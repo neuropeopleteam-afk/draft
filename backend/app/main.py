@@ -208,6 +208,7 @@ def create_app() -> FastAPI:
     @app.get("/api/meta", tags=["system"], summary="Название продукта, оператор ПДн, статус LLM и движка теста")
     def meta() -> dict:
         from app.modules.assessment.engine import get_engine
+        from app.modules.catalog import ext as catalog_ext
         from app.modules.llm.client import status as llm_status
         from app.modules.catalog import levels as _levels
 
@@ -221,10 +222,12 @@ def create_app() -> FastAPI:
                           "invitation_cooldown_days": get_settings().invitation_cooldown_days,
                           # Я22: порог уверенности решения по грейду, % (подтверждение и «уровень ниже»)
                           "confirm_pct": round(100 * get_settings().assessment_confirm_level)},
-                "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
+                "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes, avatar}
                 "interview_enabled": interview.svc.enabled(),  # то же одним флагом — шаг проводника «12 минут» (Я9)
                 "hh": hh_api.meta(),  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
                 "voice_need": voice.meta(),  # кнопка «Надиктовать»: флаг, заглушка, предел секунд, версия согласия
+                # видимые направления каталога (расширение за CATALOG_EXT_ENABLED и проверенным банком; ext.py)
+                "catalog": catalog_ext.meta(),
                 # Lead/Principal (флаг GRADES_EXT_ENABLED): уровни платформы и какие из них видны в каждом направлении
                 # (по банку, catalog.levels); без флага ключа нет — интерфейс показывает прежние 4 уровня
                 **({"grades_ext": _levels.status()} if _levels.enabled() else {}),

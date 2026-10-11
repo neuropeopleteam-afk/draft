@@ -1,0 +1,23 @@
+family_id: frontend.js.object_key_order_output
+title: Фронтенд — порядок ключей объекта JavaScript
+direction: frontend
+skills: [javascript, js_types, operators]
+target_grades: [middle, senior]
+format: predict_output
+language: javascript
+invariants:
+  code_lines: [8, 14]
+  operations: [3, 40]
+  extra: {subtype: integer_keys_first_then_insertion}
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.3
+  sigma_variant: 0.25
+  basis: "Порог Middle/Senior: 5–7 присваиваний ключей и одно удаление с повторным добавлением; нужно знать, что ключи-индексы идут первыми по возрастанию, а «01»/«-1»/«1.5» — строки. Один механизм; разброс — число ключей и какой ключ переносится. Ключ — модель, сверенная с Node."
+generator: assessment_bank.families.frontend.js_object_key_order_output
+version: 1
+description: >
+  Добор 10.10 (порог M/S, frontend): порядок Object.keys — индексы по возрастанию, затем строки в порядке
+  добавления; delete + повторное добавление. Ключ — модель, сверенная с исполнением в Node.

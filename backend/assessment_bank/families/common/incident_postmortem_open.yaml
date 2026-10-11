@@ -1,0 +1,24 @@
+family_id: common.incident.postmortem_open
+title: Постмортем по хронологии инцидента — влияние в цифрах, триггер против корневой причины, проверяемые действия
+direction: common
+skills: [incident_analysis, postmortem, slo, reliability, monitoring]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    scenarios: [cache_flush, cert_expiry, db_failover, config_push, disk_full]
+    criteria: [impact, causality, detection, actions]
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 1.7
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Постмортем по хронологии: нужно посчитать влияние (неуспешные запросы и долю месячного бюджета ошибок по SLO — двухшаговый расчёт), отделить триггер от корневой причины и способствующих факторов, объяснить задержку обнаружения и дать проверяемые действия с владельцами. Senior обычно описывает триггер и чинит его; системная причина и расход бюджета — признак Lead (граница Senior/Lead, θ ≈ 2,0). Пять сценариев одной структуры, σ 0,3"
+generator: assessment_bank.families.common.incident_postmortem_open
+version: 1
+description: >
+  Lead: основа постмортема без поиска виновных по хронологии инцидента с числами (нагрузка, доля ошибок,
+  метки времени). Рубрика из четырёх критериев (влияние, причинность, обнаружение, действия) с конкретными
+  числами варианта для проверки расчёта; оценка с цитатами-доказательствами.

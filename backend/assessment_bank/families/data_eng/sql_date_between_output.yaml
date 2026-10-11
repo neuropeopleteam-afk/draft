@@ -1,0 +1,23 @@
+family_id: data_eng.sql.date_between_output
+title: SQL — фильтр по датам через BETWEEN по столбцу с датой и временем
+direction: data_eng
+skills: [sql, date_ranges, aggregation]
+target_grades: [intern, junior]
+format: predict_output
+language: sql
+invariants:
+  code_lines: [3, 3]
+  extra:
+    subtype: between_datetime_text
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.9
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "Запрос 3 строки: COUNT и SUM за период через BETWEEN 'начало' AND 'конец' по столбцу с датой и временем (текст ISO 8601); 7–10 строк, в каждом варианте есть строки последнего дня позже полуночи (не попадают) и строка ровно в начале периода (попадает). Intern/Junior"
+generator: assessment_bank.families.data_eng.sql_date_between_output
+version: 1
+description: >
+  Предсказать результат подсчёта за период, когда BETWEEN сравнивает дату со столбцом даты и времени.
+  Ключ — исполнение запроса в sqlite.

@@ -16677,6 +16677,12 @@
             "title": "Assessment Engine",
             "type": "string"
           },
+          "catalog": {
+            "additionalProperties": true,
+            "description": "Видимые направления каталога: directions — все видимые (5 базовых и направления расширения с проверенным банком), ext — видимые направления расширения, ext_enabled — включён ли CATALOG_EXT_ENABLED",
+            "title": "Catalog",
+            "type": "object"
+          },
           "demo_sandbox": {
             "description": "Работает ли стенд на демо-данных",
             "title": "Demo Sandbox",
@@ -16727,7 +16733,8 @@
           "proctor_camera",
           "llm",
           "assessment_engine",
-          "rules"
+          "rules",
+          "catalog"
         ],
         "title": "MetaOut",
         "type": "object"
@@ -18029,7 +18036,11 @@
                   "frontend",
                   "data_ml",
                   "qa",
-                  "security"
+                  "security",
+                  "devops",
+                  "data_eng",
+                  "mobile",
+                  "analyst"
                 ],
                 "type": "string"
               },
@@ -18070,7 +18081,11 @@
               "frontend",
               "data_ml",
               "qa",
-              "security"
+              "security",
+              "devops",
+              "data_eng",
+              "mobile",
+              "analyst"
             ],
             "title": "Direction",
             "type": "string"
@@ -20894,7 +20909,11 @@
                   "frontend",
                   "data_ml",
                   "qa",
-                  "security"
+                  "security",
+                  "devops",
+                  "data_eng",
+                  "mobile",
+                  "analyst"
                 ],
                 "type": "string"
               },
@@ -28643,7 +28662,11 @@
                   "frontend",
                   "data_ml",
                   "qa",
-                  "security"
+                  "security",
+                  "devops",
+                  "data_eng",
+                  "mobile",
+                  "analyst"
                 ],
                 "type": "string"
               },
@@ -30103,7 +30126,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -31474,7 +31501,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -38845,7 +38876,7 @@
         "operationId": "get_stack_tags_api_catalog_stack_tags_get",
         "parameters": [
           {
-            "description": "Направление; общий блок возвращается всегда",
+            "description": "Направление; общий блок возвращается всегда. У направлений расширения каталога — ещё связанные теги других направлений (инженеру данных — Spark и Airflow и т. п.)",
             "in": "query",
             "name": "direction",
             "required": false,
@@ -38858,7 +38889,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Направление; общий блок возвращается всегда",
+              "description": "Направление; общий блок возвращается всегда. У направлений расширения каталога — ещё связанные теги других направлений (инженеру данных — Spark и Airflow и т. п.)",
               "title": "Direction"
             }
           }
@@ -42382,7 +42413,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -42667,7 +42702,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -43017,7 +43056,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -43231,7 +43274,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -55720,7 +55767,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },

@@ -1,0 +1,25 @@
+family_id: frontend.strategy.design_system_platform_open
+title: Дизайн-система как внутренняя платформа — модель вклада, слои и версии, перевод экранов, метрики
+direction: frontend
+skills: [design_systems, technical_strategy, architecture, accessibility, migrations]
+target_grades: [principal]
+format: open_answer
+language: text
+invariants:
+  extra:
+    twists: [other_fw, rebrand, a11y_audit]
+    criteria: [numbers, model, layers, adoption, twist, metrics]
+    anchors: [implementations_per_change, screens_per_month]
+    scale: "0–4"
+time_limit_s: 1800
+canary: false
+prior_difficulty:
+  b: 2.7
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Стратегия на год для многих команд: цена общей правки при копиях компонентов и темп переноса экранов по числам варианта, выбор модели работы (центральная, федеративная, гибрид) с ценой при малой центральной команде, слои токены → примитивы → составные и версионирование с codemod, доставка без большого переписывания, особенность (другой фреймворк у крупной команды, срок ребрендинга, аудит доступности) и метрики. Lead обычно предлагает «общую библиотеку и Storybook» без модели вклада, темпа и метрик — граница Lead/Principal (θ ≈ 2,75); рубрика 0–4 по шести критериям, σ 0,3"
+generator: assessment_bank.families.frontend.strategy_design_system_platform_open
+version: 1
+description: >
+  Principal: дизайн-система как платформа для многих команд — модель, слои, версии, перевод экранов и метрики.
+  Рубрика 0–4; оценка с цитатами-доказательствами.

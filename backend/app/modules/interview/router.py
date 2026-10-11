@@ -16,6 +16,7 @@ from app.core.deps import require_role
 from app.core.enums import UserRole
 from app.core.errors import api_error, err
 from app.modules.auth.models import User
+from app.modules.catalog.ext import DirectionId
 from app.modules.interview import port as pt
 from app.modules.interview import service as svc
 
@@ -322,7 +323,7 @@ def session_delete(session_id: uuid.UUID, user: User = Depends(candidate), db: S
 
 @router.get("/candidates/{ref}", summary="Устная защита и ИИ-интервью кандидата для карточки работодателя",
             response_model=CandidateInterviewOut, responses={**AUTH, 404: err("Кандидат не найден")})
-def candidate_interviews(ref: str, direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+def candidate_interviews(ref: str, direction: DirectionId | None = None,
                          user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     from app.modules.invitations.service import profile_by_ref
     from app.modules.matching.router import my_company

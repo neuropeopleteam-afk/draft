@@ -1,28 +1,32 @@
 {
  "bank": {
-  "families": 165,
+  "families": 342,
   "by_direction": {
-   "backend": 44,
-   "common": 34,
-   "data_ml": 23,
-   "frontend": 26,
-   "qa": 19,
-   "security": 19
+   "analyst": 26,
+   "backend": 52,
+   "common": 46,
+   "data_eng": 29,
+   "data_ml": 34,
+   "devops": 30,
+   "frontend": 35,
+   "mobile": 29,
+   "qa": 30,
+   "security": 31
   },
-  "source_commit": "679823a",
-  "content_hash": "76c4164b6ce83743",
-  "pass": 147,
-  "warn": 18,
+  "source_commit": "161b9c1",
+  "content_hash": "f563cfcaebf63aef",
+  "pass": 322,
+  "warn": 20,
   "fail": 0,
-  "checks": 1379,
+  "checks": 2219,
   "checks_failed": 0,
-  "variants": 3300,
-  "unique_variants": 3281
+  "variants": 6840,
+  "unique_variants": 6816
  },
  "migrations": {
-  "revisions": 33,
+  "revisions": 35,
   "heads": [
-   "tr01"
+   "cm01"
   ]
  },
  "memory_limits_mib": {
@@ -56,15 +60,15 @@
   }
  },
  "e2e_in_code": {
-  "spec_files": 23,
-  "scenarios": 55
+  "spec_files": 24,
+  "scenarios": 57
  },
  "validation_report": {
   "report_generated_at": "2026-10-10",
   "report_bank_families": 165,
   "exposure_generated_at": "2026-10-06",
   "exposure_bank_families": 128,
-  "report_matches_bank": true
+  "report_matches_bank": false
  },
  "grade_accuracy": {
   "confirm_level": 0.6,
@@ -127,11 +131,11 @@
  },
  "tests": {
   "failed": 0,
-  "passed": 1508,
-  "skipped": 3,
-  "seconds": 284.6,
+  "passed": 1645,
+  "skipped": 16,
+  "seconds": 438.62,
   "exit": 0,
-  "sha": "5721237",
+  "sha": "4864dce",
   "date": "11.10.2026"
  },
  "note": "Числа посчитаны tools/publish/gen_numbers.py; тесты и покрытие — из журнала прогона. Подбор — синтетический мир со скрытой истиной (модель, не люди)."
