@@ -60,7 +60,7 @@ function PlanCard({ p, current, action }: { p: Plan; current?: boolean; action?:
           <h3 className="text-lg font-bold text-brand-night">{p.title}</h3>
           {current && <span className="chip">Ваш тариф</span>}
         </div>
-        <p className="mt-2 text-2xl font-extrabold tabular-nums text-brand-night">{price(p)}</p>
+        <p className={`mt-2 font-extrabold tabular-nums text-brand-night ${p.price_rub_month == null ? "text-lg leading-snug" : "text-2xl"}`}>{price(p)}</p>
         <p className="text-xs text-brand-ink/65">{p.price_rub_month ? p.price_note : p.price_rub_month === 0 ? "Без оплаты" : "Подключает ФСП по договору"}</p>
       </div>
       <p className="text-sm leading-relaxed text-brand-ink/80">{p.summary}</p>
