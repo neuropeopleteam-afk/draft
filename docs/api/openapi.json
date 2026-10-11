@@ -17809,6 +17809,19 @@
             "description": "Сколько проверок вилки осталось за сутки; null — лимит исчерпан",
             "title": "Checks Left"
           },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "FIX7 В1: почему «Вероятно, откажет» — salary | location | format; null — вето нет",
+            "title": "Decline Reason"
+          },
           "decline_risk": {
             "description": "Кандидат, вероятно, откажет",
             "title": "Decline Risk",

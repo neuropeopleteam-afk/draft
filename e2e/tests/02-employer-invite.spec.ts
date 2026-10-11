@@ -119,9 +119,19 @@ test("работодатель: потребность → подборка с �
     await page.getByRole("button", { name: "Пригласить" }).click();
     const dialog = page.getByRole("dialog", { name: "Приглашение-оффер" });
     await expect(dialog).toBeVisible();
+    // FIX7 В1: неактивная кнопка объясняет себя — живой список недостающего со счётчиком знаков
+    const missing = dialog.getByTestId("invite-missing");
+    await expect(dialog.getByRole("button", { name: "Отправить приглашение" })).toBeDisabled();
+    await expect(missing).toContainText("Чтобы отправить, заполните:");
+    await expect(missing).toContainText("«Суть предложения» — ещё 20 знаков");
+    await expect(dialog.getByText("Сокращённое рабочее время")).toHaveCount(0);  // взрослому кандидату — не нужно
     await dialog.locator("#it").fill(POSITION);
+    await dialog.locator("#idesc").fill("Команда выплат");
+    await expect(missing).toContainText("ещё 6 знаков");
+    await expect(dialog.locator("#idesc")).toHaveAttribute("aria-invalid", "true");
     await dialog.locator("#idesc").fill("Команда выплат: FastAPI, PostgreSQL, Redis. Удалённо, гибкий график. Проверка e2e.");
     await dialog.locator("#ic").fill("hr@jury.example.com");
+    await expect(missing).not.toContainText("Чтобы отправить");
     // вилка обязательна: пустое «до» не отправляется
     await dialog.locator("#sf").fill("240000");
     await dialog.locator("#st").fill("");
