@@ -321,6 +321,20 @@ def _two_stage(out: dict, t: dict) -> None:
         out["two_stage"] = note
 
 
+def passport_status(b: "Bundle") -> str:
+    """FIX7 п. 6: статус грейда в паспорте — из того же источника, что и карточка (grade_status): «preliminary» —
+    Junior предварительно, Lead/Principal по тесту (флаг GRADES_EXT_ENABLED) или открытые ответы теста ещё на проверке
+    эксперта; иначе «confirmed». Паспорт (passport.service.build_content) и экран «Категория» берут его отсюда."""
+    if b.grade_status == "provisional":
+        return "preliminary"
+    t = b.test.value if b.test else {}
+    if (t or {}).get("pending_review"):
+        return "preliminary"
+    if b.grade_status == "confirmed" and grade_levels.preliminary_info(b.grade):
+        return "preliminary"
+    return "confirmed"
+
+
 def grade_status(b: "Bundle") -> dict:
     """Единая модель статуса грейда для карточки, подборки, поиска, сравнения, PDF и объяснения «почему».
 
@@ -346,6 +360,14 @@ def grade_status(b: "Bundle") -> dict:
         if ext:
             out["ext_preliminary"] = ext
             out["text"] = f"{GRADES.get(b.grade or '', b.grade)} по тесту — предварительно: {ext['text']}"
+        pending = int((t or {}).get("pending_review") or 0)
+        if pending:
+            # FIX7 п. 6: открытые ответы ещё у эксперта — тот же признак, по которому паспорт «предварительный»
+            # (passport_status ниже): категория присвоена тестом, но итог предварительный до проверки
+            out["pending_review"] = pending
+            out["text"] += (f" · предварительно: открытых ответов на проверке эксперта — {pending}; после проверки "
+                            "итог и паспорт обновятся сами")
+        out["passport_status"] = passport_status(b)
         return out
     if st == "provisional":
         inf = prov.info(t) or {}
