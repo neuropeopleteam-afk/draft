@@ -405,6 +405,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/ru-llm"): "open",  # замер «только российская модель»
     ("GET", "/api/validation/strongest"): "open",  # сильнейшие модели по функциям
     ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
+    ("GET", "/api/validation/partial-credit"): "open",  # частичный балл 0–4 (симуляция)
     ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)
     ("GET", "/api/validation/hh-parse"): "open",  # Я12: замер разбора на корпусе hh.ru

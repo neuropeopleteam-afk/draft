@@ -151,3 +151,14 @@ def test_sim_small_run_shapes():
     assert set(d) >= {"exact", "exact_ci", "over", "retest_exact"}
     m = P.noise_matrix()
     assert m.shape == (5, 5) and np.allclose(m.sum(axis=1), 1.0)
+
+
+def test_validation_partial_credit_route(client, monkeypatch):
+    r = client.get("/api/validation/partial-credit")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["enabled"] is False
+    assert d["grader"]["agreement"]["on_v3_skeptic"]["n"] > 200
+    assert "missing" in d or d["rows"]
+    monkeypatch.setattr(get_settings(), "assessment_partial_credit_enabled", True)
+    assert client.get("/api/validation/partial-credit").json()["enabled"] is True
