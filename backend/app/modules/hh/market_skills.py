@@ -24,6 +24,13 @@ def _status(bundle, tag: str) -> str:
     return "declared" if tag in (getattr(bundle, "stack_t0", None) or set()) else "missing"
 
 
+def _confirmed_title(bundle, tag: str) -> str:
+    """FIX7 п. 9: «подтверждён тестом» — только если подтвердил тест; задание работодателя называется своим именем."""
+    from app.modules.profiles.facts import skill_confirmed_title
+
+    return skill_confirmed_title((getattr(bundle, "skills_t1", None) or {}).get(tag))
+
+
 def _task_tags(direction: str, grade: str | None, tags: list[str]) -> set[str]:
     """Теги, по которым в банке есть задания с автопроверкой для направления и грейда (короткое задание)."""
     if not tags or not grade:
@@ -65,7 +72,8 @@ def block(direction: str | None, grade: str | None, bundle, test_tags: frozenset
                 action = {"kind": "probe", "title": None, "href": None,
                           "text": "заданий на этот навык пока нет — подтвердить можно задачей-зондом работодателя"}
         items.append({"tag": t, "title": tag_title(t), "share": x["share"], "n": x["n"], "status": st,
-                      "status_title": STATUS_TITLES[st], "action": action})
+                      "status_title": _confirmed_title(bundle, t) if st == "confirmed" else STATUS_TITLES[st],
+                      "action": action})
     scope_title = (f"категория {_dir_title(direction)} · {GRADES.get(grade, grade)}"
                    if s["scope"] == "category" else f"направление {_dir_title(direction)}")
     return {"source": "hh.ru", "scope": s["scope"], "scope_title": scope_title, "n": s["n"], "as_of": s["as_of"],
