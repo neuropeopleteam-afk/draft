@@ -371,6 +371,9 @@ class AssessmentFeedbackOut(Doc):
     route: list[Obj] = Field(description="Маршрут роста: что подтвердить дальше")
     competitions: list[Obj] = Field(description="Рекомендованные дисциплины ФСП")
     fsp_calendar_url: str | None
+    market_hh: Obj | None = Field(None, description="Я12б, при HH_ENABLED: «Что сейчас просит рынок» — частые навыки "
+                                                     "категории по вакансиям hh.ru (агрегат, n, дата), статус каждого у "
+                                                     "кандидата и ссылка на тест или короткое задание")
 
 
 class EmployerAttemptsOut(Doc):

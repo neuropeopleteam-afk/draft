@@ -6,7 +6,9 @@ from app.core.db import get_db
 from app.modules.catalog import ext
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.models import Category, Direction, Grade, StackTag
+from app.modules.catalog import levels
 from app.modules.catalog.schemas import CatalogOut, StackTagOut
+from app.modules.catalog.seed_data import EXT_GRADE_ORDER, GRADE_ORDER
 
 router = APIRouter(prefix="/api/catalog", tags=["catalog"])
 
@@ -19,10 +21,19 @@ def _hidden() -> set[str]:
 @router.get("", response_model=CatalogOut, summary="Справочник: направления, грейды, категории, стек")
 def get_catalog(db: Session = Depends(get_db)) -> CatalogOut:
     hidden = _hidden()
+    directions = [d for d in db.scalars(select(Direction).order_by(Direction.sort_order)).all() if d.id not in hidden]
+    dir_ids = [d.id for d in directions]
     return CatalogOut(
-        directions=[d for d in db.scalars(select(Direction).order_by(Direction.sort_order)).all() if d.id not in hidden],
-        grades=db.scalars(select(Grade).order_by(Grade.level)).all(),
-        categories=[c for c in db.scalars(select(Category).order_by(Category.id)).all() if c.direction_id not in hidden],
+        directions=directions,
+        # уровни платформы (seed_data.GRADE_ORDER): Lead/Principal — только с флагом GRADES_EXT_ENABLED, даже если
+        # строки справочника остались в БД после выключения флага; категория Lead/Principal — только в направлении,
+        # где эти уровни проверяет банк (catalog.levels); направления расширения каталога — только видимые (ext.py)
+        grades=[g for g in db.scalars(select(Grade).where(Grade.id.in_(GRADE_ORDER)).order_by(Grade.level)).all()
+                if g.id not in EXT_GRADE_ORDER or levels.directions_with(g.id, dir_ids)],
+        categories=[c for c in db.scalars(select(Category).where(Category.grade_id.in_(GRADE_ORDER))
+                                          .order_by(Category.id)).all()
+                    if c.direction_id not in hidden
+                    and (c.grade_id not in EXT_GRADE_ORDER or levels.is_available(c.direction_id, c.grade_id))],
         stack_tags=[t for t in db.scalars(select(StackTag).order_by(StackTag.direction_id, StackTag.sort_order)).all()
                     if t.direction_id not in hidden],
         fsp_disciplines=FSP_DISCIPLINES,

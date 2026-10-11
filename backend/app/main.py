@@ -61,6 +61,7 @@ from app.modules.subs import runner as subs_runner
 from app.modules.study import router as study_api
 from app.modules.validation.router import router as validation_router
 from app.modules.voice import router as voice  # голосовой ввод потребности (VOICE_NEED_ENABLED)
+from app.modules.tariffs import router as tariffs_api  # тарифы работодателя, «Польза для ФСП» (Я29, TARIFFS_ENABLED)
 from app.modules.fsp.registry import router as fsp_registry_router
 from app.passport.router import TAGS as PASSPORT_TAGS
 from app.passport.router import router as passport_router
@@ -93,6 +94,19 @@ TAGS = [
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    # Lead/Principal (флаг GRADES_EXT_ENABLED): грейды и категории в справочнике — идемпотентно; без флага — ничего
+    from app.modules.catalog.seed_data import GRADES_EXT
+
+    if GRADES_EXT:
+        from app.core.db import SessionLocal, get_engine as _db_engine
+        from app.modules.catalog.levels_seed import ensure as ensure_ext_levels
+
+        try:
+            _db_engine()  # до первого запроса движок БД ещё не создан
+            with SessionLocal() as _db:
+                ensure_ext_levels(_db)
+        except Exception:  # noqa: BLE001 — справочник не должен ронять старт; повтор — python -m …levels_seed
+            logging.getLogger("catalog").exception("Lead/Principal: справочник не дополнен")
     # Запасная песочница жюри — в фоне после старта: первый вход эксперта не ждёт её создания
     if get_settings().jury_spare_sandboxes > 0:
         t = threading.Timer(5.0, make_spare)
@@ -129,7 +143,7 @@ def create_app() -> FastAPI:
             "сервера — `docs/api/openapi.json` в репозитории (обзор — `docs/API.md`)."
         ),
         openapi_tags=(TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS
-                      + mutual.TAGS + study_api.TAGS + hh_api.TAGS + interview.TAGS),
+                      + mutual.TAGS + study_api.TAGS + hh_api.TAGS + interview.TAGS + tariffs_api.TAGS),
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -166,7 +180,8 @@ def create_app() -> FastAPI:
               study_api.router,  # статистика прохождения: живые пользователи (У1)
               hh_api.router, hh_api.validation_router,  # hh.ru (Я12): без HH_ENABLED и токена — 404 hh_disabled
               interview.router, interview.candidate_router, interview.employer_router,  # устная защита (Я15)
-              voice.router):  # «Надиктовать» потребность (за флагом VOICE_NEED_ENABLED)
+              voice.router,  # «Надиктовать» потребность (за флагом VOICE_NEED_ENABLED)
+              tariffs_api.public_router, tariffs_api.employer_router, tariffs_api.fsp_router):  # тарифы (Я29)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
@@ -195,6 +210,7 @@ def create_app() -> FastAPI:
         from app.modules.assessment.engine import get_engine
         from app.modules.catalog import ext as catalog_ext
         from app.modules.llm.client import status as llm_status
+        from app.modules.catalog import levels as _levels
 
         return {"product_name": s.product_name, "version": s.app_version, "operator": OPERATOR,
                 "jury_mode_available": s.jury_mode_available, "demo_sandbox": s.demo_sandbox,
@@ -203,13 +219,19 @@ def create_app() -> FastAPI:
                 # сроки правил грейда и приглашений — из настроек, тексты интерфейса берут их отсюда (Ф3)
                 "rules": {"grade_change_interval_days": get_settings().grade_change_interval_days,  # на запросе, как proctor_camera
                           "retake_same_grade_days": get_settings().retake_same_grade_days,
-                          "invitation_cooldown_days": get_settings().invitation_cooldown_days},
+                          "invitation_cooldown_days": get_settings().invitation_cooldown_days,
+                          # Я22: порог уверенности решения по грейду, % (подтверждение и «уровень ниже»)
+                          "confirm_pct": round(100 * get_settings().assessment_confirm_level)},
                 "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
                 "interview_enabled": interview.svc.enabled(),  # то же одним флагом — шаг проводника «12 минут» (Я9)
                 "hh": hh_api.meta(),  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
                 "voice_need": voice.meta(),  # кнопка «Надиктовать»: флаг, заглушка, предел секунд, версия согласия
                 # видимые направления каталога (расширение за CATALOG_EXT_ENABLED и проверенным банком; ext.py)
-                "catalog": catalog_ext.meta()}
+                "catalog": catalog_ext.meta(),
+                # Lead/Principal (флаг GRADES_EXT_ENABLED): уровни платформы и какие из них видны в каждом направлении
+                # (по банку, catalog.levels); без флага ключа нет — интерфейс показывает прежние 4 уровня
+                **({"grades_ext": _levels.status()} if _levels.enabled() else {}),
+                "tariffs": tariffs_api.svc.meta()}  # Я29: раздел «Тарифы», счётчик приглашений, метка «Партнёр ФСП»
 
     class HealthOut(BaseModel):
         status: str

@@ -144,11 +144,21 @@ def apply_result(current_grade: str | None, claimed_grade: str, confirmed: bool,
 ACCEPT_LOWER_LEVEL = 0.8
 
 
-def proved_lower(probabilities: dict[str, float] | None, claimed_grade: str, level: float = ACCEPT_LOWER_LEVEL) -> str | None:
+def _level(level: float | None) -> float:
+    """None — действующий порог уверенности (настройка assessment_confirm_level, Я22)."""
+    if level is not None:
+        return float(level)
+    from app.core.config import get_settings
+
+    return float(get_settings().assessment_confirm_level)
+
+
+def proved_lower(probabilities: dict[str, float] | None, claimed_grade: str, level: float | None = None) -> str | None:
     """Самый высокий грейд ниже заявленного, уровень которого тест доказал уверенно: P(θ ≥ порог) ≥ level.
     probabilities — {none, intern, junior, middle, senior} из результата движка (вероятности точечного грейда)."""
     if not probabilities or claimed_grade not in GRADE_LEVEL:
         return None
+    level = _level(level)
     for g in sorted(GRADE_LEVEL, key=GRADE_LEVEL.get, reverse=True):
         if GRADE_LEVEL[g] >= GRADE_LEVEL[claimed_grade]:
             continue
@@ -160,7 +170,8 @@ def proved_lower(probabilities: dict[str, float] | None, claimed_grade: str, lev
 
 
 def accept_lower_allowed(current_grade: str | None, claimed_grade: str, confirmed: bool,
-                         probabilities: dict[str, float] | None, *, provisional: bool = False) -> tuple[str | None, str | None]:
+                         probabilities: dict[str, float] | None, *, provisional: bool = False,
+                         level: float | None = None) -> tuple[str | None, str | None]:
     """Можно ли принять уровень ниже по этому тесту: тест не подтвердил заявленный грейд, но уверенно доказал
     уровень ниже (P ≥ 0,8), и этот уровень выше текущего подтверждённого (или категории ещё нет).
     Предварительный грейд (provisional, консилиум 07.10 п. 7.3в) — не подтверждённый: сравнение идёт как при
@@ -168,7 +179,7 @@ def accept_lower_allowed(current_grade: str | None, claimed_grade: str, confirme
     Возвращает (доказанный грейд или None, причина отказа)."""
     if confirmed:
         return None, "confirmed"
-    lower = proved_lower(probabilities, claimed_grade)
+    lower = proved_lower(probabilities, claimed_grade, level)
     if lower is None:
         return None, "no_lower_proved"
     if provisional:

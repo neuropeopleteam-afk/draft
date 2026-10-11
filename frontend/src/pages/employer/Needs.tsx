@@ -5,7 +5,8 @@ import { CompactCard } from "../../components/CompactCard";  // Я10: компа
 import { NeedScope, scopeOptions } from "../../components/NeedScope";  // Я10: что проверено тестом по потребности
 import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, plural, range, useApi } from "../../components/ui";
+import { Alert, Empty, Field, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, plural, range, useApi } from "../../components/ui";
+import { useGrades } from "../../lib/grades";
 import { api } from "../../lib/api";
 import { useDirectionEntries } from "../../lib/meta";
 import { LlmOff } from "../../components/LlmOff";
@@ -169,6 +170,7 @@ function Row({ id, label, status, ev, focus, onFocus, onConfirm, onDelete, child
 
 /** Разбор потребности: у каждого требования — цитата из текста; работодатель подтверждает, правит или удаляет. */
 export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChange: (r: Req) => void; focus?: string | null; onFocus?: (k: string | null) => void }) {
+  const levels = useGrades(req.direction);  // с флагом GRADES_EXT_ENABLED — и Lead/Principal, если их проверяет тест
   const dirEntries = useDirectionEntries();
   const tags = useTags();
   const [add, setAdd] = useState("");
@@ -238,7 +240,7 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
             </select>))}
           {sRow("grade", "Грейд", (
             <select aria-label="Грейд" className={sel} value={req.grade ?? ""} onChange={(e) => setScalar("grade", { grade: e.target.value || null })}>
-              <option value="">не указан</option>{Object.entries(GRADES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              <option value="">не указан</option>{Object.entries(levels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>))}
         </ul>
       </div>
@@ -601,9 +603,9 @@ export function Selection() {
                 {s.categories.map((c: any) => (
                   <li key={c.id} className="flex items-start justify-between gap-2">
                     <label className="flex items-start gap-2">
-                      <input type="checkbox" className="mt-1 accent-brand" checked={(filters.categories ?? s.categories.filter((x: any) => ["exact", "direction", "all"].includes(x.relation)).map((x: any) => x.id)).includes(c.id)}
+                      <input type="checkbox" className="mt-1 accent-brand" checked={(filters.categories ?? s.categories.filter((x: any) => x.in_pool ?? ["exact", "direction", "all"].includes(x.relation)).map((x: any) => x.id)).includes(c.id)}
                         onChange={() => {
-                          const base: string[] = filters.categories ?? s.categories.filter((x: any) => ["exact", "direction", "all"].includes(x.relation)).map((x: any) => x.id);
+                          const base: string[] = filters.categories ?? s.categories.filter((x: any) => x.in_pool ?? ["exact", "direction", "all"].includes(x.relation)).map((x: any) => x.id);
                           setFilters({ ...filters, categories: base.includes(c.id) ? base.filter((y) => y !== c.id) : [...base, c.id] });
                         }} />
                       <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{relText(c.relation)} · рынок {range(c.market_range?.from, c.market_range?.to)} на руки</span></span>
@@ -653,6 +655,9 @@ export function Selection() {
             <Alert>{wErr}</Alert>
             {s.must_first && (s.requirements?.stack_required?.length ?? 0) > 0 && <p className="text-xs leading-relaxed text-brand-ink/70">
               Порядок: {s.core?.on && s.core?.active ? `сначала кандидаты, у которых ${s.core.label.toLowerCase()} (${s.core.title}) заявлен или подтверждён, затем — остальные. Внутри групп — сначала те, у кого` : "сначала кандидаты, у которых"} всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и зонды поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
+            </p>}
+            {s.grade_above?.applied && <p className="text-xs leading-relaxed text-brand-ink/70" data-testid="grade-above-note">
+              <b className="font-semibold text-brand-night">Добор уровнем выше.</b> {s.grade_above.text}
             </p>}
             {s.core && <p className="text-xs leading-relaxed text-brand-ink/70" data-testid="core-summary">
               <b className="font-semibold text-brand-night">{s.core.label}: {s.core.title}.</b> Подтверждён тестом — {s.core.counts?.confirmed ?? 0}, заявлен — {s.core.counts?.declared ?? 0}, не заявлен — {s.core.counts?.absent ?? 0}{s.core.active ? (s.core.on ? ". Кандидаты без ядра роли (смежное направление) остаются в подборке, но идут ниже." : ". На порядок не влияет: признак выключен.") : ". В подборке ядро не заявлено ни у кого — на порядок не влияет."}
