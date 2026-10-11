@@ -5,7 +5,7 @@ import { ScrollX } from "../A11y";
  * кандидатах (backend: app/modules/validation/partial_credit_sim.py → data/partial_credit_sim.json; флаг
  * ASSESSMENT_PARTIAL_CREDIT_ENABLED). Согласие оценщика 0–4 — по сохранённым ответам набора оценщика. */
 
-const ARM: Record<string, string> = { bin: "0/1", frac: "доля 0..1 (сейчас)", gpcm: "0–4, GPCM" };
+const ARM: Record<string, string> = { bin: "0/1", frac: "доля 0..1 (сейчас)", gpcm: "0–4, GPCM", gpcm_est: "0–4, GPCM только в оценке" };
 const WORLD: Record<string, string> = { base: "основной", narrow: "пессимистичный", clean: "без шума оценщика" };
 const pp = (v?: number | null) => (v == null ? "—" : `${v > 0 ? "+" : ""}${num(v * 100, 1)}\u00A0п.\u00A0п.`);
 const ci = (c?: number[] | null) => (c ? ` [${pp(c[0])}; ${pp(c[1])}]` : "");

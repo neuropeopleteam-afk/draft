@@ -208,6 +208,9 @@ class Settings(BaseSettings):
     # рубрике) входит в θ по модели GPCM (assessment_bank/psychometrics/gpcm.py), дихотомические — 2PL, как сейчас.
     # Тот же вызов оценщика, без новых запросов; false — оценка 0..1 в 2PL (прежнее поведение)
     assessment_partial_credit_enabled: bool = False
+    # при флаге выше: выбор следующего задания по информации GPCM (true) или, как без флага, по 2PL (false — балл 0–4
+    # только в оценке θ, состав теста прежний)
+    assessment_partial_credit_select: bool = True
     # Ротация субпулов банка: 2 параллельные формы; повторная попытка получает другой субпул.
     # Утёкший субпул — в карантин: ASSESSMENT_SUBPOOL_QUARANTINE=0 (номера через запятую)
     assessment_subpools: int = 2
