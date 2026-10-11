@@ -1,0 +1,25 @@
+family_id: backend.arch.principal_retry_policy_fix
+title: Общая обёртка повторов платформы — бюджет повторов, дедлайн клиента, только повторяемые ошибки
+direction: backend
+skills: [retries, reliability, distributed_systems, timeouts, python]
+target_grades: [principal]
+format: choose_fix
+language: python
+invariants:
+  n_options: 4
+  defect_type: retry_policy
+  extra:
+    scheme: factorial_2x2
+    rules: [budget, deadline, retryable]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое задание у границы Lead/Principal: принципы архитектурного совета даны без кода («повторы не усиливают отказ», «ответ не позже дедлайна клиента», «ошибки клиента не повторяются»), кандидат переводит их в код общей обёртки — общий бюджет повторов процесса вместо счётчика на вызов, распространение оставшегося до дедлайна времени, повтор только Unavailable. Варианты — схема 2×2 из двух правил с разными локальными именами; ключ — исполнением на четырёх сценариях с поддельными часами. Lead обычно ограничивает число повторов на вызов (MAX_RETRIES) и считает шторм решённым; Principal видит перемножение по уровням и связывает таймаут с дедлайном — граница Lead/Principal (θ ≈ 2,9); σ 0,3"
+generator: assessment_bank.families.backend.principal_retry_policy_fix
+version: 1
+description: >
+  Principal (короткое, 7 мин): какая замена общей обёртки повторов выполняет три принципа архитектурного совета.
+  Ключ — исполнением: замены исполняются в составе модуля на четырёх сценариях.
