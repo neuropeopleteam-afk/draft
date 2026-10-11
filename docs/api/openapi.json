@@ -27358,20 +27358,6 @@
             "description": "Распределение по заявленным грейдам",
             "title": "Claimed"
           },
-          "competitor_reference": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Опубликованные показатели других платформ для сравнения",
-            "title": "Competitor Reference"
-          },
           "config": {
             "anyOf": [
               {
@@ -67420,7 +67406,7 @@
                       }
                     ],
                     "conditions": {
-                      "n_competitor": 400,
+                      "n_alt": 400,
                       "n_leak": 400,
                       "n_leak_table": 300,
                       "n_per_direction": 400,
