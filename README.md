@@ -21,7 +21,7 @@
 | Миграции Alembic | **ревизий: 32, одна голова `iv01`** | `backend/migrations/versions`, `alembic heads` |
 | Подбор (модель, не люди) | P@5 **0,776** [0,740; 0,810], nDCG@10 **0,573** [0,546; 0,599], MRR 0,888; синтетический мир со скрытой истиной, 200 потребностей × 2000 кандидатов, seed 20261006, алгоритм `match-v1.2` | `make bench`, `docs/validation/MATCHING_BENCH.md`, `docs/validation/matching_bench.json` |
 | Отчёт страницы `/validation` (симуляция теста, повтор, утечка) | посчитан 10.10; соответствует текущему банку; константы показа `exposure_k.json` — 06.10 на 128 семействах | `make validate`, `backend/app/modules/validation/data/report.json` |
-| Сквозные сценарии (Playwright) | 52 сценариев в 22 файлах (число в коде, не результат прогона) | `e2e/tests`, `make e2e` |
+| Сквозные сценарии (Playwright) | 51 сценариев в 21 файлах (число в коде, не результат прогона) | `e2e/tests`, `make e2e` |
 | Лимиты памяти контейнеров | db 320 МиБ, api 3072 МиБ, web 32 МиБ, keycloak 576 МиБ; профиль llm-local — 8 ГиБ | `docker-compose.yml`, разбор — `docs/LOAD_TEST.md` |
 <!-- numbers:end -->
 
