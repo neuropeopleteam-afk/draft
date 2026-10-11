@@ -98,6 +98,8 @@ Policy = str | tuple[str, dict[str, object]]
 _UPSTREAM = {"employer": OK_UPSTREAM, "employer_other": OK_UPSTREAM, "jury_employer": OK_UPSTREAM,
              "jury_other_employer": OK_UPSTREAM}
 
+_HH_OFF = {"employer": OK404, "employer_other": OK404, "jury_employer": OK404, "jury_other_employer": OK404}
+
 POLICY: dict[tuple[str, str], Policy] = {
     # ---------------------------------------------------------------- система, документация, справочники
     ("GET", "/api/health"): "open",
@@ -192,6 +194,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/assessment/attempts"): "candidate",  # feat/attempts (И26): свои попытки; чужие a/b — 404
     ("GET", "/api/assessment/grade-hint"): "candidate",  # feat/jury-test
     ("GET", "/api/assessment/sessions/{session_id}/result"): "candidate_own",
+    ("GET", "/api/assessment/sessions/{session_id}/evidence"): "candidate_own",  # feat/evidence-grade
     ("POST", "/api/assessment/sessions/{session_id}/accept-lower"): "candidate_own",
     # камера по согласию (feat/proctor, pc01): только кандидат; сессия — своя (чужая → 404); работодателю API нет,
     # агрегат ФСП — аналитик и администратор (в песочнице жюри — персона «Федерация»)
@@ -263,6 +266,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/employer/candidates/{ref}"): "employer_ref",
     ("GET", "/api/employer/candidates/{ref}/profile.pdf"): "employer_ref",
     ("GET", "/api/employer/candidates/{ref}/attempts"): "employer_ref",  # feat/attempts (И26)
+    ("GET", "/api/employer/candidates/{ref}/evidence"): "employer_ref",  # feat/evidence-grade
     ("GET", "/api/employer/candidates/{ref}/passport"): ("employer_ref", {"employer": OK404, "employer_other": OK404,
                                                                              "jury_employer": OK404}),  # feat/passport
     ("POST", "/api/employer/needs/parse"): "employer",
@@ -316,6 +320,10 @@ POLICY: dict[tuple[str, str], Policy] = {
     # И23: импорт вакансий из «Потока» — своя компания; без токена 422, ATS недоступна — 502
     ("GET", "/api/employer/vacancies/import/potok/preview"): ("employer", _UPSTREAM),
     ("POST", "/api/employer/vacancies/import/potok"): ("employer", _UPSTREAM),
+    # Я12 hh.ru: по умолчанию выключено (HH_ENABLED) — работодателю 404 hh_disabled, роли проверяются раньше
+    ("GET", "/api/employer/vacancies/import/hh/preview"): ("employer", _HH_OFF),
+    ("POST", "/api/employer/vacancies/import/hh"): ("employer", _HH_OFF),
+    ("GET", "/api/employer/market/hh"): ("employer", _HH_OFF),
     ("POST", "/api/employer/applications/{app_id}/view"): "employer_own",
     ("POST", "/api/employer/applications/{app_id}/status"): "employer_own",
     ("GET", "/api/employer/applications/{app_id}/export.json"): "employer_own",
@@ -392,10 +400,14 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/validation/attacks/{attack_id}"): "auth404",  # attack_id=nope: вход проверяется, атаки нет
     ("GET", "/api/validation/junior-stability"): "open",  # feat/status
     ("GET", "/api/validation/grader-check"): "open",  # feat/integrity
+    ("GET", "/api/validation/evidence"): "open",  # feat/evidence-grade
     ("GET", "/api/validation/llm-models"): "open",  # feat/llm-local
+    ("GET", "/api/validation/ru-llm"): "open",  # замер «только российская модель»
+    ("GET", "/api/validation/strongest"): "open",  # сильнейшие модели по функциям
     ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
     ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)
+    ("GET", "/api/validation/hh-parse"): "open",  # Я12: замер разбора на корпусе hh.ru
     ("GET", "/api/validation/attempts-repeat"): "open",  # feat/attempts (И26)
     ("GET", "/api/validation/test-length"): "open",  # Ф6 (Н8): длина теста на экране старта
     ("GET", "/api/validation/provenance"): "open",  # Я8: происхождение чисел /validation
