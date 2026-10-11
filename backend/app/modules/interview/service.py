@@ -162,7 +162,27 @@ def conversation(row: InterviewSession) -> dict | None:
             "max_questions": row.max_questions, "deadline": _deadline(row), "channels": port.channels(),
             "engine": "stub" if stub else "engine",
             # заглушка: начало письменного ответа на задание текущего вопроса — «подставить» в e2e
-            "hint": port.hint(st.get("engine") or {}, int(st.get("n") or 0)) if stub and st.get("engine") else None}
+            "hint": port.hint(st.get("engine") or {}, int(st.get("n") or 0)) if stub and st.get("engine") else None,
+            # защита: «Ваш ответ в тесте: «…»» под вопросом — 1–2 строки собственного ответа, по которому вопрос
+            "context": _answer_excerpt(port, st) if row.mode == "defense" and row.status == "in_progress" else None}
+
+
+def _answer_excerpt(port, st: dict, limit: int = 160) -> str | None:
+    try:
+        a = " ".join((port.hint(st.get("engine") or {}, int(st.get("n") or 0)) or "").split())
+    except Exception:  # noqa: BLE001 — контекст необязателен
+        return None
+    if not a:
+        return None
+    return a if len(a) <= limit else a[:limit].rsplit(" ", 1)[0].rstrip(" ,.;:") + "…"
+
+
+# Прощание ведущей, если разговор закрыт не её репликой (время вышло, «Закончить»): не тишина, а понятный итог.
+CLOSING = {
+    "defense": "Спасибо, я всё записала. Объяснения увидит работодатель, результат теста не меняется.",
+    "interview": "Спасибо, я всё записала. Итог увидит работодатель, решение принимает человек.",
+}
+CLOSING_LATE = "Время вышло, на этом закончим. "
 
 
 def add_cost(row: InterviewSession, kind: str, usd: float) -> None:
@@ -234,7 +254,17 @@ def answer(db: Session, row: InterviewSession, text: str, channel: str) -> Inter
 
 
 def _close(db: Session, row: InterviewSession, *, inline: bool) -> None:
-    """Разговор окончен: есть ответы — оценка (заглушка — сразу, движок — в фоне), нет — cancelled."""
+    """Разговор окончен: есть ответы — оценка (заглушка — сразу, движок — в фоне), нет — cancelled.
+    Последняя реплика не прощание ведущей — добавляется короткое прощание (его же озвучивает /speech после закрытия)."""
+    tr = list(row.transcript or [])
+    last = tr[-1] if tr else None
+    if not (last and last.get("who") == "interviewer" and last.get("n") is None):
+        late = _deadline(row) is not None and utcnow() >= _deadline(row) - timedelta(seconds=5)
+        bye = (CLOSING_LATE if late else "") + CLOSING.get(row.mode, CLOSING["defense"])
+        row.transcript = tr + [{"who": "interviewer", "text": bye, "n": None}]
+    else:
+        bye = last.get("text") or ""
+    row.state = {**(row.state or {}), "q": None, "closing": bye}
     if not any(r.get("who") == "candidate" for r in row.transcript or []):
         row.status = "cancelled"
         db.commit()
@@ -307,7 +337,8 @@ def apply_result(db: Session, row: InterviewSession, raw: dict) -> None:
                   "stub": bool(raw.get("stub")), "quotes_dropped": dropped,
                   "quotes_removed_by_engine": int(raw.get("removed_quotes") or 0), "source": raw.get("source"),
                   "channels": (row.state or {}).get("channels_log") or []}
-    row.state = {}  # контекст и состояние движка больше не нужны (меньше хранимых данных)
+    bye = (row.state or {}).get("closing")
+    row.state = {"closing": bye} if bye else {}  # контекст и состояние движка не нужны; прощание — для /speech после итога
     row.status, row.completed_at, row.error = "completed", utcnow(), None
     if row.mode == "defense":
         sync_fact(db, row)

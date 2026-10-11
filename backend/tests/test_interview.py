@@ -362,7 +362,7 @@ def test_engine_port_channels_and_quote_check(client, on, monkeypatch):
         assert row.result["quotes_dropped"] == 1 and row.result["channels"] == ["voice", "text", "voice", "text"]
         assert row.result["quotes_removed_by_engine"] == 2 and row.result["source"] == "llm"
         # модель: 3 хода по 0,01 + оценка 0,1; распознавание 0,002 и голос 0,003 — посчитаны продуктом
-        assert row.state == {} and row.cost["usd"] == pytest.approx(0.135) and row.cost["stt_usd"] == 0.002
+        assert set(row.state) <= {"closing"} and row.cost["usd"] == pytest.approx(0.135) and row.cost["stt_usd"] == 0.002
 
 
 def test_stub_channels_unavailable(client, on):
@@ -428,3 +428,24 @@ def test_auto_picks_engine_when_present(monkeypatch):
     monkeypatch.delattr(pkg, "engine")
     monkeypatch.setitem(sys.modules, "app.modules.interview.engine", None)  # пакета нет → ImportError
     assert isinstance(pt.get_port(), pt.StubPort) and pt.is_stub()
+
+
+def test_ivtext_context_under_question_and_bye_on_finish(client, on):
+    """IV-ТЕКСТ: под вопросом — «Ваш ответ в тесте» (1–2 строки), «Закончить» — прощание ведущей в расшифровке, не тишина."""
+    t = candidate_with_category(client)
+    ts = _with_open_answers(client, t)
+    sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
+    s = client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "text"}, headers=H(t)).json()
+    c = s["conversation"]
+    assert c["context"] and len(c["context"]) <= 161 and c["hint"].startswith(c["context"].rstrip("…")[:40])
+    q = c["question"]
+    assert "я — ИИ-интервьюер Драфта" in q and len(q.split()) <= 45 and "«" in q
+    s = client.post(f"/api/interview/sessions/{sid}/answer", json={"text": c["hint"], "channel": "text"}, headers=H(t)).json()
+    assert len(s["conversation"]["question"].split()) <= 25
+    s = client.post(f"/api/interview/sessions/{sid}/finish", headers=H(t)).json()
+    assert s["status"] in ("evaluating", "completed")
+    with SessionLocal() as db:
+        row = db.get(InterviewSession, uuid.UUID(sid))
+        last = row.transcript[-1]
+        assert last["who"] == "interviewer" and last["n"] is None and "записала" in last["text"]
+        assert row.state["closing"] == last["text"]

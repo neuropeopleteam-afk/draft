@@ -479,3 +479,29 @@ def test_relay_request_and_ca(monkeypatch, tmp_path):
     p = relay._ca_path()
     assert isinstance(p, str) and open(p, "rb").read() == b"PEM2" and relay._ca_path() == p
     assert relay.via_relay()
+
+
+def test_ivtext_female_host_short_questions():
+    """IV-ТЕКСТ: ведущая — женский образ, представление одной фразой, вопросы до 25 слов, без длинных цитат."""
+    from app.modules.interview.engine.prompts import HOST_SYSTEM, genitive, host_messages, intro
+    from app.modules.interview.engine.textnorm import short_title
+
+    assert genitive("Драфт") == "Драфта" and intro("Драфт") == "Я — ИИ-интервьюер Драфта"
+    assert "женском роде" in HOST_SYSTEM and "до 25 слов" in HOST_SYSTEM and "{product_gen}" in HOST_SYSTEM
+    assert short_title("Функция `daily_revenue` (выручка интернет-магазина) считает сумму за календар…") == "Функция считает сумму"
+    for mk in (defense_spec, interview_spec):
+        spec = e.normalize_spec(mk())
+        out = e.next_turn(e.TurnInput(spec=spec, transcript=e.Transcript()))
+        assert out.text.startswith("Здравствуйте") and "я — ИИ-интервьюер Драфта" in out.text
+        hello, question = out.text.split(". ", 1)
+        assert len(question.split()) <= 25
+        tr = out.transcript
+        while True:
+            o = e.next_turn(e.TurnInput(spec=spec, transcript=tr, candidate_text="Ответ своими словами про индексы и очереди"))
+            tr = o.transcript
+            if o.finished:
+                assert "записала" in o.text
+                break
+            assert len(o.text.split()) <= 25, o.text
+    msgs = host_messages(e.normalize_spec(defense_spec()), e.Transcript(), "(служебно)", "Интервьюер", "Драфт")
+    assert "ИИ-интервьюер Драфта" in msgs[0]["content"]
