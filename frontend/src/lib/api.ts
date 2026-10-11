@@ -87,6 +87,8 @@ const FIELD_RU: Record<string, string> = {
   salary_basis: "Основание вилки", work_format: "Формат работы", work_formats: "Формат работы", grade: "Грейд",
   claimed_grade: "Грейд", category_id: "Категория", direction: "Направление", stack: "Стек", skills: "Навыки",
   requirements: "Требования", time_limit_min: "Время", deadline_days: "Срок", fsp_id: "ФСП ID", telegram: "Телеграм",
+  experience_years: "Коммерческий стаж", salary_min_hidden: "Минимальная зарплата", additional_direction: "Дополнительное направление",
+  additional_stack: "Стек дополнительного направления", roles: "Роли", privacy: "Видимость", consent_publication: "Согласие на публикацию",
   sport_rank: "Разряд", place: "Место", level: "Уровень", status: "Статус", file: "Файл", message: "Сообщение",
 };
 const PYDANTIC_RU: Record<string, (c: any) => string> = {
