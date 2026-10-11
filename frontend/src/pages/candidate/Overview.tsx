@@ -32,7 +32,7 @@ export default function CandidateOverview() {
       {c?.specializations?.length > 1 && (
         <section className="card mt-6 space-y-3">
           <h2 className="font-bold text-brand-night">Ваши специализации</h2>
-          <Specializations items={c.specializations} />
+          <Specializations items={c.specializations} showTheta />
           <Link className="text-sm font-semibold text-brand" to="/candidate/category">Категории, история и тесты</Link>
         </section>
       )}
