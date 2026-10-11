@@ -1,4 +1,4 @@
-# Мониторинг стенда «Встречный»: одна проверка, письмо владельцу при сбое и восстановлении (infra/monitor/monitor.py).
+# Мониторинг стенда «Драфт»: одна проверка, письмо владельцу при сбое и восстановлении (infra/monitor/monitor.py).
 # Установка — docs/ARCHITECTURE.md, раздел 11.1 «Мониторинг стенда» (копирование в /etc/systemd/system, monitor.env).
 [Unit]
 Description=Spectrek FSP: availability monitor (site, Yandex AI Studio, disk, containers, backup)

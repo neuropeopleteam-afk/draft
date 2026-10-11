@@ -20,7 +20,7 @@ def test_manifest_neutral_and_russian():
     raw = _read("public/manifest.webmanifest")
     m = json.loads(raw)
     assert m["lang"] == "ru"
-    assert m["name"].startswith("Встречный") and m["short_name"] == "Встречный"
+    assert m["name"].startswith("Драфт") and m["short_name"] == "Драфт"
     assert m["description"] and len(m["description"]) <= 300
     assert not BANNED.search(raw), "в манифесте — название соревнования, домен или команда"
 

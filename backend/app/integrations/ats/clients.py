@@ -7,9 +7,9 @@
   money, position, externals[{auth_type: "NATIVE", data: {body: текст резюме}}], social[{social_type: "TELEGRAM"}];
 * ``POST /accounts/{account_id}/applicants/{applicant_id}/vacancy`` — закрепить на вакансии: vacancy, status, comment.
 
-Вебхук: ``POST <url>``, тело — JSON (схема ``vstrechny.candidate.v1``), заголовки
-``X-Vstrechny-Event``, ``X-Vstrechny-Delivery``, ``X-Vstrechny-Timestamp`` и
-``X-Vstrechny-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, "<unix>.<тело>")>``.
+Вебхук: ``POST <url>``, тело — JSON (схема ``draft.candidate.v1``), заголовки
+``X-Draft-Event``, ``X-Draft-Delivery``, ``X-Draft-Timestamp`` и
+``X-Draft-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, "<unix>.<тело>")>``.
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ import httpx
 
 from app.integrations.settings import get_isettings
 
-USER_AGENT = "Vstrechny-ATS/1.0 (+https://fsp.neuropeople.pro/docs/ATS)"
+USER_AGENT = "Draft-ATS/1.0 (+https://fsp.neuropeople.pro/docs/ATS)"
 
 
 def _send(method: str, url: str, **kw) -> httpx.Response:
@@ -134,8 +134,8 @@ def post_webhook(url: str, secret: str, event: str, delivery_id: str, payload: d
     try:
         r = _send("POST", check_url(url), content=body, timeout=get_isettings().ats_timeout_s,
                        headers={"Content-Type": "application/json; charset=utf-8", "User-Agent": USER_AGENT,
-                                "X-Vstrechny-Event": event, "X-Vstrechny-Delivery": delivery_id,
-                                "X-Vstrechny-Timestamp": str(ts), "X-Vstrechny-Signature": sig})
+                                "X-Draft-Event": event, "X-Draft-Delivery": delivery_id,
+                                "X-Draft-Timestamp": str(ts), "X-Draft-Signature": sig})
     except httpx.HTTPError as e:
         raise AtsError(f"Вебхук недоступен ({type(e).__name__})") from None
     if r.status_code >= 300:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Мониторинг стенда «Встречный»: доступность, Yandex AI Studio, диск, контейнеры, резервные копии → письмо владельцу.
+"""Мониторинг стенда «Драфт»: доступность, Yandex AI Studio, диск, контейнеры, резервные копии → письмо владельцу.
 
 Запуск — systemd timer раз в 5 минут (spectrek-monitor.timer). Только стандартная библиотека Python 3.10+ (на хосте нет
 boto3): письмо уходит через Yandex Cloud Postbox (API SESv2 SendEmail) с подписью AWS SigV4, ключи — те же, что у
@@ -296,7 +296,7 @@ def compose(mails: list[dict], results: dict[str, tuple[bool, str]], cfg, now: f
     bad = [m for m in mails if m["kind"] != "recovered"]
     title = "сбой" if bad else "восстановлено"
     names = ", ".join(CHECKS[m["check"]][0] for m in (bad or mails))
-    subject = f"Встречный ({host}): {title} — {names}"
+    subject = f"Драфт ({host}): {title} — {names}"
     ts = lambda t: datetime.fromtimestamp(t, UTC).astimezone().strftime("%d.%m %H:%M") if t else "—"  # noqa: E731
     lines = [f"Мониторинг стенда {cfg['MONITOR_BASE_URL']}, {ts(now)}.", ""]
     for m in mails:
@@ -376,14 +376,14 @@ def save_state(path: str, state: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Мониторинг стенда «Встречный»")
+    ap = argparse.ArgumentParser(description="Мониторинг стенда «Драфт»")
     ap.add_argument("--print", action="store_true", help="только показать итог, без писем и записи состояния")
     ap.add_argument("--test-mail", action="store_true", help="отправить пробное письмо")
     args = ap.parse_args(argv)
     cfg = config()
     now = time.time()
     if args.test_mail:
-        ok, info = send_mail(cfg, "Встречный: пробное письмо мониторинга",
+        ok, info = send_mail(cfg, "Драфт: пробное письмо мониторинга",
                              f"Мониторинг стенда {cfg['MONITOR_BASE_URL']} настроен. Письма придут при сбое и "
                              f"восстановлении.")
         print(("OK: " if ok else "ОШИБКА: ") + info)

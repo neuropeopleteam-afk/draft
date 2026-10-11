@@ -58,7 +58,7 @@ class IntegrationSettings(BaseSettings):
     # по умолчанию http://127.0.0.1:8000 — сам api в контейнере (адрес сайта изнутри контейнера может быть недоступен)
     ats_stub_base_url: str | None = None
     # User-Agent для Talantix обязателен: компания и контакт для связи при проблемах
-    ats_user_agent_company: str = "Vstrechny, FSP special track, fsp.neuropeople.pro"
+    ats_user_agent_company: str = "Draft, FSP special track, fsp.neuropeople.pro"
     ats_user_agent_contact: str = "noreply@neuropeople.pro"
     talantix_base_url: str = "https://api.talantix.ru"
     potok_base_url: str = "https://app.potok.io/api/v3"
