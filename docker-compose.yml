@@ -66,6 +66,10 @@ services:
       # ничего не меняется.
       - path: ${LLM_LOCAL_ENV_FILE:-./secrets/llm_local.env}
         required: false
+      # ИИ-интервьюер (backend/app/modules/interview/engine/DEPLOY.md): ключи ElevenLabs/Deepgram/Anam, ID стокового
+      # аватара и голоса, ретранслятор. Нет файла — движок в заглушке (текст, правила), поставщики не вызываются.
+      - path: ${INTERVIEW_ENV_FILE:-./secrets/interview.env}
+        required: false
       # Web Push: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT. Нет файла — push выключен, остальное работает.
       - path: ${VAPID_ENV_FILE:-./secrets/vapid.env}
         required: false
