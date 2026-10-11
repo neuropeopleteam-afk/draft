@@ -205,7 +205,11 @@ _BY_DIRECTION["devops"].update({"exit_codes": "linux", "quoting": "linux", "roll
 _BY_DIRECTION["mobile"].update({"mobile_networking": "rest-api",
     "closures": "swift", "timers": "javascript", "authentication": "rest-api", "background_execution":
     "mobile-architecture", "ui_lists": "mobile-architecture", "deep_links": "mobile-architecture",
-    "concurrency": "mobile-architecture", "migrations": "mobile-architecture", "sqlite": "mobile-architecture"})
+    "concurrency": "mobile-architecture", "migrations": "mobile-architecture", "sqlite": "mobile-architecture",
+    "versioning": "rest-api"})
+# Я19/Я24 (<внутренний документ>): продуктовая аналитика у аналитика — статистика, анализ данных — SQL
+_BY_DIRECTION["analyst"].update({"product_analytics": "statistics", "funnels": "statistics",
+                                 "product_metrics": "statistics", "data_analysis": "sql"})
 # Префиксы навыков у направлений расширения каталога: «k8s_qos» → kubernetes, «mobile_threading» → мобильная архитектура
 _PREFIX_BY_DIRECTION: dict[str, tuple[tuple[str, str], ...]] = {
     "devops": (("k8s_", "kubernetes"), ("kubernetes_", "kubernetes"), ("helm_", "helm"), ("terraform_", "terraform"),

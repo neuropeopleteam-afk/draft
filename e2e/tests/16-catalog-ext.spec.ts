@@ -38,7 +38,8 @@ async function axe(page: Page, scope: string, label: string): Promise<void> {
   const res = await page.evaluate(async (sel) => {
     // @ts-expect-error axe — глобальный объект из axe.min.js
     const r = await window.axe.run(sel, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] } });
-    return r.violations.map((v: any) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length }));
+    return r.violations.map((v: any) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length,
+      where: v.nodes.slice(0, 4).map((n: any) => `${n.target.join(" ")} :: ${(n.failureSummary || "").split("\n").slice(-1)[0]}`) }));
   }, scope);
   test.info().annotations.push({ type: "axe", description: `${label}: ${JSON.stringify(res)}` });
   expect(res.filter((v: any) => v.impact === "critical" || v.impact === "serious"), `axe ${label}`).toEqual([]);
