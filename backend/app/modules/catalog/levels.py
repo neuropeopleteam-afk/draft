@@ -43,6 +43,12 @@ def bank_ext_families() -> dict[str, dict[str, tuple[str, ...]]]:
     return {d: {g: tuple(sorted(v)) for g, v in by.items()} for d, by in out.items()}
 
 
+def _preliminary_setting() -> bool:
+    from app.core.config import get_settings
+
+    return bool(get_settings().grades_ext_preliminary)
+
+
 def _thresholds() -> tuple[int, int]:
     from app.core.config import get_settings
 
@@ -109,11 +115,44 @@ def status(directions: list[str] | tuple[str, ...] | None = None) -> dict:
         "enabled": GRADES_EXT,
         "grades": list(GRADE_ORDER),
         "min_own": min_own, "min_total": min_total,
+        "preliminary": bool(GRADES_EXT and _preliminary_setting()),
         "common": {g: len(fam.get("common", {}).get(g, ())) for g in EXT_GRADE_ORDER},
         "by_direction": {d: {"grades": list(available_grades(d)),
                              "families": {g: len(fam.get(d, {}).get(g, ())) for g in EXT_GRADE_ORDER}}
                          for d in dirs},
     }
+
+
+PRELIMINARY_TITLE = "предварительно"
+PRELIMINARY_NOTE = ("Lead и Principal — по тесту, но предварительно: на симуляции тест различает эти уровни хуже, "
+                    "чем Junior–Senior (модель, не люди; /validation, раздел «Lead и Principal»).")
+SECOND_STAGE_NOTE = ("Уточнить уровень можно вторым этапом — короткой сессией из трудных заданий у границы "
+                     "Senior/Lead и Lead/Principal.")
+
+
+def ext_preliminary(grade: str | None) -> bool:
+    """Lead/Principal с пометкой «предварительно» (флаг GRADES_EXT_ENABLED и GRADES_EXT_PRELIMINARY): уровень присвоен
+    тестом, но точность различения Lead/Principal на симуляции ниже цели. Без флага — всегда False."""
+    if not GRADES_EXT or grade not in EXT_GRADE_ORDER:
+        return False
+    from app.core.config import get_settings
+
+    return bool(get_settings().grades_ext_preliminary)
+
+
+def second_stage_available() -> bool:
+    """Второй этап уточнения (флаг ASSESSMENT_TWO_STAGE_ENABLED — отдельная ветка; без неё настройки нет)."""
+    from app.core.config import get_settings
+
+    return bool(getattr(get_settings(), "assessment_two_stage_enabled", False))
+
+
+def preliminary_info(grade: str | None) -> dict | None:
+    """Пометка для результата теста, карточки и статуса грейда; None — пометки нет."""
+    if not ext_preliminary(grade):
+        return None
+    return {"grade": grade, "title": PRELIMINARY_TITLE, "text": PRELIMINARY_NOTE,
+            "second_stage": {"available": second_stage_available(), "text": SECOND_STAGE_NOTE}}
 
 
 def reset_cache() -> None:
