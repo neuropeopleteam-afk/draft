@@ -55,7 +55,7 @@ export default function Category() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Категория и грейд" subtitle="Категорию «направление · грейд» видят работодатели. Её присваивает только тест." />
+      <PageTitle title="Категория и грейд" subtitle="Категорию «направление · грейд» видят работодатели; присваивает её только тест." />
       <section className="card grid gap-6 md:grid-cols-[1.4fr_1fr]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Текущая категория</p>

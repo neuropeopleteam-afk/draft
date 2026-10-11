@@ -4,6 +4,8 @@ import { Stat, catTitle, useApi } from "../../components/ui";
 import { useAuth } from "../../lib/auth";
 import { Specializations } from "../../components/Specializations";
 import InterestCard from "../../components/InterestCard";
+import { minutes } from "../../components/Interview";
+import { useMeta } from "../../lib/meta";
 
 export default function CandidateOverview() {
   const { me } = useAuth();
@@ -14,6 +16,7 @@ export default function CandidateOverview() {
   const probes = useApi<any[]>("/candidate/probes");
   const newInv = inv.data?.filter((i) => ["sent", "viewed"].includes(i.status)).length ?? 0;
   const newProbes = probes.data?.filter((p) => ["sent", "viewed"].includes(p.status)).length ?? 0;
+  const iv = useMeta()?.interview;
   const steps = [
     { done: !!me?.is_email_verified, title: "Почта подтверждена", text: "Регистрация завершена." },
     { done: !!c?.onboarding_completed_at, title: "Опрос", text: "Направление, стек и опыт — около 3 минут.", to: "assessment" },
@@ -23,6 +26,17 @@ export default function CandidateOverview() {
   return (
     <div className="max-w-4xl">
       <PageTitle title={name ? `Здравствуйте, ${name}` : "Кабинет кандидата"} subtitle={category ? (c?.visible_to_employers ? "Ваш профиль виден работодателям: ждите приглашений с зарплатой и коротких задач." : "Категория присвоена. Дайте согласие на публикацию профиля, чтобы работодатели могли вас найти.") : "Пройдите опрос и тест — после этого работодатели смогут найти вас и прислать приглашение с зарплатой."} />
+      {iv?.enabled && iv.avatar && category && (  // карточка «ИИ-интервьюер»: сразу к панели защиты последней завершённой попытки
+        <div className="card mt-6 flex flex-wrap items-center gap-4" data-testid="candidate-avatar">
+          <img src="/avatar/interviewer.webp" alt="Портрет ИИ-интервьюера: сгенерирован моделью, несуществующий человек"
+            className="h-16 w-16 shrink-0 rounded-xl object-cover" width={64} height={64} decoding="async" />
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-brand-night">ИИ-интервьюер</p>
+            <p className="text-sm text-brand-ink/75">Подтвердите свой ответ голосом — {minutes(iv.defense_minutes || 3)}</p>
+          </div>
+          <Link className="btn-primary shrink-0" to="/candidate/category?defense=open#defense" data-testid="candidate-avatar-go">Пройти устную защиту</Link>
+        </div>
+      )}
       <div className="mt-6"><InterestCard /></div>
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         <Stat label="Категория" value={catTitle(category)} hint="Только по результатам теста" />

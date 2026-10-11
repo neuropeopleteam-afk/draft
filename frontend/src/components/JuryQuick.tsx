@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
+import { guide, isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
   type QuickPersona, type QuickStep } from "../lib/jury";
-import { useMeta } from "../lib/meta";
+import { useDirectionEntries, useMeta } from "../lib/meta";
 
 /** Я9 «Проверка за 12 минут»: короткий режим проводника жюри (шаги — lib/jury.ts, QUICK). Своя потребность →
  *  первые три → сравнение → приглашение с вилкой → ответ кандидата → экспресс-тест (краткий режим жюри) → категория →
@@ -12,7 +13,7 @@ import { useMeta } from "../lib/meta";
 export const useQuickSteps = (): QuickStep[] => quickSteps(useMeta()?.interview);
 const SELECTION = 1, COMPARE = 2, INVITE = 3, ANSWER = 4;
 /** Минуты к концу шага по плану 12 минут: шаг «по желанию» в план не входит (у него — свой ориентир). */
-const planOf = (steps: QuickStep[]) => steps.reduce<number[]>((a, s) => [...a, (a.at(-1) ?? 0) + (s.optional ? 0 : s.min)], []);
+const planOf = (steps: QuickStep[]) => steps.reduce<number[]>((a, s) => [...a, (a.at(-1) ?? 0) + (s.optional || s.defense ? 0 : s.min)], []);
 const mmss = (ms: number) => { const t = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; };
 const mins = (m: number) => `${String(m).replace(".", ",")}\u00A0мин`;
 const NEED_RE = /^\/employer\/needs\/([0-9a-f-]{36})(?:\/|$)/;
@@ -63,9 +64,12 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const loc = useLocation();
   const steps = useQuickSteps();
   const ivStub = !!useMeta()?.interview?.stub;
+  const dirs = useDirectionEntries().map(([d]) => d);
+  const presetLabel = (p: (typeof NEED_PRESETS)[number]) => (p.dir && p.inCatalog && dirs.includes(p.dir) ? p.inCatalog : p.label);
   const LAST = steps.length - 1, PLAN = planOf(steps);
   const [now, setNow] = useState(Date.now());
   const [info, setInfo] = useState<QuickPersona[] | null>(null);
+  const [done, setDone] = useState(false);  // С2 №5: «Готово» — короткий итог, справочник — с шага 1
   useEffect(() => { quick.touch(); const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
   const jury = isJury(me?.email);
   const need = quick.need();
@@ -85,7 +89,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const here = (s.match.test(loc.pathname) && !needLogin) || !!s.alt?.test(loc.pathname);
   const t0 = quick.t0() ?? now;
   // шаг «по желанию» добавляет к ориентиру свои минуты — тем, кто его прошёл, таймер не «краснеет» за него
-  const optBefore = steps.slice(0, q + 1).reduce((a, x) => a + (x.optional ? x.min : 0), 0);
+  const optBefore = steps.slice(0, q + 1).reduce((a, x) => a + (x.optional || x.defense ? x.min : 0), 0);
   const late = now - t0 > (PLAN[q] + optBefore) * 60_000;
   // следующий обязательный шаг; шаг «по желанию» между ними — отдельной кнопкой в теле панели
   const opt = steps[q + 1]?.optional ? q + 1 : -1;
@@ -108,6 +112,13 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
     }
     await open(pathOf(steps, i), p);
   }
+  /** С2 №1: шаг 1 без своей потребности — «Открыть готовую подборку» (последняя потребность своей копии). */
+  async function readyNeed() {
+    const list = await api<{ id: string }[]>("/employer/needs").catch(() => []);
+    if (!list[0]) { setMsg("Готовых потребностей нет — сохраните свою."); return; }
+    quick.setNeed(list[0].id);
+    await go(SELECTION);
+  }
   async function preset(text: string) {
     needPreset.put(text);  // поле «Кого вы ищете» заберёт текст, как только экран откроется
     if (!(steps[0].match.test(loc.pathname) && personaOf(me?.email) === "employer")) await open("/employer/needs", "employer");
@@ -115,6 +126,20 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const first = (n: string) => n.split(" ")[0];
   const invitable = (info ?? []).filter((p) => p.rank && p.can_invite).sort((a, b) => a.rank! - b.rank!)[0];
   const invited = q === INVITE && ans.own;
+
+  if (done) return (
+    <div className="mt-2" data-testid="quick-done">
+      <p className="text-base font-bold">Проверка за {QUICK_MINUTES} минут пройдена за {mmss(now - t0)} · {steps.length} шагов</p>
+      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+        <Link to="/criteria" className="font-semibold text-brand-blush underline-offset-2 hover:underline">Критерии ТЗ — /criteria</Link>
+        <Link to="/validation" className="font-semibold text-brand-blush underline-offset-2 hover:underline">Метрики — /validation</Link>
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/10 pt-2.5">
+        <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20" onClick={() => setDone(false)}>Назад</button>
+        <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => { guide.setStep(0); quick.setMode("full"); }}>Справочник с шага 1</button>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -136,7 +161,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
           <div className="mt-1 flex flex-wrap gap-1.5">
             {NEED_PRESETS.map((p) => (
               <button key={p.label} type="button" title={p.text} disabled={busy} onClick={() => preset(p.text)}
-                className="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-white/20 hover:bg-white/20 disabled:opacity-40">{p.label}</button>
+                className="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-white/20 hover:bg-white/20 disabled:opacity-40">{presetLabel(p)}</button>
             ))}
           </div>
           <p className="mt-1 text-xs text-white/75">Или напишите свою — любой текст вакансии; подойдёт и файл PDF или DOCX.</p>
@@ -165,7 +190,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
             onClick={() => go(opt)}>{steps[opt].title.split(" · ")[0]}</button> — по желанию, ≈{"\u00A0"}{mins(steps[opt].min)} сверх плана; или сразу дальше.
         </p>
       )}
-      {s.optional && (
+      {(s.optional || s.defense) && (
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/80" data-testid="quick-live">
           <button type="button" className="font-semibold text-brand-blush underline underline-offset-2 hover:text-white" disabled={busy}
             onClick={employerView}>Как видит работодатель</button>
@@ -188,10 +213,19 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
               {busy ? "Входим…" : q === ANSWER && needLogin ? `Войти как ${first(ans.name)} и ответить` : needLogin || !s.cta.startsWith("Войти") ? s.cta : "Открыть экран"}
             </button>
           : q === 0 && !need
-            ? <span className="text-xs text-white/75">Сохраните потребность — проводник перейдёт к подборке сам.</span>
+            ? <>
+                <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={readyNeed} data-testid="quick-ready-need">{busy ? "Входим…" : "Открыть готовую подборку →"}</button>
+                <span className="text-xs text-white/75">или нажмите «Разобрать требования»</span>
+              </>
           : q < LAST
-            ? <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(nextI)}>{busy ? "Входим…" : `Дальше: ${steps[nextI].title}`}</button>
-            : <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => quick.setMode("full")}>Готово · остальное — в справочнике</button>}
+            ? <>
+                <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(nextI)}>{busy ? "Входим…" : `Дальше: ${steps[nextI].title}`}</button>
+                {/* С2 №2: перед устной защитой — вторая кнопка «Пропустить», чтобы шаг с ИИ-интервьюером не терялся и не был обязательным */}
+                {steps[nextI].defense && nextI < LAST && (
+                  <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20" disabled={busy} onClick={() => go(nextI + 1)} data-testid="quick-skip-defense">Пропустить → {steps[nextI + 1].title}</button>
+                )}
+              </>
+            : <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => setDone(true)}>Готово</button>}
         <span className="ml-auto flex gap-3 text-xs font-semibold text-white/70">
           <button className="underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={() => { quick.restart(); setQ(0); setNow(Date.now()); }}>Начать заново</button>
           <button className="underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={onReset}>Сбросить демо</button>

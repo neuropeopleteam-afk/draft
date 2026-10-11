@@ -191,9 +191,12 @@ test("1440: проверка за 12 минут — от своей потреб
   });
 
   await test.step("справочник остаётся: переключатель в шапке", async () => {
-    await g.getByRole("button", { name: "Готово · остальное — в справочнике" }).click();
+    // С2 №5: «Готово» — короткий итог, справочник — с шага 1
+    await g.getByRole("button", { name: "Готово", exact: true }).click();
+    await expect(g.getByTestId("quick-done")).toContainText(/Проверка за 12 минут пройдена за \d+:\d\d · 8 шагов/);
+    await g.getByRole("button", { name: "Справочник с шага 1" }).click();
     await expect(g.getByRole("button", { name: "Справочник" })).toHaveAttribute("aria-pressed", "true");
-    await expect(g.getByText(/^Проводник жюри · шаг \d+ из \d+$/)).toBeVisible();
+    await expect(g.getByText(/^Проводник жюри · шаг 1 из \d+$/)).toBeVisible();
     await g.getByRole("button", { name: "Проверка за 12 минут" }).click();
     await expectStep(page, 8, "Доказательства одной кнопкой");
   });
@@ -246,7 +249,7 @@ test("390: проводник «12 минут» не перекрывает де
   });
 });
 
-test("устная защита по флагу (Я15): шаг «по желанию» перед доказательствами, 1440 и 390", async ({ page }) => {
+test("устная защита по флагу (Я15): обычный шаг перед доказательствами, ведёт прямо к панели, 1440 и 390", async ({ page }) => {
   test.setTimeout(180_000);
   await page.setViewportSize({ width: 1440, height: 1000 });
   // флаг сервера INTERVIEW_ENABLED по умолчанию выключен — включаем его только в ответе /api/meta этой страницы
@@ -257,8 +260,9 @@ test("устная защита по флагу (Я15): шаг «по желан
   await page.goto("/jury/go");
   const choice = page.getByTestId("choice-quick");
   await expect(choice.locator("ol > li")).toHaveCount(9);
-  await expect(choice).toContainText("8 шагов + 1 по желанию · около 12 минут");
-  await expect(choice.locator("ol > li").nth(7)).toContainText("Устная защита ответа · по желанию");
+  await expect(choice).toContainText("9 шагов · около 12 минут");
+  await expect(choice.locator("ol > li").nth(7)).toContainText("Устная защита ответа");
+  await expect(choice.locator("ol > li").nth(7)).not.toContainText("по желанию");
   await expect(choice.locator("ol > li").nth(8)).toContainText("Доказательства одной кнопкой");
 
   await juryEnter(page, "candidate_new");
@@ -267,26 +271,24 @@ test("устная защита по флагу (Я15): шаг «по желан
   await expect(g.getByRole("button", { name: "Проверка за 12 минут" })).toHaveAttribute("aria-pressed", "true");
   await page.goto("/candidate/category");
   await expect(g.getByText(/^Шаг 7 из 9/)).toBeVisible({ timeout: 30_000 });
-  // обязательный путь не удлиняется: «Дальше» ведёт к доказательствам, устная защита — отдельной ссылкой
-  await expect(g.getByRole("button", { name: "Дальше: Доказательства одной кнопкой" })).toBeVisible();
-  const opt = g.getByTestId("quick-optional");
-  await expect(opt).toContainText("по желанию");
-  await opt.getByRole("button", { name: "Устная защита ответа" }).click();
+  // FINAL-UX B: устная защита — обычный шаг: «Дальше» ведёт к ней, сразу к раскрытой панели
+  await expect(g.getByTestId("quick-optional")).toHaveCount(0);
+  await g.getByRole("button", { name: "Дальше: Устная защита ответа" }).click();
   // кандидатом «Пройдите тест сами» — «Две попытки рядом», там панель Я15 «Подтвердите авторство ответа»
-  await expect(page).toHaveURL(/\/candidate\/attempts/);
-  await expect(g.getByText(/^Шаг 8 из 9 · по желанию, ≈\s3\sмин/)).toBeVisible();
+  await expect(page).toHaveURL(/\/candidate\/attempts\?defense=open#defense$/);
+  await expect(g.getByText(/^Шаг 8 из 9 · ≈\s3\sмин/)).toBeVisible();
   await expect(g.getByTestId("quick-live")).toContainText("движок — заглушка");
   // та же ступень глазами работодателя своей копии: карточка Марии Королёвой (вход за работодателя — сам)
   await g.getByTestId("quick-live").getByRole("button", { name: "Как видит работодатель" }).click();
   await expect(page).toHaveURL(/\/employer\/candidates\/C-[A-Z0-9]+/, { timeout: 60_000 });
-  await expect(g.getByText(/^Шаг 8 из 9 · по желанию/)).toBeVisible();
-  await expect(g.getByText("Устная защита ответа · по желанию", { exact: true })).toBeVisible();
+  await expect(g.getByText(/^Шаг 8 из 9/)).toBeVisible();
+  await expect(g.getByText("Устная защита ответа", { exact: true })).toBeVisible();
   await expect(g).toContainText("Грейд не меняет; оценивает модель, не человек");
-  await expect(g.getByTestId("quick-timer")).toContainText("сверх плана 12");
+  await expect(g.getByTestId("quick-timer")).toContainText(/из 12/);
   await expect(g.getByText(/^Проверяет:/)).toBeVisible();
   await expect(g.getByText(/^Критерий ТЗ 2\./)).toBeVisible();
 
-  await test.step("390: шаг «по желанию» помещается, кнопки на виду", async () => {
+  await test.step("390: шаг устной защиты помещается, кнопки на виду", async () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(300);  // ResizeObserver проводника пересчитывает место
     const nextBtn = g.getByRole("button", { name: "Дальше: Доказательства одной кнопкой" });

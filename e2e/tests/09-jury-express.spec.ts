@@ -26,7 +26,7 @@ test("жюри: экспресс-тест своими руками с подс�
 
   await test.step("подсказка грейда: необязательная, с объяснением; выбор за кандидатом", async () => {
     const hint = page.getByTestId("grade-hint");
-    await expect(hint).toContainText("Подсказка · необязательно");
+    await expect(hint).toContainText("Подсказка по стажу");
     await expect(hint).toContainText(/Похоже на (Junior|Middle|Senior)/);
     await hint.getByRole("button", { name: "Почему так" }).click();
     for (const src of ["Опрос", "Резюме: стаж", "Паспорт ФСП"]) await expect(hint.getByText(src, { exact: false }).first()).toBeVisible();
