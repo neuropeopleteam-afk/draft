@@ -24,7 +24,8 @@ export default function EmployerOverview() {
   return (
     <div className="max-w-4xl">
       <PageTitle title={company?.name ?? "Кабинет работодателя"} subtitle="Найдите проверенных кандидатов по категории и выйдите на контакт первым." />
-      <div className="mt-8 grid gap-5 md:grid-cols-4">
+      {/* 2 × 2 до 2xl: в режиме жюри справа открыт проводник, и в 4 колонки подписи рвались посреди слова («ПОТРЕБНОСТ-И») */}
+      <div className="mt-8 grid gap-5 sm:grid-cols-2 2xl:grid-cols-4">
         <Stat label="Потребности" value={needs.data?.length ?? "…"} />
         <Stat label="Приглашения" value={inv.data?.length ?? "…"} hint={inv.data ? `принято: ${accepted}` : undefined} />
         <Stat label="Зонды" value={probes.data?.length ?? "…"} hint={probes.data ? `ждут оценки: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
