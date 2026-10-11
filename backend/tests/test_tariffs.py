@@ -175,7 +175,10 @@ def test_jury_defaults_and_demo_benefit(client, tariffs_on):
     assert {p["id"]: p["companies"] for p in rep["plans"]}["partner"] == 3
     for part in ("regions", "directions"):  # вторичное подавление: не бывает ровно одной скрытой группы
         rows_ = rep[part]
-        assert rows_ and sum(1 for r in rows_ if r["candidates_fsp"] is None) != 1
+        assert rows_
+        for k in ("candidates_fsp", "invited_fsp", "accepted_fsp", "hired_fsp"):
+            if rep["total"][k] is not None:
+                assert sum(1 for r in rows_ if r[k] is None) != 1, (part, k)
         for r in rows_:
             for k in ("candidates_fsp", "invited_fsp", "accepted_fsp", "hired_fsp"):
                 assert r[k] is None or r[k] == 0 or r[k] >= 5
