@@ -152,6 +152,16 @@ SCENARIOS = {
     "g_real": dict(real=True, mult=0, a=None, block=0, partial="gpcm"),
     "g_real_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm"),
     "g_real_k20": dict(real=True, mult=0, a=None, block=20, partial="gpcm"),
+    # реальный банк + N новых коротких Principal (модельные, ≤ 7 мин, a 1,5, трудность у границы 2,9–3,3) — «что дадут
+    # семейства ПБ-А/Б/В»: cN — в общем блоке, oN — у каждого направления
+    "g_real_pb_c8": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
+                         common_principal_short=8, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c8_o2": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=2,
+                            common_principal_short=8, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c16_o2": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=2,
+                             common_principal_short=16, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c16_o2_k20": dict(real=True, mult=0, a=1.5, block=20, partial="gpcm", own_principal_short=2,
+                                 common_principal_short=16, b_principal_short=(2.9, 3.3)),
 }
 
 
@@ -167,7 +177,12 @@ def _x(v: float) -> str:
 
 def scen_text(s: dict) -> str:
     if s.get("real"):
-        return ", ".join(["реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a)",
+        add = [f"{lbl} {s[k]}" for k, lbl in (("common_principal_short", "общий"), ("own_principal_short", "направление"))
+               if s.get(k)]
+        lo, hi = s.get("b_principal_short") or (0, 0)
+        return ", ".join(["реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a)"
+                          + (f" + новых коротких Principal (модельных): {', '.join(add)}, трудность {_x(lo)}–{_x(hi)}, "
+                             f"a {_x(s['a'])}" if add else ""),
                           f"блок {s['block']} заданий" if s["block"] else "без блока",
                           "частичный балл 0–4 (GPCM, шум оценщика)" if s["partial"] == "gpcm" else "развёрнутые 0/1"])
     so, sc = _short_mults(s)
@@ -191,6 +206,9 @@ def scen_text(s: dict) -> str:
 
 
 def bank_counts(s: dict) -> dict:
+    if s.get("real"):  # реальный банк: модельные — только добавленные короткие Principal
+        return {blk: {"lead": (0, 0), "principal": (int(s.get(f"{blk}_principal_short") or 0), 0)}
+                for blk in ("own", "common")}
     so, sc = _short_mults(s)
     out = {}
     for blk, by in BANK_UNIT.items():
@@ -215,8 +233,6 @@ def _sources(pool, block: str):
 
 def model_bank(pool, s: dict, n_subpools: int, rng: np.random.Generator) -> list:
     out = []
-    if s.get("real"):  # реальный банк: модельных семейств нет
-        return out
     counts = bank_counts(s)
     for block in ("common",) + sim.DIRECTIONS:
         short_src, open_src = _sources(pool, block)
