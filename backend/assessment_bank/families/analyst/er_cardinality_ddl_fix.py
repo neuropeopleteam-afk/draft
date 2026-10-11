@@ -43,6 +43,24 @@ CTX = [("онлайн-школа", ("courses", "курс", "курса", "кур
        ("техподдержка", ("engineers", "инженер", "инженера", "инженеру", "инженерам"),
         ("tickets", "заявка", "заявки", "заявок", "subject", True))]
 
+# «один к одному» — пары, где связь по смыслу не больше одной строки на запись родителя
+CTX_ONE_ONE = [("отдел кадров", ("employees", "сотрудник", "сотрудника", "сотруднику", "сотрудникам"),
+                ("passes", "пропуск", "пропуска", "пропусков", "pass_no", False)),
+               ("программа лояльности", ("clients", "клиент", "клиента", "клиенту", "клиентам"),
+                ("loyalty_cards", "карта лояльности", "карты лояльности", "карт лояльности", "card_no", True)),
+               ("поликлиника", ("patients", "пациент", "пациента", "пациенту", "пациентам"),
+                ("med_records", "медкарта", "медкарты", "медкарт", "record_no", True)),
+               ("онлайн-касса", ("orders", "заказ", "заказа", "заказу", "заказам"),
+                ("receipts", "чек", "чека", "чеков", "fiscal_sign", False)),
+               ("служба доставки", ("couriers", "курьер", "курьера", "курьеру", "курьерам"),
+                ("terminals", "терминал", "терминала", "терминалов", "serial_no", False)),
+               ("управляющая компания", ("flats", "квартира", "квартиры", "квартире", "квартирам"),
+                ("accounts", "лицевой счёт", "лицевого счёта", "лицевых счетов", "account_no", False)),
+               ("университет", ("students", "студент", "студента", "студенту", "студентам"),
+                ("record_books", "зачётная книжка", "зачётной книжки", "зачётных книжек", "book_no", True)),
+               ("автопарк", ("cars", "автомобиль", "автомобиля", "автомобилю", "автомобилям"),
+                ("trackers", "GPS-трекер", "GPS-трекера", "GPS-трекеров", "imei", False))]
+
 EXTRA = {False: ["created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP", "status TEXT NOT NULL DEFAULT 'new'",
                  "comment TEXT", "priority INTEGER NOT NULL DEFAULT 0", "updated_at TEXT"],
          True: ["role TEXT NOT NULL DEFAULT 'main'", "linked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
@@ -118,9 +136,10 @@ def _link_ddl(link, a, a_fk, b, b_fk, kind, extra):
 
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
-    ctx, (ptab, p_nom, p_gen, p_dat, p_dat_pl), (ctab, c_nom, c_gen, c_gen_pl, txt, fem) = rng.choice(CTX)
-    each = "Каждая" if fem else "Каждый"
     mode = rng.choice(MODES)
+    ctx, (ptab, p_nom, p_gen, p_dat, p_dat_pl), (ctab, c_nom, c_gen, c_gen_pl, txt, fem) = rng.choice(
+        CTX_ONE_ONE if mode == "one_one" else CTX)
+    each = "Каждая" if fem else "Каждый"
     extra = rng.choice(EXTRA[mode == "many_many"])
     errs = list(ERRORS[mode])
     shown_err = rng.choice(errs)
@@ -139,8 +158,8 @@ def generate(seed: int):
         ddl = lambda k: _link_ddl(link, ptab, a_fk, ctab, b_fk, k, extra)  # noqa: E731
         good = ddl("good")
         req = (f"«{'Одна' if fem else 'Один'} {c_nom} может относиться к нескольким {p_dat_pl}, у одного {p_gen} — "
-               f"несколько {c_gen_pl}; одну и ту же пару связать дважды нельзя; ссылки — только на существующие "
-               f"записи»")
+               f"несколько {c_gen_pl}; одну и ту же пару связать дважды нельзя; ссылаться можно только на существующие "
+               f"записи обеих таблиц»")
         table_name = link
     else:
         ins = lambda cid, pid: (f"INSERT INTO {ctab} (id, {txt}, {fk}) VALUES "  # noqa: E731
@@ -149,16 +168,16 @@ def generate(seed: int):
             scen = [(ins(10, 1), True), (ins(11, 1), True), (ins(12, 2), True), (ins(13, None), False),
                     (ins(14, 99), False)]
             req = (f"«{each} {c_nom} относится ровно к одному {p_dat}; у одного {p_gen} может быть сколько "
-                   f"угодно {c_gen_pl}; ссылка — только на существующего {p_gen}»")
+                   f"угодно {c_gen_pl}; ссылаться можно только на существующие записи `{ptab}`»")
         elif mode == "one_one":
             scen = [(ins(10, 1), True), (ins(11, 2), True), (ins(12, 1), False), (ins(13, None), False),
                     (ins(14, 99), False)]
             req = (f"«{each} {c_nom} относится ровно к одному {p_dat}; у {p_gen} — не больше {'одной' if fem else 'одного'} {c_gen} "
-                   f"(может не быть ни одного); ссылка — только на существующего {p_gen}»")
+                   f"(может не быть ни {'одной' if fem else 'одного'}); ссылаться можно только на существующие записи `{ptab}`»")
         else:
             scen = [(ins(10, 1), True), (ins(11, 1), True), (ins(12, None), True), (ins(13, 99), False)]
             req = (f"«{cap(c_nom)} может быть ещё не {'назначена' if fem else 'назначен'} {p_dat}; у одного {p_gen} "
-                   f"может быть сколько угодно {c_gen_pl}; ссылка — только на существующего {p_gen}»")
+                   f"может быть сколько угодно {c_gen_pl}; ссылаться можно только на существующие записи `{ptab}`»")
         ddl = lambda k: _child_ddl(ctab, txt, fk, ptab, k, mode, extra)  # noqa: E731
         good = ddl("good")
         table_name = ctab

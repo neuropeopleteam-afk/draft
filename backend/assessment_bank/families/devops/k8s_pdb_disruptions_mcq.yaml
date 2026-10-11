@@ -1,0 +1,24 @@
+family_id: devops.k8s.pdb_disruptions_mcq
+title: Kubernetes — сколько подов можно выселить по PodDisruptionBudget при неготовых подах
+direction: devops
+skills: [kubernetes, kubernetes_manifests, pods, reliability, deployments]
+target_grades: [middle, senior]
+format: mcq_concept
+language: yaml
+invariants:
+  code_lines: [9, 9]
+  n_options: 4
+  extra:
+    subtypes: [min_available, max_unavailable]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.2
+  sigma_variant: 0.35
+  basis: "Манифест PodDisruptionBudget (minAvailable или maxUnavailable, число или процент) и список подов сервиса, часть не готова; нужно найти status.disruptionsAllowed = готовые − требуемые (процент округляется вверх, неготовые поды уже расходуют бюджет). Дистракторы фиксированного состава: для процента — от replicas, а не от готовых; процент вниз; бюджет «как есть»; для числа — от replicas, «0 при неготовых», «все готовые». Граница Middle/Senior"
+generator: assessment_bank.families.devops.k8s_pdb_disruptions_mcq
+version: 1
+description: >
+  По манифесту PodDisruptionBudget и состоянию подов определить, сколько подов можно выселить прямо сейчас
+  (kubectl drain, Eviction API). Ключ — исполнение модели контроллера бюджета над показанным манифестом.

@@ -8,17 +8,18 @@
 порядке ответов и любом наборе отказов; (3) поздний ответ на старое изменение не затирает более новое
 (пока новое не отклонено).
 
-Варианты (каждый исполняется в node):
-  * good — журнал изменений ключа (номер, значение, состояние); показ — последнее неотклонённое изменение,
-    при пустом — подтверждённое значение;
-  * snapshot — откат к снимку на момент изменения и запись ответа без проверки номера: поздний ответ
+Варианты (каждый исполняется в node) построены по схеме 2×2 от верного: журнал изменений ключа (номер,
+значение, состояние), показ — последнее неотклонённое изменение, при пустом — подтверждённое значение.
+Из пула правил выбираются два (a, b): варианты — верный, нарушено a, нарушено b, нарушены оба. Пул:
+  * only_ok — показываются только подтверждённые изменения: интерфейс не меняется сразу;
+  * clear_on_fail — при отказе журнал сбрасывается: теряются ещё ожидающие старые изменения;
+  * clear_on_ok — при успехе журнал очищается, подтверждённое значение пишется без номера: поздний успех
     старого изменения затирает новое;
-  * latest_only — ответ учитывается только для последнего изменения, откат — к снимку: если отклонены оба
-    изменения подряд, интерфейс остаётся на отклонённом первом;
-  * confirmed_unseq — откат к «последнему подтверждённому», которое обновляется любым успешным ответом без
-    учёта номера: поздний успех старого изменения портит его, а откат при ещё не пришедшем старом —
-    показывает исходное значение.
-Состав дистракторов фиксирован. Ключ проверяется исполнением: поддельный API с управляемым порядком ответов
+  * show_rejected — если отклонено всё, показывается последнее введённое, а не подтверждённое.
+Пара (clear_on_fail, show_rejected) не используется (пустой журнал). Каждый вариант отличается от двух
+других на одно правило и от третьего — на два, к тому же у каждого варианта свои локальные имена и
+необязательные строки, поэтому ни длина, ни сходство вариантов не выдают ключ.
+Ключ проверяется исполнением: поддельный API с управляемым порядком ответов
 и отказами, пять сценариев, после каждого — сравнение интерфейса с сервером.
 """
 from __future__ import annotations
@@ -49,7 +50,8 @@ HEAD = """class {cls} {{
     this.api = api;
     this.view = {{ ...initial }};       // что видит пользователь
     this.confirmed = {{ ...initial }};  // последнее известное значение сервера
-    this.ops = {{}};                    // id -> журнал изменений
+    this.ops = {{}};                    // служебное состояние по ключу
+    this.errors = {{}};
     this.seq = 0;
   }}
 """
@@ -67,13 +69,13 @@ METHODS = {
 }}""",
     "good": """
   async {meth}(id, value) {{
-    const log = this.ops[id] || (this.ops[id] = []);
-    const op = {{ seq: ++this.seq, value, state: "pending" }};
-    log.push(op);
+    const seq = ++this.seq;
+    const op = {{ seq, value, state: "pending" }};
+    (this.ops[id] ||= []).push(op);
     this.show(id);
     try {{
-      op.value = await this.api.{api}(id, value);
-      op.state = "ok";
+      const saved = await this.api.{api}(id, value);
+      Object.assign(op, {{ value: saved, state: "ok" }});
     }} catch (e) {{
       op.state = "failed";
     }}
@@ -81,51 +83,29 @@ METHODS = {
   }}
 
   show(id) {{
-    const live = (this.ops[id] || []).filter((o) => o.state !== "failed");
+    const live = this.ops[id].filter((o) => o.state !== "failed");
     this.view[id] = live.length ? live[live.length - 1].value : this.confirmed[id];
   }}
 }}""",
-    "snapshot": """
-  async {meth}(id, value) {{
-    const before = this.view[id];
-    this.view[id] = value;
-    try {{
-      const saved = await this.api.{api}(id, value);
-      this.confirmed[id] = saved;
-      this.view[id] = saved;
-    }} catch (e) {{
-      this.view[id] = before;
-    }}
-  }}
-}}""",
-    "latest_only": """
-  async {meth}(id, value) {{
-    const seq = ++this.seq;
-    this.ops[id] = seq;
-    const before = this.view[id];
-    this.view[id] = value;
-    try {{
-      const saved = await this.api.{api}(id, value);
-      if (this.ops[id] === seq) this.view[id] = saved;
-    }} catch (e) {{
-      if (this.ops[id] === seq) this.view[id] = before;
-    }}
-  }}
-}}""",
-    "confirmed_unseq": """
-  async {meth}(id, value) {{
-    const seq = ++this.seq;
-    this.ops[id] = seq;
-    this.view[id] = value;
-    try {{
-      const saved = await this.api.{api}(id, value);
-      this.confirmed[id] = saved;
-      if (this.ops[id] === seq) this.view[id] = saved;
-    }} catch (e) {{
-      if (this.ops[id] === seq) this.view[id] = this.confirmed[id];
-    }}
-  }}
-}}""",
+}
+
+# правило -> (фрагмент верного шаблона, замена); фрагменты разных правил не пересекаются
+MUTATIONS = {
+    "only_ok": ('(o) => o.state !== "failed"', '(o) => o.state === "ok"'),
+    "clear_on_fail": ('      op.state = "failed";\n', '      this.ops[id] = [];\n'),
+    "clear_on_ok": ('      Object.assign(op, {{ value: saved, state: "ok" }});\n',
+                    '      this.confirmed[id] = saved;\n      this.ops[id] = [];\n'),
+    "show_rejected": (": this.confirmed[id];", ": this.ops[id][this.ops[id].length - 1].value;"),
+}
+PAIRS = [(a, b) for i, a in enumerate(sorted(MUTATIONS)) for b in sorted(MUTATIONS)[i + 1:]
+         if {a, b} != {"clear_on_fail", "show_rejected"}]
+WHY = {
+    "only_ok": "показ только подтверждённых изменений — интерфейс не меняется сразу (нарушено требование 1)",
+    "clear_on_fail": "сброс журнала при отказе — вместе с отказом теряются ещё ожидающие старые изменения, и когда "
+                     "они подтвердятся, интерфейс их не покажет",
+    "clear_on_ok": "очистка журнала и запись подтверждённого значения при каждом успехе — поздний успех старого "
+                   "изменения затирает новое",
+    "show_rejected": "если отклонено всё, показывается последнее введённое значение, хотя сервер его не принял",
 }
 
 PRELUDE = """function makeApi(method, initial) {
@@ -193,23 +173,44 @@ def generate(seed: int):
     values = rng.sample(pool, 4)
     key = rng.choice(["item-7", "a1", "x42", "k-3", "p9"])
     f = dict(cls=cls, meth=meth, api=api)
-    names = {"log": rng.choice(["log", "journal", "history"]), "op": rng.choice(["op", "change", "entry"]),
-             "live": rng.choice(["live", "alive", "notFailed"]), "before": rng.choice(["before", "prev", "snapshot"]),
-             "saved": rng.choice(["saved", "stored", "fromServer"]), "show": rng.choice(["show", "render", "refresh"]),
-             "value": rng.choice(["value", "next", "v"])}
-
-    def ren(src: str) -> str:   # поверхностные имена; порядок обращений к rng не зависит от текста
-        return re.sub(r"\b(log|op|live|before|saved|show|value)\b", lambda m: names[m.group(1)], src)
-
     head = HEAD.format(**f)
-    code = {k: head + ren(m.format(**f)) + "\n" for k, m in METHODS.items()}
+    note = rng.choice(["// новое значение показываем сразу, ответ сервера учтём позже",
+                       "// оптимистичное обновление: не ждём сервер",
+                       "// интерфейс не должен ждать сети"])
+    code = {"buggy": head + METHODS["buggy"].format(**f) + "\n"}
+    a, b = rng.choice(PAIRS)
+    sets = {"good": [], a: [a], b: [b], f"{a}+{b}": [a, b]}
+    # у каждого варианта — свои локальные имена и необязательные строки (запись ошибки, пояснение): длина и
+    # словарь варианта не выдают ключ; порядок обращений к rng не зависит от текста
+    for k, muts in sets.items():
+        tpl = METHODS["good"]
+        for mname in muts:
+            old, new = MUTATIONS[mname]
+            if tpl.count(old) != 1:
+                raise ValueError(f"фрагмент правила {mname} не найден ровно один раз")
+            tpl = tpl.replace(old, new)
+        names = {"op": rng.choice(["op", "change", "entry"]), "live": rng.choice(["live", "alive", "kept"]),
+                 "saved": rng.choice(["saved", "stored", "result"]), "show": rng.choice(["show", "render", "sync"]),
+                 "value": rng.choice(["value", "next", "v"]), "seq": rng.choice(["seq", "ticket", "n"])}
+        add_err, add_note = rng.random() < 0.5, rng.random() < 0.5
+        src = re.sub(r"(?<!this\.)\b(op|live|saved|show|value|seq)\b", lambda m: names[m.group(1)],
+                     tpl.format(**f))
+        src = src.replace("this.show(", f"this.{names['show']}(")
+        if add_err:
+            src = src.replace("} catch (e) {\n", "} catch (e) {\n      this.errors[id] = e.message;\n", 1)
+        if add_note:
+            sig = f"  async {meth}(id, {names['value']}) {{\n"
+            src = src.replace(sig, sig + f"    {note}\n", 1)
+        code[k] = head + src + "\n"
+    if len({code[k] for k in sets}) != 4:
+        raise ValueError("варианты 2×2 совпадают")
     sc_order = list(range(len(SCENARIOS)))
     rng.shuffle(sc_order)
     test = _test(cls, meth, api, key, values, sc_order)
-    chosen = ["snapshot", "latest_only", "confirmed_unseq"]
+    chosen = [a, b, f"{a}+{b}"]
     opts, akey = make_options(rng, ("Заменить класс на:", code["good"].rstrip()),
                               [("Заменить класс на:", code[c].rstrip()) for c in chosen])
-    by_code = {c.rstrip(): k for k, c in code.items()}
+    by_code = {code[k].rstrip(): k for k in sets}
     checks = [Check(name="buggy_fails", runner="node", program=js_harness(code["buggy"], test, PRELUDE),
                     expect="fail", embeds_display_code=False)]
     for o in opts:
@@ -234,10 +235,8 @@ def generate(seed: int):
         answer_key=AnswerKey(kind="option", value=akey, explanation=(
             "Верно: журнал изменений ключа — показ равен последнему неотклонённому изменению (ожидающему или "
             "успешному), а если таких нет — подтверждённому значению; это совпадает с правилом сервера «последний "
-            "применённый в порядке отправки» при любом порядке ответов. Откат к снимку и запись ответа без номера "
-            "дают затирание нового старым; учёт только последнего изменения с откатом к снимку оставляет "
-            "отклонённое первое изменение, если отклонены оба; «последнее подтверждённое» без номера портится "
-            "поздним успехом старого изменения и при откате до прихода старого ответа.")),
+            "применённый в порядке отправки» при любом порядке ответов. Остальные варианты нарушают правила: "
+            f"{WHY[a]}; {WHY[b]}; третий вариант нарушает оба.")),
         context=ctx, verification="execution", checks=checks, defect_type="optimistic_race",
         display_code_note=("Ответ проверяется исполнением в node: поддельный API с управляемым порядком ответов и "
                            "отказами, пять сценариев, после каждого — сравнение интерфейса с сервером."),

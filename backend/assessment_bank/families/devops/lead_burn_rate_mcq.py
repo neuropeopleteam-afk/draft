@@ -5,10 +5,14 @@ SLO доступности X % за 30 дней (720 ч). Алерт: «за п�
 ошибок r и остатке бюджета z % — через сколько часов бюджет закончится: T = z · 720 · (1 − X) / r.
 Ответ — пара «порог; время».
 
-Дистракторы (каждый ошибается ровно в одной части, «почти верные»):
-  * burn_as_share — скорость расхода (q·720/h) записана как доля ошибок, время верное;
-  * per_day — бюджет посчитан на сутки вместо 30 дней (24 вместо 720 в пороге), время верное;
-  * full_budget — порог верный, время посчитано по полному бюджету, без учёта остатка z.
+Варианты — по схеме 2×2: в каждой части верное значение и одна ошибка, каждое значение встречается ровно
+в двух вариантах (верный, ошибка в пороге, ошибка во времени, ошибки в обеих частях) — «большинство» по
+частям не выдаёт ключ. Ошибка порога (одна из двух, по варианту):
+  * burn_as_share — скорость расхода (q·720/h) записана как доля ошибок;
+  * per_day — бюджет посчитан на сутки вместо 30 дней (24 вместо 720 в пороге).
+Ошибка времени (одна из двух):
+  * full_budget — время по полному бюджету, без учёта остатка z;
+  * alert_burn — время по скорости из алерта (q·720/h), а не по текущей доле ошибок.
 Ключ проверяется исполнением: программа-модель поминутно «расходует» бюджет — подбирает порог двоичным
 поиском по доле ошибок, при которой за окно расходуется q % бюджета, и шагает по минутам до исчерпания.
 """
@@ -70,13 +74,18 @@ def generate(seed: int):
         t_full = 720 * (1 - slo) / r
         thr_burn = q * 720 / h
         thr_day = q * (24 / h) * (1 - slo) * 100
-        if well_separated([thr, thr_burn, thr_day], 0.2) and well_separated([t_good, t_full], 0.2) and t_good >= 1:
+        t_alert = z_pct / 100 * 720 / (q * 720 / h)
+        if (well_separated([thr, thr_burn, thr_day], 0.2) and well_separated([t_good, t_full, t_alert], 0.2)
+                and t_good >= 1 and t_alert >= 1):
             break
     else:
         raise RuntimeError("не удалось подобрать параметры")
     opt = lambda a, b: f"порог ≈ {_fmt_pct(a)} % ошибок за окно; бюджет закончится через ≈ {fmt_num(b, 1)} ч"
-    text = {"good": opt(thr, t_good), "burn_as_share": opt(thr_burn, t_good), "per_day": opt(thr_day, t_good),
-            "full_budget": opt(thr, t_full)}
+    thr_err = rng.choice(["burn_as_share", "per_day"])
+    t_err = rng.choice(["full_budget", "alert_burn"])
+    thr_bad = {"burn_as_share": thr_burn, "per_day": thr_day}[thr_err]
+    t_bad = {"full_budget": t_full, "alert_burn": t_alert}[t_err]
+    text = {"good": opt(thr, t_good), "thr": opt(thr_bad, t_good), "time": opt(thr, t_bad), "both": opt(thr_bad, t_bad)}
     r_pct = r * 100
     hh = f"{h} {plural(h, 'час', 'часа', 'часов')}"
     stem = (f"SLO «{ctx}» — {slo_s} % успешных запросов за 30 дней. Нужен алерт для дежурного: «за последние {hh} "
@@ -88,12 +97,15 @@ def generate(seed: int):
     expl = (f"Скорость расхода (burn rate), при которой за {hh} уходит {q_pct} % бюджета 30 дней: {q_pct} % × 720 / {h} = "
             f"{fmt_num(burn, 1)}; порог доли ошибок — скорость × (1 − SLO) = {_fmt_pct(thr)} %. Текущая скорость — "
             f"{_fmt_pct(r_pct)} % / {fmt_num(100 * (1 - slo), 2)} % = {burn_now}; оставшиеся {z_pct} % бюджета уйдут за "
-            f"{z_pct} % × 720 ч / {burn_now} ≈ {fmt_num(t_good, 1)} ч. Ошибки: скорость {fmt_num(thr_burn, 1)} — не доля "
-            f"ошибок; бюджет «на сутки» даёт порог {_fmt_pct(thr_day)} %; без учёта остатка — {fmt_num(t_full, 1)} ч.")
+            f"{z_pct} % × 720 ч / {burn_now} ≈ {fmt_num(t_good, 1)} ч. Ошибки: " +
+            {"burn_as_share": f"скорость {fmt_num(thr_burn, 1)} — не доля ошибок",
+             "per_day": f"бюджет «на сутки» даёт порог {_fmt_pct(thr_day)} %"}[thr_err] + "; " +
+            {"full_budget": f"без учёта остатка — {fmt_num(t_full, 1)} ч",
+             "alert_burn": f"по скорости из алерта, а не текущей — {fmt_num(t_alert, 1)} ч"}[t_err] + ".")
     return numeric_mcq(FAMILY_ID, seed, rng, ctx=ctx, stem=stem, good=text["good"],
-                       distractors=[text["burn_as_share"], text["per_day"], text["full_budget"]], program=program,
+                       distractors=[text["thr"], text["time"], text["both"]], program=program,
                        explanation=expl,
                        params={"slo": slo_s, "q": q_pct, "h": h, "z": z_pct, "burn_now": burn_now,
-                               "thr": round(thr, 4), "hours": round(t_good, 2)},
+                               "thr": round(thr, 4), "hours": round(t_good, 2), "errors": [thr_err, t_err]},
                        note="Ответ проверяется программой-моделью: поминутный расход бюджета, порог — двоичным "
                             "поиском.")
