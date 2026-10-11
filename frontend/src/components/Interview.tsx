@@ -149,7 +149,10 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
   }
   return (
     <section id="defense" className="card mt-4 space-y-3 scroll-mt-24" aria-labelledby={`defense-h-${sessionId}`} data-testid="defense-panel">
-      <h2 id={`defense-h-${sessionId}`} className="font-bold text-brand-night">Подтвердите авторство ответа: устная защита {minutes(st.minutes)}, по желанию</h2>
+      <div className="flex items-center gap-3">
+        <img src="/avatar/interviewer.webp" alt="ИИ-интервьюер" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover" data-testid="defense-avatar" />
+        <h2 id={`defense-h-${sessionId}`} className="font-bold text-brand-night">Подтвердите авторство ответа: устная защита {minutes(st.minutes)}, по желанию</h2>
+      </div>
       <p className="text-sm text-brand-ink/75">
         ИИ-интервьюер задаст до {st.max_questions} вопросов по вашим развёрнутым ответам{st.answers_n ? ` (${st.answers_n})` : ""} — голосом или в чате.
         Работодатель увидит «ответ подтверждён устно» или «есть расхождения» с цитатами. Грейд не меняется; оценивает модель, решение — за людьми.
