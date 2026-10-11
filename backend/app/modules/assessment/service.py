@@ -243,7 +243,8 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
         b = refine_off["boundary"]
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed,
                              refine_from=prev_state, seen=seen, seen_seeds=seen_seeds,
-                             refine={**b, "level": tp["level"], "items": tp["items"], "minutes": tp["minutes"],
+                             refine={**b, "level": tp["level"], "items": int(refine_off.get("items") or tp["items"]),
+                                     "minutes": int(refine_off.get("minutes") or tp["minutes"]),
                                      "confirm": tp["confirm"], "confirm_up": tp["confirm_up"], "floor": tp["floor"],
                                      "source_session_id": str(refine_src.id)})
     elif engine.name.startswith("bank"):

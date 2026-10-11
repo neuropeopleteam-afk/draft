@@ -144,3 +144,33 @@ def test_without_flag_lead_principal_only_families_not_in_test_pool(monkeypatch)
         assert mixed in ids  # Senior + Lead — обычное семейство Senior, остаётся
     finally:
         bank_engine._pool.cache_clear()
+
+
+def _refine_state(eng, cut_grade: str, claimed: str = "senior") -> dict:
+    """Второй этап (уточнение у границы, Я26) без ответов первой сессии — только конфигурация сессии."""
+    prev = {"claimed_grade": claimed, "items": [], "prior": [], "subpool": None, "final_theta": 2.4, "final_se": 0.5}
+    refine = {"grade": claimed, "cut_grade": cut_grade, "lower": "x", "cut": 2.0, "p": 0.6, "kind": "ext", "level": 0.8,
+              "items": 8, "minutes": 15, "confirm": 0.45, "confirm_up": 0.9, "floor": False, "source_session_id": "x"}
+    return eng.start(direction="backend", claimed_grade=claimed, stack_tags=[], seed=7, refine_from=prev, refine=refine)
+
+
+def test_without_flag_refine_item_time_unchanged():
+    """Без GRADES_EXT_ENABLED второй этап берёт, как прежде, задания до 300 с (лимит 420 с — только Lead/Principal)."""
+    from app.modules.assessment.bank_engine import BankEngine
+
+    eng = BankEngine()
+    assert eng._refine_item_time_s("lead") == 300.0 and eng._refine_item_time_s("senior") == 300.0
+    st = _refine_state(eng, "senior")
+    assert st["cfg"]["max_item_time_s"] == 300.0 and "ext_item_time_s" not in st["cfg"]
+    assert eng._cfg(st).ext_item_time_s == 300.0
+
+
+def test_without_flag_second_stage_items_minutes_unchanged(monkeypatch):
+    """GRADES_EXT_REFINE_ITEMS / _MINUTES без GRADES_EXT_ENABLED не действуют (второй этап — как у двухэтапного)."""
+    from app.core.config import get_settings
+    from app.modules.assessment import two_stage
+
+    monkeypatch.setattr(get_settings(), "grades_ext_refine_items", 10)
+    monkeypatch.setattr(get_settings(), "grades_ext_refine_minutes", 25)
+    p = {"items": 8, "minutes": 15, "level": 0.8}
+    assert two_stage.ext_params(p, "lead") == p and two_stage.ext_params(p, "senior") == p
