@@ -80,11 +80,11 @@ def _step_times(r: Row) -> dict[str, float]:
 
 def _sus_block(rs: list[Row]) -> dict:
     vals = [r.sus for r in rs if r.sus is not None]
-    if len(vals) < stats.MIN_N:
-        return {"n": len(vals)}  # мелкие группы не раскрываем
+    if len(vals) < stats.SUS_MIN_N:
+        return {"n": len(vals), "enough": False}  # n < 5 — балл не показываем как результат
     m = stats.mean_ci(vals, lo=0, hi=100)
     ge = sum(1 for v in vals if v >= stats.SUS_BENCHMARK)
-    return {**m, "median": stats.median(vals), "min": min(vals), "max": max(vals),
+    return {**m, "enough": True, "median": stats.median(vals), "min": min(vals), "max": max(vals),
             "ge_benchmark": stats.share(ge, len(vals)), "benchmark": stats.SUS_BENCHMARK}
 
 
@@ -179,14 +179,14 @@ def public_summary(db: Session) -> dict:
            + ", ".join(f"{ROLE_PL[ro]} — {len(done_by[ro])}" for ro in texts.ROLES)
            + "); один человек мог пройти оба пути. Автотесты и служебные учётные записи не входят.")
     ok = lambda ro: len(done_by[ro]) >= stats.MIN_N  # noqa: E731 — срез по роли — только при N роли ≥ MIN_N
-    ok_a = lambda ro: len([r for r in roles_ans[ro] if r.sus is not None]) >= stats.MIN_N  # noqa: E731
+    ok_a = lambda ro: len([r for r in roles_ans[ro] if r.sus is not None]) >= stats.SUS_MIN_N  # noqa: E731
     tags: dict[str, int] = {}
     for r in ans:
         for t in r.ans.tags or []:
             tags[t] = tags.get(t, 0) + 1
     comp = _completion(rs)
     return {
-        "shown": True, "min_n": stats.MIN_N, "signature": sig,
+        "shown": True, "min_n": stats.MIN_N, "sus_min_n": stats.SUS_MIN_N, "signature": sig,
         "world": ("Люди работали с платформой на демонстрационных данных: кандидаты в подборке и сравнении — смоделированные "
                   "профили, а не реальные люди. Баллы SUS и оценки подборки (P@5) дали те, кто сам заполнил необязательную анкету."),
         "period": {"from": first.isoformat(), "to": last.isoformat()},
