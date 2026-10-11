@@ -468,6 +468,23 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/ats-stub/potok/api/v3/ajs_joins.json"): "stub",
     ("POST", "/api/ats-stub/potok/api/v3/ajs_joins/{join_id}/change_stage.json"): "stub",
     ("POST", "/api/ats-stub/potok/api/v3/events.json"): "stub",
+    # ---------------------------------------------------------------- Я15: устная защита и ИИ-интервью (флаг выкл. — 409 после
+    # проверки владения); {session_id} у /sessions — сессия интервью, в мире не создаётся (владельцу 404); с телом — 422 до владения
+    ("GET", "/api/interview/defense/{session_id}"): "candidate_own",
+    ("POST", "/api/interview/defense/{session_id}"): "candidate",
+    ("GET", "/api/interview/sessions/{session_id}"): "candidate_own404",
+    ("DELETE", "/api/interview/sessions/{session_id}"): "candidate_own404",
+    ("POST", "/api/interview/sessions/{session_id}/begin"): "candidate",
+    ("POST", "/api/interview/sessions/{session_id}/answer"): "candidate",
+    ("POST", "/api/interview/sessions/{session_id}/channel"): "candidate",
+    ("POST", "/api/interview/sessions/{session_id}/finish"): "candidate_own404",
+    ("POST", "/api/interview/sessions/{session_id}/transcribe"): "candidate_own404",
+    ("GET", "/api/interview/sessions/{session_id}/speech"): "candidate_own404",
+    ("GET", "/api/interview/candidates/{ref}"): "employer_ref",
+    ("GET", "/api/employer/invitations/{inv_id}/ai-interview"): "employer_own",
+    ("POST", "/api/employer/invitations/{inv_id}/ai-interview"): "employer",
+    ("GET", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate_own",
+    ("POST", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate",
 }
 
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)

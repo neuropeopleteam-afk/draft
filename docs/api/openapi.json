@@ -3978,6 +3978,21 @@
         "title": "AttemptsOut",
         "type": "object"
       },
+      "BeginIn": {
+        "properties": {
+          "channel": {
+            "default": "text",
+            "enum": [
+              "voice",
+              "text"
+            ],
+            "title": "Channel",
+            "type": "string"
+          }
+        },
+        "title": "BeginIn",
+        "type": "object"
+      },
       "Body_need_from_file_api_employer_needs_file_post": {
         "properties": {
           "file": {
@@ -4891,6 +4906,37 @@
           "items"
         ],
         "title": "CandidateCupsOut",
+        "type": "object"
+      },
+      "CandidateInterviewOut": {
+        "properties": {
+          "defense": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "interviews": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+            },
+            "title": "Interviews",
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "CandidateInterviewOut",
         "type": "object"
       },
       "CandidateInvitationOut": {
@@ -5869,6 +5915,31 @@
         "title": "CategoryRefOut",
         "type": "object"
       },
+      "ChannelsOut": {
+        "properties": {
+          "stt": {
+            "description": "«Нажми и говори»: запись ответа → распознанный текст",
+            "title": "Stt",
+            "type": "boolean"
+          },
+          "text": {
+            "title": "Text",
+            "type": "boolean"
+          },
+          "voice": {
+            "description": "Голос ведущего (синтез речи, mp3)",
+            "title": "Voice",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "voice",
+          "stt",
+          "text"
+        ],
+        "title": "ChannelsOut",
+        "type": "object"
+      },
       "ChooseIn": {
         "properties": {
           "slot_id": {
@@ -6804,6 +6875,83 @@
           "contacts_open_to"
         ],
         "title": "ContactsRevokeOut",
+        "type": "object"
+      },
+      "ConversationOut": {
+        "properties": {
+          "asked": {
+            "title": "Asked",
+            "type": "integer"
+          },
+          "channels": {
+            "$ref": "#/components/schemas/ChannelsOut"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "engine": {
+            "enum": [
+              "engine",
+              "stub"
+            ],
+            "title": "Engine",
+            "type": "string"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Только заглушка: начало письменного ответа — «подставить» в e2e",
+            "title": "Hint"
+          },
+          "max_questions": {
+            "title": "Max Questions",
+            "type": "integer"
+          },
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          }
+        },
+        "required": [
+          "asked",
+          "max_questions",
+          "channels",
+          "engine"
+        ],
+        "title": "ConversationOut",
         "type": "object"
       },
       "CriterionIn": {
@@ -8533,6 +8681,110 @@
         "title": "DecisionIn",
         "type": "object"
       },
+      "DefenseStateOut": {
+        "properties": {
+          "answers_n": {
+            "title": "Answers N",
+            "type": "integer"
+          },
+          "attempts_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempts Left"
+          },
+          "can_start": {
+            "title": "Can Start",
+            "type": "boolean"
+          },
+          "consent": {
+            "$ref": "#/components/schemas/InterviewConsentOut"
+          },
+          "eligible": {
+            "title": "Eligible",
+            "type": "boolean"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "example": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "jury": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JuryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_questions": {
+            "title": "Max Questions",
+            "type": "integer"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "name_hint": {
+            "title": "Name Hint",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "session": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stub": {
+            "title": "Stub",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled",
+          "stub",
+          "eligible",
+          "answers_n",
+          "minutes",
+          "max_questions",
+          "can_start",
+          "name_hint",
+          "consent"
+        ],
+        "title": "DefenseStateOut",
+        "type": "object"
+      },
       "DeleteIn": {
         "properties": {
           "code": {
@@ -8685,6 +8937,19 @@
           "backups"
         ],
         "title": "DeleteResultOut",
+        "type": "object"
+      },
+      "DeletedOut": {
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "DeletedOut",
         "type": "object"
       },
       "DemandCategoryOut": {
@@ -14632,6 +14897,27 @@
         "title": "InterestPeriodOut",
         "type": "object"
       },
+      "InterviewConsentOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "items"
+        ],
+        "title": "InterviewConsentOut",
+        "type": "object"
+      },
       "InterviewOut": {
         "additionalProperties": true,
         "properties": {
@@ -14905,72 +15191,6 @@
           "contact_method"
         ],
         "title": "InvitationIn",
-        "type": "object"
-      },
-      "InviteIn": {
-        "properties": {
-          "code": {
-            "pattern": "^E[1-9]$",
-            "title": "Code",
-            "type": "string"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "maxLength": 120,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "profile": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Profile"
-          },
-          "rotate": {
-            "default": false,
-            "title": "Rotate",
-            "type": "boolean"
-          },
-          "slot": {
-            "anyOf": [
-              {
-                "enum": [
-                  "E1",
-                  "E2",
-                  "E3"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Slot"
-          },
-          "team_size": {
-            "default": 3,
-            "maximum": 3.0,
-            "minimum": 2.0,
-            "title": "Team Size",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "code"
-        ],
-        "title": "InviteIn",
         "type": "object"
       },
       "ItemOut": {
@@ -15253,6 +15473,24 @@
           "sandbox_starts"
         ],
         "title": "JuryModeOut",
+        "type": "object"
+      },
+      "JuryOut": {
+        "properties": {
+          "live_per_hour": {
+            "title": "Live Per Hour",
+            "type": "integer"
+          },
+          "max_minutes": {
+            "title": "Max Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "live_per_hour",
+          "max_minutes"
+        ],
+        "title": "JuryOut",
         "type": "object"
       },
       "JuryResetOut": {
@@ -20073,6 +20311,112 @@
         "title": "PushTestOut",
         "type": "object"
       },
+      "QuestionOut": {
+        "properties": {
+          "level": {
+            "description": "defense: confirmed | partial | discrepancy | no_data; interview: strong | medium | weak | no_data",
+            "title": "Level",
+            "type": "string"
+          },
+          "level_title": {
+            "title": "Level Title",
+            "type": "string"
+          },
+          "lowered": {
+            "default": false,
+            "title": "Lowered",
+            "type": "boolean"
+          },
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "quotes": {
+            "description": "Только цитаты, сверенные кодом с расшифровкой",
+            "items": {
+              "$ref": "#/components/schemas/QuoteOut"
+            },
+            "title": "Quotes",
+            "type": "array"
+          },
+          "reasoning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoning"
+          },
+          "skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skill"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "task_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Title"
+          }
+        },
+        "required": [
+          "question",
+          "level",
+          "level_title",
+          "quotes"
+        ],
+        "title": "QuestionOut",
+        "type": "object"
+      },
+      "QuoteOut": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "QuoteOut",
+        "type": "object"
+      },
       "RatingIn": {
         "properties": {
           "rating": {
@@ -21516,90 +21860,6 @@
         "title": "SendIn",
         "type": "object"
       },
-      "SessionOut": {
-        "properties": {
-          "answered": {
-            "title": "Answered",
-            "type": "integer"
-          },
-          "can_finish": {
-            "default": false,
-            "description": "Тест окончен по правилам движка (SE, лимит заданий/времени)",
-            "title": "Can Finish",
-            "type": "boolean"
-          },
-          "claimed_grade": {
-            "title": "Claimed Grade",
-            "type": "string"
-          },
-          "deadline_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Deadline At"
-          },
-          "direction": {
-            "title": "Direction",
-            "type": "string"
-          },
-          "engine": {
-            "title": "Engine",
-            "type": "string"
-          },
-          "is_sandbox": {
-            "title": "Is Sandbox",
-            "type": "boolean"
-          },
-          "item": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ItemOut"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Следующее задание; null — тест окончен, вызовите finish"
-          },
-          "mode": {
-            "default": "full",
-            "description": "full — полный тест; express — экспресс-тест жюри; confirm — дотестирование для подтверждения «Junior (предварительно)»",
-            "title": "Mode",
-            "type": "string"
-          },
-          "session_id": {
-            "format": "uuid",
-            "title": "Session Id",
-            "type": "string"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
-          "total": {
-            "title": "Total",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "session_id",
-          "status",
-          "direction",
-          "claimed_grade",
-          "engine",
-          "is_sandbox",
-          "deadline_at",
-          "answered",
-          "total"
-        ],
-        "title": "SessionOut",
-        "type": "object"
-      },
       "SettingsIn": {
         "properties": {
           "auto_push": {
@@ -22227,6 +22487,95 @@
           "direction_id"
         ],
         "title": "StackTagOut",
+        "type": "object"
+      },
+      "StageOut": {
+        "properties": {
+          "can_invite": {
+            "title": "Can Invite",
+            "type": "boolean"
+          },
+          "consent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InterviewConsentOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "name_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Hint"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "session": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "skills": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "skills_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skills Reason"
+          },
+          "stub": {
+            "title": "Stub",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled",
+          "stub",
+          "minutes",
+          "can_invite"
+        ],
+        "title": "StageOut",
         "type": "object"
       },
       "StopIn": {
@@ -23604,6 +23953,30 @@
         "title": "TalantixTokenOut",
         "type": "object"
       },
+      "TaskRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "TaskRef",
+        "type": "object"
+      },
       "ThreadBriefOut": {
         "additionalProperties": true,
         "properties": {
@@ -23834,6 +24207,25 @@
           "user"
         ],
         "title": "TokenOut",
+        "type": "object"
+      },
+      "TranscribeOut": {
+        "properties": {
+          "stub": {
+            "default": false,
+            "description": "Заглушка распознавания (только e2e/демо): подставлено начало письменного ответа",
+            "title": "Stub",
+            "type": "boolean"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TranscribeOut",
         "type": "object"
       },
       "TrustBriefOut": {
@@ -24098,6 +24490,39 @@
           "method"
         ],
         "title": "TrustOut",
+        "type": "object"
+      },
+      "TurnOut": {
+        "properties": {
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "who": {
+            "enum": [
+              "interviewer",
+              "candidate"
+            ],
+            "title": "Who",
+            "type": "string"
+          }
+        },
+        "required": [
+          "who",
+          "text"
+        ],
+        "title": "TurnOut",
         "type": "object"
       },
       "TwoFactorChallengeOut": {
@@ -28039,6 +28464,90 @@
         "title": "AnswerIn",
         "type": "object"
       },
+      "app__modules__assessment__router__SessionOut": {
+        "properties": {
+          "answered": {
+            "title": "Answered",
+            "type": "integer"
+          },
+          "can_finish": {
+            "default": false,
+            "description": "Тест окончен по правилам движка (SE, лимит заданий/времени)",
+            "title": "Can Finish",
+            "type": "boolean"
+          },
+          "claimed_grade": {
+            "title": "Claimed Grade",
+            "type": "string"
+          },
+          "deadline_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline At"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "is_sandbox": {
+            "title": "Is Sandbox",
+            "type": "boolean"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ItemOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Следующее задание; null — тест окончен, вызовите finish"
+          },
+          "mode": {
+            "default": "full",
+            "description": "full — полный тест; express — экспресс-тест жюри; confirm — дотестирование для подтверждения «Junior (предварительно)»",
+            "title": "Mode",
+            "type": "string"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "session_id",
+          "status",
+          "direction",
+          "claimed_grade",
+          "engine",
+          "is_sandbox",
+          "deadline_at",
+          "answered",
+          "total"
+        ],
+        "title": "SessionOut",
+        "type": "object"
+      },
       "app__modules__assessment__router__StartIn": {
         "properties": {
           "claimed_grade": {
@@ -28271,6 +28780,72 @@
         "title": "NoteIn",
         "type": "object"
       },
+      "app__modules__experts__router__InviteIn": {
+        "properties": {
+          "code": {
+            "pattern": "^E[1-9]$",
+            "title": "Code",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile"
+          },
+          "rotate": {
+            "default": false,
+            "title": "Rotate",
+            "type": "boolean"
+          },
+          "slot": {
+            "anyOf": [
+              {
+                "enum": [
+                  "E1",
+                  "E2",
+                  "E3"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot"
+          },
+          "team_size": {
+            "default": 3,
+            "maximum": 3.0,
+            "minimum": 2.0,
+            "title": "Team Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "InviteIn",
+        "type": "object"
+      },
       "app__modules__hiring__router__CounterIn": {
         "properties": {
           "comment": {
@@ -28347,6 +28922,352 @@
           }
         },
         "title": "NoteIn",
+        "type": "object"
+      },
+      "app__modules__interview__router__AnswerIn": {
+        "properties": {
+          "channel": {
+            "default": "text",
+            "enum": [
+              "voice",
+              "text"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 3000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "AnswerIn",
+        "type": "object"
+      },
+      "app__modules__interview__router__InviteIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "skills": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 8,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Навыки вручную, если потребности нет",
+            "title": "Skills"
+          }
+        },
+        "title": "InviteIn",
+        "type": "object"
+      },
+      "app__modules__interview__router__SessionOut": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "conversation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConversationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration S"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "example": {
+            "description": "Готовый пример для жюри (модельный кандидат)",
+            "title": "Example",
+            "type": "boolean"
+          },
+          "example_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Example Label"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "flags": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "jury": {
+            "title": "Jury",
+            "type": "boolean"
+          },
+          "max_questions": {
+            "title": "Max Questions",
+            "type": "integer"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "mode": {
+            "enum": [
+              "defense",
+              "interview"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "questions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/QuestionOut"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "result_hidden": {
+            "default": false,
+            "title": "Result Hidden",
+            "type": "boolean"
+          },
+          "return_to": {
+            "description": "Куда вернуть кандидата после разговора",
+            "title": "Return To",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "skills": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "invited",
+              "created",
+              "in_progress",
+              "evaluating",
+              "completed",
+              "failed",
+              "expired",
+              "cancelled",
+              "deleted"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "status_title": {
+            "title": "Status Title",
+            "type": "string"
+          },
+          "stub": {
+            "title": "Stub",
+            "type": "boolean"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "tasks": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TaskRef"
+            },
+            "title": "Tasks",
+            "type": "array"
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TurnOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Только работодателю и только текст",
+            "title": "Transcript"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "defense: confirmed | discrepancies | insufficient; interview: strong | medium | weak | insufficient. Оценивает модель; грейд не меняется",
+            "title": "Verdict"
+          },
+          "verdict_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict Title"
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "status",
+          "status_title",
+          "minutes",
+          "max_questions",
+          "created_at",
+          "example",
+          "stub",
+          "jury",
+          "return_to"
+        ],
+        "title": "SessionOut",
+        "type": "object"
+      },
+      "app__modules__interview__router__StartIn": {
+        "properties": {
+          "consent": {
+            "title": "Consent",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Как обращаться — одно слово, без фамилии",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "consent"
+        ],
+        "title": "StartIn",
         "type": "object"
       },
       "app__modules__invitations__router__DeclineIn": {
@@ -29663,7 +30584,7 @@
                   "total": 6
                 },
                 "schema": {
-                  "$ref": "#/components/schemas/SessionOut"
+                  "$ref": "#/components/schemas/app__modules__assessment__router__SessionOut"
                 }
               }
             },
@@ -29764,7 +30685,7 @@
                   "total": 25
                 },
                 "schema": {
-                  "$ref": "#/components/schemas/SessionOut"
+                  "$ref": "#/components/schemas/app__modules__assessment__router__SessionOut"
                 }
               }
             },
@@ -29932,7 +30853,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SessionOut"
+                  "$ref": "#/components/schemas/app__modules__assessment__router__SessionOut"
                 }
               }
             },
@@ -35412,6 +36333,194 @@
         "summary": "Принять приглашение — работодатель увидит контакты",
         "tags": [
           "candidate-contact"
+        ]
+      }
+    },
+    "/api/candidate/invitations/{inv_id}/ai-interview": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "stage_candidate_api_candidate_invitations__inv_id__ai_interview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inv_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inv Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invitation_not_found",
+                    "message": "Приглашение не найдено"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Приглашение не найдено. Коды `detail.code`: `invitation_not_found` — Приглашение не найдено."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Приглашение на ИИ-интервью (кандидат)",
+        "tags": [
+          "interview"
+        ]
+      },
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "stage_start_api_candidate_invitations__inv_id__ai_interview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inv_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inv Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__interview__router__StartIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invitation_not_found",
+                    "message": "Приглашение не найдено"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Приглашение не найдено. Коды `detail.code`: `invitation_not_found` — Приглашение не найдено; `interview_not_found` — Компания не приглашала на ИИ-интервью."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_done",
+                    "message": "ИИ-интервью уже пройдено или прервано"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Выключено флагом (interview_disabled) или сессия в другом состоянии. Коды `detail.code`: `interview_done` — ИИ-интервью уже пройдено или прервано; `interview_disabled` — Устная защита и ИИ-интервью выключены."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "consent_required",
+                    "message": "Нужно согласие на обработку ответов"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Нет согласия. Коды `detail.code`: `consent_required` — Нужно согласие на обработку ответов; `name_required` — Как к вам обращаться — одно слово, без фамилии; `insufficient_context`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_daily_cap",
+                    "message": "Дневной лимит сессий исчерпан — попробуйте завтра"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Лимит сессий. Коды `detail.code`: `interview_daily_cap` — Дневной лимит сессий исчерпан — попробуйте завтра; `jury_limit` — В песочнице жюри — один живой запуск в час; готовый пример — ниже; `interview_user_limit` — Не больше нескольких сессий в сутки — попробуйте завтра."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Согласиться и начать ИИ-интервью",
+        "tags": [
+          "interview"
         ]
       }
     },
@@ -43640,6 +44749,194 @@
         ]
       }
     },
+    "/api/employer/invitations/{inv_id}/ai-interview": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "stage_employer_api_employer_invitations__inv_id__ai_interview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inv_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inv Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invitation_not_found",
+                    "message": "Приглашение не найдено"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Приглашение не найдено. Коды `detail.code`: `invitation_not_found` — Приглашение не найдено."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Конфликт с текущим состоянием. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Этап «ИИ-интервью»: можно ли, навыки, итог",
+        "tags": [
+          "interview"
+        ]
+      },
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "stage_invite_api_employer_invitations__inv_id__ai_interview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inv_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inv Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__interview__router__InviteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invitation_not_found",
+                    "message": "Приглашение не найдено"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Приглашение не найдено. Коды `detail.code`: `invitation_not_found` — Приглашение не найдено."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Выключено флагом (interview_disabled) или сессия в другом состоянии. Коды `detail.code`: `company_required` — Сначала заполните профиль компании; `invitation_not_accepted` — Этап доступен после того, как кандидат принял приглашение; `interview_exists` — ИИ-интервью по этому приглашению уже назначено; `interview_disabled` — Устная защита и ИИ-интервью выключены."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "insufficient_context",
+                    "message": "Данные не прошли проверку"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Все навыки уже подтверждены — добавьте вручную. Коды `detail.code`: `insufficient_context`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Пригласить на ИИ-интервью по навыкам, которые тест не подтвердил",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
     "/api/employer/invitations/{inv_id}/counter/accept": {
       "post": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
@@ -51057,7 +52354,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InviteIn"
+                "$ref": "#/components/schemas/app__modules__experts__router__InviteIn"
               }
             }
           },
@@ -53364,6 +54661,1081 @@
         "summary": "Что ждёт моего ответа по найму (счётчик в меню и напоминания в кабинете)",
         "tags": [
           "hiring"
+        ]
+      }
+    },
+    "/api/interview/candidates/{ref}": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "candidate_interviews_api_interview_candidates__ref__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "title": "Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "backend",
+                    "frontend",
+                    "data_ml",
+                    "qa",
+                    "security"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Direction"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateInterviewOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "candidate_not_found",
+                    "message": "Кандидат не найден или скрыл профиль"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Кандидат не найден. Коды `detail.code`: `candidate_not_found` — Кандидат не найден или скрыл профиль."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Конфликт с текущим состоянием. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Устная защита и ИИ-интервью кандидата для карточки работодателя",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/defense/{session_id}": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "defense_state_api_interview_defense__session_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefenseStateOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "test_session_not_found",
+                    "message": "Попытка не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Попытка не найдена. Коды `detail.code`: `test_session_not_found` — Попытка не найдена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Устная защита попытки: можно ли, текущая сессия, пример для жюри",
+        "tags": [
+          "interview"
+        ]
+      },
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "defense_start_api_interview_defense__session_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__interview__router__StartIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "test_session_not_found",
+                    "message": "Попытка не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Попытка не найдена. Коды `detail.code`: `test_session_not_found` — Попытка не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "defense_done",
+                    "message": "Устная защита этой попытки уже пройдена или попытки закончились"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Выключено флагом (interview_disabled) или сессия в другом состоянии. Коды `detail.code`: `defense_done` — Устная защита этой попытки уже пройдена или попытки закончились; `interview_disabled` — Устная защита и ИИ-интервью выключены."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "consent_required",
+                    "message": "Нужно согласие на обработку ответов"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Защищать нечего или нет согласия. Коды `detail.code`: `consent_required` — Нужно согласие на обработку ответов; `name_required` — Как к вам обращаться — одно слово, без фамилии; `insufficient_context`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_daily_cap",
+                    "message": "Дневной лимит сессий исчерпан — попробуйте завтра"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Лимит сессий (жюри — 1 живой запуск в час на песочницу). Коды `detail.code`: `interview_daily_cap` — Дневной лимит сессий исчерпан — попробуйте завтра; `jury_limit` — В песочнице жюри — один живой запуск в час; готовый пример — ниже; `interview_user_limit` — Не больше нескольких сессий в сутки — попробуйте завтра."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Начать устную защиту развёрнутых ответов (по желанию; грейд не меняется)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/sessions/{session_id}": {
+      "delete": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "session_delete_api_interview_sessions__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_not_found",
+                    "message": "Сессия не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `interview_not_found` — Сессия не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "example_readonly",
+                    "message": "Пример для жюри не удаляется"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Конфликт с текущим состоянием. Коды `detail.code`: `example_readonly` — Пример для жюри не удаляется."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Удалить запись разговора и результат (ПДн)",
+        "tags": [
+          "interview"
+        ]
+      },
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "session_get_api_interview_sessions__session_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_not_found",
+                    "message": "Сессия не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `interview_not_found` — Сессия не найдена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Сессия кандидата: шаг разговора или итог",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/sessions/{session_id}/answer": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "session_answer_api_interview_sessions__session_id__answer_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__interview__router__AnswerIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_not_found",
+                    "message": "Сессия не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `interview_not_found` — Сессия не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_disabled",
+                    "message": "Устная защита и ИИ-интервью выключены"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Выключено флагом (interview_disabled) или сессия в другом состоянии. Коды `detail.code`: `interview_disabled` — Устная защита и ИИ-интервью выключены; `interview_closed` — Разговор не идёт."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "empty_answer",
+                    "message": "Пустой ответ"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Пустой ответ. Коды `detail.code`: `empty_answer` — Пустой ответ."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Ответ кандидата (текстом или распознанный) → следующий вопрос",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/sessions/{session_id}/begin": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "session_begin_api_interview_sessions__session_id__begin_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BeginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_not_found",
+                    "message": "Сессия не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `interview_not_found` — Сессия не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_disabled",
+                    "message": "Устная защита и ИИ-интервью выключены"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Выключено флагом (interview_disabled) или сессия в другом состоянии. Коды `detail.code`: `interview_disabled` — Устная защита и ИИ-интервью выключены; `interview_closed` — Сессия уже завершена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "insufficient_context",
+                    "message": "Защищать нечего: нет развёрнутых ответов от 120 знаков"
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `insufficient_context` — Защищать нечего: нет развёрнутых ответов от 120 знаков."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_unavailable",
+                    "message": "Интервьюер сейчас недоступен — попробуйте позже"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Интервьюер недоступен. Коды `detail.code`: `interview_unavailable` — Интервьюер сейчас недоступен — попробуйте позже."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Начать разговор (первый вопрос)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/sessions/{session_id}/channel": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "session_channel_api_interview_sessions__session_id__channel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BeginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_not_found",
+                    "message": "Сессия не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `interview_not_found` — Сессия не найдена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Сменить канал (отказ голоса → текст)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/sessions/{session_id}/finish": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "session_finish_api_interview_sessions__session_id__finish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_not_found",
+                    "message": "Сессия не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `interview_not_found` — Сессия не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Выключено флагом (interview_disabled) или сессия в другом состоянии"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Закончить разговор досрочно — оценить то, что сказано",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/sessions/{session_id}/speech": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "session_speech_api_interview_sessions__session_id__speech_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "audio/mpeg": {}
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_not_found",
+                    "message": "Сессия не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `interview_not_found` — Сессия не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_closed",
+                    "message": "Разговор не идёт"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Конфликт с текущим состоянием. Коды `detail.code`: `interview_closed` — Разговор не идёт."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tts_unavailable",
+                    "message": "Голос недоступен — вопрос показан текстом"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Голос недоступен — вопрос показан текстом. Коды `detail.code`: `tts_unavailable` — Голос недоступен — вопрос показан текстом."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Голос интервьюера: текущий вопрос (аудио)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/sessions/{session_id}/transcribe": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "session_transcribe_api_interview_sessions__session_id__transcribe_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscribeOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_not_found",
+                    "message": "Сессия не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `interview_not_found` — Сессия не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_closed",
+                    "message": "Разговор не идёт"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Выключено флагом (interview_disabled) или сессия в другом состоянии. Коды `detail.code`: `interview_closed` — Разговор не идёт; `interview_disabled` — Устная защита и ИИ-интервью выключены."
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "audio_too_large",
+                    "message": "Запись слишком длинная — ответьте короче или текстом"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Запись слишком длинная. Коды `detail.code`: `audio_too_large` — Запись слишком длинная — ответьте короче или текстом."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "empty_audio",
+                    "message": "Пустая запись"
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `empty_audio` — Пустая запись."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "stt_unavailable",
+                    "message": "Распознавание речи недоступно — ответьте текстом"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Распознавание недоступно — ответьте текстом. Коды `detail.code`: `stt_unavailable` — Распознавание речи недоступно — ответьте текстом."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "«Нажми и говори»: запись ответа → текст (кандидат проверяет и отправляет)",
+        "tags": [
+          "interview"
         ]
       }
     },
@@ -64352,6 +66724,10 @@
     {
       "description": "hh.ru: импорт своей вакансии работодателя (только чтение GET /vacancies/{id}) и «Рынок по hh.ru» — медиана и p25–p75 вилок живых вакансий. Без HH_ENABLED и токена приложения — 404 hh_disabled.",
       "name": "hh"
+    },
+    {
+      "description": "Устная защита развёрнутых ответов теста и ИИ-интервью этапом найма (флаг INTERVIEW_ENABLED). Оценивает модель; грейд не меняется",
+      "name": "interview"
     }
   ]
 }
