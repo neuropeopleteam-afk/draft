@@ -143,6 +143,7 @@ class CATConfig:
     ext_item_time_s: float = 300.0        # в дотестировании — только задания с лимитом не больше этого
     ext_own_first: bool = False           # дотестирование: сначала свободные задания своего субпула (частота показа)
     partial_credit: bool = False          # развёрнутые части — GPCM 0–4 (ASSESSMENT_PARTIAL_CREDIT_ENABLED)
+    partial_credit_select: bool = True    # при partial_credit: выбор задания по информации GPCM (False — по 2PL)
 
 
 class ExposureControl:
@@ -299,7 +300,8 @@ class CATSession:
         return self.theta
 
     def _score(self, item: PoolItem, target: float) -> float:
-        info = item.information_pc(target) if self.cfg.partial_credit else item.information(target)
+        pc = self.cfg.partial_credit and self.cfg.partial_credit_select
+        info = item.information_pc(target) if pc else item.information(target)
         w = self.cfg.time_weight
         if w:
             info /= (np.exp(item.beta_time) / 120.0) ** w  # ожидаемое время ответа ∝ exp(β)
