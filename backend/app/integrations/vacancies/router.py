@@ -23,7 +23,7 @@ from app.integrations.vacancies.models import Vacancy, VacancyApplication
 from app.modules.assignments import service as assignments  # задание к вакансии (И7)
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import STACK, category_title, known_tag
+from app.modules.catalog.seed_data import category_title, known_tag, tag_title
 from app.modules.contact.salary import basis_out
 from app.modules.contact.service import application_thread_summary
 from app.modules.invitations.service import candidate_contacts, check_salary
@@ -85,7 +85,7 @@ def _vac_out(db: Session, v: Vacancy, *, company: Company | None = None, with_tr
     c = company or db.get(Company, v.company_id)
     out = {"id": str(v.id), "title": v.title, "category_id": v.category_id,
            "category_title": category_title(v.category_id) if v.category_id else None,
-           "description": v.description, "stack": [{"tag": t, "title": STACK.get(t, (t,))[0]} for t in v.stack or []],
+           "description": v.description, "stack": [{"tag": t, "title": tag_title(t)} for t in v.stack or []],
            "salary_from": v.salary_from, "salary_to": v.salary_to, "work_format": v.work_format, "city": v.city,
            "status": v.status, "published_at": v.published_at.isoformat() if v.published_at else None,
            "updated_at": v.updated_at.isoformat(), "is_demo": v.is_demo, **basis_out(v.salary_basis),

@@ -103,6 +103,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
               <GradeBadge s={c.status} claimed={c.claimed} />
+              {c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
               {badge}
             </div>
             <MustLine m={must} />

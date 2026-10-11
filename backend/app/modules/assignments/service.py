@@ -20,7 +20,7 @@ from app.modules.assignments import rubric as rub
 from app.modules.assignments import why as why_mod
 from app.modules.assignments.models import Assignment, AssignmentAttempt
 from app.modules.auth.models import User
-from app.modules.catalog.seed_data import STACK, category_title, known_tag
+from app.modules.catalog.seed_data import category_title, known_tag, tag_title
 from app.modules.jury import scope as jury_scope
 from app.modules.matching.models import EmployerNeed
 from app.modules.notifications.mailer import notify
@@ -37,7 +37,7 @@ SOURCE_TITLE = {"probe": "зонд с автопроверкой", "vacancy": "�
 
 
 def tag_title(t: str) -> str:
-    return STACK.get(t, (t,))[0]
+    return tag_title(t)
 
 
 # ------------------------------------------------------------------ требования: откуда стек и категория

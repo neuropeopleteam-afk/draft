@@ -20,7 +20,7 @@ from __future__ import annotations
 import math
 import re
 
-from app.modules.catalog.seed_data import STACK, known_tag
+from app.modules.catalog.seed_data import known_tag, tag_title
 
 ALGORITHM = "mutual-v1"
 WEIGHTS = {"format": 0.25, "location": 0.15, "salary": 0.30, "stack": 0.15, "tasks": 0.05, "readiness": 0.10}
@@ -196,7 +196,7 @@ def offer_fit(*, work_format: str, city: str | None, relocation: bool, salary_mi
         factors.append(_f("stack", "unknown", "Интересы по стеку не указаны"))
     else:
         hit = [t for t in need_tags if t in interest]
-        names = ", ".join(STACK.get(t, (t,))[0] for t in hit[:4]) + (" и др." if len(hit) > 4 else "")
+        names = ", ".join(tag_title(t) for t in hit[:4]) + (" и др." if len(hit) > 4 else "")
         share = len(hit) / len(need_tags)
         st = "ok" if share >= 0.6 else "partial" if hit else "bad"
         text = (f"В {source} {len(hit)} из {len(need_tags)} технологий: {names}" if hit
