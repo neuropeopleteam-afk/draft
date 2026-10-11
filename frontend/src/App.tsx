@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { RouteAnnouncer, SkipLink } from "./components/A11y";  // А11: пропуск навигации, смена экрана
 import { JuryGuide } from "./components/JuryGuide";
@@ -11,6 +11,7 @@ import { panelSections } from "./pages/expert/sections";
 import { fspSections } from "./ideas/fsp/sections";
 import { HashScroll } from "./lib/hashScroll";
 import { lazyNamed } from "./lib/lazyPage";
+import { preloadSections } from "./lib/preload";
 
 // Я16: стартовый JS — общий код и главная (первый экран жюри). Остальные экраны — ленивыми файлами сборки по
 // модулям: роли (кандидат, работодатель, эксперт, ФСП) и тяжёлые экраны (валидация, критерии, графики) грузятся
@@ -62,6 +63,10 @@ const pg = {
   tariffs: () => import("./pages/employer/Tariffs"),  // Я29: тарифы работодателя (TARIFFS_ENABLED)
   fspBenefit: () => import("./ideas/fsp/Benefit"),  // Я29: «Польза для ФСП» и «Партнёры ФСП»
 };
+
+// FIX7: файлы основных разделов маршрута жюри — заранее, когда браузер свободен (lib/preload.ts): переход в раздел
+// не ждёт сеть. Порядок — как в проводнике жюри: кабинет, тест, потребности и подборка, карточка, валидация, критерии.
+const PRELOAD = [pg.cabinet, pg.assessment, pg.needs, pg.search, pg.validation, pg.criteria, pg.category, pg.compare, pg.feedback];
 
 const CabinetLayout = lazyNamed(pg.cabinet, "CabinetLayout");
 const InterviewRoom = lazyNamed(pg.interview, "InterviewRoom");
@@ -140,6 +145,7 @@ const Criteria = lazyNamed(pg.criteria, "default");
 const JuryGo = lazyNamed(pg.criteria, "JuryGo");
 
 export default function App() {
+  useEffect(() => { preloadSections(PRELOAD); }, []);
   return (
     <>
     <SkipLink />

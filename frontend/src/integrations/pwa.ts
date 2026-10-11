@@ -27,6 +27,32 @@ function onActivated(version: string) {
   reloadPending = true;
 }
 
+/** FIX7: версия сборки service worker, который управляет страницей (null — нет SW или не ответил за 2 с). */
+export function swVersion(): Promise<string | null> {
+  const ctl = navigator.serviceWorker?.controller;
+  if (!ctl) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const ch = new MessageChannel();
+    const t = window.setTimeout(() => resolve(null), 2000);
+    ch.port1.onmessage = (e) => { window.clearTimeout(t); resolve(typeof e.data?.version === "string" ? e.data.version : null); };
+    try { ctl.postMessage({ type: "get-version" }, [ch.port2]); } catch { window.clearTimeout(t); resolve(null); }
+  });
+}
+
+/** FIX7: проверка на устаревшие хеши при старте. Метка сборки — время (ГГГГММДДччммсс): SW новее страницы —
+ *  страница прежней выкладки (вкладка или оболочка из кэша) и её файлы на сервере уже удалены → одна перезагрузка на
+ *  эту версию (метка в sessionStorage — без петли). SW старше — он обновится сам (reg.update), страницу не трогаем. */
+const KEY_STALE = "fsp_sw_stale";
+async function checkStale() {
+  const v = await swVersion();
+  if (!v || v === BUILD_ID || !/^\d{14}$/.test(v) || !/^\d{14}$/.test(BUILD_ID) || v < BUILD_ID) return;
+  try {
+    if (sessionStorage.getItem(KEY_STALE) === v) return;
+    sessionStorage.setItem(KEY_STALE, v);
+  } catch { return; }
+  reloadNow();
+}
+
 function hookNavigation() {
   const push = history.pushState.bind(history);
   history.pushState = (data: any, unused: string, url?: string | URL | null) => {
@@ -51,6 +77,7 @@ export function registerPwa() {
       // открыта во время выкладки)
       const check = () => reg.update().catch(() => undefined);
       check();
+      void checkStale();
       document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
       setInterval(check, 5 * 60 * 1000);
     }).catch(() => undefined);
