@@ -12,7 +12,7 @@ import { useMeta } from "../lib/meta";
 export const useQuickSteps = (): QuickStep[] => quickSteps(useMeta()?.interview);
 const SELECTION = 1, COMPARE = 2, INVITE = 3, ANSWER = 4;
 /** Минуты к концу шага по плану 12 минут: шаг «по желанию» в план не входит (у него — свой ориентир). */
-const planOf = (steps: QuickStep[]) => steps.reduce<number[]>((a, s) => [...a, (a.at(-1) ?? 0) + (s.optional ? 0 : s.min)], []);
+const planOf = (steps: QuickStep[]) => steps.reduce<number[]>((a, s) => [...a, (a.at(-1) ?? 0) + (s.optional || s.defense ? 0 : s.min)], []);
 const mmss = (ms: number) => { const t = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; };
 const mins = (m: number) => `${String(m).replace(".", ",")}\u00A0мин`;
 const NEED_RE = /^\/employer\/needs\/([0-9a-f-]{36})(?:\/|$)/;
@@ -85,7 +85,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const here = (s.match.test(loc.pathname) && !needLogin) || !!s.alt?.test(loc.pathname);
   const t0 = quick.t0() ?? now;
   // шаг «по желанию» добавляет к ориентиру свои минуты — тем, кто его прошёл, таймер не «краснеет» за него
-  const optBefore = steps.slice(0, q + 1).reduce((a, x) => a + (x.optional ? x.min : 0), 0);
+  const optBefore = steps.slice(0, q + 1).reduce((a, x) => a + (x.optional || x.defense ? x.min : 0), 0);
   const late = now - t0 > (PLAN[q] + optBefore) * 60_000;
   // следующий обязательный шаг; шаг «по желанию» между ними — отдельной кнопкой в теле панели
   const opt = steps[q + 1]?.optional ? q + 1 : -1;
@@ -165,7 +165,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
             onClick={() => go(opt)}>{steps[opt].title.split(" · ")[0]}</button> — по желанию, ≈{"\u00A0"}{mins(steps[opt].min)} сверх плана; или сразу дальше.
         </p>
       )}
-      {s.optional && (
+      {(s.optional || s.defense) && (
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/80" data-testid="quick-live">
           <button type="button" className="font-semibold text-brand-blush underline underline-offset-2 hover:text-white" disabled={busy}
             onClick={employerView}>Как видит работодатель</button>
