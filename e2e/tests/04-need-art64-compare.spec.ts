@@ -59,7 +59,7 @@ test("потребность: ст. 64 → цитаты и предупрежд�
   await test.step("подборка по исправленной потребности", async () => {
     await main.getByRole("button", { name: /^(Подтвердить остальные и показать|Сохранить и показать) подборку$/ }).click();
     await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+$/, { timeout: 60_000 });
-    const total = main.getByText(/^v1 · кандидатов:/);
+    const total = main.getByText(/^версия 1 · кандидатов:/);
     await expect(total).toBeVisible();
     expect(Number((await total.locator("b").textContent()) ?? 0), "кандидатов в подборке").toBeGreaterThanOrEqual(3);
     // место в кубке — один раз («Кубок «…» — 2 место из 5»), θ — с запятой, как в сравнении
@@ -96,7 +96,7 @@ test("потребность: ст. 64 → цитаты и предупрежд�
       hasText: /^C-[A-Z0-9]+ (выше C-[A-Z0-9]+ на [\d,]+ балл[а-я]* из 100|и C-[A-Z0-9]+ почти равны: разница [\d,]+ балл[а-я]* из 100 — решит зонд)/,
     });
     await expect(pairs).toHaveCount(2);
-    await expect(main.getByRole("button", { name: "Зонд всем (3)" })).toBeVisible();
+    await expect(main.getByRole("button", { name: "Задание всем (3)" })).toBeVisible();
     await main.getByRole("link", { name: "К подборке" }).click();
     await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+\/v\/1$/);
   });
