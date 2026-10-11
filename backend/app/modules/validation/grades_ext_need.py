@@ -104,6 +104,12 @@ SCENARIOS = {
     "d_k20_c_o2_cs8_os4": dict(mult=2, a=1.5, block=20, partial=True, common_short_mult=4, own_short_mult=2),
     "b_k20_o2_cs8": dict(mult=2, a=1.5, block=20, partial=False, common_short_mult=4, own_short_mult=0.5),
     # у Principal своих коротких в банке ×1 нет: own_principal_short / common_principal_short — число коротких Principal
+    # перепроверка на модели частичного балла платформы (GPCM 0–4 + шум оценщика; partial_credit=True в движке) —
+    # нужна ветка частичного балла (app.modules.validation.partial_credit_sim)
+    "g_x2": dict(mult=2, a=1.5, block=0, partial="gpcm"),
+    "g_k20_x2_s4": dict(mult=2, a=1.5, block=20, partial="gpcm", short_mult=4),
+    "g_k20_x2_s4_p4c16": dict(mult=2, a=1.5, block=20, partial="gpcm", short_mult=4, own_principal_short=4,
+                              common_principal_short=16),
     "d_k20_c_x2_s4_p4": dict(mult=2, a=1.5, block=20, partial=True, short_mult=4, own_principal_short=4),
     "d_k20_c_x2_s4_p4c16": dict(mult=2, a=1.5, block=20, partial=True, short_mult=4, own_principal_short=4,
                                  common_principal_short=16),
@@ -135,7 +141,8 @@ def scen_text(s: dict) -> str:
         head += ", коротких Principal: " + ", ".join(ps)
     parts = [head, f"a {s['a']}"]
     parts.append(f"блок {s['block']} заданий" if s["block"] else "без блока")
-    parts.append("частичный балл 0–4" if s["partial"] else "развёрнутые 0/1")
+    parts.append("частичный балл 0–4 (GPCM, шум оценщика)" if s["partial"] == "gpcm"
+                 else "частичный балл 0–4" if s["partial"] else "развёрнутые 0/1")
     return ", ".join(parts)
 
 
@@ -175,7 +182,7 @@ def model_bank(pool, s: dict, n_subpools: int, rng: np.random.Generator) -> list
                     base = src[k % len(src)]
                     it = deepcopy(base)
                     target = float(rng.uniform(*B_RANGE[g]))
-                    if kind == "o" and s["partial"]:  # 0–4 по рубрике: четыре ступени вокруг трудности ответа
+                    if kind == "o" and s["partial"] is True:  # 0–4 по рубрике: четыре ступени вокруг трудности ответа
                         it.b = target + np.array([-0.75, -0.25, 0.25, 0.75])
                         it.a = np.full(4, 0.8 * s["a"])
                         it.sigma = np.full(4, float(np.mean(base.sigma)))
@@ -198,7 +205,7 @@ def run_session_x(pool, cand, truth, cfg, counter, claimed, history, rng, det, s
     excl = set(stack_excluded(cand.stack))
     seen = {f: age for age, h in reversed(list(enumerate(history))) for f in h["families"]}
     person = Person(cand.theta, cand.tau, claimed)
-    responder = make_responder(person, truth)
+    responder = (s.get("_resp") or make_responder)(person, truth)
     sess, res = sim.run_session(pool, d, responder, cfg, counter, claimed, sp, rng, exclude=sorted(excl), seen=seen)
     theta, se = float(res.theta), float(res.se)
     n_block = 0
@@ -289,6 +296,14 @@ def worker(a) -> dict:
     # порог уверенности принятия уровня ниже — тот же confirm (как настройка ASSESSMENT_CONFIRM_LEVEL)
     rules_mod.proved_lower = functools.partial(rules_mod.proved_lower, level=confirm)
     cfg = sim.app_config_from_settings()
+    if s["partial"] == "gpcm":  # модель частичного балла платформы: движок с partial_credit, ответы — GPCM + шум оценщика
+        try:
+            from app.modules.validation.partial_credit_sim import gpcm_responder, noise_matrix
+        except ImportError as e:
+            raise SystemExit("сценарии g_* — после слияния ветки частичного балла (partial_credit_sim)") from e
+
+        cfg = replace(cfg, partial_credit=True, partial_credit_select=True)
+        s = dict(s, _resp=gpcm_responder("gpcm", 1.0, noise_matrix()))
     base = sim.make_pool(cfg.subpools)
     bseed = [SEED, 7, list(SCENARIOS).index(a.scenario)] + ([a.rep] if a.rep else [])  # rep — другая реализация банка
     extra = model_bank(base, s, cfg.subpools, np.random.default_rng(bseed))
