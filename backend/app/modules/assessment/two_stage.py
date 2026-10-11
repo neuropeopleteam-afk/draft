@@ -367,15 +367,40 @@ def card_note(value: dict | None) -> dict | None:
         return None
     st = t.get("status")
     lab = t.get("label") or ""
+    oral, oral_text = oral_mark(value)
     if st == "passed":
         text = f"{lab[:1].upper()}{lab[1:]} — уточнение пройдено: {TITLE.get(t.get('final_grade'), '')} по двум сессиям теста"
     elif st == "failed":
         fin = t.get("final_grade")
         text = (f"{lab[:1].upper()}{lab[1:]} — уточнение не пройдено"
                 + (f": {TITLE.get(fin, fin)} по двум сессиям теста" if fin and fin != "none" else ""))
+    elif oral:  # п. 4: устная защита меняет пометку «на границе», не уровень
+        text = f"{lab[:1].upper()}{lab[1:]} — {oral_text}"
     else:
         text = f"{lab[:1].upper()}{lab[1:]} — уточнение уровня не проходил (одна сессия теста)"
-    return {**t, "text": text}
+    if oral and st in ("passed", "failed"):
+        text += f" · устная защита: {oral_text}"
+    return {**t, "text": text, "oral": oral}
+
+
+ORAL = {"confirmed": ("confirmed", "подтверждено устной защитой"), "strong": ("confirmed", "подтверждено устной защитой"),
+        "discrepancies": ("check", "требует проверки"), "weak": ("check", "требует проверки")}
+
+
+def oral_mark(value: dict | None) -> tuple[str | None, str | None]:
+    """Устная защита ответов теста (модуль interview, флаг INTERVIEW_ENABLED) как дополнительное доказательство у границы:
+    уровень не меняет (FTT.4), меняет пометку — «подтверждено устной защитой» / «требует проверки»; «мало данных» и
+    пример модельного кандидата пометку не меняют."""
+    d = (value or {}).get("defense") or {}
+    if not d.get("verdict") or d.get("example"):
+        return None, None
+    try:
+        from app.modules.interview.service import enabled as interview_on
+    except ImportError:  # модуля интервью нет в сборке
+        return None, None
+    if not interview_on():
+        return None, None
+    return ORAL.get(d["verdict"], (None, None))
 
 
 def as_result(ts, res):
