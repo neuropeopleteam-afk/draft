@@ -50,8 +50,8 @@ def upgrade() -> None:
         sa.Column("company_id", sa.Uuid(), nullable=False),
         sa.Column("number", sa.String(length=32), nullable=False),
         sa.Column("plan", sa.String(length=16), nullable=False),
-        sa.Column("amount_rub", sa.Integer(), nullable=False),
-        sa.Column("vat_rub", sa.Integer(), nullable=False),
+        sa.Column("amount_rub", sa.Integer(), nullable=True),  # None — цена «по запросу», счёт без суммы
+        sa.Column("vat_rub", sa.Integer(), nullable=True),
         sa.Column("period_from", sa.Date(), nullable=False),
         sa.Column("period_to", sa.Date(), nullable=False),
         sa.Column("status", sa.String(length=16), nullable=False),

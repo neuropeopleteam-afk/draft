@@ -34,7 +34,8 @@ def test_pure_rules():
     from app.modules.tariffs import plans as P
     from app.modules.tariffs.service import month_window
 
-    assert P.vat_of(9_900) == 1_785  # НДС 22 % внутри цены: 9900 × 22 / 122
+    # цена «Найма» — по запросу (решение владельца 11.10): числа цены нет нигде
+    assert P.plan("hire")["price_rub_month"] is None and P.plan("hire")["price_note"] == "По запросу"
     assert [p["id"] for p in P.PLANS] == ["start", "hire", "partner"] and P.plan("nope")["id"] == "start"
     assert P.plan("start")["price_rub_month"] == 0 and P.plan("partner")["self_service"] is False
     assert P.plan("start")["invites_per_month"] < P.plan("hire")["invites_per_month"] < P.plan("partner")["invites_per_month"]
@@ -65,6 +66,8 @@ def test_start_limit_upgrade_with_demo_invoice(client, tariffs_on):
     pub = client.get("/api/tariffs")
     assert pub.status_code == 200 and pub.json()["candidates_free"] is True and pub.json()["price_is_stub"] is True
     assert [p["id"] for p in pub.json()["plans"]] == ["start", "hire", "partner"]
+    flat = json.dumps([p for p in pub.json()["plans"] if p["id"] != "start"], ensure_ascii=False)
+    assert "9900" not in flat and "9 900" not in flat and "По запросу" in flat
     te = employer(client)
     st = client.get("/api/employer/tariff", headers=H(te)).json()
     assert st["plan_id"] == "start" and st["is_default"] and st["usage"]["invites_left"] == 3
@@ -82,7 +85,8 @@ def test_start_limit_upgrade_with_demo_invoice(client, tariffs_on):
     up = client.post("/api/employer/tariff", json={"plan": "hire"}, headers=H(te))
     assert up.status_code == 200, up.text
     b = up.json()
-    assert b["plan_id"] == "hire" and b["invoice"]["amount_rub"] == 9_900 and b["invoice"]["vat_rub"] == 1_785
+    assert b["plan_id"] == "hire" and b["invoice"]["amount_rub"] is None and b["invoice"]["vat_rub"] is None
+    assert b["invoice"]["price_note"] == "по запросу" and "без суммы" in b["invoice"]["note"]
     assert b["invoice"]["status"] == "demo" and b["invoice"]["number"].startswith("Д-") and len(b["invoices"]) == 1
     assert client.post("/api/employer/tariff", json={"plan": "hire"}, headers=H(te)).json()["detail"]["code"] == "plan_same"
     assert _invite(client, te, refs[3]).status_code == 201
@@ -143,7 +147,7 @@ def test_jury_defaults_and_demo_benefit(client, tariffs_on):
     «Найм» с демо-счетами, демо-наймы; блок «Польза для ФСП» без персональных данных, малые группы скрыты."""
     from app.modules.hiring.models import HiringOutcome
     from app.modules.tariffs import demo
-    from app.modules.tariffs.models import CompanyTariff
+    from app.modules.tariffs.models import CompanyTariff, DemoInvoice
 
     _platform_demo()
     j = _login(client, "employer")
@@ -153,6 +157,8 @@ def test_jury_defaults_and_demo_benefit(client, tariffs_on):
         assert demo.has_demo(db) and demo.has_demo_hires(db)  # вход жюри досоздал демо тарифов
         rows = db.scalars(select(CompanyTariff)).all()
         assert sum(r.fsp_partner for r in rows) == 3 and sum(not r.fsp_partner for r in rows) == 4
+        invs = db.scalars(select(DemoInvoice)).all()  # демо-счета «Найма» — без суммы (цена по запросу)
+        assert len(invs) == 4 and all(i.amount_rub is None and i.vat_rub is None for i in invs)
     tf = _login(client, "fsp", j.get("scenario"))["access_token"]
     ov = client.get("/api/fsp-cabinet/partners", headers=H(tf)).json()
     names = [p["name"] for p in ov["partners"]]

@@ -32,8 +32,8 @@ employer_router = APIRouter(prefix="/api/employer/tariff", tags=["tariffs"])
 fsp_router = APIRouter(prefix="/api/fsp-cabinet", tags=["fsp-cabinet"])
 employer = require_role(UserRole.employer)
 analyst = require_role(UserRole.fsp_analyst, UserRole.admin)
-TAGS = [{"name": "tariffs", "description": "Тарифы работодателя: «Старт» (бесплатно), «Найм» (демо-счёт, без настоящей "
-                                           "оплаты), «Партнёр ФСП» (выдаёт ФСП); лимит приглашений в месяц. Кандидатам "
+TAGS = [{"name": "tariffs", "description": "Тарифы работодателя: «Старт» (бесплатно), «Найм» (цена по запросу, демо-счёт "
+                                           "без суммы), «Партнёр ФСП» (выдаёт ФСП); лимит приглашений в месяц. Кандидатам "
                                            "всегда бесплатно. Без TARIFFS_ENABLED — 404 tariffs_disabled."}]
 OFF = {404: err("Тарифы не включены на сервере (tariffs_disabled)")}
 E_AUTH = {401: err("Не выполнен вход"), 403: err("Только для работодателя"), 409: err("Нет профиля компании"), **OFF}
@@ -62,11 +62,11 @@ class PartnerSetIn(BaseModel):
 def plans() -> dict:
     svc.need_on()
     return {"plans": P.public_plans(), "features": [{"key": k, "title": t} for k, t in P.FEATURES.items()],
-            "price_is_stub": P.PRICE_IS_STUB, "vat_rate": P.VAT_RATE, "candidates_free": True,
+            "price_is_stub": P.PRICE_IS_STUB, "candidates_free": True,
             "market_references": P.MARKET_REFERENCES, "market_note": P.MARKET_NOTE,
             "notes": ["Кандидатам — всегда бесплатно: тест, категория, приглашения, паспорт ФСП.",
-                      "Оплаты на прототипе нет: при выборе «Найма» выставляется демонстрационный счёт, тариф "
-                      "подключается сразу.",
+                      "Цена «Найма» — по запросу. Оплаты на прототипе нет: при выборе «Найма» выставляется "
+                      "демонстрационный счёт без суммы, тариф подключается сразу.",
                       "«Партнёр ФСП» входит в спонсорский пакет федерации; отборочные задачи компаний проводит ФСП "
                       "на своих соревнованиях."]}
 

@@ -5,14 +5,14 @@
 ФСП и выдаётся федерацией (роль fsp_analyst/admin), не покупается. Отборочные задачи от компаний проводит ФСП на своих
 соревнованиях — функция партнёрского пакета.
 
-Цена «Найма» — ДЕМОНСТРАЦИОННАЯ (PRICE_IS_STUB): настоящей оплаты нет, выставляется демо-счёт. Ориентиры рынка —
+Цена «Найма» — «по запросу» (решение владельца 11.10: число цены не показывается нигде). Настоящей оплаты нет:
+при выборе «Найма» выставляется демонстрационный счёт без суммы и тариф подключается сразу. Ориентиры рынка —
 публичные прайсы на 11.10.2026 (MARKET_REFERENCES); это цены других единиц услуги (вакансия, открытия контактов,
-оценка), не оферта и не наша цена. Поменять цену или лимит — только здесь.
+оценка), не оферта и не наша цена. Поменять условия или лимит — только здесь.
 """
 from __future__ import annotations
 
-PRICE_IS_STUB = True  # цены не утверждены владельцем: в интерфейсе — «демонстрационная цена, не оферта»
-VAT_RATE = 0.22  # НДС 22 % (с 01.01.2026), включён в цену
+PRICE_IS_STUB = True  # цена «Найма» не утверждена: в интерфейсе и API — «по запросу», демо-счёт без суммы
 
 # Функции тарифов: ключ → подпись в интерфейсе. Проверка — tariffs.service.require_feature / feature_allowed.
 FEATURES: dict[str, str] = {
@@ -30,7 +30,7 @@ PLANS: list[dict] = [
      "features": {"ats": False, "assignments": False, "salary_market": False, "fsp_selection_tasks": False,
                   "partner_badge": False},
      "self_service": True},
-    {"id": "hire", "title": "Найм", "price_rub_month": 9_900, "price_note": "в месяц, НДС включён",
+    {"id": "hire", "title": "Найм", "price_rub_month": None, "price_note": "По запросу",
      "invites_per_month": 30,
      "summary": "Регулярный найм: больше приглашений, передача в ATS, задания кандидатам, рынок зарплат у вилки.",
      "features": {"ats": True, "assignments": True, "salary_market": True, "fsp_selection_tasks": False,
@@ -73,9 +73,6 @@ def plan(plan_id: str) -> dict:
     return PLAN_BY_ID.get(plan_id) or PLAN_BY_ID[DEFAULT_PLAN]
 
 
-def vat_of(amount_rub: int) -> int:
-    """НДС, включённый в сумму: amount × 22 / 122, округление до рубля."""
-    return int(round(amount_rub * VAT_RATE / (1 + VAT_RATE)))
 
 
 def public_plans() -> list[dict]:

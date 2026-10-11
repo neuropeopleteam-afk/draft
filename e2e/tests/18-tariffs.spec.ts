@@ -1,11 +1,11 @@
 /**
  * Тарифы работодателя и «Польза для ФСП» (Я29, docs/TARIFFS.md). Только на стенде с TARIFFS_ENABLED=1 — иначе спек
- * пропускается. Цены — демонстрационные, оплаты нет (демо-счёт).
+ * пропускается. Цена «Найма» — по запросу, оплаты нет (демо-счёт без суммы).
  *
  * 1. Публичная /tariffs: три тарифа, «кандидатам — бесплатно», ориентиры рынка со ссылками; 1440 и 390 px без
  *    горизонтальной прокрутки; axe.
  * 2. Работодатель песочницы («Северный платёж», «Найм» по умолчанию): «Тарифы» → остаток приглашений → «Старт» →
- *    снова «Найм» с демо-счётом (№, сумма, НДС 22 %); счётчик в форме приглашения; 390 px; axe.
+ *    снова «Найм» с демо-счётом (№, без суммы — «по запросу»); счётчик в форме приглашения; 390 px; axe.
  * 3. Метка «Партнёр ФСП»: «Логистика Онлайн» песочницы — партнёр по умолчанию; карточка компании у кандидата.
  * 4. Кабинет ФСП: «Польза для ФСП» (регионы, направления, партнёры, CSV) и «Партнёры ФСП» (заявки, снятие/выдача метки
  *    своей компании песочницы; демо-компании общего стенда — только просмотр); 390 px; axe.
@@ -63,7 +63,9 @@ test("тарифы: публичная страница, кабинет рабо
     for (const t of ["Старт", "Найм", "Партнёр ФСП"]) await expect(page.getByRole("article", { name: `Тариф «${t}»` })).toBeVisible();
     await expect(page.getByText("Кандидатам — всегда бесплатно", { exact: false }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Хабр Карьера/ }).first()).toHaveAttribute("href", /career\.habr\.com/);
-    await expect(page.getByText(/демонстрационные, не оферта/)).toBeVisible();
+    await expect(page.getByText(/Цена «Найма» — по запросу, не оферта/)).toBeVisible();
+    await expect(page.getByRole("article", { name: "Тариф «Найм»" })).toContainText("По запросу");
+    await expect(page.locator("main")).not.toContainText(/9\s?900/);
     expect(await noHScroll(page)).toBe(true);
     await shot(page, "public-1440");
     await axe(page, "main", "публичная /tariffs");
@@ -79,11 +81,11 @@ test("тарифы: публичная страница, кабинет рабо
     await page.getByRole("button", { name: "Перейти на «Старт»" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Тариф «Старт» подключён" })).toBeVisible();
     await expect(page.getByTestId("tariff-left")).toContainText(/из 3$/);
-    await page.getByRole("button", { name: /Подключить за 9\s900\s₽ \(демо-счёт\)/ }).click();
+    await page.getByRole("button", { name: "Подключить «Найм» (демо-счёт без суммы)" }).click();
     const ok = page.getByRole("status").filter({ hasText: "демонстрационный счёт" });
     await expect(ok).toBeVisible();
-    await expect(ok).toContainText("оплата не проводится");
-    await expect(page.getByTestId("demo-invoice").first()).toContainText(/НДС 22 %: 1\s785\s₽/);
+    await expect(ok).toContainText("без суммы (цена — по запросу)");
+    await expect(page.getByTestId("demo-invoice").first()).toContainText("сумма — по запросу");
     expect(await noHScroll(page)).toBe(true);
     await shot(page, "employer-1440");
     await axe(page, "main", "кабинет работодателя: Тарифы");
