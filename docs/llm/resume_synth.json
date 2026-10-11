@@ -1,0 +1,407 @@
+{
+ "name": "resume_synth",
+ "date": "2026-10-09",
+ "n": 20,
+ "note": "синтетика, автор набора и разметки — модель (не люди, не эксперты); ПДн нет (плейсхолдеры)",
+ "rows": [
+  {
+   "id": "r01",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nМосква\nBackend-разработчик\n\nОпыт работы\n03.2021 — по настоящее время, финтех-компания, разработчик\nПишу сервисы на питоне: FastAPI, асинхронщина на asyncio, БД — постгря, кэш в редисе. Деплой — докер, пайплайны в GitLab CI. Покрываю код тестами на pytest.\n09.2019 — 02.2021, веб-студия, младший разработчик: Django, шаблоны, немного JS.\n\nНавыки: Python, SQL, Git, Linux, REST API",
+   "gold": {
+    "stack": [
+     "asyncio",
+     "ci-cd",
+     "django",
+     "docker",
+     "fastapi",
+     "git",
+     "javascript",
+     "linux",
+     "postgresql",
+     "pytest",
+     "python",
+     "redis",
+     "rest-api",
+     "sql"
+    ],
+    "roles": [
+     "developer"
+    ],
+    "experience_years": 7.1
+   }
+  },
+  {
+   "id": "r02",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nКазань\nFrontend developer\n\nОпыт: 4 года коммерческой разработки.\nСтек: React + TS, стейт — Redux Toolkit и Zustand, сборка Vite, стили на Tailwind. Писал SSR на Next. Тесты компонентов — Jest и Testing Library, e2e — плейрайт. Слежу за доступностью (ARIA, клавиатура).\nНаставник двух джунов, провожу код-ревью.",
+   "gold": {
+    "stack": [
+     "a11y",
+     "frontend-testing",
+     "nextjs",
+     "playwright",
+     "react",
+     "state-management",
+     "tailwind",
+     "typescript",
+     "vite-webpack"
+    ],
+    "roles": [
+     "developer",
+     "mentor"
+    ],
+    "experience_years": 4.0
+   }
+  },
+  {
+   "id": "r03",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nСанкт-Петербург\nData Scientist\n\n2022 — н. в. — ритейл, DS: прогноз спроса (пандас, нампай, склерн, бустинги), A/B-тесты и статистика, витрины в кликхаусе, оркестрация на Airflow.\n2020 — 2022 — банк, аналитик данных: SQL, Python, отчёты.\nPet-проект: классификация отзывов на торче (BERT), NLP.",
+   "gold": {
+    "stack": [
+     "airflow",
+     "clickhouse",
+     "nlp",
+     "numpy",
+     "pandas",
+     "python",
+     "pytorch",
+     "scikit-learn",
+     "sql",
+     "statistics"
+    ],
+    "roles": [
+     "analyst",
+     "researcher"
+    ],
+    "experience_years": 6.8
+   }
+  },
+  {
+   "id": "r04",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nНовосибирск\nQA Automation Engineer\n\nОпыт работы 5 лет.\nАвтотесты UI на Selenium и Playwright (Python), API — requests + pytest, отчёты в Allure. Нагрузочное — JMeter и Locust. Тест-дизайн: классы эквивалентности, граничные значения, pairwise. Ручное тестирование мобильных приложений. Интеграция тестов в Jenkins.",
+   "gold": {
+    "stack": [
+     "allure",
+     "api-testing",
+     "ci-cd",
+     "load-testing",
+     "manual-testing",
+     "playwright",
+     "pytest",
+     "python",
+     "selenium",
+     "test-design"
+    ],
+    "roles": [
+     "tester"
+    ],
+    "experience_years": 5.0
+   }
+  },
+  {
+   "id": "r05",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nМосква\nСпециалист по информационной безопасности\n\n01.2020 — настоящее время — SOC-аналитик, затем пентестер. Мониторинг в SIEM (MaxPatrol, Splunk), разбор инцидентов, форензика рабочих станций. Пентест веб-приложений: Burp Suite, OWASP Top 10. Сетевая безопасность: VLAN, межсетевые экраны, Wireshark. Участвую в CTF (реверс, крипта).",
+   "gold": {
+    "stack": [
+     "burp-suite",
+     "cryptography",
+     "ctf",
+     "forensics",
+     "network-security",
+     "owasp",
+     "pentest",
+     "reverse-engineering",
+     "siem-soc"
+    ],
+    "roles": [
+     "analyst"
+    ],
+    "experience_years": 6.8
+   }
+  },
+  {
+   "id": "r06",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nЕкатеринбург\nJava-разработчик\n\nОпыт: 2018 — 2026, интегратор, разработчик → техлид.\nSpring Boot, микросервисы, Kafka и RabbitMQ, PostgreSQL, gRPC между сервисами. Kotlin — новые сервисы. Контейнеры — Docker, кубер (Helm), CI/CD в GitLab. Проектирую архитектуру модулей.",
+   "gold": {
+    "stack": [
+     "ci-cd",
+     "docker",
+     "grpc",
+     "java",
+     "kafka",
+     "kotlin",
+     "kubernetes",
+     "postgresql",
+     "rabbitmq"
+    ],
+    "roles": [
+     "architect",
+     "developer",
+     "tech_lead"
+    ],
+    "experience_years": 8.0
+   }
+  },
+  {
+   "id": "r07",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nУдалённо\nGo-разработчик (Golang)\n\n06.2022 — н. в. — маркетплейс: сервисы на Go, gRPC и REST, Postgres, Redis, Кафка. Метрики и алерты, k8s.\n07.2021 — 05.2022 — стажёр-разработчик PHP.",
+   "gold": {
+    "stack": [
+     "go",
+     "grpc",
+     "kafka",
+     "kubernetes",
+     "php",
+     "postgresql",
+     "redis",
+     "rest-api"
+    ],
+    "roles": [
+     "developer"
+    ],
+    "experience_years": 5.2
+   }
+  },
+  {
+   "id": "r08",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nНижний Новгород\nСтажёр / Junior Python\n\nВыпускник 2026 года. Учебные проекты: телеграм-бот на aiogram (asyncio), парсер на requests, REST API на Flask с SQLite. Знаю Git, базовый Linux, SQL. Решаю задачи на алгоритмы (LeetCode, 300+ задач).\nОпыта работы нет.",
+   "gold": {
+    "stack": [
+     "algorithms",
+     "asyncio",
+     "flask",
+     "git",
+     "linux",
+     "python",
+     "rest-api",
+     "sql"
+    ],
+    "roles": [
+     "developer"
+    ],
+    "experience_years": 0.0
+   }
+  },
+  {
+   "id": "r09",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nМосква\nMLOps-инженер\n\n2021 — н. в. — MLOps в телекоме: выкатка моделей, MLflow, мониторинг дрейфа, Kubernetes и Kubeflow, Docker. Spark для подготовки фич, Airflow. Python, Bash, Linux.\n2019 — 2021 — DevOps-инженер: Ansible, Terraform, CI/CD.",
+   "gold": {
+    "stack": [
+     "airflow",
+     "ci-cd",
+     "docker",
+     "kubernetes",
+     "linux",
+     "mlops",
+     "python",
+     "spark"
+    ],
+    "roles": [
+     "devops"
+    ],
+    "experience_years": 7.8
+   }
+  },
+  {
+   "id": "r10",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nСамара\nFullstack-разработчик\n\nОпыт работы — 3 года.\nБэк — Node.js (Express) на TypeScript, фронт — Vue 3 + Pinia, иногда Angular. HTML/CSS, адаптивная вёрстка. Базы — MySQL и Postgres. Docker Compose, nginx, Linux-сервера.",
+   "gold": {
+    "stack": [
+     "angular",
+     "docker",
+     "html-css",
+     "javascript",
+     "linux",
+     "postgresql",
+     "sql",
+     "state-management",
+     "typescript",
+     "vue"
+    ],
+    "roles": [
+     "developer"
+    ],
+    "experience_years": 3.0
+   }
+  },
+  {
+   "id": "r11",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nМосква\nC# / .NET разработчик\n\n10.2019 — по настоящее время, производственная компания.\nASP.NET Core, Entity Framework, MS SQL, очереди на RabbitMQ, юнит-тесты xUnit. Фронт — немного React. Работаю в команде из 8 человек, выступал на внутренних митапах.",
+   "gold": {
+    "stack": [
+     "csharp",
+     "rabbitmq",
+     "react",
+     "sql"
+    ],
+    "roles": [
+     "developer"
+    ],
+    "experience_years": 7.0
+   }
+  },
+  {
+   "id": "r12",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nТомск\nComputer Vision Engineer\n\n2023 — н. в. — детекция дефектов на конвейере: PyTorch, YOLO, OpenCV, ONNX; разметка и аугментации. Numpy, статистика метрик качества.\n2021 — 2023 — инженер-исследователь в университете (CV, сегментация).",
+   "gold": {
+    "stack": [
+     "cv",
+     "numpy",
+     "pytorch",
+     "statistics"
+    ],
+    "roles": [
+     "researcher"
+    ],
+    "experience_years": 5.8
+   }
+  },
+  {
+   "id": "r13",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nКраснодар\nТестировщик (manual QA)\n\nОпыт: 1 год 6 месяцев.\nФункциональное и регрессионное тестирование веба, тест-кейсы и чек-листы в TestIT, баг-репорты в Jira. Проверяю API в Postman, простые SQL-запросы, логи в Kibana. Начал изучать автотесты на питоне.",
+   "gold": {
+    "stack": [
+     "api-testing",
+     "manual-testing",
+     "python",
+     "sql",
+     "test-design"
+    ],
+    "roles": [
+     "tester"
+    ],
+    "experience_years": 1.5
+   }
+  },
+  {
+   "id": "r14",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nМосква\nTeam Lead backend\n\n2015 — н. в. — от разработчика до тимлида команды из 7 человек.\nPython (Django, DRF, Celery), PostgreSQL, ClickHouse, Redis, RabbitMQ. Найм, онбординг, менторство, планирование спринтов. Архитектурные ревью, высоконагруженные сервисы.",
+   "gold": {
+    "stack": [
+     "clickhouse",
+     "django",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis",
+     "rest-api"
+    ],
+    "roles": [
+     "architect",
+     "developer",
+     "mentor",
+     "team_lead"
+    ],
+    "experience_years": 11.8
+   }
+  },
+  {
+   "id": "r15",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nУфа\nAndroid-разработчик\n\n03.2022 — н. в. — Kotlin, Jetpack Compose, корутины, Retrofit (REST), Room. CI — GitHub Actions. Java — поддержка старого кода.",
+   "gold": {
+    "stack": [
+     "ci-cd",
+     "java",
+     "kotlin",
+     "rest-api"
+    ],
+    "roles": [
+     "developer"
+    ],
+    "experience_years": 4.6
+   }
+  },
+  {
+   "id": "r16",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nМосква\nАналитик данных / BI\n\nОпыт 2 года: SQL (оконные функции), Python (pandas), дашборды в Power BI и DataLens, проверка гипотез, статистические тесты. ClickHouse и Greenplum.",
+   "gold": {
+    "stack": [
+     "clickhouse",
+     "pandas",
+     "python",
+     "sql",
+     "statistics"
+    ],
+    "roles": [
+     "analyst"
+    ],
+    "experience_years": 2.0
+   }
+  },
+  {
+   "id": "r17",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nПермь\nDevSecOps\n\n2020 — н. в. — безопасная разработка: SAST/DAST в CI/CD, проверка зависимостей, харденинг Linux и Docker-образов, секреты в Vault, Kubernetes RBAC. OWASP ASVS, моделирование угроз.",
+   "gold": {
+    "stack": [
+     "ci-cd",
+     "docker",
+     "kubernetes",
+     "linux",
+     "owasp"
+    ],
+    "roles": [
+     "devops"
+    ],
+    "experience_years": 6.8
+   }
+  },
+  {
+   "id": "r18",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nВоронеж\nJunior frontend\n\nСтажировка 07.2025 — 12.2025 (6 месяцев), затем junior до сих пор.\nJavaScript, React, HTML и CSS, вебпак, немного TypeScript. Учусь писать тесты на Jest.",
+   "gold": {
+    "stack": [
+     "frontend-testing",
+     "html-css",
+     "javascript",
+     "react",
+     "typescript",
+     "vite-webpack"
+    ],
+    "roles": [
+     "developer"
+    ],
+    "experience_years": 1.3
+   }
+  },
+  {
+   "id": "r19",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nМосква\nData Engineer\n\n2021 — 2026 — дата-инженер: Spark (PySpark), Airflow, Kafka, ClickHouse и Postgres, хранилище на Hadoop. Python, SQL, Docker, CI/CD.",
+   "gold": {
+    "stack": [
+     "airflow",
+     "ci-cd",
+     "clickhouse",
+     "docker",
+     "kafka",
+     "postgresql",
+     "python",
+     "spark",
+     "sql"
+    ],
+    "roles": [
+     "developer"
+    ],
+    "experience_years": 5.0
+   }
+  },
+  {
+   "id": "r20",
+   "text": "[ФИО]\n[почта] · [телефон] · [ссылка]\nРостов-на-Дону\nPHP-разработчик\n\nОпыт работы 6 лет. Laravel и Symfony, MySQL, Redis, очереди, REST API для мобильных клиентов. Docker, Git, Linux. Немного Vue на фронте.",
+   "gold": {
+    "stack": [
+     "docker",
+     "git",
+     "linux",
+     "php",
+     "redis",
+     "rest-api",
+     "sql",
+     "vue"
+    ],
+    "roles": [
+     "developer"
+    ],
+    "experience_years": 6.0
+   }
+  }
+ ]
+}

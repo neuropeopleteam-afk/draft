@@ -1,0 +1,138 @@
+{
+ "date": "2026-10-09 14:47",
+ "source": "https://openrouter.ai/api/v1/models",
+ "models": {
+  "anthropic/claude-fable-5.1": {
+   "name": "Anthropic: Claude Fable 5.1",
+   "kind": "closed",
+   "note": "дорогая",
+   "in_usd_per_m": 10.0,
+   "out_usd_per_m": 50.0,
+   "context": 1000000,
+   "hugging_face_id": null,
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "openai/gpt-6-astra-pro": {
+   "name": "OpenAI: GPT-6 Astra Pro",
+   "kind": "closed",
+   "note": "дорогая",
+   "in_usd_per_m": 10.0,
+   "out_usd_per_m": 50.0,
+   "context": 1050000,
+   "hugging_face_id": null,
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "anthropic/claude-opus-5.5": {
+   "name": "Anthropic: Claude Opus 5.5",
+   "kind": "closed",
+   "note": "дорогая",
+   "in_usd_per_m": 4.0,
+   "out_usd_per_m": 20.0,
+   "context": 1000000,
+   "hugging_face_id": null,
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "openai/gpt-6.1-sol-pro": {
+   "name": "OpenAI: GPT-6.1 Sol Pro",
+   "kind": "closed",
+   "note": "",
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
+   "context": 1050000,
+   "hugging_face_id": null,
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "anthropic/claude-sonnet-5.5": {
+   "name": "Anthropic: Claude Sonnet 5.5",
+   "kind": "closed",
+   "note": "модель стенда",
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
+   "context": 1000000,
+   "hugging_face_id": null,
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "x-ai/grok-4.7": {
+   "name": "SpaceXAI: Grok 4.7",
+   "kind": "closed",
+   "note": "",
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 6.0,
+   "context": 500000,
+   "hugging_face_id": null,
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "google/gemini-3.1-pro-preview": {
+   "name": "Google: Gemini 3.1 Pro Preview",
+   "kind": "closed",
+   "note": "",
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 12.0,
+   "context": 1048576,
+   "hugging_face_id": null,
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "moonshotai/kimi-k3": {
+   "name": "MoonshotAI: Kimi K3",
+   "kind": "open",
+   "note": "",
+   "in_usd_per_m": 0.5,
+   "out_usd_per_m": 12.0,
+   "context": 1048576,
+   "hugging_face_id": "moonshotai/Kimi-K3",
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "qwen/qwen3.8-2.4t-a95b": {
+   "name": "Qwen: Qwen3.8 2.4T A95B",
+   "kind": "open",
+   "note": "",
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 6.0,
+   "context": 1048576,
+   "hugging_face_id": "Qwen/Qwen3.8-2.4T-A95B",
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "deepseek/deepseek-v4-pro-0813": {
+   "name": "DeepSeek: DeepSeek V4 Pro 0813",
+   "kind": "open",
+   "note": "",
+   "in_usd_per_m": 0.66,
+   "out_usd_per_m": 1.98,
+   "context": 1048576,
+   "hugging_face_id": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "z-ai/glm-5.3": {
+   "name": "Z.ai: GLM 5.3",
+   "kind": "open",
+   "note": "",
+   "in_usd_per_m": 0.04,
+   "out_usd_per_m": 3.6,
+   "context": 1048576,
+   "hugging_face_id": "zai-org/GLM-5.3",
+   "reasoning": true,
+   "structured_outputs": true
+  },
+  "qwen/qwen3.8-27b": {
+   "name": "Qwen: Qwen3.8 27B",
+   "kind": "open",
+   "note": "встаёт на 1 GPU",
+   "in_usd_per_m": 0.425,
+   "out_usd_per_m": 2.55,
+   "context": 1000000,
+   "hugging_face_id": "Qwen/Qwen3.8-27B",
+   "reasoning": true,
+   "structured_outputs": true
+  }
+ }
+}
