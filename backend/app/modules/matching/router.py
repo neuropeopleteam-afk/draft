@@ -35,6 +35,10 @@ from app.modules.matching import whatif
 from app.modules.mydata import interest  # обезличенная отметка интереса для кандидата (md01)
 from app.modules.profiles.facts import card, load_bundles
 from app.modules.profiles.models import Company, EmployerProfile
+from app.modules.catalog.seed_data import GRADE_ORDER as _GRADE_ORDER
+
+# уровни платформы: 4 (Стажёр–Senior), с флагом GRADES_EXT_ENABLED — 6 (+ Lead, Principal; catalog.levels)
+GradeId = Literal[_GRADE_ORDER]  # type: ignore[valid-type]
 
 router = APIRouter(prefix="/api/employer", tags=["employer"])
 AUTH = {401: err("Не выполнен вход"), 403: err("Только для работодателя"),
@@ -83,7 +87,7 @@ class StackReq(BaseModel):
 
 class Requirements(BaseModel):
     direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None
-    grade: Literal["intern", "junior", "middle", "senior"] | None = None
+    grade: GradeId | None = None
     stack_required: list[StackReq] = Field(default_factory=list, max_length=20)
     stack_desired: list[StackReq] = Field(default_factory=list, max_length=20)
     experience_years_min: float | None = Field(None, ge=0, le=30)
@@ -261,6 +265,8 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         # Ф2: условия потребности, применённые к версии, и сколько кандидатов они скрыли (None — версия до Ф2)
         "conditions": meta.get("conditions"), "must_first": meta.get("must_first"),
         "core": meta.get("core"),  # Я1: ядро роли версии (None — у потребности нет ядра или версия до Я1)
+        # Я12б: добор ступенью выше (None — версия до match-v1.3); text — пояснение для работодателя
+        "grade_above": meta.get("grade_above"),
         "scope": _scope_out(db, v),  # Я10: что тест проверяет / НЕ проверяет и зонды по потребности (не меняет порядок)
         "weights": ranking.WEIGHTS, "levels": ranking.LEVELS, "provisional_penalty": ranking.PROVISIONAL_PENALTY,
         "categories": recs,
@@ -471,7 +477,7 @@ def compare_candidates(need_id: uuid.UUID, refs: list[str] = Query(default_facto
 @router.get("/candidates", summary="Поиск по всей базе (только обезличенные карточки)", responses=AUTH)
 def search_candidates(
     direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
-    grade: Literal["intern", "junior", "middle", "senior"] | None = None,
+    grade: GradeId | None = None,
     category: str | None = None,
     stack: list[str] = Query(default_factory=list, description="Стек-теги (все должны быть)"),
     stack_level: Literal["any", "t1"] = Query("any", description="any — заявлен или подтверждён; t1 — подтверждён"),

@@ -10,44 +10,89 @@ DIRECTIONS: dict[str, str] = {
 # Грейды снизу вверх. «Стажёр» (intern) — ниже Junior, для начинающих участников ФСП (решение владельца 07.10).
 # Единственный источник правды о наборе грейдов на стороне платформы: другие модули импортируют отсюда,
 # «ровно три грейда» нигде не предполагается.
-GRADES: dict[str, str] = {
+# Lead и Principal (решение владельца 10.10, вариант Б — 6 уровней): за флагом GRADES_EXT_ENABLED (по умолчанию
+# выключен). Флаг читается один раз при импорте (как и остальные настройки процесса — при старте службы): без флага
+# все константы ниже — прежние 4 уровня, байт в байт; с флагом — 6. Какие уровни видны в направлении, решает банк
+# (app.modules.catalog.levels: Lead/Principal — только если в банке направления есть проверенные семейства этих
+# уровней; правило FTT.4 — уровень присваивает только тест).
+
+
+def _grades_ext_flag() -> bool:
+    from app.core.config import get_settings
+
+    return bool(get_settings().grades_ext_enabled)
+
+
+GRADES_EXT: bool = _grades_ext_flag()
+BASE_GRADE_ORDER: tuple[str, ...] = ("intern", "junior", "middle", "senior")
+EXT_GRADE_ORDER: tuple[str, ...] = ("lead", "principal")  # уровни выше Senior (только с флагом и банком направления)
+ALL_GRADES: dict[str, str] = {
     "intern": "Стажёр",
     "junior": "Junior",
     "middle": "Middle",
     "senior": "Senior",
+    "lead": "Lead",
+    "principal": "Principal",
 }
-GRADE_LEVEL = {"intern": 0, "junior": 1, "middle": 2, "senior": 3}
-GRADE_ORDER: tuple[str, ...] = tuple(GRADES)  # ("intern", "junior", "middle", "senior")
+ALL_GRADE_LEVEL = {"intern": 0, "junior": 1, "middle": 2, "senior": 3, "lead": 4, "principal": 5}
 # Пороги на шкале θ: θ ≥ cut[g] → не ниже грейда g. Между Junior, Middle и Senior — одна единица шкалы; порог Стажёра
 # −1,75 выбран симуляцией теста по заранее заданному правилу (app/modules/validation/intern_cut.py, блок на /validation):
 # из кандидатов −1,5/−1,75/−2,0/−2,25 только он даёт ложные подтверждения ≤ 10 % и ложные отказы ≤ 20 % на банке
 # с лёгкими семействами; на текущем банке у него же минимальная сумма ошибок.
-GRADE_CUTS = {"intern": -1.75, "junior": -1.0, "middle": 0.0, "senior": 1.0}
-# Стартовая оценка θ адаптивного теста по заявленному грейду (середина полосы грейда, у Стажёра — чуть выше порога)
-GRADE_START_THETA = {"intern": -1.25, "junior": -0.5, "middle": 0.5, "senior": 1.3}
+# Lead 2,0 и Principal 3,0 — полосы Senior и Lead той же ширины 1, что Junior и Middle: одно правило решения даёт
+# одинаковую точность на всех уровнях при той же погрешности (согласовано с расчётом точности уровня); варианты
+# 2,0/2,75, 1,75/2,5, 2,25/3,0 и числа — симуляция с 6 уровнями (app/modules/validation/grades_ext_sim.py,
+# docs/validation/GRADES_EXT.md): при 2,75 Lead различается хуже, Principal — чуть лучше.
+ALL_GRADE_CUTS = {"intern": -1.75, "junior": -1.0, "middle": 0.0, "senior": 1.0, "lead": 2.0, "principal": 3.0}
+# Стартовая оценка θ адаптивного теста по заявленному грейду (середина полосы грейда, у Стажёра — чуть выше порога;
+# у Lead и Principal — немного выше порога: θ̂ сначала проверяет сам порог)
+ALL_GRADE_START_THETA = {"intern": -1.25, "junior": -0.5, "middle": 0.5, "senior": 1.3, "lead": 2.4, "principal": 3.3}
 # Грейд — уровень навыков, который подтверждает тест (ответ организаторов VS.1). Стаж в годах — только подсказка при
 # выборе уровня тестирования («обычно у Middle 1,5–4,5 года»), не условие и не критерий.
-GRADE_SKILL_TEXT = {
+ALL_GRADE_SKILL_TEXT = {
     "intern": "Начинающий: базовые конструкции языка, простые задачи по образцу, учится читать чужой код",
     "junior": "Решает типовые задачи по понятной постановке, знает основы инструментов, работает с наставником",
     "middle": "Самостоятельно ведёт задачу от постановки до выпуска, находит дефекты в чужом коде, понимает устройство инструментов",
     "senior": "Проектирует решения, выбирает компромиссы, находит неочевидные дефекты и объясняет их команде",
+    "lead": "Отвечает за архитектуру системы и команды: ревью дизайн-документов, разбор инцидентов и постмортемы, "
+            "компромиссы надёжности, стоимости и скорости, план миграций",
+    "principal": "Задаёт техническую стратегию нескольких команд: архитектура на годы вперёд, крупные миграции без "
+                 "остановки, стандарты надёжности и процессов в инженерных терминах",
 }
+ALL_GRADE_EXPERIENCE_TEXT = {"intern": "обычно без опыта или до полугода", "junior": "обычно до 1,5 лет опыта",
+                             "middle": "обычно 1,5–4,5 года опыта", "senior": "обычно от 4,5 лет опыта",
+                             "lead": "обычно от 7,5 лет опыта", "principal": "обычно от 10 лет опыта"}
+
+GRADE_ORDER: tuple[str, ...] = BASE_GRADE_ORDER + (EXT_GRADE_ORDER if GRADES_EXT else ())
+GRADES: dict[str, str] = {g: ALL_GRADES[g] for g in GRADE_ORDER}
+GRADE_LEVEL = {g: ALL_GRADE_LEVEL[g] for g in GRADE_ORDER}
+GRADE_CUTS = {g: ALL_GRADE_CUTS[g] for g in GRADE_ORDER}
+GRADE_START_THETA = {g: ALL_GRADE_START_THETA[g] for g in GRADE_ORDER}
+GRADE_SKILL_TEXT = {g: ALL_GRADE_SKILL_TEXT[g] for g in GRADE_ORDER}
 # Подсказка по стажу (лет): до полугода — Стажёр, до 1,5 — Junior, до 4,5 — Middle, дальше — Senior
-GRADE_BY_EXPERIENCE: tuple[tuple[float, str], ...] = ((0.5, "intern"), (1.5, "junior"), (4.5, "middle"))
-GRADE_EXPERIENCE_TEXT = {"intern": "обычно без опыта или до полугода", "junior": "обычно до 1,5 лет опыта",
-                         "middle": "обычно 1,5–4,5 года опыта", "senior": "обычно от 4,5 лет опыта"}
+# (с флагом: до 7,5 — Senior, до 10 — Lead, дальше — Principal; потолок — верхний уровень, видимый в направлении)
+GRADE_BY_EXPERIENCE: tuple[tuple[float, str], ...] = (
+    ((0.5, "intern"), (1.5, "junior"), (4.5, "middle")) + (((7.5, "senior"), (10.0, "lead")) if GRADES_EXT else ()))
+GRADE_EXPERIENCE_TEXT = {g: ALL_GRADE_EXPERIENCE_TEXT[g] for g in GRADE_ORDER}
+if GRADES_EXT:
+    GRADE_EXPERIENCE_TEXT["senior"] = "обычно 4,5–7,5 года опыта"
+    GRADE_EXPERIENCE_TEXT["lead"] = "обычно 7,5–10 лет опыта"
 
 
-def grade_by_experience(years: float | None) -> str | None:
+def grade_by_experience(years: float | None, top: str | None = None) -> str | None:
     """Подсказка грейда по стажу в годах (None — стаж неизвестен). Только ориентир для выбора уровня теста:
-    грейд подтверждается тестом навыков, стаж — атрибут профиля (VS.1)."""
+    грейд подтверждается тестом навыков, стаж — атрибут профиля (VS.1). top — верхний уровень, видимый в направлении
+    (с флагом GRADES_EXT_ENABLED Lead/Principal есть не во всех направлениях); без него — верхний уровень платформы."""
     if years is None:
         return None
+    out = GRADE_ORDER[-1]
     for limit, g in GRADE_BY_EXPERIENCE:
         if years < limit:
-            return g
-    return GRADE_ORDER[-1]
+            out = g
+            break
+    if top in GRADE_LEVEL and GRADE_LEVEL[out] > GRADE_LEVEL[top]:
+        return top
+    return out
 
 
 def grade_above(grade: str) -> str | None:

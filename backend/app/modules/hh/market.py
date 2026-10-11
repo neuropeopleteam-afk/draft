@@ -36,6 +36,10 @@ ROLE_QUERY: dict[str, tuple[list[str], list[str] | None]] = {
     "data_ml": (["165", "96"], ["data", "ml", "machine learning", "дата", "машинн", "nlp", "computer vision", "llm"]),
     "security": (["116"], None),
 }
+# Я12б: четыре новых направления каталога (в интерфейсе — только при CATALOG_EXT_ENABLED); роли и слова — directions.py
+from app.modules.hh.directions import HH_DIRECTIONS as _HD, NEW_DIRECTIONS as _NEW  # noqa: E402
+
+ROLE_QUERY.update({d: (list(_HD[d]["roles"]), list(_HD[d]["words"]) if _HD[d]["words"] else None) for d in _NEW})
 GRADE_WORDS = {"intern": ["стажер", "стажёр", "intern", "стажировка", "trainee"],
                "junior": ["junior", "джуниор", "младший"],
                "middle": ["middle", "мидл"],

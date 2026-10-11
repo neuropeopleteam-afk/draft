@@ -42,17 +42,20 @@ def main():
     scored = score_world(world, _parsed(world))
     base_parse = baseline_parser()
     base_scored = score_world(world, [base_parse(n.text, use_llm=False) for n in world.needs])
-    original = per_need(world.rel, platform_orders(base_scored, must_first=False, core=False))
-    old = per_need(world.rel, platform_orders(scored, must_first=False, core=False))
-    new = per_need(world.rel, platform_orders(scored, must_first=True, core=False))
-    core_o = platform_orders(scored, must_first=True, core=True)
+    # Я12б: прежние столбцы — без добора ступенью выше (above=False), «above_on» — продукт match-v1.3
+    original = per_need(world.rel, platform_orders(base_scored, must_first=False, core=False, above=False))
+    old = per_need(world.rel, platform_orders(scored, must_first=False, core=False, above=False))
+    new = per_need(world.rel, platform_orders(scored, must_first=True, core=False, above=False))
+    core_o = platform_orders(scored, must_first=True, core=True, above=False)
     core_n = per_need(world.rel, core_o)
-    new_o = platform_orders(scored, must_first=True, core=False)
-    i8 = per_need(world.rel, platform_orders(scored, experimental=True, core=False))
+    above_n = per_need(world.rel, platform_orders(scored, must_first=True, core=True, above=True))
+    new_o = platform_orders(scored, must_first=True, core=False, above=False)
+    i8 = per_need(world.rel, platform_orders(scored, experimental=True, core=False, above=False))
     result["hidden_truth_500"] = {"config": cfg.to_dict(),
                                  "before": {k: round(float(v.mean()), 4) for k, v in old.items()},
                                  "after": {k: round(float(v.mean()), 4) for k, v in new.items()},
                                  "core_on": {k: round(float(v.mean()), 4) for k, v in core_n.items()},
+                                 "above_on": {k: round(float(v.mean()), 4) for k, v in above_n.items()},
                                  "core_changed_needs": [i for i in range(len(world.needs))
                                                         if not np.array_equal(new_o[i][:10], core_o[i][:10])],
                                  "core_policy": core_skill.POLICY, "core_enabled_in_product": core_skill.enabled(),
@@ -60,8 +63,8 @@ def main():
                                  "current_parser_product": {k: round(float(v.mean()), 4) for k, v in old.items()},
                                  "i8_gap_count_policy": {k: round(float(v.mean()), 4) for k, v in i8.items()},
                                  "changed_needs": [i for i in range(len(world.needs))
-                                                   if not np.array_equal(platform_orders(scored, must_first=False)[i][:10],
-                                                                         platform_orders(scored, must_first=True)[i][:10])],
+                                                   if not np.array_equal(platform_orders(scored, must_first=False, above=False)[i][:10],
+                                                                         platform_orders(scored, must_first=True, above=False)[i][:10])],
                                  "policy": "Ф2: ярусы обязательного (0, 1, ≥2 непокрытых T1), внутри — балл match-v1",
                                  "experimental_policy_enabled": True,
                                  "no_fitting": True}

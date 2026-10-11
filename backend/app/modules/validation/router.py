@@ -239,6 +239,62 @@ def path_retest():
     return {**d, "vs_truth": retest_vs_truth(d), "provenance": stamp("path", d)}
 
 
+GRADE_SWEEP = Path(__file__).resolve().parent / "data" / "grade_sweep.json"
+
+
+@router.get("/grade-accuracy", summary="Точность уровня: перебор параметров теста, Парето и выбор (пересчёт: make grade-sweep)")
+def grade_accuracy():
+    """Я22: компактно для страницы — текущая и прежняя конфигурация, выбор, Парето-фронт основного мира (σ = 0,5),
+    условия конкурента (4 ступени, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой. Полный список точек — в JSON."""
+    if not GRADE_SWEEP.exists():
+        return {"missing": True}
+    from app.modules.validation.grade_sweep import compact
+
+    return compact(json.loads(GRADE_SWEEP.read_text(encoding="utf-8")))
+
+
+from app.modules.catalog.seed_data import GRADES_EXT as _GRADES_EXT  # noqa: E402
+
+if _GRADES_EXT:  # Lead/Principal (флаг GRADES_EXT_ENABLED): без флага маршрута нет — openapi прежний
+    @router.get("/grades-ext", summary="Lead и Principal: точность различения 6 уровней и что нужно для цели (модель, не люди)")
+    def grades_ext_route():
+        from app.modules.validation.grades_ext_view import view
+
+        return view()
+
+
+TWO_STAGE = Path(__file__).resolve().parent / "data" / "two_stage.json"
+
+
+@router.get("/two-stage", summary="Двухэтапное подтверждение у границы: одна сессия / две сессии, Парето, выбор "
+                                  "(пересчёт: make two-stage)")
+def two_stage_route():
+    """Я26: сводка симуляции и состояние в продукте (флаг ASSESSMENT_TWO_STAGE_ENABLED и его параметры)."""
+    from app.modules.assessment.two_stage import params
+
+    p = params()
+    if not TWO_STAGE.exists():
+        return {"missing": True, "product": p}
+    from app.modules.validation.two_stage import compact
+
+    return {**compact(json.loads(TWO_STAGE.read_text(encoding="utf-8"))), "product": p}
+
+
+PARTIAL_SIM = Path(__file__).resolve().parent / "data" / "partial_credit_sim.json"
+PARTIAL_NOISE = Path(__file__).resolve().parent / "data" / "partial_credit_noise.json"
+
+
+@router.get("/partial-credit", summary="Частичный балл 0–4 у развёрнутых: «0/1» против «0–4» (синтетика; пересчёт: "
+                                       "make partial-credit-sim)")
+def partial_credit_route():
+    d = json.loads(PARTIAL_SIM.read_text(encoding="utf-8")) if PARTIAL_SIM.exists() else {"missing": True}
+    if PARTIAL_NOISE.exists():
+        nz = json.loads(PARTIAL_NOISE.read_text(encoding="utf-8"))
+        d["grader"] = {k: nz.get(k) for k in ("grader", "reference", "n", "agreement", "intermediate_share_reference",
+                                               "set", "points_rule")}
+    return {**d, "enabled": bool(get_settings().assessment_partial_credit_enabled)}
+
+
 @router.get("/test-length", summary="Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди)")
 def test_length_route():
     from app.modules.validation.provenance import length_info  # Ф6 (Н8)

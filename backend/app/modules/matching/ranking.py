@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 from app.core.fmt import probe_title, quoted, ru_num, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
+from app.modules.catalog import levels as grade_levels
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
 from app.modules.catalog.seed_data import category_title
 from app.modules.profiles.facts import (
@@ -40,7 +41,7 @@ from app.modules.profiles.facts import (
 )
 from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
-from app.modules.matching import core_skill, must_have
+from app.modules.matching import core_skill, grade_above, must_have
 from app.core.origin import NO_FSP
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
@@ -49,17 +50,45 @@ MUST_ALGORITHM = "match-v1.1"  # Ф2: match-v1 + ярусы обязательн
 
 
 CORE_ALGORITHM = "match-v1.2"  # Я1: match-v1.1 + ядро роли (основной язык / фреймворк / специализация), RANK_CORE_SKILL
+# match-v1.3 (Я12б): match-v1.2 + добор ступенью выше при малом пуле точного уровня (grade_above, MATCH_GRADE_ABOVE)
 
 
 def algorithm() -> str:
     from app.modules.matching import core_skill
 
     if must_have.enabled():
-        return CORE_ALGORITHM if core_skill.enabled() else MUST_ALGORITHM
-    return f"{ALGORITHM_VERSION}+core" if core_skill.enabled() else ALGORITHM_VERSION
+        if core_skill.enabled():
+            return grade_above.ALGORITHM if grade_above.enabled() else CORE_ALGORITHM
+        return MUST_ALGORITHM + ("+above" if grade_above.enabled() else "")
+    base = f"{ALGORITHM_VERSION}+core" if core_skill.enabled() else ALGORITHM_VERSION
+    return base + ("+above" if grade_above.enabled() else "")
 WEIGHTS = {"test": 0.45, "stack_required": 0.35, "stack_desired": 0.05, "fsp": 0.10, "probe": 0.05}
 LEVELS = {"T2": "подтверждено реестром ФСП", "T1": "подтверждено тестом или зондом", "T0": "заявлено кандидатом",
           "none": "нет данных"}
+
+
+def grade_cap_enabled() -> bool:
+    """Я28: флаг MATCH_GRADE_CAP (по умолчанию выключен) — «сила теста выше порога следующего грейда не даёт бонуса»."""
+    import os
+
+    return os.environ.get("MATCH_GRADE_CAP", "0").strip().lower() in ("1", "true", "yes", "on")
+
+
+def grade_cap(test: float, grade: str | None, on: bool | None = None) -> float:
+    """Компонента теста с потолком на пороге следующего грейда (флаг MATCH_GRADE_CAP, выкл.): кандидат, чей θ выше
+    порога следующего грейда, внутри категории не обгоняет за счёт теста того, кто уверенно в запрошенном грейде, —
+    его опережают подтверждённые обязательные навыки. Так считают и другие открытые бенчмарки (потолок θ на пороге
+    + 1, мера близости к грейду вакансии); в нашем строгом протоколе правило «не хуже» не выполнено
+    (docs/validation/MATCHING_COMPARE.md), поэтому выключено. Для Senior (следующего грейда нет) потолка нет."""
+    on = grade_cap_enabled() if on is None else on
+    if not on or grade not in GRADES:
+        return test
+    from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
+
+    i = GRADE_ORDER.index(grade)
+    if i + 1 >= len(GRADE_ORDER):
+        return test
+    return min(test, test_component(GRADE_CUTS[GRADE_ORDER[i + 1]], None, grade))
 
 
 def _has_category_clause():
@@ -168,8 +197,8 @@ def recommended_categories(req: dict, counts: dict[str, int], cats: dict[str, Ca
     out = []
     if not d:
         return [{"id": c.id, "title": c.title, "count": counts.get(c.id, 0), "relation": "all",
-                 "market_range": _mr(c)} for c in cats.values()]
-    for grade in GRADES:
+                 "market_range": _mr(c)} for c in cats.values() if c.grade_id in GRADES]
+    for grade in grade_levels.available_grades(d):  # Lead/Principal — только где их проверяет банк (флаг)
         cid = f"{d}.{grade}"
         c = cats.get(cid)
         if not c:
@@ -197,7 +226,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     p = b.profile
     reasons: list[dict] = []
     t = b.test.value if b.test else {}
-    test = test_component(t.get("theta"), t.get("se"), req.get("grade") or b.grade)
+    test = grade_cap(test_component(t.get("theta"), t.get("se"), req.get("grade") or b.grade), req.get("grade"))
     cat_title = category_title(b.category_id)
     if b.unconfirmed:
         # грейд не подтверждён: заявленное из опроса (T0) и исход последней попытки; результат теста в скор не входит
@@ -440,12 +469,17 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     counts, prov = pool_counts(db)
     recs = recommended_categories(req, counts, cats)
     cat_ids = filters.get("categories") or [r["id"] for r in recs if r["relation"] in ("exact", "direction", "all")]
-    pool = visible_pool(db, category_ids=cat_ids)
+    # Я12б: в точной категории меньше 30 подтверждённых — добор категории на ступень выше (grade_above, match-v1.3)
+    above = grade_above.applies(recs, filters)
+    above_id = above["above"]["id"] if above else None
+    pool_ids = cat_ids + [above_id] if above else cat_ids
+    pool = visible_pool(db, category_ids=pool_ids)
     ids = [p.user_id for p in pool]
     if not filters.get("confirmed_only"):
-        # без подтверждённого грейда — по заявленной категории, отдельным ярусом ниже (видео №6: показывать, не скрывать)
+        # без подтверждённого грейда — по заявленной категории, отдельным ярусом ниже (видео №6: показывать, не скрывать);
+        # добор ступенью выше их не касается — только точный уровень
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids)]
-    bundles = list(load_bundles(db, ids, direction=req.get("direction"), category_ids=cat_ids).values())
+    bundles = list(load_bundles(db, ids, direction=req.get("direction"), category_ids=pool_ids).values())
     # Ф2: условия потребности (формат, город — T0) применяются по умолчанию, только сужают выдачу и не дают баллов;
     # сколько скрыто условиями — в ответе (чип «скрыто условиями: N», отмена — filters.conditions_off)
     effective = condition_filters(req, filters)
@@ -462,7 +496,15 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         if must_have.declared_counts() else {}
     must = must_have.tiers_for([b for _, b, _, _ in scored], req, levels)
     core = core_skill.assess_pool([b for _, b, _, _ in scored], req)  # Я1: ядро роли (порядок — флаг RANK_CORE_SKILL)
-    scored = selection_order(scored, must, core)
+    if above:
+        # первые места — лучшие точного уровня по прежнему порядку (ярус обязательного — по пулу точного уровня),
+        # дальше — общий порядок, при равном ярусе обязательного точный уровень раньше
+        exact = [x for x in scored if x[1].category_id != above_id]
+        must_e = must_have.tiers_for([b for _, b, _, _ in exact], req, levels)
+        head = [x for x in selection_order(exact, must_e, core)[:grade_above.KEEP] if tier(x[1]) == 0]
+        scored = grade_above.merge(head, selection_order(scored, must, core, above_id=above_id))
+    else:
+        scored = selection_order(scored, must, core)
     results = []
     for rank, (s, b, comps, reasons) in enumerate(scored, start=1):
         if rank > limit and b.profile.public_ref not in include_refs:
@@ -476,33 +518,39 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)
         r["unconfirmed"] = unc.get(r["id"], 0)
+        r["in_pool"] = r["id"] in pool_ids  # отмечено в фильтре категорий (добор ступенью выше — тоже)
     applied = {k: effective[k] for k in ("work_formats", "work_format", "city") if effective.get(k)}
     conditions = {"applied": applied, "text": conditions_text(applied), "off": bool(filters.get("conditions_off")),
                   "from_need": need_conditions(req)["work_formats"] is not None,
                   "hidden": max(0, before_conditions - len(bundles))}
     core_meta = core_meta_of(req, core)
+    above_meta = grade_above.meta(above, results)
     meta = {"categories": recs, "conditions": conditions, "must_first": must_have.enabled(),
-            "total_matched": len(scored), "core": core_meta}
+            "total_matched": len(scored), "core": core_meta, "grade_above": above_meta}
     return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": algorithm(),
             "conditions": conditions, "must_first": must_have.enabled(), "core": core_meta, "meta": meta,
+            "grade_above": above_meta,
             "weights": WEIGHTS, "provisional_penalty": PROVISIONAL_PENALTY,
             "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional),
             "unconfirmed_matched": sum(1 for _, b, _, _ in scored if b.unconfirmed),
             "confirmed_matched": sum(1 for _, b, _, _ in scored if b.grade_status == "confirmed")}
 
 
-def selection_order(scored: list, must: dict, core: dict, policy: str | None = None) -> list:
+def selection_order(scored: list, must: dict, core: dict, policy: str | None = None, above_id: str | None = None) -> list:
     """Порядок подборки: ярус статуса грейда → [ядро роли, Я1, флаг RANK_CORE_SKILL] → ярус обязательного (Ф2) →
     балл → рейтинг → ref. scored — [(балл, Bundle, …)]; must — must_have.tiers_for; core — core_skill.assess_pool
-    (key = 1 — ядра нет и признак действует; при выключенном флаге у всех 0 — порядок прежний, match-v1.1)."""
+    (key = 1 — ядра нет и признак действует; при выключенном флаге у всех 0 — порядок прежний, match-v1.1).
+    above_id — категория добора ступенью выше (grade_above): перед баллом — точный уровень раньше."""
     pol = policy or core_skill.POLICY
 
     def key(x):
         b = x[1]
         uid = b.profile.user_id
         ck = (core.get(uid) or {}).get("key", 0)
-        return (*core_skill.sort_key(tier(b), must[uid]["tier"], x[0], ck, pol), -(b.rating or 0),
-                b.profile.public_ref or "")
+        k = core_skill.sort_key(tier(b), must[uid]["tier"], x[0], ck, pol)
+        if above_id:
+            k = (*k[:-1], int(b.category_id == above_id), k[-1])
+        return (*k, -(b.rating or 0), b.profile.public_ref or "")
 
     out = sorted(scored, key=key)
     if pol == "cap" and core:

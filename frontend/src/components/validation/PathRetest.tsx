@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Alert, DIRECTIONS, GRADES, Loading, NB, num, pct, useApi } from "../ui";
+import { Alert, DIRECTIONS, GRADE_TITLE_ALL, Loading, NB, num, pct, useApi } from "../ui";
 import { SignatureLine } from "./Headline";
 import { ProvenanceLine, RetestVsTruth } from "./Provenance";
 import { ScrollX } from "../A11y";
@@ -7,7 +7,7 @@ import { ScrollX } from "../A11y";
 /** Блоки /validation: test–retest всего пути кандидата, дискриминативность семейств, карточка калибровки
  *  (backend: app/modules/validation/path_retest.py, make path-retest). */
 
-const LEVEL: Record<string, string> = { none: "Без категории", ...GRADES };
+const LEVEL: Record<string, string> = { none: "Без категории", ...GRADE_TITLE_ALL };
 const LEVELS = ["none", "intern", "junior", "middle", "senior"];
 const ci = (c?: number[] | null, d = 3) => (c ? `${num(c[0], d)} … ${num(c[1], d)}` : "");
 const withCi = (v?: number | null, c?: number[] | null) => <>{num(v, 3)}{c && <span className="block text-xs text-brand-ink/65">{ci(c)}</span>}</>;
@@ -148,6 +148,91 @@ export function CalibrationCard() {
           ["Шкала моделей ≠ шкала людей", "Трудность для модели не равна трудности для человека: корреляция авторской и модельной дискриминативности близка к нулю (см. «Повтор всего пути»). Поэтому параметры из панели в решение не переносятся."],
           ["Калибровка на людях", "После хакатона: пилот на живых кандидатах, оценка a и b по ответам людей, проверка D и r_pb, пересчёт всех чисел этой страницы на новой шкале."],
         ].map(([t, x]) => <div key={t} className="card"><p className="font-bold text-brand-night">{t}</p><p className="mt-1 text-sm leading-relaxed text-brand-ink/80">{x}</p></div>)}
+      </div>
+    </section>
+  );
+}
+
+/** Я22: точность уровня — перебор параметров теста на симуляции всего пути (backend: validation/grade_sweep.py,
+ *  make grade-sweep). Модель, не люди: сравнение правил внутри одного мира. */
+export function GradeAccuracy() {
+  const { data: g, error, loading } = useApi<any>("/validation/grade-accuracy", []);
+  const head = ["Вариант", "Точно", "Выше", "Ниже", "Без категории", "±1", "Совпадение при повторе", "κw повтора", "Минут"];
+  const row = (x: any): ReactNode[] => [
+    <span key="l">{x.label}{x.feasible ? "" : <span className="block text-xs text-brand-ink/60">не проходит ограничения</span>}</span>,
+    <span key="e">{pct(x.exact)}{x.exact_ci && <span className="block text-xs text-brand-ink/65">{pct(x.exact_ci[0])} … {pct(x.exact_ci[1])}</span>}</span>,
+    pct(x.over), pct(x.under), pct(x.none), pct(x.within_1), pct(x.retest_exact), withCi(x.retest_kappa, x.retest_kappa_ci),
+    num(x.minutes_mean, 0)];
+  const c = g?.constraints, ch = g?.choice?.row, b = g?.baseline;
+  return (
+    <section id="grade-accuracy" className="mt-12 scroll-mt-20" aria-labelledby="grade-accuracy-t">
+      <h2 id="grade-accuracy-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Точность уровня: какие правила теста дают истинный уровень</h2>
+      <div className="mt-4">
+        {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !g || g.missing
+          ? <Alert kind="info">Расчёт ещё не выполнен: запустите make grade-sweep.</Alert>
+          : <>
+            <SignatureLine s={g.signature} />
+            <p className="mt-2 text-sm text-brand-ink/75">Модель, не люди: {g.points_note ?? "синтетические кандидаты (2PL), истинные параметры заданий = предкалибровка + ошибка эксперта"}. Одни и те же кандидаты во всех вариантах, меняются только правила. Ограничения выбора: завышение ≤ {pct(c.max_over)}, κw повтора ≥ {num(c.min_retest_kappa, 2)}, время пути ≤ {num(c.max_minutes_mean, 0)} мин; точек перебора — {g.n_points}.</p>
+            {ch && b && <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <K label="Точно истинный уровень" value={`${pct(b.exact)} → ${pct(ch.exact)}`} hint={`порог уверенности P ≥ 0,8 → ${num(g.choice.point?.confirm_level, 1)}`} />
+              <K label="Выше истинного" value={`${pct(b.over)} → ${pct(ch.over)}`} hint={`ограничение ≤ ${pct(c.max_over)}`} />
+              <K label="Совпадение при повторе" value={`${pct(b.retest_exact)} → ${pct(ch.retest_exact)}`} hint={`κw ${num(b.retest_kappa, 3)} → ${num(ch.retest_kappa, 3)}`} />
+              <K label="Минут на путь" value={`${num(b.minutes_mean, 0)} → ${num(ch.minutes_mean, 0)}`} hint="время теста не выросло" />
+            </div>}
+            <h3 className="mt-6 font-bold text-brand-night">Главные варианты (мир σ = 0,5, 5 ступеней)</h3>
+            <div className="mt-2"><T head={head} rows={(g.key_rows ?? []).map(row)} min="56rem" caption="Главные варианты перебора" /></div>
+            <p className="mt-2 text-xs text-brand-ink/70">«Ниже» почти на две трети — кандидаты, заявившие грейд ниже своего ({pct(ch?.under_claimed_below)} из {pct(ch?.under)}): тест подтверждает заявленный грейд и выше его не поднимает — смена грейда вверх идёт новым тестом. Решение по лучшей оценке θ̂ без запаса уверенности поднимает точность, но завышает уровень у каждого шестого.</p>
+            <h3 className="mt-6 font-bold text-brand-night">Другие миры: ошибка параметров σ = 0,35 и 4 ступени (как у FSP Talent)</h3>
+            <div className="mt-2"><T head={head} rows={(g.worlds ?? []).map(row)} min="56rem" caption="Варианты в других мирах" /></div>
+            <p className="mt-2 text-xs text-brand-ink/70">Условия конкурента (4 ступени без Стажёра, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой — строка «порог уверенности P 0,5; дотестирование 0; 20 заданий; ступеней 4». У FSP Talent в их мире: совпадение при повторе 76 %, κw 0,866 (miliantr/fsp-talent, docs/testing.md, 05.10.2026) — другой мир и другая процедура, числа сравнимы только по смыслу.</p>
+            <h3 className="mt-6 font-bold text-brand-night">Парето-фронт (точно ↑, выше ↓, κw ↑, минуты ↓)</h3>
+            <div className="mt-2"><T head={head} rows={(g.pareto ?? []).map(row)} min="56rem" caption="Парето-фронт перебора" /></div>
+            {g.pool?.rows?.length > 0 && <>
+              <h3 className="mt-6 font-bold text-brand-night">Чистка пула и добор сильных заданий у порогов</h3>
+              <p className="mt-2 text-sm text-brand-ink/75">26 семейств, слабых по калибровке панелью моделей (модель, не люди), и 17 новых семейств у порогов Junior/Middle и Middle/Senior. Два мира: слабые семейства «как в предкалибровке» и «на деле слабые».</p>
+              <div className="mt-2"><T head={head} rows={g.pool.rows.map((x: any) => { const r = row(x); r[0] = <span key="l">{x.label}{x.world_weak ? "" : <span className="block text-xs text-brand-ink/60">мир: как в предкалибровке</span>}{x.feasible ? "" : <span className="block text-xs text-brand-ink/60">не проходит ограничения</span>}</span>; return r; })} min="56rem" caption="Чистка пула и добор у порогов" /></div>
+              <p className="mt-2 text-xs text-brand-ink/70">Исключение слабых лучше по всем ограничениям в обоих мирах: банк платформы — {g.pool.exclude_better?.platform ? "да" : "нет"}, банк с добором — {g.pool.exclude_better?.plus ? "да" : "нет"}{g.pool.exclude_better?.platform || g.pool.exclude_better?.plus ? "." : "; поэтому чистка пула по умолчанию выключена (меньше сменных семейств — ниже повтор)."}{g.pool.plus_best_confirm ? ` После добора банка завышение ≤ ${pct(c.max_over)} в обоих мирах держит порог P ${num(g.pool.plus_best_confirm.confirm_level, 2)} — пересчёт пути на синхронизированном банке перед сменой порога.` : ""}</p>
+            </>}
+            <p className="mt-2 text-xs text-brand-ink/70">Полная таблица — docs/validation/GRADE_ACCURACY.md; пересчёт — make grade-sweep.</p>
+          </>}
+      </div>
+    </section>
+  );
+}
+
+/** Я26: двухэтапное подтверждение уровня у границы — «одна сессия / две сессии» на симуляции всего пути
+ *  (backend: validation/two_stage.py, make two-stage). Модель, не люди. В продукте — флаг ASSESSMENT_TWO_STAGE_ENABLED. */
+export function TwoStage() {
+  const { data: g, error, loading } = useApi<any>("/validation/two-stage", []);
+  const p1 = (v?: number | null) => pct(v, 1);
+  const head = ["Вариант", "Точно", "Выше", "Ниже", "Совпадение при повторе", "κw повтора", "Второй этап", "Минут всего", "Минут второго этапа"];
+  const row = (x: any): ReactNode[] => [
+    <span key="l">{x.label}{x.feasible ? "" : <span className="block text-xs text-brand-ink/75">не проходит ограничения</span>}</span>,
+    <span key="e">{p1(x.exact)}{x.exact_ci && <span className="block text-xs text-brand-ink/65">{p1(x.exact_ci[0])} … {p1(x.exact_ci[1])}</span>}</span>,
+    p1(x.over), p1(x.under), p1(x.retest_exact), num(x.retest_kappa, 3), p1(x.share_refined), num(x.minutes_mean, 1), num(x.refine_minutes_mean, 1)];
+  const t = g?.targets, one = g?.one_session, ch = g?.choice?.row, pr = g?.product;
+  return (
+    <section id="two-stage" className="mt-12 scroll-mt-20" aria-labelledby="two-stage-t">
+      <h2 id="two-stage-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Две сессии у границы: уточнение уровня</h2>
+      <div className="mt-4">
+        {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !g || g.missing
+          ? <Alert kind="info">Расчёт ещё не выполнен: запустите make two-stage.</Alert>
+          : <>
+            <SignatureLine s={g.signature} />
+            <p className="mt-2 text-sm text-brand-ink/75">Модель, не люди: синтетические кандидаты (2PL), истинные параметры заданий = предкалибровка + ошибка эксперта. Если после полного теста уровень «на границе» (вероятность у порога между 1 − L и L), кандидату предлагается отдельная сессия до N коротких заданий у этой границы из семейств, которых он не видел; итог — одна оценка по ответам обеих сессий. Одни и те же кандидаты во всех вариантах; точек перебора — {g.n_points}.</p>
+            {ch && one && <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <K label="Точно истинный уровень" value={`${p1(one.exact)} → ${p1(ch.exact)}`} hint={`цель ≥ ${pct(t?.exact, 0)}`} />
+              <K label="Выше истинного" value={`${p1(one.over)} → ${p1(ch.over)}`} hint={`ограничение ≤ ${pct(t?.max_over, 0)}`} />
+              <K label="Совпадение при повторе" value={`${p1(one.retest_exact)} → ${p1(ch.retest_exact)}`} hint={`цель ≥ ${pct(t?.retest_exact, 0)}; κw ${num(one.retest_kappa, 3)} → ${num(ch.retest_kappa, 3)}`} />
+              <K label="Второй этап и время" value={`${p1(ch.share_refined)} кандидатов`} hint={`в среднем ${num(ch.refine_minutes_mean, 1)} мин у них; на кандидата ${num(one.minutes_mean, 1)} → ${num(ch.minutes_mean, 1)} мин`} />
+            </div>}
+            <h3 className="mt-6 font-bold text-brand-night">Одна сессия / две сессии</h3>
+            <div className="mt-2"><T head={head} rows={[one, g.default, ...(g.choice?.key && g.default && g.choice.row?.label !== g.default.label ? [ch] : [])].filter(Boolean).map(row)} min="60rem" caption="Одна сессия и две сессии" /></div>
+            <p className="mt-2 text-xs text-brand-ink/70">Цели волны (точно ≥ {pct(t?.exact, 0)}, повтор ≥ {pct(t?.retest_exact, 0)}) не достигнуты ни одним вариантом: за 10–15 минут второй сессии добавляется в среднем {num(ch?.refine_items_mean, 1)} коротких заданий — этого мало, чтобы уверенно разделить соседние уровни у большинства пограничных. Варианты «выше заявленного» (уточнение и выше заявленного грейда) точнее, но завышают уровень чаще 7 % или хуже совпадают при повторе — они в Парето-фронте ниже. Выбранный вариант лучше одной сессии по всем ограничениям: {g.choice?.better_on_all ? "да" : "нет"}.</p>
+            <h3 className="mt-6 font-bold text-brand-night">Парето-фронт (точно ↑, выше ↓, повтор ↑, доля второго этапа ↓, минуты ↓)</h3>
+            <div className="mt-2"><T head={head} rows={(g.pareto ?? []).map(row)} min="60rem" caption="Парето-фронт двух сессий" /></div>
+            <p className="mt-2 text-xs text-brand-ink/70">В продукте: {pr?.enabled ? `включено — L ${num(pr.level, 2)}, до ${pr.items} заданий / ${pr.minutes} мин, итог при P ≥ ${num(pr.confirm, 2)}` : "выключено (флаг ASSESSMENT_TWO_STAGE_ENABLED)"}. Полная таблица — docs/validation/TWO_STAGE.md; пересчёт — make two-stage.</p>
+          </>}
       </div>
     </section>
   );

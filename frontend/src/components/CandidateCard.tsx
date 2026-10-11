@@ -141,6 +141,9 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
           <MustLine m={must} />
           <CoreLine k={core} />
           <GradeStatusNote s={c.status} className="mt-1 max-w-2xl" />
+          {c.status?.position && <p className="mt-0.5 text-xs text-brand-ink/70" data-testid="level-position">Внутри уровня {c.status.position.grade_title}: {c.status.position.text}</p>}
+          {/* Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): «на границе Middle/Senior — уточнение пройдено / не пройдено» */}
+          {c.status?.two_stage?.text && <p className="mt-0.5 text-xs text-brand-ink/70" data-testid="two-stage-note">{c.status.two_stage.text}</p>}
           {c.confirmed_by && <p className="mt-1 text-xs text-brand-ink/70">Грейд был предварительным и подтверждён {c.confirmed_by.title}{c.confirmed_by.ref_title ? ` («${c.confirmed_by.ref_title}»)` : ""}</p>}
           <p className="mt-0.5 text-sm text-brand-ink/65">
             {c.rank_in_category ? `Место ${c.rank_in_category} из ${c.category_size} в категории · ` : ""}
@@ -164,7 +167,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
             <p className="mt-1 flex flex-wrap gap-1.5">
               {t.mode === "express" && <span className="chip" title="Экспресс-тест: 5–7 коротких заданий (за Senior — 8–12), интервал θ шире, чем у полного теста">экспресс-тест</span>}
               {t.mode === "mini" && <span className="chip" title="Мини-тест из 3 заданий: категория предварительная и не выше Middle, полный тест уточнит грейд">мини-тест · предварительно</span>}
-              {t.accepted_lower && <span className="chip" title="Заявленный грейд не подтвердился; уровень ниже доказан тестом (P ≥ 80 %) и принят кандидатом">принят уровень ниже</span>}
+              {t.accepted_lower && <span className="chip" title="Заявленный грейд не подтвердился; уровень ниже доказан тестом с уверенностью порога подтверждения и принят кандидатом">принят уровень ниже</span>}
             </p>
           )}
           {t?.integrity && <Integrity v={t.integrity} compact={compact} />}
