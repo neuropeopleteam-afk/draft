@@ -124,7 +124,7 @@ export function EmployerAts() {
   const anyDemo = prov.data.some((p) => p.mode === "demo" && p.enabled) || s.data.stub.connected;
   return (
     <div className="max-w-5xl space-y-6">
-      <PageTitle title="Интеграция с ATS" subtitle="Когда кандидат принимает приглашение, его верифицированный профиль с контактами уходит в вашу ATS: категория и грейд, подтверждённые навыки T1/T2, паспорт ФСП, вилка оффера и ссылка на PDF. До принятия контакты закрыты — и в ATS тоже." />
+      <PageTitle title="Интеграция с ATS" subtitle="Принятое приглашение — профиль кандидата с контактами уходит в вашу ATS; до принятия контакты закрыты." />
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card flex flex-wrap items-center justify-between gap-4 border-brand-lavender/30 bg-[#FBFAFF]">
         <div className="max-w-xl">
