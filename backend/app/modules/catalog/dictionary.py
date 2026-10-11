@@ -43,7 +43,9 @@ STACK_ALIASES: dict[str, list[str]] = {
     "state-management": ["redux", "zustand", "mobx", "effector", "управление состоянием", "редакс", "ngrx", "pinia", "vuex"],
     "vite-webpack": ["webpack", "vite", "rollup", "esbuild"],
     "frontend-testing": ["jest", "vitest", "testing library", "cypress"],
-    "a11y": ["a11y", "доступност", "accessibility", "wcag"],
+    # «доступност» — только в контексте интерфейса (CONTEXT_ALIASES ниже): «в пешей доступности», триада ИБ — не a11y
+    "a11y": ["a11y", "доступност", "веб-доступност", "цифровая доступност", "цифровой доступност", "accessibility",
+             "wcag"],
     "pandas": ["pandas"],
     "numpy": ["numpy"],
     "scikit-learn": ["scikit-learn", "sklearn", "scikit"],
@@ -180,9 +182,45 @@ def _alias_regex(alias: str) -> re.Pattern:
     return re.compile(rf"(?<![\w\-]){a}{right}", re.IGNORECASE)
 
 
+# Синонимы, которые значат навык только в своём контексте. «доступност» → a11y: на 414 реальных вакансиях hh.ru
+# (корпус 10.10.2026) голое слово дало 31 срабатывание, из них про доступность интерфейсов — 1; остальные —
+# «в пешей/шаговой доступности от метро», «конфиденциальность, целостность, доступность» (ИБ), «высокой доступности
+# сервисов» (надёжность). Считаем a11y, только если в той же фразе есть слово интерфейса и нет этих оборотов.
+_CLAUSE_END = re.compile(r"[;!?\n•]|\.\s")
+_A11Y_CONTEXT = re.compile(
+    r"интерфейс|(?<![a-zа-яё])ui(?![a-zа-яё])|(?<![a-zа-яё])ux(?![a-zа-яё])|фронт|front|react|vue|angular|"
+    r"svelte|html|css|вёрстк|верстк|семантик|seo|aria|wcag|a11y|клавиатур|экранн|скринридер|screen ?reader|слабовидящ|"
+    r"незрячи|инклюзив|ограниченными возможност|инвалидност|дизайн-систем|контраст",
+    re.IGNORECASE)
+_A11Y_BEFORE_NOT = re.compile(r"(?:пеш|шагов|транспортн|высок)\w*\s+$", re.IGNORECASE)   # «в пешей доступности»
+_A11Y_AFTER_NOT = re.compile(r"^\w*\s+(?:от|до)\s", re.IGNORECASE)                      # «доступности от м. …»
+_A11Y_CLAUSE_NOT = re.compile(r"конфиденциальн|целостн", re.IGNORECASE)                  # триада ИБ
+
+
+def _clause(text: str, start: int, end: int) -> tuple[str, str]:
+    """Часть фразы до совпадения и после него (до ближайшей границы фразы, не дальше 80 знаков)."""
+    left = text[max(0, start - 80):start]
+    cut = [m.end() for m in _CLAUSE_END.finditer(left)]
+    left = left[cut[-1]:] if cut else left
+    right = text[end:end + 80]
+    m = _CLAUSE_END.search(right)
+    return left, right[:m.start()] if m else right
+
+
+def _a11y_context(text: str, m: re.Match) -> bool:
+    left, right = _clause(text, m.start(), m.end())
+    if _A11Y_BEFORE_NOT.search(left) or _A11Y_AFTER_NOT.search(right) or _A11Y_CLAUSE_NOT.search(left + " " + right):
+        return False
+    return bool(_A11Y_CONTEXT.search(left) or _A11Y_CONTEXT.search(right))
+
+
+CONTEXT_ALIASES = {("a11y", "доступност"): _a11y_context}
+
 _COMPILED: dict[str, list[re.Pattern]] = {
-    tag: [_alias_regex(a) for a in aliases if a not in CASE_SENSITIVE_SHORT] for tag, aliases in STACK_ALIASES.items()
+    tag: [_alias_regex(a) for a in aliases if a not in CASE_SENSITIVE_SHORT and (tag, a) not in CONTEXT_ALIASES]
+    for tag, aliases in STACK_ALIASES.items()
 }
+_CONTEXTUAL = [(tag, _alias_regex(a), check) for (tag, a), check in CONTEXT_ALIASES.items()]
 _SHORT = {k: re.compile(rf"(?<![\w\-])(?:{rx})(?![\w\-])") for k, rx in CASE_SENSITIVE_SHORT.items()}
 
 
@@ -194,6 +232,10 @@ def find_stack_spans(text: str) -> dict[str, tuple[int, int]]:
             m = p.search(text)
             if m and (tag not in found or m.start() < found[tag][0]):
                 found[tag] = (m.start(), m.end())
+    for tag, pat, check in _CONTEXTUAL:
+        m = next((m for m in pat.finditer(text) if check(text, m)), None)
+        if m and (tag not in found or m.start() < found[tag][0]):
+            found[tag] = (m.start(), m.end())
     for short, pat in _SHORT.items():
         if short == "api":
             continue  # «API» само по себе слишком общее; REST API ловится полным синонимом
