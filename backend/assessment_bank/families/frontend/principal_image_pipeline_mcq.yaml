@@ -1,0 +1,24 @@
+family_id: frontend.perf.principal_image_pipeline_mcq
+title: Доставка изображений по годовой цене — оригиналы, обработка при сборке, при загрузке или на лету
+direction: frontend
+skills: [web_performance, core_web_vitals, build, technical_strategy, performance]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    plans: [orig, build, both, cdn]
+    traps: [min_traffic, no_new_services, without_user_uploads]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: способ доставки изображений выбирается по сумме цен — обработка, трафик (средний размер по долям просмотров) и потеря выручки от добавки к LCP; ключевая деталь — обработка при сборке не касается загруженных пользователями изображений. Верный вариант распределён поровну; ловушки — «наименьший трафик», «без новых сервисов» и расчёт без загруженных пользователями — отличаются от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном). Lead обычно выбирает по трафику или по простоте; Principal смешивает цены по долям просмотров — граница Lead/Principal (θ ≈ 2,9); σ 0,3"
+generator: assessment_bank.families.frontend.principal_image_pipeline_mcq
+version: 1
+description: >
+  Principal (короткое, 7 мин): какой способ доставки изображений даёт минимальную годовую цену. Ключ — исполнением:
+  модельная выборка просмотров и правило каждого варианта.
