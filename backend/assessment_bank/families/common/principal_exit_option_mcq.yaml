@@ -1,0 +1,24 @@
+family_id: common.strategy.principal_exit_option_mcq
+title: Цена зависимости от поставщика — ожидаемая цена с риском переезда на горизонте
+direction: common
+skills: [technical_strategy, architecture, probability, capacity_planning]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    plans: [prop, std, self, abs]
+    traps: [cheapest_run, min_risk, worst_case]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.8
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: выбор платформы с риском ухода поставщика оценивается ожидаемой ценой — эксплуатация за горизонт плюс вероятность хотя бы одного события за горизонт 1 − (1 − p)^H, умноженная на цену переезда. Верный вариант распределён поровну; ловушки — «дешевле в эксплуатации» (без риска), «минимальный риск» (свой слой совместимости) и «худший случай» (событие наверняка) — отличаются от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном). Lead обычно сравнивает эксплуатацию или перестраховывается слоем совместимости; Principal оценивает опцион выхода в ожидании — граница Lead/Principal (θ ≈ 3,0); σ 0,3"
+generator: assessment_bank.families.common.principal_exit_option_mcq
+version: 1
+description: >
+  Principal (короткое, 7 мин): какой вариант платформы даёт минимальную ожидаемую цену с учётом риска переезда.
+  Ключ — исполнением: перебор исходов по годам с весами вероятности.

@@ -262,6 +262,72 @@ data_eng — по 7 (на направление ≥ 4 Lead и ≥ 2 Principal).
 ≥ 20 различимых вариантов, префиксы, угадывание по форме и по месту числа, вне счёта 165). prior_difficulty — априорная, до
 калибровки панелью.
 
+### Короткие Principal и Lead у границы: common, backend, frontend (волна 10, ПБ-А, 11.10)
+
+24 коротких семейства (лимит 420 с, `mcq_concept` и `choose_fix`): 21 Principal и 3 Lead у верхней границы Lead.
+Соглашения — как в разделе «Уровни Lead и Principal» выше, с уточнениями:
+
+- `target_grades` — `[principal]` (b 2,6–2,8, a 1,4–1,5) или `[lead]` (b 2,2–2,3 — задания между порогами Lead и
+  Principal); `basis` начинается с «Априорная трудность (не по людям)», калибровки нет.
+- Расчётные `mcq_concept` — четыре именованных плана, верный распределён поровну (цель выбирается до подбора
+  параметров), отрыв минимума ≥ 4 % (у доли долга ≥ 3 %); три ловушки («очевидный» план, «самый дешёвый/
+  безопасный», расчёт без одной составляющей) отличаются от ответа хотя бы в двух случаях из трёх. Ключ печатает
+  программа-модель (перебор исходов, поток запросов, расписание выпусков, моделирование кварталов), а не формула
+  генератора.
+- `choose_fix` — схема 2×2 из пула трёх правил; принципы даны словами, без кода; варианты одной длины в строках.
+- Тест потока — `tests/test_bank_principal_a.py` (контракт, исполнение ключей на 60 seed, ≥ 20 различимых, равномерность
+  ключа, ранг числового ответа); общие проверки `test_lead_principal_a.py`, `test_proofread.py`,
+  `test_families_quick.py` их тоже покрывают.
+
+| Направление | Principal | Lead у границы | Проверка ключа |
+|---|---|---|---|
+| common | `strategy.principal_sequence_cod_mcq`, `process.principal_team_split_mcq`, `reliability.principal_slo_target_mcq`, `strategy.principal_exit_option_mcq`, `reliability.principal_region_topology_mcq`, `strategy.principal_debt_share_mcq`, `process.principal_oncall_model_mcq` | `arch.lead_rate_limit_fix` (choose_fix) | перебор порядков с зависимостью; связи компонентов; цена SLO; исходы по годам; события года; кварталы; инциденты дня и ночи; ведро жетонов с явным временем |
+| backend | `strategy.principal_shard_key_mcq`, `strategy.principal_integration_style_mcq`, `arch.principal_retry_policy_fix` (choose_fix), `strategy.principal_read_consistency_mcq`, `strategy.principal_concurrency_model_mcq`, `strategy.principal_data_freshness_mcq`, `strategy.principal_api_deprecation_mcq` | `arch.lead_idempotency_fix` (choose_fix) | запросы по шардам; 2^k состояний сервисов; подставные часы и бюджет повторов; поток чтений; закон Литтла по запросам; события суток по минутам; годы вывода версии; сценарии ключа идемпотентности |
+| frontend | `strategy.principal_rendering_mix_mcq`, `strategy.principal_microfrontends_mcq`, `strategy.principal_browser_baseline_mcq`, `perf.principal_third_party_mcq`, `perf.principal_image_pipeline_mcq`, `strategy.principal_api_layer_mcq`, `quality.principal_test_strategy_mcq` | `arch.lead_flag_rollout_fix` (choose_fix, node) | обслуживание и устаревание страниц; расписание выпусков; группы браузеров; выборка сессий; выборка просмотров; цепочка запросов по сетям; дефекты года по видам; флаги в Node |
+
+### Короткие Principal: data_ml, devops, data_eng (волна 10, 11.10)
+
+18 семейств — по 6 на направление, все `mcq_concept`, `target_grades: [principal]`, ≤ 420 с (≤ 7 мин), 4 варианта.
+Это короткие задания у границы Lead/Principal с ключом, который считает программа-модель по тем же числам, что
+видит кандидат (перебор состояний, почасовая или поквартальная имитация, проход сценариев через граф), — не формула
+генератора. Соглашения те же, что в разделе «Уровни Lead и Principal» выше; дополнительно:
+
+- Ответ (имя меры или место числа среди четырёх) выбирается по seed **до** подбора чисел — равновероятен; подбор
+  (`_principal_b_kit.search`) перебирает параметры, пока ответ не совпадёт и ловушки не отличатся от него.
+- Ловушки — модели типичных решений уровня Lead: самая дешёвая мера, «самая надёжная/быстрая», расчёт по среднему
+  вместо распределения, без одного из ограничений; ответ отличается хотя бы от двух ловушек (у крайних — от одной).
+- Значения у порогов (SLO, срок, мощность) отстоят от границы на 3–5 % — ключ не зависит от округления.
+- `prior_difficulty.b` 2,4–2,6, у шести семейств с 2–3 взаимодействующими ограничениями — 2,9–3,0 (граница
+  Lead/Principal θ ≈ 3,0 по шкале продукта): 3,0 — `db_cutover`, `region_topology`, `backfill_plan`,
+  `commit_capacity`; 2,9 — `oncall_load`, `dag_sla`. **b — априорная оценка по числу взаимодействующих ограничений,
+  не калибровка; калибровка — после пилота.** `basis` начинается с «Априорная трудность (не по людям)» и называет
+  границу Lead/Principal.
+
+| Направление | family_id | Содержание | Проверка ключа |
+|---|---|---|---|
+| data_ml | `strategy.principal_llm_cascade_mcq` | API, малая модель, каскад, своя большая — цена при пороге качества | цена и качество каждой стратегии по объёму запросов |
+| data_ml | `serving.principal_gpu_fleet_mcq` | сколько GPU под SLA задержки с отказом зоны | пропускная способность по пакетам и зонам |
+| data_ml | `mlops.principal_retrain_cadence_mcq` | период переобучения: деградация, риск выкатки, рост | потери по неделям горизонта |
+| data_ml | `decision.principal_review_threshold_mcq` | порог ручной проверки по корзинам скора | проход по корзинам с мощностью отдела |
+| data_ml | `strategy.principal_data_vs_model_mcq` | данные, разметка или модель — по разложению ошибки | пересчёт трёх частей ошибки |
+| data_ml | `llm.principal_rag_fix_mcq` | что чинить в RAG: полнота × точность, p95 | пересчёт полноты, точности и задержки |
+| devops | `sre.principal_slo_investment_mcq` | какое вложение одно выводит на SLO | перебор состояний компонентов |
+| devops | `release.principal_canary_plan_mcq` | план канарейки: доля × длительность | ожидаемая цена плана |
+| devops | `cloud.principal_commit_capacity_mcq` | сколько ВМ зарезервировать на год | цена года для каждого N по кварталам |
+| devops | `sre.principal_oncall_load_mcq` | дежурства: нормы ночных вызовов и часов | раскладка вызовов по неделям и дежурным |
+| devops | `cloud.principal_region_topology_mcq` | топология регионов под SLO и p99 записи | минуты простоя в год и p99 |
+| devops | `release.principal_db_cutover_mcq` | способ переезда базы под допуски простоя | окна простоя и осуществимость CDC |
+| data_eng | `strategy.principal_freshness_arch_mcq` | поток, микропакеты, час, сутки — под свежесть | задержка и цена каждой архитектуры |
+| data_eng | `quality.principal_dq_gate_mcq` | ворота качества: блок, карантин, оповещение | исходы 12 сценариев |
+| data_eng | `orchestration.principal_dag_sla_mcq` | мера под SLA витрины по распределению задержки | сценарии задержки через граф зависимостей |
+| data_eng | `etl.principal_backfill_plan_mcq` | план пересчёта истории к сроку | почасовое распределение узлов |
+| data_eng | `dwh.principal_partition_layout_mcq` | схема разделов под смесь запросов | отбор разделов по условию запроса |
+| data_eng | `streaming.principal_dedup_strategy_mcq` | дубли потока: граница exactly-once, окно дедупликации | дубли в приёмнике и полная цена суток |
+
+Тест потока — `tests/test_principal_b.py` (состав и файлы, уровень и обоснование трудности, навыки из словаря
+каталога, исполнение ключа и детерминизм, время генерации, ≥ 20 различимых вариантов и 4 разных ключа, угадывание
+по форме и по месту числа ≤ 0,45, разброс места ключа). Семейства вне счёта 165 (target_grades без senior).
+
 ### Правки по флагам панели 06.10 (версии 2)
 
 `qa.js.brittle_render_fix` и `common.text.utf8_truncate_fix` — фиксированный состав дистракторов;
