@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 from app.core.fmt import probe_title, quoted, ru_num, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
+from app.modules.catalog import levels as grade_levels
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
 from app.modules.catalog.seed_data import category_title
 from app.modules.profiles.facts import (
@@ -172,8 +173,8 @@ def recommended_categories(req: dict, counts: dict[str, int], cats: dict[str, Ca
     out = []
     if not d:
         return [{"id": c.id, "title": c.title, "count": counts.get(c.id, 0), "relation": "all",
-                 "market_range": _mr(c)} for c in cats.values()]
-    for grade in GRADES:
+                 "market_range": _mr(c)} for c in cats.values() if c.grade_id in GRADES]
+    for grade in grade_levels.available_grades(d):  # Lead/Principal — только где их проверяет банк (флаг)
         cid = f"{d}.{grade}"
         c = cats.get(cid)
         if not c:

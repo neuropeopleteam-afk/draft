@@ -36,6 +36,7 @@ export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
   const st = c.status?.status;
   if (st === "unconfirmed") risks.push("грейд не подтверждён тестом");
   else if (st === "provisional" || c.category?.preliminary) risks.push("грейд предварительный");
+  else if (c.category?.ext_preliminary) risks.push(`${c.status?.grade_title ?? "Lead/Principal"} — предварительно`);  // Я25
   const grade = reasons.find((x) => x.requirement === "Специализация и грейд");
   const off = /грейд на (?:ступень|две ступени|три ступени) (?:выше|ниже) запрошенного/.exec(grade?.text ?? "");
   if (off) risks.push(off[0]);

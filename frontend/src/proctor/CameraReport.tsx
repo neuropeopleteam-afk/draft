@@ -3,7 +3,7 @@
  * (работодателю события не показываются). На экране результата теста и в настройках (список попыток).
  */
 import { useState } from "react";
-import { Alert, DIRECTIONS, GRADES, Loading, dtt, errText, useApi } from "../components/ui";
+import { Alert, DIRECTIONS, GRADE_TITLE_ALL, Loading, dtt, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 import { useMeta } from "../lib/meta";
 import { ConsentBody, verDate, type ConsentState } from "./CameraConsent";
@@ -104,7 +104,7 @@ export function CameraSettings() {
         <ul className="mt-4 space-y-2 text-sm">
           {list.data.map((s) => (
             <li key={s.session_id} className="flex flex-wrap items-center justify-between gap-2 border-t border-brand-night/5 pt-2">
-              <span className="text-brand-ink/80">{s.started_at ? dtt(s.started_at) : "—"} · {DIRECTIONS[s.direction] ?? s.direction} · {GRADES[s.claimed_grade] ?? s.claimed_grade}</span>
+              <span className="text-brand-ink/80">{s.started_at ? dtt(s.started_at) : "—"} · {DIRECTIONS[s.direction] ?? s.direction} · {GRADE_TITLE_ALL[s.claimed_grade] ?? s.claimed_grade}</span>
               <span className="text-xs font-semibold text-brand-night">{s.summary.title}{s.summary.remarks.length ? `: ${s.summary.remarks.join("; ")}` : ""}</span>
             </li>
           ))}
