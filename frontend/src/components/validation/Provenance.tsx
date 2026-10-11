@@ -49,7 +49,7 @@ export function ProvenanceLine({ p, className = "" }: { p?: Prov | null; classNa
 
 const SECTION_T: Record<string, string> = {
   headline: "5 чисел", "path-retest": "Весь путь дважды", bench: "Бенчмарк", ablations: "Абляции", "retest-repeats": "Повторы заданий",
-  retest: "Повтор", test: "Тест", competitors: "Условия конкурентов", exposure: "Частота показа", leak: "Утечка",
+  retest: "Повтор", test: "Тест", "other-conditions": "Другие условия измерения", exposure: "Частота показа", leak: "Утечка",
   matching: "Демо-500", junior: "Junior у порога", intern: "Стажёр", grader: "Оценщик ответов", experts: "Модельная панель",
   discrimination: "D и r_pb", calibration: "Калибровка",
 };
