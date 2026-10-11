@@ -93,7 +93,7 @@ export function InstallPage() {
     <main id="main" className="min-h-screen bg-[#FBF8FC] px-6 py-10">
       <div className="mx-auto max-w-4xl space-y-6">
         <Link to="/"><Logo /></Link>
-        <PageTitle title="Приложение «Встречный»" subtitle="Установите платформу на телефон как приложение — без магазина приложений." />
+        <PageTitle title="Приложение «Драфт»" subtitle="Установите платформу на телефон как приложение — без магазина приложений." />
         <InstallGuide />
         {me ? <PushCard /> : <Alert kind="info">Чтобы включить уведомления, <Link to="/login" className="font-semibold underline">войдите</Link>.</Alert>}
       </div>

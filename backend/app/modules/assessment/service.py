@@ -642,6 +642,15 @@ def result(db: Session, ts: TestSession) -> dict:
     return out
 
 
+def _two_stage_status(db: Session, user_id: uuid.UUID, direction: str | None) -> dict:
+    from app.modules.assessment import two_stage
+
+    if not two_stage.enabled():
+        return {}
+    cur = two_stage.current_offer(db, user_id, direction)
+    return {"two_stage": cur} if cur else {}
+
+
 def _ext_preliminary(out: dict, specialization) -> None:
     """Lead/Principal (флаг GRADES_EXT_ENABLED, GRADES_EXT_PRELIMINARY): категория присвоена тестом, но с пометкой
     «предварительно» и предложением второго этапа; без флага ключа нет."""
@@ -861,6 +870,9 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         "active_mode": _mode(active) if active else None,
         # «Junior (предварительно)»: уровень доказанности и как подтвердить (provisional.options) — для направления
         "provisional": provisional.options(db, profile, specialization) if specialization is not None else None,
+        # Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): уточнение уровня у границы по последнему полному тесту направления
+        # (для Lead/Principal «предварительно» — второй этап); без флага ключа нет
+        **_two_stage_status(db, user_id, selected),
         # единая модель статуса грейда (та же, что видит работодатель): подтверждён / предварительно / не подтверждён
         "grade_status": grade_status(selected_bundle),
         "confirmed_by": provisional.confirmed_by(selected_bundle.test.value if selected_bundle.test else None),

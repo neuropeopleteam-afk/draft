@@ -1,0 +1,23 @@
+family_id: qa.lead.test_plan_review_open
+title: Ревью плана тестирования — уровни проверок, контракты, данные, нагрузка, нестабильность, критерии выпуска, выкатка (Lead)
+direction: qa
+skills: [test_architecture, test_design, contract_testing, performance_testing, regression_strategy]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    issues_pool: [contracts, data, exit, flaky, perf, pyramid, rollout]
+    planted: 3
+time_limit_s: 1200
+canary: false
+prior_difficulty:
+  b: 2.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Ревью чужого плана тестирования с числами: три вставленные проблемы из семи среди верных разделов; нужно найти именно их, связать с риском (деньги клиентов, пик, скорость обратной связи) и расставить приоритет. Senior находит одну-две по отдельности, Lead — все три с приоритетом; частичный балл 0–4 по каждому критерию даёт высокую различающую способность у порога Senior/Lead"
+generator: assessment_bank.families.qa.lead_test_plan_review_open
+version: 1
+description: >
+  Ревью выдержки плана тестирования нового расчёта стоимости: три проблемы из пула семи вставлены среди верных
+  разделов. Рубрика — по критерию на проблему и приоритизация; шкала 0–4 с цитатами из ответа.

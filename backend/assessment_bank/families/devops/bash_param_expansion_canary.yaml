@@ -1,0 +1,23 @@
+family_id: devops.bash.param_expansion_canary
+title: bash — раскрытие параметров (канарейка)
+direction: devops
+skills: [bash, shell, linux]
+target_grades: [junior]
+format: predict_output
+language: bash
+invariants:
+  code_lines: [8, 8]
+  operations: [5, 8]
+time_limit_s: 120
+canary: true
+canary_pool_size: 30
+prior_difficulty:
+  b: -1.0
+  a: 1.0
+  sigma_variant: 0.25
+  basis: "8 строк: пустая и незаданная переменная, две подстановки по умолчанию (:- и -) и три среза пути (#, ##, %, %%, длина); Junior"
+generator: assessment_bank.families.devops.bash_param_expansion_canary
+version: 1
+description: >
+  Канареечное семейство: seed 1..30 опубликованы. Показываются только они; служат детектору предзнания
+  (время + правильность), в грейд не входят.

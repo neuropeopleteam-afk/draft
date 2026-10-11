@@ -16,6 +16,14 @@
   вероятностью, ближайшей к 0,5: «keep» — уровень итога под вопросом, «up» — возможно, уровень выше итога (до заявленного).
   Режим «выше заявленного» (``above`` > 0): если на заявленном уровне границы нет и у порога уровня выше заявленного
   P ≥ ``above`` — граница «above» у наивысшего такого порога (тест на заявленный грейд выше его не поднимает).
+  **Lead/Principal** (флаг GRADES_EXT_ENABLED, пометка «предварительно» — catalog.levels): если границы по правилу выше
+  нет, второй этап всё равно предлагается — граница «ext» у порога своего уровня (Senior/Lead для Lead, Lead/Principal
+  для Principal): точность различения этих уровней одной сессией ниже цели (docs/validation/GRADES_EXT_NEED.md).
+  То же, если заявленный Lead/Principal доказан с P ≥ L, но не присвоен только потолком полного теста (погрешность
+  одной сессии больше ``GRADES_EXT_MAX_SE``): граница «ext» у его порога — вторая сессия сужает погрешность. Итог
+  уточнения Lead/Principal — тоже только при общей погрешности не больше ``GRADES_EXT_MAX_SE``.
+  Шкала уровней — направления (``catalog.levels.available_grades``): выше уровня, который банк направления не
+  проверяет, ни граница, ни итог не поднимаются.
 * **До уточнения** уровень — по первой сессии (не выше, чем позволяет она), с пометкой «на границе: можно уточнить».
 * **Вторая сессия** (``RefineSession``): ответы первой сессии перенесены (в θ и в детектор предзнания, заново не
   показываются); новые задания — короткие (лимит ≤ 5 мин), с наибольшей информацией в выбранном пороге, семейства
@@ -38,7 +46,7 @@ from assessment_bank.psychometrics import PoolItem
 
 from app.modules.assessment.exposure import AppCATSession
 from app.modules.assessment.grades import p_at_least
-from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
+from app.modules.catalog.seed_data import EXT_GRADE_ORDER, GRADE_CUTS, GRADE_ORDER
 
 # Значения по умолчанию — выбор на симуляции (docs/validation/TWO_STAGE.md); настройки — app.core.config
 DEFAULT_LEVEL = 0.8
@@ -73,7 +81,8 @@ class Boundary:
     cut_grade: str      # грейд, порог которого уточняется (граница «ниже cut_grade / cut_grade»)
     cut: float          # порог на шкале θ
     p: float            # P(θ ≥ порога) по первой сессии
-    kind: str           # up — возможно, уровень выше; keep — уровень первой сессии под вопросом; above — выше уже вероятен
+    kind: str           # up — возможно, уровень выше; keep — уровень первой сессии под вопросом; above — выше уже вероятен;
+    #                     ext — второй этап для Lead/Principal «предварительно» (порог своего уровня)
 
     @property
     def lower(self) -> str:
@@ -86,13 +95,16 @@ class Boundary:
 
 
 def boundary(theta: float | None, se: float | None, grade: str | None, claimed: str | None = None,
-             level: float = DEFAULT_LEVEL, above: float = DEFAULT_ABOVE) -> Boundary | None:
+             level: float = DEFAULT_LEVEL, above: float = DEFAULT_ABOVE, order: tuple[str, ...] | None = None,
+             ext: bool = False) -> Boundary | None:
     """Граница для уточнения после сессии с заявленным грейдом ``claimed`` и итогом ``grade`` (см. описание модуля)
-    или None — уточнять нечего. claimed None — заявленный = итог."""
+    или None — уточнять нечего. claimed None — заявленный = итог. order — шкала направления (по умолчанию — все
+    уровни платформы); ext — у итога Lead/Principal пометка «предварительно»: второй этап и без границы по правилу."""
     if theta is None or se is None:
         return None
+    order = tuple(order or GRADE_ORDER)
     theta, se, grade = float(theta), max(float(se), 1e-6), grade or "none"
-    claimed = claimed if claimed in GRADE_ORDER else (grade if grade in GRADE_ORDER else GRADE_ORDER[0])
+    claimed = claimed if claimed in order else (grade if grade in order else order[0])
     lo, hi = max(_rank(grade), 0), _rank(claimed)
     rel = GRADE_ORDER[min(lo, hi):max(lo, hi) + 1]
     probs = {g: p_at_least(theta, se, g) for g in rel}
@@ -101,8 +113,14 @@ def boundary(theta: float | None, se: float | None, grade: str | None, claimed: 
         g = min(band, key=lambda x: (abs(probs[x] - 0.5), -_rank(x)))
         kind = "keep" if _rank(g) <= _rank(grade) else "up"
         return Boundary(grade, g, float(GRADE_CUTS[g]), probs[g], kind)
+    if ext and grade in EXT_GRADE_ORDER and grade in order:  # Lead/Principal «предварительно»: порог своего уровня
+        return Boundary(grade, grade, float(GRADE_CUTS[grade]), p_at_least(theta, se, grade), "ext")
+    capped = [g for g in rel if ext and g in EXT_GRADE_ORDER and _rank(g) > _rank(grade) and probs[g] >= level]
+    if capped:  # заявленный Lead/Principal доказан, но срезан потолком одной сессии (погрешность) — второй этап
+        g = capped[-1]
+        return Boundary(grade, g, float(GRADE_CUTS[g]), probs[g], "ext")
     if above > 0 and _rank(grade) >= _rank(claimed):
-        ups = [g for g in GRADE_ORDER if _rank(g) > _rank(claimed) and p_at_least(theta, se, g) >= above]
+        ups = [g for g in order if _rank(g) > _rank(claimed) and p_at_least(theta, se, g) >= above]
         if ups:
             g = ups[-1]
             return Boundary(grade, g, float(GRADE_CUTS[g]), p_at_least(theta, se, g), "above")
@@ -110,12 +128,14 @@ def boundary(theta: float | None, se: float | None, grade: str | None, claimed: 
 
 
 def final_grade(theta: float, se: float, claimed: str | None = None, confirm: float = DEFAULT_CONFIRM,
-                confirm_up: float = DEFAULT_CONFIRM_UP) -> str:
+                confirm_up: float = DEFAULT_CONFIRM_UP, order: tuple[str, ...] | None = None) -> str:
     """Итог по общей оценке обеих сессий: наивысший уровень с P(θ ≥ порога) ≥ confirm (до заявленного включительно)
-    или ≥ confirm_up (выше заявленного). Без потолка длины: вторая сессия добавляет задания к первой."""
-    cr = _rank(claimed) if claimed in GRADE_ORDER else len(GRADE_ORDER)
+    или ≥ confirm_up (выше заявленного). Без потолка длины: вторая сессия добавляет задания к первой. order — шкала
+    направления (выше уровня, который банк направления не проверяет, итог не поднимается)."""
+    order = tuple(order or GRADE_ORDER)
+    cr = order.index(claimed) if claimed in order else len(order)
     out = "none"
-    for i, g in enumerate(GRADE_ORDER):
+    for i, g in enumerate(order):
         if p_at_least(float(theta), float(se), g) >= (confirm if i <= cr else confirm_up):
             out = g
     return out
@@ -177,7 +197,27 @@ class RefineSession(AppCATSession):
 
 # ---------------------------------------------------------------- продукт (флаг ASSESSMENT_TWO_STAGE_ENABLED)
 
-TITLE = {"none": "без категории", "intern": "Стажёр", "junior": "Junior", "middle": "Middle", "senior": "Senior"}
+TITLE = {"none": "без категории", "intern": "Стажёр", "junior": "Junior", "middle": "Middle", "senior": "Senior",
+         "lead": "Lead", "principal": "Principal"}
+
+
+def _order(direction: str | None) -> tuple[str, ...]:
+    """Шкала уровней направления: без флага GRADES_EXT_ENABLED — прежние 4, с флагом — и Lead/Principal по банку."""
+    from app.modules.catalog import levels
+
+    return tuple(levels.available_grades(direction)) if direction else GRADE_ORDER
+
+
+def _ext(grade: str | None) -> bool:
+    from app.modules.catalog import levels
+
+    return bool(levels.ext_preliminary(grade))
+
+
+def _ext_max_se() -> float:
+    from app.core.config import get_settings
+
+    return float(getattr(get_settings(), "grades_ext_max_se", 0.6))
 
 
 def params() -> dict:
@@ -236,8 +276,9 @@ def session_boundary(ts, p: dict | None = None) -> Boundary | None:
     if ts.status != TestSessionStatus.finished or mode_of(ts) != "full" or not str(r.get("engine", "")).startswith("bank"):
         return None
     er = r.get("engine_result") or {}
-    return boundary(er.get("theta"), er.get("se"), session_grade(ts), ts.claimed_grade_id, level=p["level"],
-                    above=p["above"])
+    g = session_grade(ts)
+    return boundary(er.get("theta"), er.get("se"), g, ts.claimed_grade_id, level=p["level"], above=p["above"],
+                    order=_order(ts.direction_id), ext=_ext(g) or (_ext(ts.claimed_grade_id) and g not in EXT_GRADE_ORDER))
 
 
 def label(b: dict) -> str:
@@ -290,15 +331,49 @@ def offer(db, ts) -> dict | None:
     active = next((t for t in refs if t.status == TestSessionStatus.in_progress), None)
     done = next((t for t in refs if t.status == TestSessionStatus.finished), None)
     bd = b.as_dict()
-    out = {"boundary": bd, "label": label(bd), "items": p["items"], "minutes": p["minutes"],
+    text = (f"Уровень {label(bd)}: одна сессия теста не отделяет эти уровни уверенно. Можно уточнить уровень "
+            f"за 10–{p['minutes']} минут — до {p['items']} коротких заданий у этой границы из новых семейств; "
+            "итог считается по ответам обеих сессий вместе и может оказаться как выше, так и ниже нынешнего.")
+    if b.kind == "ext" and b.cut_grade != b.grade:  # заявленный Lead/Principal срезан потолком одной сессии
+        text = (f"{TITLE.get(b.cut_grade, b.cut_grade)} по этому тесту вероятен, но не присвоен: одной сессии мало, "
+                f"чтобы уверенно отделить {TITLE.get(bd['lower'], bd['lower'])} от {TITLE.get(b.cut_grade, b.cut_grade)} "
+                f"(погрешность шире допустимой для Lead/Principal). Второй этап — до {p['items']} коротких заданий у "
+                f"этой границы из новых семейств, 10–{p['minutes']} минут, без отдельного теста на "
+                f"{TITLE.get(bd['lower'], bd['lower'])}; итог — по ответам обеих сессий вместе: "
+                f"{TITLE.get(b.cut_grade, b.cut_grade)} (с пометкой «предварительно»), {TITLE.get(bd['lower'], bd['lower'])} "
+                "или ниже (модель, не люди; /validation, «Lead и Principal»).")
+    elif b.kind == "ext":
+        text = (f"{TITLE.get(b.grade, b.grade)} по тесту — предварительно. Второй этап — до {p['items']} коротких "
+                f"заданий у границы {TITLE.get(bd['lower'], bd['lower'])}/{TITLE.get(b.cut_grade, b.cut_grade)} из новых "
+                f"семейств, 10–{p['minutes']} минут; итог считается по ответам обеих сессий вместе и может оказаться как "
+                "выше, так и ниже нынешнего. Пометка «предварительно» у Lead/Principal остаётся и после второго этапа: "
+                "банк заданий этих уровней пока мал (модель, не люди; /validation, «Lead и Principal»).")
+    out = {"boundary": bd, "label": label(bd), "items": p["items"], "minutes": p["minutes"], "ext": b.kind == "ext",
            "status": "done" if done else ("in_progress" if active else "offered"),
            "available": bool(not refs and last is not None and last.id == ts.id),
            "refine_session_id": str((done or active).id) if (done or active) else None,
-           "outcome": outcome(done) if done else None,
-           "text": (f"Уровень {label(bd)}: одна сессия теста не отделяет эти уровни уверенно. Можно уточнить уровень "
-                    f"за 10–{p['minutes']} минут — до {p['items']} коротких заданий у этой границы из новых семейств; "
-                    "итог считается по ответам обеих сессий вместе и может оказаться как выше, так и ниже нынешнего.")}
+           "outcome": outcome(done) if done else None, "text": text}
     return out
+
+
+def current_offer(db, user_id, direction: str | None) -> dict | None:
+    """Предложение по последней полной сессии направления — для экрана «Категория и грейд» (статус теста):
+    «можно уточнить» / уточнение идёт / итог уточнения. None — флаг выключен, полной сессии нет или границы нет."""
+    if not direction or not enabled():
+        return None
+    from sqlalchemy import select
+
+    from app.core.enums import TestSessionStatus
+    from app.modules.assessment.models import TestSession
+
+    rows = db.scalars(select(TestSession).where(
+        TestSession.user_id == user_id, TestSession.direction_id == direction,
+        TestSession.status == TestSessionStatus.finished).order_by(TestSession.finished_at.desc()).limit(20)).all()
+    for t in rows:
+        if mode_of(t) == "full" and str((t.result or {}).get("engine", "")).startswith("bank"):
+            off = offer(db, t)
+            return {**off, "session_id": str(t.id), "direction": direction} if off else None
+    return None
 
 
 def outcome(ts) -> dict | None:
@@ -313,8 +388,11 @@ def refine_result(state: dict, theta: float, se: float, n_new: int) -> dict:
     """Итог уточнения для движка (bank_engine.finish): уровень по общей оценке обеих сессий."""
     rf = state.get("refine") or {}
     claimed = state.get("claimed_grade")
+    order = _order(state.get("direction"))
+    if float(se) > _ext_max_se():  # Lead/Principal — только при общей погрешности не шире, чем у полного теста (Я25)
+        order = tuple(g for g in order if g not in EXT_GRADE_ORDER)
     f = final_grade(theta, se, claimed, float(rf.get("confirm", DEFAULT_CONFIRM)),
-                    float(rf.get("confirm_up", DEFAULT_CONFIRM_UP)))
+                    float(rf.get("confirm_up", DEFAULT_CONFIRM_UP)), order=order)
     if rf.get("floor") and _rank(f) < _rank(rf.get("grade") or "none"):  # итог не ниже первой сессии
         f = rf["grade"]
     cut_g = rf.get("cut_grade")

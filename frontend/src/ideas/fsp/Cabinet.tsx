@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, Outlet, useOutletContext } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, GRADES, Loading, Seg, Stat, dt, errText, range, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, DIRECTION_TITLES, GRADES, Loading, Seg, Stat, dt, errText, range, useApi } from "../../components/ui";
 import { apiDownload } from "../../lib/api";
 import { BarList, Donut, Funnel, Heatmap, Legend, PairBars, RangeChart, StackBar, fk, fpct, ftr, fx, type Stage } from "../charts";
 import { MODE_SHORT, Phase } from "../shared";
@@ -140,7 +140,7 @@ export function FspOverview() {
                 </div>
               </Card>
               <Card title="Спрос по направлениям" sub="Приглашения-офферы за период" more={{ to: "demand", label: "Категории и навыки" }}>
-                <BarList rows={byDir.map((d) => ({ key: d.id, label: DIRECTIONS[d.id], value: d.v }))} labelWidth="11rem" />
+                <BarList rows={byDir.map((d) => ({ key: d.id, label: DIRECTION_TITLES[d.id], value: d.v }))} labelWidth="11rem" />
               </Card>
               <Card title="Воронка кандидатов" sub="Категория → приглашение → принятие" more={{ to: "funnel", label: "Все воронки" }}>
                 <Funnel stages={rep.funnel.all} />
@@ -193,7 +193,7 @@ export function FspDemand() {
             <Card title="Категории «направление · грейд»" sub="Выберите показатель. Пустая клетка с пунктиром — группа меньше 5 человек.">
               <Seg label="Показатель" value={metric} onChange={setMetric} options={METRICS.map(({ id, title }) => ({ id, title }))} />
               <Heatmap rows={DIRS} cols={GRS} cell={get} fmt={m.fmt} tone={metric === "needs" || metric === "invitations" ? "brand" : "night"} />
-              {noGrade.length > 0 && <p className="text-xs text-brand-ink/65">Потребности без грейда: {noGrade.map(([d, n]) => `${DIRECTIONS[d] ?? d} — ${n}`).join(", ")}.</p>}
+              {noGrade.length > 0 && <p className="text-xs text-brand-ink/65">Потребности без грейда: {noGrade.map(([d, n]) => `${DIRECTION_TITLES[d] ?? d} — ${n}`).join(", ")}.</p>}
             </Card>
             <Card title="Навыки в потребностях" sub="Сколько потребностей требуют навык (обязательно и желательно) и как часто приглашают тех, кто подтвердил его тестом (T1).">
               <Legend items={[{ tone: "brand", label: "обязательно" }, { tone: "soft", label: "желательно" }]} />

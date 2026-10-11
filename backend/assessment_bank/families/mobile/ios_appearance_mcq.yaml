@@ -1,0 +1,24 @@
+family_id: mobile.ios.appearance_mcq
+title: UIViewController — колбэки появления при push, модальных листах и уходе в фон
+direction: mobile
+skills: [ios, uikit, view_controllers, ios_lifecycle, navigation]
+target_grades: [junior, middle]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    actions: [push, full_screen, page_sheet, automatic, background, rotate]
+    misconceptions: [reload_on_return, sheet_disappears, automatic_is_full, background_disappears, rotate_reappears]
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: -0.1
+  a: 1.2
+  sigma_variant: 0.35
+  basis: "Сценарий из двух действий; ключевое различение — лист (.pageSheet/.automatic с iOS 13) не вызывает колбэков появления у экрана под ним, фон и поворот — тоже; дистракторы — модель с одним заблуждением той же формы. Различает Junior и Middle (b ≈ −0,1); пары действий разной трудности → σ повышена"
+generator: assessment_bank.families.mobile.ios_appearance_mcq
+version: 1
+description: >
+  Два действия пользователя над экраном A в UINavigationController; нужно выбрать последовательность
+  колбэков появления A. Ключ: модель исполняется в песочнице и находит совпавший вариант.

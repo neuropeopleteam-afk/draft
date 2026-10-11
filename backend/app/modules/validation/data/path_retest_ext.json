@@ -1,0 +1,2969 @@
+{
+ "signature": {
+  "world": "симуляция теста: 4 направлений × 500 кандидатов, семейств в банке: 268",
+  "seed": 20261006,
+  "config_hash": "df98d0ab3e88",
+  "commit": "af90886",
+  "bank": "2c7d82bbb008b587",
+  "n": 2000,
+  "command": "make path-retest",
+  "generated_at": "2026-10-11T11:41:33+00:00"
+ },
+ "quick": false,
+ "n_per_direction": 500,
+ "directions": [
+  "devops",
+  "data_eng",
+  "mobile",
+  "analyst"
+ ],
+ "config": {
+  "app": {
+   "min_items": 8,
+   "max_items": 16,
+   "se_target": 0.35,
+   "max_minutes": 60,
+   "subpools": 2,
+   "exposure": true,
+   "max_per_format": {
+    "open_book_3step": 2,
+    "open_answer": 1
+   },
+   "stop_rule": "classification",
+   "classify_z": 1.28,
+   "select_at": "cut",
+   "time_weight": 0.0,
+   "ext_items": 6,
+   "ext_minutes": 20,
+   "ext_own_first": true,
+   "legacy_ext": 0,
+   "retake_seen": true,
+   "claim_prior": false,
+   "rotation": "subpool",
+   "cuts": [
+    -1.75,
+    -1.0,
+    0.0,
+    1.0
+   ],
+   "start_theta": {
+    "intern": -1.25,
+    "junior": -0.5,
+    "middle": 0.5,
+    "senior": 1.3
+   }
+  },
+  "n_per_direction": 500,
+  "directions": [
+   "devops",
+   "data_eng",
+   "mobile",
+   "analyst"
+  ],
+  "p_follow_hint": 0.5,
+  "self_sd": 0.6,
+  "misspec": 0.5,
+  "border": 0.25,
+  "pilot_n": 1000,
+  "cuts": {
+   "intern": -1.75,
+   "junior": -1.0,
+   "middle": 0.0,
+   "senior": 1.0
+  },
+  "n_families": 268
+ },
+ "claimed": {
+  "intern": 396,
+  "junior": 605,
+  "middle": 643,
+  "senior": 356
+ },
+ "true_grades": {
+  "none": 87,
+  "intern": 246,
+  "junior": 675,
+  "middle": 688,
+  "senior": 304
+ },
+ "total": {
+  "path_grade": {
+   "n": 2000,
+   "exact": 0.76,
+   "within_1": 0.995,
+   "two_steps": 0.005,
+   "kappa_w": 0.852,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.838,
+    0.865
+   ],
+   "exact_ci": [
+    0.741,
+    0.778
+   ]
+  },
+  "icc_theta": 0.824,
+  "r_theta": 0.824,
+  "icc_theta_ci": [
+   0.811,
+   0.836
+  ],
+  "point_grade": {
+   "n": 2000,
+   "exact": 0.587,
+   "within_1": 0.985,
+   "two_steps": 0.015,
+   "kappa_w": 0.736,
+   "kappa_informative": true
+  },
+  "point_grade_ceiling": {
+   "exact": 0.588,
+   "within_1": 0.98,
+   "kappa_w": 0.796
+  },
+  "status_agreement": 0.721,
+  "overlap_all": {
+   "mean": 0.154,
+   "median": 0.0,
+   "any_share": 0.231,
+   "max": 1.0
+  },
+  "overlap_first": {
+   "mean": 0.152,
+   "median": 0.0,
+   "any_share": 0.225,
+   "max": 1.0
+  },
+  "truth": {
+   "n": 2000,
+   "exact": 0.582,
+   "exact_with_category": 0.584,
+   "over_share": 0.046,
+   "under_share": 0.344,
+   "no_category_share": 0.063,
+   "kappa_w_true": 0.782
+  },
+  "path": {
+   "status_share": {
+    "confirmed": 0.582,
+    "provisional": 0.076,
+    "accepted_lower": 0.283,
+    "none": 0.059
+   },
+   "sessions_per_path": 1.01,
+   "mean_items_per_session": 20.25,
+   "mean_items_per_path": 20.37,
+   "mean_time_min_per_path": 53.2,
+   "extension_share": 0.857,
+   "rescored_share": 0.001,
+   "provisional_intern_proved": 286,
+   "block_gap_flag_share": 0.053
+  },
+  "splits": {
+   "far_from_cut": {
+    "share": 0.505,
+    "n": 1010,
+    "exact": 0.729,
+    "within_1": 0.996,
+    "two_steps": 0.004,
+    "kappa_w": 0.853,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.833,
+     0.871
+    ],
+    "exact_ci": [
+     0.702,
+     0.756
+    ]
+   },
+   "near_cut": {
+    "share": 0.495,
+    "n": 990,
+    "exact": 0.792,
+    "within_1": 0.994,
+    "two_steps": 0.006,
+    "kappa_w": 0.846,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.824,
+     0.866
+    ],
+    "exact_ci": [
+     0.768,
+     0.817
+    ]
+   },
+   "far_from_boundary": {
+    "share": 0.503,
+    "n": 1006,
+    "exact": 0.776,
+    "within_1": 0.993,
+    "two_steps": 0.007,
+    "kappa_w": 0.872,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.853,
+     0.89
+    ],
+    "exact_ci": [
+     0.751,
+     0.802
+    ]
+   },
+   "near_boundary": {
+    "share": 0.497,
+    "n": 994,
+    "exact": 0.743,
+    "within_1": 0.997,
+    "two_steps": 0.003,
+    "kappa_w": 0.825,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.804,
+     0.842
+    ],
+    "exact_ci": [
+     0.716,
+     0.77
+    ]
+   },
+   "boundary_shift": 0.32,
+   "decided_both": {
+    "share": 0.802,
+    "n": 1604,
+    "exact": 0.771,
+    "within_1": 0.998,
+    "two_steps": 0.002,
+    "kappa_w": 0.82,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.801,
+     0.841
+    ],
+    "exact_ci": [
+     0.749,
+     0.791
+    ]
+   },
+   "undecided_any": {
+    "share": 0.198,
+    "n": 396,
+    "exact": 0.717,
+    "within_1": 0.985,
+    "two_steps": 0.015,
+    "kappa_w": 0.793,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.749,
+     0.831
+    ],
+    "exact_ci": [
+     0.672,
+     0.763
+    ]
+   }
+  }
+ },
+ "by_direction": {
+  "devops": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.764,
+    "within_1": 0.988,
+    "two_steps": 0.012,
+    "kappa_w": 0.868,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.837,
+     0.894
+    ],
+    "exact_ci": [
+     0.726,
+     0.802
+    ]
+   },
+   "icc_theta": 0.844,
+   "r_theta": 0.844,
+   "icc_theta_ci": [
+    0.814,
+    0.867
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.59,
+    "within_1": 0.97,
+    "two_steps": 0.03,
+    "kappa_w": 0.755,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.595,
+    "within_1": 0.981,
+    "kappa_w": 0.811
+   },
+   "status_agreement": 0.734,
+   "overlap_all": {
+    "mean": 0.157,
+    "median": 0.0,
+    "any_share": 0.256,
+    "max": 0.75
+   },
+   "overlap_first": {
+    "mean": 0.153,
+    "median": 0.0,
+    "any_share": 0.248,
+    "max": 0.75
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.568,
+    "exact_with_category": 0.573,
+    "over_share": 0.034,
+    "under_share": 0.344,
+    "no_category_share": 0.114,
+    "kappa_w_true": 0.805
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.517,
+     "provisional": 0.076,
+     "accepted_lower": 0.307,
+     "none": 0.1
+    },
+    "sessions_per_path": 1.01,
+    "mean_items_per_session": 20.21,
+    "mean_items_per_path": 20.45,
+    "mean_time_min_per_path": 52.7,
+    "extension_share": 0.834,
+    "rescored_share": 0.0,
+    "provisional_intern_proved": 70,
+    "block_gap_flag_share": 0.082
+   }
+  },
+  "data_eng": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.75,
+    "within_1": 0.998,
+    "two_steps": 0.002,
+    "kappa_w": 0.829,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.797,
+     0.857
+    ],
+    "exact_ci": [
+     0.71,
+     0.786
+    ]
+   },
+   "icc_theta": 0.821,
+   "r_theta": 0.821,
+   "icc_theta_ci": [
+    0.791,
+    0.845
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.594,
+    "within_1": 0.992,
+    "two_steps": 0.008,
+    "kappa_w": 0.718,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.593,
+    "within_1": 0.982,
+    "kappa_w": 0.779
+   },
+   "status_agreement": 0.714,
+   "overlap_all": {
+    "mean": 0.129,
+    "median": 0.0,
+    "any_share": 0.218,
+    "max": 0.812
+   },
+   "overlap_first": {
+    "mean": 0.129,
+    "median": 0.0,
+    "any_share": 0.218,
+    "max": 0.812
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.572,
+    "exact_with_category": 0.573,
+    "over_share": 0.044,
+    "under_share": 0.368,
+    "no_category_share": 0.034,
+    "kappa_w_true": 0.752
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.632,
+     "provisional": 0.066,
+     "accepted_lower": 0.266,
+     "none": 0.036
+    },
+    "sessions_per_path": 1.0,
+    "mean_items_per_session": 20.07,
+    "mean_items_per_path": 20.11,
+    "mean_time_min_per_path": 58.1,
+    "extension_share": 0.879,
+    "rescored_share": 0.001,
+    "provisional_intern_proved": 63,
+    "block_gap_flag_share": 0.077
+   }
+  },
+  "mobile": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.754,
+    "within_1": 1.0,
+    "two_steps": 0.0,
+    "kappa_w": 0.852,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.827,
+     0.876
+    ],
+    "exact_ci": [
+     0.718,
+     0.792
+    ]
+   },
+   "icc_theta": 0.807,
+   "r_theta": 0.807,
+   "icc_theta_ci": [
+    0.778,
+    0.832
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.548,
+    "within_1": 0.982,
+    "two_steps": 0.018,
+    "kappa_w": 0.702,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.581,
+    "within_1": 0.981,
+    "kappa_w": 0.796
+   },
+   "status_agreement": 0.716,
+   "overlap_all": {
+    "mean": 0.139,
+    "median": 0.0,
+    "any_share": 0.21,
+    "max": 0.812
+   },
+   "overlap_first": {
+    "mean": 0.136,
+    "median": 0.0,
+    "any_share": 0.202,
+    "max": 0.812
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.586,
+    "exact_with_category": 0.584,
+    "over_share": 0.056,
+    "under_share": 0.34,
+    "no_category_share": 0.048,
+    "kappa_w_true": 0.785
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.608,
+     "provisional": 0.072,
+     "accepted_lower": 0.271,
+     "none": 0.049
+    },
+    "sessions_per_path": 1.0,
+    "mean_items_per_session": 20.5,
+    "mean_items_per_path": 20.58,
+    "mean_time_min_per_path": 49.3,
+    "extension_share": 0.856,
+    "rescored_share": 0.0,
+    "provisional_intern_proved": 67,
+    "block_gap_flag_share": 0.028
+   }
+  },
+  "analyst": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.772,
+    "within_1": 0.994,
+    "two_steps": 0.006,
+    "kappa_w": 0.849,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.817,
+     0.876
+    ],
+    "exact_ci": [
+     0.732,
+     0.808
+    ]
+   },
+   "icc_theta": 0.815,
+   "r_theta": 0.815,
+   "icc_theta_ci": [
+    0.786,
+    0.839
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.614,
+    "within_1": 0.994,
+    "two_steps": 0.006,
+    "kappa_w": 0.753,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.582,
+    "within_1": 0.979,
+    "kappa_w": 0.795
+   },
+   "status_agreement": 0.718,
+   "overlap_all": {
+    "mean": 0.192,
+    "median": 0.0,
+    "any_share": 0.24,
+    "max": 1.0
+   },
+   "overlap_first": {
+    "mean": 0.189,
+    "median": 0.0,
+    "any_share": 0.232,
+    "max": 1.0
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.6,
+    "exact_with_category": 0.604,
+    "over_share": 0.05,
+    "under_share": 0.324,
+    "no_category_share": 0.056,
+    "kappa_w_true": 0.779
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.57,
+     "provisional": 0.092,
+     "accepted_lower": 0.287,
+     "none": 0.051
+    },
+    "sessions_per_path": 1.0,
+    "mean_items_per_session": 20.22,
+    "mean_items_per_path": 20.32,
+    "mean_time_min_per_path": 52.7,
+    "extension_share": 0.861,
+    "rescored_share": 0.003,
+    "provisional_intern_proved": 86,
+    "block_gap_flag_share": 0.027
+   }
+  }
+ },
+ "by_claimed": {
+  "intern": {
+   "n": 396,
+   "exact": 0.763,
+   "within_1": 1.0,
+   "two_steps": 0.0,
+   "kappa_w": 0.425,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.319,
+    0.516
+   ],
+   "exact_ci": [
+    0.72,
+    0.803
+   ]
+  },
+  "junior": {
+   "n": 605,
+   "exact": 0.969,
+   "within_1": 0.99,
+   "two_steps": 0.01,
+   "kappa_w": -0.014,
+   "kappa_informative": false,
+   "kappa_w_ci": [
+    -0.02,
+    -0.006
+   ],
+   "exact_ci": [
+    0.954,
+    0.982
+   ]
+  },
+  "middle": {
+   "n": 643,
+   "exact": 0.628,
+   "within_1": 0.997,
+   "two_steps": 0.003,
+   "kappa_w": 0.357,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.29,
+    0.425
+   ],
+   "exact_ci": [
+    0.591,
+    0.667
+   ]
+  },
+  "senior": {
+   "n": 356,
+   "exact": 0.64,
+   "within_1": 0.994,
+   "two_steps": 0.006,
+   "kappa_w": 0.441,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.353,
+    0.521
+   ],
+   "exact_ci": [
+    0.59,
+    0.691
+   ]
+  }
+ },
+ "transitions": [
+  [
+   68,
+   55,
+   3,
+   0,
+   0
+  ],
+  [
+   39,
+   235,
+   21,
+   1,
+   0
+  ],
+  [
+   3,
+   18,
+   780,
+   124,
+   0
+  ],
+  [
+   0,
+   1,
+   125,
+   376,
+   46
+  ],
+  [
+   0,
+   0,
+   2,
+   42,
+   61
+  ]
+ ],
+ "block_gap": {
+  "direction": "devops",
+  "claimed": "middle",
+  "rule": {
+   "gap": 0.3,
+   "min_items": 4
+  },
+  "rows": [
+   {
+    "shift": 0.0,
+    "n": 150,
+    "flag_share": 0.047,
+    "confirmed_share": 0.593,
+    "confirmed_flagged_share": 0.056
+   },
+   {
+    "shift": 1.0,
+    "n": 150,
+    "flag_share": 0.287,
+    "confirmed_share": 0.233,
+    "confirmed_flagged_share": 0.314
+   },
+   {
+    "shift": 3.0,
+    "n": 150,
+    "flag_share": 0.913,
+    "confirmed_share": 0.04,
+    "confirmed_flagged_share": 0.833
+   }
+  ]
+ },
+ "discrimination": {
+  "n_pilot": 1000,
+  "n_families": 116,
+  "criteria": {
+   "weak_D": 0.2,
+   "weak_r_pb": 0.2,
+   "weak_r_pb_panel": 0.15
+  },
+  "summary": {
+   "D_mean": 0.489,
+   "D_median": 0.498,
+   "r_pb_mean": 0.42,
+   "r_pb_median": 0.421,
+   "share_D_ge_03": 1.0,
+   "share_D_02_03": 0.0,
+   "share_D_lt_02": 0.0,
+   "share_r_pb_gt_02": 1.0,
+   "n_weak": 0,
+   "n_weak_sim": 0,
+   "panel_n": 0,
+   "panel_corr": null,
+   "panel_weak": 0,
+   "audit_rework_n": 4,
+   "audit_rework_and_weak": [],
+   "audit_rework_panel_r_pb_mean": null
+  },
+  "by_format": {
+   "choose_fix": {
+    "n": 15,
+    "D_mean": 0.527,
+    "r_pb_mean": 0.433
+   },
+   "find_bug": {
+    "n": 22,
+    "D_mean": 0.532,
+    "r_pb_mean": 0.436
+   },
+   "mcq_concept": {
+    "n": 35,
+    "D_mean": 0.498,
+    "r_pb_mean": 0.412
+   },
+   "open_answer": {
+    "n": 8,
+    "D_mean": 0.372,
+    "r_pb_mean": 0.333
+   },
+   "open_book_3step": {
+    "n": 7,
+    "D_mean": 0.443,
+    "r_pb_mean": 0.572
+   },
+   "predict_output": {
+    "n": 29,
+    "D_mean": 0.47,
+    "r_pb_mean": 0.399
+   }
+  },
+  "weak": [],
+  "families": [
+   {
+    "family_id": "analyst.api.breaking_change_mcq",
+    "block": "analyst",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.371,
+    "D": 0.5,
+    "r_pb": 0.414,
+    "a": 1.2,
+    "b": 0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.api.idempotency_contract_mcq",
+    "block": "analyst",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.361,
+    "D": 0.47,
+    "r_pb": 0.382,
+    "a": 1.2,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.api.json_schema_validate_output",
+    "block": "analyst",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.763,
+    "D": 0.374,
+    "r_pb": 0.358,
+    "a": 1.1,
+    "b": -1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.arch.integration_open",
+    "block": "analyst",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.28,
+    "D": 0.344,
+    "r_pb": 0.294,
+    "a": 0.9,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.bpmn.gateway_trace_output",
+    "block": "analyst",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.724,
+    "D": 0.419,
+    "r_pb": 0.373,
+    "a": 1.1,
+    "b": -1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.bpmn.join_mismatch_bug",
+    "block": "analyst",
+    "format": "find_bug",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.357,
+    "D": 0.5,
+    "r_pb": 0.405,
+    "a": 1.2,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.er.cardinality_ddl_fix",
+    "block": "analyst",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.56,
+    "D": 0.537,
+    "r_pb": 0.428,
+    "a": 1.2,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.process.bottleneck_capacity_output",
+    "block": "analyst",
+    "format": "predict_output",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.444,
+    "D": 0.496,
+    "r_pb": 0.403,
+    "a": 1.1,
+    "b": 0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.req.acceptance_scenario_mcq",
+    "block": "analyst",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.643,
+    "D": 0.507,
+    "r_pb": 0.41,
+    "a": 1.2,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.req.decision_table_mcq",
+    "block": "analyst",
+    "format": "mcq_concept",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.448,
+    "D": 0.485,
+    "r_pb": 0.414,
+    "a": 1.2,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.req.nfr_open",
+    "block": "analyst",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.277,
+    "D": 0.385,
+    "r_pb": 0.351,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.req.rice_priority_mcq",
+    "block": "analyst",
+    "format": "mcq_concept",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.701,
+    "D": 0.444,
+    "r_pb": 0.395,
+    "a": 1.1,
+    "b": -1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.sql.funnel_distinct_bug",
+    "block": "analyst",
+    "format": "find_bug",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.722,
+    "D": 0.433,
+    "r_pb": 0.393,
+    "a": 1.2,
+    "b": -1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.sql.join_fanout_fix",
+    "block": "analyst",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.428,
+    "D": 0.548,
+    "r_pb": 0.454,
+    "a": 1.3,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.sql.not_in_null_bug",
+    "block": "analyst",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.518,
+    "D": 0.581,
+    "r_pb": 0.464,
+    "a": 1.3,
+    "b": -0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.sql.null_aggregate_output",
+    "block": "analyst",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.722,
+    "D": 0.407,
+    "r_pb": 0.371,
+    "a": 1.1,
+    "b": -1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.sql.retention_cohort_fix",
+    "block": "analyst",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.297,
+    "D": 0.53,
+    "r_pb": 0.472,
+    "a": 1.3,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.uml.state_machine_output",
+    "block": "analyst",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.758,
+    "D": 0.393,
+    "r_pb": 0.338,
+    "a": 1.0,
+    "b": -1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "analyst.uml.state_rule_bug",
+    "block": "analyst",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.57,
+    "D": 0.596,
+    "r_pb": 0.45,
+    "a": 1.1,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.alg.binary_search_bound",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.566,
+    "D": 0.535,
+    "r_pb": 0.426,
+    "a": 1.1,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.alg.complexity_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.626,
+    "D": 0.501,
+    "r_pb": 0.408,
+    "a": 1.1,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.alg.merge_intervals_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.398,
+    "D": 0.452,
+    "r_pb": 0.565,
+    "a": 1.0,
+    "b": 0.533,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.conc.async_lost_update_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.362,
+    "D": 0.442,
+    "r_pb": 0.553,
+    "a": 1.0,
+    "b": 0.733,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.db.index_plan_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.392,
+    "D": 0.487,
+    "r_pb": 0.4,
+    "a": 1.1,
+    "b": 0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.db.tx_isolation_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.381,
+    "D": 0.497,
+    "r_pb": 0.407,
+    "a": 1.1,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.dist.fencing_token_bug",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.31,
+    "D": 0.483,
+    "r_pb": 0.418,
+    "a": 1.1,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.dist.outbox_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.277,
+    "D": 0.411,
+    "r_pb": 0.375,
+    "a": 1.1,
+    "b": 1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.docker.cache_order_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.641,
+    "D": 0.507,
+    "r_pb": 0.409,
+    "a": 1.1,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.docker.compose_port_bug",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.582,
+    "D": 0.502,
+    "r_pb": 0.406,
+    "a": 1.1,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.docker.layer_cache_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.558,
+    "D": 0.485,
+    "r_pb": 0.391,
+    "a": 1.1,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.ds.lru_cache_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.493,
+    "D": 0.53,
+    "r_pb": 0.425,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.history_count",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.497,
+    "D": 0.531,
+    "r_pb": 0.423,
+    "a": 1.1,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.move_commits_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.447,
+    "D": 0.511,
+    "r_pb": 0.416,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.undo_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.54,
+    "D": 0.514,
+    "r_pb": 0.404,
+    "a": 1.1,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.http.api_design_open",
+    "block": "common",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.295,
+    "D": 0.403,
+    "r_pb": 0.343,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.http.conditional_get",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.426,
+    "D": 0.529,
+    "r_pb": 0.426,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.http.retry_idempotent_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.608,
+    "D": 0.502,
+    "r_pb": 0.401,
+    "a": 1.1,
+    "b": -0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.http.status_codes",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.644,
+    "D": 0.434,
+    "r_pb": 0.367,
+    "a": 1.0,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.linux.log_pipeline",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.564,
+    "D": 0.473,
+    "r_pb": 0.385,
+    "a": 1.0,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.linux.relative_path_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.775,
+    "D": 0.354,
+    "r_pb": 0.333,
+    "a": 1.0,
+    "b": -1.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.net.cidr_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.53,
+    "D": 0.488,
+    "r_pb": 0.386,
+    "a": 1.0,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.perf.fanout_tail_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.348,
+    "D": 0.507,
+    "r_pb": 0.411,
+    "a": 1.1,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.aggregate_filter_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.454,
+    "D": 0.54,
+    "r_pb": 0.428,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.count_nulls_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.751,
+    "D": 0.377,
+    "r_pb": 0.354,
+    "a": 1.0,
+    "b": -1.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.left_join_count",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.541,
+    "D": 0.513,
+    "r_pb": 0.418,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.not_in_null",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.458,
+    "D": 0.527,
+    "r_pb": 0.421,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.revenue_report_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.349,
+    "D": 0.435,
+    "r_pb": 0.558,
+    "a": 1.0,
+    "b": 0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.window_range_ties_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.295,
+    "D": 0.52,
+    "r_pb": 0.447,
+    "a": 1.3,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.window_rank",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.317,
+    "D": 0.431,
+    "r_pb": 0.371,
+    "a": 1.0,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sys.reliability_open",
+    "block": "common",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.274,
+    "D": 0.345,
+    "r_pb": 0.319,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.time.tz_report_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.356,
+    "D": 0.428,
+    "r_pb": 0.549,
+    "a": 1.0,
+    "b": 0.767,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.design.pipeline_open",
+    "block": "data_eng",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.251,
+    "D": 0.374,
+    "r_pb": 0.354,
+    "a": 1.0,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.dq.uniqueness_check_bug",
+    "block": "data_eng",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.591,
+    "D": 0.585,
+    "r_pb": 0.452,
+    "a": 1.2,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.dwh.scd2_rerun_fix",
+    "block": "data_eng",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.338,
+    "D": 0.541,
+    "r_pb": 0.445,
+    "a": 1.2,
+    "b": 0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.etl.cdc_apply_output",
+    "block": "data_eng",
+    "format": "predict_output",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.368,
+    "D": 0.556,
+    "r_pb": 0.446,
+    "a": 1.2,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.etl.csv_parse_bug",
+    "block": "data_eng",
+    "format": "find_bug",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.669,
+    "D": 0.489,
+    "r_pb": 0.423,
+    "a": 1.1,
+    "b": -0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.etl.partition_overwrite_fix",
+    "block": "data_eng",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.373,
+    "D": 0.533,
+    "r_pb": 0.426,
+    "a": 1.3,
+    "b": 0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.etl.tz_partition_bug",
+    "block": "data_eng",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.568,
+    "D": 0.537,
+    "r_pb": 0.427,
+    "a": 1.2,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.etl.upsert_fix",
+    "block": "data_eng",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.438,
+    "D": 0.626,
+    "r_pb": 0.465,
+    "a": 1.2,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.etl.watermark_ob3",
+    "block": "data_eng",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.281,
+    "D": 0.427,
+    "r_pb": 0.585,
+    "a": 1.2,
+    "b": 1.033,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.orch.catchup_runs_mcq",
+    "block": "data_eng",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.509,
+    "D": 0.496,
+    "r_pb": 0.416,
+    "a": 1.2,
+    "b": -0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.orch.trigger_rule_output",
+    "block": "data_eng",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.436,
+    "D": 0.548,
+    "r_pb": 0.443,
+    "a": 1.2,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.sql.and_or_precedence_output",
+    "block": "data_eng",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.738,
+    "D": 0.393,
+    "r_pb": 0.354,
+    "a": 1.1,
+    "b": -1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.sql.date_between_output",
+    "block": "data_eng",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.709,
+    "D": 0.459,
+    "r_pb": 0.405,
+    "a": 1.1,
+    "b": -0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.sql.group_by_having_output",
+    "block": "data_eng",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.724,
+    "D": 0.404,
+    "r_pb": 0.356,
+    "a": 1.1,
+    "b": -1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.sql.left_join_filter_bug",
+    "block": "data_eng",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.575,
+    "D": 0.544,
+    "r_pb": 0.423,
+    "a": 1.2,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.sql.scd2_asof_output",
+    "block": "data_eng",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.469,
+    "D": 0.537,
+    "r_pb": 0.432,
+    "a": 1.2,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.sql.sessionization_output",
+    "block": "data_eng",
+    "format": "predict_output",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.32,
+    "D": 0.526,
+    "r_pb": 0.44,
+    "a": 1.2,
+    "b": 0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.sql.window_rank_output",
+    "block": "data_eng",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.516,
+    "D": 0.641,
+    "r_pb": 0.492,
+    "a": 1.2,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.stream.consumer_lag_mcq",
+    "block": "data_eng",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.579,
+    "D": 0.537,
+    "r_pb": 0.427,
+    "a": 1.2,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.stream.delivery_semantics_mcq",
+    "block": "data_eng",
+    "format": "mcq_concept",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.259,
+    "D": 0.433,
+    "r_pb": 0.395,
+    "a": 1.2,
+    "b": 1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_eng.stream.tumbling_window_output",
+    "block": "data_eng",
+    "format": "predict_output",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.299,
+    "D": 0.441,
+    "r_pb": 0.383,
+    "a": 1.2,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.bash.exit_status_output",
+    "block": "devops",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.76,
+    "D": 0.422,
+    "r_pb": 0.397,
+    "a": 1.2,
+    "b": -1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.bash.pipefail_fix",
+    "block": "devops",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.519,
+    "D": 0.6,
+    "r_pb": 0.467,
+    "a": 1.3,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.bash.quoting_bug",
+    "block": "devops",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.588,
+    "D": 0.574,
+    "r_pb": 0.449,
+    "a": 1.2,
+    "b": -0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.bash.redirect_order_output",
+    "block": "devops",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.718,
+    "D": 0.456,
+    "r_pb": 0.395,
+    "a": 1.1,
+    "b": -1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.bash.retry_ob3",
+    "block": "devops",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.332,
+    "D": 0.47,
+    "r_pb": 0.6,
+    "a": 1.2,
+    "b": 0.767,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.ci.job_needs_output",
+    "block": "devops",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.484,
+    "D": 0.593,
+    "r_pb": 0.454,
+    "a": 1.2,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.docker.entrypoint_cmd_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.611,
+    "D": 0.511,
+    "r_pb": 0.421,
+    "a": 1.2,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.inc.incident_open",
+    "block": "devops",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.24,
+    "D": 0.411,
+    "r_pb": 0.372,
+    "a": 1.0,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.k8s.hpa_replicas_ob3",
+    "block": "devops",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.285,
+    "D": 0.447,
+    "r_pb": 0.591,
+    "a": 1.2,
+    "b": 1.033,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.k8s.pdb_disruptions_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.294,
+    "D": 0.433,
+    "r_pb": 0.397,
+    "a": 1.2,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.k8s.qos_class_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.549,
+    "D": 0.541,
+    "r_pb": 0.431,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.k8s.rolling_update_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.48,
+    "D": 0.6,
+    "r_pb": 0.465,
+    "a": 1.3,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.k8s.service_selector_bug",
+    "block": "devops",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.607,
+    "D": 0.581,
+    "r_pb": 0.467,
+    "a": 1.3,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.k8s.target_port_bug",
+    "block": "devops",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.533,
+    "D": 0.6,
+    "r_pb": 0.462,
+    "a": 1.3,
+    "b": -0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.linux.cron_next_runs_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.699,
+    "D": 0.381,
+    "r_pb": 0.326,
+    "a": 1.1,
+    "b": -1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.linux.permissions_output",
+    "block": "devops",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.763,
+    "D": 0.37,
+    "r_pb": 0.341,
+    "a": 1.1,
+    "b": -1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.mon.alert_for_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.339,
+    "D": 0.507,
+    "r_pb": 0.439,
+    "a": 1.3,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.mon.histogram_quantile_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.333,
+    "D": 0.489,
+    "r_pb": 0.412,
+    "a": 1.2,
+    "b": 0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.net.iptables_order_output",
+    "block": "devops",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.538,
+    "D": 0.548,
+    "r_pb": 0.434,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.net.nginx_location_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.404,
+    "D": 0.552,
+    "r_pb": 0.438,
+    "a": 1.2,
+    "b": 0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.sre.burn_rate_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.272,
+    "D": 0.496,
+    "r_pb": 0.426,
+    "a": 1.2,
+    "b": 1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "devops.sre.error_budget_mcq",
+    "block": "devops",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.556,
+    "D": 0.589,
+    "r_pb": 0.452,
+    "a": 1.2,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.android.lifecycle_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.646,
+    "D": 0.533,
+    "r_pb": 0.445,
+    "a": 1.2,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.android.state_survival_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.377,
+    "D": 0.519,
+    "r_pb": 0.425,
+    "a": 1.3,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.arch.offline_sync_open",
+    "block": "mobile",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.256,
+    "D": 0.341,
+    "r_pb": 0.313,
+    "a": 0.9,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.ios.appearance_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.546,
+    "D": 0.552,
+    "r_pb": 0.446,
+    "a": 1.2,
+    "b": -0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.background_timer_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.563,
+    "D": 0.544,
+    "r_pb": 0.433,
+    "a": 1.2,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.cursor_pagination_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.679,
+    "D": 0.489,
+    "r_pb": 0.429,
+    "a": 1.1,
+    "b": -0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.deeplink_route_fix",
+    "block": "mobile",
+    "format": "choose_fix",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.73,
+    "D": 0.433,
+    "r_pb": 0.393,
+    "a": 1.1,
+    "b": -1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.double_submit_fix",
+    "block": "mobile",
+    "format": "choose_fix",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.697,
+    "D": 0.485,
+    "r_pb": 0.425,
+    "a": 1.2,
+    "b": -1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.offline_queue_fix",
+    "block": "mobile",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.443,
+    "D": 0.563,
+    "r_pb": 0.442,
+    "a": 1.2,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.retry_backoff_output",
+    "block": "mobile",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.773,
+    "D": 0.422,
+    "r_pb": 0.404,
+    "a": 1.1,
+    "b": -1.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.token_refresh_fix",
+    "block": "mobile",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.328,
+    "D": 0.515,
+    "r_pb": 0.434,
+    "a": 1.2,
+    "b": 0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.version_gate_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.74,
+    "D": 0.452,
+    "r_pb": 0.425,
+    "a": 1.1,
+    "b": -1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.kotlin.flow_lifecycle_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.355,
+    "D": 0.485,
+    "r_pb": 0.412,
+    "a": 1.2,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.kotlin.main_thread_io_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.544,
+    "D": 0.593,
+    "r_pb": 0.47,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.perf.cold_start_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.35,
+    "D": 0.474,
+    "r_pb": 0.403,
+    "a": 1.2,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.perf.frame_budget_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.556,
+    "D": 0.556,
+    "r_pb": 0.444,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.push.fcm_message_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.491,
+    "D": 0.537,
+    "r_pb": 0.427,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.release.release_quality_open",
+    "block": "mobile",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.287,
+    "D": 0.374,
+    "r_pb": 0.321,
+    "a": 0.9,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.security.secret_storage_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.779,
+    "D": 0.374,
+    "r_pb": 0.355,
+    "a": 1.0,
+    "b": -1.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.storage.sqlite_migration_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.789,
+    "D": 0.404,
+    "r_pb": 0.401,
+    "a": 1.2,
+    "b": -1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.swift.retain_cycle_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.472,
+    "D": 0.652,
+    "r_pb": 0.504,
+    "a": 1.3,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.swift.ui_main_thread_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.672,
+    "D": 0.5,
+    "r_pb": 0.434,
+    "a": 1.2,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   }
+  ]
+ },
+ "procedure": [
+  "Опрос: стаж (θ = 0 → 1,5 года, θ = 1 → 4,5 года, шум 1 год) → подсказка грейда по стажу (как в продукте); самооценка — θ + N(0; 0,6). Заявленный грейд — подсказка (в половине случаев) или самооценка; ниже порога Стажёра — Стажёр.",
+  "Стек опроса фильтрует семейства (Go, Java, Django, Kafka, Docker — только тем, у кого тег есть).",
+  "Адаптивный тест платформы на банке: классификационная остановка, дотестирование у порога, контроль частоты, ротация субпулов по истории сессий; тест Стажёра — только лёгкие семейства, без ротации.",
+  "Детектор предзнания и пересчёт θ; решение: подтверждён при P ≥ 0,8, «Junior (предварительно)» при P от 0,10.",
+  "Не подтверждён: принять доказанный уровень ниже без нового теста (P ≥ 0,8), иначе один тест ступенью ниже, иначе без категории.",
+  "Повтор — вся процедура ещё раз: другой субпул, новые варианты; семейства всех прошлых сессий не берутся (новых нет — виденные давнее всего, в новом варианте)."
+ ],
+ "caveat": "Синтетика: истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5, люди — модель ответов 2PL; проверяется механика всей процедуры, а не качество заданий на людях. «Предварительно» считается ступенью Junior. Дискриминативность — на симулированном пилоте с авторскими параметрами: она показывает замысел автора, а не поведение людей; r_pb панели моделей — независимая проверка на ответах моделей, шкала моделей не равна шкале людей.",
+ "other_reference": {
+  "source": "внешний репозиторий, docs/testing.md (05.10.2026)",
+  "kappa_w": 0.866,
+  "exact": 0.759,
+  "within_1": 0.998,
+  "r_theta_parallel": 0.874,
+  "borderline_exact": 0.663,
+  "far_exact": 0.826,
+  "length": 20,
+  "confirm_rule": "P ≥ 0,5",
+  "param_error": "b + N(0; 0,35), a · LogN(0; 0,2)",
+  "n": 1600,
+  "levels": 4,
+  "ci": null,
+  "icc": null
+ },
+ "seconds": 24.5
+}

@@ -1,0 +1,22 @@
+family_id: data_eng.design.pipeline_open
+title: Проектирование конвейера данных — источники, гарантии, модель хранения и эксплуатация
+direction: data_eng
+skills: [data_pipelines, data_modeling, late_data, data_quality, orchestration, cdc]
+target_grades: [senior]
+format: open_answer
+language: text
+invariants:
+  extra:
+    topics: [clickstream_marts, cdc_lakehouse, payments_recon, feature_pipeline]
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 1.3
+  a: 1.0
+  sigma_variant: 0.3
+  basis: "Развёрнутый проект конвейера по постановке с цифрами (объём, задержка, требования к точности); четыре темы — витрины по потоку кликов с опозданиями, перенос OLTP в lakehouse с историей, ежедневная сверка платежей, признаки для моделей онлайн и офлайн; рубрика из трёх критериев — архитектура и гарантии, модель хранения и повторные запуски, качество и эксплуатация. Senior"
+generator: assessment_bank.families.data_eng.design_pipeline_open
+version: 1
+description: >
+  Открытый вопрос: спроектировать конвейер данных под заданные объёмы и требования, объяснить гарантии,
+  модель хранения, повторные запуски и контроль качества. Оценивается по рубрике.

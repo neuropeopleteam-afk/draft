@@ -23,7 +23,7 @@ from app.modules.invitations.models import Invitation, InvitationEvent
 from app.modules.profiles.models import Company
 
 log = logging.getLogger(__name__)
-DEMO_LINK = "https://telemost.yandex.ru/j/demo-vstrechny"
+DEMO_LINK = "https://telemost.yandex.ru/j/demo-draft"
 SCHEDULED_TITLE = "Python-разработчик (платёжный шлюз)"
 
 
