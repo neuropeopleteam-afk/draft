@@ -30,6 +30,7 @@ TAGS = [{"name": "hh", "description": "hh.ru: импорт своей вакан
                                       "«Рынок по hh.ru» — медиана и p25–p75 вилок живых вакансий. Без HH_ENABLED и "
                                       "токена приложения — 404 hh_disabled."}]
 DATA = Path(__file__).resolve().parents[1] / "validation" / "data" / "hh_parse.json"
+MATCH_DATA = DATA.with_name("hh_match.json")
 E = {401: err("Не выполнен вход"), 403: err("Только для работодателя"), 404: err("Интеграция с hh.ru выключена "
                                                                                   "(hh_disabled) или вакансия не найдена"),
      409: err("Нет профиля компании"), 422: err("Неверная ссылка или номер вакансии"),
@@ -224,3 +225,26 @@ def hh_parse():
     if not DATA.exists():
         return {"missing": True}
     return json.loads(DATA.read_text(encoding="utf-8"))
+
+
+# ------------------------------------------------------------------ Я12б: подбор на вакансиях hh.ru и спрос
+class HhMatchOut(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    missing: bool | None = None
+    generated_at: str | None = Field(None, description="Когда посчитан замер (UTC)")
+    code_commit: str | None = Field(None, description="Коммит кода замера")
+    n: int | None = Field(None, description="Вакансий в прогоне")
+    label_note: str | None = Field(None, description="Подпись: тексты — реальные вакансии hh.ru, кандидаты — модельные")
+    demand: dict | None = Field(None, description="Спрос по направлениям: число вакансий hh.ru на дату (агрегат)")
+
+
+@validation_router.get("/hh-match", response_model=HhMatchOut,
+                       summary="Подбор на реальных вакансиях hh.ru (кандидаты — модельные): покрытие требований, доля "
+                               "потребностей с подтверждёнными кандидатами, ошибки разбора; спрос по направлениям "
+                               "(пересчёт: tools/realdata/hh_plus.py match / demand)")
+def hh_match():
+    from app.modules.hh import snapshot
+
+    out = json.loads(MATCH_DATA.read_text(encoding="utf-8")) if MATCH_DATA.exists() else {"missing": True}
+    out["demand"] = snapshot.demand_data()
+    return out

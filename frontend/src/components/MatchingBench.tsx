@@ -115,7 +115,7 @@ function Body({ r }: { r: any }) {
           <li>Парсер потребностей на текстах мира: направление {pct(w.parser?.direction_accuracy)}, грейд {pct(w.parser?.grade_accuracy)}, обязательные навыки — точность {pct(w.parser?.required_precision)}, полнота {pct(w.parser?.required_recall)}.</li>
         </ul>
         <p className="mt-3 text-brand-ink/70">
-          Алгоритм продукта: {r.algorithm ?? "match-v1"}{r.algorithm === "match-v1.1" ? " — match-v1 + ярусы обязательного (MATCH_MUST_FIRST)" : r.algorithm === "match-v1.2" ? " — match-v1 + ярусы обязательного + ядро роли (MATCH_MUST_FIRST, RANK_CORE_SKILL)" : ""}.{r.signature?.commit ? ` Код — коммит ${r.signature.commit}${r.signature.bank ? `, банк ${r.signature.bank}` : ""}.` : ""}
+          Алгоритм продукта: {r.algorithm ?? "match-v1"}{r.algorithm === "match-v1.1" ? " — match-v1 + ярусы обязательного (MATCH_MUST_FIRST)" : r.algorithm === "match-v1.2" ? " — match-v1 + ярусы обязательного + ядро роли (MATCH_MUST_FIRST, RANK_CORE_SKILL)" : r.algorithm === "match-v1.3" ? " — match-v1.2 + добор ступенью выше при малом пуле точного уровня (MATCH_GRADE_ABOVE; в мире 200 × 2000 не включается)" : ""}.{r.signature?.commit ? ` Код — коммит ${r.signature.commit}${r.signature.bank ? `, банк ${r.signature.bank}` : ""}.` : ""}
           {" "}Пересчёт: <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">make bench</code> ({n2(r.seconds, 0)} с). Seed мира {r.seeds?.world}, второй мир {r.seeds?.world2}, бутстреп {r.seeds?.bootstrap}, разбиение {r.seeds?.split}; конфиг {r.config_hash}, алгоритм {r.algorithm}.
           Отчёт построен {r.generated_at?.slice(0, 10).split("-").reverse().join(".")}. Подробно: docs/validation/MATCHING_BENCH.md и matching_bench.json (метрики по каждой потребности).
         </p>

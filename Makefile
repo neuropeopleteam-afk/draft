@@ -55,6 +55,9 @@ validate-docker: ## То же в контейнере api (без пересчё
 bench: ## Бенчмарк подбора со скрытой истиной: 200 × 2000, абляции, веса на отложенных данных (≈ 1 мин CPU)
 	cd backend && python -m app.modules.validation.matching_bench && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
 
+grade-above: ## Добор ступенью выше (match-v1.3): бенчмарк со скрытой истиной до/после в малом и большом пуле → docs/validation/grade_above.json (≈ 5 мин CPU)
+	cd backend && python ../tools/realdata/grade_above_bench.py
+
 intern-cut: ## Порог грейда «Стажёр»: симуляция теста при 4 порогах-кандидатах, с лёгкими семействами и без (≈ 2 мин CPU)
 	cd backend && python -m app.modules.validation.intern_cut
 
@@ -81,7 +84,7 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
 .PHONY: help env up llm-local llm-local-logs down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
-.PHONY: bench bench-quick stability intern-cut fsp-regression path-retest
+.PHONY: bench bench-quick stability intern-cut grade-above fsp-regression path-retest
 
 # подпись мира у чисел /validation: коммит кода (на сервере проверок .git нет — передавайте GIT_COMMIT=…)
 GIT_COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null)
