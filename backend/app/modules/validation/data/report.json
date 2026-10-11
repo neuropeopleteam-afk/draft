@@ -770,7 +770,7 @@
    "n_retest_pairs": 400,
    "n_leak": 400,
    "n_leak_table": 300,
-   "n_competitor": 400,
+   "n_alt": 400,
    "n_overclaim": 300,
    "param_error_b_sd": 0.5,
    "param_error_note": "сдвиг трудности семейства N(0; 0,5) + N(0; 0,15) по шагам, a × LogN(0; 0,25)",
@@ -1190,7 +1190,7 @@
       }
      ]
     },
-    "competitor_like": {
+    "alt_conditions": {
      "truth": {
       "n": 400,
       "grade_exact": 0.735,
@@ -1591,7 +1591,7 @@
       }
      ]
     },
-    "competitor_like": {
+    "alt_conditions": {
      "truth": {
       "n": 400,
       "grade_exact": 0.708,
@@ -1992,7 +1992,7 @@
       }
      ]
     },
-    "competitor_like": {
+    "alt_conditions": {
      "truth": {
       "n": 400,
       "grade_exact": 0.67,
@@ -2393,7 +2393,7 @@
       }
      ]
     },
-    "competitor_like": {
+    "alt_conditions": {
      "truth": {
       "n": 400,
       "grade_exact": 0.693,
@@ -2794,7 +2794,7 @@
       }
      ]
     },
-    "competitor_like": {
+    "alt_conditions": {
      "truth": {
       "n": 400,
       "grade_exact": 0.662,
@@ -3125,7 +3125,7 @@
     "unused_share": 0.017
    }
   },
-  "competitor_like": {
+  "alt_conditions": {
    "config": {
     "min_items": 20,
     "max_items": 20,
@@ -3149,7 +3149,7 @@
    "error": {
     "b_sd": 0.35,
     "a_logsd": 0.2,
-    "source": "miliantr/fsp-talent, evaluation/results/tests_report.md"
+    "source": "собственный протокол: ошибка параметров меньше основной (σ = 0,5)"
    },
    "n_per_direction": 400,
    "truth": {
@@ -3181,22 +3181,6 @@
      "grade_exact_agreement": 0.619,
      "grade_within_1": 0.988,
      "grade_kappa_quadratic": 0.78
-    }
-   },
-   "reference": {
-    "miliantr/fsp-talent": {
-     "grade_exact": 0.805,
-     "kappa_true": 0.898,
-     "grade_within_1": 0.999,
-     "r_theta_retest": 0.866,
-     "decision_kappa_retest": 0.54,
-     "length": 20,
-     "n": 1600,
-     "param_error": "b + N(0; 0,35), a · LogN(0; 0,2)"
-    },
-    "Izymka/fsp-job-board": {
-     "kappa_retest": 0.86,
-     "param_error": "не опубликована"
     }
    }
   }

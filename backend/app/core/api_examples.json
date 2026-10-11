@@ -8203,7 +8203,7 @@
      }
     ],
     "conditions": {
-     "n_competitor": 400,
+     "n_alt": 400,
      "n_leak": 400,
      "n_leak_table": 300,
      "n_per_direction": 400,
