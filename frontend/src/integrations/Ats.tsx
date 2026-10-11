@@ -29,6 +29,21 @@ type Tab = "huntflow" | "talantix" | "potok" | "webhook";
 type Msg = { k: "ok" | "error" | "info"; t: string } | null;
 
 const TITLES: Record<string, string> = { huntflow: "Хантфлоу", talantix: "Talantix", potok: "Поток", webhook: "Вебхук" };
+/** FIX7 В2 (замечание владельца): первой — «Поток» (проверен на настоящем аккаунте), остальные — во вкладке «Другие ATS». */
+const OTHER: Tab[] = ["talantix", "huntflow", "webhook"];
+/** Одна фраза в режиме «Реальный»: откуда токен; для демо вводить ничего не нужно. */
+const TOKEN_FROM: Record<string, string> = {
+  potok: "Токен выдаёт ваш «Поток»: Настройки компании → «Генерация токенов». Для демо ничего вводить не нужно — режим «Демо».",
+  talantix: "Токены выдаёт ваш Talantix: личный кабинет → токены API (ссылка на JSON с парой access/refresh). Для демо ничего вводить не нужно — режим «Демо».",
+  huntflow: "Токен выдаёт ваш Хантфлоу: Настройки → API → токен доступа. Для демо ничего вводить не нужно — кнопка «Подключить все демо-ATS».",
+};
+/** Почему «Проверить подключение» неактивна — текст рядом с кнопкой (тот же расчёт, что у disabled). */
+export function checkBlockedReason(o: { busy?: boolean; tokenSet: boolean; modeSaved: string; modeNow: string }): string | null {
+  if (o.busy) return null;
+  if (o.modeNow !== o.modeSaved) return o.modeNow === "demo" ? "Проверить можно после «Включить демо»." : "Режим изменён: сначала вставьте токен и нажмите «Сохранить».";
+  if (!o.tokenSet) return o.modeNow === "demo" ? "Проверить можно после «Включить демо» — демо-токены выпустятся сами." : "Проверить можно после того, как токен сохранён: вставьте его и нажмите «Сохранить».";
+  return null;
+}
 const NEEDS: Record<Tab, string[]> = {
   talantix: ["Тариф Talantix «Оптимальный» — на других тарифах API недоступно.",
     "Пользователь с ролью «Администратор» и рабочим местом: токены выпускает администратор, без рабочего места кандидатов создать нельзя.",
@@ -82,7 +97,7 @@ export function EmployerAts() {
   const prov = useApi<Provider[]>("/employer/ats/providers");
   const deliveries = useApi<any[]>("/employer/ats/deliveries");
   const records = useApi<any[]>("/employer/ats/stub/records");
-  const [tab, setTab] = useState<Tab>("talantix");
+  const [tab, setTab] = useState<Tab>("potok");
   const [msg, setMsg] = useState<Msg>(null);
   const [busy, setBusy] = useState(false);
 
@@ -121,9 +136,13 @@ export function EmployerAts() {
 
       <section className="card space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Seg label="ATS" value={tab} onChange={setTab} options={(["talantix", "potok", "huntflow", "webhook"] as Tab[]).map((t) => ({ id: t, title: `${TITLES[t]}${on(t) ? " · вкл." : ""}` }))} />
+          <Seg label="ATS" value={tab === "potok" ? "potok" : "other"} onChange={(g) => setTab(g === "potok" ? "potok" : "talantix")}
+            options={[{ id: "potok", title: `«Поток»${on("potok") ? " · вкл." : ""}` },
+              { id: "other", title: `Другие ATS${OTHER.some(on) ? ` · вкл. ${OTHER.filter(on).length}` : ""}` }]} />
           {tab !== "webhook" && <a className="text-sm font-semibold text-brand-plum hover:text-brand" href={byCode[tab]?.docs_url} target="_blank" rel="noreferrer">Документация API {TITLES[tab]}</a>}
         </div>
+        {tab !== "potok" && <Seg label="Другие ATS" value={tab} onChange={setTab} options={OTHER.map((t) => ({ id: t, title: `${TITLES[t]}${on(t) ? " · вкл." : ""}` }))} />}
+        {tab === "potok" && <p className="text-xs leading-relaxed text-brand-ink/70" data-testid="ats-live-check">«Поток» проверен на настоящем аккаунте: передача кандидата, импорт вакансии и этапы обратно — в репозитории, <code className="break-all">docs/integrations/LIVE_CHECKS.md</code>. Talantix, Хантфлоу и вебхук — готовые адаптеры с демо-заглушками.</p>}
         {tab === "talantix" || tab === "potok"
           ? <ConnectionPanel key={tab} p={byCode[tab]} onSaved={(np) => { prov.setData(prov.data!.map((x) => (x.code === np.code ? np : x))); void records.reload(); }} setMsg={setMsg} />
           : <SettingsPanel key={tab} tab={tab} s={s.data} hf={byCode.huntflow} onSaved={(ns) => { s.setData(ns); void prov.reload(); }} setMsg={setMsg} />}
@@ -231,6 +250,7 @@ function ConnectionPanel({ p, onSaved, setMsg }: { p: Provider; onSaved: (p: Pro
   const [res, setRes] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const tx = p.code === "talantix";
+  const blocked = checkBlockedReason({ busy, tokenSet: p.token_set, modeSaved: p.mode, modeNow: f.mode });
   async function save(over: Partial<typeof f> = {}) {
     const x = { ...f, ...over };
     setMsg(null); setBusy(true);
@@ -255,8 +275,9 @@ function ConnectionPanel({ p, onSaved, setMsg }: { p: Provider; onSaved: (p: Pro
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 text-sm text-brand-ink/70">
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.enabled ? "bg-emerald-50 text-emerald-700" : "bg-[#F3F2FB] text-brand-ink/65"}`}>{p.enabled ? "подключено" : "выключено"}</span>
-        <OriginTag o={p.origin} kind={p.mode === "demo" ? "stub" : "unverified"} /><span><code className="text-xs">{p.base_url}</code></span>
+        {/* В2: «подключено» и «заглушка» рядом путали — одна метка: что подключено и к чему */}
+        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.enabled ? "bg-emerald-50 text-emerald-700" : "bg-[#F3F2FB] text-brand-ink/65"}`}>{p.enabled ? (p.mode === "demo" ? "подключено к демо-заглушке на нашем сервере" : "подключено к вашему аккаунту") : "выключено"}</span>
+        {p.mode !== "demo" && <OriginTag o={p.origin} kind="unverified" />}<span><code className="text-xs">{p.base_url}</code></span>
         {p.token_set && <span>токен {p.token_masked}{tx && p.refresh_set ? " + refresh" : ""}</span>}
         {tx && p.token_expires_at && <span>access до {dtt(p.token_expires_at)}{p.token_refreshed_at ? `, обновлён ${dtt(p.token_refreshed_at)}` : ""}</span>}
         {tx && p.refresh_expires_at && <span>refresh до {dtt(p.refresh_expires_at)}</span>}
@@ -270,6 +291,7 @@ function ConnectionPanel({ p, onSaved, setMsg }: { p: Provider; onSaved: (p: Pro
         <p className="text-sm text-brand-ink/65">Демо-{p.title} на нашем сервере: {tx ? "GraphQL с теми же типами, OAuth-токены (access живёт 15 минут и обновляется сам)" : "REST v3 с теми же методами и ответами"}. {p.mode !== "demo" && "После переключения нажмите «Включить демо»."}</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
+          <p className="rounded-xl bg-[#F3F2FB] px-3 py-2 text-sm text-brand-night sm:col-span-2" data-testid="ats-token-from">{TOKEN_FROM[p.code]}</p>
           {tx ? (<>
             <Field label="Токены Talantix (JSON со ссылки или access-токен)" htmlFor="tx-t" hint={p.token_set && p.mode === "real" ? `Сохранён: ${p.token_masked}. Пусто — не менять.` : "Вставьте JSON целиком: access_token, refresh_token, expires_in, created_at"}>
               <textarea id="tx-t" className="input min-h-[5.5rem] font-mono text-xs" autoComplete="off" spellCheck={false} value={f.token} onChange={(e) => setF({ ...f, token: e.target.value })} />
@@ -294,8 +316,9 @@ function ConnectionPanel({ p, onSaved, setMsg }: { p: Provider; onSaved: (p: Pro
         {f.mode === "demo" && p.mode !== "demo" ? <button className="btn-primary" disabled={busy} onClick={demo}>Включить демо</button>
           : <button className="btn-primary" disabled={busy} onClick={() => save()}>Сохранить</button>}
         {f.mode === "demo" && p.mode === "demo" && <button className="btn-ghost" disabled={busy} onClick={demo}>Выпустить новые демо-токены</button>}
-        <button className="btn-ghost" disabled={busy || !p.token_set || f.mode !== p.mode} onClick={check}>Проверить подключение</button>
+        <button className="btn-ghost" disabled={busy || !p.token_set || f.mode !== p.mode} aria-describedby={blocked ? `${p.code}-check-why` : undefined} onClick={check}>Проверить подключение</button>
       </div>
+      {blocked && <p id={`${p.code}-check-why`} className="text-xs text-brand-ink/70" data-testid="ats-check-why">{blocked}</p>}
       <CheckResult res={res} />
       {!res && p.last_check_at && <p className="text-xs text-brand-ink/65">Последняя проверка {dtt(p.last_check_at)}: {p.last_check_ok ? "успешно" : `ошибка — ${p.last_check_info?.error ?? ""}`}</p>}
     </div>
@@ -328,6 +351,7 @@ function SettingsPanel({ tab, s, hf, onSaved, setMsg }: { tab: "huntflow" | "web
           <Toggle checked={f.huntflow.enabled} onChange={(v) => set("huntflow", "enabled", v)} label="Хантфлоу (публичный API v2)" hint={hf?.mode === "demo" ? "Сейчас — демо-заглушка Хантфлоу на нашем сервере" : "Кандидат создаётся в базе и закрепляется на вакансии на первом этапе (или указанном)"} />
           {f.huntflow.enabled && (
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              {hf?.mode !== "demo" && <p className="rounded-xl bg-[#F3F2FB] px-3 py-2 text-sm text-brand-night sm:col-span-2">{TOKEN_FROM.huntflow}</p>}
               <Field label="Адрес API" htmlFor="hb" hint="https://api.huntflow.ru/v2 — облако; для коробки — свой адрес"><input id="hb" className="input" value={f.huntflow.base_url ?? ""} onChange={(e) => set("huntflow", "base_url", e.target.value)} /></Field>
               <Field label="Токен доступа" htmlFor="ht" hint={f.huntflow.token_set ? `Сохранён: ${f.huntflow.token_masked}. Оставьте пустым, чтобы не менять.` : "Настройки Хантфлоу → API → токен"}><input id="ht" type="password" autoComplete="off" className="input" value={f.huntflow.token} onChange={(e) => set("huntflow", "token", e.target.value)} /></Field>
               <Field label="ID организации (account_id)" htmlFor="ha"><input id="ha" type="number" className="input" value={f.huntflow.account_id ?? ""} onChange={(e) => set("huntflow", "account_id", e.target.value)} /></Field>
@@ -352,8 +376,9 @@ function SettingsPanel({ tab, s, hf, onSaved, setMsg }: { tab: "huntflow" | "web
       )}
       <div className="flex flex-wrap gap-2">
         <button className="btn-primary" onClick={save}>Сохранить</button>
-        {tab === "huntflow" && <button className="btn-ghost" onClick={check} disabled={!f.huntflow.token_set}>Проверить подключение</button>}
+        {tab === "huntflow" && <button className="btn-ghost" onClick={check} disabled={!f.huntflow.token_set} aria-describedby={!f.huntflow.token_set ? "hf-check-why" : undefined}>Проверить подключение</button>}
       </div>
+      {tab === "huntflow" && !f.huntflow.token_set && <p id="hf-check-why" className="text-xs text-brand-ink/70" data-testid="ats-check-why">Проверить можно после того, как токен сохранён: вставьте его и нажмите «Сохранить» (для демо — «Подключить все демо-ATS» вверху).</p>}
       {tab === "huntflow" && res && (res.error ? <Alert kind="error">{res.error}</Alert>
         : <Alert kind="ok">Подключение работает: {res.me?.name}. Организации: {(res.accounts ?? []).map((a: any) => `${a.name} (id ${a.id})`).join(", ")}. Этапы: {(res.statuses ?? []).map((x: any) => `${x.name} (${x.id})`).join(", ") || "—"}.</Alert>)}
     </div>

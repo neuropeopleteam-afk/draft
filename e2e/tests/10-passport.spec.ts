@@ -96,7 +96,7 @@ test("паспорт грейда: кандидат делится ссылко�
     await expect(anon.getByRole("heading", { level: 1 })).toHaveText("Действителен");
     await expect(anon.getByText(/подпись Ed25519 верна/)).toBeVisible();
     await expect(anon.getByText(`Кандидат ${ref} · обезличенный идентификатор, без ФИО и контактов`)).toBeVisible();
-    await expect(anon.getByRole("heading", { name: /Навыки, подтверждённые заданиями теста/ })).toBeVisible();
+    await expect(anon.getByRole("heading", { name: /Навыки, подтверждённые заданиями \(T1\)/ })).toBeVisible();
     await expect(anon.getByRole("heading", { name: /Достижения ФСП, подтверждённые реестром/ })).toBeVisible();
     await expect(anon.getByRole("link", { name: "Методика и проверка качества теста" })).toBeVisible();
     for (const x of pii) await expect(anon.locator("body")).not.toContainText(x);

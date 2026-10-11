@@ -282,3 +282,33 @@ def test_adaptive_pool_has_no_top_only_families():
     top_only = {fid for fid, s in specs.items() if s.target_grades and not set(s.target_grades) & set(ext.GRADE_IDS)}
     in_pool = {pi.family_id for pi in _pool(1)}
     assert not (top_only & in_pool)
+
+
+def test_fix7_demo_core_tags_exist_in_catalog():
+    """FIX7 (выкладка 6): каждый тег стека демо-данных (все направления, включая расширение) есть в справочнике
+    stack_tags — иначе на PostgreSQL пересев демо падает на FK survey_stack_tags → stack_tags целиком."""
+    from app.modules.catalog.seed_data import STACK
+    from app.modules.demo import seed
+
+    known = set(STACK) | set(ext.EXT_STACK)
+    bad = {d: [t for t in tags if t not in known] for d, tags in seed.CORE.items()}
+    assert not {d: t for d, t in bad.items() if t}, bad
+
+
+def test_fix7_demo_reseed_all_directions_tags_in_db(client, ext_on):
+    """Пересев модельных кандидатов всех видимых направлений: каждый survey_stack_tags.stack_tag_id — строка stack_tags
+    (SQLite в тестах FK не проверяет — сверяем явно, как сделал бы PostgreSQL)."""
+    from sqlalchemy import select
+
+    from app.core.db import SessionLocal
+    from app.modules.assessment.models import SurveyStackTag
+    from app.modules.catalog.models import StackTag
+    from app.modules.demo.seed import extend_catalog_ext
+
+    with SessionLocal() as db:
+        out = extend_catalog_ext(db)
+        db.commit()
+        assert set(out["directions"]) == set(EXT) and out["added"] == 80
+        used = set(db.scalars(select(SurveyStackTag.stack_tag_id)))
+        known = set(db.scalars(select(StackTag.id)))
+        assert used and used <= known, sorted(used - known)

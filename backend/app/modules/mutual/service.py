@@ -317,6 +317,20 @@ def similar(db: Session, user: User, need: EmployerNeed, v: SelectionVersion, re
 
 # ------------------------------------------------------------------ форма приглашения: подсказка до отправки
 
+def offer_hint(fit: dict) -> tuple[str, str | None]:
+    """Заголовок подсказки формы приглашения и причина отказа. FIX7 В1 (замечание владельца): при «Вероятно, откажет»
+    не из-за вилки (город без переезда, формат) заголовок — настоящая причина, а не «Вилка в ожиданиях кандидата»."""
+    sal = next(f for f in fit["factors"] if f["key"] == "salary")
+    veto = next((f for f in fit["factors"] if f["status"] == "bad" and f["key"] in ("location", "format")), None)
+    if sal["status"] == "bad":
+        return ("С такой вилкой кандидат, вероятно, откажет: верх вилки ниже его ожиданий. Минимум кандидата не "
+                "раскрывается.", "salary")
+    if veto is not None and fit["level"] == "low":
+        return (f"{veto['text']} — кандидат, вероятно, откажет"
+                + (". Вилка при этом в его ожиданиях." if sal["status"] == "ok" else "."), veto["key"])
+    return ("Вилка в ожиданиях кандидата." if sal["status"] == "ok" else sal["text"]), None
+
+
 def offer_check(db: Session, company: Company, p: CandidateProfile, salary_to: int, need: EmployerNeed | None,
                 salary_basis: str = "gross") -> dict:
     req = dict(need.requirements or {}) if need else {}
@@ -325,9 +339,7 @@ def offer_check(db: Session, company: Company, p: CandidateProfile, salary_to: i
     out = bundle_fit(b, prefs_of(db, [p.user_id]).get(p.user_id), {**req, "salary_to": salary_to},
                      need.raw_text if need else None, salary_to, salary_limited=not allowed, salary_basis=salary_basis)
     sal = next(f for f in out["factors"] if f["key"] == "salary")
-    out["hint"] = ("С такой вилкой кандидат, вероятно, откажет: верх вилки ниже его ожиданий. Минимум кандидата не "
-                   "раскрывается." if sal["status"] == "bad" else
-                   "Вилка в ожиданиях кандидата." if sal["status"] == "ok" else sal["text"])
+    out["hint"], out["decline_reason"] = offer_hint(out)
     out["salary_status"] = sal["status"]
     out["checks_left"] = None if not allowed else max(0, OFFER_CHECKS_PER_DAY - len(set(db.scalars(
         select(OfferFitCheck.salary_bucket).where(OfferFitCheck.company_id == company.id,
