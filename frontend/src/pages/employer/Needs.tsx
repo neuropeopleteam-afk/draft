@@ -107,6 +107,14 @@ export function confirmAll(req: Req): Req {
   return { ...req, stack_required: req.stack_required.map(fix), stack_desired: req.stack_desired.map(fix), review };
 }
 
+/** FIX7 п. 10: «3 года опыта» из текста потребности не терялся по пути в фильтр подборки — подставить в experience_min,
+ *  если версия задала его сама (или явно сняла через «Что если» — тогда ключ есть со значением null/undefined), не трогать. */
+export function withNeedExperience(filters: Record<string, any>, req?: { experience_years_min?: number | null } | null) {
+  const need = req?.experience_years_min;
+  if (need == null || "experience_min" in filters) return filters;
+  return { ...filters, experience_min: need };
+}
+
 /** Тело запроса: только поля требований (находки фильтра считает сервер по тексту). Основание вилки salary_net
  *  («на руки» / до вычета) — поле требований, его сохраняем: приглашение, сравнение и взаимный подбор читают его. */
 export function reqBody(req: Req) {
@@ -436,7 +444,8 @@ export function Selection() {
   const [wErr, setWErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { if (sel.data) { setFilters(sel.data.filters ?? {}); setPicked([]); setShown(TOP); setOpen({}); setActive(null); } }, [sel.data]);
+  // FIX7 п. 10: стаж из потребности подставляется в «Стаж от, лет», если версия его не задала — уходит в следующую версию
+  useEffect(() => { if (sel.data) { setFilters(withNeedExperience(sel.data.filters ?? {}, sel.data.requirements)); setPicked([]); setShown(TOP); setOpen({}); setActive(null); } }, [sel.data]);
   // Я10: первые TOP — компактно, остальные свёрнуты («Показать ещё»); на широком блоке (≥ 1000 px) доказательства — справа
   const [shown, setShown] = useState(TOP);
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -501,6 +510,7 @@ export function Selection() {
   const rest = ordered.length - visible.length;
   const askRefs = picked.length ? picked : ordered.slice(0, 3).map((r) => r.ref);
   const activeRow = ordered.find((r) => r.ref === active) ?? visible[0];
+  const expMin = s?.requirements?.experience_years_min ?? null;  // FIX7 п. 10
   const evidence = (r: any) => <CandidateCard bare c={r.card} reasons={r.reasons} must={r.must} compact
     mutual={<MutualCardBlock needId={id!} version={s!.version} cref={r.ref} mutual={mutual} />} />;
   const togglePick = (ref: string) => setPicked(picked.includes(ref) ? picked.filter((x) => x !== ref) : [...picked, ref]);
@@ -553,7 +563,7 @@ export function Selection() {
                     {visible.map((r: any, i: number) => {
                       const isOpen = open[r.ref] ?? expandAll;
                       return (
-                        <CompactCard key={r.ref} r={r} rank={i + 1} fit={mutual.data?.items[r.ref]} needId={id}
+                        <CompactCard key={r.ref} r={expMin != null ? { ...r, exp_min: expMin } : r} rank={i + 1} fit={mutual.data?.items[r.ref]} needId={id}
                           picked={picked.includes(r.ref)} pickDisabled={picked.length >= 3} onPick={() => togglePick(r.ref)}
                           onInvite={() => { setInvited(null); setInvite(r); }}
                           badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
@@ -644,7 +654,11 @@ export function Selection() {
               </Field>
               <Field label="Город (или готов к переезду)" htmlFor="fcity"><input id="fcity" className="input" placeholder={condOn && s.conditions?.applied?.city ? `как в потребности: ${s.conditions.applied.city}` : undefined} value={filters.city ?? ""} onChange={(e) => setFilters({ ...filters, city: e.target.value || undefined })} /></Field>
               <p className="text-xs text-brand-ink/65">{condOn ? "Формат и город из потребности уже применены к подборке; здесь их можно заменить." : "Условия потребности в этой версии не применены — показаны все."}</p>
-              <Field label="Стаж от, лет (T0)" htmlFor="fexp"><input id="fexp" type="number" min={0} className="input" value={filters.experience_min ?? ""} onChange={(e) => setFilters({ ...filters, experience_min: e.target.value ? Number(e.target.value) : undefined })} /></Field>
+              <Field label="Стаж от, лет (T0)" htmlFor="fexp"><input id="fexp" type="number" min={0} className="input" value={filters.experience_min ?? ""} onChange={(e) => setFilters({ ...filters, experience_min: e.target.value ? Number(e.target.value) : undefined })} />
+                {s.requirements?.experience_years_min != null && <p className="mt-1 text-xs text-brand-ink/70" data-testid="exp-from-need">
+                  Из потребности: от {String(s.requirements.experience_years_min).replace(".", ",")} лет{s.filters?.experience_min == null
+                    ? ` — в этой версии стаж не применялся (у кандидатов с меньшим стажем — пометка в карточке); применится в v${(last ?? 0) + 1}.`
+                    : "."}</p>}</Field>
               <button type="button" className="text-sm font-semibold text-brand hover:underline" onClick={() => setRefineReq(refineReq ? null : s.requirements)}>{refineReq ? "Не менять требования" : "Изменить требования"}</button>
               <Alert>{err}</Alert>
               <button className="btn-primary w-full" disabled={busy} onClick={refine}>{busy ? "Пересчитываем…" : `Сохранить как v${(last ?? 0) + 1}`}</button>

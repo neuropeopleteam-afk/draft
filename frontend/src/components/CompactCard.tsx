@@ -44,6 +44,10 @@ export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
   const integ = c.test?.integrity;
   if (integ && integ.level !== "high") risks.push(`достоверность теста: ${String(integ.title ?? "").toLowerCase()}`);
   for (const x of reasons) if ((x.requirement === "Формат работы" || x.requirement === "Город присутствия") && x.status === "mismatch") risks.push(String(x.text).toLowerCase());
+  // FIX7 п. 10: стаж из потребности («3 года опыта») виден у каждого, кто его не набирает (T0, заявлено кандидатом)
+  const expMin = r.exp_min;
+  if (expMin != null && c.experience_years != null && Number(c.experience_years) < Number(expMin))
+    risks.push(`стаж ${String(c.experience_years).replace(".", ",")} г. — меньше ${String(expMin).replace(".", ",")} из потребности`);
   if (fit && (fit.level === "low" || fit.decline_risk)) {
     const bad = (fit.factors ?? []).filter((f) => f.status === "bad").map((f) => f.title.toLowerCase());
     risks.push(`вероятно, откажет${bad.length ? `: ${bad.join(", ")}` : ""}`);
