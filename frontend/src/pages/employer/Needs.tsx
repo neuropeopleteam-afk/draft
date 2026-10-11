@@ -106,10 +106,11 @@ export function confirmAll(req: Req): Req {
   return { ...req, stack_required: req.stack_required.map(fix), stack_desired: req.stack_desired.map(fix), review };
 }
 
-/** Тело запроса: только поля требований (находки фильтра считает сервер по тексту). */
+/** Тело запроса: только поля требований (находки фильтра считает сервер по тексту). Основание вилки salary_net
+ *  («на руки» / до вычета) — поле требований, его сохраняем: приглашение, сравнение и взаимный подбор читают его. */
 export function reqBody(req: Req) {
-  const { method: _m, bias: _b, suggested_text: _s, llm: _l, salary_net: _n, ...clean } = req;
-  void _m; void _b; void _s; void _l; void _n;
+  const { method: _m, bias: _b, suggested_text: _s, llm: _l, ...clean } = req;
+  void _m; void _b; void _s; void _l;
   return clean;
 }
 
