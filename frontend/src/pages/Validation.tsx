@@ -28,6 +28,7 @@ import { juryToken } from "../lib/jury";
 import { useHashScroll } from "../lib/hashScroll";
 import { useMeta } from "../lib/meta";
 import { ScrollX } from "../components/A11y";
+import { Fold, FoldAllButton, FoldProvider } from "../components/validation/Fold";  // SIMPLIFY п.3: разделы свёрнуты
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
@@ -39,7 +40,7 @@ export default function Validation() {
   const { data: r, error, loading } = useApi<any>("/validation/report", []);
   useHashScroll(!!r);  // блоки ниже отчёта (бенчмарк) догружаются позже — якорь держится, пока страница растёт
   return (
-    <div className="min-h-screen bg-[#FBF8FC]">
+    <FoldProvider><div className="min-h-screen bg-[#FBF8FC]">
       <SiteHeader />
       <main id="main" className="mx-auto max-w-content px-6 py-12">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Валидация</p>
@@ -50,13 +51,30 @@ export default function Validation() {
           затем на {r?.experts?.model_panel ? "разметке модельной панели (не люди)" : "экспертной разметке"} и демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
         </p>
         <Headline />
-        <Snapshots />
-        <ClosedSet />
+        <HowToRead />
+        <Fold><Snapshots /></Fold>
+        <Fold><ClosedSet /></Fold>
         {loading ? <div className="mt-8"><Loading /></div> : error ? <div className="mt-8"><Alert>{error}</Alert></div> : r?.missing
           ? <div className="mt-8"><Alert kind="info">Отчёт ещё не построен: запустите make validate.</Alert></div>
           : <Report r={r} />}
       </main>
       <SiteFooter />
+    </div></FoldProvider>
+  );
+}
+
+/** SIMPLIFY п.3: короткое «как читать» простыми словами — под «5 чисел»; разделы ниже свёрнуты (Fold). */
+function HowToRead() {
+  return (
+    <div className="mt-6 max-w-3xl rounded-2xl bg-white p-4 text-sm leading-relaxed text-brand-ink/80 ring-1 ring-brand-night/10 sm:p-5" data-testid="validation-how-to-read">
+      <p className="font-bold text-brand-night">Как читать эту страницу</p>
+      <p className="mt-1">
+        Сверху — пять главных чисел. Под каждым подписано, на каких данных и когда оно посчитано. Ниже — разделы с подробностями:
+        они свёрнуты, чтобы не мешать; нажмите на заголовок или «Показать раздел». «95 % ДИ» — диапазон, в котором число, скорее
+        всего, окажется при пересчёте на другой случайной выборке. Синтетические кандидаты и модельная панель — модели, не люди:
+        они проверяют механику, а не рынок. В самом низу — «Красная кнопка»: атакуйте подбор сами.
+      </p>
+      <FoldAllButton className="mt-2" />
     </div>
   );
 }
@@ -83,13 +101,13 @@ function Report({ r }: { r: any }) {
       </nav>
 
       {/* И26: стабильность при повторе и доля повторов заданий — выше по странице (жюри проверяет повтор руками) */}
-      <RetestSection sim={sim} />
-      <RetestLive />
-      <PathRetest />
-      <GradeAccuracy />
-      <GradesExtBlock />
-      <TwoStage />
+      <Fold><RetestSection sim={sim} /><RetestLive /></Fold>
+      <Fold><PathRetest /></Fold>
+      <Fold><GradeAccuracy /></Fold>
+      <Fold><GradesExtBlock /></Fold>
+      <Fold><TwoStage /></Fold>
 
+      <Fold>
       <Section id="bank" title="Банк заданий и калибровка">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           <Kpi label="Семейств в банке сейчас" value={bn.n_families ?? r.bank?.n_families} hint={bn.n_families != null ? `синхронизирован ${bn.synced_at ? d10(bn.synced_at) : "—"}, версия ${bn.content_hash ?? "—"}` : `версия ${r.bank?.content_hash ?? "—"}`} />
@@ -106,8 +124,10 @@ function Report({ r }: { r: any }) {
             : r.calibration?.note}
         </Alert></div>
       </Section>
-      <CalibrationCard />
+      </Fold>
+      <Fold><CalibrationCard /></Fold>
 
+      <Fold>
       <Section id="test" title="Тест: точность оценки и решения по грейду (симуляция)"
         lead={`Конфигурация платформы: ${sim.config?.min_items}–${sim.config?.max_items} заданий, до ${sim.config?.max_minutes} мин, ${sim.config?.subpools} субпула, контроль частоты Sympson — Hetter, open book не больше ${sim.config?.max_per_format?.open_book_3step}. Сравнение — с конфигурацией дня 2 (до 20 заданий, 90 мин, без контроля частоты и ротации). ${sim.population ?? ""}`}>
         <Table head={["Направление", "r(θ)", "RMSE", "Заданий", "Минут", "Грейд точно", "Решение верно", "Ложное подтверждение", "Ложный отказ", "Open book, макс."]}
@@ -116,11 +136,13 @@ function Report({ r }: { r: any }) {
             ["День 2, среднее", num(sim.mean_baseline?.r_theta), num(sim.mean_baseline?.rmse), num(sim.mean_baseline?.mean_items, 1), num(sim.mean_baseline?.mean_time_min, 0), pct(sim.mean_baseline?.grade_exact), pct(sim.mean_baseline?.decision_accuracy), pct(sim.mean_baseline?.false_confirm_rate, 1), pct(sim.mean_baseline?.false_reject_rate, 1), Math.max(...dirs.map((d) => sim.directions[d].baseline_day2.ob3_max))]]} />
         <SimConditions sim={sim} kind="test" />
       </Section>
+      </Fold>
 
-      <JuniorStability />
-      <InternCutSection ic={r.intern_cut} />
-      <AltConditions sim={sim} />
+      <Fold><JuniorStability /></Fold>
+      <Fold><InternCutSection ic={r.intern_cut} /></Fold>
+      <Fold><AltConditions sim={sim} /></Fold>
 
+      <Fold>
       <Section id="exposure" title="Частота показа заданий"
         lead="Доля сессий, в которых показано семейство заданий. Цель Sympson — Hetter — не выше 0,3; канарейки опубликованы намеренно и не считаются.">
         <Table head={["Направление", "Макс. частота", "Средняя", "Доля > 0,3", "Не используются", "День 2: макс.", "День 2: > 0,3", "День 2: не используются"]}
@@ -131,7 +153,9 @@ function Report({ r }: { r: any }) {
         {r.provenance?.exposure_k?.note && <p className="mt-1 max-w-4xl text-xs leading-relaxed text-brand-ink/70">{r.provenance.exposure_k.note}</p>}
         <SimConditions sim={sim} kind="exposure" kDate={r.exposure_calibration?.generated_at} runDate={r.generated_at} />
       </Section>
+      </Fold>
 
+      <Fold>
       <Section id="leak" title="Устойчивость к утечке части банка"
         lead={`Опубликовано ${pct(sim.directions?.[dirs[0]]?.leak?.leak_share)} вариантов и все канарейки, ${pct(sim.directions?.[dirs[0]]?.leak?.cheater_share)} кандидатов пользуются утечкой. Порог детектора — по честным кандидатам при 1 % ложных срабатываний.`}>
         <Table head={["Направление", "Без утечки: завышение θ", "Утечка, без детектора", "С детектором", "Детектор + карантин", "Поймано списывающих", "Ложные срабатывания"]}
@@ -145,17 +169,19 @@ function Report({ r }: { r: any }) {
         <SimConditions sim={sim} kind="leak" />
         <LeakShareTable sim={sim} />
       </Section>
+      </Fold>
 
-      <MatchingBench />
-      <Ablations />
+      <Fold><MatchingBench /></Fold>
+      <Fold><Ablations /></Fold>
 
-      {r.experts && <ExpertsSection ex={r.experts} prov={pv.experts} />}
-      <GraderCheck />
-      <HhParse />
-      <HhMatch />
-      <EvidenceBench />
-      <PartialCredit />
+      {r.experts && <Fold><ExpertsSection ex={r.experts} prov={pv.experts} /></Fold>}
+      <Fold><GraderCheck /></Fold>
+      <Fold><HhParse /></Fold>
+      <Fold><HhMatch /></Fold>
+      <Fold><EvidenceBench /></Fold>
+      <Fold><PartialCredit /></Fold>
 
+      <Fold>
       <Section id="matching" title="Подбор на демо-данных: разметка правилами" lead={`${m.n_needs} потребностей × ${m.set_size} кандидатов из демо-данных, ${m.n_pairs} пар. ${m.method ?? ""}`}>
         <ProvenanceLine p={pv.demo} className="mb-2" />
         <div className="mb-3"><Alert kind="info"><b>Не доказательство. </b>Метки здесь построены правилами и частично повторяют фильтр категории платформы — оценка циркулярна. Доказательство качества подбора — бенчмарк со скрытой истиной и абляции выше, затем разметка моделью; этот блок показывает только, что подборка на демо-данных работает.</Alert></div>
@@ -167,7 +193,9 @@ function Report({ r }: { r: any }) {
         <p className="mt-1 text-xs text-brand-ink/65">Пары и метки: docs/validation/matching_pairs.json</p>
         <FspRatingValidation />
       </Section>
+      </Fold>
 
+      <Fold>
       <Section id="live" title="Живые данные платформы">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           <Kpi label="Тестов банка завершено" value={live.bank_sessions_finished} hint={`всего сессий: ${live.sessions_total}`} />
@@ -176,10 +204,11 @@ function Report({ r }: { r: any }) {
           <Kpi label="Согласие LLM и эксперта" value={live.expert_llm_agreement?.n ? `MAE ${num(live.expert_llm_agreement.mae)}` : "пар пока нет"} hint={live.expert_llm_agreement?.n ? `${live.expert_llm_agreement.n} пар, в пределах 0,25 — ${pct(live.expert_llm_agreement.within_025)}` : "копится на экране эксперта"} />
         </div>
       </Section>
+      </Fold>
 
-      <LiveUsers data={study} />
-      <SelfCheck opts={r.self_check} />
-      <RedButton attacks={r.attacks ?? []} />
+      <Fold><LiveUsers data={study} /></Fold>
+      <Fold><SelfCheck opts={r.self_check} /></Fold>
+      <Fold><RedButton attacks={r.attacks ?? []} /></Fold>
     </AsOf.Provider>
   );
 }

@@ -6,7 +6,7 @@
  */
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "../lib/fixtures";
-import { juryEnter, openSection } from "../lib/ui";
+import { juryEnter, openFold, openSection } from "../lib/ui";
 
 const DEVOPS = "DevOps-инженер middle: Linux, Docker, CI/CD, мониторинг, Kubernetes и Terraform. Удалённо, зарплата от 250 до 300 тыс.";
 
@@ -121,6 +121,7 @@ test("/validation: закрытый набор свёрнут, форма — п
   await page.goto("/validation");
   const sec = page.locator("section#closed-set");
   await expect(sec.getByRole("heading", { name: "Закрытый набор жюри" })).toBeVisible({ timeout: 60_000 });
+  await openFold(page, "section#closed-set");  // SIMPLIFY: раздел свёрнут целиком — раскрыть, затем прежняя проверка формы
   await expect(sec.getByText("Скачать шаблон JSON")).toHaveCount(0);
   await sec.getByRole("button", { name: "Проверить на своих данных" }).click();
   await expect(sec.getByText("Скачать шаблон JSON")).toBeVisible();
