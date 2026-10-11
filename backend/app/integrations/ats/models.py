@@ -27,7 +27,7 @@ class AtsSettings(Timestamps, Base):
     huntflow_vacancy_id: Mapped[int | None]
     huntflow_status_id: Mapped[int | None]
     huntflow_token_enc: Mapped[str | None] = mapped_column(sa.Text)  # Fernet
-    # Универсальный вебхук: POST JSON, подпись HMAC-SHA256 в заголовке X-Vstrechny-Signature
+    # Универсальный вебхук: POST JSON, подпись HMAC-SHA256 в заголовке X-Draft-Signature
     webhook_enabled: Mapped[bool] = mapped_column(default=False)
     webhook_url: Mapped[str | None] = mapped_column(sa.String(500))
     webhook_secret_enc: Mapped[str | None] = mapped_column(sa.Text)  # Fernet
@@ -102,7 +102,7 @@ class AtsConnection(Timestamps, Base):
     stage_title: Mapped[str | None] = mapped_column(sa.String(255))
     # Сопоставление вакансий платформы с вакансиями ATS: {platform_vacancy_id: {"id": 123, "title": "…"}}
     vacancy_map: Mapped[dict] = mapped_column(default=dict)
-    # Источник кандидата «Встречный» в справочнике ATS (Talantix personSources) — находим или создаём один раз
+    # Источник кандидата «Драфт» в справочнике ATS (Talantix personSources) — находим или создаём один раз
     source_id: Mapped[int | None] = mapped_column(sa.BigInteger)
     last_check_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     last_check_ok: Mapped[bool | None]
