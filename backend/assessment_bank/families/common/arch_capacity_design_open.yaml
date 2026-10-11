@@ -1,0 +1,24 @@
+family_id: common.arch.capacity_design_open
+title: Архитектурное задание с оценкой ёмкости — пиковая нагрузка, хранение, кэш, разбиение и особенность варианта
+direction: common
+skills: [system_design, capacity_planning, caching, architecture, distributed_systems]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    twists: [hot_keys, two_regions, budget]
+    criteria: [estimate, paths, partition, twist, verify]
+    scale: "0–4"
+time_limit_s: 1800
+canary: false
+prior_difficulty:
+  b: 1.9
+  a: 1.3
+  sigma_variant: 0.35
+  basis: "Априорная трудность (не по людям). Развёрнутое задание: расчёт пиковой нагрузки на чтение и запись, хранения с репликами и кэша (опорные числа варианта — в рубрике, допуск двукратный), пути чтения и записи, ключ разбиения, ответ на особенность варианта (горячие ключи, два региона, бюджет хранения) и проверка ёмкости. Рубрика 0–4 по каждому критерию даёт частичный балл; Senior обычно даёт архитектуру без расчёта или расчёт без следствий — граница Senior/Lead (θ ≈ 2,0); σ 0,35"
+generator: assessment_bank.families.common.arch_capacity_design_open
+version: 1
+description: >
+  Lead: системный дизайн с оценкой ёмкости по параметрам варианта; опорные числа считает генератор. Пять
+  критериев рубрики со шкалой 0–4; оценка с цитатами-доказательствами.

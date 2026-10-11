@@ -1,0 +1,23 @@
+family_id: mobile.swift.ui_main_thread_bug
+title: Swift — обновление интерфейса из обработчика URLSession
+direction: mobile
+skills: [swift, ios, gcd, mobile_threading, networking]
+target_grades: [junior]
+format: find_bug
+language: swift
+invariants:
+  code_lines: [15, 15]
+  operations: [11, 11]
+  defect_type: ui_off_main
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: -0.7
+  a: 1.2
+  sigma_variant: 0.2
+  basis: "14–16 строк Swift, один подтип (UIKit в фоновом обработчике dataTask); рядом обращения к UIKit на главной очереди (до запроса и в обёрнутом блоке) и разбор JSON в фоне. Симптом прямо называет предупреждение, нужно найти единственное необёрнутое обращение. Junior (b ≈ −0,7)"
+generator: assessment_bank.families.mobile.swift_ui_main_thread_bug
+version: 1
+description: >
+  Обработчик dataTask меняет UIKit вне главной очереди. Ключ: модель очередей на Python по показанному коду —
+  дефектный код нарушает правило главной очереди, исправленный (main.async в строке ключа) — нет.

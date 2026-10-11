@@ -1,0 +1,24 @@
+family_id: mobile.storage.sqlite_migration_bug
+title: Миграция локальной SQLite-базы — обновление приложения прерывается
+direction: mobile
+skills: [mobile_storage, sqlite, sql, migrations]
+target_grades: [intern, junior]
+format: find_bug
+language: sql
+invariants:
+  code_lines: [7, 8]
+  operations: [0, 1]
+  defect_type: add_not_null_no_default
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: -1.2
+  a: 1.2
+  sigma_variant: 0.2
+  basis: "Скрипт из 7–8 строк, один подтип дефекта (NOT NULL без DEFAULT при ALTER TABLE ADD COLUMN); рядом — верные строки той же формы с DEFAULT и обнуляемый столбец, так что нужно знать правило, а не искать «странную» строку; симптом «только при обновлении» указывает на миграцию, но не на строку. Стажёр/Junior, у порога Junior (b ≈ −1,2)"
+generator: assessment_bank.families.mobile.storage_sqlite_migration_bug
+version: 1
+description: >
+  Скрипт миграции локальной базы приложения добавляет столбцы; один объявлен NOT NULL без значения по
+  умолчанию, и миграция падает у обновивших приложение. Ключ: показанный скрипт исполняется в sqlite3 на
+  базе старой версии с данными — дефектный падает, исправленный проходит.

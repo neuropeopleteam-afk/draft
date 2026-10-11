@@ -1,0 +1,20 @@
+family_id: mobile.js.retry_backoff_output
+title: Повторы запроса — экспоненциальная задержка, потолок и Retry-After
+direction: mobile
+skills: [mobile_networking, retries, javascript]
+target_grades: [intern, junior]
+format: predict_output
+language: javascript
+invariants: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: -1.4
+  a: 1.1
+  sigma_variant: 0.2
+  basis: "12 строк, прямое вычисление: степень, потолок Math.min и одна попытка с Retry-After; ошибки — забыть потолок, сдвинуть степень или сбросить экспоненту после Retry-After. Стажёр (b ≈ −1,4), у порога Junior"
+generator: assessment_bank.families.mobile.js_retry_backoff_output
+version: 1
+description: >
+  Функция задержки повтора с экспоненциальным ростом, потолком и Retry-After; нужно предсказать вывод.
+  Ключ — расчёт на Python, сверенный с исполнением показанного кода в Node.

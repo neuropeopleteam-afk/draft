@@ -1,0 +1,24 @@
+family_id: mobile.swift.retain_cycle_bug
+title: "Swift — экран не освобождается: цикл ссылок через сохранённое замыкание"
+direction: mobile
+skills: [swift, memory_management, arc, closures, ios]
+target_grades: [middle]
+format: find_bug
+language: swift
+invariants:
+  code_lines: [13, 13]
+  operations: [10, 10]
+  defect_type: stored_closure_strong_self
+time_limit_s: 200
+canary: false
+prior_difficulty:
+  b: 0.2
+  a: 1.3
+  sigma_variant: 0.2
+  basis: "13–15 строк Swift, один подтип: сохранённое замыкание с сильным self. Почти верные «ловушки» — тоже упоминают self: UIView.animate или DispatchQueue.main.async (не хранятся) и второй колбэк с [weak self]; нужно отличать хранимое замыкание от выполняемого. Middle (b ≈ 0,2)"
+generator: assessment_bank.families.mobile.swift_retain_cycle_bug
+version: 1
+description: >
+  UIViewController владеет моделью, модель хранит колбэк с сильным захватом self — цикл ссылок, экран не
+  освобождается. Ключ проверяется моделью ARC на Python по показанному коду: дефектный код утекает, с
+  [weak self] в строке ключа — нет.

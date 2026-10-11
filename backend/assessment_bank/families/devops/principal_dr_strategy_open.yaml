@@ -1,0 +1,23 @@
+family_id: devops.strategy.principal_dr_open
+title: Стратегия отказоустойчивости между регионами — схемы по классам RTO/RPO, данные, переключение, учения
+direction: devops
+skills: [reliability, sre, capacity_planning, incident_response, disaster_recovery]
+target_grades: [principal]
+format: open_answer
+language: text
+invariants:
+  extra:
+    constraints: [budget, residency, conflicts]
+    criteria: [tiering, data, constraint, failover, plan_metrics]
+time_limit_s: 1800
+canary: false
+prior_difficulty:
+  b: 2.7
+  a: 1.0
+  sigma_variant: 0.35
+  basis: "Априорная трудность (не по людям). Стратегия на годы для всей компании: разные схемы по классам сервисов с ценой, цена RPO в задержке синхронной репликации, общие зависимости во втором регионе, учёт ограничения варианта (бюджет, хранение данных в стране, конфликты записи при active-active), переключение с учениями и измерением фактических RTO/RPO. Lead обычно предлагает «active-active для всех» без цены и учений — граница Lead/Principal (θ ≈ 2,75); σ 0,35"
+generator: assessment_bank.families.devops.principal_dr_strategy_open
+version: 1
+description: >
+  Principal: стратегия отказоустойчивости между регионами при требованиях RTO/RPO по классам и ограничении
+  варианта. Пять критериев рубрики; оценка с цитатами-доказательствами.
