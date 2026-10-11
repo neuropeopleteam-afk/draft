@@ -82,8 +82,8 @@ function Line({ label, tone, children, testid }: { label: string; tone: string; 
 }
 
 /** Компактная карточка: шапка, 4–5 строк и действия; «Подробнее» раскрывает доказательства под карточкой. */
-export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, needId, version, badge, open, onToggle, details, side = false, active = false }: {
-  r: any; rank: number; fit?: Fit | null; picked: boolean; onPick: () => void; pickDisabled?: boolean; onInvite: () => void;
+export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, sent = false, needId, version, badge, open, onToggle, details, side = false, active = false }: {
+  r: any; rank: number; fit?: Fit | null; picked: boolean; onPick: () => void; pickDisabled?: boolean; onInvite: () => void; sent?: boolean;
   needId?: string; /** FIX7 п. 12: версия подборки — карточка кандидата считается по её требованиям */ version?: number; badge?: ReactNode; open: boolean; onToggle: () => void; details?: ReactNode;
   side?: boolean; active?: boolean;  // side — подробности в панели справа (широкий экран); active — эта карточка сейчас в ней
 }) {
@@ -115,7 +115,8 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
         {f.salary && <Line label="Зарплата" tone="text-brand-plum" testid="compact-salary">{f.salary}{fit && fit.level !== "low" ? <span className="ml-2 align-middle"><FitBadge fit={fit} short /></span> : null}</Line>}
       </ul>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button type="button" className="btn-primary !px-4 !py-2" onClick={onInvite}>Пригласить</button>
+        {/* аудит №2: после «Отправить приглашение» — «Приглашён ✓», кнопка неактивна */}
+        <button type="button" className="btn-primary !px-4 !py-2 disabled:opacity-60" onClick={onInvite} disabled={sent} data-testid={sent ? "card-invited" : undefined}>{sent ? "Приглашён ✓" : "Пригласить"}</button>
         <label className={`inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold ${picked ? "border-brand bg-brand-blush/50 text-brand-night" : "border-brand-night/15 text-brand-night"} ${pickDisabled && !picked ? "opacity-60" : ""}`}
           title={pickDisabled && !picked ? "Сравнить можно до трёх кандидатов" : "Отметьте 2–3 кандидатов и откройте сравнение"}>
           <input type="checkbox" className="accent-brand" checked={picked} disabled={pickDisabled && !picked} onChange={onPick} />Сравнить
