@@ -338,9 +338,10 @@ def offer(db, ts) -> dict | None:
         text = (f"{TITLE.get(b.cut_grade, b.cut_grade)} по этому тесту вероятен, но не присвоен: одной сессии мало, "
                 f"чтобы уверенно отделить {TITLE.get(bd['lower'], bd['lower'])} от {TITLE.get(b.cut_grade, b.cut_grade)} "
                 f"(погрешность шире допустимой для Lead/Principal). Второй этап — до {p['items']} коротких заданий у "
-                f"этой границы из новых семейств, 10–{p['minutes']} минут; итог считается по ответам обеих сессий вместе "
-                f"и может оказаться как выше, так и ниже нынешнего; {TITLE.get(b.cut_grade, b.cut_grade)} после него — "
-                "с пометкой «предварительно» (модель, не люди; /validation, «Lead и Principal»).")
+                f"этой границы из новых семейств, 10–{p['minutes']} минут, без отдельного теста на "
+                f"{TITLE.get(bd['lower'], bd['lower'])}; итог — по ответам обеих сессий вместе: "
+                f"{TITLE.get(b.cut_grade, b.cut_grade)} (с пометкой «предварительно»), {TITLE.get(bd['lower'], bd['lower'])} "
+                "или ниже (модель, не люди; /validation, «Lead и Principal»).")
     elif b.kind == "ext":
         text = (f"{TITLE.get(b.grade, b.grade)} по тесту — предварительно. Второй этап — до {p['items']} коротких "
                 f"заданий у границы {TITLE.get(bd['lower'], bd['lower'])}/{TITLE.get(b.cut_grade, b.cut_grade)} из новых "
