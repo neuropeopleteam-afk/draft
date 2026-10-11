@@ -133,6 +133,16 @@ def run_task(args: tuple) -> dict:
     """Один вариант × мир × порог × направление: путь дважды для n кандидатов (те же зёрна, что path_retest)."""
     arm, world, confirm, length, i, d, n = args
     w = WORLDS[world]
+    from app.modules.assessment import rules as rules_mod
+
+    saved = (pr.decide_grade, rules_mod.proved_lower, pr.make_responder)  # подмены — только на время задачи
+    try:
+        return _run_task(arm, world, confirm, length, i, d, n, w)
+    finally:
+        pr.decide_grade, rules_mod.proved_lower, pr.make_responder = saved
+
+
+def _run_task(arm, world, confirm, length, i, d, n, w) -> dict:
     _patch_confirm(confirm)
     cfg = sim.app_config_from_settings()
     cfg = replace(cfg, partial_credit=arm in ("gpcm", "gpcm_est"), partial_credit_select=(arm == "gpcm"))
