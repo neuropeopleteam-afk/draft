@@ -69,7 +69,7 @@ export default function Landing() {
           </div>
 
           <div className="hidden self-end rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/10 backdrop-blur sm:block" role="figure" aria-label="Пример приглашения">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Входящее приглашение</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Входящее приглашение · пример</p>
             <p className="mt-4 text-xl font-bold">Backend-разработчик в команду платежей</p>
             <p className="mt-1 text-sm text-white/70">ООО «Пример» · удалённо</p>
             <p className="mt-5 text-3xl font-extrabold text-white">{"220\u00A0000\u00A0– 290\u00A0000\u00A0₽"}</p>
@@ -79,8 +79,9 @@ export default function Landing() {
               <li className="flex gap-2"><span className="font-bold text-[#B9B4EA]">T2</span> Призёр соревнований ФСП</li>
             </ul>
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <span className="btn bg-brand-strong text-white" aria-hidden="true">Принять</span>
-              <span className="btn bg-white/10 text-white" aria-hidden="true">Отклонить</span>
+              {/* С2 №6: макет — кнопки неактивны, чтобы первый клик эксперта не уходил «в никуда» */}
+              <span className="btn pointer-events-none cursor-default bg-brand-strong/40 text-white/60" aria-hidden="true">Принять</span>
+              <span className="btn pointer-events-none cursor-default bg-white/5 text-white/50" aria-hidden="true">Отклонить</span>
             </div>
           </div>
         </div>
