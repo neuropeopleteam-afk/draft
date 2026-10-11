@@ -38,14 +38,14 @@ export interface InterviewerAvatarProps {
   /** Уровень звука 0…1 (голос ведущего или микрофон) — для свечения рамки. */
   level?: () => number;
   name?: string;
-  /** Дополнительная подпись (канал, «модель, не люди»). */
+  /** Не показывается (решение владельца 11.10: под образом — только «Интервьюер: говорит / слушает»); оставлено для совместимости. */
   caption?: string;
   /** Сторона квадрата, px (по умолчанию 200; на узком экране — не шире контейнера). */
   size?: number;
   className?: string;
 }
 
-export function InterviewerAvatar({ state, level, name = "Интервьюер", caption, size = 200, className = "" }: InterviewerAvatarProps) {
+export function InterviewerAvatar({ state, level, name = "Интервьюер", size = 200, className = "" }: InterviewerAvatarProps) {
   const box = useRef<HTMLDivElement | null>(null);
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const vids = useRef<Partial<Record<WaveState, HTMLVideoElement | null>>>({});
@@ -160,13 +160,11 @@ export function InterviewerAvatar({ state, level, name = "Интервьюер",
           </video>
         ))}
         <canvas ref={canvas} aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full" />
-        <span className="absolute bottom-2 left-2 rounded-full bg-[#1B1C21]/80 px-2 py-0.5 text-[11px] font-semibold text-white">ИИ · не человек</span>
       </div>
       <figcaption className="mt-2">
         <p className="text-sm font-semibold text-brand-night">
           {name}: <span aria-live="polite" data-testid="avatar-state">{label}</span>
         </p>
-        <p className="text-xs text-brand-ink/65">ИИ-интервьюер, не человек{caption ? ` · ${caption}` : ""}</p>
       </figcaption>
     </figure>
   );
