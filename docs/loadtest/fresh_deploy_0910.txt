@@ -2,7 +2,7 @@
 /dev/mapper/hk-root      118G   94G       19G  84% /
 Mem:            7918        2385         793         203        5253        5532
 0.27 0.23 0.20 1/413 482493
-## клон 63063cb Я7 п. 5: tools/ci/fresh_check.py — проверка …; .env: нет; node_modules: нет
+## клон ae3488c Я7 п. 5: tools/ci/fresh_check.py — проверка …; .env: нет; node_modules: нет
 .env создан
 ## проект fspscratch сервисы ['api', 'db', 'web']
     api [('127.0.0.1', '5190')] cpus 1.5 mem 1610612736

@@ -11,7 +11,7 @@ from app.modules.profiles.facts import test_component  # noqa: E402
 from app.modules.validation.bench_world import BenchConfig, generate  # noqa: E402
 from app.modules.validation.matching_bench import _parsed, score_world, platform_orders, per_need, boot_idx  # noqa: E402
 
-# Замороженная формула profiles/facts.py из базы main 763b8f7 — именно то, с чем сравниваем.
+# Замороженная формула profiles/facts.py из базы main 8ef691a — именно то, с чем сравниваем.
 LEVEL_WEIGHT = {"international": 1.0, "national": 0.85, "interregional": 0.65, "regional": 0.45, "school": 0.25}
 RELEVANCE = {
     "algorithmic": {"backend": .9, "frontend": .6, "data_ml": 1., "qa": .6, "security": .6},

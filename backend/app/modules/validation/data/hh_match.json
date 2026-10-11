@@ -1,6 +1,6 @@
 {
  "generated_at": "2026-10-11T11:01:12+00:00",
- "code_commit": "9a3b9fce",
+ "code_commit": "62b9b213",
  "algorithm": "match-v1.3",
  "label_note": "тексты — реальные вакансии hh.ru, кандидаты — модельные (модель, не люди)",
  "corpus_collected_at": "2026-10-10",

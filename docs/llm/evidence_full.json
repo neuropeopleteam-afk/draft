@@ -1,7 +1,7 @@
 {
  "title": "Доказательная оценка: флаг GRADING_EVIDENCE выкл и вкл на одних и тех же 406 ответах",
  "date": "2026-10-10 17:53",
- "code_sha": "abb801d",
+ "code_sha": "e09b9f2",
  "grader": "Claude Sonnet 5.5",
  "skeptic": "Claude Fable 5.1",
  "reference": "gpt-oss-120b (панель 06.10, одна модель; модель, не люди); на подмножестве 50 — судьи замера моделей",

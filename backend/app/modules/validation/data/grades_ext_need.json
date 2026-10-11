@@ -19573,16 +19573,16 @@
   "world": "симуляция 6 уровней: модельный банк Lead/Principal, блок Lead/Principal, частичный балл; модель, не люди",
   "seed": 20261011,
   "config_hash": "f05209a8a18c",
-  "commit": "9b59eacf",
+  "commit": "5f1fbbd0",
   "bank": "76c4164b6ce83743",
   "n": 1000,
   "command": "make grades-ext-need",
   "generated_at": "2026-10-11T09:56:40+00:00",
-  "commit_note": "прогоны на сервере проверок шли без .git (commit unknown); код симуляции этих прогонов закоммичен в 9b59eacf без изменений сценариев",
+  "commit_note": "прогоны на сервере проверок шли без .git (commit unknown); код симуляции этих прогонов закоммичен в 5f1fbbd0 без изменений сценариев",
   "extra_runs": [
    {
     "scenarios": "g_* (модель частичного балла платформы: GPCM 0–4 + шум оценщика, partial_credit=True)",
-    "commit": "e0c66610 + ветка частичного балла 663e8414",
+    "commit": "aae14ca5 + ветка частичного балла 7b49ae3d",
     "generated_at": "2026-10-11T10:56:02+00:00",
     "seed": 20261011,
     "command": "make grades-ext-need (SIM_ARGS --scenarios g_… --reps 0,1,2,3,4)",
@@ -19593,33 +19593,33 @@
     "reps": "0,1,2",
     "confirms": "0.6",
     "worlds": "top",
-    "commit": "54e52f7",
+    "commit": "9ee3edf",
     "bank": "76c4164b6ce83743",
     "generated_at": "2026-10-11T14:26:00+00:00",
     "seed": 20261011,
     "config_hash": "df102df7a3cc",
     "command": "make grades-ext-need",
-    "note": "дерево feat/grades-ext после слияния integ/wave5 0fa767f (в нём feat/partial-credit 4bd17eb)"
+    "note": "дерево feat/grades-ext после слияния integ/wave5 2c1215f (в нём feat/partial-credit 84d2a9c)"
    },
    {
     "scenarios": "g_x2, g_k20_x3_s4_p8c32, g_bank705, g_bank705_k10",
     "reps": "0,1,2,3,4",
     "confirms": "0.6",
     "worlds": "top",
-    "commit": "54e52f7",
+    "commit": "9ee3edf",
     "bank": "76c4164b6ce83743",
     "generated_at": "2026-10-11T14:36:12+00:00",
     "seed": 20261011,
     "config_hash": "eb99f4a73c97",
     "command": "make grades-ext-need",
-    "note": "дерево feat/grades-ext после слияния integ/wave5 0fa767f (в нём feat/partial-credit 4bd17eb); повтор g_x2 и g_k20_x3_s4_p8c32 совпал с прежним прогоном до знака"
+    "note": "дерево feat/grades-ext после слияния integ/wave5 2c1215f (в нём feat/partial-credit 84d2a9c); повтор g_x2 и g_k20_x3_s4_p8c32 совпал с прежним прогоном до знака"
    },
    {
     "scenarios": "g_pb_c10_lo, g_pb_c10_mid",
     "reps": "0,1,2,3,4",
     "confirms": "0.6",
     "worlds": "top",
-    "commit": "1b79163",
+    "commit": "5f83470",
     "bank": "76c4164b6ce83743",
     "generated_at": "2026-10-11T14:39:57+00:00",
     "seed": 20261011,
@@ -19631,7 +19631,7 @@
     "reps": "3,4",
     "confirms": "0.6",
     "worlds": "top",
-    "commit": "ab6a4bc",
+    "commit": "b941442",
     "bank": "76c4164b6ce83743",
     "generated_at": "2026-10-11T14:42:18+00:00",
     "seed": 20261011,
@@ -19649,7 +19649,7 @@
     "seed": 20261011,
     "config_hash": "7c002cc6b10e",
     "command": "make grades-ext-need",
-    "note": "дерево exp/grades-ext-x-catalog-ext2 = feat/grades-ext + feat/catalog-ext a8e0053 (банк после sync 705e743: 45 семейств Lead + 29 Principal)"
+    "note": "дерево exp/grades-ext-x-catalog-ext2 = feat/grades-ext + feat/catalog-ext 640825c (банк после sync 705e743: 45 семейств Lead + 29 Principal)"
    },
    {
     "scenarios": "g_real_pb_c8, g_real_pb_c8_o2, g_real_pb_c16_o2, g_real_pb_c16_o2_k20",
@@ -19662,7 +19662,7 @@
     "seed": 20261011,
     "config_hash": "4ad29cda01a5",
     "command": "make grades-ext-need",
-    "note": "дерево exp/grades-ext-x-catalog-ext2 = feat/grades-ext + feat/catalog-ext a8e0053 (банк после sync 705e743: 45 семейств Lead + 29 Principal)"
+    "note": "дерево exp/grades-ext-x-catalog-ext2 = feat/grades-ext + feat/catalog-ext 640825c (банк после sync 705e743: 45 семейств Lead + 29 Principal)"
    },
    {
     "scenarios": "g_real_pb_c24, g_real_pb_c32",
@@ -19675,7 +19675,7 @@
     "seed": 20261011,
     "config_hash": "2a333310b3f7",
     "command": "make grades-ext-need",
-    "note": "дерево exp/grades-ext-x-catalog-ext2 = feat/grades-ext + feat/catalog-ext a8e0053 (банк 705e743)"
+    "note": "дерево exp/grades-ext-x-catalog-ext2 = feat/grades-ext + feat/catalog-ext 640825c (банк 705e743)"
    },
    {
     "scenarios": "g_real_d4, g_real_d4_k10",
@@ -19721,7 +19721,7 @@
     "reps": "0",
     "confirms": "0.6,0.65",
     "worlds": "top",
-    "commit": "35bf697b+ban",
+    "commit": "326e1c8a+ban",
     "bank": "f563cfcaebf63aef",
     "generated_at": "2026-10-11T17:12:31+00:00",
     "seed": 20261011,

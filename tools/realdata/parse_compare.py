@@ -7,8 +7,8 @@
   * changed — какие вакансии разобраны иначе (поля и веса), с ожидаемым значением разметки.
 Модель не вызывается (use_llm=False): путь правил. Без записи в docs/ по умолчанию; --out <файл> — сохранить JSON.
 
-  cd backend && python ../tools/realdata/parse_compare.py --rev 601e2ba [--out /tmp/x.json]
-  cd backend && python ../tools/realdata/parse_compare.py --rev 601e2ba --corpus <файл.json> [--out /tmp/x.json]
+  cd backend && python ../tools/realdata/parse_compare.py --rev 9d937a0 [--out /tmp/x.json]
+  cd backend && python ../tools/realdata/parse_compare.py --rev 9d937a0 --corpus <файл.json> [--out /tmp/x.json]
 
 --corpus — любой корпус того же вида ({"vacancies": [{"id", "text", "expected"?, "expected_stack"?, "acceptable"?,
 "source_url"?}]}; по умолчанию docs/realdata/vacancies_50.json). Строки без разметки (`expected`) в точность полей и
@@ -83,7 +83,7 @@ def summary(m: dict) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--rev", default="601e2ba")
+    ap.add_argument("--rev", default="9d937a0")
     ap.add_argument("--out")
     ap.add_argument("--corpus", default=str(ROOT / "docs/realdata/vacancies_50.json"))
     a = ap.parse_args()

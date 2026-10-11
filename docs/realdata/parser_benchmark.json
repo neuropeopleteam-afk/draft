@@ -1,7 +1,7 @@
 {
   "corpus_size": 50,
   "annotation": "silver, not expert; exact source excerpts",
-  "comparison_note": "LLM and baseline rules: same deployed 763b8f7. Current branch rules reported separately.",
+  "comparison_note": "LLM and baseline rules: same deployed 8ef691a. Current branch rules reported separately.",
   "baseline_rules": {
     "fields": {
       "direction": {
