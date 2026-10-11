@@ -90,7 +90,6 @@ class ValidationPathRetestOut(Doc):
     discrimination: Obj | None = None
     procedure: list[str] | None = None
     caveat: str | None = None
-    competitor_reference: Obj | None = Field(default=None, description="Опубликованные показатели других платформ для сравнения")
     seconds: float | None = None
 
 

@@ -28,6 +28,7 @@ import contextvars
 from contextlib import contextmanager
 from datetime import date, timedelta
 import logging
+import threading
 import time
 
 import numpy as np
@@ -239,7 +240,11 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
                               verified=True, source_ref="demo-registry"))
     db.commit()
     res = {}
-    for attempt in range(6):  # демо-респондент случаен: нужен заданный исход — иначе следующий seed
+    # демо-респондент случаен (выбор заданий и ответы): нужен заданный исход — иначе следующий seed. Для «Junior
+    # (предварительно)» окно уже: при пороге уверенности 0,6 (Я22) θ = −1,05 чаще подтверждает Junior, чем раньше при 0,8,
+    # поэтому попыток 12 (6 не хватало примерно раз на сотню песочниц — test_jury_persona_candidate_junior).
+    attempts = 12 if want == "provisional" else 6
+    for attempt in range(attempts):
         res = run_demo_test(db, u.id, claimed, theta, seed + attempt, pending_left, away_items, copy_items,
                             camera=camera)
         if want == "provisional" and res.get("category_provisional"):
@@ -554,13 +559,21 @@ def _tariffs_demo(db: Session) -> None:
         log.exception("jury: tariffs demo failed")
 
 
+# SQLite (локальный запуск без Docker — один процесс uvicorn): по очереди между потоками процесса. Без этого запасная
+# песочница (фоновый поток) и вход эксперта писали в файл одновременно — «database is locked» сразу, без ожидания
+# (повышение блокировки чтения до записи), и песочница оставалась без примера устной защиты (развёртывание с нуля 11.10).
+_local_mx = threading.RLock()
+
+
 @contextmanager
 def _lock(db: Session):
     """Сброс и создание демо жюри — по очереди между воркерами uvicorn (advisory lock PostgreSQL на отдельном
-    соединении: сессия внутри несколько раз фиксирует транзакции и может сменить соединение)."""
+    соединении: сессия внутри несколько раз фиксирует транзакции и может сменить соединение); на SQLite — между
+    потоками процесса (_local_mx)."""
     bind = db.get_bind()
     if bind.dialect.name != "postgresql":
-        yield
+        with _local_mx:
+            yield
         return
     with bind.connect() as conn:
         conn.execute(text("SELECT pg_advisory_lock(20261006)"))

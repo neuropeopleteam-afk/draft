@@ -1,11 +1,11 @@
-"""Точность уровня в сопоставимых условиях (Я22, 11.10) → data/grade_compare.json, docs/validation/GRADE_COMPARE.md.
+"""Точность уровня при других условиях измерения (Я22, 11.10) → data/grade_compare.json, docs/validation/GRADE_COMPARE.md.
 
 Та же процедура, что path-retest и перебор (grade_sweep.run_task: весь путь кандидата дважды, одни и те же
 синтетические кандидаты во всех вариантах; модель, не люди), меняются только условия мира и разбор:
 
 * мир «наш» — истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5 (как на /validation);
 * мир «точные параметры» — истина = предкалибровка без ошибки (так считают модели, где параметры заданий известны
-  точно, — например, собственная симуляция конкурента);
+  точно, — так считают модели без ошибки калибровки);
 * «заявили не ниже истинного» — подвыборка кандидатов, заявивших уровень не ниже своего истинного: тест подтверждает
   заявленный уровень и выше его не поднимает, поэтому заниженные заявления дают «ниже» независимо от точности теста;
 * вариант ТЗ «справившийся уверенно — повысить грейд» без автоподъёма: короткий тест на уровень выше
@@ -47,12 +47,7 @@ VARIANT_RU = {"old": "прежнее правило (P ≥ 0,8)", "current": "д
               "promote_05_up09": "то же при P(следующий) ≥ 0,5, уровень выше — при P ≥ 0,9 по двум сессиям"}
 WORLDS = {"ours": {"misspec": 0.5}, "exact": {"misspec": 0.5, "exact": 1}}
 WORLD_RU = {"ours": "наш мир: ошибка эксперта σ 0,5", "exact": "точные параметры заданий"}
-FOUR = ("current", "promote_03_up08")  # + 4 ступени без Стажёра (как у конкурента) в мире точных параметров
-COMPETITORS = [
-    {"name": "FSP Talent", "exact": 0.826, "kappa": 0.904, "over": 0.029,
-     "note": "их материалы: собственная симуляция с точными параметрами заданий, 4 ступени"},
-    {"name": "IT Match", "exact": 0.70, "note": "их материалы; условия расчёта не раскрыты"},
-]
+FOUR = ("current", "promote_03_up08")  # + 4 ступени без Стажёра в мире точных параметров
 TWO_STAGE = {"exact": 0.675, "over": 0.040, "retest_exact": 0.80, "retest_kappa": 0.875,
              "note": "двухэтапное подтверждение пограничных (feat/two-stage, проба c₂ 0,5; синтетика)"}
 
@@ -115,9 +110,9 @@ def run(n: int = 500, workers: int | None = None, write: bool = True) -> dict:
                                   world=f"симуляция всего пути (path-retest): {len(sim.DIRECTIONS)} направлений × {n} "
                                         f"синтетических кандидатов, путь дважды; миры: {', '.join(WORLD_RU.values())}",
                                   command="make grade-compare"),
-           "rows": rows, "competitors": COMPETITORS, "two_stage": TWO_STAGE, "promote_cfg": gs.PROMOTE_CFG,
+           "rows": rows, "two_stage": TWO_STAGE, "promote_cfg": gs.PROMOTE_CFG,
            "caveat": "Синтетика (модель, не люди): кандидаты — модель ответов 2PL; «точные параметры» — истина = "
-                     "предкалибровка; числа конкурентов — из их материалов, другой мир и процедура.",
+                     "предкалибровка; числа разных условий измерения несопоставимы между собой.",
            "seconds": round(time.time() - t0, 1)}
     if write:
         OUT.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -154,7 +149,7 @@ def markdown(rep: dict) -> str:
                 f"{_pc(m['under'])} ({_pc(m['under_claimed_below'])}) | {_pc(m['retest_exact'])} | "
                 f"{_f(m['retest_kappa'])} | {off} | {_f(m['minutes_mean'], 1)} |")
 
-    L = ["# Точность уровня в сопоставимых условиях", "",
+    L = ["# Точность уровня при других условиях измерения", "",
          f"Подпись мира: {sig['world']}; seed {sig['seed']}, конфигурация `{sig['config_hash']}`, коммит "
          f"`{sig['commit']}`, банк `{sig['bank']}`. Пересчёт: `{sig['command']}`.", "",
          f"> {rep['caveat']}", "",
@@ -170,7 +165,7 @@ def markdown(rep: dict) -> str:
                     L.append(line(r, part))
     four = [r for r in rep["rows"] if r["levels"] == 4]
     if four:
-        L += ["", "## Как у конкурента: 4 ступени (без Стажёра), точные параметры", "", *head]
+        L += ["", "## Другие условия измерения: 4 ступени (без Стажёра), точные параметры", "", *head]
         L += [line(r, part) for part in ("all", "claimed_not_below") for r in four]
     cur, cur_x = find(rep, "ours", "current"), find(rep, "exact", "current")
     old = find(rep, "ours", "old")
@@ -184,10 +179,8 @@ def markdown(rep: dict) -> str:
             L.append(f"- {name}: ниже {_pc(m['under'])} = {_pc(m['under_claimed_below'])} заниженных заявлений "
                      f"(заявили ниже истинного {_pc(m['claimed_below_share'])} кандидатов) + {_pc(m['under_other'])} "
                      f"ошибок теста; выше {_pc(m['over'])}; без категории {_pc(m['none'])}.")
-    L += ["", "## Сравнение с другими (их числа — из их материалов; другой мир и процедура)", "",
-          "| Источник | Точно | Выше | κw | Условия |", "|---|---|---|---|---|"]
-    for c in rep["competitors"]:
-        L.append(f"| {c['name']} | {_pc(c.get('exact'))} | {_pc(c.get('over'))} | {_f(c.get('kappa'))} | {c['note']} |")
+    L += ["", "## Сравнение вариантов подтверждения (наши расчёты; миры и процедуры различаются)", "",
+          "| Вариант | Точно | Выше | κw | Условия |", "|---|---|---|---|---|"]
     ts = rep["two_stage"]
     L.append(f"| Двухэтапное подтверждение (наш вариант) | {_pc(ts['exact'])} | {_pc(ts['over'])} | "
              f"{_f(ts['retest_kappa'])} | {ts['note']}; повтор {_pc(ts['retest_exact'])} |")
@@ -212,7 +205,7 @@ def markdown(rep: dict) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Точность уровня в сопоставимых условиях → data/grade_compare.json")
+    ap = argparse.ArgumentParser(description="Точность уровня при других условиях измерения → data/grade_compare.json")
     ap.add_argument("--n", type=int, default=500)
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--no-write", action="store_true")
