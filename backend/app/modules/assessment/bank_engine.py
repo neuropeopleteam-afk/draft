@@ -68,6 +68,7 @@ from app.modules.assessment.grades import (GRADE_RU, category_level, cuts_tuple,
                                            start_theta)
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.skill_map import stack_gate, to_stack_tags
+from app.modules.catalog import levels as grade_levels
 from app.modules.catalog.seed_data import EXT_GRADE_ORDER
 
 log = logging.getLogger("assessment")
@@ -88,7 +89,8 @@ def bank_manifest() -> dict:
 
 @lru_cache(maxsize=4)
 def _pool(n_subpools: int) -> tuple[PoolItem, ...]:
-    return tuple(pool_from_specs(load_specs().values(), n_subpools=n_subpools))
+    # без флага GRADES_EXT_ENABLED семейства только Lead/Principal в тест не попадают (catalog.levels.pool_specs)
+    return tuple(pool_from_specs(grade_levels.pool_specs(load_specs().values()), n_subpools=n_subpools))
 
 
 @lru_cache(maxsize=1)
