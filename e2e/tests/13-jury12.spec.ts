@@ -149,6 +149,9 @@ test("1440: проверка за 12 минут — от своей потреб
       }
     }
     expect(sent, "приглашение с вилкой отправлено").toBe(true);
+    // аудит №2: карточка — «Приглашён ✓», шаг в проводнике отмечен
+    await expect(page.getByTestId("card-invited").first()).toHaveText("Приглашён ✓");
+    await expect(hint).toContainText("✓ Приглашение отправлено", { timeout: 30_000 });
     own = !!ref;
   });
 
