@@ -41,7 +41,7 @@ PATH. Без них соответствующие проверки помеча
 | Поле YAML | Смысл |
 |---|---|
 | `family_id` | `направление.область.имя`, например `common.sql.left_join_count` |
-| `direction` | common, backend, frontend, data_ml, qa, security |
+| `direction` | common, backend, frontend, data_ml, qa, security; с волны 7 — devops, data_eng, mobile, analyst |
 | `skills`, `target_grades` | навыки (теги, которые платформа сводит к своему каталогу); intern / junior / middle / senior — `intern` («Стажёр») помечает лёгкие семейства у порога Junior (b ≲ −1) и в CAT не участвует |
 | `language` | python, javascript, typescript, sql, bash, text, go, java, dockerfile, yaml |
 | `format` | find_bug, predict_output, choose_fix, open_book_3step, mcq_concept, open_answer |
@@ -158,6 +158,40 @@ Kafka, сборщик мусора JVM), ключ проверяется исп�
 `data_ml.stats.mean_median_output` (среднее и медиана с выбросом), `qa.pytest.float_assert_bug`
 (точное сравнение float, `pytest.approx`), `security.logging.password_in_log_bug` (пароль в журнале).
 
+### Добор у порогов Junior/Middle и Middle/Senior (10.10)
+
+Цель — точность теста, а не число заданий: у порогов Junior/Middle (θ = 0) и Middle/Senior (θ = 1) по калибровке
+панели (модель, не люди) мало семейств с высокой различающей способностью (у порога M/S в security — ни одного).
+Слабые семейства (низкая дискриминация, ответы на уровне угадывания, разброс между вариантами) собраны
+`tools/weak_families.py` в `reports/weak_families.{md,json}` — это список-кандидат на исключение из адаптивного пула.
+Различимость вариантов любого семейства проверяет `tools/check_family_variants.py`.
+
+Добавлено 17 семейств, все с ключом, проверяемым исполнением, одним подтипом дефекта и фиксированным составом
+дистракторов; prior a = 1,3, b — у своей границы (обоснование в `basis`). Калибровка — отдельным прогоном панели.
+
+| Семейство | Формат | Порог | Проверка ключа |
+|---|---|---|---|
+| `security.web.ssrf_allowlist_fix` | choose_fix | M/S | законные и атакующие URL (userinfo, суффикс домена, схема) |
+| `security.session.fixation_bug` | find_bug | J/M | подставленный идентификатор сессии после входа не даёт доступа |
+| `security.crypto.hmac_canonical_bug` | find_bug | M/S | подпись не подходит к сообщению со сдвинутой границей полей |
+| `security.access.bulk_owner_check_bug` | find_bug | J/M | пакет «свой + чужой» отклоняется целиком |
+| `security.auth.token_audience_bug` | find_bug | M/S | токен без `aud`, с чужим `aud`, истёкший, чужого издателя — отклонены |
+| `frontend.state.optimistic_rollback_fix` | choose_fix | M/S | Node: откат после подтверждённых изменений |
+| `frontend.js.object_key_order_output` | predict_output | M/S | Node и модель порядка ключей объекта |
+| `data_ml.ml.purged_split_fix` | choose_fix | M/S | разрыв перед тестовым блоком на разных (n, k, H) |
+| `data_ml.metrics.pooled_rate_bug` | find_bug | J/M | итоговая доля — отношение сумм |
+| `data_ml.features.lag_window_leak_bug` | find_bug | J/M | признак не зависит от цели своей строки |
+| `data_ml.features.target_encoding_oof_fix` | choose_fix | M/S | независимость от цели своего фолда и эталонный расчёт |
+| `qa.mock.called_once_bug` | find_bug | J/M | обвязка pytest: исправленный тест ловит мутанта |
+| `qa.mutation.survivors_output` | predict_output | M/S | прогон тестов на мутантах |
+| `qa.pytest.fixture_scope_state_bug` | find_bug | M/S | тесты по одному и во всех порядках |
+| `qa.pytest.raises_too_broad_bug` | find_bug | J/M | правильная реализация и мутант с другим исключением |
+| `backend.cache.stampede_fix` | choose_fix | M/S | asyncio: N одновременных промахов — одна загрузка; ошибка не кэшируется |
+| `common.sql.window_range_ties_output` | predict_output | M/S | SQLite и модель рамки RANGE по умолчанию |
+
+Тесты добора — `tests/test_bank_core_plus.py`; счётчик в `tests/test_bankfix.py` считает только шесть исходных
+направлений (165 + добор), новые направления проверяются своими тестами.
+
 ### Правки по флагам панели 06.10 (версии 2)
 
 `qa.js.brittle_render_fix` и `common.text.utf8_truncate_fix` — фиксированный состав дистракторов;
@@ -202,7 +236,7 @@ find_bug) и `backend.java.list_remove_loop_fix` (Junior/Middle, choose_fix с �
 (тот же ID, версия 2: фиксированный сценарий — 4 объекта, 6 переназначений, одна схема дистракторов). В выдаче
 снова **166** семейств, Java — 7.
 
-09.10 (ветка `feat/bank-fix`, решение руководителя проекта по итогам панели ext4) `backend.java.gc_reachability_mcq` (версия 3) **повторно выведено**
+09.10 (ветка `feat/bank-fix`, решение штаба по итогам панели ext4) `backend.java.gc_reachability_mcq` (версия 3) **повторно выведено**
 в `families_retired/backend/`: ключ однозначен и варианты изоморфны (σ 0,00, χ² p_hom 0,58), но вся панель отвечает на уровне
 угадывания (p 0,23 при шансе 0,25, a 0,36, r 0,04), то есть задание не различает уровни, а CAT по prior (b 0,3, a 1,0) выбирал бы
 его как информативное. Оценки трудности для людей нет; вернуть можно после пилота с людьми. Теперь в выдаче **165** семейств

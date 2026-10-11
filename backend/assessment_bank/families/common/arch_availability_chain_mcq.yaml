@@ -1,0 +1,24 @@
+family_id: common.arch.availability_chain_mcq
+title: Доступность цепочки зависимостей — последовательные, резервированные и необязательные звенья
+direction: common
+skills: [reliability, slo, system_design, probability, capacity_planning]
+target_grades: [lead]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    components: [svc, dep1, dep2, db_pair, optional]
+    distractors: [optional_in_series, replicas_in_series, single_replica]
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 1.6
+  a: 1.3
+  sigma_variant: 0.25
+  basis: "Априорная трудность (не по людям). Нужно собрать модель доступности из трёх видов звеньев (последовательные, пара реплик с переключением, необязательное с запасным ответом) и перевести долю отказов в минуты за 30 дней. Дистракторы — три типичные ошибки одной числовой формы (≥ 15 % друг от друга), верный не крайний по построению не гарантирован, но позиция буквы случайна. Senior обычно умеет перемножать последовательные звенья; учёт резерва и необязательной зависимости одновременно — граница Senior/Lead (θ ≈ 2,0). Один подтип; варьируются путь, доступности звеньев"
+generator: assessment_bank.families.common.arch_availability_chain_mcq
+version: 1
+description: >
+  Lead: ожидаемая недоступность пути за 30 дней по доступностям сервиса, двух обязательных зависимостей,
+  пары реплик базы и необязательной зависимости. Ключ — исполнением модели (перебор 2⁶ состояний).

@@ -1,0 +1,23 @@
+family_id: mobile.release.release_quality_open
+title: Выпуск и качество мобильного приложения — поэтапный выпуск, совместимость, запуск, ANR, тесты
+direction: mobile
+skills: [mobile_release, mobile_performance, mobile_testing, api_compatibility]
+target_grades: [senior]
+format: open_answer
+language: text
+invariants:
+  extra:
+    topics: [rollout, compat, startup, anr, testing]
+time_limit_s: 1200
+canary: false
+prior_difficulty:
+  b: 1.3
+  a: 0.9
+  sigma_variant: 0.3
+  basis: "Инженерное решение по выпуску и качеству с числовыми ограничениями; рубрика из 3 критериев (диагностика или основа, меры, защита от регрессий); Senior"
+generator: assessment_bank.families.mobile.release_quality_open
+version: 1
+description: >
+  Открытые вопросы о выпуске и качестве мобильного приложения: поэтапный выпуск и флаги, совместимость
+  API со старыми клиентами и обязательное обновление, холодный старт, ANR и пропуски кадров,
+  стратегия тестирования и CI. Оценка по рубрике с эталонами.

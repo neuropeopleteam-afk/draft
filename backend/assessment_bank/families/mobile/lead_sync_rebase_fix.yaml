@@ -1,0 +1,27 @@
+family_id: mobile.lead.sync_rebase_fix
+title: Синхронизация офлайн-правок — устаревший ответ, конфликты по полям, удаление, перебазирование (Lead)
+direction: mobile
+skills: [offline_first, persistence, networking, javascript, state_management]
+target_grades: [lead]
+format: choose_fix
+language: javascript
+invariants:
+  code_lines: [20, 26]
+  operations: [10, 60]
+  defect_type: stale_response_applied
+  n_options: 4
+  extra:
+    distractors: [base_not_moved, record_level_conflict, tombstone_ignored]
+    scenarios: 8
+time_limit_s: 600
+canary: false
+prior_difficulty:
+  b: 1.9
+  a: 1.3
+  sigma_variant: 0.25
+  basis: "Модуль синхронизации ~30 строк с четырьмя правилами (устаревший ответ, конфликт по версии поля, удаление на сервере, перенос base); замены в другом стиле, чем показанный код; каждый дистрактор устраняет инцидент (откат записи) и нарушает одно правило — типичные ошибки проектирования офлайн-синхронизации, которые видит Lead, а не Senior, исправляющий конкретный случай: у порога Senior/Lead"
+generator: assessment_bank.families.mobile.lead_sync_rebase_fix
+version: 1
+description: >
+  Наложение ответа сервера на локальное состояние и перебазирование очереди офлайн-правок. Ключ — исполнение в
+  Node всех замен в составе модуля на восьми сценариях.
