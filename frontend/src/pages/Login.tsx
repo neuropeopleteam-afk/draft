@@ -33,7 +33,7 @@ export default function Login() {
   return (
     <AuthShell
       title="Вход"
-      subtitle="Кабинет кандидата или работодателя откроется автоматически."
+      subtitle="Кабинет кандидата или работодателя откроется автоматически." lead={<>Нет аккаунта? <Link to="/register" className="font-semibold text-brand hover:text-brand-soft">Зарегистрироваться</Link></>}
       footer={<>Нет аккаунта? <Link to="/register" className="font-semibold text-brand hover:text-brand-soft">Зарегистрироваться</Link></>}
     >
       <form onSubmit={submit} className="space-y-4" noValidate>

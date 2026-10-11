@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "./Logo";
 
-export function AuthShell({ title, subtitle, children, footer }: { title: string; subtitle?: string; children: ReactNode; footer?: ReactNode }) {
+export function AuthShell({ title, subtitle, lead, children, footer }: { title: string; subtitle?: string; lead?: ReactNode; children: ReactNode; footer?: ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[0.9fr_1.1fr]">
       <aside className="relative hidden overflow-hidden bg-brand-night p-12 text-white lg:flex lg:flex-col lg:justify-between">
@@ -18,6 +18,8 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
         <div className="w-full max-w-md">
           <Link to="/" className="mb-10 inline-block lg:hidden"><Logo /></Link>
           <h1 className="text-2xl font-extrabold tracking-tight text-brand-night">{title}</h1>
+          {/* UX-2: «Уже есть аккаунт? Войти» / «Нет аккаунта? Зарегистрироваться» — сразу под заголовком */}
+          {lead && <p className="mt-2 text-sm text-brand-ink/70" data-testid="auth-lead">{lead}</p>}
           {subtitle && <p className="mt-2 text-sm text-brand-ink/65">{subtitle}</p>}
           <div className="mt-8">{children}</div>
           {footer && <div className="mt-8 text-sm text-brand-ink/70">{footer}</div>}
