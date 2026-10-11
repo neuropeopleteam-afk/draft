@@ -78,7 +78,6 @@ export function JuryGuide() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [box, setBox] = useState<HTMLElement | null>(null);
-  useReserveSpace(box, !hidden);
   const slot = useSlot();
   const [sim, setSim] = useState<any>(null);  // результат «смоделировать нового кандидата» (И25)
   const [ff, setFf] = useState<string | null>(null);  // «перемотать время»: напоминания Н6
@@ -101,8 +100,11 @@ export function JuryGuide() {
     return () => { window.clearTimeout(t); document.removeEventListener("focusin", on); document.removeEventListener("focusout", off); };
   }, [phone]);
   // С2 №3: на главной у вернувшегося эксперта проводник свёрнут в строку «Продолжить проверку», пока его не развернули
+  // аудит №1: и на сравнении (/employer/…/compare) — панель сбоку сужала таблицу; развернуть — по нажатию
   const [peek, setPeek] = useState(false);
-  useEffect(() => { if (loc.pathname !== "/") setPeek(false); }, [loc.pathname]);
+  useEffect(() => { setPeek(false); }, [loc.pathname]);
+  const folded = !peek && (loc.pathname === "/" || /\/compare(\/|$)/.test(loc.pathname));
+  useReserveSpace(box, !hidden && !folded);
   // «Показать проводник» с главной и «Скрыть» в другой вкладке — состояние берём из хранилища
   useEffect(() => {
     const sync = () => { setHidden(guide.hidden()); setMode(quick.mode()); setQ(quick.step()); setStep(guide.step()); };
@@ -124,7 +126,7 @@ export function JuryGuide() {
   // телефон гостя живой демонстрации (/j/…) — без проводника: эксперт там не вошёл и проходит мини-тест;
   // экран кода второго фактора (/login/2fa) — тоже: на телефоне панель перекрывала бы форму
   if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/") || loc.pathname === "/login/2fa") return null;
-  if (!hidden && loc.pathname === "/" && !peek) return (
+  if (!hidden && folded) return (
     <button ref={setBox} type="button" data-testid="guide-continue" onClick={() => setPeek(true)} aria-label="Развернуть проводник для жюри"
       className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm">
       {mode === "quick" ? `Продолжить проверку: шаг ${q + 1} из ${QUICK_LEN}` : `Продолжить проверку: шаг ${step + 1} из ${STEPS.length}`}
