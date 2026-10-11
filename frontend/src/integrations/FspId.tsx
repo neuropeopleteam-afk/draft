@@ -40,7 +40,7 @@ export function FspIdLogin({ role = "candidate", compact = false }: { role?: "ca
         onClick={async () => { setBusy(true); setErr(null); try { await start("login", role); } catch (e) { setErr(errText(e)); setBusy(false); } }}>
         <FspIdMark /> {busy ? "Переходим в ФСП ID…" : "Войти через ФСП ID"}
       </button>
-      <p className="text-center text-xs text-brand-ink/70">{data.enabled ? `Без пароля: кабинет ${role === "candidate" ? "кандидата" : "компании"} создадим при первом входе.` : "ФСП ID на этом сервере ещё не подключён."}</p>
+      <p className="text-center text-xs text-brand-ink/70">{data.enabled ? (role === "candidate" ? "Без пароля, достижения ФСП — сразу в паспорт." : "Без пароля: кабинет компании создадим при первом входе.") : "ФСП ID на этом сервере ещё не подключён."}</p>
       <Alert>{err}</Alert>
       {data.demo_accounts.length > 0 && (
         <details className="text-xs text-brand-night" data-testid="fsp-demo-accounts">
