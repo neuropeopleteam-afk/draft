@@ -987,7 +987,9 @@ def _cell(x: dict) -> str:
 def _algo_label(algo: str) -> str:
     """Одна формулировка везде (docs, /validation): продукт — «match-v1 + ярусы обязательного (MATCH_MUST_FIRST)»."""
     labels = {"match-v1.1": "match-v1 + ярусы обязательного, MATCH_MUST_FIRST",
-              "match-v1.2": "match-v1 + ярусы обязательного + ядро роли, MATCH_MUST_FIRST и RANK_CORE_SKILL"}
+              "match-v1.2": "match-v1 + ярусы обязательного + ядро роли, MATCH_MUST_FIRST и RANK_CORE_SKILL",
+              "match-v1.3": "match-v1.2 + добор ступенью выше при малом пуле точного уровня, MATCH_GRADE_ABOVE (в мире "
+                            "200 × 2000 не включается; замер — docs/validation/grade_above.json)"}
     return f"{algo} ({labels[algo]})" if algo in labels else algo
 
 
