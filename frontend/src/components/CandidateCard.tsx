@@ -6,6 +6,9 @@ import { Specializations } from "./Specializations";
 import { MarketNote } from "./Salary";
 import { NO_FSP, OriginTag } from "./Origin";
 
+/** SIMPLIFY п.5: θ работодателю — только в подсказке (наведение), на виду — «N из M верно» и статус грейда. */
+export const thetaHint = (theta?: number | null, se?: number | null) => theta == null ? undefined : `Оценка уровня по шкале теста: θ = ${signed(theta)} ± ${num(se)}`;
+
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
 /** Обезличенная карточка кандидата: подтверждённые факты (T1/T2) отдельно от самоописания (T0). */
@@ -68,7 +71,7 @@ function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
   return (
     <ul className="mt-3 space-y-1 text-sm" data-testid="card-brief">
       <li className="flex items-start gap-2"><Level level={t ? "T1" : "none"} />
-        <span className="text-brand-ink/80">{t ? `Тест: ${t.correct} из ${t.answered} верно · θ = ${signed(t.theta)} ± ${num(t.se)}${t.mode === "express" ? " · экспресс" : ""}${integ ? ` · достоверность: ${integ.toLowerCase()}` : ""}` : "Результата теста нет"}</span></li>
+        <span className="text-brand-ink/80" title={t ? thetaHint(t.theta, t.se) : undefined}>{t ? `Тест: ${t.correct} из ${t.answered} верно${t.mode === "express" ? " · экспресс" : ""}${integ ? ` · достоверность: ${integ.toLowerCase()}` : ""}` : "Результата теста нет"}</span></li>
       {(okMust.length > 0 || okWant.length > 0) && <li className="flex items-start gap-2"><Level level="T1" />
         <span className="text-brand-ink/80">Подтверждено: {[...okMust, ...okWant.map((x) => `${x} (желательно)`)].join(", ")}</span></li>}
       {gaps.length > 0 && <li className="flex items-start gap-2"><Level level="none" />
@@ -160,8 +163,8 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
       <div className={`mt-4 grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
         <div className="rounded-xl bg-brand-blush/25 p-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level="T1" /> Тест</p>
-          {t ? <p className="mt-1 text-brand-ink/75">{t.correct} из {t.answered} верно · θ = {signed(t.theta)} ± {num(t.se)}</p>
-            : c.status?.attempt?.theta != null ? <p className="mt-1 text-brand-ink/65">последняя попытка на {c.status.attempt.grade_title ?? c.status.attempt.grade}: θ = {signed(c.status.attempt.theta)} ± {num(c.status.attempt.se)} — грейд не подтверждён, в скор не входит</p>
+          {t ? <p className="mt-1 text-brand-ink/75" title={thetaHint(t.theta, t.se)}>{t.correct} из {t.answered} верно</p>
+            : c.status?.attempt?.theta != null ? <p className="mt-1 text-brand-ink/65" title={thetaHint(c.status.attempt.theta, c.status.attempt.se)}>последняя попытка на {c.status.attempt.grade_title ?? c.status.attempt.grade}: грейд не подтверждён, в скор не входит</p>
             : <p className="mt-1 text-brand-ink/65">нет результата</p>}
           {c.provisional && <p className="mt-1 text-xs text-brand-ink/70">P(уровень не ниже Junior) = {c.provisional.p_pct} % · подтверждение от {c.provisional.confirm_pct} %, «не доказанно ниже» от {c.provisional.level_pct} %{c.provisional.attempts ? ` · дотестирований ${c.provisional.attempts} из ${c.provisional.attempts_max}` : ""}</p>}
           {t && (t.mode === "express" || t.mode === "mini" || t.accepted_lower) && (

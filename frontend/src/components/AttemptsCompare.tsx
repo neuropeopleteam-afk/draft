@@ -66,8 +66,8 @@ export function AttemptsCompare({ cmp, audience = "candidate", level = 3 }: { cm
           {head(a, 1)}{head(b, 2)}
           <p className="hidden text-sm font-bold text-brand-night sm:block">Разница</p>
         </div>
-        <Row label="Оценка уровня θ ± погрешность" a={thetaSe(a)} b={thetaSe(b)}
-          d={d.theta == null ? "—" : <>Δθ = {signed(d.theta)}{d.interval != null && <> · {d.within_error ? "в пределах" : "больше"} погрешности ±{num(d.interval)}</>}</>} />
+        <Row label={audience === "employer" ? "Оценка уровня ± погрешность" : "Оценка уровня θ ± погрешность"} a={thetaSe(a)} b={thetaSe(b)}
+          d={d.theta == null ? "—" : <>{audience === "employer" ? "разница" : "Δθ ="} {signed(d.theta)}{d.interval != null && <> · {d.within_error ? "в пределах" : "больше"} погрешности ±{num(d.interval)}</>}</>} />
         <Row label="Точность (погрешность SE)" a={num(a.se)} b={num(b.se)} d={d.se == null ? "—" : `${signed(d.se)} (${d.se < 0 ? "точнее" : d.se > 0 ? "менее точно" : "так же"})`} />
         <Row label="Доля верных ответов" a={a.accuracy == null ? "—" : `${pct(a.accuracy)} (${a.correct} из ${a.answered})`}
           b={b.accuracy == null ? "—" : `${pct(b.accuracy)} (${b.correct} из ${b.answered})`}
@@ -92,7 +92,7 @@ export function AttemptsCompare({ cmp, audience = "candidate", level = 3 }: { cm
         </ul>
         <p className="mt-2 text-xs text-brand-ink/65">
           {audience === "employer"
-            ? "Сравнение — по данным сессий теста (θ на общей шкале банка). Контрольные задания и тексты заданий не раскрываются. Кандидат может скрыть этот блок в настройках приватности."
+            ? "Сравнение — по данным сессий теста (оценка уровня на общей шкале банка). Контрольные задания и тексты заданий не раскрываются. Кандидат может скрыть этот блок в настройках приватности."
             : "Контрольные задания в подсчёт повторов не входят и не раскрываются. Работодатель видит это сравнение в вашей карточке, если вы не скрыли его в настройках приватности."}
         </p>
       </section>
