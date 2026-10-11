@@ -36,9 +36,9 @@
   "algorithm": "match-v1.2",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "fff0a5c",
+  "bench_commit": "5721237",
   "bank_hash": "76c4164b6ce83743",
-  "generated_at": "2026-10-10T09:22:12+00:00",
+  "generated_at": "2026-10-11T10:06:08+00:00",
   "p5": {
    "mean": 0.776,
    "lo": 0.74,
@@ -66,6 +66,30 @@
   "exposure_bank_families": 128,
   "report_matches_bank": true
  },
+ "deploy": {
+  "fresh_seconds": 291
+ },
+ "boot": {
+  "js_kb_before": 418,
+  "js_kb_after": 101
+ },
+ "load": {
+  "u100_error_share": 0.0051,
+  "fix_rps_before": 1.3,
+  "fix_rps_after": 24.1,
+  "fix_errors_after": 0
+ },
+ "demo": {
+  "candidates": 500,
+  "employers": 10,
+  "needs": 17,
+  "vacancies": 11
+ },
+ "evidence": {
+  "cost_usd_per_answer": 0.0213,
+  "n": 406
+ },
+ "a11y": {},
  "tests": {
   "failed": 0,
   "passed": 1508,
