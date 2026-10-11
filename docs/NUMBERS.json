@@ -36,9 +36,9 @@
   "algorithm": "match-v1.2",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "fff0a5c",
+  "bench_commit": "5721237",
   "bank_hash": "76c4164b6ce83743",
-  "generated_at": "2026-10-10T09:22:12+00:00",
+  "generated_at": "2026-10-11T10:06:08+00:00",
   "p5": {
    "mean": 0.776,
    "lo": 0.74,
