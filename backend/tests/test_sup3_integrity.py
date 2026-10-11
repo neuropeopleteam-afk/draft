@@ -40,7 +40,10 @@ def test_desktop_rules_unchanged():
 
 
 # ------------------------------------------------------------------ С3-11: что именно снизило достоверность (демо жюри)
+import uuid  # noqa: E402
+
 from app.core.config import get_settings  # noqa: E402
+from app.core.db import SessionLocal  # noqa: E402
 from tests.test_integrity_r27 import H, _run_test_with_all_signals, assert_candidate_safe, bank_api  # noqa: E402,F401
 
 
@@ -58,7 +61,16 @@ def test_result_details_only_in_jury_demo_mode(client, bank_api, monkeypatch):
     sid, fin, _ = _run_test_with_all_signals(client, tok)
     jury = fin["integrity_jury"]  # демо-режим жюри: те же причины, что у работодателя, — из уже собранных сигналов
     assert fin["sandbox"] and fin["integrity"]["level"] == "low"
-    assert any("скопировать текст задания" in t for t in jury["reasons"]) and len(jury["reasons"]) <= 6
+    # Сверка с сохранёнными сигналами сессии, а не с конкретной строкой: копирование — 1 балл при двух развёрнутых
+    # заданиях и 2 при трёх (сколько их выдаст адаптивный тест — зависит от выборки заданий), и при 1 балле строка
+    # уходит в «И ещё N причин меньшего веса» — прежняя проверка `"скопировать" in reasons` падала через раз на поде
+    with SessionLocal() as db:
+        from app.modules.assessment.models import TestSession
+
+        raw = db.get(TestSession, uuid.UUID(sid)).result["engine_result"]["details"]["integrity"]
+    assert any("скопировать текст задания" in t for t in raw["reasons"]), raw
+    assert jury["reasons"] == integrity.summary_for_employer(raw)["reasons"] and len(jury["reasons"]) <= 6
+    assert any("невидимая метка" in t for t in jury["reasons"])  # самая весомая причина (3 балла) — всегда в первой пятёрке
     again = client.get(f"/api/assessment/sessions/{sid}/result", headers=H(tok)).json()
     assert again["integrity_jury"] == jury
     # вне демо-режима (Р27) — ни в итоге, ни при повторном запросе: только уровень и общая причина
