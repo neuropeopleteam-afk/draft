@@ -30,7 +30,7 @@ const d10 = (v?: string | null) => (v ? `${v.slice(8, 10)}.${v.slice(5, 7)}.${v.
 
 /** Чип вида данных: «синтетика», «модель, не люди», «люди», «правила на демо-данных». */
 export function KindChip({ p }: { p: Pick<Prov, "kind" | "kind_label"> }) {
-  return <span className={`inline-flex items-center rounded-md px-1.5 py-px text-[10px] font-bold uppercase tracking-[0.06em] ring-1 ${KIND_CLS[p.kind] ?? KIND_CLS.synthetic}`}>{p.kind_label}</span>;
+  return <span className={`inline-flex items-center rounded-md px-1.5 py-px text-xs font-bold uppercase tracking-[0.06em] ring-1 ${KIND_CLS[p.kind] ?? KIND_CLS.synthetic}`}>{p.kind_label}</span>;
 }
 
 export function ProvenanceLine({ p, className = "" }: { p?: Prov | null; className?: string }) {
@@ -39,7 +39,7 @@ export function ProvenanceLine({ p, className = "" }: { p?: Prov | null; classNa
   const parts = [d10(p.date), p.commit ? <>{p.snapshot === "code" || p.snapshot === "live" ? "код" : "алгоритм"} <code>{p.commit}</code></> : p.snapshot === "live" ? null : "коммит не записан", bank,
     p.command ? <code>{p.command}</code> : null].filter(Boolean);
   return (
-    <span className={`flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-snug text-brand-ink/70 [overflow-wrap:anywhere] ${className}`} data-testid="provenance-line" data-snapshot={p.snapshot} data-kind={p.kind}>
+    <span className={`flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs leading-snug text-brand-ink/70 [overflow-wrap:anywhere] ${className}`} data-testid="provenance-line" data-snapshot={p.snapshot} data-kind={p.kind}>
       <KindChip p={p} />
       {parts.map((x, i) => <span key={i}>{i ? "· " : ""}{x}</span>)}
       <span className={p.snapshot === "historical" ? "font-semibold text-brand-plum" : ""}>· {SNAP[p.snapshot] ?? p.snapshot}</span>
