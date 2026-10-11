@@ -1,7 +1,7 @@
 // Я15: «устная защита» развёрнутых ответов теста и «ИИ-интервью» этапом найма. Всё — за флагом /api/meta interview.enabled
 // (по умолчанию выключен: компоненты ничего не рисуют). Честно: грейд не меняется, оценивает модель, решение — за людьми.
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { api, apiUrl, tokenStore } from "../lib/api";
 import { useMeta } from "../lib/meta";
 import { PageTitle } from "./CabinetLayout";
@@ -123,7 +123,9 @@ export function minutes(n: number): string {
 export function DefensePanel({ sessionId }: { sessionId: string }) {
   const on = useInterviewOn();
   const { data: st, reload } = useApi<DefenseState>(on ? `/interview/defense/${sessionId}` : null, [on]);
-  const [open, setOpen] = useState(false);
+  // ?defense=open — с карточки «ИИ-интервьюер» на обзоре кандидата: форма согласия сразу раскрыта
+  const search = useLocation().search;
+  const [open, setOpen] = useState(() => new URLSearchParams(search).get("defense") === "open");
   const [name, setName] = useState("");
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
