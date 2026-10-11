@@ -79,7 +79,7 @@ export default function MyData() {
       </Block>
 
       <Block title="Скачать всё одним файлом" id="export">
-        <p className="text-sm text-brand-ink/70">Один файл JSON: профиль вместе со скрытыми полями, опросы, резюме, ваши ответы теста и итоги, согласия, события камеры, приглашения, зонды, отклики, переписка, паспорта и обезличенная отметка интереса.</p>
+        <p className="text-sm text-brand-ink/70">Один файл JSON: профиль вместе со скрытыми полями, опросы, резюме, ваши ответы теста и итоги, согласия, события камеры, приглашения, задания, отклики, переписка, паспорта и обезличенная отметка интереса.</p>
         <p className="text-xs text-brand-ink/65">В файле нет данных других людей, текстов заданий и ключей ответов (это банк заданий оператора), секретов входа. Достоверность результата — в том виде, как её видите вы.</p>
         <button className="btn-primary" data-testid="mydata-download" disabled={busy === "export"} onClick={download}>{busy === "export" ? "Готовим файл…" : "Скачать мои данные (JSON)"}</button>
       </Block>
@@ -121,7 +121,7 @@ export default function MyData() {
       </Block>
 
       <Block title="Удалить учётную запись" id="delete">
-        <p className="text-sm text-brand-ink/70">Это же отзыв согласия на обработку персональных данных. Личные данные, тесты, ответы, резюме и согласия стираются сразу и безвозвратно. Записи работодателей (приглашения, зонды, отклики) остаются без привязки к вам — так работодатель не теряет свою историю, а вас по ним узнать нельзя.</p>
+        <p className="text-sm text-brand-ink/70">Это же отзыв согласия на обработку персональных данных. Личные данные, тесты, ответы, резюме и согласия стираются сразу и безвозвратно. Записи работодателей (приглашения, задания, отклики) остаются без привязки к вам — так работодатель не теряет свою историю, а вас по ним узнать нельзя.</p>
         <ul className="list-disc space-y-1 pl-5 text-sm text-brand-ink/70">{d.not_in_our_power.map((t: string) => <li key={t}>{t}</li>)}</ul>
         <button className="btn bg-red-700 text-white hover:bg-red-800" data-testid="mydata-delete-open" onClick={() => setDel(true)}>Удалить учётную запись…</button>
       </Block>
@@ -178,7 +178,7 @@ function DeleteModal({ open, onClose, conf }: { open: boolean; onClose: () => vo
         {pre.loading && !pre.data ? <Loading /> : pre.data && (
           <>
             <div><p className="mb-1 font-semibold text-brand-night">Будет удалено сразу</p><Counts items={pre.data.deleted} empty="—" /></div>
-            <div><p className="mb-1 font-semibold text-brand-night">Останется у работодателей без привязки к вам</p><Counts items={pre.data.anonymized} empty="Приглашений, зондов и откликов нет." /></div>
+            <div><p className="mb-1 font-semibold text-brand-night">Останется у работодателей без привязки к вам</p><Counts items={pre.data.anonymized} empty="Приглашений, заданий и откликов нет." /></div>
             {pre.data.contacts_open_to?.length > 0 && <Alert kind="info">Контакты открыты работодателям: {pre.data.contacts_open_to.length}. Копии у них мы удалить не можем — закройте доступ до удаления в разделе «Кому открыты ваши контакты».</Alert>}
           </>
         )}
