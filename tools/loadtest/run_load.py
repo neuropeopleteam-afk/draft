@@ -24,6 +24,7 @@ import csv
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -47,9 +48,12 @@ UA = "spectrek-load/prepare"  # User-Agent запросов этого скри�
 SOCKS = os.environ.get("LT_SOCKS", "")
 # Остановка прогона по сторожу: доля ошибок Locust выше LT_ABORT_FAIL (за последние ≈ 60 с или за
 # весь прогон, от 200 запросов) или память контейнера api выше LT_ABORT_API_MIB (docker stats через KPY, только чтение).
-# 0 — сторож выключен. Замеры сторожа — <тег>_guard.txt.
+# 0 — сторож выключен; LT_ABORT_API_MIB=auto — 90 % лимита памяти api из docker stats (лимит меняется вместе с числом
+# воркеров: 3072m при 2, 4096m при 3). Замеры сторожа — <тег>_guard.txt.
 ABORT_FAIL = float(os.environ.get("LT_ABORT_FAIL", "0"))
-ABORT_API_MIB = float(os.environ.get("LT_ABORT_API_MIB", "0"))
+_ABORT_MIB_RAW = os.environ.get("LT_ABORT_API_MIB", "0").strip().lower()
+ABORT_API_AUTO = _ABORT_MIB_RAW == "auto"
+ABORT_API_MIB = 0.0 if ABORT_API_AUTO else float(_ABORT_MIB_RAW or 0)
 GUARD_EVERY_S = int(os.environ.get("LT_GUARD_EVERY_S", "30"))
 if SOCKS:
     import socket
@@ -162,16 +166,32 @@ def burst(a, tag: str | None = None) -> list[dict]:
     return res
 
 
-def _server_stats(seconds: int, out: Path) -> None:
-    """Цикл замеров на сервере одной SSH-сессией (только чтение): docker stats стека и load average."""
-    n = max(1, seconds // 10)
+def _server_stats(seconds: int, out: Path, stop: threading.Event | None = None) -> None:
+    """Замеры на сервере (только чтение): настройки api в начале, docker stats стека и load average каждые ~10 с, в конце —
+    RSS воркеров, memory.peak и события памяти. Короткими вызовами с записью в файл сразу: 11.10 (stand_200b) прогон,
+    остановленный извне, потерял все замеры — одна длинная SSH-сессия отдавала вывод только в конце."""
+    if not KPY:
+        out.write_text("KPY не задан — ресурсы сервера не сняты\n")
+        return
+    stop = stop or threading.Event()
     cg = "/sys/fs/cgroup/system.slice/docker-$(docker inspect -f '{{.Id}}' spectrek_fsp-api-1).scope"
-    script = (f"echo '## memory.events api до'; grep -E '^(oom|oom_kill) ' {cg}/memory.events; "
-              f"for i in $(seq {n}); do echo \"## $(date +%T) $(cut -d' ' -f1-3 /proc/loadavg)\"; "
-              "docker stats --no-stream --format '{{.Name}};{{.CPUPerc}};{{.MemUsage}}' | grep '^spectrek_fsp-'; "
-              "sleep 8; done; echo '## memory.peak api'; "
-              f"cat {cg}/memory.peak; grep -E '^(oom|oom_kill) ' {cg}/memory.events")
-    out.write_text(_remote(script, timeout=seconds + 300) or "KPY не задан — ресурсы сервера не сняты\n")
+    workers = "docker top spectrek_fsp-api-1 -o pid,rss,args | grep spawn_main | grep -v grep"
+    with out.open("w") as f:
+        f.write(_remote("echo '## api настройки'; docker inspect -f 'mem_limit={{.HostConfig.Memory}}' spectrek_fsp-api-1; "
+                        f"echo workers=$({workers} | wc -l); "
+                        "docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' spectrek_fsp-api-1 | grep -E "
+                        "'^(API_WORKERS|DB_POOL_SIZE|DB_MAX_OVERFLOW|DB_POOL_TIMEOUT_S|JURY_SPARE_SANDBOXES)='; "
+                        f"echo '## memory.events api до'; grep -E '^(oom|oom_kill) ' {cg}/memory.events", timeout=90))
+        f.flush()
+        end = time.time() + seconds
+        while time.time() < end and not stop.is_set():
+            t = time.time()
+            f.write(_remote("echo \"## $(date +%T) $(cut -d' ' -f1-3 /proc/loadavg)\"; docker stats --no-stream --format "
+                            "'{{.Name}};{{.CPUPerc}};{{.MemUsage}}' | grep '^spectrek_fsp-'", timeout=60))
+            f.flush()
+            stop.wait(max(1.0, 10 - (time.time() - t)))
+        f.write(_remote(f"echo '## RSS воркеров api, КиБ'; {workers} | awk '{{print $2}}'; echo '## memory.peak api'; "
+                        f"cat {cg}/memory.peak; grep -E '^(oom|oom_kill) ' {cg}/memory.events", timeout=90))
 
 
 def _client_stats(seconds: int, out: Path, stop: threading.Event) -> None:
@@ -206,7 +226,8 @@ def run(a) -> None:
     stop = threading.Event()
     threads = [threading.Thread(target=_client_stats, args=(dur + 60, OUT / f"{a.tag}_client.txt", stop), daemon=True)]
     if a.server_stats:
-        threads.append(threading.Thread(target=_server_stats, args=(dur + 30, OUT / f"{a.tag}_server.txt"), daemon=True))
+        threads.append(threading.Thread(target=_server_stats, args=(dur + 30, OUT / f"{a.tag}_server.txt", stop),
+                                        daemon=True))
     for t in threads:
         t.start()
     cmd = [LOCUST, "-f", str(ROOT / "tools/loadtest/jury_load.py"), "--host", a.host, "--headless", "-u", str(a.users),
@@ -216,6 +237,8 @@ def run(a) -> None:
         b = argparse.Namespace(host=a.host, n=a.burst_n, tag=a.tag)
         threads.append(threading.Timer(a.burst_at, burst, args=(b,)))
         threads[-1].start()
+    term = threading.Event()  # остановка извне (kill, переезд): Locust гасим, meta и замеры всё равно пишем
+    signal.signal(signal.SIGTERM, lambda *_: term.set())
     t0 = time.time()
     meta = {"tag": a.tag, "host": a.host, "users": a.users, "ramp_per_s": a.ramp, "time": a.time,
             "burst_at_s": a.burst_at, "burst_n": a.burst_n if a.burst_at else 0, "user_agent": f"spectrek-load/{a.tag}",
@@ -224,9 +247,13 @@ def run(a) -> None:
     with raw.open("w") as lf:
         p = subprocess.Popen(cmd, env=env, cwd=ROOT, stdout=lf, stderr=subprocess.STDOUT, text=True)
         check_at = a.users / max(a.ramp, 0.1) + 45  # после разгона: все ли пользователи живы
-        guard_at, samples = (t0 + 60) if (ABORT_FAIL or ABORT_API_MIB) else 0, []
+        guard_at, samples = (t0 + 60) if (ABORT_FAIL or ABORT_API_MIB or ABORT_API_AUTO) else 0, []
         while p.poll() is None:
             time.sleep(5)
+            if term.is_set() and not meta.get("aborted"):
+                meta["aborted"] = "остановлен извне (SIGTERM)"
+                print(f"ОСТАНОВЛЕНО: {meta['aborted']}")
+                p.terminate()
             if guard_at and time.time() >= guard_at:
                 guard_at = time.time() + GUARD_EVERY_S
                 why = _guard(a.tag, samples)
@@ -269,11 +296,13 @@ def _guard(tag: str, samples: list) -> str:
     samples.append((now, req, fail))
     old = next(((t, r, f) for t, r, f in reversed(samples) if now - t >= 55), samples[0])
     d_req, d_fail = req - old[1], fail - old[2]
-    mem = 0.0
-    if ABORT_API_MIB and KPY:
+    mem, limit = 0.0, ABORT_API_MIB
+    if (ABORT_API_MIB or ABORT_API_AUTO) and KPY:
         out = _remote("docker stats --no-stream --format '{{.Name}};{{.MemUsage}}' spectrek_fsp-api-1", timeout=60)
-        m = re.search(r"spectrek_fsp-api-1;([^/\n]+)/", out)
+        m = re.search(r"spectrek_fsp-api-1;([^/\n]+)/\s*(\S+)", out)
         mem = _mib(m.group(1)) if m else 0.0
+        if ABORT_API_AUTO and m:
+            limit = 0.9 * _mib(m.group(2))
     line = (f"{time.strftime('%T')} запросов {req}, ошибок {fail} ({fail / max(1, req):.2%}); за окно {d_req}/{d_fail} "
             f"({d_fail / max(1, d_req):.2%}); api {mem:.0f} МиБ")
     with (OUT / f"{tag}_guard.txt").open("a") as f:
@@ -283,8 +312,8 @@ def _guard(tag: str, samples: list) -> str:
             return f"ошибок за последнюю минуту {d_fail / d_req:.1%} > {ABORT_FAIL:.0%}"
         if req >= 200 and fail / req > ABORT_FAIL:
             return f"ошибок за прогон {fail / req:.1%} > {ABORT_FAIL:.0%}"
-    if ABORT_API_MIB and mem > ABORT_API_MIB:
-        return f"память api {mem:.0f} МиБ > {ABORT_API_MIB:.0f} МиБ"
+    if limit and mem > limit:
+        return f"память api {mem:.0f} МиБ > {limit:.0f} МиБ"
     return ""
 
 
@@ -358,6 +387,17 @@ def summary(a) -> None:
         if la:
             print(f"\nLoad average сервера (1 мин): макс. {max(la):.2f}, средн. {sum(la) / len(la):.2f} (4 ядра)")
         txt = srv.read_text()
+        if "## api настройки" in txt:
+            cfg = txt.split("## api настройки", 1)[1].split("##", 1)[0].split()
+            kv = dict(x.split("=", 1) for x in cfg if "=" in x)
+            lim = int(kv["mem_limit"]) / 2**20 if kv.get("mem_limit", "").isdigit() else 0
+            print(f"Настройки api: воркеров {kv.get('workers', '—')} (API_WORKERS={kv.get('API_WORKERS', 'по умолчанию 2')}), "
+                  f"лимит памяти {f'{lim:.0f} МиБ' if lim else '—'}, пул БД на воркер {kv.get('DB_POOL_SIZE', '8')} + "
+                  f"{kv.get('DB_MAX_OVERFLOW', '10')}, JURY_SPARE_SANDBOXES={kv.get('JURY_SPARE_SANDBOXES', '1')}")
+        if "## RSS воркеров api, КиБ" in txt:
+            rss = [int(x) for x in txt.split("## RSS воркеров api, КиБ", 1)[1].split("##", 1)[0].split() if x.isdigit()]
+            if rss:
+                print("RSS воркеров api после прогона: " + ", ".join(f"{x / 2**20:.2f} ГиБ" for x in rss))
         if "## memory.events api до" in txt:
             print("События памяти api до прогона: " + " ".join(txt.split("## memory.events api до", 1)[1]
                                                                .split("##", 1)[0].split()))
@@ -515,6 +555,7 @@ def nginx(a) -> None:
 
 
 def main() -> None:
+    sys.stdout.reconfigure(line_buffering=True)  # строки «ОСТАНОВЛЕНО…» не теряются при остановке извне
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ("prepare", "cleanup"):

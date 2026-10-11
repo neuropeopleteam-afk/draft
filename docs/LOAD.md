@@ -100,8 +100,12 @@ SOCKS5 (нужен `pip install pysocks` и в окружении Locust, и у 
 записывается в `<tag>_meta.json` (`route`) и в первую строку сводки. Для шагов на
 сервере `run_load.py` запускается интерпретатором, в котором есть `paramiko` (его использует SSH-обёртка).
 
-`--server-stats` (только чтение, через SSH-обёртку рабочего места): `docker stats` каждые ~10 с, `loadavg`, у api —
-cgroup `memory.events` до и после прогона и `memory.peak` (OOM ловится как рост `oom_kill`). Результаты —
+`--server-stats` (только чтение, через SSH-обёртку рабочего места): в начале — настройки api (число воркеров,
+`API_WORKERS`, лимит памяти, пул БД, `JURY_SPARE_SANDBOXES`), `docker stats` каждые ~10 с, `loadavg`, у api —
+cgroup `memory.events` до и после прогона, `memory.peak` (OOM ловится как рост `oom_kill`) и RSS каждого воркера в
+конце; замеры пишутся в файл сразу (остановленный прогон их не теряет). Сторож: `LT_ABORT_FAIL` (доля ошибок за 60 с и
+за прогон), `LT_ABORT_API_MIB` (МиБ или `auto` — 90 % лимита api). Вход жюри при 503/502/504 повторяется через
+`Retry-After` (`LT_LOGIN_TRIES`, по умолчанию 4), задачи без входа не идут. Результаты —
 `docs/loadtest/<tag>_*.csv`, `<tag>_burst.json`, `<tag>_server.txt`. Время прогона 10 минут — после разгона
 (100 пользователей при 2/с — 50 с). Только всплеск, без фоновой нагрузки: `run_load.py burst --host $H -n 5 --tag …`.
 
