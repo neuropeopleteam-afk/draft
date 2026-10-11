@@ -161,6 +161,30 @@ COVERAGE_ROLE_DIRECTION: dict[str, str] = {"devops": "devops", "mobile": "mobile
 MODEL_LABEL = "модель, не люди"
 
 GRADE_IDS: tuple[str, ...] = ("intern", "junior", "middle", "senior")
+# Уровни выше Senior (банк feat/bank-ext, schema.Grade): присваиваются только с флагом GRADES_EXT_ENABLED
+TOP_GRADE_IDS: tuple[str, ...] = ("lead", "principal")
+
+
+def grades_ext_on() -> bool:
+    """Включены ли уровни Lead/Principal (флаг GRADES_EXT_ENABLED; без поля в настройках — выключены)."""
+    return bool(getattr(get_settings(), "grades_ext_enabled", False))
+
+
+def in_active_pool(spec) -> bool:
+    """Участвует ли семейство банка в тесте при текущих флагах.
+
+    Семейства только уровней Lead/Principal (в ``target_grades`` нет ни одного из Стажёр…Senior) без флага
+    GRADES_EXT_ENABLED не выдаются и не считаются «проверяемыми навыками» — тест для 4 уровней остаётся прежним.
+    """
+    tg = set(getattr(spec, "target_grades", None) or ())
+    if not tg or tg & set(GRADE_IDS):
+        return True
+    return grades_ext_on()
+
+
+def active_specs(specs):
+    """Фильтр ``in_active_pool`` для коллекции семейств (load_specs().values())."""
+    return [s for s in specs if in_active_pool(s)]
 BANK_SYNC = Path(__file__).resolve().parents[3] / "assessment_bank" / "BANK_SYNC.json"
 
 

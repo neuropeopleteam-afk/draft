@@ -236,9 +236,11 @@ def bank_tags(direction: str) -> frozenset[str]:
         from app.modules.assessment.skill_map import to_stack_tags
     except Exception:  # noqa: BLE001 — банк недоступен: считаем, что заданий нет
         return frozenset()
+    from app.modules.catalog.ext import in_active_pool
+
     out: set[str] = set()
     for s in load_specs().values():
-        if s.direction in (direction, "common") and not s.canary:
+        if s.direction in (direction, "common") and not s.canary and in_active_pool(s):
             out.update(to_stack_tags(s.direction, s.skills))
     return frozenset(out)
 
