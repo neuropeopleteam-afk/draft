@@ -1,0 +1,24 @@
+family_id: backend.strategy.principal_api_deprecation_mcq
+title: Вывод старой версии публичного API — поддержка, жёсткий срок, слой совместимости или помощь с переходом
+direction: backend
+skills: [api_design, technical_strategy, rest_api, prioritization]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    plans: [keep, deadline, adapter, assist]
+    traps: [never_break, fastest_off, short_horizon]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: план вывода старой версии API выбирается по сумме за горизонт — поддержка, разовые затраты и потеря выручки ушедших партнёров (доля на старой версии через год с учётом естественного перехода × вероятность ухода, каждый следующий год). Верный план распределён поровну; ловушки — «никогда не ломать клиентов», «быстрее всего избавиться» и расчёт на два года — отличаются от ответа хотя бы в двух случаях (если верен сам ловушечный — хотя бы в одном). Lead обычно ставит срок или тянет поддержку; Principal сравнивает планы на горизонте — граница Lead/Principal (θ ≈ 2,9); σ 0,3"
+generator: assessment_bank.families.backend.principal_api_deprecation_mcq
+version: 1
+description: >
+  Principal (короткое, 7 мин): какой план вывода старой версии API даёт минимальную сумму за горизонт. Ключ —
+  исполнением: моделирование лет для каждого плана.

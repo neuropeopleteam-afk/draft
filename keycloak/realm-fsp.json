@@ -25,7 +25,7 @@
   "clients": [
     {
       "clientId": "spectrek-platform",
-      "name": "Встречный — платформа спецтрека ФСП",
+      "name": "Драфт — платформа спецтрека ФСП",
       "description": "Демо-клиент: Authorization Code + PKCE (S256), конфиденциальный",
       "enabled": true,
       "protocol": "openid-connect",

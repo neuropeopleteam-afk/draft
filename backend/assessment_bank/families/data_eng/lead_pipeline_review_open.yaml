@@ -1,0 +1,24 @@
+family_id: data_eng.review.lead_pipeline_review_open
+title: Ревью дизайна конвейера данных ведущим — идемпотентность, история справочников, контракты, качество, файлы, время
+direction: data_eng
+skills: [etl, idempotency, scd, data_contracts, data_quality]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    planted_flaws: 3
+    sound_items: 2
+    flaw_pool: [append_backfill, scd_overwrite, schema_any, no_dq, exactly_once_claim, small_files, tz_partition, full_rebuild]
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "Априорная трудность (не по людям). Пять пунктов дизайн-документа конвейера: 3 изъяна из пула 8 и 2 здравых решения; полный балл — найти все три, связать с числами условия (перезапуски в месяц, поставщики, партиции и файлы, часовые пояса, объём перестройки), предложить проверяемую меру и не поднять ложную тревогу. Senior находит дубли и мелкие файлы, пропуская ложный exactly-once, историю справочника и границу суток, — граница Senior/Lead (θ ≈ 2,0); σ 0,35"
+generator: assessment_bank.families.data_eng.lead_pipeline_review_open
+version: 1
+description: >
+  Lead: ревью дизайна конвейера витрины; три заложенных изъяна и два здравых пункта. Рубрика по каждому изъяну
+  и по приоритетам без ложных тревог; оценка с цитатами-доказательствами.

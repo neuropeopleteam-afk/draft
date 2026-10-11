@@ -168,15 +168,31 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
             raise api_error(409, "confirm_unavailable", opts["confirm_unavailable_reason"] or "Дотестирование недоступно")
         confirm_src = provisional.source_session(db, profile, specialization)
         claimed_grade = specialization.grade_id or "junior"
+    refine_src = refine_off = None
+    if mode == "refine":  # Я26: уточнение уровня у границы — вторая сессия поверх последней полной (two_stage.py)
+        from app.modules.assessment import two_stage
+
+        if not two_stage.enabled():
+            raise api_error(409, "two_stage_disabled", "Уточнение уровня у границы сейчас выключено")
+        refine_src = two_stage.latest_full(db, user_id, survey.direction_id)
+        refine_off = two_stage.offer(db, refine_src) if refine_src is not None else None
+        old_ref = active_session(db, user_id, survey.direction_id)
+        if old_ref is not None and _mode(old_ref) == "refine":  # продолжение начатого уточнения
+            return old_ref
+        if refine_off is None or not refine_off["available"]:
+            raise api_error(409, "refine_unavailable", "Уточнять нечего: последний полный тест не на границе уровней "
+                            "или уточнение по нему уже пройдено")
+        claimed_grade = refine_src.claimed_grade_id
     old = active_session(db, user_id, survey.direction_id)
     # Продолжение уже начатого теста не расходует повтор/лимит.
     # Дотестирование — не новая попытка: правило 30 дней после неподтверждённой попытки на него не действует
     # (консилиум 07.10, 7.3а); число дотестирований ограничивает provisional.options.
     failed = (recent_failed(db, user_id, survey.direction_id, now, st_.retake_same_grade_days)
-              if not sandbox and mode != "confirm" else None)
+              if not sandbox and mode not in ("confirm", "refine") else None)
     check = check_can_start(specialization.grade_id, specialization.locked_until, claimed_grade, now, sandbox,
                             failed, st_.retake_same_grade_days)
-    if not check.allowed:
+    # уточнение — часть той же оценки, не новая попытка: правила 90 и 30 дней на него не действуют (одно на тест)
+    if not check.allowed and mode != "refine":
         raise api_error(409 if check.code in ("grade_locked", "retake_cooldown") else 422,
                         check.code or "not_allowed", check.message or "")
     if (old is not None and old.claimed_grade_id == claimed_grade and old.direction_id == survey.direction_id
@@ -198,7 +214,7 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
     if old is not None:
         old.status = TestSessionStatus.aborted
         old.finished_at = now
-    engine = get_engine(engine_name or ("bank" if confirm_src is not None else None))
+    engine = get_engine(engine_name or ("bank" if confirm_src is not None or refine_src is not None else None))
     seed = secrets.randbelow(2**31)
     stack = list((survey.answers or {}).get("stack", {}).keys())
     if confirm_src is not None:
@@ -215,6 +231,21 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed,
                              previous_families=fams, confirm_from=prev_state, seen=seen, seen_seeds=seen_seeds)
         state["confirm"]["source_session_id"] = str(confirm_src.id)
+    elif refine_src is not None:
+        if not engine.name.startswith("bank"):
+            raise api_error(409, "refine_unavailable", "Уточнение доступно только для теста банка заданий")
+        from app.modules.assessment import two_stage
+
+        prev_state = dict((refine_src.result or {}).get("state") or {},
+                          final_theta=refine_src.theta, final_se=refine_src.theta_se)
+        seen, seen_seeds = seen_families(db, user_id, survey.direction_id)
+        tp = two_stage.params()
+        b = refine_off["boundary"]
+        state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed,
+                             refine_from=prev_state, seen=seen, seen_seeds=seen_seeds,
+                             refine={**b, "level": tp["level"], "items": tp["items"], "minutes": tp["minutes"],
+                                     "confirm": tp["confirm"], "confirm_up": tp["confirm_up"], "floor": tp["floor"],
+                                     "source_session_id": str(refine_src.id)})
     elif engine.name.startswith("bank"):
         # Повторная попытка — другой субпул, чем в прошлых сессиях этого кандидата (параллельная форма);
         # семейства всех прошлых попыток по направлению не берутся ни в основную часть, ни в дотестирование
@@ -240,6 +271,8 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
         minutes = 30
     elif confirm_src is not None:
         minutes = st_.assessment_extension_minutes + 10
+    elif refine_src is not None:
+        minutes = st_.assessment_two_stage_minutes + 10
     elif mode == "express":
         minutes = express_params(st_, claimed_grade)["max_minutes"]
     else:
@@ -284,7 +317,7 @@ def progress(ts: TestSession) -> tuple[int, int, bool]:
         done = sum(1 for i in st.get("items", []) if i.get("done"))
         cfg = st.get("cfg", {})
         ext = st.get("ext") or {}
-        if st.get("mode") == "confirm":  # дотестирование: только новые короткие задания
+        if st.get("mode") in ("confirm", "refine"):  # дотестирование и уточнение: только новые короткие задания
             return done, int(ext.get("n") or cfg.get("ext_items", 6)), bool(st.get("done"))
         return done, int(cfg.get("max_items", 20)) + 3 + int(ext.get("n", 0)), bool(st.get("done"))
     total = len(st.get("item_ids", []))
@@ -402,6 +435,10 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
         raise api_error(409, "test_not_complete", "Тест ещё не закончен: ответьте на текущее задание")
     profile = db.get(CandidateProfile, ts.user_id)
     res = (engine or get_engine(_engine_key(ts))).finish(ts.result["state"])
+    if _mode(ts) == "refine":  # Я26: итог уточнения — уровень по общей оценке обеих сессий (two_stage.final_grade)
+        from app.modules.assessment import two_stage
+
+        res = two_stage.as_result(ts, res)
     from app.modules.proctor.service import apply_to_result  # камера по согласию (И16): итог — в достоверность
 
     apply_to_result(db, ts, res.details)
@@ -438,6 +475,7 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
     second_todo = second_op.take_new(ts.result["state"]) if _engine_key(ts) == "bank" else []
     result["second_opinions"] = second_op.summary(ts.result["state"])  # И27: итог не ждёт вторую оценку
     _add_level_position(result, ts)
+    _add_two_stage(db, result, ts)
     ts.result = {**ts.result, "outcome": {**ts.result["outcome"], **result}}
     flag_modified(ts, "result")
     db.commit()
@@ -455,6 +493,19 @@ def _add_level_position(out: dict, ts: TestSession) -> None:
     er = (ts.result or {}).get("engine_result") or {}
     grade = ts.result_grade_id or ("junior" if er.get("provisional") else None)
     out["level_position"] = level_position(er.get("theta"), er.get("se"), grade)
+
+
+def _add_two_stage(db: Session, out: dict, ts: TestSession) -> None:
+    """Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): «на границе: можно уточнить» / итог уточнения."""
+    from app.modules.assessment import two_stage
+
+    if not two_stage.enabled():
+        out.pop("two_stage", None)
+        return
+    db.flush()  # autoflush выключен: «последняя завершённая полная сессия» должна видеть эту же сессию
+    out["two_stage"] = two_stage.view(db, ts)
+    if _mode(ts) == "refine":
+        two_stage.mark_fact(db, ts)
 
 
 def store_confirmed(db, profile, specialization, ts, res, outcome, current):
@@ -573,6 +624,12 @@ def result(db: Session, ts: TestSession) -> dict:
     er = ts.result.get("engine_result") or {}
     out = dict(ts.result.get("outcome") or {})
     out.update(_accept_lower_fields(ts, specialization, er))
+    from app.modules.assessment import two_stage
+
+    if two_stage.enabled():  # состояние предложения меняется после итога (уточнение начато / пройдено)
+        out["two_stage"] = two_stage.view(db, ts)
+    else:
+        out.pop("two_stage", None)
     out["second_opinions"] = second_op.summary(ts.result.get("state") or {})  # И27: текущее состояние фона
     _add_level_position(out, ts)
     out.update({"current_grade": specialization.grade_id, "category_id": specialization.category_id,
@@ -583,6 +640,15 @@ def result(db: Session, ts: TestSession) -> dict:
     _ext_preliminary(out, specialization)
     _jury_integrity(out, profile, (er.get("details") or {}).get("integrity"))
     return out
+
+
+def _two_stage_status(db: Session, user_id: uuid.UUID, direction: str | None) -> dict:
+    from app.modules.assessment import two_stage
+
+    if not two_stage.enabled():
+        return {}
+    cur = two_stage.current_offer(db, user_id, direction)
+    return {"two_stage": cur} if cur else {}
 
 
 def _ext_preliminary(out: dict, specialization) -> None:
@@ -663,6 +729,14 @@ def accept_lower_grade(db: Session, ts: TestSession) -> dict:
     db.commit()
     return result(db, ts)
 
+def _two_stage_fact(db: Session, ts: TestSession) -> dict:
+    """Я26: пометка «на границе X/Y — уточнение пройдено / не пройдено / не проходил» в факте теста (флаг)."""
+    from app.modules.assessment import two_stage
+
+    v = two_stage.fact_payload(db, ts)
+    return {"two_stage": v} if v else {}
+
+
 def _write_t1_facts(db: Session, ts: TestSession, res, extra: dict | None = None, *, grade: str | None = None,
                     accepted_lower: bool = False) -> None:
     """Результат теста и навыки, проверенные заданиями, — факты T1 (заменяют прежние факты теста этого направления).
@@ -688,7 +762,7 @@ def _write_t1_facts(db: Session, ts: TestSession, res, extra: dict | None = None
                "correct": res.correct, "answered": res.answered, "engine": res.engine, "session_id": str(ts.id),
                "pending_review": d.get("pending_review"), "extension": bool(d.get("extension")),
                "preknowledge_flagged": (d.get("preknowledge") or {}).get("flagged"),
-               "integrity": d.get("integrity"), **(extra or {})},
+               "integrity": d.get("integrity"), **(extra or {}), **_two_stage_fact(db, ts)},
         evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=f"test_session:{ts.id}",
     ))
     for tag, s in res.skills.items():
@@ -796,6 +870,9 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         "active_mode": _mode(active) if active else None,
         # «Junior (предварительно)»: уровень доказанности и как подтвердить (provisional.options) — для направления
         "provisional": provisional.options(db, profile, specialization) if specialization is not None else None,
+        # Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): уточнение уровня у границы по последнему полному тесту направления
+        # (для Lead/Principal «предварительно» — второй этап); без флага ключа нет
+        **_two_stage_status(db, user_id, selected),
         # единая модель статуса грейда (та же, что видит работодатель): подтверждён / предварительно / не подтверждён
         "grade_status": grade_status(selected_bundle),
         "confirmed_by": provisional.confirmed_by(selected_bundle.test.value if selected_bundle.test else None),

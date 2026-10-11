@@ -39,7 +39,7 @@ from __future__ import annotations
 import os
 import re
 
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import STACK, tag_title
 from app.modules.profiles.facts import Bundle, skill_confirmed
 
 FLAG = "RANK_CORE_SKILL"
@@ -84,7 +84,7 @@ def enabled() -> bool:
 
 
 def _title(tag: str) -> str:
-    return STACK.get(tag, (tag,))[0]
+    return tag_title(tag)
 
 
 def _direction(req: dict) -> str | None:

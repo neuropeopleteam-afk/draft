@@ -61,6 +61,9 @@ grade-above: ## Добор ступенью выше (match-v1.3): бенчма�
 intern-cut: ## Порог грейда «Стажёр»: симуляция теста при 4 порогах-кандидатах, с лёгкими семействами и без (≈ 2 мин CPU)
 	cd backend && python -m app.modules.validation.intern_cut
 
+match-bench-compare: ## Подбор при других условиях измерения: миры A и B (другой размер, шкала релевантности, шум самоописания) → docs/validation/MATCHING_COMPARE.md (≈ 15 мин CPU)
+	cd backend && python -m app.modules.validation.matching_compare
+
 bench-quick: ## Быстрая проверка бенчмарка 40 × 400 без записи результатов
 	cd backend && python -m app.modules.validation.matching_bench --quick --no-write
 
@@ -69,6 +72,12 @@ stability: ## Стабильность статуса «Junior (предвари
 
 path-retest: ## Test–retest всего пути кандидата (5 × 500, дважды) и D / r_pb семейств → data/path_retest.json (≈ 3 мин CPU)
 	cd backend && python -m app.modules.validation.path_retest && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
+
+path-retest-ext: ## Test–retest пути в направлениях расширения каталога (DIRS=devops,mobile; CATALOG_EXT_ENABLED) → data/path_retest_ext.json
+	cd backend && CATALOG_EXT_ENABLED=1 python -m app.modules.validation.path_retest --directions $(DIRS)
+
+partial-credit-sim: ## Частичный балл 0–4 у развёрнутых: «0/1» против «0–4» (5 × 500, 14 вариантов) → data/partial_credit_sim.json, docs/validation/PARTIAL_CREDIT.md
+	cd backend && python -m app.modules.validation.partial_credit_sim $(SIM_ARGS)
 
 criteria-doc: ## docs/CRITERIA.md «Критерий ТЗ → что показываем → чем доказано» из того же источника, что /criteria
 	cd backend && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
@@ -87,7 +96,10 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 grade-sweep: ## Перебор параметров теста ради точности уровня (Парето, два мира σ 0,5 / 0,35) → data/grade_sweep.json, docs/validation/GRADE_ACCURACY.md (≈ 20 мин на 8 ядрах)
 	cd backend && python -m app.modules.validation.grade_sweep $(SWEEP_ARGS)
 
-grade-compare: ## Точность уровня в сопоставимых условиях (точные параметры, заявили не ниже, короткий тест на уровень выше) → data/grade_compare.json, docs/validation/GRADE_COMPARE.md
+two-stage: ## Двухэтапное подтверждение у границы: «одна сессия / две сессии», Парето по L и длине второго этапа → data/two_stage.json, docs/validation/TWO_STAGE.md (≈ 4 мин на 8 ядрах)
+	cd backend && python -m app.modules.validation.two_stage $(TWO_STAGE_ARGS)
+
+grade-compare: ## Точность уровня при других условиях измерения (точные параметры, заявили не ниже, короткий тест на уровень выше) → data/grade_compare.json, docs/validation/GRADE_COMPARE.md
 	cd backend && python -m app.modules.validation.grade_compare $(COMPARE_ARGS)
 
 grades-ext-sim: ## Путь-повтор с 6 уровнями (Lead, Principal; модельные семейства) → data/grades_ext_sim.json, docs/validation/GRADES_EXT.md (≈ 15 мин на 8 ядрах)
@@ -96,7 +108,7 @@ grades-ext-sim: ## Путь-повтор с 6 уровнями (Lead, Principal;
 grades-ext-need: ## Что нужно для точности Lead/Principal ≥ 64 %: банк, блок Lead/Principal, частичный балл → data/grades_ext_need.json, docs/validation/GRADES_EXT_NEED.md
 	cd backend && GRADES_EXT_ENABLED=1 python -m app.modules.validation.grades_ext_need $(SIM_ARGS)
 
-.PHONY: bench bench-quick stability intern-cut grade-above fsp-regression path-retest grade-sweep grade-compare grades-ext-sim grades-ext-need
+.PHONY: bench bench-quick match-bench-compare stability intern-cut grade-above fsp-regression path-retest path-retest-ext grade-sweep two-stage grade-compare grades-ext-sim grades-ext-need partial-credit-sim
 
 compose-check: ## Версия Docker Compose: нужна v2.24+ (в docker-compose.yml env_file с required: false)
 	@v=$$($(COMPOSE) version --short 2>/dev/null | sed 's/^v//'); \

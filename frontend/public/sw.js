@@ -1,4 +1,4 @@
-/* Service worker «Встречный»: оболочка приложения офлайн, API — только сеть, Web Push. MIT.
+/* Service worker «Драфт»: оболочка приложения офлайн, API — только сеть, Web Push. MIT.
  *
  * Выкладка без пустой страницы:
  * - VERSION подставляется при сборке (vite.config.ts, плагин sw-build-version): новый sw.js на каждую сборку,
@@ -7,7 +7,8 @@
  * - index.html (навигация) — сначала сеть; кэш — только при обрыве сети или 5xx во время выкладки;
  *   в кэш кладутся только успешные ответы (502 и страница ошибки не становятся «оболочкой»);
  * - 401 (базовая авторизация стенда) — SW снимается и страница перезагружается: браузер сам покажет окно входа;
- * - после активации SW сообщает версию вкладкам — устаревшая вкладка перезагружается (src/integrations/pwa.ts).
+ * - после активации SW сообщает версию вкладкам — устаревшая вкладка перезагружается (src/integrations/pwa.ts);
+ * - FIX7: версия по запросу (message get-version) — страница сверяет свою сборку с SW при старте; /status — мимо SW.
  */
 const VERSION = "__BUILD_ID__";
 const SHELL = `shell-${VERSION}`;
@@ -82,8 +83,10 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   // API, вход через внешний ID (/auth/), документация и сам SW — никогда не из кэша
+  // /status — страница проверки связи (FIX7): всегда сеть и не «оболочка» (иначе её HTML попал бы в кэш как "/")
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/") || url.pathname.startsWith("/docs")
-      || url.pathname === "/sw.js" || url.pathname === "/recover.js") return;
+      || url.pathname === "/sw.js" || url.pathname === "/recover.js"
+      || url.pathname === "/status" || url.pathname === "/status.html") return;
   if (req.mode === "navigate" || url.pathname === "/index.html") {
     e.respondWith(navigate(req));
     return;
@@ -99,10 +102,16 @@ self.addEventListener("fetch", (e) => {
   }
 });
 
+// FIX7: версия сборки по запросу страницы (src/integrations/pwa.ts, /status): сверка «страница ↔ service worker» —
+// устаревшая вкладка или закэшированная оболочка прежней выкладки распознаются без ожидания события активации.
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "get-version" && e.ports && e.ports[0]) e.ports[0].postMessage({ type: "version", version: VERSION });
+});
+
 self.addEventListener("push", (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : "" }; }
-  const title = d.title || "Встречный";
+  const title = d.title || "Драфт";
   e.waitUntil(self.registration.showNotification(title, {
     body: d.body || "",
     icon: d.icon || "/icons/icon-192.png",

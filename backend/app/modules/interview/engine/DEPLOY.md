@@ -19,8 +19,8 @@
 | `ELEVENLABS_VOICE_ID` | `sRk0zCqhS2Cmv0bzx5wA` — стоковый голос библиотеки ElevenLabs «Felix — Calm, Clear and Friendly» (ru, мужской, спокойный); добавлен в аккаунт 10.10.2026 через API `POST /v1/voices/add` |
 | `ELEVENLABS_MODEL` | `eleven_multilingual_v2` (по умолчанию) |
 | `DEEPGRAM_API_KEY` | ключ Deepgram; модель `nova-3`, язык `ru`; режим «нажми и говори» — целый фрагмент за запрос |
-| `INTERVIEW_AVATAR_ENABLED` | канал «аватар» (Anam). **По умолчанию выключен и в сдаче не включается** — решение владельца 10.10 (регламент п. 5.11: изображения третьих лиц). Без флага `avatar_token` отвечает `avatar_unavailable`, в `status()` `channels.avatar=false`; каналы — голос и текст, экран кандидата рисует собственную анимацию (Я15) |
-| `ANAM_API_KEY` | ключ Anam (нужен только при `INTERVIEW_AVATAR_ENABLED=1`) |
+| `INTERVIEW_ANAM_ENABLED` | канал «аватар» поставщика (Anam). **По умолчанию выключен и в сдаче не включается** — решение владельца 10.10 (регламент п. 5.11: изображения третьих лиц). Без флага `avatar_token` отвечает `avatar_unavailable`, в `status()` `channels.avatar=false`, `anam_enabled=false`; каналы — голос и текст. До 11.10 назывался `INTERVIEW_AVATAR_ENABLED`; теперь `INTERVIEW_AVATAR_ENABLED` — флаг продукта для собственного рисованного образа интервьюера (`app/core/config.py`, docs/INTERVIEW.md, раздел 2.2), поставщика он не включает |
+| `ANAM_API_KEY` | ключ Anam (нужен только при `INTERVIEW_ANAM_ENABLED=1`) |
 | `ANAM_AVATAR_ID` | `19d18eb0-5346-4d50-a77f-26b3723ed79d` — стоковый образ поставщика «Richard (table)», модель `cara-4`, режим передачи звука (`enableAudioPassthrough`) |
 | `ANAM_PERSONA_ID` | `25952956-4d5e-41ba-b0bc-54c11a971f6b` — персона «Интервьюер», создана 10.10.2026 10:37 UTC через `POST /v1/personas` (стоковый образ Richard + стоковый голос «Richard (ru)»); для учёта — в сессии используется `ANAM_AVATAR_ID` |
 | `ANAM_MAX_SESSION_S` | предел сессии аватара, по умолчанию 600 |
@@ -57,7 +57,7 @@
   `relay=true`, ключей в ответе нет.
 - Журнал api: строки `interview turn` / `interview evaluate` без текста реплик.
 - Журнал ретранслятора: `POST api.elevenlabs.io/... 200`, `POST api.deepgram.com/v1/listen 200`,
-  (`POST api.anam.ai/v1/auth/session-token` — только если флаг аватара включён).
+  (`POST api.anam.ai/v1/auth/session-token` — только если включён `INTERVIEW_ANAM_ENABLED`).
 
 ## 5. Что проверено 10.10.2026 из песочницы
 

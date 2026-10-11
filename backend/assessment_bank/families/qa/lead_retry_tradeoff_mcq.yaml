@@ -1,0 +1,24 @@
+family_id: qa.lead.retry_tradeoff_mcq
+title: Повторы упавших тестов — ложные красные прогоны против пропуска нестабильных регрессий (Lead)
+direction: qa
+skills: [flaky_tests, ci, test_architecture, risk_based_testing, statistics]
+target_grades: [lead]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors: [per_test, any_fail, no_effect]
+    r_range: [2, 3]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.7
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Двухшаговый расчёт на уровне набора (1 − (1 − p^r)^N, а не p^r для одного теста) и вывод о цене решения: повторы гасят и нестабильные регрессии (q^r). Компромисс скорость/надёжность для политики команды, а не формула одного теста — выше Senior; почти верные дистракторы (r для одного теста, «хотя бы одна попытка»); у порога Senior/Lead"
+generator: assessment_bank.families.qa.lead_retry_tradeoff_mcq
+version: 1
+description: >
+  Минимальное число попыток под целевую долю ложных красных прогонов и вероятность поймать регрессию, проявляющуюся
+  в доле запусков. Ключ — расчёт программой по тем же числам.

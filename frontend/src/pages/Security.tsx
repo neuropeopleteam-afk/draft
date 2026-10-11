@@ -128,7 +128,7 @@ function RecoveryCodes({ codes, account, onDone, doneLabel = "Готово" }: {
       </ul>
       <div className="flex flex-wrap gap-2">
         <button type="button" className="btn-ghost" onClick={copy}>{copied ? "Скопировано" : "Скопировать"}</button>
-        <button type="button" className="btn-ghost" onClick={() => downloadCodes(codes, account, product || "Встречный")}>Скачать файлом</button>
+        <button type="button" className="btn-ghost" onClick={() => downloadCodes(codes, account, product || "Драфт")}>Скачать файлом</button>
       </div>
       <label className="flex items-start gap-2 text-sm text-brand-ink/85">
         <input type="checkbox" className="mt-0.5" checked={saved} onChange={(e) => setSaved(e.target.checked)} />

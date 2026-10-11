@@ -6,7 +6,7 @@
 import { Component, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { ApiError } from "../lib/api";
-import { isChunkError } from "../lib/lazyPage";
+import { chunkName, isChunkError } from "../lib/lazyPage";
 
 const VPN = "Если включён VPN — отключите его и обновите страницу.";
 
@@ -21,6 +21,8 @@ declare global {
       retry: () => boolean;
       /** Повторная загрузка по кнопке (обход кэша, без лимита). */
       reload: () => void;
+      /** FIX7: «Очистить кэш и открыть заново» — снять service worker и все кэши сайта, открыть адрес заново. */
+      clear?: () => void;
     };
   }
 }
@@ -31,19 +33,48 @@ export function hardReload() {
   else window.location.reload();
 }
 
+/** FIX7: «Очистить кэш и открыть заново» — снять регистрацию service worker, удалить все кэши сайта и открыть тот же
+ *  адрес с обходом кэша. Через сторожа index.html, если он есть; иначе — здесь же. */
+export function clearAndReopen() {
+  if (window.__fspBoot?.clear) { window.__fspBoot.clear(); return; }
+  const go = () => window.location.reload();
+  const jobs: Promise<unknown>[] = [];
+  try {
+    if (navigator.serviceWorker?.getRegistrations) {
+      jobs.push(navigator.serviceWorker.getRegistrations().then((rs) => Promise.all(rs.map((r) => r.unregister()))));
+    }
+    if ("caches" in window) jobs.push(caches.keys().then((ks) => Promise.all(ks.map((k) => caches.delete(k)))));
+  } catch { /* без SW и кэшей — просто заново */ }
+  window.setTimeout(go, 2000);
+  Promise.all(jobs).then(go, go);
+}
+
+/** FIX7: кнопки экрана сбоя загрузки — «Обновить», «Очистить кэш и открыть заново» и ссылка на /status
+ *  (статическая страница без файлов сборки: состояние сервера и проверка доставки файлов). */
+function LoadActions() {
+  return (
+    <>
+      <button type="button" className="btn-primary" onClick={hardReload}>Обновить</button>
+      <button type="button" className="btn-ghost" onClick={clearAndReopen}>Очистить кэш и открыть заново</button>
+      <a href="/status" className="btn-ghost">Состояние сервиса</a>
+    </>
+  );
+}
+
 /** Первый экран отрисован: сторож index.html больше не ждёт и не перезагружает страницу. */
 export function BootMark() {
   useEffect(() => { window.__fspBoot?.mounted(); }, []);
   return null;
 }
 
-function Screen({ title, text, children, note, full = true }: { title: string; text: string; children?: ReactNode; note?: string; full?: boolean }) {
+function Screen({ title, text, children, note, why, full = true }: { title: string; text: string; children?: ReactNode; note?: string; why?: string; full?: boolean }) {
   const h = useRef<HTMLHeadingElement>(null);
   useEffect(() => { h.current?.focus({ preventScroll: true }); }, []);
   const body = (
     <>
       <h1 ref={h} tabIndex={-1} className="text-xl font-bold text-brand-night outline-none">{title}</h1>
       <p className="max-w-md text-base leading-relaxed text-brand-ink/80">{text}</p>
+      {why && <p className="max-w-md break-all text-sm text-brand-ink/80" data-boot-why>{why}</p>}
       {children && <div className="flex flex-wrap justify-center gap-3">{children}</div>}
       <p className="min-h-[1.5em] text-sm text-brand-plum" role="status">{note ?? ""}</p>
     </>
@@ -70,11 +101,14 @@ function CrashScreen({ error, full, onRetry }: { error: unknown; full?: boolean;
     return () => window.clearTimeout(t);
   }, [auto]);
   if (chunk) {
+    const file = chunkName(error);
+    const timeout = error instanceof Error && /timeout/i.test(error.message);
     return (
       <Screen full={full} title="Раздел не загрузился"
-        text={`Связь с сервером прервалась или вышла новая версия сайта. ${VPN}`}
+        text={`Повторили загрузку несколько раз — не получилось: связь с сервером прервалась или вышла новая версия сайта. ${VPN}`}
+        why={`Код: ${timeout ? "CHUNK-TIMEOUT" : "CHUNK"}${file ? ` · ${timeout ? "не дождались файла" : "не загрузился файл"}: ${file}` : ""}`}
         note={auto ? "Пробуем загрузить ещё раз…" : undefined}>
-        <button type="button" className="btn-primary" onClick={hardReload}>Обновить</button>
+        <LoadActions />
       </Screen>
     );
   }
@@ -125,28 +159,23 @@ export function RouteBoundary({ children, inline = false }: { children: ReactNod
 
 const SLOW_MS = 10_000;
 
-/** Пока грузится файл экрана (React.lazy): «Загружаем…» (через 0,3 с — без мигания на быстрой сети);
- *  через 10 с — сообщение, «Обновить страницу» и через 1,5 с одна автоматическая повторная загрузка (сторож index.html). */
+/** Пока грузится файл экрана (React.lazy): «Загружаем…» (через 0,3 с — без мигания на быстрой сети); через 10 с —
+ *  сообщение и кнопки. Повтор загрузки идёт сам, на месте (lib/lazyPage.ts, FIX7: до 3 повторов, с обходом кэша) —
+ *  страница не перезагружается; не вышло — экран «Раздел не загрузился» (CrashScreen) с одной авто-перезагрузкой. */
 export function RouteFallback({ inline = false }: { inline?: boolean }) {
   const [stage, setStage] = useState<"quiet" | "wait" | "slow">("quiet");
-  const [auto, setAuto] = useState(false);
   useEffect(() => {
     const a = window.setTimeout(() => setStage("wait"), 300);
-    let c = 0;
-    const b = window.setTimeout(() => {
-      setStage("slow");
-      const can = !!window.__fspBoot?.canAuto();
-      setAuto(can);
-      if (can) c = window.setTimeout(() => { window.__fspBoot?.retry(); }, AUTO_RELOAD_MS);
-    }, SLOW_MS);
-    return () => { window.clearTimeout(a); window.clearTimeout(b); window.clearTimeout(c); };
+    const b = window.setTimeout(() => setStage("slow"), SLOW_MS);
+    return () => { window.clearTimeout(a); window.clearTimeout(b); };
   }, []);
   if (stage === "slow") {
     return (
       <Screen full={!inline} title="Раздел загружается дольше обычного"
-        text={`Связь с сервером медленная или прервалась. ${VPN}`}
-        note={auto ? "Пробуем загрузить ещё раз…" : undefined}>
-        <button type="button" className="btn-primary" onClick={hardReload}>Обновить</button>
+        text={`Связь с сервером медленная или прервалась — повторяем загрузку сами, страницу перезагружать не нужно. ${VPN}`}
+        why="Код: CHUNK-SLOW"
+        note="Пробуем загрузить ещё раз…">
+        <LoadActions />
       </Screen>
     );
   }

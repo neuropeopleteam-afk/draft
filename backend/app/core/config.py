@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", env_ignore_empty=True)
 
     # Рабочее название продукта — единственное место, где оно задано (фронтенд берёт его из /api/meta).
-    product_name: str = "Встречный"
+    product_name: str = "Драфт"
     app_name: str = "Спецтрек ФСП — платформа подбора ИТ-специалистов"
     app_version: str = "0.2.0"
     env: str = Field(default="dev", description="dev | test | prod")
@@ -225,6 +225,13 @@ class Settings(BaseSettings):
     assessment_extension_own_first: bool = True
     assessment_max_open_book: int = 2
     assessment_max_open_answer: int = 1
+    # Частичный балл 0–4 у развёрнутых ответов (open_answer, текстовый шаг open_book_3step): балл = round(4 · оценка по
+    # рубрике) входит в θ по модели GPCM (assessment_bank/psychometrics/gpcm.py), дихотомические — 2PL, как сейчас.
+    # Тот же вызов оценщика, без новых запросов; false — оценка 0..1 в 2PL (прежнее поведение)
+    assessment_partial_credit_enabled: bool = False
+    # при флаге выше: выбор следующего задания по информации GPCM (true) или, как без флага, по 2PL (false — балл 0–4
+    # только в оценке θ, состав теста прежний)
+    assessment_partial_credit_select: bool = True
     # Ротация субпулов банка: 2 параллельные формы; повторная попытка получает другой субпул.
     # Утёкший субпул — в карантин: ASSESSMENT_SUBPOOL_QUARANTINE=0 (номера через запятую)
     assessment_subpools: int = 2
@@ -240,6 +247,19 @@ class Settings(BaseSettings):
     # только когда погрешность позволяет, иначе «точнее — после дотестирования»; без чисел θ (grades.level_position).
     # false — как раньше (поля нет)
     grade_position_enabled: bool = False
+    # Я26: двухэтапное подтверждение уровня у границы (assessment/two_stage.py, docs/validation/TWO_STAGE.md): после
+    # полного теста уровень «на границе» (P у порога между 1 − L и L) — кандидату предлагается уточнение отдельной
+    # сессией до N коротких заданий и M минут у этого порога; итог — по общей оценке обеих сессий (до заявленного —
+    # P ≥ confirm, выше заявленного — P ≥ confirm_up, если above > 0). false — как раньше (предложения нет)
+    assessment_two_stage_enabled: bool = False
+    assessment_two_stage_level: float = 0.8
+    assessment_two_stage_items: int = 8
+    assessment_two_stage_minutes: int = 15
+    assessment_two_stage_confirm: float = 0.45
+    assessment_two_stage_confirm_up: float = 0.9
+    assessment_two_stage_above: float = 0.0
+    # итог уточнения не ниже уровня первой сессии (без понижения по итогу второй сессии)
+    assessment_two_stage_floor: bool = False
     # Я22: чистка пула — 26 семейств, слабых по калибровке панелью моделей (assessment/weak_pool.py), не выдаются ни в
     # основной части, ни в дотестировании. false — пул как раньше. По умолчанию выключено: на симуляции повтор (κw)
     # с исключением ниже (docs/validation/GRADE_ACCURACY.md, «Чистка пула»)
@@ -299,6 +319,16 @@ class Settings(BaseSettings):
     # к вкладу результата в силу паспорта (app/modules/fsp/relevance.py). По умолчанию выключено — порядок выдачи
     # match-v1 не меняется; включать только без падения метрик make bench / ranking_guard (цифры — внутренний отчёт разработки)
     fsp_discipline_relevance: bool = False
+    # Каталог шире (волна 7, app/modules/catalog/ext.py): 4 новых направления — DevOps / SRE, инженер данных, мобильная
+    # разработка, системный / бизнес-аналитик. По умолчанию выключено — всё как с пятью направлениями. С флагом видны
+    # только направления, чей банк прошёл проверку (directions_verified манифеста банка + правило ниже, FTT.4:
+    # уровень — только по тесту). CATALOG_EXT_DIRECTIONS — показывать только перечисленные (через запятую; пусто — все
+    # готовые). CATALOG_EXT_FORCE_READY — только тесты и локальная проверка интерфейса до готовности банка, на стенде пусто.
+    catalog_ext_enabled: bool = False
+    catalog_ext_directions: str = ""
+    catalog_ext_min_families: int = 18
+    catalog_ext_min_per_grade: int = 3
+    catalog_ext_force_ready: str = ""
 
     # Подписка на потребность и напоминания (И25, Н6; app/modules/subs): фоновый обход раз в N секунд (0 — выключен:
     # тесты и консольный запуск python -m app.modules.subs.runner). Топ-N подписки, не чаще одного пересчёта в
@@ -359,6 +389,11 @@ class Settings(BaseSettings):
     voice_need_per_hour: int = Field(default=20, ge=1)  # записей на работодателя в час
     voice_need_daily: int = Field(default=300, ge=1)  # записей в сутки на установку (≈ 300 мин × ставка STT)
 
+    # Я29: тарифы работодателя (app/modules/tariffs, docs/TARIFFS.md): «Старт» бесплатно с лимитом приглашений в месяц,
+    # «Найм» — цена по запросу, демо-счёт без суммы, «Партнёр ФСП» выдаёт ФСП; блок «Польза для ФСП» в кабинете ФСП.
+    # По умолчанию выключено: лимит не проверяется, функции не ограничиваются, ответы API прежние.
+    tariffs_enabled: bool = False
+
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None
     fsp_oidc_client_id: str | None = None
@@ -368,8 +403,12 @@ class Settings(BaseSettings):
     # INTERVIEW_ENGINE=stub — заглушка продукта (тесты, CI, e2e): вопросы по шаблону, оценка правилом, «заглушка» в итоге.
     interview_enabled: bool = False
     interview_engine: str = "auto"  # auto — движок, если он есть и настроен, иначе заглушка; stub — всегда заглушка
-    # Видео-аватара в продукте нет (решение владельца 10.10, регламент п. 5.11): визуал — своя анимация волны голоса;
-    # канал «аватар» остаётся только в движке за INTERVIEW_AVATAR_ENABLED (выкл.) и экраном не используется.
+    # Лица поставщика (Anam) в продукте нет (решение владельца 10.10, регламент п. 5.11): канал «аватар» поставщика — только
+    # в движке за INTERVIEW_ANAM_ENABLED (выкл.) и экраном не используется. Визуал по умолчанию — своя анимация волны голоса.
+    # INTERVIEW_AVATAR_ENABLED (решение владельца 11.10): свой образ «ИИ-интервьюер, не человек» —
+    # сгенерированный портрет несуществующего человека и беззвучные клипы (frontend/public/avatar/, PROVENANCE.md),
+    # переключение по состоянию разговора; без клипов — неподвижный кадр и свечение рамки по громкости голоса. Голос — как раньше (/speech). docs/INTERVIEW.md, раздел 2.2.
+    interview_avatar_enabled: bool = False
     interview_stt_stub: bool = False  # e2e/демо: в заглушке «нажми и говори» отдаёт начало письменного ответа (stub=true)
     interview_audio_max_kb: int = 3072  # запись одного ответа «нажми и говори»
     interview_defense_minutes: int = 3

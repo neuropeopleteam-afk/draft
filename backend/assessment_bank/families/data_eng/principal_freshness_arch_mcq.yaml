@@ -1,0 +1,24 @@
+family_id: data_eng.strategy.principal_freshness_arch_mcq
+title: Поток или пакеты под требование свежести — окно досчёта поздних событий, накладные запуска, цена за месяц
+direction: data_eng
+skills: [streaming, late_data, incremental_load, data_pipelines, orchestration]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    architectures: [stream, micro, hourly, daily]
+    traps: [freshest, no_freshness, no_lookback, no_startup]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.5
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Выбор архитектуры по требованию свежести и полной цене: худшая задержка пакета (интервал + обработка), цена месяца = число запусков × (накладные + объём интервала и окна досчёта поздних событий) против постоянного кластера потока. Ключевое наблюдение — при длинном окне досчёта частые микропакеты пересчитывают одни и те же часы много раз и дороже потока. Ответ равновероятен среди четырёх архитектур; ловушки — самая свежая, самая дешёвая без требования, без окна досчёта, без накладных — отличаются от ответа минимум в двух случаях (у крайних — в одном). Lead обычно выбирает «поток, раз нужна свежесть» или микропакеты без учёта окна досчёта — граница Lead/Principal (θ ≈ 2,5). Короткое задание (≤ 7 мин). σ 0,3"
+generator: assessment_bank.families.data_eng.principal_freshness_arch_mcq
+version: 1
+description: >
+  Principal: поток, микропакеты, почасовые или суточный пакет — какая архитектура укладывается в требование свежести
+  с минимальной ценой за месяц при окне досчёта поздних событий. Ключ — исполнением: расписание запусков на месяц.
