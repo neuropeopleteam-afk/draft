@@ -28,7 +28,7 @@ class InterviewSettings(BaseSettings):
     deepgram_model: str = "nova-3"
     # Решение владельца 10.10 (регламент п. 5.11, изображения третьих лиц): лицо стокового аватара поставщика (Anam) в сдаче
     # не показываем. Канал «аватар» поставщика существует только за INTERVIEW_ANAM_ENABLED и по умолчанию выключен; без него —
-    # голос и текст. INTERVIEW_AVATAR_ENABLED (11.10) — флаг продукта для собственного рисованного образа интервьюера
+    # голос и текст. INTERVIEW_AVATAR_ENABLED (11.10) — флаг продукта для собственного образа интервьюера
     # (app/core/config.py, docs/INTERVIEW.md, раздел 2.2) и к поставщику отношения не имеет.
     interview_anam_enabled: bool = False
     anam_api_key: str | None = None
