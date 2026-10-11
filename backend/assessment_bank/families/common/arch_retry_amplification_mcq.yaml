@@ -1,0 +1,24 @@
+family_id: common.arch.retry_amplification_mcq
+title: Усиление нагрузки повторами по слоям — сколько запросов получит перегруженная база
+direction: common
+skills: [reliability, distributed_systems, retries, probability, capacity_planning]
+target_grades: [lead]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    layers: 3
+    distractors: [full_outage, bottom_only, independent_layers]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.9
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Вложенная вероятностная модель: повторы нижнего слоя снижают вероятность отказа звена, которую видят верхние слои, — нужно перемножить средние числа вызовов по слоям, а не (1 + r_i) и не геометрические суммы с исходной p. Дистрактор independent_layers — «почти верный» (та же форма расчёта). Типичная ошибка Senior — верхняя граница полного отказа; граница Senior/Lead (θ ≈ 2,0). Один подтип; варьируются цепочка, число повторов слоёв, p"
+generator: assessment_bank.families.common.arch_retry_amplification_mcq
+version: 1
+description: >
+  Lead: три слоя с повторами над перегруженной базой (каждая попытка неудачна с вероятностью p) — среднее
+  число запросов к базе на пользовательский запрос. Ключ — исполнением модели (перечисление исходов попыток).

@@ -1,0 +1,24 @@
+family_id: qa.pytest.raises_too_broad_bug
+title: Тестирование — слишком широкое ожидание исключения
+direction: qa
+skills: [test_review, false_positive, pytest, python]
+target_grades: [junior, middle]
+format: find_bug
+language: python
+invariants:
+  code_lines: [9, 9]
+  operations: [3, 30]
+  defect_type: raises_too_broad
+  extra: {subtype: raises_base_exception_class}
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.3
+  sigma_variant: 0.2
+  basis: "Порог Junior/Middle: три теста в переменном порядке (9 строк); один ждёт любое исключение вместо ValueError, регрессия даёт другое исключение; ловушки — точные проверки значений. Симптом в условии. Исполняемый ключ на правильной реализации и мутанте, один подтип."
+generator: assessment_bank.families.qa.py_raises_too_broad_bug
+version: 1
+description: >
+  Добор 10.10 (порог J/M, qa): pytest.raises(Exception) пропускает регрессию с другим исключением. Тесты
+  исполняются на правильной реализации и мутанте до и после исправления.

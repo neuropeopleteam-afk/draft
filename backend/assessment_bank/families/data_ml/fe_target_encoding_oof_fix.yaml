@@ -1,0 +1,25 @@
+family_id: data_ml.features.target_encoding_oof_fix
+title: ML — target encoding вне своего фолда
+direction: data_ml
+skills: [categorical_encoding, data_leakage, cross_validation, python]
+target_grades: [middle, senior]
+format: choose_fix
+language: python
+invariants:
+  code_lines: [15, 15]
+  operations: [3, 60]
+  defect_type: target_encoding_in_fold_leak
+  n_options: 4
+  extra: {subtype: stats_include_own_row, runner: python}
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.3
+  sigma_variant: 0.2
+  basis: "Порог Middle/Senior: функция из 15 строк, 4 замены отличаются одной строкой (какие строки дают статистику и кому она записывается); дистракторы — свой фолд, исключение строки вместо фолда, запись в другие фолды. Исполняемый ключ: независимость кода строки от её цели и сверка с эталоном."
+generator: assessment_bank.families.data_ml.fe_target_encoding_oof_fix
+version: 1
+description: >
+  Добор 10.10 (порог M/S, data_ml): target encoding out-of-fold со сглаживанием. Все замены исполняются:
+  независимость кода от цели строки и её фолда, сверка с эталонным расчётом.

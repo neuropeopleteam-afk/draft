@@ -1,0 +1,20 @@
+family_id: analyst.uml.state_machine_output
+title: Машина состояний UML — конечное состояние и отброшенные события
+direction: analyst
+skills: [uml, state_machines, requirements]
+target_grades: [intern, junior]
+format: predict_output
+language: text
+invariants: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: -1.3
+  a: 1.0
+  sigma_variant: 0.2
+  basis: "7–8 переходов и 6–8 событий; прямой проход, ловушки — событие, недопустимое в текущем состоянии (отбрасывается), и одноимённые события из разных состояний. Стажёр (b ≈ −1,3), у порога Junior"
+generator: assessment_bank.families.analyst.uml_state_machine_output
+version: 1
+description: >
+  Машина состояний в текстовой записи и последовательность событий; нужно назвать конечное состояние и
+  число отброшенных событий. Ключ: Python разбирает показанную запись дословно.

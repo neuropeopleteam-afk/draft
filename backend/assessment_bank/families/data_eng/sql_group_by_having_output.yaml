@@ -1,0 +1,23 @@
+family_id: data_eng.sql.group_by_having_output
+title: SQL — WHERE до группировки и HAVING после
+direction: data_eng
+skills: [sql, aggregation, group_by]
+target_grades: [intern, junior]
+format: predict_output
+language: sql
+invariants:
+  code_lines: [6, 6]
+  operations: [6, 6]
+  extra:
+    subtype: where_vs_having
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -1.1
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "Запрос 6 строк: WHERE по статусу, GROUP BY, HAVING по COUNT или SUM, ORDER BY агрегата; 7–10 строк данных; в каждом варианте и WHERE, и HAVING меняют результат. Intern/Junior"
+generator: assessment_bank.families.data_eng.sql_group_by_having_output
+version: 1
+description: >
+  Предсказать результат запроса с WHERE, GROUP BY и HAVING. Ключ — исполнение запроса в sqlite.
