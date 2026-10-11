@@ -180,11 +180,13 @@ function JuryBlock() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
-  const interview = !!useMeta()?.interview?.enabled;  // Я15: шаг «по желанию» в «12 минутах»
+  const meta = useMeta();
+  const interview = !!meta?.interview?.enabled;  // Я15: шаг «по желанию» в «12 минутах»
+  const avatar = interview && !!meta?.interview?.avatar;  // SIMPLIFY п.8: карточка «ИИ-интервьюер» — только при образе интервьюера
 
-  async function enter(p: Persona) {
-    setBusy(p); setMsg(null);
-    try { navigate(await juryLogin(p, signIn)); }
+  async function enter(p: Persona, next?: string, key: string = p) {
+    setBusy(key); setMsg(null);
+    try { navigate(await juryLogin(p, signIn, next)); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
   }
   async function quickStart() {  // Я9: «Проверка за 12 минут» — вход работодателем своей копии
@@ -238,6 +240,18 @@ function JuryBlock() {
             </button>
           ))}
         </div>
+        {avatar && (  // SIMPLIFY п.8: образ интервьюера — постер (без видео), вход демо-кандидатом сразу к панели устной защиты
+          <div className="mt-4 flex flex-wrap items-center gap-4 rounded-2xl bg-white p-4 ring-1 ring-brand-night/10" data-testid="jury-avatar">
+            <img src="/avatar/interviewer.webp" alt="Портрет ИИ-интервьюера: сгенерирован моделью, несуществующий человек"
+              className="h-16 w-16 shrink-0 rounded-xl object-cover" width={64} height={64} loading="lazy" decoding="async" />
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-brand-night">ИИ-интервьюер</p>
+              <p className="text-sm text-brand-ink/70">ИИ · не человек · устная защита ответа{meta?.interview?.defense_minutes ? `, ${meta.interview.defense_minutes} мин` : ""}, по желанию</p>
+            </div>
+            <button type="button" className="btn-primary shrink-0" disabled={!!busy} data-testid="jury-avatar-try"
+              onClick={() => enter("candidate", "/candidate/category#defense", "avatar")}>{busy === "avatar" ? "Входим…" : "Попробовать устную защиту"}</button>
+          </div>
+        )}
         <div className="mt-4 rounded-2xl bg-white/70 p-4 ring-1 ring-brand-night/10" data-testid="jury-more-roles">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="mr-1 font-semibold text-brand-night">Ещё роли:</span>
