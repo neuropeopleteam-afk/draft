@@ -320,9 +320,39 @@ class Settings(BaseSettings):
         """Функции hh.ru видны: флаг включён и есть токен приложения (или заглушка)."""
         return bool(self.hh_enabled and (self.hh_stub or (self.hh_app_token and self.hh_user_agent)))
 
+    # Голосовой ввод потребности (app/modules/voice, docs/VOICE.md): кнопка «Надиктовать» у поля «Кого вы ищете».
+    # Распознавание — функция движка интервью stt (Deepgram через ретранслятор), заглушка — INTERVIEW_STUB=1 или нет ключа.
+    voice_need_enabled: bool = False
+    voice_need_max_seconds: int = Field(default=60, ge=5, le=180)
+    voice_need_max_kb: int = Field(default=2048, ge=64, le=6144)  # 60 с opus ≈ 0,5 МБ, AAC Safari ≈ 1 МБ; движок — до 6 МБ
+    voice_need_timeout_s: float = Field(default=20.0, gt=0, le=60)
+    voice_need_per_hour: int = Field(default=20, ge=1)  # записей на работодателя в час
+    voice_need_daily: int = Field(default=300, ge=1)  # записей в сутки на установку (≈ 300 мин × ставка STT)
+
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None
     fsp_oidc_client_id: str | None = None
+
+    # Я15: «устная защита» ответов теста и «ИИ-интервью» как этап найма (app/modules/interview). По умолчанию выключено.
+    # Движок разговора и оценки — app/modules/interview/engine (Я14, свой интерфейс engine/CONTRACT.md); пока его нет или
+    # INTERVIEW_ENGINE=stub — заглушка продукта (тесты, CI, e2e): вопросы по шаблону, оценка правилом, «заглушка» в итоге.
+    interview_enabled: bool = False
+    interview_engine: str = "auto"  # auto — движок, если он есть и настроен, иначе заглушка; stub — всегда заглушка
+    # Видео-аватара в продукте нет (решение владельца 10.10, регламент п. 5.11): визуал — своя анимация волны голоса;
+    # канал «аватар» остаётся только в движке за INTERVIEW_AVATAR_ENABLED (выкл.) и экраном не используется.
+    interview_stt_stub: bool = False  # e2e/демо: в заглушке «нажми и говори» отдаёт начало письменного ответа (stub=true)
+    interview_audio_max_kb: int = 3072  # запись одного ответа «нажми и говори»
+    interview_defense_minutes: int = 3
+    interview_defense_max_questions: int = 3
+    interview_defense_min_chars: int = 120  # развёрнутый ответ короче — защищать нечего
+    interview_defense_max_tasks: int = 4
+    interview_defense_attempts: int = 2  # сессий на одну попытку теста (сбой связи — можно ещё раз)
+    interview_hiring_minutes: int = 10
+    interview_hiring_max_questions: int = 6
+    interview_per_user_day: int = 4
+    interview_total_day: int = 300  # всех новых сессий за сутки — потолок расходов со стороны продукта
+    interview_jury_minutes: int = 5  # режим жюри: живой запуск не длиннее, не чаще раза в час на песочницу
+    interview_jury_per_hour: int = 1
 
     @property
     def postbox_configured(self) -> bool:

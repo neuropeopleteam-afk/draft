@@ -43,6 +43,7 @@ from app.modules.contact import router as contact
 from app.modules.experts.router import router as expert_panel_router
 from app.modules.hiring import router as hiring  # найм после принятия: собеседование, оффер, исход (Н8)
 from app.modules.hh import router as hh_api  # hh.ru: импорт своей вакансии, «Рынок по hh.ru» (Я12, за HH_ENABLED)
+from app.modules.interview import router as interview  # устная защита и ИИ-интервью (Я15), флаг INTERVIEW_ENABLED
 from app.modules.invitations.router import candidate_router as candidate_contact_router
 from app.modules.invitations.router import employer_router as employer_contact_router
 from app.modules.jury.router import make_spare
@@ -59,6 +60,7 @@ from app.modules.subs import router as subs_api
 from app.modules.subs import runner as subs_runner
 from app.modules.study import router as study_api
 from app.modules.validation.router import router as validation_router
+from app.modules.voice import router as voice  # голосовой ввод потребности (VOICE_NEED_ENABLED)
 from app.modules.fsp.registry import router as fsp_registry_router
 from app.passport.router import TAGS as PASSPORT_TAGS
 from app.passport.router import router as passport_router
@@ -127,7 +129,7 @@ def create_app() -> FastAPI:
             "сервера — `docs/api/openapi.json` в репозитории (обзор — `docs/API.md`)."
         ),
         openapi_tags=(TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS
-                      + mutual.TAGS + study_api.TAGS + hh_api.TAGS),
+                      + mutual.TAGS + study_api.TAGS + hh_api.TAGS + interview.TAGS),
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -162,7 +164,9 @@ def create_app() -> FastAPI:
               evidence_candidate_router, evidence_employer_router, evidence_validation_router,  # цитаты
               mutual.employer_router, mutual.candidate_router, mutual.public_router,  # взаимный подбор (Н9, Н2, Н3)
               study_api.router,  # статистика прохождения: живые пользователи (У1)
-              hh_api.router, hh_api.validation_router):  # hh.ru (Я12): без HH_ENABLED и токена — 404 hh_disabled
+              hh_api.router, hh_api.validation_router,  # hh.ru (Я12): без HH_ENABLED и токена — 404 hh_disabled
+              interview.router, interview.candidate_router, interview.employer_router,  # устная защита (Я15)
+              voice.router):  # «Надиктовать» потребность (за флагом VOICE_NEED_ENABLED)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
@@ -199,7 +203,10 @@ def create_app() -> FastAPI:
                 "rules": {"grade_change_interval_days": get_settings().grade_change_interval_days,  # на запросе, как proctor_camera
                           "retake_same_grade_days": get_settings().retake_same_grade_days,
                           "invitation_cooldown_days": get_settings().invitation_cooldown_days},
-                "hh": hh_api.meta()}  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
+                "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
+                "interview_enabled": interview.svc.enabled(),  # то же одним флагом — шаг проводника «12 минут» (Я9)
+                "hh": hh_api.meta(),  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
+                "voice_need": voice.meta()}  # кнопка «Надиктовать»: флаг, заглушка, предел секунд, версия согласия
 
     class HealthOut(BaseModel):
         status: str
