@@ -24,6 +24,7 @@ export interface Meta {
 
 export interface GradesExt {
   enabled: boolean; grades: string[]; min_own: number; min_total: number;
+  preliminary?: boolean; // Lead/Principal — «предварительно» (GRADES_EXT_PRELIMINARY)
   common: Record<string, number>;
   by_direction: Record<string, { grades: string[]; families: Record<string, number> }>;
 }
