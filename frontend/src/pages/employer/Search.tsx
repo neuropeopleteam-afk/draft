@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { CandidateCard } from "../../components/CandidateCard";
+import { InterviewEmployerDetails } from "../../components/Interview";  // Я15: устная защита и ИИ-интервью
 import { PageTitle } from "../../components/CabinetLayout";
 import { StatusCounts } from "../../components/GradeStatus";
 import { Alert, Empty, Field, GRADES, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi } from "../../components/ui";
@@ -154,6 +155,7 @@ export function CandidateDetail() {
       <PassportEmployerBadge refId={c.ref} />
       <EmployerAttempts refId={c.ref} direction={c.direction ?? direction} />
       <EmployerEvidence refId={c.ref} direction={c.direction ?? direction} />
+      <InterviewEmployerDetails refId={c.ref} direction={c.direction ?? direction} />
       {(c.my_invitations.length > 0 || c.my_probes.length > 0) && (
         <section className="card text-sm">
           <h2 className="font-bold text-brand-night">Ваши взаимодействия</h2>

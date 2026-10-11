@@ -100,12 +100,26 @@ export function SusPage() {
 export function SusSummaryCard() {
   const { data } = useApi<any>("/sus/summary");
   if (!data || !data.n) return null;
+  const minN = data.min_n ?? 5;
+  const when = data.updated_at ? new Date(data.updated_at).toLocaleDateString("ru-RU", { timeZone: "Europe/Moscow" }) : null;
+  const anon = data.anonymous?.n ? <p className="mt-2 text-xs text-brand-ink/65">Анонимные анкеты считаются отдельно и в итог не входят: n = {data.anonymous.n}{data.anonymous.n >= minN ? `, среднее ${String(data.anonymous.mean).replace(".", ",")}` : ""}.</p> : null;
+  const demo = data.demo_n ? <p className="mt-1 text-xs text-brand-ink/65" data-testid="sus-demo-note">Из них с демо-учёток жюри: {data.demo_n} — среди них автотесты и модельные персоны (модель, не люди).</p> : null;
+  if (data.n < minN) {  // Я17: при n < 5 балл не выдаём за результат
+    return (
+      <section className="card" data-testid="sus-summary">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Итог по ответам после входа</p>
+        <p className="mt-2 text-lg font-bold text-brand-night">Пока недостаточно ответов (n = {data.n})</p>
+        <p className="text-sm text-brand-ink/65">Балл покажем, когда анкет будет не меньше {minN}{when ? ` · последняя анкета ${when}` : ""}.</p>
+        {demo}{anon}
+      </section>
+    );
+  }
   return (
-    <section className="card">
+    <section className="card" data-testid="sus-summary">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Итог по ответам после входа</p>
       <p className="mt-2 text-3xl font-extrabold tabular-nums text-brand-night">{String(data.mean).replace(".", ",")}<span className="ml-2 text-base font-medium text-brand-ink/65">из 100 · n = {data.n}</span></p>
       <p className="text-sm text-brand-ink/65">Медиана {String(data.median).replace(".", ",")}{data.ci95 ? `, 95 % ДИ ${data.ci95[0]}–${data.ci95[1]}` : ""} · «{data.adjective}» · оценка {data.grade} · порог отрасли 68</p>
-      {data.anonymous?.n ? <p className="mt-2 text-xs text-brand-ink/65">Анонимные анкеты считаются отдельно и в итог не входят: n = {data.anonymous.n}, среднее {String(data.anonymous.mean).replace(".", ",")}.</p> : null}
+      {demo}{anon}
     </section>
   );
 }

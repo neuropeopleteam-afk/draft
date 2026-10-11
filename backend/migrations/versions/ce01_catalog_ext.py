@@ -1,7 +1,7 @@
 """Каталог шире: 4 новых направления × 4 грейда = 16 категорий, стек-теги направлений
 
 Revision ID: ce01
-Revises: fp01 (голова integ/wave5 на 10.10; при слиянии М5 перевешивает на последнюю голову по порядку слияния)
+Revises: iv01 (голова integ/wave5 9494b88 на 11.10; при слиянии М5 перевешивает на последнюю голову по порядку слияния)
 Create Date: 2026-10-10
 
 Направления: devops «DevOps / SRE», data_eng «Инженер данных», mobile «Мобильная разработка», analyst «Системный /
@@ -24,7 +24,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = "ce01"
-down_revision: str | None = "fp01"
+down_revision: str | None = "iv01"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { DefensePanel } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTION_TITLES, Field, GRADES, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
@@ -471,6 +472,14 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
       </div>
       </details>
+      {/* доказательная оценка (GRADING_EVIDENCE): короткая фраза о цитатах до начала теста */}
+      {status?.evidence_grading && (
+        <p className="mt-3 text-sm text-brand-ink/75" data-testid="evidence-pretest">
+          <b className="text-brand-night">Развёрнутые ответы — с доказательствами.</b> К каждому пункту рубрики модель
+          приводит дословные цитаты из вашего ответа, программа сверяет их с текстом. После теста цитаты видны на экране
+          результата; работодателю — если вы не скрыли «Цитаты из ответов теста» в настройках приватности.
+        </p>
+      )}
       <IntegrityNotice />
       {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTION_TITLES[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
       {retakeLocked && !locked && (
@@ -848,6 +857,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       )}
       <div className="mt-3"><Alert>{err}</Alert></div>
       <FeedbackSummary sessionId={sessionId} fallbackLink />
+      <DefensePanel sessionId={sessionId} />
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>
       </div>
