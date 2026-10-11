@@ -40,23 +40,23 @@
   "algorithm": "match-v1.3",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "296b31dd",
-  "bank_hash": "76c4164b6ce83743",
-  "generated_at": "2026-10-11T11:24:03+00:00",
+  "bench_commit": "unknown",
+  "bank_hash": "f563cfcaebf63aef",
+  "generated_at": "2026-10-11T15:22:45+00:00",
   "p5": {
-   "mean": 0.776,
-   "lo": 0.74,
-   "hi": 0.81
+   "mean": 0.762,
+   "lo": 0.73,
+   "hi": 0.793
   },
   "ndcg10": {
-   "mean": 0.573,
-   "lo": 0.546,
-   "hi": 0.599
+   "mean": 0.565,
+   "lo": 0.542,
+   "hi": 0.588
   },
   "mrr": {
-   "mean": 0.888,
-   "lo": 0.853,
-   "hi": 0.918
+   "mean": 0.921,
+   "lo": 0.89,
+   "hi": 0.947
   }
  },
  "e2e_in_code": {
@@ -72,8 +72,8 @@
  },
  "grade_accuracy": {
   "confirm_level": 0.6,
-  "path_retest_commit": "659ca65",
-  "path_retest_at": "2026-10-10",
+  "path_retest_commit": "unknown",
+  "path_retest_at": "2026-10-11",
   "sweep_commit": "8f4d6d2",
   "sweep_points": 98,
   "before": {
