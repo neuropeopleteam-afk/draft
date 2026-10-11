@@ -434,6 +434,7 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
                                                      "extension", "pending_review", "n_families_in_bank", "mode")},
         "integrity": candidate_view((res.details or {}).get("integrity")),
     }
+    _ext_preliminary(result, specialization)
     second_todo = second_op.take_new(ts.result["state"]) if _engine_key(ts) == "bank" else []
     result["second_opinions"] = second_op.summary(ts.result["state"])  # И27: итог не ждёт вторую оценку
     ts.result = {**ts.result, "outcome": {**ts.result["outcome"], **result}}
@@ -564,8 +565,18 @@ def result(db: Session, ts: TestSession) -> dict:
                 "sandbox": is_sandbox(profile), "retake_same_grade_days": get_settings().retake_same_grade_days,
                 "locked_until": (as_aware(specialization.locked_until).isoformat()
                                  if specialization.locked_until else None)})
+    _ext_preliminary(out, specialization)
     _jury_integrity(out, profile, (er.get("details") or {}).get("integrity"))
     return out
+
+
+def _ext_preliminary(out: dict, specialization) -> None:
+    """Lead/Principal (флаг GRADES_EXT_ENABLED, GRADES_EXT_PRELIMINARY): категория присвоена тестом, но с пометкой
+    «предварительно» и предложением второго этапа; без флага ключа нет."""
+    out.pop("grade_preliminary", None)
+    ext = grade_levels.preliminary_info(specialization.grade_id if specialization.category_id else None)
+    if ext:
+        out["grade_preliminary"] = ext
 
 
 def _jury_integrity(out: dict, profile: CandidateProfile, integ: dict | None) -> None:
@@ -710,6 +721,7 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
     st_ = get_settings()
     jury_allowed = bool(st_.jury_mode_available and user is not None and user.is_demo)
     is_prov = bool(specialization is not None and specialization.status == "provisional" and cat is not None)
+    ext_pre = grade_levels.preliminary_info(cat.grade_id) if cat is not None else None  # Lead/Principal (флаг)
     selected_bundle = bundle.for_direction(selected) if selected else bundle
     failed = (recent_failed(db, user_id, survey.direction_id, now, st_.retake_same_grade_days)
               if survey is not None and not sandbox else {})
@@ -720,8 +732,10 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         "claimed_grade": survey.claimed_grade_id if survey else None,
         "current": {
             "direction": selected, "grade": specialization.grade_id if specialization else None,
-            "category_id": cat_id, "category_title": provisional.title(cat.title, is_prov) if cat else None,
+            "category_id": cat_id,
+            "category_title": provisional.title(cat.title, is_prov or bool(ext_pre)) if cat else None,
             "provisional": is_prov,
+            **({"grade_preliminary": ext_pre} if ext_pre else {}),
             "rating_score": specialization.rating_score if specialization else None, "rank": rank, "category_size": total,
             "market_range": {"from": cat.market_salary_from, "to": cat.market_salary_to,
                              "median": cat.market_salary_median} if cat else None,

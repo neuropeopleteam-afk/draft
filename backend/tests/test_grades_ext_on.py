@@ -123,3 +123,49 @@ def test_demo_lead_principal_model_candidates(client):
         emails = set(db.scalars(select(User.email).where(User.email.like("demo-candidate-%@demo.invalid"))))
         assert min(int(e[15:18]) for e in emails) >= EXT_FIRST
         assert ext_candidates(db, 20261007, "x", emails) == 0  # идемпотентно
+
+
+def test_lead_principal_preliminary_mark(monkeypatch):
+    from app.core.config import get_settings
+
+    info = levels.preliminary_info("lead")
+    assert info and info["title"] == "предварительно" and "модель, не люди" in info["text"]
+    assert info["second_stage"]["available"] is False  # второй этап — отдельный флаг, здесь не включён
+    assert levels.preliminary_info("senior") is None and levels.preliminary_info(None) is None
+    assert levels.status(["backend"])["preliminary"] is True
+    monkeypatch.setattr(get_settings(), "grades_ext_preliminary", False)
+    assert levels.preliminary_info("principal") is None  # пометку снимает настройка, уровень остаётся
+
+
+def test_grade_status_and_card_lead_preliminary():
+    from types import SimpleNamespace
+
+    from app.modules.profiles import facts
+
+    class B(SimpleNamespace):
+        grade_status = "confirmed"
+
+    b = B(profile=SimpleNamespace(), grade="lead", direction="backend", test=None, claimed=(None, None),
+          last_attempt=None)
+    gs = facts.grade_status(b)
+    assert gs["status"] == "confirmed" and gs["ext_preliminary"]["grade"] == "lead"
+    assert gs["text"].startswith("Lead по тесту — предварительно")
+    b.grade = "senior"
+    gs = facts.grade_status(b)
+    assert "ext_preliminary" not in gs and gs["text"].startswith("Грейд подтверждён тестом")
+
+
+def test_validation_grades_ext_block(client):
+    r = client.get("/api/validation/grades-ext")
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["enabled"] and d["preliminary"]
+    roles = [x["role"] for x in d["rows"]]
+    assert roles[0] == "now" and "goal" in roles
+    goal = next(x for x in d["rows"] if x["role"] == "goal")
+    assert goal["goal"] and goal["levels"]["lead"]["exact"] >= 0.64 and goal["above"] <= 0.07
+    now = d["rows"][0]
+    assert now["levels"]["lead"]["exact"] < 0.64 and not now["goal"]
+    assert "модель, не люди" in d["signature"]["world"]
+    assert d["bank"]["by_direction"]["backend"]["families"] == {"lead": 2, "principal": 1}
+    assert any(x["role"] == "goal" and x["reps"] >= 2 for x in d["robustness"])

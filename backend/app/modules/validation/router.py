@@ -239,6 +239,16 @@ def path_retest():
     return {**d, "vs_truth": retest_vs_truth(d), "provenance": stamp("path", d)}
 
 
+from app.modules.catalog.seed_data import GRADES_EXT as _GRADES_EXT  # noqa: E402
+
+if _GRADES_EXT:  # Lead/Principal (флаг GRADES_EXT_ENABLED): без флага маршрута нет — openapi прежний
+    @router.get("/grades-ext", summary="Lead и Principal: точность различения 6 уровней и что нужно для цели (модель, не люди)")
+    def grades_ext_route():
+        from app.modules.validation.grades_ext_view import view
+
+        return view()
+
+
 @router.get("/test-length", summary="Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди)")
 def test_length_route():
     from app.modules.validation.provenance import length_info  # Ф6 (Н8)

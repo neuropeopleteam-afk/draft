@@ -94,6 +94,8 @@ def build_content(db: Session, user_id: uuid.UUID) -> dict | None:
     status = "confirmed"
     if getattr(p, "grade_provisional", False) or t.get("pending_review"):
         status = "preliminary"  # «Junior (предварительно)» (ветка junior) или открытые ответы ещё на проверке
+    if (c.get("category") or {}).get("ext_preliminary"):
+        status = "preliminary"  # Lead/Principal (флаг GRADES_EXT_ENABLED): по тесту, но предварительно
     session_id = t.get("session_id")
     probs = None
     if session_id:

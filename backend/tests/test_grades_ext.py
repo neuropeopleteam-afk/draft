@@ -105,3 +105,8 @@ def test_with_flag_suite_in_subprocess():
                        timeout=900)
     assert r.returncode == 0, (r.stdout[-4000:] + r.stderr[-2000:])
     assert " passed" in r.stdout and "skipped" not in r.stdout.split("\n")[-2]
+
+
+def test_validation_grades_ext_route_absent_without_flag(client):
+    assert client.get("/api/validation/grades-ext").status_code == 404
+    assert "/api/validation/grades-ext" not in client.get("/api/openapi.json").json()["paths"]
