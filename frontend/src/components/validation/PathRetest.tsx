@@ -152,3 +152,50 @@ export function CalibrationCard() {
     </section>
   );
 }
+
+/** Я22: точность уровня — перебор параметров теста на симуляции всего пути (backend: validation/grade_sweep.py,
+ *  make grade-sweep). Модель, не люди: сравнение правил внутри одного мира. */
+export function GradeAccuracy() {
+  const { data: g, error, loading } = useApi<any>("/validation/grade-accuracy", []);
+  const head = ["Вариант", "Точно", "Выше", "Ниже", "Без категории", "±1", "Совпадение при повторе", "κw повтора", "Минут"];
+  const row = (x: any): ReactNode[] => [
+    <span key="l">{x.label}{x.feasible ? "" : <span className="block text-xs text-brand-ink/60">не проходит ограничения</span>}</span>,
+    <span key="e">{pct(x.exact)}{x.exact_ci && <span className="block text-xs text-brand-ink/65">{pct(x.exact_ci[0])} … {pct(x.exact_ci[1])}</span>}</span>,
+    pct(x.over), pct(x.under), pct(x.none), pct(x.within_1), pct(x.retest_exact), withCi(x.retest_kappa, x.retest_kappa_ci),
+    num(x.minutes_mean, 0)];
+  const c = g?.constraints, ch = g?.choice?.row, b = g?.baseline;
+  return (
+    <section id="grade-accuracy" className="mt-12 scroll-mt-20" aria-labelledby="grade-accuracy-t">
+      <h2 id="grade-accuracy-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Точность уровня: какие правила теста дают истинный уровень</h2>
+      <div className="mt-4">
+        {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !g || g.missing
+          ? <Alert kind="info">Расчёт ещё не выполнен: запустите make grade-sweep.</Alert>
+          : <>
+            <SignatureLine s={g.signature} />
+            <p className="mt-2 text-sm text-brand-ink/75">Модель, не люди: {g.points_note ?? "синтетические кандидаты (2PL), истинные параметры заданий = предкалибровка + ошибка эксперта"}. Одни и те же кандидаты во всех вариантах, меняются только правила. Ограничения выбора: завышение ≤ {pct(c.max_over)}, κw повтора ≥ {num(c.min_retest_kappa, 2)}, время пути ≤ {num(c.max_minutes_mean, 0)} мин; точек перебора — {g.n_points}.</p>
+            {ch && b && <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <K label="Точно истинный уровень" value={`${pct(b.exact)} → ${pct(ch.exact)}`} hint={`порог уверенности P ≥ 0,8 → ${num(g.choice.point?.confirm_level, 1)}`} />
+              <K label="Выше истинного" value={`${pct(b.over)} → ${pct(ch.over)}`} hint={`ограничение ≤ ${pct(c.max_over)}`} />
+              <K label="Совпадение при повторе" value={`${pct(b.retest_exact)} → ${pct(ch.retest_exact)}`} hint={`κw ${num(b.retest_kappa, 3)} → ${num(ch.retest_kappa, 3)}`} />
+              <K label="Минут на путь" value={`${num(b.minutes_mean, 0)} → ${num(ch.minutes_mean, 0)}`} hint="время теста не выросло" />
+            </div>}
+            <h3 className="mt-6 font-bold text-brand-night">Главные варианты (мир σ = 0,5, 5 ступеней)</h3>
+            <div className="mt-2"><T head={head} rows={(g.key_rows ?? []).map(row)} min="56rem" caption="Главные варианты перебора" /></div>
+            <p className="mt-2 text-xs text-brand-ink/70">«Ниже» почти на две трети — кандидаты, заявившие грейд ниже своего ({pct(ch?.under_claimed_below)} из {pct(ch?.under)}): тест подтверждает заявленный грейд и выше его не поднимает — смена грейда вверх идёт новым тестом. Решение по лучшей оценке θ̂ без запаса уверенности поднимает точность, но завышает уровень у каждого шестого.</p>
+            <h3 className="mt-6 font-bold text-brand-night">Другие миры: ошибка параметров σ = 0,35 и 4 ступени (как у FSP Talent)</h3>
+            <div className="mt-2"><T head={head} rows={(g.worlds ?? []).map(row)} min="56rem" caption="Варианты в других мирах" /></div>
+            <p className="mt-2 text-xs text-brand-ink/70">Условия конкурента (4 ступени без Стажёра, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой — строка «порог уверенности P 0,5; дотестирование 0; 20 заданий; ступеней 4». У FSP Talent в их мире: совпадение при повторе 76 %, κw 0,866 (miliantr/fsp-talent, docs/testing.md, 05.10.2026) — другой мир и другая процедура, числа сравнимы только по смыслу.</p>
+            <h3 className="mt-6 font-bold text-brand-night">Парето-фронт (точно ↑, выше ↓, κw ↑, минуты ↓)</h3>
+            <div className="mt-2"><T head={head} rows={(g.pareto ?? []).map(row)} min="56rem" caption="Парето-фронт перебора" /></div>
+            {g.pool?.rows?.length > 0 && <>
+              <h3 className="mt-6 font-bold text-brand-night">Чистка пула и добор сильных заданий у порогов</h3>
+              <p className="mt-2 text-sm text-brand-ink/75">26 семейств, слабых по калибровке панелью моделей (модель, не люди), и 17 новых семейств у порогов Junior/Middle и Middle/Senior. Два мира: слабые семейства «как в предкалибровке» и «на деле слабые».</p>
+              <div className="mt-2"><T head={head} rows={g.pool.rows.map((x: any) => { const r = row(x); r[0] = <span key="l">{x.label}{x.world_weak ? "" : <span className="block text-xs text-brand-ink/60">мир: как в предкалибровке</span>}{x.feasible ? "" : <span className="block text-xs text-brand-ink/60">не проходит ограничения</span>}</span>; return r; })} min="56rem" caption="Чистка пула и добор у порогов" /></div>
+              <p className="mt-2 text-xs text-brand-ink/70">Исключение слабых лучше по всем ограничениям в обоих мирах: банк платформы — {g.pool.exclude_better?.platform ? "да" : "нет"}, банк с добором — {g.pool.exclude_better?.plus ? "да" : "нет"}{g.pool.exclude_better?.platform || g.pool.exclude_better?.plus ? "." : "; поэтому чистка пула по умолчанию выключена (меньше сменных семейств — ниже повтор)."}{g.pool.plus_best_confirm ? ` После добора банка завышение ≤ ${pct(c.max_over)} в обоих мирах держит порог P ${num(g.pool.plus_best_confirm.confirm_level, 2)} — пересчёт пути на синхронизированном банке перед сменой порога.` : ""}</p>
+            </>}
+            <p className="mt-2 text-xs text-brand-ink/70">Полная таблица — docs/validation/GRADE_ACCURACY.md; пересчёт — make grade-sweep.</p>
+          </>}
+      </div>
+    </section>
+  );
+}
