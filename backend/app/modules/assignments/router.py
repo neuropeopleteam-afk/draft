@@ -18,6 +18,7 @@ from app.modules.assignments import rubric as rub
 from app.modules.assignments import service as svc
 from app.modules.assignments.models import Assignment, AssignmentAttempt
 from app.modules.auth.models import User
+from app.modules.tariffs.service import require_feature
 from app.modules.invitations.service import profile_by_ref
 from app.modules.matching.router import my_company
 from app.modules.jury import scope as jury_scope
@@ -92,6 +93,7 @@ def preview(body: SourceIn, user: User = Depends(employer), db: Session = Depend
 
 
 @employer_router.post("", status_code=201, summary="Создать задание: зонд кандидатам, к вакансии или открытое",
+                      dependencies=[Depends(require_feature("assignments"))],  # Я29: тариф «Найм»/«Партнёр ФСП»
                       responses={**E_AUTH, 404: err("Источник или кандидат не найден"),
                                  409: err("У вакансии уже есть задание"), 422: err("Вилка или категория")})
 def create(body: AssignmentIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:

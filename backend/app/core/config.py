@@ -325,6 +325,11 @@ class Settings(BaseSettings):
     voice_need_per_hour: int = Field(default=20, ge=1)  # записей на работодателя в час
     voice_need_daily: int = Field(default=300, ge=1)  # записей в сутки на установку (≈ 300 мин × ставка STT)
 
+    # Я29: тарифы работодателя (app/modules/tariffs, docs/TARIFFS.md): «Старт» бесплатно с лимитом приглашений в месяц,
+    # «Найм» — демо-счёт без настоящей оплаты, «Партнёр ФСП» выдаёт ФСП; блок «Польза для ФСП» в кабинете ФСП.
+    # По умолчанию выключено: лимит не проверяется, функции не ограничиваются, ответы API прежние.
+    tariffs_enabled: bool = False
+
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None
     fsp_oidc_client_id: str | None = None
