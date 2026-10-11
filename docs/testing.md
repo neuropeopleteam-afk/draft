@@ -9,7 +9,7 @@
 <!-- numbers:begin -->
 | Что | Число | Откуда |
 |---|---|---|
-| Автотесты бэкенда (`pytest`, SQLite) | **1645 прошли**, пропущено 16, упавших 0 | полный прогон на сервере проверок, SHA `4864dce`, 11.10.2026; `make test`, `make coverage` |
+| Автотесты бэкенда (`pytest`, SQLite) | **1653 прошли**, пропущено 18, упавших 0 | полный прогон на сервере проверок, SHA `fbda4d5`, 11.10.2026; `make test`, `make coverage` |
 | Банк заданий | **361 семейств** (analyst 31, backend 52, common 46, data_eng 29, data_ml 34, devops 30, frontend 35, mobile 34, qa 35, security 35); валидатор (20 вариантов на семейство): PASS 341, WARN 20, FAIL 0 (WARN — открытый ответ без ключа или ключ не исполняется в окружении без Django/JDK; в окружении только с `requirements.txt` WARN больше); 2276 проверок ключей исполнением кода, ошибок 0; 7220 вариантов, уникальных 7196 | `backend/assessment_bank/BANK_SYNC.json`, `make test-bank` |
 | Миграции Alembic | **ревизий: 35, одна голова `cm01`** | `backend/migrations/versions`, `alembic heads` |
 | Подбор (модель, не люди) | P@5 **0,762** [0,730; 0,793], nDCG@10 **0,565** [0,542; 0,588], MRR 0,921; синтетический мир со скрытой истиной, 200 потребностей × 2000 кандидатов, seed 20261006, алгоритм `match-v1.3` | `make bench`, `docs/validation/MATCHING_BENCH.md`, `docs/validation/matching_bench.json` |
