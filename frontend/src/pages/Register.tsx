@@ -2,7 +2,8 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthShell, FormError } from "../components/AuthShell";
 import { api, ApiError, type RegisterOut, type Role } from "../lib/api";
-import { FspIdLogin } from "../integrations/FspId";
+import { FspIdMark } from "../integrations/FspId";
+import { Alert, errText, useApi } from "../components/ui";
 
 export default function Register() {
   const [params] = useSearchParams();
@@ -95,7 +96,46 @@ export default function Register() {
         <FormError message={error} />
         <button type="submit" className="btn-primary w-full" disabled={busy}>{busy ? "Отправляем…" : "Зарегистрироваться"}</button>
       </form>
-      <FspIdLogin role={role === "employer" ? "employer" : "candidate"} compact />
+      <RegisterFspId role={role} />
     </AuthShell>
+  );
+}
+
+interface FspConfig { enabled: boolean; demo_accounts: { username: string; title: string }[]; demo_password: string | null; note: string }
+
+/** UX-2: ФСП ID на регистрации — кнопка и одна строка, демо-учётки свёрнуты. Свой блок: FspIdLogin («Вход») не меняем. */
+function RegisterFspId({ role }: { role: Role }) {
+  const { data } = useApi<FspConfig>("/fsp-id/config");
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!data) return null;
+  const go = async () => {
+    setBusy(true); setErr(null);
+    try {
+      const r = await api<{ authorize_url: string }>("/fsp-id/start", { body: { intent: "login", registration_role: role === "employer" ? "employer" : "candidate" } });
+      window.location.assign(r.authorize_url);
+    } catch (e) { setErr(errText(e)); setBusy(false); }
+  };
+  return (
+    <div className="mt-6 space-y-2">
+      <div className="flex items-center gap-3 text-xs uppercase tracking-[0.14em] text-brand-ink/65"><span className="h-px flex-1 bg-brand-night/10" />или<span className="h-px flex-1 bg-brand-night/10" /></div>
+      <button type="button" data-testid="button-fsp-login" className="btn-ghost w-full gap-2 !border-brand-plum/30 !bg-[#F3F2FB] !text-brand-night" disabled={busy || !data.enabled} onClick={go}>
+        <FspIdMark /> {busy ? "Переходим в ФСП ID…" : "Войти через ФСП ID"}
+      </button>
+      <p className="text-center text-xs text-brand-ink/70">{data.enabled ? (role === "candidate" ? "Без пароля, достижения ФСП — сразу в паспорт." : "Без пароля: кабинет компании создадим при первом входе.") : "ФСП ID на этом сервере ещё не подключён."}</p>
+      <Alert>{err}</Alert>
+      {data.demo_accounts.length > 0 && (
+        <details className="text-xs text-brand-night" data-testid="fsp-demo-accounts">
+          <summary className="cursor-pointer text-center font-semibold text-brand-plum hover:text-brand">Демо-учётки ФСП ID</summary>
+          <div className="mt-2 rounded-xl bg-[#F3F2FB] p-4 leading-relaxed">
+            <ul className="space-y-1.5">
+              {data.demo_accounts.map((a) => <li key={a.username}><code className="rounded bg-white px-1.5 py-0.5 font-semibold">{a.username}</code> — {a.title}</li>)}
+            </ul>
+            {data.demo_password && <p className="mt-2">Пароль для всех демо-учёток: <code className="rounded bg-white px-1.5 py-0.5 font-semibold">{data.demo_password}</code></p>}
+            <p className="mt-2 text-brand-ink/65">{data.note}</p>
+          </div>
+        </details>
+      )}
+    </div>
   );
 }
