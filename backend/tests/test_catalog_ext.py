@@ -258,3 +258,27 @@ def test_spa_inside_spark_only_fixed_with_flag(monkeypatch):
         monkeypatch.delenv("CATALOG_EXT_MIN_FAMILIES")
         get_settings.cache_clear()
         ext.reset_cache()
+
+
+def test_lead_principal_only_families_not_in_pool_without_flag(monkeypatch):
+    """Без GRADES_EXT_ENABLED семейства только уровней Lead/Principal не выдаются и не считаются проверяемыми навыками
+    (банк feat/bank-ext содержит такие семейства; тест 4 уровней остаётся прежним)."""
+    only_top = SimpleNamespace(target_grades=["lead", "principal"])
+    mixed = SimpleNamespace(target_grades=["senior", "lead"])
+    base = SimpleNamespace(target_grades=["junior"])
+    assert ext.in_active_pool(base) and ext.in_active_pool(mixed)
+    assert not ext.in_active_pool(only_top)
+    assert ext.active_specs([only_top, mixed, base]) == [mixed, base]
+    monkeypatch.setattr(ext, "grades_ext_on", lambda: True)
+    assert ext.in_active_pool(only_top)
+
+
+def test_adaptive_pool_has_no_top_only_families():
+    from assessment_bank import load_specs
+
+    from app.modules.assessment.bank_engine import _pool
+
+    specs = load_specs()
+    top_only = {fid for fid, s in specs.items() if s.target_grades and not set(s.target_grades) & set(ext.GRADE_IDS)}
+    in_pool = {pi.family_id for pi in _pool(1)}
+    assert not (top_only & in_pool)
