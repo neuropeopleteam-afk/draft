@@ -29,12 +29,6 @@ const employerSteps = [
   ["Приглашение-оффер", "Вилка «от–до» в рублях обязательна. Контакты кандидата открываются после его согласия."],
 ];
 
-const evidence = [
-  ["T0", "Заявлено", "Самоописание в анкете или резюме. Показывается, но не влияет на категорию и рейтинг."],
-  ["T1", "Проверено платформой", "Подтверждено тестом или зондом. Основа категории и ранжирования."],
-  ["T2", "Подтверждено реестром", "Достижения в соревнованиях ФСП по дисциплинам ЕВСК. Бонус в рейтинге."],
-];
-
 export default function Landing() {
   const rules = useRules();
   return (
@@ -99,25 +93,6 @@ export default function Landing() {
         <div className="mt-12 grid gap-8 lg:grid-cols-2">
           <StepList id="candidates" title="Кандидату" accent="bg-brand" steps={candidateSteps(rules)} cta={["/register?role=candidate", "Зарегистрироваться как кандидат"]} />
           <StepList id="employers" title="Работодателю" accent="bg-brand-plum" steps={employerSteps} cta={["/register?role=employer", "Зарегистрировать компанию"]} />
-        </div>
-      </section>
-
-      <section className="bg-brand-blush/40">
-        <div className="mx-auto max-w-content px-6 py-20">
-          <h2 className="text-3xl font-extrabold tracking-tight text-brand-night">Что считается доказательством</h2>
-          <p className="mt-3 max-w-2xl text-brand-ink/70">
-            Каждый факт о кандидате помечен уровнем доказанности. В подборку и рейтинг идут только T1 и T2.
-            Нет истории ФСП — без штрафа; подтверждённые достижения ФСП дают бонус.
-          </p>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {evidence.map(([code, title, text]) => (
-              <div key={code} className="card border-transparent">
-                <span className="text-3xl font-extrabold text-brand">{code}</span>
-                <p className="mt-3 font-bold text-brand-night">{title}</p>
-                <p className="mt-2 text-sm leading-relaxed text-brand-ink/70">{text}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
