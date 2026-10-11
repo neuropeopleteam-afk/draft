@@ -198,7 +198,10 @@ def test_selection_flag_off_keeps_order_flag_on_moves_absent_core_down(client, m
     assert "ниже тех, у кого ядро роли заявлено или подтверждено" in line["text"]
     assert rc["core"]["headline"] == "Основной язык роли — Go: не заявлен"
     assert {r["ref"]: r for r in on["results"]}[refs["a"]]["core"]["headline"].endswith("подтверждён тестом")
-    assert off["algorithm"] == "match-v1.1" and on["algorithm"] == "match-v1.2"
+    from app.modules.matching import grade_above as GA  # Я12б: добор ступенью выше — match-v1.3 (здесь не действует)
+    assert off["algorithm"] == "match-v1.1" + ("+above" if GA.enabled() else "")
+    assert on["algorithm"] == (GA.ALGORITHM if GA.enabled() else "match-v1.2")
+    assert not on["grade_above"]["applied"]
     monkeypatch.delenv(C.FLAG)
     assert C.enabled() and [r["ref"] for r in _selection(GO_NEED)["results"]] == order_on  # по умолчанию включён
 
