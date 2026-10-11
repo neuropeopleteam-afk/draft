@@ -67,6 +67,7 @@ OUTCOME_TITLES = {"hired": "Вышел на работу", "declined": "Отка
 # Этап найма → этап на платформе для ATS (app.integrations.ats.stages.PLATFORM_STAGES)
 ATS_STAGE = {"interview": "interview", "offer": "offer", "hired": "hired", "declined": "rejected",
              "rejected": "rejected"}
+PAUSED_TITLE = "Доступ к контактам отозван — найм на паузе"
 STAGE_TITLES = {"contact": "Контакты открыты", "slots": "Выбор времени собеседования",
                 "reschedule": "Кандидат просит другое время", "interview": "Собеседование назначено",
                 "interview_done": "Собеседование прошло", "offer": "Оффер отправлен",
@@ -557,8 +558,10 @@ def state_out(db: Session, inv: Invitation, side: str) -> dict:
     act = active_interview(db, inv)
     cur = offers[-1] if offers else None
     open_case = inv.status == InvitationStatus.accepted and inv.contacts_revealed_at is not None and oc is None
-    out = {"invitation_id": str(inv.id), "stage": stage, "stage_title": STAGE_TITLES[stage], "open": open_case,
-           "paused": inv.status == InvitationStatus.accepted and inv.contacts_revealed_at is None,
+    paused = inv.status == InvitationStatus.accepted and inv.contacts_revealed_at is None
+    # FIX7 п. 8 (P12): отзыв контактов важнее исторического «Контакты открыты» — бейдж найма говорит о паузе
+    out = {"invitation_id": str(inv.id), "stage": stage, "stage_title": PAUSED_TITLE if paused else STAGE_TITLES[stage],
+           "open": open_case, "paused": paused,
            "interview": interview_out(act) if act else None,
            "interviews": [interview_out(x) for x in reversed(ivs)],
            "offer": offer_out(cur) if cur else None, "offers": [offer_out(x) for x in reversed(offers)],
@@ -591,6 +594,8 @@ def summary(db: Session, inv: Invitation, side: str) -> dict | None:
     act = active_interview(db, inv)
     cur = current_offer(db, inv)
     line = STAGE_TITLES[stage]
+    if inv.contacts_revealed_at is None:  # FIX7 п. 8: кандидат отозвал доступ — найм на паузе
+        return {"stage": stage, "title": PAUSED_TITLE, "line": PAUSED_TITLE, "todo": False, "paused": True}
     if act is not None and act.status == "scheduled":
         line = f"Собеседование {msk(act.starts_at)}"
     elif cur is not None and cur.status == "sent":

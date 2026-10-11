@@ -316,7 +316,10 @@ def test_revoked_contacts_pause_hiring(client):
     assert client.post(f"{C(inv)}/contacts/revoke", headers=H(tc)).status_code == 200
     r = _propose(client, te, inv)
     assert r.status_code == 409 and r.json()["detail"]["code"] == "hiring_contacts_revoked"
-    assert client.get(f"{E(inv)}/hiring", headers=H(te)).json()["paused"] is True
+    st = client.get(f"{E(inv)}/hiring", headers=H(te)).json()
+    assert st["paused"] is True and st["stage_title"] == "Доступ к контактам отозван — найм на паузе"  # FIX7 п. 8
+    row = next(i for i in client.get("/api/employer/invitations", headers=H(te)).json() if i["id"] == inv)
+    assert row["hiring"]["title"] == "Доступ к контактам отозван — найм на паузе" and row["hiring"]["paused"] is True
     assert client.post(f"{C(inv)}/contacts/restore", headers=H(tc)).status_code == 200
     assert _propose(client, te, inv).status_code == 201
 
