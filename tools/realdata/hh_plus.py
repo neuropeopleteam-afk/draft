@@ -336,7 +336,7 @@ def match(limit: int) -> None:
     from app.core.db import SessionLocal, get_engine
     from app.modules.catalog.models import Category
     from app.modules.catalog.seed_data import DIRECTIONS
-    from app.modules.matching import need_parser
+    from app.modules.matching import grade_above, need_parser
     from app.modules.matching.ranking import algorithm, build_selection
 
     corpus, items, raws = _load_corpus()
@@ -344,7 +344,8 @@ def match(limit: int) -> None:
     per = defaultdict(Counter)
     parsed_dir = defaultdict(Counter)
     errors, missed_ks = [], defaultdict(Counter)
-    cov_best = defaultdict(list)
+    cov_best, cov_mean = defaultdict(list), defaultdict(list)
+    compare = os.environ.get("HH_MATCH_COMPARE", "1") != "0"
     with SessionLocal() as db:
         cat_ids = {c.id for c in db.scalars(select(Category)).all()}
         for i, it in enumerate(items, 1):
@@ -383,22 +384,37 @@ def match(limit: int) -> None:
                     errors.append({"id": it["id"], "field": "grade", "expected": gt, "actual": r.get("grade")})
             if not req and not des:
                 errors.append({"id": it["id"], "field": "stack", "expected": "≥ 1 навык", "actual": None})
-            sel = build_selection(db, r, {}, limit=limit)
-            res = sel["results"]
-            conf = [x for x in res if x["grade_status"] == "confirmed"]
             exact = f"{r.get('direction')}.{r.get('grade')}" if r.get("direction") and r.get("grade") else None
-            c["selection_nonempty"] += bool(res)
-            c["confirmed_any"] += bool(conf)
-            c["confirmed_exact"] += bool(exact and exact in cat_ids and any(x["category_id"] == exact for x in conf))
-            c["confirmed_right_direction"] += bool(any((x["category_id"] or "").split(".")[0] == d for x in conf))
-            top5 = [x for x in res[:5]]
-            if req:
-                c["req_vac"] += 1
-                best = max((x["components"].get("stack_required") or 0 for x in top5), default=0.0)
-                cov_best[d].append(best)
-                c["req_full_top5"] += any((x.get("must") or {}).get("missing_total", 1) == 0 for x in top5)
-                c["req_full_top5_conf"] += any((x.get("must") or {}).get("missing_total", 1) == 0
-                                               and x["grade_status"] == "confirmed" for x in top5)
+            # Я12б: «до» — тот же код с выключенным добором ступенью выше (MATCH_GRADE_ABOVE=0, match-v1.2), «после» —
+            # продукт по умолчанию; покрытие обязательного и «найден подтверждённый» — для обоих
+            for pre, flag in (("off_", "0"), ("", None)) if compare else (("", None),):
+                prev = os.environ.get(grade_above.FLAG)
+                if flag is not None:
+                    os.environ[grade_above.FLAG] = flag
+                try:
+                    sel = build_selection(db, r, {}, limit=limit)
+                finally:
+                    if flag is not None:
+                        os.environ.pop(grade_above.FLAG) if prev is None else os.environ.__setitem__(grade_above.FLAG, prev)
+                res = sel["results"]
+                conf = [x for x in res if x["grade_status"] == "confirmed"]
+                c[pre + "selection_nonempty"] += bool(res)
+                c[pre + "confirmed_any"] += bool(conf)
+                c[pre + "confirmed_exact"] += bool(exact and exact in cat_ids and any(x["category_id"] == exact for x in conf))
+                c[pre + "confirmed_right_direction"] += bool(any((x["category_id"] or "").split(".")[0] == d for x in conf))
+                c[pre + "grade_above_applied"] += bool((sel.get("grade_above") or {}).get("applied"))
+                top5 = [x for x in res[:5]]
+                above_id = (sel.get("grade_above") or {}).get("above")
+                c[pre + "top5_slots"] += len(top5)
+                c[pre + "top5_above"] += sum(1 for x in top5 if above_id and x["category_id"] == above_id)
+                if req:
+                    c[pre + "req_vac"] += 1
+                    vals = [x["components"].get("stack_required") or 0 for x in top5]
+                    cov_best[pre + d].append(max(vals, default=0.0))
+                    cov_mean[pre + d].append(statistics.mean(vals) if vals else 0.0)
+                    c[pre + "req_full_top5"] += any((x.get("must") or {}).get("missing_total", 1) == 0 for x in top5)
+                    c[pre + "req_full_top5_conf"] += any((x.get("must") or {}).get("missing_total", 1) == 0
+                                                         and x["grade_status"] == "confirmed" for x in top5)
             if i % 50 == 0:
                 print(f"… {i}/{len(items)}")
     dirs = {}
@@ -414,17 +430,23 @@ def match(limit: int) -> None:
                    "confirmed_exact": _share(c["confirmed_exact"], c["n"]),
                    "confirmed_right_direction": _share(c["confirmed_right_direction"], c["n"]),
                    "req_coverage_best_top5": {"mean": round(statistics.mean(cv), 3) if cv else None, "n": len(cv)},
+                   "req_coverage_mean_top5": _mean(cov_mean[d]),
+                   "req_coverage_best_top5_off": _mean(cov_best["off_" + d]),
                    "req_full_top5": _share(c["req_full_top5"], c["req_vac"]),
                    "req_full_top5_confirmed": _share(c["req_full_top5_conf"], c["req_vac"]),
                    "missed_key_skills_top": [{"tag": t, "n": k} for t, k in missed_ks[d].most_common(5)]}
     tot = Counter()
     for c in per.values():
         tot.update(c)
-    allcv = [x for d in cov_best for x in cov_best[d]]
+    allcv = [x for d in per for x in cov_best[d]]
     catalog = [d for d in per if d in DIRECTIONS]
     cat_tot = Counter()
     for d in catalog:
         cat_tot.update(per[d])
+
+    def covs(ds):
+        return {k: [x for d in ds for x in src[pre + d]] for k, src, pre in (
+            ("mean5", cov_mean, ""), ("best5_off", cov_best, "off_"), ("mean5_off", cov_mean, "off_"))}
     out = {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "code_commit": code_commit(),
            "algorithm": algorithm(), "label_note": LABEL_NOTE, "corpus_collected_at": corpus["collected_at"],
            "n_corpus": len(items), "n": tot["n"], "n_missing": len(items) - tot["n"], "limit": limit,
@@ -435,8 +457,13 @@ def match(limit: int) -> None:
                      "в названии, навыки — «Ключевые навыки» → теги справочника (разбору не даются). «Подтверждённые» — "
                      "кандидаты, у которых грейд подтверждён тестом. Покрытие требований — доля обязательных навыков "
                      "потребности, подтверждённых тестом (T1), у лучшего из первых пяти.",
-           "overall": _summary(tot, allcv),
-           "catalog_only": _summary(cat_tot, [x for d in catalog for x in cov_best[d]]),
+           "overall": _summary(tot, allcv, covs(list(per))),
+           "catalog_only": _summary(cat_tot, [x for d in catalog for x in cov_best[d]], covs(catalog)),
+           "grade_above": {"compare": compare, "flag": grade_above.FLAG, "min_exact": grade_above.MIN_EXACT,
+                           "keep": grade_above.KEEP,
+                           "note": "«до» — тот же код и разбор с MATCH_GRADE_ABOVE=0 (match-v1.2), «после» — продукт "
+                                   "по умолчанию (match-v1.3): в точной категории меньше 30 подтверждённых — добор "
+                                   "категории на ступень выше, первые 2 места — лучшие точного уровня"},
            "directions": dict(sorted(dirs.items())),
            "errors_top": errors[:80], "errors_by_field": dict(Counter(e["field"] for e in errors))}
     OUT_MATCH.parent.mkdir(parents=True, exist_ok=True)
@@ -449,8 +476,25 @@ def _share(a: int, b: int) -> dict:
     return {"k": a, "n": b, "share": round(a / b, 3) if b else None}
 
 
-def _summary(c: Counter, cv: list[float]) -> dict:
+def _mean(v: list[float]) -> dict:
+    return {"mean": round(statistics.mean(v), 3) if v else None, "n": len(v)}
+
+
+def _summary(c: Counter, cv: list[float], extra: dict | None = None) -> dict:
+    extra = extra or {}
+    off = {"selection_nonempty": _share(c["off_selection_nonempty"], c["n"]),
+           "confirmed_any": _share(c["off_confirmed_any"], c["n"]),
+           "confirmed_exact": _share(c["off_confirmed_exact"], c["n"]),
+           "confirmed_right_direction": _share(c["off_confirmed_right_direction"], c["n"]),
+           "req_coverage_best_top5": _mean(extra.get("best5_off") or []),
+           "req_coverage_mean_top5": _mean(extra.get("mean5_off") or []),
+           "req_full_top5": _share(c["off_req_full_top5"], c["off_req_vac"]),
+           "req_full_top5_confirmed": _share(c["off_req_full_top5_conf"], c["off_req_vac"])} if c["off_req_vac"] else None
     return {"n": c["n"], "direction_ok": _share(c["dir_ok"], c["dir_labelled"]), "grade_ok": _share(c["grade_ok"], c["grade_labelled"]),
+            "req_coverage_mean_top5": _mean(extra.get("mean5") or []),
+            "grade_above_applied": _share(c["grade_above_applied"], c["n"]),
+            "top5_above_share": _share(c["top5_above"], c["top5_slots"]),
+            "grade_above_off": off,
             "with_required": _share(c["with_required"], c["n"]), "key_skills_recall": _share(c["ks_found"], c["ks_total"]),
             "selection_nonempty": _share(c["selection_nonempty"], c["n"]), "confirmed_any": _share(c["confirmed_any"], c["n"]),
             "confirmed_exact": _share(c["confirmed_exact"], c["n"]),
@@ -491,9 +535,32 @@ def render_match(r: dict) -> str:
         lines.append(f"| {t} | {_p(k[key])} | {_p(o[key])} |")
     lines.append(f"| покрытие обязательных навыков у лучшего из пяти (среднее, T1) | {_m(k['req_coverage_best_top5'])} | "
                  f"{_m(o['req_coverage_best_top5'])} |")
+    if k.get("req_coverage_mean_top5"):
+        lines.append(f"| … в среднем по первой пятёрке (T1) | {_m(k['req_coverage_mean_top5'])} | "
+                     f"{_m(o['req_coverage_mean_top5'])} |")
     if k.get("required_mean") is not None:
         lines.append(f"| обязательных навыков в потребности (среднее, где они есть) | {str(k['required_mean']).replace('.', ',')} | "
                      f"{str(o['required_mean']).replace('.', ',')} |")
+    if k.get("grade_above_off"):
+        ko, oo = k["grade_above_off"], o["grade_above_off"]
+        lines += ["", "## Добор уровнем выше (match-v1.3): до и после", "",
+                  "«До» — тот же код и тот же разбор с `MATCH_GRADE_ABOVE=0` (порядок match-v1.2: только точная категория), "
+                  "«после» — продукт по умолчанию: если в точной категории меньше 30 кандидатов с подтверждённым или "
+                  "предварительным грейдом, подборка добавляет категорию на ступень выше; первые 2 места — лучшие точного "
+                  "уровня, дальше кандидат уровнем выше стоит выше точного, только если покрывает больше обязательного. "
+                  f"Добор сработал: {_p(k['grade_above_applied'])} вакансий каталога; доля кандидатов уровнем выше в "
+                  f"первых пятёрках — {_p(k['top5_above_share'])}. На синтетике со скрытой истиной правило не ухудшает "
+                  "P@5, P@10, nDCG@5, nDCG@10 и MRR ни в одном из шести миров — `docs/validation/grade_above.json`.", "",
+                  "| Показатель (направления каталога) | До (match-v1.2) | После (match-v1.3) | Все 9: до | Все 9: после |",
+                  "|---|---|---|---|---|"]
+        for key, t, f in (("req_coverage_best_top5", "покрытие обязательных у лучшего из пяти", _m),
+                          ("req_coverage_mean_top5", "покрытие обязательных, среднее по пятёрке", _m),
+                          ("req_full_top5", "в пятёрке есть кандидат со всеми обязательными", _p),
+                          ("req_full_top5_confirmed", "… и с подтверждённым грейдом", _p),
+                          ("confirmed_any", "есть кандидат с подтверждённым грейдом", _p),
+                          ("confirmed_exact", "… в точной категории", _p),
+                          ("confirmed_right_direction", "… в направлении вакансии", _p)):
+            lines.append(f"| {t} | {f(ko[key])} | {f(k[key])} | {f(oo[key])} | {f(o[key])} |")
     lines += ["", "## По направлениям", "",
               "| Направление | n | В каталоге | Разбор отнёс к | Направление верно | Грейд верно | Подтверждённые кандидаты | В направлении вакансии | Покрытие (лучший из 5) | Все обязательные в пятёрке |",
               "|---|---:|---|---|---|---|---|---|---|---|"]
