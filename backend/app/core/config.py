@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", env_ignore_empty=True)
 
     # Рабочее название продукта — единственное место, где оно задано (фронтенд берёт его из /api/meta).
-    product_name: str = "Встречный"
+    product_name: str = "Драфт"
     app_name: str = "Спецтрек ФСП — платформа подбора ИТ-специалистов"
     app_version: str = "0.2.0"
     env: str = Field(default="dev", description="dev | test | prod")

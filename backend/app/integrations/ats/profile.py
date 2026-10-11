@@ -87,7 +87,7 @@ def phone_digits(phone: str | None) -> str | None:
 # ------------------------------------------------------------------ профиль
 
 def build(p: dict) -> dict:
-    """Из тела ``vstrechny.candidate.v1`` (service.export_payload) — плоская структура для адаптеров ATS."""
+    """Из тела ``draft.candidate.v1`` (service.export_payload) — плоская структура для адаптеров ATS."""
     c, ctx = p["candidate"], p["context"]
     card = c.get("card") or {}
     ct = c.get("contacts") or {}
@@ -118,13 +118,13 @@ def build(p: dict) -> dict:
                      "work_format": WORK_FORMAT_TITLES.get(card.get("work_format") or "", card.get("work_format")),
                      "city": card.get("city")},
         "pdf_url": links.get("pdf"), "card_url": links.get("card") or f"{base}/employer/candidates/{c['ref']}",
-        "platform": (p.get("source") or {}).get("platform") or "Встречный (спецтрек ФСП)",
+        "platform": (p.get("source") or {}).get("platform") or "Драфт (спецтрек ФСП)",
     }
 
 
 def offer_text(d: dict) -> str:
     what = "Принял приглашение" if d["context_type"] == "invitation" else "Откликнулся на вакансию"
-    return f"{what} на платформе «Встречный»: «{d['position_title']}», вилка оффера {_rub(d['salary_from'])} – {_rub(d['salary_to'])}."
+    return f"{what} на платформе «Драфт»: «{d['position_title']}», вилка оффера {_rub(d['salary_from'])} – {_rub(d['salary_to'])}."
 
 
 def test_line(d: dict) -> str | None:
@@ -227,7 +227,7 @@ def as_html(d: dict) -> str:
 
 def comment_text(d: dict, *, update: bool = False) -> str:
     """Короткий комментарий в карточку кандидата на вакансии ATS."""
-    lines = [("Профиль обновлён на платформе «Встречный». " if update else "") + offer_text(d),
+    lines = [("Профиль обновлён на платформе «Драфт». " if update else "") + offer_text(d),
              f"Категория: {d['category_title'] or 'не присвоена'}."]
     tl = test_line(d)
     if tl:

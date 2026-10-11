@@ -79,7 +79,7 @@ def realm() -> dict:
         "internationalizationEnabled": True, "supportedLocales": ["ru", "en"], "defaultLocale": "ru",
         "accessTokenLifespan": 300, "ssoSessionIdleTimeout": 1800, "ssoSessionMaxLifespan": 36000,
         "clients": [{
-            "clientId": "spectrek-platform", "name": "Встречный — платформа спецтрека ФСП",
+            "clientId": "spectrek-platform", "name": "Драфт — платформа спецтрека ФСП",
             "description": "Демо-клиент: Authorization Code + PKCE (S256), конфиденциальный",
             "enabled": True, "protocol": "openid-connect", "publicClient": False,
             "clientAuthenticatorType": "client-secret", "secret": "${FSP_OIDC_CLIENT_SECRET}",
