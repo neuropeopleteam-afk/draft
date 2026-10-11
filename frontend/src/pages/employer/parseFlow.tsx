@@ -153,11 +153,11 @@ export function ParseStatus({ req, fp }: { req: Req; fp: FastParse }) {
     return <span className="chip" role="status" title={title}>разбор: словарь + {label}, цитаты проверены{fp.phase === "cached" ? " · из кэша" : ""}</span>;
   }
   if (fp.phase === "failed") {
-    return <span className="chip" role="status" title="Модель не ответила вовремя — технологии, грейд и опыт найдены по словарю и правилам">разобрано словарём: модель не ответила</span>;
+    return <span className="chip" role="status" title="Модель не ответила вовремя — технологии, грейд и опыт найдены по словарю и правилам">разобрано правилами: модель не ответила</span>;
   }
   const note = req.llm?.used ? `Ответила модель ${label}${req.llm.fallback ? " (запасная: основная не ответила)" : ""}, ${num((req.llm.latency_ms ?? 0) / 1000)} с`
     : req.llm?.reason && req.llm.reason !== "not_configured" ? "Модели не ответили — разбор по словарю технологий и правилам" : undefined;
-  return <span className="chip" title={note}>{req.method === "rules" ? (req.llm?.reason && req.llm.reason !== "not_configured" ? "разбор по словарю: модель не ответила" : "разбор по словарю") : `разбор: словарь + ${label}, цитаты проверены`}</span>;
+  return <span className="chip" title={note}>{req.method === "rules" ? (req.llm?.reason && req.llm.reason !== "not_configured" ? "разобрано правилами: модель не ответила" : "разбор по словарю") : `разбор: словарь + ${label}, цитаты проверены`}</span>;
 }
 
 /** Что изменила модель (строка) и её предложения после правок работодателя (принять / отклонить). */
@@ -205,5 +205,18 @@ export function Suggestions({ fp }: { fp: FastParse }) {
         </div>
       )}
     </div>
+  );
+}
+
+/** Я17: модель не ответила (недоступна, таймаут, мусор вместо JSON) — разбор правилами и предложение уточнить. */
+export function RulesFallbackNote({ req, fp }: { req: Req; fp: FastParse }) {
+  const failed = fp.phase === "failed" || (fp.phase !== "pending" && fp.phase !== "done" && fp.phase !== "cached"
+    && req.method === "rules" && !!req.llm?.reason && req.llm.reason !== "not_configured");
+  if (!failed) return null;
+  return (
+    <p className="rounded-xl border border-brand-lavender/30 bg-[#F3F2FB] px-3 py-2 text-xs text-brand-night" data-testid="parse-rules-fallback">
+      Модель сейчас не ответила — требования разобраны правилами по словарю технологий. Проверьте список ниже и уточните:
+      добавьте недостающее, поправьте веса и уровень; можно повторить разбор позже.
+    </p>
   );
 }

@@ -387,6 +387,21 @@ def _sus(db) -> dict | None:
     return s if s.get("n") else None
 
 
+def _ru_date(iso: str | None) -> str | None:
+    """ISO-время → «05.10.2026» по Москве (дата последней анкеты в подписи SUS)."""
+    if not iso:
+        return None
+    from datetime import datetime, timedelta, timezone
+
+    try:
+        dt = datetime.fromisoformat(iso)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone(timedelta(hours=3))).strftime("%d.%m.%Y")
+
+
 def resolve(spec: dict, db=None) -> dict:
     """«Чем доказано» → значение с интервалом и подписью или ссылка (нет расчёта — нет числа)."""
     kind = spec["kind"]
@@ -399,9 +414,15 @@ def resolve(spec: dict, db=None) -> dict:
         if not s:
             return {"kind": "link", "label": "Анкета SUS: ответов на этом стенде пока нет", "anchor": spec["anchor"],
                     "missing": True}
+        if not s.get("enough", s["n"] >= 5):  # n < 5: число не результат, только «недостаточно ответов» с датой
+            when = _ru_date(s.get("updated_at"))
+            return {"kind": "link", "label": f"Анкета SUS: пока недостаточно ответов (n = {s['n']}{', на ' + when if when else ''})"
+                    " — балл не показываем", "anchor": spec["anchor"], "missing": True}
         return {"kind": "metric", "label": spec["label"], "fmt": "num1", "value": s["mean"], "ci": s.get("ci95"),
                 "vs": {"label": "среднее по отрасли", "value": s.get("benchmark"), "fmt": "num1"}, "anchor": spec["anchor"],
-                "note": "из 100; живые данные этого стенда, демо-учётки жюри включены",
+                "note": "из 100; живые данные этого стенда, демо-учётки жюри включены"
+                        + (f" (их ответов {s['demo_n']}: в т. ч. автотесты и модельные персоны — модель, не люди)"
+                           if s.get("demo_n") else ""),
                 "signature": {"world": "живые анкеты этого стенда", "n": s["n"], "generated_at": s.get("updated_at")}}
     d = _load(spec["src"])
     value = _get(d, spec["path"]) if d else None
@@ -436,8 +457,26 @@ def build(db=None) -> dict:
             items[0]["do"] = items[0]["do"] + [INTERVIEW_GO]
         crit.append({"id": f"c{c['n']}", "n": c["n"], "title": c["title"], "short": c["short"], "weight": c["weight"],
                      "items": items})
-    return {"criteria": crit, "pitch": PITCH, "unique": UNIQUE, "how_to_read": HOW_TO_READ,
+    return {"criteria": crit, "pitch": PITCH, "unique": UNIQUE + _voice_unique(), "how_to_read": HOW_TO_READ,
             "personas": PERSONA_TITLE, "total_weight": sum(c["weight"] for c in CRITERIA) + PITCH["weight"]}
+
+
+# Я17: «Надиктовать» потребность — за флагом VOICE_NEED_ENABLED (по умолчанию выкл.), docs/VOICE.md.
+VOICE_UNIQUE = {"title": "Надиктовать потребность",
+                "text": "У поля «Кого вы ищете» — до 60 с голосом; текст появляется в поле, его правят и разбирают как "
+                        "обычно. Запись не хранится, без согласия микрофон не включается.",
+                "do": [go("Надиктовать", "/employer/needs#need", "employer")]}
+VOICE_NOTE = ("Голосовой ввод потребности (флаг `VOICE_NEED_ENABLED`, по умолчанию выкл.; при включённом — пункт в "
+              "«Что можно проверить только здесь»): «Надиктовать» у поля потребности, до 60 с, распознавание речи "
+              "функцией движка интервью (Deepgram через ретранслятор); текст появляется в поле для правки, разбор — "
+              "прежний и только по кнопке; ни запись, ни текст не сохраняются. Отказ микрофона, старый браузер, сбой "
+              "распознавания — сообщение и ввод с клавиатуры. Механика, лимиты и проверка — `docs/VOICE.md`.")
+
+
+def _voice_unique() -> list[dict]:
+    from app.core.config import get_settings
+
+    return [VOICE_UNIQUE] if getattr(get_settings(), "voice_need_enabled", False) else []
 
 
 def all_links(data: dict | None = None) -> list[dict]:
@@ -535,6 +574,7 @@ def markdown(data: dict | None = None) -> str:
         if c["n"] in INTERVIEW_NOTE:  # Я15
             out += ["", INTERVIEW_NOTE[c["n"]]]
     p = data["pitch"]
+    out += ["", VOICE_NOTE]  # Я17: голосовой ввод потребности — после раздела 6 «Дополнительный функционал»
     out += ["", f"## {p['n']}. {p['title']} — {p['weight']} %", "", f"«{p['tz']}» В продукте не проверяется.", ""]
     return "\n".join(out)
 
