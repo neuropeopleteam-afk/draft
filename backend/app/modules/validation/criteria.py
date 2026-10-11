@@ -432,6 +432,8 @@ def build(db=None) -> dict:
         items = [{"id": f"c{c['n']}-{i}", "n": f"{c['n']}.{i}", "tz": it["tz"], "do": it["do"], "see": it["see"],
                   "proof": _with_provenance(resolve(it["proof"], db)), "limit": it["limit"]}
                  for i, it in enumerate(c["items"], 1)]
+        if c["n"] == 2 and _interview_on():  # Я15: ссылка на устную защиту — только при включённом флаге
+            items[0]["do"] = items[0]["do"] + [INTERVIEW_GO]
         crit.append({"id": f"c{c['n']}", "n": c["n"], "title": c["title"], "short": c["short"], "weight": c["weight"],
                      "items": items})
     return {"criteria": crit, "pitch": PITCH, "unique": UNIQUE, "how_to_read": HOW_TO_READ,
@@ -492,6 +494,25 @@ def _do_text(g: dict) -> str:
     return f"{g['label']} — `{g['to']}`{who}{need}"
 
 
+# Я15: устная защита ответов и ИИ-интервью — за флагом INTERVIEW_ENABLED (по умолчанию выкл.), docs/INTERVIEW.md.
+INTERVIEW_GO = go("Устная защита ответа — по желанию", "/candidate/category#defense", "candidate")
+INTERVIEW_NOTE = {
+    2: ("Устная защита ответа (флаг `INTERVIEW_ENABLED`, по умолчанию выкл.; при включённом — ссылка в 2.1): по желанию "
+        "кандидата ИИ-интервьюер 3 минуты спрашивает по его же развёрнутым ответам; работодатель видит «ответ подтверждён "
+        "устно» или «есть расхождения» с цитатами, сверенными кодом с расшифровкой. Грейд не меняется — это сигнал против "
+        "списывания и чужих ответов, оценивает модель, не люди. Механика, лимиты и проверка — `docs/INTERVIEW.md`."),
+    6: ("ИИ-интервью как этап найма (тот же флаг): работодатель в принятом приглашении зовёт кандидата на 10 минут по "
+        "навыкам, которые тест не подтвердил; итог и расшифровку видит только эта компания. Канал — голос или чат; на "
+        "экране — своя анимация собеседника (волна голоса), без видео и лиц; `docs/INTERVIEW.md`."),
+}
+
+
+def _interview_on() -> bool:
+    from app.core.config import get_settings
+
+    return bool(getattr(get_settings(), "interview_enabled", False))
+
+
 def markdown(data: dict | None = None) -> str:
     """docs/CRITERIA.md: «Критерий → что показываем → чем доказано». Числа — из build() на момент генерации; живые
     данные стенда (SUS) в документ не попадают — только ссылка."""
@@ -511,6 +532,8 @@ def markdown(data: dict | None = None) -> str:
         for it in c["items"]:
             out.append("| " + " | ".join([it["n"], f"«{it['tz']}»", "<br>".join(_do_text(g) for g in it["do"]),
                                           it["see"], proof_text(it["proof"]), it["limit"]]).replace("\n", " ") + " |")
+        if c["n"] in INTERVIEW_NOTE:  # Я15
+            out += ["", INTERVIEW_NOTE[c["n"]]]
     p = data["pitch"]
     out += ["", f"## {p['n']}. {p['title']} — {p['weight']} %", "", f"«{p['tz']}» В продукте не проверяется.", ""]
     return "\n".join(out)
