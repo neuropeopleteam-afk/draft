@@ -198,7 +198,7 @@ export const QUICK: QuickStep[] = [
  *  выключен — шага нет): между категорией и доказательствами, в счёт 12 минут не входит. Ведёт кандидатом «Пройдите
  *  тест сами» на «Две попытки рядом» — там панель Я15 «Подтвердите авторство ответа» (живой запуск с лимитом копии
  *  жюри и готовый пример); `alt` — та же ступень у работодателя: карточка Марии Королёвой со значком и подробностями.
- *  Согласовано с Я15: reports_0910/jury12_to_interview_ui.md, reports_0910/interview_ui.md («Для проводника Я9»). */
+ *  Форма meta.interview = {enabled, stub, defense_minutes} согласована с модулем интервью (frontend/src/lib/meta.tsx). */
 export const QUICK_INTERVIEW: QuickStep = {
   title: "Устная защита ответа · по желанию", optional: true, persona: "candidate_new", path: "/candidate/attempts",
   match: /^\/candidate\/(attempts|interview\/)/, alt: /^\/employer\/candidates\/[^/]+/, cta: "Открыть устную защиту", min: 3,

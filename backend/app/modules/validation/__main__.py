@@ -60,9 +60,22 @@ def calibration_section() -> dict:
                         "Когда появится calibration/panel_*/params.json, `make validate` подхватит её автоматически."}
     p = Path(found[-1])
     d = json.loads(p.read_text(encoding="utf-8"))
-    fams = d.get("families") or d.get("params") or d
-    n = len(fams) if isinstance(fams, dict) else None
-    out = {"status": "ready", "panel": p.parent.name, "file": str(p.relative_to(bank_dir)), "n_families": n,
+    # Я8: охват — объединение семейств всех панелей (последняя панель бывает расширением на 2–10 семейств),
+    # в пересечении с текущим банком; раньше бралась только последняя панель — охват занижался
+    union: set[str] = set()
+    for f in found:
+        fm = json.loads(Path(f).read_text(encoding="utf-8"))
+        fm = fm.get("families") or fm.get("params") or fm
+        if isinstance(fm, dict):
+            union |= set(fm)
+    try:
+        from app.modules.validation.sim import make_pool
+        bank_ids = {i.family_id for i in make_pool(1)}
+    except Exception:  # noqa: BLE001 — без банка: охват по всем панелям
+        bank_ids = union
+    out = {"status": "ready", "panel": p.parent.name, "file": str(p.relative_to(bank_dir)),
+           "n_families": len(union & bank_ids), "n_families_all_panels": len(union),
+           "panels": [Path(f).parent.name for f in found],
            "meta": {k: d[k] for k in ("method", "n_respondents", "n_responses", "generated_at") if k in d}}
     return out
 
@@ -292,6 +305,13 @@ def main() -> int:
     rep["exposure_calibration"] = {k: exp.get(k) for k in ("method", "r_max", "sessions_per_iteration", "iterations",
                                                            "history", "generated_at")}
     rep["seconds"] = round(time.time() - t0, 1)
+    # Я8: подпись расчёта, как у остальных JSON /validation — коммит кода, банк, seed, конфигурация (только метаданные)
+    from app.modules.validation.signature import signature
+    rep["signature"] = signature(
+        seed=20261006, config={"n": a.n, "quick": a.quick, "simulation": rep["simulation"].get("config"),
+                               "exposure_k_generated_at": exp.get("generated_at")},
+        world="симуляция теста на синтетических кандидатах (θ ~ N(0; 1), истина заданий = предкалибровка + ошибка "
+              "эксперта) и подбор на демо-данных (метки правилами)", command="make validate", n=a.n)
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"4/4 → {REPORT} ({rep['seconds']} с)")
