@@ -91,7 +91,7 @@ export function JuryGuide() {
   useEffect(() => { if (loc.pathname !== "/") setPeek(false); }, [loc.pathname]);
   // «Показать проводник» с главной и «Скрыть» в другой вкладке — состояние берём из хранилища
   useEffect(() => {
-    const sync = () => { setHidden(guide.hidden()); setMode(quick.mode()); setQ(quick.step()); };
+    const sync = () => { setHidden(guide.hidden()); setMode(quick.mode()); setQ(quick.step()); setStep(guide.step()); };
     window.addEventListener(GUIDE_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => { window.removeEventListener(GUIDE_EVENT, sync); window.removeEventListener("storage", sync); };
