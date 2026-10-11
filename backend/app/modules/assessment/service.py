@@ -25,7 +25,8 @@ from app.modules.assessment.models import (GradeHistory, SandboxTestStart, Surve
 from app.modules.auth.models import User
 from app.modules.assessment.rules import (GRADE_LEVEL, GradeOutcome, accept_lower_allowed, apply_result,
                                           check_can_start, retake_locks)
-from app.modules.catalog.seed_data import GRADES, tag_title
+from app.modules.catalog import levels as grade_levels
+from app.modules.catalog.seed_data import GRADE_ORDER, GRADES, tag_title
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile
 from app.modules.profiles.models import CandidateSpecialization
@@ -148,6 +149,12 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
     sandbox = is_sandbox(profile)
     specialization = ensure_specialization(db, profile, survey.direction_id)
     confirm_src = None
+    if mode != "confirm" and not grade_levels.is_available(survey.direction_id, claimed_grade):
+        # Lead/Principal (флаг GRADES_EXT_ENABLED) — только там, где банк направления их проверяет (FTT.4)
+        raise api_error(422, "grade_unavailable",
+                        f"Уровень {GRADES.get(claimed_grade, claimed_grade)} в этом направлении тест пока не проверяет: "
+                        "в банке направления нет проверенных заданий этого уровня. Доступно: "
+                        + ", ".join(GRADES[g] for g in grade_levels.available_grades(survey.direction_id)) + ".")
     if mode == "express" and not sandbox:
         raise api_error(409, "express_sandbox_only",
                         "Экспресс-тест доступен только в демо-режиме жюри: категорию живым кандидатам присваивает полный тест")
@@ -464,6 +471,7 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
                                                      "extension", "pending_review", "n_families_in_bank", "mode")},
         "integrity": candidate_view((res.details or {}).get("integrity")),
     }
+    _ext_preliminary(result, specialization)
     second_todo = second_op.take_new(ts.result["state"]) if _engine_key(ts) == "bank" else []
     result["second_opinions"] = second_op.summary(ts.result["state"])  # И27: итог не ждёт вторую оценку
     _add_level_position(result, ts)
@@ -629,8 +637,18 @@ def result(db: Session, ts: TestSession) -> dict:
                 "sandbox": is_sandbox(profile), "retake_same_grade_days": get_settings().retake_same_grade_days,
                 "locked_until": (as_aware(specialization.locked_until).isoformat()
                                  if specialization.locked_until else None)})
+    _ext_preliminary(out, specialization)
     _jury_integrity(out, profile, (er.get("details") or {}).get("integrity"))
     return out
+
+
+def _ext_preliminary(out: dict, specialization) -> None:
+    """Lead/Principal (флаг GRADES_EXT_ENABLED, GRADES_EXT_PRELIMINARY): категория присвоена тестом, но с пометкой
+    «предварительно» и предложением второго этапа; без флага ключа нет."""
+    out.pop("grade_preliminary", None)
+    ext = grade_levels.preliminary_info(specialization.grade_id if specialization.category_id else None)
+    if ext:
+        out["grade_preliminary"] = ext
 
 
 def _jury_integrity(out: dict, profile: CandidateProfile, integ: dict | None) -> None:
@@ -746,6 +764,12 @@ def _write_t1_facts(db: Session, ts: TestSession, res, extra: dict | None = None
         ))
 
 
+def _grades_ext_status(direction: str | None) -> dict:
+    av = grade_levels.available_grades(direction)
+    return {"grades": list(av), "grades_titles": {g: GRADES[g] for g in av},
+            "grades_hidden": [g for g in GRADES if g not in av]}
+
+
 def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dict:
     from app.modules.assessment import provisional
     from app.modules.profiles.facts import grade_status
@@ -781,6 +805,7 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
     st_ = get_settings()
     jury_allowed = bool(st_.jury_mode_available and user is not None and user.is_demo)
     is_prov = bool(specialization is not None and specialization.status == "provisional" and cat is not None)
+    ext_pre = grade_levels.preliminary_info(cat.grade_id) if cat is not None else None  # Lead/Principal (флаг)
     selected_bundle = bundle.for_direction(selected) if selected else bundle
     failed = (recent_failed(db, user_id, survey.direction_id, now, st_.retake_same_grade_days)
               if survey is not None and not sandbox else {})
@@ -791,8 +816,10 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         "claimed_grade": survey.claimed_grade_id if survey else None,
         "current": {
             "direction": selected, "grade": specialization.grade_id if specialization else None,
-            "category_id": cat_id, "category_title": provisional.title(cat.title, is_prov) if cat else None,
+            "category_id": cat_id,
+            "category_title": provisional.title(cat.title, is_prov or bool(ext_pre)) if cat else None,
             "provisional": is_prov,
+            **({"grade_preliminary": ext_pre} if ext_pre else {}),
             "rating_score": specialization.rating_score if specialization else None, "rank": rank, "category_size": total,
             "market_range": {"from": cat.market_salary_from, "to": cat.market_salary_to,
                              "median": cat.market_salary_median} if cat else None,
@@ -825,7 +852,10 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         # min_items/max_items — для Junior/Middle (как раньше), by_grade — по каждому грейду
         "express_available": sandbox and get_engine().name.startswith("bank"),
         "express": {"min_items": st_.assessment_express_min_items, "max_items": st_.assessment_express_max_items,
-                    "by_grade": {g: express_params(st_, g) for g in ("intern", "junior", "middle", "senior")}},
+                    "by_grade": {g: express_params(st_, g) for g in GRADE_ORDER}},
+        # Lead/Principal (флаг GRADES_EXT_ENABLED): уровни, которые тест проверяет в выбранном направлении (по банку);
+        # без флага ключей нет — экран выбора показывает прежние 4 уровня
+        **(_grades_ext_status(selected) if grade_levels.enabled() else {}),
         "active_session_id": str(active.id) if active else None,
         "active_grade": active.claimed_grade_id if active else None,
         "active_mode": _mode(active) if active else None,

@@ -30551,12 +30551,18 @@
           "422": {
             "content": {
               "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "grade_unavailable",
+                    "message": "Данные не прошли проверку"
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Неизвестный грейд"
+            "description": "Неизвестный грейд. Коды `detail.code`: `grade_unavailable`."
           },
           "429": {
             "content": {
@@ -57749,12 +57755,25 @@
           "422": {
             "content": {
               "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "grade_unavailable",
+                    "message": "Данные не прошли проверку"
+                  }
+                },
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
                 }
               }
             },
-            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `grade_unavailable`."
           },
           "429": {
             "content": {

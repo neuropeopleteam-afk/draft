@@ -69,6 +69,8 @@ from app.modules.assessment.grades import (GRADE_RU, category_level, confirm_pct
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.skill_map import stack_gate, to_stack_tags
 from app.modules.assessment.weak_pool import weak_excluded
+from app.modules.catalog import levels as grade_levels
+from app.modules.catalog.seed_data import EXT_GRADE_ORDER
 
 log = logging.getLogger("assessment")
 
@@ -88,7 +90,8 @@ def bank_manifest() -> dict:
 
 @lru_cache(maxsize=4)
 def _pool(n_subpools: int) -> tuple[PoolItem, ...]:
-    return tuple(pool_from_specs(load_specs().values(), n_subpools=n_subpools))
+    # без флага GRADES_EXT_ENABLED семейства только Lead/Principal в тест не попадают (catalog.levels.pool_specs)
+    return tuple(pool_from_specs(grade_levels.pool_specs(load_specs().values()), n_subpools=n_subpools))
 
 
 @lru_cache(maxsize=1)
@@ -145,7 +148,7 @@ def express_params(settings, claimed_grade: str | None) -> dict:
     """Параметры экспресса по заявленному грейду: Junior/Middle — 5–7 заданий с лимитом ≤ 240 с; Senior — 8–12 с лимитом
     ≤ 360 с (консилиум 07.10, решение 5). Одна точка правды для движка, статуса и дедлайна сессии."""
     s = settings
-    if claimed_grade == "senior":
+    if claimed_grade in ("senior", "lead", "principal"):  # Lead/Principal экспресс не присваивает (grades.ceiling)
         return {"min_items": s.assessment_express_senior_min_items, "max_items": s.assessment_express_senior_max_items,
                 "item_time_s": s.assessment_express_senior_item_time_s,
                 "max_minutes": s.assessment_express_senior_max_minutes}
@@ -215,6 +218,12 @@ class BankEngine:
                                  parse_quarantine(self._settings().assessment_subpool_quarantine))
         if claimed_grade == "intern":  # лёгких семейств мало — тест Стажёра идёт без ротации субпулов (intern_pool.py)
             subpool = None
+        if claimed_grade in EXT_GRADE_ORDER:  # Lead/Principal (флаг GRADES_EXT_ENABLED): трудных семейств мало — как у
+            # Стажёра, без ротации субпулов; оценка θ — с более широким априорным SD (меньше стягивание к среднему у
+            # θ ≈ 2–3). Обоснование и числа — docs/validation/GRADES_EXT.md
+            if self._settings().grades_ext_no_subpool:
+                subpool = None
+            cfg["prior_sd"] = float(self._settings().grades_ext_prior_sd)
         state = {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": claimed_grade,
             "mode": mode, "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
@@ -398,7 +407,7 @@ class BankEngine:
                 rescored, excluded = True, len(excl)
         scored = [i for i in done if not i["canary"]]
         # потолок категории по длине теста и погрешности — то же отображение θ → категория, что у мини-теста (grades)
-        dec = decide_grade(theta, se, claimed, n_items=len(scored))
+        dec = decide_grade(theta, se, claimed, n_items=len(scored), direction=state["direction"])
 
         new_scored = [i for i in state["items"] if i["done"] and not i["canary"]]
         pending = [i for i in scored if any(v is None for v in i["x"])]
@@ -468,7 +477,7 @@ class BankEngine:
 
             details["two_stage"] = refine_result(state, theta, se, len(new_scored))
         retake = dec.retake_lower
-        lvl = category_level(theta, se, len(scored))
+        lvl = category_level(theta, se, len(scored), direction=state["direction"])
         details["category_level"] = {"grade": lvl.grade, "ceiling": lvl.ceiling, "capped": lvl.capped,
                                      "claimed_above_ceiling": GRADES.index(claimed) > GRADES.index(lvl.ceiling)}
         # θ и погрешность округляются один раз (fmt.theta_round): итог, факты, подборка и приглашение — одинаково
@@ -493,7 +502,8 @@ class BankEngine:
         c = state["cfg"]
         ext = state.get("ext")
         # сессии, начатые до 06.10 (в cfg нет новых ключей), доигрываются по прежним правилам остановки и выбора
-        cuts = ((self.scale.cuts[c["cuts_only"]],) if c.get("cuts_only") else tuple(self.scale.cuts[g] for g in GRADES))
+        # пороги — уровней направления (Lead/Principal — только если они видны в направлении, catalog.levels)
+        cuts = ((self.scale.cuts[c["cuts_only"]],) if c.get("cuts_only") else cuts_tuple(state.get("direction")))
         return CATConfig(min_items=c["min_items"], max_items=c["max_items"], se_target=c["se_target"],
                          max_time_s=c["max_time_s"], cuts=cuts, start_theta=start_theta(),
                          canary_positions=tuple(c.get("canary_positions", (2, 6, 10))),
@@ -501,7 +511,7 @@ class BankEngine:
                          select_at=c.get("select_at", "theta"),
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
                          ext_time_s=float(c.get("ext_time_s", 1800.0)),
-                         ext_own_first=bool(c.get("ext_own_first", False)))
+                         ext_own_first=bool(c.get("ext_own_first", False)), prior_sd=float(c.get("prior_sd", 1.0)))
 
     def _rebuild(self, state: dict) -> CATSession:
         pool = list(_pool(state["cfg"].get("subpools", 1)))
