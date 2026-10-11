@@ -191,9 +191,12 @@ test("1440: проверка за 12 минут — от своей потреб
   });
 
   await test.step("справочник остаётся: переключатель в шапке", async () => {
-    await g.getByRole("button", { name: "Готово · остальное — в справочнике" }).click();
+    // С2 №5: «Готово» — короткий итог, справочник — с шага 1
+    await g.getByRole("button", { name: "Готово", exact: true }).click();
+    await expect(g.getByTestId("quick-done")).toContainText(/Проверка за 12 минут пройдена за \d+:\d\d · 8 шагов/);
+    await g.getByRole("button", { name: "Справочник с шага 1" }).click();
     await expect(g.getByRole("button", { name: "Справочник" })).toHaveAttribute("aria-pressed", "true");
-    await expect(g.getByText(/^Проводник жюри · шаг \d+ из \d+$/)).toBeVisible();
+    await expect(g.getByText(/^Проводник жюри · шаг 1 из \d+$/)).toBeVisible();
     await g.getByRole("button", { name: "Проверка за 12 минут" }).click();
     await expectStep(page, 8, "Доказательства одной кнопкой");
   });

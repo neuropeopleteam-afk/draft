@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
+import { guide, isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
   type QuickPersona, type QuickStep } from "../lib/jury";
 import { useDirectionEntries, useMeta } from "../lib/meta";
 
@@ -69,6 +69,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const LAST = steps.length - 1, PLAN = planOf(steps);
   const [now, setNow] = useState(Date.now());
   const [info, setInfo] = useState<QuickPersona[] | null>(null);
+  const [done, setDone] = useState(false);  // С2 №5: «Готово» — короткий итог, справочник — с шага 1
   useEffect(() => { quick.touch(); const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
   const jury = isJury(me?.email);
   const need = quick.need();
@@ -125,6 +126,20 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const first = (n: string) => n.split(" ")[0];
   const invitable = (info ?? []).filter((p) => p.rank && p.can_invite).sort((a, b) => a.rank! - b.rank!)[0];
   const invited = q === INVITE && ans.own;
+
+  if (done) return (
+    <div className="mt-2" data-testid="quick-done">
+      <p className="text-base font-bold">Проверка за {QUICK_MINUTES} минут пройдена за {mmss(now - t0)} · {steps.length} шагов</p>
+      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+        <Link to="/criteria" className="font-semibold text-brand-blush underline-offset-2 hover:underline">Критерии ТЗ — /criteria</Link>
+        <Link to="/validation" className="font-semibold text-brand-blush underline-offset-2 hover:underline">Метрики — /validation</Link>
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/10 pt-2.5">
+        <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20" onClick={() => setDone(false)}>Назад</button>
+        <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => { guide.setStep(0); quick.setMode("full"); }}>Справочник с шага 1</button>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -210,7 +225,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
                   <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20" disabled={busy} onClick={() => go(nextI + 1)} data-testid="quick-skip-defense">Пропустить → {steps[nextI + 1].title}</button>
                 )}
               </>
-            : <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => quick.setMode("full")}>Готово · остальное — в справочнике</button>}
+            : <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => setDone(true)}>Готово</button>}
         <span className="ml-auto flex gap-3 text-xs font-semibold text-white/70">
           <button className="underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={() => { quick.restart(); setQ(0); setNow(Date.now()); }}>Начать заново</button>
           <button className="underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={onReset}>Сбросить демо</button>
