@@ -1,13 +1,13 @@
 {
  "signature": {
-  "world": "симуляция всего пути: 5 направлений × 500 кандидатов, точек перебора: 90",
+  "world": "симуляция всего пути: 5 направлений × 500 кандидатов, точек перебора: 98",
   "seed": 20261006,
   "config_hash": "ae6fef171362",
   "commit": "unknown",
   "bank": "76c4164b6ce83743",
   "n": 2500,
   "command": "make grade-sweep",
-  "generated_at": "2026-10-11T09:49:08+00:00"
+  "generated_at": "2026-10-11T09:51:11+00:00"
  },
  "constraints": {
   "max_over": 0.07,
@@ -77,6 +77,9 @@
   "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude;plus=1",
   "decision=claimed;confirm_level=0.55;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude;plus=1",
   "decision=claimed;confirm_level=0.58;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude;plus=1",
+  "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=keep;plus=1",
+  "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude;plus=1",
+  "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude;plus=1",
   "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=keep;plus=0",
   "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude;plus=0",
   "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=down;plus=0",
@@ -86,6 +89,9 @@
   "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=exclude;plus=1",
   "decision=claimed;confirm_level=0.55;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=exclude;plus=1",
   "decision=claimed;confirm_level=0.58;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=exclude;plus=1",
+  "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep;plus=1",
+  "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=exclude;plus=1",
+  "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=exclude;plus=1",
   "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep;plus=0",
   "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep;plus=0",
   "decision=claimed;confirm_level=0.55;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep;plus=0",
@@ -5867,8 +5873,520 @@
     "feasible_strict": false
    },
    "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep;plus=1",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.65,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 1
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.628,
+    "over": 0.0664,
+    "under": 0.294,
+    "none": 0.0304,
+    "within_1": 0.992,
+    "kappa_true": 0.7872,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8674,
+    "retest_exact": 0.794,
+    "minutes_mean": 56.6592,
+    "minutes_p90": 74.3208,
+    "minutes_over_60": 0.4884,
+    "items_mean": 20.72,
+    "sessions_mean": 1.004,
+    "borderline": 0.7368,
+    "status": {
+     "accepted_lower": 0.2212,
+     "confirmed": 0.692,
+     "none": 0.0304,
+     "provisional": 0.0564
+    },
+    "exact_ci": [
+     0.609,
+     0.646
+    ],
+    "over_ci": [
+     0.057,
+     0.075
+    ],
+    "retest_kappa_ci": [
+     0.855,
+     0.878
+    ],
+    "feasible": true,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=exclude;plus=1",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.65,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "exclude",
+    "plus": 1
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6192,
+    "over": 0.0596,
+    "under": 0.3092,
+    "none": 0.0348,
+    "within_1": 0.9936,
+    "kappa_true": 0.7867,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.8653,
+    "retest_exact": 0.7972,
+    "minutes_mean": 56.132,
+    "minutes_p90": 73.8946,
+    "minutes_over_60": 0.462,
+    "items_mean": 20.6724,
+    "sessions_mean": 1.004,
+    "borderline": 0.7424,
+    "status": {
+     "accepted_lower": 0.2332,
+     "confirmed": 0.6688,
+     "none": 0.0348,
+     "provisional": 0.0632
+    },
+    "exact_ci": [
+     0.6,
+     0.636
+    ],
+    "over_ci": [
+     0.05,
+     0.068
+    ],
+    "retest_kappa_ci": [
+     0.853,
+     0.878
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep;plus=1",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.7,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 1
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6144,
+    "over": 0.0596,
+    "under": 0.3112,
+    "none": 0.038,
+    "within_1": 0.9912,
+    "kappa_true": 0.7809,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8619,
+    "retest_exact": 0.7832,
+    "minutes_mean": 56.6793,
+    "minutes_p90": 74.3322,
+    "minutes_over_60": 0.488,
+    "items_mean": 20.7148,
+    "sessions_mean": 1.0044,
+    "borderline": 0.7356,
+    "status": {
+     "accepted_lower": 0.2384,
+     "confirmed": 0.656,
+     "none": 0.038,
+     "provisional": 0.0676
+    },
+    "exact_ci": [
+     0.595,
+     0.633
+    ],
+    "over_ci": [
+     0.051,
+     0.068
+    ],
+    "retest_kappa_ci": [
+     0.849,
+     0.874
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=exclude;plus=1",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.7,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "exclude",
+    "plus": 1
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5964,
+    "over": 0.0556,
+    "under": 0.3308,
+    "none": 0.042,
+    "within_1": 0.9928,
+    "kappa_true": 0.7759,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8588,
+    "retest_exact": 0.7804,
+    "minutes_mean": 56.1694,
+    "minutes_p90": 73.8946,
+    "minutes_over_60": 0.4656,
+    "items_mean": 20.6724,
+    "sessions_mean": 1.0048,
+    "borderline": 0.7452,
+    "status": {
+     "accepted_lower": 0.2528,
+     "confirmed": 0.6292,
+     "none": 0.042,
+     "provisional": 0.076
+    },
+    "exact_ci": [
+     0.579,
+     0.616
+    ],
+    "over_ci": [
+     0.046,
+     0.064
+    ],
+    "retest_kappa_ci": [
+     0.847,
+     0.872
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=keep;plus=1",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.65,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "keep",
+    "plus": 1
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6232,
+    "over": 0.07,
+    "under": 0.2956,
+    "none": 0.0272,
+    "within_1": 0.9904,
+    "kappa_true": 0.7762,
+    "under_claimed_below": 0.1656,
+    "retest_kappa": 0.8678,
+    "retest_exact": 0.808,
+    "minutes_mean": 57.3949,
+    "minutes_p90": 74.5334,
+    "minutes_over_60": 0.5064,
+    "items_mean": 20.8256,
+    "sessions_mean": 1.0016,
+    "borderline": 0.7396,
+    "status": {
+     "accepted_lower": 0.2284,
+     "confirmed": 0.6956,
+     "none": 0.0272,
+     "provisional": 0.0488
+    },
+    "exact_ci": [
+     0.604,
+     0.642
+    ],
+    "over_ci": [
+     0.061,
+     0.08
+    ],
+    "retest_kappa_ci": [
+     0.856,
+     0.879
+    ],
+    "feasible": true,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude;plus=1",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.65,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "exclude",
+    "plus": 1
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6192,
+    "over": 0.0596,
+    "under": 0.3092,
+    "none": 0.0348,
+    "within_1": 0.9936,
+    "kappa_true": 0.7867,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.8653,
+    "retest_exact": 0.7972,
+    "minutes_mean": 56.132,
+    "minutes_p90": 73.8946,
+    "minutes_over_60": 0.462,
+    "items_mean": 20.6724,
+    "sessions_mean": 1.004,
+    "borderline": 0.7424,
+    "status": {
+     "accepted_lower": 0.2332,
+     "confirmed": 0.6688,
+     "none": 0.0348,
+     "provisional": 0.0632
+    },
+    "exact_ci": [
+     0.6,
+     0.637
+    ],
+    "over_ci": [
+     0.05,
+     0.068
+    ],
+    "retest_kappa_ci": [
+     0.854,
+     0.876
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=keep;plus=1",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.7,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "keep",
+    "plus": 1
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6064,
+    "over": 0.0652,
+    "under": 0.3136,
+    "none": 0.0352,
+    "within_1": 0.9904,
+    "kappa_true": 0.7696,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8643,
+    "retest_exact": 0.7988,
+    "minutes_mean": 57.3521,
+    "minutes_p90": 74.558,
+    "minutes_over_60": 0.504,
+    "items_mean": 20.84,
+    "sessions_mean": 1.0012,
+    "borderline": 0.7408,
+    "status": {
+     "accepted_lower": 0.2428,
+     "confirmed": 0.6628,
+     "none": 0.0352,
+     "provisional": 0.0592
+    },
+    "exact_ci": [
+     0.588,
+     0.625
+    ],
+    "over_ci": [
+     0.056,
+     0.075
+    ],
+    "retest_kappa_ci": [
+     0.851,
+     0.875
+    ],
+    "feasible": true,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude;plus=1",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.7,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "exclude",
+    "plus": 1
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5964,
+    "over": 0.0556,
+    "under": 0.3308,
+    "none": 0.042,
+    "within_1": 0.9928,
+    "kappa_true": 0.7759,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8588,
+    "retest_exact": 0.7804,
+    "minutes_mean": 56.1694,
+    "minutes_p90": 73.8946,
+    "minutes_over_60": 0.4656,
+    "items_mean": 20.6724,
+    "sessions_mean": 1.0048,
+    "borderline": 0.7452,
+    "status": {
+     "accepted_lower": 0.2528,
+     "confirmed": 0.6292,
+     "none": 0.042,
+     "provisional": 0.076
+    },
+    "exact_ci": [
+     0.578,
+     0.613
+    ],
+    "over_ci": [
+     0.047,
+     0.065
+    ],
+    "retest_kappa_ci": [
+     0.846,
+     0.87
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
   }
  ],
  "caveat": "Синтетика: истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5, люди — модель ответов 2PL; проверяется механика всей процедуры, а не качество заданий на людях. «Предварительно» считается ступенью Junior. Дискриминативность — на симулированном пилоте с авторскими параметрами: она показывает замысел автора, а не поведение людей; r_pb панели моделей — независимая проверка на ответах моделей, шкала моделей не равна шкале людей.",
- "seconds": 63.0
+ "seconds": 39.6
 }

@@ -178,6 +178,12 @@ def test_grade_accuracy_endpoint(client):
     assert ch["feasible"] and ch["exact"] > d["baseline"]["exact"]
     assert ch["over"] <= d["constraints"]["max_over"]
     assert ch["point"]["confirm_level"] == pytest.approx(get_settings().assessment_confirm_level)
+    pool = d.get("pool") or {}
+    if pool.get("rows"):  # чистка пула: строки двух миров; флаг по умолчанию выключен, пока исключение не лучше по всем
+        assert {"platform", "plus"} >= set(pool["exclude_better"])
+        if not any(pool["exclude_better"].values()):
+            assert not get_settings().assessment_weak_exclude
+        assert all(not r["world_weak"] or "истинная a" in r["label"] for r in pool["rows"])
     assert d["pareto"] and d["worlds"] and d["key_rows"]
 
 
