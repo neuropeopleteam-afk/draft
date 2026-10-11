@@ -315,7 +315,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
               </div>
               <p className="mt-2 text-xs text-brand-ink/65">Имя, почта и телефон не показываются никогда — только после того, как вы примете приглашение.</p>
             </div>
-            <Field label="ФСП ID (необязательно)" htmlFor="fsp" hint="Связь с ФСП ID пока работает как заглушка: идентификатор сохранится, достижения подтянутся после подключения реестра.">
+            <Field label="ФСП ID (необязательно)" htmlFor="fsp" hint="Достижения подтянутся из реестра ФСП, если войти через ФСП ID">
               <input id="fsp" className="input" value={fspId} onChange={(e) => setFspId(e.target.value)} placeholder="Например, FSP-123456" />
             </Field>
             <label className="flex items-start gap-3 rounded-xl border border-brand-night/10 p-4 text-sm">
