@@ -16997,6 +16997,546 @@
      "block_minutes_mean": 14.3
     }
    }
+  },
+  "g_real_pb_c24|0.6|top": {
+   "scenario": "g_real_pb_c24",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a) + новых коротких Principal (модельных): общий 24, трудность 2,9–3,3, a 1,5, блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      24,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": 1.5,
+   "block": 10,
+   "partial": "gpcm",
+   "own_principal_short": 0,
+   "common_principal_short": 24,
+   "b_principal_short": [
+    2.9,
+    3.3
+   ],
+   "n": 1000,
+   "exact": 0.635,
+   "above": 0.05,
+   "below": 0.315,
+   "none": 0.0,
+   "retest_exact": 0.605,
+   "minutes_mean": 79.8,
+   "minutes_p90": 99.8,
+   "block_share": 0.51,
+   "ext_assigned": 0.482,
+   "above_ext": 0.044,
+   "ext_false_share": 0.091,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.882,
+     "above": 0.039,
+     "below": 0.079,
+     "minutes_mean": 66.6,
+     "minutes_p90": 76.9,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.521,
+     "above": 0.083,
+     "below": 0.396,
+     "minutes_mean": 73.8,
+     "minutes_p90": 96.5,
+     "block_minutes_mean": 5.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.687,
+     "above": 0.061,
+     "below": 0.253,
+     "minutes_mean": 87.1,
+     "minutes_p90": 100.5,
+     "block_minutes_mean": 15.1
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.563,
+     "above": 0.0,
+     "below": 0.437,
+     "minutes_mean": 87.1,
+     "minutes_p90": 100.8,
+     "block_minutes_mean": 14.3
+    }
+   }
+  },
+  "g_real_pb_c24|0.6|top|r1": {
+   "scenario": "g_real_pb_c24",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 1,
+   "text": "реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a) + новых коротких Principal (модельных): общий 24, трудность 2,9–3,3, a 1,5, блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 2",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      24,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": 1.5,
+   "block": 10,
+   "partial": "gpcm",
+   "own_principal_short": 0,
+   "common_principal_short": 24,
+   "b_principal_short": [
+    2.9,
+    3.3
+   ],
+   "n": 1000,
+   "exact": 0.631,
+   "above": 0.035,
+   "below": 0.334,
+   "none": 0.0,
+   "retest_exact": 0.61,
+   "minutes_mean": 80.4,
+   "minutes_p90": 99.5,
+   "block_share": 0.521,
+   "ext_assigned": 0.468,
+   "above_ext": 0.023,
+   "ext_false_share": 0.049,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.829,
+     "above": 0.079,
+     "below": 0.092,
+     "minutes_mean": 67.0,
+     "minutes_p90": 76.4,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.534,
+     "above": 0.058,
+     "below": 0.409,
+     "minutes_mean": 74.4,
+     "minutes_p90": 97.2,
+     "block_minutes_mean": 5.6
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.714,
+     "above": 0.017,
+     "below": 0.269,
+     "minutes_mean": 86.8,
+     "minutes_p90": 100.4,
+     "block_minutes_mean": 14.5
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.529,
+     "above": 0.0,
+     "below": 0.471,
+     "minutes_mean": 88.9,
+     "minutes_p90": 100.8,
+     "block_minutes_mean": 16.0
+    }
+   }
+  },
+  "g_real_pb_c24|0.6|top|r2": {
+   "scenario": "g_real_pb_c24",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 2,
+   "text": "реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a) + новых коротких Principal (модельных): общий 24, трудность 2,9–3,3, a 1,5, блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 3",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      24,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": 1.5,
+   "block": 10,
+   "partial": "gpcm",
+   "own_principal_short": 0,
+   "common_principal_short": 24,
+   "b_principal_short": [
+    2.9,
+    3.3
+   ],
+   "n": 1000,
+   "exact": 0.606,
+   "above": 0.046,
+   "below": 0.348,
+   "none": 0.0,
+   "retest_exact": 0.599,
+   "minutes_mean": 80.0,
+   "minutes_p90": 99.9,
+   "block_share": 0.528,
+   "ext_assigned": 0.465,
+   "above_ext": 0.037,
+   "ext_false_share": 0.08,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.855,
+     "above": 0.059,
+     "below": 0.086,
+     "minutes_mean": 67.1,
+     "minutes_p90": 75.3,
+     "block_minutes_mean": 0.2
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.502,
+     "above": 0.086,
+     "below": 0.412,
+     "minutes_mean": 74.5,
+     "minutes_p90": 97.1,
+     "block_minutes_mean": 5.9
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.657,
+     "above": 0.034,
+     "below": 0.31,
+     "minutes_mean": 86.7,
+     "minutes_p90": 100.9,
+     "block_minutes_mean": 14.9
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.521,
+     "above": 0.0,
+     "below": 0.479,
+     "minutes_mean": 86.9,
+     "minutes_p90": 101.5,
+     "block_minutes_mean": 14.6
+    }
+   }
+  },
+  "g_real_pb_c32|0.6|top": {
+   "scenario": "g_real_pb_c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a) + новых коротких Principal (модельных): общий 32, трудность 2,9–3,3, a 1,5, блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      32,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": 1.5,
+   "block": 10,
+   "partial": "gpcm",
+   "own_principal_short": 0,
+   "common_principal_short": 32,
+   "b_principal_short": [
+    2.9,
+    3.3
+   ],
+   "n": 1000,
+   "exact": 0.628,
+   "above": 0.044,
+   "below": 0.328,
+   "none": 0.0,
+   "retest_exact": 0.62,
+   "minutes_mean": 80.5,
+   "minutes_p90": 99.7,
+   "block_share": 0.522,
+   "ext_assigned": 0.469,
+   "above_ext": 0.035,
+   "ext_false_share": 0.075,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.822,
+     "above": 0.059,
+     "below": 0.118,
+     "minutes_mean": 67.4,
+     "minutes_p90": 76.6,
+     "block_minutes_mean": 0.2
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.53,
+     "above": 0.061,
+     "below": 0.409,
+     "minutes_mean": 74.4,
+     "minutes_p90": 97.0,
+     "block_minutes_mean": 5.5
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.673,
+     "above": 0.054,
+     "below": 0.273,
+     "minutes_mean": 86.5,
+     "minutes_p90": 100.1,
+     "block_minutes_mean": 14.3
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.576,
+     "above": 0.0,
+     "below": 0.424,
+     "minutes_mean": 89.6,
+     "minutes_p90": 101.1,
+     "block_minutes_mean": 16.2
+    }
+   }
+  },
+  "g_real_pb_c32|0.6|top|r1": {
+   "scenario": "g_real_pb_c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 1,
+   "text": "реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a) + новых коротких Principal (модельных): общий 32, трудность 2,9–3,3, a 1,5, блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 2",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      32,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": 1.5,
+   "block": 10,
+   "partial": "gpcm",
+   "own_principal_short": 0,
+   "common_principal_short": 32,
+   "b_principal_short": [
+    2.9,
+    3.3
+   ],
+   "n": 1000,
+   "exact": 0.634,
+   "above": 0.051,
+   "below": 0.315,
+   "none": 0.0,
+   "retest_exact": 0.593,
+   "minutes_mean": 80.1,
+   "minutes_p90": 99.9,
+   "block_share": 0.507,
+   "ext_assigned": 0.48,
+   "above_ext": 0.045,
+   "ext_false_share": 0.094,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.836,
+     "above": 0.039,
+     "below": 0.125,
+     "minutes_mean": 67.5,
+     "minutes_p90": 76.7,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.502,
+     "above": 0.061,
+     "below": 0.438,
+     "minutes_mean": 74.3,
+     "minutes_p90": 95.7,
+     "block_minutes_mean": 4.9
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.677,
+     "above": 0.088,
+     "below": 0.236,
+     "minutes_mean": 86.7,
+     "minutes_p90": 100.6,
+     "block_minutes_mean": 14.3
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.626,
+     "above": 0.0,
+     "below": 0.374,
+     "minutes_mean": 87.8,
+     "minutes_p90": 101.3,
+     "block_minutes_mean": 15.2
+    }
+   }
+  },
+  "g_real_pb_c32|0.6|top|r2": {
+   "scenario": "g_real_pb_c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 2,
+   "text": "реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a) + новых коротких Principal (модельных): общий 32, трудность 2,9–3,3, a 1,5, блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 3",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      32,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": 1.5,
+   "block": 10,
+   "partial": "gpcm",
+   "own_principal_short": 0,
+   "common_principal_short": 32,
+   "b_principal_short": [
+    2.9,
+    3.3
+   ],
+   "n": 1000,
+   "exact": 0.605,
+   "above": 0.039,
+   "below": 0.356,
+   "none": 0.0,
+   "retest_exact": 0.619,
+   "minutes_mean": 80.3,
+   "minutes_p90": 100.2,
+   "block_share": 0.49,
+   "ext_assigned": 0.438,
+   "above_ext": 0.028,
+   "ext_false_share": 0.064,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.803,
+     "above": 0.072,
+     "below": 0.125,
+     "minutes_mean": 67.9,
+     "minutes_p90": 76.2,
+     "block_minutes_mean": 0.1
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.565,
+     "above": 0.045,
+     "below": 0.39,
+     "minutes_mean": 73.7,
+     "minutes_p90": 96.7,
+     "block_minutes_mean": 4.7
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.599,
+     "above": 0.047,
+     "below": 0.354,
+     "minutes_mean": 87.1,
+     "minutes_p90": 100.9,
+     "block_minutes_mean": 15.1
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.538,
+     "above": 0.0,
+     "below": 0.462,
+     "minutes_mean": 88.2,
+     "minutes_p90": 101.2,
+     "block_minutes_mean": 15.3
+    }
+   }
   }
  },
  "signature": {
@@ -17093,6 +17633,19 @@
     "config_hash": "4ad29cda01a5",
     "command": "make grades-ext-need",
     "note": "дерево exp/grades-ext-x-catalog-ext2 = feat/grades-ext + feat/catalog-ext a8e0053 (банк после sync 705e743: 45 семейств Lead + 29 Principal)"
+   },
+   {
+    "scenarios": "g_real_pb_c24, g_real_pb_c32",
+    "reps": "0,1,2",
+    "confirms": "0.6",
+    "worlds": "top",
+    "commit": "3e87c42",
+    "bank": "f563cfcaebf63aef",
+    "generated_at": "2026-10-11T14:59:53+00:00",
+    "seed": 20261011,
+    "config_hash": "2a333310b3f7",
+    "command": "make grades-ext-need",
+    "note": "дерево exp/grades-ext-x-catalog-ext2 = feat/grades-ext + feat/catalog-ext a8e0053 (банк 705e743)"
    }
   ]
  },
