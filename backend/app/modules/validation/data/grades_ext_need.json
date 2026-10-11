@@ -8798,6 +8798,2131 @@
      "block_minutes_mean": 13.4
     }
    }
+  },
+  "g_x2|0.6|top": {
+   "scenario": "g_x2",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "банк ×2, a 1.5, без блока, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      2,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      4,
+      4
+     ],
+     "principal": [
+      2,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 0,
+   "partial": "gpcm",
+   "n": 1000,
+   "exact": 0.483,
+   "above": 0.012,
+   "below": 0.505,
+   "none": 0.0,
+   "retest_exact": 0.656,
+   "minutes_mean": 64.9,
+   "minutes_p90": 76.3,
+   "block_share": 0.0,
+   "ext_assigned": 0.377,
+   "above_ext": 0.004,
+   "ext_false_share": 0.011,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.822,
+     "above": 0.053,
+     "below": 0.125,
+     "minutes_mean": 62.6,
+     "minutes_p90": 74.2,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.581,
+     "above": 0.013,
+     "below": 0.406,
+     "minutes_mean": 63.7,
+     "minutes_p90": 75.5,
+     "block_minutes_mean": 0.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.505,
+     "above": 0.0,
+     "below": 0.495,
+     "minutes_mean": 65.8,
+     "minutes_p90": 76.6,
+     "block_minutes_mean": 0.0
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.109,
+     "above": 0.0,
+     "below": 0.891,
+     "minutes_mean": 66.8,
+     "minutes_p90": 77.0,
+     "block_minutes_mean": 0.0
+    }
+   }
+  },
+  "g_x2|0.6|top|r1": {
+   "scenario": "g_x2",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 1,
+   "text": "банк ×2, a 1.5, без блока, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 2",
+   "bank": {
+    "own": {
+     "lead": [
+      2,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      4,
+      4
+     ],
+     "principal": [
+      2,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 0,
+   "partial": "gpcm",
+   "n": 1000,
+   "exact": 0.506,
+   "above": 0.028,
+   "below": 0.466,
+   "none": 0.0,
+   "retest_exact": 0.614,
+   "minutes_mean": 64.8,
+   "minutes_p90": 76.0,
+   "block_share": 0.0,
+   "ext_assigned": 0.408,
+   "above_ext": 0.016,
+   "ext_false_share": 0.039,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.796,
+     "above": 0.079,
+     "below": 0.125,
+     "minutes_mean": 61.5,
+     "minutes_p90": 75.3,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.505,
+     "above": 0.038,
+     "below": 0.457,
+     "minutes_mean": 63.7,
+     "minutes_p90": 75.1,
+     "block_minutes_mean": 0.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.542,
+     "above": 0.013,
+     "below": 0.444,
+     "minutes_mean": 66.5,
+     "minutes_p90": 75.8,
+     "block_minutes_mean": 0.0
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.277,
+     "above": 0.0,
+     "below": 0.723,
+     "minutes_mean": 66.4,
+     "minutes_p90": 77.3,
+     "block_minutes_mean": 0.0
+    }
+   }
+  },
+  "g_x2|0.6|top|r2": {
+   "scenario": "g_x2",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 2,
+   "text": "банк ×2, a 1.5, без блока, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 3",
+   "bank": {
+    "own": {
+     "lead": [
+      2,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      4,
+      4
+     ],
+     "principal": [
+      2,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 0,
+   "partial": "gpcm",
+   "n": 1000,
+   "exact": 0.456,
+   "above": 0.014,
+   "below": 0.53,
+   "none": 0.0,
+   "retest_exact": 0.669,
+   "minutes_mean": 64.7,
+   "minutes_p90": 76.0,
+   "block_share": 0.0,
+   "ext_assigned": 0.349,
+   "above_ext": 0.003,
+   "ext_false_share": 0.009,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.822,
+     "above": 0.072,
+     "below": 0.105,
+     "minutes_mean": 62.4,
+     "minutes_p90": 75.5,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.575,
+     "above": 0.01,
+     "below": 0.415,
+     "minutes_mean": 63.5,
+     "minutes_p90": 75.0,
+     "block_minutes_mean": 0.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.421,
+     "above": 0.0,
+     "below": 0.579,
+     "minutes_mean": 65.6,
+     "minutes_p90": 76.2,
+     "block_minutes_mean": 0.0
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.109,
+     "above": 0.0,
+     "below": 0.891,
+     "minutes_mean": 66.9,
+     "minutes_p90": 77.0,
+     "block_minutes_mean": 0.0
+    }
+   }
+  },
+  "g_x2|0.6|top|r3": {
+   "scenario": "g_x2",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 3,
+   "text": "банк ×2, a 1.5, без блока, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 4",
+   "bank": {
+    "own": {
+     "lead": [
+      2,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      4,
+      4
+     ],
+     "principal": [
+      2,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 0,
+   "partial": "gpcm",
+   "n": 1000,
+   "exact": 0.496,
+   "above": 0.011,
+   "below": 0.493,
+   "none": 0.0,
+   "retest_exact": 0.677,
+   "minutes_mean": 65.1,
+   "minutes_p90": 76.1,
+   "block_share": 0.0,
+   "ext_assigned": 0.384,
+   "above_ext": 0.005,
+   "ext_false_share": 0.013,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.862,
+     "above": 0.039,
+     "below": 0.099,
+     "minutes_mean": 63.1,
+     "minutes_p90": 74.8,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.601,
+     "above": 0.013,
+     "below": 0.387,
+     "minutes_mean": 63.9,
+     "minutes_p90": 75.1,
+     "block_minutes_mean": 0.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.519,
+     "above": 0.003,
+     "below": 0.478,
+     "minutes_mean": 65.4,
+     "minutes_p90": 76.6,
+     "block_minutes_mean": 0.0
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.097,
+     "above": 0.0,
+     "below": 0.903,
+     "minutes_mean": 67.4,
+     "minutes_p90": 76.9,
+     "block_minutes_mean": 0.0
+    }
+   }
+  },
+  "g_x2|0.6|top|r4": {
+   "scenario": "g_x2",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 4,
+   "text": "банк ×2, a 1.5, без блока, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 5",
+   "bank": {
+    "own": {
+     "lead": [
+      2,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      4,
+      4
+     ],
+     "principal": [
+      2,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 0,
+   "partial": "gpcm",
+   "n": 1000,
+   "exact": 0.479,
+   "above": 0.022,
+   "below": 0.499,
+   "none": 0.0,
+   "retest_exact": 0.614,
+   "minutes_mean": 64.6,
+   "minutes_p90": 75.9,
+   "block_share": 0.0,
+   "ext_assigned": 0.353,
+   "above_ext": 0.01,
+   "ext_false_share": 0.028,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.822,
+     "above": 0.079,
+     "below": 0.099,
+     "minutes_mean": 61.2,
+     "minutes_p90": 73.1,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.572,
+     "above": 0.016,
+     "below": 0.412,
+     "minutes_mean": 63.9,
+     "minutes_p90": 74.8,
+     "block_minutes_mean": 0.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.377,
+     "above": 0.017,
+     "below": 0.606,
+     "minutes_mean": 65.4,
+     "minutes_p90": 76.4,
+     "block_minutes_mean": 0.0
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.265,
+     "above": 0.0,
+     "below": 0.735,
+     "minutes_mean": 66.6,
+     "minutes_p90": 76.5,
+     "block_minutes_mean": 0.0
+    }
+   }
+  },
+  "g_k20_x2_s4|0.6|top": {
+   "scenario": "g_k20_x2_s4",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "банк ×2, коротких ×8, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "n": 1000,
+   "exact": 0.577,
+   "above": 0.019,
+   "below": 0.404,
+   "none": 0.0,
+   "retest_exact": 0.629,
+   "minutes_mean": 69.7,
+   "minutes_p90": 96.4,
+   "block_share": 0.379,
+   "ext_assigned": 0.444,
+   "above_ext": 0.012,
+   "ext_false_share": 0.027,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.868,
+     "above": 0.046,
+     "below": 0.086,
+     "minutes_mean": 63.8,
+     "minutes_p90": 76.6,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.562,
+     "above": 0.026,
+     "below": 0.412,
+     "minutes_mean": 64.6,
+     "minutes_p90": 86.6,
+     "block_minutes_mean": 3.2
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.653,
+     "above": 0.013,
+     "below": 0.333,
+     "minutes_mean": 74.7,
+     "minutes_p90": 98.8,
+     "block_minutes_mean": 13.0
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.315,
+     "above": 0.0,
+     "below": 0.685,
+     "minutes_mean": 73.9,
+     "minutes_p90": 98.6,
+     "block_minutes_mean": 11.7
+    }
+   }
+  },
+  "g_k20_x2_s4|0.6|top|r1": {
+   "scenario": "g_k20_x2_s4",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 1,
+   "text": "банк ×2, коротких ×8, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 2",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "n": 1000,
+   "exact": 0.596,
+   "above": 0.013,
+   "below": 0.391,
+   "none": 0.0,
+   "retest_exact": 0.628,
+   "minutes_mean": 69.7,
+   "minutes_p90": 97.1,
+   "block_share": 0.392,
+   "ext_assigned": 0.452,
+   "above_ext": 0.009,
+   "ext_false_share": 0.02,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.836,
+     "above": 0.026,
+     "below": 0.138,
+     "minutes_mean": 63.8,
+     "minutes_p90": 75.2,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.55,
+     "above": 0.019,
+     "below": 0.431,
+     "minutes_mean": 64.8,
+     "minutes_p90": 79.8,
+     "block_minutes_mean": 3.3
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.69,
+     "above": 0.01,
+     "below": 0.3,
+     "minutes_mean": 73.5,
+     "minutes_p90": 97.8,
+     "block_minutes_mean": 12.5
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.387,
+     "above": 0.0,
+     "below": 0.613,
+     "minutes_mean": 75.4,
+     "minutes_p90": 99.2,
+     "block_minutes_mean": 12.3
+    }
+   }
+  },
+  "g_k20_x2_s4|0.6|top|r2": {
+   "scenario": "g_k20_x2_s4",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 2,
+   "text": "банк ×2, коротких ×8, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 3",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "n": 1000,
+   "exact": 0.645,
+   "above": 0.035,
+   "below": 0.32,
+   "none": 0.0,
+   "retest_exact": 0.602,
+   "minutes_mean": 71.0,
+   "minutes_p90": 97.3,
+   "block_share": 0.406,
+   "ext_assigned": 0.471,
+   "above_ext": 0.026,
+   "ext_false_share": 0.055,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.829,
+     "above": 0.059,
+     "below": 0.112,
+     "minutes_mean": 64.3,
+     "minutes_p90": 75.5,
+     "block_minutes_mean": 0.1
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.601,
+     "above": 0.054,
+     "below": 0.345,
+     "minutes_mean": 65.1,
+     "minutes_p90": 83.4,
+     "block_minutes_mean": 3.7
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.7,
+     "above": 0.03,
+     "below": 0.269,
+     "minutes_mean": 76.3,
+     "minutes_p90": 99.1,
+     "block_minutes_mean": 13.9
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.517,
+     "above": 0.0,
+     "below": 0.483,
+     "minutes_mean": 76.3,
+     "minutes_p90": 98.7,
+     "block_minutes_mean": 11.6
+    }
+   }
+  },
+  "g_k20_x2_s4|0.6|top|r3": {
+   "scenario": "g_k20_x2_s4",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 3,
+   "text": "банк ×2, коротких ×8, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 4",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "n": 1000,
+   "exact": 0.567,
+   "above": 0.024,
+   "below": 0.409,
+   "none": 0.0,
+   "retest_exact": 0.605,
+   "minutes_mean": 69.7,
+   "minutes_p90": 95.1,
+   "block_share": 0.387,
+   "ext_assigned": 0.44,
+   "above_ext": 0.013,
+   "ext_false_share": 0.03,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.809,
+     "above": 0.072,
+     "below": 0.118,
+     "minutes_mean": 63.2,
+     "minutes_p90": 75.8,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.569,
+     "above": 0.029,
+     "below": 0.403,
+     "minutes_mean": 65.4,
+     "minutes_p90": 82.9,
+     "block_minutes_mean": 3.5
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.643,
+     "above": 0.013,
+     "below": 0.343,
+     "minutes_mean": 72.8,
+     "minutes_p90": 97.7,
+     "block_minutes_mean": 11.9
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.315,
+     "above": 0.0,
+     "below": 0.685,
+     "minutes_mean": 75.7,
+     "minutes_p90": 97.8,
+     "block_minutes_mean": 11.9
+    }
+   }
+  },
+  "g_k20_x2_s4|0.6|top|r4": {
+   "scenario": "g_k20_x2_s4",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 4,
+   "text": "банк ×2, коротких ×8, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 5",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      0,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "n": 1000,
+   "exact": 0.635,
+   "above": 0.032,
+   "below": 0.333,
+   "none": 0.0,
+   "retest_exact": 0.631,
+   "minutes_mean": 70.7,
+   "minutes_p90": 96.9,
+   "block_share": 0.415,
+   "ext_assigned": 0.493,
+   "above_ext": 0.022,
+   "ext_false_share": 0.045,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.842,
+     "above": 0.066,
+     "below": 0.092,
+     "minutes_mean": 63.7,
+     "minutes_p90": 75.5,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.55,
+     "above": 0.048,
+     "below": 0.403,
+     "minutes_mean": 65.3,
+     "minutes_p90": 91.8,
+     "block_minutes_mean": 4.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.785,
+     "above": 0.024,
+     "below": 0.192,
+     "minutes_mean": 74.2,
+     "minutes_p90": 98.6,
+     "block_minutes_mean": 12.5
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.429,
+     "above": 0.0,
+     "below": 0.571,
+     "minutes_mean": 77.8,
+     "minutes_p90": 99.4,
+     "block_minutes_mean": 13.5
+    }
+   }
+  },
+  "g_k20_x2_s4_p4c16|0.6|top": {
+   "scenario": "g_k20_x2_s4_p4c16",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 4, общий 16, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      4,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      16,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 4,
+   "common_principal_short": 16,
+   "n": 1000,
+   "exact": 0.607,
+   "above": 0.019,
+   "below": 0.374,
+   "none": 0.0,
+   "retest_exact": 0.615,
+   "minutes_mean": 68.8,
+   "minutes_p90": 97.2,
+   "block_share": 0.37,
+   "ext_assigned": 0.446,
+   "above_ext": 0.012,
+   "ext_false_share": 0.027,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.809,
+     "above": 0.046,
+     "below": 0.145,
+     "minutes_mean": 62.7,
+     "minutes_p90": 75.6,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.597,
+     "above": 0.022,
+     "below": 0.38,
+     "minutes_mean": 64.5,
+     "minutes_p90": 85.1,
+     "block_minutes_mean": 3.7
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.67,
+     "above": 0.017,
+     "below": 0.313,
+     "minutes_mean": 73.8,
+     "minutes_p90": 98.8,
+     "block_minutes_mean": 12.8
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.412,
+     "above": 0.0,
+     "below": 0.588,
+     "minutes_mean": 71.9,
+     "minutes_p90": 99.1,
+     "block_minutes_mean": 10.3
+    }
+   }
+  },
+  "g_k20_x2_s4_p4c16|0.6|top|r1": {
+   "scenario": "g_k20_x2_s4_p4c16",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 1,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 4, общий 16, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 2",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      4,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      16,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 4,
+   "common_principal_short": 16,
+   "n": 1000,
+   "exact": 0.652,
+   "above": 0.036,
+   "below": 0.312,
+   "none": 0.0,
+   "retest_exact": 0.626,
+   "minutes_mean": 68.4,
+   "minutes_p90": 97.2,
+   "block_share": 0.362,
+   "ext_assigned": 0.483,
+   "above_ext": 0.03,
+   "ext_false_share": 0.062,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.882,
+     "above": 0.039,
+     "below": 0.079,
+     "minutes_mean": 62.1,
+     "minutes_p90": 75.1,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.527,
+     "above": 0.048,
+     "below": 0.425,
+     "minutes_mean": 65.7,
+     "minutes_p90": 89.3,
+     "block_minutes_mean": 4.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.727,
+     "above": 0.051,
+     "below": 0.222,
+     "minutes_mean": 72.1,
+     "minutes_p90": 99.8,
+     "block_minutes_mean": 11.6
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.576,
+     "above": 0.0,
+     "below": 0.424,
+     "minutes_mean": 71.5,
+     "minutes_p90": 99.2,
+     "block_minutes_mean": 9.9
+    }
+   }
+  },
+  "g_k20_x2_s4_p4c16|0.6|top|r2": {
+   "scenario": "g_k20_x2_s4_p4c16",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 2,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 4, общий 16, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 3",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      4,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      16,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 4,
+   "common_principal_short": 16,
+   "n": 1000,
+   "exact": 0.648,
+   "above": 0.056,
+   "below": 0.296,
+   "none": 0.0,
+   "retest_exact": 0.59,
+   "minutes_mean": 68.7,
+   "minutes_p90": 97.7,
+   "block_share": 0.378,
+   "ext_assigned": 0.486,
+   "above_ext": 0.051,
+   "ext_false_share": 0.105,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.855,
+     "above": 0.033,
+     "below": 0.112,
+     "minutes_mean": 63.7,
+     "minutes_p90": 75.7,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.537,
+     "above": 0.064,
+     "below": 0.399,
+     "minutes_mean": 64.9,
+     "minutes_p90": 86.7,
+     "block_minutes_mean": 4.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.667,
+     "above": 0.104,
+     "below": 0.229,
+     "minutes_mean": 73.7,
+     "minutes_p90": 99.6,
+     "block_minutes_mean": 13.1
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.639,
+     "above": 0.0,
+     "below": 0.361,
+     "minutes_mean": 70.7,
+     "minutes_p90": 99.8,
+     "block_minutes_mean": 10.3
+    }
+   }
+  },
+  "g_k20_x2_s4_p4c16|0.6|top|r3": {
+   "scenario": "g_k20_x2_s4_p4c16",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 3,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 4, общий 16, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 4",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      4,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      16,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 4,
+   "common_principal_short": 16,
+   "n": 1000,
+   "exact": 0.655,
+   "above": 0.029,
+   "below": 0.316,
+   "none": 0.0,
+   "retest_exact": 0.59,
+   "minutes_mean": 70.3,
+   "minutes_p90": 97.8,
+   "block_share": 0.384,
+   "ext_assigned": 0.47,
+   "above_ext": 0.023,
+   "ext_false_share": 0.049,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.816,
+     "above": 0.039,
+     "below": 0.145,
+     "minutes_mean": 63.0,
+     "minutes_p90": 75.6,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.492,
+     "above": 0.038,
+     "below": 0.47,
+     "minutes_mean": 65.4,
+     "minutes_p90": 81.6,
+     "block_minutes_mean": 3.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.704,
+     "above": 0.037,
+     "below": 0.259,
+     "minutes_mean": 76.6,
+     "minutes_p90": 100.2,
+     "block_minutes_mean": 13.6
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.706,
+     "above": 0.0,
+     "below": 0.294,
+     "minutes_mean": 73.4,
+     "minutes_p90": 99.6,
+     "block_minutes_mean": 10.9
+    }
+   }
+  },
+  "g_k20_x2_s4_p4c16|0.6|top|r4": {
+   "scenario": "g_k20_x2_s4_p4c16",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 4,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 4, общий 16, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 5",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      4,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      16,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 4,
+   "common_principal_short": 16,
+   "n": 1000,
+   "exact": 0.6,
+   "above": 0.024,
+   "below": 0.376,
+   "none": 0.0,
+   "retest_exact": 0.613,
+   "minutes_mean": 70.1,
+   "minutes_p90": 97.2,
+   "block_share": 0.399,
+   "ext_assigned": 0.456,
+   "above_ext": 0.018,
+   "ext_false_share": 0.039,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.836,
+     "above": 0.039,
+     "below": 0.125,
+     "minutes_mean": 62.7,
+     "minutes_p90": 75.7,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.53,
+     "above": 0.035,
+     "below": 0.435,
+     "minutes_mean": 64.5,
+     "minutes_p90": 85.1,
+     "block_minutes_mean": 3.4
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.673,
+     "above": 0.024,
+     "below": 0.303,
+     "minutes_mean": 76.5,
+     "minutes_p90": 99.3,
+     "block_minutes_mean": 14.2
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.45,
+     "above": 0.0,
+     "below": 0.55,
+     "minutes_mean": 74.1,
+     "minutes_p90": 99.1,
+     "block_minutes_mean": 10.8
+    }
+   }
+  },
+  "g_k20_x2_s4_p8c32|0.6|top": {
+   "scenario": "g_k20_x2_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      32,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.613,
+   "above": 0.037,
+   "below": 0.35,
+   "none": 0.0,
+   "retest_exact": 0.632,
+   "minutes_mean": 69.5,
+   "minutes_p90": 96.2,
+   "block_share": 0.387,
+   "ext_assigned": 0.469,
+   "above_ext": 0.028,
+   "ext_false_share": 0.06,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.842,
+     "above": 0.059,
+     "below": 0.099,
+     "minutes_mean": 63.3,
+     "minutes_p90": 75.6,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.565,
+     "above": 0.058,
+     "below": 0.377,
+     "minutes_mean": 65.4,
+     "minutes_p90": 83.5,
+     "block_minutes_mean": 3.7
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.687,
+     "above": 0.034,
+     "below": 0.279,
+     "minutes_mean": 74.0,
+     "minutes_p90": 97.6,
+     "block_minutes_mean": 13.3
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.437,
+     "above": 0.0,
+     "below": 0.563,
+     "minutes_mean": 73.3,
+     "minutes_p90": 98.3,
+     "block_minutes_mean": 10.9
+    }
+   }
+  },
+  "g_k20_x2_s4_p8c32|0.6|top|r1": {
+   "scenario": "g_k20_x2_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 1,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 2",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      32,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.593,
+   "above": 0.032,
+   "below": 0.375,
+   "none": 0.0,
+   "retest_exact": 0.598,
+   "minutes_mean": 69.9,
+   "minutes_p90": 96.8,
+   "block_share": 0.396,
+   "ext_assigned": 0.465,
+   "above_ext": 0.024,
+   "ext_false_share": 0.052,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.776,
+     "above": 0.053,
+     "below": 0.171,
+     "minutes_mean": 62.8,
+     "minutes_p90": 74.1,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.502,
+     "above": 0.042,
+     "below": 0.457,
+     "minutes_mean": 65.0,
+     "minutes_p90": 84.9,
+     "block_minutes_mean": 3.1
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.694,
+     "above": 0.037,
+     "below": 0.269,
+     "minutes_mean": 74.5,
+     "minutes_p90": 98.8,
+     "block_minutes_mean": 13.2
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.471,
+     "above": 0.0,
+     "below": 0.529,
+     "minutes_mean": 75.0,
+     "minutes_p90": 98.8,
+     "block_minutes_mean": 12.2
+    }
+   }
+  },
+  "g_k20_x2_s4_p8c32|0.6|top|r2": {
+   "scenario": "g_k20_x2_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 2,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 3",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      32,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.648,
+   "above": 0.036,
+   "below": 0.316,
+   "none": 0.0,
+   "retest_exact": 0.629,
+   "minutes_mean": 69.8,
+   "minutes_p90": 97.3,
+   "block_share": 0.38,
+   "ext_assigned": 0.464,
+   "above_ext": 0.03,
+   "ext_false_share": 0.065,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.836,
+     "above": 0.039,
+     "below": 0.125,
+     "minutes_mean": 63.5,
+     "minutes_p90": 75.3,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.55,
+     "above": 0.032,
+     "below": 0.419,
+     "minutes_mean": 65.9,
+     "minutes_p90": 90.5,
+     "block_minutes_mean": 3.9
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.66,
+     "above": 0.067,
+     "below": 0.273,
+     "minutes_mean": 74.5,
+     "minutes_p90": 99.4,
+     "block_minutes_mean": 12.6
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.643,
+     "above": 0.0,
+     "below": 0.357,
+     "minutes_mean": 73.0,
+     "minutes_p90": 98.8,
+     "block_minutes_mean": 11.5
+    }
+   }
+  },
+  "g_k20_x2_s4_p8c32|0.6|top|r3": {
+   "scenario": "g_k20_x2_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 3,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 4",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      32,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.654,
+   "above": 0.034,
+   "below": 0.312,
+   "none": 0.0,
+   "retest_exact": 0.627,
+   "minutes_mean": 68.4,
+   "minutes_p90": 95.8,
+   "block_share": 0.364,
+   "ext_assigned": 0.454,
+   "above_ext": 0.027,
+   "ext_false_share": 0.059,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.868,
+     "above": 0.046,
+     "below": 0.086,
+     "minutes_mean": 62.9,
+     "minutes_p90": 76.1,
+     "block_minutes_mean": 0.1
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.55,
+     "above": 0.042,
+     "below": 0.409,
+     "minutes_mean": 63.9,
+     "minutes_p90": 80.0,
+     "block_minutes_mean": 3.3
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.64,
+     "above": 0.047,
+     "below": 0.313,
+     "minutes_mean": 72.4,
+     "minutes_p90": 98.4,
+     "block_minutes_mean": 11.4
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.672,
+     "above": 0.0,
+     "below": 0.328,
+     "minutes_mean": 72.9,
+     "minutes_p90": 98.4,
+     "block_minutes_mean": 11.5
+    }
+   }
+  },
+  "g_k20_x2_s4_p8c32|0.6|top|r4": {
+   "scenario": "g_k20_x2_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 4,
+   "text": "банк ×2, коротких ×8, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 5",
+   "bank": {
+    "own": {
+     "lead": [
+      8,
+      2
+     ],
+     "principal": [
+      8,
+      2
+     ]
+    },
+    "common": {
+     "lead": [
+      16,
+      4
+     ],
+     "principal": [
+      32,
+      2
+     ]
+    }
+   },
+   "mult": 2,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.669,
+   "above": 0.033,
+   "below": 0.298,
+   "none": 0.0,
+   "retest_exact": 0.627,
+   "minutes_mean": 68.5,
+   "minutes_p90": 96.0,
+   "block_share": 0.365,
+   "ext_assigned": 0.466,
+   "above_ext": 0.03,
+   "ext_false_share": 0.064,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.862,
+     "above": 0.02,
+     "below": 0.118,
+     "minutes_mean": 63.9,
+     "minutes_p90": 75.7,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.556,
+     "above": 0.029,
+     "below": 0.415,
+     "minutes_mean": 64.0,
+     "minutes_p90": 79.7,
+     "block_minutes_mean": 3.2
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.667,
+     "above": 0.071,
+     "below": 0.263,
+     "minutes_mean": 72.9,
+     "minutes_p90": 97.3,
+     "block_minutes_mean": 12.7
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.697,
+     "above": 0.0,
+     "below": 0.303,
+     "minutes_mean": 72.0,
+     "minutes_p90": 99.1,
+     "block_minutes_mean": 10.8
+    }
+   }
+  },
+  "g_k20_x3_s4_p8c32|0.6|top": {
+   "scenario": "g_k20_x3_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "банк ×3, коротких ×12, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      12,
+      3
+     ],
+     "principal": [
+      8,
+      3
+     ]
+    },
+    "common": {
+     "lead": [
+      24,
+      6
+     ],
+     "principal": [
+      32,
+      3
+     ]
+    }
+   },
+   "mult": 3,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.626,
+   "above": 0.022,
+   "below": 0.352,
+   "none": 0.0,
+   "retest_exact": 0.648,
+   "minutes_mean": 69.9,
+   "minutes_p90": 95.8,
+   "block_share": 0.386,
+   "ext_assigned": 0.439,
+   "above_ext": 0.015,
+   "ext_false_share": 0.034,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.816,
+     "above": 0.046,
+     "below": 0.138,
+     "minutes_mean": 63.3,
+     "minutes_p90": 74.5,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.537,
+     "above": 0.019,
+     "below": 0.444,
+     "minutes_mean": 64.3,
+     "minutes_p90": 77.9,
+     "block_minutes_mean": 2.1
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.636,
+     "above": 0.03,
+     "below": 0.333,
+     "minutes_mean": 75.7,
+     "minutes_p90": 97.8,
+     "block_minutes_mean": 13.7
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.609,
+     "above": 0.0,
+     "below": 0.391,
+     "minutes_mean": 74.1,
+     "minutes_p90": 98.7,
+     "block_minutes_mean": 12.0
+    }
+   }
+  },
+  "g_k20_x3_s4_p8c32|0.6|top|r1": {
+   "scenario": "g_k20_x3_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 1,
+   "text": "банк ×3, коротких ×12, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 2",
+   "bank": {
+    "own": {
+     "lead": [
+      12,
+      3
+     ],
+     "principal": [
+      8,
+      3
+     ]
+    },
+    "common": {
+     "lead": [
+      24,
+      6
+     ],
+     "principal": [
+      32,
+      3
+     ]
+    }
+   },
+   "mult": 3,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.677,
+   "above": 0.021,
+   "below": 0.302,
+   "none": 0.0,
+   "retest_exact": 0.673,
+   "minutes_mean": 69.0,
+   "minutes_p90": 96.0,
+   "block_share": 0.368,
+   "ext_assigned": 0.472,
+   "above_ext": 0.015,
+   "ext_false_share": 0.032,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.77,
+     "above": 0.039,
+     "below": 0.191,
+     "minutes_mean": 63.6,
+     "minutes_p90": 74.8,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.604,
+     "above": 0.019,
+     "below": 0.377,
+     "minutes_mean": 63.5,
+     "minutes_p90": 79.8,
+     "block_minutes_mean": 2.5
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.741,
+     "above": 0.03,
+     "below": 0.229,
+     "minutes_mean": 75.0,
+     "minutes_p90": 99.2,
+     "block_minutes_mean": 13.0
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.634,
+     "above": 0.0,
+     "below": 0.366,
+     "minutes_mean": 72.0,
+     "minutes_p90": 98.4,
+     "block_minutes_mean": 10.1
+    }
+   }
+  },
+  "g_k20_x3_s4_p8c32|0.6|top|r2": {
+   "scenario": "g_k20_x3_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 2,
+   "text": "банк ×3, коротких ×12, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 3",
+   "bank": {
+    "own": {
+     "lead": [
+      12,
+      3
+     ],
+     "principal": [
+      8,
+      3
+     ]
+    },
+    "common": {
+     "lead": [
+      24,
+      6
+     ],
+     "principal": [
+      32,
+      3
+     ]
+    }
+   },
+   "mult": 3,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.665,
+   "above": 0.027,
+   "below": 0.308,
+   "none": 0.0,
+   "retest_exact": 0.631,
+   "minutes_mean": 69.5,
+   "minutes_p90": 96.2,
+   "block_share": 0.382,
+   "ext_assigned": 0.459,
+   "above_ext": 0.025,
+   "ext_false_share": 0.054,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.882,
+     "above": 0.013,
+     "below": 0.105,
+     "minutes_mean": 64.3,
+     "minutes_p90": 76.5,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.55,
+     "above": 0.035,
+     "below": 0.415,
+     "minutes_mean": 64.3,
+     "minutes_p90": 78.7,
+     "block_minutes_mean": 3.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.663,
+     "above": 0.047,
+     "below": 0.29,
+     "minutes_mean": 76.5,
+     "minutes_p90": 99.1,
+     "block_minutes_mean": 14.6
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.681,
+     "above": 0.0,
+     "below": 0.319,
+     "minutes_mean": 70.8,
+     "minutes_p90": 97.9,
+     "block_minutes_mean": 11.1
+    }
+   }
+  },
+  "g_k20_x3_s4_p8c32|0.6|top|r3": {
+   "scenario": "g_k20_x3_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 3,
+   "text": "банк ×3, коротких ×12, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 4",
+   "bank": {
+    "own": {
+     "lead": [
+      12,
+      3
+     ],
+     "principal": [
+      8,
+      3
+     ]
+    },
+    "common": {
+     "lead": [
+      24,
+      6
+     ],
+     "principal": [
+      32,
+      3
+     ]
+    }
+   },
+   "mult": 3,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.633,
+   "above": 0.025,
+   "below": 0.342,
+   "none": 0.0,
+   "retest_exact": 0.63,
+   "minutes_mean": 68.7,
+   "minutes_p90": 95.8,
+   "block_share": 0.373,
+   "ext_assigned": 0.451,
+   "above_ext": 0.02,
+   "ext_false_share": 0.044,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.829,
+     "above": 0.033,
+     "below": 0.138,
+     "minutes_mean": 63.4,
+     "minutes_p90": 75.1,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.54,
+     "above": 0.035,
+     "below": 0.425,
+     "minutes_mean": 63.2,
+     "minutes_p90": 78.7,
+     "block_minutes_mean": 2.7
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.65,
+     "above": 0.03,
+     "below": 0.32,
+     "minutes_mean": 76.2,
+     "minutes_p90": 98.8,
+     "block_minutes_mean": 13.3
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.609,
+     "above": 0.0,
+     "below": 0.391,
+     "minutes_mean": 69.9,
+     "minutes_p90": 97.2,
+     "block_minutes_mean": 10.5
+    }
+   }
+  },
+  "g_k20_x3_s4_p8c32|0.6|top|r4": {
+   "scenario": "g_k20_x3_s4_p8c32",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 4,
+   "text": "банк ×3, коротких ×12, коротких Principal: направление 8, общий 32, a 1.5, блок 20 заданий, частичный балл 0–4 (GPCM, шум оценщика) · банк, реализация 5",
+   "bank": {
+    "own": {
+     "lead": [
+      12,
+      3
+     ],
+     "principal": [
+      8,
+      3
+     ]
+    },
+    "common": {
+     "lead": [
+      24,
+      6
+     ],
+     "principal": [
+      32,
+      3
+     ]
+    }
+   },
+   "mult": 3,
+   "a": 1.5,
+   "block": 20,
+   "partial": "gpcm",
+   "short_mult": 4,
+   "own_principal_short": 8,
+   "common_principal_short": 32,
+   "n": 1000,
+   "exact": 0.623,
+   "above": 0.043,
+   "below": 0.334,
+   "none": 0.0,
+   "retest_exact": 0.629,
+   "minutes_mean": 68.3,
+   "minutes_p90": 95.9,
+   "block_share": 0.371,
+   "ext_assigned": 0.469,
+   "above_ext": 0.038,
+   "ext_false_share": 0.081,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.803,
+     "above": 0.033,
+     "below": 0.164,
+     "minutes_mean": 63.0,
+     "minutes_p90": 75.2,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.47,
+     "above": 0.042,
+     "below": 0.489,
+     "minutes_mean": 65.0,
+     "minutes_p90": 80.4,
+     "block_minutes_mean": 3.1
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.657,
+     "above": 0.084,
+     "below": 0.259,
+     "minutes_mean": 72.9,
+     "minutes_p90": 98.6,
+     "block_minutes_mean": 12.7
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.668,
+     "above": 0.0,
+     "below": 0.332,
+     "minutes_mean": 70.3,
+     "minutes_p90": 98.3,
+     "block_minutes_mean": 10.7
+    }
+   }
   }
  },
  "signature": {
@@ -8809,7 +10934,17 @@
   "n": 1000,
   "command": "make grades-ext-need",
   "generated_at": "2026-10-11T09:56:40+00:00",
-  "commit_note": "прогоны на сервере проверок шли без .git (commit unknown); код симуляции этих прогонов закоммичен в 9b59eacf без изменений сценариев"
+  "commit_note": "прогоны на сервере проверок шли без .git (commit unknown); код симуляции этих прогонов закоммичен в 9b59eacf без изменений сценариев",
+  "extra_runs": [
+   {
+    "scenarios": "g_* (модель частичного балла платформы: GPCM 0–4 + шум оценщика, partial_credit=True)",
+    "commit": "e0c66610 + ветка частичного балла 663e8414",
+    "generated_at": "2026-10-11T10:56:02+00:00",
+    "seed": 20261011,
+    "command": "make grades-ext-need (SIM_ARGS --scenarios g_… --reps 0,1,2,3,4)",
+    "config_hash": "b9f4a31f0357"
+   }
+  ]
  },
  "target": {
   "exact_lead": 0.64,
