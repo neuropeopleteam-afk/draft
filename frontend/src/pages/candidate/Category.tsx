@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { ExtPreliminaryNote, GradeBadge, GradeStatusNote } from "../../components/GradeStatus";
 import { Alert, DIRECTIONS, Empty, GRADE_TITLE_ALL, Loading, Toggle, catTitle, dt, dtt, errText, num, ruText, signed, useApi } from "../../components/ui";
+import { DefenseForLatest } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
 import { MarketNote } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { gradeIds } from "../../lib/grades";
@@ -130,6 +131,7 @@ export default function Category() {
         {s.sessions.some((t: any) => t.status === "finished") && <Link className="btn-ghost" to="/candidate/feedback">Карта навыков и маршрут роста</Link>}
       </section>
       {c.category_id && <PassportShare />}
+      <DefenseForLatest sessions={s.sessions} direction={c.direction} />
       <div className="grid gap-6 md:grid-cols-2">
         <section className="card">
           <h2 className="font-bold text-brand-night">История грейда</h2>

@@ -6,6 +6,7 @@ Lead/Principal видны только в направлениях, где ба�
 """
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -100,11 +101,14 @@ def test_with_flag_suite_in_subprocess():
                                                            "PYTEST_XDIST_WORKER_COUNT", "PYTEST_CURRENT_TEST")}
     env["GRADES_EXT_ENABLED"] = "1"
     env.pop("TEST_DATABASE_URL", None)  # общий PostgreSQL занят основным прогоном — флаг проверяем на своём SQLite
-    r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-x", "-p", "no:cacheprovider", "-p", "no:randomly",
-                        "tests/test_grades_ext_on.py"], cwd=BACKEND, env=env, capture_output=True, text=True,
-                       timeout=900)
+    env.pop("PYTEST_ADDOPTS", None)  # на сервере проверок там -q: итоговая строка «N passed» пропадает
+    r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-x", "-rs", "-p", "no:cacheprovider", "-p", "no:randomly",
+                        "-o", "addopts=", "tests/test_grades_ext_on.py"], cwd=BACKEND, env=env, capture_output=True,
+                       text=True, timeout=900)
     assert r.returncode == 0, (r.stdout[-4000:] + r.stderr[-2000:])
-    assert " passed" in r.stdout and "skipped" not in r.stdout.split("\n")[-2]
+    m = re.search(r"(\d+) passed", r.stdout)
+    dots = next((ln for ln in r.stdout.splitlines() if ln.strip().endswith("[100%]")), "")
+    assert (m and int(m.group(1)) >= 10 or dots.count(".") >= 10) and "SKIPPED" not in r.stdout, r.stdout[-2000:]
 
 
 def test_validation_grades_ext_route_absent_without_flag(client):
