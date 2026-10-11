@@ -1,0 +1,647 @@
+{
+ "signature": {
+  "world": "симуляция пути: 5 направлений × 500 кандидатов, «0/1» против «0–4»",
+  "seed": 20261006,
+  "config_hash": "8836e47471ff",
+  "commit": "unknown",
+  "bank": "76c4164b6ce83743",
+  "n": 2500,
+  "command": "make partial-credit-sim",
+  "generated_at": "2026-10-11T10:24:23+00:00"
+ },
+ "quick": false,
+ "n_per_direction": 500,
+ "directions": [
+  "backend",
+  "frontend",
+  "data_ml",
+  "qa",
+  "security"
+ ],
+ "worlds": {
+  "base": {
+   "spacing": 1.0,
+   "noise": true,
+   "ru": "ступени ×1, шум оценщика по данным"
+  },
+  "narrow": {
+   "spacing": 0.5,
+   "noise": true,
+   "ru": "ступени ×0,5 (пункты рубрики мало различаются), шум по данным"
+  },
+  "clean": {
+   "spacing": 1.0,
+   "noise": false,
+   "ru": "ступени ×1, без шума оценщика (верхняя оценка)"
+  }
+ },
+ "arms": {
+  "bin": "0/1 (засчитано при балле ≥ 2)",
+  "frac": "доля 0..1 в 2PL (сейчас, флаг выкл.)",
+  "gpcm": "0–4 по GPCM (флаг вкл.)"
+ },
+ "rows": [
+  {
+   "arm": "bin",
+   "world": "base",
+   "confirm": 0.8,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.568,
+   "over": 0.053,
+   "under": 0.348,
+   "none": 0.058,
+   "kappa_w_true": 0.759,
+   "retest_exact": 0.745,
+   "retest_exact_ci": [
+    0.728,
+    0.762
+   ],
+   "retest_kappa_w": 0.834,
+   "retest_kappa_w_ci": [
+    0.821,
+    0.847
+   ],
+   "icc_theta": 0.802,
+   "se_first_mean": 0.4157,
+   "se_first_median": 0.4014,
+   "items_per_session": 19.71,
+   "items_per_path": 19.77,
+   "minutes_per_path": 55.8,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.864,
+   "diff_vs_frac": {
+    "exact": -0.003,
+    "exact_ci": [
+     -0.021,
+     0.015
+    ],
+    "over": 0.003,
+    "over_ci": [
+     -0.004,
+     0.009
+    ],
+    "retest_exact": -0.026,
+    "retest_exact_ci": [
+     -0.048,
+     -0.006
+    ]
+   }
+  },
+  {
+   "arm": "frac",
+   "world": "base",
+   "confirm": 0.8,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.57,
+   "over": 0.05,
+   "under": 0.357,
+   "none": 0.049,
+   "kappa_w_true": 0.757,
+   "retest_exact": 0.772,
+   "retest_exact_ci": [
+    0.756,
+    0.788
+   ],
+   "retest_kappa_w": 0.847,
+   "retest_kappa_w_ci": [
+    0.834,
+    0.86
+   ],
+   "icc_theta": 0.803,
+   "se_first_mean": 0.4124,
+   "se_first_median": 0.4004,
+   "items_per_session": 19.86,
+   "items_per_path": 19.94,
+   "minutes_per_path": 56.0,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.878
+  },
+  {
+   "arm": "gpcm",
+   "world": "base",
+   "confirm": 0.8,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.561,
+   "over": 0.054,
+   "under": 0.358,
+   "none": 0.051,
+   "kappa_w_true": 0.75,
+   "retest_exact": 0.767,
+   "retest_exact_ci": [
+    0.75,
+    0.783
+   ],
+   "retest_kappa_w": 0.845,
+   "retest_kappa_w_ci": [
+    0.831,
+    0.858
+   ],
+   "icc_theta": 0.812,
+   "se_first_mean": 0.3979,
+   "se_first_median": 0.3886,
+   "items_per_session": 19.46,
+   "items_per_path": 19.54,
+   "minutes_per_path": 56.3,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.87,
+   "diff_vs_frac": {
+    "exact": -0.009,
+    "exact_ci": [
+     -0.028,
+     0.009
+    ],
+    "over": 0.004,
+    "over_ci": [
+     -0.002,
+     0.011
+    ],
+    "retest_exact": -0.005,
+    "retest_exact_ci": [
+     -0.025,
+     0.014
+    ]
+   }
+  },
+  {
+   "arm": "bin",
+   "world": "base",
+   "confirm": 0.6,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.641,
+   "over": 0.073,
+   "under": 0.272,
+   "none": 0.032,
+   "kappa_w_true": 0.798,
+   "retest_exact": 0.793,
+   "retest_exact_ci": [
+    0.777,
+    0.808
+   ],
+   "retest_kappa_w": 0.869,
+   "retest_kappa_w_ci": [
+    0.858,
+    0.881
+   ],
+   "icc_theta": 0.8,
+   "se_first_mean": 0.4152,
+   "se_first_median": 0.4007,
+   "items_per_session": 19.7,
+   "items_per_path": 19.76,
+   "minutes_per_path": 55.7,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.863,
+   "diff_vs_frac": {
+    "exact": -0.006,
+    "exact_ci": [
+     -0.022,
+     0.01
+    ],
+    "over": 0.0,
+    "over_ci": [
+     -0.008,
+     0.009
+    ],
+    "retest_exact": -0.012,
+    "retest_exact_ci": [
+     -0.031,
+     0.007
+    ]
+   }
+  },
+  {
+   "arm": "frac",
+   "world": "base",
+   "confirm": 0.6,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.647,
+   "over": 0.073,
+   "under": 0.269,
+   "none": 0.032,
+   "kappa_w_true": 0.803,
+   "retest_exact": 0.804,
+   "retest_exact_ci": [
+    0.79,
+    0.82
+   ],
+   "retest_kappa_w": 0.872,
+   "retest_kappa_w_ci": [
+    0.86,
+    0.884
+   ],
+   "icc_theta": 0.807,
+   "se_first_mean": 0.4126,
+   "se_first_median": 0.4009,
+   "items_per_session": 19.88,
+   "items_per_path": 19.94,
+   "minutes_per_path": 56.0,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.879
+  },
+  {
+   "arm": "gpcm",
+   "world": "base",
+   "confirm": 0.6,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.637,
+   "over": 0.075,
+   "under": 0.277,
+   "none": 0.028,
+   "kappa_w_true": 0.794,
+   "retest_exact": 0.807,
+   "retest_exact_ci": [
+    0.791,
+    0.822
+   ],
+   "retest_kappa_w": 0.871,
+   "retest_kappa_w_ci": [
+    0.859,
+    0.883
+   ],
+   "icc_theta": 0.803,
+   "se_first_mean": 0.3982,
+   "se_first_median": 0.3887,
+   "items_per_session": 19.45,
+   "items_per_path": 19.51,
+   "minutes_per_path": 56.3,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.871,
+   "diff_vs_frac": {
+    "exact": -0.01,
+    "exact_ci": [
+     -0.026,
+     0.006
+    ],
+    "over": 0.002,
+    "over_ci": [
+     -0.007,
+     0.011
+    ],
+    "retest_exact": 0.002,
+    "retest_exact_ci": [
+     -0.016,
+     0.022
+    ]
+   }
+  },
+  {
+   "arm": "bin",
+   "world": "clean",
+   "confirm": 0.6,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.639,
+   "over": 0.069,
+   "under": 0.278,
+   "none": 0.033,
+   "kappa_w_true": 0.797,
+   "retest_exact": 0.799,
+   "retest_exact_ci": [
+    0.783,
+    0.814
+   ],
+   "retest_kappa_w": 0.872,
+   "retest_kappa_w_ci": [
+    0.86,
+    0.883
+   ],
+   "icc_theta": 0.806,
+   "se_first_mean": 0.4152,
+   "se_first_median": 0.4007,
+   "items_per_session": 19.71,
+   "items_per_path": 19.79,
+   "minutes_per_path": 55.7,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.861,
+   "diff_vs_frac": {
+    "exact": -0.004,
+    "exact_ci": [
+     -0.02,
+     0.012
+    ],
+    "over": -0.0,
+    "over_ci": [
+     -0.009,
+     0.008
+    ],
+    "retest_exact": -0.01,
+    "retest_exact_ci": [
+     -0.029,
+     0.009
+    ]
+   }
+  },
+  {
+   "arm": "frac",
+   "world": "clean",
+   "confirm": 0.6,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.643,
+   "over": 0.07,
+   "under": 0.277,
+   "none": 0.026,
+   "kappa_w_true": 0.798,
+   "retest_exact": 0.81,
+   "retest_exact_ci": [
+    0.794,
+    0.825
+   ],
+   "retest_kappa_w": 0.877,
+   "retest_kappa_w_ci": [
+    0.866,
+    0.887
+   ],
+   "icc_theta": 0.811,
+   "se_first_mean": 0.4129,
+   "se_first_median": 0.4,
+   "items_per_session": 19.85,
+   "items_per_path": 19.93,
+   "minutes_per_path": 55.9,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.874
+  },
+  {
+   "arm": "gpcm",
+   "world": "clean",
+   "confirm": 0.6,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.635,
+   "over": 0.073,
+   "under": 0.281,
+   "none": 0.029,
+   "kappa_w_true": 0.793,
+   "retest_exact": 0.8,
+   "retest_exact_ci": [
+    0.785,
+    0.816
+   ],
+   "retest_kappa_w": 0.87,
+   "retest_kappa_w_ci": [
+    0.859,
+    0.881
+   ],
+   "icc_theta": 0.794,
+   "se_first_mean": 0.4002,
+   "se_first_median": 0.3896,
+   "items_per_session": 19.3,
+   "items_per_path": 19.38,
+   "minutes_per_path": 56.1,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.86,
+   "diff_vs_frac": {
+    "exact": -0.008,
+    "exact_ci": [
+     -0.024,
+     0.009
+    ],
+    "over": 0.004,
+    "over_ci": [
+     -0.005,
+     0.011
+    ],
+    "retest_exact": -0.009,
+    "retest_exact_ci": [
+     -0.029,
+     0.01
+    ]
+   }
+  },
+  {
+   "arm": "bin",
+   "world": "narrow",
+   "confirm": 0.6,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.638,
+   "over": 0.076,
+   "under": 0.274,
+   "none": 0.031,
+   "kappa_w_true": 0.796,
+   "retest_exact": 0.801,
+   "retest_exact_ci": [
+    0.786,
+    0.818
+   ],
+   "retest_kappa_w": 0.874,
+   "retest_kappa_w_ci": [
+    0.862,
+    0.885
+   ],
+   "icc_theta": 0.801,
+   "se_first_mean": 0.4157,
+   "se_first_median": 0.4009,
+   "items_per_session": 19.73,
+   "items_per_path": 19.8,
+   "minutes_per_path": 55.9,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.869,
+   "diff_vs_frac": {
+    "exact": -0.008,
+    "exact_ci": [
+     -0.026,
+     0.01
+    ],
+    "over": 0.008,
+    "over_ci": [
+     0.0,
+     0.017
+    ],
+    "retest_exact": -0.002,
+    "retest_exact_ci": [
+     -0.022,
+     0.016
+    ]
+   }
+  },
+  {
+   "arm": "frac",
+   "world": "narrow",
+   "confirm": 0.6,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.646,
+   "over": 0.068,
+   "under": 0.276,
+   "none": 0.03,
+   "kappa_w_true": 0.794,
+   "retest_exact": 0.803,
+   "retest_exact_ci": [
+    0.788,
+    0.818
+   ],
+   "retest_kappa_w": 0.873,
+   "retest_kappa_w_ci": [
+    0.863,
+    0.884
+   ],
+   "icc_theta": 0.806,
+   "se_first_mean": 0.4116,
+   "se_first_median": 0.4002,
+   "items_per_session": 19.92,
+   "items_per_path": 19.99,
+   "minutes_per_path": 56.0,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.88
+  },
+  {
+   "arm": "gpcm",
+   "world": "narrow",
+   "confirm": 0.6,
+   "length": "adaptive",
+   "n": 2500,
+   "exact": 0.633,
+   "over": 0.076,
+   "under": 0.281,
+   "none": 0.028,
+   "kappa_w_true": 0.787,
+   "retest_exact": 0.796,
+   "retest_exact_ci": [
+    0.78,
+    0.811
+   ],
+   "retest_kappa_w": 0.865,
+   "retest_kappa_w_ci": [
+    0.852,
+    0.876
+   ],
+   "icc_theta": 0.799,
+   "se_first_mean": 0.3983,
+   "se_first_median": 0.3875,
+   "items_per_session": 19.43,
+   "items_per_path": 19.5,
+   "minutes_per_path": 56.2,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.87,
+   "diff_vs_frac": {
+    "exact": -0.013,
+    "exact_ci": [
+     -0.03,
+     0.004
+    ],
+    "over": 0.008,
+    "over_ci": [
+     0.001,
+     0.017
+    ],
+    "retest_exact": -0.008,
+    "retest_exact_ci": [
+     -0.028,
+     0.012
+    ]
+   }
+  },
+  {
+   "arm": "frac",
+   "world": "base",
+   "confirm": 0.6,
+   "length": "fixed",
+   "n": 2500,
+   "exact": 0.614,
+   "over": 0.082,
+   "under": 0.296,
+   "none": 0.02,
+   "kappa_w_true": 0.772,
+   "retest_exact": 0.789,
+   "retest_exact_ci": [
+    0.774,
+    0.805
+   ],
+   "retest_kappa_w": 0.86,
+   "retest_kappa_w_ci": [
+    0.848,
+    0.872
+   ],
+   "icc_theta": 0.761,
+   "se_first_mean": 0.4603,
+   "se_first_median": 0.4525,
+   "items_per_session": 15.12,
+   "items_per_path": 15.17,
+   "minutes_per_path": 46.6,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.0
+  },
+  {
+   "arm": "gpcm",
+   "world": "base",
+   "confirm": 0.6,
+   "length": "fixed",
+   "n": 2500,
+   "exact": 0.619,
+   "over": 0.081,
+   "under": 0.29,
+   "none": 0.025,
+   "kappa_w_true": 0.778,
+   "retest_exact": 0.803,
+   "retest_exact_ci": [
+    0.787,
+    0.818
+   ],
+   "retest_kappa_w": 0.865,
+   "retest_kappa_w_ci": [
+    0.852,
+    0.877
+   ],
+   "icc_theta": 0.779,
+   "se_first_mean": 0.4408,
+   "se_first_median": 0.4331,
+   "items_per_session": 14.76,
+   "items_per_path": 14.81,
+   "minutes_per_path": 47.2,
+   "sessions_per_path": 1.0,
+   "extension_share": 0.0,
+   "diff_vs_frac": {
+    "exact": 0.006,
+    "exact_ci": [
+     -0.012,
+     0.024
+    ],
+    "over": -0.0,
+    "over_ci": [
+     -0.009,
+     0.008
+    ],
+    "retest_exact": 0.014,
+    "retest_exact_ci": [
+     -0.004,
+     0.034
+    ]
+   }
+  }
+ ],
+ "info": [
+  {
+   "theta": -2.0,
+   "info_2pl": 0.105,
+   "info_gpcm": 0.251
+  },
+  {
+   "theta": -1.0,
+   "info_2pl": 0.197,
+   "info_gpcm": 0.501
+  },
+  {
+   "theta": 0.0,
+   "info_2pl": 0.25,
+   "info_gpcm": 0.684
+  },
+  {
+   "theta": 1.0,
+   "info_2pl": 0.197,
+   "info_gpcm": 0.501
+  },
+  {
+   "theta": 2.0,
+   "info_2pl": 0.105,
+   "info_gpcm": 0.251
+  }
+ ],
+ "caveat": "Синтетика: люди и ответы — модель, не люди. Истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5 (как в path_retest); балл 0–4 — модель GPCM, шум оценщика — по ответам моделей на наборе оценщика (эталон — тоже модель). Параметры GPCM движка до калибровки на людях выведены из 2PL; на людях их нужно откалибровать.",
+ "seconds": 167.3
+}
