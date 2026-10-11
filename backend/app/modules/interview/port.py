@@ -93,8 +93,10 @@ class StubPort:
                 title = short_title(t.get("title") or "задание")
                 if k < len(tasks):
                     frag = short_fragment(t.get("answer") or "", 7)
-                    q = (f"В задании «{title}» вы написали: «{frag}». Почему вы решили именно так?" if frag else
-                         f"Вернёмся к вашему ответу в задании «{title}». Почему вы решили именно так?")
+                    ask = ("Почему вы решили именно так?", "Почему именно так, а не иначе?",
+                           "Как вы проверите, что это работает?")[k % 3]
+                    q = (f"В задании «{title}» вы написали: «{frag}». {ask}" if frag else
+                         f"Вернёмся к вашему ответу в задании «{title}». {ask}")
                 else:
                     q = f"Вернёмся к заданию «{title}». Что изменится, если условие станет строже?"
                 out.append({"n": k + 1, "task_id": t.get("id"), "skill": None, "question": q})

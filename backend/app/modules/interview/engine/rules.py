@@ -25,8 +25,9 @@ _CLOSE = {
     "interview": "Спасибо, {name}, я всё записала. Итог увидит работодатель, решение принимает человек. Хорошего дня.",
 }
 # {lead} — «В задании «…» вы написали: «первые слова ответа».» (короткий фрагмент, не цитата целиком)
+_FIRST_ASK = ("Почему вы решили именно так?", "Почему именно так, а не иначе?", "Как вы проверите, что это работает?")
 _DEFENSE_Q = (
-    "{lead} Почему вы решили именно так?",
+    "{lead} {ask}",
     "Вернёмся к заданию «{title}». Какой другой вариант вы видели и чем он хуже?",
     "В задании «{title}»: где ваше решение может сломаться?",
     "В задании «{title}»: как вы проверите, что решение работает?",
@@ -60,9 +61,11 @@ def rules_turn(spec: SessionSpec, transcript: Transcript, kind: str, k: int | No
     if spec.mode == "defense":
         t = task_by_id(spec, item.task_id)
         title = short_title(item.title)
-        q = _DEFENSE_Q[angle_idx % len(_DEFENSE_Q)].format(title=title, lead=_lead(title, t.answer if t else ""))
+        ask = _FIRST_ASK[(item.k - 1) % len(_FIRST_ASK)]
+        q = _DEFENSE_Q[angle_idx % len(_DEFENSE_Q)].format(title=title, lead=_lead(title, t.answer if t else ""), ask=ask)
         if word_count(q) > MAX_QUESTION_WORDS:  # длинное название или фрагмент — без фрагмента
-            q = _DEFENSE_Q[angle_idx % len(_DEFENSE_Q)].format(title=title, lead=f"Вернёмся к вашему ответу в задании «{title}».")
+            q = _DEFENSE_Q[angle_idx % len(_DEFENSE_Q)].format(title=title, ask=ask,
+                                                               lead=f"Вернёмся к вашему ответу в задании «{title}».")
     else:
         q = _INTERVIEW_Q[angle_idx % len(_INTERVIEW_Q)].format(skill=item.skill)
     prefix = ""
