@@ -25,6 +25,10 @@
 или не кончится запас времени ext_time_s. Задания дотестирования берутся из всего банка
 направления (субпул после основной части почти исчерпан), кроме семейств прошлой попытки
 (``exclude_ext``) и субпулов на карантине (``blocked_subpools``).
+
+Частичный балл (``partial_credit=True``, флаг ASSESSMENT_PARTIAL_CREDIT_ENABLED): части с развёрнутым ответом
+(open_answer, текстовый шаг open_book_3step) входят в θ и в информацию при выборе по модели GPCM с баллом 0–4
+(``gpcm.py``; балл = round(4 · оценка)); остальные части — 2PL, как без флага.
 """
 from __future__ import annotations
 
@@ -33,6 +37,7 @@ from typing import Callable, Iterable
 
 import numpy as np
 
+from . import gpcm
 from .hierarchical import effective_a
 from .irt import estimate_theta, prob
 
@@ -59,6 +64,27 @@ class PoolItem:
     def information(self, theta: float) -> float:
         p = prob(theta, self.a_eff, self.b)
         return float(np.sum(self.a_eff ** 2 * p * (1 - p)))
+
+    @property
+    def text_parts(self) -> list[int]:
+        return gpcm.text_parts(self.format, len(self.b))
+
+    def gpcm_part(self, j: int) -> tuple[float, np.ndarray]:
+        """Параметры GPCM части j (a_g, ступени) из её 2PL (a_eff, b) — до калибровки на людях."""
+        return gpcm.from_2pl(float(self.a_eff[j]), float(self.b[j]))
+
+    def information_pc(self, theta: float) -> float:
+        """Информация с частичным баллом: развёрнутые части — GPCM 0–4, остальные — 2PL."""
+        tp = self.text_parts
+        if not tp:
+            return self.information(theta)
+        a, b = self.a_eff, self.b
+        p = prob(theta, a, b)
+        info = a ** 2 * p * (1 - p)
+        for j in tp:
+            ag, steps = self.gpcm_part(j)
+            info[j] = float(gpcm.information(float(theta), ag, steps))
+        return float(np.sum(info))
 
 
 def pool_from_specs(specs: Iterable, params: dict | None = None,
@@ -116,6 +142,8 @@ class CATConfig:
     ext_time_s: float = 1200.0            # запас времени на дотестирование сверх max_time_s
     ext_item_time_s: float = 300.0        # в дотестировании — только задания с лимитом не больше этого
     ext_own_first: bool = False           # дотестирование: сначала свободные задания своего субпула (частота показа)
+    partial_credit: bool = False          # развёрнутые части — GPCM 0–4 (ASSESSMENT_PARTIAL_CREDIT_ENABLED)
+    partial_credit_select: bool = True    # при partial_credit: выбор задания по информации GPCM (False — по 2PL)
 
 
 class ExposureControl:
@@ -272,7 +300,8 @@ class CATSession:
         return self.theta
 
     def _score(self, item: PoolItem, target: float) -> float:
-        info = item.information(target)
+        pc = self.cfg.partial_credit and self.cfg.partial_credit_select
+        info = item.information_pc(target) if pc else item.information(target)
         w = self.cfg.time_weight
         if w:
             info /= (np.exp(item.beta_time) / 120.0) ** w  # ожидаемое время ответа ∝ exp(β)
@@ -370,16 +399,42 @@ class CATSession:
             return np.array([]), np.array([]), np.array([])
         return np.concatenate(xs), np.concatenate(aa), np.concatenate(bb)
 
+    def _pc_arrays(self, exclude: set[int] | None = None):
+        """Частичный балл: дихотомические части (x, a, b) и развёрнутые [(балл 0–4, a_g, ступени)]."""
+        xs, aa, bb, poly = [], [], [], []
+        for k, adm in enumerate(self.administered):
+            if adm.canary or (exclude and k in exclude):
+                continue
+            it = self.items[adm.family_id]
+            tp = set(it.text_parts)
+            a_eff = it.a_eff
+            for j, v in enumerate(np.asarray(adm.x, dtype=float)):
+                if j in tp:
+                    if not np.isnan(v):
+                        ag, steps = it.gpcm_part(j)
+                        poly.append((gpcm.points(float(v)), ag, steps))
+                    continue
+                xs.append(v)
+                aa.append(a_eff[j])
+                bb.append(it.b[j])
+        return np.asarray(xs, dtype=float), np.asarray(aa, dtype=float), np.asarray(bb, dtype=float), poly
+
+    def _estimate(self, exclude: set[int] | None = None, prior_mean: float = 0.0, prior_sd: float | None = None):
+        sd = self.cfg.prior_sd if prior_sd is None else prior_sd
+        if self.cfg.partial_credit:
+            x, a, b, poly = self._pc_arrays(exclude)
+            return gpcm.estimate_theta_mixed(x, a, b, poly, prior_mean=prior_mean, prior_sd=sd)
+        x, a, b = self._scored_arrays(exclude)
+        return estimate_theta(x, a, b, method=self.cfg.estimator, prior_mean=prior_mean, prior_sd=sd)
+
     def _update_theta(self) -> None:
-        x, a, b = self._scored_arrays()
-        est = estimate_theta(x, a, b, method=self.cfg.estimator, prior_sd=self.cfg.prior_sd)
+        est = self._estimate()
         self.theta, self.se = est.theta, est.se
         self.trace.append((self.theta, self.se))
 
     def rescore(self, exclude: set[int]) -> tuple[float, float]:
         """θ без части ответов (например, подозрительных по детектору предзнания)."""
-        x, a, b = self._scored_arrays(exclude)
-        est = estimate_theta(x, a, b, method=self.cfg.estimator, prior_sd=self.cfg.prior_sd)
+        est = self._estimate(exclude)
         return est.theta, est.se
 
     def result(self) -> CATResult:
