@@ -181,9 +181,9 @@ export function GradeAccuracy() {
             <h3 className="mt-6 font-bold text-brand-night">Главные варианты (мир σ = 0,5, 5 ступеней)</h3>
             <div className="mt-2"><T head={head} rows={(g.key_rows ?? []).map(row)} min="56rem" caption="Главные варианты перебора" /></div>
             <p className="mt-2 text-xs text-brand-ink/70">«Ниже» почти на две трети — кандидаты, заявившие грейд ниже своего ({pct(ch?.under_claimed_below)} из {pct(ch?.under)}): тест подтверждает заявленный грейд и выше его не поднимает — смена грейда вверх идёт новым тестом. Решение по лучшей оценке θ̂ без запаса уверенности поднимает точность, но завышает уровень у каждого шестого.</p>
-            <h3 className="mt-6 font-bold text-brand-night">Другие миры: ошибка параметров σ = 0,35 и 4 ступени (как у FSP Talent)</h3>
+            <h3 className="mt-6 font-bold text-brand-night">Другие условия измерения: ошибка параметров σ = 0,35 и 4 ступени</h3>
             <div className="mt-2"><T head={head} rows={(g.worlds ?? []).map(row)} min="56rem" caption="Варианты в других мирах" /></div>
-            <p className="mt-2 text-xs text-brand-ink/70">Условия конкурента (4 ступени без Стажёра, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой — строка «порог уверенности P 0,5; дотестирование 0; 20 заданий; ступеней 4». У FSP Talent в их мире: совпадение при повторе 76 %, κw 0,866 (miliantr/fsp-talent, docs/testing.md, 05.10.2026) — другой мир и другая процедура, числа сравнимы только по смыслу.</p>
+            <p className="mt-2 text-xs text-brand-ink/70">Другие условия измерения (4 ступени без Стажёра, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой — строка «порог уверенности P 0,5; дотестирование 0; 20 заданий; ступеней 4». Числа разных миров и процедур сравнимы только по смыслу.</p>
             <h3 className="mt-6 font-bold text-brand-night">Парето-фронт (точно ↑, выше ↓, κw ↑, минуты ↓)</h3>
             <div className="mt-2"><T head={head} rows={(g.pareto ?? []).map(row)} min="56rem" caption="Парето-фронт перебора" /></div>
             {g.pool?.rows?.length > 0 && <>

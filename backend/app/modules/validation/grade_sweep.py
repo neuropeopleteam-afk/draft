@@ -137,12 +137,12 @@ def stage_grid() -> list[dict]:
 
 
 def stage_worlds() -> list[dict]:
-    """Мир конкурента (σ = 0,35): Парето-точки мира σ = 0,5 пересчитываются в stage «worlds» отдельно (см. run)."""
+    """Другие условия измерения (σ = 0,35): Парето-точки мира σ = 0,5 пересчитываются в stage «worlds» отдельно (см. run)."""
     return [_p(misspec=0.35), _p(misspec=0.35, decision="point"), _p(misspec=0.35, confirm_level=0.5)]
 
 
-def stage_competitor() -> list[dict]:
-    """«Яблоко к яблоку» с FSP Talent: 4 ступени (без Стажёра), σ параметров 0,35, 20 заданий, подтверждение при
+def stage_four_levels() -> list[dict]:
+    """Другие условия измерения: 4 ступени (без Стажёра), σ параметров 0,35, 20 заданий, подтверждение при
     P ≥ 0,5 — нашей процедурой (опрос, ротация, детектор, повтор всего пути); рядом — наша текущая и по лучшей оценке."""
     fixed = dict(levels=4, misspec=0.35, min_items=20, max_items=20, ext_items=0, max_minutes=90)
     return [_p(**fixed, confirm_level=0.5), _p(**fixed, decision="point"),
@@ -170,7 +170,7 @@ def stage_time() -> list[dict]:
 
 
 def stage_refine() -> list[dict]:
-    """Уточнение около выбора (P ≥ 0,6) и он же в мире конкурента."""
+    """Уточнение около выбора (P ≥ 0,6) и он же при других условиях измерения (σ = 0,35)."""
     return [_p(confirm_level=0.58), _p(confirm_level=0.62), _p(confirm_level=0.6, exclude_low=0.1),
             _p(confirm_level=0.6, ext_items=9), _p(confirm_level=0.6, classify_z=1.0),
             _p(confirm_level=0.6, time_weight=1.0, max_items=20, exclude_low=0.1),
@@ -198,7 +198,7 @@ def stage_plus() -> list[dict]:
     return pts
 
 
-STAGES = {"plus": stage_plus, "screen": stage_screen, "time": stage_time, "refine": stage_refine, "weak": stage_weak, "grid": stage_grid, "worlds": stage_worlds, "competitor": stage_competitor,
+STAGES = {"plus": stage_plus, "screen": stage_screen, "time": stage_time, "refine": stage_refine, "weak": stage_weak, "grid": stage_grid, "worlds": stage_worlds, "four_levels": stage_four_levels,
           "pool": stage_pool}
 
 
@@ -353,7 +353,7 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
                   classify_z=float(pt["classify_z"]), stop_rule=str(pt["stop_rule"]),
                   max_minutes=int(pt["max_minutes"]), time_weight=float(pt["time_weight"]))
     four = int(pt["levels"]) == 4
-    if four:  # 4 ступени, как у FSP Talent: без Стажёра (ниже Junior — без категории)
+    if four:  # 4 ступени: без Стажёра (ниже Junior — без категории)
         cfg = replace(cfg, cuts=tuple(c for g, c in zip(GRADE_ORDER, cfg.cuts) if g != "intern"))
     plus = int(pt.get("plus") or 0)
     pool_all = _pool(cfg.subpools, plus)
@@ -770,7 +770,7 @@ def markdown(rep: dict) -> str:
             "Заданий | Ограничения |", "|---|---|---|---|---|---|---|---|---|"]
     L = ["# Точность уровня: перебор параметров теста (Парето)", "",
          f"Подпись мира: {sig['world']}; seed {sig['seed']}, конфигурация `{sig['config_hash']}`, коммит "
-         f"`{sig['commit']}`, банк `{sig['bank']}`. Пересчёт: `{sig['command']}` (этапы screen, competitor, pool, time, "
+         f"`{sig['commit']}`, банк `{sig['bank']}`. Пересчёт: `{sig['command']}` (этапы screen, four_levels, pool, time, "
          "refine — `SWEEP_ARGS=\"--stage <этап> --merge\"`; ≈ 30 мин на 8 ядрах сервера проверок).", "", f"> {rep['caveat']}", "",
          "Точка = вся процедура `make path-retest` (опрос → тест → решение → «уровень ниже» или тест ступенью ниже → "
          "повтор) с изменёнными параметрами; одни и те же кандидаты и ответы (общие случайные числа), поэтому разница "
