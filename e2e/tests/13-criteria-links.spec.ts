@@ -27,7 +27,7 @@ test("главная → «Проверить по критериям ТЗ»: 6 
   const manifest = await (await page.request.get("/manifest.webmanifest")).json();
   expect(manifest.name).toMatch(/^Драфт — /);
   expect(manifest.short_name).toBe("Драфт");
-  await page.locator("section#jury").getByRole("link", { name: "Проверить по критериям ТЗ" }).click();
+  await page.locator("section#jury").getByRole("link", { name: "критерии ТЗ" }).click();  // SIMPLIFY п.9: строка «Для экспертов»
   await expect(page).toHaveURL(/\/criteria$/);
   await expect(page.getByRole("heading", { level: 1, name: "Проверьте нас по критериям ТЗ" })).toBeVisible();
   await expect(page.locator("section#unique").getByRole("heading", { name: "Что можно проверить только здесь" })).toBeVisible();
