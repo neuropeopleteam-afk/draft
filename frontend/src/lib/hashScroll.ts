@@ -1,13 +1,13 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-const HOLD_MS = 8000;
-const USER_EVENTS = ["wheel", "touchstart", "keydown", "mousedown"] as const;
+const HOLD_MS = 1500;
+const USER_EVENTS = ["wheel", "touchstart", "keydown", "mousedown", "pointerdown"] as const;
 
 /**
  * Прокрутка к якорю из адреса (/validation#red-button), когда страница догружается частями: блоки выше якоря
  * (бенчмарк, экспертная разметка) появляются после первой отрисовки и сдвигают его вниз. Пока раскладка меняется
- * (до 8 с), якорь возвращается к верху экрана; как только человек сам прокручивает или нажимает клавишу —
+ * (до 1,5 с), якорь возвращается к верху экрана; как только человек сам прокручивает или нажимает клавишу —
  * страница больше не двигается.
  */
 export function useHashScroll(ready: boolean) {
