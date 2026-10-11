@@ -293,8 +293,8 @@ const READ_MS = (q: string) => Math.max(1200, Math.min(4000, q.length * 35));
 /**
  * /candidate/interview/:id — разговор голосом или в чате. Визуал собеседника — собственная анимация (VoiceWave: круг и
  * волна голоса, состояния «говорю / слушаю / думаю»), без изображений людей (регламент п. 5.11); при
- * INTERVIEW_AVATAR_ENABLED (meta.interview.avatar) — свой рисованный образ «ИИ-интервьюер, не человек»
- * (InterviewerAvatar: сгенерированная картинка и беззвучные клипы по состоянию, без клипов — 2D-анимация по громкости).
+ * INTERVIEW_AVATAR_ENABLED (meta.interview.avatar) — свой образ «ИИ-интервьюер, не человек» (InterviewerAvatar:
+ * сгенерированный портрет несуществующего человека и беззвучные клипы по состоянию; без клипов — кадр и свечение рамки).
  * Голос ведущего — /speech (mp3), ответ — «нажми и говори» (запись → распознанный текст в поле, человек проверяет)
  * или текстом. Отказ голоса → текст; отказ микрофона/распознавания → текст.
  */
@@ -384,7 +384,7 @@ export function InterviewRoom() {
   const wave: WaveState = s.status === "evaluating" || busy || rec === "processing" ? "thinking"
     : !live ? "idle" : rec === "recording" ? "listening" : player.playing || reading ? "speaking" : "listening";
   const level = () => (rec === "recording" ? mic.current() : player.level());
-  const caption = avatar ? `модель, не люди · ${ch === "voice" && live ? "голос и текст" : "текст"} · образ сгенерирован`
+  const caption = avatar ? `модель, не люди · ${ch === "voice" && live ? "голос и текст" : "текст"} · портрет сгенерирован`
     : `модель, не люди · ${ch === "voice" && live ? "голос и текст" : "текст"}, без видео`;
   return (
     <div className="max-w-2xl space-y-4">

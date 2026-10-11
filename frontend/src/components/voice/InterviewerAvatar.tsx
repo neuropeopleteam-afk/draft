@@ -1,19 +1,17 @@
-// В1: свой рисованный образ интервьюера (флаг INTERVIEW_AVATAR_ENABLED → /api/meta interview.avatar). Картинка и клипы
-// сгенерированы моделью (frontend/public/avatar/PROVENANCE.md): стилизованный рисунок, не фото и не реальный человек
-// (регламент п. 5.11). Голос — как раньше (/speech); клипы беззвучные.
+// В1: свой образ интервьюера (флаг INTERVIEW_AVATAR_ENABLED → /api/meta interview.avatar). Портрет и клипы сгенерированы
+// моделью (frontend/public/avatar/PROVENANCE.md): реалистичный портрет несуществующего человека — не фото и не образ
+// реального человека, изображений третьих лиц нет (регламент п. 5.11); на экране — «ИИ-интервьюер, не человек».
+// Голос — как раньше (/speech); клипы беззвучные.
 // Состояния — как у VoiceWave: «ожидаю начала» / «говорю» / «слушаю» / «думаю»; на каждое — свой короткий зацикленный клип.
 // Ленивая загрузка: клипы грузятся, только когда образ на экране, и по одному — сначала текущий, остальные после него.
-// Запасной вариант без клипов (нет файла, ошибка, prefers-reduced-motion, экономия трафика): неподвижная картинка +
-// 2D-анимация по громкости голоса — рот на картинке открывается по уровню звука, свечение рамки — по уровню
-// (при prefers-reduced-motion — только неподвижный кадр и цвет рамки по состоянию, без движения).
+// Запасной вариант без клипов (нет файла, ошибка, prefers-reduced-motion, экономия трафика): неподвижный кадр +
+// свечение рамки по громкости голоса и бегущие точки «думаю» в углу. Рисованный рот поверх фотореалистичного портрета
+// выглядит неестественно (проверено 11.10) — его нет. При prefers-reduced-motion — только кадр и цвет рамки по состоянию.
 import { useEffect, useRef, useState } from "react";
 import { WAVE_LABEL, type WaveState } from "./VoiceWave";
 
 const STATES: WaveState[] = ["idle", "speaking", "listening", "thinking"];
 const DIR = "/avatar/";
-
-/** Положение рта на картинке (доли стороны квадрата) — для запасной 2D-анимации. */
-export const AVATAR_MOUTH = { x: 0.496, y: 0.447, w: 0.064 };
 
 const RING: Record<WaveState, string> = {
   // цвета рамки по состоянию — палитра ФСП/ЛЦТ (синий #402FFF, лаванда, малиновый)
@@ -37,7 +35,7 @@ function clipExt(): "webm" | "mp4" {
 
 export interface InterviewerAvatarProps {
   state: WaveState;
-  /** Уровень звука 0…1 (голос ведущего или микрофон) — для свечения рамки и рта в запасном варианте. */
+  /** Уровень звука 0…1 (голос ведущего или микрофон) — для свечения рамки. */
   level?: () => number;
   name?: string;
   /** Дополнительная подпись (канал, «модель, не люди»). */
@@ -105,7 +103,7 @@ export function InterviewerAvatar({ state, level, name = "Интервьюер",
   const modeRef = useRef(mode);
   modeRef.current = mode;
 
-  useEffect(() => {  // свечение рамки по уровню звука и рот в запасном варианте (2D-анимация); при reduce — один кадр
+  useEffect(() => {  // свечение рамки по уровню звука и точки «думаю» в запасном варианте; при reduce — один кадр
     const el = canvas.current, frame = box.current;
     const g = el?.getContext?.("2d");
     if (!el || !g || !frame) return;
@@ -125,14 +123,6 @@ export function InterviewerAvatar({ state, level, name = "Интервьюер",
       frame.style.boxShadow = reduce ? `0 0 0 3px ${RING[s]}` : `0 0 0 3px ${RING[s]}, 0 0 ${Math.round(10 + 34 * amp)}px ${Math.round(2 + 8 * amp)}px ${RING[s]}`;
       g.clearRect(0, 0, W, W);
       if (modeRef.current === "still" && !reduce) {
-        if (s === "speaking" && amp > 0.04) {  // рот: тёмный овал с языком, раскрытие — по уровню звука
-          const cx = AVATAR_MOUTH.x * W, cy = AVATAR_MOUTH.y * W + W * 0.004;
-          const rx = AVATAR_MOUTH.w * W * (0.42 + 0.18 * amp), ry = W * (0.006 + 0.024 * amp);
-          g.fillStyle = "#5B1F36";
-          g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.fill();
-          g.fillStyle = "#E26A86";
-          g.beginPath(); g.ellipse(cx, cy + ry * 0.45, rx * 0.55, ry * 0.45, 0, 0, Math.PI * 2); g.fill();
-        }
         if (s === "thinking") {  // «думаю» — три бегущие точки в углу
           for (let k = 0; k < 3; k++) {
             const a = 0.35 + 0.65 * Math.max(0, Math.sin(t * 4 - k * 0.9));
@@ -154,7 +144,7 @@ export function InterviewerAvatar({ state, level, name = "Интервьюер",
       <div ref={box} className="relative aspect-square max-w-full overflow-hidden rounded-3xl bg-[#1B1C21]"
         style={{ width: size }}>
         {!noImg && (
-          <img src={`${DIR}interviewer.webp`} alt="Рисованный образ ИИ-интервьюера (сгенерирован моделью, не фото человека)"
+          <img src={`${DIR}interviewer.webp`} alt="Портрет ИИ-интервьюера: сгенерирован моделью, несуществующий человек"
             width={480} height={480} loading="lazy" decoding="async" onError={() => setNoImg(true)}
             className="absolute inset-0 h-full w-full object-cover" data-testid="avatar-still" />
         )}
