@@ -55,7 +55,7 @@ N_BOOT = 1000
 
 PARAMS = ("decision", "confirm_level", "ext_items", "ext_minutes", "min_items", "max_items", "se_target",
           "classify_z", "stop_rule", "award_above", "misspec", "levels", "max_minutes", "exclude_low", "partial",
-          "time_weight", "weak_a", "weak_pool", "plus", "exact", "promote")
+          "time_weight", "weak_a", "weak_pool", "plus", "exact", "promote", "promote_up")
 # Семейства, слабые по калибровке панелью LLM (модель, не люди): отрицательная дискриминация шага, p = 0/1, a < 0,6,
 # a_eff < 0,55, p ≈ угадывание, неизоморфные варианты (банк, ветка feat/bank-core-plus 5493728,
 # reports/weak_families.json, поле exclude). Проверка: мир, где их истинная a = weak_a (по умолчанию в пуле — prior
@@ -84,7 +84,8 @@ PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items":
             "weak_a": "мир: у 26 слабых по панели семейств истинная a", "weak_pool": "26 слабых семейств в пуле",
             "plus": "добор банка у порогов J/M и M/S (17 семейств)",
             "exact": "мир: точные параметры заданий (без ошибки эксперта)",
-            "promote": "короткий тест на уровень выше, если P(следующий) ≥"}
+            "promote": "короткий тест на уровень выше, если P(следующий) ≥",
+            "promote_up": "уровень выше по двум сессиям при P ≥"}
 VALUE_RU = {"weak_pool": {"exclude": "26 слабых семейств исключены из пула", "down": "26 слабых семейств в пуле с a = 0,4"},
             "plus": {1: "+ добор банка у порогов J/M и M/S (17 семейств)"},
             "exact": {1: "мир: точные параметры заданий (без ошибки эксперта)"}}
@@ -98,7 +99,7 @@ def baseline_point() -> dict:
             "min_items": c.min_items, "max_items": c.max_items, "se_target": c.se_target,
             "classify_z": c.classify_z, "stop_rule": c.stop_rule, "award_above": None, "levels": 5,
             "max_minutes": c.max_minutes, "exclude_low": 0.0, "partial": 1, "time_weight": c.time_weight,
-            "weak_a": 0.0, "weak_pool": "keep", "plus": 0, "exact": 0, "promote": None}
+            "weak_a": 0.0, "weak_pool": "keep", "plus": 0, "exact": 0, "promote": None, "promote_up": None}
 
 
 def _p(**kw) -> dict:
@@ -316,10 +317,11 @@ def combine(t1: float, s1: float, t2: float, s2: float, prior_sd: float = 1.0) -
     return (t1 / s1 ** 2 + t2 / s2 ** 2) / prec, prec ** -0.5
 
 
-def promote_path(pool, c, truth, cfg, counter, hist, rng, det, r: dict, q: float, confirm) -> dict:
+def promote_path(pool, c, truth, cfg, counter, hist, rng, det, r: dict, q: float, confirm, up=None) -> dict:
     """Вариант ТЗ «справившийся уверенно — повысить грейд» без автоподъёма: подтвердившему заявленный уровень, у
     которого P(θ ≥ порога следующего) ≥ q, сразу предлагается короткий тест на уровень выше (≤ 8 заданий, ≤ 15 мин,
-    без повторов семейств). Следующий уровень — если общая оценка двух сессий даёт P ≥ порога уверенности; иначе
+    без повторов семейств). Следующий уровень — если общая оценка двух сессий даёт P ≥ up (по умолчанию — порог
+    уверенности); иначе
     остаётся подтверждённый (не ниже). Кандидат принимает предложение всегда (верхняя оценка эффекта)."""
     g = r["grade"]
     if r["status"] != "confirmed" or g not in GRADE_ORDER or GRADE_ORDER.index(g) + 1 >= len(GRADE_ORDER):
@@ -333,7 +335,7 @@ def promote_path(pool, c, truth, cfg, counter, hist, rng, det, r: dict, q: float
     th, se = combine(t1["theta"], t1["se"], rec["theta"], rec["se"])
     from app.modules.assessment.grades import confirm_level as product_confirm
 
-    level = confirm if confirm is not None else product_confirm(se)
+    level = float(up) if up is not None else (confirm if confirm is not None else product_confirm(se))
     out = {**r, "tests": r["tests"] + [rec], "families": sorted(set(r["families"]) | set(rec["families"])),
            "promote_offered": True}
     if p_at_least(th, se, nxt) >= level:
@@ -402,7 +404,8 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
                 r = pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"], pt["award_above"],
                                 pt["decision"])
                 if q is not None:
-                    r = promote_path(pool, c, truth, cfg, counter, hist, rng, det, r, float(q), pt["confirm_level"])
+                    r = promote_path(pool, c, truth, cfg, counter, hist, rng, det, r, float(q), pt["confirm_level"],
+                                     pt.get("promote_up"))
                 pair.append(r)
             rows.append((c, *pair))
     finally:
