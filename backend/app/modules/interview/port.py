@@ -87,7 +87,7 @@ class StubPort:
     name = "stub"
 
     def channels(self) -> dict:
-        return {"voice": False, "stt": bool(get_settings().interview_stt_stub), "text": True}
+        return {"voice": False, "stt": bool(get_settings().interview_stt_stub), "text": True, "avatar": False}
 
     def _plan(self, mode: str, ctx: dict, max_q: int) -> list[dict]:
         out: list[dict] = []
@@ -186,8 +186,19 @@ class StubPort:
             return stub_text.strip(), 0.0, True
         raise EngineUnavailable("распознавание речи в заглушке не работает — ответьте текстом")
 
-    def speak(self, text: str) -> tuple[bytes, str, float]:
+    def speak(self, text: str, fmt: str = "mp3") -> tuple[bytes, str, float]:
         raise EngineUnavailable("голос в заглушке не работает")
+
+    def avatar_token(self) -> dict:
+        raise EngineUnavailable("avatar_unavailable")
+
+    def avatar_token(self) -> dict:
+        """Токен сессии Anam (наш аватар ANAM_AVATAR_ID, режим передачи звука — голос наш). Нет флага/ключа/сети → EngineUnavailable."""
+        try:
+            t = self.eng.avatar_token()
+        except Exception as x:  # noqa: BLE001
+            raise self._err(x) from None
+        return t.model_dump(mode="json") if hasattr(t, "model_dump") else dict(t)
 
     def check_limits(self, jury: bool, last_hour: list[dict], spent_today_usd: float) -> None:
         return None
@@ -217,7 +228,9 @@ class EnginePort:
         except Exception:  # noqa: BLE001
             ch = {}
         stt = bool(ch.get("stt")) or (self.is_stub() and get_settings().interview_stt_stub)
-        return {"voice": bool(ch.get("voice")), "stt": stt, "text": True}
+        # avatar — живой аватар Anam с нашим лицом (INTERVIEW_ANAM_ENABLED + ключ + ANAM_AVATAR_ID); экран берёт токен
+        # через /sessions/{id}/avatar-token и при любом сбое тихо показывает свой портрет
+        return {"voice": bool(ch.get("voice")), "stt": stt, "text": True, "avatar": bool(ch.get("avatar"))}
 
     def _spec(self, state: dict):
         return self.eng.SessionSpec.model_validate(state["spec"])
@@ -278,9 +291,10 @@ class EnginePort:
             raise EngineUnavailable("stt_unavailable")
         return t.text, float(t.cost_usd or 0), stub
 
-    def speak(self, text: str) -> tuple[bytes, str, float]:
+    def speak(self, text: str, fmt: str = "mp3") -> tuple[bytes, str, float]:
+        """fmt: mp3 — канал «голос» (браузер); pcm_16000 — канал «аватар» (Anam, передача звука pcm_s16le 16 кГц моно)."""
         try:
-            a = self.eng.tts(text, "mp3")
+            a = self.eng.tts(text, fmt)
         except Exception as x:  # noqa: BLE001
             raise self._err(x) from None
         if getattr(a, "stub", False) or not a.data:
