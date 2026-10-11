@@ -36,7 +36,8 @@ export function KindChip({ p }: { p: Pick<Prov, "kind" | "kind_label"> }) {
 export function ProvenanceLine({ p, className = "" }: { p?: Prov | null; className?: string }) {
   if (!p) return null;
   const bank = p.bank ? `банк ${p.bank.slice(0, 8)}${p.bank_families ? ` (${p.bank_families}${NB}семейств)` : ""}` : p.snapshot === "no_bank" ? "банк не нужен" : p.snapshot === "live" ? null : "банк не записан";
-  const parts = [d10(p.date), p.commit ? <>{p.snapshot === "code" || p.snapshot === "live" ? "код" : "алгоритм"} <code>{p.commit}</code></> : p.snapshot === "live" ? null : "коммит не записан", bank,
+  const commit = p.commit && p.commit !== "unknown" ? p.commit : null;  // С2 №6: «unknown» читается как «не знаем, что проверяли»
+  const parts = [d10(p.date), commit ? <>{p.snapshot === "code" || p.snapshot === "live" ? "код" : "алгоритм"} <code>{commit}</code></> : p.snapshot === "live" ? null : "коммит не записан", bank,
     p.command ? <code>{p.command}</code> : null].filter(Boolean);
   return (
     <span className={`flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs leading-snug text-brand-ink/70 [overflow-wrap:anywhere] ${className}`} data-testid="provenance-line" data-snapshot={p.snapshot} data-kind={p.kind}>
@@ -67,7 +68,7 @@ export function Snapshots() {
   return (
     <section id="snapshots" className="mt-6 scroll-mt-20 rounded-2xl bg-white p-4 ring-1 ring-brand-night/10 sm:p-5" aria-labelledby="snapshots-t" data-testid="validation-snapshots">
       <h2 id="snapshots-t" className="text-base font-bold text-brand-night">Откуда числа этой страницы</h2>
-      <p className="mt-1 max-w-4xl text-xs leading-relaxed text-brand-ink/70">{data.how_to_read} Код стенда <code>{data.code_commit}</code>; людей в расчётах ниже нет — синтетика и модели{data.one_snapshot ? "." : "; снимки ещё не сведены в один."}</p>
+      <p className="mt-1 max-w-4xl text-xs leading-relaxed text-brand-ink/70">{data.how_to_read} Код стенда {data.code_commit && data.code_commit !== "unknown" ? <code>{data.code_commit}</code> : "— коммит не записан"}; людей в расчётах ниже нет — синтетика и модели{data.one_snapshot ? "." : "; снимки ещё не сведены в один."}</p>
       <div className="mt-3 grid gap-4 lg:grid-cols-2">
         {groups.filter(([, , g]) => g.length).map(([k, t, g]) => (
           <div key={k} className="min-w-0" data-testid={`snapshots-${k}`}>
