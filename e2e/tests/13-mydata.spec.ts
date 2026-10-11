@@ -37,7 +37,8 @@ test("«Мои данные»: интерес за неделю, выгрузк�
     expect(n, "работодателей открыли карточку").toBeGreaterThan(0);
     expect(m, "подборок с кандидатом").toBeGreaterThan(0);
     await expect(card.getByText("без названий компаний")).toBeVisible();
-    await expect(card.getByTestId("interest-demo")).toContainText("Модельные данные");
+    await expect(card.getByTestId("interest-demo")).toHaveText("Демо-данные");  // FINAL-UX C: пояснение — в подсказке
+    await expect(card.getByTestId("interest-demo")).toHaveAttribute("title", /Модельные данные/);
     expect(await noHScroll(page)).toBe(true);
     await shot(page, "overview-1440");
   });
