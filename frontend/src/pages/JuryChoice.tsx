@@ -45,7 +45,7 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
             <ol className="mt-4 space-y-2 text-sm">
               {steps.map((s, i) => (
                 <li key={s.title} className="flex gap-3">
-                  <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${s.optional ? "border border-dashed border-brand-night text-brand-night" : "bg-brand-night text-white"}`}>{i + 1}</span>
+                  <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${s.optional ? "border border-dashed border-brand-night text-brand-night" : "bg-brand-night text-white"}`}>{i + 1}</span>
                   <span className="min-w-0">
                     <b className="text-brand-night">{s.title}</b> <span className="tabular-nums text-brand-ink/65">≈{NB}{String(s.min).replace(".", ",")}{NB}мин{s.optional ? " сверх плана" : ""}</span>
                     <span className="block text-xs leading-snug text-brand-ink/70">Проверяет {s.checks}. Критерий {s.crit}.</span>
