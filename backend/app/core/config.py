@@ -204,6 +204,10 @@ class Settings(BaseSettings):
     assessment_extension_own_first: bool = True
     assessment_max_open_book: int = 2
     assessment_max_open_answer: int = 1
+    # Частичный балл 0–4 у развёрнутых ответов (open_answer, текстовый шаг open_book_3step): балл = round(4 · оценка по
+    # рубрике) входит в θ по модели GPCM (assessment_bank/psychometrics/gpcm.py), дихотомические — 2PL, как сейчас.
+    # Тот же вызов оценщика, без новых запросов; false — оценка 0..1 в 2PL (прежнее поведение)
+    assessment_partial_credit_enabled: bool = False
     # Ротация субпулов банка: 2 параллельные формы; повторная попытка получает другой субпул.
     # Утёкший субпул — в карантин: ASSESSMENT_SUBPOOL_QUARANTINE=0 (номера через запятую)
     assessment_subpools: int = 2
