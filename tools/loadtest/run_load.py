@@ -45,7 +45,7 @@ UA = "spectrek-load/prepare"  # User-Agent запросов этого скри�
 # этого скрипта (urllib) — через PySocks, Locust — через HTTPS_PROXY=socks5h://… (requests + PySocks). Маршрут
 # записывается в meta и сводку: задержки через прокси и напрямую не сравниваются без пометки.
 SOCKS = os.environ.get("LT_SOCKS", "")
-# Остановка прогона по сторожу (решение штаба 11.10): доля ошибок Locust выше LT_ABORT_FAIL (за последние ≈ 60 с или за
+# Остановка прогона по сторожу: доля ошибок Locust выше LT_ABORT_FAIL (за последние ≈ 60 с или за
 # весь прогон, от 200 запросов) или память контейнера api выше LT_ABORT_API_MIB (docker stats через KPY, только чтение).
 # 0 — сторож выключен. Замеры сторожа — <тег>_guard.txt.
 ABORT_FAIL = float(os.environ.get("LT_ABORT_FAIL", "0"))
