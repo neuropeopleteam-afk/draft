@@ -411,7 +411,7 @@ def markdown(rep: dict) -> str:
         a("")
         for c in [x for x in rep["conditions"] if x["other"] == comp]:
             a(f"**{c['title']}.** {c['text']}. Релевантных на потребность: в среднем "
-              f"{c['world']['relevant_per_need']['mean']:.1f} (от {c['world']['relevant_per_need']['min']} до "
+              f"{_f(c['world']['relevant_per_need']['mean'], 1)} (от {c['world']['relevant_per_need']['min']} до "
               f"{c['world']['relevant_per_need']['max']}), доля релевантных пар {_f(c['world']['relevant_share'], 3)}.")
             a("")
             a("| Метод (наш расчёт) | P@5 | P@10 | nDCG@10 | MRR |")
