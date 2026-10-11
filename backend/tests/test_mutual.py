@@ -404,3 +404,62 @@ def test_fit_salary_basis_gross_vs_net_pure():
     me = fitm.offer_fit(**BASE, req=REQ, salary_to=260000, audience="candidate", salary_basis="gross")
     sal = next(f for f in me["factors"] if f["key"] == "salary")
     assert "на руки" in sal["text"] and "ниже вашего минимума" in sal["text"]
+
+
+def test_fix7_offer_hint_names_real_reason():
+    """FIX7 В1 (замечание владельца): красный «Вероятно, откажет» из-за города без переезда — заголовок плашки называет
+    город, а не «Вилка в ожиданиях кандидата»; при плохой вилке — прежний текст; без вето — как было."""
+    from app.modules.mutual.fit import _f, summarize
+    from app.modules.mutual.service import offer_hint
+
+    city = summarize([_f("format", "ok", "Кандидату подходит любой формат"),
+                      _f("location", "bad", "Работа в городе Казань: кандидат в другом городе и без переезда"),
+                      _f("salary", "ok", "Вилка в ожиданиях кандидата"),
+                      _f("readiness", "ok", "Открыт к предложениям")])
+    assert city["level"] == "low" and city["title"] == "Вероятно, откажет"
+    hint, why = offer_hint(city)
+    assert why == "location" and hint.startswith("Работа в городе Казань") and "вероятно, откажет" in hint, hint
+    salary = summarize([_f("location", "ok", "Город совпадает: Казань"), _f("salary", "bad", "Верх вилки ниже ожиданий кандидата")])
+    assert offer_hint(salary)[1] == "salary" and "верх вилки ниже" in offer_hint(salary)[0]
+    fine = summarize([_f("location", "ok", "Город совпадает: Казань"), _f("salary", "ok", "Вилка в ожиданиях кандидата"),
+                      _f("format", "ok", "Подходит любой формат")])
+    assert offer_hint(fine) == ("Вилка в ожиданиях кандидата.", None)
+
+
+def test_fix7_candidate_card_keeps_selection_version(client):
+    """FIX7 п. 12 (проход модельного пользователя P08): профиль, открытый из подборки v2, считался по требованиям v1
+    (61/100, 3/4, снова обязательный REST API). С ?v=2 — балл и «обязательное» по требованиям v2, как в самой подборке."""
+    w = _world(client)
+    te, nid = w["te"], w["need"]["id"]
+    req = dict(_sel(client, w)["requirements"])
+    must = req["stack_required"]
+    assert len(must) >= 2, must
+    req2 = {**req, "stack_required": must[:-1]}  # v2: одно обязательное ослаблено
+    r = client.post(f"/api/employer/needs/{nid}/selections", headers=H(te),
+                    json={"parent_version": 1, "filters": {}, "requirements": req2})
+    assert r.status_code == 201, r.text
+    v2 = r.json()
+    ref = v2["results"][0]["ref"]
+    card1 = client.get(f"/api/employer/candidates/{ref}", params={"need_id": nid}, headers=H(te)).json()["match"]
+    card2 = client.get(f"/api/employer/candidates/{ref}", params={"need_id": nid, "v": v2["version"]}, headers=H(te)).json()["match"]
+    assert card2["version"] == v2["version"] and card1["version"] is None
+    assert card2["must"]["required_total"] == len(must) - 1 and card1["must"]["required_total"] == len(must)
+    assert card2["score"] == v2["results"][0]["score"]
+    # чужая/несуществующая версия — как без версии (требования потребности)
+    card9 = client.get(f"/api/employer/candidates/{ref}", params={"need_id": nid, "v": 99}, headers=H(te)).json()["match"]
+    assert card9["version"] is None and card9["must"]["required_total"] == len(must)
+
+
+def test_fix7_candidate_fit_title_names_unknown_terms():
+    """FIX7 Я4-16 (P04): формат/город/стек не указаны в предложении — не «Предложение вам подходит»; уровень тот же."""
+    from app.modules.mutual.fit import _f, summarize
+
+    fs = [_f("format", "unknown", "Формат в предложении не указан"), _f("location", "unknown", "Город в предложении не указан"),
+          _f("stack", "unknown", "Стек в предложении не указан"), _f("salary", "ok", "Вилка выше вашего минимума"),
+          _f("readiness", "ok", "Открыт к предложениям")]
+    me, emp = summarize(fs, "candidate"), summarize(fs, "employer")
+    assert me["level"] == emp["level"] == "high" and me["score"] == emp["score"]
+    assert me["title"] == "Подходит по указанным условиям"
+    assert "Не указаны в предложении: формат, город, стек — по ним соответствие не установлено" in me["line"]
+    full = [_f("format", "ok", "Гибрид"), _f("salary", "ok", "Вилка выше вашего минимума"), _f("readiness", "ok", "Открыт")]
+    assert summarize(full, "candidate")["title"] == "Предложение вам подходит"

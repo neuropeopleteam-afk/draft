@@ -226,7 +226,7 @@ export function OfferFitHint({ cref, needId, from, to, basis }: { cref: string; 
   const warn = res.salary_status === "bad" || res.level === "low";
   return (
     <div role="status" className={`rounded-xl border px-4 py-3 text-sm ${warn ? "border-brand/30 bg-brand-blush/40 text-brand-plum" : "border-brand-lavender/30 bg-[#F3F2FB] text-brand-night"}`}>
-      <div className="flex flex-wrap items-center gap-2"><FitBadge fit={res} /><span className="font-semibold">{res.salary_status === "bad" ? "С такой вилкой кандидат, вероятно, откажет" : res.hint}</span></div>
+      <div className="flex flex-wrap items-center gap-2"><FitBadge fit={res} /><span className="font-semibold" data-testid="offer-fit-head">{res.salary_status === "bad" ? "С такой вилкой кандидат, вероятно, откажет" : res.hint}</span></div>
       <p className="mt-1 text-brand-ink/80">{res.line}</p>
       {res.salary_status === "bad" && <p className="mt-1 text-xs text-brand-ink/65">Верх вилки ниже ожиданий кандидата. Минимум не раскрывается; сравнений вилки — не больше пяти в сутки на кандидата.</p>}
     </div>

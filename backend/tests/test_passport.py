@@ -461,3 +461,53 @@ def test_expert_review_keeps_candidate_revocation(client):
     assert me["active"] is None and me["opted_out"] and me["eligible"]
     again = client.post("/api/me/passport/reissue", headers=H(tok)).json()["active"]
     assert again["passport"]["grade_status"] == "confirmed" and again["status"]["state"] == "valid"
+
+
+def test_fix7_one_status_source_category_and_passport(client):
+    """FIX7 п. 6 (проход модельных пользователей, выкладка 5): категория — «подтверждён», паспорт — «предварительный»
+    без объяснения. Теперь статус паспорта и экран «Категория» — из одного источника (profiles.facts.passport_status):
+    открытые ответы на проверке эксперта → в статусе грейда pending_review и passport_status «preliminary», плашка
+    и паспорт говорят одно и то же, у паспорта — причина."""
+    tok, _uid = _candidate_with_category(client, email="fix7.onesrc@example.com", pending_left=1, seed=13)
+    gs = client.get("/api/assessment/status", headers=H(tok)).json()["grade_status"]
+    assert gs["status"] == "confirmed" and gs["pending_review"] >= 1, gs
+    assert gs["passport_status"] == "preliminary" and "на проверке эксперта" in gs["text"], gs
+    me = client.get("/api/me/passport", headers=H(tok)).json()
+    assert me["active"]["passport"]["grade_status"] == gs["passport_status"]
+    assert "на проверке эксперта" in (me["preliminary_reason"] or ""), me.get("preliminary_reason")
+    # без открытых ответов — оба «подтверждён», причины нет
+    tok2, _ = _candidate_with_category(client, email="fix7.onesrc2@example.com", seed=14)
+    gs2 = client.get("/api/assessment/status", headers=H(tok2)).json()["grade_status"]
+    me2 = client.get("/api/me/passport", headers=H(tok2)).json()
+    assert gs2["passport_status"] == "confirmed" == me2["active"]["passport"]["grade_status"]
+    assert not gs2.get("pending_review") and me2["preliminary_reason"] is None
+
+
+def test_fix7_skill_confirmed_title_names_real_source():
+    """FIX7 п. 9 (P05): навык подтверждён заданием работодателя при тесте 0,4 из 1 — подпись не «подтверждён тестом»."""
+    from types import SimpleNamespace as NS
+
+    from app.modules.profiles.facts import skill_confirmed_title
+
+    both_ok = NS(value={"score": 1.0, "parts": {"test": {"correct": 1, "total": 1}, "assignment": {"correct": 1, "total": 1}}}, source_ref="")
+    task_only = NS(value={"score": 0.7, "parts": {"test": {"correct": 0.4, "total": 1}, "assignment": {"correct": 1, "total": 1}}}, source_ref="")
+    test_only = NS(value={"score": 0.67, "correct": 2, "total": 3}, source_ref="test_session:1")
+    assign = NS(value={"score": 1.0, "correct": 1, "total": 1}, source_ref="assignment:1")
+    assert skill_confirmed_title(test_only) == "подтверждён тестом (T1)"
+    assert skill_confirmed_title(both_ok) == "подтверждён тестом и заданием работодателя (T1)"
+    assert skill_confirmed_title(task_only) == "подтверждён заданием работодателя (T1); в тесте — ниже 50 %"
+    assert skill_confirmed_title(assign) == "подтверждён заданием работодателя (T1)"
+
+
+def test_fix7_compare_cell_names_employer_task():
+    """FIX7 п. 11 (P07/P08): навык, подтверждённый только заданием работодателя, в сравнении — не «задания теста»."""
+    from types import SimpleNamespace as NS
+
+    from app.modules.matching.compare import _stack_cell
+
+    assign = NS(value={"score": 1.0, "correct": 1, "total": 1}, source_ref="assignment:1")
+    test = NS(value={"score": 0.67, "correct": 2, "total": 3}, source_ref="test_session:1")
+    cell, _ = _stack_cell(NS(skills_t1={"python": assign}, stack_t0=set()), "python")
+    assert cell["text"].startswith("Подтверждено заданием работодателя: 1 из 1")
+    cell, _ = _stack_cell(NS(skills_t1={"python": test}, stack_t0=set()), "python")
+    assert cell["text"].startswith("Подтверждено заданиями: 2 из 3")

@@ -72,8 +72,8 @@ function Steps({ stage, outcome }: { stage: string; outcome?: any }) {
 
 /** Этап найма в списке приглашений. */
 export function HiringChip({ h }: { h?: any }) {
-  if (!h || h.stage === "contact") return null;
-  const c = h.todo ? "bg-amber-50 text-amber-800" : h.stage === "hired" ? "bg-emerald-50 text-emerald-700" : ["rejected", "declined"].includes(h.stage) ? "bg-gray-100 text-gray-600" : "bg-[#ECEAF8] text-brand-night";
+  if (!h || (h.stage === "contact" && !h.paused)) return null;
+  const c = h.paused ? "bg-amber-50 text-amber-900" : h.todo ? "bg-amber-50 text-amber-800" : h.stage === "hired" ? "bg-emerald-50 text-emerald-700" : ["rejected", "declined"].includes(h.stage) ? "bg-gray-100 text-gray-600" : "bg-[#ECEAF8] text-brand-night";
   return <span className={`inline-flex max-w-full items-center truncate rounded-full px-2.5 py-1 text-xs font-semibold ${c}`} title={h.line}>{h.title}</span>;
 }
 

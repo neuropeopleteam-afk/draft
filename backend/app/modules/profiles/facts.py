@@ -321,6 +321,20 @@ def _two_stage(out: dict, t: dict) -> None:
         out["two_stage"] = note
 
 
+def passport_status(b: "Bundle") -> str:
+    """FIX7 п. 6: статус грейда в паспорте — из того же источника, что и карточка (grade_status): «preliminary» —
+    Junior предварительно, Lead/Principal по тесту (флаг GRADES_EXT_ENABLED) или открытые ответы теста ещё на проверке
+    эксперта; иначе «confirmed». Паспорт (passport.service.build_content) и экран «Категория» берут его отсюда."""
+    if b.grade_status == "provisional":
+        return "preliminary"
+    t = b.test.value if b.test else {}
+    if (t or {}).get("pending_review"):
+        return "preliminary"
+    if b.grade_status == "confirmed" and grade_levels.preliminary_info(b.grade):
+        return "preliminary"
+    return "confirmed"
+
+
 def grade_status(b: "Bundle") -> dict:
     """Единая модель статуса грейда для карточки, подборки, поиска, сравнения, PDF и объяснения «почему».
 
@@ -346,6 +360,14 @@ def grade_status(b: "Bundle") -> dict:
         if ext:
             out["ext_preliminary"] = ext
             out["text"] = f"{GRADES.get(b.grade or '', b.grade)} по тесту — предварительно: {ext['text']}"
+        pending = int((t or {}).get("pending_review") or 0)
+        if pending:
+            # FIX7 п. 6: открытые ответы ещё у эксперта — тот же признак, по которому паспорт «предварительный»
+            # (passport_status ниже): категория присвоена тестом, но итог предварительный до проверки
+            out["pending_review"] = pending
+            out["text"] += (f" · предварительно: открытых ответов на проверке эксперта — {pending}; после проверки "
+                            "итог и паспорт обновятся сами")
+        out["passport_status"] = passport_status(b)
         return out
     if st == "provisional":
         inf = prov.info(t) or {}
@@ -431,6 +453,11 @@ def _origin(f: CandidateFact) -> str:
     return (getattr(f, "value", None) or {}).get("origin") or ("assignment" if ref.startswith("assignment:") else "test")
 
 
+def skill_origin(f: CandidateFact) -> str:
+    """«test» | «assignment» — публичное имя для _origin (FIX7 п. 11: подпись источника в сравнении)."""
+    return _origin(f)
+
+
 def _part(f: CandidateFact) -> dict:
     v = getattr(f, "value", None) or {}
     try:
@@ -459,6 +486,22 @@ def skill_parts_text(f: CandidateFact) -> str:
             else ("подтверждено" if ok else "ниже порога")
         out.append(f"{SKILL_SOURCE.get(k, k)} — {word}, {fmt_count(x['correct'])} из {fmt_count(x['total'])}")
     return "; ".join(out)
+
+
+def skill_confirmed_title(f: CandidateFact | None) -> str:
+    """FIX7 п. 9: подпись подтверждённого навыка по настоящему источнику (тот же порог 50 %, что у skill_confirmed).
+    Слитый факт «тест 0,4 из 1 + задание работодателя 1 из 1» подтверждён заданием, а не тестом — в карте навыков
+    у такого навыка 34–40 % и «Пробел», поэтому подпись «подтверждён тестом» противоречила карте."""
+    v = getattr(f, "value", None) or {}
+    parts = v.get("parts") or ({_origin(f): _part(f)} if f is not None else {})
+    ok = {k for k, x in parts.items() if _part_ok(x)}
+    if ok == {"test"} or not parts:
+        return "подтверждён тестом (T1)"
+    if "test" in ok:
+        return "подтверждён тестом и заданием работодателя (T1)"
+    if "test" in parts:
+        return "подтверждён заданием работодателя (T1); в тесте — ниже 50 %"
+    return "подтверждён заданием работодателя (T1)"
 
 
 def skill_evidence_text(f: CandidateFact) -> str:

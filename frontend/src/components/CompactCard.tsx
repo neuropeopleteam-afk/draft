@@ -1,5 +1,5 @@
 // Я10: компактная карточка подборки — решение «кого пригласить и почему» за несколько секунд.
-// На виду: совпало (подтверждено тестом) / не проверено / риск / зарплата / «Пригласить» / «Сравнить»;
+// На виду: совпало (подтверждено тестом или заданием работодателя) / не проверено / риск / зарплата / «Пригласить» / «Сравнить»;
 // доказательства (тест, ФСП, все причины, взаимный подбор) — по «Подробнее». Порядок и баллы не меняются.
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -12,14 +12,25 @@ const SKILL = /^(Обязательно|Желательно): /;
 const skillName = (r: any) => String(r.requirement).replace(SKILL, "");
 const isMust = (r: any) => String(r.requirement).startsWith("Обязательно");
 
-export interface CompactFacts { matched: string[]; unchecked: string[]; risks: string[]; salary: string | null; core: string | null; coreState?: string }
+/** FIX7 п. 11: источник подтверждения из текста причины (skill_evidence_text): «…заданиями теста…» / «…заданием
+ *  работодателя…» / «тест — подтверждено …; задание работодателя — выполнено …». Задание — не «тест». */
+export function skillSource(text: unknown): "test" | "task" | "both" {
+  const t = String(text ?? "").toLowerCase();
+  const task = /задани(е|ем) работодателя(:| — выполнено)/.test(t);
+  const test = /заданиями теста|тест — подтверждено|^подтверждено заданиями:/.test(t);
+  return task && test ? "both" : task ? "task" : "test";
+}
+
+export interface CompactFacts { matched: string[]; matchedTask: string[]; unchecked: string[]; risks: string[]; salary: string | null; core: string | null; coreState?: string }
 
 /** Короткие строки карточки из того же ответа подборки (reasons, must, card, core Я1, взаимный подбор). */
 export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
   const reasons: any[] = r.reasons ?? [];
   const c = r.card ?? {};
   const stack = reasons.filter((x) => SKILL.test(x.requirement ?? ""));
-  const matched = stack.filter((x) => x.status === "confirmed").map((x) => skillName(x) + (isMust(x) ? "" : " (желательно)"));
+  const ok = stack.filter((x) => x.status === "confirmed");
+  const matched = ok.filter((x) => skillSource(x.text) !== "task").map((x) => skillName(x) + (isMust(x) ? "" : " (желательно)"));
+  const matchedTask = ok.filter((x) => skillSource(x.text) === "task").map((x) => skillName(x) + (isMust(x) ? "" : " (желательно)"));
   // по состоянию, обязательные первыми: «Go — только заявлен; Kubernetes, CI/CD — не проверялись»
   const label = (x: any) => skillName(x) + (isMust(x) ? "" : " (желательно)");
   const unchecked = (["declared", "missing"] as const).map((st) => {
@@ -44,6 +55,10 @@ export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
   const integ = c.test?.integrity;
   if (integ && integ.level !== "high") risks.push(`достоверность теста: ${String(integ.title ?? "").toLowerCase()}`);
   for (const x of reasons) if ((x.requirement === "Формат работы" || x.requirement === "Город присутствия") && x.status === "mismatch") risks.push(String(x.text).toLowerCase());
+  // FIX7 п. 10: стаж из потребности («3 года опыта») виден у каждого, кто его не набирает (T0, заявлено кандидатом)
+  const expMin = r.exp_min;
+  if (expMin != null && c.experience_years != null && Number(c.experience_years) < Number(expMin))
+    risks.push(`стаж ${String(c.experience_years).replace(".", ",")} г. — меньше ${String(expMin).replace(".", ",")} из потребности`);
   if (fit && (fit.level === "low" || fit.decline_risk)) {
     const bad = (fit.factors ?? []).filter((f) => f.status === "bad").map((f) => f.title.toLowerCase());
     risks.push(`вероятно, откажет${bad.length ? `: ${bad.join(", ")}` : ""}`);
@@ -54,7 +69,7 @@ export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
   const market = m && (m.from || m.to) ? `рынок категории ${range(m.from, m.to)} на руки` : null;
   const salary = [sal?.text ? sal.text.replace(/^./, (s) => s.toLowerCase()) : null, market].filter(Boolean).join(" · ") || null;
   const k = r.core;  // Я1 (feat/key-lang): «Основной язык роли — Go: подтверждён тестом / заявлен / не заявлен»
-  return { matched, unchecked, risks, salary, core: k?.headline ? String(k.headline) : null, coreState: k?.state };
+  return { matched, matchedTask, unchecked, risks, salary, core: k?.headline ? String(k.headline) : null, coreState: k?.state };
 }
 
 function Line({ label, tone, children, testid }: { label: string; tone: string; children: ReactNode; testid: string }) {
@@ -67,9 +82,9 @@ function Line({ label, tone, children, testid }: { label: string; tone: string; 
 }
 
 /** Компактная карточка: шапка, 4–5 строк и действия; «Подробнее» раскрывает доказательства под карточкой. */
-export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, needId, badge, open, onToggle, details, side = false, active = false }: {
+export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, needId, version, badge, open, onToggle, details, side = false, active = false }: {
   r: any; rank: number; fit?: Fit | null; picked: boolean; onPick: () => void; pickDisabled?: boolean; onInvite: () => void;
-  needId?: string; badge?: ReactNode; open: boolean; onToggle: () => void; details?: ReactNode;
+  needId?: string; /** FIX7 п. 12: версия подборки — карточка кандидата считается по её требованиям */ version?: number; badge?: ReactNode; open: boolean; onToggle: () => void; details?: ReactNode;
   side?: boolean; active?: boolean;  // side — подробности в панели справа (широкий экран); active — эта карточка сейчас в ней
 }) {
   const c = r.card ?? {};
@@ -91,7 +106,10 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
         {r.score != null && <ScoreBox score={r.score} must={r.must} />}
       </div>
       <ul className="mt-2 space-y-1 text-sm" data-testid="compact-lines">
-        <Line label="Совпало" tone="text-emerald-800" testid="compact-matched">{f.matched.length ? <>подтверждено тестом: {f.matched.join(", ")}</> : "тестом из требований ничего не подтверждено"}</Line>
+        <Line label="Совпало" tone="text-emerald-800" testid="compact-matched">{f.matched.length || f.matchedTask.length
+          ? [f.matched.length ? `подтверждено тестом: ${f.matched.join(", ")}` : "",
+             f.matchedTask.length ? `заданием работодателя: ${f.matchedTask.join(", ")}` : ""].filter(Boolean).join("; ")
+          : "тестом и заданиями из требований ничего не подтверждено"}</Line>
         {f.unchecked.length > 0 && <Line label="Не проверено" tone="text-brand-ink/65" testid="compact-unchecked">{f.unchecked.join("; ")}<span className="hidden sm:inline"> — можно задать вопрос зондом</span></Line>}
         <Line label="Риск" tone="text-amber-900" testid="compact-risk">{f.risks.length ? f.risks.join("; ") : "по подтверждённым данным не виден"}</Line>
         {f.salary && <Line label="Зарплата" tone="text-brand-plum" testid="compact-salary">{f.salary}{fit && fit.level !== "low" ? <span className="ml-2 align-middle"><FitBadge fit={fit} short /></span> : null}</Line>}
@@ -102,7 +120,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
           title={pickDisabled && !picked ? "Сравнить можно до трёх кандидатов" : "Отметьте 2–3 кандидатов и откройте сравнение"}>
           <input type="checkbox" className="accent-brand" checked={picked} disabled={pickDisabled && !picked} onChange={onPick} />Сравнить
         </label>
-        <Link className="btn-ghost !px-3 !py-2" to={`/employer/candidates/${r.ref}?need=${needId ?? ""}`}>Открыть</Link>
+        <Link className="btn-ghost !px-3 !py-2" to={`/employer/candidates/${r.ref}?need=${needId ?? ""}${version ? `&v=${version}` : ""}`}>Открыть</Link>
         {side ? (
           <button type="button" className="ml-auto text-sm font-semibold text-brand hover:underline disabled:no-underline disabled:opacity-70" aria-pressed={active} disabled={active} onClick={onToggle}>
             {active ? "Подробности — справа" : "Подробнее справа: тест, ФСП, причины"}

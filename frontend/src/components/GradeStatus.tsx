@@ -15,6 +15,10 @@ export interface GradeStatusInfo {
   attempt?: { grade?: string | null; theta?: number | null; se?: number | null; at?: string | null } | null;
   // Lead/Principal (GRADES_EXT_ENABLED): уровень присвоен тестом, но «предварительно» — точность различения ниже цели
   ext_preliminary?: ExtPreliminary | null;
+  // FIX7 п. 6: открытые ответы теста ещё у эксперта — итог (и паспорт) предварительный до проверки
+  pending_review?: number | null;
+  /** Статус грейда в паспорте из того же источника (profiles.facts.passport_status). */
+  passport_status?: "confirmed" | "preliminary" | null;
 }
 
 export interface ExtPreliminary {
@@ -37,8 +41,9 @@ export function GradeBadge({ s, claimed }: { s?: GradeStatusInfo | null; claimed
   const label = s.status === "provisional" ? `Предварительно${s.p_pct != null ? ` · ${s.p_pct} %` : ""}`
     : s.status === "unconfirmed" ? `Грейд не подтверждён${claimed?.title ? ` · заявлен ${claimed.title}` : s.claimed_title ? ` · заявлен ${s.claimed_title}` : ""}`
     : s.ext_preliminary ? `${s.grade_title ?? s.ext_preliminary.grade} по тесту · предварительно`
+    : s.pending_review ? "Грейд по тесту · предварительно, ответы на проверке"
     : "Грейд подтверждён";
-  const cls = s.status === "confirmed" && s.ext_preliminary ? STYLE.provisional : STYLE[s.status];
+  const cls = s.status === "confirmed" && (s.ext_preliminary || s.pending_review) ? STYLE.provisional : STYLE[s.status];
   return (
     <span title={ruText(s.text)} data-testid={s.ext_preliminary ? "grade-ext-preliminary" : undefined} className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ${cls}`}>
       {label}
@@ -120,7 +125,7 @@ function SecondStage({ t, grade, direction, generic = false }: { t: TwoStageStat
 
 /** Пояснение под плашкой — одно предложение из бэкенда (текст един для всех экранов). */
 export function GradeStatusNote({ s, className = "" }: { s?: GradeStatusInfo | null; className?: string }) {
-  if (!s || (s.status === "confirmed" && !s.ext_preliminary)) return null;
+  if (!s || (s.status === "confirmed" && !s.ext_preliminary && !s.pending_review)) return null;
   return <p className={`text-xs leading-relaxed text-brand-ink/70 ${className}`}>{ruText(s.text)}</p>;
 }
 

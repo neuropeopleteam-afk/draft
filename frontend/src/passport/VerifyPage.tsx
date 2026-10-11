@@ -88,7 +88,9 @@ function Body({ d }: { d: PassportPublic }) {
             <Row k="Действителен до" v={dt(p.valid_until)} />
           </dl>
         )}
-        <h3 className="mt-6 flex items-center gap-2 font-bold text-brand-night"><Lvl t="T1" /> Навыки, подтверждённые заданиями теста</h3>
+        <h3 className="mt-6 flex items-center gap-2 font-bold text-brand-night"><Lvl t="T1" /> Навыки, подтверждённые заданиями (T1)</h3>
+        {/* FIX7 п. 11 / Я4-15: сюда входят и задания теста, и задания работодателя — подпись не сужает источник до «теста» */}
+        <p className="mt-1 text-xs text-brand-ink/70" data-testid="passport-skills-source">Задания теста платформы и задания работодателя с автопроверкой; навык считается подтверждённым от 50 % верных.</p>
         {p.skills_t1.length ? (
           <ul className="mt-2 flex flex-wrap gap-2">
             {p.skills_t1.map((x) => <li key={x.tag} className="chip">{x.title}{x.score != null ? ` · ${pct(x.score)}` : ""}</li>)}
