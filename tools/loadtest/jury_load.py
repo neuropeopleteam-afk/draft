@@ -66,6 +66,7 @@ MAX_LLM_TEXT = int(os.environ.get("LT_MAX_LLM_TEXT", "6"))  # новых тек�
 MAX_RESUME = int(os.environ.get("LT_MAX_RESUME", "6"))      # загрузок резюме DOCX (лимит продукта — 5 в час на учётку)
 REDBUTTON = int(os.environ.get("LT_REDBUTTON", "2"))        # пользователей «Красной кнопки» (12 атак в минуту на учётку)
 RESUME_USERS = int(os.environ.get("LT_RESUME", "1"))        # пользователей с загрузкой резюме
+LOGIN_TRIES = max(1, int(os.environ.get("LT_LOGIN_TRIES", "4")))  # попыток входа при 503/502/504 (пауза Retry-After)
 # Подпись запросов в журнале nginx стенда: run_load.py nginx сверяет число запросов Locust с тем, что дошло до сервера
 UA = f"spectrek-load/{os.environ.get('LT_TAG', 'run')}"
 # 429 на страницах — limit_req nginx хоста (10 запросов/с с адреса): у генератора один адрес, это защита, не отказ
@@ -134,15 +135,34 @@ class JuryUser(HttpUser):
         self.client.headers["User-Agent"] = UA
 
     def login(self, persona: str | None = None) -> bool:
+        """Вход в песочницу. 503 db_busy / 502 / 504 под нагрузкой — человек видит «повторите через несколько секунд»
+        и нажимает «Войти» ещё раз: повтор через Retry-After (до LT_LOGIN_TRIES попыток; каждая неудача — в статистике).
+        11.10 (stand_200b): без повтора пользователь с неудачным входом ходил по кабинету без токена — 26 из 174 ошибок
+        прогона были 401 сценария, а не ответы стенда."""
         persona = persona or self.persona
-        with self.client.post("/api/jury/login", json={"persona": persona, "scenario": SCENARIO},
-                              name="вход жюри (песочница)", catch_response=True) as r:
-            if r.status_code == 200 and r.json().get("access_token"):
-                self.client.headers["Authorization"] = f"Bearer {r.json()['access_token']}"
-                r.success()
-                return True
-            r.failure(f"{r.status_code} {r.text[:120]}")
-            return False
+        self.login_persona = persona
+        for attempt in range(LOGIN_TRIES):
+            with self.client.post("/api/jury/login", json={"persona": persona, "scenario": SCENARIO},
+                                  name="вход жюри (песочница)", catch_response=True) as r:
+                if r.status_code == 200 and r.json().get("access_token"):
+                    self.client.headers["Authorization"] = f"Bearer {r.json()['access_token']}"
+                    r.success()
+                    return True
+                r.failure(f"{r.status_code} {r.text[:120]}")
+                if r.status_code not in (0, 502, 503, 504) or attempt + 1 >= LOGIN_TRIES:
+                    return False
+                try:
+                    pause = float(r.headers.get("Retry-After") or 3)
+                except ValueError:
+                    pause = 3.0
+            time.sleep(min(pause, 10.0) + random.uniform(0, 1))
+        return False
+
+    def ensure_login(self) -> bool:
+        """Задача без входа не идёт: сначала повторный вход (как человек после ошибки), запросы без токена (401) — нет."""
+        if not getattr(self, "ok", False):
+            self.ok = self.login(getattr(self, "login_persona", None))
+        return self.ok
 
     def page_once(self, path: str, label: str) -> None:
         """HTML страницы и её статика (JS, CSS) — как первый заход браузера; дальше браузер берёт из кэша."""
@@ -188,7 +208,9 @@ class CandidateTester(JuryUser):
 
     @task
     def full_path(self):
-        if not self.ok or self.done:
+        if not self.ensure_login():
+            return
+        if self.done:
             return self.view()
         with _lock:
             n = _counters["starts"].get(self.slot, 0)
@@ -267,25 +289,35 @@ class CandidateViewer(JuryUser):
 
     @task(3)
     def category(self):
+        if not self.ensure_login():
+            return
         self.client.get("/api/assessment/status", name="кандидат: статус категории")
 
     @task(2)
     def inbox(self):
+        if not self.ensure_login():
+            return
         self.client.get("/api/candidate/invitations", name="кандидат: приглашения")
         self.client.get("/api/candidate/probes", name="кандидат: зонды")
         self.client.get("/api/messages/unread", name="кабинет: непрочитанные")
 
     @task(2)
     def feedback(self):
+        if not self.ensure_login():
+            return
         with self.client.get("/api/assessment/feedback", name="кандидат: обратная связь", catch_response=True) as r:
             r.success() if r.status_code in (200, 404, 409) else r.failure(str(r.status_code))  # нет теста — 409
 
     @task(1)
     def attempts(self):
+        if not self.ensure_login():
+            return
         self.client.get("/api/assessment/attempts", name="кандидат: две попытки рядом")
 
     @task(1)
     def vacancies(self):
+        if not self.ensure_login():
+            return
         self.client.get("/api/vacancies", name="кандидат: вакансии")
 
 
@@ -309,6 +341,8 @@ class Employer(JuryUser):
     @task(1)
     def new_need(self):
         """Жюри вводит свою потребность: разбор (правила сразу) → сохранение с готовыми требованиями → подборка."""
+        if not self.ensure_login():
+            return
         if not PARSE:
             return
         with _lock:
@@ -350,6 +384,8 @@ class Employer(JuryUser):
 
     @task(4)
     def selection(self):
+        if not self.ensure_login():
+            return
         if not self.need:
             return self.pick_need()
         r = self.client.get(f"/api/employer/needs/{self.need}/selections/{self.version}", name="подборка: версия")
@@ -359,12 +395,16 @@ class Employer(JuryUser):
 
     @task(1)
     def what_if(self):
+        if not self.ensure_login():
+            return
         if self.need:
             self.client.get(f"/api/employer/needs/{self.need}/selections/{self.version}/what-if",
                             name="подборка: что если")
 
     @task(2)
     def compare(self):
+        if not self.ensure_login():
+            return
         if not self.need:
             return
         with self.client.get(f"/api/employer/needs/{self.need}/compare", params={"version": self.version},
@@ -373,11 +413,15 @@ class Employer(JuryUser):
 
     @task(2)
     def card(self):
+        if not self.ensure_login():
+            return
         if self.refs:
             self.client.get(f"/api/employer/candidates/{random.choice(self.refs)}", name="подборка: карточка кандидата")
 
     @task(1)
     def invite(self):
+        if not self.ensure_login():
+            return
         if not (self.need and self.refs):
             return
         ref = random.choice(self.refs[:5])
@@ -393,6 +437,8 @@ class Employer(JuryUser):
 
     @task(1)
     def lists(self):
+        if not self.ensure_login():
+            return
         self.client.get("/api/employer/invitations", name="работодатель: приглашения")
         self.client.get("/api/employer/categories", name="работодатель: категории с рынком")
 
@@ -456,7 +502,7 @@ class RedButton(JuryUser):
 
     @task
     def attack(self):
-        if not self.ok:
+        if not self.ensure_login():
             return
         aid = random.choice(ATTACKS)
         with self.client.post(f"/api/validation/attacks/{aid}", json=attack_body(aid),
@@ -483,7 +529,7 @@ class ResumeUploader(JuryUser):
 
     @task
     def upload(self):
-        if not self.ok or not _take("resume", MAX_RESUME):
+        if not self.ensure_login() or not _take("resume", MAX_RESUME):
             return
         self.i += 1
         files = {"file": ("resume.docx", resume_docx(self.i),
