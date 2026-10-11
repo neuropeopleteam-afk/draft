@@ -24,6 +24,8 @@ const DIST = resolve(dirname(fileURLToPath(import.meta.url)), "../../frontend/di
 const AXE_JS = process.env.AXE_JS || "/tmp/boot/axe.min.js";
 const MAIN_JS = /\/assets\/index-[^/]+\.js$/;
 const MAIN_CSS = /\/assets\/index-[^/]+\.css$/;
+// файл экрана /validation — и под адресом с обходом кэша (?retry=…, FIX7: повтор загрузки раздела на месте)
+const VALIDATION_JS = /\/assets\/Validation-[^/?]+\.js(\?.*)?$/;
 
 const META = {
   product_name: "Проверка", version: "e2e", jury_mode_available: true, demo_sandbox: true, assessment_engine: "irt",
@@ -146,6 +148,11 @@ test("второй сбой подряд — без цикла: только к�
   await expect(h).toBeVisible({ timeout: 12_000 });
   await expect(page.getByText("Пробуем загрузить ещё раз…")).toHaveCount(0);
   await expect(page.getByText("Если включён VPN — отключите его и обновите страницу.")).toBeVisible();
+  // FIX7: причина (код и файл, которого не дождались), «Очистить кэш и открыть заново», ссылка на /status
+  await expect(page.locator("#boot-why")).toContainText("Код: BOOT-SLOW");
+  await expect(page.locator("#boot-why")).toContainText(/не дождались файла: .*index-[^,]+\.js/);
+  await expect(page.getByRole("button", { name: "Очистить кэш и открыть заново" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Состояние сервиса и проверка связи" })).toHaveAttribute("href", "/status");
   await noHorizontalScroll(page);
   await axe(page, "сторож: страница не загрузилась");
   await page.waitForTimeout(4_000);
@@ -169,37 +176,120 @@ test("CSS завис → экран загрузки всё равно рису�
   expect(css.n).toBe(2);
 });
 
-test("файл ленивого экрана оборвался → «Раздел не загрузился» → повторная загрузка → экран открылся", async ({ page }) => {
+test("файл ленивого экрана оборвался → повтор на месте, без перезагрузки страницы → экран открылся", async ({ page }) => {
   desktopOnly();
   await mockApi(page);
-  const chunk = await breakAsset(page, /\/assets\/Validation-[^/]+\.js$/, "reset");
+  const chunk = await breakAsset(page, VALIDATION_JS, "reset");
+  const navs: string[] = [];
+  page.on("framenavigated", (f) => { if (f === page.mainFrame()) navs.push(f.url()); });
   await page.goto("/validation", { waitUntil: "commit" });
-  await expect(page.getByRole("heading", { level: 1, name: "Раздел не загрузился" })).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByRole("button", { name: "Обновить" })).toBeVisible();
-  await expect(page.getByText("Пробуем загрузить ещё раз…")).toBeVisible();
-  await page.waitForURL(/[?&]r=\d+/, { timeout: 10_000, waitUntil: "commit" });
-  await expect(page.getByRole("heading", { level: 1, name: "Раздел не загрузился" })).toHaveCount(0, { timeout: 15_000 });
-  await expect(page.locator("main h1").first()).toBeVisible();
+  // FIX7: повтор загрузки раздела — сам, на месте (lib/lazyPage.ts): экрана ошибки и перезагрузки страницы нет
+  await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { level: 1, name: "Раздел не загрузился" })).toHaveCount(0);
+  expect(chunk.n, "повтор дошёл до сети").toBeGreaterThanOrEqual(2);
+  expect(navs.filter((u) => /[?&]r=\d/.test(u)), "перезагрузки страницы не было").toEqual([]);
+});
+
+test("файл ленивого экрана завис → повтор с обходом кэша, не дожидаясь первой попытки → экран открылся", async ({ page }) => {
+  desktopOnly();
+  await mockApi(page);
+  const chunk = await breakAsset(page, VALIDATION_JS, "hang");
+  await page.goto("/validation", { waitUntil: "commit" });
+  await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible({ timeout: 25_000 });
   expect(chunk.n).toBe(2);
 });
 
-test("раздел не загрузился, автоповтор уже был → только кнопка; axe; «Обновить» → экран открылся", async ({ page }) => {
+test("раздел не загрузился после всех повторов, автоповтор уже был → причина и кнопки; axe; «Обновить» → открылся", async ({ page }) => {
   await mockApi(page);
   // автоповтор был только что (метка сторожа в sessionStorage) — экран стоит, решает человек
-  await page.addInitScript(() => sessionStorage.setItem("fsp_boot_retry", String(Date.now())));
-  const chunk = await breakAsset(page, /\/assets\/Validation-[^/]+\.js$/, "reset");
+  await page.addInitScript(() => { if (!sessionStorage.getItem("fsp_boot_retry")) sessionStorage.setItem("fsp_boot_retry", String(Date.now())); });
+  const chunk = await breakAsset(page, VALIDATION_JS, "reset", 1000);
   await page.goto("/validation", { waitUntil: "commit" });
-  await expect(page.getByRole("heading", { level: 1, name: "Раздел не загрузился" })).toBeVisible({ timeout: 10_000 });
+  // 1 + 3 повтора на месте (паузы 0,8 / 2 / 4 с) — затем экран ошибки
+  await expect(page.getByRole("heading", { level: 1, name: "Раздел не загрузился" })).toBeVisible({ timeout: 25_000 });
   await expect(page.getByText("Если включён VPN — отключите его и обновите страницу.", { exact: false })).toBeVisible();
+  await expect(page.locator("[data-boot-why]")).toContainText(/Код: CHUNK · не загрузился файл: Validation-[^/?]+\.js/);
+  await expect(page.getByRole("button", { name: "Очистить кэш и открыть заново" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Состояние сервиса" })).toHaveAttribute("href", "/status");
   await expect(page.getByText("Пробуем загрузить ещё раз…")).toHaveCount(0);
+  expect(chunk.n, "повторы на месте дошли до сети").toBeGreaterThanOrEqual(3);
   await noHorizontalScroll(page);
   await axe(page, "раздел не загрузился");
+  const seen = chunk.n;
   await page.waitForTimeout(2_500);
-  expect(chunk.n, "автоматической повторной загрузки нет").toBe(1);
+  expect(chunk.n, "автоматической повторной загрузки нет").toBe(seen);
+  await page.unroute(VALIDATION_JS);
   await page.getByRole("button", { name: "Обновить" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible({ timeout: 15_000 });
-  expect(chunk.n).toBe(2);
   await noHorizontalScroll(page);
+});
+
+test("после выкладки на сервере другая сборка → одна принудительная перезагрузка, без петли", async ({ page }) => {
+  desktopOnly();
+  await mockApi(page);
+  // свежий index.html (запрос fetch из lib/lazyPage.ts) называет другой основной файл — как после выкладки
+  await page.route(/\/$/, async (route) => {
+    if (route.request().resourceType() !== "fetch") return route.continue();
+    const res = await route.fetch();
+    const html = (await res.text()).replace(/\/assets\/index-[^"]+\.js/g, "/assets/index-NEWBUILD.js");
+    return route.fulfill({ status: 200, headers: { "content-type": "text/html" }, body: html });
+  });
+  await breakAsset(page, VALIDATION_JS, "reset", 1000);
+  const navs: string[] = [];
+  page.on("framenavigated", (f) => { if (f === page.mainFrame()) navs.push(f.url()); });
+  await page.goto("/validation", { waitUntil: "commit" });
+  await page.waitForURL(/[?&]r=\d+/, { timeout: 15_000, waitUntil: "commit" });
+  // после перезагрузки сборка «та же новая» — второй перезагрузки нет, экран ошибки с кнопками
+  await expect(page.getByRole("heading", { level: 1, name: "Раздел не загрузился" })).toBeVisible({ timeout: 30_000 });
+  expect(await page.evaluate(() => sessionStorage.getItem("fsp_build_reload"))).toBe("/assets/index-NEWBUILD.js");
+  await page.waitForTimeout(3_000);
+  expect(navs.filter((u) => /[?&]r=\d/.test(u)).length, "одна принудительная перезагрузка").toBe(1);
+});
+
+test("после старта файлы основных разделов предзагружаются сами (requestIdleCallback)", async ({ page }) => {
+  desktopOnly();
+  await mockApi(page);
+  const wanted = [/\/assets\/CabinetLayout-[^/]+\.js/, /\/assets\/Validation-[^/]+\.js/, /\/assets\/Criteria-[^/]+\.js/];
+  const got = wanted.map((re) => page.waitForRequest(re, { timeout: 30_000 }));
+  await page.goto("/");
+  await landing(page);
+  await Promise.all(got);
+  // переход в раздел — без нового запроса файла (модуль уже загружен)
+  let again = 0;
+  page.on("request", (r) => { if (VALIDATION_JS.test(r.url())) again++; });
+  await page.evaluate(() => { history.pushState({}, "", "/validation"); dispatchEvent(new PopStateEvent("popstate")); });
+  await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("Загружаем…")).toHaveCount(0);
+  expect(again, "файл раздела не запрашивался повторно").toBe(0);
+});
+
+test("обрыв основного файла, автоповтор уже был → причина с именем файла; «Очистить кэш и открыть заново» → открылось", async ({ page }) => {
+  desktopOnly();
+  await mockApi(page);
+  await page.addInitScript(() => { if (!sessionStorage.getItem("fsp_boot_retry")) sessionStorage.setItem("fsp_boot_retry", String(Date.now())); });
+  const main = await breakAsset(page, MAIN_JS, "reset");
+  await page.goto("/", { waitUntil: "commit" });
+  await expect(page.getByRole("heading", { level: 1, name: "Страница не загрузилась" })).toBeVisible({ timeout: 8_000 });
+  await expect(page.locator("#boot-why")).toContainText(/Код: BOOT-CHUNK · не загрузился файл: index-[^/?]+\.js/);
+  await page.getByRole("button", { name: "Очистить кэш и открыть заново" }).click();
+  await landing(page);
+  expect(main.n).toBe(2);
+});
+
+test("/status: страница проверки связи без файлов сборки — сервер, файлы, кнопка очистки; axe", async ({ page }) => {
+  await mockApi(page, { "/health": { status: "ok", db: "ok" } });
+  const assets: string[] = [];
+  page.on("request", (r) => { if (r.resourceType() === "script" || r.resourceType() === "stylesheet") assets.push(r.url()); });
+  await page.goto("/status.html");
+  await expect(page.getByRole("heading", { level: 1, name: "Состояние сервиса «Проверка»" })).toBeVisible();
+  await expect(page.getByText(/Сервер отвечает: HTTP 200, база данных — ok/)).toBeVisible();
+  await expect(page.getByText(/Текущая версия на сервере: index-[^ ]+\.js/)).toBeVisible();
+  await expect(page.locator("#files tr td.ok").first()).toHaveText("дошёл");
+  await expect(page.locator("#sum")).toContainText(/файлы: (\d+) из \1/, { timeout: 20_000 });
+  expect(assets, "страница не тянет файлы сборки").toEqual([]);
+  await expect(page.getByRole("button", { name: "Очистить кэш и открыть заново" })).toBeVisible();
+  await noHorizontalScroll(page);
+  await axe(page, "/status");
 });
 
 test("500 на /api/me → экран повтора, вход сохранён; «Повторить» → кабинет", async ({ page }) => {

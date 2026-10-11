@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Состояние сервиса</title>
+<!-- FIX7: страница проверки связи — без файлов сборки, шрифтов и внешних запросов (открывается, даже когда сайт не
+     загружается). Открывается по /status (frontend/nginx.conf), service worker её не перехватывает (public/sw.js).
+     Проверяет: сервер (/api/health), версию и доставку файлов сборки (сверка с текущим index.html), service worker.
+     Описание — docs/BOOT.md, «Страница /status». -->
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#1C1D22;background:#fff;line-height:1.5}
+  main{box-sizing:border-box;max-width:44rem;margin:0 auto;padding:1.5rem}
+  h1{font-size:1.4rem;color:#310F53;margin:0 0 .5rem}
+  h2{font-size:1.05rem;color:#310F53;margin:1.25rem 0 .5rem}
+  p{margin:.25rem 0}
+  table{border-collapse:collapse;width:100%;font-size:.9rem}
+  th,td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid #E4DDEC;vertical-align:top;overflow-wrap:anywhere}
+  .ok{color:#0A6B2F;font-weight:600}.bad{color:#B00032;font-weight:600}.wait{color:#4A4B52}
+  .row{display:flex;flex-wrap:wrap;gap:.75rem;margin:1rem 0}
+  button,.btn{font:inherit;font-weight:600;min-height:44px;padding:.65rem 1.1rem;border-radius:.75rem;border:0;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+  button{background:#E0004C;color:#fff}button:hover{background:#C20042}
+  .btn{background:#fff;color:#310F53;box-shadow:inset 0 0 0 2px #310F53}
+  button:focus-visible,.btn:focus-visible,a:focus-visible{outline:3px solid #310F53;outline-offset:3px}
+  a{color:#520978}
+  .sum{background:#F3EEF8;border-radius:.75rem;padding:.75rem 1rem;font-size:.9rem;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<main id="main">
+  <h1 id="title">Состояние сервиса</h1>
+  <p>Страница работает без файлов сайта: если основной сайт не открывается, здесь видно, отвечает ли сервер и какие файлы не доходят.</p>
+  <div class="row">
+    <button type="button" id="clear">Очистить кэш и открыть заново</button>
+    <a class="btn" href="/">Открыть сайт</a>
+    <button type="button" class="btn" id="again">Проверить ещё раз</button>
+  </div>
+  <h2>Сервер</h2>
+  <p id="api" class="wait" role="status">Проверяем…</p>
+  <h2>Файлы сайта</h2>
+  <p id="ver" class="wait">Проверяем…</p>
+  <table>
+    <caption style="text-align:left;font-size:.85rem;color:#4A4B52;padding-bottom:.25rem">Каждый файл текущей версии загружается заново, без кэша</caption>
+    <thead><tr><th scope="col">Файл</th><th scope="col">Итог</th><th scope="col">Размер</th><th scope="col">Время</th></tr></thead>
+    <tbody id="files"></tbody>
+  </table>
+  <h2>Этот браузер</h2>
+  <p id="sw" class="wait">Проверяем…</p>
+  <h2>Сводка</h2>
+  <p class="sum" id="sum">Проверяем…</p>
+  <p style="margin-top:1rem">Файлы не доходят целиком — связь обрывается по пути (VPN, облачный браузер, корпоративный прокси): попробуйте без VPN или из другой сети, затем «Очистить кэш и открыть заново». Сервер не отвечает — подождите минуту: возможно, идёт обновление.</p>
+</main>
+<script>
+(function () {
+  var D = document, $ = function (id) { return D.getElementById(id); }, res = {};
+  function ms(t0) { return Math.round(performance.now() - t0) + " мс"; }
+  function kb(n) { return n >= 1024 ? (n / 1024).toFixed(1).replace(".", ",") + " КБ" : n + " Б"; }
+  function put(id, text, cls) { var e = $(id); e.textContent = text; e.className = cls || ""; }
+  function get(url, ms0) {
+    var ctl = window.AbortController ? new AbortController() : null;
+    var t = setTimeout(function () { if (ctl) ctl.abort(); }, ms0 || 20000);
+    return fetch(url, { cache: "no-store", credentials: "same-origin", signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { clearTimeout(t); return r; }, function (e) { clearTimeout(t); throw e; });
+  }
+  function summary() {
+    put("sum", "API: " + (res.api || "…") + " · сборка: " + (res.build || "…") + " · файлы: " + (res.files || "…") +
+      " · SW: " + (res.sw || "…") + " · " + new Date().toLocaleString("ru-RU"), "sum");
+  }
+  function api() {
+    var t0 = performance.now();
+    return get("/api/health", 10000).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        var ok = r.ok && j.status === "ok";
+        res.api = r.status + (j.status ? " " + j.status : "");
+        put("api", (ok ? "Сервер отвечает" : "Сервер отвечает с ошибкой") + ": HTTP " + r.status + (j.db ? ", база данных — " + j.db : "") + ", " + ms(t0), ok ? "ok" : "bad");
+      });
+    }, function (e) {
+      res.api = "нет ответа";
+      put("api", "Сервер не ответил за 10 с (" + (e && e.name === "AbortError" ? "тайм-аут" : "обрыв связи") + ")", "bad");
+    }).then(function () {
+      return get("/api/meta", 10000).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
+        if (m && m.product_name) { $("title").textContent = "Состояние сервиса «" + m.product_name + "»"; D.title = "Состояние сервиса — " + m.product_name; }
+      }, function () { /* без названия — заголовок как есть */ });
+    });
+  }
+  function files() {
+    var tb = $("files");
+    tb.textContent = "";
+    return get("/", 15000).then(function (r) { return r.text(); }).then(function (html) {
+      var re = /(?:src|href)="(\/assets\/[^"]+\.(?:js|css))"/g, m, list = [];
+      while ((m = re.exec(html))) if (list.indexOf(m[1]) < 0) list.push(m[1]);
+      var main = /\/assets\/(index-[^"]+\.js)/.exec(html);
+      res.build = main ? main[1] : "не найдена";
+      put("ver", "Текущая версия на сервере: " + res.build + " (файлов на старте: " + list.length + ")", "");
+      var ok = 0, done = 0;
+      return list.reduce(function (p, u) {
+        return p.then(function () {
+          var tr = D.createElement("tr"), name = u.replace(/^.*\//, "");
+          tr.innerHTML = "<td></td><td class=\"wait\">загружаем…</td><td></td><td></td>";
+          tr.children[0].textContent = name;
+          tb.appendChild(tr);
+          var t0 = performance.now();
+          return get(u, 30000).then(function (r) {
+            return r.arrayBuffer().then(function (b) {
+              var good = r.ok && b.byteLength > 0;
+              if (good) ok++;
+              tr.children[1].textContent = good ? "дошёл" : "ошибка HTTP " + r.status;
+              tr.children[1].className = good ? "ok" : "bad";
+              tr.children[2].textContent = kb(b.byteLength);
+              tr.children[3].textContent = ms(t0);
+            });
+          }).catch(function (e) {
+            tr.children[1].textContent = e && e.name === "AbortError" ? "не дошёл за 30 с" : "обрыв при загрузке";
+            tr.children[1].className = "bad";
+            tr.children[3].textContent = ms(t0);
+          }).then(function () { done++; res.files = ok + " из " + list.length; summary(); });
+        });
+      }, Promise.resolve());
+    }, function () {
+      res.build = "нет ответа";
+      put("ver", "Не удалось получить страницу сайта (обрыв связи или тайм-аут)", "bad");
+    });
+  }
+  function sw() {
+    var s = navigator.serviceWorker;
+    if (!s) { res.sw = "нет"; put("sw", "Service worker в этом браузере не поддерживается или выключен — кэша приложения нет.", ""); return Promise.resolve(); }
+    return s.getRegistrations().then(function (rs) {
+      if (!rs.length) { res.sw = "не установлен"; put("sw", "Service worker не установлен — сайт загружается из сети.", ""); return; }
+      var ctl = s.controller;
+      if (!ctl || !window.MessageChannel) { res.sw = "установлен"; put("sw", "Service worker установлен (" + rs.length + ").", ""); return; }
+      return new Promise(function (ok) {
+        var ch = new MessageChannel(), t = setTimeout(function () { res.sw = "не ответил"; put("sw", "Service worker установлен, но не ответил.", "bad"); ok(); }, 2000);
+        ch.port1.onmessage = function (e) { clearTimeout(t); res.sw = "версия " + ((e.data && e.data.version) || "?"); put("sw", "Service worker установлен, версия сборки " + ((e.data && e.data.version) || "неизвестна") + ".", ""); ok(); };
+        try { ctl.postMessage({ type: "get-version" }, [ch.port2]); } catch (e) { clearTimeout(t); ok(); }
+      });
+    }, function () { res.sw = "?"; });
+  }
+  function run() { res = {}; summary(); return Promise.all([api(), sw()]).then(files).then(summary, summary); }
+  $("again").onclick = run;
+  $("clear").onclick = function () {
+    var go = function () { location.replace("/?r=" + Date.now()); }, jobs = [], s = navigator.serviceWorker;
+    try {
+      if (s && s.getRegistrations) jobs.push(s.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+      if (window.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+    } catch (e) { /* без SW и кэшей — просто заново */ }
+    setTimeout(go, 2000);
+    Promise.all(jobs).then(go, go);
+  };
+  run();
+})();
+</script>
+</body>
+</html>
