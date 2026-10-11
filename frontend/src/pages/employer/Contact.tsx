@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, plural, rub, useApi } from "../../components/ui";
 import { InlineThread } from "../../components/Chat";
-import { BasisSeg, MarketNote, otherBasis, salaryText, type Basis } from "../../components/Salary";
+import { BasisSeg, MARKET_SOURCE, MarketNote, otherBasis, salaryText, type Basis } from "../../components/Salary";
 import { ApiError, api } from "../../lib/api";
 import { daysText, useRules } from "../../lib/meta";
 import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
@@ -39,8 +39,14 @@ function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market, hh }:
               : "«До» — не больше чем в 1,5 раза выше «от»: узкая вилка показывает кандидату реальное предложение."}
         </p>
       </div>
-      <MarketNote m={market} extra="Минимум кандидата вам не показывается." />
-      {hh && <HhMarketNote cref={hh.cref} needId={hh.needId} />}
+      {/* UX-2 (аудит №3): два источника подписаны по смыслу, объяснение — одна раскрывашка «Как считали» */}
+      {hh ? <>
+        <MarketNote m={market} title="Ожидания кандидатов этой категории" short />
+        <HhMarketNote cref={hh.cref} needId={hh.needId} title="Вакансии на hh.ru" how={<>
+          <b>Ожидания кандидатов этой категории</b> — {MARKET_SOURCE}, на руки{market?.median ? `, медиана ${rub(market.median)}` : ""}.{" "}
+          <b>Вакансии на hh.ru</b> — живые вакансии с зарплатой по категории и региону. Источники разные, поэтому и медианы разные. Минимум кандидата вам не показывается.{" "}
+        </>} />
+      </> : <MarketNote m={market} extra="Минимум кандидата вам не показывается." />}
     </div>
   );
 }
