@@ -29,6 +29,7 @@ import argparse
 from dataclasses import replace
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import sys
 import time
@@ -79,7 +80,20 @@ FT_NOISE = {"dirs": ("backend", "frontend", "data_ml", "qa"), "need_grade_p": (0
             "theta_sigma": 0.33, "se_reported": 0.33, "fsp_base": 0.0}
 ITM_NOISE = {"t0_model": "claims", "claim_over": 0.25, "claim_under": 0.10, "claim_stuff": 0.35, "claim_stuff_n": (4, 4),
              "claim_omit": 0.0}
+VARIANTS = {
+    "grade_cap": {"title": "Флаг MATCH_GRADE_CAP: тест не даёт бонуса выше порога следующего грейда",
+                  "env": {"MATCH_GRADE_CAP": "1"}, "where": "продукт, флаг (по умолчанию выключен)"},
+    "w_req45_fsp05": {"title": "Веса: тест 0,40 · обязательное 0,45 · ФСП 0,05 (подобранные на синтетике)",
+                      "weights": {"test": 0.40, "stack_required": 0.45, "stack_desired": 0.05, "fsp": 0.05,
+                                  "probe": 0.05}, "where": "только стенд"},
+    "w_req40": {"title": "Веса: тест 0,40 · обязательное 0,40 · ФСП 0,10 (ФСП не трогаем)",
+                "weights": {"test": 0.40, "stack_required": 0.40, "stack_desired": 0.05, "fsp": 0.10, "probe": 0.05},
+                "where": "только стенд"},
+}
 CONDITIONS = [
+    {"id": "ours_strict", "competitor": None, "strict": True, "title": "Наш строгий протокол, 200 × 2000",
+     "text": "Как `make bench`: наша истина и шум; здесь — только продукт, BM25 и варианты порядка (правило «не хуже»)",
+     "cfg": {}},
     {"id": "ours_60x600", "competitor": None, "title": "Наш строгий протокол, мир 60 × 600",
      "text": "Наша истина «может выполнять работу» (0–3), наш шум; размер — как у «FSP Talent»",
      "cfg": {"n_needs": 60, "n_candidates": 600}},
@@ -214,6 +228,37 @@ def _round_metrics(m: dict) -> dict:
     return {k: m[k] for k in METRICS4 if k in m}
 
 
+def scored_with_flag(world: World, reqs: list[dict], env: dict[str, str]) -> dict:
+    """Скоринг продукта с флагами (через переменные окружения, как на сервере); флаги снимаются после расчёта."""
+    old = {k: os.environ.get(k) for k in env}
+    os.environ.update(env)
+    try:
+        return mb.score_world(world, reqs)
+    finally:
+        for k, v in old.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+
+def variants(world: World, reqs: list[dict], sc: dict, seed: int) -> dict:
+    """Варианты порядка против продукта на одном мире: флаг продукта (пересчёт кодом продукта) и веса (только стенд)."""
+    rel = world.rel
+    idx = mb.boot_idx(rel.shape[0], seed + 11)
+    base = mb.per_need(rel, mb.platform_orders(sc))
+    out = {}
+    for vid, v in VARIANTS.items():
+        if "env" in v:
+            o = mb.platform_orders(scored_with_flag(world, reqs, v["env"]))
+        else:
+            o = mb.platform_orders(sc, np.array([v["weights"][k] for k in mb.COMP_KEYS]))
+        pn = mb.per_need(rel, o)
+        out[vid] = {"metrics": {m: round(float(pn[m].mean()), 3) for m in METRICS4},
+                    "minus_product": {m: mb._ci(pn[m] - base[m], idx) for m in METRICS4}}
+    return out
+
+
 def run_condition(cond: dict, blocks: dict, quick: bool = False, extra_seeds: tuple[int, ...] = EXTRA_SEEDS) -> dict:
     cfg = replace(BenchConfig(seed=SEED), **cond["cfg"])
     if quick:
@@ -221,7 +266,8 @@ def run_condition(cond: dict, blocks: dict, quick: bool = False, extra_seeds: tu
     t0 = time.time()
     world = generate(cfg, blocks)
     reqs = mb._parsed(world)
-    r = mb.run_methods(world, reqs, cfg.seed, METHODS_MAIN)
+    strict = cond.get("strict", False)
+    r = mb.run_methods(world, reqs, cfg.seed, ("platform", "bm25") if strict else METHODS_MAIN)
     s = mb.summarize(world, r, cfg.seed)
     ws = mb.world_stats(world, reqs)
     out = {"id": cond["id"], "competitor": cond["competitor"], "title": cond["title"], "text": cond["text"],
@@ -230,15 +276,18 @@ def run_condition(cond: dict, blocks: dict, quick: bool = False, extra_seeds: tu
                                         "no_category", "category_equals_true_grade", "parser")},
            "metrics": {k: _round_metrics(v) for k, v in s["metrics"].items()},
            "paired_platform_minus": s["paired_platform_minus"],
-           "diagnostics": diagnostics(world, reqs, r["scored"], r["orders"]["platform"][0])}
+           "diagnostics": diagnostics(world, reqs, r["scored"], r["orders"]["platform"][0]),
+           "variants": variants(world, reqs, r["scored"], cfg.seed)}
     out["world"]["relevant_share"] = round(float((world.rel >= 2).mean()), 4)
     seeds = []
-    for sd in (() if quick else extra_seeds):
+    for sd in (() if quick else extra_seeds[:1] if strict else extra_seeds):
         c2 = replace(cfg, seed=sd)
         w2 = generate(c2, blocks)
-        r2 = mb.run_methods(w2, mb._parsed(w2), sd, ("platform", "bm25"))
+        q2 = mb._parsed(w2)
+        r2 = mb.run_methods(w2, q2, sd, ("platform", "bm25"))
         pn = {k: mb.mean_metrics(w2.rel, o) for k, o in r2["orders"].items()}
-        seeds.append({"seed": sd, **{k: {m: round(float(pn[k][m].mean()), 3) for m in METRICS4} for k in pn}})
+        seeds.append({"seed": sd, **{k: {m: round(float(pn[k][m].mean()), 3) for m in METRICS4} for k in pn},
+                      "variants": variants(w2, q2, r2["scored"], sd)})
     out["other_seeds"] = seeds
     out["seconds"] = round(time.time() - t0, 1)
     p = out["metrics"]["platform"]
@@ -262,12 +311,13 @@ def run(quick: bool = False, write: bool = True, only: list[str] | None = None) 
                                  "приближённое.",
            "published": PUBLISHED, "protocol_diff": [dict(zip(("aspect", "ours", "ft", "itm"), row, strict=True))
                                                     for row in PROTOCOL_DIFF],
-           "conditions": res,
+           "conditions": res, "variants": {k: {kk: vv for kk, vv in v.items()} for k, v in VARIANTS.items()},
            "signature": signature(seed=SEED, config={c["id"]: c["config_hash"] for c in res},
                                   n=sum(c["world"]["n_needs"] * c["world"]["n_candidates"] for c in res),
                                   world="подбор в сопоставимых условиях: " + ", ".join(
                                       f"{c['world']['n_needs']} × {c['world']['n_candidates']}" for c in res),
                                   command=cmd)}
+    rep["not_worse"] = {vid: not_worse(rep, vid) for vid in VARIANTS}
     rep["seconds"] = round(time.time() - t0, 1)
     if write:
         for p in (DOCS_JSON, DATA_OUT):
@@ -407,6 +457,26 @@ def markdown(rep: dict) -> str:
       "заявленное же в резюме мы в балл не берём намеренно — это защита от раздувания. Пересортировка своего топ-10 по "
       "истине почти не помогает: дело в составе топ-10, а не в порядке внутри него; ничьих в топ-10 почти нет.")
     a("")
+    a("## Что улучшает порядок: варианты и правило «не хуже»")
+    a("")
+    a("Разница «вариант − продукт» на тех же мирах (парный бутстреп по потребностям, 95 % ДИ). Правило «не хуже»: "
+      "на нашем строгом протоколе (оба мира 200 × 2000) P@5 и MRR не ниже продукта; три числа на вакансиях hh от "
+      "порядка выдачи не зависят (разбор текста и пул кандидатов те же).")
+    a("")
+    a("| Вариант | Где | Мир | ΔP@5 | ΔnDCG@10 | ΔMRR |")
+    a("|---|---|---|---|---|---|")
+    for vid, v in VARIANTS.items():
+        for c in rep["conditions"]:
+            rows = [(c["title"], c["variants"])] + [(f"{c['title']}, seed {x['seed']}", x["variants"])
+                                                     for x in c["other_seeds"] if "variants" in x]
+            for title, vv in rows:
+                d = vv[vid]["minus_product"]
+                a(f"| {v['title']} | {v['where']} | {title} | {mb._signed(d['p@5'])} | {mb._signed(d['ndcg@10'])} | "
+                  f"{mb._signed(d['mrr'])} |")
+    a("")
+    for line in verdicts(rep):
+        a(f"* {line}")
+    a("")
     a("Полные данные: `docs/validation/matching_compare.json`.")
     a("")
     return "\n".join(L)
@@ -414,6 +484,36 @@ def markdown(rep: dict) -> str:
 
 def _pct(v) -> str:
     return "—" if v is None else f"{round(v * 100)} %"
+
+
+def not_worse(rep: dict, vid: str) -> dict:
+    """Правило «не хуже» на строгом протоколе: P@5 и MRR варианта не ниже продукта (по среднему) на обоих мирах."""
+    c = _cond(rep, "ours_strict")
+    if not c:
+        return {"checked": False}
+    worlds = [c["variants"]] + [x["variants"] for x in c["other_seeds"] if "variants" in x]
+    d = [{m: w[vid]["minus_product"][m]["mean"] for m in METRICS4} for w in worlds]
+    ok = all(x["p@5"] >= 0 and x["mrr"] >= 0 for x in d)
+    return {"checked": True, "passed": ok, "worlds": len(d), "deltas": d}
+
+
+def verdicts(rep: dict) -> list[str]:
+    out = []
+    for vid, v in VARIANTS.items():
+        nw = not_worse(rep, vid)
+        if not nw["checked"]:
+            continue
+        their = [c["variants"][vid]["minus_product"]["ndcg@10"]["mean"] for c in rep["conditions"] if c["competitor"]]
+        out.append(f"{v['title']} ({v['where']}): на строгом протоколе ΔP@5 "
+                   + " / ".join(mb._f(x["p@5"]) for x in nw["deltas"]) + ", ΔMRR "
+                   + " / ".join(mb._f(x["mrr"]) for x in nw["deltas"]) + ", ΔnDCG@10 "
+                   + " / ".join(mb._f(x["ndcg@10"]) for x in nw["deltas"])
+                   + f"; в чужих условиях ΔnDCG@10 от {mb._f(min(their))} до {mb._f(max(their))}. "
+                   + (("Правило «не хуже» выполнено" if nw["passed"] else "Правило «не хуже» не выполнено")
+                      + ("; это проверка на стенде: веса подобраны на той же синтетике (подгонка под нашу же истину), "
+                         "в продукт без данных о людях не переносим." if "weights" in v else
+                         "." if nw["passed"] else " — флаг в продукте остаётся выключенным.")))
+    return out
 
 
 def main() -> int:
