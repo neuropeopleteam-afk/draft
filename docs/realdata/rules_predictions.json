@@ -2068,19 +2068,6 @@
         "status": "extracted"
       },
       {
-        "tag": "a11y",
-        "weight": 0.6,
-        "evidence": {
-          "quote": "доступност",
-          "start": 1379,
-          "end": 1389,
-          "context": "- Использовать принципы Site Reliability Engineering для повышения отказоустойчивости и доступности сервисов;",
-          "source": "rules",
-          "basis": "neutral"
-        },
-        "status": "extracted"
-      },
-      {
         "tag": "ci-cd",
         "weight": 0.6,
         "evidence": {

@@ -165,3 +165,37 @@ def test_repo_data_has_no_vacancy_texts(path):
     keys = set(_walk(d))
     assert not keys & {"description", "snippet", "requirement", "responsibility", "employer", "contacts", "text"}
     assert len(p.read_text(encoding="utf-8")) < 600_000
+
+
+A11Y_CASES = [  # (текст, a11y?) — обороты из корпуса hh.ru 10.10.2026 и прежние тексты платформы
+    ("Senior frontend: TypeScript, React, доступность и тестирование фронтенда.", True),
+    ("Витрина маркетплейса: React, TypeScript, дизайн-система, доступность интерфейсов.", True),
+    ("Производительность интерфейсов, соблюдать семантику, учитывать доступность и базовые требования SEO;", True),
+    ("Уверенные навыки вёрстки: доступность, сложные формы, состояния, таблицы;", True),
+    ("Слежу за доступностью (ARIA, клавиатура).", True),
+    ("Опыт веб-доступности и WCAG", True),
+    ("Офис в пешей доступности от м. Калужская. Стек: React.", False),
+    ("Frontend: офис в шаговой доступности от метро", False),
+    ("Транспортная доступность от м. Ладожская", False),
+    ("Понимание принципов ИБ: конфиденциальность, целостность, доступность, управление доступом", False),
+    ("Обеспечение высокой доступности сервисов", False),
+    ("Диагностировать инциденты, связанные с производительностью, доступностью", False),
+    ("React-разработчик. Мониторинг доступности API", False),
+]
+
+
+@pytest.mark.parametrize("text,is_a11y", A11Y_CASES)
+def test_a11y_only_in_interface_context(text, is_a11y):
+    """«доступность» → a11y только рядом со словом интерфейса: «в пешей доступности», триада ИБ и высокая доступность
+    сервисов — не навык интерфейса (на корпусе hh.ru было 31 срабатывание, верное — 1)."""
+    from app.modules.catalog.dictionary import find_stack_spans
+    assert ("a11y" in find_stack_spans(text)) is is_a11y
+
+
+def test_a11y_security_need_not_required():
+    from app.modules.matching.need_parser import parse_need
+    need = parse_need("Специалист по информационной безопасности. Требования: понимание принципов ИБ — конфиденциальность, "
+                      "целостность, доступность; SIEM, сетевая безопасность. Офис в пешей доступности от метро.",
+                      use_llm=False)
+    tags = {i["tag"] for i in need["stack_required"] + need["stack_desired"]}
+    assert "a11y" not in tags and "siem-soc" in tags
