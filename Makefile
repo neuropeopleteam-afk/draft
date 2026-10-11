@@ -61,6 +61,9 @@ grade-above: ## Добор ступенью выше (match-v1.3): бенчма�
 intern-cut: ## Порог грейда «Стажёр»: симуляция теста при 4 порогах-кандидатах, с лёгкими семействами и без (≈ 2 мин CPU)
 	cd backend && python -m app.modules.validation.intern_cut
 
+match-bench-compare: ## Подбор в сопоставимых условиях: миры по описанию других бенчмарков (их размер, шкала, метрики) → docs/validation/MATCHING_COMPARE.md (≈ 15 мин CPU)
+	cd backend && python -m app.modules.validation.matching_compare
+
 bench-quick: ## Быстрая проверка бенчмарка 40 × 400 без записи результатов
 	cd backend && python -m app.modules.validation.matching_bench --quick --no-write
 
@@ -102,7 +105,7 @@ grades-ext-sim: ## Путь-повтор с 6 уровнями (Lead, Principal;
 grades-ext-need: ## Что нужно для точности Lead/Principal ≥ 64 %: банк, блок Lead/Principal, частичный балл → data/grades_ext_need.json, docs/validation/GRADES_EXT_NEED.md
 	cd backend && GRADES_EXT_ENABLED=1 python -m app.modules.validation.grades_ext_need $(SIM_ARGS)
 
-.PHONY: bench bench-quick stability intern-cut grade-above fsp-regression path-retest grade-sweep two-stage grade-compare grades-ext-sim grades-ext-need partial-credit-sim
+.PHONY: bench bench-quick match-bench-compare stability intern-cut grade-above fsp-regression path-retest grade-sweep two-stage grade-compare grades-ext-sim grades-ext-need partial-credit-sim
 
 # подпись мира у чисел /validation: коммит кода (на сервере проверок .git нет — передавайте GIT_COMMIT=…)
 GIT_COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null)
