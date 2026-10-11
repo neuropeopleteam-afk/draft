@@ -44,9 +44,16 @@ export function InvitesLeft({ compact = false }: { compact?: boolean }) {
   if (!on || !data) return null;
   const u = data.usage;
   const low = u.invites_left <= Math.max(1, Math.round(u.invites_limit * 0.1));
+  // UX-2: компактная строка для обзора кабинета — тариф ссылкой и остаток одной фразой
+  if (compact) return (
+    <p className={`text-sm ${low ? "text-brand-plum" : "text-brand-ink/75"}`} data-testid="invites-left" aria-live="polite">
+      {data.plan_id !== "partner" ? <Link to="/employer/tariffs" className="font-semibold text-brand hover:underline">Тариф «{data.plan.title}»</Link> : <>Тариф «{data.plan.title}»</>}
+      {" "}· осталось <b className="tabular-nums">{u.invites_left}</b> из {invitesText(u.invites_limit)}{u.invites_left === 0 && <> · новые — с {u.resets_on}</>}
+    </p>
+  );
   return (
     <p className={`text-sm ${low ? "text-brand-plum" : "text-brand-ink/75"}`} data-testid="invites-left" aria-live="polite">
-      {compact ? "" : `Тариф «${data.plan.title}»: `}осталось <b className="tabular-nums">{u.invites_left}</b> из {invitesText(u.invites_limit)} в этом месяце
+      {`Тариф «${data.plan.title}»: `}осталось <b className="tabular-nums">{u.invites_left}</b> из {invitesText(u.invites_limit)} в этом месяце
       {u.invites_left === 0 && <> · новые — с {u.resets_on}</>}
       {data.plan_id !== "partner" && <> · <Link to="/employer/tariffs" className="font-semibold text-brand hover:underline">{u.invites_left === 0 ? "Больше приглашений" : "Тарифы"}</Link></>}
     </p>
