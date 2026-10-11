@@ -245,3 +245,31 @@ def test_plus_snapshot_and_task():
     assert set(gs.PLUS_FAMILIES) <= ids
     r = gs.run_task((gs._p(confirm_level=0.6, plus=1, weak_pool="exclude"), 0, "security", 3))
     assert len(r["l1"]) == 3
+
+
+# ------------------------------------------------------------------ сопоставимые условия (grade_compare)
+
+def test_promote_and_exact_task_small():
+    """Мир точных параметров и короткий тест на уровень выше: путь считается, предложение — только подтвердившим."""
+    r = gs.run_task((gs._p(confirm_level=0.6, exact=1, promote=0.0, promote_up=0.8), 0, "backend", 4))
+    assert len(r["l1"]) == 4 and len(r["offer1"]) == 4
+    for st, off in zip(r["status1"], r["offer1"]):
+        assert not off or st in ("confirmed", "promoted")
+    th, se = gs.combine(1.0, 0.33, 1.2, 0.45)
+    assert 1.0 < th < 1.2 and se < 0.33
+
+
+def test_grade_compare_subset_and_doc():
+    from app.modules.validation import grade_compare as gc
+
+    row = {"true": [2, 3, 3, 4], "claimed": [2, 2, 3, 4], "l1": [2, 2, 3, 4], "l2": [2, 2, 3, 3],
+           "min1": [50.0] * 4, "items1": [20] * 4, "sess1": [1] * 4, "border1": [False] * 4,
+           "status1": ["confirmed"] * 4, "offer1": [False] * 4}
+    sub = gc._subset([row], lambda t, c: c >= t)
+    assert sub[0]["true"] == [2, 3, 4]
+    m = gc.block([row], 0)
+    assert m["under_claimed_below"] == 0.25 and m["claimed_below_share"] == 0.25 and m["under_other"] == 0.0
+    if gc.OUT.exists():  # документ — из генератора
+        import json
+
+        assert gc.DOCS_MD.read_text(encoding="utf-8") == gc.markdown(json.loads(gc.OUT.read_text(encoding="utf-8")))

@@ -660,6 +660,8 @@ def _f(v, d: int = 3) -> str:
 
 def _diff(pt: dict, base: dict) -> str:
     parts = []
+    b0 = baseline_point()  # точки прежних прогонов — без новых параметров (значения по умолчанию)
+    base, pt = {**b0, **base}, {**b0, **pt}
     for k in PARAMS:
         if pt[k] != base[k]:
             v = pt[k]
@@ -689,7 +691,7 @@ def pool_rows(rep: dict, confirm: float = 0.6) -> list[dict]:
     """Точки «чистка пула / добор у порогов» при пороге confirm в двух мирах: слабые как в prior / на деле слабые."""
     out = []
     for p in rep["points"]:
-        pt = p["point"]
+        pt = p["point"] = {**baseline_point(), **p["point"]}
         rest = {k: v for k, v in pt.items() if k not in (*POOL_KEYS, "weak_a", "confirm_level")}
         if (pt["confirm_level"] != confirm and not pt.get("plus")) or rest != {
                 k: v for k, v in baseline_point().items() if k not in (*POOL_KEYS, "weak_a", "confirm_level")}:
