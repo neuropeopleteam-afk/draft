@@ -202,3 +202,18 @@ def test_refine_at_lead_principal_cut_takes_items_up_to_420s(monkeypatch):
     monkeypatch.setattr(get_settings(), "grades_ext_refine_item_time_s", 300.0)
     st = _refine_state(eng, "principal", claimed="principal")
     assert st["cfg"]["max_item_time_s"] == 300.0 and "ext_item_time_s" not in st["cfg"]
+
+
+def test_second_stage_items_minutes_at_lead_principal_cut(monkeypatch):
+    """GRADES_EXT_REFINE_ITEMS / _MINUTES: свои число заданий и минуты второго этапа у границ Lead/Principal; 0 (по
+    умолчанию) — как у двухэтапного; у границ Стажёр…Senior — всегда как у двухэтапного."""
+    from app.core.config import get_settings
+    from app.modules.assessment import two_stage
+
+    p = {"items": 8, "minutes": 15, "level": 0.8}
+    assert two_stage.ext_params(p, "principal") == p  # по умолчанию 0 — без изменений
+    monkeypatch.setattr(get_settings(), "grades_ext_refine_items", 10)
+    monkeypatch.setattr(get_settings(), "grades_ext_refine_minutes", 25)
+    assert two_stage.ext_params(p, "lead") == {**p, "items": 10, "minutes": 25}
+    assert two_stage.ext_params(p, "principal")["minutes"] == 25
+    assert two_stage.ext_params(p, "senior") == p and two_stage.ext_params(p, "middle") == p

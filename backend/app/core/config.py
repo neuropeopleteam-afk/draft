@@ -204,6 +204,11 @@ class Settings(BaseSettings):
     # лимитом времени до N с (короткие Lead/Principal банка — 420 с, ≤ 7 мин); у границ Стажёр…Senior — как прежде 300 с.
     # Действует только при GRADES_EXT_ENABLED; 300 — прежнее поведение
     grades_ext_refine_item_time_s: float = 420.0
+    # число заданий и минуты второго этапа у границ Lead/Principal (только при GRADES_EXT_ENABLED); 0 — как у двухэтапного
+    # (ASSESSMENT_TWO_STAGE_ITEMS / _MINUTES: 8 / 15). Синтетика (модель, не люди, docs/validation/GRADES_EXT_NEED.md):
+    # 10 / 25 — Principal точно 28 → 42 %
+    grades_ext_refine_items: int = 0
+    grades_ext_refine_minutes: int = 0
 
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"
