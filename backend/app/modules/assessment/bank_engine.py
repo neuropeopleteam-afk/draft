@@ -261,6 +261,9 @@ class BankEngine:
                     "stop_rule": "classification", "cuts_only": refine["cut_grade"], "classify_z": stop_z(level),
                     "ext_items": int(refine.get("items", 8)), "ext_time_s": float(refine.get("minutes", 15)) * 60.0,
                     "max_item_time_s": 300.0})
+        item_t = self._refine_item_time_s(refine.get("cut_grade"))
+        if item_t != 300.0:  # Я25: граница Senior/Lead или Lead/Principal (GRADES_EXT_ENABLED) — короткие до 420 с
+            cfg.update({"max_item_time_s": item_t, "ext_item_time_s": item_t})
         own = {it["family_id"] for it in prior}
         state = {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": prev["claimed_grade"],
@@ -274,6 +277,13 @@ class BankEngine:
         if seen is not None:
             state.update(seen=dict(seen), seen_seeds={k: list(v) for k, v in (seen_seeds or {}).items()})
         return state
+
+    def _refine_item_time_s(self, cut_grade: str | None) -> float:
+        """Лимит времени задания во втором этапе: 300 с; у границ Lead и Principal (только при GRADES_EXT_ENABLED) —
+        GRADES_EXT_REFINE_ITEM_TIME_S (420 с: короткие Lead/Principal банка рассчитаны на ≤ 7 мин)."""
+        if cut_grade in EXT_GRADE_ORDER and grade_levels.enabled():
+            return max(300.0, float(self._settings().grades_ext_refine_item_time_s))
+        return 300.0
 
     def _start_confirm(self, *, direction: str, stack_tags: list[str], seed: int, prev: dict,
                        previous_families: list[str] | None, seen: dict[str, int] | None = None,
@@ -517,6 +527,8 @@ class BankEngine:
                          select_at=c.get("select_at", "theta"),
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
                          ext_time_s=float(c.get("ext_time_s", 1800.0)),
+                         # второй этап у границ Lead/Principal (Я25) — свой лимит времени задания; остальные — как в банке
+                         **({"ext_item_time_s": float(c["ext_item_time_s"])} if c.get("ext_item_time_s") else {}),
                          ext_own_first=bool(c.get("ext_own_first", False)), prior_sd=float(c.get("prior_sd", 1.0)),
                          partial_credit=bool(c.get("partial_credit", False)),
                          partial_credit_select=bool(c.get("partial_credit_select", True)))

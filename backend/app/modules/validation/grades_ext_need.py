@@ -153,7 +153,7 @@ SCENARIOS = {
     "g_real_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm"),
     "g_real_k20": dict(real=True, mult=0, a=None, block=20, partial="gpcm"),
     # реальный банк + N новых коротких Principal (модельные, ≤ 7 мин, a 1,5, трудность у границы 2,9–3,3) — «что дадут
-    # семейства ПБ-А/Б/В»: cN — в общем блоке, oN — у каждого направления
+    # новые семейства Principal»: cN — в общем блоке, oN — у каждого направления
     "g_real_pb_c8": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
                          common_principal_short=8, b_principal_short=(2.9, 3.3)),
     "g_real_pb_c8_o2": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=2,
@@ -166,6 +166,42 @@ SCENARIOS = {
                           common_principal_short=24, b_principal_short=(2.9, 3.3)),
     "g_real_pb_c32": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
                           common_principal_short=32, b_principal_short=(2.9, 3.3)),
+    # «после»: то же, что g_real / g_real_k10, на банке после синхронизации новых коротких Principal (вечер 11.10) — отдельные
+    # ключи, чтобы «до» (банк 705e743) и «после» лежали рядом
+    "g_real_v2": dict(real=True, mult=0, a=None, block=0, partial="gpcm", bank_note="после новых коротких Principal 11.10"),
+    "g_real_v2_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm", bank_note="после новых коротких Principal 11.10"),
+    # направления qa, security, mobile, analyst: «до» — банк 705e743, «после» — + новые короткие Principal 11.10
+    "g_real_d4": dict(real=True, mult=0, a=None, block=0, partial="gpcm", directions=("qa", "security", "mobile", "analyst"),
+                      bank_note="банк 705e743; qa, security, mobile, analyst"),
+    "g_real_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
+                          directions=("qa", "security", "mobile", "analyst"), bank_note="банк 705e743; qa, security, mobile, analyst"),
+    "g_real_pbc_d4": dict(real=True, mult=0, a=None, block=0, partial="gpcm",
+                          directions=("qa", "security", "mobile", "analyst"), bank_note="+ новые короткие Principal 11.10; qa, security, mobile, analyst"),
+    "g_real_pbc_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
+                              directions=("qa", "security", "mobile", "analyst"),
+                              bank_note="+ новые короткие Principal 11.10; qa, security, mobile, analyst"),
+    "g_real_v2_d4": dict(real=True, mult=0, a=None, block=0, partial="gpcm", directions=("qa", "security", "mobile", "analyst"),
+                         bank_note="после новых коротких Principal 11.10; qa, security, mobile, analyst"),
+    "g_real_v2_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
+                             directions=("qa", "security", "mobile", "analyst"),
+                             bank_note="после новых коротких Principal 11.10; qa, security, mobile, analyst"),
+    # «как в продукте» (второй этап Я26: только заявившим Lead/Principal, до 8 коротких, 15 мин, не меньше 3 новых) на банке
+    # после всех новых Principal: p300 — лимит задания 300 с (до 5434b09: новые короткие Principal 420 с не попадают), p420 — 420 с
+    # (GRADES_EXT_REFINE_ITEM_TIME_S с 5434b09); p420_m25 — то же, 10 заданий за 25 мин (что дали бы больше минут);
+    # пул второго этапа — все короткие задания направления и общего блока (block_pool «all»), как AppCATSession._ext_candidates
+    "g_real_v2_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
+                           block_trigger="product", block_min_new=3, block_pool="all", bank_note="после новых коротких Principal 11.10; второй этап как в продукте, 300 с"),
+    "g_real_v2_p420": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=420.0, block_minutes=15,
+                           block_trigger="product", block_min_new=3, block_pool="all", bank_note="после новых коротких Principal 11.10; второй этап как в продукте, 420 с"),
+    "g_real_v2_p420_m25": dict(real=True, mult=0, a=None, block=10, partial="gpcm", block_item_time=420.0, block_minutes=25,
+                               block_trigger="product", block_min_new=3, block_pool="all",
+                               bank_note="после новых коротких Principal 11.10; второй этап как в продукте, 420 с, 10 заданий за 25 мин"),
+    "g_real_v2_d4_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
+                              block_trigger="product", block_min_new=3, block_pool="all", directions=("qa", "security", "mobile", "analyst"),
+                              bank_note="после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 300 с"),
+    "g_real_v2_d4_p420": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=420.0, block_minutes=15,
+                              block_trigger="product", block_min_new=3, block_pool="all", directions=("qa", "security", "mobile", "analyst"),
+                              bank_note="после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 420 с"),
 }
 
 
@@ -184,10 +220,14 @@ def scen_text(s: dict) -> str:
         add = [f"{lbl} {s[k]}" for k, lbl in (("common_principal_short", "общий"), ("own_principal_short", "направление"))
                if s.get(k)]
         lo, hi = s.get("b_principal_short") or (0, 0)
-        return ", ".join(["реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a)"
+        return ", ".join([f"реальный банк Lead/Principal ({s.get('bank_note') or 'семейства банка после синхронизации'}, "
+                          "априорные b и a)"
                           + (f" + новых коротких Principal (модельных): {', '.join(add)}, трудность {_x(lo)}–{_x(hi)}, "
                              f"a {_x(s['a'])}" if add else ""),
-                          f"блок {s['block']} заданий" if s["block"] else "без блока",
+                          (f"второй этап до {s['block']} заданий ≤ {s['block_item_time']:g} с за {s['block_minutes']:g} мин"
+                           + (" (только заявившим Lead/Principal)" if s.get("block_trigger") == "product" else "")
+                           if s["block"] and "block_item_time" in s
+                           else f"блок {s['block']} заданий" if s["block"] else "без блока"),
                           "частичный балл 0–4 (GPCM, шум оценщика)" if s["partial"] == "gpcm" else "развёрнутые 0/1"])
     so, sc = _short_mults(s)
     m = s["mult"]
@@ -282,19 +322,34 @@ def run_session_x(pool, cand, truth, cfg, counter, claimed, history, rng, det, s
     dec = grades_mod.decide_grade(theta, se, claimed, confirm_level=confirm, n_items=int(res.n_items))
     cut_l, cut_p = seed_data.GRADE_CUTS["lead"], seed_data.GRADE_CUTS["principal"]
     z = cfg.classify_z
-    trig = s["block"] > 0 and theta + z * se >= cut_l and (claimed in EXT or (claimed == "senior" and dec.confirmed))
+    # блок: block_item_time — лимит времени задания (по умолчанию 420 с), block_minutes — запас времени (25 мин),
+    # block_trigger «product» — как второй этап продукта (Я26): только заявившим Lead/Principal (Senior, подтверждённому
+    # с запасом, «выше заявленного» продукт не предлагает), block_min_new — не меньше N новых заданий (в продукте 3)
+    item_t = float(s.get("block_item_time", BLOCK_ITEM_TIME_S))
+    minutes = float(s.get("block_minutes", 25))
+    min_new = int(s.get("block_min_new", 0))
+    senior_too = s.get("block_trigger", "model") != "product"
+    trig = s["block"] > 0 and theta + z * se >= cut_l and (claimed in EXT or (senior_too and claimed == "senior"
+                                                                              and dec.confirmed))
     if trig:
         sess.cfg = replace(sess.cfg, prior_sd=1.5)
         sess._update_theta()
         t0 = sess.time_used
-        hard = [p for p in pool if p.grades and p.grades[0] in EXT and p.block in ("common", d)
-                and p.time_limit_s <= BLOCK_ITEM_TIME_S]
+        if s.get("block_pool") == "all":  # как в продукте: все короткие задания направления и общего блока (не только
+            # Lead/Principal) — выбор по информации у порога
+            hard = [p for p in pool if not p.canary and p.block in ("common", d) and p.time_limit_s <= item_t
+                    and p.family_id not in excl]
+        else:
+            hard = [p for p in pool if p.grades and p.grades[0] in EXT and p.block in ("common", d)
+                    and p.time_limit_s <= item_t]
         while n_block < s["block"]:
             unc = [c for c in (cut_l, cut_p) if abs(sess.theta - c) < z * sess.se]
             if not unc:
-                break
+                if n_block >= min_new:
+                    break
+                unc = [cut_l, cut_p]
             target = min(unc, key=lambda c: abs(sess.theta - c))
-            left = 25 * 60 - (sess.time_used - t0)
+            left = minutes * 60 - (sess.time_used - t0)
             cands = [p for p in hard if p.family_id not in sess.used and p.family_id not in seen
                      and p.time_limit_s <= left]
             if not cands:
@@ -357,6 +412,10 @@ def run_path_x(pool, cand, truth, cfg, counter, history, rng, det, s: dict, conf
             "families": sorted({f for t in tests for f in t["families"]})}
 
 
+# направления расширения каталога (CATALOG_EXT): в симуляции — только для сценариев с явным списком directions
+DIR_ALL = tuple(sim.DIRECTIONS) + tuple(d for d in ("analyst", "data_eng", "devops", "mobile") if d not in sim.DIRECTIONS)
+
+
 def worker(a) -> dict:
     s = SCENARIOS[a.scenario]
     confirm = a.confirm
@@ -377,7 +436,7 @@ def worker(a) -> dict:
     if s.get("real") and not any(p.grades and p.grades[0] in EXT for p in base):
         raise SystemExit("сценарии g_real* — на дереве с банком, где есть семейства Lead/Principal (после sync_bank)")
     pool = list(base) + extra
-    i = sim.DIRECTIONS.index(a.direction)
+    i = DIR_ALL.index(a.direction)  # 5 направлений симуляции — прежние индексы (те же кандидаты), дальше — расширение
     wi = list(gx.WORLDS).index(a.world)
     rng0 = np.random.default_rng([SEED, i, wi])  # те же кандидаты и истина во всех сценариях направления и мира
     truth = make_truth(pool, None, misspec=0.5, seed=SEED)
@@ -438,7 +497,7 @@ def run(n: int, scenarios: list[str], confirms: list[float], worlds: list[str], 
     t0 = time.time()
     reps = reps or [0]
     jobs = [(sc, cf, w, d, r) for sc in scenarios for cf in confirms for w in worlds for r in reps
-            for d in sim.DIRECTIONS]
+            for d in (SCENARIOS[sc].get("directions") or sim.DIRECTIONS)]
     tmp = Path(tempfile.mkdtemp(prefix="gneed_"))
     env = {**os.environ, "GRADES_EXT_ENABLED": "1"}
     procs, results, pending = [], [], list(jobs)
@@ -462,12 +521,17 @@ def run(n: int, scenarios: list[str], confirms: list[float], worlds: list[str], 
         for cf in confirms:
             for w in worlds:
                 for rp in reps:
-                    rows = [r for x in results if (x["scenario"], x["confirm"], x["world"], x.get("rep", 0)) ==
-                            (sc, cf, w, rp) for r in x["rows"]]
-                    rep["variants"][_key(sc, cf, w, rp)] = {
+                    xs = [x for x in results if (x["scenario"], x["confirm"], x["world"], x.get("rep", 0)) ==
+                          (sc, cf, w, rp)]
+                    rows = [r for x in xs for r in x["rows"]]
+                    v = rep["variants"][_key(sc, cf, w, rp)] = {
                         "scenario": sc, "confirm": cf, "world": w, "rep": rp,
                         "text": scen_text(SCENARIOS[sc]) + (f" · банк, реализация {rp + 1}" if rp else ""),
                         "bank": bank_counts(SCENARIOS[sc]), **SCENARIOS[sc], **summarize(rows)}
+                    if SCENARIOS[sc].get("directions"):  # по направлениям — для сценариев с явным списком направлений
+                        v["by_direction"] = {x["direction"]: {lv: (summarize(x["rows"])["by_true_level"].get(lv) or {}).get("exact")
+                                                              for lv in ("senior", "lead", "principal")}
+                                             for x in xs}
     old = json.loads(OUT.read_text(encoding="utf-8")) if merge and OUT.exists() else None
     if old:
         rep["variants"] = {**old.get("variants", {}), **rep["variants"]}
