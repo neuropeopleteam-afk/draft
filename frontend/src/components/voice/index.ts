@@ -6,5 +6,5 @@ export { VoiceRecordButton, postAudio } from "./VoiceRecordButton";
 export type { Transcribed, VoiceRecordButtonProps } from "./VoiceRecordButton";
 export { VoiceWave, WAVE_LABEL } from "./VoiceWave";
 export type { VoiceWaveProps, WaveState } from "./VoiceWave";
-export { AVATAR_MOUTH, InterviewerAvatar } from "./InterviewerAvatar";
+export { InterviewerAvatar } from "./InterviewerAvatar";
 export type { InterviewerAvatarProps } from "./InterviewerAvatar";
