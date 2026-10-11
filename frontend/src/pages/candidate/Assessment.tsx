@@ -7,7 +7,7 @@ import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
 import { ExtPreliminaryNote } from "../../components/GradeStatus";  // Я25: Lead/Principal «предварительно»
-import { useDirectionEntries, useMeta } from "../../lib/meta";
+import { useDirectionEntries, useMeta, usePageTitle } from "../../lib/meta";
 import { useGrades } from "../../lib/grades";
 import { trapTab } from "../../components/ui";  // А11: Tab по кругу внутри страницы теста
 import { CameraConsent, startProctor, type CamMode } from "../../proctor/CameraConsent";
@@ -101,7 +101,7 @@ function GradeHint({ hint, grade, onPick }: { hint: Hint | null; grade: string; 
     <div className="card mt-4 text-sm" data-testid="grade-hint">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Подсказка · необязательно</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Подсказка по стажу</p>
           <p className="mt-1 font-semibold text-brand-night">{open || !hint.suggested ? hint.summary : `Похоже на ${GRADE_TITLE_ALL[hint.suggested]}. Выбор за вами.`}</p>
           {open && <p className="mt-1 text-xs text-brand-ink/65">По опросу, резюме и паспорту ФСП, правилами без нейросети. {hint.note}</p>}
         </div>
@@ -434,7 +434,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
             <p className="mt-1 text-xs leading-relaxed text-brand-ink/80">{GRADE_SKILLS_SHORT[id]}</p>
             <span className="mt-3 flex flex-wrap gap-1.5">
               {!hint.data && status?.claimed_grade === id && <span className="chip">Подсказка по стажу из опроса</span>}
-              {hint.data?.suggested === id && <span className="chip">Подсказка</span>}
+              {hint.data?.suggested === id && <span className="chip">По вашему стажу</span>}
               {retakeLocks[id] && <span className="chip">Повтор с {dt(retakeLocks[id]).replace(/ г\.$/, "")}</span>}
             </span>
           </button>
@@ -852,6 +852,7 @@ function TwoStageOutcome({ t }: { t: any }) {
 function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
   const [r, setR] = useState<any>(initial);
   useEffect(() => { setR(initial); }, [initial]);
+  usePageTitle("Результат теста");  // С2 №7: во вкладке — результат, а не «Задание N»
   const llmOff = useLlmOff();
   const meta = useMeta();
   const [busy, setBusy] = useState(false);

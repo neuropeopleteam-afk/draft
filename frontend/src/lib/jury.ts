@@ -166,7 +166,8 @@ export const quick = {
   setNeed: (id: string) => localStorage.setItem(KEY_NEED, id),
 };
 /** optional — шаг «по желанию» (вне плана 12 минут); alt — другие страницы того же шага при любой персоне. */
-export interface QuickStep extends GuideStep { checks: string; crit: string; min: number; optional?: boolean; alt?: RegExp }
+// defense — шаг устной защиты: обычный шаг пути (не «по желанию»), но в план 12 минут его минуты не входят
+export interface QuickStep extends GuideStep { checks: string; crit: string; min: number; optional?: boolean; defense?: boolean; alt?: RegExp }
 const C1 = "1. Новая механика подбора · 35 %", C2 = "2. Тестирование и категоризация · 25 %";
 export const QUICK: QuickStep[] = [
   { title: "Своя потребность своими словами", persona: "employer", path: "/employer/needs", match: /^\/employer\/needs\/?$/, cta: "Войти как работодатель", min: 2,
@@ -194,25 +195,26 @@ export const QUICK: QuickStep[] = [
     text: "/criteria — каждый подпункт раздела 6 ТЗ: что сделать, что увидите, чем доказано, ограничение. /validation — метрики с подписью мира (синтетика и модельная разметка, людей нет), повтор теста и «Красная кнопка».",
     checks: "процедуру валидации, её результаты и честные ограничения", crit: `${C2}; ${C1} — доля релевантных в топе; 5. Документация · 6 %` },
 ];
-/** Шаг «по желанию» — устная защита ответа (Я15; флаг INTERVIEW_ENABLED → /api/meta `interview.enabled`, по умолчанию
+/** Шаг устной защиты ответа (Я15; FINAL-UX B: обычный шаг пути, «Открыть» ведёт прямо к раскрытой панели; флаг INTERVIEW_ENABLED → /api/meta `interview.enabled`, по умолчанию
  *  выключен — шага нет): между категорией и доказательствами, в счёт 12 минут не входит. Ведёт кандидатом «Пройдите
  *  тест сами» на «Две попытки рядом» — там панель Я15 «Подтвердите авторство ответа» (живой запуск с лимитом копии
  *  жюри и готовый пример); `alt` — та же ступень у работодателя: карточка Марии Королёвой со значком и подробностями.
  *  Форма meta.interview = {enabled, stub, defense_minutes} согласована с модулем интервью (frontend/src/lib/meta.tsx). */
 export const QUICK_INTERVIEW: QuickStep = {
-  title: "Устная защита ответа · по желанию", optional: true, persona: "candidate_new", path: "/candidate/attempts",
+  title: "Устная защита ответа", defense: true, persona: "candidate_new", path: "/candidate/attempts?defense=open#defense",
   match: /^\/candidate\/(attempts|interview\/)/, alt: /^\/employer\/candidates\/[^/]+/, cta: "Открыть устную защиту", min: 3,
-  text: "Можно пропустить. Ниже на странице — «Подтвердите авторство ответа»: модель задаёт вопросы по развёрнутым ответам теста — голосом или в чате, работодатель видит «ответ подтверждён устно» или «есть расхождения» с цитатами. Своих развёрнутых ответов нет — там же готовый пример (модельный кандидат, не человек). Грейд не меняет; оценивает модель, не человек.",
+  text: "Ниже на странице — «Подтвердите авторство ответа»: модель задаёт вопросы по развёрнутым ответам теста — голосом или в чате, работодатель видит «ответ подтверждён устно» или «есть расхождения» с цитатами. Своих развёрнутых ответов нет — там же готовый пример (модельный кандидат, не человек). Грейд не меняет; оценивает модель, не человек.",
   checks: "проверку ответов на списывание: авторство развёрнутого ответа", crit: `${C2} — самостоятельность ответов; 6. Доп. функции · 7 %` };
 /** Шаги короткого режима: без устной защиты — 8, с ней — 9 (шаг «по желанию» перед доказательствами; минуты — из
  *  /api/meta `interview.defense_minutes`). */
 export const quickSteps = (iv?: { enabled?: boolean; defense_minutes?: number } | null): QuickStep[] =>
   iv?.enabled ? [...QUICK.slice(0, -1), { ...QUICK_INTERVIEW, min: iv.defense_minutes || QUICK_INTERVIEW.min }, QUICK[QUICK.length - 1]] : QUICK;
-/** Заготовки своей потребности (шаг 1): отрицание, нестандартный стек, роль вне каталога. Эксперт правит текст сам. */
-export const NEED_PRESETS = [
+/** Заготовки своей потребности (шаг 1): отрицание, нестандартный стек, роль вне каталога. Эксперт правит текст сам.
+ *  С2 №7: dir/inCatalog — если направление уже в каталоге (расширение каталога, /api/meta catalog.directions), подпись другая. */
+export const NEED_PRESETS: { label: string; text: string; dir?: string; inCatalog?: string }[] = [
   { label: "Python, с отрицанием", text: "Ищем Python-разработчика middle: FastAPI, PostgreSQL, Docker. Django не нужен, PHP не нужен. Желательно Redis. Удалённо, 200–260 тыс. ₽" },
   { label: "Go и ClickHouse, Казань", text: "Go-разработчик senior: Kafka, ClickHouse, gRPC и Kubernetes; Rust будет плюсом. Гибрид в Казани, 320–400 тыс. ₽" },
-  { label: "DevOps — вне каталога", text: "DevOps-инженер middle: Linux, Docker, CI/CD, Kubernetes, Terraform и мониторинг на Prometheus. Удалённо, 250–300 тыс. ₽" },
+  { label: "DevOps — вне каталога", dir: "devops", inCatalog: "DevOps / SRE — новое направление", text: "DevOps-инженер middle: Linux, Docker, CI/CD, Kubernetes, Terraform и мониторинг на Prometheus. Удалённо, 250–300 тыс. ₽" },
 ];
 const KEY_PRESET = "jury_need_preset", PRESET_EVENT = "jury-need-preset";
 /** Заготовка → поле «Кого вы ищете» (Needs.tsx): ждёт в sessionStorage, если экран ещё не открыт. */

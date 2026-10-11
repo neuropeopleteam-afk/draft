@@ -18,8 +18,9 @@ function Big({ value, label, hint, before, testid }: { value: number; label: str
   return (
     <div className="min-w-0 rounded-xl bg-[#F3F2FB] p-4" data-testid={testid}>
       <p className="text-3xl font-bold tabular-nums text-brand-night">{num(value, 0)}</p>
-      <p className="mt-1 text-sm font-semibold leading-snug text-brand-night">{label}</p>
-      {hint && <p className="mt-1 text-xs leading-relaxed text-brand-ink/65">{hint}</p>}
+      <p className="mt-1 text-sm font-semibold leading-snug text-brand-night">{label}
+        {hint && <span role="img" aria-label={`Пояснение: ${hint}`} title={hint}
+          className="ml-1.5 inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-white align-middle text-xs font-bold text-brand-plum ring-1 ring-brand-plum/30">?</span>}</p>
       <p className="mt-1"><Delta now={value} before={before} /></p>
     </div>
   );
@@ -92,8 +93,10 @@ export default function InterestCard() {
           </div>
         </>
       )}
-      {d.demo && <p className="mt-3 text-xs text-brand-ink/65" data-testid="interest-demo">Модельные данные: цифры демо-кандидата песочницы жюри посеяны заранее. Когда работодатель песочницы откроет вашу карточку, число работодателей вырастет на один.</p>}
-      <p className="mt-3 text-xs leading-relaxed text-brand-ink/65">{d.note} <Link className="font-semibold text-brand hover:underline" to="/candidate/mydata">Мои данные</Link></p>
+      {/* FINAL-UX C: одна подпись «Демо-данные»; прежние пояснения — в подсказке */}
+      {d.demo ? <p className="mt-3 text-xs text-brand-ink/65" data-testid="interest-demo"
+        title={`Модельные данные: цифры демо-кандидата песочницы жюри посеяны заранее. Когда работодатель песочницы откроет вашу карточку, число работодателей вырастет на один. ${d.note ?? ""}`}>Демо-данные</p>
+        : <p className="mt-3 text-xs leading-relaxed text-brand-ink/65">{d.note} <Link className="font-semibold text-brand hover:underline" to="/candidate/mydata">Мои данные</Link></p>}
     </section>
   );
 }

@@ -25,13 +25,16 @@ async function start(intent: "login" | "link", role: "candidate" | "employer" = 
   window.location.assign(r.authorize_url);
 }
 
-/** Кнопка входа на странице «Вход» + раскрывающаяся подсказка с демо-учётками realm fsp. */
-export function FspIdLogin({ role = "candidate" }: { role?: "candidate" | "employer" }) {
+/** Кнопка входа через ФСП ID. На «Входе» (demo) — одна строка демо-участника с копированием, остальные — свёрнуто
+ *  (SIMPLIFY п.7а); на «Регистрации» демо-учётки не показываем — они про вход (п.7б). */
+export function FspIdLogin({ role = "candidate", demo = true }: { role?: "candidate" | "employer"; demo?: boolean }) {
   const { data } = useApi<FspConfig>("/fsp-id/config");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [hint, setHint] = useState(false);
   if (!data) return null;
+  const accounts = demo ? data.demo_accounts : [];
+  const main = accounts.find((a) => a.username === "fsp-champion") ?? accounts[0];
+  const rest = accounts.filter((a) => a !== main);
   return (
     <div className="mt-6 space-y-3">
       <div className="flex items-center gap-3 text-xs uppercase tracking-[0.14em] text-brand-ink/65"><span className="h-px flex-1 bg-brand-night/10" />или<span className="h-px flex-1 bg-brand-night/10" /></div>
@@ -39,21 +42,39 @@ export function FspIdLogin({ role = "candidate" }: { role?: "candidate" | "emplo
         onClick={async () => { setBusy(true); setErr(null); try { await start("login", role); } catch (e) { setErr(errText(e)); setBusy(false); } }}>
         <FspIdMark /> {busy ? "Переходим в ФСП ID…" : "Войти через ФСП ID"}
       </button>
-      <p className="text-center text-xs leading-relaxed text-brand-ink/70">{data.enabled ? `ФСП ID ↔ профиль${role === "candidate" ? " ↔ достижения" : " компании"}${data.demo ? " · демо-Keycloak" : ""}. При первом входе создадим кабинет ${role === "candidate" ? "кандидата" : "работодателя"}.` : "ФСП ID ↔ профиль ↔ достижения. Подключение к ФСП ID на этом сервере ещё не настроено."}</p>
+      {main && (
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-brand-night" data-testid="fsp-demo-account">
+          <span>Демо-участник: логин <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5 font-semibold">{main.username}</code></span>
+          <CopyButton value={main.username} label="логин" />
+          {data.demo_password && <><span aria-hidden="true">·</span><span>пароль <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5 font-semibold">{data.demo_password}</code></span>
+            <CopyButton value={data.demo_password} label="пароль" /></>}
+        </p>
+      )}
+      <p className="text-center text-xs leading-relaxed text-brand-ink/70">{data.enabled
+        ? (role === "candidate" ? "При первом входе создадим кабинет кандидата с достижениями ФСП" : "При первом входе создадим кабинет работодателя")
+        : "Подключение к ФСП ID на этом сервере ещё не настроено."}</p>
       <Alert>{err}</Alert>
-      {data.demo_accounts.length > 0 && <button type="button" className="w-full text-center text-xs font-semibold text-brand-plum hover:text-brand" onClick={() => setHint(!hint)} aria-expanded={hint}>
-        {hint ? "Скрыть демо-учётки" : "Демо-учётки ФСП ID для проверки"}
-      </button>}
-      {hint && (
-        <div className="rounded-xl bg-[#F3F2FB] p-4 text-xs leading-relaxed text-brand-night">
-          <ul className="space-y-1.5">
-            {data.demo_accounts.map((a) => <li key={a.username}><code className="rounded bg-white px-1.5 py-0.5 font-semibold">{a.username}</code> — {a.title}</li>)}
+      {rest.length > 0 && (
+        <details className="text-center text-xs text-brand-night">
+          <summary className="cursor-pointer font-semibold text-brand-plum hover:text-brand">Ещё участники</summary>
+          <ul className="mt-2 space-y-1.5 rounded-xl bg-[#F3F2FB] p-3 text-left leading-relaxed">
+            {accounts.map((a) => <li key={a.username}><code className="rounded bg-white px-1.5 py-0.5 font-semibold">{a.username}</code> — {a.title}</li>)}
           </ul>
-          {data.demo_password && <p className="mt-2">Пароль для всех демо-учёток: <code className="rounded bg-white px-1.5 py-0.5 font-semibold">{data.demo_password}</code></p>}
           <p className="mt-2 text-brand-ink/65">{data.note}</p>
-        </div>
+        </details>
       )}
     </div>
+  );
+}
+
+function CopyButton({ value, label }: { value: string; label: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button type="button" className="rounded-md px-1.5 py-0.5 text-xs font-semibold text-brand-plum ring-1 ring-brand-plum/30 hover:text-brand"
+      aria-label={`Скопировать ${label}`}
+      onClick={async () => { try { await navigator.clipboard.writeText(value); setDone(true); setTimeout(() => setDone(false), 1500); } catch { /* буфер недоступен — значение видно на экране */ } }}>
+      {done ? "Скопировано" : "Скопировать"}
+    </button>
   );
 }
 
