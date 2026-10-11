@@ -1,0 +1,183 @@
+{
+ "date": "2026-10-09 14:47",
+ "sample": {
+  "needs_delta": 15,
+  "needs_jury": 15,
+  "resume": 20,
+  "grade": 50
+ },
+ "full": {
+  "needs_delta": 50,
+  "needs_jury": 15,
+  "resume": 20,
+  "grade": 406
+ },
+ "tokens_per_call_sonnet": {
+  "needs_delta": [
+   5065,
+   323
+  ],
+  "needs_jury": [
+   4324,
+   135
+  ],
+  "resume": [
+   638,
+   88
+  ],
+  "grade": [
+   2348,
+   305
+  ]
+ },
+ "reasoning_x": [
+  1.0,
+  6.0
+ ],
+ "rows": [
+  {
+   "model": "anthropic/claude-fable-5.1",
+   "kind": "closed",
+   "note": "дорогая",
+   "open_weights": null,
+   "in": 10.0,
+   "out": 50.0,
+   "usd_lo": 3.9,
+   "usd_hi": 4.5,
+   "full_usd_lo": 20.03,
+   "full_usd_hi": 23.62
+  },
+  {
+   "model": "openai/gpt-6-astra-pro",
+   "kind": "closed",
+   "note": "дорогая",
+   "open_weights": null,
+   "in": 10.0,
+   "out": 50.0,
+   "usd_lo": 3.9,
+   "usd_hi": 9.87,
+   "full_usd_lo": 20.03,
+   "full_usd_hi": 55.97
+  },
+  {
+   "model": "anthropic/claude-opus-5.5",
+   "kind": "closed",
+   "note": "дорогая",
+   "open_weights": null,
+   "in": 4.0,
+   "out": 20.0,
+   "usd_lo": 1.56,
+   "usd_hi": 1.8,
+   "full_usd_lo": 8.01,
+   "full_usd_hi": 9.45
+  },
+  {
+   "model": "openai/gpt-6.1-sol-pro",
+   "kind": "closed",
+   "note": "",
+   "open_weights": null,
+   "in": 2.0,
+   "out": 10.0,
+   "usd_lo": 0.78,
+   "usd_hi": 1.97,
+   "full_usd_lo": 4.01,
+   "full_usd_hi": 11.19
+  },
+  {
+   "model": "anthropic/claude-sonnet-5.5",
+   "kind": "closed",
+   "note": "модель стенда",
+   "open_weights": null,
+   "in": 2.0,
+   "out": 10.0,
+   "usd_lo": 0.78,
+   "usd_hi": 0.9,
+   "full_usd_lo": 4.01,
+   "full_usd_hi": 4.72
+  },
+  {
+   "model": "x-ai/grok-4.7",
+   "kind": "closed",
+   "note": "",
+   "open_weights": null,
+   "in": 2.0,
+   "out": 6.0,
+   "usd_lo": 0.69,
+   "usd_hi": 1.4,
+   "full_usd_lo": 3.43,
+   "full_usd_hi": 7.74
+  },
+  {
+   "model": "google/gemini-3.1-pro-preview",
+   "kind": "closed",
+   "note": "",
+   "open_weights": null,
+   "in": 2.0,
+   "out": 12.0,
+   "usd_lo": 0.83,
+   "usd_hi": 2.26,
+   "full_usd_lo": 4.29,
+   "full_usd_hi": 12.92
+  },
+  {
+   "model": "moonshotai/kimi-k3",
+   "kind": "open",
+   "note": "",
+   "open_weights": "moonshotai/Kimi-K3",
+   "in": 0.5,
+   "out": 12.0,
+   "usd_lo": 0.42,
+   "usd_hi": 1.85,
+   "full_usd_lo": 2.37,
+   "full_usd_hi": 10.99
+  },
+  {
+   "model": "qwen/qwen3.8-2.4t-a95b",
+   "kind": "open",
+   "note": "",
+   "open_weights": "Qwen/Qwen3.8-2.4T-A95B",
+   "in": 2.0,
+   "out": 6.0,
+   "usd_lo": 0.69,
+   "usd_hi": 1.4,
+   "full_usd_lo": 3.43,
+   "full_usd_hi": 7.74
+  },
+  {
+   "model": "deepseek/deepseek-v4-pro-0813",
+   "kind": "open",
+   "note": "",
+   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "in": 0.66,
+   "out": 1.98,
+   "usd_lo": 0.23,
+   "usd_hi": 0.46,
+   "full_usd_lo": 1.13,
+   "full_usd_hi": 2.56
+  },
+  {
+   "model": "z-ai/glm-5.3",
+   "kind": "open",
+   "note": "",
+   "open_weights": "zai-org/GLM-5.3",
+   "in": 0.04,
+   "out": 3.6,
+   "usd_lo": 0.1,
+   "usd_hi": 0.53,
+   "full_usd_lo": 0.57,
+   "full_usd_hi": 3.16
+  },
+  {
+   "model": "qwen/qwen3.8-27b",
+   "kind": "open",
+   "note": "встаёт на 1 GPU",
+   "open_weights": "Qwen/Qwen3.8-27B",
+   "in": 0.425,
+   "out": 2.55,
+   "usd_lo": 0.18,
+   "usd_hi": 0.48,
+   "full_usd_lo": 0.91,
+   "full_usd_hi": 2.75
+  }
+ ]
+}
