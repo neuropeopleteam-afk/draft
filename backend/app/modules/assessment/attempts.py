@@ -37,7 +37,8 @@ from app.modules.catalog.seed_data import DIRECTIONS, GRADES
 Z95 = 1.96
 STATUS_TITLES = {"confirmed": "подтверждён", "accepted_lower": "принят уровень ниже", "provisional": "предварительно",
                  "unconfirmed": "не подтверждён"}
-MODE_TITLES = {"full": "полный тест", "express": "экспресс-тест", "confirm": "дотестирование"}
+MODE_TITLES = {"full": "полный тест", "express": "экспресс-тест", "confirm": "дотестирование",
+               "refine": "уточнение уровня"}
 Direction = Literal["backend", "frontend", "data_ml", "qa", "security"]
 
 
@@ -256,8 +257,9 @@ def changes(a: dict, b: dict, ov: dict, d: dict) -> list[dict]:
         txt = (f"Повторилось семейств: {rf} из {nf} ({_pct(ov['share_families'])}), вариантов — "
                f"{ov['repeated_variants']} из {ov['n_variants_second']}: {why}. В повторённом семействе "
                f"генерируется новый вариант (другие числа и код).")
-    if b["mode"] == "confirm":
-        txt += f" Дотестирование: {b['prior_items']} ответов прошлой попытки перенесены, повторы считаются по новым."
+    if b["mode"] in ("confirm", "refine"):
+        txt += (f" {'Дотестирование' if b['mode'] == 'confirm' else 'Уточнение уровня'}: {b['prior_items']} ответов "
+                "прошлой попытки перенесены, повторы считаются по новым.")
     add("overlap", "Задания", txt)
     if a["mode"] != b["mode"] and "express" in (a["mode"], b["mode"]):
         add("mode", "Режим", "Экспресс-тест короче и его погрешность шире — сравнение с полным тестом условное.")

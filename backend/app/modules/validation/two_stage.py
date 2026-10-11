@@ -547,8 +547,11 @@ def main() -> int:
     a = ap.parse_args()
     if a.worker:
         return _worker(*a.worker)
-    if a.md_only:
-        DOCS_MD.write_text(markdown(json.loads(OUT.read_text(encoding="utf-8"))), encoding="utf-8")
+    if a.md_only:  # без пересчёта: значения по умолчанию и выбор — по текущему коду (после смены DEFAULT_*)
+        rep = json.loads(OUT.read_text(encoding="utf-8"))
+        rep["defaults"], rep["choice"] = default_point(), choose(rep["points"])
+        OUT.write_text(json.dumps(rep, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        DOCS_MD.write_text(markdown(rep), encoding="utf-8")
         return 0
     rep = run([a.stage], n=a.n, workers=a.workers, write=not a.no_write)
     for p in rep["points"][:6]:
