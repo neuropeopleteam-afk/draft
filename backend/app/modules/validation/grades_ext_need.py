@@ -162,6 +162,10 @@ SCENARIOS = {
                              common_principal_short=16, b_principal_short=(2.9, 3.3)),
     "g_real_pb_c16_o2_k20": dict(real=True, mult=0, a=1.5, block=20, partial="gpcm", own_principal_short=2,
                                  common_principal_short=16, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c24": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
+                          common_principal_short=24, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c32": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
+                          common_principal_short=32, b_principal_short=(2.9, 3.3)),
 }
 
 
