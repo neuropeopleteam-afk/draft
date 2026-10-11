@@ -207,7 +207,7 @@ export function TwoStage() {
   const p1 = (v?: number | null) => pct(v, 1);
   const head = ["Вариант", "Точно", "Выше", "Ниже", "Совпадение при повторе", "κw повтора", "Второй этап", "Минут всего", "Минут второго этапа"];
   const row = (x: any): ReactNode[] => [
-    <span key="l">{x.label}{x.feasible ? "" : <span className="block text-xs text-brand-ink/60">не проходит ограничения</span>}</span>,
+    <span key="l">{x.label}{x.feasible ? "" : <span className="block text-xs text-brand-ink/75">не проходит ограничения</span>}</span>,
     <span key="e">{p1(x.exact)}{x.exact_ci && <span className="block text-xs text-brand-ink/65">{p1(x.exact_ci[0])} … {p1(x.exact_ci[1])}</span>}</span>,
     p1(x.over), p1(x.under), p1(x.retest_exact), num(x.retest_kappa, 3), p1(x.share_refined), num(x.minutes_mean, 1), num(x.refine_minutes_mean, 1)];
   const t = g?.targets, one = g?.one_session, ch = g?.choice?.row, pr = g?.product;
