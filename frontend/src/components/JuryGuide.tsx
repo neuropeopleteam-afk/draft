@@ -125,7 +125,8 @@ export function JuryGuide() {
 
   // телефон гостя живой демонстрации (/j/…) — без проводника: эксперт там не вошёл и проходит мини-тест;
   // экран кода второго фактора (/login/2fa) — тоже: на телефоне панель перекрывала бы форму
-  if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/") || loc.pathname === "/login/2fa") return null;
+  if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/") || loc.pathname === "/login/2fa"
+    || ["/login", "/register", "/criteria", "/jury/live"].includes(loc.pathname)) return null;  // k-final2: не накрывать вход, регистрацию, критерии и экран зала
   if (!hidden && folded) return (
     <button ref={setBox} type="button" data-testid="guide-continue" onClick={() => setPeek(true)} aria-label="Развернуть проводник для жюри"
       className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm">
