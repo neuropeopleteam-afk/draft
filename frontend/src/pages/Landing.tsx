@@ -25,7 +25,7 @@ const employerSteps = [
   ["Профиль компании", "Чем занимается команда и как с вами связаться."],
   ["Потребность", "Опишите задачу своими словами — система выделит направление, грейд и стек."],
   ["Подборка с объяснением", "Обезличенные кандидаты из нужной категории и причины выбора по подтверждённым фактам."],
-  ["Зонд (по желанию)", "Короткая задача на 15 минут с вилкой зарплаты — свежий сигнал до контакта."],
+  ["Короткое задание (по желанию)", "Задача на 15 минут с вилкой зарплаты — свежий сигнал до контакта."],
   ["Приглашение-оффер", "Вилка «от–до» в рублях обязательна. Контакты кандидата открываются после его согласия."],
 ];
 
@@ -74,9 +74,9 @@ export default function Landing() {
             <p className="mt-1 text-sm text-white/70">ООО «Пример» · удалённо</p>
             <p className="mt-5 text-3xl font-extrabold text-white">{"220\u00A0000\u00A0– 290\u00A0000\u00A0₽"}</p>
             <ul className="mt-5 space-y-2 text-sm text-white/80">
-              <li className="flex gap-2"><span className="font-bold text-[#FF7AA5]">T1</span> SQL и индексы — тест, 9 из 10</li>
-              <li className="flex gap-2"><span className="font-bold text-[#FF7AA5]">T1</span> FastAPI — зонд «найди ошибку»</li>
-              <li className="flex gap-2"><span className="font-bold text-[#B9B4EA]">T2</span> Призёр соревнований ФСП</li>
+              <li className="flex gap-2"><span className="font-bold text-[#FF7AA5]">тест</span> SQL и индексы — 9 из 10</li>
+              <li className="flex gap-2"><span className="font-bold text-[#FF7AA5]">задание</span> FastAPI — «найди ошибку»</li>
+              <li className="flex gap-2"><span className="font-bold text-[#B9B4EA]">ФСП</span> Призёр соревнований, подтверждено реестром</li>
             </ul>
             <div className="mt-6 grid grid-cols-2 gap-3">
               {/* С2 №6: макет — кнопки неактивны, чтобы первый клик эксперта не уходил «в никуда» */}
@@ -165,7 +165,7 @@ function Rule({ title, text }: { title: string; text: string }) {
 }
 
 const JURY: { id: Persona; title: string; text: string }[] = [
-  { id: "candidate", title: "Кандидат с паспортом ФСП", text: "Мария Королёва · Backend · Middle. Тест пройден, достижения ФСП из реестра (T2), место в рейтинге и 2-е место в кубке работодателя." },
+  { id: "candidate", title: "Кандидат с паспортом ФСП", text: "Мария Королёва · Backend · Middle. Тест пройден, достижения ФСП из реестра, место в рейтинге и 2-е место в кубке работодателя." },
   { id: "candidate_nofsp", title: "Кандидат без ФСП", text: "Илья Сергеев · Backend · Middle. Нет истории ФСП — без штрафа. Ждёт приглашение с вилкой." },
   { id: "candidate_junior", title: "Кандидат «Junior (предварительно)»", text: "Артём Лебедев · Backend · Junior у порога: грейд не подтверждён, но и не доказанно ниже. Вероятность уровня, короткое дотестирование, статус у работодателя." },
   { id: "candidate_new", title: "Пройдите тест сами", text: "Антон Лебедев · Backend · категории нет. Экспресс-тест около 5 минут или полный, подсказка грейда по резюме, путь до категории и подборки." },

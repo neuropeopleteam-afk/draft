@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, GRADE_TITLE_ALL, Level, Loading, catTitle, dt, useApi } from "../../components/ui";
+import { Alert, Empty, GRADE_TITLE_ALL, Loading, catTitle, dt, plainText, useApi } from "../../components/ui";
 import HhMarketSkills, { type HhMarket } from "../../components/HhMarketSkills";  // Я12б: «Что сейчас просит рынок» (hh.ru)
 
 /** Обратная связь после теста: карта навыков, спрос работодателей категории, маршрут роста, дисциплины ФСП. */
@@ -123,13 +123,14 @@ function Demand({ d }: { d: NonNullable<FeedbackData["demand"]> }) {
       </p>
       <ul className="mt-3 divide-y divide-brand-night/5 text-sm">
         {d.items.map((x) => (
-          <li key={x.tag} className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 py-2 sm:grid-cols-[minmax(0,1fr)_15rem_auto]">
-            <span className="font-medium text-brand-night">{x.title}</span>
+          <li key={x.tag} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-2 sm:grid-cols-[minmax(0,1fr)_15rem_auto]">
+            <span className="min-w-0 break-words font-medium text-brand-night">{x.title}</span>
             <span className="order-3 col-span-2 flex items-center gap-2 whitespace-nowrap text-xs text-brand-ink/65 sm:order-none sm:col-span-1">
               <span className="h-1.5 w-16 shrink-0 rounded-full bg-brand-night/5"><span className="block h-1.5 rounded-full bg-brand-lavender" style={{ width: `${x.share * 100}%` }} /></span>
               {x.required + x.desired} из {d.sources}{x.required ? ` · обязательно в ${x.required}` : " · желательно"}
             </span>
-            <span className="flex items-center gap-1.5 justify-self-end"><Level level={DEMAND_LEVEL[x.status]} /><Chip s={DEMAND[x.status]}>{x.status_title}</Chip></span>
+            {/* КУХНЯ + штаб: без кода T0/T1 и без второй плашки; на 390 px подпись переносится (была прокрутка 425 px) */}
+            <span className="flex min-w-0 max-w-[11rem] items-center justify-self-end sm:max-w-none" title={DEMAND_LEVEL[x.status] === "T1" ? "Проверено на платформе" : DEMAND_LEVEL[x.status] === "T0" ? "Указано вами, не проверено" : undefined}><Chip s={`${DEMAND[x.status]} max-w-full whitespace-normal break-words text-right`}>{plainText(x.status_title)}</Chip></span>
           </li>
         ))}
       </ul>
@@ -172,7 +173,7 @@ function Competitions({ list, url }: { list: Comp[]; url?: string }) {
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs text-brand-ink/65">Достижения ФСП из реестра — уровень T2: они дают бонус к месту в рейтинге категории и видны работодателю. Подтвердить их можно в разделе <Link className="underline" to="/candidate/fsp">«Паспорт ФСП»</Link>.</p>
+      <p className="mt-3 text-xs text-brand-ink/65">Достижения ФСП, подтверждённые реестром, дают бонус к месту в рейтинге категории и видны работодателю. Подтвердить их можно в разделе <Link className="underline" to="/candidate/fsp">«Паспорт ФСП»</Link>.</p>
     </section>
   );
 }
@@ -225,7 +226,7 @@ export default function Feedback() {
       {s.integrity && s.integrity.level !== "high" && (
         <Alert kind="info">Достоверность результата снижена. Общая причина: {s.integrity.reasons.join("; ").toLowerCase()}. {s.integrity.note ?? "Оценку уровня и грейд это не меняет."}</Alert>
       )}
-      {fb.source === "facts" && <Alert kind="info">Подробной разбивки по заданиям для этого теста нет — карта построена по навыкам, подтверждённым тестом (T1).</Alert>}
+      {fb.source === "facts" && <Alert kind="info">Подробной разбивки по заданиям для этого теста нет — карта построена по навыкам, подтверждённым тестом.</Alert>}
       <SkillMap fb={fb} />
       {fb.demand && <Demand d={fb.demand} />}
       {fb.market_hh && <HhMarketSkills m={fb.market_hh} />}

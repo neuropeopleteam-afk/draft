@@ -121,7 +121,7 @@ test("кандидат: демо-вход → тест → результат �
 
   await test.step("результат теста", async () => {
     await expect(page.getByText("Оценка уровня")).toBeVisible();
-    await expect(page.getByText(/^θ = [+−-]?\d/)).toBeVisible();
+    await expect(page.getByText(/^по шкале теста · точность ± \d/)).toBeVisible();
     await expect(page.getByText(/^\d+ из \d+$/).first()).toBeVisible();
     await expect(page.getByText(/^Оценено заданий: \d+/)).toBeVisible();
     // кандидату — уровень достоверности и общая причина, без механики и контрольных заданий

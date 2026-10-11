@@ -17,6 +17,25 @@ export const ruText = (s?: string | null) => (s ?? "")
   .replace(/(^|[\s(=±+−-])(0|[1-9]\d{0,2})\.(\d+)(?![.\d])/g, "$1$2,$3")
   .replace(/(\d) (?=\d{3}(?!\d))/g, `$1${NB}`)
   .replace(/(\d) (₽|%|тыс\.)/g, `$1${NB}$2`);
+/** КУХНЯ: внутренние обозначения из ответов сервера (θ, SE, P(θ ≥ порога), «сила паспорта») → простые слова.
+ *  Только для экранов кандидата и работодателя; на /criteria и /validation остаётся ruText с обозначениями. */
+const nRu = (x: string) => parseFloat(x.replace("−", "-").replace(",", "."));
+export const plainText = (s?: string | null) => ruText(s)
+  .replace(/тест: θ ([+−-]?\d+(?:,\d+)?) ± (\d+(?:,\d+)?) против θ ([+−-]?\d+(?:,\d+)?) ± (\d+(?:,\d+)?)/g,
+    (_m, a: string, sa: string, b: string, sb: string) => (nRu(a) - nRu(sa) > nRu(b) + nRu(sb)
+      ? "уровень по тесту выше, с запасом" : "уровень по тесту выше, но в пределах точности теста"))
+  .replace(/θ — уровень по шкале теста, ± SE — стандартная ошибка/g, "Уровень по шкале теста; ± — точность оценки")
+  .replace(/θ и точность оценки/g, "Уровень по тесту и точность оценки")
+  .replace(/P\(θ\s*≥\s*порога[^)]*\)\s*=\s*/g, "вероятность уровня не ниже порога ")
+  .replace(/P\(θ\s*≥\s*порога[^)]*\)/g, "вероятность уровня не ниже порога")
+  .replace(/при θ\s*=\s*/g, "при уровне по шкале теста ")
+  .replace(/θ\s*=\s*/g, "уровень по шкале теста ")
+  .replace(/θ\s+(?=[+−-]?\d)/g, "уровень ")
+  .replace(/θ/g, "уровень по тесту")
+  .replace(/погрешность SE|\bSE\b/g, "точность")
+  .replace(/сила паспорта/g, "вес достижений")
+  .replace(/\s*\((?:уровень )?T[012](?:\/T[012])*\)/g, "")
+  .replace(/,? ?уровень T[012]\b/g, "");
 /** Доля → проценты: 0.953 → «95 %». */
 export const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${num(v * 100, d)}${NB}%`);
 export const dt = (s?: string | null) => (s ? new Date(s).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "—");
@@ -106,20 +125,22 @@ const LEVEL_STYLE: Record<string, string> = {
 };
 const LEVEL_HINT: Record<string, string> = {
   T2: "Подтверждено реестром ФСП",
-  T1: "Подтверждено тестом или зондом на платформе",
+  T1: "Подтверждено тестом или заданием работодателя на платформе",
   T0: "Указано кандидатом, не проверено",
   none: "Нет данных",
 };
 
 /** SIMPLIFY п.5: рядом с кодом уровня — слова (код без слов работодателю ничего не говорит); words={false} — только код
  *  (легенда, где слова стоят рядом полным текстом). */
-export const LEVEL_WORDS: Record<string, string> = { T0: "заявлено", T1: "подтверждено тестом", T2: "подтверждено ФСП" };
+export const LEVEL_WORDS: Record<string, string> = { T0: "указано кандидатом", T1: "подтверждено тестом", T2: "подтверждено ФСП" };
+/** КУХНЯ: на экранах — только слова, без внутренних кодов T0/T1/T2; words={false} — короткая метка для легенды. */
+const LEVEL_SHORT: Record<string, string> = { T0: "указано", T1: "тест", T2: "ФСП", none: "нет данных" };
 
 export function Level({ level, words = true }: { level?: string | null; words?: boolean }) {
   const l = level ?? "none";
   return (
-    <span title={LEVEL_HINT[l]} aria-label={`${l === "none" ? "нет данных" : l}: ${LEVEL_HINT[l] ?? ""}`} className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-xs font-bold leading-none tracking-wide ${LEVEL_STYLE[l] ?? LEVEL_STYLE.none}`}>
-      {l === "none" ? "нет" : l}{words && LEVEL_WORDS[l] && <span aria-hidden="true" className="ml-1 font-semibold tracking-normal">· {LEVEL_WORDS[l]}</span>}
+    <span title={LEVEL_HINT[l]} aria-label={LEVEL_HINT[l] ?? "нет данных"} className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-xs font-semibold leading-none ${LEVEL_STYLE[l] ?? LEVEL_STYLE.none}`}>
+      <span aria-hidden="true">{words ? (LEVEL_WORDS[l] ?? LEVEL_SHORT.none) : (LEVEL_SHORT[l] ?? LEVEL_SHORT.none)}</span>
     </span>
   );
 }
