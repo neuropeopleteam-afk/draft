@@ -87,6 +87,12 @@ SCENARIOS = {
     "d_k15_c_s4": dict(mult=1, a=1.5, block=15, partial=True, short_mult=4),
     "d_k15_c_s6": dict(mult=1, a=1.5, block=15, partial=True, short_mult=6),
     "d_k15_c_x3_a2.0": dict(mult=3, a=2.0, block=15, partial=True),
+    # запас на случай, если 15 заданий и ×4 коротких мало: блок 20, коротких ×6–×8
+    "b_k20_s8": dict(mult=1, a=1.5, block=20, partial=False, short_mult=8),
+    "d_k15_c_s8": dict(mult=1, a=1.5, block=15, partial=True, short_mult=8),
+    "d_k20_c_s6": dict(mult=1, a=1.5, block=20, partial=True, short_mult=6),
+    "d_k20_c_s8": dict(mult=1, a=1.5, block=20, partial=True, short_mult=8),
+    "d_k20_c_x2_s4": dict(mult=2, a=1.5, block=20, partial=True, short_mult=4),
 }
 
 
