@@ -16,7 +16,7 @@ refresh — 120 дней и одноразовый: после ``POST /oauth/tok
 
 Передача кандидата:
 1. ``persons(filter: {search: email, searchFrom: [CONTACTS]})`` — есть ли кандидат в базе (дубликат не создаём);
-2. ``personSources(filterByName)`` / ``createPersonSource`` — источник «Встречный (ФСП)» (один раз на компанию);
+2. ``personSources(filterByName)`` / ``createPersonSource`` — источник «Драфт (ФСП)» (один раз на компанию);
 3. ``dictionaries { areas }`` — areaId по городу кандидата (если нашёлся);
 4. ``createPerson`` с ``vacancyIds``, ``contacts``, ``customResumes [{type: TMS, text: HTML профиля}]`` и
    ``structuredResume`` (title, link на PDF-профиль, skills, keySkills — подтверждённые навыки);
@@ -41,7 +41,7 @@ from app.integrations.settings import get_isettings
 
 BASE_URL = "https://api.talantix.ru"
 DOCS_URL = "https://api.talantix.ru/docs/"
-SOURCE_NAME = "Встречный (ФСП)"
+SOURCE_NAME = "Драфт (ФСП)"
 
 Q_ME = "query Me { me { id firstName lastName email } }"
 Q_VACANCIES = """query Vacancies($first: Int, $after: String, $filter: VacancyFilterInput) {
@@ -110,7 +110,7 @@ _areas_cache: dict[str, tuple[float, dict[str, str]]] = {}
 def user_agent() -> str:
     """Talantix требует User-Agent с названием компании и контактом для связи."""
     s = get_isettings()
-    return f"Vstrechny-ATS/1.0 ({s.ats_user_agent_company}; {s.ats_user_agent_contact})"
+    return f"Draft-ATS/1.0 ({s.ats_user_agent_company}; {s.ats_user_agent_contact})"
 
 
 def parse_tokens(raw: str | None, refresh: str | None = None) -> dict | None:
@@ -376,7 +376,7 @@ class TalantixProvider(Provider):
     def _source(self, steps: list[str]) -> int | None:
         if self.source_cached:
             return self.source_cached
-        sid = soft(steps, "Источник «Встречный (ФСП)»", self.cl.source_id)
+        sid = soft(steps, "Источник «Драфт (ФСП)»", self.cl.source_id)
         if sid:
             self.source_cached = sid
             if self.on_source:

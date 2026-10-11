@@ -99,7 +99,7 @@ export default function LiveScreen() {
       <header className="bg-brand-night text-white">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3 px-6 py-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Встречный · демонстрация для жюри</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Драфт · демонстрация для жюри</p>
             <h1 className="mt-1 text-xl font-extrabold tracking-tight md:text-2xl">Отсканируйте QR: мини-тест → категория → приглашение</h1>
           </div>
           <div className="flex flex-wrap gap-2">
