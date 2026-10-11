@@ -422,7 +422,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         </div>
       )}
       {(chosen?.category_id ?? status?.current?.category_id) && (
-        <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}</b> · <Link className="font-semibold underline" to="/candidate/category">подробнее</Link></Alert>
+        <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}{status?.current?.grade_preliminary && (!chosen || chosen.direction === status.current.direction) ? " (предварительно)" : ""}</b> · <Link className="font-semibold underline" to="/candidate/category">подробнее</Link></Alert>
       )}
       <div className={`mt-6 grid gap-3 sm:grid-cols-2 ${Object.keys(levels).length > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`} data-testid="grade-cards">
         {Object.entries(levels).map(([id, t]) => (
