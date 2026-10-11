@@ -179,3 +179,63 @@ def test_grade_accuracy_endpoint(client):
     assert ch["over"] <= d["constraints"]["max_over"]
     assert ch["point"]["confirm_level"] == pytest.approx(get_settings().assessment_confirm_level)
     assert d["pareto"] and d["worlds"] and d["key_rows"]
+
+
+# ------------------------------------------------------------------ чистка пула (ASSESSMENT_WEAK_EXCLUDE)
+
+def test_weak_exclude_flag(monkeypatch):
+    """Флаг выключен — пул как раньше; включён — 26 слабых по панели семейств не выдаются (один список с симуляцией)."""
+    from types import SimpleNamespace as NS
+
+    from app.modules.assessment import weak_pool
+
+    assert not get_settings().assessment_weak_exclude
+    assert weak_pool.weak_excluded() == frozenset()
+    assert weak_pool.weak_excluded(NS(assessment_weak_exclude=True)) == weak_pool.WEAK_FAMILIES
+    assert len(weak_pool.WEAK_FAMILIES) == 26 and gs.WEAK_FAMILIES is weak_pool.WEAK_FAMILIES
+    from app.modules.validation import sim
+
+    ids = {i.family_id for i in sim.make_pool(1)}
+    assert weak_pool.WEAK_FAMILIES <= ids  # все семейства списка есть в банке платформы
+    monkeypatch.setenv("ASSESSMENT_WEAK_EXCLUDE", "true")
+    get_settings.cache_clear()
+    try:
+        assert weak_pool.weak_excluded() == weak_pool.WEAK_FAMILIES
+    finally:
+        monkeypatch.delenv("ASSESSMENT_WEAK_EXCLUDE")
+        get_settings.cache_clear()
+
+
+def test_weak_exclude_session(monkeypatch):
+    """С флагом слабые семейства не попадают ни в основную часть, ни в дотестирование; без флага — пул прежний."""
+    from app.modules.assessment import bank_engine as be
+    from app.modules.assessment import weak_pool
+
+    eng = be.BankEngine()
+    st = eng.start(direction="frontend", claimed_grade="middle", stack_tags=["javascript", "react", "typescript"],
+                   seed=777)
+    sess = eng._rebuild(st)
+    before = {p.family_id for p in sess.scored_pool} | {p.family_id for p in sess.ext_pool}
+    assert before & weak_pool.WEAK_FAMILIES  # без флага слабые frontend-семейства в пуле есть
+    monkeypatch.setenv("ASSESSMENT_WEAK_EXCLUDE", "true")
+    get_settings.cache_clear()
+    try:
+        sess = eng._rebuild(st)
+        after = {p.family_id for p in sess.scored_pool} | {p.family_id for p in sess.ext_pool}
+        assert after and not after & weak_pool.WEAK_FAMILIES
+        assert after == before - weak_pool.WEAK_FAMILIES
+    finally:
+        monkeypatch.delenv("ASSESSMENT_WEAK_EXCLUDE")
+        get_settings.cache_clear()
+
+
+def test_plus_snapshot_and_task():
+    """Снимок добора у порогов: 17 семейств, prior с basis в банке; точка с plus = 1 считается."""
+    specs = gs.plus_specs()
+    assert [s.family_id for s in specs] == list(gs.PLUS_FAMILIES)
+    assert all(s.prior_difficulty.a > 0 and s.time_limit_s > 0 for s in specs)
+    pool = gs._pool(1, 1)
+    ids = {i.family_id for i in pool}
+    assert set(gs.PLUS_FAMILIES) <= ids
+    r = gs.run_task((gs._p(confirm_level=0.6, plus=1, weak_pool="exclude"), 0, "security", 3))
+    assert len(r["l1"]) == 3
