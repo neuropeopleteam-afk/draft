@@ -2,11 +2,13 @@
 import { expect, type Page } from "@playwright/test";
 import { sandboxId, type Persona } from "./stand";
 
+// SIMPLIFY п.9: главные входы — компактный ряд («Кандидат», «Пройти тест с нуля», «Работодатель», «Федерация (ФСП)»),
+// остальные роли — под «Ещё роли» (раскрываем перед кликом)
 const TITLES: Record<Persona, string> = {
-  candidate: "Кандидат с паспортом ФСП",
+  candidate: "Кандидат",
   candidate_nofsp: "Кандидат без ФСП",
   candidate_junior: "Кандидат «Junior \\(предварительно\\)»",
-  candidate_new: "Пройдите тест сами",
+  candidate_new: "Пройти тест с нуля",
   employer: "Работодатель",
   expert: "Эксперт",
   fsp: "Федерация \\(ФСП\\)",
@@ -22,8 +24,10 @@ const LANDING: Record<Persona, RegExp> = {
 export async function juryEnter(page: Page, persona: Persona): Promise<void> {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   const block = page.locator("section#jury");
-  await expect(block.getByRole("heading", { name: "Вход в один клик и проводник по сценарию" })).toBeVisible();
-  await block.getByRole("button", { name: new RegExp(`^Войти как:?\\s*${TITLES[persona]}`) }).click();
+  await expect(block.getByRole("heading", { name: "Проверка для жюри" })).toBeVisible();
+  const btn = block.getByRole("button", { name: new RegExp(`^Войти как:?\\s*${TITLES[persona]}$`) });
+  if (!(await btn.isVisible())) await block.getByTestId("jury-more-roles").locator("summary").click();
+  await btn.click();
   await expect(page).toHaveURL(LANDING[persona], { timeout: 60_000 });
   // вход — в песочницу прогона, а не в общее демо: фронтенд хранит её id там же, где мы его задали
   expect(await page.evaluate(() => localStorage.getItem("jury_scenario")), "песочница жюри в браузере").toBe(sandboxId());
