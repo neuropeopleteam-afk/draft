@@ -141,6 +141,12 @@ SCENARIOS = {
                             own_principal_short=1, common_principal_short=18, b_principal_short=(3.0, 3.5)),
     "g_pb_hi": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
                     own_principal_short=1, common_principal_short=2, b_principal_short=(3.0, 3.5)),
+    # та же прибавка (+ 8 в общем блоке), трудность «как пишут сейчас» (2,5–2,8 — априорные b Principal банка 11.10)
+    # и «у самой границы» (2,9–3,3)
+    "g_pb_c10_lo": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                        own_principal_short=1, common_principal_short=10, b_principal_short=(2.5, 2.8)),
+    "g_pb_c10_mid": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                         own_principal_short=1, common_principal_short=10, b_principal_short=(2.9, 3.3)),
 }
 
 
@@ -429,14 +435,22 @@ def run(n: int, scenarios: list[str], confirms: list[float], worlds: list[str], 
                         "scenario": sc, "confirm": cf, "world": w, "rep": rp,
                         "text": scen_text(SCENARIOS[sc]) + (f" · банк, реализация {rp + 1}" if rp else ""),
                         "bank": bank_counts(SCENARIOS[sc]), **SCENARIOS[sc], **summarize(rows)}
-    if merge and OUT.exists():
-        old = json.loads(OUT.read_text(encoding="utf-8"))
+    old = json.loads(OUT.read_text(encoding="utf-8")) if merge and OUT.exists() else None
+    if old:
         rep["variants"] = {**old.get("variants", {}), **rep["variants"]}
     cfg_sig = {"scenarios": {k: SCENARIOS[k] for k in scenarios}, "bank_unit": BANK_UNIT, "b_range": B_RANGE,
                "n_per_direction": n, "confirms": confirms, "worlds": worlds}
     rep["signature"] = signature(seed=SEED, config=cfg_sig, n=n * len(sim.DIRECTIONS),
                                  world="симуляция 6 уровней: модельный банк Lead/Principal, блок Lead/Principal, "
                                        "частичный балл; модель, не люди", command="make grades-ext-need")
+    if old and old.get("signature"):
+        # --merge: подпись основного прогона сохраняется, этот прогон — строкой в extra_runs (какие сценарии, коммит, когда)
+        new_sig, base = rep["signature"], dict(old["signature"])
+        base["extra_runs"] = [*base.get("extra_runs", []), {
+            "scenarios": ", ".join(scenarios), "reps": ",".join(str(r) for r in (reps or [0])),
+            "confirms": ",".join(str(c) for c in confirms), "worlds": ",".join(worlds),
+            **{k: new_sig.get(k) for k in ("commit", "generated_at", "seed", "config_hash", "command")}}]
+        rep["signature"] = base
     rep["target"] = {"exact_lead": 0.64, "exact_principal": 0.64, "above_max": 0.07}
     rep["seconds"] = round(time.time() - t0, 1)
     if write:
@@ -461,6 +475,10 @@ def markdown(rep: dict) -> str:
          "≤ 7 %.", "",
          f"Подпись: {sig.get('world')}; seed {sig.get('seed')}; коммит {sig.get('commit') or '—'}; "
          f"команда `{sig.get('command')}`.", "",
+         *[f"- Дополнительный прогон: {x.get('scenarios')} (реализации {x.get('reps') or '0'}) — коммит "
+           f"{x.get('commit') or '—'}, {str(x.get('generated_at') or '—')[:16].replace('T', ' ')} UTC, "
+           f"config {x.get('config_hash') or '—'}." for x in sig.get("extra_runs", [])],
+         *([""] if sig.get("extra_runs") else []),
          "Банк ×1 — ожидаемый по карточке банка: направление — Lead 1 короткое + 1 развёрнутое, Principal 1 развёрнутое; "
          "общий блок — Lead 2 + 2, Principal 1 + 1. Блок — до K коротких трудных заданий за ≤ 25 мин после основной "
          "части (тем, кто заявил Lead/Principal, и подтвердившим Senior с θ̂, не исключающим Lead).", "",
