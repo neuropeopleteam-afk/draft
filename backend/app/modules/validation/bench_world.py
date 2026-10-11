@@ -22,7 +22,7 @@ Bundle для ``ranking.score_candidate`` строится функцией ``bu
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import asdict, dataclass, field, fields, replace
 from functools import cached_property
 from datetime import date, datetime, timezone
 from decimal import Decimal
@@ -153,7 +153,17 @@ class BenchConfig:
     claim_omit: float = 0.10  # … вероятность не указать в резюме навык, которым владеет
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        """Конфигурация для подписи. Ручки сопоставимых условий в значениях по умолчанию не пишутся — конфигурация и
+        hash строгого протокола (make bench) те же, что до их появления."""
+        d = asdict(self)
+        for f in fields(self):
+            if f.name in COMPARE_KNOBS and getattr(self, f.name) == f.default:
+                d.pop(f.name)
+        return d
+
+
+COMPARE_KNOBS = ("dirs", "need_grade_p", "need_required", "theta_model", "band_p", "band_top", "t0_model", "claim_over",
+                 "claim_under", "claim_stuff", "claim_stuff_n", "claim_omit")
 
 
 @dataclass
