@@ -52,7 +52,7 @@ def settings_out(st: AtsSettings) -> dict:
                      "token_set": bool(st.huntflow_token_enc), "token_masked": mask(decrypt(st.huntflow_token_enc))},
         "webhook": {"enabled": st.webhook_enabled, "url": st.webhook_url, "secret_set": bool(st.webhook_secret_enc),
                     "secret_masked": mask(decrypt(st.webhook_secret_enc)),
-                    "signature_header": "X-Vstrechny-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, '<unix>.<body>')>"},
+                    "signature_header": "X-Draft-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, '<unix>.<body>')>"},
         "stub": {"connected": bool(st.stub_key), "huntflow_base_url": f"{stub_base}/api/ats-stub/huntflow/v2",
                  "webhook_url": f"{stub_base}/api/ats-stub/webhook/{st.stub_key}" if st.stub_key else None},
     }
