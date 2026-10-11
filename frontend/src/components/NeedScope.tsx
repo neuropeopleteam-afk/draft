@@ -45,7 +45,7 @@ export function NeedScope({ scope, cov, recipients, picked, onAsk, needId }: {
           <span key={why || gi}>{gi > 0 && "; "}
             {items.map((x, i) => <span key={x.title}>{i > 0 && ", "}
               {x.probe && can
-                ? <button type="button" className="font-semibold text-brand-ink underline decoration-dotted underline-offset-2 hover:text-brand" title={`Задать вопрос зондом по навыку «${x.title}»`} onClick={() => onAsk(optOf.get(x)!)}>{x.title}</button>
+                ? <button type="button" className="font-semibold text-brand-ink underline decoration-dotted underline-offset-2 hover:text-brand" title={`Задать короткое задание по навыку «${x.title}»`} onClick={() => onAsk(optOf.get(x)!)}>{x.title}</button>
                 : x.title}
             </span>)}
             {why && <span className="hidden sm:inline"> — {why}</span>}
@@ -56,10 +56,10 @@ export function NeedScope({ scope, cov, recipients, picked, onAsk, needId }: {
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5">
           <button type="button" className="btn-primary !px-3 !py-1.5 text-sm" disabled={!can}
             title={`Кому: ${recipients.join(", ")} — отмеченные «Сравнить», иначе первые три. Вопрос (задача роли или навык) и текст можно поправить перед отправкой; оценённый ответ становится подтверждённым фактом (T1) в карточке.`}
-            onClick={() => onAsk(options[0].id)}>Задать вопрос зондом ({recipients.length})</button>
+            onClick={() => onAsk(options[0].id)}>Задать короткое задание ({recipients.length})</button>
           <span className="text-xs text-brand-ink/65">{picked ? "отмеченным" : "первым трём"} · {pr && pr.total > 0
-            ? <Link className="font-semibold text-brand hover:underline" to={needId ? `/employer/probes?need=${needId}` : "/employer/probes"}>зонды по этой потребности: {pr.total}{pr.answered ? `, с ответом ${pr.answered}` : ""}{pr.reviewed ? `, оценено ${pr.reviewed}` : ""}</Link>
-            : "зондов пока нет"}</span>
+            ? <Link className="font-semibold text-brand hover:underline" to={needId ? `/employer/probes?need=${needId}` : "/employer/probes"}>задания по этой потребности: {pr.total}{pr.answered ? `, с ответом ${pr.answered}` : ""}{pr.reviewed ? `, оценено ${pr.reviewed}` : ""}</Link>
+            : "заданий пока нет"}</span>
         </div>
       )}
     </section>

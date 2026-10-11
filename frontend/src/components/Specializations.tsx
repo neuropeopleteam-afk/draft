@@ -11,11 +11,11 @@ export function Specializations({ items, testing = false, showTheta = testing }:
         <div key={s.direction} className="min-w-0 rounded-xl border border-brand-night/10 bg-white p-3 text-sm">
           <p className="text-xs font-semibold text-brand-lavender">{s.is_primary ? "Основное направление" : "Дополнительное направление"}</p>
           <p className="mt-1 font-bold text-brand-night">{s.category_title ?? s.direction_title}</p>
-          <p className="mt-1 text-brand-ink/75" title={!showTheta && s.theta != null ? `Оценка уровня по шкале теста: θ = ${signed(s.theta)} ± ${num(s.se)}` : undefined}>
-            {s.confirmed_by === "test" ? "Подтверждено отдельным тестом · T1"
+          <p className="mt-1 text-brand-ink/75" title={!showTheta && s.theta != null ? `Оценка уровня по шкале теста: ${signed(s.theta)} (точность ± ${num(s.se)})` : undefined}>
+            {s.confirmed_by === "test" ? "Подтверждено отдельным тестом"
               : s.status === "provisional" ? "Предварительная категория" : "Ожидает подтверждения тестом"}
           </p>
-          {showTheta && s.theta != null && <p className="mt-1 text-xs text-brand-ink/65">θ = {signed(s.theta)} ± {num(s.se)}</p>}
+          {showTheta && s.theta != null && <p className="mt-1 text-xs text-brand-ink/65">уровень по шкале теста {signed(s.theta)} ± {num(s.se)}</p>}
           {testing && (
             <div className="mt-3 space-y-2">
               <p className="text-xs text-brand-ink/65">{s.lock_active ? `Смена грейда — с ${dt(s.locked_until)}` : "Тест в этом направлении доступен"}</p>

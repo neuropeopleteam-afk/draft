@@ -1,13 +1,13 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { DefenseBadge, DefenseBriefLine } from "./Interview";  // Я15: значок устной защиты
 import { GradeBadge, GradeStatusNote } from "./GradeStatus";
-import { Level, num, pct, ruText, signed, years } from "./ui";
+import { Level, num, pct, plainText as ruText, signed, years } from "./ui";
 import { Specializations } from "./Specializations";
 import { MarketNote } from "./Salary";
 import { NO_FSP, OriginTag } from "./Origin";
 
 /** SIMPLIFY п.5: θ работодателю — только в подсказке (наведение), на виду — «N из M верно» и статус грейда. */
-export const thetaHint = (theta?: number | null, se?: number | null) => theta == null ? undefined : `Оценка уровня по шкале теста: θ = ${signed(theta)} ± ${num(se)}`;
+export const thetaHint = (theta?: number | null, se?: number | null) => theta == null ? undefined : `Оценка уровня по шкале теста: ${signed(theta)} (точность ± ${num(se)})`;
 
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
@@ -18,7 +18,7 @@ export function MustLine({ m }: { m?: { missing?: string[]; missing_more?: numbe
   if (!m.missing_total) return <p className="mt-1 text-sm font-semibold text-emerald-800">Всё обязательное подтверждено тестом: {m.required_total} из {m.required_total}</p>;
   const more = m.missing_more ? ` и ещё ${m.missing_more}` : "";
   return (
-    <p className="mt-1 max-w-2xl text-sm font-semibold text-amber-900" title="Тест не подтвердил эти навыки (проверены ниже порога, только заявлены или не проверялись). Это не «не умеет» — можно проверить зондом. В подборке такие кандидаты идут ниже тех, у кого всё обязательное подтверждено.">
+    <p className="mt-1 max-w-2xl text-sm font-semibold text-amber-900" title="Тест не подтвердил эти навыки (проверены ниже порога, только заявлены или не проверялись). Это не «не умеет» — можно проверить коротким заданием. В подборке такие кандидаты идут ниже тех, у кого всё обязательное подтверждено.">
       Не хватает обязательного: {(m.missing ?? []).join(", ")}{more}
     </p>
   );
@@ -45,7 +45,7 @@ export function ReasonLevel({ r }: { r: { level?: string | null; status?: string
 }
 
 /** Ф6 (Н3): рядом с баллом — покрытие обязательного тестом; подсказка — что балл значит и какие условия жёсткие. */
-export const SCORE_HINT = "Соответствие из 100 — взвешенная доля требований потребности, подтверждённых тестом (T1); обязательные весят больше желательных, ФСП и зонды добавляют немного. Заявленное кандидатом (T0) в балл не входит. Обязательные навыки — мягкое условие: без подтверждения кандидат не исключается, но помечен и идёт ниже. Формат и город — жёсткое условие: не прошедшие скрыты (можно показать всех).";
+export const SCORE_HINT = "Соответствие из 100 — взвешенная доля требований потребности, подтверждённых тестом; обязательные весят больше желательных, достижения ФСП и ваши задания добавляют немного. Сказанное кандидатом о себе в балл не входит. Обязательные навыки — мягкое условие: без подтверждения кандидат не исключается, но помечен и идёт ниже. Формат и город — жёсткое условие: не прошедшие скрыты (можно показать всех).";
 
 export function ScoreBox({ score, must }: { score: number; must?: any }) {
   const req = must?.required_total ?? 0, miss = must?.missing_total ?? 0;
@@ -75,7 +75,7 @@ function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
       {(okMust.length > 0 || okWant.length > 0) && <li className="flex items-start gap-2"><Level level="T1" />
         <span className="text-brand-ink/80">Подтверждено: {[...okMust, ...okWant.map((x) => `${x} (желательно)`)].join(", ")}</span></li>}
       {gaps.length > 0 && <li className="flex items-start gap-2"><Level level="none" />
-        <span className="text-brand-ink/80">Пробелы обязательного: {gaps.join(", ")} — можно проверить зондом</span></li>}
+        <span className="text-brand-ink/80">Пробелы обязательного: {gaps.join(", ")} — можно проверить коротким заданием</span></li>}
       <DefenseBriefLine d={t?.defense} />
       <li className="flex items-start gap-2"><Level level={fsp.achievements?.length && !fsp.hidden ? "T2" : "none"} />
         <span className="text-brand-ink/80">{fsp.hidden ? "Паспорт ФСП скрыт кандидатом" : fsp.achievements?.length ? `ФСП: ${fsp.achievements[0].text}${fsp.achievements.length > 1 ? ` и ещё ${fsp.achievements.length - 1}` : ""}` : NO_FSP}{fsp.achievements?.length > 0 && !fsp.hidden && <OriginTag o={fsp.origin} className="ml-1.5 align-middle" />}</span></li>
@@ -169,7 +169,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
           {c.provisional && <p className="mt-1 text-xs text-brand-ink/70">P(уровень не ниже Junior) = {c.provisional.p_pct} % · подтверждение от {c.provisional.confirm_pct} %, «не доказанно ниже» от {c.provisional.level_pct} %{c.provisional.attempts ? ` · дотестирований ${c.provisional.attempts} из ${c.provisional.attempts_max}` : ""}</p>}
           {t && (t.mode === "express" || t.mode === "mini" || t.accepted_lower) && (
             <p className="mt-1 flex flex-wrap gap-1.5">
-              {t.mode === "express" && <span className="chip" title="Экспресс-тест: 5–7 коротких заданий (за Senior — 8–12), интервал θ шире, чем у полного теста">экспресс-тест</span>}
+              {t.mode === "express" && <span className="chip" title="Экспресс-тест: 5–7 коротких заданий (за Senior — 8–12), оценка уровня менее точная, чем у полного теста">экспресс-тест</span>}
               {t.mode === "mini" && <span className="chip" title="Мини-тест из 3 заданий: категория предварительная и не выше Middle, полный тест уточнит грейд">мини-тест · предварительно</span>}
               {t.accepted_lower && <span className="chip" title="Заявленный грейд не подтвердился; уровень ниже доказан тестом с уверенностью порога подтверждения и принят кандидатом">принят уровень ниже</span>}
             </p>
@@ -182,7 +182,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
             </div>
           )}
           {c.freshness?.text && <p className="mt-1 text-xs text-brand-ink/70" title="Свежесть не входит в формулу подбора: показывает, насколько давно проверены навыки">Свежесть: {c.freshness.title.toLowerCase()}. {c.freshness.text}</p>}
-          {c.probes?.length > 0 && <p className="mt-2 text-xs text-brand-ink/70">Зонды: {c.probes.map((p: any) => `${p.title} — ${p.verdict}`).join("; ")}</p>}
+          {c.probes?.length > 0 && <p className="mt-2 text-xs text-brand-ink/70">Задания работодателя: {c.probes.map((p: any) => `${p.title} — ${p.verdict}`).join("; ")}</p>}
         </div>
         <div className="rounded-xl bg-[#F3F2FB] p-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level={fsp.achievements?.length ? "T2" : "none"} /> Паспорт ФСП</p>
@@ -250,7 +250,7 @@ export function Integrity({ v, compact = false }: { v: { level: string; title: s
       {/* И16: итог камеры (по согласию кандидата) — только заголовок и до трёх замечаний; без камеры — нейтрально */}
       {v.camera && <p className="mt-0.5 text-[11px] opacity-90" data-testid="camera-title">{v.camera.title}{!compact && v.camera.remarks.length ? `: ${v.camera.remarks.join("; ")}` : ""}{!compact && v.camera.notes.length ? ` · ${v.camera.notes.join("; ")}` : ""}</p>}
       {/* подсказка работодателю; у версии для кандидата (с note, Р27) — не показывается (Я11, С3-11) */}
-      {v.level !== "high" && !v.note && <p className="mt-0.5 opacity-80">Не блокирует: на место в подборке не влияет, решение за вами — можно пригласить или проверить зондом.</p>}
+      {v.level !== "high" && !v.note && <p className="mt-0.5 opacity-80">Не блокирует: на место в подборке не влияет, решение за вами — можно пригласить или проверить коротким заданием.</p>}
     </div>
   );
 }

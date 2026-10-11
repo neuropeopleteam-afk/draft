@@ -49,7 +49,7 @@ function ReqNotes({ req, title }: { req: Req; title: (t: string) => string }) {
   if (!tips.length && !unknown.length && !excluded.length && !req.salary_note) return null;
   return (
     <ul className="space-y-1.5 rounded-lg bg-brand-blush/25 px-3 py-2 text-sm">
-      {unknown.length > 0 && <li data-testid="unknown-terms"><b className="font-semibold">Вне справочника — проверить вручную:</b> {unknown.map((u) => u.term + (u.evidence?.source === "llm" ? ` (${(u.evidence as any).model ?? "модель"})` : "")).join(", ")} — в подбор не входят: тест платформы их не проверяет. Проверьте зондом или на интервью.</li>}
+      {unknown.length > 0 && <li data-testid="unknown-terms"><b className="font-semibold">Вне справочника — проверить вручную:</b> {unknown.map((u) => u.term + (u.evidence?.source === "llm" ? " (выделено моделью)" : "")).join(", ")} — в подбор не входят: тест платформы их не проверяет. Проверьте зондом или на интервью.</li>}
       {excluded.length > 0 && <li><b className="font-semibold">Исключено по тексту:</b> {excluded.map((x) => `${title(x.tag)}${x.evidence?.quote ? ` («${x.evidence.quote}»)` : ""}`).join(", ")}</li>}
       {req.salary_note && <li>{req.salary_note.text}{req.salary_note.evidence?.quote ? ` («${req.salary_note.evidence.quote}»)` : ""}</li>}
       {tips.map((t) => <li key={t}>{t}</li>)}
@@ -233,7 +233,7 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
     <div className="space-y-4">
       {req.coverage && <Alert kind="info"><b>{req.coverage.message}</b>
         <p className="mt-2">Проверяется: {req.coverage.tested}.</p>
-        <p className="mt-1">Не проверяется: {req.coverage.not_tested}. Для этих навыков нужен отдельный зонд или интервью.</p>
+        <p className="mt-1">Не проверяется: {req.coverage.not_tested}. Для этих навыков нужно отдельное задание или интервью.</p>
       </Alert>}
       <ReqNotes req={req} title={(t) => tags[t]?.title ?? t} />
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -335,7 +335,7 @@ export function Needs() {
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Потребности и подборки" subtitle="Опишите, кто нужен, своими словами — подборка строится по подтверждённым фактам о кандидатах." />
       <section className="card space-y-4">
-        <Field label="Кого вы ищете" htmlFor="need" hint="Контакты из текста вырезаются до обработки. Без LLM разбор идёт по словарю технологий и правилам. Требования к полу, возрасту, внешности, семье (ст. 64 ТК РФ) не учитываются.">
+        <Field label="Кого вы ищете" htmlFor="need" hint="Контакты из текста вырезаются до обработки. Если языковая модель недоступна, требования выделяются по словарю технологий. Требования к полу, возрасту, внешности, семье (ст. 64 ТК РФ) не учитываются.">
           <textarea id="need" className="input min-h-[120px]" value={text} onChange={(e) => { setText(e.target.value); setReq(null); fp.reset(); }} placeholder={EXAMPLE} />
         </Field>
         {file && text.slice(0, 40) === file.text.slice(0, 40) && <NeedFileNote info={file} edited={text !== file.text} />}
@@ -526,7 +526,7 @@ export function Selection() {
         {/* Я10: подзаголовок мельче на телефоне — первая карточка выше (PageTitle — та же разметка h1) */}
         <div>
           <h1 className="text-xl font-extrabold tracking-tight text-brand-night sm:text-2xl">{need.data.title}</h1>
-          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-brand-ink/70 sm:mt-2 sm:text-base">В балле — только подтверждённое: тест (T1), зонды и ФСП (T2); заявленное (T0) — отдельно.</p>
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-brand-ink/70 sm:mt-2 sm:text-base">Балл — только по проверенным фактам: тест, задания работодателя, достижения ФСП. Сказанное кандидатом о себе в балл не входит.</p>
         </div>
         <Link to="/employer/needs" className="btn-ghost hidden sm:inline-flex">Все потребности</Link>
       </div>
@@ -537,8 +537,8 @@ export function Selection() {
         <Link to="/employer/needs" className="font-semibold text-brand hover:underline sm:hidden">Все потребности</Link>
         <span className="text-brand-ink/65">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
-          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} title={x.filters?.relaxation ? `из v${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
-            v{x.version} · {x.total}
+          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} title={x.filters?.relaxation ? `из версии ${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
+            версия {x.version} · {x.total}
           </Link>
         ))}
       </div>
@@ -548,7 +548,7 @@ export function Selection() {
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div className="min-w-0">
                   <h2 id="top-picks-h" className="text-lg font-bold text-brand-night">{ordered.length ? `Кого пригласить первым: ${Math.min(TOP, ordered.length)} из ${s.total}` : "Кандидаты"}</h2>
-                  <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}{ordered.length > 0 && !wide && <> · {expandBtn}</>}</p>
+                  <p className="text-sm text-brand-ink/70">версия {s.version}{s.parent_version ? ` (из версии ${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}{ordered.length > 0 && !wide && <> · {expandBtn}</>}</p>
                 </div>
                 {ordered.length > 0 && wide && expandBtn}
               </div>
@@ -677,7 +677,7 @@ export function Selection() {
             {s.core && <p className="text-xs leading-relaxed text-brand-ink/70" data-testid="core-summary">
               <b className="font-semibold text-brand-night">{s.core.label}: {s.core.title}.</b> Подтверждён тестом — {s.core.counts?.confirmed ?? 0}, заявлен — {s.core.counts?.declared ?? 0}, не заявлен — {s.core.counts?.absent ?? 0}{s.core.active ? (s.core.on ? ". Кандидаты без ядра роли (смежное направление) остаются в подборке, но идут ниже." : ". На порядок не влияет: признак выключен.") : ". В подборке ядро не заявлено ни у кого — на порядок не влияет."}
             </p>}
-            {s.filters?.origin?.note && <Alert kind="info">v{s.version}: {s.filters.origin.note}</Alert>}
+            {s.filters?.origin?.note && <Alert kind="info">Версия {s.version}: {s.filters.origin.note}</Alert>}
             <MutualToolbar needId={id!} version={s.version} mutual={mutual} />
             <LevelLegend />
             <p className="text-xs leading-relaxed text-brand-ink/65">{SCORE_HINT}</p>

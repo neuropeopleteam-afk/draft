@@ -76,7 +76,7 @@ function Line({ label, tone, children, testid }: { label: string; tone: string; 
   return (
     <li className="flex min-w-0 items-baseline gap-2" data-testid={testid}>
       <span className={`shrink-0 text-xs font-bold uppercase tracking-[0.08em] ${tone}`}>{label}</span>
-      <span className="min-w-0 text-brand-ink/80">{children}</span>
+      <span className="min-w-0 break-words text-brand-ink/80">{children}</span>
     </li>
   );
 }
@@ -110,7 +110,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
           ? [f.matched.length ? `подтверждено тестом: ${f.matched.join(", ")}` : "",
              f.matchedTask.length ? `заданием работодателя: ${f.matchedTask.join(", ")}` : ""].filter(Boolean).join("; ")
           : "тестом и заданиями из требований ничего не подтверждено"}</Line>
-        {f.unchecked.length > 0 && <Line label="Не проверено" tone="text-brand-ink/65" testid="compact-unchecked">{f.unchecked.join("; ")}<span className="hidden sm:inline"> — можно задать вопрос зондом</span></Line>}
+        {f.unchecked.length > 0 && <Line label="Не проверено" tone="text-brand-ink/65" testid="compact-unchecked">{f.unchecked.join("; ")}<span className="hidden sm:inline"> — можно проверить коротким заданием</span></Line>}
         <Line label="Риск" tone="text-amber-900" testid="compact-risk">{f.risks.length ? f.risks.join("; ") : "по подтверждённым данным не виден"}</Line>
         {f.salary && <Line label="Зарплата" tone="text-brand-plum" testid="compact-salary">{f.salary}{fit && fit.level !== "low" ? <span className="ml-2 align-middle"><FitBadge fit={fit} short /></span> : null}</Line>}
       </ul>

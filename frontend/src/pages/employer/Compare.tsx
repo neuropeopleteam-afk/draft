@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, type GradeStatusInfo } from "../../components/GradeStatus";
-import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, ruText, useApi } from "../../components/ui";
+import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, plainText as ruText, useApi } from "../../components/ui";
 import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
 import { ReasonLevel } from "../../components/CandidateCard";  // Ф6 (Н5)
 
@@ -29,14 +29,15 @@ function WhyBlock({ why }: { why: Why[] }) {
   return (
     <section className="card space-y-3" aria-label="Почему один кандидат выше другого">
       <h2 className="text-sm font-bold text-brand-night">Почему выше</h2>
-      <ul className="grid gap-3 md:grid-cols-2">
+      {/* аудит №1: колонки по ширине блока, а не экрана — при узкой колонке (панель проводника) уровни не наезжают на текст */}
+      <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-3">
         {why.map((w) => (
           <li key={`${w.higher}-${w.lower}`} className="rounded-xl bg-[#F7F6FB] p-4 text-sm">
-            <p className="font-semibold text-brand-night">{w.summary}</p>
+            <p className="font-semibold text-brand-night">{ruText(w.summary)}</p>
             {w.pro.length > 0 && (
               <ul className="mt-2 space-y-1.5">
                 {w.pro.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2"><Level level={f.level} /><span className="flex-1">{ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-emerald-700">+{pts(f.points)}</span></li>
+                  <li key={i} className="flex items-start gap-2"><span className="shrink-0"><Level level={f.level} /></span><span className="min-w-0 flex-1">{ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-emerald-700">+{pts(f.points)}</span></li>
                 ))}
               </ul>
             )}
@@ -53,7 +54,7 @@ function WhyBlock({ why }: { why: Why[] }) {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-brand-ink/65">Баллы из 100 — вклад фактора в разницу скоров. Учитываются только подтверждённые факты: тест и навыки (T1), ФСП из реестра (T2), оценённые зонды (T1). Ядро роли (основной язык, фреймворк или специализация) в балл не входит — о нём отдельная строка.</p>
+      <p className="text-xs text-brand-ink/65">Баллы из 100 — вклад каждого факта в разницу. Учитывается только проверенное: тест, достижения из реестра ФСП, оценённые задания работодателя. Ядро роли (основной язык, фреймворк или специализация) в балл не входит — о нём отдельная строка.</p>
     </section>
   );
 }
@@ -94,10 +95,10 @@ export function Compare() {
   return (
     <div className="max-w-6xl space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <PageTitle title="Сравнение кандидатов" subtitle={`«${data.need.title}»${data.need.version ? `, подборка v${data.need.version}` : ""}. Рядом — только факты по требованиям потребности; заявленное кандидатом (T0) в скор не входит. Кандидаты обезличены.`} />
+        <PageTitle title="Сравнение кандидатов" subtitle={`«${data.need.title}»${data.need.version ? `, подборка, версия ${data.need.version}` : ""}. Рядом — только факты по требованиям потребности; сказанное кандидатом о себе в балл не входит. Кандидаты обезличены.`} />
         <div className="flex flex-wrap gap-2">
           <Link to={back} className="btn-ghost">К подборке</Link>
-          <button className="btn-primary" disabled={!cs.some((c) => !c.probe_active)} onClick={() => setProbe(cs.filter((c) => !c.probe_active).map((c) => c.ref))}>Зонд всем ({cs.filter((c) => !c.probe_active).length})</button>
+          <button className="btn-ghost" disabled={!cs.some((c) => !c.probe_active)} onClick={() => setProbe(cs.filter((c) => !c.probe_active).map((c) => c.ref))}>Задание всем ({cs.filter((c) => !c.probe_active).length})</button>
         </div>
       </div>
       {done && <Alert kind="ok">{done}</Alert>}
@@ -119,8 +120,8 @@ export function Compare() {
                 <GradeBadge s={c.status} claimed={c.claimed} />
                 <p className="text-2xl font-bold text-brand">{Math.round(c.score * 100)}<span className="text-sm font-semibold text-brand-ink/65"> из 100</span></p>
                 <div className="flex flex-wrap gap-1.5">
-                  <button className="btn-ghost !px-3 !py-1.5 text-xs" disabled={c.probe_active} title={c.probe_active ? "Зонд уже отправлен и ждёт ответа" : undefined} onClick={() => setProbe([c.ref])}>
-                    {c.probe_active ? "Зонд отправлен" : "Зонд"}
+                  <button className="btn-ghost !px-3 !py-1.5 text-xs" disabled={c.probe_active} title={c.probe_active ? "Задание уже отправлено и ждёт ответа" : "Короткое проверочное задание от вас"} onClick={() => setProbe([c.ref])}>
+                    {c.probe_active ? "Задание отправлено" : "Задание"}
                   </button>
                   <button className="btn-primary !px-3 !py-1.5 text-xs" disabled={!c.can_invite} title={c.can_invite ? undefined : inviteBlockedText(c)} onClick={() => setInvite(c)}>Пригласить</button>
                   <Link className="btn-ghost !px-3 !py-1.5 text-xs" to={`/employer/candidates/${c.ref}?need=${id}${data.need.version ? `&v=${data.need.version}` : ""}`}>Карточка</Link>
@@ -138,11 +139,11 @@ export function Compare() {
               </div>
               {g.rows.map((r) => (
                 <div key={r.key} role="row" className="contents">
-                  <div role="rowheader" className="sticky left-0 z-10 border-b border-brand-night/10 bg-white p-4 text-sm" title={r.hint}>
-                    <p className="font-semibold text-brand-night">{r.title}{r.weight != null && <span className="font-normal text-brand-ink/65"> · вес {r.weight.toLocaleString("ru-RU")}</span>}</p>
+                  <div role="rowheader" className="sticky left-0 z-10 border-b border-brand-night/10 bg-white p-4 text-sm">
+                    <p className="font-semibold text-brand-night">{ruText(r.title)}{r.weight != null && <span className="font-normal text-brand-ink/65"> · вес {r.weight.toLocaleString("ru-RU")}</span>}</p>
                     {r.requirement && <p className="text-xs text-brand-ink/70">нужно: {r.requirement}</p>}
                     {r.quote && <p className="mt-1 text-xs"><span className="rounded bg-brand-blush/60 px-1 text-brand-night">«{r.quote}»</span></p>}
-                    {r.hint && <p className="mt-1 text-xs leading-snug text-brand-ink/65">{r.hint}</p>}
+                    {r.hint && <p className="mt-1 text-xs leading-snug text-brand-ink/65">{ruText(r.hint)}</p>}
                   </div>
                   {cs.map((c) => {
                     const cell = c.cells[r.key];
@@ -164,8 +165,8 @@ export function Compare() {
         </div>
       </div>
       <p className="text-xs text-brand-ink/65">Пол, возраст, имя и фото в сравнении и в ранжировании не участвуют. Контакты откроются только после того, как кандидат примет приглашение.</p>
-      <Modal open={!!probe} onClose={() => setProbe(null)} title={`Зонд для ${probe?.length ?? 0} канд.`}>
-        {probe && <ProbeForm refs={probe} needId={id} market={market} needSalary={needSalary} onDone={(r) => { setProbe(null); setDone(probeSentText(r) ?? "Зонд никому не отправлен."); reload(); }} />}
+      <Modal open={!!probe} onClose={() => setProbe(null)} title={`Проверочное задание: ${probe?.length ?? 0} канд.`}>
+        {probe && <ProbeForm refs={probe} needId={id} market={market} needSalary={needSalary} onDone={(r) => { setProbe(null); setDone(probeSentText(r) ?? "Задание никому не отправлено."); reload(); }} />}
       </Modal>
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение ${invite?.ref ?? ""}`}>
         {invite && <InviteForm cref={invite.ref} needId={id} market={invite.market_range ?? market} needSalary={needSalary} onDone={(inv) => { setInvite(null); setDone(inviteSentText(inv, invite.ref)); reload(); }} />}

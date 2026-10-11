@@ -100,7 +100,7 @@ export function DictateNeed({ fieldId, disabled, onText }: { fieldId: string; di
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
               {rec.state === "requesting" ? "Ждём разрешения микрофона…" : busy ? "Распознаём…" : "Надиктовать"}
             </button>
-            <span id="voice-need-hint" className="text-brand-ink/65">До {max} с голосом — текст появится в поле, его можно поправить.{v.stub ? " Сейчас — заглушка: вместо распознавания подставится пример." : ""}</span>
+            <span id="voice-need-hint" className="text-brand-ink/65">До {max} с голосом — текст появится в поле, его можно поправить.{v.stub ? " Распознавание речи сейчас недоступно: подставится пример текста." : ""}</span>
           </>
         )}
       </div>

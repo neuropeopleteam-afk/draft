@@ -120,7 +120,7 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone, init }: { 
   );
   return (
     <div className="space-y-4">
-      <p className="text-sm text-brand-ink/65">Короткая задача на 15–30 минут. Кандидат ответит решением или подходом; ваша оценка станет подтверждённым фактом (T1).</p>
+      <p className="text-sm text-brand-ink/65">Короткая задача на 15–30 минут. Кандидат ответит решением или подходом; ваша оценка станет проверенным фактом в профиле кандидата.</p>
       <Field label="Название" htmlFor="pt"><input id="pt" className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Например, медленный запрос" /></Field>
       <Field label="Задача" htmlFor="ptask"><textarea id="ptask" className="input min-h-[120px]" value={task} onChange={(e) => setTask(e.target.value)} placeholder="Запрос с JOIN по двум таблицам выполняется 8 секунд. Опишите план диагностики и исправления." /></Field>
       <div className="flex flex-wrap items-end gap-4">
@@ -221,7 +221,7 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       {/* В1: сокращённое время — условие только для 16–17 лет (backend/modules/fsp/youth.py); взрослым переключатель не нужен */}
       {safety?.minor && <Toggle checked={reduced} onChange={setReduced} label="Сокращённое рабочее время" />}
       {safety?.minor && <Toggle checked={ack} onChange={setAck} label="Проверю документы и ограничения перед оформлением" />}
-      <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. {rules ? `Одно приглашение кандидату — не чаще раза в ${daysText(rules.invitation_cooldown_days)}. ` : ""}До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
+      <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся проверенные факты о соответствии: тест, задания, достижения ФСП. {rules ? `Одно приглашение кандидату — не чаще раза в ${daysText(rules.invitation_cooldown_days)}. ` : ""}До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
       <Alert>{err && <>{err}{limitHit && <> <Link to="/employer/tariffs" className="font-semibold underline">Открыть тарифы</Link></>}</>}</Alert>
       <InvitesLeft />
       <button className="btn-primary" aria-busy={sending || undefined} aria-describedby="invite-missing" disabled={sending || candidate.loading || !!candidate.error || missing.length > 0} onClick={send}>{sending ? "Отправляем приглашение…" : "Отправить приглашение"}</button>

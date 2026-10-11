@@ -41,7 +41,7 @@ test("жюри: экспресс-тест своими руками с подс�
   await test.step("экспресс-режим выбран заранее и честно описан", async () => {
     const mode = page.getByTestId("mode-choice");
     await expect(mode.getByRole("radio", { name: /Экспресс/ })).toHaveAttribute("aria-checked", "true");
-    await expect(mode).toContainText("интервал θ заметно шире");
+    await expect(mode).toContainText("оценка заметно менее точная");
     await expect(page.getByRole("status").filter({ hasText: /новых тестов за 24 часа осталось \d+ из 30/ })).toBeVisible();
     await page.getByRole("checkbox", { name: /даю согласие оператору платформы на обработку сведений о ходе прохождения теста/ }).check();
   });
