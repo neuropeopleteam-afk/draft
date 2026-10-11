@@ -230,7 +230,7 @@ export function Toggle({ checked, onChange, label, hint }: { checked: boolean; o
 export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
     <div className="card min-w-0 break-words">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{label}</p>
+      <p className="stat-label text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{label}</p>
       <p className="mt-2 text-xl font-bold tabular-nums text-brand-night">{value}</p>
       {hint && <p className="mt-1 text-xs leading-relaxed text-brand-ink/65">{hint}</p>}
     </div>
