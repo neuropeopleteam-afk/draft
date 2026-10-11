@@ -404,3 +404,23 @@ def test_fit_salary_basis_gross_vs_net_pure():
     me = fitm.offer_fit(**BASE, req=REQ, salary_to=260000, audience="candidate", salary_basis="gross")
     sal = next(f for f in me["factors"] if f["key"] == "salary")
     assert "на руки" in sal["text"] and "ниже вашего минимума" in sal["text"]
+
+
+def test_fix7_offer_hint_names_real_reason():
+    """FIX7 В1 (замечание владельца): красный «Вероятно, откажет» из-за города без переезда — заголовок плашки называет
+    город, а не «Вилка в ожиданиях кандидата»; при плохой вилке — прежний текст; без вето — как было."""
+    from app.modules.mutual.fit import _f, summarize
+    from app.modules.mutual.service import offer_hint
+
+    city = summarize([_f("format", "ok", "Кандидату подходит любой формат"),
+                      _f("location", "bad", "Работа в городе Казань: кандидат в другом городе и без переезда"),
+                      _f("salary", "ok", "Вилка в ожиданиях кандидата"),
+                      _f("readiness", "ok", "Открыт к предложениям")])
+    assert city["level"] == "low" and city["title"] == "Вероятно, откажет"
+    hint, why = offer_hint(city)
+    assert why == "location" and hint.startswith("Работа в городе Казань") and "вероятно, откажет" in hint, hint
+    salary = summarize([_f("location", "ok", "Город совпадает: Казань"), _f("salary", "bad", "Верх вилки ниже ожиданий кандидата")])
+    assert offer_hint(salary)[1] == "salary" and "верх вилки ниже" in offer_hint(salary)[0]
+    fine = summarize([_f("location", "ok", "Город совпадает: Казань"), _f("salary", "ok", "Вилка в ожиданиях кандидата"),
+                      _f("format", "ok", "Подходит любой формат")])
+    assert offer_hint(fine) == ("Вилка в ожиданиях кандидата.", None)
