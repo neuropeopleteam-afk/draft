@@ -129,7 +129,7 @@ function Demand({ d }: { d: NonNullable<FeedbackData["demand"]> }) {
               <span className="h-1.5 w-16 shrink-0 rounded-full bg-brand-night/5"><span className="block h-1.5 rounded-full bg-brand-lavender" style={{ width: `${x.share * 100}%` }} /></span>
               {x.required + x.desired} из {d.sources}{x.required ? ` · обязательно в ${x.required}` : " · желательно"}
             </span>
-            {/* КУХНЯ + штаб: без кода T0/T1 и без второй плашки; на 390 px подпись переносится (была прокрутка 425 px) */}
+            {/* Без кода уровня и без второй плашки; на 390 px подпись переносится (была горизонтальная прокрутка 425 px) */}
             <span className="flex min-w-0 max-w-[11rem] items-center justify-self-end sm:max-w-none" title={DEMAND_LEVEL[x.status] === "T1" ? "Проверено на платформе" : DEMAND_LEVEL[x.status] === "T0" ? "Указано вами, не проверено" : undefined}><Chip s={`${DEMAND[x.status]} max-w-full whitespace-normal break-words text-right`}>{plainText(x.status_title)}</Chip></span>
           </li>
         ))}
