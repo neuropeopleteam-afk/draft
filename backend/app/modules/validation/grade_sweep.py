@@ -574,8 +574,8 @@ def compact(rep: dict) -> dict:
     main = [p for p in rep["points"] if p["point"]["misspec"] == 0.5 and p["point"].get("levels", 5) == 5
             and not p["point"].get("weak_a") and not p["point"].get("plus")]
     front = sorted([p for p in main if p.get("pareto")], key=lambda p: -p["metrics"]["exact"])
-    comp = [p for p in rep["points"] if p["point"].get("levels", 5) == 4 or p["point"]["misspec"] != 0.5
-            or p["point"].get("weak_a") or p["point"].get("plus")]
+    comp = [p for p in rep["points"] if (p["point"].get("levels", 5) == 4 or p["point"]["misspec"] != 0.5)
+            and not p["point"].get("weak_a") and not p["point"].get("plus") and p["point"].get("weak_pool", "keep") == "keep"]
     keyrows = [p for p in main if _label(p["point"]) in KEY_ROWS]
     return {"signature": rep["signature"], "constraints": rep["constraints"], "caveat": rep.get("caveat"),
             "baseline": row(base) if base else None,
@@ -584,6 +584,10 @@ def compact(rep: dict) -> dict:
             "pareto": [row(p) for p in front[:12]],
             "worlds": [row(p) for p in sorted(comp, key=lambda p: (p["point"].get("levels", 5), -p["point"]["misspec"],
                                                                     -p["metrics"]["exact"]))],
+            # чистка пула и добор у порогов (флаг ASSESSMENT_WEAK_EXCLUDE): строки двух миров и итог по данным
+            "pool": {"rows": [{**row(p), "world_weak": bool(p["point"].get("weak_a")),
+                               "plus": bool(p["point"].get("plus"))} for p in pool_rows(rep)],
+                     **pool_verdict(rep)},
             "n_points": len(rep["points"])}
 
 
@@ -645,6 +649,37 @@ def pool_rows(rep: dict, confirm: float = 0.6) -> list[dict]:
                                       ("keep", "exclude", "down").index(p["point"]["weak_pool"])))
 
 
+def pool_verdict(rep: dict) -> dict:
+    """Итог чистки пула по данным: «исключить» лучше «оставить» по всем ограничениям в обоих мирах (на банке платформы
+    и на банке с добором) и наибольший порог-кандидат для банка с добором, где завышение ≤ MAX_OVER в обоих мирах."""
+    rows = pool_rows(rep)
+
+    def get(wa, plus, cl, wp):
+        return next((p["metrics"] for p in rows if p["point"]["weak_a"] == wa and int(p["point"].get("plus") or 0) == plus
+                     and p["point"]["confirm_level"] == cl and p["point"]["weak_pool"] == wp), None)
+
+    out: dict = {"exclude_better": {}, "plus_best_confirm": None}
+    for plus in (0, 1):
+        res = []
+        for wa in (0.0, 0.4):
+            k, e = get(wa, plus, 0.6, "keep"), get(wa, plus, 0.6, "exclude")
+            if k and e:
+                res.append(e["exact"] >= k["exact"] and e["over"] <= k["over"] and e["retest_kappa"] >= k["retest_kappa"])
+        if len(res) == 2:
+            out["exclude_better"]["plus" if plus else "platform"] = all(res)
+    best = None
+    for cl in sorted({p["point"]["confirm_level"] for p in rows if p["point"].get("plus")}):
+        for wp in ("keep", "exclude"):
+            ms = [get(wa, 1, cl, wp) for wa in (0.0, 0.4)]
+            if all(ms) and all(m["feasible"] for m in ms):
+                ex = min(m["exact"] for m in ms)
+                if best is None or ex > best[2]:
+                    best = (cl, wp, ex)
+    if best:
+        out["plus_best_confirm"] = {"confirm_level": best[0], "weak_pool": best[1]}
+    return out
+
+
 def pool_section(rep: dict, head: list[str], bp: dict) -> list[str]:
     rows = pool_rows(rep)
     if not rows:
@@ -656,10 +691,20 @@ def pool_section(rep: dict, head: list[str], bp: dict) -> list[str]:
          "добором — и другие пороги (какой держит завышение ≤ 7 % после синхронизации банка).", "",
          *head]
     L += [_row(p, bp) for p in rows]
+    v = pool_verdict(rep)
+    yn = {True: "да", False: "нет"}
     L += ["", "Правило: новое значение по умолчанию — только если лучше по всем ограничениям в обоих мирах. "
-          "Флаг `ASSESSMENT_WEAK_EXCLUDE` (assessment/weak_pool.py) по умолчанию выключен; включает штаб, если строки "
-          "«exclude» лучше «keep» на банке, который стоит на стенде.", ""]
-    return L
+          "Флаг `ASSESSMENT_WEAK_EXCLUDE` (assessment/weak_pool.py) по умолчанию выключен.", ""]
+    if v["exclude_better"]:
+        L += [f"- Исключение лучше «оставить» по точности, завышению и κw в обоих мирах при P 0,6: банк платформы — "
+              f"{yn.get(v['exclude_better'].get('platform'), '—')}; банк с добором — {yn.get(v['exclude_better'].get('plus'), '—')}. "
+              "Причина «нет» — повтор (κw) и точность: меньше сменных семейств для второй попытки и у порогов."]
+    if v["plus_best_confirm"]:
+        c = v["plus_best_confirm"]
+        L += [f"- После синхронизации банка с добором: наибольшая точность при завышении ≤ 7 % и κw ≥ 0,84 в обоих мирах — "
+              f"P {str(c['confirm_level']).replace('.', ',')}, пул «{'исключить' if c['weak_pool'] == 'exclude' else 'оставить'}». "
+              "Порог на стенде менять только после пересчёта path-retest на синхронизированном банке."]
+    return L + [""]
 
 
 def markdown(rep: dict) -> str:
