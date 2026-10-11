@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
   type QuickPersona, type QuickStep } from "../lib/jury";
@@ -108,6 +109,13 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
     }
     await open(pathOf(steps, i), p);
   }
+  /** С2 №1: шаг 1 без своей потребности — «Открыть готовую подборку» (последняя потребность своей копии). */
+  async function readyNeed() {
+    const list = await api<{ id: string }[]>("/employer/needs").catch(() => []);
+    if (!list[0]) { setMsg("Готовых потребностей нет — сохраните свою."); return; }
+    quick.setNeed(list[0].id);
+    await go(SELECTION);
+  }
   async function preset(text: string) {
     needPreset.put(text);  // поле «Кого вы ищете» заберёт текст, как только экран откроется
     if (!(steps[0].match.test(loc.pathname) && personaOf(me?.email) === "employer")) await open("/employer/needs", "employer");
@@ -188,7 +196,10 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
               {busy ? "Входим…" : q === ANSWER && needLogin ? `Войти как ${first(ans.name)} и ответить` : needLogin || !s.cta.startsWith("Войти") ? s.cta : "Открыть экран"}
             </button>
           : q === 0 && !need
-            ? <span className="text-xs text-white/75">Сохраните потребность — проводник перейдёт к подборке сам.</span>
+            ? <>
+                <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={readyNeed} data-testid="quick-ready-need">{busy ? "Входим…" : "Открыть готовую подборку →"}</button>
+                <span className="text-xs text-white/75">или нажмите «Разобрать требования»</span>
+              </>
           : q < LAST
             ? <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(nextI)}>{busy ? "Входим…" : `Дальше: ${steps[nextI].title}`}</button>
             : <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => quick.setMode("full")}>Готово · остальное — в справочнике</button>}
