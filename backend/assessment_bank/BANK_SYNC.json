@@ -1,10 +1,10 @@
 {
   "source": "../bank",
-  "commit": "82aa359",
+  "commit": "272a323",
   "dirty_files": 0,
-  "content_hash": "cba1e486e274e873",
-  "synced_at": "2026-10-11T15:43:24+00:00",
-  "n_families": 361,
+  "content_hash": "4d44ffb455f03520",
+  "synced_at": "2026-10-11T17:08:09+00:00",
+  "n_families": 403,
   "by_direction": {
     "analyst": {
       "families": 31,
@@ -18,31 +18,31 @@
       }
     },
     "backend": {
-      "families": 52,
+      "families": 60,
       "canary": 2,
       "formats": {
-        "choose_fix": 13,
+        "choose_fix": 15,
         "predict_output": 12,
         "find_bug": 11,
         "open_answer": 6,
         "open_book_3step": 5,
-        "mcq_concept": 5
+        "mcq_concept": 11
       }
     },
     "common": {
-      "families": 46,
+      "families": 54,
       "canary": 3,
       "formats": {
         "find_bug": 4,
-        "mcq_concept": 15,
+        "mcq_concept": 22,
         "predict_output": 11,
         "open_book_3step": 4,
         "open_answer": 8,
-        "choose_fix": 4
+        "choose_fix": 5
       }
     },
     "data_eng": {
-      "families": 29,
+      "families": 35,
       "canary": 1,
       "formats": {
         "open_answer": 5,
@@ -50,14 +50,14 @@
         "choose_fix": 4,
         "predict_output": 10,
         "open_book_3step": 1,
-        "mcq_concept": 5
+        "mcq_concept": 11
       }
     },
     "data_ml": {
-      "families": 34,
+      "families": 40,
       "canary": 1,
       "formats": {
-        "mcq_concept": 4,
+        "mcq_concept": 10,
         "open_answer": 6,
         "find_bug": 9,
         "choose_fix": 7,
@@ -66,25 +66,25 @@
       }
     },
     "devops": {
-      "families": 30,
+      "families": 36,
       "canary": 1,
       "formats": {
         "predict_output": 6,
         "choose_fix": 1,
         "find_bug": 3,
         "open_book_3step": 2,
-        "mcq_concept": 13,
+        "mcq_concept": 19,
         "open_answer": 5
       }
     },
     "frontend": {
-      "families": 35,
+      "families": 43,
       "canary": 2,
       "formats": {
-        "mcq_concept": 5,
+        "mcq_concept": 12,
         "open_book_3step": 4,
         "open_answer": 8,
-        "choose_fix": 6,
+        "choose_fix": 7,
         "predict_output": 6,
         "find_bug": 6
       }
@@ -232,38 +232,38 @@
   "excluded": [],
   "validation": {
     "summary": {
-      "n_families": 361,
-      "n_variants_generated": 7220,
-      "n_unique_variants": 7196,
-      "n_checks": 2276,
+      "n_families": 403,
+      "n_variants_generated": 8060,
+      "n_unique_variants": 8036,
+      "n_checks": 2450,
       "n_checks_failed": 0,
       "status": {
-        "PASS": 341,
+        "PASS": 383,
         "WARN": 20
       },
       "n_fail": 0,
       "n_warn": 20,
       "by_direction": {
         "analyst": 31,
-        "backend": 52,
-        "common": 46,
-        "data_eng": 29,
-        "data_ml": 34,
-        "devops": 30,
-        "frontend": 35,
+        "backend": 60,
+        "common": 54,
+        "data_eng": 35,
+        "data_ml": 40,
+        "devops": 36,
+        "frontend": 43,
         "mobile": 34,
         "qa": 35,
         "security": 35
       },
       "by_format": {
-        "mcq_concept": 98,
+        "mcq_concept": 136,
         "predict_output": 65,
         "open_answer": 57,
         "find_bug": 67,
-        "choose_fix": 52,
+        "choose_fix": 56,
         "open_book_3step": 22
       },
-      "seconds": 458.8
+      "seconds": 262.0
     },
     "seeds": 20,
     "verify_seeds": 3,

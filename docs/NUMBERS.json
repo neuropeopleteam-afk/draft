@@ -1,27 +1,27 @@
 {
  "bank": {
-  "families": 361,
+  "families": 403,
   "by_direction": {
    "analyst": 31,
-   "backend": 52,
-   "common": 46,
-   "data_eng": 29,
-   "data_ml": 34,
-   "devops": 30,
-   "frontend": 35,
+   "backend": 60,
+   "common": 54,
+   "data_eng": 35,
+   "data_ml": 40,
+   "devops": 36,
+   "frontend": 43,
    "mobile": 34,
    "qa": 35,
    "security": 35
   },
-  "source_commit": "82aa359",
-  "content_hash": "cba1e486e274e873",
-  "pass": 341,
+  "source_commit": "272a323",
+  "content_hash": "4d44ffb455f03520",
+  "pass": 383,
   "warn": 20,
   "fail": 0,
-  "checks": 2276,
+  "checks": 2450,
   "checks_failed": 0,
-  "variants": 7220,
-  "unique_variants": 7196
+  "variants": 8060,
+  "unique_variants": 8036
  },
  "migrations": {
   "revisions": 35,
@@ -131,11 +131,11 @@
  },
  "tests": {
   "failed": 0,
-  "passed": 1653,
-  "skipped": 18,
-  "seconds": 252.84,
+  "passed": 1652,
+  "skipped": 19,
+  "seconds": 290.62,
   "exit": 0,
-  "sha": "fbda4d5",
+  "sha": "d101806",
   "date": "11.10.2026"
  },
  "note": "Числа посчитаны tools/publish/gen_numbers.py; тесты и покрытие — из журнала прогона. Подбор — синтетический мир со скрытой истиной (модель, не люди)."
