@@ -71,9 +71,9 @@ function Line({ label, tone, children, testid }: { label: string; tone: string; 
 }
 
 /** Компактная карточка: шапка, 4–5 строк и действия; «Подробнее» раскрывает доказательства под карточкой. */
-export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, needId, badge, open, onToggle, details, side = false, active = false }: {
+export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, needId, version, badge, open, onToggle, details, side = false, active = false }: {
   r: any; rank: number; fit?: Fit | null; picked: boolean; onPick: () => void; pickDisabled?: boolean; onInvite: () => void;
-  needId?: string; badge?: ReactNode; open: boolean; onToggle: () => void; details?: ReactNode;
+  needId?: string; /** FIX7 п. 12: версия подборки — карточка кандидата считается по её требованиям */ version?: number; badge?: ReactNode; open: boolean; onToggle: () => void; details?: ReactNode;
   side?: boolean; active?: boolean;  // side — подробности в панели справа (широкий экран); active — эта карточка сейчас в ней
 }) {
   const c = r.card ?? {};
@@ -106,7 +106,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
           title={pickDisabled && !picked ? "Сравнить можно до трёх кандидатов" : "Отметьте 2–3 кандидатов и откройте сравнение"}>
           <input type="checkbox" className="accent-brand" checked={picked} disabled={pickDisabled && !picked} onChange={onPick} />Сравнить
         </label>
-        <Link className="btn-ghost !px-3 !py-2" to={`/employer/candidates/${r.ref}?need=${needId ?? ""}`}>Открыть</Link>
+        <Link className="btn-ghost !px-3 !py-2" to={`/employer/candidates/${r.ref}?need=${needId ?? ""}${version ? `&v=${version}` : ""}`}>Открыть</Link>
         {side ? (
           <button type="button" className="ml-auto text-sm font-semibold text-brand hover:underline disabled:no-underline disabled:opacity-70" aria-pressed={active} disabled={active} onClick={onToggle}>
             {active ? "Подробности — справа" : "Подробнее справа: тест, ФСП, причины"}
