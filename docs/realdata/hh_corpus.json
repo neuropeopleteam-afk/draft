@@ -1,0 +1,6481 @@
+{
+ "schema_version": 1,
+ "collected_at": "2026-10-10",
+ "purpose": "Проверка разбора потребности на реальных вакансиях hh.ru (FTT.6: только тестовые данные). В файле — номера, ссылки и производные метки из структурированных полей hh.ru; тексты вакансий в репозиторий не входят (локальный кэш HH_CORPUS_DIR, повтор — с токеном приложения).",
+ "method": "Поиск GET /vacancies по ролям каталога (5 направлений × 4 грейда: профессиональная роль hh.ru + слова направления и грейда в названии, вся Россия, свежие) и выборки с отрицаниями; затем GET /vacancies/{id}. Метки: направление — роль hh.ru (+ слова названия для «Программист»), грейд — слово в названии, опыт — поле experience, формат — work_format, навыки — key_skills → теги справочника; neg_exp / neg_remote — найдено ли отрицание в тексте (регулярное выражение).",
+ "n": 193,
+ "items": [
+  {
+   "id": "138321320",
+   "url": "https://hh.ru/vacancy/138321320",
+   "bucket": "backend.intern",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [
+     "go"
+    ],
+    "n_key_skills": 1,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "5d8e1540e2db881579fafcb79e521c43cb0ac46bcc8ed5ba11f0770d5143a1dc"
+  },
+  {
+   "id": "138321229",
+   "url": "https://hh.ru/vacancy/138321229",
+   "bucket": "backend.intern",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [
+     "python"
+    ],
+    "n_key_skills": 1,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "8eef56a4c5d7d0a704dc5fcbc158e2bf0657eb422530e7f5a35d6b0913f9c8c0"
+  },
+  {
+   "id": "138298584",
+   "url": "https://hh.ru/vacancy/138298584",
+   "bucket": "backend.intern",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "csharp",
+     "docker",
+     "git",
+     "java",
+     "kafka",
+     "kotlin",
+     "kubernetes",
+     "linux",
+     "postgresql",
+     "sql"
+    ],
+    "n_key_skills": 27,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "4a03d1ec7c5bbc586d4f70586a1de2fd252f11cb99514f2b237eca6cc3e892d3"
+  },
+  {
+   "id": "137319302",
+   "url": "https://hh.ru/vacancy/137319302",
+   "bucket": "backend.intern",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "php",
+     "sql"
+    ],
+    "n_key_skills": 3,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Екатеринбург"
+   },
+   "text_sha256": "c5a38838eccf6ed33aeda50a22060951957dda12e328397a7c6af034b3171152"
+  },
+  {
+   "id": "137906636",
+   "url": "https://hh.ru/vacancy/137906636",
+   "bucket": "backend.intern",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "cv",
+     "git",
+     "linux",
+     "python"
+    ],
+    "n_key_skills": 6,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "db20e32b76c042e2806fae7a3b85cf4f0629b23ae52273346dd4d2aabb0f64ad"
+  },
+  {
+   "id": "138122007",
+   "url": "https://hh.ru/vacancy/138122007",
+   "bucket": "backend.intern",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "csharp",
+     "docker",
+     "git",
+     "java",
+     "kafka",
+     "kotlin",
+     "kubernetes",
+     "linux",
+     "postgresql",
+     "sql"
+    ],
+    "n_key_skills": 27,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "9044e7493ce9db111fea0bda1a376a7b4345b34d6191423379a4312ccc323ba7"
+  },
+  {
+   "id": "138188773",
+   "url": "https://hh.ru/vacancy/138188773",
+   "bucket": "backend.intern",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "intern",
+     "junior"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "django",
+     "docker",
+     "javascript",
+     "kubernetes",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis"
+    ],
+    "n_key_skills": 12,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "f6dfb25999483c6f64a6c58c9f1223d903b98059c7f59bac714de13f1670b3fe"
+  },
+  {
+   "id": "138187404",
+   "url": "https://hh.ru/vacancy/138187404",
+   "bucket": "backend.intern",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "go",
+     "java",
+     "kotlin",
+     "python"
+    ],
+    "n_key_skills": 5,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "4008677c854d797a2d720d5c72727ad801e097245efbbce23ada1ac9ec7c302a"
+  },
+  {
+   "id": "135331044",
+   "url": "https://hh.ru/vacancy/135331044",
+   "bucket": "backend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "java"
+    ],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "3cc94ba33e1eecebcf8a989b6b6589a7d814b73601f480c9ca4aaab16929412c"
+  },
+  {
+   "id": "138256015",
+   "url": "https://hh.ru/vacancy/138256015",
+   "bucket": "backend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "asyncio",
+     "cv",
+     "docker",
+     "fastapi",
+     "git",
+     "http",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis",
+     "rest-api"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "a45035d808e87f3908330b84baee90da1caf1f55313618603a7b291a69987063"
+  },
+  {
+   "id": "138256016",
+   "url": "https://hh.ru/vacancy/138256016",
+   "bucket": "backend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "asyncio",
+     "cv",
+     "docker",
+     "fastapi",
+     "git",
+     "http",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis",
+     "rest-api"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Орел"
+   },
+   "text_sha256": "a45035d808e87f3908330b84baee90da1caf1f55313618603a7b291a69987063"
+  },
+  {
+   "id": "138256017",
+   "url": "https://hh.ru/vacancy/138256017",
+   "bucket": "backend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "asyncio",
+     "cv",
+     "docker",
+     "fastapi",
+     "git",
+     "http",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis",
+     "rest-api"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Новосибирск"
+   },
+   "text_sha256": "a45035d808e87f3908330b84baee90da1caf1f55313618603a7b291a69987063"
+  },
+  {
+   "id": "138256018",
+   "url": "https://hh.ru/vacancy/138256018",
+   "bucket": "backend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "asyncio",
+     "cv",
+     "docker",
+     "fastapi",
+     "git",
+     "http",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis",
+     "rest-api"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Екатеринбург"
+   },
+   "text_sha256": "a45035d808e87f3908330b84baee90da1caf1f55313618603a7b291a69987063"
+  },
+  {
+   "id": "138256019",
+   "url": "https://hh.ru/vacancy/138256019",
+   "bucket": "backend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "asyncio",
+     "cv",
+     "docker",
+     "fastapi",
+     "git",
+     "http",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis",
+     "rest-api"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "a45035d808e87f3908330b84baee90da1caf1f55313618603a7b291a69987063"
+  },
+  {
+   "id": "138256020",
+   "url": "https://hh.ru/vacancy/138256020",
+   "bucket": "backend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "asyncio",
+     "cv",
+     "docker",
+     "fastapi",
+     "git",
+     "http",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis",
+     "rest-api"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Курск"
+   },
+   "text_sha256": "a45035d808e87f3908330b84baee90da1caf1f55313618603a7b291a69987063"
+  },
+  {
+   "id": "138256021",
+   "url": "https://hh.ru/vacancy/138256021",
+   "bucket": "backend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "asyncio",
+     "cv",
+     "docker",
+     "fastapi",
+     "git",
+     "http",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis",
+     "rest-api"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Уфа"
+   },
+   "text_sha256": "a45035d808e87f3908330b84baee90da1caf1f55313618603a7b291a69987063"
+  },
+  {
+   "id": "137392814",
+   "url": "https://hh.ru/vacancy/137392814",
+   "bucket": "backend.middle",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "4e8d03fffa1029900159286934f86c329515ff77e037189feaf2de79c4e3644b"
+  },
+  {
+   "id": "137535177",
+   "url": "https://hh.ru/vacancy/137535177",
+   "bucket": "backend.middle",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "git",
+     "html-css",
+     "javascript",
+     "php",
+     "postgresql",
+     "rabbitmq",
+     "react",
+     "redis",
+     "sql"
+    ],
+    "n_key_skills": 10,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "28eb00680c55c9c7e2cdbf3ef4647a45527b73e655d9bca77384d7caf2a95250"
+  },
+  {
+   "id": "137759614",
+   "url": "https://hh.ru/vacancy/137759614",
+   "bucket": "backend.middle",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend",
+     "frontend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [
+     "git",
+     "javascript",
+     "php",
+     "react",
+     "redis",
+     "sql"
+    ],
+    "n_key_skills": 6,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "a27ce94c13b198f21c0bc8b3b86ce6beddaabce1a77e6ebd8d45d37ee2ee8fea"
+  },
+  {
+   "id": "137368199",
+   "url": "https://hh.ru/vacancy/137368199",
+   "bucket": "backend.middle",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "http",
+     "postgresql",
+     "rest-api",
+     "typescript"
+    ],
+    "n_key_skills": 5,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Казань"
+   },
+   "text_sha256": "1e7b2800a8344cd89e19b0a69b16881e36925c5473aec325cbb10ae4d8b1deb3"
+  },
+  {
+   "id": "138294924",
+   "url": "https://hh.ru/vacancy/138294924",
+   "bucket": "backend.middle",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "f4426aae550a8cdea40bd1a97915bb517afed5fc4638cbd0fc83e1909e674db5"
+  },
+  {
+   "id": "137348133",
+   "url": "https://hh.ru/vacancy/137348133",
+   "bucket": "backend.middle",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [
+     "csharp",
+     "git",
+     "http",
+     "postgresql"
+    ],
+    "n_key_skills": 6,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Челябинск"
+   },
+   "text_sha256": "e76c007175eef7825d36b604f3b7728346a87849d075a972065daa7526aa20cf"
+  },
+  {
+   "id": "138143805",
+   "url": "https://hh.ru/vacancy/138143805",
+   "bucket": "backend.middle",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "c6a82ada520862240f1b1a81b99f08583c9609465ec37afe6af17bbed204fdcd"
+  },
+  {
+   "id": "137495670",
+   "url": "https://hh.ru/vacancy/137495670",
+   "bucket": "backend.middle",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "clickhouse",
+     "http",
+     "kubernetes",
+     "php",
+     "postgresql",
+     "redis",
+     "rest-api",
+     "sql"
+    ],
+    "n_key_skills": 9,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Пермь"
+   },
+   "text_sha256": "522ba66118e5555b2ce90af5a33153b3ae9627c74e570303a34f524fefc9000f"
+  },
+  {
+   "id": "138329094",
+   "url": "https://hh.ru/vacancy/138329094",
+   "bucket": "backend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "docker",
+     "fastapi",
+     "postgresql",
+     "python",
+     "rabbitmq",
+     "redis"
+    ],
+    "n_key_skills": 8,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "69c835f4eb77c801ecf24e31e85dc312aa09bf0b7221f43a96b7498fab3f2d3f"
+  },
+  {
+   "id": "138211694",
+   "url": "https://hh.ru/vacancy/138211694",
+   "bucket": "backend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "docker",
+     "kubernetes",
+     "postgresql",
+     "python",
+     "rabbitmq"
+    ],
+    "n_key_skills": 7,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "de118da020d6643bad5093f5e5d627522bf381e02b275cc0d4681cb99382dc02"
+  },
+  {
+   "id": "136120969",
+   "url": "https://hh.ru/vacancy/136120969",
+   "bucket": "backend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "linux"
+    ],
+    "n_key_skills": 8,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "c6bb23ccec94103b0008e0868aedc8bdc466d2f5a458cb6d35196eaaa9f872b3"
+  },
+  {
+   "id": "137193871",
+   "url": "https://hh.ru/vacancy/137193871",
+   "bucket": "backend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "hybrid",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "linux"
+    ],
+    "n_key_skills": 4,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "f65c147f245b36b7715fd08a3eca65c822750bb220e5b0161e39df68e2721a54"
+  },
+  {
+   "id": "137993835",
+   "url": "https://hh.ru/vacancy/137993835",
+   "bucket": "backend.senior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "hybrid",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "ci-cd",
+     "docker",
+     "git",
+     "kubernetes",
+     "postgresql",
+     "python",
+     "redis"
+    ],
+    "n_key_skills": 6,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "bad19d9dffb18b486935ddddfa7a4583bf44b507a44cbde6eb940e87801afb4c"
+  },
+  {
+   "id": "137407983",
+   "url": "https://hh.ru/vacancy/137407983",
+   "bucket": "backend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [],
+    "key_skills_tags": [
+     "csharp"
+    ],
+    "n_key_skills": 3,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "850304f44b74759ae94ee49c41c8efa1b5020012f6797326169fb986ca455415"
+  },
+  {
+   "id": "137407964",
+   "url": "https://hh.ru/vacancy/137407964",
+   "bucket": "backend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "docker",
+     "linux",
+     "php",
+     "redis"
+    ],
+    "n_key_skills": 6,
+    "salary": true,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "65eb22b56a110c80a990f449d021f9b2a0a969ceb9cee79da2e8f69462fda77a"
+  },
+  {
+   "id": "137765857",
+   "url": "https://hh.ru/vacancy/137765857",
+   "bucket": "backend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "docker",
+     "fastapi",
+     "git",
+     "http",
+     "kafka",
+     "postgresql",
+     "python",
+     "rest-api",
+     "sql"
+    ],
+    "n_key_skills": 11,
+    "salary": true,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Краснодар"
+   },
+   "text_sha256": "7bbfd141c16162dceb5aa1ceee5de54b678d958f1a585df24d314e63b6b6a95f"
+  },
+  {
+   "id": "137992530",
+   "url": "https://hh.ru/vacancy/137992530",
+   "bucket": "frontend.intern",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "html-css",
+     "javascript",
+     "react",
+     "typescript"
+    ],
+    "n_key_skills": 4,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Тверь"
+   },
+   "text_sha256": "fb144fa3d0db44e1bb83c53e994a37dcf1c572942e6648af39479c4714c039f8"
+  },
+  {
+   "id": "134717822",
+   "url": "https://hh.ru/vacancy/134717822",
+   "bucket": "frontend.intern",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "30a180e376492d3ad76bc67570e0dd5da68d6086d206b19984cbc5bcfbb56ae4"
+  },
+  {
+   "id": "138218328",
+   "url": "https://hh.ru/vacancy/138218328",
+   "bucket": "frontend.intern",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "git",
+     "html-css",
+     "javascript",
+     "react",
+     "typescript",
+     "vue"
+    ],
+    "n_key_skills": 12,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "b07c778b5b2a85a130b9b9ff1dc4b782b97ff23abaec92a39e478a62dcec46b6"
+  },
+  {
+   "id": "138120436",
+   "url": "https://hh.ru/vacancy/138120436",
+   "bucket": "frontend.intern",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "f37c5d3381fb00960b615feba507e4057535e12d72bdddeb8b7287cd3f54212f"
+  },
+  {
+   "id": "138054059",
+   "url": "https://hh.ru/vacancy/138054059",
+   "bucket": "frontend.intern",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "git",
+     "html-css",
+     "javascript",
+     "react",
+     "typescript",
+     "vue"
+    ],
+    "n_key_skills": 12,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Казань"
+   },
+   "text_sha256": "182b64e0f867119e45f5aa574de1769f579ee0e4db87ad7f9d377fcc9ab7899e"
+  },
+  {
+   "id": "137969554",
+   "url": "https://hh.ru/vacancy/137969554",
+   "bucket": "frontend.intern",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "hybrid",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "angular",
+     "javascript"
+    ],
+    "n_key_skills": 3,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "f34e0a53fd97bfce75a86ad0447a0df99db23754a96d63b4a31192766110e8a2"
+  },
+  {
+   "id": "137905214",
+   "url": "https://hh.ru/vacancy/137905214",
+   "bucket": "frontend.intern",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "git",
+     "html-css",
+     "javascript",
+     "react",
+     "typescript",
+     "vue"
+    ],
+    "n_key_skills": 12,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Самара"
+   },
+   "text_sha256": "b07c778b5b2a85a130b9b9ff1dc4b782b97ff23abaec92a39e478a62dcec46b6"
+  },
+  {
+   "id": "137748534",
+   "url": "https://hh.ru/vacancy/137748534",
+   "bucket": "frontend.intern",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "git",
+     "html-css",
+     "javascript",
+     "react"
+    ],
+    "n_key_skills": 9,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "b07c778b5b2a85a130b9b9ff1dc4b782b97ff23abaec92a39e478a62dcec46b6"
+  },
+  {
+   "id": "138308354",
+   "url": "https://hh.ru/vacancy/138308354",
+   "bucket": "frontend.junior",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "git",
+     "html-css",
+     "javascript",
+     "php",
+     "sql"
+    ],
+    "n_key_skills": 12,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Пермь"
+   },
+   "text_sha256": "811316c00858d61973cb6199877eb6ba2753d47dc9def49e0874e6ff2edd56d4"
+  },
+  {
+   "id": "138142269",
+   "url": "https://hh.ru/vacancy/138142269",
+   "bucket": "frontend.junior",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Казань"
+   },
+   "text_sha256": "f257b6f1b40b1a01790c86bd18114b34b8e2e4f9f1fe571ffcd0ce328eb8d0ef"
+  },
+  {
+   "id": "138142270",
+   "url": "https://hh.ru/vacancy/138142270",
+   "bucket": "frontend.junior",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Иннополис"
+   },
+   "text_sha256": "f257b6f1b40b1a01790c86bd18114b34b8e2e4f9f1fe571ffcd0ce328eb8d0ef"
+  },
+  {
+   "id": "137667058",
+   "url": "https://hh.ru/vacancy/137667058",
+   "bucket": "frontend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend",
+     "frontend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "django",
+     "docker",
+     "git",
+     "html-css",
+     "http",
+     "javascript",
+     "linux",
+     "postgresql",
+     "python",
+     "rest-api"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Новосибирск"
+   },
+   "text_sha256": "813f3c86149e352ac65beaef1244d6f502b2f63ffa66de89b0b7a846df021267"
+  },
+  {
+   "id": "137652219",
+   "url": "https://hh.ru/vacancy/137652219",
+   "bucket": "frontend.junior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend",
+     "frontend"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "git",
+     "html-css",
+     "javascript",
+     "sql",
+     "typescript",
+     "vue"
+    ],
+    "n_key_skills": 8,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Смоленск"
+   },
+   "text_sha256": "e8d027758aa597004280a88984830486848c13ef9ccd5bf61f4f80a2ce450cb6"
+  },
+  {
+   "id": "137849180",
+   "url": "https://hh.ru/vacancy/137849180",
+   "bucket": "frontend.middle",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "frontend-testing",
+     "git",
+     "html-css",
+     "javascript",
+     "state-management",
+     "vue"
+    ],
+    "n_key_skills": 12,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "6d15179bcd9247b3cc1db93125bad5bf0c269da0ebe1ea3ffec3c7966d63fd1e"
+  },
+  {
+   "id": "138310906",
+   "url": "https://hh.ru/vacancy/138310906",
+   "bucket": "frontend.middle",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "f663e52f136f48de27903a2650bd9bdc70635b33fb59f4d2facd0419c188acc0"
+  },
+  {
+   "id": "138309536",
+   "url": "https://hh.ru/vacancy/138309536",
+   "bucket": "frontend.middle",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "javascript"
+    ],
+    "n_key_skills": 3,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "f9ba2c3c348a699aa79722721c7fe703c115c2946f15458d8f7c78cc8b1286e2"
+  },
+  {
+   "id": "137938169",
+   "url": "https://hh.ru/vacancy/137938169",
+   "bucket": "frontend.middle",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "angular",
+     "html-css",
+     "http",
+     "javascript",
+     "rest-api",
+     "typescript",
+     "vite-webpack"
+    ],
+    "n_key_skills": 8,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "57397015b19539c57de12e596b639f4e959f4108a17dac5fea1fda38fb9c5c02"
+  },
+  {
+   "id": "137340472",
+   "url": "https://hh.ru/vacancy/137340472",
+   "bucket": "frontend.middle",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "angular",
+     "javascript"
+    ],
+    "n_key_skills": 4,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "3dcd2473a4ee6c8f79f6ed749c63f406911e6fb9b22160be70740242a64d8cb9"
+  },
+  {
+   "id": "135155890",
+   "url": "https://hh.ru/vacancy/135155890",
+   "bucket": "frontend.middle",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "javascript",
+     "typescript",
+     "vue"
+    ],
+    "n_key_skills": 8,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "f4821f5733881ecd84e08143398b7fd4f8ee026c2811ff8a37d2172df3325e51"
+  },
+  {
+   "id": "137435682",
+   "url": "https://hh.ru/vacancy/137435682",
+   "bucket": "frontend.middle",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "git",
+     "html-css",
+     "http",
+     "javascript",
+     "react",
+     "rest-api",
+     "typescript"
+    ],
+    "n_key_skills": 12,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "4dacaba1a64f0b7c1a129ac1a083148cb64333401cd3373e2fb4f26956b66b83"
+  },
+  {
+   "id": "138144579",
+   "url": "https://hh.ru/vacancy/138144579",
+   "bucket": "frontend.middle",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "http",
+     "javascript",
+     "postgresql",
+     "rabbitmq",
+     "react",
+     "redis",
+     "sql"
+    ],
+    "n_key_skills": 8,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "1dc40878fa9d83b580f63982ddb406d8df7338d81010ca6eb2bdce7b3d064570"
+  },
+  {
+   "id": "138308169",
+   "url": "https://hh.ru/vacancy/138308169",
+   "bucket": "frontend.senior",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "c52cb3f6f1f74cc4a1aa23ba0726811cf9f8d7431f9d71ef4c0aac453c9c45fc"
+  },
+  {
+   "id": "138307588",
+   "url": "https://hh.ru/vacancy/138307588",
+   "bucket": "frontend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "noExperience",
+    "work_formats": [],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "dbae24a0dcd1769599f3fedf7d4c3a7aa1d5d72a7708bcc92edff79d756d8547"
+  },
+  {
+   "id": "138306242",
+   "url": "https://hh.ru/vacancy/138306242",
+   "bucket": "frontend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "825c872570882c4e6f373ea9e6b7dee0eb9c1958262b5fdfff34ee37c86696eb"
+  },
+  {
+   "id": "138306229",
+   "url": "https://hh.ru/vacancy/138306229",
+   "bucket": "frontend.senior",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "eabd1bb42d5ce36eedafd48e696f28d952285f6416ee874c4cfa39d7c67c62f8"
+  },
+  {
+   "id": "137502975",
+   "url": "https://hh.ru/vacancy/137502975",
+   "bucket": "frontend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend",
+     "frontend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "javascript",
+     "react",
+     "typescript"
+    ],
+    "n_key_skills": 3,
+    "salary": true,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "662d7b545c93b345d43a744fba91c5ff2bed2f9fb4a1b952ef7492165ae1e802"
+  },
+  {
+   "id": "138266535",
+   "url": "https://hh.ru/vacancy/138266535",
+   "bucket": "frontend.senior",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "16c0d0844c78daff9b1d39fe8e0f2425c9b1bf0f4deda1daee3b55d5c00c7fff"
+  },
+  {
+   "id": "138263018",
+   "url": "https://hh.ru/vacancy/138263018",
+   "bucket": "frontend.senior",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [
+     "react",
+     "typescript"
+    ],
+    "n_key_skills": 6,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "299b9342a2a3425d48454a2c9fd7664424330dc74c5869ef478d19ea4a51e9d9"
+  },
+  {
+   "id": "138260902",
+   "url": "https://hh.ru/vacancy/138260902",
+   "bucket": "frontend.senior",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend",
+     "frontend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "git",
+     "html-css",
+     "php",
+     "react",
+     "sql",
+     "typescript"
+    ],
+    "n_key_skills": 8,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "975daf99e9772c8adb157dcbe8fada2d2383697e47d2bbe75719c735b80d176c"
+  },
+  {
+   "id": "138329091",
+   "url": "https://hh.ru/vacancy/138329091",
+   "bucket": "qa.intern",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [
+     "api-testing",
+     "git",
+     "java",
+     "sql"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Воронеж"
+   },
+   "text_sha256": "427c39a9e8085481f31c0ab08bbbf04fca4b5d5b9307e04cd13670607ce59af5"
+  },
+  {
+   "id": "138071178",
+   "url": "https://hh.ru/vacancy/138071178",
+   "bucket": "qa.intern",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Краснодар"
+   },
+   "text_sha256": "d5ff10d4cb78dc91b4fec8fd36b121d2f32531c1de35c332e2ac5c9ae82b3a14"
+  },
+  {
+   "id": "138306799",
+   "url": "https://hh.ru/vacancy/138306799",
+   "bucket": "qa.intern",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "allure",
+     "api-testing",
+     "java",
+     "selenium",
+     "sql",
+     "test-design"
+    ],
+    "n_key_skills": 21,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Казань"
+   },
+   "text_sha256": "8648183529d05aef0b4b775bd2b628acfa3f101513053a23e6ed6aec013cf982"
+  },
+  {
+   "id": "138159849",
+   "url": "https://hh.ru/vacancy/138159849",
+   "bucket": "qa.intern",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "0021a23111f3ebe95b7ebaef3fe28704f1db0157d7b23698f851897df13423a2"
+  },
+  {
+   "id": "138265837",
+   "url": "https://hh.ru/vacancy/138265837",
+   "bucket": "qa.intern",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "java",
+     "sql"
+    ],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Шахты"
+   },
+   "text_sha256": "7194e1dfba4b8a0b592fe2d3f1ff772d84fde2220f0876a2b842765c873be604"
+  },
+  {
+   "id": "138257313",
+   "url": "https://hh.ru/vacancy/138257313",
+   "bucket": "qa.intern",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "java",
+     "sql"
+    ],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Таганрог"
+   },
+   "text_sha256": "0b399f6b36b68b3ae4f987a2653d9e872a35a2569cb4e0cb70a155826fc1ee53"
+  },
+  {
+   "id": "137085748",
+   "url": "https://hh.ru/vacancy/137085748",
+   "bucket": "qa.intern",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "api-testing",
+     "postgresql"
+    ],
+    "n_key_skills": 4,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Екатеринбург"
+   },
+   "text_sha256": "9a2ee78cea2097c75b91a1960e20850564cfebe99296cbfe746833164677ab51"
+  },
+  {
+   "id": "138227805",
+   "url": "https://hh.ru/vacancy/138227805",
+   "bucket": "qa.intern",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "http",
+     "sql"
+    ],
+    "n_key_skills": 7,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Дубна (Московская область)"
+   },
+   "text_sha256": "af536d2d6428146c86ea8c234e38cbc250616c7aa4fb5069cb34c9861c0fbf1b"
+  },
+  {
+   "id": "136605051",
+   "url": "https://hh.ru/vacancy/136605051",
+   "bucket": "qa.junior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "csharp",
+     "git",
+     "java",
+     "python"
+    ],
+    "n_key_skills": 8,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "2bd406e9bc3805e6a753a95a2e840d7c94ff9b0588baebf670ea4275e9e48674"
+  },
+  {
+   "id": "138301196",
+   "url": "https://hh.ru/vacancy/138301196",
+   "bucket": "qa.junior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "http",
+     "javascript",
+     "postgresql",
+     "python",
+     "rest-api"
+    ],
+    "n_key_skills": 8,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "cdfc4aac70eaed6fc3b7bab3816f72784db987339c2a8bc977b3d7cc17f1fa9c"
+  },
+  {
+   "id": "136868347",
+   "url": "https://hh.ru/vacancy/136868347",
+   "bucket": "qa.junior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 7,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Новосибирск"
+   },
+   "text_sha256": "d498d4b2c3b0da41681b316c169c5d8def15cd964783e751dfdbe18f4635d9c3"
+  },
+  {
+   "id": "132325681",
+   "url": "https://hh.ru/vacancy/132325681",
+   "bucket": "qa.junior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "sql"
+    ],
+    "n_key_skills": 3,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Владивосток"
+   },
+   "text_sha256": "4af56fab738cfe32edb9b5f883e02d1e34c5a0ccbdbb9dc5826736d2e36c9997"
+  },
+  {
+   "id": "137352125",
+   "url": "https://hh.ru/vacancy/137352125",
+   "bucket": "qa.junior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [
+     "http",
+     "load-testing",
+     "manual-testing",
+     "rest-api",
+     "selenium",
+     "sql",
+     "test-design"
+    ],
+    "n_key_skills": 26,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Уфа"
+   },
+   "text_sha256": "c2f595bc8ebac8c54aac4d12a32f778058b32775d1db876833403c368e959a61"
+  },
+  {
+   "id": "137672604",
+   "url": "https://hh.ru/vacancy/137672604",
+   "bucket": "qa.junior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "sql"
+    ],
+    "n_key_skills": 2,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Владивосток"
+   },
+   "text_sha256": "6011945d7a10957214fa31f2d753b750eb2797dc564def842ebeabacdb7c0774"
+  },
+  {
+   "id": "138230873",
+   "url": "https://hh.ru/vacancy/138230873",
+   "bucket": "qa.junior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "8467585bbf77ebf3e31330795afac77263c470cba78e155ef8ddbf81d5959185"
+  },
+  {
+   "id": "138227784",
+   "url": "https://hh.ru/vacancy/138227784",
+   "bucket": "qa.junior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "http",
+     "sql"
+    ],
+    "n_key_skills": 5,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Дубна (Московская область)"
+   },
+   "text_sha256": "011b26472271840226da8a3ebece2b8b47a0e09f4e8333d1cfb32c1acf36d2a2"
+  },
+  {
+   "id": "138321547",
+   "url": "https://hh.ru/vacancy/138321547",
+   "bucket": "qa.middle",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "api-testing",
+     "frontend-testing",
+     "git",
+     "playwright",
+     "sql",
+     "test-design"
+    ],
+    "n_key_skills": 16,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "cc3656231e067ae3d7d5a8b4c0ea8573f1fb86e85282b02571d822dcbc184429"
+  },
+  {
+   "id": "137605399",
+   "url": "https://hh.ru/vacancy/137605399",
+   "bucket": "qa.middle",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "http",
+     "rest-api"
+    ],
+    "n_key_skills": 5,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "be10b2a8929786f5ec3a4a71898696b236156f1addc687a332a31de07cfc8c19"
+  },
+  {
+   "id": "136806013",
+   "url": "https://hh.ru/vacancy/136806013",
+   "bucket": "qa.middle",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "junior",
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "982b498cf76d40dd98652f10e507a83bf97b1409aa986b7c34ab0bb22726c885"
+  },
+  {
+   "id": "138309140",
+   "url": "https://hh.ru/vacancy/138309140",
+   "bucket": "qa.middle",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "junior",
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "65a46b058e897d282ba357e5011ba4160971e11e713937040c1f9893a6449e54"
+  },
+  {
+   "id": "138309032",
+   "url": "https://hh.ru/vacancy/138309032",
+   "bucket": "qa.middle",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "api-testing",
+     "load-testing",
+     "manual-testing",
+     "test-design"
+    ],
+    "n_key_skills": 10,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "2a46c87256bb1bb3a7615578f065f8dcaba40881638dbba54c581b9286e9fe4a"
+  },
+  {
+   "id": "138308604",
+   "url": "https://hh.ru/vacancy/138308604",
+   "bucket": "qa.middle",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Оренбург"
+   },
+   "text_sha256": "d0639d89c0cb4ad6dd5f716e5e6870039d88986500d8fde6256ea4b0e1ed7365"
+  },
+  {
+   "id": "129586923",
+   "url": "https://hh.ru/vacancy/129586923",
+   "bucket": "qa.middle",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "11cfb588d907d96468b7f71d18f13014e34840a20a3ae980c1122fc2de785709"
+  },
+  {
+   "id": "138304047",
+   "url": "https://hh.ru/vacancy/138304047",
+   "bucket": "qa.middle",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "junior",
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Екатеринбург"
+   },
+   "text_sha256": "994ea043628f21560f8d07400637408807b3d8005f13af260193c52421c83456"
+  },
+  {
+   "id": "137428120",
+   "url": "https://hh.ru/vacancy/137428120",
+   "bucket": "qa.senior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [
+     "csharp",
+     "linux",
+     "load-testing",
+     "manual-testing",
+     "postgresql",
+     "python"
+    ],
+    "n_key_skills": 9,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "feb35f6707ef860552c0cfc980786830f69509ce632e2aea00a8a4e9444d7d28"
+  },
+  {
+   "id": "137633047",
+   "url": "https://hh.ru/vacancy/137633047",
+   "bucket": "qa.senior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "docker",
+     "git",
+     "java",
+     "kafka"
+    ],
+    "n_key_skills": 5,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "4df029740ad2c414c0ed61315b4c215803ba327dfd00bad13a600c714f910509"
+  },
+  {
+   "id": "137398852",
+   "url": "https://hh.ru/vacancy/137398852",
+   "bucket": "qa.senior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Зеленоград"
+   },
+   "text_sha256": "8a6261907854a49de8484f188e5b9e6c1f74ca257ed7dedb34e691e7c35ec27d"
+  },
+  {
+   "id": "138186663",
+   "url": "https://hh.ru/vacancy/138186663",
+   "bucket": "qa.senior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "c1f2d3061ceb32df2227a2d0f73ef65a263805b74c5fe0b24197d867951b50cd"
+  },
+  {
+   "id": "138315398",
+   "url": "https://hh.ru/vacancy/138315398",
+   "bucket": "qa.senior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "go"
+    ],
+    "n_key_skills": 2,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "16462f111148659f1ea459483c411a7e57c58f14bf0fb3bcfee7485234f87dea"
+  },
+  {
+   "id": "137392697",
+   "url": "https://hh.ru/vacancy/137392697",
+   "bucket": "qa.senior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 3,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "8b1c178f656166135476c26c3f87f2e62e56012a18aadea9857d688a0ad4b068"
+  },
+  {
+   "id": "138311436",
+   "url": "https://hh.ru/vacancy/138311436",
+   "bucket": "qa.senior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "go",
+     "typescript"
+    ],
+    "n_key_skills": 6,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "78a309795af1e70c4e43ec114374c12e435223e67fe4f47d3c42ccbd5b9269cd"
+  },
+  {
+   "id": "138309862",
+   "url": "https://hh.ru/vacancy/138309862",
+   "bucket": "qa.senior",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [
+     "manual-testing"
+    ],
+    "n_key_skills": 4,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "ed1c8244b245562c3dddbcfc289a54da87cf040daff20fe93c2b2bcbc370e5eb"
+  },
+  {
+   "id": "138067675",
+   "url": "https://hh.ru/vacancy/138067675",
+   "bucket": "data_ml.intern",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [
+     "python",
+     "sql"
+    ],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "124067a74647446eb1d956c4dab7a1f43a51a42c12e749035017921735c511be"
+  },
+  {
+   "id": "138010748",
+   "url": "https://hh.ru/vacancy/138010748",
+   "bucket": "data_ml.intern",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "56eb083c639c22e8183b5f5d7a23ea0883bfaa399e4fb12bdede09dee5156ac4"
+  },
+  {
+   "id": "137841921",
+   "url": "https://hh.ru/vacancy/137841921",
+   "bucket": "data_ml.intern",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "47eae65ccb366a5c379e7cd08e507c0391be3c4b607839b4887568b7ce5343cd"
+  },
+  {
+   "id": "137649397",
+   "url": "https://hh.ru/vacancy/137649397",
+   "bucket": "data_ml.intern",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "1d01ef935a1b766717a3fb28636c5228edcd039ccf9b0dbf01908e1a827ae52e"
+  },
+  {
+   "id": "137633482",
+   "url": "https://hh.ru/vacancy/137633482",
+   "bucket": "data_ml.intern",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 1,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "3fda90fdbf95ad44bf9ccab2e6edc29c4856cdbf372ba7e56019f073b0238042"
+  },
+  {
+   "id": "137601924",
+   "url": "https://hh.ru/vacancy/137601924",
+   "bucket": "data_ml.intern",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Ростов-на-Дону"
+   },
+   "text_sha256": "ae93c2bab5967558fc990a32f70dd2d2da51e0c37286a868cfd608eeacc9e444"
+  },
+  {
+   "id": "137535328",
+   "url": "https://hh.ru/vacancy/137535328",
+   "bucket": "data_ml.intern",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "e1532380a93bd8025379805e68fe07db244c993a4a060864091d8f11c64680b9"
+  },
+  {
+   "id": "137303185",
+   "url": "https://hh.ru/vacancy/137303185",
+   "bucket": "data_ml.intern",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "d08526cb0328fcc39ccd3f40f28a5e3dc938617d74e036e8d922757513fa1332"
+  },
+  {
+   "id": "138225739",
+   "url": "https://hh.ru/vacancy/138225739",
+   "bucket": "data_ml.junior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "ab5e4bcede2fd58e47327eea92cf94c445ef5eef0bc374620acdeb0e2fbd89a3"
+  },
+  {
+   "id": "138151737",
+   "url": "https://hh.ru/vacancy/138151737",
+   "bucket": "data_ml.junior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "pandas",
+     "python",
+     "pytorch",
+     "statistics"
+    ],
+    "n_key_skills": 6,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Краснодар"
+   },
+   "text_sha256": "7631109a81bc5c15164fcf7a9e3ba3c17bb9749105db267f235306a2d66a2a01"
+  },
+  {
+   "id": "137055333",
+   "url": "https://hh.ru/vacancy/137055333",
+   "bucket": "data_ml.junior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "kubernetes",
+     "mlops",
+     "nlp",
+     "spark",
+     "sql"
+    ],
+    "n_key_skills": 7,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Иннополис"
+   },
+   "text_sha256": "f595d3fdd160eac2c25ba04439a090cd0b6b3c93d68a888dbdf15ef38f67b5df"
+  },
+  {
+   "id": "136809758",
+   "url": "https://hh.ru/vacancy/136809758",
+   "bucket": "data_ml.junior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [
+     "sql"
+    ],
+    "n_key_skills": 1,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "739b62fc23012ae46d5557d126d4f2c795b581a441425d7c025e41829b90bc83"
+  },
+  {
+   "id": "133784376",
+   "url": "https://hh.ru/vacancy/133784376",
+   "bucket": "data_ml.junior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "numpy",
+     "pandas",
+     "python"
+    ],
+    "n_key_skills": 3,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "f6e4252ba95c3fb0b8bc813d79dc39ca66d66788c92da67f10af59e2e2dec697"
+  },
+  {
+   "id": "137905644",
+   "url": "https://hh.ru/vacancy/137905644",
+   "bucket": "data_ml.junior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "4e439d73c3c6aee471561734365d48974ebc9d9380e79b14922bacd6f3747fab"
+  },
+  {
+   "id": "136811152",
+   "url": "https://hh.ru/vacancy/136811152",
+   "bucket": "data_ml.junior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "junior",
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "d2f22fffdaf6e9ba6f59e256d372f7c215f7497a11bf512a9a4c0c1c27c5b2d4"
+  },
+  {
+   "id": "137520258",
+   "url": "https://hh.ru/vacancy/137520258",
+   "bucket": "data_ml.junior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Нижний Новгород"
+   },
+   "text_sha256": "9bda796f963a4f1092aa680febe82c7658c29b99f4f8dcff3abac092cd8c1106"
+  },
+  {
+   "id": "138320505",
+   "url": "https://hh.ru/vacancy/138320505",
+   "bucket": "data_ml.middle",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "a39bd8cd63fd855ad5572a368f86691400b748b5cfe721312e975f350e6ecb5b"
+  },
+  {
+   "id": "138304334",
+   "url": "https://hh.ru/vacancy/138304334",
+   "bucket": "data_ml.middle",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "4e57019828b8be19cfea62422a54cb9d44c34e80d581e52e67b32affd91f91e3"
+  },
+  {
+   "id": "137317982",
+   "url": "https://hh.ru/vacancy/137317982",
+   "bucket": "data_ml.middle",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "5a0971dc7b77d007d4f4ac0c75e82055e2b0ebea85544f214d4e1d784919c37e"
+  },
+  {
+   "id": "138232263",
+   "url": "https://hh.ru/vacancy/138232263",
+   "bucket": "data_ml.middle",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 1,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "5933ef105e9a61e1b41fff68f3388a88d4d0e1806a4d080cfade2279a3364ce8"
+  },
+  {
+   "id": "138228530",
+   "url": "https://hh.ru/vacancy/138228530",
+   "bucket": "data_ml.middle",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "a18b784df97b70f88cc3ef1947e5c1b95841dff722cf974cd2f2655e229e0b4e"
+  },
+  {
+   "id": "138218208",
+   "url": "https://hh.ru/vacancy/138218208",
+   "bucket": "data_ml.middle",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "c00b130cf9d93dfb13324f15c8dc9d478d24cd733b6654794f4e36ca5ab989e8"
+  },
+  {
+   "id": "137792022",
+   "url": "https://hh.ru/vacancy/137792022",
+   "bucket": "data_ml.middle",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [
+     "python",
+     "spark",
+     "sql"
+    ],
+    "n_key_skills": 5,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "92407622009a5e2f4023c5684ea8936284ed0005727f34b380d3126acae1e6b4"
+  },
+  {
+   "id": "136898522",
+   "url": "https://hh.ru/vacancy/136898522",
+   "bucket": "data_ml.middle",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "18dc63e633ef7d00c8850d9aab0062a794a54ec143403b4b99919f9427c95d6c"
+  },
+  {
+   "id": "137214252",
+   "url": "https://hh.ru/vacancy/137214252",
+   "bucket": "data_ml.senior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "algorithms"
+    ],
+    "n_key_skills": 12,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "9f9da3227b44ff684ee3c97253807a4b809bae20b9fbda7968a5a14124e304df"
+  },
+  {
+   "id": "137611084",
+   "url": "https://hh.ru/vacancy/137611084",
+   "bucket": "data_ml.senior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "cv",
+     "docker",
+     "javascript",
+     "postgresql",
+     "python",
+     "pytorch"
+    ],
+    "n_key_skills": 11,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "8ab0c45b0eeaeb4aff5d03d9e657243c3701b7cf931d62db3763f86af025250f"
+  },
+  {
+   "id": "138315487",
+   "url": "https://hh.ru/vacancy/138315487",
+   "bucket": "data_ml.senior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "4d6152ca861359f90850ec2fbf3a5e37c5dab512f008554837fa4444cc799718"
+  },
+  {
+   "id": "138312596",
+   "url": "https://hh.ru/vacancy/138312596",
+   "bucket": "data_ml.senior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "61468b341ee9001446deecfc7ea48efe87f176dd11b16314c7846c2cebfb9ce7"
+  },
+  {
+   "id": "136028884",
+   "url": "https://hh.ru/vacancy/136028884",
+   "bucket": "data_ml.senior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "python",
+     "sql"
+    ],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "8a2e680b68dfa7212283f89423431478d33c7f61ddf628d77328b736581c3426"
+  },
+  {
+   "id": "138307968",
+   "url": "https://hh.ru/vacancy/138307968",
+   "bucket": "data_ml.senior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "583336d100194899e0c3bb273af1745dac298261f9e1754687ca6bec03c92845"
+  },
+  {
+   "id": "138307871",
+   "url": "https://hh.ru/vacancy/138307871",
+   "bucket": "data_ml.senior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "165"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "340b3ab4c9dd469c10ef887c5699013431baac2454f8f361dd92481d82845d75"
+  },
+  {
+   "id": "137530262",
+   "url": "https://hh.ru/vacancy/137530262",
+   "bucket": "data_ml.senior",
+   "labels": {
+    "direction": "data_ml",
+    "direction_acceptable": [
+     "data_ml"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "cv",
+     "git",
+     "python",
+     "pytorch"
+    ],
+    "n_key_skills": 18,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Екатеринбург"
+   },
+   "text_sha256": "cea848824e183792879b92c80b6d5c3d2ff9f356466001087e818a1da1e0707b"
+  },
+  {
+   "id": "138313312",
+   "url": "https://hh.ru/vacancy/138313312",
+   "bucket": "security.intern",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Подольск (Московская область)"
+   },
+   "text_sha256": "88cc2f3524c608b99d03b580318bffb55c23c0fe34196fbe33978aa3089874c1"
+  },
+  {
+   "id": "138293587",
+   "url": "https://hh.ru/vacancy/138293587",
+   "bucket": "security.intern",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "29ec8e59b86f035a5392d538cdf32c2975f644d015cb992b0bfe25e28deebeae"
+  },
+  {
+   "id": "138278809",
+   "url": "https://hh.ru/vacancy/138278809",
+   "bucket": "security.intern",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [
+     "http",
+     "linux"
+    ],
+    "n_key_skills": 8,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "0c9869906cd0739716c1e34de69f5409c42a3a5b253200bcf69ada88e2495177"
+  },
+  {
+   "id": "138075901",
+   "url": "https://hh.ru/vacancy/138075901",
+   "bucket": "security.intern",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "siem-soc"
+    ],
+    "n_key_skills": 6,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Нижний Новгород"
+   },
+   "text_sha256": "f66de0d370209711001e84da7733e3be1004d6fc6a3d35b3f2f8013b64f01834"
+  },
+  {
+   "id": "138029689",
+   "url": "https://hh.ru/vacancy/138029689",
+   "bucket": "security.intern",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "siem-soc"
+    ],
+    "n_key_skills": 4,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "12d62ddb2bdfd53a7d05238df22ef66cff86dd3025e23221254fbeb22b2fcad9"
+  },
+  {
+   "id": "138024569",
+   "url": "https://hh.ru/vacancy/138024569",
+   "bucket": "security.intern",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "619f0b4e40f811c6d7187d00fa59faba8d1e4aa780c1041caaa530d96423b135"
+  },
+  {
+   "id": "136760085",
+   "url": "https://hh.ru/vacancy/136760085",
+   "bucket": "security.intern",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "5c28effbe76f07ff7eed9232cbc25ebd3f7e0ad38d9904278296c9108717e8a9"
+  },
+  {
+   "id": "137908800",
+   "url": "https://hh.ru/vacancy/137908800",
+   "bucket": "security.intern",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "058f4543089de7f5f9fd05a142620cabad07e875cf7894b0f710bcdfdc4b62c4"
+  },
+  {
+   "id": "134071500",
+   "url": "https://hh.ru/vacancy/134071500",
+   "bucket": "security.junior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Оренбург"
+   },
+   "text_sha256": "411b629cd996b1665a1464a2032f5779052404eaf6f3df94b52e3aaaf0df47d7"
+  },
+  {
+   "id": "138277977",
+   "url": "https://hh.ru/vacancy/138277977",
+   "bucket": "security.junior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 4,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Екатеринбург"
+   },
+   "text_sha256": "1db3da95680b090fdce7bcdd612b5573ad499c83770579f400220bf5d1eb80f5"
+  },
+  {
+   "id": "137698101",
+   "url": "https://hh.ru/vacancy/137698101",
+   "bucket": "security.junior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "ece5abc90ceb76c4b9dfa0109c8a9a0355363cb9fe4580d7fcea2d99cd794b61"
+  },
+  {
+   "id": "133082559",
+   "url": "https://hh.ru/vacancy/133082559",
+   "bucket": "security.junior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 1,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "295a3ead7d88e8dee1768172c4f27dd3169a2684206ade5cc87b517357e1fbaf"
+  },
+  {
+   "id": "136185330",
+   "url": "https://hh.ru/vacancy/136185330",
+   "bucket": "security.junior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "cryptography"
+    ],
+    "n_key_skills": 10,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Архангельск"
+   },
+   "text_sha256": "4bbdeb8c9e1fe0a0dc871380c6600aff71c8a0b2b68c6078104f7b1fc06844c1"
+  },
+  {
+   "id": "138181621",
+   "url": "https://hh.ru/vacancy/138181621",
+   "bucket": "security.junior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "linux"
+    ],
+    "n_key_skills": 8,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Краснодар"
+   },
+   "text_sha256": "651ba201524bf25596b88e8ffaced7e512fcf083e5056f8dff7d292632012ba4"
+  },
+  {
+   "id": "138161780",
+   "url": "https://hh.ru/vacancy/138161780",
+   "bucket": "security.junior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "junior",
+    "grade_acceptable": [
+     "junior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 4,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Пермь"
+   },
+   "text_sha256": "63c5425e3db7fe54289095097b016b1ab16ff1692b554aeaeb80d02b49d986f8"
+  },
+  {
+   "id": "133291633",
+   "url": "https://hh.ru/vacancy/133291633",
+   "bucket": "security.junior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "cryptography"
+    ],
+    "n_key_skills": 8,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Ярославль"
+   },
+   "text_sha256": "34fb0e177e7ffe25fd19c1fefaf14949b4611c8b64b5ea57f174b5d377fbdfde"
+  },
+  {
+   "id": "137539539",
+   "url": "https://hh.ru/vacancy/137539539",
+   "bucket": "security.middle",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [
+     "ci-cd",
+     "git",
+     "linux"
+    ],
+    "n_key_skills": 10,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "1fe42f9c3a72169ca79d3fe5c4f4aa8bb73288cfe20bf2a24f92b51dab88dd91"
+  },
+  {
+   "id": "133206210",
+   "url": "https://hh.ru/vacancy/133206210",
+   "bucket": "security.middle",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "middle",
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "linux",
+     "network-security",
+     "siem-soc"
+    ],
+    "n_key_skills": 14,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "8be282ab1bb600c9bc84a625d346237b33e71e07ae0dcb0cc3c6cc976b1f36f6"
+  },
+  {
+   "id": "137123830",
+   "url": "https://hh.ru/vacancy/137123830",
+   "bucket": "security.middle",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "5fabe3f6cc81c2ad38e2dc62ca8131f1f793a087962cf95bcb36dd18a44d7f67"
+  },
+  {
+   "id": "138149321",
+   "url": "https://hh.ru/vacancy/138149321",
+   "bucket": "security.middle",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "network-security",
+     "siem-soc"
+    ],
+    "n_key_skills": 4,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Томск"
+   },
+   "text_sha256": "d51046c8d882e03e152f70511ebeb68aa4c58749f8a94bffbe6037cc2e54447f"
+  },
+  {
+   "id": "138148877",
+   "url": "https://hh.ru/vacancy/138148877",
+   "bucket": "security.middle",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "network-security",
+     "siem-soc"
+    ],
+    "n_key_skills": 4,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Тюмень"
+   },
+   "text_sha256": "d3ed7edd966606ba6396ee5908ffda9d3980f1b6a66158f9b3b116679a101cb9"
+  },
+  {
+   "id": "135006026",
+   "url": "https://hh.ru/vacancy/135006026",
+   "bucket": "security.middle",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "linux",
+     "network-security"
+    ],
+    "n_key_skills": 12,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Екатеринбург"
+   },
+   "text_sha256": "af8a715979a65cb77507d1898da62ad2842df324ab630fbe037b6636109e3228"
+  },
+  {
+   "id": "135932941",
+   "url": "https://hh.ru/vacancy/135932941",
+   "bucket": "security.middle",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [
+     "linux",
+     "network-security"
+    ],
+    "n_key_skills": 11,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Челябинск"
+   },
+   "text_sha256": "c0c19cedd0ea61deca7d77f9fa3a4427ce078aa18e20361bbfb212d8ca7542dc"
+  },
+  {
+   "id": "135526625",
+   "url": "https://hh.ru/vacancy/135526625",
+   "bucket": "security.middle",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "middle",
+    "grade_acceptable": [
+     "middle"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "linux",
+     "network-security",
+     "siem-soc"
+    ],
+    "n_key_skills": 3,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "6af21d873af9dc0a025c7a1559636baa096a0067ffa32837ec1976771e79727a"
+  },
+  {
+   "id": "137995106",
+   "url": "https://hh.ru/vacancy/137995106",
+   "bucket": "security.senior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "siem-soc"
+    ],
+    "n_key_skills": 9,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Фрязино (Московская область)"
+   },
+   "text_sha256": "f16bad4c660f26616f02d43caa52d1c6e625cb8a08f8b502c40849426e6191a4"
+  },
+  {
+   "id": "137623722",
+   "url": "https://hh.ru/vacancy/137623722",
+   "bucket": "security.senior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 5,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "ee96e0bfe88370b22b9f3107a7cd2236d3096094bc239dab298a2e647b5c9f10"
+  },
+  {
+   "id": "138191979",
+   "url": "https://hh.ru/vacancy/138191979",
+   "bucket": "security.senior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 2,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Южно-Сахалинск"
+   },
+   "text_sha256": "24aef4e812e9daf762ff8398108487d45ca8594e5acff3efd2227c02fc179131"
+  },
+  {
+   "id": "138321976",
+   "url": "https://hh.ru/vacancy/138321976",
+   "bucket": "security.senior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "http"
+    ],
+    "n_key_skills": 16,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Краснодар"
+   },
+   "text_sha256": "3c87578b6c3e9613fd99da8b92f1393f28d9cdfe51001f6bb7724f11088200ce"
+  },
+  {
+   "id": "138320217",
+   "url": "https://hh.ru/vacancy/138320217",
+   "bucket": "security.senior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 16,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "cb65eb40e6d3024d685aecdc2636ec5dd179dea41e2d1b530862d28ee8562ead"
+  },
+  {
+   "id": "138317940",
+   "url": "https://hh.ru/vacancy/138317940",
+   "bucket": "security.senior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "249d4191125e082af13032a7c680f8002bc86ed362b64e15469eea5d8b67f9ba"
+  },
+  {
+   "id": "137915609",
+   "url": "https://hh.ru/vacancy/137915609",
+   "bucket": "security.senior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "fe604b4ce2a61c33cd93d6c617f4e75efeb0d7ecf9808350b70f3fcf8c7b05dc"
+  },
+  {
+   "id": "138314649",
+   "url": "https://hh.ru/vacancy/138314649",
+   "bucket": "security.senior",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "siem-soc"
+    ],
+    "n_key_skills": 7,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "648a2f81420aa24681ecfc1a5e1e963412cc05adf403157a6f740180a4ad7366"
+  },
+  {
+   "id": "134881609",
+   "url": "https://hh.ru/vacancy/134881609",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [
+     "docker",
+     "git",
+     "linux",
+     "sql"
+    ],
+    "n_key_skills": 9,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "4f9b3493d9fa00b2ee832a68798df91f5c0cb8451c379fe614440fabebd7b78a"
+  },
+  {
+   "id": "137995075",
+   "url": "https://hh.ru/vacancy/137995075",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "office"
+    ],
+    "key_skills_tags": [
+     "siem-soc"
+    ],
+    "n_key_skills": 9,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Фрязино (Московская область)"
+   },
+   "text_sha256": "218adfe928f82b3be2ca959f4f2293b1d49512a6b37056ed457fa276706d781a"
+  },
+  {
+   "id": "130453479",
+   "url": "https://hh.ru/vacancy/130453479",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 5,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Тюмень"
+   },
+   "text_sha256": "30b4bac6105024110bb46b500a4591e1cce2148805eb668ce59cf77543a12bca"
+  },
+  {
+   "id": "130453478",
+   "url": "https://hh.ru/vacancy/130453478",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 5,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Новосибирск"
+   },
+   "text_sha256": "30b4bac6105024110bb46b500a4591e1cce2148805eb668ce59cf77543a12bca"
+  },
+  {
+   "id": "130452683",
+   "url": "https://hh.ru/vacancy/130452683",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 5,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Челябинск"
+   },
+   "text_sha256": "9410ed77ad65f3f2f53e93cae3998efdd676605250a348e54da76bd5e341a617"
+  },
+  {
+   "id": "130452681",
+   "url": "https://hh.ru/vacancy/130452681",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 5,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "30b4bac6105024110bb46b500a4591e1cce2148805eb668ce59cf77543a12bca"
+  },
+  {
+   "id": "130452680",
+   "url": "https://hh.ru/vacancy/130452680",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 5,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "30b4bac6105024110bb46b500a4591e1cce2148805eb668ce59cf77543a12bca"
+  },
+  {
+   "id": "137843980",
+   "url": "https://hh.ru/vacancy/137843980",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "linux",
+     "sql"
+    ],
+    "n_key_skills": 8,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "cd62553d1e9647db908a495fdea7d73a8f85177ed6b5c7291dab963ad0586041"
+  },
+  {
+   "id": "130453442",
+   "url": "https://hh.ru/vacancy/130453442",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "sql"
+    ],
+    "n_key_skills": 4,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Краснодар"
+   },
+   "text_sha256": "9cf31830802c16098ced4f71949a9eaeede65eaf0ad8b9ecb6cd07e0f0d32254"
+  },
+  {
+   "id": "130453410",
+   "url": "https://hh.ru/vacancy/130453410",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [
+     "sql"
+    ],
+    "n_key_skills": 4,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "3f424ee0670ea83670e6373cacee82a3beb2afcbb00e17d0c9b53429726d8241"
+  },
+  {
+   "id": "130453395",
+   "url": "https://hh.ru/vacancy/130453395",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "sql"
+    ],
+    "n_key_skills": 4,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "bc29d4a51efcda36f5335cabc9a17ff2efbbed279418ddeb6df4a74137ab6f37"
+  },
+  {
+   "id": "135582813",
+   "url": "https://hh.ru/vacancy/135582813",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "moreThan6",
+    "work_formats": [
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "63c95d4f0e237c221d453fb0c92f0927ab21aa4fdba552243a9851b640b2edce"
+  },
+  {
+   "id": "138318490",
+   "url": "https://hh.ru/vacancy/138318490",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 6,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "57450e4a1ec754a8b1544baaa2d1c8c79e5f313710a643388298142b1429325b"
+  },
+  {
+   "id": "137975285",
+   "url": "https://hh.ru/vacancy/137975285",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": "security",
+    "direction_acceptable": [
+     "security"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 9,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": true,
+    "neg_remote": true,
+    "roles": [
+     "116"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "2a9c24a713a9a51d268575b4c1e16446618bedd24563d30ac8534dc5066af518"
+  },
+  {
+   "id": "138298444",
+   "url": "https://hh.ru/vacancy/138298444",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "5cd7d8687caf71b50ec687c901ddcc09bddf9a268ec94b3a7f5e4f3a9250a657"
+  },
+  {
+   "id": "137483137",
+   "url": "https://hh.ru/vacancy/137483137",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": "intern",
+    "grade_acceptable": [
+     "intern"
+    ],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "python",
+     "sql"
+    ],
+    "n_key_skills": 4,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "fc8f7dbf001f426960c95af4554f32f297c72efb1783202e6455ec3978b89859"
+  },
+  {
+   "id": "138182395",
+   "url": "https://hh.ru/vacancy/138182395",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Оренбург"
+   },
+   "text_sha256": "6e5c187bd3b4504a9de019ff2cbaac3d57e94b8649e7f4f952996c3d6920dccf"
+  },
+  {
+   "id": "137294740",
+   "url": "https://hh.ru/vacancy/137294740",
+   "bucket": "neg_exp",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between1And3",
+    "work_formats": [
+     "hybrid",
+     "office",
+     "remote"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 7,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": true,
+    "neg_remote": false,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Ташкент"
+   },
+   "text_sha256": "2626a7ce7823e054ae7ba789e2d375206248c0e2f018e1933e4899479f46ec74"
+  },
+  {
+   "id": "137171449",
+   "url": "https://hh.ru/vacancy/137171449",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "git",
+     "linux"
+    ],
+    "n_key_skills": 6,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Ростов-на-Дону"
+   },
+   "text_sha256": "1625242c140b6524ac706049afcdddcb8950b1a98b182c04ef0f40fb23186daf"
+  },
+  {
+   "id": "136971902",
+   "url": "https://hh.ru/vacancy/136971902",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Новосибирск"
+   },
+   "text_sha256": "ad43d3b4aa457640221bd7aee275625ce87e43babd5277e9263f61808e2495ab"
+  },
+  {
+   "id": "132524176",
+   "url": "https://hh.ru/vacancy/132524176",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 6,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Ростов-на-Дону"
+   },
+   "text_sha256": "8a062f1e383187480e79b6b8e5bd888ecc9ff80b20349035da101fa96d22d0cd"
+  },
+  {
+   "id": "136624461",
+   "url": "https://hh.ru/vacancy/136624461",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": true,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Сергиев Посад (Московская область)"
+   },
+   "text_sha256": "4acc59fa39cbe6065e51967ef24c1af131186e2d56b8e875ded0c4871f4c048c"
+  },
+  {
+   "id": "136645351",
+   "url": "https://hh.ru/vacancy/136645351",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 2,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Ижевск"
+   },
+   "text_sha256": "a7e8f4cd551f64eb2305a7eaec663787c52912543f09d907b6f5efad6da21de1"
+  },
+  {
+   "id": "138305947",
+   "url": "https://hh.ru/vacancy/138305947",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend",
+     "frontend"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "75dc3672017a4acc3d898192bc4007d310b9c8477b75a15a438474218bc1ad29"
+  },
+  {
+   "id": "137525292",
+   "url": "https://hh.ru/vacancy/137525292",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "sql"
+    ],
+    "n_key_skills": 2,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Томск"
+   },
+   "text_sha256": "02a050435b625a96ff848df0a0a52b56b97011d2f0c58eecec058620666b103b"
+  },
+  {
+   "id": "137525288",
+   "url": "https://hh.ru/vacancy/137525288",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "git",
+     "php",
+     "postgresql"
+    ],
+    "n_key_skills": 3,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Томск"
+   },
+   "text_sha256": "aa8b5c8ed1cea0254adf972805cb3191a3739ee9a3c08c8b03345c359fdec9e1"
+  },
+  {
+   "id": "138153259",
+   "url": "https://hh.ru/vacancy/138153259",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 4,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "86b9eff791c206cbe5ed82467673af7ff1dd74ba423122f55316a163faaa370f"
+  },
+  {
+   "id": "133951263",
+   "url": "https://hh.ru/vacancy/133951263",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "noExperience",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "manual-testing"
+    ],
+    "n_key_skills": 4,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Тольятти"
+   },
+   "text_sha256": "3f79629aaf11695de017e419b898b3405fde17835bac0be21770b94e0c42cc0e"
+  },
+  {
+   "id": "133391091",
+   "url": "https://hh.ru/vacancy/133391091",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "linux"
+    ],
+    "n_key_skills": 3,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Саратов"
+   },
+   "text_sha256": "79e9c0c240467e8ce8b92ccc8ffa1ac2122ebfa5c43df0123b1fea8939d2ba09"
+  },
+  {
+   "id": "137871302",
+   "url": "https://hh.ru/vacancy/137871302",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": "qa",
+    "direction_acceptable": [
+     "qa"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "api-testing",
+     "git",
+     "http",
+     "rest-api",
+     "selenium",
+     "sql",
+     "test-design"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "124"
+    ],
+    "archived": false,
+    "area": "Москва"
+   },
+   "text_sha256": "bd0ad83e0e4efdbf8dd040b13ae4a37c80ffc7522bc5ed019d4301bec06f0ea0"
+  },
+  {
+   "id": "138288788",
+   "url": "https://hh.ru/vacancy/138288788",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": "frontend",
+    "direction_acceptable": [
+     "frontend"
+    ],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "git",
+     "javascript",
+     "react",
+     "typescript",
+     "vite-webpack"
+    ],
+    "n_key_skills": 15,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Набережные Челны"
+   },
+   "text_sha256": "d7e1a1e3af2bdd63df4beacb359308c6986233cb71b26cf08799008c8c23ab5f"
+  },
+  {
+   "id": "138111463",
+   "url": "https://hh.ru/vacancy/138111463",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": "backend",
+    "direction_acceptable": [
+     "backend"
+    ],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "javascript",
+     "php",
+     "sql"
+    ],
+    "n_key_skills": 3,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Челябинск"
+   },
+   "text_sha256": "ae244b6765e2f462642b85486f8e69bb34501a7ba562213fb6ea0f3bd97614a7"
+  },
+  {
+   "id": "138227090",
+   "url": "https://hh.ru/vacancy/138227090",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 2,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Санкт-Петербург"
+   },
+   "text_sha256": "e77211530f3fd592e424510802253616e3990870a18e07444994fa1e15aed661"
+  },
+  {
+   "id": "138153039",
+   "url": "https://hh.ru/vacancy/138153039",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between1And3",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Волгоград"
+   },
+   "text_sha256": "ae112c93682d5f4bb8a18a91339dc6239a6fd2aefb5ed34a03014f2ae696c4d7"
+  },
+  {
+   "id": "137739099",
+   "url": "https://hh.ru/vacancy/137739099",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": "senior",
+    "grade_acceptable": [
+     "senior"
+    ],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [],
+    "n_key_skills": 0,
+    "salary": false,
+    "salary_rub_month": false,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Тверь"
+   },
+   "text_sha256": "1e181b99ab8d2461158ea4942dd788f8e482f7c58e2f27b32d7bd43fd42083e2"
+  },
+  {
+   "id": "136272657",
+   "url": "https://hh.ru/vacancy/136272657",
+   "bucket": "neg_remote",
+   "labels": {
+    "direction": null,
+    "direction_acceptable": [],
+    "grade": null,
+    "grade_acceptable": [],
+    "experience": "between3And6",
+    "work_formats": [
+     "office"
+    ],
+    "key_skills_tags": [
+     "algorithms"
+    ],
+    "n_key_skills": 8,
+    "salary": true,
+    "salary_rub_month": true,
+    "neg_exp": false,
+    "neg_remote": true,
+    "roles": [
+     "96"
+    ],
+    "archived": false,
+    "area": "Екатеринбург"
+   },
+   "text_sha256": "99e68bfb2f3d4d3767b34c32d2a003af4467d212653ff18d11e17771577d75ee"
+  }
+ ]
+}

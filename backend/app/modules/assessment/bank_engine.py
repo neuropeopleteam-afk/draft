@@ -68,6 +68,7 @@ from app.modules.assessment.grades import (GRADE_RU, category_level, confirm_pct
                                            start_theta)
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.skill_map import stack_gate, to_stack_tags
+from app.modules.assessment.weak_pool import weak_excluded
 
 log = logging.getLogger("assessment")
 
@@ -520,6 +521,8 @@ class BankEngine:
         # Фильтр по стеку (И3): семейства Go, Java, Django, Kafka, Docker — только кандидатам с этим тегом в стеке опроса;
         # уже выданные задания остаются в сессии (они есть в sess.items и записываются ниже)
         excl = set(stack_excluded(state.get("stack")))
+        # Чистка пула (ASSESSMENT_WEAK_EXCLUDE, по умолчанию выкл.): слабые по калибровке семейства не выдаются
+        excl.update(weak_excluded(self._settings()))
         if state["claimed_grade"] == "intern":
             excl.update(intern_exclusions(pool, state["direction"]))
         kw = dict(max_per_format=cfg.get("max_per_format", {}), max_item_time_s=cfg.get("max_item_time_s"),

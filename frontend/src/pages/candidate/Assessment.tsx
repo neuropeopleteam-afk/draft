@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { DefensePanel } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
@@ -14,6 +15,7 @@ import { camera } from "../../proctor/controller";
 import { FeedbackSummary } from "./Feedback";
 import { useLlmOff } from "../../components/LlmOff";
 import { MutualPrefs } from "../mutual/Candidate";  // интересы для взаимного подбора (Н9)
+import { CandidateEvidence } from "../../components/OpenEvidence";  // цитаты из ответа
 
 interface Tag { id: string; title: string; kind: string; direction_id: string | null }
 interface Onb {
@@ -469,6 +471,14 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
       </div>
       </details>
+      {/* доказательная оценка (GRADING_EVIDENCE): короткая фраза о цитатах до начала теста */}
+      {status?.evidence_grading && (
+        <p className="mt-3 text-sm text-brand-ink/75" data-testid="evidence-pretest">
+          <b className="text-brand-night">Развёрнутые ответы — с доказательствами.</b> К каждому пункту рубрики модель
+          приводит дословные цитаты из вашего ответа, программа сверяет их с текстом. После теста цитаты видны на экране
+          результата; работодателю — если вы не скрыли «Цитаты из ответов теста» в настройках приватности.
+        </p>
+      )}
       <IntegrityNotice />
       {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTIONS[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
       {retakeLocked && !locked && (
@@ -868,6 +878,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " LLM-оценщик не подключён: ответы проверяет эксперт." : ""}</Alert></div>}
       {/* И27: вторая оценка спорных ответов идёт в фоне — итог её не ждёт */}
       {(r.second_opinions?.pending > 0 || r.second_opinions?.revised > 0) && <p className="mt-2 text-xs text-brand-ink/65" data-testid="second-opinions">{r.second_opinions.pending > 0 ? `Вторая оценка спорных ответов: ${r.second_opinions.pending} — выполняется в фоне, итог теста её не ждёт; если оценки разойдутся, ответ проверит эксперт. ` : ""}{r.second_opinions.revised > 0 ? `Пересмотрено второй моделью: ${r.second_opinions.revised}${r.second_opinions.disputed ? `, передано эксперту: ${r.second_opinions.disputed}` : ""}.` : ""}</p>}
+      {/* доказательства — цитаты из ответа по пунктам рубрики (только при GRADING_EVIDENCE) */}
+      <CandidateEvidence sessionId={sessionId} />
       {/* Ф6 (В2): итог камеры — один раз, в блоке камеры ниже (в пометке достоверности не повторяется) */}
       {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={meta?.proctor_camera === false ? r.integrity : { ...r.integrity, camera: null }} /></div>}
       {/* Я11 (С3-11): демо-режим жюри — что именно снизило достоверность (причины работодателя; вне демо-режима их нет, Р27) */}
@@ -897,6 +909,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       )}
       <div className="mt-3"><Alert>{err}</Alert></div>
       <FeedbackSummary sessionId={sessionId} fallbackLink />
+      <DefensePanel sessionId={sessionId} />
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>
       </div>

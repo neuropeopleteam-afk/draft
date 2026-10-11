@@ -66,6 +66,10 @@ services:
       # ничего не меняется.
       - path: ${LLM_LOCAL_ENV_FILE:-./secrets/llm_local.env}
         required: false
+      # ИИ-интервьюер (backend/app/modules/interview/engine/DEPLOY.md): ключи ElevenLabs/Deepgram/Anam, ID стокового
+      # аватара и голоса, ретранслятор. Нет файла — движок в заглушке (текст, правила), поставщики не вызываются.
+      - path: ${INTERVIEW_ENV_FILE:-./secrets/interview.env}
+        required: false
       # Web Push: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT. Нет файла — push выключен, остальное работает.
       - path: ${VAPID_ENV_FILE:-./secrets/vapid.env}
         required: false
@@ -80,6 +84,11 @@ services:
       # Паспорт грейда: PASSPORT_SIGNING_KEY — ключ подписи Ed25519 (python tools/passport/genkey.py > secrets/passport.env,
       # chmod 600). Нет файла — эфемерный «тестовый ключ» процесса, страница проверки /verify/<id> так и пишет.
       - path: ${PASSPORT_ENV_FILE:-./secrets/passport.env}
+        required: false
+      # hh.ru (docs/INTEGRATIONS.md): HH_APP_TOKEN — токен приложения работодателя, HH_USER_AGENT. client id/secret не
+      # нужны и не хранятся (повторный запрос токена отзывает действующий). Функции включает HH_ENABLED=true в .env;
+      # нет файла или флага — импорт с hh.ru и «Рынок по hh.ru» скрыты, остальное работает.
+      - path: ${HH_ENV_FILE:-./secrets/hh.env}
         required: false
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fsp}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fsp}
