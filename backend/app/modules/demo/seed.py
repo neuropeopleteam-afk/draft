@@ -471,7 +471,9 @@ EXT_DEMO_FIRST = {"devops": 501, "data_eng": 521, "mobile": 541, "analyst": 561}
 EXT_DEMO_GRADES = ["intern"] * 4 + ["junior"] * 6 + ["middle"] * 6 + ["senior"] * 4
 CORE.update({
     "devops": ["linux", "docker", "kubernetes", "ci-cd", "terraform", "monitoring", "ansible", "helm", "networking",
-               "nginx", "sre", "cloud", "bash", "python", "git", "postgresql"],
+               "nginx", "sre", "cloud", "python", "git", "postgresql"],  # «bash» — синоним тега linux в
+    # словаре разбора (dictionary.py), отдельного тега в справочнике нет: на PostgreSQL FK survey_stack_tags → stack_tags
+    # откатывал весь пересев (FIX7, выкладка 6)
     "data_eng": ["sql", "python", "etl", "dwh", "airflow", "spark", "kafka", "dbt", "clickhouse", "greenplum",
                  "streaming", "data-quality", "postgresql", "git", "docker"],
     "mobile": ["kotlin", "android", "jetpack-compose", "mobile-architecture", "swift", "ios", "swiftui", "flutter",

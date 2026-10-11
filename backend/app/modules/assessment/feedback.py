@@ -30,7 +30,7 @@ from app.modules.assessment.integrity import candidate_view
 from app.modules.assessment.models import TestSession
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES, GRADE_CUTS, GRADE_ORDER, tag_title, known_tag
-from app.modules.profiles.facts import load_bundles
+from app.modules.profiles.facts import load_bundles, skill_confirmed_title
 
 # Только рекомендации для тренировки навыков, не вес соревнований и не рейтинг ФСП.
 # Отделено от profiles/facts.py: в рейтинге v2 все дисциплины равны.
@@ -377,7 +377,10 @@ def _demand(db: Session, direction: str, grade: str | None, bundle, topics: dict
         tp = topics.get(t)
         items.append({"tag": t, "title": _title(t), "required": req_c[t], "desired": des_c[t],
                       "share": round((req_c[t] + des_c[t]) / len(used), 2) if used else 0.0,
-                      "status": st, "status_title": DEMAND_STATUS_TITLES[st], "testable": t in covered,
+                      "status": st, "testable": t in covered,
+                      # FIX7 п. 9: «подтверждён» — по настоящему источнику (тест / задание работодателя)
+                      "status_title": skill_confirmed_title(bundle.skills_t1.get(t)) if st == "confirmed"
+                      else DEMAND_STATUS_TITLES[st],
                       "test_score": tp["score"] if tp else None})
     full, cov = 0, []
     for _, req, _ in used:

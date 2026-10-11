@@ -142,6 +142,28 @@ export const inviteSentText = (inv: any, cref: string) => {
 export const inviteBlockedText = (c: any) =>
   `Приглашение этому кандидату уже отправлено. Следующее — с ${c?.invite_available_at ? dt(c.invite_available_at) : "окончания срока"}${c?.invitation_cooldown_days ? ` (не чаще раза в ${c.invitation_cooldown_days} дней)` : ""}.`;
 
+/** FIX7 В1 (замечание владельца): почему «Отправить приглашение» неактивна — живой список того, что осталось заполнить
+ *  (с числом недостающих знаков). Те же условия, что у disabled кнопки; сервер проверяет их же (employer/invitations). */
+export const INVITE_MIN = { title: 3, desc: 20, contact: 3 } as const;
+const left = (n: number) => `ещё ${n} ${plural(n, "знак", "знака", "знаков")}`;
+export function inviteMissing(o: { title: string; desc: string; contact: string; minor?: boolean; offerAllowed?: boolean; format: string; reduced: boolean; ack: boolean }) {
+  const out: { field: "title" | "desc" | "contact" | "format" | "reduced" | "ack" | "offer"; text: string }[] = [];
+  const t = o.title.trim().length, d = o.desc.trim().length, c = o.contact.trim().length;
+  if (t < INVITE_MIN.title) out.push({ field: "title", text: `«Позиция» — ${left(INVITE_MIN.title - t)}` });
+  if (d < INVITE_MIN.desc) out.push({ field: "desc", text: `«Суть предложения» — ${left(INVITE_MIN.desc - d)} (минимум ${INVITE_MIN.desc})` });
+  if (c < INVITE_MIN.contact) out.push({ field: "contact", text: `«Как с вами связаться» — Telegram, почта или телефон (${left(INVITE_MIN.contact - c)})` });
+  if (o.minor) {
+    if (!o.offerAllowed) out.push({ field: "offer", text: "оффер этому кандидату недоступен (14–15 лет или нет отметки согласия) — см. пояснение выше" });
+    else {
+      if (o.format === "employment") out.push({ field: "format", text: "«Формат предложения» — для 16–17 лет стажировка или лёгкий труд" });
+      if (!o.reduced) out.push({ field: "reduced", text: "отметку «Сокращённое рабочее время» — обязательно для 16–17 лет" });
+      if (!o.ack) out.push({ field: "ack", text: "отметку «Проверю документы и ограничения перед оформлением»" });
+    }
+  }
+  return out;
+}
+const warnRing = (on: boolean) => (on ? " !border-amber-500 ring-2 ring-amber-200" : "");
+
 export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }: { cref: string; needId?: string | null; probeId?: string | null; market: Market; needSalary?: NeedSalary; onDone: (inv: any) => void }) {
   const candidate = useApi<any>(`/employer/candidates/${cref}`);
   const safety = candidate.data?.employment_safety;
@@ -162,6 +184,12 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
   const [limitHit, setLimitHit] = useState(false);  // Я29: 409 tariff_limit — ссылка на тарифы
   const [sending, setSending] = useState(false);  // Я11 (С3-6): «Отправляем…» сразу, повторное нажатие не шлёт второй POST
   const inFlight = useRef(false);
+  // В1: что мешает отправке — список под кнопкой; поля подсвечиваем, когда пользователь начал заполнять форму
+  const missing = inviteMissing({ title, desc, contact, minor: !!safety?.minor, offerAllowed: !!safety?.offer_allowed, format, reduced, ack });
+  const miss = new Set<string>(missing.map((m) => m.field));
+  const [touched, setTouched] = useState(false);
+  const show = touched || !!(title || desc || contact);
+  const hl = (f: string) => warnRing(show && miss.has(f));
   async function send() {
     if (inFlight.current) return;
     const se = salaryError(from, to);
@@ -174,21 +202,32 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
   }
   return (
     <div className="space-y-4">
-      <Field label="Позиция" htmlFor="it"><input id="it" className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Python-разработчик в команду платежей" /></Field>
-      <Field label="Суть предложения" htmlFor="idesc"><textarea id="idesc" className="input min-h-[110px]" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Задачи, команда, формат, что предлагаем" /></Field>
-      <Field label="Как с вами связаться" htmlFor="ic"><input id="ic" className="input" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Telegram @hr_company или hr@company.ru" /></Field>
+      <Field label="Позиция" htmlFor="it"><input id="it" className={`input${hl("title")}`} aria-invalid={(show && miss.has("title")) || undefined} aria-describedby="invite-missing" value={title} onBlur={() => setTouched(true)} onChange={(e) => setTitle(e.target.value)} placeholder="Python-разработчик в команду платежей" /></Field>
+      <Field label="Суть предложения" htmlFor="idesc"><textarea id="idesc" className={`input min-h-[110px]${hl("desc")}`} aria-invalid={(show && miss.has("desc")) || undefined} aria-describedby="invite-desc-count invite-missing" value={desc} onBlur={() => setTouched(true)} onChange={(e) => setDesc(e.target.value)} placeholder="Задачи, команда, формат, что предлагаем" />
+        <p id="invite-desc-count" className={`mt-1 text-xs ${desc.trim().length < INVITE_MIN.desc ? "text-amber-800" : "text-brand-ink/65"}`} data-testid="invite-desc-count">{desc.trim().length} / {INVITE_MIN.desc} знаков минимум</p></Field>
+      <Field label="Как с вами связаться" htmlFor="ic"><input id="ic" className={`input${hl("contact")}`} aria-invalid={(show && miss.has("contact")) || undefined} aria-describedby="invite-missing" value={contact} onBlur={() => setTouched(true)} onChange={(e) => setContact(e.target.value)} placeholder="Telegram @hr_company или hr@company.ru" /></Field>
       <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} basis={basis} setBasis={setBasis} market={market} hh={{ cref, needId }} />
       <OfferFitHint cref={cref} needId={needId} from={Number(from) || undefined} to={Number(to) || undefined} basis={basis} />
       {safety?.minor && <Alert kind="info">{safety.warning} {!safety.offer_allowed && "Оффер недоступен: возраст 14–15 лет или ещё нет отметки согласия."}</Alert>}
-      <Field label="Формат предложения" htmlFor="offer-format"><select id="offer-format" className="input" value={format} onChange={e => setFormat(e.target.value)}>
+      <Field label="Формат предложения" htmlFor="offer-format"><select id="offer-format" className={`input${hl("format")}`} value={format} onChange={e => setFormat(e.target.value)}>
         {formats.map((f) => <option key={f} value={f}>{FORMAT_TITLES[f] ?? f}</option>)}
       </select></Field>
-      <Toggle checked={reduced} onChange={setReduced} label="Сокращённое рабочее время" />
+      {/* В1: сокращённое время — условие только для 16–17 лет (backend/modules/fsp/youth.py); взрослым переключатель не нужен */}
+      {safety?.minor && <Toggle checked={reduced} onChange={setReduced} label="Сокращённое рабочее время" />}
       {safety?.minor && <Toggle checked={ack} onChange={setAck} label="Проверю документы и ограничения перед оформлением" />}
       <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. {rules ? `Одно приглашение кандидату — не чаще раза в ${daysText(rules.invitation_cooldown_days)}. ` : ""}До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
       <Alert>{err && <>{err}{limitHit && <> <Link to="/employer/tariffs" className="font-semibold underline">Открыть тарифы</Link></>}</>}</Alert>
       <InvitesLeft />
-      <button className="btn-primary" aria-busy={sending || undefined} disabled={sending || candidate.loading || !!candidate.error || title.length < 3 || desc.length < 20 || contact.length < 3 || (safety?.minor && (!safety.offer_allowed || format === "employment" || !reduced || !ack))} onClick={send}>{sending ? "Отправляем приглашение…" : "Отправить приглашение"}</button>
+      <button className="btn-primary" aria-busy={sending || undefined} aria-describedby="invite-missing" disabled={sending || candidate.loading || !!candidate.error || missing.length > 0} onClick={send}>{sending ? "Отправляем приглашение…" : "Отправить приглашение"}</button>
+      <div id="invite-missing" aria-live="polite" data-testid="invite-missing">
+        {missing.length > 0 && (
+          <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950 ring-1 ring-amber-200">
+            <p className="font-semibold">Чтобы отправить, заполните:</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4">{missing.map((m) => <li key={m.field}>{m.text}</li>)}</ul>
+          </div>
+        )}
+        {missing.length === 0 && candidate.loading && <p className="text-xs text-brand-ink/65">Загружаем данные кандидата…</p>}
+      </div>
       <p className="sr-only" role="status" aria-live="polite">{sending ? `Отправляем приглашение кандидату ${cref}` : ""}</p>
       {candidate.error && <Alert>{candidate.error}</Alert>}
     </div>

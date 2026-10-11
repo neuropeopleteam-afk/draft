@@ -26,7 +26,7 @@ from app.modules.matching import core_skill, ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
 from app.core.origin import NO_FSP, NO_FSP_SHORT
 from app.modules.profiles.facts import (GRADE_CUTS, card, fmt_count, load_bundles, skill_check_text, skill_confirmed,
-                                       skill_evidence_text)
+                                       skill_evidence_text, skill_origin)
 from app.modules.profiles.models import Company
 
 MIN_REFS, MAX_REFS = 2, 3
@@ -84,7 +84,9 @@ def _stack_cell(b, tag: str) -> tuple[dict, float | None]:
         sc = float(f.value.get("score", 0))
         multi = len(f.value.get("parts") or {}) > 1  # Ф6 (Н5): тест и задание работодателя — раздельные исходы
         return ({"level": "T1", "status": "confirmed",
-                 "text": skill_evidence_text(f) if multi else f"Подтверждено заданиями: {fmt_count(f.value.get('correct'))} из "
+                 "text": skill_evidence_text(f) if multi else
+                 # FIX7 п. 11: задание работодателя — не «задания теста»
+                 f"Подтверждено {'заданием работодателя' if skill_origin(f) == 'assignment' else 'заданиями'}: {fmt_count(f.value.get('correct'))} из "
                          f"{fmt_count(f.value.get('total'))} ({sc * 100:.0f} %)"}, sc)
     if f is not None:  # проверялось тестом, но ниже порога подтверждения
         sc = float(f.value.get("score", 0))

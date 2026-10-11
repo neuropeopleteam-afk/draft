@@ -119,9 +119,19 @@ test("работодатель: потребность → подборка с �
     await page.getByRole("button", { name: "Пригласить" }).click();
     const dialog = page.getByRole("dialog", { name: "Приглашение-оффер" });
     await expect(dialog).toBeVisible();
+    // FIX7 В1: неактивная кнопка объясняет себя — живой список недостающего со счётчиком знаков
+    const missing = dialog.getByTestId("invite-missing");
+    await expect(dialog.getByRole("button", { name: "Отправить приглашение" })).toBeDisabled();
+    await expect(missing).toContainText("Чтобы отправить, заполните:");
+    await expect(missing).toContainText("«Суть предложения» — ещё 20 знаков");
+    await expect(dialog.getByText("Сокращённое рабочее время")).toHaveCount(0);  // взрослому кандидату — не нужно
     await dialog.locator("#it").fill(POSITION);
+    await dialog.locator("#idesc").fill("Команда выплат");
+    await expect(missing).toContainText("ещё 6 знаков");
+    await expect(dialog.locator("#idesc")).toHaveAttribute("aria-invalid", "true");
     await dialog.locator("#idesc").fill("Команда выплат: FastAPI, PostgreSQL, Redis. Удалённо, гибкий график. Проверка e2e.");
     await dialog.locator("#ic").fill("hr@jury.example.com");
+    await expect(missing).not.toContainText("Чтобы отправить");
     // вилка обязательна: пустое «до» не отправляется
     await dialog.locator("#sf").fill("240000");
     await dialog.locator("#st").fill("");
@@ -193,6 +203,19 @@ test("кандидат принимает → работодатель види�
     await expect(main.getByRole("heading", { level: 1, name: "Интеграция с ATS" })).toBeVisible();
     const journal = main.getByRole("table").filter({ has: page.getByRole("columnheader", { name: "Куда" }) });
     await expect(main.getByRole("heading", { level: 2, name: "Журнал передач" })).toBeVisible();
+    // FIX7 В2: первая вкладка — «Поток», остальные — в «Другие ATS»; в «Реальный» — откуда токен; причина неактивной проверки
+    const atsSeg = main.getByRole("radiogroup", { name: "ATS" });
+    await expect(atsSeg.getByRole("radio").first()).toHaveText(/^«Поток»/);
+    await expect(atsSeg.getByRole("radio").first()).toHaveAttribute("aria-checked", "true");
+    await expect(atsSeg.getByRole("radio", { name: /^Другие ATS/ })).toBeVisible();
+    await expect(main.getByTestId("ats-live-check")).toContainText("docs/integrations/LIVE_CHECKS.md");
+    await main.getByRole("radiogroup", { name: "Режим" }).getByRole("radio", { name: "Реальный" }).click();
+    await expect(main.getByTestId("ats-token-from")).toContainText("Настройки компании → «Генерация токенов»");
+    await expect(main.getByRole("button", { name: "Проверить подключение" })).toBeDisabled();
+    await expect(main.getByTestId("ats-check-why")).toContainText("сначала вставьте токен");
+    await main.getByRole("radiogroup", { name: "Режим" }).getByRole("radio", { name: "Демо" }).click();
+    await atsSeg.getByRole("radio", { name: /^Другие ATS/ }).click();
+    await expect(main.getByRole("radiogroup", { name: "Другие ATS" }).getByRole("radio", { name: /^Talantix/ })).toHaveAttribute("aria-checked", "true");
     // принятое приглашение уходит автоматически во все подключённые демо-ATS
     for (const ats of ["Talantix", "Поток", "Хантфлоу", "Вебхук"]) {
       const row = journal.getByRole("row").filter({ hasText: POSITION }).filter({ has: page.getByRole("cell", { name: ats, exact: true }) });
