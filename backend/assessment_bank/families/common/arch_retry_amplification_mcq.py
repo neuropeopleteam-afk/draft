@@ -6,10 +6,16 @@
 запросов получит база на один пользовательский запрос?
 
 Ключ: f₃ = p, E₃ = Σ_{j=0..r₃} p^j; f₂ = p^(1+r₃), E₂ = Σ_{j=0..r₂} f₂^j; f₁ = f₂^(1+r₂), E₁ = Σ_{j=0..r₁} f₁^j;
-ответ — E₁·E₂·E₃. Дистракторы одной числовой формы:
+ответ — E₁·E₂·E₃. Дистракторы одной числовой формы — три из пяти (версия 2: число ловушек ниже ключа
+равновероятно 0, 1 или 2, поэтому место ключа по величине меняется между вариантами):
+  выше ключа —
   * full_outage — произведение (1 + r_i), как будто база отказала полностью (верхняя граница);
+  * independent_layers — каждый слой «видит» отказ с той же вероятностью p: Π Σ_j p^j;
+  * top_sees_p — забыто только для шлюза: Σ_j p^j (шлюз) · E₂ · E₃;
+  ниже ключа —
   * bottom_only — учтены только повторы нижнего слоя (E₃);
-  * independent_layers — каждый слой «видит» отказ с той же вероятностью p: Π Σ_j p^j.
+  * additive — повторы слоёв сложены, а не перемножены: E₁ + E₂ + E₃ − 2.
+Числа в вариантах — три значащие цифры (2,50 / 24,0), чтобы длина подписи не выдавала величину.
 Ключ проверяется исполнением: программа-модель перечисляет все исходы попыток по дереву вызовов точной
 арифметикой (Fraction) — распределение пар (успех, число запросов к базе) — и печатает букву варианта.
 """
@@ -62,6 +68,11 @@ print(hit[0] if len(hit) == 1 else "AMBIGUOUS")
 """
 
 
+def _sig3(x: float) -> str:
+    """Три значащие цифры: длина подписи варианта не выдаёт порядок величины (2,50 / 24,0)."""
+    return fmt_num(x, 2 if x < 10 else 1 if x < 100 else 0)
+
+
 def _geom(q: Fraction, r: int) -> Fraction:
     return sum((q ** j for j in range(r + 1)), Fraction(0))
 
@@ -69,22 +80,27 @@ def _geom(q: Fraction, r: int) -> Fraction:
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     gw, s1, s2, db = rng.choice(CONTEXTS)
+    n_below = rng.choice([0, 1, 2])          # сколько ловушек ниже ключа — равновероятно, до подбора чисел
     for _ in range(400):
         r1, r2, r3 = rng.choice([1, 2]), rng.choice([2, 3]), rng.choice([2, 3, 4])
-        p = rng.choice([Fraction(1, 2), Fraction(3, 5), Fraction(7, 10), Fraction(4, 5)])
+        p = rng.choice([Fraction(1, 2), Fraction(11, 20), Fraction(3, 5), Fraction(13, 20), Fraction(7, 10),
+                        Fraction(3, 4), Fraction(4, 5), Fraction(17, 20)])
         e3 = _geom(p, r3)
         f2 = p ** (1 + r3)
         e2 = _geom(f2, r2)
         f1 = f2 ** (1 + r2)
         e1 = _geom(f1, r1)
-        vals = {"good": e1 * e2 * e3, "full_outage": Fraction((1 + r1) * (1 + r2) * (1 + r3)),
-                "bottom_only": e3, "independent_layers": _geom(p, r1) * _geom(p, r2) * e3}
+        above = {"full_outage": Fraction((1 + r1) * (1 + r2) * (1 + r3)),
+                 "independent_layers": _geom(p, r1) * _geom(p, r2) * e3, "top_sees_p": _geom(p, r1) * e2 * e3}
+        below = {"bottom_only": e3, "additive": e1 + e2 + e3 - 2}
+        traps = rng.sample(sorted(below), n_below) + rng.sample(sorted(above), 3 - n_below)
+        vals = {"good": e1 * e2 * e3, **{k: (above | below)[k] for k in traps}}
         fl = {k: float(v) for k, v in vals.items()}
-        if well_separated(list(fl.values()), 0.12) and fl["good"] > fl["bottom_only"] * 1.12:
+        if well_separated(list(fl.values()), 0.12):
             break
     else:
         raise RuntimeError("не удалось подобрать параметры")
-    text = {k: f"≈ {fmt_num(v, 2)} запроса" for k, v in fl.items()}
+    text = {k: f"≈ {_sig3(v)} запроса" for k, v in fl.items()}
     rr = lambda r: f"{r} {plural(r, 'раза', 'раз', 'раз')}"
     pct = round(100 * float(p))
     stem = (f"Цепочка: «{gw}» → «{s1}» → «{s2}» → «{db}». При неудачном вызове нижнего звена «{gw}» повторяет "
@@ -94,16 +110,24 @@ def generate(seed: int):
             f"запрос?")
     retries = [r1, r2, r3]
     program = PROGRAM.format(pn=p.numerator, pd=p.denominator, retries=retries)
-    expl = (f"Нижнее звено делает в среднем Σ p^j = {fmt_num(fl['bottom_only'], 2)} попытки на вызов, но его вызов "
+    allv = {k: float(v) for k, v in (above | below).items()}
+    why = {"full_outage": f"произведение (1 + r_i) = {_sig3(allv['full_outage'])} — полный отказ базы (верхняя граница)",
+           "independent_layers": (f"«каждый слой видит отказ с вероятностью p» — {_sig3(allv['independent_layers'])}: "
+                                  f"забыто, что повторы нижних слоёв уже снизили вероятность отказа звена"),
+           "top_sees_p": (f"«шлюз видит отказ с вероятностью p» — {_sig3(allv['top_sees_p'])}: то же упущение "
+                          f"для верхнего слоя"),
+           "bottom_only": f"только повторы нижнего звена — {_sig3(allv['bottom_only'])}: верхние слои не учтены",
+           "additive": (f"сумма E₁ + E₂ + E₃ − 2 = {_sig3(allv['additive'])}: повторы слоёв сложены, а они "
+                        f"перемножаются")}
+    expl = (f"Нижнее звено делает в среднем Σ p^j = {_sig3(allv['bottom_only'])} попытки на вызов, но его вызов "
             f"неудачен только с вероятностью p^{1 + r3}; верхние слои повторяют с этой (меньшей) вероятностью, "
-            f"поэтому итог — произведение средних чисел вызовов по слоям ≈ {fmt_num(fl['good'], 2)}. "
-            f"Произведение (1 + r_i) = {fmt_num(fl['full_outage'], 2)} — полный отказ базы (верхняя граница); "
-            f"«каждый слой видит отказ с вероятностью p» — {fmt_num(fl['independent_layers'], 2)}: забыто, что "
-            f"повторы нижних слоёв уже снизили вероятность отказа звена. Вывод для ведущего: повторы на каждом "
-            f"слое умножаются — нужен бюджет повторов и повтор только на одном слое.")
+            f"поэтому итог — произведение средних чисел вызовов по слоям ≈ {_sig3(fl['good'])}. Ловушки: "
+            + "; ".join(why[k] for k in sorted(traps)) +
+            ". Вывод для ведущего: повторы на каждом слое умножаются — нужен бюджет повторов и повтор только на "
+            "одном слое.")
     return numeric_mcq(FAMILY_ID, seed, rng, ctx=gw, stem=stem, good=text["good"],
-                       distractors=[text["full_outage"], text["bottom_only"], text["independent_layers"]],
+                       distractors=[text[k] for k in traps],
                        program=program, explanation=expl,
-                       params={"retries": retries, "p": str(p), "mean": round(fl["good"], 4)},
+                       params={"retries": retries, "p": str(p), "mean": round(fl["good"], 4), "traps": traps},
                        note="Ответ проверяется программой-моделью: перечисление всех исходов попыток по дереву "
                             "вызовов точной арифметикой.")

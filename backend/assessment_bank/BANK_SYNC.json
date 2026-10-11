@@ -1,9 +1,9 @@
 {
   "source": "../bank",
-  "commit": "9695472",
+  "commit": "705e743",
   "dirty_files": 0,
-  "content_hash": "2c7d82bbb008b587",
-  "synced_at": "2026-10-11T11:23:07+00:00",
+  "content_hash": "a4397d996399af73",
+  "synced_at": "2026-10-11T14:15:28+00:00",
   "n_families": 342,
   "by_direction": {
     "analyst": {
@@ -263,7 +263,7 @@
         "choose_fix": 52,
         "open_book_3step": 22
       },
-      "seconds": 378.2
+      "seconds": 181.9
     },
     "seeds": 20,
     "verify_seeds": 3,
