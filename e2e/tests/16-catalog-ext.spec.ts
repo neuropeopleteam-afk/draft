@@ -140,7 +140,7 @@ test("работодатель: потребность Android → «Мобил�
   await test.step("подборка: кандидаты направления, подпись «модель, не люди»", async () => {
     await main.getByRole("button", { name: /^(Подтвердить остальные и показать|Сохранить и показать) подборку$/ }).click();
     await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+$/, { timeout: 60_000 });
-    const total = main.getByText(/^v1 · кандидатов:/);
+    const total = main.getByText(/^версия 1 · кандидатов:/);
     await expect(total).toBeVisible();
     expect(Number((await total.locator("b").textContent()) ?? 0), "кандидатов в подборке").toBeGreaterThanOrEqual(1);
     await expect(main.getByText(/модель, не люди/).first()).toBeVisible();

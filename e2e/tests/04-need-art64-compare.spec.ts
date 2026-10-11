@@ -59,7 +59,7 @@ test("потребность: ст. 64 → цитаты и предупрежд�
   await test.step("подборка по исправленной потребности", async () => {
     await main.getByRole("button", { name: /^(Подтвердить остальные и показать|Сохранить и показать) подборку$/ }).click();
     await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+$/, { timeout: 60_000 });
-    const total = main.getByText(/^v1 · кандидатов:/);
+    const total = main.getByText(/^версия 1 · кандидатов:/);
     await expect(total).toBeVisible();
     expect(Number((await total.locator("b").textContent()) ?? 0), "кандидатов в подборке").toBeGreaterThanOrEqual(3);
     // место в кубке — один раз («Кубок «…» — 2 место из 5»), θ — с запятой, как в сравнении
