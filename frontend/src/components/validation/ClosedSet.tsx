@@ -15,7 +15,8 @@ export default function ClosedSet() {
   const [busy, setBusy] = useState(false);
   const [filename, setFilename] = useState("");
   // Ф6 (В10): форма свёрнута — сначала доказательства («5 чисел» выше), затем свои данные по кнопке; по #closed-set — раскрыта
-  const [open, setOpen] = useState(() => window.location.hash === "#closed-set");
+  // W2: #evaluate — короткий адрес из «Экспертизы ФСП» («Проверка на своём JSON/CSV-наборе»)
+  const [open, setOpen] = useState(() => window.location.hash === "#closed-set" || window.location.hash === "#evaluate");
   const body = { content, format, k };
   const authenticate = async () => {
     if (!isJury(me?.email) || !["employer", "admin"].includes(me?.role ?? "")) {
@@ -46,7 +47,8 @@ export default function ClosedSet() {
     finally { setBusy(false); }
   };
   return (
-    <section id="closed-set" className="mt-12 rounded-2xl border border-brand-night/10 bg-white p-5 md:p-7">
+    <section id="closed-set" className="mt-12 scroll-mt-20 rounded-2xl border border-brand-night/10 bg-white p-5 md:p-7">
+      <span id="evaluate" className="block scroll-mt-20" aria-hidden="true" />
       <p className="text-xs font-semibold uppercase tracking-wider text-brand-plum">Проверка на ваших данных</p>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1 basis-72">

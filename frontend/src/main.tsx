@@ -8,10 +8,13 @@ import { AuthProvider } from "./lib/auth";
 import { MetaProvider } from "./lib/meta";
 import "./index.css";
 import { registerPwa } from "./integrations/pwa";
+import { currentTheme } from "./lib/theme";
 
 // Я16: код приложения загрузился и выполняется — сторож index.html убирает метку повтора ?r= из адреса
 window.__fspBoot?.started();
 registerPwa();
+// W2: тема публичных страниц — до первой отрисовки, без вспышки другой темы
+document.documentElement.dataset.theme = currentTheme();
 
 /** Ошибка отрисовки внутри приложения снимается переходом по меню (resetKey — адрес страницы, docs/LOAD.md). */
 function Guarded() {

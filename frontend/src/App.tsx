@@ -1,5 +1,5 @@
 import { Suspense, useEffect } from "react";
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { RouteAnnouncer, SkipLink } from "./components/A11y";  // А11: пропуск навигации, смена экрана
 import { JuryGuide } from "./components/JuryGuide";
 import { StudyDock } from "./components/study/StudyDock";
@@ -62,6 +62,7 @@ const pg = {
   interview: () => import("./components/Interview"),  // Я15: разговор устной защиты и ИИ-интервью
   tariffs: () => import("./pages/employer/Tariffs"),  // Я29: тарифы работодателя (TARIFFS_ENABLED)
   fspBenefit: () => import("./ideas/fsp/Benefit"),  // Я29: «Польза для ФСП» и «Партнёры ФСП»
+  expertise: () => import("./pages/public/Expertise"),  // W2: единый хаб «Экспертиза ФСП»
 };
 
 // FIX7: файлы основных разделов маршрута жюри — заранее, когда браузер свободен (lib/preload.ts): переход в раздел
@@ -143,6 +144,7 @@ const LiveScreen = lazyNamed(pg.liveScreen, "default");
 const PassportVerify = lazyNamed(pg.passport, "default");
 const Criteria = lazyNamed(pg.criteria, "default");
 const JuryGo = lazyNamed(pg.criteria, "JuryGo");
+const Expertise = lazyNamed(pg.expertise, "default");
 
 export default function App() {
   useEffect(() => { preloadSections(PRELOAD); }, []);
@@ -155,6 +157,9 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/validation" element={<Validation />} />
       <Route path="/criteria" element={<Criteria />} />
+      {/* W2: «Экспертиза ФСП» — всё для экспертов жюри; /security — короткий адрес «Красной кнопки» */}
+      <Route path="/expertise" element={<Expertise />} />
+      <Route path="/security" element={<Navigate to="/validation#red-button" replace />} />
       <Route path="/jury/go" element={<JuryGo />} />
       <Route path="/study" element={<StudyAbout />} />
       <Route path="/tariffs" element={<TariffsPublic />} />
@@ -260,10 +265,10 @@ function NotFound() {
     <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
       <p className="text-6xl font-extrabold text-brand" aria-hidden="true">404</p>
       <h1 className="text-xl font-bold text-brand-night">Такой страницы нет</h1>
-      <p className="max-w-sm text-sm text-brand-ink/70">Возможно, ссылка устарела. Демо-учётки для жюри — на главной, вход в один клик.</p>
+      <p className="max-w-sm text-sm text-brand-ink/70">Возможно, ссылка устарела. Демо-учётки для жюри — во вкладке «Экспертиза ФСП», вход в один клик.</p>
       <div className="flex flex-wrap justify-center gap-3">
         <Link to="/" className="btn-primary">На главную</Link>
-        <Link to="/#jury" className="btn-ghost">Демо для жюри</Link>
+        <Link to="/expertise" className="btn-ghost">Экспертиза ФСП</Link>
       </div>
     </main>
   );
