@@ -221,7 +221,7 @@ function JuryGoLink() {
           <p className="max-w-sm text-sm text-brand-ink/80">{err}</p>
           <div className="flex flex-wrap justify-center gap-3">
             <button type="button" className="btn-primary" onClick={() => location.reload()}>Повторить</button>
-            <Link to="/#jury" className="btn-ghost">Демо-учётки на главной</Link>
+            <Link to="/expertise" className="btn-ghost">Демо-учётки: «Экспертиза ФСП»</Link>
             <Link to="/criteria" className="btn-ghost">К критериям ТЗ</Link>
           </div>
         </>

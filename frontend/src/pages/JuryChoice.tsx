@@ -64,7 +64,7 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
             <p className="mt-2 text-xs leading-relaxed text-brand-ink/65">Полный тест на грейд — 8–16 заданий и дотестирование у порога, планируйте до 80 минут; в проверке за 12 минут вместо него — экспресс-тест краткого режима жюри.</p>
             <div className="mt-auto flex flex-wrap gap-2 pt-5">
               <button type="button" className="btn-ghost" disabled={busy} onClick={startFull}>Начать справочник с регистрации</button>
-              <Link to="/#jury" className="btn-ghost" onClick={() => quick.setMode("full")}>Выбрать роль на главной</Link>
+              <Link to="/expertise#jury-roles-anchor" className="btn-ghost" onClick={() => quick.setMode("full")}>Выбрать роль</Link>
             </div>
           </section>
         </div>
