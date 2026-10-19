@@ -299,7 +299,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/employer/needs/{need_id}/compare"): "employer_own",
     ("POST", "/api/employer/needs/{need_id}/advisor"): "employer_own",  # Н1 ИИ-советник руководителя
     ("POST", "/api/employer/needs/{need_id}/advisor/avatar-token"): ("employer_own", {"employer": 503, "jury_employer": 503}),
-    ("POST", "/api/employer/needs/{need_id}/advisor/speech"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/advisor/speech"): ("employer_own", {"employer": 503, "jury_employer": 503}),
     ("GET", "/api/employer/probes"): "employer",
     ("POST", "/api/employer/probes"): "employer_ref",
     ("POST", "/api/employer/probes/{probe_id}/review"): "employer_own",
