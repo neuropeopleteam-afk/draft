@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, Level, Loading, Modal, Status, dt, dtEnd, dtt, errText, useApi } from "../../components/ui";
+import { Alert, Empty, Field, Level, Loading, Modal, Status, dt, dtEnd, dtt, errText, plural, useApi } from "../../components/ui";
+import { FspMark } from "../../components/FspTournament";
 import { salaryText } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { CodeBlock, Countdown, ENTRY, MODE_SHORT, Phase, mins } from "../shared";
@@ -38,7 +39,8 @@ function CupGrid({ title, items }: { title: string; items: any[] }) {
           <Link key={c.id} to={c.id} className="card block transition-shadow hover:shadow-md hover:ring-2 hover:ring-brand/30">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{c.company?.name} · {MODE_SHORT[c.mode]}</p>
+                {c.tournament && <p className="mb-1.5 flex items-center gap-2"><FspMark /><span className="text-xs font-semibold text-brand-night">Отборочный турнир ФСП</span></p>}
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{c.company?.name} · {c.tournament ? c.tournament.discipline : MODE_SHORT[c.mode]}</p>
                 <p className="mt-1 text-lg font-bold text-brand-night">{c.title}</p>
               </div>
               <Phase p={c.phase} />
@@ -96,10 +98,17 @@ export function CandidateCup() {
       </div>
       {!solving && (
         <section className="card space-y-3">
+          {c.tournament && (
+            <div className="rounded-xl border-l-4 border-brand bg-brand-blush/40 px-4 py-3">
+              <p className="flex flex-wrap items-center gap-2"><FspMark /><span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-plum">Отборочный турнир ФСП · {c.tournament.discipline}</span></p>
+              <p className="mt-1.5 text-sm font-semibold leading-relaxed text-brand-night">Приз: {c.tournament.prize}</p>
+              {c.tournament.stack?.length > 0 && <p className="mt-1 text-xs text-brand-ink/70">Стек вакансии: {c.tournament.stack.join(", ")}</p>}
+            </div>
+          )}
           <p className="text-sm leading-relaxed text-brand-ink/80">{c.description}</p>
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <div><dt className="text-brand-ink/65">Срок</dt><dd className="font-semibold">{dt(c.starts_at)} — {dt(c.ends_at)}</dd></div>
-            <div><dt className="text-brand-ink/65">Время на решение</dt><dd className="font-semibold">{c.time_limit_min} мин с момента старта{c.mode === "auto" ? `, ${c.n_tasks} заданий` : ""}</dd></div>
+            <div><dt className="text-brand-ink/65">Время на решение</dt><dd className="font-semibold">{c.time_limit_min} мин с момента старта{c.mode === "auto" ? `, ${c.n_tasks} ${plural(c.n_tasks, "задание", "задания", "заданий")}` : ""}</dd></div>
             <div><dt className="text-brand-ink/65">Приглашение лучшим</dt><dd className="font-semibold">топ-{c.invite_top_n} с баллом от {c.min_score_pct} %: «{c.position_title}», {salaryText(c.salary_from, c.salary_to, c.salary_basis)}</dd></div>
             <div><dt className="text-brand-ink/65">Участники</dt><dd className="font-semibold">{c.participants}</dd></div>
           </dl>

@@ -6,6 +6,7 @@ import { BasisSeg, MarketNote, otherBasis, salaryText, type Basis } from "../../
 import { api } from "../../lib/api";
 import { ENTRY, MODE_SHORT, Phase, mins } from "../shared";
 import { LlmOff } from "../../components/LlmOff";
+import { FspMark, TournamentLaunch, TournamentPassport, isTournament } from "../../components/FspTournament";
 
 type Mode = "auto" | "rubric" | "employer";
 const CATEGORIES = Object.keys(DIRECTIONS).flatMap((d) => Object.keys(GRADES).map((g) => `${d}.${g}`));
@@ -23,6 +24,7 @@ export function EmployerCups() {
         <button className="btn-primary" onClick={() => setOpen(true)}>Запустить кубок</button>
       </div>
       {error && <Alert>{error}</Alert>}
+      <NeedTournament />
       {loading && !data ? <Loading /> : !data?.length ? (
         <Empty title="Кубков пока нет" text="Задайте категорию, задачу, срок и вилку зарплаты — кандидаты категории увидят кубок у себя в кабинете."
           action={<button className="btn-primary" onClick={() => setOpen(true)}>Запустить первый кубок</button>} />
@@ -32,7 +34,8 @@ export function EmployerCups() {
             <Link key={c.id} to={c.id} className="card block transition-shadow hover:shadow-md hover:ring-2 hover:ring-brand/30">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{c.category_title} · {MODE_SHORT[c.mode]}</p>
+                  {isTournament(c) && <p className="mb-1.5 flex items-center gap-2"><FspMark /><span className="text-xs font-semibold text-brand-night">Кубок компании × ФСП</span></p>}
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{c.category_title} · {isTournament(c) ? c.tournament.discipline : MODE_SHORT[c.mode]}</p>
                   <p className="mt-1 text-lg font-bold text-brand-night">{c.title}</p>
                 </div>
                 <Phase p={c.phase} />
@@ -52,6 +55,24 @@ export function EmployerCups() {
       <CreateCup open={open} onClose={() => setOpen(false)} onCreated={(id) => { setOpen(false); void reload(); navigate(id); }} />
     </div>
   );
+}
+
+/** Н5: отборочный турнир ФСП под одну из потребностей компании (вилка, стек и категория — из потребности). */
+function NeedTournament() {
+  const needs = useApi<any[]>("/employer/needs");
+  const [pick, setPick] = useState("");
+  const list = needs.data ?? [];
+  if (!list.length) return null;
+  const cur = list.find((n) => n.id === pick) ?? list[0];
+  const picker = list.length > 1 ? (
+    <label className="flex flex-wrap items-center gap-2 text-sm">
+      <span className="font-semibold text-white/85">Потребность</span>
+      <select className="input w-auto max-w-full py-2 text-brand-ink" value={cur.id} onChange={(e) => setPick(e.target.value)}>
+        {list.map((n) => <option key={n.id} value={n.id}>{n.title}</option>)}
+      </select>
+    </label>
+  ) : null;
+  return <TournamentLaunch key={cur.id} needId={cur.id} title={list.length > 1 ? undefined : cur.title} picker={picker} />;
 }
 
 interface Draft {
@@ -254,7 +275,10 @@ export function EmployerCup() {
     <div className="max-w-5xl space-y-6">
       <Link to=".." relative="path" className="text-sm font-semibold text-brand-plum hover:text-brand">← Все кубки</Link>
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <PageTitle title={c.title} subtitle={`${c.category_title} · ${c.mode_title}`} />
+        <div className="min-w-0">
+          {isTournament(c) && <p className="mb-2 flex items-center gap-2"><FspMark /><span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Отборочный турнир ФСП · {c.tournament.discipline}</span></p>}
+          <PageTitle title={c.title} subtitle={`${c.category_title} · ${c.mode_title}`} />
+        </div>
         <Phase p={c.phase} />
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -304,6 +328,7 @@ export function EmployerCup() {
           </table>
         )}
       </section>
+      {isTournament(c) && <TournamentPassport cup={c} onInvite={async (entryId) => setData(await api<any>(`/employer/cups/${id}/entries/${entryId}/invite`, { body: {} }))} />}
       {review.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-lg font-bold text-brand-night">Решения — оценка вслепую{c.to_review ? ` · ждут оценки: ${c.to_review}` : ""}</h2>
