@@ -1,10 +1,15 @@
 // Общая запись голоса «нажми и говори» (интервью, голосовой ввод потребности). Без зависимостей: getUserMedia +
 // MediaRecorder + AnalyserNode для индикатора уровня. Звук никуда не уходит сам — запись отдаётся в onBlob, дальше
 // решает экран (распознавание, проверка текста человеком). Поток микрофона закрывается сразу после остановки.
+// Д1: по желанию экрана (silenceMs) — остановка по паузе: человек заговорил (RMS выше порога), потом ~2 с тишины →
+// запись останавливается сама и отдаётся в onBlob. Порог — от шумового фона первых долей секунды, не ниже minLevel.
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type RecState = "idle" | "requesting" | "recording" | "stopping";
-export type RecErrorCode = "unsupported" | "denied" | "no_device" | "too_large" | "empty" | "failed";
+export type RecErrorCode = "unsupported" | "denied" | "no_device" | "too_large" | "empty" | "failed" | "silent";
+/** Слушание с остановкой по паузе: ждём речь → слышим речь → пауза (идёт отсчёт до остановки). */
+export type VadPhase = "off" | "waiting" | "speaking" | "pause";
+export interface VadInfo { phase: VadPhase; /** мс тишины после речи (для отсчёта «отправлю через…») */ silentMs: number; silenceMs: number }
 
 export interface VoiceRecorderOptions {
   /** Предел длительности, с: запись останавливается сама (по умолчанию 90). */
@@ -15,6 +20,14 @@ export interface VoiceRecorderOptions {
   onBlob: (blob: Blob, seconds: number) => void | Promise<void>;
   /** Отказ микрофона, неподдерживаемый браузер, пустая/слишком большая запись — текст по-русски для пользователя. */
   onError?: (message: string, code: RecErrorCode) => void;
+  /** Остановка по паузе: столько мс тишины после начала речи — и запись останавливается сама (0/не задано — выключено). */
+  silenceMs?: number;
+  /** Нижняя граница порога речи по шкале rmsLevel 0…1 (по умолчанию 0.07). */
+  minLevel?: number;
+  /** Речь так и не началась за столько мс — запись отменяется с кодом silent (по умолчанию 15000; 0 — не отменять). */
+  noSpeechMs?: number;
+  /** Смена фазы слушания (ждём речь / говорит / пауза) — для индикатора на экране. */
+  onVad?: (phase: VadPhase) => void;
 }
 
 export interface VoiceRecorder {
@@ -29,6 +42,8 @@ export interface VoiceRecorder {
   stop: () => void;
   /** Остановить без отдачи записи. */
   cancel: () => void;
+  /** Фаза слушания и длительность паузы (без перерисовки React) — для индикатора «отправлю через…». */
+  vad: () => VadInfo;
 }
 
 export const REC_MESSAGES: Record<RecErrorCode, string> = {
@@ -38,7 +53,33 @@ export const REC_MESSAGES: Record<RecErrorCode, string> = {
   too_large: "Запись слишком длинная — скажите короче или ответьте текстом.",
   empty: "Запись пустая — попробуйте ещё раз или ответьте текстом.",
   failed: "Запись не удалась — ответьте текстом.",
+  silent: "Речь не слышна — проверьте микрофон и нажмите «Ответить» ещё раз или ответьте текстом.",
 };
+
+/**
+ * Детектор речи и паузы по уровню RMS (чистая функция шага — проверяется без браузера). Первые calibMs — шумовой фон;
+ * порог = max(minLevel, фон × 2.5). Речь началась — уровень выше порога суммарно ≥ speechMs; пауза — ниже порога
+ * непрерывно; stop — пауза дольше silenceMs после речи.
+ */
+export interface VadState { t: number; floor: number; calib: number; voiced: number; started: boolean; quiet: number }
+export const vadInit = (): VadState => ({ t: 0, floor: 0, calib: 0, voiced: 0, started: false, quiet: 0 });
+export function vadStep(v: VadState, level: number, dt: number, o: { silenceMs: number; minLevel?: number; calibMs?: number; speechMs?: number }):
+  { phase: VadPhase; stop: boolean } {
+  const { silenceMs, minLevel = 0.07, calibMs = 300, speechMs = 150 } = o;
+  v.t += dt;
+  // фон — только тихие кадры: человек мог заговорить сразу, его голос не должен поднять порог
+  if (v.t <= calibMs) { v.calib += 1; v.floor += (Math.min(level, 0.08) - v.floor) / v.calib; }
+  const thr = Math.max(minLevel, Math.min(0.2, v.floor * 2.5));
+  if (level >= thr) {
+    v.quiet = 0;
+    v.voiced += dt;
+    if (v.voiced >= speechMs) v.started = true;
+    return { phase: v.started ? "speaking" : "waiting", stop: false };
+  }
+  if (!v.started) { v.voiced = Math.max(0, v.voiced - dt / 2); return { phase: "waiting", stop: false }; }
+  v.quiet += dt;
+  return { phase: v.quiet >= 250 ? "pause" : "speaking", stop: v.quiet >= silenceMs };
+}
 
 export function voiceSupported(): boolean {
   return typeof window !== "undefined" && typeof MediaRecorder !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
@@ -58,7 +99,7 @@ export function rmsLevel(an: AnalyserNode, buf: Uint8Array<ArrayBuffer>): number
 }
 
 export function useVoiceRecorder(opts: VoiceRecorderOptions): VoiceRecorder {
-  const { maxSeconds = 90, maxBytes = 3 * 1024 * 1024 } = opts;
+  const { maxSeconds = 90, maxBytes = 3 * 1024 * 1024, silenceMs = 0, minLevel, noSpeechMs = 15000 } = opts;
   const [state, setState] = useState<RecState>("idle");
   const [seconds, setSeconds] = useState(0);
   const cb = useRef(opts);
@@ -71,11 +112,15 @@ export function useVoiceRecorder(opts: VoiceRecorderOptions): VoiceRecorder {
   const timer = useRef<number | null>(null);
   const t0 = useRef(0);
   const keep = useRef(true);
+  const vadTimer = useRef<number | null>(null);
+  const vadInfo = useRef<VadInfo>({ phase: "off", silentMs: 0, silenceMs: 0 });
 
   const cleanup = useCallback(() => {
     if (raf.current != null) cancelAnimationFrame(raf.current);
     if (timer.current != null) clearInterval(timer.current);
-    raf.current = timer.current = null;
+    if (vadTimer.current != null) clearInterval(vadTimer.current);
+    raf.current = timer.current = vadTimer.current = null;
+    if (vadInfo.current.phase !== "off") { vadInfo.current = { phase: "off", silentMs: 0, silenceMs: 0 }; cb.current.onVad?.("off"); }
     stream.current?.getTracks().forEach((t) => t.stop());
     stream.current = null;
     void ctx.current?.close().catch(() => undefined);
@@ -92,6 +137,7 @@ export function useVoiceRecorder(opts: VoiceRecorderOptions): VoiceRecorder {
     if (!voiceSupported()) { fail("unsupported"); return; }
     setState("requesting");
     let s: MediaStream;
+    let analyser: AnalyserNode | null = null;
     try {
       s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
     } catch (e: any) {
@@ -108,6 +154,7 @@ export function useVoiceRecorder(opts: VoiceRecorderOptions): VoiceRecorder {
         an.fftSize = 512;
         c.createMediaStreamSource(s).connect(an);
         ctx.current = c;
+        analyser = an;
         const buf = new Uint8Array(an.fftSize);
         const loop = () => { lvl.current = rmsLevel(an, buf); raf.current = requestAnimationFrame(loop); };
         loop();
@@ -139,7 +186,25 @@ export function useVoiceRecorder(opts: VoiceRecorderOptions): VoiceRecorder {
     }, 250);
     rec.start(250);
     setState("recording");
-  }, [state, maxSeconds, maxBytes, cleanup]);  // eslint-disable-line react-hooks/exhaustive-deps
+    if (silenceMs > 0 && analyser) {  // остановка по паузе — таймер, а не rAF: в фоне вкладки rAF замирает
+      const an = analyser, vb = new Uint8Array(an.fftSize), v = vadInit();
+      let last = performance.now(), phase: VadPhase = "waiting";
+      vadInfo.current = { phase, silentMs: 0, silenceMs };
+      cb.current.onVad?.(phase);
+      vadTimer.current = window.setInterval(() => {
+        if (rec.state !== "recording") return;
+        const now = performance.now(), dt = now - last;
+        last = now;
+        let lv = 0;
+        try { lv = rmsLevel(an, vb); } catch { return; }
+        const r = vadStep(v, lv, dt, { silenceMs, minLevel });
+        vadInfo.current = { phase: r.phase, silentMs: v.started ? v.quiet : 0, silenceMs };
+        if (r.phase !== phase) { phase = r.phase; cb.current.onVad?.(phase); }
+        if (r.stop) { keep.current = true; setState("stopping"); rec.stop(); return; }
+        if (!v.started && noSpeechMs > 0 && v.t >= noSpeechMs) { keep.current = false; rec.stop(); fail("silent"); }
+      }, 50);
+    }
+  }, [state, maxSeconds, maxBytes, silenceMs, minLevel, noSpeechMs, cleanup]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const stop = useCallback(() => {
     const r = mr.current;
@@ -151,7 +216,9 @@ export function useVoiceRecorder(opts: VoiceRecorderOptions): VoiceRecorder {
     if (r && r.state === "recording") r.stop(); else { cleanup(); setState("idle"); }
   }, [cleanup]);
 
-  return { state, seconds, level: () => lvl.current, supported: voiceSupported(), start, stop, cancel };
+  const level = useCallback(() => lvl.current, []);
+  const vad = useCallback(() => vadInfo.current, []);
+  return { state, seconds, level, supported: voiceSupported(), start, stop, cancel, vad };
 }
 
 /**

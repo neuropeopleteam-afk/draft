@@ -91,6 +91,19 @@ async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { v
     }
     const field = page.getByLabel("Ваш ответ");
     const rec = page.getByTestId("iv-record");
+    const voiceUi = page.getByTestId("iv-voice");
+    if (await voiceUi.isVisible()) {  // Д1: голос — одна кнопка «Ответить», текст вопроса под ссылкой, ответ уходит сам
+      await expect(page.getByTestId("iv-question")).toBeHidden();
+      await page.getByTestId("iv-question-toggle").click();
+      await expect(page.getByTestId("iv-question")).toBeVisible();
+      await rec.click();
+      await expect(rec).toHaveAttribute("aria-pressed", "true", { timeout: 15_000 });
+      await expect(page.getByTestId("iv-listening")).toBeVisible();
+      await page.waitForTimeout(1500);
+      await rec.click();  // повторное «Ответить» — остановка и отправка без второго шага
+      await expect(page.getByTestId("iv-heard").or(done)).toBeVisible({ timeout: 30_000 });
+      continue;
+    }
     if (i === 0 && opts.voiceFirst && await rec.isVisible()) {
       await rec.click();
       await expect(rec).toHaveAttribute("aria-pressed", "true", { timeout: 15_000 });
@@ -98,7 +111,7 @@ async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { v
       await page.waitForTimeout(1500);
       await rec.click();
       await expect(field).not.toHaveValue("", { timeout: 30_000 });  // распознанный текст — в поле, на проверку
-      await expect(page.getByRole("status").filter({ hasText: /Проверьте распознанный текст|Распознавание — заглушка/ })).toBeVisible();
+      await expect(page.getByRole("status").filter({ hasText: /Проверьте распознанный текст|Распознавание — заглушка|Демо-распознавание/ })).toBeVisible();
     } else {
       const hint = page.getByTestId("iv-hint");
       if (await hint.isVisible()) await hint.click();
