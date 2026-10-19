@@ -17,8 +17,12 @@ from __future__ import annotations
 from typing import Any
 
 KINDS = ("no_face", "multi_face", "blocked", "camera_off")
+# D3 п. 3: мгновенные события журнала (без длительности) — в журнале видны, в баллы камеры не входят: снимок экрана
+# учитывается один раз — сигналом задания printscreen в assessment/integrity.py (proctoring_source)
+MARK_KINDS = ("printscreen",)
+EVENT_KINDS = KINDS + MARK_KINDS
 KIND_TITLES = {"no_face": "нет лица в кадре", "multi_face": "в кадре несколько лиц", "blocked": "камера закрыта",
-               "camera_off": "камера не передаёт изображение"}
+               "camera_off": "камера не передаёт изображение", "printscreen": "Снимок экрана (PrintScreen)"}
 MODES = ("camera", "declined", "unsupported", "denied")
 MODE_TITLES = {"camera": "с камерой", "declined": "без камеры — выбор кандидата",
                "unsupported": "без камеры — браузер не поддерживает анализ видео",
