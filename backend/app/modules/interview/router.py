@@ -436,3 +436,81 @@ def stage_start(inv_id: uuid.UUID, body: StartIn, user: User = Depends(candidate
 
     inv = _cand_inv(db, user, inv_id)
     return svc.view(svc.start_interview(db, user, inv, body.name, body.consent), "candidate")
+
+
+# ------------------------------------------------------------------ живой ИИ-проводник Елена (главная и все кабинеты)
+
+class ConciergeSpeechIn(BaseModel):
+    text: str = Field(min_length=1, max_length=1000)
+    format: Literal["mp3", "pcm"] = "mp3"
+
+
+class ConciergeChatIn(BaseModel):
+    message: str = Field(min_length=1, max_length=1500)
+    user_name: str | None = Field(None, max_length=60)
+    user_role: str | None = Field(None, max_length=32)
+    current_path: str = Field("/", max_length=200)
+    step_index: int = Field(0, ge=0, le=50)
+    history: list[dict] = Field(default_factory=list, max_length=20)
+
+
+class ConciergeChatOut(BaseModel):
+    reply: str
+    user_name: str | None = None
+    detected_role: Literal["all", "candidate", "employer", "fsp"] = "all"
+    start_tour: bool = True
+    jump_to_step: int | None = None
+
+
+@router.post("/concierge/avatar-token", response_model=AvatarTokenOut,
+             summary="Живой аватар ИИ-проводника Елены: токен сессии Anam с липсинком")
+def concierge_avatar_token() -> dict:
+    try:
+        return pt.get_port().avatar_token()
+    except pt.EngineUnavailable:
+        raise api_error(503, "avatar_unavailable", "Живой видеопоток временно недоступен — включён голосовой режим") from None
+
+
+@router.post("/concierge/speech", summary="Голос ИИ-проводника Елены (ElevenLabs, mp3 или pcm для липсинка Anam)",
+             response_class=Response)
+def concierge_speech(body: ConciergeSpeechIn) -> Response:
+    from app.modules.interview import concierge as cg
+
+    try:
+        audio, mime = cg.cached_speak(body.text.strip(), "pcm_16000" if body.format == "pcm" else "mp3")
+    except pt.EngineUnavailable:
+        raise api_error(503, "tts_unavailable", "Синтез речи временно недоступен") from None
+    return Response(audio, media_type=mime, headers={"Cache-Control": "public, max-age=3600"})
+
+
+@router.post("/concierge/transcribe", response_model=TranscribeOut,
+             summary="Распознавание голоса собеседника для ИИ-проводника Елены (Deepgram Nova-2)")
+async def concierge_transcribe(request: Request) -> dict:
+    from app.core.config import get_settings
+
+    audio = await request.body()
+    if len(audio) > get_settings().interview_audio_max_kb * 1024:
+        raise api_error(413, "audio_too_large", "Запись слишком длинная — скажите короче или напишите")
+    if not audio:
+        raise api_error(422, "empty_audio", "Пустая запись")
+    try:
+        text, _usd, stub = pt.get_port().transcribe(audio, request.headers.get("content-type") or "audio/webm")
+    except pt.EngineUnavailable:
+        raise api_error(503, "stt_unavailable", "Распознавание речи временно недоступно") from None
+    return {"text": (text or "").strip()[:1500], "stub": stub}
+
+
+@router.post("/concierge/chat", response_model=ConciergeChatOut,
+             summary="Живой диалог с ИИ-проводником Еленой: знакомство по имени, выбор роли и ответы на вопросы")
+def concierge_chat(body: ConciergeChatIn) -> dict:
+    from app.modules.interview import concierge as cg
+
+    return cg.reply_chat(
+        body.message,
+        user_name=body.user_name,
+        user_role=body.user_role,
+        current_path=body.current_path,
+        step_index=body.step_index,
+        history=body.history,
+    )
+
