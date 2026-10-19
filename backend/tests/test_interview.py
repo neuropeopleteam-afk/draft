@@ -525,3 +525,55 @@ def test_jury_express_without_open_answers_live_by_example(client, on, monkeypat
         assert "ivan.petrov@example.com" not in str(row.state["ctx"])  # ПДн модельного кандидата вычищены
     s = _talk(client, t, r.json()["id"], ["hint", "hint", "hint"])
     assert s["status"] == "completed", s
+
+
+# ------------------------------------------------------------------ Д3: готовый пример — проценты ≤ 100, «правило примера»
+
+def _pcts(text: str) -> list[int]:
+    import re
+
+    return [int(x) for x in re.findall(r"(\d+)\s*%", text or "")]
+
+
+def test_stub_keyword_overlap_never_over_100():
+    """Пересечение ключевых слов больше 12 — раньше выходило «183 %»; теперь не больше 100 %."""
+    port = pt.StubPort()
+    long = WRITTEN + " " + WRITTEN2 + " Сравнивал клиентов, нормализовал телефоны, почты, индексы, партиции, отчёты."
+    ctx = {"tasks": [{"id": "t1", "title": "Дубликаты клиентов:", "answer": long}]}
+    est, _, _ = port.start("defense", ctx, max_questions=1, minutes=3, name="Мария")
+    raw = port.evaluate(est, [{"who": "candidate", "text": long + " " + long, "n": 1}])
+    why = raw["questions"][0]["reasoning"]
+    assert "Совпадение ключевых слов" in why and _pcts(why) and max(_pcts(why)) <= 100
+
+
+def test_example_wording_and_title(client, on):
+    t = candidate_with_category(client)
+    _with_open_answers(client, t)
+    from app.modules.interview.demo import cap_percent, example_wording, seed_jury_defense
+    from app.modules.profiles.models import CandidateProfile
+
+    assert cap_percent("Совпадение ключевых слов с письменным ответом — 183 % (правило примера)").count("100 %") == 1
+    old = f"({pt.STUB_RULE})"  # подпись правила StubPort — у примера её быть не должно
+    fixed = example_wording({"summary": f"Оценка — {pt.STUB_RULE_BY}, не моделью.", "flags": [f"мало {old}"],
+                             "questions": [{"reasoning": f"Совпадение — 183 % {old}"}]})
+    assert fixed["questions"][0]["reasoning"] == "Совпадение — 100 % (правило примера)"
+    assert fixed["summary"] == "Оценка — по фиксированному правилу примера, не моделью." and fixed["flags"] == ["мало (правило примера)"]
+    with SessionLocal() as db:
+        p = db.scalars(select(CandidateProfile)).first()
+        seed_jury_defense(db, p)
+        db.commit()
+        row = db.scalars(select(InterviewSession).where(InterviewSession.is_example.is_(True))).one()
+        # старый пример в базе (засеян до правки): «183 %», подпись правила StubPort, заголовок с двоеточием
+        res = dict(row.result)
+        res["questions"] = [{**q, "reasoning": f"Совпадение ключевых слов с письменным ответом — 183 % {old}"}
+                            for q in res["questions"]]
+        res["summary"] = f"Пример. Оценка — {pt.STUB_RULE_BY}, не моделью."
+        row.result = res
+        row.context_meta = {**row.context_meta, "tasks": [{**x, "title": x["title"] + ":"} for x in row.context_meta["tasks"]]}
+        db.commit()
+        v = svc.view(row, "candidate")
+    text = " ".join([v["summary"] or ""] + [q["reasoning"] or "" for q in v["questions"]] + v["flags"])
+    assert "заглушк" not in text and "(правило примера)" in text and "по фиксированному правилу примера, не моделью" in text
+    assert _pcts(text) and max(_pcts(text)) <= 100
+    assert all(not (q["task_title"] or "").endswith(":") for q in v["questions"])
+    assert all(not (x["title"] or "").endswith(":") for x in v["tasks"])

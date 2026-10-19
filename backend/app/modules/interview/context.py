@@ -112,7 +112,7 @@ def last_task(ts: TestSession) -> dict | None:
 
 
 def _title(a: dict) -> str:
-    first = re.split(r"(?<=[.!?:])\s|\n", a["stem"].strip(), maxsplit=1)[0]
+    first = re.split(r"(?<=[.!?:])\s|\n", a["stem"].strip(), maxsplit=1)[0].rstrip(" :;,")  # без «: ·» в карточке
     return (first[:77] + "…") if len(first) > 80 else first or f"Задание {a['position']}"
 
 

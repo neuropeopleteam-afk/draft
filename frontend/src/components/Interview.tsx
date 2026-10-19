@@ -38,6 +38,15 @@ const STYLE: Record<string, string> = {
 const LEVEL_STYLE: Record<string, string> = { confirmed: "text-emerald-700", strong: "text-emerald-700", partial: "text-sky-800", medium: "text-sky-800", discrepancy: "text-amber-800", weak: "text-amber-800", no_data: "text-brand-ink/75" };
 export const useInterviewOn = () => !!useMeta()?.interview?.enabled;
 
+/** Д3: подпись разбора — проценты не больше 100 («Совпадение ключевых слов — 183 %» → 100 %), у примера — «(правило примера)». */
+export function fmtReason(t: string, example = false): string {
+  let out = t.replace(/(\d+(?:[.,]\d+)?)\s*%/g, (_m, n: string) => `${Math.min(100, Math.round(Number(n.replace(",", "."))))} %`);
+  if (example) out = out.replace(/\(правило заглушки\)/g, "(правило примера)").replace(/правилом заглушки/g, "по фиксированному правилу примера");
+  return out;
+}
+/** Заголовок задания без хвостового «:», «;», «,» — чтобы не было «Задание: …: · подтверждено». */
+export const fmtTaskTitle = (t: string) => t.replace(/[\s:;,—-]+$/u, "") || t;
+
 /** Значок «ответ подтверждён устно / расхождения / мало данных / не проходил» — карточка, подборка, сравнение. */
 export function DefenseBadge({ d }: { d?: { verdict: Verdict; title: string; example?: boolean; stub?: boolean; quotes?: number | null } | null }) {
   if (!d) return null;
@@ -67,24 +76,24 @@ export function SessionResult({ s, employer = false }: { s: IvSession; employer?
         {s.score != null && <span className="text-xs text-brand-ink/65">балл модели {Math.round(s.score)} из 100</span>}
         {s.completed_at && <span className="text-xs text-brand-ink/65">{dt(s.completed_at)}{s.duration_s ? ` · ${Math.max(1, Math.round(s.duration_s / 60))} мин` : ""}</span>}
       </div>
-      {s.summary && <p className="text-brand-ink/80">{s.summary}</p>}
+      {s.summary && <p className="text-brand-ink/80">{fmtReason(s.summary, s.example)}</p>}
       {s.questions.length > 0 && (
         <ol className="space-y-3">
           {s.questions.map((q, i) => (
             <li key={i} className="rounded-xl border border-brand-night/10 bg-white p-3">
-              <p className="text-xs text-brand-ink/65">{q.task_title ? `Задание: ${q.task_title}` : q.skill ? `Навык: ${q.skill}` : `Вопрос ${q.n ?? i + 1}`} · <span className={`font-semibold ${LEVEL_STYLE[q.level] ?? ""}`}>{q.level_title}</span>{q.lowered ? " · уровень снижен проверкой цитат" : ""}</p>
+              <p className="text-xs text-brand-ink/65">{q.task_title ? `Задание: ${fmtTaskTitle(q.task_title)}` : q.skill ? `Навык: ${q.skill}` : `Вопрос ${q.n ?? i + 1}`} · <span className={`font-semibold ${LEVEL_STYLE[q.level] ?? ""}`}>{q.level_title}</span>{q.lowered ? " · уровень снижен проверкой цитат" : ""}</p>
               <p className="mt-1 font-semibold text-brand-night">{q.question}</p>
               {q.quotes.length > 0 && (
                 <ul className="mt-2 space-y-1">
                   {q.quotes.map((c, k) => <li key={k}><blockquote className="border-l-2 border-emerald-300 pl-2 text-brand-ink/80">«{c.text}»</blockquote></li>)}
                 </ul>
               )}
-              {q.reasoning && <p className="mt-1 text-xs text-brand-ink/65">{q.reasoning}</p>}
+              {q.reasoning && <p className="mt-1 text-xs text-brand-ink/65">{fmtReason(q.reasoning, s.example)}</p>}
             </li>
           ))}
         </ol>
       )}
-      {s.flags.length > 0 && <ul className="list-disc space-y-1 pl-5 text-amber-900">{s.flags.map((f, i) => <li key={i}>{f}</li>)}</ul>}
+      {s.flags.length > 0 && <ul className="list-disc space-y-1 pl-5 text-amber-900">{s.flags.map((f, i) => <li key={i}>{fmtReason(f, s.example)}</li>)}</ul>}
       <p className="text-xs text-brand-ink/65">Цитаты — только те, что код нашёл в расшифровке. {MODEL_NOTE}</p>
       {employer && s.transcript && s.transcript.length > 0 && (
         <details className="rounded-xl bg-brand-blush/20 p-3">

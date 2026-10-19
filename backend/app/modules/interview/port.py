@@ -27,6 +27,10 @@ class EngineUnavailable(Exception):
 
 # ------------------------------------------------------------------ заглушка продукта
 
+# подпись правила заглушки в разборе; готовый пример жюри (demo.example_wording) заменяет её на «(правило примера)»
+STUB_RULE = "правило заглушки"
+STUB_RULE_BY = "правилом заглушки"  # так было в итоге примеров, засеянных до Д3
+
 _WORD = re.compile(r"[a-zа-яё0-9_]{4,}", re.I)
 _STOP = {"чтобы", "этого", "потому", "который", "которые", "когда", "если", "тогда", "будет", "можно", "нужно", "также",
          "только", "этом", "этот", "этой", "есть", "было", "были", "после", "перед", "через", "между", "with", "that",
@@ -152,13 +156,14 @@ class StubPort:
             answered += len(a) >= 40
             if mode == "defense":
                 kw = keywords((by_task.get(q.get("task_id")) or {}).get("answer") or "")
-                overlap = len(keywords(a) & kw) / max(1, min(len(kw), 12))
+                # доля от min(|kw|, 12): пересечение может быть больше 12 — без предела было «183 %»; не больше 100 %
+                overlap = min(1.0, len(keywords(a) & kw) / max(1, min(len(kw), 12)))
                 level = ("no_data" if len(a) < 40 else "confirmed" if overlap >= 0.3 else "partial" if overlap >= 0.15
                          else "discrepancy")
-                why = f"Совпадение ключевых слов с письменным ответом — {round(overlap * 100)} % (правило заглушки)"
+                why = f"Совпадение ключевых слов с письменным ответом — {round(overlap * 100)} % ({STUB_RULE})"
             else:
                 level = "no_data" if len(a) < 20 else "strong" if len(a) >= 200 else "medium" if len(a) >= 80 else "weak"
-                why = f"Длина ответа — {len(a)} знаков (правило заглушки)"
+                why = f"Длина ответа — {len(a)} знаков ({STUB_RULE})"
             quote = first_phrase(a) if len(a) >= 40 and level not in ("discrepancy", "weak") else ""
             qs.append({**q, "answer_excerpt": a[:400], "level": level, "reasoning": why if a else "Ответа нет",
                        "lowered": False, "quotes": [{"text": quote}] if quote else []})
@@ -176,7 +181,7 @@ class StubPort:
                        "medium" if (score or 0) >= 55 else "weak")
         return {"verdict": verdict, "verdict_label": VERDICT_LABELS[verdict], "score": score,
                 "summary": "Заглушка интервью: вопросы по шаблону, оценка правилом по ключевым словам ответов — не модель.",
-                "questions": qs, "flags": [f"Устный ответ на вопрос {q['n']} мало совпадает с письменным (правило заглушки)"
+                "questions": qs, "flags": [f"Устный ответ на вопрос {q['n']} мало совпадает с письменным ({STUB_RULE})"
                                            for q in qs if q["level"] == "discrepancy"],
                 "coverage": round(100 * sum(x != "no_data" for x in lv) / len(lv)) if lv else 0,
                 "cost": {"usd": 0.0, "estimated": False}, "stub": True}
