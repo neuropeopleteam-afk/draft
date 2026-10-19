@@ -495,6 +495,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/interview/sessions/{session_id}/finish"): "candidate_own404",
     ("POST", "/api/interview/sessions/{session_id}/transcribe"): "candidate_own404",
     ("GET", "/api/interview/sessions/{session_id}/speech"): "candidate_own404",
+    ("POST", "/api/interview/sessions/{session_id}/avatar-token"): "candidate_own404",
     ("GET", "/api/interview/candidates/{ref}"): "employer_ref",
     ("GET", "/api/employer/invitations/{inv_id}/ai-interview"): "employer_own",
     ("POST", "/api/employer/invitations/{inv_id}/ai-interview"): "employer",
