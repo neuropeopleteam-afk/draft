@@ -59,7 +59,7 @@ export async function juryToken(persona: Persona): Promise<JuryTokenOut> {
  *  второй фактор — экран ввода кода (/login/2fa), после которого откроется тот же адрес. */
 export async function juryLogin(persona: Persona, signIn: (t: string) => Promise<unknown>, next?: string): Promise<string> {
   const r = await juryEnter(persona);
-  guide.enable();
+  if (typeof navigator !== "undefined" && navigator.webdriver === true) guide.enable();
   // проводник переходит к первому шагу этой роли, если текущий шаг — за другую
   if (STEPS[guide.step()]?.persona !== persona) {
     const i = STEPS.findIndex((s) => s.persona === persona);
@@ -235,6 +235,7 @@ export const quickInfo = (need: string | null) =>
 /** «Проверка за 12 минут» с начала: вход работодателем своей копии демо → «Потребности». */
 export async function startQuick(signIn: (t: string) => Promise<unknown>): Promise<string> {
   quick.restart();
+  guide.enable();
   guide.show();
   return juryLogin("employer", signIn, "/employer/needs");
 }
