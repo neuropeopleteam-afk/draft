@@ -56,6 +56,8 @@ function Body({ r }: { r: any }) {
   const sp = t.splits ?? {};
   const ps = t.path ?? {};
   const tr = t.truth ?? {};
+  // порог уверенности, с которым посчитан make path-retest (config.confirm_level), а не прежний 0,8
+  const cl = num(r.config?.confirm_level ?? 0.8, 1);
   const split = (title: string, s: any) => [title, pct(s?.share), pct(s?.exact), pct(s?.within_1), withCi(s?.kappa_w, s?.kappa_w_ci)];
   return (
     <>
@@ -65,13 +67,13 @@ function Body({ r }: { r: any }) {
       <ol className="mt-3 max-w-4xl list-decimal space-y-1 pl-5 text-sm text-brand-ink/75">{(r.procedure ?? []).map((s: string) => <li key={s}>{s}</li>)}</ol>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <K label="κ с квадратичными весами" value={num(pg.kappa_w, 3)} hint={<>95{NB}% ДИ {ci(pg.kappa_w_ci)}; 5 ступеней</>} />
-        <K label="Итоговый грейд совпал" value={pct(pg.exact)} hint={<>±1 ступень — {pct(pg.within_1)}; на 2 и больше — {pct(pg.two_steps)}</>} />
+        <K label="Итоговый грейд совпал" value={pct(pg.exact, 1)} hint={<>±1 ступень — {pct(pg.within_1, 1)}; на 2 и больше — {pct(pg.two_steps, 1)}</>} />
         <K label="ICC(2,1) по θ̂" value={num(t.icc_theta, 3)} hint={<>95{NB}% ДИ {ci(t.icc_theta_ci)}; первая сессия, тот же заявленный грейд</>} />
         <K label="Семейства второй попытки уже были" value={pct(t.overlap_all?.mean)} hint={<>хотя бы одно — у {pct(t.overlap_all?.any_share)}; варианты при этом новые</>} />
       </div>
       <RetestVsTruth v={r.vs_truth} className="mt-3" />
       <h3 className="mt-6 font-bold text-brand-night">Уверенные и у порога</h3>
-      <p className="mt-1 max-w-4xl text-sm text-brand-ink/70">Граница решения выше номинального порога на z(0,8)·SE ≈ {num(sp.boundary_shift, 2)}: и подтверждение, и «уровень ниже» требуют P{NB}≥{NB}0,8. Поэтому «у порога» считается от этой границы; разрез по номинальному порогу — для сравнения.</p>
+      <p className="mt-1 max-w-4xl text-sm text-brand-ink/70">Граница решения выше номинального порога на z({cl})·SE ≈ {num(sp.boundary_shift, 2)}: и подтверждение, и «уровень ниже» требуют P{NB}≥{NB}{cl}. Поэтому «у порога» считается от этой границы; разрез по номинальному порогу — для сравнения.</p>
       <div className="mt-2"><T caption="Совпадение итогового грейда по группам" head={["Группа", "Доля", "Точно", "±1", "κ, 95 % ДИ"]} rows={[
         split("Дальше 0,25 от границы решения", sp.far_from_boundary), split("Ближе 0,25 к границе решения", sp.near_boundary),
         split("Дальше 0,25 от номинального порога", sp.far_from_cut), split("Ближе 0,25 к номинальному порогу", sp.near_cut),
@@ -85,7 +87,7 @@ function Body({ r }: { r: any }) {
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <div className="card text-sm leading-relaxed text-brand-ink/80">
           <p className="font-bold text-brand-night">Точность к истине (первая попытка)</p>
-          <p className="mt-1">Грейд = истинный у {pct(tr.exact)}; выше истинного — {pct(tr.over_share)}, ниже — {pct(tr.under_share)}, без категории — {pct(tr.no_category_share)}. Правило осторожное: подтверждение при P{NB}≥{NB}0,8, при сомнении — доказанный уровень ниже или «предварительно».</p>
+          <p className="mt-1">Грейд = истинный у {pct(tr.exact, 1)}; выше истинного — {pct(tr.over_share, 1)}, ниже — {pct(tr.under_share, 1)}, без категории — {pct(tr.no_category_share, 1)}. Правило осторожное: подтверждение при P{NB}≥{NB}{cl}, при сомнении — доказанный уровень ниже или «предварительно».</p>
           <p className="mt-1">Статусы: подтверждён {pct(ps.status_share?.confirmed)}, предварительно {pct(ps.status_share?.provisional)}, принят уровень ниже {pct(ps.status_share?.accepted_lower)}, без категории {pct(ps.status_share?.none)}. На путь — {num(ps.mean_items_per_path, 1)} заданий, около {num(ps.mean_time_min_per_path, 0)} минут.</p>
         </div>
         <div className="card text-sm leading-relaxed text-brand-ink/80" id="provisional-read">
@@ -93,7 +95,7 @@ function Body({ r }: { r: any }) {
           <p className="mt-1">Это не подтверждение: P(θ{NB}≥{NB}порога Junior) от 0,10 до {num(r.config?.confirm_level ?? 0.6, 2)}, работодатель видит статус и вероятность, в подборке — штраф к скору. Кандидат может дотестироваться (до двух попыток) или нажать «принять Стажёра» — если Стажёр доказан (P{NB}≥{NB}{num(r.config?.confirm_level ?? 0.6, 2)}), уровень присваивается без нового теста. В этой симуляции Стажёр доказан у {num(ps.provisional_intern_proved, 0)} «предварительных». Полосы P и доля истинно ниже порога — в разделе <a href="#junior" className="font-semibold text-brand-plum underline">«Junior у порога»</a>.</p>
         </div>
       </div>
-      <p className="mt-4 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Условия расчёта: 5 ступеней со Стажёром, подтверждение при P{NB}≥{NB}0,8 и ошибка параметров σ{NB}={NB}0,5. Числа относятся к этому миру; при другой длине теста и другой ошибке параметров — см. <a href="#other-conditions" className="font-semibold text-brand-plum underline">«Другие условия измерения»</a>.</p>
+      <p className="mt-4 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Условия расчёта: 5 ступеней со Стажёром, подтверждение при P{NB}≥{NB}{cl} и ошибка параметров σ{NB}={NB}0,5. Числа относятся к этому миру; при другой длине теста и другой ошибке параметров — см. <a href="#other-conditions" className="font-semibold text-brand-plum underline">«Другие условия измерения»</a>.</p>
       <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">{r.caveat}</p>
       <ProvenanceLine p={r.provenance} className="mt-2" />
       <SignatureLine s={r.signature} className="mt-1" />

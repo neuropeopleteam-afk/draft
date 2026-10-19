@@ -83,10 +83,34 @@ def test_retest_vs_truth_from_saved_json():
     assert "повторяемость, а не точность" in v["lead"] and f(tr["exact"]) in v["lead"]
     for x in (tr["over_share"], tr["under_share"], tr["no_category_share"], ps["extension_share"]):
         assert f(x) in v["cost"]
-    assert "P ≥ 0,8" in v["cost"] and "дотестирование" in v["cost"] and "вторая попытка" in v["cost"]
+    lvl = f"{pr['config'].get('confirm_level', 0.8):g}".replace(".", ",")  # порог расчёта, а не прежний 0,8
+    assert f"P ≥ {lvl}" in v["cost"] and "дотестирование" in v["cost"] and "вторая попытка" in v["cost"]
     assert retest_vs_truth({**pr, "quick": True}) is None and retest_vs_truth(None) is None
     assert headline()["retest_vs_truth"] == v
     assert "с синтетической истиной" in headline()["items"][0]["note"]
+
+
+def test_headline_card1_same_format_and_protocols():
+    """Д5: у карточки №1 доля повтора — с одной десятой, как в блоке под карточками (80,5 %, а не «80 %» и «80,5 %»),
+    и есть сверка с перебором правил (make grade-sweep): тот же порог, числа обоих JSON без пересчёта."""
+    pr, h = _json("path"), headline()
+    f = lambda x: f"{100 * x:.1f}".replace(".", ",") + "\u00a0%"  # noqa: E731
+    pg, tr = pr["total"]["path_grade"], pr["total"]["truth"]
+    card = h["items"][0]
+    assert f(pg["exact"]) in card["text"] and f(pg["exact"]) in h["retest_vs_truth"]["lead"]
+    lvl = f"{pr['config']['confirm_level']:g}".replace(".", ",")
+    assert f"P ≥ {lvl}" in card["protocol_note"] and "grade-sweep" in card["protocol_note"]
+    gs = json.loads((PV.DATA / "grade_sweep.json").read_text(encoding="utf-8"))
+    m = next(q["metrics"] for q in gs["points"] if q["key"] == gs["choice"]["key"])
+    p = h["protocols"]
+    assert (p["sweep"]["exact"], p["sweep"]["over"], p["sweep"]["retest_exact"], p["sweep"]["retest_kappa"]) == (
+        m["exact"], m["over"], m["retest_exact"], m["retest_kappa"])
+    assert (p["path"]["exact"], p["path"]["over"], p["path"]["retest_exact"], p["path"]["retest_kappa"]) == (
+        tr["exact"], tr["over_share"], pg["exact"], pg["kappa_w"])
+    assert p["sweep"]["bank"] == gs["signature"]["bank"] and p["path"]["bank"] == pr["signature"]["bank"]
+    for x in (m["exact"], m["over"], tr["exact"], tr["over_share"], pg["exact"]):
+        assert f(x) in p["text"]
+    assert "make grade-sweep" in p["text"] and "make path-retest" in p["text"] and "NUMBERS.json" in p["text"]
 
 
 def test_routes_expose_provenance(client):

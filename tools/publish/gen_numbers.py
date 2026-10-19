@@ -90,6 +90,14 @@ def static_numbers() -> dict:
             "sweep_points": len(gs["points"]),
             "before": {k: r3(base.get(k)) for k in ("exact", "over", "under", "none", "retest_exact", "retest_kappa", "minutes_mean")},
             "now": {k: r3(ch.get(k)) for k in ("exact", "over", "under", "none", "retest_exact", "retest_kappa", "minutes_mean")},
+            # Д5: тот же порог в контрольном прогоне всего пути с настройками продукта (make path-retest) — эти числа
+            # показывает первый экран /validation (/api/validation/headline); перебор правил — на своём снимке банка
+            "sweep_bank": gs["signature"].get("bank"), "path_retest_bank": pr["signature"].get("bank"),
+            "path_retest_bank_families": pr["config"].get("n_families"),
+            "path_retest": {k: r3(v) for k, v in (
+                ("exact", pr["total"]["truth"]["exact"]), ("over", pr["total"]["truth"]["over_share"]),
+                ("under", pr["total"]["truth"]["under_share"]), ("none", pr["total"]["truth"]["no_category_share"]),
+                ("retest_exact", pr["total"]["path_grade"]["exact"]), ("retest_kappa", pr["total"]["path_grade"]["kappa_w"]))},
         }
     # e2e в коде
     specs = sorted((ROOT / "e2e/tests").glob("*.spec.ts"))
@@ -210,7 +218,7 @@ def validation_row(v: dict, families: int) -> str:
     if v["report_matches_bank"]:
         tail = "соответствует текущему банку"
     else:
-        tail = (f"**на банке из {v['report_bank_families']} семейств, а в банке сейчас {families}: пересчёт `make validate` (≈ 10 мин на 8 ядрах) "
+        tail = (f"**на банке из {v['report_bank_families']} семейств, а в банке сейчас {families}: пересчёт `make validate` (≈ 21 мин в один процесс: K ≈ 4 мин, симуляция ≈ 17 мин) "
                 f"даст другие числа симуляции, повтора и утечки**")
     return (f"| Отчёт страницы `/validation` (симуляция теста, повтор, утечка) | посчитан {d}; {tail}; константы показа `exposure_k.json` — "
             f"{dm(v['exposure_generated_at'])} на {v['exposure_bank_families']} семействах | `make validate`, `backend/app/modules/validation/data/report.json` |")
@@ -223,9 +231,15 @@ def grade_row(g: dict | None) -> list[str]:
     pc = lambda x: fnum(100 * x, 1) + " %"  # noqa: E731
     return [f"| Точность уровня (модель, не люди) | порог уверенности P ≥ {fnum(g['confirm_level'], 1)}: точно истинный уровень "
             f"**{pc(c['exact'])}** (было {pc(b['exact'])} при P ≥ 0,8), выше {pc(c['over'])}, ниже {pc(c['under'])}, без категории "
-            f"{pc(c['none'])}; повтор: совпало {pc(c['retest_exact'])}, κw {fnum(c['retest_kappa'])}; ≈ {fnum(c['minutes_mean'], 0)} мин "
-            f"| перебор {g['sweep_points']} вариантов, коммит `{g['sweep_commit']}`; путь — коммит `{g['path_retest_commit']}`, "
-            f"{g['path_retest_at']}; `make grade-sweep`, `docs/validation/GRADE_ACCURACY.md` |"]
+            f"{pc(c['none'])}; повтор: совпало {pc(c['retest_exact'])}, κw {fnum(c['retest_kappa'])}; ≈ {fnum(c['minutes_mean'], 0)} мин (перебор правил `make grade-sweep`)"
+            + (f"; тот же порог в контрольном прогоне всего пути с настройками продукта (первый экран `/validation`, пул 5 направлений — "
+               f"{g.get('path_retest_bank_families') or '—'} семейств): точно {pc(p['exact'])}, выше {pc(p['over'])}, повтор "
+               f"{pc(p['retest_exact'])}, κw {fnum(p['retest_kappa'])}"
+               + ("" if g.get("sweep_bank") == g.get("path_retest_bank") else " — перебор посчитан на другом снимке банка")
+               if (p := g.get("path_retest")) else "")
+            + f" | перебор {g['sweep_points']} вариантов, коммит `{g['sweep_commit']}`, банк `{g.get('sweep_bank') or '—'}`; путь — "
+            f"коммит `{g['path_retest_commit']}`, банк `{g.get('path_retest_bank') or '—'}`, {g['path_retest_at']}; `make grade-sweep`, "
+            "`make path-retest`, `docs/validation/GRADE_ACCURACY.md` |"]
 
 
 def render_numbers(n: dict) -> str:
