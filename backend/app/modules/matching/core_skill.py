@@ -147,7 +147,7 @@ def text(core: dict, st: dict, active: bool, on: bool) -> str:
         base = "Заявлен кандидатом" + (f" (через {_title(via)})" if st.get("implied") else "")
         tail = ("; тест проверял — ниже порога подтверждения" if st.get("tested_low") else
                 ", тестом не подтверждён")
-        return base + tail + " — можно проверить зондом"
+        return base + tail + " — можно проверить коротким заданием"
     out = "Не заявлен и не подтверждён" + ("; тест проверял — ниже порога" if st.get("tested_low") else "") \
         + " — смежное направление"
     if not active:
@@ -205,7 +205,30 @@ def headline(core: dict, st: dict) -> str:
     """Короткая строка для шапки карточки и сравнения: «Основной язык роли — Go: не заявлен»."""
     word = {"confirmed": "подтверждён тестом", "declared": "заявлен, тестом не подтверждён",
             "absent": "не заявлен"}[st["state"]]
+    if st["state"] == "confirmed" and st.get("implied") and st.get("via"):
+        word += f" (через {_title(st['via'])})"  # D3 п. 1: Python подтверждён косвенно — через FastAPI
     return f"{core['label']} — {core['title']}: {word}"
+
+
+def annotate(reasons: list[dict], info: dict | None) -> list[dict]:
+    """D3 п. 1: ядро подтверждено косвенно (FastAPI → Python), а сам язык в строке стека — «только заявлен» или «не
+    проверялся». Чтобы карточка не противоречила себе («Python: подтверждён тестом» и тут же «Python — только
+    заявлен»), строке стека ядра добавляется implied_via (через что подтверждено) и понятный текст. Статус и уровень
+    строки не меняются: балл и ярус обязательного считаются как прежде."""
+    if not info or info.get("state") != "confirmed" or not info.get("implied") or not info.get("via"):
+        return reasons
+    names = {_title(t) for t in info.get("tags") or []}
+    via = info["via"]
+    for r in reasons:
+        req = str(r.get("requirement") or "")
+        if r.get("core") or ": " not in req:
+            continue
+        zone, name = req.split(": ", 1)
+        if zone in ("Обязательно", "Желательно") and name in names and r.get("status") in ("declared", "missing"):
+            r["implied_via"] = via
+            r["text"] = (f"Напрямую не проверялся — подтверждён тестом через {via}"
+                         + ("; заявлен кандидатом" if r.get("status") == "declared" else ""))
+    return reasons
 
 
 def reason(info: dict) -> dict:

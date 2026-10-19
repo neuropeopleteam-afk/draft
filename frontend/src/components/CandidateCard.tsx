@@ -13,13 +13,17 @@ const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид",
 
 /** Обезличенная карточка кандидата: подтверждённые факты (T1/T2) отдельно от самоописания (T0). */
 /** Ф2: шапка «Не хватает обязательного: …» — обязательные навыки без подтверждения тестом (T1), до трёх названий. */
-export function MustLine({ m }: { m?: { missing?: string[]; missing_more?: number; missing_total?: number; required_total?: number; tier?: number } | null }) {
+export function MustLine({ m, core }: { m?: { missing?: string[]; missing_more?: number; missing_total?: number; required_total?: number; tier?: number } | null; core?: any }) {
   if (!m || !m.required_total) return null;
   if (!m.missing_total) return <p className="mt-1 text-sm font-semibold text-emerald-800">Всё обязательное подтверждено тестом: {m.required_total} из {m.required_total}</p>;
   const more = m.missing_more ? ` и ещё ${m.missing_more}` : "";
+  // D3 п. 1: язык ядра подтверждён через фреймворк — в списке с пометкой, без противоречия строке ядра
+  const via = core?.state === "confirmed" && core?.implied && core?.via ? String(core.via) : null;
+  const names = new Set<string>(String(core?.title ?? "").split(" или "));
+  const missing = (m.missing ?? []).map((x) => via && names.has(x) ? `${x} (напрямую не проверялся, подтверждён через ${via})` : x);
   return (
     <p className="mt-1 max-w-2xl text-sm font-semibold text-amber-900" title="Тест не подтвердил эти навыки (проверены ниже порога, только заявлены или не проверялись). Это не «не умеет» — можно проверить коротким заданием. В подборке такие кандидаты идут ниже тех, у кого всё обязательное подтверждено.">
-      Не хватает обязательного: {(m.missing ?? []).join(", ")}{more}
+      Не хватает обязательного: {missing.join(", ")}{more}
     </p>
   );
 }
@@ -65,7 +69,7 @@ function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
   const okMust = stack.filter((r) => r.status === "confirmed" && r.requirement.startsWith("Обязательно")).map(name);
   const okWant = stack.filter((r) => r.status === "confirmed" && r.requirement.startsWith("Желательно")).map(name);
   const gaps = stack.filter((r) => r.status !== "confirmed" && r.requirement.startsWith("Обязательно"))
-    .map((r) => `${name(r)} (${r.status === "mismatch" ? "ниже порога" : r.status === "declared" ? "только заявлено" : "не проверялось"})`);
+    .map((r) => `${name(r)} (${r.implied_via ? `напрямую не проверялся, подтверждён через ${r.implied_via}` : r.status === "mismatch" ? "ниже порога" : r.status === "declared" ? "только заявлено" : "не проверялось"})`);
   const t = c.test, fsp = c.fsp ?? {};
   const integ = t?.integrity && t.integrity.level !== "high" ? t.integrity.title : null;
   return (
@@ -109,7 +113,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
               {c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
               {badge}
             </div>
-            <MustLine m={must} />
+            <MustLine m={must} core={core} />
             <CoreLine k={core} />
             <p className="mt-0.5 text-sm text-brand-ink/65">
               {c.rank_in_category ? `Место ${c.rank_in_category} из ${c.category_size} в категории · ` : ""}
@@ -142,7 +146,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
               : <GradeBadge s={c.status} claimed={c.claimed} />}
             {badge}
           </div>
-          <MustLine m={must} />
+          <MustLine m={must} core={core} />
           <CoreLine k={core} />
           <GradeStatusNote s={c.status} className="mt-1 max-w-2xl" />
           {c.status?.position && <p className="mt-0.5 text-xs text-brand-ink/70" data-testid="level-position">Внутри уровня {c.status.position.grade_title}: {c.status.position.text}</p>}
