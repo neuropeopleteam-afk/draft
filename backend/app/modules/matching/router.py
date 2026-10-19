@@ -487,7 +487,7 @@ class AdvisorIn(BaseModel):
 
 
 class AdvisorSpeechIn(BaseModel):
-    text: str = Field(..., min_length=1, max_length=1200, description="Текст реплики советника для озвучивания")
+    text: str = Field("Краткий доклад по кандидатам.", min_length=1, max_length=1200, description="Текст реплики советника для озвучивания")
     format: Literal["mp3", "pcm"] = Field("mp3", description="mp3 — аудио, pcm — pcm_s16le 16 кГц моно для липсинка Anam")
 
 
@@ -530,10 +530,11 @@ def need_advisor_avatar_token(need_id: uuid.UUID, user: User = Depends(employer)
 
 @router.post("/needs/{need_id}/advisor/speech", summary="Озвучка реплики ИИ-советника руководителя (ElevenLabs mp3 или pcm_16000 для липсинка Anam)",
              responses={**AUTH, 404: err("Потребность не найдена"), 503: err("Синтез речи недоступен")})
-def need_advisor_speech(need_id: uuid.UUID, data: AdvisorSpeechIn, user: User = Depends(employer),
+def need_advisor_speech(need_id: uuid.UUID, data: AdvisorSpeechIn | None = None, user: User = Depends(employer),
                         db: Session = Depends(get_db)) -> Response:
     from app.modules.interview import port as pt
 
+    data = data or AdvisorSpeechIn()
     _own_need(db, my_company(db, user), need_id)
     release(db)
     try:
