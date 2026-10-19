@@ -108,74 +108,74 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
           </div>
         </div>
       </aside>
-      <main id="main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-4 outline-none sm:px-6 md:px-10 md:py-6">
+      <div className="min-w-0">
         {/* Постоянная верхняя панель: где я, переключение роли в 1 клик, запуск ИИ-экскурсовода со стрелками и заметная кнопка «Выйти» */}
-        {!(typeof navigator !== "undefined" && navigator.webdriver === true) && (
-          <div
-            data-testid="cabinet-top-bar"
-            className="mb-6 flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-brand-night/10 bg-white px-3.5 py-2.5 shadow-sm print:hidden"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-brand-night px-2.5 py-1 text-xs font-bold text-white">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                {SHORT[role] ?? title}
-              </span>
-              <button
-                type="button"
-                onClick={() =>
-                  startAvatarTour(
-                    role === "employer" ? "employer" : role === "fsp_analyst" ? "fsp" : "candidate",
-                    0
-                  )
-                }
-                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blush/60 px-2.5 py-1 text-xs font-bold text-brand-plum transition hover:bg-brand-blush"
-              >
-                ▶ Экскурсия с ИИ-аватаром (показать стрелками)
-              </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="mr-1 hidden text-xs font-semibold text-brand-ink/60 lg:inline">Роль в 1 клик:</span>
-              {([
-                ["candidate", "Кандидат", "/candidate"],
-                ["candidate_new", "Тест с нуля", "/candidate/assessment"],
-                ["employer", "Работодатель", "/employer/needs"],
-                ["fsp", "Федерация ФСП", "/fsp"],
-              ] as [Persona, string, string][]).map(([p, label, path]) => {
-                const isActive =
-                  (p === "employer" && role === "employer") ||
-                  (p === "fsp" && role === "fsp_analyst") ||
-                  (p === "candidate" && role === "candidate" && !me.email.startsWith("candidate-new")) ||
-                  (p === "candidate_new" && role === "candidate" && me.email.startsWith("candidate-new"));
-                return (
-                  <button
-                    key={p}
-                    type="button"
-                    disabled={!!switchingRole}
-                    onClick={() => void quickSwitchRole(p, path)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                      isActive
-                        ? "bg-brand text-white shadow-sm"
-                        : "bg-[#F3F2FB] text-brand-night hover:bg-brand-blush/60"
-                    }`}
-                  >
-                    {switchingRole === p ? "Вход…" : label}
-                  </button>
-                );
-              })}
-              <button
-                type="button"
-                onClick={exit}
-                className="ml-1 rounded-lg border border-brand/30 bg-white px-3 py-1 text-xs font-bold text-brand transition hover:bg-brand hover:text-white"
-              >
-                Выйти
-              </button>
-            </div>
+        <div
+          data-testid="cabinet-top-bar"
+          className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2.5 border-b border-brand-night/10 bg-white/95 px-4 py-2.5 backdrop-blur sm:px-6 md:px-10 print:hidden"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-brand-night px-2.5 py-1 text-xs font-bold text-white">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              {SHORT[role] ?? title}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                startAvatarTour(
+                  role === "employer" ? "employer" : role === "fsp_analyst" ? "fsp" : "candidate",
+                  0
+                )
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blush/60 px-2.5 py-1 text-xs font-bold text-brand-plum transition hover:bg-brand-blush"
+            >
+              ▶ Экскурсия с ИИ-аватаром (показать стрелками)
+            </button>
           </div>
-        )}
-        {/* Я16: раздел грузится отдельным файлом — меню остаётся, ошибка загрузки раздела — экран повтора внутри */}
-        <RouteBoundary inline><Suspense fallback={<RouteFallback inline />}><Outlet /></Suspense></RouteBoundary>
-      </main>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 hidden text-xs font-semibold text-brand-ink/60 lg:inline">Роль в 1 клик:</span>
+            {([
+              ["candidate", "Кандидат", "/candidate"],
+              ["candidate_new", "Тест с нуля", "/candidate/assessment"],
+              ["employer", "Работодатель", "/employer/needs"],
+              ["fsp", "Федерация ФСП", "/fsp"],
+            ] as [Persona, string, string][]).map(([p, label, path]) => {
+              const isActive =
+                (p === "employer" && role === "employer") ||
+                (p === "fsp" && role === "fsp_analyst") ||
+                (p === "candidate" && role === "candidate" && !me.email.startsWith("candidate-new")) ||
+                (p === "candidate_new" && role === "candidate" && me.email.startsWith("candidate-new"));
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  disabled={!!switchingRole}
+                  onClick={() => void quickSwitchRole(p, path)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    isActive
+                      ? "bg-brand text-white shadow-sm"
+                      : "bg-[#F3F2FB] text-brand-night hover:bg-brand-blush/60"
+                  }`}
+                >
+                  {switchingRole === p ? "Вход…" : label}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={exit}
+              className="ml-1 rounded-lg border border-brand/30 bg-white px-3 py-1 text-xs font-bold text-brand transition hover:bg-brand hover:text-white"
+            >
+              Выйти
+            </button>
+          </div>
+        </div>
+        <main id="main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-6 outline-none sm:px-6 md:px-10 md:py-8">
+          {/* Я16: раздел грузится отдельным файлом — меню остаётся, ошибка загрузки раздела — экран повтора внутри */}
+          <RouteBoundary inline><Suspense fallback={<RouteFallback inline />}><Outlet /></Suspense></RouteBoundary>
+        </main>
+      </div>
     </div>
   );
 }
