@@ -538,13 +538,13 @@ def need_advisor_speech(need_id: uuid.UUID, data: AdvisorSpeechIn | None = None,
     _own_need(db, my_company(db, user), need_id)
     release(db)
     try:
-        audio = pt.get_port().speech(data.text, fmt="pcm_16000" if data.format == "pcm" else "mp3")
+        raw, mime, _cost = pt.get_port().speak(data.text, fmt="pcm_16000" if data.format == "pcm" else "mp3")
     except pt.EngineUnavailable:
         raise api_error(503, "tts_unavailable", "Синтез речи недоступен") from None
-    headers = {"Cache-Control": "no-store", "X-Voice-Stub": "1" if audio.get("stub") else "0"}
-    if audio.get("sample_rate"):
-        headers["X-Sample-Rate"] = str(audio["sample_rate"])
-    return Response(content=audio["data"], media_type=audio["mime"], headers=headers)
+    headers = {"Cache-Control": "no-store", "X-Voice-Stub": "0"}
+    if data.format == "pcm":
+        headers["X-Sample-Rate"] = "16000"
+    return Response(content=raw, media_type=mime, headers=headers)
 
 
 # ------------------------------------------------------------------ поиск и карточка
