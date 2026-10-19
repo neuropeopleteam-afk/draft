@@ -49,6 +49,47 @@
         "title": "AdminTwoFactorResetIn",
         "type": "object"
       },
+      "AdvisorIn": {
+        "properties": {
+          "question": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Вопрос руководителя; пусто — краткий доклад",
+            "title": "Question"
+          },
+          "refs": {
+            "description": "Сравниваемые кандидаты; пусто — первые три",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Refs",
+            "type": "array"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Версия подборки (как в сравнении)",
+            "title": "Version"
+          }
+        },
+        "title": "AdvisorIn",
+        "type": "object"
+      },
       "ApplicationOut": {
         "additionalProperties": true,
         "description": "Отклик кандидата на вакансию. Работодателю дополнительно приходят карточка кандидата и контакты (после ответа).",
@@ -44202,6 +44243,104 @@
         ]
       }
     },
+    "/api/employer/cups/from-need/{need_id}": {
+      "post": {
+        "description": "Н5. Кубок компании × ФСП по дисциплине «Продуктовое программирование»: три задания банка с автопроверкой под обязательный стек потребности, приз — прямой оффер с вилкой из потребности для топ-5 призёров и очки в рейтинг ФСП. В ответе — кубок и tournament («Паспорт соревновательной задачи ФСП»). Повтор по той же потребности, пока турнир идёт, возвращает его же (200, created=false).\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "from_need_api_employer_cups_from_need__need_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "need_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Need Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Турнир по этой потребности уже идёт — он и возвращён"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response From Need Api Employer Cups From Need  Need Id  Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "need_not_found",
+                    "message": "Потребность не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Потребность не найдена. Коды `detail.code`: `need_not_found` — Потребность не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Нет профиля компании. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "cup_need_category",
+                    "message": "Для этой потребности нет категории кубка"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Направление вне кубков, вилка шире правила 1,5× или мало заданий. Коды `detail.code`: `cup_need_category` — Для этой потребности нет категории кубка; `cup_need_direction` — Турнир ФСП запускается для направлений Backend, Frontend, Data/ML, QA и ИБ — уточните потребность; `cup_bank_too_small` — В банке мало заданий с автопроверкой под этот стек; `cup_need_salary` — Вилка потребности шире правила платформы: «до» — не больше чем в 1,5 раза выше «от». Уточните вилку в потребности; `cup_period_invalid` — Окончание кубка должно быть позже начала; `cup_period_past` — Кубок должен закончиться в будущем; `cup_task_required` — Опишите задачу кубка; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; ещё 2."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Запустить отборочный турнир ФСП под вакансию (из потребности)",
+        "tags": [
+          "cups"
+        ]
+      }
+    },
     "/api/employer/cups/options": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
@@ -44538,6 +44677,118 @@
           }
         ],
         "summary": "Отменить кубок, пока никто не прислал решение",
+        "tags": [
+          "cups"
+        ]
+      }
+    },
+    "/api/employer/cups/{cup_id}/entries/{entry_id}/invite": {
+      "post": {
+        "description": "Н5. Приглашение с вилкой кубка участнику из топ-N текущей таблицы (турнир может ещё идти). Имя и контакты — только после принятия приглашения, как обычно.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "invite_entry_api_employer_cups__cup_id__entries__entry_id__invite_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cup_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Cup Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Invite Entry Api Employer Cups  Cup Id  Entries  Entry Id  Invite Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "cup_entry_not_found",
+                    "message": "Участник не найден"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено. Коды `detail.code`: `cup_entry_not_found` — Участник не найден; `cup_not_found` — Кубок не найден."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не призёр, уже приглашён, решение не оценено или лимит 30 дней. Коды `detail.code`: `company_required` — Сначала заполните профиль компании; `cup_cancelled` — Кубок отменён; `cup_entry_invited` — Этот участник уже приглашён; `cup_entry_not_scored` — Пригласить можно участника с оценённым решением; `cup_entry_not_prize` — Пригласить в один клик можно призёров — топ-… таблицы; `cup_entry_hidden` — Участник скрыл профиль — приглашение недоступно; `invitation_cooldown` — Этому кандидату ваша компания уже отправляла приглашение. Следующее — с …; `cup_finished` — Итоги кубка уже подведены; ещё 3."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "light_work_minor_only",
+                    "message": "Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»"
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Пригласить призёра в один клик",
         "tags": [
           "cups"
         ]
@@ -48210,6 +48461,118 @@
           }
         ],
         "summary": "Изменить потребность (подборки прежних версий сохраняются)",
+        "tags": [
+          "employer"
+        ]
+      }
+    },
+    "/api/employer/needs/{need_id}/advisor": {
+      "post": {
+        "description": "Н1. Вопрос директора (голосом или текстом) → ответ по тем же фактам, что и сравнение: балл, навыки, подтверждённые тестом, и непроверенные, достоверность, достижения ФСП (T2), рынок категории и вилка потребности. Ответ собирается правилами без генерации моделью (source=rules); speech — текст для синтеза речи. Скрытый минимум зарплаты кандидата не используется.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "need_advisor_api_employer_needs__need_id__advisor_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "need_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Need Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AdvisorIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Need Advisor Api Employer Needs  Need Id  Advisor Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "version_not_found",
+                    "message": "Версия подборки не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Потребность, версия или кандидат не найдены. Коды `detail.code`: `version_not_found` — Версия подборки не найдена; `need_not_found` — Потребность не найдена; `candidate_not_found` — Кандидат не найден или скрыл профиль."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "company_required — сначала заполните профиль компании. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "compare_refs",
+                    "message": "Для сравнения выберите от 2 до 3 кандидатов"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Нужно от 2 до 3 разных кандидатов. Коды `detail.code`: `compare_refs` — Для сравнения выберите от 2 до 3 кандидатов."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "ИИ-советник руководителя: ответ по сравниваемым кандидатам",
         "tags": [
           "employer"
         ]
