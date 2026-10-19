@@ -12,7 +12,10 @@ interface Topic {
   expected: number | null; relative: string | null; status: string; confidence: string; level: string | null; aspects: Aspect[];
 }
 interface DemandItem { tag: string; title: string; required: number; desired: number; share: number; status: string; status_title: string; testable: boolean; test_score: number | null }
-interface Step { kind: string; title: string; text: string; tags: string[] }
+interface Step { kind: string; title: string; text: string; tags: string[]; source?: string }
+/** D3 п. 4: два списка «подтянуть» подписаны источником — тест или спрос работодателей (не путать жюри). */
+const SOURCE_TEST = "Слабее всего по тесту", SOURCE_DEMAND = "Востребовано у работодателей в вашей категории";
+const stepSource = (s: Step) => s.source ?? (s.kind === "topic" ? SOURCE_TEST : s.kind === "demand" ? SOURCE_DEMAND : null);
 interface Comp { discipline: string; title: string; score: number; reasons: string[]; your_level: string | null; your_level_title: string | null; next_step: string; peers?: { category_size: number; with_discipline: number } }
 export interface FeedbackData {
   available: boolean; message?: string; source?: string;
@@ -147,7 +150,7 @@ function Route({ steps }: { steps: Step[] }) {
         {steps.map((s, i) => (
           <li key={i} className="flex gap-3">
             <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush/60 text-xs font-bold text-brand-plum">{i + 1}</span>
-            <div><p className="font-semibold text-brand-night">{s.title}</p><p className="mt-0.5 text-sm text-brand-ink/70">{s.text}</p></div>
+            <div>{stepSource(s) && <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-lavender" data-testid="route-source">{stepSource(s)}</p>}<p className="font-semibold text-brand-night">{s.title}</p><p className="mt-0.5 text-sm text-brand-ink/70">{s.text}</p></div>
           </li>
         ))}
       </ol>
@@ -185,16 +188,19 @@ export function FeedbackSummary({ sessionId, fallbackLink = false }: { sessionId
   // Ф6 (В2): один переход к карте роста на экране результата — из сводки или, если сводки нет, отдельной кнопкой
   if (!fb?.available) return fallbackLink ? <Link className="btn-ghost mt-4 inline-flex" to={`/candidate/feedback?session=${sessionId}`}>Карта навыков и маршрут роста</Link> : null;
   const s = fb.skill_map!.summary;
+  // D3 п. 4: что востребовано у работодателей и ещё не подтверждено тестом — отдельной строкой от «слабее всего по тесту»
+  const wanted = (fb.demand?.items ?? []).filter((x) => x.status !== "confirmed").slice(0, 3).map((x) => x.title);
   return (
     <section className="card mt-4">
       <h2 className="font-bold text-brand-night">Карта навыков и маршрут роста</h2>
       <p className="mt-1 text-sm text-brand-ink/70">
         Тем в тесте: {s.topics} · уверенно: {s.strong}{s.ok ? ` · в целом освоено: ${s.ok}` : ""} · пробелы: {s.gap}{s.pending ? ` · на проверке: ${s.pending}` : ""}.
         {s.best.length ? <> Сильнее всего: {s.best.join(", ")}.</> : null}
-        {s.weakest.length ? <> Подтянуть: {s.weakest.join(", ")}.</> : null}
+        {s.weakest.length ? <> {SOURCE_TEST}: {s.weakest.join(", ")}.</> : null}
       </p>
+      {wanted.length > 0 && <p className="mt-1 text-sm text-brand-ink/70" data-testid="summary-demand">{SOURCE_DEMAND}: {wanted.join(", ")}.</p>}
       {fb.route && fb.route.length > 0 && (
-        <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm text-brand-ink/75">{fb.route.slice(0, 3).map((r, i) => <li key={i}>{r.title}</li>)}</ol>
+        <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm text-brand-ink/75">{fb.route.slice(0, 3).map((r, i) => <li key={i}>{r.title}{stepSource(r) && <span className="text-brand-ink/60"> — {stepSource(r)!.toLowerCase()}</span>}</li>)}</ol>
       )}
       <Link className="btn-ghost mt-3 inline-flex" to={`/candidate/feedback?session=${sessionId}`}>Открыть карту навыков</Link>
     </section>

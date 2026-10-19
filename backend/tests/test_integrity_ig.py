@@ -57,6 +57,21 @@ def test_fullscreen_rules():
     assert many["points"] == 2
 
 
+def test_printscreen_signal():
+    """D3 п. 3: PrintScreen во время задания — причина «Снимок экрана (PrintScreen)» (поведение), 1 балл; на трёх и
+    более заданиях — 2. Старые клиенты без ключа printscreen этим правилом не судятся."""
+    assert integrity.clean_signals({"printscreen": "3"})["printscreen"] == 3
+    assert "printscreen" not in integrity.clean_signals({"focus_lost": 1})
+    ps = lambda n: _item(signals={**_item()["signals"], "printscreen": n})
+    one = integrity.assess([ps(2)] + [ps(0) for _ in range(5)])
+    assert one["points"] == 1 and one["reasons"][0] == "Снимок экрана (PrintScreen): 2 раза (1 задание)"
+    assert integrity.reason_kind(one["reasons"][0]) == "behavior"
+    assert integrity.candidate_view(one)["reasons"] == [integrity.KIND_TITLES["behavior"]]  # Р27: без названия сигнала
+    many = integrity.assess([ps(1) for _ in range(3)] + [ps(0) for _ in range(3)])
+    assert many["points"] == 2 and many["signals"]["printscreen_items"] == 3
+    assert integrity.assess([ps(0) for _ in range(6)])["level"] == "high"
+
+
 def test_copy_ai_mark_fast_text_typing_meta_rules():
     sig = _item()["signals"]
     r = integrity.assess([_item(signals={**sig, "copy": 1})] + [_item() for _ in range(5)])

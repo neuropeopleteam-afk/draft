@@ -29701,7 +29701,8 @@
               "no_face",
               "multi_face",
               "blocked",
-              "camera_off"
+              "camera_off",
+              "printscreen"
             ],
             "title": "Kind",
             "type": "string"

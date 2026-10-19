@@ -4,7 +4,7 @@
  * выдаёт при создании сессии). Любая ошибка камеры или модели — понятное сообщение и продолжение без камеры.
  */
 import { useEffect, useRef, useState } from "react";
-import { Alert, Loading, dt, errText } from "../components/ui";
+import { Alert, Loading, dateOnly, errText } from "../components/ui";
 import { api } from "../lib/api";
 import { camera, stateTitle, useCamera } from "./controller";
 
@@ -16,7 +16,9 @@ export interface ConsentText {
 export interface ConsentState { active: boolean; granted_at: string | null; version: string | null; current_version: string; text: ConsentText; enabled: boolean }
 
 /** Редакция согласия хранится датой ГГГГ-ММ-ДД — показываем по-русски. */
-export const verDate = (v: string | null | undefined) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? dt(v) : v ?? "—");
+export const verDate = (v: string | null | undefined) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? dateOnly(v) : v ?? "—");
+/** D3 п. 4: дата редакции в конце предложения — без «г..» («Редакция согласия от 10 октября 2026 г.»). */
+export const verDateEnd = (v: string | null | undefined) => verDate(v).replace(/\.$/, "");
 
 /** Текст согласия — общий для экрана перед тестом и настроек. */
 export function ConsentBody({ t, compact = false }: { t: ConsentText; compact?: boolean }) {
@@ -29,7 +31,7 @@ export function ConsentBody({ t, compact = false }: { t: ConsentText; compact?: 
       <p><b className="text-brand-night">Как влияет на результат.</b> {t.effect}</p>
       <p><b className="text-brand-night">Срок хранения.</b> {t.how_long}</p>
       <p><b className="text-brand-night">Отзыв согласия.</b> {t.revoke}</p>
-      <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия от {verDate(t.version)}.</p>
+      <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия от {verDateEnd(t.version)}.</p>
     </div>
   );
 }
@@ -43,7 +45,7 @@ function ConsentBrief({ t }: { t: ConsentText }) {
       {line("Что сохраняется", t.stored[0])}
       {line("Кто это видит", t.who_sees[1] ?? t.who_sees[0])}
       {line("Как влияет на результат", t.effect.split(" Без камеры")[0])}
-      <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия от {verDate(t.version)}.</p>
+      <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия от {verDateEnd(t.version)}.</p>
     </div>
   );
 }
