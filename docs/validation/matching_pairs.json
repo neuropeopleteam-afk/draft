@@ -19,27 +19,27 @@
  "pairs": [
   {
    "need_index": 0,
-   "candidate_ref": "C-4399NZ",
+   "candidate_ref": "C-74N3AT",
    "category": "backend.middle",
    "label": 0,
-   "rank_platform": 6,
-   "rank_platform_no_fsp": 6,
+   "rank_platform": 7,
+   "rank_platform_no_fsp": 7,
    "rank_bm25": 10,
    "rank_keywords": 10
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-LMTGDF",
+   "candidate_ref": "C-YLBNB3",
    "category": "backend.middle",
    "label": 2,
-   "rank_platform": 4,
-   "rank_platform_no_fsp": 4,
+   "rank_platform": 5,
+   "rank_platform_no_fsp": 5,
    "rank_bm25": 2,
    "rank_keywords": 6
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-UVP7Y6",
+   "candidate_ref": "C-QWMCRQ",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 8,
@@ -49,67 +49,67 @@
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-TFYSBE",
+   "candidate_ref": "C-7T5T49",
    "category": "backend.middle",
    "label": 2,
-   "rank_platform": 1,
-   "rank_platform_no_fsp": 1,
+   "rank_platform": 3,
+   "rank_platform_no_fsp": 3,
    "rank_bm25": 11,
    "rank_keywords": 8
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-LLG388",
+   "candidate_ref": "C-YBK8N3",
    "category": "backend.middle",
    "label": 1,
-   "rank_platform": 5,
-   "rank_platform_no_fsp": 5,
+   "rank_platform": 6,
+   "rank_platform_no_fsp": 6,
    "rank_bm25": 9,
    "rank_keywords": 12
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-CPWQEM",
+   "candidate_ref": "C-TUW4DV",
    "category": "backend.middle",
    "label": 1,
-   "rank_platform": 3,
-   "rank_platform_no_fsp": 3,
+   "rank_platform": 4,
+   "rank_platform_no_fsp": 4,
    "rank_bm25": 12,
    "rank_keywords": 9
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-AC6QTN",
+   "candidate_ref": "C-AGCEQQ",
    "category": "backend.middle",
    "label": 3,
-   "rank_platform": 7,
-   "rank_platform_no_fsp": 7,
+   "rank_platform": 2,
+   "rank_platform_no_fsp": 2,
    "rank_bm25": 1,
    "rank_keywords": 1
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-TNQUDH",
+   "candidate_ref": "C-UPBVW7",
    "category": "backend.middle",
    "label": 1,
-   "rank_platform": 2,
-   "rank_platform_no_fsp": 2,
+   "rank_platform": 1,
+   "rank_platform_no_fsp": 1,
    "rank_bm25": 3,
    "rank_keywords": 2
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-KLAANS",
+   "candidate_ref": "C-YL2VJP",
    "category": "backend.senior",
    "label": 1,
-   "rank_platform": 9,
-   "rank_platform_no_fsp": 9,
+   "rank_platform": 12,
+   "rank_platform_no_fsp": 12,
    "rank_bm25": 5,
    "rank_keywords": 7
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-9QC2C7",
+   "candidate_ref": "C-B8TV9Q",
    "category": "backend.junior",
    "label": 1,
    "rank_platform": 20,
@@ -119,17 +119,17 @@
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-BAEXPY",
+   "candidate_ref": "C-RAJS9U",
    "category": "backend.senior",
    "label": 1,
-   "rank_platform": 11,
-   "rank_platform_no_fsp": 11,
+   "rank_platform": 14,
+   "rank_platform_no_fsp": 14,
    "rank_bm25": 6,
    "rank_keywords": 4
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-G8E99U",
+   "candidate_ref": "C-6V3JJA",
    "category": "backend.junior",
    "label": 1,
    "rank_platform": 17,
@@ -139,67 +139,67 @@
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-78WN9Y",
+   "candidate_ref": "C-99CJPC",
    "category": "backend.senior",
    "label": 1,
    "rank_platform": 16,
-   "rank_platform_no_fsp": 13,
+   "rank_platform_no_fsp": 15,
    "rank_bm25": 4,
    "rank_keywords": 3
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-8G7R8K",
+   "candidate_ref": "C-MUD8FW",
    "category": "backend.senior",
    "label": 1,
-   "rank_platform": 10,
-   "rank_platform_no_fsp": 10,
+   "rank_platform": 13,
+   "rank_platform_no_fsp": 13,
    "rank_bm25": 7,
    "rank_keywords": 5
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-M2C23K",
+   "candidate_ref": "C-5DXU5J",
    "category": "data_ml.senior",
    "label": 0,
-   "rank_platform": 12,
-   "rank_platform_no_fsp": 12,
+   "rank_platform": 9,
+   "rank_platform_no_fsp": 9,
    "rank_bm25": 16,
    "rank_keywords": 16
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-HLPCGW",
+   "candidate_ref": "C-7NFCPL",
    "category": "qa.senior",
    "label": 0,
-   "rank_platform": 14,
-   "rank_platform_no_fsp": 16,
+   "rank_platform": 10,
+   "rank_platform_no_fsp": 11,
    "rank_bm25": 17,
    "rank_keywords": 19
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-SGVJCC",
+   "candidate_ref": "C-56EJEN",
    "category": "security.senior",
    "label": 0,
-   "rank_platform": 13,
-   "rank_platform_no_fsp": 14,
+   "rank_platform": 15,
+   "rank_platform_no_fsp": 16,
    "rank_bm25": 19,
    "rank_keywords": 18
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-RUH4AN",
+   "candidate_ref": "C-XQLPW6",
    "category": "data_ml.middle",
    "label": 0,
-   "rank_platform": 15,
-   "rank_platform_no_fsp": 15,
+   "rank_platform": 11,
+   "rank_platform_no_fsp": 10,
    "rank_bm25": 15,
    "rank_keywords": 14
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-RC4SLV",
+   "candidate_ref": "C-NU7M48",
    "category": "qa.junior",
    "label": 0,
    "rank_platform": 19,
@@ -209,7 +209,7 @@
   },
   {
    "need_index": 0,
-   "candidate_ref": "C-ZP2AB8",
+   "candidate_ref": "C-SPD789",
    "category": "security.middle",
    "label": 0,
    "rank_platform": 18,
@@ -219,27 +219,27 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-PDKG2T",
+   "candidate_ref": "C-6FT4LW",
    "category": "backend.senior",
    "label": 3,
-   "rank_platform": 4,
+   "rank_platform": 3,
    "rank_platform_no_fsp": 2,
    "rank_bm25": 3,
    "rank_keywords": 2
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-FQL7WL",
+   "candidate_ref": "C-C6KLLT",
    "category": "backend.senior",
    "label": 3,
-   "rank_platform": 6,
-   "rank_platform_no_fsp": 6,
+   "rank_platform": 5,
+   "rank_platform_no_fsp": 5,
    "rank_bm25": 1,
    "rank_keywords": 4
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-APPYTX",
+   "candidate_ref": "C-P5YQ3R",
    "category": "backend.senior",
    "label": 3,
    "rank_platform": 1,
@@ -249,7 +249,7 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-K5SNA6",
+   "candidate_ref": "C-VZM2S4",
    "category": "backend.senior",
    "label": 2,
    "rank_platform": 2,
@@ -259,47 +259,47 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-H6TQBP",
+   "candidate_ref": "C-4CLLRP",
    "category": "backend.senior",
    "label": 2,
-   "rank_platform": 7,
-   "rank_platform_no_fsp": 7,
+   "rank_platform": 6,
+   "rank_platform_no_fsp": 6,
    "rank_bm25": 10,
    "rank_keywords": 10
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-TZLSQY",
+   "candidate_ref": "C-CAFQT4",
    "category": "backend.senior",
    "label": 3,
-   "rank_platform": 5,
+   "rank_platform": 4,
    "rank_platform_no_fsp": 3,
    "rank_bm25": 2,
    "rank_keywords": 3
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-CMLXSW",
+   "candidate_ref": "C-TUGQQ2",
    "category": "backend.senior",
    "label": 2,
-   "rank_platform": 8,
-   "rank_platform_no_fsp": 8,
+   "rank_platform": 7,
+   "rank_platform_no_fsp": 7,
    "rank_bm25": 9,
    "rank_keywords": 8
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-8UBYT5",
+   "candidate_ref": "C-JKSGSZ",
    "category": "backend.senior",
    "label": 2,
-   "rank_platform": 3,
-   "rank_platform_no_fsp": 5,
+   "rank_platform": 8,
+   "rank_platform_no_fsp": 8,
    "rank_bm25": 12,
    "rank_keywords": 12
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-TFYSBE",
+   "candidate_ref": "C-7T5T49",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 10,
@@ -309,7 +309,7 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-VD858F",
+   "candidate_ref": "C-V2TFHU",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 14,
@@ -319,7 +319,7 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-UVP7Y6",
+   "candidate_ref": "C-QWMCRQ",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 9,
@@ -329,7 +329,7 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-TYRMXY",
+   "candidate_ref": "C-EV2L47",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 17,
@@ -339,7 +339,7 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-ZBHR25",
+   "candidate_ref": "C-TS7DH3",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 16,
@@ -349,7 +349,7 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-TYBFG6",
+   "candidate_ref": "C-ED87Y2",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 15,
@@ -359,27 +359,27 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-68QRKP",
+   "candidate_ref": "C-WUJ2YC",
    "category": "security.senior",
    "label": 0,
-   "rank_platform": 11,
-   "rank_platform_no_fsp": 11,
+   "rank_platform": 12,
+   "rank_platform_no_fsp": 12,
    "rank_bm25": 15,
    "rank_keywords": 18
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-BM2SEA",
+   "candidate_ref": "C-FER7N5",
    "category": "data_ml.senior",
    "label": 0,
-   "rank_platform": 12,
-   "rank_platform_no_fsp": 12,
+   "rank_platform": 11,
+   "rank_platform_no_fsp": 11,
    "rank_bm25": 16,
    "rank_keywords": 19
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-L4F7YB",
+   "candidate_ref": "C-4KQCMC",
    "category": "security.middle",
    "label": 0,
    "rank_platform": 20,
@@ -389,7 +389,7 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-DPABUD",
+   "candidate_ref": "C-5BFZTG",
    "category": "qa.senior",
    "label": 0,
    "rank_platform": 13,
@@ -399,7 +399,7 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-768WY9",
+   "candidate_ref": "C-DPCZSH",
    "category": "qa.junior",
    "label": 0,
    "rank_platform": 19,
@@ -409,7 +409,7 @@
   },
   {
    "need_index": 1,
-   "candidate_ref": "C-DGD626",
+   "candidate_ref": "C-U48V92",
    "category": "data_ml.junior",
    "label": 0,
    "rank_platform": 18,
@@ -419,7 +419,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-DTVUQV",
+   "candidate_ref": "C-DRGBVX",
    "category": "data_ml.middle",
    "label": 2,
    "rank_platform": 3,
@@ -429,7 +429,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-QZATSY",
+   "candidate_ref": "C-KNGVPB",
    "category": "data_ml.middle",
    "label": 2,
    "rank_platform": 2,
@@ -439,7 +439,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-JXSG6R",
+   "candidate_ref": "C-6Y3KLM",
    "category": "data_ml.middle",
    "label": 2,
    "rank_platform": 7,
@@ -449,7 +449,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-E6GTRF",
+   "candidate_ref": "C-GQ4X3U",
    "category": "data_ml.middle",
    "label": 2,
    "rank_platform": 5,
@@ -459,7 +459,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-4BSRFF",
+   "candidate_ref": "C-XVQ3AN",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 8,
@@ -469,7 +469,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-YJ92Z4",
+   "candidate_ref": "C-CWWRTJ",
    "category": "data_ml.middle",
    "label": 2,
    "rank_platform": 6,
@@ -479,7 +479,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-QYXQ33",
+   "candidate_ref": "C-FSG9U2",
    "category": "data_ml.middle",
    "label": 2,
    "rank_platform": 1,
@@ -489,7 +489,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-ZS5XA6",
+   "candidate_ref": "C-MB9DMX",
    "category": "data_ml.middle",
    "label": 2,
    "rank_platform": 4,
@@ -499,7 +499,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-4XQ6A3",
+   "candidate_ref": "C-2A2RVS",
    "category": "data_ml.junior",
    "label": 1,
    "rank_platform": 15,
@@ -509,7 +509,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-NRUFQR",
+   "candidate_ref": "C-528Q2K",
    "category": "data_ml.junior",
    "label": 1,
    "rank_platform": 13,
@@ -519,7 +519,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-83AAZF",
+   "candidate_ref": "C-23C7GC",
    "category": "data_ml.senior",
    "label": 1,
    "rank_platform": 9,
@@ -529,7 +529,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-XW8SSU",
+   "candidate_ref": "C-7QAD76",
    "category": "data_ml.junior",
    "label": 1,
    "rank_platform": 18,
@@ -539,7 +539,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-RFSQAS",
+   "candidate_ref": "C-WWUH9G",
    "category": "data_ml.junior",
    "label": 1,
    "rank_platform": 14,
@@ -549,7 +549,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-G5W2RA",
+   "candidate_ref": "C-UCMHBU",
    "category": "data_ml.junior",
    "label": 1,
    "rank_platform": 16,
@@ -559,7 +559,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-NPQEYK",
+   "candidate_ref": "C-K2CM7F",
    "category": "frontend.junior",
    "label": 0,
    "rank_platform": 17,
@@ -569,7 +569,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-FENUUT",
+   "candidate_ref": "C-35GVGN",
    "category": "security.junior",
    "label": 0,
    "rank_platform": 20,
@@ -579,7 +579,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-X8DSSG",
+   "candidate_ref": "C-B8SE6F",
    "category": "backend.senior",
    "label": 0,
    "rank_platform": 10,
@@ -589,7 +589,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-NJUK26",
+   "candidate_ref": "C-Q6CE6E",
    "category": "frontend.senior",
    "label": 0,
    "rank_platform": 12,
@@ -599,7 +599,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-8YA7KS",
+   "candidate_ref": "C-L6RZCD",
    "category": "backend.middle",
    "label": 0,
    "rank_platform": 11,
@@ -609,7 +609,7 @@
   },
   {
    "need_index": 2,
-   "candidate_ref": "C-SHM9XZ",
+   "candidate_ref": "C-GE2GEE",
    "category": "backend.junior",
    "label": 0,
    "rank_platform": 19,
@@ -619,7 +619,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-4XQ6A3",
+   "candidate_ref": "C-2A2RVS",
    "category": "data_ml.junior",
    "label": 2,
    "rank_platform": 2,
@@ -629,7 +629,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-SHJ6GE",
+   "candidate_ref": "C-ERM6V4",
    "category": "data_ml.junior",
    "label": 2,
    "rank_platform": 1,
@@ -639,7 +639,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-HWK4ZV",
+   "candidate_ref": "C-N3SK55",
    "category": "data_ml.junior",
    "label": 2,
    "rank_platform": 3,
@@ -649,7 +649,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-LW3L2M",
+   "candidate_ref": "C-E96QRC",
    "category": "data_ml.junior",
    "label": 2,
    "rank_platform": 8,
@@ -659,7 +659,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-VF8T7A",
+   "candidate_ref": "C-SW75JJ",
    "category": "data_ml.junior",
    "label": 2,
    "rank_platform": 7,
@@ -669,7 +669,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-HWNGN5",
+   "candidate_ref": "C-6ZNCZU",
    "category": "data_ml.junior",
    "label": 2,
    "rank_platform": 4,
@@ -679,7 +679,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-MA4XWF",
+   "candidate_ref": "C-6MMBD8",
    "category": "data_ml.junior",
    "label": 2,
    "rank_platform": 5,
@@ -689,7 +689,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-26MPSP",
+   "candidate_ref": "C-G8L45S",
    "category": "data_ml.junior",
    "label": 2,
    "rank_platform": 6,
@@ -699,7 +699,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-QV89QN",
+   "candidate_ref": "C-WSNGNM",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 10,
@@ -709,7 +709,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-QSBBQB",
+   "candidate_ref": "C-9FA4ZC",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 16,
@@ -719,7 +719,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-YJ92Z4",
+   "candidate_ref": "C-CWWRTJ",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 12,
@@ -729,7 +729,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-TU89AQ",
+   "candidate_ref": "C-9V3YZK",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 15,
@@ -739,7 +739,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-DTVUQV",
+   "candidate_ref": "C-DRGBVX",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 9,
@@ -749,7 +749,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-WDDPEF",
+   "candidate_ref": "C-HX3P2P",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 11,
@@ -759,7 +759,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-MQWJNV",
+   "candidate_ref": "C-PKNBEZ",
    "category": "security.middle",
    "label": 0,
    "rank_platform": 14,
@@ -769,7 +769,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-5LWH97",
+   "candidate_ref": "C-999PY7",
    "category": "qa.senior",
    "label": 0,
    "rank_platform": 19,
@@ -779,7 +779,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-VD858F",
+   "candidate_ref": "C-V2TFHU",
    "category": "backend.middle",
    "label": 0,
    "rank_platform": 17,
@@ -789,7 +789,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-ZBHR25",
+   "candidate_ref": "C-TS7DH3",
    "category": "backend.middle",
    "label": 0,
    "rank_platform": 13,
@@ -799,7 +799,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-FRTY2S",
+   "candidate_ref": "C-5BACL3",
    "category": "security.junior",
    "label": 0,
    "rank_platform": 20,
@@ -809,7 +809,7 @@
   },
   {
    "need_index": 3,
-   "candidate_ref": "C-BMS9GT",
+   "candidate_ref": "C-4S5S7T",
    "category": "backend.senior",
    "label": 0,
    "rank_platform": 18,
@@ -819,7 +819,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-FV8EBB",
+   "candidate_ref": "C-VH36EU",
    "category": "security.middle",
    "label": 2,
    "rank_platform": 4,
@@ -829,7 +829,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-P34PKZ",
+   "candidate_ref": "C-H6SHH8",
    "category": "security.middle",
    "label": 2,
    "rank_platform": 3,
@@ -839,7 +839,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-KEFLA6",
+   "candidate_ref": "C-ZH73YV",
    "category": "security.middle",
    "label": 2,
    "rank_platform": 1,
@@ -849,7 +849,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-VT3LQH",
+   "candidate_ref": "C-Q4JUDS",
    "category": "security.middle",
    "label": 2,
    "rank_platform": 7,
@@ -859,7 +859,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-K5HKEP",
+   "candidate_ref": "C-65HANT",
    "category": "security.middle",
    "label": 2,
    "rank_platform": 2,
@@ -869,7 +869,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-L4F7YB",
+   "candidate_ref": "C-4KQCMC",
    "category": "security.middle",
    "label": 2,
    "rank_platform": 8,
@@ -879,7 +879,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-G4REYM",
+   "candidate_ref": "C-ADKJSZ",
    "category": "security.middle",
    "label": 2,
    "rank_platform": 6,
@@ -889,7 +889,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-PQLC4X",
+   "candidate_ref": "C-YX4JZW",
    "category": "security.middle",
    "label": 2,
    "rank_platform": 5,
@@ -899,7 +899,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-9SEWD4",
+   "candidate_ref": "C-MLHAZJ",
    "category": "security.senior",
    "label": 1,
    "rank_platform": 11,
@@ -909,7 +909,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-V7JAAC",
+   "candidate_ref": "C-G4V5LX",
    "category": "security.senior",
    "label": 1,
    "rank_platform": 10,
@@ -919,7 +919,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-ZGTM5Q",
+   "candidate_ref": "C-ZLBN2V",
    "category": "security.junior",
    "label": 1,
    "rank_platform": 19,
@@ -929,7 +929,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-FENUUT",
+   "candidate_ref": "C-35GVGN",
    "category": "security.junior",
    "label": 1,
    "rank_platform": 20,
@@ -939,7 +939,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-GJ6GD8",
+   "candidate_ref": "C-B9G5YU",
    "category": "security.junior",
    "label": 1,
    "rank_platform": 17,
@@ -949,7 +949,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-X957U4",
+   "candidate_ref": "C-KRRGVS",
    "category": "security.senior",
    "label": 1,
    "rank_platform": 9,
@@ -959,7 +959,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-8L3MHF",
+   "candidate_ref": "C-29KABX",
    "category": "backend.senior",
    "label": 0,
    "rank_platform": 12,
@@ -969,7 +969,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-USCZ3F",
+   "candidate_ref": "C-TSLKEG",
    "category": "data_ml.senior",
    "label": 0,
    "rank_platform": 14,
@@ -979,7 +979,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-TVYHMY",
+   "candidate_ref": "C-MGDEDJ",
    "category": "data_ml.senior",
    "label": 0,
    "rank_platform": 15,
@@ -989,7 +989,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-3KG4C7",
+   "candidate_ref": "C-FBPZPJ",
    "category": "backend.middle",
    "label": 0,
    "rank_platform": 16,
@@ -999,7 +999,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-X4D847",
+   "candidate_ref": "C-RMXH3J",
    "category": "frontend.middle",
    "label": 0,
    "rank_platform": 13,
@@ -1009,7 +1009,7 @@
   },
   {
    "need_index": 4,
-   "candidate_ref": "C-UVQ4YL",
+   "candidate_ref": "C-KK46EA",
    "category": "data_ml.middle",
    "label": 0,
    "rank_platform": 18,
@@ -1019,7 +1019,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-K9EF9D",
+   "candidate_ref": "C-DEP7BM",
    "category": "security.senior",
    "label": 2,
    "rank_platform": 6,
@@ -1029,7 +1029,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-W9GDML",
+   "candidate_ref": "C-AAAQ4V",
    "category": "security.senior",
    "label": 2,
    "rank_platform": 5,
@@ -1039,7 +1039,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-S7BV76",
+   "candidate_ref": "C-WFD463",
    "category": "security.senior",
    "label": 1,
    "rank_platform": 2,
@@ -1049,7 +1049,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-9SEWD4",
+   "candidate_ref": "C-MLHAZJ",
    "category": "security.senior",
    "label": 3,
    "rank_platform": 3,
@@ -1059,7 +1059,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-9Q9GQP",
+   "candidate_ref": "C-AT45XQ",
    "category": "security.senior",
    "label": 2,
    "rank_platform": 1,
@@ -1069,7 +1069,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-4XD3R3",
+   "candidate_ref": "C-U6D5G7",
    "category": "security.senior",
    "label": 3,
    "rank_platform": 4,
@@ -1079,7 +1079,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-CEE5FM",
+   "candidate_ref": "C-LTJYQ9",
    "category": "security.senior",
    "label": 2,
    "rank_platform": 7,
@@ -1089,7 +1089,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-ER795C",
+   "candidate_ref": "C-C2HFTQ",
    "category": "security.senior",
    "label": 1,
    "rank_platform": 8,
@@ -1099,7 +1099,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-R6TNG4",
+   "candidate_ref": "C-HX8BY2",
    "category": "security.middle",
    "label": 1,
    "rank_platform": 10,
@@ -1109,7 +1109,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-KEZFGG",
+   "candidate_ref": "C-943Z77",
    "category": "security.middle",
    "label": 1,
    "rank_platform": 13,
@@ -1119,7 +1119,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-G4REYM",
+   "candidate_ref": "C-ADKJSZ",
    "category": "security.middle",
    "label": 1,
    "rank_platform": 16,
@@ -1129,7 +1129,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-WGRV6N",
+   "candidate_ref": "C-H33ZYX",
    "category": "security.middle",
    "label": 1,
    "rank_platform": 17,
@@ -1139,7 +1139,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-VT3LQH",
+   "candidate_ref": "C-Q4JUDS",
    "category": "security.middle",
    "label": 0,
    "rank_platform": 19,
@@ -1149,7 +1149,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-HGKNWD",
+   "candidate_ref": "C-B339HV",
    "category": "security.middle",
    "label": 1,
    "rank_platform": 9,
@@ -1159,7 +1159,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-Z8EFZF",
+   "candidate_ref": "C-VRJGH4",
    "category": "frontend.senior",
    "label": 0,
    "rank_platform": 12,
@@ -1169,7 +1169,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-TVGTKP",
+   "candidate_ref": "C-FQEEL6",
    "category": "backend.senior",
    "label": 0,
    "rank_platform": 15,
@@ -1179,7 +1179,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-HVVWF4",
+   "candidate_ref": "C-H7VMLG",
    "category": "frontend.senior",
    "label": 0,
    "rank_platform": 11,
@@ -1189,7 +1189,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-WBRXGB",
+   "candidate_ref": "C-NVGL7X",
    "category": "qa.junior",
    "label": 0,
    "rank_platform": 20,
@@ -1199,7 +1199,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-MDN2NP",
+   "candidate_ref": "C-TGW4Y7",
    "category": "backend.senior",
    "label": 0,
    "rank_platform": 14,
@@ -1209,7 +1209,7 @@
   },
   {
    "need_index": 5,
-   "candidate_ref": "C-TMDD7U",
+   "candidate_ref": "C-N3CHP2",
    "category": "backend.junior",
    "label": 0,
    "rank_platform": 18,
@@ -1219,7 +1219,7 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-Z7WWUR",
+   "candidate_ref": "C-PBD475",
    "category": "frontend.middle",
    "label": 2,
    "rank_platform": 2,
@@ -1229,7 +1229,7 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-84RDXP",
+   "candidate_ref": "C-5WQYFX",
    "category": "frontend.middle",
    "label": 2,
    "rank_platform": 8,
@@ -1239,7 +1239,7 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-PJM2WK",
+   "candidate_ref": "C-GA4ANB",
    "category": "frontend.middle",
    "label": 2,
    "rank_platform": 3,
@@ -1249,7 +1249,7 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-CA88DZ",
+   "candidate_ref": "C-JVT6KS",
    "category": "frontend.middle",
    "label": 2,
    "rank_platform": 1,
@@ -1259,7 +1259,7 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-NGYPT6",
+   "candidate_ref": "C-ZBFBPT",
    "category": "frontend.middle",
    "label": 2,
    "rank_platform": 4,
@@ -1269,7 +1269,7 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-KRF7L6",
+   "candidate_ref": "C-EGRDJ9",
    "category": "frontend.middle",
    "label": 2,
    "rank_platform": 7,
@@ -1279,7 +1279,7 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-4DM7CB",
+   "candidate_ref": "C-UEAJJU",
    "category": "frontend.middle",
    "label": 2,
    "rank_platform": 6,
@@ -1289,7 +1289,7 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-S7GGA5",
+   "candidate_ref": "C-KFTAMG",
    "category": "frontend.middle",
    "label": 2,
    "rank_platform": 5,
@@ -1299,47 +1299,47 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-R9PP8B",
+   "candidate_ref": "C-AZQP6F",
    "category": "frontend.senior",
    "label": 1,
-   "rank_platform": 13,
-   "rank_platform_no_fsp": 13,
+   "rank_platform": 11,
+   "rank_platform_no_fsp": 11,
    "rank_bm25": 3,
    "rank_keywords": 5
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-WCFSY5",
+   "candidate_ref": "C-UPH9NK",
    "category": "frontend.junior",
    "label": 1,
-   "rank_platform": 16,
-   "rank_platform_no_fsp": 16,
+   "rank_platform": 13,
+   "rank_platform_no_fsp": 13,
    "rank_bm25": 8,
    "rank_keywords": 8
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-FHTQMV",
+   "candidate_ref": "C-H5CCWX",
    "category": "frontend.junior",
    "label": 1,
-   "rank_platform": 19,
-   "rank_platform_no_fsp": 19,
+   "rank_platform": 14,
+   "rank_platform_no_fsp": 14,
    "rank_bm25": 11,
    "rank_keywords": 14
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-7ZMNLR",
+   "candidate_ref": "C-399UFP",
    "category": "frontend.junior",
    "label": 1,
-   "rank_platform": 12,
-   "rank_platform_no_fsp": 12,
+   "rank_platform": 10,
+   "rank_platform_no_fsp": 10,
    "rank_bm25": 10,
    "rank_keywords": 11
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-EW4FN6",
+   "candidate_ref": "C-TEJEYT",
    "category": "frontend.senior",
    "label": 1,
    "rank_platform": 9,
@@ -1349,17 +1349,17 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-V4TFVW",
+   "candidate_ref": "C-QCMC5S",
    "category": "frontend.junior",
    "label": 1,
-   "rank_platform": 14,
-   "rank_platform_no_fsp": 14,
+   "rank_platform": 12,
+   "rank_platform_no_fsp": 12,
    "rank_bm25": 9,
    "rank_keywords": 10
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-HC7AAN",
+   "candidate_ref": "C-5TJ2GU",
    "category": "backend.junior",
    "label": 0,
    "rank_platform": 20,
@@ -1369,87 +1369,87 @@
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-5TDMVD",
+   "candidate_ref": "C-5U296S",
    "category": "data_ml.junior",
    "label": 0,
-   "rank_platform": 17,
-   "rank_platform_no_fsp": 18,
+   "rank_platform": 18,
+   "rank_platform_no_fsp": 19,
    "rank_bm25": 20,
    "rank_keywords": 16
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-Q2NXU8",
+   "candidate_ref": "C-8QSWEX",
    "category": "data_ml.senior",
    "label": 0,
-   "rank_platform": 10,
-   "rank_platform_no_fsp": 10,
+   "rank_platform": 15,
+   "rank_platform_no_fsp": 15,
    "rank_bm25": 19,
    "rank_keywords": 18
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-4399NZ",
+   "candidate_ref": "C-74N3AT",
    "category": "backend.middle",
    "label": 0,
-   "rank_platform": 15,
-   "rank_platform_no_fsp": 15,
+   "rank_platform": 17,
+   "rank_platform_no_fsp": 17,
    "rank_bm25": 18,
    "rank_keywords": 15
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-TVYHMY",
+   "candidate_ref": "C-MGDEDJ",
    "category": "data_ml.senior",
    "label": 0,
-   "rank_platform": 11,
-   "rank_platform_no_fsp": 11,
+   "rank_platform": 16,
+   "rank_platform_no_fsp": 16,
    "rank_bm25": 17,
    "rank_keywords": 20
   },
   {
    "need_index": 6,
-   "candidate_ref": "C-ZZ3LXD",
+   "candidate_ref": "C-6KHEKY",
    "category": "qa.junior",
    "label": 0,
-   "rank_platform": 18,
-   "rank_platform_no_fsp": 17,
+   "rank_platform": 19,
+   "rank_platform_no_fsp": 18,
    "rank_bm25": 15,
    "rank_keywords": 19
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-PFYC7L",
+   "candidate_ref": "C-3BKCLS",
    "category": "backend.junior",
    "label": 1,
-   "rank_platform": 7,
-   "rank_platform_no_fsp": 7,
+   "rank_platform": 8,
+   "rank_platform_no_fsp": 8,
    "rank_bm25": 13,
    "rank_keywords": 15
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-GKR82E",
+   "candidate_ref": "C-7VPQCH",
    "category": "backend.junior",
    "label": 1,
-   "rank_platform": 8,
-   "rank_platform_no_fsp": 8,
+   "rank_platform": 3,
+   "rank_platform_no_fsp": 3,
    "rank_bm25": 7,
    "rank_keywords": 5
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-SBZJVW",
+   "candidate_ref": "C-YAGAH8",
    "category": "backend.junior",
    "label": 1,
-   "rank_platform": 3,
-   "rank_platform_no_fsp": 5,
+   "rank_platform": 4,
+   "rank_platform_no_fsp": 6,
    "rank_bm25": 15,
    "rank_keywords": 19
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-EGYHMR",
+   "candidate_ref": "C-5CSKQC",
    "category": "backend.junior",
    "label": 1,
    "rank_platform": 2,
@@ -1459,37 +1459,37 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-KPCG7V",
+   "candidate_ref": "C-HHA9R7",
    "category": "backend.junior",
    "label": 1,
-   "rank_platform": 6,
-   "rank_platform_no_fsp": 3,
+   "rank_platform": 7,
+   "rank_platform_no_fsp": 4,
    "rank_bm25": 14,
    "rank_keywords": 11
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-L8RBLE",
+   "candidate_ref": "C-V3TZHK",
    "category": "backend.junior",
    "label": 1,
-   "rank_platform": 4,
-   "rank_platform_no_fsp": 6,
+   "rank_platform": 5,
+   "rank_platform_no_fsp": 7,
    "rank_bm25": 12,
    "rank_keywords": 14
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-9JZN67",
+   "candidate_ref": "C-FSNUJ8",
    "category": "backend.junior",
    "label": 1,
-   "rank_platform": 5,
-   "rank_platform_no_fsp": 4,
+   "rank_platform": 6,
+   "rank_platform_no_fsp": 5,
    "rank_bm25": 19,
    "rank_keywords": 12
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-HC7AAN",
+   "candidate_ref": "C-5TJ2GU",
    "category": "backend.junior",
    "label": 2,
    "rank_platform": 1,
@@ -1499,17 +1499,17 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-F8TRJT",
+   "candidate_ref": "C-VJSLY8",
    "category": "backend.middle",
    "label": 1,
-   "rank_platform": 11,
+   "rank_platform": 12,
    "rank_platform_no_fsp": 12,
    "rank_bm25": 6,
    "rank_keywords": 8
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-LW5EF2",
+   "candidate_ref": "C-X6B666",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 18,
@@ -1519,7 +1519,7 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-NZJRHC",
+   "candidate_ref": "C-FK5QAE",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 19,
@@ -1529,7 +1529,7 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-CPWQEM",
+   "candidate_ref": "C-TUW4DV",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 17,
@@ -1539,7 +1539,7 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-VEQW4G",
+   "candidate_ref": "C-KNZ5GL",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 9,
@@ -1549,7 +1549,7 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-LLG388",
+   "candidate_ref": "C-YBK8N3",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 14,
@@ -1559,7 +1559,7 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-PJM2WK",
+   "candidate_ref": "C-GA4ANB",
    "category": "frontend.middle",
    "label": 0,
    "rank_platform": 15,
@@ -1569,7 +1569,7 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-TD69HW",
+   "candidate_ref": "C-DM7QLH",
    "category": "qa.junior",
    "label": 0,
    "rank_platform": 20,
@@ -1579,7 +1579,7 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-CVPTN5",
+   "candidate_ref": "C-SD2HV8",
    "category": "frontend.junior",
    "label": 0,
    "rank_platform": 16,
@@ -1589,17 +1589,17 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-ZR2KL3",
+   "candidate_ref": "C-USXHE2",
    "category": "data_ml.senior",
    "label": 0,
-   "rank_platform": 12,
+   "rank_platform": 11,
    "rank_platform_no_fsp": 11,
    "rank_bm25": 9,
    "rank_keywords": 7
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-YCRLQY",
+   "candidate_ref": "C-U2NFB3",
    "category": "data_ml.senior",
    "label": 0,
    "rank_platform": 10,
@@ -1609,7 +1609,7 @@
   },
   {
    "need_index": 7,
-   "candidate_ref": "C-PDZUY7",
+   "candidate_ref": "C-GDKKYH",
    "category": "frontend.junior",
    "label": 0,
    "rank_platform": 13,
@@ -1619,7 +1619,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-P85PW3",
+   "candidate_ref": "C-MCSNVY",
    "category": "qa.middle",
    "label": 3,
    "rank_platform": 3,
@@ -1629,7 +1629,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-K4DLSB",
+   "candidate_ref": "C-MXZQLK",
    "category": "qa.middle",
    "label": 2,
    "rank_platform": 7,
@@ -1639,7 +1639,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-B9CWFM",
+   "candidate_ref": "C-DV87B4",
    "category": "qa.middle",
    "label": 2,
    "rank_platform": 6,
@@ -1649,7 +1649,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-EW5LG9",
+   "candidate_ref": "C-3Y9JH7",
    "category": "qa.middle",
    "label": 2,
    "rank_platform": 4,
@@ -1659,7 +1659,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-PV69ZD",
+   "candidate_ref": "C-DP2VRG",
    "category": "qa.middle",
    "label": 3,
    "rank_platform": 8,
@@ -1669,7 +1669,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-AHKGNL",
+   "candidate_ref": "C-3FMDVT",
    "category": "qa.middle",
    "label": 2,
    "rank_platform": 2,
@@ -1679,7 +1679,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-W7JXV2",
+   "candidate_ref": "C-SNKQ94",
    "category": "qa.middle",
    "label": 2,
    "rank_platform": 5,
@@ -1689,7 +1689,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-XRMQP6",
+   "candidate_ref": "C-PM5KL4",
    "category": "qa.middle",
    "label": 3,
    "rank_platform": 1,
@@ -1699,7 +1699,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-H2RU8H",
+   "candidate_ref": "C-N7P6GW",
    "category": "qa.junior",
    "label": 1,
    "rank_platform": 13,
@@ -1709,7 +1709,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-P386TB",
+   "candidate_ref": "C-CZNN5B",
    "category": "qa.senior",
    "label": 1,
    "rank_platform": 12,
@@ -1719,7 +1719,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-ETF2AV",
+   "candidate_ref": "C-S9PYE9",
    "category": "qa.senior",
    "label": 1,
    "rank_platform": 10,
@@ -1729,7 +1729,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-FTKYQV",
+   "candidate_ref": "C-MCVK5Q",
    "category": "qa.senior",
    "label": 1,
    "rank_platform": 11,
@@ -1739,7 +1739,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-MSTPJF",
+   "candidate_ref": "C-D5JRJ4",
    "category": "qa.junior",
    "label": 1,
    "rank_platform": 18,
@@ -1749,7 +1749,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-FA8NC2",
+   "candidate_ref": "C-87MLGZ",
    "category": "qa.senior",
    "label": 1,
    "rank_platform": 9,
@@ -1759,7 +1759,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-X2W7YR",
+   "candidate_ref": "C-CZSYS6",
    "category": "data_ml.junior",
    "label": 0,
    "rank_platform": 20,
@@ -1769,7 +1769,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-YCFZMR",
+   "candidate_ref": "C-2ZDF8Q",
    "category": "security.senior",
    "label": 0,
    "rank_platform": 14,
@@ -1779,7 +1779,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-WCFSY5",
+   "candidate_ref": "C-UPH9NK",
    "category": "frontend.junior",
    "label": 0,
    "rank_platform": 19,
@@ -1789,7 +1789,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-6WS9MC",
+   "candidate_ref": "C-5D9YTE",
    "category": "security.senior",
    "label": 0,
    "rank_platform": 15,
@@ -1799,7 +1799,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-BM2SEA",
+   "candidate_ref": "C-FER7N5",
    "category": "data_ml.senior",
    "label": 0,
    "rank_platform": 16,
@@ -1809,7 +1809,7 @@
   },
   {
    "need_index": 8,
-   "candidate_ref": "C-JTR5J3",
+   "candidate_ref": "C-ZGUKZZ",
    "category": "backend.middle",
    "label": 0,
    "rank_platform": 17,
@@ -1819,7 +1819,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-HXBM7E",
+   "candidate_ref": "C-NQC9JV",
    "category": "backend.senior",
    "label": 2,
    "rank_platform": 8,
@@ -1829,7 +1829,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-X8DSSG",
+   "candidate_ref": "C-B8SE6F",
    "category": "backend.senior",
    "label": 2,
    "rank_platform": 7,
@@ -1839,7 +1839,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-K5SNA6",
+   "candidate_ref": "C-VZM2S4",
    "category": "backend.senior",
    "label": 1,
    "rank_platform": 4,
@@ -1849,7 +1849,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-APPYTX",
+   "candidate_ref": "C-P5YQ3R",
    "category": "backend.senior",
    "label": 2,
    "rank_platform": 3,
@@ -1859,7 +1859,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-KLAANS",
+   "candidate_ref": "C-YL2VJP",
    "category": "backend.senior",
    "label": 2,
    "rank_platform": 1,
@@ -1869,7 +1869,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-78WN9Y",
+   "candidate_ref": "C-99CJPC",
    "category": "backend.senior",
    "label": 2,
    "rank_platform": 5,
@@ -1879,7 +1879,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-7W935E",
+   "candidate_ref": "C-3WRCSP",
    "category": "backend.senior",
    "label": 2,
    "rank_platform": 2,
@@ -1889,7 +1889,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-BAEXPY",
+   "candidate_ref": "C-RAJS9U",
    "category": "backend.senior",
    "label": 2,
    "rank_platform": 6,
@@ -1899,27 +1899,27 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-UGUDB4",
+   "candidate_ref": "C-Z3X2LP",
    "category": "backend.middle",
    "label": 1,
-   "rank_platform": 13,
-   "rank_platform_no_fsp": 12,
+   "rank_platform": 10,
+   "rank_platform_no_fsp": 10,
    "rank_bm25": 4,
    "rank_keywords": 9
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-R7E4GC",
+   "candidate_ref": "C-KSUKQE",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 9,
-   "rank_platform_no_fsp": 11,
+   "rank_platform_no_fsp": 9,
    "rank_bm25": 1,
    "rank_keywords": 5
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-AC6QTN",
+   "candidate_ref": "C-AGCEQQ",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 17,
@@ -1929,7 +1929,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-TYRMXY",
+   "candidate_ref": "C-EV2L47",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 16,
@@ -1939,7 +1939,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-VEQW4G",
+   "candidate_ref": "C-KNZ5GL",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 15,
@@ -1949,7 +1949,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-9TV23J",
+   "candidate_ref": "C-LDSFMH",
    "category": "backend.middle",
    "label": 1,
    "rank_platform": 14,
@@ -1959,7 +1959,7 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-34ZHRX",
+   "candidate_ref": "C-GEQVTK",
    "category": "frontend.middle",
    "label": 0,
    "rank_platform": 18,
@@ -1969,27 +1969,27 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-VGE5F2",
+   "candidate_ref": "C-RL7EF2",
    "category": "security.middle",
    "label": 0,
-   "rank_platform": 12,
+   "rank_platform": 13,
    "rank_platform_no_fsp": 15,
    "rank_bm25": 20,
    "rank_keywords": 18
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-GEP7NT",
+   "candidate_ref": "C-8NKTS3",
    "category": "security.senior",
    "label": 0,
-   "rank_platform": 11,
-   "rank_platform_no_fsp": 10,
+   "rank_platform": 12,
+   "rank_platform_no_fsp": 12,
    "rank_bm25": 15,
    "rank_keywords": 13
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-7ZMNLR",
+   "candidate_ref": "C-399UFP",
    "category": "frontend.junior",
    "label": 0,
    "rank_platform": 20,
@@ -1999,17 +1999,17 @@
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-7KXYQA",
+   "candidate_ref": "C-4A9666",
    "category": "frontend.senior",
    "label": 0,
-   "rank_platform": 10,
-   "rank_platform_no_fsp": 9,
+   "rank_platform": 11,
+   "rank_platform_no_fsp": 11,
    "rank_bm25": 19,
    "rank_keywords": 16
   },
   {
    "need_index": 9,
-   "candidate_ref": "C-DVR3ZJ",
+   "candidate_ref": "C-F7ETEL",
    "category": "frontend.junior",
    "label": 0,
    "rank_platform": 19,
@@ -2019,7 +2019,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-HKV677",
+   "candidate_ref": "C-4TK52Z",
    "category": "frontend.junior",
    "label": 2,
    "rank_platform": 1,
@@ -2029,7 +2029,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-2CN2N6",
+   "candidate_ref": "C-MEEZML",
    "category": "frontend.junior",
    "label": 2,
    "rank_platform": 2,
@@ -2039,7 +2039,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-V4TFVW",
+   "candidate_ref": "C-QCMC5S",
    "category": "frontend.junior",
    "label": 2,
    "rank_platform": 4,
@@ -2049,7 +2049,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-QE682P",
+   "candidate_ref": "C-GBCGDP",
    "category": "frontend.junior",
    "label": 2,
    "rank_platform": 5,
@@ -2059,7 +2059,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-CJJTXC",
+   "candidate_ref": "C-9HDFED",
    "category": "frontend.junior",
    "label": 2,
    "rank_platform": 6,
@@ -2069,7 +2069,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-SXVHZT",
+   "candidate_ref": "C-5HMEZU",
    "category": "frontend.junior",
    "label": 3,
    "rank_platform": 7,
@@ -2079,7 +2079,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-SGRVMD",
+   "candidate_ref": "C-M8RRKU",
    "category": "frontend.junior",
    "label": 2,
    "rank_platform": 8,
@@ -2089,7 +2089,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-6N9957",
+   "candidate_ref": "C-X2K4F5",
    "category": "frontend.junior",
    "label": 2,
    "rank_platform": 3,
@@ -2099,17 +2099,17 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-PJM2WK",
+   "candidate_ref": "C-GA4ANB",
    "category": "frontend.middle",
    "label": 1,
-   "rank_platform": 14,
+   "rank_platform": 13,
    "rank_platform_no_fsp": 13,
    "rank_bm25": 14,
    "rank_keywords": 6
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-S7GGA5",
+   "candidate_ref": "C-KFTAMG",
    "category": "frontend.middle",
    "label": 1,
    "rank_platform": 12,
@@ -2119,7 +2119,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-34ZHRX",
+   "candidate_ref": "C-GEQVTK",
    "category": "frontend.middle",
    "label": 1,
    "rank_platform": 11,
@@ -2129,17 +2129,17 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-FPRS6A",
+   "candidate_ref": "C-FT86L9",
    "category": "frontend.middle",
    "label": 1,
-   "rank_platform": 15,
-   "rank_platform_no_fsp": 18,
+   "rank_platform": 14,
+   "rank_platform_no_fsp": 14,
    "rank_bm25": 11,
    "rank_keywords": 12
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-CA88DZ",
+   "candidate_ref": "C-JVT6KS",
    "category": "frontend.middle",
    "label": 1,
    "rank_platform": 9,
@@ -2149,7 +2149,7 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-GMWNU2",
+   "candidate_ref": "C-5T6G2B",
    "category": "frontend.middle",
    "label": 1,
    "rank_platform": 10,
@@ -2159,27 +2159,27 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-KEZFGG",
+   "candidate_ref": "C-943Z77",
    "category": "security.middle",
    "label": 0,
    "rank_platform": 17,
-   "rank_platform_no_fsp": 14,
+   "rank_platform_no_fsp": 15,
    "rank_bm25": 20,
    "rank_keywords": 19
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-QZATSY",
+   "candidate_ref": "C-KNGVPB",
    "category": "data_ml.middle",
    "label": 0,
    "rank_platform": 16,
-   "rank_platform_no_fsp": 15,
+   "rank_platform_no_fsp": 16,
    "rank_bm25": 15,
    "rank_keywords": 18
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-SBUJV6",
+   "candidate_ref": "C-2X9U5X",
    "category": "security.junior",
    "label": 0,
    "rank_platform": 20,
@@ -2189,17 +2189,17 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-DTVUQV",
+   "candidate_ref": "C-DRGBVX",
    "category": "data_ml.middle",
    "label": 0,
    "rank_platform": 18,
-   "rank_platform_no_fsp": 17,
+   "rank_platform_no_fsp": 18,
    "rank_bm25": 17,
    "rank_keywords": 15
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-EGYHMR",
+   "candidate_ref": "C-5CSKQC",
    "category": "backend.junior",
    "label": 0,
    "rank_platform": 19,
@@ -2209,67 +2209,67 @@
   },
   {
    "need_index": 10,
-   "candidate_ref": "C-B9CWFM",
+   "candidate_ref": "C-DV87B4",
    "category": "qa.middle",
    "label": 0,
-   "rank_platform": 13,
-   "rank_platform_no_fsp": 16,
+   "rank_platform": 15,
+   "rank_platform_no_fsp": 17,
    "rank_bm25": 19,
    "rank_keywords": 17
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-GC4PDK",
+   "candidate_ref": "C-MMJYAB",
    "category": "data_ml.senior",
    "label": 1,
-   "rank_platform": 5,
-   "rank_platform_no_fsp": 5,
+   "rank_platform": 6,
+   "rank_platform_no_fsp": 6,
    "rank_bm25": 11,
    "rank_keywords": 10
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-YCHR5R",
+   "candidate_ref": "C-FTGANQ",
    "category": "data_ml.senior",
    "label": 1,
-   "rank_platform": 6,
-   "rank_platform_no_fsp": 6,
+   "rank_platform": 7,
+   "rank_platform_no_fsp": 7,
    "rank_bm25": 9,
    "rank_keywords": 11
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-BM2SEA",
+   "candidate_ref": "C-FER7N5",
    "category": "data_ml.senior",
    "label": 2,
-   "rank_platform": 4,
-   "rank_platform_no_fsp": 4,
+   "rank_platform": 5,
+   "rank_platform_no_fsp": 5,
    "rank_bm25": 12,
    "rank_keywords": 8
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-PA3RGP",
+   "candidate_ref": "C-QZTLUU",
    "category": "data_ml.senior",
    "label": 2,
-   "rank_platform": 1,
-   "rank_platform_no_fsp": 2,
+   "rank_platform": 4,
+   "rank_platform_no_fsp": 4,
    "rank_bm25": 6,
    "rank_keywords": 5
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-83AAZF",
+   "candidate_ref": "C-23C7GC",
    "category": "data_ml.senior",
    "label": 2,
-   "rank_platform": 3,
-   "rank_platform_no_fsp": 3,
+   "rank_platform": 2,
+   "rank_platform_no_fsp": 2,
    "rank_bm25": 4,
    "rank_keywords": 4
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-2KP5J2",
+   "candidate_ref": "C-249DWU",
    "category": "data_ml.senior",
    "label": 2,
    "rank_platform": 8,
@@ -2279,27 +2279,27 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-6PWNTC",
+   "candidate_ref": "C-DU4GDP",
    "category": "data_ml.senior",
    "label": 3,
-   "rank_platform": 7,
-   "rank_platform_no_fsp": 7,
+   "rank_platform": 3,
+   "rank_platform_no_fsp": 3,
    "rank_bm25": 1,
    "rank_keywords": 1
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-Q2NXU8",
+   "candidate_ref": "C-8QSWEX",
    "category": "data_ml.senior",
    "label": 2,
-   "rank_platform": 2,
+   "rank_platform": 1,
    "rank_platform_no_fsp": 1,
    "rank_bm25": 2,
    "rank_keywords": 2
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-KYAQ9P",
+   "candidate_ref": "C-QM6YXJ",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 13,
@@ -2309,7 +2309,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-72VJXQ",
+   "candidate_ref": "C-KHQGKF",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 17,
@@ -2319,7 +2319,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-TU89AQ",
+   "candidate_ref": "C-9V3YZK",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 14,
@@ -2329,7 +2329,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-QYXQ33",
+   "candidate_ref": "C-FSG9U2",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 11,
@@ -2339,7 +2339,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-ZS5XA6",
+   "candidate_ref": "C-MB9DMX",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 10,
@@ -2349,7 +2349,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-4BSRFF",
+   "candidate_ref": "C-XVQ3AN",
    "category": "data_ml.middle",
    "label": 1,
    "rank_platform": 15,
@@ -2359,7 +2359,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-YLBY8S",
+   "candidate_ref": "C-A8A4AY",
    "category": "security.senior",
    "label": 0,
    "rank_platform": 9,
@@ -2369,7 +2369,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-TA8AES",
+   "candidate_ref": "C-UY4GP7",
    "category": "backend.junior",
    "label": 0,
    "rank_platform": 19,
@@ -2379,7 +2379,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-SV6PHU",
+   "candidate_ref": "C-B4KG4K",
    "category": "qa.middle",
    "label": 0,
    "rank_platform": 20,
@@ -2389,7 +2389,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-34ZHRX",
+   "candidate_ref": "C-GEQVTK",
    "category": "frontend.middle",
    "label": 0,
    "rank_platform": 18,
@@ -2399,7 +2399,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-4VAR7G",
+   "candidate_ref": "C-WGR6XL",
    "category": "backend.senior",
    "label": 0,
    "rank_platform": 12,
@@ -2409,7 +2409,7 @@
   },
   {
    "need_index": 11,
-   "candidate_ref": "C-PJM2WK",
+   "candidate_ref": "C-GA4ANB",
    "category": "frontend.middle",
    "label": 0,
    "rank_platform": 16,
@@ -2419,7 +2419,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-BXEZGR",
+   "candidate_ref": "C-SAP2MP",
    "category": "frontend.senior",
    "label": 2,
    "rank_platform": 2,
@@ -2429,7 +2429,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-ZRAMF3",
+   "candidate_ref": "C-WDWT82",
    "category": "frontend.senior",
    "label": 3,
    "rank_platform": 5,
@@ -2439,7 +2439,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-Z2U8NY",
+   "candidate_ref": "C-9M5XD8",
    "category": "frontend.senior",
    "label": 2,
    "rank_platform": 6,
@@ -2449,7 +2449,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-SCEJFY",
+   "candidate_ref": "C-VP8SFH",
    "category": "frontend.senior",
    "label": 3,
    "rank_platform": 3,
@@ -2459,7 +2459,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-NCYBMR",
+   "candidate_ref": "C-XWJTNS",
    "category": "frontend.senior",
    "label": 2,
    "rank_platform": 8,
@@ -2469,7 +2469,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-GYSRJS",
+   "candidate_ref": "C-3UJ5HR",
    "category": "frontend.senior",
    "label": 2,
    "rank_platform": 7,
@@ -2479,7 +2479,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-U2L4ZR",
+   "candidate_ref": "C-JTP2BG",
    "category": "frontend.senior",
    "label": 3,
    "rank_platform": 1,
@@ -2489,7 +2489,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-8YWLNL",
+   "candidate_ref": "C-SB55CC",
    "category": "frontend.senior",
    "label": 3,
    "rank_platform": 4,
@@ -2499,7 +2499,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-T6XC7A",
+   "candidate_ref": "C-MABL7C",
    "category": "frontend.middle",
    "label": 1,
    "rank_platform": 10,
@@ -2509,7 +2509,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-Z7WWUR",
+   "candidate_ref": "C-PBD475",
    "category": "frontend.middle",
    "label": 1,
    "rank_platform": 11,
@@ -2519,17 +2519,17 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-RMEEMX",
+   "candidate_ref": "C-ZZPU5M",
    "category": "frontend.middle",
    "label": 1,
-   "rank_platform": 17,
-   "rank_platform_no_fsp": 18,
+   "rank_platform": 14,
+   "rank_platform_no_fsp": 14,
    "rank_bm25": 3,
    "rank_keywords": 11
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-34ZHRX",
+   "candidate_ref": "C-GEQVTK",
    "category": "frontend.middle",
    "label": 1,
    "rank_platform": 12,
@@ -2539,7 +2539,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-PJM2WK",
+   "candidate_ref": "C-GA4ANB",
    "category": "frontend.middle",
    "label": 1,
    "rank_platform": 13,
@@ -2549,7 +2549,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-GMWNU2",
+   "candidate_ref": "C-5T6G2B",
    "category": "frontend.middle",
    "label": 1,
    "rank_platform": 9,
@@ -2559,7 +2559,7 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-QE9EQA",
+   "candidate_ref": "C-CHT8K6",
    "category": "security.junior",
    "label": 0,
    "rank_platform": 20,
@@ -2569,27 +2569,27 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-FUTRH8",
+   "candidate_ref": "C-SXFYQU",
    "category": "security.middle",
    "label": 0,
-   "rank_platform": 14,
-   "rank_platform_no_fsp": 14,
+   "rank_platform": 15,
+   "rank_platform_no_fsp": 15,
    "rank_bm25": 18,
    "rank_keywords": 16
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-Z7KAB5",
+   "candidate_ref": "C-ML8WMQ",
    "category": "qa.middle",
    "label": 0,
-   "rank_platform": 15,
-   "rank_platform_no_fsp": 15,
+   "rank_platform": 16,
+   "rank_platform_no_fsp": 16,
    "rank_bm25": 17,
    "rank_keywords": 18
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-ZY377X",
+   "candidate_ref": "C-Q7N28M",
    "category": "backend.middle",
    "label": 0,
    "rank_platform": 19,
@@ -2599,27 +2599,27 @@
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-LLG388",
+   "candidate_ref": "C-YBK8N3",
    "category": "backend.middle",
    "label": 0,
-   "rank_platform": 16,
-   "rank_platform_no_fsp": 16,
+   "rank_platform": 17,
+   "rank_platform_no_fsp": 17,
    "rank_bm25": 19,
    "rank_keywords": 15
   },
   {
    "need_index": 12,
-   "candidate_ref": "C-EW5LG9",
+   "candidate_ref": "C-3Y9JH7",
    "category": "qa.middle",
    "label": 0,
    "rank_platform": 18,
-   "rank_platform_no_fsp": 17,
+   "rank_platform_no_fsp": 18,
    "rank_bm25": 20,
    "rank_keywords": 17
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-PU6LUP",
+   "candidate_ref": "C-5PPV99",
    "category": "qa.junior",
    "label": 2,
    "rank_platform": 4,
@@ -2629,7 +2629,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-6H59BG",
+   "candidate_ref": "C-WTH95N",
    "category": "qa.junior",
    "label": 2,
    "rank_platform": 7,
@@ -2639,7 +2639,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-PYPAXD",
+   "candidate_ref": "C-F35CJ4",
    "category": "qa.junior",
    "label": 1,
    "rank_platform": 8,
@@ -2649,7 +2649,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-JNV7ZM",
+   "candidate_ref": "C-D3JX9D",
    "category": "qa.junior",
    "label": 2,
    "rank_platform": 1,
@@ -2659,7 +2659,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-ZZ3LXD",
+   "candidate_ref": "C-6KHEKY",
    "category": "qa.junior",
    "label": 2,
    "rank_platform": 3,
@@ -2669,7 +2669,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-W2R6CE",
+   "candidate_ref": "C-VAEPJW",
    "category": "qa.junior",
    "label": 2,
    "rank_platform": 6,
@@ -2679,7 +2679,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-HVV4UZ",
+   "candidate_ref": "C-ZEBYZR",
    "category": "qa.junior",
    "label": 2,
    "rank_platform": 5,
@@ -2689,7 +2689,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-WBRXGB",
+   "candidate_ref": "C-NVGL7X",
    "category": "qa.junior",
    "label": 1,
    "rank_platform": 2,
@@ -2699,7 +2699,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-KCPKU5",
+   "candidate_ref": "C-E9LCN7",
    "category": "qa.middle",
    "label": 0,
    "rank_platform": 12,
@@ -2709,7 +2709,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-25A8KF",
+   "candidate_ref": "C-HWGU7Y",
    "category": "qa.middle",
    "label": 1,
    "rank_platform": 16,
@@ -2719,7 +2719,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-8VX4B8",
+   "candidate_ref": "C-2Z6KLS",
    "category": "qa.middle",
    "label": 1,
    "rank_platform": 13,
@@ -2729,7 +2729,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-Z7KAB5",
+   "candidate_ref": "C-ML8WMQ",
    "category": "qa.middle",
    "label": 1,
    "rank_platform": 9,
@@ -2739,7 +2739,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-SSK2Q9",
+   "candidate_ref": "C-ZDARHG",
    "category": "qa.middle",
    "label": 0,
    "rank_platform": 10,
@@ -2749,7 +2749,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-EW5LG9",
+   "candidate_ref": "C-3Y9JH7",
    "category": "qa.middle",
    "label": 0,
    "rank_platform": 11,
@@ -2759,7 +2759,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-4DM7CB",
+   "candidate_ref": "C-UEAJJU",
    "category": "frontend.middle",
    "label": 0,
    "rank_platform": 17,
@@ -2769,7 +2769,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-7ZMNLR",
+   "candidate_ref": "C-399UFP",
    "category": "frontend.junior",
    "label": 0,
    "rank_platform": 18,
@@ -2779,7 +2779,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-R6TNG4",
+   "candidate_ref": "C-HX8BY2",
    "category": "security.middle",
    "label": 0,
    "rank_platform": 15,
@@ -2789,7 +2789,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-ZS5XA6",
+   "candidate_ref": "C-MB9DMX",
    "category": "data_ml.middle",
    "label": 0,
    "rank_platform": 14,
@@ -2799,7 +2799,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-PF6GL8",
+   "candidate_ref": "C-3DYNJR",
    "category": "backend.junior",
    "label": 0,
    "rank_platform": 20,
@@ -2809,7 +2809,7 @@
   },
   {
    "need_index": 13,
-   "candidate_ref": "C-W8WGCL",
+   "candidate_ref": "C-ZKEGJ7",
    "category": "backend.middle",
    "label": 0,
    "rank_platform": 19,
@@ -2819,17 +2819,17 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-S2APRV",
+   "candidate_ref": "C-4SERPL",
    "category": "qa.senior",
    "label": 2,
-   "rank_platform": 6,
-   "rank_platform_no_fsp": 6,
+   "rank_platform": 5,
+   "rank_platform_no_fsp": 5,
    "rank_bm25": 3,
    "rank_keywords": 6
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-VSK4E4",
+   "candidate_ref": "C-F94V7X",
    "category": "qa.senior",
    "label": 2,
    "rank_platform": 4,
@@ -2839,7 +2839,7 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-U42TK5",
+   "candidate_ref": "C-YCYTZ8",
    "category": "qa.senior",
    "label": 2,
    "rank_platform": 3,
@@ -2849,7 +2849,7 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-ZU8LG5",
+   "candidate_ref": "C-KHYGH6",
    "category": "qa.senior",
    "label": 2,
    "rank_platform": 7,
@@ -2859,7 +2859,7 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-TZ3MEJ",
+   "candidate_ref": "C-DLNKMD",
    "category": "qa.senior",
    "label": 1,
    "rank_platform": 8,
@@ -2869,17 +2869,17 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-9D3WKQ",
+   "candidate_ref": "C-ZYDT3C",
    "category": "qa.senior",
    "label": 1,
-   "rank_platform": 5,
-   "rank_platform_no_fsp": 5,
+   "rank_platform": 6,
+   "rank_platform_no_fsp": 6,
    "rank_bm25": 9,
    "rank_keywords": 12
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-8S8MZC",
+   "candidate_ref": "C-T56BSB",
    "category": "qa.senior",
    "label": 2,
    "rank_platform": 2,
@@ -2889,7 +2889,7 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-5LWH97",
+   "candidate_ref": "C-999PY7",
    "category": "qa.senior",
    "label": 2,
    "rank_platform": 1,
@@ -2899,87 +2899,87 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-8VX4B8",
+   "candidate_ref": "C-2Z6KLS",
    "category": "qa.middle",
    "label": 1,
-   "rank_platform": 15,
-   "rank_platform_no_fsp": 15,
+   "rank_platform": 17,
+   "rank_platform_no_fsp": 17,
    "rank_bm25": 17,
    "rank_keywords": 19
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-JKW8X5",
+   "candidate_ref": "C-2Q2JMX",
    "category": "qa.middle",
    "label": 1,
-   "rank_platform": 12,
-   "rank_platform_no_fsp": 12,
+   "rank_platform": 16,
+   "rank_platform_no_fsp": 16,
    "rank_bm25": 5,
    "rank_keywords": 10
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-AHKGNL",
+   "candidate_ref": "C-3FMDVT",
    "category": "qa.middle",
    "label": 1,
-   "rank_platform": 11,
-   "rank_platform_no_fsp": 11,
+   "rank_platform": 15,
+   "rank_platform_no_fsp": 15,
    "rank_bm25": 11,
    "rank_keywords": 14
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-B9CWFM",
+   "candidate_ref": "C-DV87B4",
    "category": "qa.middle",
    "label": 1,
-   "rank_platform": 10,
-   "rank_platform_no_fsp": 10,
+   "rank_platform": 14,
+   "rank_platform_no_fsp": 14,
    "rank_bm25": 12,
    "rank_keywords": 9
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-PV69ZD",
+   "candidate_ref": "C-DP2VRG",
    "category": "qa.middle",
    "label": 1,
-   "rank_platform": 14,
-   "rank_platform_no_fsp": 13,
+   "rank_platform": 11,
+   "rank_platform_no_fsp": 10,
    "rank_bm25": 1,
    "rank_keywords": 3
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-P85PW3",
+   "candidate_ref": "C-MCSNVY",
    "category": "qa.middle",
    "label": 1,
-   "rank_platform": 13,
-   "rank_platform_no_fsp": 14,
+   "rank_platform": 10,
+   "rank_platform_no_fsp": 11,
    "rank_bm25": 4,
    "rank_keywords": 11
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-2WPKHH",
+   "candidate_ref": "C-AJ4RPM",
    "category": "backend.middle",
    "label": 0,
-   "rank_platform": 18,
-   "rank_platform_no_fsp": 17,
+   "rank_platform": 13,
+   "rank_platform_no_fsp": 13,
    "rank_bm25": 16,
    "rank_keywords": 13
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-9JZN67",
+   "candidate_ref": "C-FSNUJ8",
    "category": "backend.junior",
    "label": 0,
-   "rank_platform": 16,
+   "rank_platform": 18,
    "rank_platform_no_fsp": 19,
    "rank_bm25": 19,
    "rank_keywords": 17
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-PF6GL8",
+   "candidate_ref": "C-3DYNJR",
    "category": "backend.junior",
    "label": 0,
    "rank_platform": 20,
@@ -2989,7 +2989,7 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-L4F7YB",
+   "candidate_ref": "C-4KQCMC",
    "category": "security.middle",
    "label": 0,
    "rank_platform": 19,
@@ -2999,7 +2999,7 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-Y2N848",
+   "candidate_ref": "C-LWVGCR",
    "category": "backend.senior",
    "label": 0,
    "rank_platform": 9,
@@ -3009,11 +3009,11 @@
   },
   {
    "need_index": 14,
-   "candidate_ref": "C-NE952H",
+   "candidate_ref": "C-FUKVBV",
    "category": "data_ml.junior",
    "label": 0,
-   "rank_platform": 17,
-   "rank_platform_no_fsp": 16,
+   "rank_platform": 12,
+   "rank_platform_no_fsp": 12,
    "rank_bm25": 14,
    "rank_keywords": 15
   }
