@@ -486,6 +486,11 @@ class AdvisorIn(BaseModel):
     version: int | None = Field(None, ge=1, description="Версия подборки (как в сравнении)")
 
 
+class AdvisorSpeechIn(BaseModel):
+    text: str = Field(..., min_length=1, max_length=1200, description="Текст реплики советника для озвучивания")
+    format: Literal["mp3", "pcm"] = Field("mp3", description="mp3 — аудио, pcm — pcm_s16le 16 кГц моно для липсинка Anam")
+
+
 @router.post("/needs/{need_id}/advisor", summary="ИИ-советник руководителя: ответ по сравниваемым кандидатам",
              description="Н1. Вопрос директора (голосом или текстом) → ответ по тем же фактам, что и сравнение: балл, "
                          "навыки, подтверждённые тестом, и непроверенные, достоверность, достижения ФСП (T2), рынок "
@@ -508,6 +513,37 @@ def need_advisor(need_id: uuid.UUID, data: AdvisorIn | None = None, user: User =
     if not compare_mod.MIN_REFS <= len(refs) <= compare_mod.MAX_REFS:
         raise api_error(422, "compare_refs", "Для сравнения выберите от 2 до 3 кандидатов")
     return advisor.advise(db, c, n, refs, data.version, data.question)
+
+
+@router.post("/needs/{need_id}/advisor/avatar-token", summary="Сеансовый токен живого видеоаватара Anam для ИИ-советника руководителя",
+             responses={**AUTH, 404: err("Потребность не найдена"), 503: err("Аватар выключен или недоступен")})
+def need_advisor_avatar_token(need_id: uuid.UUID, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    from app.modules.interview import port as pt
+
+    _own_need(db, my_company(db, user), need_id)
+    release(db)
+    try:
+        return pt.get_port().avatar_token()
+    except pt.EngineUnavailable:
+        raise api_error(503, "avatar_unavailable", "Аватар недоступен — доступны каналы «голос» и «текст»") from None
+
+
+@router.post("/needs/{need_id}/advisor/speech", summary="Озвучка реплики ИИ-советника руководителя (ElevenLabs mp3 или pcm_16000 для липсинка Anam)",
+             responses={**AUTH, 404: err("Потребность не найдена"), 503: err("Синтез речи недоступен")})
+def need_advisor_speech(need_id: uuid.UUID, data: AdvisorSpeechIn, user: User = Depends(employer),
+                        db: Session = Depends(get_db)) -> Response:
+    from app.modules.interview import port as pt
+
+    _own_need(db, my_company(db, user), need_id)
+    release(db)
+    try:
+        audio = pt.get_port().speech(data.text, fmt="pcm_16000" if data.format == "pcm" else "mp3")
+    except pt.EngineUnavailable:
+        raise api_error(503, "tts_unavailable", "Синтез речи недоступен") from None
+    headers = {"Cache-Control": "no-store", "X-Voice-Stub": "1" if audio.get("stub") else "0"}
+    if audio.get("sample_rate"):
+        headers["X-Sample-Rate"] = str(audio["sample_rate"])
+    return Response(content=audio["data"], media_type=audio["mime"], headers=headers)
 
 
 # ------------------------------------------------------------------ поиск и карточка

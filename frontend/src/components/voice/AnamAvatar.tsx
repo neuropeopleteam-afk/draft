@@ -38,6 +38,9 @@ export interface AnamAvatarProps {
   level?: () => number;
   name?: string;
   size?: number;
+  tone?: "light" | "dark";
+  className?: string;
+  tokenPath?: string;
   onStatus?: (s: AnamStatus) => void;
 }
 
@@ -54,7 +57,7 @@ function rms(pcm: ArrayBuffer): Float32Array {  // огибающая громк
 }
 
 export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamAvatar(
-  { sessionId, state, level, name = "Интервьюер", size = 200, onStatus }, ref,
+  { sessionId, state, level, name = "Интервьюер", size = 200, tone = "light", className = "", tokenPath, onStatus }, ref,
 ) {
   const videoId = `anam-video-${sessionId.slice(0, 8)}`;
   const client = useRef<AnamClient | null>(null);
@@ -76,7 +79,8 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
       try {
         if (typeof RTCPeerConnection === "undefined") throw new Error("no webrtc");
         const t = tokenStore.get();
-        const r = await fetch(apiUrl(`/interview/sessions/${sessionId}/avatar-token`), { method: "POST", headers: t ? { Authorization: `Bearer ${t}` } : {} });
+        const url = tokenPath ?? `/interview/sessions/${sessionId}/avatar-token`;
+        const r = await fetch(apiUrl(url), { method: "POST", headers: t ? { Authorization: `Bearer ${t}` } : {} });
         if (!r.ok) throw new Error(String(r.status));
         const tok = (await r.json()) as TokenOut;
         if (dead) return;
@@ -136,7 +140,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     },
   }), []);
 
-  if (status === "failed") return <InterviewerAvatar state={state} level={level} name={name} size={size} />;
+  if (status === "failed") return <InterviewerAvatar state={state} level={level} name={name} size={size} tone={tone} className={className} />;
 
   const shown: WaveState = speaking ? "speaking" : state === "speaking" ? "listening" : state;
   const lvl = () => {
@@ -146,12 +150,13 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     return i < e.e.length ? e.e[i] : 0;
   };
   const label = WAVE_LABEL[shown].toLowerCase();
+  const textTone = tone === "dark" ? "text-white" : "text-brand-night";
   return (
-    <figure className="m-0 flex flex-col items-center text-center" data-testid="interviewer-avatar" data-state={shown}
+    <figure className={`m-0 flex flex-col items-center text-center ${className}`} data-testid="interviewer-avatar" data-state={shown}
       data-mode={status === "live" ? "anam" : "connecting"}>
       <div className="relative aspect-square max-w-full overflow-hidden rounded-3xl bg-[#1B1C21]" style={{ width: size }}>
         {status !== "live" && (  // пока поток поднимается — наш портрет; живое видео появляется поверх без мигания
-          <div className="absolute inset-0"><InterviewerAvatar state={shown} level={lvl} name={name} size={size} className="[&>figcaption]:hidden" /></div>
+          <div className="absolute inset-0"><InterviewerAvatar state={shown} level={lvl} name={name} size={size} tone={tone} className="[&>figcaption]:hidden" /></div>
         )}
         <video id={videoId} autoPlay playsInline disablePictureInPicture aria-label="ИИ-интервьюер: сгенерированный образ, не человек"
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${status === "live" ? "opacity-100" : "opacity-0"}`}
@@ -159,7 +164,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
         <RingGlow state={shown} level={lvl} />
       </div>
       <figcaption className="mt-2">
-        <p className="text-sm font-semibold text-brand-night">
+        <p className={`text-sm font-semibold ${textTone}`}>
           {name}: <span aria-live="polite" data-testid="avatar-state">{label}</span>
         </p>
       </figcaption>
