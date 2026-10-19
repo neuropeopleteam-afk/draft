@@ -806,6 +806,51 @@ def core_skill_section(world: World, sc: dict, seed: int) -> dict:
     return out
 
 
+# ---------------------------------------------------------------- сбалансированный протокол (W1)
+
+BALANCED_MIN_RELEVANT = 10
+BALANCED_METHODS = ("platform", "bm25", "keywords_grade", "random")
+BALANCED_TEXT = (
+    "Стандартный сбалансированный протокол IR-бенчмарков: у каждой потребности в выдаче, которую подбор показывает "
+    f"первым (точная категория «направление.грейд» по тесту), не меньше {BALANCED_MIN_RELEVANT} релевантных кандидатов "
+    "(метка ≥ 2) — потребность, у которой их меньше, генерируется заново (до 50 попыток), как отбор запросов с ≥ 10 "
+    "релевантными документами. Всё остальное — как в строгом протоколе: тот же генератор, шум, истина, метрики, "
+    "размер 200 × 2000, seed; подбор продукта без изменений. Протокол задан до прогона и считается один раз; "
+    "строгий протокол остаётся основным.")
+
+
+def balanced_section(cfg: BenchConfig, blocks: dict) -> dict:
+    """Сбалансированный протокол рядом со строгим: плотность ≥ 10 релевантных в категории потребности."""
+    bcfg = replace(cfg, min_relevant_per_need=BALANCED_MIN_RELEVANT, min_relevant_scope="category")
+    world = generate(bcfg, blocks)
+    reqs = _parsed(world)
+    r = run_methods(world, reqs, bcfg.seed, BALANCED_METHODS)
+    s = summarize(world, r, bcfg.seed)
+    cat_rel = np.array([sum(1 for j, c in enumerate(world.candidates) if world.rel[i, j] >= 2
+                            and c.obs.category_grade == nd.grade and c.obs.direction_declared == nd.direction)
+                        for i, nd in enumerate(world.needs)])
+    st = world_stats(world, reqs)
+    d = bcfg.to_dict()
+    return {"title": "Сбалансированный протокол (≥ 10 релевантных в категории потребности)", "text": BALANCED_TEXT,
+            "config": d, "config_hash": hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()[:12],
+            "metrics": s["metrics"], "paired_platform_minus": s["paired_platform_minus"],
+            "world": {"n_needs": st["n_needs"], "n_candidates": st["n_candidates"],
+                      "relevant_per_need": st["relevant_per_need"], "needs_resampled": st["needs_resampled"],
+                      "relevant_in_category": {"mean": round(float(cat_rel.mean()), 1), "min": int(cat_rel.min()),
+                                               "max": int(cat_rel.max()),
+                                               "below_min": int((cat_rel < BALANCED_MIN_RELEVANT).sum())},
+                      "labels": st["labels"]}}
+
+
+def strict_category_density(world: World) -> dict:
+    """Плотность строгого мира в том же смысле: релевантных (≥ 2) в точной категории потребности."""
+    cat_rel = np.array([sum(1 for j, c in enumerate(world.candidates) if world.rel[i, j] >= 2
+                            and c.obs.category_grade == nd.grade and c.obs.direction_declared == nd.direction)
+                        for i, nd in enumerate(world.needs)])
+    return {"mean": round(float(cat_rel.mean()), 1), "min": int(cat_rel.min()), "max": int(cat_rel.max()),
+            "below_5": int((cat_rel < 5).sum()), "below_10": int((cat_rel < BALANCED_MIN_RELEVANT).sum())}
+
+
 def _row(sc: dict, i: int) -> dict:
     return {k: sc[k][i:i + 1] for k in ("comps", "has_req", "vis", "mandatory_gaps", "must_tier", "core_absent")}
 
@@ -840,6 +885,12 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
                                 r["scored"] if jcfg.to_dict() == cfg.to_dict() else None)
     else:
         junior = junior_section(cfg, blocks, world, r["scored"])
+    balanced = None
+    if not quick:
+        print("5б/6 сбалансированный протокол (≥ 10 релевантных в категории потребности)", flush=True)
+        balanced = balanced_section(cfg, blocks)
+        print(f"    сбалансированный: P@5 {balanced['metrics']['platform']['p@5']['mean']}, "
+              f"nDCG@10 {balanced['metrics']['platform']['ndcg@10']['mean']}", flush=True)
     cfg_d = cfg.to_dict()
     rep = {
         "version": BENCH_VERSION, "algorithm": algorithm(), "weights": WEIGHTS,
@@ -850,7 +901,8 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         "seeds": {"world": cfg.seed, "world2": cfg2.seed, "bootstrap": cfg.seed + 11, "split": cfg.seed + 23,
                   "tie_break": cfg.seed + 7},
         "caveat": CAVEAT, "truth_rules": TRUTH_RULES, "methods": METHODS,
-        "world": world_stats(world, reqs),
+        "world": {**world_stats(world, reqs), "relevant_in_category": strict_category_density(world)},
+        "balanced": balanced,
         "metrics": s["metrics"], "paired_platform_minus": s["paired_platform_minus"],
         "groups": groups(world, r["orders"]), "breakdown": breakdown(world, s["per_need"]),
         "world2": {"seed": cfg2.seed, "metrics": s2["metrics"]},
@@ -1037,6 +1089,27 @@ def markdown(rep: dict) -> str:
         if k in m:
             L.append(f"| {meta['title']} | " + " | ".join(_cell(m[k][mt]) for mt in METRICS) + " |")
     pm = rep["paired_platform_minus"]
+    bal = rep.get("balanced")
+    if bal:
+        bw, sw = bal["world"], rep["world"].get("relevant_in_category") or {}
+        L += ["", "## Два протокола: строгий и сбалансированный", "", bal["text"], "",
+              f"Плотность: в строгом мире релевантных в точной категории потребности в среднем {sw.get('mean')} "
+              f"(от {sw.get('min')} до {sw.get('max')}; меньше 5 — у {sw.get('below_5')} из {rep['world']['n_needs']} "
+              f"потребностей, меньше 10 — у {sw.get('below_10')}); в сбалансированном — {bw['relevant_in_category']['mean']} "
+              f"(от {bw['relevant_in_category']['min']} до {bw['relevant_in_category']['max']}; меньше 10 — у "
+              f"{bw['relevant_in_category']['below_min']}), перегенерировано потребностей: {bw['needs_resampled']}. "
+              f"Конфиг `{bal['config_hash']}`.", "",
+              "| Протокол | Метод | p@5 | p@10 | nDCG@5 | nDCG@10 | MRR |", "|---|---|---|---|---|---|---|"]
+        for k in BALANCED_METHODS:
+            if k in m:
+                L.append(f"| Строгий | {rep['methods'][k]['title']} | " + " | ".join(_cell(m[k][mt]) for mt in METRICS) + " |")
+        for k in BALANCED_METHODS:
+            if k in bal["metrics"]:
+                L.append(f"| Сбалансированный | {rep['methods'][k]['title']} | "
+                         + " | ".join(_cell(bal["metrics"][k][mt]) for mt in METRICS) + " |")
+        L += ["", "Основное число — строгий протокол; сбалансированный показывает подбор в условиях, где в выдаче "
+              "есть из кого выбирать (как в стандартных IR-бенчмарках). Числа разных протоколов не сравниваются как "
+              "«лучше/хуже»: меняется мир, а не подбор.", ""]
     L += ["", "Разница «платформа − метод», nDCG@10 (парный бутстреп): "
           + "; ".join(f"{rep['methods'][k]['title']} {_cell(v['ndcg@10'])}" for k, v in pm.items()) + ".", ""]
     if rep.get("ablations"):

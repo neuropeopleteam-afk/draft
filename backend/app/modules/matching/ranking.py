@@ -41,7 +41,7 @@ from app.modules.profiles.facts import (
 )
 from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
-from app.modules.matching import core_skill, grade_above, must_have
+from app.modules.matching import core_skill, grade_above, implied, must_have
 from app.core.origin import NO_FSP
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
@@ -282,6 +282,12 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                 got += w * f.value.get("score", 0)
                 reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "confirmed", "weight": w,
                                 "text": skill_evidence_text(f)})  # тест и задания работодателя (И7)
+            elif f is None and (imp := implied.implied_by(b.skills_t1, tag)) is not None:  # W1: фреймворк → язык
+                # (только если сам язык тест не проверял: прямой результат ниже порога не перебивается)
+                got += w * implied.IMPLIED_FACTOR * imp[1].value.get("score", 0)
+                reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "confirmed", "weight": w,
+                                "implied_by": imp[0],
+                                "text": f"Подтверждён через {tag_title(imp[0])}: {skill_evidence_text(imp[1])}"})
             elif f is not None:  # И18: тест проверял навык, порог не набран — это не «нет данных» (как в сравнении)
                 reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "mismatch", "weight": w,
                                 "text": skill_check_text(f)})  # Ф6 (Н5): тест и задание работодателя — раздельно

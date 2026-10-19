@@ -27,6 +27,7 @@ export default function Headline() {
     <section id="headline" className="mt-8 scroll-mt-20" aria-labelledby="headline-t" data-testid="validation-headline">
       <h2 id="headline-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">5 чисел, которые доказывают механику</h2>
       <p className="mt-2 max-w-4xl text-sm leading-relaxed text-brand-ink/70">{data.how_to_read}</p>
+      <AccuracyViews v={data.accuracy} className="mt-4" />
       <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {data.items.map((it: any, i: number) => (
           <li key={it.id} className="card flex min-w-0 flex-col" data-testid={`headline-${it.id}`}>
@@ -78,6 +79,31 @@ export function Protocols({ v, className = "" }: { v?: any; className?: string }
         </table>
       </ScrollX>
       <p className="mt-2 text-xs leading-relaxed text-brand-ink/75">{v.text}</p>
+    </div>
+  );
+}
+
+/** W1: точность грейда — три прозрачных числа первыми (make accuracy-views): вдали от порога, без занижения заявки,
+ *  строго по всему пулу (+ повтор). У каждого — кто входит и доля пула. */
+export function AccuracyViews({ v, className = "" }: { v?: any; className?: string }) {
+  if (!v?.items?.length) return null;
+  return (
+    <div className={`rounded-2xl bg-white p-4 ring-1 ring-brand-night/10 ${className}`} data-testid="headline-accuracy">
+      <p className="text-sm font-semibold leading-snug text-brand-night">Точность грейда: три числа, у каждого — кто входит</p>
+      <ol className="mt-3 grid gap-3 md:grid-cols-3">
+        {v.items.map((it: any, i: number) => (
+          <li key={it.id} className="min-w-0 rounded-xl bg-[#F7F6FC] p-3" data-testid={`accuracy-${it.id}`}>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-lavender">{"абв"[i]}) {it.title}</p>
+            <p className="mt-1 text-2xl font-extrabold tabular-nums text-brand-night">{pct(it.value, 1)}</p>
+            {it.ci && <p className="text-xs tabular-nums text-brand-ink/70">95{NB}% ДИ: {pct(it.ci[0], 1)} … {pct(it.ci[1], 1)}</p>}
+            <p className="mt-1 text-xs text-brand-ink/70">Кто входит: {it.who} · доля пула {pct(it.share, 1)}</p>
+            <p className="mt-1.5 text-sm leading-snug text-brand-ink/80">{it.text}</p>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-2 text-xs leading-relaxed text-brand-ink/70">{v.note} Пересчёт: <code>{v.command}</code>.</p>
+      <ProvenanceLine p={v.provenance} className="mt-1.5" />
+      <SignatureLine s={v.signature} className="mt-1" />
     </div>
   );
 }
