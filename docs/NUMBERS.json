@@ -64,11 +64,11 @@
   "scenarios": 58
  },
  "validation_report": {
-  "report_generated_at": "2026-10-10",
-  "report_bank_families": 165,
-  "exposure_generated_at": "2026-10-06",
-  "exposure_bank_families": 128,
-  "report_matches_bank": false
+  "report_generated_at": "2026-10-19",
+  "report_bank_families": 403,
+  "exposure_generated_at": "2026-10-19",
+  "exposure_bank_families": 403,
+  "report_matches_bank": true
  },
  "grade_accuracy": {
   "confirm_level": 0.6,
@@ -93,6 +93,17 @@
    "retest_exact": 0.804,
    "retest_kappa": 0.874,
    "minutes_mean": 56.563
+  },
+  "sweep_bank": "76c4164b6ce83743",
+  "path_retest_bank": "f563cfcaebf63aef",
+  "path_retest_bank_families": 268,
+  "path_retest": {
+   "exact": 0.645,
+   "over": 0.079,
+   "under": 0.267,
+   "none": 0.026,
+   "retest_exact": 0.805,
+   "retest_kappa": 0.877
   }
  },
  "deploy": {

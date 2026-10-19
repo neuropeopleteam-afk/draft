@@ -11,6 +11,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 PATH_RETEST = HERE / "data" / "path_retest.json"
 BENCH = HERE / "data" / "matching_bench.json"
+GRADE_SWEEP = HERE / "data" / "grade_sweep.json"
 
 
 def _load(p: Path) -> dict | None:
@@ -42,9 +43,52 @@ def _p1(v: float) -> str:
     return f"{100 * v:.1f}".replace(".", ",") + "\u00a0%"
 
 
+def _level(pr: dict | None) -> str:
+    """Порог уверенности подтверждения, с которым посчитан make path-retest («0,6»); нет в JSON — прежний 0,8."""
+    v = ((pr or {}).get("config") or {}).get("confirm_level")
+    return f"{v if v is not None else 0.8:g}".replace(".", ",")
+
+
+def _k3(v: float) -> str:
+    return f"{v:.3f}".replace(".", ",")
+
+
+def protocols(pr: dict | None, gs: dict | None) -> dict | None:
+    """Два протокола с одним порогом: перебор правил (make grade-sweep, выбранная точка P ≥ 0,6 — эти числа в
+    docs/NUMBERS.json → grade_accuracy и на слайдах) и контрольный прогон всего пути с настройками продукта
+    (make path-retest — числа карточек). Процедура и seed одни, отличаются снимок банка и версия кода. Только числа
+    сохранённых JSON, без пересчёта; нет одного из расчётов — нет подписи."""
+    t = (pr or {}).get("total") or {}
+    tr, pg = t.get("truth") or {}, t.get("path_grade") or {}
+    ch = ((gs or {}).get("choice") or {}).get("key")
+    m = next((q.get("metrics") or {} for q in (gs or {}).get("points") or [] if q.get("key") == ch), None)
+    if not tr or not pg or not m or (pr or {}).get("quick"):
+        return None
+    ssig, psig = gs.get("signature") or {}, pr.get("signature") or {}
+    lvl, slvl = _level(pr), f"{((gs.get('choice') or {}).get('point') or {}).get('confirm_level', 0.6):g}".replace(".", ",")
+    nf = (pr.get("config") or {}).get("n_families")
+    sweep = {"exact": m.get("exact"), "over": m.get("over"), "retest_exact": m.get("retest_exact"),
+             "retest_kappa": m.get("retest_kappa"), "confirm_level": slvl, "bank": ssig.get("bank"),
+             "commit": ssig.get("commit"), "points": len(gs.get("points") or []), "command": ssig.get("command")}
+    path = {"exact": tr.get("exact"), "over": tr.get("over_share"), "retest_exact": pg.get("exact"),
+            "retest_kappa": pg.get("kappa_w"), "confirm_level": lvl, "bank": psig.get("bank"), "bank_families": nf,
+            "commit": psig.get("commit"), "command": psig.get("command")}
+    same = sweep["bank"] == path["bank"]
+    text = (f"Порог P ≥ {lvl} — один в обоих протоколах. Перебор правил (make grade-sweep, {sweep['points']} точек, "
+            f"банк {sweep['bank'] or '—'}, коммит {sweep['commit'] or '—'}) выбрал P ≥ {slvl}: точно "
+            f"{_p1(sweep['exact'])}, завышение {_p1(sweep['over'])}, повтор {_p1(sweep['retest_exact'])}, κw "
+            f"{_k3(sweep['retest_kappa'])} — эти числа в docs/NUMBERS.json (grade_accuracy). Карточки выше — "
+            f"контрольный прогон всего пути с настройками продукта (make path-retest, банк {path['bank'] or '—'}"
+            f"{f', пул 5 направлений — {nf} семейств' if nf else ''}, коммит {path['commit'] or '—'}): точно {_p1(path['exact'])}, "
+            f"завышение {_p1(path['over'])}, повтор {_p1(path['retest_exact'])}, κw {_k3(path['retest_kappa'])}. "
+            "Процедура и seed те же; " + ("разница — версия кода, не правило." if same else
+                                                     "разница — снимок банка и версия кода, не правило."))
+    return {"text": text, "sweep": sweep, "path": path, "same_bank": same}
+
+
 def retest_vs_truth(pr: dict | None) -> dict | None:
     """Я8 (судья п. 13): рядом с κ повтора — точность к синтетической истине, завышение, занижение, «без категории»,
-    цена порога P ≥ 0,8 и маршрут восстановления. Только числа сохранённого make path-retest, без пересчёта."""
+    цена действующего порога P ≥ 0,6 и маршрут восстановления. Только числа сохранённого make path-retest, без пересчёта."""
     t = (pr or {}).get("total") or {}
     tr, pg, ps = t.get("truth") or {}, t.get("path_grade") or {}, t.get("path") or {}
     if not tr or not pg or (pr or {}).get("quick"):
@@ -58,7 +102,7 @@ def retest_vs_truth(pr: dict | None) -> dict | None:
         "provisional": st.get("provisional"),
         "lead": (f"κ {k} — повторяемость, а не точность: при повторе всего пути грейд совпал у {_p1(pg['exact'])}, "
                  f"а с синтетической истиной — у {_p1(tr['exact'])} (первая попытка)."),
-        "cost": (f"Цена порога P ≥ 0,8: правило осторожно против завышения (выше истинного — {_p1(tr['over_share'])}), "
+        "cost": (f"Цена порога P ≥ {_level(pr)}: правило осторожно против завышения (выше истинного — {_p1(tr['over_share'])}), "
                  f"поэтому чаще занижает (ниже истинного — {_p1(tr['under_share'])}, без категории — "
                  f"{_p1(tr['no_category_share'])}; «принят уровень ниже» — {_p1(st.get('accepted_lower') or 0)} статусов). "
                  f"Маршрут восстановления: у порога — дотестирование (+{cfg.get('ext_items', '—')} заданий, до "
@@ -70,7 +114,8 @@ def retest_vs_truth(pr: dict | None) -> dict | None:
 def headline() -> dict:
     from app.modules.validation.provenance import stamp  # Я8: строка происхождения у каждого числа
 
-    pr, b = _load(PATH_RETEST), _load(BENCH)
+    pr, b, gs = _load(PATH_RETEST), _load(BENCH), _load(GRADE_SWEEP)
+    proto = protocols(pr, gs)
     items: list[dict] = []
     if pr and not pr.get("quick"):
         t, sig = pr["total"], pr["signature"]
@@ -79,10 +124,14 @@ def headline() -> dict:
             "id": "path_kappa", "anchor": "path-retest", "value": pg["kappa_w"], "ci": pg.get("kappa_w_ci"),
             "format": "num3",
             "title": "Повтор всего пути",
+            # доли — с одной десятой, как в блоке «повтор против истины» под карточками (80,5 %, а не 80 % и 80,5 %)
             "text": (f"κ с весами: {pg['n']} синтетических кандидатов прошли опрос, тест и решение дважды. Грейд совпал у "
-                     f"{_p(pg['exact'])}, ±1 ступень — у {_p(pg['within_1'])}."),
+                     f"{_p1(pg['exact'])}, ±1 ступень — у {_p1(pg['within_1'])}."),
             "note": (f"повторяемость, не точность: с синтетической истиной грейд совпал у {_p1(t['truth']['exact'])}"
-                     if t.get("truth") else "5 ступеней, подтверждение при P ≥ 0,8; новые варианты заданий"),
+                     if t.get("truth") else f"5 ступеней, подтверждение при P ≥ {_level(pr)}; новые варианты заданий"),
+            "protocol_note": ((f"Порог P ≥ {_level(pr)}, полный путь (make path-retest). Перебор правил (make grade-sweep) "
+                               f"с тем же порогом — {'та же версия банка' if proto['same_bank'] else 'другой снимок банка'}: "
+                               "сверка двух протоколов под карточками") if proto else None),
             "signature": sig})
         tr = t["truth"]
         items.append({
@@ -121,7 +170,7 @@ def headline() -> dict:
     for it in items:  # Я8: «синтетика · дата · SHA алгоритма · банк · команда» — из JSON расчёта
         it["provenance"] = stamp("path" if it["anchor"] == "path-retest" else "bench",
                                  pr if it["anchor"] == "path-retest" else b)
-    return {"items": items, "missing": not items, "retest_vs_truth": retest_vs_truth(pr),
+    return {"items": items, "missing": not items, "retest_vs_truth": retest_vs_truth(pr), "protocols": proto,
             "how_to_read": ("Каждое число — из расчёта с подписью мира (seed, hash конфигурации, коммит), рядом — 95 % "
                             "доверительный интервал и строка происхождения: синтетика, модель или люди, дата, SHA "
                             "алгоритма, банк, команда пересчёта. Ниже по странице: синтетика с интервалами, затем "
