@@ -79,6 +79,38 @@ def eligible(ts: TestSession) -> tuple[list[dict], str | None]:
     return good, None
 
 
+def last_task(ts: TestSession) -> dict | None:
+    """Д2: последнее выполненное задание попытки без развёрнутого ответа (экспресс-тест жюри) — опора для живой устной
+    защиты в песочнице жюри: условие и выбранный кандидатом ответ; интервьюер просит устно объяснить ход решения.
+    Ответ — то, что кандидат выбрал или ввёл (вариант, строка, вывод), с пояснением, что развёрнутого ответа нет."""
+    st = (ts.result or {}).get("state") or {}
+    done = [it for it in st.get("items") or [] if it.get("done") and not it.get("canary")]
+    if not done:
+        return None
+    it = max(done, key=lambda x: x.get("position") or 0)
+    pub = it.get("public") or {}
+    opts = {str(o.get("id")): o for o in pub.get("options") or [] if isinstance(o, dict)}
+    picked = []
+    for k in sorted((it.get("answers") or {}).keys()):
+        v = ((it.get("answers") or {}).get(k) or {}).get("value")
+        if v is None or v == "":
+            continue
+        o = opts.get(str(v).strip().upper()) or opts.get(str(v))
+        if o is not None:
+            picked.append(_clean(str(o.get("text") or o.get("code") or v))[:300])
+        elif it.get("format") == "find_bug":
+            picked.append(f"строка {v}")
+        else:
+            picked.append(_clean(str(v))[:300])
+    chosen = "; ".join(p for p in picked if p) or "ответ без текста"
+    answer = (f"Мой ответ в тесте: {chosen}. Развёрнутого ответа в этом задании не было — объясню устно, почему "
+              f"выбрал(а) именно это, какие варианты отбросил(а) и как проверил(а) бы решение на практике.")
+    topics = [tag_title(t) for t in it.get("skills") or []]
+    return {"id": f"t{it.get('position')}", "position": it.get("position"), "kind": it.get("format"),
+            "stem": _clean(pub.get("stem") or ""), "code": pub.get("code"), "step_prompt": None,
+            "answer": answer, "topics": [t for t in topics if t][:8], "score": None, "integrity_flags": []}
+
+
 def _title(a: dict) -> str:
     first = re.split(r"(?<=[.!?:])\s|\n", a["stem"].strip(), maxsplit=1)[0]
     return (first[:77] + "…") if len(first) > 80 else first or f"Задание {a['position']}"

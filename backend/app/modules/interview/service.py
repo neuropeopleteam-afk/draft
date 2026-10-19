@@ -365,6 +365,38 @@ def own_attempt(db: Session, user: User, ts_id: uuid.UUID) -> TestSession:
     return ts
 
 
+def _jury_example(db: Session, jkey: str) -> InterviewSession | None:
+    return db.scalar(select(InterviewSession).where(InterviewSession.is_example.is_(True),
+                                                    InterviewSession.jury_scope == jkey)
+                     .order_by(InterviewSession.created_at).limit(1))
+
+
+def jury_fallback(db: Session, ts: TestSession, example: InterviewSession | None) -> dict | None:
+    """Д2: в попытке жюри нечего защищать (экспресс-тест: 7 коротких заданий без развёрнутых ответов) — всё равно даём
+    живой разговор с ИИ-интервьюером: по защищаемому примеру песочницы (развёрнутые ответы модельного кандидата), иначе —
+    по последнему заданию попытки. {source, title, ctx, meta} или None, если опереться не на что."""
+    from app.core.enums import TestSessionStatus
+
+    if ts.status != TestSessionStatus.finished:
+        return None
+    if example is not None and example.test_session_id:
+        ets = db.get(TestSession, example.test_session_id)
+        good, why = cx.eligible(ets) if ets is not None else ([], "нет")
+        if good and not why:
+            ctx, meta = cx.defense_context(ets, good[:2])
+            titles = [t["title"] for t in ctx["tasks"]]
+            meta = {**meta, "source": "example", "example_id": str(example.id)}
+            return {"source": "example", "title": "по защищаемому примеру" + (f": «{titles[0]}»" if titles else ""),
+                    "ctx": ctx, "meta": meta}
+    last = cx.last_task(ts)
+    if last is not None:
+        ctx, meta = cx.defense_context(ts, [last])
+        meta = {**meta, "source": "last_task"}
+        return {"source": "last_task", "title": f"по последнему заданию попытки: «{ctx['tasks'][0]['title']}»",
+                "ctx": ctx, "meta": meta}
+    return None
+
+
 def defense_state(db: Session, user: User, ts: TestSession) -> dict:
     s = get_settings()
     good, reason = cx.eligible(ts)
@@ -373,14 +405,13 @@ def defense_state(db: Session, user: User, ts: TestSession) -> dict:
         _expire(db, live)
     jkey = jury_key(user)
     if example is None and jkey:  # жюри без своего примера (экспресс-тест без развёрнутых ответов) — пример песочницы
-        example = db.scalar(select(InterviewSession).where(InterviewSession.is_example.is_(True),
-                                                           InterviewSession.jury_scope == jkey)
-                              .order_by(InterviewSession.created_at).limit(1))
+        example = _jury_example(db, jkey)
+    fb = jury_fallback(db, ts, example) if (reason and jkey) else None
     used = sum(1 for r in _defense_rows(db, ts.id) if not r.is_example)
     # итог уже был (в том числе удалённый кандидатом) — повторной защиты этой попытки нет
     done = any(r.status == "completed" or (r.status == "deleted" and r.completed_at) for r in _defense_rows(db, ts.id)
                if not r.is_example)
-    can = enabled() and not reason and not (live is not None and live.status in ACTIVE) and \
+    can = enabled() and (not reason or fb is not None) and not (live is not None and live.status in ACTIVE) and \
         (bool(jkey) or (not done and used < s.interview_defense_attempts))
     minutes = min(s.interview_defense_minutes, s.interview_jury_minutes) if jkey else s.interview_defense_minutes
     return {"enabled": enabled(), "stub": pt.is_stub(), "eligible": not reason, "reason": reason,
@@ -389,7 +420,9 @@ def defense_state(db: Session, user: User, ts: TestSession) -> dict:
             "jury": {"live_per_hour": s.interview_jury_per_hour, "max_minutes": s.interview_jury_minutes} if jkey else None,
             "name_hint": name_hint(db, user), "consent": consent_text("defense"),
             "session": view(live, "candidate") if live else None,
-            "example": view(example, "candidate") if example else None}
+            "example": view(example, "candidate") if example else None,
+            # Д2: жюри без развёрнутых ответов — живой запуск по примеру или последнему заданию (title — о чём разговор)
+            "fallback": {"source": fb["source"], "title": fb["title"]} if fb else None}
 
 
 def start_defense(db: Session, user: User, ts: TestSession, name: str, consent: bool) -> InterviewSession:
@@ -400,7 +433,7 @@ def start_defense(db: Session, user: User, ts: TestSession, name: str, consent: 
     if not nm:
         raise api_error(422, "name_required", "Как к вам обращаться — одно слово, без фамилии")
     st = defense_state(db, user, ts)
-    if st["reason"]:
+    if st["reason"] and not st.get("fallback"):
         raise api_error(422, "insufficient_context", st["reason"])
     if st["session"] and st["session"]["status"] in ACTIVE:
         return db.get(InterviewSession, uuid.UUID(st["session"]["id"]))
@@ -408,8 +441,14 @@ def start_defense(db: Session, user: User, ts: TestSession, name: str, consent: 
         raise api_error(409, "defense_done", "Устная защита этой попытки уже пройдена или попытки закончились")
     jkey = jury_key(user)
     _limits(db, user, jkey)
-    good, _ = cx.eligible(ts)
-    ctx, meta_ = cx.defense_context(ts, good)
+    good, why = cx.eligible(ts)
+    if why:  # Д2: жюри — разговор по защищаемому примеру или последнему заданию попытки
+        fb = jury_fallback(db, ts, latest_defense(db, ts.id)[1] or (_jury_example(db, jkey) if jkey else None))
+        if fb is None:
+            raise api_error(422, "insufficient_context", why)
+        ctx, meta_ = fb["ctx"], fb["meta"]
+    else:
+        ctx, meta_ = cx.defense_context(ts, good)
     s = get_settings()
     row = InterviewSession(id=uuid.uuid4(), mode="defense", candidate_user_id=user.id, test_session_id=ts.id,
                            created_by=user.id, status="created", jury_scope=jkey, minutes=st["minutes"],

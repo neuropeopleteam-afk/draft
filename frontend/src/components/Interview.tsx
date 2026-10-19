@@ -24,6 +24,8 @@ interface DefenseState {
   enabled: boolean; stub: boolean; eligible: boolean; reason?: string | null; answers_n: number; minutes: number; max_questions: number;
   attempts_left?: number | null; can_start: boolean; jury?: { live_per_hour: number; max_minutes: number } | null; name_hint: string;
   consent: Consent; session?: IvSession | null; example?: IvSession | null;
+  /** Д2: жюри без развёрнутых ответов (экспресс-тест) — живой разговор по защищаемому примеру или последнему заданию. */
+  fallback?: { source: "example" | "last_task"; title: string } | null;
 }
 interface Stage { enabled: boolean; stub: boolean; minutes: number; can_invite: boolean; reason?: string | null; skills: string[]; skills_reason?: string | null; name_hint?: string | null; consent?: Consent | null; session?: IvSession | null }
 
@@ -134,7 +136,8 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
   const navigate = useNavigate();
   useEffect(() => { if (st?.name_hint && !name) setName(st.name_hint); }, [st?.name_hint]);  // eslint-disable-line react-hooks/exhaustive-deps
   if (!on || !st?.enabled) return null;
-  if (!st.eligible && !st.session && !st.example) return null;
+  if (!st.eligible && !st.session && !st.example && !st.fallback) return null;
+  const fb = !st.eligible ? st.fallback ?? null : null;  // живой разговор жюри без своих развёрнутых ответов
   const s = st.session;
   const active = s && (s.status === "created" || s.status === "in_progress");
   async function start() {
@@ -153,10 +156,17 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
         <img src="/avatar/interviewer.webp" alt="ИИ-интервьюер" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover" data-testid="defense-avatar" />
         <h2 id={`defense-h-${sessionId}`} className="font-bold text-brand-night">Подтвердите авторство ответа: устная защита {minutes(st.minutes)}, по желанию</h2>
       </div>
-      <p className="text-sm text-brand-ink/75">
-        ИИ-интервьюер задаст до {st.max_questions} вопросов по вашим развёрнутым ответам{st.answers_n ? ` (${st.answers_n})` : ""} — голосом или в чате.
-        Работодатель увидит «ответ подтверждён устно» или «есть расхождения» с цитатами. Грейд не меняется; оценивает модель, решение — за людьми.
-      </p>
+      {fb ? (
+        <p className="text-sm text-brand-ink/75" data-testid="defense-fallback">
+          В экспресс-тесте жюри нет развёрнутых ответов, поэтому живой разговор пойдёт {fb.title}{fb.source === "example" ? " (развёрнутые ответы модельного кандидата, не человека)" : ""}.
+          ИИ-интервьюер задаст до {st.max_questions} вопросов — голосом или в чате; можно поговорить с аватаром прямо сейчас. Грейд не меняется; оценивает модель, решение — за людьми.
+        </p>
+      ) : (
+        <p className="text-sm text-brand-ink/75">
+          ИИ-интервьюер задаст до {st.max_questions} вопросов по вашим развёрнутым ответам{st.answers_n ? ` (${st.answers_n})` : ""} — голосом или в чате.
+          Работодатель увидит «ответ подтверждён устно» или «есть расхождения» с цитатами. Грейд не меняется; оценивает модель, решение — за людьми.
+        </p>
+      )}
       {st.stub && <Alert kind="info">Демо-режим: вопросы по шаблону, оценка — по фиксированному правилу, не моделью. Итог помечен «демо».</Alert>}
       {st.jury && <p className="text-xs text-brand-ink/65" data-testid="defense-jury">Песочница жюри: живой запуск — {st.jury.live_per_hour} в час, до {st.jury.max_minutes} минут. Готовый пример — ниже.</p>}
       {s && s.status === "completed" && (
@@ -169,17 +179,17 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
       {active && <Link className="btn-primary" to={`/candidate/interview/${s!.id}`}>{s!.status === "created" ? "Начать разговор" : "Продолжить разговор"}</Link>}
       {s && ["failed", "expired", "cancelled"].includes(s.status) && <p className="text-sm text-brand-ink/70">Прошлая сессия: {s.status_title.toLowerCase()}{s.error ? ` — ${s.error}` : ""}.</p>}
       {s?.status === "deleted" && <p className="text-sm text-brand-ink/70">Запись и результат удалены по вашей просьбе. Повторная защита этой попытки недоступна — она будет у следующей попытки теста.</p>}
-      {!st.eligible && st.reason && <p className="text-sm text-brand-ink/70">{st.reason}.</p>}
+      {!st.eligible && st.reason && !fb && <p className="text-sm text-brand-ink/70">{st.reason}.</p>}
       {st.can_start && !active && (open ? (
         <div className="space-y-3 rounded-xl border border-brand-night/10 p-3">
           <ConsentBox c={st.consent} name={name} setName={setName} agree={agree} setAgree={setAgree} idp={`def-${sessionId}`} />
           <div className="flex flex-wrap gap-2">
-            <button className="btn-primary" disabled={busy || limited || !agree || !name.trim()} onClick={start} data-testid="interview-defense-start">{busy ? "Готовим вопросы…" : limited ? "Живой запуск уже был в этот час · откройте готовый пример" : "Начать устную защиту"}</button>
+            <button className="btn-primary" disabled={busy || limited || !agree || !name.trim()} onClick={start} data-testid="interview-defense-start">{busy ? "Готовим вопросы…" : limited ? "Живой запуск уже был в этот час · откройте готовый пример" : fb ? "Начать живой разговор" : "Начать устную защиту"}</button>
             <button className="btn-ghost" onClick={() => setOpen(false)}>Не сейчас</button>
           </div>
           {st.attempts_left != null && <p className="text-xs text-brand-ink/65">Сессий для этой попытки: {st.attempts_left} (при сбое связи можно ещё раз).</p>}
         </div>
-      ) : <button className="btn-primary" onClick={() => setOpen(true)} data-testid="defense-open">Подтвердить устно</button>)}
+      ) : <button className="btn-primary" onClick={() => setOpen(true)} data-testid="defense-open">{fb ? "Поговорить с ИИ-интервьюером вживую" : "Подтвердить устно"}</button>)}
       <Alert>{err}</Alert>
       {st.example && (
         <details key={limited ? "lim" : "ok"} className="rounded-xl bg-brand-blush/20 p-3" open={!s || limited} data-testid="defense-example">

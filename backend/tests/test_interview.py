@@ -453,3 +453,75 @@ def test_ivtext_context_under_question_and_bye_on_finish(client, on):
         last = row.transcript[-1]
         assert last["who"] == "interviewer" and last["n"] is None and "записала" in last["text"]
         assert row.state["closing"] == last["text"]
+
+
+# ------------------------------------------------------------------ Д2: жюри без развёрнутых ответов — живой разговор
+
+def _express_only(email: str) -> str:
+    """Экспресс-тест жюри: только короткие задания с выбором варианта — развёрнутых ответов нет."""
+    from app.modules.auth.models import User
+
+    with SessionLocal() as db:
+        uid = db.scalar(select(User.id).where(User.email == email))
+        ts = db.scalars(select(TSession).where(TSession.user_id == uid).order_by(TSession.started_at.desc())).first()
+        st = ts.result.setdefault("state", {})
+        st["items"] = [{"position": k, "format": "mcq_concept", "done": True, "canary": False, "skills": ["postgresql"],
+                        "public": {"stem": f"Задание {k}: какой индекс ускорит выборку по дате?", "code": None,
+                                   "options": [{"id": "A", "text": "B-tree по created_at"}, {"id": "B", "text": "Хеш"}]},
+                        "answers": {"1": {"value": "A"}}, "x": [1.0], "signals": {}} for k in range(1, 8)]
+        flag_modified(ts, "result")
+        db.commit()
+        return str(ts.id)
+
+
+def test_jury_express_without_open_answers_live_by_last_task(client, on, monkeypatch):
+    t = candidate_with_category(client, email="jx@example.com")
+    ts = _express_only("jx@example.com")
+    # обычный кандидат: защищать нечего — как раньше, без живого запуска
+    st = client.get(f"/api/interview/defense/{ts}", headers=H(t)).json()
+    assert not st["eligible"] and not st["can_start"] and st["fallback"] is None
+    assert client.post(f"/api/interview/defense/{ts}", json={"name": "Анна", "consent": True},
+                       headers=H(t)).status_code == 422
+    # жюри: кнопка живого запуска есть — по последнему заданию попытки
+    monkeypatch.setattr(svc, "jury_key", lambda user: "sbxtestd2a")
+    st = client.get(f"/api/interview/defense/{ts}", headers=H(t)).json()
+    assert not st["eligible"] and st["can_start"] and st["fallback"]["source"] == "last_task"
+    assert "последнему заданию" in st["fallback"]["title"]
+    r = client.post(f"/api/interview/defense/{ts}", json={"name": "Анна", "consent": True}, headers=H(t))
+    assert r.status_code == 201, r.text
+    sid = r.json()["id"]
+    with SessionLocal() as db:
+        row = db.get(InterviewSession, uuid.UUID(sid))
+        assert [x["id"] for x in row.state["ctx"]["tasks"]] == ["t7"] and row.context_meta["source"] == "last_task"
+        assert "B-tree по created_at" in row.state["ctx"]["tasks"][0]["answer"]
+    s = _talk(client, t, sid, ["Выбрал B-tree по дате, потому что выборка идёт по диапазону, а хеш диапазоны не умеет."] * 3)
+    assert s["status"] == "completed", s
+
+
+def test_jury_express_without_open_answers_live_by_example(client, on, monkeypatch):
+    from app.modules.interview.demo import seed_jury_defense
+    from app.modules.profiles.models import CandidateProfile
+
+    tm = candidate_with_category(client)  # модельный кандидат песочницы с развёрнутыми ответами
+    _with_open_answers(client, tm)
+    with SessionLocal() as db:
+        p = db.scalars(select(CandidateProfile)).first()
+        seed_jury_defense(db, p)
+        ex = db.scalars(select(InterviewSession).where(InterviewSession.is_example.is_(True))).one()
+        ex.jury_scope = "sbxtestd2b"
+        db.commit()
+    t = candidate_with_category(client, email="jy@example.com")
+    ts = _express_only("jy@example.com")
+    monkeypatch.setattr(svc, "jury_key", lambda user: "sbxtestd2b")
+    st = client.get(f"/api/interview/defense/{ts}", headers=H(t)).json()
+    assert st["can_start"] and st["fallback"]["source"] == "example" and st["example"]["example"] is True
+    assert st["fallback"]["title"].startswith("по защищаемому примеру")
+    r = client.post(f"/api/interview/defense/{ts}", json={"name": "Олег", "consent": True}, headers=H(t))
+    assert r.status_code == 201, r.text
+    with SessionLocal() as db:
+        row = db.get(InterviewSession, uuid.UUID(r.json()["id"]))
+        assert row.test_session_id == uuid.UUID(ts) and not row.is_example
+        assert row.context_meta["source"] == "example" and {x["id"] for x in row.state["ctx"]["tasks"]} <= {"t90", "t91"}
+        assert "ivan.petrov@example.com" not in str(row.state["ctx"])  # ПДн модельного кандидата вычищены
+    s = _talk(client, t, r.json()["id"], ["hint", "hint", "hint"])
+    assert s["status"] == "completed", s

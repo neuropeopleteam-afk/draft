@@ -279,7 +279,9 @@ test("устная защита по флагу (Я15): обычный шаг п
   await expect(g.getByText(/^Шаг 7 из 9/)).toBeVisible({ timeout: 30_000 });
   // FINAL-UX B: устная защита — обычный шаг: «Дальше» ведёт к ней, сразу к раскрытой панели
   await expect(g.getByTestId("quick-optional")).toHaveCount(0);
-  await g.getByRole("button", { name: "Дальше: Устная защита ответа" }).click();
+  // Д2: переход к шагу 8 — явная основная кнопка в теле панели, а не сноска
+  await expect(g.getByTestId("quick-defense-next")).toBeVisible();
+  await g.getByTestId("quick-to-defense").click();
   // кандидатом «Пройдите тест сами» — «Две попытки рядом», там панель Я15 «Подтвердите авторство ответа»
   await expect(page).toHaveURL(/\/candidate\/attempts\?defense=open#defense$/);
   await expect(g.getByText(/^Шаг 8 из 9 · ≈\s3\sмин/)).toBeVisible();

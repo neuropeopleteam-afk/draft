@@ -135,6 +135,12 @@ class JuryOut(BaseModel):
     max_minutes: int
 
 
+class DefenseFallbackOut(BaseModel):
+    """Д2: жюри без развёрнутых ответов — живой разговор по защищаемому примеру (example) или последнему заданию."""
+    source: str
+    title: str
+
+
 class DefenseStateOut(BaseModel):
     enabled: bool
     stub: bool
@@ -150,6 +156,7 @@ class DefenseStateOut(BaseModel):
     consent: InterviewConsentOut
     session: SessionOut | None = None
     example: SessionOut | None = None
+    fallback: DefenseFallbackOut | None = None
 
 
 class StageOut(BaseModel):
