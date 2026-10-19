@@ -6769,6 +6769,142 @@
         "title": "CompleteIn",
         "type": "object"
       },
+      "ConciergeChatIn": {
+        "properties": {
+          "current_path": {
+            "default": "/",
+            "maxLength": 200,
+            "title": "Current Path",
+            "type": "string"
+          },
+          "history": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 20,
+            "title": "History",
+            "type": "array"
+          },
+          "message": {
+            "maxLength": 1500,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "step_index": {
+            "default": 0,
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Step Index",
+            "type": "integer"
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Name"
+          },
+          "user_role": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Role"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ConciergeChatIn",
+        "type": "object"
+      },
+      "ConciergeChatOut": {
+        "properties": {
+          "detected_role": {
+            "default": "all",
+            "enum": [
+              "all",
+              "candidate",
+              "employer",
+              "fsp"
+            ],
+            "title": "Detected Role",
+            "type": "string"
+          },
+          "jump_to_step": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jump To Step"
+          },
+          "reply": {
+            "title": "Reply",
+            "type": "string"
+          },
+          "start_tour": {
+            "default": true,
+            "title": "Start Tour",
+            "type": "boolean"
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Name"
+          }
+        },
+        "required": [
+          "reply"
+        ],
+        "title": "ConciergeChatOut",
+        "type": "object"
+      },
+      "ConciergeSpeechIn": {
+        "properties": {
+          "format": {
+            "default": "mp3",
+            "enum": [
+              "mp3",
+              "pcm"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ConciergeSpeechIn",
+        "type": "object"
+      },
       "ConnectionIn": {
         "properties": {
           "base_url": {
@@ -56623,6 +56759,207 @@
           }
         ],
         "summary": "Устная защита и ИИ-интервью кандидата для карточки работодателя",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/avatar-token": {
+      "post": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "concierge_avatar_token_api_interview_concierge_avatar_token_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarTokenOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "avatar_unavailable",
+                    "message": "Живой видеопоток временно недоступен — включён голосовой режим"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `avatar_unavailable` — Живой видеопоток временно недоступен — включён голосовой режим."
+          }
+        },
+        "summary": "Живой аватар ИИ-проводника Елены: токен сессии Anam с липсинком",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/chat": {
+      "post": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "concierge_chat_api_interview_concierge_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConciergeChatIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConciergeChatOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "summary": "Живой диалог с ИИ-проводником Еленой: знакомство по имени, выбор роли и ответы на вопросы",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/speech": {
+      "post": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "concierge_speech_api_interview_concierge_speech_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConciergeSpeechIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tts_unavailable",
+                    "message": "Синтез речи временно недоступен"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `tts_unavailable` — Синтез речи временно недоступен."
+          }
+        },
+        "summary": "Голос ИИ-проводника Елены (ElevenLabs, mp3 или pcm для липсинка Anam)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/transcribe": {
+      "post": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "concierge_transcribe_api_interview_concierge_transcribe_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscribeOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "audio_too_large",
+                    "message": "Запись слишком длинная — скажите короче или напишите"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком большой запрос или файл. Коды `detail.code`: `audio_too_large` — Запись слишком длинная — скажите короче или напишите."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "empty_audio",
+                    "message": "Пустая запись"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Данные не прошли проверку. Коды `detail.code`: `empty_audio` — Пустая запись."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "stt_unavailable",
+                    "message": "Распознавание речи временно недоступно"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `stt_unavailable` — Распознавание речи временно недоступно."
+          }
+        },
+        "summary": "Распознавание голоса собеседника для ИИ-проводника Елены (Deepgram Nova-2)",
         "tags": [
           "interview"
         ]
