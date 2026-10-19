@@ -510,7 +510,8 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
             continue
         ci = core.get(b.profile.user_id)
         results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
-                        "reasons": (reasons[:1] + [core_skill.reason(ci)] + reasons[1:]) if ci else reasons,
+                        "reasons": core_skill.annotate(reasons[:1] + [core_skill.reason(ci)] + reasons[1:], ci)
+                        if ci else reasons,
                         "category_id": b.category_id, "must": must[b.profile.user_id], "core": ci,
                         "grade_status": b.grade_status, "card": card(b, cats)})
     unc = unconfirmed_counts(db)

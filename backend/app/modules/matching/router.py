@@ -547,7 +547,7 @@ def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
 
         core = core_skill.describe(b, req)  # Я1: «Основной язык роли — Go: не заявлен»
         if core:
-            reasons = reasons[:1] + [core_skill.reason(core)] + reasons[1:]
+            reasons = core_skill.annotate(reasons[:1] + [core_skill.reason(core)] + reasons[1:], core)
         out["match"] = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons, "must": must,
                         "core": core, "version": sv.version if sv is not None else None}
     until = cooldown_until(db, c.id, p.user_id)

@@ -90,6 +90,36 @@ def test_state_implied_by_framework():
     assert C.state(_b({"nextjs": 0.5}), react)["state"] == "confirmed"
 
 
+def test_implied_core_headline_and_unchecked_no_contradiction():
+    """D3 п. 1 (P1 из отчётов T3 и С2): Python подтверждён через FastAPI — в шапке «(через FastAPI)», а строка стека
+    «Обязательно: Python» не говорит «только заявлен»: implied_via и текст «напрямую не проверялся». Статус и уровень
+    строки прежние — балл и ярус обязательного не меняются."""
+    req = parse_need("Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis.",
+                     use_llm=False)
+    b = _b({"fastapi": 1.0}, ("python", "fastapi"))
+    info = C.describe(b, req, on=True)
+    assert info["state"] == "confirmed" and info["implied"] and info["via"] == "FastAPI"
+    assert info["headline"] == "Основной язык роли — Python: подтверждён тестом (через FastAPI)"
+    # прямое подтверждение — без «через»
+    direct = C.describe(_b({"python": 1.0}), req, on=True)
+    assert direct["headline"] == "Основной язык роли — Python: подтверждён тестом"
+    reasons = [{"requirement": "Специализация и грейд", "status": "confirmed", "text": "…"},
+               {"requirement": "Обязательно: Python", "level": "T0", "status": "declared", "text": "Заявлено кандидатом"},
+               {"requirement": "Обязательно: FastAPI", "level": "T1", "status": "confirmed", "text": "Подтверждено"},
+               {"requirement": "Обязательно: PostgreSQL", "level": "T0", "status": "declared", "text": "Заявлено"}]
+    out = C.annotate([dict(r) for r in reasons], info)
+    py = next(r for r in out if r["requirement"] == "Обязательно: Python")
+    assert py["implied_via"] == "FastAPI" and py["status"] == "declared" and py["level"] == "T0"
+    assert "только заявлен" not in py["text"] and "Напрямую не проверялся — подтверждён тестом через FastAPI" in py["text"]
+    pg = next(r for r in out if r["requirement"] == "Обязательно: PostgreSQL")
+    assert "implied_via" not in pg  # чужие навыки не трогаем
+    # прямое подтверждение или ядро не подтверждено — строки стека как прежде
+    assert all("implied_via" not in r for r in C.annotate([dict(r) for r in reasons], direct))
+    declared = C.describe(_b({}, ("python",)), req, on=True)
+    assert all("implied_via" not in r for r in C.annotate([dict(r) for r in reasons], declared))
+    assert "зонд" not in C.text(C.role_core(req), C.state(_b({}, ("python",)), C.role_core(req)), True, True)
+
+
 def test_assess_pool_texts_and_key(monkeypatch):
     req = parse_need("Senior Go-разработчик: Go, PostgreSQL, Kafka, Docker.", use_llm=False)
     a, d, x = _b({"go": 1.0}, ("go",)), _b({}, ("go",)), _b({"java": 1.0, "kafka": 1.0}, ("java", "kafka"))

@@ -340,6 +340,12 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                 cell, val = _stack_cell(b, it["tag"])
                 if val is not None:
                     cell["value"] = val
+                ci = why_items[-1].get("core")
+                if (ci and ci.get("state") == "confirmed" and ci.get("implied") and ci.get("via")
+                        and it["tag"] in (ci.get("tags") or []) and cell["status"] in ("declared", "missing")):
+                    # D3 п. 1: язык подтверждён через фреймворк — строка языка не противоречит строке ядра
+                    cell["implied_via"] = ci["via"]
+                    cell["text"] = f"Напрямую не проверялся — подтверждён тестом через {ci['via']}"
                 cells[f"stack:{it['tag']}"] = cell
         if req.get("experience_years_min"):
             ey = c.get("experience_years")
