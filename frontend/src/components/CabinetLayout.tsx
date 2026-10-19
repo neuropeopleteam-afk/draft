@@ -5,9 +5,11 @@ import { api, type Role } from "../lib/api";
 import { MESSAGES_CHANGED } from "./Chat";
 import { useHiringTodo } from "./Hiring";
 import { Logo } from "./Logo";
-import { GuideSlot } from "./JuryGuide";
+import { GuideSlot, whoAmI } from "./JuryGuide";
+import { isJury } from "../lib/jury";
 import { RouteBoundary, RouteFallback, StartupError, StartupLoading } from "./Boot";  // Я16
 import { useMeta } from "../lib/meta";
+import { catTitle } from "./ui";
 
 // flag — раздел виден, только если функция включена на сервере (/api/meta → <flag>.enabled), например «Тарифы» (Я29)
 // also — другие разделы, на которых пункт тоже подсвечен (например, «Уведомления» на /…/app)
@@ -76,8 +78,22 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
         </nav>
         <div className="hidden border-t border-brand-night/10 px-5 py-5 md:block">
           <GuideSlot where="sidebar" />
-          <p className="truncate text-sm font-medium text-brand-ink/80" title={me.email}>{me.email}</p>
-          <button onClick={exit} className="mt-1.5 rounded text-sm font-semibold text-brand-plum hover:text-brand">Выйти</button>
+          <p className="truncate text-sm font-semibold text-brand-night" title={me.email}>
+            {isJury(me.email)
+              ? whoAmI(me.email).replace(/^демо-/, "Демо-")
+              : me.candidate?.full_name || me.employer?.company?.name || me.email}
+          </p>
+          {me.candidate?.current_category_id && (
+            <p className="mt-0.5 truncate text-xs text-brand-ink/65">{catTitle(me.candidate.current_category_id)}</p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+            {isJury(me.email) && (
+              <NavLink to="/expertise" className="text-xs font-semibold text-brand hover:underline">
+                Сменить роль
+              </NavLink>
+            )}
+            <button onClick={exit} className="rounded text-sm font-semibold text-brand-plum hover:text-brand">Выйти</button>
+          </div>
         </div>
       </aside>
       <main id="main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-6 outline-none sm:px-6 md:px-10 md:py-10">

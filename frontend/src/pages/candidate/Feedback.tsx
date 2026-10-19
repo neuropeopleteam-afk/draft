@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, GRADE_TITLE_ALL, Loading, catTitle, dt, plainText, useApi } from "../../components/ui";
 import HhMarketSkills, { type HhMarket } from "../../components/HhMarketSkills";  // Я12б: «Что сейчас просит рынок» (hh.ru)
+import { ThetaScale } from "../../components/ThetaScale";
 
 /** Обратная связь после теста: карта навыков, спрос работодателей категории, маршрут роста, дисциплины ФСП. */
 
@@ -12,7 +13,7 @@ interface Topic {
   expected: number | null; relative: string | null; status: string; confidence: string; level: string | null; aspects: Aspect[];
 }
 interface DemandItem { tag: string; title: string; required: number; desired: number; share: number; status: string; status_title: string; testable: boolean; test_score: number | null }
-interface Step { kind: string; title: string; text: string; tags: string[]; source?: string }
+interface Step { kind: string; title: string; text: string; tags: string[]; source?: string; action?: { title: string; href: string } | null }
 /** D3 п. 4: два списка «подтянуть» подписаны источником — тест или спрос работодателей (не путать жюри). */
 const SOURCE_TEST = "Слабее всего по тесту", SOURCE_DEMAND = "Востребовано у работодателей в вашей категории";
 const stepSource = (s: Step) => s.source ?? (s.kind === "topic" ? SOURCE_TEST : s.kind === "demand" ? SOURCE_DEMAND : null);
@@ -107,7 +108,7 @@ function SkillMap({ fb }: { fb: FeedbackData }) {
           </div>
         );
       })}
-      <p className="mt-3 text-xs text-brand-ink/65">{fb.skill_map?.note}</p>
+      <p className="mt-3 text-xs text-brand-ink/65">{plainText(fb.skill_map?.note ?? "")}</p>
     </section>
   );
 }
@@ -137,20 +138,34 @@ function Demand({ d }: { d: NonNullable<FeedbackData["demand"]> }) {
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-xs text-brand-ink/65">{d.note}</p>
+      <p className="mt-3 text-xs text-brand-ink/65">{plainText(d.note)}</p>
     </section>
   );
 }
 
 function Route({ steps }: { steps: Step[] }) {
   return (
-    <section className="card">
-      <h2 className="font-bold text-brand-night">Маршрут роста</h2>
+    <section className="card border-brand/25 bg-brand-blush/15">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-bold text-brand-night">Маршрут роста: что сделать дальше</h2>
+        <span className="text-xs font-semibold text-brand-plum">Прямые действия для повышения вилки и места в выдаче</span>
+      </div>
       <ol className="mt-3 space-y-3">
         {steps.map((s, i) => (
-          <li key={i} className="flex gap-3">
-            <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush/60 text-xs font-bold text-brand-plum">{i + 1}</span>
-            <div>{stepSource(s) && <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-lavender" data-testid="route-source">{stepSource(s)}</p>}<p className="font-semibold text-brand-night">{s.title}</p><p className="mt-0.5 text-sm text-brand-ink/70">{s.text}</p></div>
+          <li key={i} className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-brand-night/5">
+            <div className="flex min-w-0 flex-1 gap-3">
+              <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-strong text-xs font-bold text-white">{i + 1}</span>
+              <div className="min-w-0">
+                {stepSource(s) && <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-lavender" data-testid="route-source">{stepSource(s)}</p>}
+                <p className="font-semibold text-brand-night">{s.title}</p>
+                <p className="mt-0.5 text-sm text-brand-ink/70">{plainText(s.text)}</p>
+              </div>
+            </div>
+            {s.action?.href && (
+              <Link to={s.action.href} className={i === 0 ? "btn-primary shrink-0 !px-4 !py-2 text-xs" : "btn-ghost shrink-0 !px-3.5 !py-1.5 text-xs"}>
+                {s.action.title}
+              </Link>
+            )}
           </li>
         ))}
       </ol>
@@ -233,10 +248,11 @@ export default function Feedback() {
         <Alert kind="info">Достоверность результата снижена. Общая причина: {s.integrity.reasons.join("; ").toLowerCase()}. {s.integrity.note ?? "Оценку уровня и грейд это не меняет."}</Alert>
       )}
       {fb.source === "facts" && <Alert kind="info">Подробной разбивки по заданиям для этого теста нет — карта построена по навыкам, подтверждённым тестом.</Alert>}
+      <ThetaScale theta={s.theta} se={s.se} grade={s.claimed_grade} confirmed={s.confirmed} />
+      {fb.route && fb.route.length > 0 && <Route steps={fb.route} />}
       <SkillMap fb={fb} />
       {fb.demand && <Demand d={fb.demand} />}
       {fb.market_hh && <HhMarketSkills m={fb.market_hh} />}
-      {fb.route && fb.route.length > 0 && <Route steps={fb.route} />}
       {fb.competitions && fb.competitions.length > 0 && <Competitions list={fb.competitions} url={fb.fsp_calendar_url} />}
       <p className="text-xs text-brand-ink/65">Этот разбор входит и в ваш PDF-профиль (раздел <Link className="underline" to="/candidate/profile">«Профиль и резюме»</Link>). В версии профиля для работодателя его нет.</p>
     </div>

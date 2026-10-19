@@ -17,7 +17,7 @@ const PHASE_TEXT: Record<VadPhase, string> = {
 };
 
 /** Индикатор слушания: пять полос уровня микрофона, живая бегущая строка распознанной речи и отсчёт паузы. */
-export function ListeningMeter({ level, vad, phase, liveText }: { level: () => number; vad: () => VadInfo; phase: VadPhase; liveText?: string }) {
+export function ListeningMeter({ level, vad, phase, liveText, hasLiveSr }: { level: () => number; vad: () => VadInfo; phase: VadPhase; liveText?: string; hasLiveSr?: boolean }) {
   const bars = useRef<(HTMLSpanElement | null)[]>([]);
   const left = useRef<HTMLSpanElement | null>(null);
   useEffect(() => {
@@ -58,10 +58,10 @@ export function ListeningMeter({ level, vad, phase, liveText }: { level: () => n
       </div>
       <div className="mt-2 rounded-xl bg-white px-3.5 py-2.5 text-left shadow-inner ring-1 ring-brand-night/10">
         <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
-          {liveText ? "Слышу и распознаю вашу речь в реальном времени:" : "Говорите в микрофон — ваши слова появятся здесь:"}
+          {liveText ? "Слышу и распознаю вашу речь в реальном времени:" : hasLiveSr ? "Говорите в микрофон — ваши слова появятся здесь:" : "Микрофон записывает ваш ответ:"}
         </p>
         <p className="mt-1 min-h-[1.5rem] text-sm font-medium leading-relaxed text-brand-night" data-testid="iv-live-transcript">
-          {liveText ? `«${liveText}»` : "Слушаю вас… Просто начните говорить, нажимать кнопки не нужно."}
+          {liveText ? `«${liveText}»` : hasLiveSr ? "Слушаю вас… Просто начните говорить, после паузы 3,5 с ответ уйдёт сам." : "Говорите спокойно — после паузы 3,5 с сервер Deepgram распознает и запишет ваш ответ."}
         </p>
       </div>
     </div>
@@ -90,13 +90,14 @@ export interface VoiceAnswerButtonProps {
   autoStartKey?: number;
 }
 
-export function VoiceAnswerButton({ transcribe, onAnswer, onNote, onState, onLevel, onBeforeStart, silenceMs = 2000,
+export function VoiceAnswerButton({ transcribe, onAnswer, onNote, onState, onLevel, onBeforeStart, silenceMs = 3500,
   maxSeconds = 90, disabled, testId = "iv-record", autoStartKey = 0 }: VoiceAnswerButtonProps) {
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState<VadPhase>("off");
   const [liveText, setLiveText] = useState("");
   const liveTextRef = useRef("");
   const srRef = useRef<any>(null);
+  const hasLiveSr = typeof window !== "undefined" && !!((window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition);
 
   const stopSr = () => {
     const r = srRef.current;
@@ -194,7 +195,7 @@ export function VoiceAnswerButton({ transcribe, onAnswer, onNote, onState, onLev
     : rec.state === "stopping" ? "Отправляю ваш ответ…" : on ? `Говорю · отправить сейчас (${mmss(rec.seconds)})` : "Включить микрофон и ответить";
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      {on && <ListeningMeter level={rec.level} vad={rec.vad} phase={phase === "off" ? "waiting" : phase} liveText={liveText} />}
+      {on && <ListeningMeter level={rec.level} vad={rec.vad} phase={phase === "off" ? "waiting" : phase} liveText={liveText} hasLiveSr={hasLiveSr} />}
       <button type="button" className={on ? "btn-ghost border-2 border-emerald-600 bg-white !px-6 !py-2.5 text-sm font-bold text-emerald-900 hover:bg-emerald-50" : "btn-primary min-w-[14rem] !px-8 !py-3 text-base"}
         disabled={disabled || busy || rec.state === "requesting" || rec.state === "stopping"}
         onClick={toggle} aria-pressed={on} data-testid={testId} data-rec={rec.state}
@@ -203,7 +204,7 @@ export function VoiceAnswerButton({ transcribe, onAnswer, onNote, onState, onLev
         {label}
       </button>
       <p id={`${testId}-hint`} className="max-w-md text-center text-xs text-brand-ink/70">
-        {on ? `После того как вы договорите и сделаете паузу ${Math.round(silenceMs / 1000)} с, ответ отправится автоматически (или нажмите кнопку выше, чтобы отправить сразу).`
+        {on ? `После того как вы договорите и сделаете паузу ${(silenceMs / 1000).toFixed(1).replace(".", ",")} с, ответ отправится автоматически (или нажмите кнопку выше, чтобы отправить сразу).`
           : busy ? "ИИ-интервьюер услышала ваш ответ и формулирует следующий вопрос." : "Микрофон включается автоматически после каждого вопроса интервьюера."}
       </p>
     </div>

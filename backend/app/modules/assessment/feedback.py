@@ -432,14 +432,16 @@ def _route(ts: TestSession | None, outcome: dict, profile, topics: dict[str, dic
             nxt = GRADE_ORDER[GRADE_ORDER.index(grade) + 1]
             steps.append({"kind": "grade", "title": f"Тест на {GRADES[nxt]}",
                           "text": f"Результат уверенно выше порога {GRADES[grade]} — можно подтверждать {GRADES[nxt]}."
-                                  + when, "tags": []})
+                                  + when, "tags": [],
+                          "action": {"title": f"К тесту на {GRADES[nxt]}", "href": f"/candidate/assessment?grade={nxt}"}})
         elif not er.get("confirmed"):
             lower = er.get("retake_lower")
             steps.append({"kind": "grade", "title": "Подготовиться и пересдать" if not lower else f"Тест на {GRADES.get(lower, lower)}",
                           "text": ("Грейд пока не подтверждён, текущая категория не понизится. Начните с пробелов ниже; "
                                    "повторная попытка — из другого набора заданий." if not lower else
                                    f"До {GRADES.get(grade, grade)} пока не хватает — подтвердите {GRADES.get(lower, lower)}, "
-                                   "а к следующей попытке подтяните пробелы ниже."), "tags": []})
+                                   "а к следующей попытке подтяните пробелы ниже."), "tags": [],
+                          "action": {"title": "Перейти к выбору теста", "href": "/candidate/assessment"}})
     n_src = demand.get("sources") or 0
     used_tags: set[str] = set()
     for d in demand.get("items", []):
@@ -458,21 +460,25 @@ def _route(ts: TestSession | None, outcome: dict, profile, topics: dict[str, dic
                     + (f" ({_n_tasks(tp['n'])})" if tp else "") + "."
                     + (f" Слабее всего: {', '.join(weak)}." if weak else "")
                     + " После подготовки пересдайте тест — задания подбираются заново.")
-            steps.append({"kind": "demand", "title": f"Подтянуть «{title}»", "text": text, "tags": [t]})
+            steps.append({"kind": "demand", "title": f"Подтянуть «{title}»", "text": text, "tags": [t],
+                          "action": {"title": "Проверочные задачи", "href": "/candidate/assignments"}})
         elif d["testable"]:
             if d["status"] == "declared":
                 text = (f"{need}. В опросе навык заявлен, но тестом пока не подтверждён — работодатель видит его как "
                         "самоописание. В банке есть задания на этот навык: при повторной попытке он может попасть в тест.")
-                steps.append({"kind": "demand", "title": f"Подтвердить «{title}» тестом", "text": text, "tags": [t]})
+                steps.append({"kind": "demand", "title": f"Подтвердить «{title}» тестом", "text": text, "tags": [t],
+                              "action": {"title": "Задачи по навыкам", "href": "/candidate/assignments"}})
             else:
                 text = (f"{need}, в вашем профиле его нет. Освойте навык, добавьте его в опрос и пройдите тест — "
                         "он проверяется заданиями банка.")
-                steps.append({"kind": "demand", "title": f"Освоить «{title}»", "text": text, "tags": [t]})
+                steps.append({"kind": "demand", "title": f"Освоить «{title}»", "text": text, "tags": [t],
+                              "action": {"title": "Добавить в стек опроса", "href": "/candidate/assessment?survey=1"}})
         else:
             text = (f"{need}. Заданий теста на этот навык нет — подтвердить его можно коротким заданием от работодателя "
                     "(оценённое задание подтверждает навык) или проектом на соревнованиях по продуктовому программированию."
                     + ("" if d["status"] == "declared" else " Сейчас его нет и в вашем профиле."))
-            steps.append({"kind": "demand", "title": f"Показать «{title}» на практике", "text": text, "tags": [t]})
+            steps.append({"kind": "demand", "title": f"Показать «{title}» на практике", "text": text, "tags": [t],
+                          "action": {"title": "Открыть задания и кубки", "href": "/candidate/cups"}})
         used_tags.add(t)
     gaps = sorted([tp for tp in topics.values() if tp["status"] == "gap" and tp["tag"] not in used_tags],
                   key=lambda x: (x["score"] if x["score"] is not None else 1, -x["n"]))
@@ -481,14 +487,16 @@ def _route(ts: TestSession | None, outcome: dict, profile, topics: dict[str, dic
         rel = " — ниже ожидаемого для вашего общего уровня" if tp.get("relative") == "below" else ""
         steps.append({"kind": "topic", "title": f"Подтянуть тему «{tp['title']}»",
                       "text": f"В тесте — {_fmt_pct(tp['score'])} ({_n_tasks(tp['n'])}){rel}."
-                              + (f" Слабее всего: {', '.join(weak)}." if weak else ""), "tags": [tp["tag"]]})
+                              + (f" Слабее всего: {', '.join(weak)}." if weak else ""), "tags": [tp["tag"]],
+                      "action": {"title": "Задачи с автопроверкой", "href": "/candidate/assignments"}})
     for s in steps:  # D3 п. 4: откуда шаг — два списка «подтянуть» не путаются (тест или спрос работодателей)
         if s["kind"] in STEP_SOURCES:
             s.setdefault("source", STEP_SOURCES[s["kind"]])
     if not [s for s in steps if s["kind"] in ("demand", "topic")]:
         steps.append({"kind": "keep", "title": "Сильный профиль для категории",
                       "text": "Явных пробелов в теме теста и в спросе работодателей нет. Следующий рычаг — "
-                              "достижения ФСП, подтверждённые реестром: они дают бонус к месту в рейтинге категории.", "tags": []})
+                              "достижения ФСП, подтверждённые реестром: они дают бонус к месту в рейтинге категории.", "tags": [],
+                      "action": {"title": "Открыть паспорт ФСП", "href": "/candidate/fsp"}})
     return steps
 
 

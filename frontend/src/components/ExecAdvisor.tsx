@@ -24,7 +24,6 @@ const CHIPS = ["Кого позвать первым и почему?", "У ко
   "О чём спросить лидера на финальном созвоне?", "Чем отличаются их достижения ФСП?"];
 const INTEG: Record<string, string> = { high: "достоверность высокая", medium: "достоверность средняя", low: "достоверность низкая" };
 
-const hasActivation = () => typeof navigator === "undefined" || !(navigator as any).userActivation || (navigator as any).userActivation.hasBeenActive;
 const nowrapRefs = (t: string) => t.split(/(C-[A-Z0-9]+)/).map((p, i) => (i % 2 ? <span key={i} className="whitespace-nowrap font-mono font-semibold">{p}</span> : p));
 
 function Answer({ a }: { a: AdvisorOut }) {
@@ -96,7 +95,8 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
 
   const say = useCallback(async (a: AdvisorOut, auto = false) => {
     if (!soundRef.current) return;
-    if (auto && !hasActivation()) { setWaitTap(true); return; }
+    // При открытии страницы сравнения (auto === true) не начинаем кричать автоматически — ждём нажатия кнопки «Озвучить доклад»
+    if (auto) { setWaitTap(true); return; }
     setWaitTap(false);
     stopAllSpeech();
     const t = tokenStore.get();
@@ -140,10 +140,10 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
           return;
         }
       }
-    } catch { /* если браузер заблокировал автозапуск без клика — показываем кнопку «Озвучить доклад» */ }
+    } catch { /* локальный стенд без внешнего ключа — запасной синтез браузера */ }
 
-    if (auto) setWaitTap(true);
-  }, [needId, stopAllSpeech]);
+    if (tts.supported) tts.speak(a.speech);
+  }, [needId, stopAllSpeech, tts]);
 
   const ask = useCallback(async (question: string | null) => {
     stopAllSpeech();
