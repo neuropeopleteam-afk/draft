@@ -252,6 +252,8 @@ test("этап найма «ИИ-интервью»: приглашение ра
   }
   await cand.getByTestId("iv-begin-text").click();
   await expect(cand.getByTestId("iv-question")).toBeVisible({ timeout: 60_000 });
+  // Д4: на живом интервью проводник жюри не висит поверх разговора
+  await expect(cand.getByRole("complementary", { name: "Проводник для экспертов жюри" })).toHaveCount(0);
   await noHScroll(cand, "разговор ИИ-интервью, 390 px");
   mkdirSync(SHOTS, { recursive: true });
   await cand.screenshot({ path: resolve(SHOTS, avatar ? "14-interview-room-avatar-390.png" : "14-interview-room-390.png"), fullPage: true });

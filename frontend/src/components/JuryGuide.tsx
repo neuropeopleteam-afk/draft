@@ -124,8 +124,10 @@ export function JuryGuide() {
   }, [loc.pathname, me?.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // телефон гостя живой демонстрации (/j/…) — без проводника: эксперт там не вошёл и проходит мини-тест;
-  // экран кода второго фактора (/login/2fa) — тоже: на телефоне панель перекрывала бы форму
+  // экран кода второго фактора (/login/2fa) — тоже: на телефоне панель перекрывала бы форму;
+  // Д4: живое интервью (/candidate/interview/*) — без проводника: в центре только аватар и «Ответить», без «Шаг 1 из 9»
   if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/") || loc.pathname === "/login/2fa"
+    || loc.pathname.startsWith("/candidate/interview/")
     || ["/login", "/register", "/criteria", "/jury/live"].includes(loc.pathname)) return null;  // k-final2: не накрывать вход, регистрацию, критерии и экран зала
   if (!hidden && folded) return (
     <button ref={setBox} type="button" data-testid="guide-continue" onClick={() => setPeek(true)} aria-label="Развернуть проводник для жюри"
