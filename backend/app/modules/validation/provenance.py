@@ -67,6 +67,8 @@ KINDS = {"synthetic": "синтетика", "model": "модель, не люд�
 SOURCES: dict[str, dict] = {
     "path": {"file": "path_retest.json", "command": "make path-retest", "kind": "synthetic",
              "title": "Повтор всего пути, точность к истине, D и r_pb", "sections": ["headline", "path-retest", "discrimination"]},
+    "accuracy": {"file": "accuracy_views.json", "command": "make accuracy-views", "kind": "synthetic",
+                 "title": "Точность грейда: вдали от порога, без занижения заявки, строго", "sections": ["headline"]},
     "bench": {"file": "matching_bench.json", "command": "make bench", "kind": "synthetic",
               "title": "Бенчмарк подбора со скрытой истиной, абляции", "sections": ["headline", "bench", "ablations"]},
     "attempts": {"file": "attempts_repeat.json", "command": "python -m app.modules.validation.attempts_repeat",

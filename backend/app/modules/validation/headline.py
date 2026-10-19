@@ -12,6 +12,7 @@ HERE = Path(__file__).resolve().parent
 PATH_RETEST = HERE / "data" / "path_retest.json"
 BENCH = HERE / "data" / "matching_bench.json"
 GRADE_SWEEP = HERE / "data" / "grade_sweep.json"
+ACCURACY = HERE / "data" / "accuracy_views.json"
 
 
 def _load(p: Path) -> dict | None:
@@ -111,6 +112,41 @@ def retest_vs_truth(pr: dict | None) -> dict | None:
         "signature": pr.get("signature")}
 
 
+def accuracy_views(av: dict | None) -> dict | None:
+    """W1: три прозрачных числа точности грейда (make accuracy-views) — первыми в карточке точности: вдали от порога,
+    без занижения заявки (с двухэтапным подтверждением у границы), строго по всему пулу + повтор. Только числа
+    сохранённого JSON; у каждого — кто входит и доля пула, чтобы условное число не читалось как общее."""
+    v = (av or {}).get("views") or {}
+    a, b, c = v.get("far_from_cut"), v.get("no_under_claim"), v.get("strict_pool")
+    if not (a and b and c):
+        return None
+    rt = c.get("retest") or {}
+    items = [
+        {"id": "acc_far", "value": a["exact"], "ci": a.get("exact_ci"), "share": a["share"],
+         "title": "Точность вдали от порога",
+         "who": f"|θ − ближайший порог| ≥ {a['threshold']:g}".replace(".", ","),
+         "text": (f"Кандидаты, у которых истинный уровень не у самой границы грейдов ({_p1(a['share'])} пула), одна "
+                  f"сессия теста. У порога — {_p1(v['near_cut']['exact'])}: соседний грейд там статистически почти "
+                  "неотличим.")},
+        {"id": "acc_no_under", "value": b["exact"], "ci": b.get("exact_ci"), "share": b["share"],
+         "title": "Точность без занижения заявки",
+         "who": "заявленный грейд ≥ истинного",
+         "text": (f"{_p1(b['share'])} пула, с двухэтапным подтверждением у границы (одна сессия — "
+                  f"{_p1(b['one_session']['exact'])}); завышение {_p1(b['over'])}. Тест идёт от заявленного уровня — "
+                  "выше заявки грейд не подтверждается.")},
+        {"id": "acc_strict", "value": c["exact"], "ci": c.get("exact_ci"), "share": 1.0,
+         "title": "Строго, весь пул",
+         "who": f"все, включая {_p1(c['under_claim_share'])} заявивших ниже истинного",
+         "text": (f"Одна сессия, как в продукте. Повтор всего пути: совпадение {_p1(rt['exact'])}, κw "
+                  f"{_k3(rt['kappa_w'])}, ±1 ступень {_p1(rt['within_1'])}." if rt else
+                  "Одна сессия, как в продукте.")},
+    ]
+    return {"items": items, "signature": av.get("signature"), "caveat": av.get("caveat"),
+            "command": "make accuracy-views",
+            "note": ("Подмножества заданы до прогона и посчитаны один раз на одном мире симуляции (модель, не люди); "
+                     "условные числа а) и б) честны только вместе с долей пула и строгим числом в).")}
+
+
 def headline() -> dict:
     from app.modules.validation.provenance import stamp  # Я8: строка происхождения у каждого числа
 
@@ -170,7 +206,11 @@ def headline() -> dict:
     for it in items:  # Я8: «синтетика · дата · SHA алгоритма · банк · команда» — из JSON расчёта
         it["provenance"] = stamp("path" if it["anchor"] == "path-retest" else "bench",
                                  pr if it["anchor"] == "path-retest" else b)
-    return {"items": items, "missing": not items, "retest_vs_truth": retest_vs_truth(pr), "protocols": proto,
+    acc = accuracy_views(_load(ACCURACY))
+    if acc:
+        acc["provenance"] = stamp("accuracy", _load(ACCURACY))
+    return {"items": items, "missing": not items, "accuracy": acc, "retest_vs_truth": retest_vs_truth(pr),
+            "protocols": proto,
             "how_to_read": ("Каждое число — из расчёта с подписью мира (seed, hash конфигурации, коммит), рядом — 95 % "
                             "доверительный интервал и строка происхождения: синтетика, модель или люди, дата, SHA "
                             "алгоритма, банк, команда пересчёта. Ниже по странице: синтетика с интервалами, затем "

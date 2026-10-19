@@ -66,6 +66,9 @@ def coverage(b: Bundle, tag: str, levels: dict[str, int] | None = None) -> str |
     f = b.skills_t1.get(tag)
     if skill_confirmed(f):
         return "t1"
+    from app.modules.matching import implied  # W1: подтверждённый фреймворк подтверждает базовый язык
+    if f is None and implied.implied_by(b.skills_t1, tag) is not None:  # прямой результат ниже порога не перебивается
+        return "t1"
     if levels and f is None and tag in b.stack_t0 and levels.get(tag, 0) >= HIGH_SELF_LEVEL:
         return "t0_high"
     return None

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Alert, DIRECTION_TITLES, GRADE_TITLE_ALL, Loading, NB, num, pct, useApi } from "../ui";
-import { SignatureLine } from "./Headline";
+import { AccuracyViews, SignatureLine } from "./Headline";
 import { ProvenanceLine, RetestVsTruth } from "./Provenance";
 import { ScrollX } from "../A11y";
 
@@ -61,7 +61,8 @@ function Body({ r }: { r: any }) {
   const split = (title: string, s: any) => [title, pct(s?.share), pct(s?.exact), pct(s?.within_1), withCi(s?.kappa_w, s?.kappa_w_ci)];
   return (
     <>
-      <p className="max-w-4xl text-sm leading-relaxed text-brand-ink/70">
+      <PathAccuracy />
+      <p className="mt-4 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
         {num(pg.n, 0)} синтетических кандидатов ({r.directions?.length} направлений × {num(r.n_per_direction, 0)}) проходят весь путь платформы дважды — теми же функциями, что живой кандидат. Вторая попытка — другой субпул и новые варианты заданий; какие семейства исключались в этом расчёте — в последнем пункте процедуры.
       </p>
       <ol className="mt-3 max-w-4xl list-decimal space-y-1 pl-5 text-sm text-brand-ink/75">{(r.procedure ?? []).map((s: string) => <li key={s}>{s}</li>)}</ol>
@@ -237,4 +238,10 @@ export function TwoStage() {
       </div>
     </section>
   );
+}
+
+/** W1: три числа точности грейда первыми в карточке точности (те же, что на первом экране; make accuracy-views). */
+function PathAccuracy() {
+  const { data } = useApi<any>("/validation/headline", []);
+  return <AccuracyViews v={data?.accuracy} />;
 }

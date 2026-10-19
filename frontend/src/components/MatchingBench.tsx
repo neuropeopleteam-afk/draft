@@ -59,6 +59,8 @@ function Body({ r }: { r: any }) {
         <Kpi label="«Раздутые» без оснований в топ-10" value={pct(g.inflated?.platform?.irrelevant_inflated_top10)} hint={`BM25 ${pct(g.inflated?.bm25?.irrelevant_inflated_top10)} · в популяции ${pct(g.inflated?.population_share)}`} />
       </div>
 
+      <TwoProtocols r={r} />
+
       <h3 className="mt-8 text-base font-bold text-brand-night">Метрики: среднее по потребностям и 95 % ДИ (бутстреп по потребностям)</h3>
       <Table head={["Метод", "Тип", ...METRICS.map(([, t]) => t)]}
         hi={0}
@@ -273,5 +275,25 @@ function Table({ head, rows, hi }: { head: string[]; rows: ReactNode[][]; hi?: n
         </tbody>
       </table>
     </ScrollX>
+  );
+}
+
+/** W1: строгий протокол (основной) и стандартный сбалансированный (≥ 10 релевантных в категории потребности) рядом. */
+function TwoProtocols({ r }: { r: any }) {
+  const b = r.balanced;
+  if (!b) return null;
+  const sw = r.world?.relevant_in_category ?? {};
+  const bw = b.world?.relevant_in_category ?? {};
+  const rows: [string, any, string][] = [
+    ["Строгий (основной)", r.metrics?.platform, `в категории ${n2(sw.mean, 1)} релевантных (от ${sw.min ?? "—"}); меньше 5 — у ${sw.below_5 ?? "—"} потребностей`],
+    ["Сбалансированный", b.metrics?.platform, `в категории ${n2(bw.mean, 1)} релевантных (от ${bw.min ?? "—"}); меньше 10 — у ${bw.below_min ?? "—"}`],
+  ];
+  return (
+    <div className="mt-6 rounded-2xl bg-white p-4 ring-1 ring-brand-night/10" data-testid="bench-two-protocols">
+      <p className="text-sm font-semibold text-brand-night">Два протокола: строгий и сбалансированный (тот же подбор, разные миры)</p>
+      <Table head={["Протокол", "p@5", "p@10", "nDCG@10", "MRR", "Плотность"]}
+        rows={rows.map(([t, m, d]) => [t, <Cell x={m?.["p@5"]} d={3} />, <Cell x={m?.["p@10"]} d={3} />, <Cell x={m?.["ndcg@10"]} d={3} />, <Cell x={m?.mrr} d={3} />, d])} />
+      <p className="mt-2 text-xs leading-relaxed text-brand-ink/70">{b.text} BM25 в сбалансированном мире: p@5 {n2(b.metrics?.bm25?.["p@5"]?.mean)}, nDCG@10 {n2(b.metrics?.bm25?.["ndcg@10"]?.mean)}.</p>
+    </div>
   );
 }
