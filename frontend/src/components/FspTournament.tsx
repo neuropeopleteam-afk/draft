@@ -35,7 +35,7 @@ export function TournamentLaunch({ needId, title, picker, className = "" }: { ne
       <span className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-brand/25 blur-3xl" aria-hidden="true" />
       <span className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-brand" aria-hidden="true" />
       <div className="relative flex flex-wrap items-center justify-between gap-4">
-        <div className="min-w-0 max-w-2xl">
+        <div className="min-w-0 max-w-xl">
           <div className="flex flex-wrap items-center gap-2">
             <FspMark light />
             <span className="text-xs font-semibold uppercase tracking-[0.12em] text-white/70">Кубок компании × ФСП · Продуктовое программирование</span>
@@ -48,7 +48,7 @@ export function TournamentLaunch({ needId, title, picker, className = "" }: { ne
           </p>
           {picker && <div className="mt-3">{picker}</div>}
         </div>
-        <button type="button" className="btn-primary shrink-0" disabled={busy} onClick={launch} data-testid="fsp-tournament-launch">
+        <button type="button" className="btn-primary w-full whitespace-normal text-center sm:w-auto sm:shrink-0" disabled={busy} onClick={launch} data-testid="fsp-tournament-launch">
           {busy ? "Запускаем…" : "Запустить отборочный турнир ФСП под эту вакансию"}
         </button>
       </div>
@@ -109,7 +109,7 @@ export function TournamentPassport({ cup, onInvite }: { cup: any; onInvite: (ent
       <div className="rounded-xl border-l-4 border-brand bg-brand-blush/40 px-4 py-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-plum">Приз</p>
         <p className="mt-1 text-sm font-semibold leading-relaxed text-brand-night">{t.prize}</p>
-        <p className="mt-1 text-xs text-brand-ink/70">Вилка {salaryText(t.salary.from, t.salary.to, t.salary.basis)} — {SOURCE[t.salary.source] ?? t.salary.source}. Места пишутся в паспорт ФСП призёра (уровень «платформа», T1) после итогов.</p>
+        <p className="mt-1 text-xs text-brand-ink/70">{t.salary.source === "need" ? "Вилка — из потребности, та же уйдёт в приглашение." : `Вилка ${salaryText(t.salary.from, t.salary.to, t.salary.basis)} — ${SOURCE.market}.`} Места пишутся в паспорт ФСП призёра (уровень «платформа», T1) после итогов.</p>
       </div>
       <div>
         <div className="flex flex-wrap items-baseline justify-between gap-2">

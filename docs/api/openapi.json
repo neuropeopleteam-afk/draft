@@ -90,6 +90,7 @@
         "title": "AdvisorIn",
         "type": "object"
       },
+<<<<<<< HEAD
       "AdvisorSpeechIn": {
         "properties": {
           "format": {
@@ -114,6 +115,8 @@
         "title": "AdvisorSpeechIn",
         "type": "object"
       },
+=======
+>>>>>>> feat/w4-knockout
       "ApplicationOut": {
         "additionalProperties": true,
         "description": "Отклик кандидата на вакансию. Работодателю дополнительно приходят карточка кандидата и контакты (после ответа).",
@@ -48602,6 +48605,7 @@
         ]
       }
     },
+<<<<<<< HEAD
     "/api/employer/needs/{need_id}/advisor/avatar-token": {
       "post": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
@@ -48825,6 +48829,8 @@
         ]
       }
     },
+=======
+>>>>>>> feat/w4-knockout
     "/api/employer/needs/{need_id}/compare": {
       "get": {
         "description": "Строки — требования потребности (с цитатой из текста) и подтверждающие факты: категория и грейд, θ ± SE с 95 % интервалом и вероятностью уровня, достоверность результата, навыки (T1/T0/нет данных), опыт и формат (T0), паспорт ФСП (T2), зонды (T1), рынок категории, итоговое соответствие. Обезличено, как в подборке. Без refs — первые три из версии.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",

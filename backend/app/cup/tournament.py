@@ -186,7 +186,7 @@ def create_from_need(db: Session, user: User, company: Company, need: EmployerNe
     stack_line = ", ".join(stack_titles) if stack_titles else category_title(cat.id)
     description = (f"Отборочный турнир ФСП под вакансию «{need.title}». Дисциплина — «{DISCIPLINE}». "
                    f"Три задания банка платформы с автопроверкой под стек: {stack_line}. У каждого участника свой "
-                   f"вариант, {TIME_LIMIT_MIN} минут на решение, таблица — под псевдонимами. Приз: {prize}.")
+                   f"вариант, {TIME_LIMIT_MIN} минут на решение, таблица — под псевдонимами.")  # приз — отдельно (паспорт)
     offer = (f"Прямой оффер по итогам отборочного турнира ФСП «{title}»: позиция «{need.title}» в компании "
              f"{company.name}. Вилка {_rub(lo)} – {_rub(hi)} {basis_title(basis)} — "
              f"{'из потребности работодателя' if source == 'need' else 'по рынку категории (в потребности не указана)'}. "
