@@ -51,6 +51,9 @@ def _llm_turn(messages: list[dict], timeout_s: float, max_words: int = 60) -> tu
 
     res = llm.chat(messages, temperature=0.6, max_tokens=400, want_json=True, model=s.interview_model_turn,
                    timeout_s=timeout_s, validate=ok)
+    if not res.ok:
+        res = llm.chat(messages, temperature=0.6, max_tokens=400, want_json=True, model=None,
+                       timeout_s=timeout_s, validate=ok)
     if not res.ok or not isinstance(res.data, dict):
         return None, None, res.info() if res else None, 0.0
     kind = res.data.get("kind") if res.data.get("kind") in ("opening", "question", "repeat", "closing") else None

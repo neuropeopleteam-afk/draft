@@ -6,7 +6,6 @@ import { MESSAGES_CHANGED } from "./Chat";
 import { useHiringTodo } from "./Hiring";
 import { Logo } from "./Logo";
 import { GuideSlot, whoAmI } from "./JuryGuide";
-import { startAvatarTour } from "./InteractiveAvatarTour";
 import { isJury, juryLogin, type Persona } from "../lib/jury";
 import { RouteBoundary, RouteFallback, StartupError, StartupLoading } from "./Boot";  // Я16
 import { useMeta } from "../lib/meta";
@@ -119,18 +118,6 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
               {SHORT[role] ?? title}
             </span>
-            <button
-              type="button"
-              onClick={() =>
-                startAvatarTour(
-                  role === "employer" ? "employer" : role === "fsp_analyst" ? "fsp" : "candidate",
-                  0
-                )
-              }
-              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blush/60 px-2.5 py-1 text-xs font-bold text-brand-plum transition hover:bg-brand-blush"
-            >
-              ▶ Экскурсия с ИИ-аватаром (показать стрелками)
-            </button>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
