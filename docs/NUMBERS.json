@@ -40,59 +40,31 @@
   "algorithm": "match-v1.3",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "b544962",
-  "bank_hash": "4d44ffb455f03520",
-  "generated_at": "2026-10-19T18:01:01+00:00",
+  "bench_commit": "25770a6",
+  "bank_hash": "f563cfcaebf63aef",
+  "generated_at": "2026-10-11T15:22:45+00:00",
   "p5": {
-   "mean": 0.751,
-   "lo": 0.717,
-   "hi": 0.784
+   "mean": 0.762,
+   "lo": 0.73,
+   "hi": 0.793
   },
   "ndcg10": {
-   "mean": 0.566,
-   "lo": 0.54,
-   "hi": 0.592
+   "mean": 0.565,
+   "lo": 0.542,
+   "hi": 0.588
   },
   "mrr": {
-   "mean": 0.896,
-   "lo": 0.862,
-   "hi": 0.926
+   "mean": 0.921,
+   "lo": 0.89,
+   "hi": 0.947
   },
   "p10": {
-   "mean": 0.725,
-   "lo": 0.696,
-   "hi": 0.755
+   "mean": 0.738,
+   "lo": 0.711,
+   "hi": 0.765
   },
   "protocol": "строгий (основной)",
-  "balanced": {
-   "p5": {
-    "mean": 0.752,
-    "lo": 0.718,
-    "hi": 0.785
-   },
-   "p10": {
-    "mean": 0.731,
-    "lo": 0.703,
-    "hi": 0.76
-   },
-   "ndcg10": {
-    "mean": 0.567,
-    "lo": 0.541,
-    "hi": 0.592
-   },
-   "mrr": {
-    "mean": 0.899,
-    "lo": 0.866,
-    "hi": 0.929
-   },
-   "config_hash": "2a4b2ae4a4c0",
-   "relevant_in_category": {
-    "mean": 54.1,
-    "min": 10,
-    "max": 125,
-    "below_min": 0
-   }
-  }
+  "balanced": null
  },
  "lead_principal": {
   "scenario": "g_real_v3_w12_m25|0.6|top",
@@ -361,8 +333,8 @@
  "validation_report": {
   "report_generated_at": "2026-10-19",
   "report_bank_families": 403,
-  "exposure_generated_at": "2026-10-19",
-  "exposure_bank_families": 403,
+  "exposure_generated_at": "2026-10-06",
+  "exposure_bank_families": 128,
   "report_matches_bank": true
  },
  "grade_accuracy": {
@@ -404,8 +376,8 @@
    "command": "make accuracy-views"
   },
   "confirm_level": 0.6,
-  "path_retest_commit": "b544962",
-  "path_retest_at": "2026-10-19",
+  "path_retest_commit": "25770a6",
+  "path_retest_at": "2026-10-11",
   "sweep_commit": "8f4d6d2",
   "sweep_points": 98,
   "before": {
@@ -427,15 +399,15 @@
    "minutes_mean": 56.563
   },
   "sweep_bank": "76c4164b6ce83743",
-  "path_retest_bank": "4d44ffb455f03520",
+  "path_retest_bank": "f563cfcaebf63aef",
   "path_retest_bank_families": 268,
   "path_retest": {
-   "exact": 0.658,
-   "over": 0.071,
-   "under": 0.264,
-   "none": 0.031,
-   "retest_exact": 0.787,
-   "retest_kappa": 0.869
+   "exact": 0.645,
+   "over": 0.079,
+   "under": 0.267,
+   "none": 0.026,
+   "retest_exact": 0.805,
+   "retest_kappa": 0.877
   }
  },
  "deploy": {
