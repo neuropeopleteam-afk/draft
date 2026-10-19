@@ -57,7 +57,253 @@
    "mean": 0.921,
    "lo": 0.89,
    "hi": 0.947
-  }
+  },
+  "p10": {
+   "mean": 0.738,
+   "lo": 0.711,
+   "hi": 0.765
+  },
+  "protocol": "строгий (основной)",
+  "balanced": null
+ },
+ "lead_principal": null,
+ "hh_match": {
+  "generated_at": "2026-10-11T11:01:12+00:00",
+  "code_commit": "9a3b9fce",
+  "algorithm": "match-v1.3",
+  "n": 414,
+  "catalog_directions": [
+   "backend",
+   "data_ml",
+   "frontend",
+   "qa",
+   "security"
+  ],
+  "overall": {
+   "n": 414,
+   "direction_ok": {
+    "k": 216,
+    "n": 236,
+    "share": 0.915
+   },
+   "grade_ok": {
+    "k": 335,
+    "n": 348,
+    "share": 0.963
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.276,
+    "n": 369
+   },
+   "grade_above_applied": {
+    "k": 150,
+    "n": 414,
+    "share": 0.362
+   },
+   "top5_above_share": {
+    "k": 378,
+    "n": 2053,
+    "share": 0.184
+   },
+   "grade_above_off": {
+    "selection_nonempty": {
+     "k": 391,
+     "n": 414,
+     "share": 0.944
+    },
+    "confirmed_any": {
+     "k": 391,
+     "n": 414,
+     "share": 0.944
+    },
+    "confirmed_exact": {
+     "k": 354,
+     "n": 414,
+     "share": 0.855
+    },
+    "confirmed_right_direction": {
+     "k": 206,
+     "n": 414,
+     "share": 0.498
+    },
+    "req_coverage_best_top5": {
+     "mean": 0.323,
+     "n": 369
+    },
+    "req_coverage_mean_top5": {
+     "mean": 0.234,
+     "n": 369
+    },
+    "req_full_top5": {
+     "k": 36,
+     "n": 369,
+     "share": 0.098
+    },
+    "req_full_top5_confirmed": {
+     "k": 36,
+     "n": 369,
+     "share": 0.098
+    }
+   },
+   "with_required": {
+    "k": 369,
+    "n": 414,
+    "share": 0.891
+   },
+   "key_skills_recall": {
+    "k": 737,
+    "n": 895,
+    "share": 0.823
+   },
+   "selection_nonempty": {
+    "k": 414,
+    "n": 414,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 414,
+    "n": 414,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 354,
+    "n": 414,
+    "share": 0.855
+   },
+   "confirmed_right_direction": {
+    "k": 219,
+    "n": 414,
+    "share": 0.529
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.39,
+    "n": 369
+   },
+   "req_full_top5": {
+    "k": 46,
+    "n": 369,
+    "share": 0.125
+   },
+   "req_full_top5_confirmed": {
+    "k": 46,
+    "n": 369,
+    "share": 0.125
+   },
+   "required_mean": 5.5
+  },
+  "catalog_only": {
+   "n": 236,
+   "direction_ok": {
+    "k": 216,
+    "n": 236,
+    "share": 0.915
+   },
+   "grade_ok": {
+    "k": 206,
+    "n": 210,
+    "share": 0.981
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.319,
+    "n": 219
+   },
+   "grade_above_applied": {
+    "k": 99,
+    "n": 236,
+    "share": 0.419
+   },
+   "top5_above_share": {
+    "k": 259,
+    "n": 1172,
+    "share": 0.221
+   },
+   "grade_above_off": {
+    "selection_nonempty": {
+     "k": 221,
+     "n": 236,
+     "share": 0.936
+    },
+    "confirmed_any": {
+     "k": 221,
+     "n": 236,
+     "share": 0.936
+    },
+    "confirmed_exact": {
+     "k": 208,
+     "n": 236,
+     "share": 0.881
+    },
+    "confirmed_right_direction": {
+     "k": 206,
+     "n": 236,
+     "share": 0.873
+    },
+    "req_coverage_best_top5": {
+     "mean": 0.365,
+     "n": 219
+    },
+    "req_coverage_mean_top5": {
+     "mean": 0.267,
+     "n": 219
+    },
+    "req_full_top5": {
+     "k": 23,
+     "n": 219,
+     "share": 0.105
+    },
+    "req_full_top5_confirmed": {
+     "k": 23,
+     "n": 219,
+     "share": 0.105
+    }
+   },
+   "with_required": {
+    "k": 219,
+    "n": 236,
+    "share": 0.928
+   },
+   "key_skills_recall": {
+    "k": 507,
+    "n": 615,
+    "share": 0.824
+   },
+   "selection_nonempty": {
+    "k": 236,
+    "n": 236,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 236,
+    "n": 236,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 208,
+    "n": 236,
+    "share": 0.881
+   },
+   "confirmed_right_direction": {
+    "k": 219,
+    "n": 236,
+    "share": 0.928
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.445,
+    "n": 219
+   },
+   "req_full_top5": {
+    "k": 30,
+    "n": 219,
+    "share": 0.137
+   },
+   "req_full_top5_confirmed": {
+    "k": 30,
+    "n": 219,
+    "share": 0.137
+   },
+   "required_mean": 5.8
+  },
+  "note": "модельный пул кандидатов демо-стенда (модель, не люди); покрытие зависит от состава пула"
  },
  "e2e_in_code": {
   "spec_files": 24,

@@ -21,6 +21,7 @@
 | Расчёт | Блоки /validation | Строка происхождения |
 |---|---|---|
 | Повтор всего пути, точность к истине, D и r_pb (`path_retest.json`) | #headline, #path-retest, #discrimination | синтетика · исторический снимок · 11.10.2026 · алгоритм `25770a6` · банк `f563cfca` (268 семейств) · `make path-retest` |
+| Точность грейда: вдали от порога, без занижения заявки, строго (`accuracy_views.json`) | #headline | синтетика · не посчитано · коммит не записан · `make accuracy-views` |
 | Бенчмарк подбора со скрытой истиной, абляции (`matching_bench.json`) | #headline, #bench, #ablations | синтетика · исторический снимок · 11.10.2026 · алгоритм `25770a6` · банк `f563cfca` · `make bench` |
 | Повторы заданий между попытками (`attempts_repeat.json`) | #retest-repeats | синтетика · исторический снимок · 09.10.2026 · алгоритм `9dcade5` · банк `76c4164b` · `python -m app.modules.validation.attempts_repeat` |
 | Симуляция теста: точность, повтор, частота показа, утечка (`report.json`) | #retest, #test, #other-conditions, #exposure, #leak, #calibration | синтетика · текущий снимок · 19.10.2026 · алгоритм `41d0e68` · банк `4d44ffb4` (403 семейств) · `make validate` |
