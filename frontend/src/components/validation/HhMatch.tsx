@@ -91,6 +91,21 @@ function Body({ r }: { r: any }) {
         у лучшего из первых пяти.{r.grade_above ? " Добор уровнем выше (match-v1.3): если в точной категории меньше 30 кандидатов, подборка добавляет категорию на ступень выше; первые 2 места — лучшие точного уровня, дальше кандидат уровнем выше стоит выше точного, только если покрывает больше обязательного. На синтетике со скрытой истиной P@5, nDCG и MRR не ниже прежних (docs/validation/grade_above.json)." : ""} Направления, которых пока нет в каталоге, разбор относит к ближайшему — это ошибка, которую закрывает расширение каталога.
         Ошибки разбора по полям: {Object.entries<number>(r.errors_by_field ?? {}).map(([f, n]) => `${f} — ${n}`).join(", ") || "—"}. Подробно — docs/validation/HH_MATCH.md.
       </p>
+      {r.w1?.rows?.length > 0 && (
+        <div className="mt-6 rounded-2xl bg-white p-4 ring-1 ring-brand-night/10" data-testid="hh-match-w1">
+          <h3 className="font-bold text-brand-night">Что изменилось: по шагам</h3>
+          <p className="mt-1 text-xs leading-relaxed text-brand-ink/70">{r.w1.summary}</p>
+          <ScrollX label="Шаги изменений подбора на вакансиях hh.ru" className="mt-2 overflow-x-auto">
+            <table className="w-full min-w-[40rem] text-left text-sm">
+              <thead className="text-xs text-brand-ink/70"><tr><th scope="col" className={th}>Шаг</th><th scope="col" className={th}>Подтверждённый в направлении вакансии</th><th scope="col" className={th}>Покрытие у лучшего из 5</th></tr></thead>
+              <tbody>
+                {r.w1.rows.map((x: any) => <tr key={x.title} className="border-t border-brand-night/5"><td className="px-3 py-2 font-medium text-brand-night">{x.title}</td><td className={td}>{pct(x.confirmed_right_direction)}</td><td className={td}>{mean(x.req_coverage_best_top5)}</td></tr>)}
+              </tbody>
+            </table>
+          </ScrollX>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-brand-ink/70">{(r.w1.caveats ?? []).map((c: string) => <li key={c}>{c}</li>)}</ul>
+        </div>
+      )}
       {dem.length > 0 && (
         <>
           <h3 className="mt-6 font-bold text-brand-night">Спрос по направлениям на hh.ru</h3>
