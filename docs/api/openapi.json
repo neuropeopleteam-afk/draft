@@ -103,6 +103,7 @@
             "type": "string"
           },
           "text": {
+            "default": "Краткий доклад по кандидатам.",
             "description": "Текст реплики советника для озвучивания",
             "maxLength": 1200,
             "minLength": 1,
@@ -110,9 +111,6 @@
             "type": "string"
           }
         },
-        "required": [
-          "text"
-        ],
         "title": "AdvisorSpeechIn",
         "type": "object"
       },
@@ -48729,11 +48727,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AdvisorSpeechIn"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AdvisorSpeechIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
