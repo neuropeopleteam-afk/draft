@@ -369,8 +369,17 @@ export const touchPrimary = () => typeof window !== "undefined" && !!window.matc
   && window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(hover: none)").matches;
 const fsSupported = () => typeof document !== "undefined" && !!document.fullscreenEnabled && !!document.documentElement.requestFullscreen
   && !touchPrimary();
+/** D3 п. 3: полноэкранный режим засчитывается и по клавише F11 браузера — тогда document.fullscreenElement пуст
+ *  (Fullscreen API не задействован), но окно занимает весь экран. Допуск 16 px — рамки и полосы прокрутки. */
+export function isFullscreen(): boolean {
+  if (typeof document === "undefined") return false;
+  if (document.fullscreenElement) return true;
+  if (typeof window === "undefined" || !window.screen) return false;
+  const { width, height } = window.screen;
+  return width > 0 && height > 0 && window.innerWidth >= width - 16 && window.innerHeight >= height - 16;
+}
 function enterFullscreen() {
-  if (fsSupported() && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => undefined);
+  if (fsSupported() && !isFullscreen()) document.documentElement.requestFullscreen().catch(() => undefined);
 }
 
 /** Стаж-ориентир уровня; при видимом Lead у Senior — верхняя граница (как GRADE_EXPERIENCE_TEXT на бэкенде с флагом). */
@@ -568,7 +577,11 @@ function fmtTime(sec: number) {
   return `${sec < 0 ? "−" : ""}${m}:${String(s).padStart(2, "0")}`;
 }
 
-const EMPTY_SIG = { focus_lost: 0, hidden_ms: 0, paste: 0, paste_chars: 0, copy: 0, awaySince: 0, fs_exit: 0, fs_ms: 0, fs_out_ms: 0, fsSince: 0, fsOn: false };
+const EMPTY_SIG = { focus_lost: 0, hidden_ms: 0, paste: 0, paste_chars: 0, copy: 0, awaySince: 0, fs_exit: 0, fs_ms: 0, fs_out_ms: 0, fsSince: 0, fsOn: false, printscreen: 0 };
+/** D3 п. 3: клавиша PrintScreen (снимок экрана) — keydown или keyup (Windows часто присылает только keyup); одно
+ *  нажатие считается один раз: повтор в пределах секунды — то же нажатие. */
+export const isPrintScreen = (e: { key?: string; code?: string }) => e.key === "PrintScreen" || e.code === "PrintScreen";
+const PRINTSCREEN_DEDUP_MS = 1000;
 const EMPTY_TYPING = { len: 0, typed: 0, inserted: 0, dropped: 0, deleted: 0, keys: 0, active_ms: 0, last: 0, n: 0, mean: 0, m2: 0 };
 
 export function TestRun() {
@@ -589,25 +602,41 @@ export function TestRun() {
   // Динамика набора развёрнутого ответа: только счётчики (символы с клавиатуры, вставка, ритм нажатий)
   const typing = useRef({ ...EMPTY_TYPING });
   const [away, setAway] = useState({ focus: 0, paste: 0, copy: 0 });
-  const [fsOn, setFsOn] = useState(() => !!document.fullscreenElement);
+  const [fsOn, setFsOn] = useState(() => isFullscreen());
   const fsOk = fsSupported();
   const itemHead = useRef<HTMLHeadingElement>(null);  // А11: новое задание — фокус на его заголовок (экранный диктор)
 
   function show(x: any) {
     setS(x); setValue(null); setShownAt(Date.now() - (x?.item?.elapsed_s ?? 0) * 1000);
-    sig.current = { ...EMPTY_SIG, fsSince: Date.now(), fsOn: !!document.fullscreenElement };
+    sig.current = { ...EMPTY_SIG, fsSince: Date.now(), fsOn: isFullscreen() };
     typing.current = { ...EMPTY_TYPING };
   }
   useEffect(() => {
     // полноэкранный режим: выходы и время вне его — по заданию; выход не прерывает тест
     const onFs = () => {
-      const c = sig.current, now = Date.now(), on = !!document.fullscreenElement;
+      const c = sig.current, now = Date.now(), on = isFullscreen();
+      if (on === c.fsOn) return;  // resize без смены режима (F11 даёт только resize, без fullscreenchange)
       if (c.fsSince) { if (c.fsOn) c.fs_ms += now - c.fsSince; else c.fs_out_ms += now - c.fsSince; }
       if (c.fsOn && !on) c.fs_exit += 1;
       c.fsOn = on; c.fsSince = now; setFsOn(on);
     };
     document.addEventListener("fullscreenchange", onFs);
-    return () => document.removeEventListener("fullscreenchange", onFs);
+    window.addEventListener("resize", onFs);
+    return () => { document.removeEventListener("fullscreenchange", onFs); window.removeEventListener("resize", onFs); };
+  }, []);
+  useEffect(() => {
+    // D3 п. 3: PrintScreen — сигнал задания (printscreen) и событие в журнал камеры, если она включена
+    let last = 0;
+    const onKey = (e: KeyboardEvent) => {
+      if (!isPrintScreen(e)) return;
+      const now = Date.now();
+      if (now - last < PRINTSCREEN_DEDUP_MS) return;
+      last = now;
+      sig.current.printscreen += 1;
+      camera.mark("printscreen");
+    };
+    window.addEventListener("keydown", onKey); window.addEventListener("keyup", onKey);
+    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("keyup", onKey); };
   }, []);
   useEffect(() => {
     const leave = () => { if (!sig.current.awaySince) { sig.current.focus_lost += 1; sig.current.awaySince = Date.now(); setAway((a) => ({ ...a, focus: a.focus + 1 })); } };
@@ -660,7 +689,8 @@ export function TestRun() {
     const cv = t.n >= 10 && t.mean > 0 ? Math.round((Math.sqrt(t.m2 / (t.n - 1)) / t.mean) * 100) : 0;
     const base = { focus_lost: c.focus_lost, hidden_ms: c.hidden_ms + extra, paste: c.paste, paste_chars: c.paste_chars, copy: c.copy,
       // Я11 (С3-5): без полноэкранного режима (телефон) время «вне его» не копится — это не выход из режима
-      fs_exit: c.fs_exit, fs_ms: c.fs_ms + (c.fsOn ? seg : 0), fs_out_ms: fsOk ? c.fs_out_ms + (c.fsOn ? 0 : seg) : 0, fs_na: fsOk ? 0 : 1 };
+      fs_exit: c.fs_exit, fs_ms: c.fs_ms + (c.fsOn ? seg : 0), fs_out_ms: fsOk ? c.fs_out_ms + (c.fsOn ? 0 : seg) : 0, fs_na: fsOk ? 0 : 1,
+      printscreen: c.printscreen };
     if (s?.item?.answer_kind !== "text" || s?.item?.format === "predict_output") return base;
     return { ...base, typed: t.typed, inserted: t.inserted, dropped: t.dropped, deleted: t.deleted, keys: t.keys, ik_cv: cv, active_ms: t.active_ms };
   }

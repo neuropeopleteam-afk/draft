@@ -27,7 +27,7 @@ candidate = require_role(UserRole.candidate)
 analyst = require_role(UserRole.fsp_analyst, UserRole.admin)
 
 Mode = Literal["camera", "declined", "unsupported", "denied"]
-Kind = Literal["no_face", "multi_face", "blocked", "camera_off"]
+Kind = Literal["no_face", "multi_face", "blocked", "camera_off", "printscreen"]  # printscreen — снимок экрана (D3)
 
 
 class StartIn(BaseModel):
