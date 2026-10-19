@@ -336,6 +336,27 @@ export function Needs() {
   return (
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Потребности и подборки" subtitle="Опишите, кто нужен, своими словами — подборка строится по подтверждённым фактам о кандидатах." />
+      <section className="rounded-2xl border border-brand-night/10 bg-white p-4 shadow-sm" data-tour="emp-roadmap" aria-label="Пошаговый маршрут работодателя">
+        <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand">Дорожная карта работодателя · 4 шага</p>
+        <ol className="mt-2.5 grid gap-2.5 text-xs sm:grid-cols-2 lg:grid-cols-4">
+          <li className="rounded-xl bg-[#FBF8FC] p-3">
+            <span className="font-bold text-brand-night">1. Текст вакансии</span>
+            <p className="mt-0.5 text-brand-ink/70">Вставьте описание своими словами или нажмите «Подставить пример».</p>
+          </li>
+          <li className="rounded-xl bg-[#FBF8FC] p-3">
+            <span className="font-bold text-brand-night">2. Авторазбор и ТК РФ</span>
+            <p className="mt-0.5 text-brand-ink/70">Система выделит стек, сверит вилку с hh.ru и уберёт нарушения ст. 64 ТК РФ.</p>
+          </li>
+          <li className="rounded-xl bg-[#FBF8FC] p-3">
+            <span className="font-bold text-brand-night">3. Подборка 2PL IRT + ФСП</span>
+            <p className="mt-0.5 text-brand-ink/70">Кандидаты ранжируются по формуле 45 / 35 / 10 / 5 / 5 и сравниваются с ИИ-советником.</p>
+          </li>
+          <li className="rounded-xl bg-[#FBF8FC] p-3">
+            <span className="font-bold text-brand-night">4. Приглашение с вилкой</span>
+            <p className="mt-0.5 text-brand-ink/70">Отправьте оффер с зарплатной вилкой — контакты откроются после согласия кандидата.</p>
+          </li>
+        </ol>
+      </section>
       <section className="card space-y-4">
         <Field label="Кого вы ищете" htmlFor="need" hint="Контакты из текста вырезаются до обработки. Если языковая модель недоступна, требования выделяются по словарю технологий. Требования к полу, возрасту, внешности, семье (ст. 64 ТК РФ) не учитываются.">
           <textarea id="need" className="input min-h-[120px]" value={text} onChange={(e) => { setText(e.target.value); setReq(null); fp.reset(); }} placeholder={EXAMPLE} />

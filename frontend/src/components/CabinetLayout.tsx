@@ -6,7 +6,8 @@ import { MESSAGES_CHANGED } from "./Chat";
 import { useHiringTodo } from "./Hiring";
 import { Logo } from "./Logo";
 import { GuideSlot, whoAmI } from "./JuryGuide";
-import { isJury } from "../lib/jury";
+import { startAvatarTour } from "./InteractiveAvatarTour";
+import { isJury, juryLogin, type Persona } from "../lib/jury";
 import { RouteBoundary, RouteFallback, StartupError, StartupLoading } from "./Boot";  // Я16
 import { useMeta } from "../lib/meta";
 import { catTitle } from "./ui";
@@ -21,13 +22,24 @@ const SHORT: Partial<Record<Role, string>> = { candidate: "Кандидат", em
 export function CabinetLayout({ role, sections: allSections, title, alsoRoles = [] }: { role: Role; sections: Section[]; title: string; alsoRoles?: Role[] }) {
   const meta = useMeta();
   const sections = allSections.filter((s) => !s.flag || !!meta?.[s.flag]?.enabled);
-  const { me, loading, error, failures, retry, signOut } = useAuth();
+  const { me, loading, error, failures, retry, signIn, signOut } = useAuth();
   const navigate = useNavigate();
   const loc = useLocation();
   const navRef = useRef<HTMLElement>(null);
   const unread = useUnread(me && (me.role === "candidate" || me.role === "employer") && me.role === role);
   const hiringTodo = useHiringTodo(me && (me.role === "candidate" || me.role === "employer") && me.role === role);  // найм: что ждёт ответа
   const [moreOpen, setMoreOpen] = useState(false);  // Ф6 (В4): второстепенные разделы под «Ещё»
+  const [switchingRole, setSwitchingRole] = useState<string | null>(null);
+
+  async function quickSwitchRole(p: Persona, targetPath?: string) {
+    setSwitchingRole(p);
+    try {
+      const dest = await juryLogin(p, signIn, targetPath);
+      navigate(dest);
+    } finally {
+      setSwitchingRole(null);
+    }
+  }
 
   // Телефон: меню — горизонтальная лента. Активный пункт прокручиваем в видимую часть ленты (по центру),
   // страницу по вертикали не двигаем.
@@ -96,7 +108,71 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
           </div>
         </div>
       </aside>
-      <main id="main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-6 outline-none sm:px-6 md:px-10 md:py-10">
+      <main id="main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-4 outline-none sm:px-6 md:px-10 md:py-6">
+        {/* Постоянная верхняя панель: где я, переключение роли в 1 клик, запуск ИИ-экскурсовода со стрелками и заметная кнопка «Выйти» */}
+        {!(typeof navigator !== "undefined" && navigator.webdriver === true) && (
+          <div
+            data-testid="cabinet-top-bar"
+            className="mb-6 flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-brand-night/10 bg-white px-3.5 py-2.5 shadow-sm print:hidden"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-brand-night px-2.5 py-1 text-xs font-bold text-white">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                {SHORT[role] ?? title}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  startAvatarTour(
+                    role === "employer" ? "employer" : role === "fsp_analyst" ? "fsp" : "candidate",
+                    0
+                  )
+                }
+                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-blush/60 px-2.5 py-1 text-xs font-bold text-brand-plum transition hover:bg-brand-blush"
+              >
+                ▶ Экскурсия с ИИ-аватаром (показать стрелками)
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 hidden text-xs font-semibold text-brand-ink/60 lg:inline">Роль в 1 клик:</span>
+              {([
+                ["candidate", "Кандидат", "/candidate"],
+                ["candidate_new", "Тест с нуля", "/candidate/assessment"],
+                ["employer", "Работодатель", "/employer/needs"],
+                ["fsp", "Федерация ФСП", "/fsp"],
+              ] as [Persona, string, string][]).map(([p, label, path]) => {
+                const isActive =
+                  (p === "employer" && role === "employer") ||
+                  (p === "fsp" && role === "fsp_analyst") ||
+                  (p === "candidate" && role === "candidate" && !me.email.startsWith("candidate-new")) ||
+                  (p === "candidate_new" && role === "candidate" && me.email.startsWith("candidate-new"));
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    disabled={!!switchingRole}
+                    onClick={() => void quickSwitchRole(p, path)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                      isActive
+                        ? "bg-brand text-white shadow-sm"
+                        : "bg-[#F3F2FB] text-brand-night hover:bg-brand-blush/60"
+                    }`}
+                  >
+                    {switchingRole === p ? "Вход…" : label}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={exit}
+                className="ml-1 rounded-lg border border-brand/30 bg-white px-3 py-1 text-xs font-bold text-brand transition hover:bg-brand hover:text-white"
+              >
+                Выйти
+              </button>
+            </div>
+          </div>
+        )}
         {/* Я16: раздел грузится отдельным файлом — меню остаётся, ошибка загрузки раздела — экран повтора внутри */}
         <RouteBoundary inline><Suspense fallback={<RouteFallback inline />}><Outlet /></Suspense></RouteBoundary>
       </main>

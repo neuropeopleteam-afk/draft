@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { launchLiveAvatar } from "../components/Interview";
+import { AvatarConciergeHero, startAvatarTour } from "../components/InteractiveAvatarTour";
 import { JuryPanel } from "../components/JuryPanel";
 import { DraftLaws } from "../components/landing/DraftLaws";
 import { ReverseDraftDemo } from "../components/landing/ReverseDraftDemo";
@@ -112,18 +113,78 @@ export default function Landing() {
 
       {showInlineJury && <JuryPanel compact />}
 
+      <AvatarConciergeHero />
+
       <DraftLaws />
 
-      <section id="how" className="relative mx-auto max-w-content scroll-mt-24 px-4 py-20 sm:px-6" aria-labelledby="how-title">
-        <p className="np-eyebrow">Маршрут пользователя</p>
-        <h2 id="how-title" className="mt-4 text-3xl font-extrabold tracking-tight np-text md:text-[2.6rem]">Как устроен путь на платформе</h2>
-        <p className="mt-3 max-w-2xl leading-relaxed np-muted">
-          Никаких бесконечных откликов и субъективного скрининга резюме: пять прозрачных шагов для специалиста и пять — для нанимающей команды.
-        </p>
-        <div className="mt-10 grid gap-5 lg:grid-cols-2">
-          <StepList id="candidates" title="Путь кандидата" tone="indigo" steps={candidateSteps(rules)} cta={["/register?role=candidate", "Регистрация кандидата"]} onDemo={jury ? tryCandidate : undefined} />
-          <StepList id="employers" title="Путь работодателя" tone="red" steps={employerSteps} cta={["/register?role=employer", "Регистрация компании"]} onDemo={jury ? tryInvite : undefined} />
+      <section id="how" className="relative mx-auto max-w-content scroll-mt-24 px-4 py-16 sm:px-6" aria-labelledby="how-title">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="np-eyebrow">Сквозная архитектура и маршрут</p>
+            <h2 id="how-title" className="mt-3 text-3xl font-extrabold tracking-tight np-text md:text-[2.5rem]">Как это работает: 3 контура под капотом</h2>
+            <p className="mt-3 max-w-2xl leading-relaxed np-muted">
+              Никаких бесконечных откликов и субъективного чтения резюме: математическое ядро соединяет проверенные навыки специалистов, реестр ФСП и запросы работодателей.
+            </p>
+          </div>
+          <button type="button" onClick={() => startAvatarTour("all", 0)} className="np-btn-primary px-5 py-3 text-sm">
+            ▶ Запустить автоэкскурсию со стрелками
+          </button>
         </div>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="np-glass p-6">
+            <span className="np-eyebrow">Шаг 1 · Калибровка кандидата</span>
+            <h3 className="mt-2 text-lg font-bold np-text">Адаптивный тест 2PL IRT + живой ИИ-аватар</h3>
+            <p className="mt-2 text-sm leading-relaxed np-muted">
+              Сложность задач подбирается в реальном времени по методу максимума информации Фишера. После кода — 3-минутная устная защита с видеоаватаром Еленой против списывания.
+            </p>
+          </div>
+          <div className="np-glass p-6">
+            <span className="np-eyebrow">Шаг 2 · Доказательное ранжирование</span>
+            <h3 className="mt-2 text-lg font-bold np-text">Формула 45 / 35 / 10 / 5 / 5 и реестр ФСП</h3>
+            <p className="mt-2 text-sm leading-relaxed np-muted">
+              Текст вакансии очищается от нарушений ст. 64 ТК РФ, сверяется с 1 344 вакансиями hh.ru, а кандидаты ранжируются по подтверждённому тесту (45 %), стеку (35 %) и паспорту ФСП (10 %).
+            </p>
+          </div>
+          <div className="np-glass p-6">
+            <span className="np-eyebrow">Шаг 3 · Обратный найм с деньгами</span>
+            <h3 className="mt-2 text-lg font-bold np-text">Оффер с открытой вилкой до раскрытия имени</h3>
+            <p className="mt-2 text-sm leading-relaxed np-muted">
+              Работодатель сравнивает обезличенных лидеров (C-...) с помощью ИИ-советника руководителя и отправляет приглашение с обязательной вилкой в рублях. Контакты открываются только с согласия кандидата.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="candidates" className="relative mx-auto max-w-content scroll-mt-24 px-4 py-14 sm:px-6" aria-labelledby="cand-sec-title">
+        <div className="mb-6">
+          <p className="np-eyebrow">Раздел для ИТ-специалистов и спортсменов ФСП</p>
+          <h2 id="cand-sec-title" className="mt-2 text-2xl font-extrabold tracking-tight np-text sm:text-3xl">Кандидатам: 5 шагов от теста до оффера с зарплатой</h2>
+        </div>
+        <StepList
+          id="candidates-card"
+          title="Путь кандидата"
+          tone="indigo"
+          steps={candidateSteps(rules)}
+          cta={["/register?role=candidate", "Регистрация кандидата"]}
+          onDemo={jury ? tryCandidate : undefined}
+          onTour={() => startAvatarTour("candidate", 0)}
+        />
+      </section>
+
+      <section id="employers" className="relative mx-auto max-w-content scroll-mt-24 px-4 py-14 sm:px-6" aria-labelledby="emp-sec-title">
+        <div className="mb-6">
+          <p className="np-eyebrow">Раздел для нанимающих команд и HR-директоров</p>
+          <h2 id="emp-sec-title" className="mt-2 text-2xl font-extrabold tracking-tight np-text sm:text-3xl">Работодателям: готовая подборка по проверенным фактам</h2>
+        </div>
+        <StepList
+          id="employers-card"
+          title="Путь работодателя"
+          tone="red"
+          steps={employerSteps}
+          cta={["/register?role=employer", "Регистрация компании"]}
+          onDemo={jury ? tryInvite : undefined}
+          onTour={() => startAvatarTour("employer", 0)}
+        />
       </section>
 
       <section className="relative mx-auto max-w-content px-4 pb-24 sm:px-6" aria-label="Начать работу">
@@ -154,22 +215,27 @@ function Fact({ k, t }: { k: string; t: string }) {
   );
 }
 
-function StepList({ id, title, steps, tone, cta, onDemo }: { id: string; title: string; steps: string[][]; tone: "indigo" | "red"; cta: [string, string]; onDemo?: () => void }) {
+function StepList({ id, title, steps, tone, cta, onDemo, onTour }: { id: string; title: string; steps: string[][]; tone: "indigo" | "red"; cta: [string, string]; onDemo?: () => void; onTour?: () => void }) {
   return (
     <div id={id} className="np-glass scroll-mt-24 p-6 sm:p-8">
-      <h3 className="text-xl font-bold np-text">{title}</h3>
-      <ol className="mt-6 space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-xl font-bold np-text">{title}</h3>
+        {onTour && (
+          <button type="button" onClick={onTour} className="np-btn-ghost !px-4 !py-2 text-xs font-bold">
+            ▶ Показать этот путь стрелками с ИИ-аватаром
+          </button>
+        )}
+      </div>
+      <ol className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {steps.map(([t, d], i) => (
-          <li key={t} className="flex gap-4">
+          <li key={t} className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <span className={`np-num ${tone === "indigo" ? "np-num-indigo" : "np-num-red"}`}>{i + 1}</span>
-            <div className="min-w-0">
-              <p className="font-semibold np-text">{t}</p>
-              <p className="mt-0.5 text-sm leading-relaxed np-muted">{d}</p>
-            </div>
+            <p className="font-semibold np-text">{t}</p>
+            <p className="text-xs leading-relaxed np-muted">{d}</p>
           </li>
         ))}
       </ol>
-      <div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-6 flex flex-wrap gap-3">
         {onDemo && <button type="button" onClick={onDemo} className="np-btn-primary px-5 py-2.5 text-sm">Открыть демо-кабинет</button>}
         <Link to={cta[0]} className="np-btn-ghost">{cta[1]}</Link>
       </div>
