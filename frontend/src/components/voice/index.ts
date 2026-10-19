@@ -1,7 +1,9 @@
 // Общие голосовые компоненты (интервью, голосовой ввод потребности): запись «нажми и говори», кнопка с распознаванием,
 // проигрывание голоса с уровнем сигнала и собственная анимация собеседника. Описание API — docs/INTERVIEW.md, раздел «Голос».
-export { REC_MESSAGES, rmsLevel, useSpeechPlayer, useVoiceRecorder, voiceSupported } from "./recorder";
-export type { RecErrorCode, RecState, VoiceRecorder, VoiceRecorderOptions } from "./recorder";
+export { REC_MESSAGES, rmsLevel, useSpeechPlayer, useVoiceRecorder, vadInit, vadStep, voiceSupported } from "./recorder";
+export type { RecErrorCode, RecState, VadInfo, VadPhase, VadState, VoiceRecorder, VoiceRecorderOptions } from "./recorder";
+export { VoiceAnswerButton, ListeningMeter } from "./VoiceAnswerButton";
+export type { VoiceAnswerButtonProps } from "./VoiceAnswerButton";
 export { VoiceRecordButton, postAudio } from "./VoiceRecordButton";
 export type { Transcribed, VoiceRecordButtonProps } from "./VoiceRecordButton";
 export { VoiceWave, WAVE_LABEL } from "./VoiceWave";

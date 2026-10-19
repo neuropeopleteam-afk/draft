@@ -6,7 +6,7 @@ import { api, ApiError, apiUrl, tokenStore } from "../lib/api";
 import { useMeta } from "../lib/meta";
 import { PageTitle } from "./CabinetLayout";
 import { Alert, Loading, dt, errText, useApi } from "./ui";
-import { AnamAvatar, InterviewerAvatar, VoiceRecordButton, VoiceWave, postAudio, useSpeechPlayer, type AnamHandle, type WaveState } from "./voice";
+import { AnamAvatar, InterviewerAvatar, VoiceAnswerButton, VoiceRecordButton, VoiceWave, postAudio, useSpeechPlayer, voiceSupported, type AnamHandle, type WaveState } from "./voice";
 
 type Verdict = "confirmed" | "discrepancies" | "insufficient" | "strong" | "medium" | "weak" | null;
 interface Quote { text: string }
@@ -301,8 +301,10 @@ const READ_MS = (q: string) => Math.max(1200, Math.min(4000, q.length * 35));
  * волна голоса, состояния «говорю / слушаю / думаю»), без изображений людей (регламент п. 5.11); при
  * INTERVIEW_AVATAR_ENABLED (meta.interview.avatar) — свой образ «ИИ-интервьюер, не человек» (InterviewerAvatar:
  * сгенерированный портрет несуществующего человека и беззвучные клипы по состоянию; без клипов — кадр и свечение рамки).
- * Голос ведущего — /speech (mp3), ответ — «нажми и говори» (запись → распознанный текст в поле, человек проверяет)
- * или текстом. Отказ голоса → текст; отказ микрофона/распознавания → текст.
+ * Голос ведущего — /speech (mp3). Д1: в канале «голос» в центре — аватар и одна кнопка «Ответить» (VoiceAnswerButton):
+ * запись останавливается по паузе ~2 с или повторным нажатием и сразу уходит на сервер; текст вопроса — под ссылкой
+ * «Показать текст вопроса»; «Повторить вопрос», «Перейти в чат», «Закончить» — второстепенные ссылки. В чате — поле
+ * и «нажми и говори» (распознанный текст в поле на проверку). Отказ голоса → текст; отказ микрофона/распознавания → текст.
  * INTERVIEW_ANAM_ENABLED (conversation.channels.avatar) — живой аватар Anam с тем же нашим лицом (AnamAvatar): наш голос
  * идёт в поток (/speech?format=pcm), Anam рисует губы; любой сбой — тихо обратно к портрету и mp3.
  */
@@ -318,6 +320,9 @@ export function InterviewRoom() {
   const [reading, setReading] = useState(false);
   const [rec, setRec] = useState<"idle" | "recording" | "processing">("idle");
   const [left, setLeft] = useState<number | null>(null);
+  const [showQ, setShowQ] = useState(false);  // голос: текст вопроса — под ссылкой «Показать текст вопроса»
+  const [confirmEnd, setConfirmEnd] = useState(false);  // «Ответов N из 3 — завершить сейчас?»
+  const [heard, setHeard] = useState<string | null>(null);  // голос: последний распознанный и отправленный ответ
   const mic = useRef<() => number>(() => 0);
   const lastAudio = useRef<Blob | null>(null);
   const spoken = useRef<string>("");
@@ -387,15 +392,24 @@ export function InterviewRoom() {
     setBusy(true); setErr(null); setNote(null); setCh(want);
     try { setS(await api<IvSession>(`/interview/sessions/${id}/begin`, { body: { channel: want } })); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
+  async function post(answer: string): Promise<boolean> {
+    player.stop(); anam.current?.stop(); lastAudio.current = null;
+    setBusy(true); setErr(null); setNote(null); setConfirmEnd(false);
+    try { setS(await api<IvSession>(`/interview/sessions/${id}/answer`, { body: { text: answer, channel: ch } })); return true; }
+    catch (e) { setErr(errText(e)); return false; } finally { setBusy(false); }
+  }
   async function send() {
     if (!text.trim()) return;
-    player.stop(); anam.current?.stop(); lastAudio.current = null;
-    setBusy(true); setErr(null); setNote(null);
-    try { setS(await api<IvSession>(`/interview/sessions/${id}/answer`, { body: { text, channel: ch } })); setText(""); }
-    catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+    if (await post(text)) setText("");
+  }
+  async function sendVoice(answer: string, info: { stub: boolean }) {  // голос: распознано → сразу на сервер
+    if (await post(answer)) {
+      setHeard(answer);
+      if (info.stub) setNote("Демо-распознавание: отправлен подставленный текст.");
+    }
   }
   async function finish(timeUp = false) {
-    player.stop(); anam.current?.stop();
+    player.stop(); anam.current?.stop(); setConfirmEnd(false);
     setBusy(true); setErr(null);
     try {
       const r = await api<IvSession>(`/interview/sessions/${id}/finish`, { method: "POST" });
@@ -421,6 +435,23 @@ export function InterviewRoom() {
   const level = () => (rec === "recording" ? mic.current() : player.level());
   // живой аватар — только в канале «голос», пока идёт разговор, если движок его даёт и поток не отказал
   const anamOn = avatar && !anamOff && ch === "voice" && live && !!c?.channels.avatar;
+  // голос: одна кнопка «Ответить» — если есть распознавание и браузер умеет записывать; иначе поле ответа
+  const voiceUi = ch === "voice" && !!c?.channels.stt && voiceSupported();
+  const answered = c ? Math.max(0, (c.n ?? c.asked) - 1) : 0;
+  function askFinish() {  // меньше 3 ответов — короткое подтверждение, иначе сразу
+    if (c && answered < Math.min(3, c.max_questions)) setConfirmEnd(true); else void finish();
+  }
+  const toChat = () => { player.stop(); anam.current?.stop(); setConfirmEnd(false); void fallback("text", "Перешли в чат: вопросы — текстом, отвечать можно и голосом."); };
+  const link = "text-sm text-brand-ink/70 underline underline-offset-2 hover:text-brand-night disabled:opacity-50";
+  const confirmBox = confirmEnd && c ? (
+    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm" role="alertdialog" aria-labelledby="iv-end-q" data-testid="iv-finish-confirm">
+      <p id="iv-end-q" className="font-semibold text-amber-900">Ответов {answered} из {c.max_questions} — завершить сейчас?</p>
+      <div className="mt-2 flex flex-wrap gap-3">
+        <button className="btn-primary !py-1.5 !px-4" disabled={busy} onClick={() => void finish()} data-testid="iv-finish-yes" autoFocus>Завершить</button>
+        <button className={link} onClick={() => setConfirmEnd(false)} data-testid="iv-finish-no">Продолжить разговор</button>
+      </div>
+    </div>
+  ) : null;
   const caption = avatar ? `модель, не люди · ${ch === "voice" && live ? "голос и текст" : "текст"} · портрет сгенерирован`
     : `модель, не люди · ${ch === "voice" && live ? "голос и текст" : "текст"}, без видео`;
   return (
@@ -439,7 +470,7 @@ export function InterviewRoom() {
       {note && <p className="text-sm text-brand-ink/75" role="status">{note}</p>}
       {s.status === "created" && c && (
         <section className="card space-y-3" aria-label="Начало разговора">
-          <p className="text-sm text-brand-ink/80">До {s.max_questions} вопросов, около {s.minutes} минут. Отвечайте своими словами — так же, как писали в тесте.{c.channels.stt ? " Отвечать можно голосом («нажми и говори», текст можно поправить перед отправкой) или текстом" : " Отвечать — текстом"}; закончить — в любой момент.</p>
+          <p className="text-sm text-brand-ink/80">До {s.max_questions} вопросов, около {s.minutes} минут. Отвечайте своими словами — так же, как писали в тесте.{c.channels.voice && c.channels.stt ? " Голосом — одна кнопка «Ответить»: замолчите на ~2 с, и ответ отправится сам; или текстом в чате" : c.channels.stt ? " Отвечать можно голосом («нажми и говори», текст можно поправить перед отправкой) или текстом" : " Отвечать — текстом"}; закончить — в любой момент.</p>
           <div className="flex flex-wrap items-center gap-3">
             <button className="btn-primary" disabled={busy} onClick={() => begin(c.channels.voice ? "voice" : "text")}
               data-testid={c.channels.voice ? "iv-begin-voice" : "iv-begin-text"}>Начать разговор</button>
@@ -447,15 +478,43 @@ export function InterviewRoom() {
           </div>
         </section>
       )}
-      {live && c && (
+      {live && c && voiceUi && (
+        <section className="card space-y-4" aria-label="Разговор голосом" data-testid="iv-voice">
+          <p className="text-center text-xs text-brand-ink/65">Вопрос {Math.min(c.n ?? c.asked, c.max_questions)} из {c.max_questions}{left != null ? ` · осталось ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : ""}</p>
+          <div className="flex justify-center">
+            <VoiceAnswerButton testId="iv-record" disabled={busy} maxSeconds={90} silenceMs={2000}
+              transcribe={(b) => postAudio(`/interview/sessions/${id}/transcribe`, b)}
+              onBeforeStart={() => { player.stop(); anam.current?.stop(); setNote(null); setErr(null); setConfirmEnd(false); }}
+              onLevel={(f) => { mic.current = f; }} onState={setRec} onNote={setNote}
+              onAnswer={(t, info) => sendVoice(t, info)} />
+          </div>
+          {heard && rec === "idle" && !busy && <p className="text-center text-xs text-brand-ink/65" data-testid="iv-heard">Отправлено: «{heard.length > 140 ? `${heard.slice(0, 140)}…` : heard}»</p>}
+          <div className="text-center">
+            <button type="button" className={link} aria-expanded={showQ} aria-controls="iv-qtext" onClick={() => setShowQ((x) => !x)} data-testid="iv-question-toggle">
+              {showQ ? "Скрыть текст вопроса" : "Показать текст вопроса"}
+            </button>
+          </div>
+          <div id="iv-qtext" hidden={!showQ} className="space-y-1 rounded-xl bg-brand-blush/20 p-3">
+            <p className="font-semibold text-brand-night" data-testid="iv-question">{c.question}</p>
+            {c.context && <p className="line-clamp-2 text-sm text-brand-ink/75" data-testid="iv-context">Ваш ответ в тесте: «{c.context}»</p>}
+          </div>
+          {confirmBox}
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-brand-night/10 pt-3" aria-label="Другие действия">
+            <button type="button" className={link} disabled={busy || rec !== "idle" || player.playing} onClick={() => q && void say(q, true)} data-testid="iv-repeat">Повторить вопрос</button>
+            <button type="button" className={link} disabled={busy || rec !== "idle"} onClick={toChat} data-testid="iv-to-chat">Перейти в чат</button>
+            <button type="button" className={link} disabled={busy || rec !== "idle"} onClick={askFinish} data-testid="iv-finish">Закончить</button>
+          </nav>
+        </section>
+      )}
+      {live && c && !voiceUi && (
         <section className="card space-y-3" aria-label="Разговор">
           <p className="text-xs text-brand-ink/65">Вопрос {Math.min(c.n ?? c.asked, c.max_questions)} из {c.max_questions}{left != null ? ` · осталось ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : ""}</p>
           <p className="font-semibold text-brand-night" aria-live="polite" data-testid="iv-question">{c.question}</p>
           {c.context && <p className="line-clamp-2 text-sm text-brand-ink/75" data-testid="iv-context">Ваш ответ в тесте: «{c.context}»</p>}
-          <p className="text-xs text-brand-ink/65">{ch === "voice" && c.channels.stt ? "Ответьте голосом своими словами, 1–2 фразы." : "Ответьте своими словами, 1–2 фразы."}</p>
+          <p className="text-xs text-brand-ink/65">Ответьте своими словами, 1–2 фразы.</p>
           <label className="block" htmlFor="iv-answer"><span className="sr-only">Ваш ответ</span>
             <textarea id="iv-answer" className="input min-h-[8rem] w-full" value={text} onChange={(e) => setText(e.target.value)} placeholder="Ваш ответ своими словами" maxLength={3000} /></label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button className="btn-primary" disabled={busy || rec !== "idle" || !text.trim()} onClick={send} data-testid="iv-send">{busy ? "Отправляем…" : "Отправить ответ"}</button>
             {c.channels.stt && (
               <VoiceRecordButton testId="iv-record" disabled={busy && rec === "idle"} maxSeconds={90}
@@ -463,11 +522,14 @@ export function InterviewRoom() {
                 onLevel={(f) => { mic.current = f; player.stop(); }} onState={setRec} onNote={setNote}
                 onText={(t, info) => { setText((x) => (x ? `${x} ` : "") + t); setNote(info.stub ? "Демо-распознавание: подставлен текст для проверки. Поправьте и отправьте." : "Проверьте распознанный текст и отправьте ответ."); }} />
             )}
-            {ch === "voice" && <button className="btn-ghost" disabled={busy || player.playing} onClick={() => q && void say(q, true)} data-testid="iv-repeat">Повторить вопрос</button>}
-            {c.engine === "stub" && c.hint && <button className="btn-ghost" onClick={() => setText(c.hint ?? "")} data-testid="iv-hint">Подставить начало письменного ответа (заглушка)</button>}
-            <button className="btn-ghost" disabled={busy} onClick={() => void finish()}>Закончить</button>
-            {ch === "voice" && <button className="text-sm text-brand-ink/70 underline" disabled={busy} onClick={() => { player.stop(); anam.current?.stop(); void fallback("text", "Перешли в чат: вопросы — текстом, отвечать можно и голосом."); }} data-testid="iv-to-chat">Перейти в чат</button>}
+            {c.engine === "stub" && c.hint && <button className="btn-ghost" onClick={() => setText(c.hint ?? "")} data-testid="iv-hint">Подставить начало письменного ответа (пример)</button>}
           </div>
+          {confirmBox}
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-2" aria-label="Другие действия">
+            {ch === "voice" && <button type="button" className={link} disabled={busy || player.playing} onClick={() => q && void say(q, true)} data-testid="iv-repeat">Повторить вопрос</button>}
+            {ch === "voice" && <button type="button" className={link} disabled={busy} onClick={toChat} data-testid="iv-to-chat">Перейти в чат</button>}
+            <button type="button" className={link} disabled={busy} onClick={askFinish} data-testid="iv-finish">Закончить</button>
+          </nav>
         </section>
       )}
       {bye && <p className="font-semibold text-brand-night" role="status" data-testid="iv-bye">Интервьюер: {bye}</p>}
