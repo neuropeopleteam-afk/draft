@@ -53,7 +53,7 @@ def test_jury_view_only_for_lowered_level():
     medium = integrity.assess([_item(fs_na=0) for _ in range(6)])
     jv = integrity.jury_view(medium)
     assert medium["level"] == "medium" and jv["reasons"] == integrity.summary_for_employer(medium)["reasons"]
-    assert "без полноэкранного режима" in jv["reasons"][0] and "Р27" in jv["note"]
+    assert "без полноэкранного режима" in jv["reasons"][0] and "механику проверки кандидату не раскрываем" in jv["note"]
 
 
 def test_result_details_only_in_jury_demo_mode(client, bank_api, monkeypatch):

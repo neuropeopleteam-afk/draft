@@ -41,6 +41,13 @@ def test_feedback_jury_candidate_full_map_without_leaks(client):
     assert {"python", "fastapi", "postgresql", "redis"} <= tags and fb["demand"]["sources"] >= 1
     assert {d["status"] for d in fb["demand"]["items"]} <= {"confirmed", "weak", "declared", "missing"}
     assert fb["route"] and fb["competitions"] and fb["competitions"][0]["discipline"] in ("product", "algorithmic")
+    # D3 п. 4: шаги «подтянуть» подписаны источником — по тесту или по спросу работодателей категории
+    for st in fb["route"]:
+        if st["kind"] == "topic":
+            assert st["source"] == "Слабее всего по тесту"
+        elif st["kind"] == "demand":
+            assert st["source"] == "Востребовано у работодателей в вашей категории"
+    assert "зонд" not in json.dumps(fb["route"], ensure_ascii=False)
     assert fb["fsp_calendar_url"].startswith("https://fsp-russia.ru/")
     # без раскрытия заданий: ни семейств, ни формулировок, ни ключей, ни токенов заданий
     from app.modules.assessment.models import TestSession
