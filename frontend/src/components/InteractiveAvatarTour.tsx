@@ -246,13 +246,13 @@ export function InteractiveAvatarTour() {
       }
       updateSpotlight();
     }, 450);
-    const t2 = window.setTimeout(updateSpotlight, 950);
+    const iv = window.setInterval(updateSpotlight, 350);
     const onScrollOrResize = () => updateSpotlight();
     window.addEventListener("scroll", onScrollOrResize, true);
     window.addEventListener("resize", onScrollOrResize);
     return () => {
       window.clearTimeout(t1);
-      window.clearTimeout(t2);
+      window.clearInterval(iv);
       window.removeEventListener("scroll", onScrollOrResize, true);
       window.removeEventListener("resize", onScrollOrResize);
     };
