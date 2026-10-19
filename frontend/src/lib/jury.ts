@@ -171,7 +171,7 @@ export interface QuickStep extends GuideStep { checks: string; crit: string; min
 const C1 = "1. Новая механика подбора · 35 %", C2 = "2. Тестирование и категоризация · 25 %";
 export const QUICK: QuickStep[] = [
   { title: "Своя потребность своими словами", persona: "employer", path: "/employer/needs", match: /^\/employer\/needs\/?$/, cta: "Войти как работодатель", min: 2,
-    text: "Опишите, кого ищете, обычным текстом или возьмите заготовку и поправьте. «Разобрать требования»: у каждого требования — цитата из текста, отрицания уходят в «исключено». Подтвердите и нажмите «Сохранить и показать подборку».",
+    text: "Опишите, кого ищете, обычным текстом или возьмите заготовку и поправьте. «Разобрать требования»: у каждого требования — цитата из текста, отрицания уходят в «исключено». Проверьте требования и нажмите «Подтвердить остальные и показать подборку» (если всё уже подтверждено — «Сохранить и показать подборку»).",
     checks: "разбор свободного текста: стек, грейд, формат, вилку, отрицания, незнакомые технологии", crit: `${C1} — «работодатель описывает потребность и получает подборку»` },
   { title: "Первые три кандидата и почему они", persona: "employer", path: "/employer/needs", match: /^\/employer\/needs\/[^/]+(?:\/v\/\d+)?\/?$/, cta: "Открыть подборку", min: 2,
     text: "У первых трёх — балл, «обязательное: N из M» и «почему здесь»: только подтверждённые факты — тест (T1) и достижения ФСП (T2). Чего не хватает, сказано прямо; «Подробно у всех» раскрывает остальных.",
@@ -214,7 +214,7 @@ export const quickSteps = (iv?: { enabled?: boolean; defense_minutes?: number } 
 export const NEED_PRESETS: { label: string; text: string; dir?: string; inCatalog?: string }[] = [
   { label: "Python, с отрицанием", text: "Ищем Python-разработчика middle: FastAPI, PostgreSQL, Docker. Django не нужен, PHP не нужен. Желательно Redis. Удалённо, 200–260 тыс. ₽" },
   { label: "Go и ClickHouse, Казань", text: "Go-разработчик senior: Kafka, ClickHouse, gRPC и Kubernetes; Rust будет плюсом. Гибрид в Казани, 320–400 тыс. ₽" },
-  { label: "DevOps — вне каталога", dir: "devops", inCatalog: "DevOps / SRE — новое направление", text: "DevOps-инженер middle: Linux, Docker, CI/CD, Kubernetes, Terraform и мониторинг на Prometheus. Удалённо, 250–300 тыс. ₽" },
+  { label: "DevOps / SRE — новое направление", dir: "devops", inCatalog: "DevOps / SRE — новое направление", text: "DevOps-инженер middle: Linux, Docker, CI/CD, Kubernetes, Terraform и мониторинг на Prometheus. Удалённо, 250–300 тыс. ₽" },
 ];
 const KEY_PRESET = "jury_need_preset", PRESET_EVENT = "jury-need-preset";
 /** Заготовка → поле «Кого вы ищете» (Needs.tsx): ждёт в sessionStorage, если экран ещё не открыт. */
