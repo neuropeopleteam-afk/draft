@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { DefensePanel } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
+import { DefensePanel } from "../../components/Interview";
+import { IncidentSandbox, isIncidentTask } from "../../components/IncidentSandbox";  // Н2: пульт инцидента к архитектурным заданиям  // Я15: устная защита ответа, по желанию
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, signed, useApi, plainText } from "../../components/ui";
 import { api } from "../../lib/api";
@@ -584,6 +585,8 @@ export const isPrintScreen = (e: { key?: string; code?: string }) => e.key === "
 const PRINTSCREEN_DEDUP_MS = 1000;
 const EMPTY_TYPING = { len: 0, typed: 0, inserted: 0, dropped: 0, deleted: 0, keys: 0, active_ms: 0, last: 0, n: 0, mean: 0, m2: 0 };
 
+const INCIDENT_KEY = "draft.incident.sandbox";
+
 export function TestRun() {
   const llmOff = useLlmOff();
   const { id } = useParams();
@@ -596,6 +599,9 @@ export function TestRun() {
   const [busy, setBusy] = useState(false);
   const [shownAt, setShownAt] = useState(Date.now());
   const [now, setNow] = useState(Date.now());
+  // Н2: «Интерактивный пульт инцидента» у архитектурных и инцидентных заданий (Middle и выше); выбор запоминается
+  const [incidentOn, setIncidentOn] = useState(() => { try { return localStorage.getItem(INCIDENT_KEY) !== "off"; } catch { return true; } });
+  const toggleIncident = () => setIncidentOn((v) => { try { localStorage.setItem(INCIDENT_KEY, v ? "off" : "on"); } catch { /* приватный режим */ } return !v; });
   // Сигналы честности за текущее задание (античит): уход со вкладки/окна и вставка текста.
   // Влияют только на «достоверность результата», которую видит работодатель; кандидат предупреждён.
   const sig = useRef({ ...EMPTY_SIG });
@@ -784,6 +790,23 @@ export function TestRun() {
           Тест рассчитан на полноэкранный режим.
           <button type="button" className="ml-1 font-semibold underline" onClick={enterFullscreen}>Вернуться в полноэкранный режим</button>
         </Alert></div>
+      )}
+      {isIncidentTask(it, s.claimed_grade) && (
+        <div className="mt-4 space-y-3" data-testid="incident-wrap">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-blush/30 px-4 py-2.5">
+            <p className="min-w-0 flex-1 text-sm text-brand-night">
+              <b>Интерактивный пульт инцидента</b> — метрики, поток логов и код релиза: найдите причину руками, затем опишите решение в ответе к заданию.
+            </p>
+            <button type="button" role="switch" aria-checked={incidentOn} aria-label="Интерактивный пульт инцидента" onClick={toggleIncident} data-testid="incident-toggle"
+              className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-brand-night">
+              <span aria-hidden="true" className={`relative h-6 w-11 rounded-full transition-colors ${incidentOn ? "bg-brand-strong" : "bg-brand-ink/25"}`}>
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${incidentOn ? "left-[1.375rem]" : "left-0.5"}`} />
+              </span>
+              {incidentOn ? "Включён" : "Выключен"}
+            </button>
+          </div>
+          {incidentOn && <IncidentSandbox key={it.position} />}
+        </div>
       )}
       <h1 ref={itemHead} tabIndex={-1} className="sr-only">{`Задание ${it.position}${it.steps_total ? `, шаг ${it.step} из ${it.steps_total}` : ""}`}</h1>
       <div className="card mt-4" onCopy={onCopy} onCut={onCopy} onContextMenu={(e) => { if (!(e.target as HTMLElement).closest("textarea, input")) e.preventDefault(); }}
