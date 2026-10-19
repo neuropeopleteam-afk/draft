@@ -96,6 +96,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   // следующий обязательный шаг; шаг «по желанию» между ними — отдельной кнопкой в теле панели
   const opt = steps[q + 1]?.optional ? q + 1 : -1;
   const nextI = opt >= 0 ? q + 2 : q + 1;
+  const toDefense = steps[nextI]?.defense && nextI <= LAST ? nextI : -1;  // следующий — устная защита (шаг 8)
 
   /** Шаг «по желанию» глазами работодателя своей копии: карточка Марии (демо-персона «candidate», ref — /api/jury/quick). */
   async function employerView() {
@@ -193,6 +194,18 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
             onClick={() => go(opt)}>{steps[opt].title.split(" · ")[0]}</button> — по желанию, ≈{"\u00A0"}{mins(steps[opt].min)} сверх плана; или сразу дальше.
         </p>
       )}
+      {/* Д2: шаг 7 → шаг 8 «Устная защита ответа» — явной основной кнопкой, а не сноской */}
+      {toDefense >= 0 && (
+        <div className="mt-2.5 rounded-xl bg-white/10 p-2.5 ring-1 ring-white/20" data-testid="quick-defense-next">
+          <p className="text-xs leading-relaxed text-white/85">
+            <b className="font-semibold text-white">Следующий шаг {toDefense + 1} — {steps[toDefense].title.toLowerCase()}.</b> Живой разговор с ИИ-интервьюером: аватар задаёт вопросы голосом или в чате, ≈{"\u00A0"}{mins(steps[toDefense].min)}. Развёрнутых ответов в экспресс-тесте нет — разговор пойдёт по защищаемому примеру или последнему заданию.
+          </p>
+          <button type="button" className="btn mt-2 w-full bg-brand-strong px-3 py-2 text-sm font-semibold text-white hover:bg-brand-deep disabled:opacity-40"
+            disabled={busy} onClick={() => go(toDefense)} data-testid="quick-to-defense">
+            {busy ? "Входим…" : `Перейти к шагу ${toDefense + 1}: ${steps[toDefense].title} →`}
+          </button>
+        </div>
+      )}
       {(s.optional || s.defense) && (
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/80" data-testid="quick-live">
           <button type="button" className="font-semibold text-brand-blush underline underline-offset-2 hover:text-white" disabled={busy}
@@ -222,7 +235,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
               </>
           : q < LAST
             ? <>
-                <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(nextI)}>{busy ? "Входим…" : `Дальше: ${steps[nextI].title}`}</button>
+                {toDefense < 0 && <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(nextI)}>{busy ? "Входим…" : `Дальше: ${steps[nextI].title}`}</button>}
                 {/* С2 №2: перед устной защитой — вторая кнопка «Пропустить», чтобы шаг с ИИ-интервьюером не терялся и не был обязательным */}
                 {steps[nextI].defense && nextI < LAST && (
                   <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20" disabled={busy} onClick={() => go(nextI + 1)} data-testid="quick-skip-defense">Пропустить → {steps[nextI + 1].title}</button>

@@ -3978,6 +3978,52 @@
         "title": "AttemptsOut",
         "type": "object"
       },
+      "AvatarTokenOut": {
+        "description": "Параметры подключения к потоку живого аватара (Anam, JS SDK). Ключей нет — одноразовый токен сессии; реплики ведущей\nклиент берёт у нас (/speech?format=pcm, наш голос) и передаёт в поток для движения губ (режим передачи звука).",
+        "properties": {
+          "ice_servers": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Наш TURN (временные учётные данные) или null — ICE поставщика",
+            "title": "Ice Servers"
+          },
+          "max_seconds": {
+            "description": "Потолок длительности сессии у поставщика",
+            "title": "Max Seconds",
+            "type": "integer"
+          },
+          "persona_name": {
+            "default": "Интервьюер",
+            "title": "Persona Name",
+            "type": "string"
+          },
+          "relay_only": {
+            "default": false,
+            "title": "Relay Only",
+            "type": "boolean"
+          },
+          "session_token": {
+            "title": "Session Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_token",
+          "max_seconds"
+        ],
+        "title": "AvatarTokenOut",
+        "type": "object"
+      },
       "BeginIn": {
         "properties": {
           "channel": {
@@ -5917,6 +5963,12 @@
       },
       "ChannelsOut": {
         "properties": {
+          "avatar": {
+            "default": false,
+            "description": "Живой аватар (Anam, наше сгенерированное лицо, голос наш): токен — POST /sessions/{id}/avatar-token; при любом сбое экран показывает свой портрет",
+            "title": "Avatar",
+            "type": "boolean"
+          },
           "stt": {
             "description": "«Нажми и говори»: запись ответа → распознанный текст",
             "title": "Stt",
@@ -6870,6 +6922,18 @@
           },
           "channels": {
             "$ref": "#/components/schemas/ChannelsOut"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Защита: 1–2 строки письменного ответа кандидата, по которому вопрос",
+            "title": "Context"
           },
           "deadline": {
             "anyOf": [
@@ -8666,6 +8730,25 @@
         "title": "DecisionIn",
         "type": "object"
       },
+      "DefenseFallbackOut": {
+        "description": "Д2: жюри без развёрнутых ответов — живой разговор по защищаемому примеру (example) или последнему заданию.",
+        "properties": {
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "title"
+        ],
+        "title": "DefenseFallbackOut",
+        "type": "object"
+      },
       "DefenseStateOut": {
         "properties": {
           "answers_n": {
@@ -8702,6 +8785,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DefenseFallbackOut"
               },
               {
                 "type": "null"
@@ -56372,6 +56465,109 @@
         ]
       }
     },
+    "/api/interview/sessions/{session_id}/avatar-token": {
+      "post": {
+        "description": "Лицо — наш сгенерированный портрет (frontend/public/avatar/PROVENANCE.md), загруженный в Anam как собственный аватар\n(ANAM_AVATAR_ID); модель Anam только рисует лицо и губы под наш звук (/speech?format=pcm), её LLM и голос не\nиспользуются. Флаг по умолчанию выключен → 503, клиент тихо остаётся на портрете и голосе mp3.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "session_avatar_token_api_interview_sessions__session_id__avatar_token_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarTokenOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_not_found",
+                    "message": "Сессия не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `interview_not_found` — Сессия не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_closed",
+                    "message": "Разговор не идёт"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Выключено флагом (interview_disabled) или сессия в другом состоянии. Коды `detail.code`: `interview_closed` — Разговор не идёт."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "avatar_unavailable",
+                    "message": "Аватар недоступен — доступны каналы «голос» и «текст»"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Аватар недоступен — экран показывает свой портрет. Коды `detail.code`: `avatar_unavailable` — Аватар недоступен — доступны каналы «голос» и «текст»."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Живой аватар: токен сессии Anam (INTERVIEW_ANAM_ENABLED)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
     "/api/interview/sessions/{session_id}/begin": {
       "post": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
@@ -56662,7 +56858,7 @@
     },
     "/api/interview/sessions/{session_id}/speech": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "format=pcm — pcm_s16le 16 кГц моно (audio/pcm) для живого аватара (Anam, передача звука); по умолчанию mp3.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "session_speech_api_interview_sessions__session_id__speech_get",
         "parameters": [
           {
@@ -56672,6 +56868,20 @@
             "schema": {
               "format": "uuid",
               "title": "Session Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "mp3",
+              "enum": [
+                "mp3",
+                "pcm"
+              ],
+              "title": "Format",
               "type": "string"
             }
           }
