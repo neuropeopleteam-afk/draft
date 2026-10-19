@@ -43,9 +43,11 @@ export interface InterviewerAvatarProps {
   /** Сторона квадрата, px (по умолчанию 200; на узком экране — не шире контейнера). */
   size?: number;
   className?: string;
+  /** Н1: подпись на тёмном фоне (панель советника руководителя). */
+  tone?: "light" | "dark";
 }
 
-export function InterviewerAvatar({ state, level, name = "Интервьюер", size = 200, className = "" }: InterviewerAvatarProps) {
+export function InterviewerAvatar({ state, level, name = "Интервьюер", size = 200, className = "", tone = "light" }: InterviewerAvatarProps) {
   const box = useRef<HTMLDivElement | null>(null);
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const vids = useRef<Partial<Record<WaveState, HTMLVideoElement | null>>>({});
@@ -162,7 +164,7 @@ export function InterviewerAvatar({ state, level, name = "Интервьюер",
         <canvas ref={canvas} aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full" />
       </div>
       <figcaption className="mt-2">
-        <p className="text-sm font-semibold text-brand-night">
+        <p className={`text-sm font-semibold ${tone === "dark" ? "text-white" : "text-brand-night"}`}>
           {name}: <span aria-live="polite" data-testid="avatar-state">{label}</span>
         </p>
       </figcaption>

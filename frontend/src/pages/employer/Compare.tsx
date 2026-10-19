@@ -5,6 +5,7 @@ import { GradeBadge, type GradeStatusInfo } from "../../components/GradeStatus";
 import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, plainText as ruText, useApi } from "../../components/ui";
 import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
 import { ReasonLevel } from "../../components/CandidateCard";  // Ф6 (Н5)
+import { ExecAdvisor } from "../../components/ExecAdvisor";  // Н1: ИИ-советник руководителя (живой диалог)
 
 interface Cell { level: string; status: string; text: string; value?: number; best?: boolean }
 interface Row { key: string; group: string; title: string; requirement?: string | null; quote?: string | null; weight?: number | null; hint?: string }
@@ -106,6 +107,7 @@ export function Compare() {
           <button className="btn-ghost" disabled={!cs.some((c) => !c.probe_active)} onClick={() => setProbe(cs.filter((c) => !c.probe_active).map((c) => c.ref))}>Задание всем ({cs.filter((c) => !c.probe_active).length})</button>
         </div>
       </div>
+      <ExecAdvisor needId={id!} refs={cs.map((c) => c.ref)} version={data.need.version} />
       {done && <Alert kind="ok">{done}</Alert>}
       <WhyBlock why={data.why} />
       <LevelLegend />

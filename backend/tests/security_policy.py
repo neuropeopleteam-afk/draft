@@ -297,6 +297,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/share/{token}"): "open404",
     ("POST", "/api/share/{token}/reactions"): "open404",
     ("GET", "/api/employer/needs/{need_id}/compare"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/advisor"): "employer_own",  # Н1 ИИ-советник руководителя
     ("GET", "/api/employer/probes"): "employer",
     ("POST", "/api/employer/probes"): "employer_ref",
     ("POST", "/api/employer/probes/{probe_id}/review"): "employer_own",
