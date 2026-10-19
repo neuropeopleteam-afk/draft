@@ -12,3 +12,5 @@ export { InterviewerAvatar } from "./InterviewerAvatar";
 export type { InterviewerAvatarProps } from "./InterviewerAvatar";
 export { AnamAvatar } from "./AnamAvatar";
 export type { AnamAvatarProps, AnamHandle, AnamStatus } from "./AnamAvatar";
+export { dictationSupported, pickRuVoice, ttsSupported, useBrowserTts, useLiveDictation } from "./browserSpeech";
+export type { DictationOptions } from "./browserSpeech";

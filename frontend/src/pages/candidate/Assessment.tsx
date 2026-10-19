@@ -935,6 +935,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
+      {/* Н1: сразу после письменной части — живой ИИ-интервьюер зовёт в устный разговор (метка достоверности) */}
+      <DefensePanel sessionId={sessionId} live="auto" />
       {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}
       {r.two_stage && r.mode !== "refine" && r.two_stage.boundary && !extStage && <TwoStageOffer t={r.two_stage} claimed={r.claimed_grade} direction={r.direction} />}
       <div className="card mt-4 text-sm text-brand-ink/75">{plainText(r.explanation)}</div>
@@ -981,7 +983,6 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       )}
       <div className="mt-3"><Alert>{err}</Alert></div>
       <FeedbackSummary sessionId={sessionId} fallbackLink />
-      <DefensePanel sessionId={sessionId} />
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>
       </div>

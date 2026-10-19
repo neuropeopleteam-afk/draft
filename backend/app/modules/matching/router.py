@@ -480,6 +480,36 @@ def compare_candidates(need_id: uuid.UUID, refs: list[str] = Query(default_facto
     return compare_mod.compare(db, c, n, refs, version)
 
 
+class AdvisorIn(BaseModel):
+    question: str | None = Field(None, max_length=500, description="Вопрос руководителя; пусто — краткий доклад")
+    refs: list[str] = Field(default_factory=list, max_length=3, description="Сравниваемые кандидаты; пусто — первые три")
+    version: int | None = Field(None, ge=1, description="Версия подборки (как в сравнении)")
+
+
+@router.post("/needs/{need_id}/advisor", summary="ИИ-советник руководителя: ответ по сравниваемым кандидатам",
+             description="Н1. Вопрос директора (голосом или текстом) → ответ по тем же фактам, что и сравнение: балл, "
+                         "навыки, подтверждённые тестом, и непроверенные, достоверность, достижения ФСП (T2), рынок "
+                         "категории и вилка потребности. Ответ собирается правилами без генерации моделью (source=rules); "
+                         "speech — текст для синтеза речи. Скрытый минимум зарплаты кандидата не используется.",
+             responses={**AUTH, 404: err("Потребность, версия или кандидат не найдены"),
+                        422: err("Нужно от 2 до 3 разных кандидатов")})
+def need_advisor(need_id: uuid.UUID, data: AdvisorIn | None = None, user: User = Depends(employer),
+                 db: Session = Depends(get_db)) -> dict:
+    from app.modules.matching import advisor
+
+    data = data or AdvisorIn()
+    c = my_company(db, user)
+    n = _own_need(db, c, need_id)
+    if data.version is not None and db.scalar(select(SelectionVersion.id).where(
+            SelectionVersion.need_id == n.id, SelectionVersion.version == data.version)) is None:
+        raise api_error(404, "version_not_found", "Версия подборки не найдена")
+    refs = list(dict.fromkeys(r.strip() for r in data.refs if r and r.strip())) or \
+        compare_mod.default_refs(db, n, data.version)
+    if not compare_mod.MIN_REFS <= len(refs) <= compare_mod.MAX_REFS:
+        raise api_error(422, "compare_refs", "Для сравнения выберите от 2 до 3 кандидатов")
+    return advisor.advise(db, c, n, refs, data.version, data.question)
+
+
 # ------------------------------------------------------------------ поиск и карточка
 
 @router.get("/candidates", summary="Поиск по всей базе (только обезличенные карточки)", responses=AUTH)
