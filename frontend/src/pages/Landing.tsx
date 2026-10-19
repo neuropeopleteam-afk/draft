@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { launchLiveAvatar } from "../components/Interview";
-import { AvatarConciergeHero, startAvatarTour } from "../components/InteractiveAvatarTour";
 import { JuryPanel } from "../components/JuryPanel";
 import { DraftLaws } from "../components/landing/DraftLaws";
 import { ReverseDraftDemo } from "../components/landing/ReverseDraftDemo";
@@ -113,36 +112,29 @@ export default function Landing() {
 
       {showInlineJury && <JuryPanel compact />}
 
-      <AvatarConciergeHero />
-
       <DraftLaws />
 
       <section id="how" className="relative mx-auto max-w-content scroll-mt-24 px-4 py-16 sm:px-6" aria-labelledby="how-title">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="np-eyebrow">Сквозная архитектура и маршрут</p>
-            <h2 id="how-title" className="mt-3 text-3xl font-extrabold tracking-tight np-text md:text-[2.5rem]">Как это работает: 3 контура под капотом</h2>
-            <p className="mt-3 max-w-2xl leading-relaxed np-muted">
-              Никаких бесконечных откликов и субъективного чтения резюме: математическое ядро соединяет проверенные навыки специалистов, реестр ФСП и запросы работодателей.
-            </p>
-          </div>
-          <button type="button" onClick={() => startAvatarTour("all", 0)} className="np-btn-primary px-5 py-3 text-sm">
-            ▶ Запустить автоэкскурсию со стрелками
-          </button>
+        <div>
+          <p className="np-eyebrow">Сквозная архитектура и маршрут</p>
+          <h2 id="how-title" className="mt-3 text-3xl font-extrabold tracking-tight np-text md:text-[2.5rem]">Как это работает: 3 контура под капотом</h2>
+          <p className="mt-3 max-w-2xl leading-relaxed np-muted">
+            Никаких бесконечных откликов и субъективного чтения резюме: математическое ядро соединяет проверенные навыки специалистов, реестр ФСП и запросы работодателей.
+          </p>
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           <div className="np-glass p-6">
             <span className="np-eyebrow">Шаг 1 · Калибровка кандидата</span>
-            <h3 className="mt-2 text-lg font-bold np-text">Адаптивный тест 2PL IRT + живой ИИ-аватар</h3>
+            <h3 className="mt-2 text-lg font-bold np-text">Адаптивный тест 2PL IRT + устная защита кода</h3>
             <p className="mt-2 text-sm leading-relaxed np-muted">
-              Сложность задач подбирается в реальном времени по методу максимума информации Фишера. После кода — 3-минутная устная защита с видеоаватаром Еленой против списывания.
+              Сложность задач подбирается в реальном времени по методу максимума информации Фишера. После кода — 3-минутная устная защита решения для подтверждения самостоятельности.
             </p>
           </div>
           <div className="np-glass p-6">
             <span className="np-eyebrow">Шаг 2 · Доказательное ранжирование</span>
             <h3 className="mt-2 text-lg font-bold np-text">Формула 45 / 35 / 10 / 5 / 5 и реестр ФСП</h3>
             <p className="mt-2 text-sm leading-relaxed np-muted">
-              Текст вакансии очищается от нарушений ст. 64 ТК РФ, сверяется с 1 344 вакансиями hh.ru, а кандидаты ранжируются по подтверждённому тесту (45 %), стеку (35 %) и паспорту ФСП (10 %).
+              Текст вакансии очищается от нарушений ст. 64 ТК РФ, сверяется с открытыми вакансиями рынка, а кандидаты ранжируются по подтверждённому тесту (45 %), стеку (35 %) и паспорту ФСП (10 %).
             </p>
           </div>
           <div className="np-glass p-6">
@@ -167,7 +159,6 @@ export default function Landing() {
           steps={candidateSteps(rules)}
           cta={["/register?role=candidate", "Регистрация кандидата"]}
           onDemo={jury ? tryCandidate : undefined}
-          onTour={() => startAvatarTour("candidate", 0)}
         />
       </section>
 
@@ -183,7 +174,6 @@ export default function Landing() {
           steps={employerSteps}
           cta={["/register?role=employer", "Регистрация компании"]}
           onDemo={jury ? tryInvite : undefined}
-          onTour={() => startAvatarTour("employer", 0)}
         />
       </section>
 
@@ -215,17 +205,10 @@ function Fact({ k, t }: { k: string; t: string }) {
   );
 }
 
-function StepList({ id, title, steps, tone, cta, onDemo, onTour }: { id: string; title: string; steps: string[][]; tone: "indigo" | "red"; cta: [string, string]; onDemo?: () => void; onTour?: () => void }) {
+function StepList({ id, title, steps, tone, cta, onDemo }: { id: string; title: string; steps: string[][]; tone: "indigo" | "red"; cta: [string, string]; onDemo?: () => void }) {
   return (
     <div id={id} className="np-glass scroll-mt-24 p-6 sm:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-xl font-bold np-text">{title}</h3>
-        {onTour && (
-          <button type="button" onClick={onTour} className="np-btn-ghost !px-4 !py-2 text-xs font-bold">
-            ▶ Показать этот путь стрелками с ИИ-аватаром
-          </button>
-        )}
-      </div>
+      <h3 className="text-xl font-bold np-text">{title}</h3>
       <ol className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {steps.map(([t, d], i) => (
           <li key={t} className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">

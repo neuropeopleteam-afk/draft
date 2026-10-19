@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { NB } from "../ui";
 import { DEMO, type DemoCandidate } from "./demoData";
-import { AvatarPreview } from "./AvatarPreview";
 
 /** W2: «Обратный драфт в действии (Show, Don't Tell)» — правый блок первого экрана главной. Переключатель направлений,
  *  карточка верифицированного кандидата (три колонки доказанности, бейдж ФСП, ползунок вилки, пробное приглашение)
@@ -9,7 +8,7 @@ import { AvatarPreview } from "./AvatarPreview";
 const money = (v: number) => v.toLocaleString("ru-RU").replace(/\s/g, NB);
 type Flow = "idle" | "sent" | "viewed" | "accepted";
 
-export function ReverseDraftDemo({ onTry, onLiveAvatar, busyLive }: { onTry: () => void; onLiveAvatar?: () => void; busyLive?: boolean }) {
+export function ReverseDraftDemo({ onTry }: { onTry: () => void; onLiveAvatar?: () => void; busyLive?: boolean }) {
   const [i, setI] = useState(0);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const c = DEMO[i];
@@ -35,7 +34,6 @@ export function ReverseDraftDemo({ onTry, onLiveAvatar, busyLive }: { onTry: () 
       </div>
       <div id="dir-panel" role="tabpanel" aria-labelledby={`dir-tab-${c.key}`} className="mt-3">
         <CandidateCard key={c.key} c={c} onTry={onTry} />
-        <AvatarPreview key={`av-${c.key}`} c={c} onLiveAvatar={onLiveAvatar} busyLive={busyLive} />
       </div>
       <p className="mt-3 text-[11px] np-faint">Демонстрация интерфейса · профиль специалиста обезличен до согласия</p>
     </div>

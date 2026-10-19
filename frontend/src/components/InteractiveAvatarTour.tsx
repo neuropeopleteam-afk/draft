@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api, apiUrl } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { juryLogin, type Persona } from "../lib/jury";
-import { AnamAvatar, type AnamHandle, type AnamStatus } from "./voice";
+import { AnamAvatar, type AnamHandle } from "./voice";
 
 export type TourTrack = "all" | "candidate" | "employer" | "fsp";
 
@@ -16,13 +16,8 @@ export interface TourStep {
   badge: string;
   speech: string;
   pointerLabel: string;
-  autoClickSelector?: string;
 }
 
-/**
- * Пошаговый маршрут с самой первой (главной) страницы без пропусков:
- * сначала 3 шага на главной странице (/), затем плавный переход по кабинету кандидата, работодателя и ФСП.
- */
 export const TOUR_STEPS: TourStep[] = [
   {
     id: "land-1-hero",
@@ -31,8 +26,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/",
     selector: "[data-testid='reverse-draft-demo'], main h1",
     badge: "Главная · 1/10",
-    speech: "Начнём с первого экрана главной страницы. Справа вы видите интерактивную карточку Обратного драфта: специалист один раз подтверждает квалификацию адаптивным тестом, а компании сами присылают офферы сразу с зарплатной вилкой в рублях.",
-    pointerLabel: "Интерактивная витрина: офферы сразу с зарплатной вилкой",
+    speech: "Начнём с первого экрана главной страницы. Слева находятся кнопки входа для кандидата и для работодателя, а справа — интерактивная карточка профиля: здесь специалист один раз подтверждает квалификацию адаптивным тестом, а компании присылают приглашения сразу с зарплатной вилкой в рублях.",
+    pointerLabel: "Витрина кандидата и ползунок зарплатного предложения",
   },
   {
     id: "land-2-laws",
@@ -41,8 +36,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/",
     selector: "#laws",
     badge: "Главная · 2/10",
-    speech: "Чуть ниже на главной странице расположен блок Четыре закона Драфта. Обратите внимание на три вкладки — Работодатель, Кандидат и Федерация спортивного программирования. Здесь показана выгода для каждой стороны без бумажных резюме.",
-    pointerLabel: "Три вкладки: Работодатель · Кандидат · Федерация ФСП",
+    speech: "Чуть ниже расположен блок Четыре закона Драфта. В нём три вкладки — Работодатель, Кандидат и Федерация спортивного программирования. Нажимая на каждую вкладку, вы видите, как платформа заменяет субъективные резюме на проверенные факты.",
+    pointerLabel: "Переключатель 3 вкладок: Работодатель · Кандидат · ФСП",
   },
   {
     id: "land-3-how",
@@ -51,8 +46,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/",
     selector: "#how",
     badge: "Главная · 3/10",
-    speech: "А здесь описаны три математических контура под капотом: адаптивное тестирование 2PL IRT с защитой от списывания, формула ранжирования сорок пять на тридцать пять на десять и обратный найм. Сейчас я плавно переведу вас в кабинет кандидата.",
-    pointerLabel: "Три контура под капотом: IRT · Ранжирование · Оффер с вилкой",
+    speech: "Ниже показаны три этапа работы платформы и отдельные маршруты из пяти шагов для специалистов и для нанимающих команд. А теперь я плавно открою личный кабинет, чтобы показать поля и разделы внутри.",
+    pointerLabel: "Этапы работы платформы и маршруты по ролям",
   },
   {
     id: "cand-1-overview",
@@ -61,8 +56,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/candidate",
     selector: "[data-tour='cand-roadmap']",
     badge: "Кандидат · 4/10",
-    speech: "Мы вошли в кабинет кандидата. В самом верху экрана закреплена панель быстрого переключения ролей и кнопка Выйти, а под ней — дорожная карта из четырёх шагов: стек, адаптивный тест, устная защита кода со мной и приглашения от компаний.",
-    pointerLabel: "Дорожная карта кандидата: 4 понятных шага по порядку",
+    speech: "Мы в кабинете кандидата в разделе Обзор. В верхней полосе вы всегда можете переключить роль в один клик или нажать кнопку Выйти. А в центре экрана — дорожная карта из четырёх шагов: стек, адаптивный тест, устная защита кода и приглашения с вилкой.",
+    pointerLabel: "Дорожная карта кандидата: 4 шага по порядку",
   },
   {
     id: "cand-2-assessment",
@@ -71,8 +66,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/candidate/assessment",
     selector: "[data-testid='test-launch-box'], [data-testid='grade-cards']",
     badge: "Кандидат · 5/10",
-    speech: "Это раздел Опрос и тест. На первом экране вы кликаете по карточке нужного грейда — например, Middle — ставите галочку согласия в розовом блоке прямо под карточками и нажимаете кнопку Начать тест. Экспресс-калибровка занимает всего пять минут.",
-    pointerLabel: "Выберите карточку грейда, отметьте согласие и нажмите «Начать тест»",
+    speech: "В разделе Опрос и тест на первом экране расположены шесть карточек грейдов — от Стажёра до Principal. Вы выбираете карточку нужного уровня, ставите галочку согласия в розовом блоке прямо под карточками и нажимаете кнопку Начать тест.",
+    pointerLabel: "Карточки выбора грейда, галочка согласия и кнопка «Начать тест»",
   },
   {
     id: "cand-3-feedback",
@@ -81,8 +76,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/candidate/feedback",
     selector: "[data-testid='theta-scale']",
     badge: "Кандидат · 6/10",
-    speech: "После сдачи теста открывается Карта навыков и рост. Стрелка показывает психометрическую шкалу 2PL IRT с вашим индексом способности тета и доверительным коридором, а ниже — кнопки Маршрута роста и сравнение со спросом по тысяче трёмстам сорока четырём вакансиям hh.ru.",
-    pointerLabel: "Психометрическая шкала 2PL IRT (θ ± SE) и кнопки роста",
+    speech: "В разделе Карта навыков и рост сверху показана шкала способности по итогам теста, под ней — блок Маршрут роста с кнопками перехода к проверочным задачам, а ниже — сравнение ваших навыков с открытыми вакансиями на рынке.",
+    pointerLabel: "Шкала уровня по тесту и маршрут роста с кнопками",
   },
   {
     id: "cand-4-invitations",
@@ -91,8 +86,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/candidate/invitations",
     selector: "main .card, main h1",
     badge: "Кандидат · 7/10",
-    speech: "В разделе Приглашения кандидат видит офферы от компаний. Пока вы не нажмёте кнопку Принять, работодатель не знает вашего имени и телефона, но уже обязан указать точную зарплатную вилку в рублях. Теперь посмотрим кабинет работодателя.",
-    pointerLabel: "Приглашение с зарплатной вилкой и индексом доверия компании",
+    speech: "В разделе Приглашения собраны предложения от компаний. В каждой карточке сразу указана зарплатная вилка в рублях, индекс доверия работодателя и кнопки Принять, Отклонить или Предложить свою вилку. Контакты открываются только после вашего согласия.",
+    pointerLabel: "Приглашение компании с зарплатной вилкой и кнопкой «Принять»",
   },
   {
     id: "emp-1-needs",
@@ -101,8 +96,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/employer/needs",
     selector: "#need, [data-tour='emp-roadmap']",
     badge: "Работодатель · 8/10",
-    speech: "Мы в кабинете работодателя в разделе Потребности и подборки. В это текстовое поле достаточно вставить описание вакансии своими словами или нажать Подставить пример и кнопку Разобрать требования: система сама выделит стек и уберёт нарушения статьи 64 Трудового кодекса.",
-    pointerLabel: "Поле текста вакансии и кнопка «Подставить пример»",
+    speech: "Мы перешли в кабинет работодателя в раздел Потребности и подборки. В текстовое поле Кого вы ищете вы вставляете описание вакансии своими словами или нажимаете кнопку Подставить пример, а затем кнопку Разобрать требования. Система сама выделит стек и проверит рыночность зарплаты.",
+    pointerLabel: "Поле «Кого вы ищете», кнопка «Подставить пример» и «Разобрать требования»",
   },
   {
     id: "emp-2-compare",
@@ -111,8 +106,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/employer/compare",
     selector: "[data-testid='decision-proof-strip'], [data-testid='exec-advisor'], main h1",
     badge: "Работодатель · 9/10",
-    speech: "На экране сравнения лучших кандидатов видна пятисегментная формула ранжирования и панель ИИ-советника руководителя. Здесь можно сравнить доказательства по каждому требованию и в один клик отправить приглашение с зарплатной вилкой.",
-    pointerLabel: "ИИ-советник руководителя и формула ранжирования 45/35/10/5/5",
+    speech: "На экране сравнения кандидатов вверху работает ИИ-советник руководителя, который помогает выбрать лидера и подготовить вопросы к финальному созвону, а ниже в таблице видны подтверждённые навыки каждого кандидата и кнопка Пригласить с указанием вилки.",
+    pointerLabel: "Советник руководителя, таблица сравнения и кнопка «Пригласить»",
   },
   {
     id: "fsp-1-cabinet",
@@ -121,8 +116,8 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/fsp",
     selector: "main .card, main h1",
     badge: "Федерация ФСП · 10/10",
-    speech: "И финальная точка нашего маршрута — аналитический кабинет Федерации спортивного программирования. Здесь собраны дефицит навыков по регионам России, влияние спортивных разрядов ФСП на зарплатные офферы и запуск отборочных кубков под вакансии. Задайте мне любой вопрос голосом или в строке ниже.",
-    pointerLabel: "Аналитика спроса по РФ и эффект соревнований ФСП",
+    speech: "И третий кабинет платформы — кабинет Федерации спортивного программирования. В верхних вкладках здесь открываются спрос работодателей по регионам России, влияние спортивных достижений на зарплатные предложения и кубки работодателей. Если хотите что-то уточнить — просто скажите в микрофон.",
+    pointerLabel: "Вкладки аналитики спроса по РФ и эффекта соревнований ФСП",
   },
 ];
 
@@ -151,9 +146,10 @@ interface ChatTurn {
 }
 
 /**
- * Компактный живой ИИ-проводник Елена с настоящим голосом ElevenLabs, WebRTC-липсинком Anam и распознаванием Deepgram.
- * Без гигантского окна и без кнопки «Далее»: сначала знакомится, спрашивает имя и роль, отвечает на вопросы в живом диалоге,
- * а затем плавно ведёт по сайту с самой первой страницы, подсвечивая каждый блок и каждое поле стрелкой.
+ * Живой голосовой ИИ-проводник Елена.
+ * Никаких кнопок выбора роли, текстовых полей и технических ярлыков:
+ * после нажатия открывается крупный живой видеопортрет Елены, она здоровается, спрашивает имя и роль,
+ * сама включает микрофон и в живом диалоге (на базе RAG по всем экранам и полям сайта) плавно ведёт пользователя с первой страницы.
  */
 export function InteractiveAvatarTour() {
   const { me, signIn } = useAuth();
@@ -171,9 +167,7 @@ export function InteractiveAvatarTour() {
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [thinking, setThinking] = useState(false);
-  const [inputText, setInputText] = useState("");
   const [history, setHistory] = useState<ChatTurn[]>([]);
-  const [anamStatus, setAnamStatus] = useState<AnamStatus>("connecting");
   const [targetRect, setTargetRect] = useState<BoxRect | null>(null);
 
   const anamRef = useRef<AnamHandle | null>(null);
@@ -216,12 +210,7 @@ export function InteractiveAvatarTour() {
     setRecording(false);
   }, []);
 
-  /**
-   * Озвучка фразы ТОЛЬКО настоящим голосом ElevenLabs:
-   * 1) Если WebRTC-поток Anam готов (anamRef.current.live() === true) — запрашиваем pcm_16000 и отдаём в anamRef.current.speak(pcm) для синхронного движения губ;
-   * 2) Пока поток Anam подключается или недоступен — запрашиваем mp3 у ElevenLabs (/api/interview/concierge/speech) и проигрываем через HTMLAudioElement.
-   */
-  const speakElevenLabs = useCallback(async (text: string): Promise<void> => {
+  const speakVoice = useCallback(async (text: string): Promise<void> => {
     stopAudio();
     const clean = text.trim();
     if (!clean) return;
@@ -248,7 +237,6 @@ export function InteractiveAvatarTour() {
         }
       }
 
-      // Настоящий голос ElevenLabs в формате MP3 (если поток Anam ещё соединяется)
       const resMp3 = await fetch(apiUrl("/interview/concierge/speech"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -272,7 +260,7 @@ export function InteractiveAvatarTour() {
         audio.play().catch(done);
       });
     } catch {
-      // прервано пользователем или сетью
+      // прервано
     } finally {
       if (speakAbortRef.current === ac) {
         setSpeaking(false);
@@ -280,14 +268,14 @@ export function InteractiveAvatarTour() {
     }
   }, [stopAudio]);
 
-  // Отправка сказанного/написанного сообщения в живой диалог Елены
+  const startMicRef = useRef<() => Promise<void>>(async () => {});
+
   const handleUserMessage = useCallback(async (rawText: string) => {
     const msg = rawText.trim();
     if (!msg) return;
     if (stepTimerRef.current) window.clearTimeout(stepTimerRef.current);
     stopAudio();
     stopMic();
-    setInputText("");
     setThinking(true);
     const nextHist: ChatTurn[] = [...history, { who: "user", text: msg }];
     setHistory(nextHist);
@@ -320,9 +308,14 @@ export function InteractiveAvatarTour() {
         setTrack(r.detected_role);
       }
       setHistory((h) => [...h, { who: "elena", text: r.reply }]);
-      await speakElevenLabs(r.reply);
+      await speakVoice(r.reply);
 
-      // После ответа плавно запускаем или продолжаем пошаговую экскурсию с 1-й страницы
+      if (!r.start_tour) {
+        // Елена уточнила роль (например, человек назвал только имя) — снова включаем микрофон и ждём ответ
+        void startMicRef.current();
+        return;
+      }
+
       spokenStepRef.current = null;
       if (typeof r.jump_to_step === "number") {
         setIdx(r.jump_to_step);
@@ -336,9 +329,8 @@ export function InteractiveAvatarTour() {
       setPhase("tour");
       setPaused(false);
     }
-  }, [history, userName, track, loc.pathname, idx, phase, stopAudio, stopMic, speakElevenLabs]);
+  }, [history, userName, track, loc.pathname, idx, phase, stopAudio, stopMic, speakVoice]);
 
-  // Запись микрофона с автоостановкой по паузе и распознаванием через Deepgram Nova-2
   const startMic = useCallback(async () => {
     if (recording || transcribing) {
       stopMic();
@@ -381,7 +373,6 @@ export function InteractiveAvatarTour() {
         }
       };
 
-      // Детектор голоса и паузы (2.6 с тишины после речи → автоотправка)
       const ctx = new AudioContext();
       const src = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
@@ -405,7 +396,7 @@ export function InteractiveAvatarTour() {
           lastSpeechAt = Date.now();
         }
         const now = Date.now();
-        if ((heardSpeech && now - lastSpeechAt > 2600) || now - startedAt > 14000) {
+        if ((heardSpeech && now - lastSpeechAt > 2600) || now - startedAt > 15000) {
           if (silenceTimerRef.current) window.clearInterval(silenceTimerRef.current);
           silenceTimerRef.current = null;
           void ctx.close().catch(() => undefined);
@@ -420,7 +411,10 @@ export function InteractiveAvatarTour() {
     }
   }, [recording, transcribing, stopAudio, stopMic, handleUserMessage]);
 
-  // Открытие гида по событию
+  useEffect(() => {
+    startMicRef.current = startMic;
+  }, [startMic]);
+
   useEffect(() => {
     const onTour = (e: Event) => {
       const d = (e as CustomEvent).detail || {};
@@ -437,37 +431,30 @@ export function InteractiveAvatarTour() {
       setPaused(false);
       spokenStepRef.current = null;
       setOpen(true);
-
-      if (d.skipGreeting) {
-        setPhase("tour");
-      } else {
-        setPhase("greeting");
-      }
+      setPhase(d.skipGreeting ? "tour" : "greeting");
     };
     window.addEventListener(TOUR_EVENT, onTour);
     return () => window.removeEventListener(TOUR_EVENT, onTour);
   }, [stopAudio, stopMic]);
 
-  // Фаза 1: Живое приветствие при открытии (остаёмся на текущей странице, знакомимся по имени и спрашиваем роль)
+  // Живое знакомство при открытии (остаёмся на текущей странице, Елена представляется и включает микрофон)
   useEffect(() => {
     if (!open || phase !== "greeting") return;
     let cancelled = false;
     (async () => {
-      // Небольшая пауза, чтобы Anam WebRTC успел подняться для синхронного липсинка
-      await new Promise((r) => setTimeout(r, 900));
+      await new Promise((r) => setTimeout(r, 1100));
       if (cancelled) return;
       const greetText = userName
-        ? `Здравствуйте, ${userName}. Я Елена, цифровой проводник платформы Драфт. Скажите голосом или напишите, в какой роли показать платформу — кандидат, работодатель или весь маршрут с первой страницы?`
-        : "Здравствуйте. Меня зовут Елена, я цифровой проводник платформы Драфт. Скажите голосом или напишите, как к вам обращаться и что вам показать — путь кандидата, кабинет работодателя или весь сайт с самого начала?";
-      await speakElevenLabs(greetText);
+        ? `Здравствуйте, ${userName}. Меня зовут Елена, я проводник платформы Драфт. Скажите, пожалуйста, в какой роли вы сегодня — кандидат или работодатель, или провести вас по всему сайту с самого начала?`
+        : "Здравствуйте. Меня зовут Елена, я цифровой проводник платформы Драфт. Скажите, пожалуйста, как вас зовут и в какой роли вы сегодня — кандидат или работодатель? Я отвечу на ваши вопросы и проведу по всему сайту.";
+      await speakVoice(greetText);
       if (cancelled) return;
-      // Автоматически включаем микрофон после приветствия для живого диалога
-      void startMic();
+      void startMicRef.current();
     })();
     return () => { cancelled = true; };
   }, [open, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Фаза 2: Плавное пошаговое ведение по сайту с 1-й страницы без кнопки «Далее»
+  // Плавное ведение по сайту с первой страницы
   useEffect(() => {
     if (!open || phase !== "tour" || paused || recording || transcribing || thinking || !step) return;
     if (spokenStepRef.current === step.id) return;
@@ -476,7 +463,6 @@ export function InteractiveAvatarTour() {
 
     let cancelled = false;
     (async () => {
-      // 1. При необходимости переключаем демо-роль и переходим на нужный экран
       try {
         const needPersona = step.persona;
         const currentRole = me?.role;
@@ -494,15 +480,13 @@ export function InteractiveAvatarTour() {
         if (!cancelled && loc.pathname !== step.path) navigate(step.path);
       }
 
-      // Ждём отрисовки и плавно прокручиваем к блоку
-      await new Promise((r) => setTimeout(r, 650));
+      await new Promise((r) => setTimeout(r, 700));
       if (cancelled) return;
 
       const prefix = userName && idx === 0 ? `${userName}, ` : "";
-      await speakElevenLabs(prefix + step.speech);
+      await speakVoice(prefix + step.speech);
       if (cancelled || paused) return;
 
-      // Комфортная пауза 3,2 секунды после окончания речи, чтобы человек спокойно рассмотрел блок, и автоматический переход дальше
       stepTimerRef.current = window.setTimeout(() => {
         if (cancelled || paused) return;
         if (idx < steps.length - 1) {
@@ -511,16 +495,15 @@ export function InteractiveAvatarTour() {
         } else {
           setPaused(true);
         }
-      }, 3200);
+      }, 3400);
     })();
 
     return () => {
       cancelled = true;
       if (stepTimerRef.current) window.clearTimeout(stepTimerRef.current);
     };
-  }, [open, phase, paused, recording, transcribing, thinking, step, idx, steps.length, me, signIn, navigate, loc.pathname, userName, speakElevenLabs]);
+  }, [open, phase, paused, recording, transcribing, thinking, step, idx, steps.length, me, signIn, navigate, loc.pathname, userName, speakVoice]);
 
-  // Наведение светящейся рамки и стрелки-указки на текущий блок
   const updateSpotlight = useCallback(() => {
     if (!open || phase !== "tour" || !step) {
       setTargetRect(null);
@@ -584,20 +567,20 @@ export function InteractiveAvatarTour() {
 
   if (!open) {
     return (
-      <div className="fixed bottom-4 right-4 z-40 print:hidden">
+      <div className="fixed bottom-5 right-5 z-40 print:hidden">
         <button
           type="button"
           onClick={() => startAvatarTour("all", 0, false)}
           data-testid="floating-avatar-concierge"
-          className="group flex items-center gap-2.5 rounded-full border border-brand/40 bg-[#120E24]/95 px-3 py-2 text-left text-white shadow-xl backdrop-blur transition hover:scale-[1.02] hover:border-brand"
+          className="group flex items-center gap-3 rounded-full border border-brand/40 bg-[#120E24]/95 px-4 py-2.5 text-left text-white shadow-2xl backdrop-blur transition hover:scale-[1.02] hover:border-brand"
         >
-          <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full ring-2 ring-brand">
-            <img src="/avatar/interviewer.webp" alt="ИИ-гид Елена" className="h-full w-full object-cover" />
-            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-[#120E24]" />
+          <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full ring-2 ring-brand">
+            <img src="/avatar/interviewer.webp" alt="Елена — проводник по платформе" className="h-full w-full object-cover" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-[#120E24]" />
           </span>
           <span className="pr-1">
-            <span className="block text-xs font-extrabold text-white">ИИ-гид Елена</span>
-            <span className="block text-[10px] text-white/75">Живой диалог и обзор</span>
+            <span className="block text-sm font-extrabold text-white">Елена · ИИ-проводник</span>
+            <span className="block text-xs text-white/75">Познакомиться и пройти обзор</span>
           </span>
         </button>
       </div>
@@ -606,7 +589,7 @@ export function InteractiveAvatarTour() {
 
   return (
     <>
-      {/* Светящаяся рамка и живая стрелка-указка поверх активного блока */}
+      {/* Подсветка текущего блока и указатель */}
       {phase === "tour" && targetRect && (
         <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden print:hidden" aria-hidden="true">
           <div
@@ -635,22 +618,21 @@ export function InteractiveAvatarTour() {
         </div>
       )}
 
-      {/* Компактный блок живого ИИ-проводника Елены (Anam WebRTC липсинк + ElevenLabs + Deepgram STT) */}
+      {/* Чистый голосовой блок Елены с крупным портретом и одной кнопкой микрофона */}
       <aside
-        aria-label="Живой ИИ-проводник Елена"
+        aria-label="Елена — проводник по платформе"
         data-testid="interactive-avatar-tour"
-        className="fixed bottom-4 right-4 z-50 w-[19rem] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-white/15 bg-[#120E24]/95 text-white shadow-2xl backdrop-blur-xl print:hidden"
+        className="fixed bottom-5 right-5 z-50 w-[21rem] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-3xl border border-white/15 bg-[#120E24]/95 text-white shadow-2xl backdrop-blur-xl print:hidden"
       >
-        {/* Верхняя компактная полоска */}
-        <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-white/5 px-3 py-2">
-          <div className="flex min-w-0 items-center gap-1.5">
-            <span className={`h-2 w-2 shrink-0 rounded-full ${speaking ? "animate-ping bg-brand" : "bg-emerald-400"}`} />
-            <span className="truncate text-[11px] font-bold text-white">
+        <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-white/5 px-4 py-2.5">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${speaking ? "animate-ping bg-brand" : "bg-emerald-400"}`} />
+            <span className="truncate text-xs font-bold text-white">
               {userName ? `Елена · для ${userName}` : "Елена · ИИ-проводник"}
-              {phase === "tour" ? ` (${step.badge})` : ""}
+              {phase === "tour" ? ` · ${step.badge}` : ""}
             </span>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1.5">
             {phase === "tour" && (
               <button
                 type="button"
@@ -664,9 +646,9 @@ export function InteractiveAvatarTour() {
                     spokenStepRef.current = null;
                   }
                 }}
-                className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/85 hover:bg-white/20"
+                className="rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/85 hover:bg-white/20"
               >
-                {paused ? "▶ Пуск" : "⏸ Пауза"}
+                {paused ? "Продолжить" : "Пауза"}
               </button>
             )}
             <button
@@ -677,7 +659,7 @@ export function InteractiveAvatarTour() {
                 stopMic();
                 setOpen(false);
               }}
-              className="rounded-md px-1.5 py-0.5 text-xs font-bold text-white/70 hover:bg-white/10 hover:text-white"
+              className="rounded-lg px-2 py-1 text-xs font-bold text-white/70 hover:bg-white/10 hover:text-white"
               aria-label="Закрыть"
             >
               ✕
@@ -685,140 +667,56 @@ export function InteractiveAvatarTour() {
           </div>
         </div>
 
-        <div className="space-y-2.5 p-3">
-          {/* Живой WebRTC-аватар Anam с липсинком + компактная текущая реплика */}
-          <div className="flex items-center gap-2.5">
-            <div className="relative h-[76px] w-[76px] shrink-0 overflow-hidden rounded-xl border border-brand/50 bg-black">
-              <AnamAvatar
-                ref={anamRef}
-                sessionId="concierge-elena"
-                tokenPath="/interview/concierge/avatar-token"
-                state={speaking ? "speaking" : thinking || transcribing ? "thinking" : "listening"}
-                name="Елена"
-                size={76}
-                tone="dark"
-                className="[&>figcaption]:hidden"
-                onStatus={setAnamStatus}
-              />
-              <span className="pointer-events-none absolute bottom-0.5 left-0.5 rounded bg-black/75 px-1 py-0.2 text-[9px] font-semibold text-emerald-300">
-                {anamStatus === "live" ? "Live WebRTC" : "ElevenLabs"}
-              </span>
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <p className="line-clamp-4 text-[11.5px] leading-snug text-white/90">
-                {thinking
-                  ? "Елена думает над ответом…"
-                  : transcribing
-                  ? "Распознаю вашу речь (Deepgram)…"
-                  : recording
-                  ? "Слушаю вас — назовите имя, роль или задайте вопрос…"
-                  : subtitle || "Здравствуйте! Назовите ваше имя и роль, и я проведу вас по сайту."}
-              </p>
-            </div>
+        <div className="flex flex-col items-center space-y-3.5 p-4 text-center">
+          {/* Крупный живой портрет Елены без технических надписей */}
+          <div className="relative h-44 w-44 overflow-hidden rounded-2xl border-2 border-brand/50 bg-black shadow-xl">
+            <AnamAvatar
+              ref={anamRef}
+              sessionId="concierge-elena"
+              tokenPath="/interview/concierge/avatar-token"
+              state={speaking ? "speaking" : thinking || transcribing ? "thinking" : "listening"}
+              name="Елена"
+              size={176}
+              tone="dark"
+              className="[&>figcaption]:hidden"
+            />
           </div>
 
-          {/* Быстрые чипы выбора при знакомстве (если не хочется говорить в микрофон) */}
-          {phase === "greeting" && (
-            <div className="flex flex-wrap gap-1">
-              {[
-                ["Покажи весь сайт с начала", "Весь сайт"],
-                ["Я кандидат, покажи путь", "Я кандидат"],
-                ["Я работодатель, покажи найм", "Я работодатель"],
-              ].map(([msg, label]) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => void handleUserMessage(msg)}
-                  className="rounded-lg bg-white/10 px-2 py-1 text-[10.5px] font-semibold text-white/90 transition hover:bg-brand hover:text-white"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Полный текст текущей реплики без обрезки */}
+          <p className="text-xs leading-relaxed text-white/90">
+            {thinking
+              ? "Секунду, формулирую ответ…"
+              : transcribing
+              ? "Обрабатываю ваши слова…"
+              : subtitle || "Здравствуйте. Меня зовут Елена, я цифровой проводник платформы Драфт."}
+          </p>
 
-          {/* Живой голосовой и текстовый ввод для диалога с Еленой в любой момент */}
-          <form
-            onSubmit={(e: FormEvent) => {
-              e.preventDefault();
-              if (inputText.trim()) void handleUserMessage(inputText);
-            }}
-            className="flex items-center gap-1.5"
-          >
+          {/* Единственная круглая кнопка микрофона */}
+          <div className="flex flex-col items-center gap-1.5 pt-1">
             <button
               type="button"
               onClick={() => void startMic()}
-              title={recording ? "Остановить запись" : "Сказать голосом (Deepgram)"}
-              className={`flex h-8 shrink-0 items-center gap-1 rounded-xl px-2.5 text-[11px] font-bold transition ${
+              aria-label={recording ? "Выключить микрофон" : "Включить микрофон"}
+              className={`flex h-12 w-12 items-center justify-center rounded-full transition ${
                 recording
-                  ? "animate-pulse bg-brand text-white shadow-lg"
-                  : "bg-brand/25 text-brand-blush ring-1 ring-brand/50 hover:bg-brand hover:text-white"
+                  ? "animate-pulse bg-brand text-white shadow-[0_0_24px_rgba(225,29,72,0.8)] ring-4 ring-brand/40"
+                  : "bg-white/15 text-white hover:bg-brand"
               }`}
             >
-              <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 fill-current">
+              <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current">
                 <path d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" />
               </svg>
-              {recording ? "Говорите…" : "Голосом"}
             </button>
-
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder={phase === "greeting" ? "Имя, роль или вопрос…" : "Спросить Елену…"}
-              className="h-8 min-w-0 flex-1 rounded-xl border border-white/15 bg-white/10 px-2.5 text-[11px] text-white placeholder-white/45 focus:border-brand focus:outline-none"
-            />
-            {inputText.trim() && (
-              <button
-                type="submit"
-                className="h-8 shrink-0 rounded-xl bg-brand px-2.5 text-[11px] font-bold text-white"
-              >
-                →
-              </button>
-            )}
-          </form>
+            <span className="text-[11px] font-medium text-white/70">
+              {recording
+                ? "Микрофон включён — говорите…"
+                : speaking
+                ? "Елена говорит (нажмите, чтобы спросить)"
+                : "Нажмите на микрофон, чтобы ответить или спросить"}
+            </span>
+          </div>
         </div>
       </aside>
     </>
-  );
-}
-
-/**
- * Компактная плашка вызова живого ИИ-проводника Елены на главной странице (/):
- * без гигантского блока и без мгновенного выброса в кабинет — при нажатии открывает живое знакомство и ведёт с 1-й страницы.
- */
-export function AvatarConciergeHero() {
-  return (
-    <section
-      aria-label="Живой ИИ-проводник Елена"
-      data-testid="avatar-concierge-hero"
-      className="mx-auto max-w-content px-4 pb-6 sm:px-6"
-    >
-      <div className="np-glass np-glass-accent flex flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-4">
-        <div className="flex items-center gap-3.5">
-          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-brand shadow-lg">
-            <img src="/avatar/interviewer.webp" alt="ИИ-проводник Елена" className="h-full w-full object-cover" />
-            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-brand-night" />
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider np-accent">
-              Живой ИИ-проводник · Голос ElevenLabs · Липсинк Anam WebRTC
-            </p>
-            <p className="mt-0.5 text-sm font-bold np-text sm:text-base">
-              Елена познакомится с вами, спросит вашу роль и плавно проведёт по всему сайту с первой страницы
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => startAvatarTour("all", 0, false)}
-          className="np-btn-primary shrink-0 !px-5 !py-2.5 text-xs font-extrabold sm:text-sm"
-        >
-          ▶ Начать живой диалог и обзор с Еленой
-        </button>
-      </div>
-    </section>
   );
 }

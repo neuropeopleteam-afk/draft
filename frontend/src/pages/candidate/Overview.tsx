@@ -6,7 +6,6 @@ import { useAuth } from "../../lib/auth";
 import { Specializations } from "../../components/Specializations";
 import InterestCard from "../../components/InterestCard";
 import { launchLiveAvatar, minutes } from "../../components/Interview";
-import { startAvatarTour } from "../../components/InteractiveAvatarTour";
 import { useMeta } from "../../lib/meta";
 
 export default function CandidateOverview() {
@@ -39,18 +38,9 @@ export default function CandidateOverview() {
 
       {/* Наглядная пошаговая дорожная карта кандидата (Шаг 1 → Шаг 2 → Шаг 3 с живым ИИ-аватаром → Шаг 4) */}
       <section className="card mt-6 space-y-4 border-brand/20 bg-white" data-tour="cand-roadmap" aria-label="Пошаговая дорожная карта кандидата">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand">Дорожная карта кандидата · 4 шага</p>
-            <h2 className="mt-0.5 text-lg font-bold text-brand-night">Как устроен ваш путь в «Драфте» и куда нажимать</h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => startAvatarTour("candidate", 0)}
-            className="btn-ghost !px-3.5 !py-1.5 text-xs font-bold"
-          >
-            ▶ Показать все 4 шага со стрелками и голосом
-          </button>
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand">Дорожная карта кандидата · 4 шага</p>
+          <h2 className="mt-0.5 text-lg font-bold text-brand-night">Как устроен ваш путь в «Драфте» и куда нажимать</h2>
         </div>
 
         <ol className="grid gap-3 md:grid-cols-2">
