@@ -17,7 +17,7 @@ const BEATS: Beat[] = [
 const WHO = { ai: "ИИ-интервьюер", cand: "Кандидат", sys: "Итог" } as const;
 const TOTAL = 180;
 
-export function AvatarPreview({ c }: { c: DemoCandidate }) {
+export function AvatarPreview({ c, onLiveAvatar, busyLive }: { c: DemoCandidate; onLiveAvatar?: () => void; busyLive?: boolean }) {
   const [beat, setBeat] = useState(-1);  // -1 — не запущено
   const [left, setLeft] = useState(TOTAL);
   const timers = useRef<number[]>([]);
@@ -36,7 +36,7 @@ export function AvatarPreview({ c }: { c: DemoCandidate }) {
   const clip: Clip = b?.clip ?? "idle";
   const mmss = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
   return (
-    <div className="np-card mt-3 flex flex-col gap-3 p-3 sm:flex-row sm:items-stretch" data-testid="demo-defense">
+    <div className="np-card mt-3 flex flex-col gap-3 p-3.5 sm:flex-row sm:items-stretch" data-testid="demo-defense">
       <div className="np-video relative h-28 w-full shrink-0 overflow-hidden rounded-xl sm:h-auto sm:w-28">
         {beat < 0 ? (
           <img src="/avatar/interviewer.webp" alt="ИИ-интервьюер: портрет сгенерирован моделью, несуществующий человек"
@@ -48,24 +48,29 @@ export function AvatarPreview({ c }: { c: DemoCandidate }) {
             <source src={`/avatar/${clip}.mp4`} type="video/mp4" />
           </video>
         )}
-        <span className="np-video-tag">ИИ, не человек</span>
+        <span className="np-video-tag">Живой ИИ</span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-bold leading-snug np-text">3-минутная устная защита кода с ИИ-интервьюером</p>
+          <p className="text-sm font-bold leading-snug np-text">Живая устная защита кода с ИИ-аватаром</p>
           <span className="font-mono text-xs tabular-nums np-faint" aria-label={`Осталось ${mmss}`}>{running ? <><span className="np-live-dot mr-1.5 inline-block align-middle" aria-hidden="true" />{mmss}</> : "3:00"}</span>
         </div>
         <p className="mt-1.5 min-h-[2.5rem] text-xs leading-snug np-muted" aria-live="polite">
           {b ? <><b className={b.who === "sys" ? "np-ok" : b.who === "ai" ? "np-accent" : "np-text"}>{WHO[b.who]}: </b>{b.text(c)}</>
-            : "Аватар задаёт вопросы по вашему решению голосом или в чате. Работодатель видит «подтверждено устно» или расхождения с цитатами."}
+            : "Аватар задаёт вопросы по решению своим голосом и автоматически включает микрофон для вашего ответа. Работодатель видит вердикт и дословные цитаты."}
         </p>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
+        <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
+          {onLiveAvatar && (
+            <button type="button" className="np-btn-primary px-4 py-1.5 text-xs font-bold" disabled={busyLive} onClick={onLiveAvatar} data-testid="demo-defense-live">
+              <svg viewBox="0 0 24 24" className="mr-1.5 inline-block h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+              {busyLive ? "Открываем комнату…" : "Поговорить с ИИ-аватаром вживую"}
+            </button>
+          )}
           {running
-            ? <button type="button" className="np-btn-ghost px-3.5 py-1.5 text-xs" onClick={stop}>Остановить</button>
-            : <button type="button" className="np-btn-ghost px-3.5 py-1.5 text-xs" onClick={play} data-testid="demo-defense-play">
+            ? <button type="button" className="np-btn-ghost px-3 py-1.5 text-xs" onClick={stop}>Остановить превью</button>
+            : <button type="button" className="np-btn-ghost px-3 py-1.5 text-xs" onClick={play} data-testid="demo-defense-play">
                 <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10-6.5-10-6.5z" /></svg>
-                {beat < 0 ? "Смотреть пример" : "Ещё раз"}</button>}
-          <span className="text-[11px] np-faint">Оценивает модель · грейд не меняет</span>
+                {beat < 0 ? "Текст примера" : "Ещё раз"}</button>}
         </div>
       </div>
     </div>

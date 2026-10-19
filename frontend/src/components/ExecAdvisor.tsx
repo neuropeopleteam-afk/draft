@@ -102,6 +102,11 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
     const t = tokenStore.get();
     const headers: Record<string, string> = { "Content-Type": "application/json", ...(t ? { Authorization: `Bearer ${t}` } : {}) };
 
+    if (anamRef.current && !anamRef.current.live()) {
+      for (let k = 0; k < 16 && anamRef.current && !anamRef.current.live(); k++) {
+        await new Promise((r) => setTimeout(r, 250));
+      }
+    }
     if (anamRef.current?.live()) {
       try {
         const r = await fetch(apiUrl(`/employer/needs/${needId}/advisor/speech`), {
@@ -135,10 +140,10 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
           return;
         }
       }
-    } catch { /* локальный стенд без внешнего ключа — запасной синтез браузера */ }
+    } catch { /* если браузер заблокировал автозапуск без клика — показываем кнопку «Озвучить доклад» */ }
 
-    if (tts.supported) tts.speak(a.speech);
-  }, [needId, stopAllSpeech, tts]);
+    if (auto) setWaitTap(true);
+  }, [needId, stopAllSpeech]);
 
   const ask = useCallback(async (question: string | null) => {
     stopAllSpeech();
@@ -261,7 +266,14 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
               {busy ? "Думаю…" : "Спросить"}
             </button>
           </form>
-          {dict.listening && <p className="text-xs font-semibold text-[#FFD6E4]" role="status" data-testid="advisor-listening">{phaseText}</p>}
+          {dict.listening && (
+            <div className="rounded-2xl border border-emerald-400/60 bg-emerald-950/60 px-4 py-2.5 text-xs text-white" role="status" data-testid="advisor-listening">
+              <p className="font-bold text-emerald-300">● {phaseText}</p>
+              <p className="mt-1 text-sm font-medium text-white">
+                {dict.interim ? `Слышу ваш вопрос: «${dict.interim}»` : "Говорите в микрофон — ваши слова сразу появятся здесь…"}
+              </p>
+            </div>
+          )}
           {note && <p className="text-xs text-[#FFD6E4]" role="status">{note}</p>}
 
           {hist.length > 0 && (

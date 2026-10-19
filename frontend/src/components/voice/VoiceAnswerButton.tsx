@@ -11,13 +11,13 @@ const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, 
 
 const PHASE_TEXT: Record<VadPhase, string> = {
   off: "",
-  waiting: "Слушаю — говорите",
-  speaking: "Слышу вас",
-  pause: "Пауза — сейчас отправлю",
+  waiting: "● Микрофон включён — говорите своими словами",
+  speaking: "● Слышу вас — говорите",
+  pause: "✓ Пауза — отправляю ваш ответ",
 };
 
-/** Индикатор слушания: пять полос уровня микрофона и подпись фазы с отсчётом паузы. Рисуется без перерисовки React. */
-export function ListeningMeter({ level, vad, phase }: { level: () => number; vad: () => VadInfo; phase: VadPhase }) {
+/** Индикатор слушания: пять полос уровня микрофона, живая бегущая строка распознанной речи и отсчёт паузы. */
+export function ListeningMeter({ level, vad, phase, liveText }: { level: () => number; vad: () => VadInfo; phase: VadPhase; liveText?: string }) {
   const bars = useRef<(HTMLSpanElement | null)[]>([]);
   const left = useRef<HTMLSpanElement | null>(null);
   useEffect(() => {
@@ -28,7 +28,7 @@ export function ListeningMeter({ level, vad, phase }: { level: () => number; vad
       bars.current.forEach((b, i) => {
         if (!b) return;
         const k = 0.55 + 0.45 * Math.abs(Math.sin(t * 6 + i * 1.3));
-        b.style.transform = `scaleY(${Math.max(0.15, Math.min(1, l * 1.8 * k))})`;
+        b.style.transform = `scaleY(${Math.max(0.18, Math.min(1, l * 2.1 * k))})`;
       });
       const v = vad();
       if (left.current) {
@@ -40,19 +40,30 @@ export function ListeningMeter({ level, vad, phase }: { level: () => number; vad
     loop();
     return () => cancelAnimationFrame(raf);
   }, [level, vad]);
-  const dot = phase === "speaking" ? "bg-emerald-500" : phase === "pause" ? "bg-amber-500" : "bg-sky-500";
+  const dot = phase === "speaking" ? "bg-emerald-500" : phase === "pause" ? "bg-amber-500" : "bg-emerald-500";
+  const ring = phase === "speaking" ? "border-emerald-400 bg-emerald-50/90" : phase === "pause" ? "border-amber-300 bg-amber-50/90" : "border-emerald-300 bg-emerald-50/60";
   return (
-    <div className="flex flex-col items-center gap-1" data-testid="iv-listening" data-phase={phase}>
-      <div className="flex h-8 items-center gap-1" aria-hidden="true">
-        <span className={`mr-2 h-3 w-3 animate-pulse rounded-full ${dot}`} />
-        {[0, 1, 2, 3, 4].map((i) => (
-          <span key={i} ref={(el) => { bars.current[i] = el; }}
-            className="block h-8 w-1.5 origin-center rounded-full bg-brand-night/70 transition-transform duration-75" style={{ transform: "scaleY(0.15)" }} />
-        ))}
+    <div className={`w-full max-w-lg rounded-2xl border-2 px-4 py-3 transition-colors ${ring}`} data-testid="iv-listening" data-phase={phase}>
+      <div className="flex items-center justify-center gap-3">
+        <div className="flex h-7 items-center gap-1" aria-hidden="true">
+          <span className={`mr-1.5 h-3 w-3 animate-ping rounded-full ${dot}`} />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <span key={i} ref={(el) => { bars.current[i] = el; }}
+              className="block h-7 w-1.5 origin-center rounded-full bg-emerald-700 transition-transform duration-75" style={{ transform: "scaleY(0.18)" }} />
+          ))}
+        </div>
+        <p className="text-sm font-bold text-brand-night" role="status" aria-live="polite">
+          {PHASE_TEXT[phase]}<span ref={left} />
+        </p>
       </div>
-      <p className="text-sm font-semibold text-brand-night" role="status" aria-live="polite">
-        {PHASE_TEXT[phase]}<span ref={left} />
-      </p>
+      <div className="mt-2 rounded-xl bg-white px-3.5 py-2.5 text-left shadow-inner ring-1 ring-brand-night/10">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
+          {liveText ? "Слышу и распознаю вашу речь в реальном времени:" : "Говорите в микрофон — ваши слова появятся здесь:"}
+        </p>
+        <p className="mt-1 min-h-[1.5rem] text-sm font-medium leading-relaxed text-brand-night" data-testid="iv-live-transcript">
+          {liveText ? `«${liveText}»` : "Слушаю вас… Просто начните говорить, нажимать кнопки не нужно."}
+        </p>
+      </div>
     </div>
   );
 }
@@ -75,50 +86,125 @@ export interface VoiceAnswerButtonProps {
   maxSeconds?: number;
   disabled?: boolean;
   testId?: string;
+  /** Счётчик автозапуска микрофона сразу после окончания фразы ИИ-интервьюера. */
+  autoStartKey?: number;
 }
 
 export function VoiceAnswerButton({ transcribe, onAnswer, onNote, onState, onLevel, onBeforeStart, silenceMs = 2000,
-  maxSeconds = 90, disabled, testId = "iv-record" }: VoiceAnswerButtonProps) {
+  maxSeconds = 90, disabled, testId = "iv-record", autoStartKey = 0 }: VoiceAnswerButtonProps) {
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState<VadPhase>("off");
+  const [liveText, setLiveText] = useState("");
+  const liveTextRef = useRef("");
+  const srRef = useRef<any>(null);
+
+  const stopSr = () => {
+    const r = srRef.current;
+    srRef.current = null;
+    try { r?.stop(); } catch { /* */ }
+  };
+
+  const startSr = () => {
+    stopSr();
+    liveTextRef.current = "";
+    setLiveText("");
+    if (typeof window === "undefined") return;
+    const Ctor = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+    if (!Ctor) return;
+    try {
+      const r = new Ctor();
+      r.lang = "ru-RU";
+      r.interimResults = true;
+      r.continuous = true;
+      r.maxAlternatives = 1;
+      r.onresult = (e: any) => {
+        let fin = "", mid = "";
+        for (let i = 0; i < e.results.length; i++) {
+          const x = e.results[i];
+          if (x.isFinal) fin += `${x[0].transcript} `; else mid += x[0].transcript;
+        }
+        const combined = `${fin}${mid}`.replace(/\s+/g, " ").trim();
+        liveTextRef.current = combined;
+        setLiveText(combined);
+      };
+      r.onerror = () => { /* тихо: основная запись идёт через MediaRecorder */ };
+      srRef.current = r;
+      r.start();
+    } catch { /* браузер без Web Speech API */ }
+  };
+
+  useEffect(() => () => stopSr(), []);
+
   const rec = useVoiceRecorder({
     maxSeconds, silenceMs,
     onVad: setPhase,
-    onError: (m) => { onState?.("idle"); onNote?.(m); },
+    onError: (m) => { stopSr(); onState?.("idle"); onNote?.(m); },
     onBlob: async (blob, seconds) => {
+      stopSr();
+      const fallbackBrowserText = liveTextRef.current.trim();
       setBusy(true); onState?.("processing");
       try {
-        const r = await transcribe(blob);
-        if (!r.text.trim()) onNote?.("Речь не распознана — нажмите «Ответить» и скажите ещё раз или перейдите в чат.");
-        else await onAnswer(r.text.trim(), { stub: !!r.stub, seconds });
+        let finalTxt = "";
+        let isStub = false;
+        try {
+          const r = await transcribe(blob);
+          finalTxt = (r.text || "").trim();
+          isStub = !!r.stub;
+        } catch (e) {
+          if (fallbackBrowserText) {
+            finalTxt = fallbackBrowserText;
+          } else {
+            throw e;
+          }
+        }
+        if (!finalTxt && fallbackBrowserText) finalTxt = fallbackBrowserText;
+        if (!finalTxt) {
+          onNote?.("Я не расслышала ответ — просто начните говорить ещё раз или нажмите «Перейти в чат».");
+        } else {
+          setLiveText("");
+          liveTextRef.current = "";
+          await onAnswer(finalTxt, { stub: isStub, seconds });
+        }
       } catch (e) { onNote?.(e instanceof ApiError ? e.message : "Распознавание недоступно — нажмите «Ответить» ещё раз или перейдите в чат."); }
       finally { setBusy(false); onState?.("idle"); }
     },
   });
-  if (!rec.supported) return null;
   const on = rec.state === "recording" || rec.state === "stopping";
-  async function toggle() {
-    if (on) { rec.stop(); return; }
+  async function startListening() {
+    if (on || busy || disabled) return;
     onBeforeStart?.();
     onLevel?.(rec.level);
     onState?.("recording");
+    startSr();
     await rec.start();
   }
-  const label = busy ? "Распознаём и отправляем…" : rec.state === "requesting" ? "Ждём микрофон…"
-    : rec.state === "stopping" ? "Отправляем…" : on ? `Ответить · ${mmss(rec.seconds)}` : "Ответить";
+  async function toggle() {
+    if (on) { stopSr(); rec.stop(); return; }
+    await startListening();
+  }
+  useEffect(() => {
+    if (autoStartKey > 0 && rec.supported && !on && !busy && !disabled) {
+      void startListening();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStartKey]);
+
+  if (!rec.supported) return null;
+  const label = busy ? "Приняла ответ — готовлю следующий вопрос…" : rec.state === "requesting" ? "Подключаю микрофон…"
+    : rec.state === "stopping" ? "Отправляю ваш ответ…" : on ? `Говорю · отправить сейчас (${mmss(rec.seconds)})` : "Включить микрофон и ответить";
   return (
-    <div className="flex flex-col items-center gap-2">
-      <button type="button" className="btn-primary min-w-[12rem] !px-8 !py-3 text-base"
+    <div className="flex w-full flex-col items-center gap-3">
+      {on && <ListeningMeter level={rec.level} vad={rec.vad} phase={phase === "off" ? "waiting" : phase} liveText={liveText} />}
+      <button type="button" className={on ? "btn-ghost border-2 border-emerald-600 bg-white !px-6 !py-2.5 text-sm font-bold text-emerald-900 hover:bg-emerald-50" : "btn-primary min-w-[14rem] !px-8 !py-3 text-base"}
         disabled={disabled || busy || rec.state === "requesting" || rec.state === "stopping"}
         onClick={toggle} aria-pressed={on} data-testid={testId} data-rec={rec.state}
         aria-describedby={`${testId}-hint`}>
-        {on && <span className="mr-2 inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-red-400 align-middle" aria-hidden="true" />}
+        {on && <span className="mr-2 inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-600 align-middle" aria-hidden="true" />}
         {label}
       </button>
-      {on && <ListeningMeter level={rec.level} vad={rec.vad} phase={phase === "off" ? "waiting" : phase} />}
-      <p id={`${testId}-hint`} className="max-w-sm text-center text-xs text-brand-ink/65">
-        {on ? `Замолчите на ${Math.round(silenceMs / 1000)} с — ответ отправится сам, или нажмите «Ответить» ещё раз.`
-          : busy ? "Распознаём речь — ответ уйдёт сразу." : "Нажмите и отвечайте своими словами, 1–2 фразы. Пауза ~2 с — и ответ отправится сам."}
+      <p id={`${testId}-hint`} className="max-w-md text-center text-xs text-brand-ink/70">
+        {on ? `После того как вы договорите и сделаете паузу ${Math.round(silenceMs / 1000)} с, ответ отправится автоматически (или нажмите кнопку выше, чтобы отправить сразу).`
+          : busy ? "ИИ-интервьюер услышала ваш ответ и формулирует следующий вопрос." : "Микрофон включается автоматически после каждого вопроса интервьюера."}
       </p>
     </div>
   );

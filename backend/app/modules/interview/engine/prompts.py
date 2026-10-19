@@ -4,13 +4,14 @@
 from __future__ import annotations
 
 from .planning import INTEGRITY_LABELS, plan
+from .rules import is_generic_name
 from .schemas import DefenseContext, InterviewContext, PlanItem, SessionSpec, Transcript
 
 HOST_SYSTEM = """Ты — {host}, ИИ-интервьюер сервиса «{product}». Твой образ — женщина: о себе говори только в женском роде
 («я поняла», «я хотела уточнить», «я записала», «рада»), никогда в мужском. Представляешься один раз, в приветствии, одной
 фразой: «Я — ИИ-интервьюер {product_gen}». Разговор озвучивается голосом, поэтому говори как живой человек: просто, коротко,
 без канцелярита («в рамках», «данный», «осуществлять», «на предмет», «с целью», «в части», «является»), без списков,
-разметки и смайликов. Обращайся на «вы» и по имени. Тон — спокойный и доброжелательный.
+разметки и смайликов. Обращайся уважительно на «вы» (если имя собеседника не указано или указано как «без имени» — обращайся просто на «вы» без имени). Тон — спокойный и доброжелательный.
 
 Как задавать вопрос:
 - Вопрос — до 25 слов, один смысл, простые слова. Сначала одной короткой фразой — о чём речь в ответе собеседника, потом сам
@@ -84,7 +85,8 @@ JUDGE_SKEPTIC_SYSTEM = """Ты — придирчивый рецензент о�
 
 
 def _materials(spec: SessionSpec) -> str:
-    lines = [f"Собеседник: {spec.candidate_name}. Вопросов по плану: {spec.max_questions}. Время: {spec.duration_min} мин."]
+    who = "без имени (обращаться просто на «вы»)" if is_generic_name(spec.candidate_name) else spec.candidate_name
+    lines = [f"Собеседник: {who}. Вопросов по плану: {spec.max_questions}. Время: {spec.duration_min} мин."]
     ctx = spec.context
     if isinstance(ctx, DefenseContext):
         lines.append(f"Режим: защита. Направление теста: {ctx.role or 'не указано'}; заявленный уровень: {ctx.grade or 'не указан'}.")
@@ -151,7 +153,8 @@ def service_line(spec: SessionSpec, item: PlanItem | None, kind: str, minute: fl
     if kind == "closing":
         what = ("объяснения увидит работодатель, результат теста не меняется"
                 if spec.mode == "defense" else "итог увидит работодатель, решение принимает человек")
-        parts.append(f"вопросов больше не задавай: одной-двумя фразами поблагодари по имени, скажи, что {what}, попрощайся; "
+        by_name = "поблагодари собеседника (без имени)" if is_generic_name(spec.candidate_name) else "поблагодари по имени"
+        parts.append(f"вопросов больше не задавай: одной-двумя фразами {by_name}, скажи, что {what}, попрощайся; "
                      "kind = closing")
     elif kind == "repeat":
         parts.append("собеседник не понял или ответ не дошёл: задай последний вопрос ещё проще, до 20 слов; kind = repeat")
@@ -160,8 +163,10 @@ def service_line(spec: SessionSpec, item: PlanItem | None, kind: str, minute: fl
         if kind == "opening":
             what = "по вашим письменным ответам" if spec.mode == "defense" else "о вашем опыте"
             n = plural(spec.max_questions, "короткий вопрос", "коротких вопроса", "коротких вопросов")
-            parts.append(f"начало: приветствие — одна фраза, например «Здравствуйте, {spec.candidate_name}, я — ИИ-интервьюер "
-                         f"{genitive(product)}, задам {n} {what}.», и сразу вопрос 1; kind = opening")
+            hello = (f"Здравствуйте, я — ИИ-интервьюер {genitive(product)}"
+                     if is_generic_name(spec.candidate_name)
+                     else f"Здравствуйте, {spec.candidate_name}, я — ИИ-интервьюер {genitive(product)}")
+            parts.append(f"начало: приветствие — одна фраза, например «{hello}, задам {n} {what}.», и сразу вопрос 1; kind = opening")
         else:
             parts.append(f"сейчас задай вопрос {item.k} из {spec.max_questions}: без оценки прошлого ответа, максимум «Поняла.» "
                          "перед вопросом; kind = question")

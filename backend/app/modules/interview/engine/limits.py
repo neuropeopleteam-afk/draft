@@ -11,7 +11,8 @@ def check_limits(jury: bool, sandbox_sessions_last_hour: list[dict] | None, spen
                  now: datetime | None = None) -> None:
     """sandbox_sessions_last_hour: [{"created_at": datetime, "active": bool}, …] по песочнице жюри за последний час."""
     now = now or datetime.now(UTC)
-    if jury and sandbox_sessions_last_hour:
+    max_per_hour = max(1, int(getattr(get_interview_settings(), "interview_engine_jury_per_hour", 1) or 1))
+    if jury and sandbox_sessions_last_hour and len(sandbox_sessions_last_hour) >= max_per_hour:
         active = any(s.get("active") for s in sandbox_sessions_last_hour)
         oldest = min((s["created_at"] for s in sandbox_sessions_last_hour if s.get("created_at")), default=now)
         if oldest.tzinfo is None:

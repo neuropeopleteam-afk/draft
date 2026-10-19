@@ -553,7 +553,14 @@ export function Selection() {
                   <h2 id="top-picks-h" className="text-lg font-bold text-brand-night">{ordered.length ? `Кого пригласить первым: ${Math.min(TOP, ordered.length)} из ${s.total}` : "Кандидаты"}</h2>
                   <p className="text-sm text-brand-ink/70">версия {s.version}{s.parent_version ? ` (из версии ${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}{ordered.length > 0 && !wide && <> · {expandBtn}</>}</p>
                 </div>
-                {ordered.length > 0 && wide && expandBtn}
+                <div className="flex flex-wrap items-center gap-2">
+                  {ordered.length >= 2 && (
+                    <Link className="btn-primary !px-4 !py-2 text-xs sm:text-sm" to={`/employer/needs/${id}/compare?v=${s.version}`} data-testid="compare-top3-btn">
+                      Сравнить топ-3 с ИИ-советником
+                    </Link>
+                  )}
+                  {ordered.length > 0 && wide && expandBtn}
+                </div>
               </div>
               {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
                 <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Балл — доля требований, подтверждённых тестом; порядок подборки не меняется. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
@@ -608,6 +615,7 @@ export function Selection() {
                   <StatusCounts confirmed={s.confirmed_matched} provisional={s.provisional_matched} unconfirmed={s.unconfirmed_matched} hiddenNote={!!s.filters?.confirmed_only} />
                   <Conditions c={s.conditions} busy={busy} onToggle={toggleConditions} />
               </div>
+              {id && <TournamentLaunch needId={id} title={need.data.title} />}
             </section>
             {/* Я10: фильтры и уточнение — после решения «кого пригласить»; две колонки на ≥ 768 px */}
             <div className="grid items-start gap-4 md:grid-cols-2" data-testid="refine-panel">
@@ -686,8 +694,7 @@ export function Selection() {
             <p className="text-xs leading-relaxed text-brand-ink/65">{SCORE_HINT}</p>
         </div>
       )}
-      {/* Н5: в подборке мало подходящих — отборочный турнир ФСП под эту же потребность (три задания под стек, топ-5 — оффер) */}
-      {id && <TournamentLaunch needId={id} title={need.data.title} />}
+      {!s && id && <TournamentLaunch needId={id} title={need.data.title} />}
       {/* Я10: текст потребности с цитатами и подписка — после решения «кого пригласить»; при находках ст. 64 раскрыт */}
       <details className="card group" open={hasBias || undefined} data-testid="need-text">
         <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">

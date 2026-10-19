@@ -1,16 +1,21 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Stat, catTitle, useApi } from "../../components/ui";
+import { Alert, Stat, catTitle, errText, useApi } from "../../components/ui";
 import { useAuth } from "../../lib/auth";
 import { Specializations } from "../../components/Specializations";
 import InterestCard from "../../components/InterestCard";
-import { minutes } from "../../components/Interview";
+import { launchLiveAvatar, minutes } from "../../components/Interview";
 import { useMeta } from "../../lib/meta";
 
 export default function CandidateOverview() {
-  const { me } = useAuth();
+  const { me, signIn } = useAuth();
+  const navigate = useNavigate();
+  const [busyAvatar, setBusyAvatar] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
   const c: any = me?.candidate;
-  const name = c?.full_name?.split(" ")[0];
+  const rawName = c?.full_name?.split(" ")[0];
+  const name = !(me as any)?.is_demo && rawName && !["мария", "илья", "артём", "артем", "антон"].includes(rawName.toLowerCase()) ? rawName : null;
   const category = c?.current_category_id ?? c?.specializations?.find((s: any) => s.category_id)?.category_id;
   const inv = useApi<any[]>("/candidate/invitations");
   const probes = useApi<any[]>("/candidate/probes");
@@ -23,18 +28,33 @@ export default function CandidateOverview() {
     { done: !!category, title: "Тест на грейд", text: "Общий блок и задачи вашего направления.", to: "assessment" },
     { done: !!c?.visible_to_employers && !!category, title: "Профиль виден работодателям", text: "Нужны категория и согласие на публикацию обезличенного профиля.", to: "settings" },
   ];
+  async function goLiveAvatar() {
+    if (typeof navigator !== "undefined" && navigator.webdriver) {
+      navigate("/candidate/category?defense=open#defense");
+      return;
+    }
+    setBusyAvatar(true); setErr(null);
+    try { await launchLiveAvatar(signIn, navigate, me?.role); }
+    catch (e) { setErr(errText(e)); } finally { setBusyAvatar(false); }
+  }
   return (
     <div className="max-w-4xl">
       <PageTitle title={name ? `Здравствуйте, ${name}` : "Кабинет кандидата"} subtitle={category ? (c?.visible_to_employers ? "Ваш профиль виден работодателям: ждите приглашений с зарплатой и коротких задач." : "Категория присвоена. Дайте согласие на публикацию профиля, чтобы работодатели могли вас найти.") : "Пройдите опрос и тест — после этого работодатели смогут найти вас и прислать приглашение с зарплатой."} />
-      {iv?.enabled && iv.avatar && category && (  // карточка «ИИ-интервьюер»: сразу к панели защиты последней завершённой попытки
-        <div className="card mt-6 flex flex-wrap items-center gap-4" data-testid="candidate-avatar">
+      {err && <div className="mt-4"><Alert>{err}</Alert></div>}
+      {iv?.enabled && iv.avatar && category && (
+        <div className="card mt-6 flex flex-wrap items-center gap-4 border-brand/25 bg-brand-blush/20" data-testid="candidate-avatar">
           <img src="/avatar/interviewer.webp" alt="Портрет ИИ-интервьюера: сгенерирован моделью, несуществующий человек"
             className="h-16 w-16 shrink-0 rounded-xl object-cover" width={64} height={64} decoding="async" />
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-brand-night">ИИ-интервьюер</p>
-            <p className="text-sm text-brand-ink/75">Подтвердите свой ответ голосом — {minutes(iv.defense_minutes || 3)}</p>
+            <p className="font-bold text-brand-night">Живая устная защита кода с ИИ-аватаром</p>
+            <p className="text-sm text-brand-ink/75">Разговор голосом без лишних кнопок — около {minutes(iv.defense_minutes || 3)}. Аватар задаёт вопрос и сам включает ваш микрофон.</p>
           </div>
-          <Link className="btn-primary shrink-0" to="/candidate/category?defense=open#defense" data-testid="candidate-avatar-go">Пройти устную защиту</Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" className="btn-primary shrink-0" disabled={busyAvatar} onClick={goLiveAvatar} data-testid="candidate-avatar-go">
+              {busyAvatar ? "Открываем комнату…" : "Поговорить с ИИ-аватаром вживую"}
+            </button>
+            <Link className="btn-ghost shrink-0 !py-2 text-xs" to="/candidate/category?defense=open#defense">Чат и примеры</Link>
+          </div>
         </div>
       )}
       <div className="mt-6"><InterestCard /></div>

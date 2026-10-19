@@ -117,6 +117,8 @@ def _clean_name(name: str | None) -> str:
 
 
 def name_hint(db: Session, user: User) -> str:
+    if user.is_demo:
+        return ""
     from app.modules.profiles.models import CandidateProfile
 
     p = db.get(CandidateProfile, user.id)
@@ -425,13 +427,18 @@ def defense_state(db: Session, user: User, ts: TestSession) -> dict:
             "fallback": {"source": fb["source"], "title": fb["title"]} if fb else None}
 
 
+def _resolve_name(user: User, name: str | None) -> str:
+    nm = _clean_name(name)
+    if user.is_demo and nm.lower() in ("мария", "илья", "артём", "артем", "антон"):
+        return "кандидат"
+    return nm or "кандидат"
+
+
 def start_defense(db: Session, user: User, ts: TestSession, name: str, consent: bool) -> InterviewSession:
     require_enabled()
     if not consent:
         raise api_error(422, "consent_required", "Нужно согласие на обработку ответов")
-    nm = _clean_name(name)
-    if not nm:
-        raise api_error(422, "name_required", "Как к вам обращаться — одно слово, без фамилии")
+    nm = _resolve_name(user, name)
     st = defense_state(db, user, ts)
     if st["reason"] and not st.get("fallback"):
         raise api_error(422, "insufficient_context", st["reason"])
@@ -457,6 +464,28 @@ def start_defense(db: Session, user: User, ts: TestSession, name: str, consent: 
     row.state, row.expires_at = {"ctx": ctx, "name": nm}, utcnow() + timedelta(hours=24)
     db.add(row)
     db.commit()
+    return row
+
+
+def quick_defense(db: Session, user: User) -> InterviewSession:
+    """Вход в живой разговор с ИИ-интервьюером в 1 клик: последняя завершённая попытка, старт сразу в канале voice."""
+    from app.core.enums import TestSessionStatus
+
+    require_enabled()
+    ts = db.scalars(select(TestSession).where(
+        TestSession.user_id == user.id, TestSession.status == TestSessionStatus.finished
+    ).order_by(TestSession.finished_at.desc(), TestSession.started_at.desc())).first()
+    if ts is None:
+        raise api_error(404, "test_session_not_found", "Завершённых попыток теста пока нет")
+    # Если была старая незавершённая сессия — удаляем её, чтобы разговор начался с первого вопроса и не тратил лимит
+    for old in _defense_rows(db, ts.id):
+        if not old.is_example and old.status in ACTIVE:
+            db.delete(old)
+    db.commit()
+    row = start_defense(db, user, ts, name="кандидат", consent=True)
+    if row.status == "created":
+        ch = "voice" if pt.get_port().channels().get("voice") else "text"
+        row = begin(db, row, ch)
     return row
 
 
@@ -665,9 +694,7 @@ def start_interview(db: Session, user: User, inv, name: str, consent: bool) -> I
         raise api_error(409, "interview_done", "ИИ-интервью уже пройдено или прервано")
     if not consent:
         raise api_error(422, "consent_required", "Нужно согласие на обработку ответов")
-    nm = _clean_name(name)
-    if not nm:
-        raise api_error(422, "name_required", "Как к вам обращаться — одно слово, без фамилии")
+    nm = _resolve_name(user, name)
     jkey = jury_key(user)
     _limits(db, user, jkey)
     ctx, meta_, reason = hiring_skills(db, inv, (row.context_meta or {}).get("extra"))
