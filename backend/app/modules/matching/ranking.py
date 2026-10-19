@@ -63,7 +63,7 @@ def algorithm() -> str:
     base = f"{ALGORITHM_VERSION}+core" if core_skill.enabled() else ALGORITHM_VERSION
     return base + ("+above" if grade_above.enabled() else "")
 WEIGHTS = {"test": 0.45, "stack_required": 0.35, "stack_desired": 0.05, "fsp": 0.10, "probe": 0.05}
-LEVELS = {"T2": "подтверждено реестром ФСП", "T1": "подтверждено тестом или зондом", "T0": "заявлено кандидатом",
+LEVELS = {"T2": "подтверждено реестром ФСП", "T1": "подтверждено тестом или заданием с вилкой", "T0": "заявлено кандидатом",
           "none": "нет данных"}
 
 
@@ -248,11 +248,11 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
             "text": f"Категория {cat_title} — предварительно: тест {b.test.created_at:%d.%m.%Y} не подтвердил грейд, "
                     f"но и не доказал уровень ниже (вероятность уровня не ниже Junior — {pct}, подтверждение — от 80 %; "
                     f"θ = {theta_se(t.get('theta', 0), t.get('se'))}). В ранжировании −{PROVISIONAL_PENALTY:.2f}; "
-                    "можно подтвердить зондом",
+                    "можно подтвердить коротким заданием",
         })
     elif b.test:
         by = t.get("confirmed_by") if t.get("status") == "confirmed" else None
-        how = {"probe": " (предварительный грейд подтверждён зондом)", "cup": " (предварительный грейд подтверждён кубком)",
+        how = {"probe": " (предварительный грейд подтверждён заданием с вилкой)", "cup": " (предварительный грейд подтверждён кубком)",
                "extension": " с дотестированием у порога"}.get(by or "", "")
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "confirmed",
@@ -287,11 +287,11 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                                 "text": skill_check_text(f)})  # Ф6 (Н5): тест и задание работодателя — раздельно
             elif tag in b.stack_t0:
                 reasons.append({"requirement": f"{label}: {title}", "level": "T0", "status": "declared", "weight": w,
-                                "text": "Заявлено кандидатом — не влияет на ранжирование, можно проверить зондом"})
+                                "text": "Заявлено кандидатом — не влияет на ранжирование, можно проверить коротким заданием"})
             else:
                 reasons.append({"requirement": f"{label}: {title}", "level": "none", "status": "missing", "weight": w,
                                 "text": "Не подтверждено: тест кандидата этот навык не проверял, в профиле он не заявлен — "
-                                        "можно проверить зондом"})
+                                        "можно проверить коротким заданием"})
         return got / total
 
     sreq = stack_part(req.get("stack_required") or [], "Обязательно")
@@ -325,13 +325,13 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                         "status": {"high": "confirmed", "medium": "partial"}.get(lvl, "mismatch"),
                         "text": f"{(integ.get('title') or '').capitalize()}: " + "; ".join((integ.get("reasons") or [])[:2])
                         + ("" if lvl == "high" else ". Не блокирует: на место в подборке не влияет, решение за вами — "
-                                                    "можно пригласить или проверить зондом"),
+                                                    "можно пригласить или проверить коротким заданием"),
                         "integrity": lvl})
     probe = max((f.value.get("score", 0) for f in b.probes_t1), default=0.0)
     own = [f for f in b.probes_t1 if not assignment_signal.is_assignment_fact(f)]  # задание работодателя — своя строка (К5)
     if own:
         best = max(own, key=lambda f: f.value.get("score", 0))
-        reasons.append({"requirement": "Зонд", "level": "T1", "status": "confirmed",
+        reasons.append({"requirement": "Задание с вилкой", "level": "T1", "status": "confirmed",
                         "text": f"{quoted(probe_title(best.title, best.value.get('verdict')))} — {best.value.get('verdict', 'оценено')}"})
     sig = assignment_signal.reason_for(b.probes_t1)  # К5: адресное задание — одна строка, порядок match-v1 не меняет
     if sig:

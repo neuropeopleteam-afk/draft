@@ -146,7 +146,7 @@ def test_what_if_counts_apply_and_explanations(client):
     k3 = next(x for x in by_ref[refs[2]]["reasons"] if x["requirement"].endswith("Kafka"))
     assert k3["status"] == "mismatch" and k3["level"] == "T1" and "1 из 3 — ниже порога" in k3["text"]
     k2 = next(x for x in by_ref[refs[1]]["reasons"] if x["requirement"].endswith("Kafka"))
-    assert k2["status"] == "missing" and "можно проверить зондом" in k2["text"] and "Нет данных" not in k2["text"]
+    assert k2["status"] == "missing" and "можно проверить коротким заданием" in k2["text"] and "Нет данных" not in k2["text"]
     # порядок выдачи не меняется: полностью подходящий — первым, скор тот же, что считает ranking
     assert v1["results"][0]["ref"] == refs[0]
 

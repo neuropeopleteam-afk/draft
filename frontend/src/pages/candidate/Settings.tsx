@@ -27,7 +27,7 @@ export function Fsp() {
       <PageTitle title="Паспорт ФСП" subtitle="Достижения в соревнованиях по дисциплинам спортивного программирования (ЕВСК) — подтверждённые реестром факты (T2)." />
       <section className="card space-y-4">
         <div className="flex items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p>{data.origin && <OriginTag o={data.origin} />}</div>
-        <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром (T2).` : data.note}</p>
+        <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром ФСП.` : data.note}</p>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl bg-[#F3F2FB] p-4 text-center text-sm" data-testid="fsp-identity-link">
           <div className="min-w-0"><p className="font-bold text-brand-night">ФСП ID</p><p className="mt-1 break-all text-xs text-brand-ink/70">{data.fsp_id_claimed || "Не указан"}</p></div>
           <span className="text-brand-plum" aria-label="Связь">↔</span>
