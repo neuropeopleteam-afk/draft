@@ -165,10 +165,8 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     <figure className={`m-0 flex flex-col items-center text-center ${className}`} data-testid="interviewer-avatar" data-state={shown}
       data-mode={status === "live" ? "anam" : "connecting"}>
       <div className="relative aspect-square max-w-full overflow-hidden rounded-3xl bg-[#1B1C21]" style={{ width: size }}>
-        {status !== "live" && (  // пока поток поднимается — наш портрет; живое видео появляется поверх без мигания
-          <div className="absolute inset-0"><InterviewerAvatar state={shown} level={lvl} name={name} size={size} tone={tone} className="[&>figcaption]:hidden" /></div>
-        )}
-        <video id={videoId} autoPlay playsInline disablePictureInPicture aria-label="ИИ-интервьюер: сгенерированный образ, не человек"
+        <div className="absolute inset-0"><InterviewerAvatar state={shown} level={lvl} name={name} size={size} tone={tone} className="[&>figcaption]:hidden" /></div>
+        <video id={videoId} poster="/avatar/interviewer.webp" autoPlay playsInline disablePictureInPicture aria-label="ИИ-интервьюер: сгенерированный образ, не человек"
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${status === "live" ? "opacity-100" : "opacity-0"}`}
           data-testid="avatar-anam-video" />
         <RingGlow state={shown} level={lvl} />
