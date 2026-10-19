@@ -4,6 +4,8 @@ Swagger UI и ReDoc раздаются с нашего сервера (app/stati
 """
 import logging
 import threading
+import time
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -157,6 +159,15 @@ def create_app() -> FastAPI:
         return JSONResponse(status_code=503, headers={"Retry-After": str(get_settings().db_busy_retry_after_s)},
                             content={"detail": {"code": "db_busy",
                                                 "message": "Сервер сейчас перегружен — повторите через несколько секунд"}})
+
+    @app.middleware("http")
+    async def server_timing_middleware(request, call_next):  # noqa: ANN001
+        t0 = time.perf_counter()
+        res = await call_next(request)
+        ms = round((time.perf_counter() - t0) * 1000, 1)
+        res.headers["Server-Timing"] = f"app;dur={ms}"
+        res.headers["X-Request-Id"] = uuid.uuid4().hex[:12]
+        return res
 
     app.add_middleware(JuryScopeMiddleware)  # песочница жюри из токена → видимость кандидатов и ответов
     app.include_router(fsp_registry_router)

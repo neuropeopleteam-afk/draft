@@ -67,6 +67,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   const [speaking, setSpeaking] = useState(false);
   const env = useRef<{ t0: number; e: Float32Array } | null>(null);
   const timer = useRef<number | null>(null);
+  const speakReject = useRef<((e: Error) => void) | null>(null);
   const onStatusRef = useRef(onStatus);
   onStatusRef.current = onStatus;
 
@@ -75,6 +76,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   useEffect(() => {
     let dead = false;
     let watchdog = 0;
+    let maxTimer = 0;
     (async () => {
       try {
         if (typeof RTCPeerConnection === "undefined") throw new Error("no webrtc");
@@ -99,20 +101,23 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
         if (dead) { void c.stopStreaming().catch(() => undefined); return; }
         audioIn.current = c.createAgentAudioInputStream({ encoding: "pcm_s16le", sampleRate: RATE, channels: 1 });
         // предел сессии у поставщика — за 5 с до него тихо уходим на портрет, не дожидаясь обрыва
-        window.setTimeout(() => { if (!dead) fail(); }, Math.max(30, (tok.max_seconds || 600) - 5) * 1000);
+        maxTimer = window.setTimeout(() => { if (!dead) fail(); }, Math.max(30, (tok.max_seconds || 600) - 5) * 1000);
       } catch { if (!dead) fail(); }
     })();
     function fail() {
       window.clearTimeout(watchdog);
+      window.clearTimeout(maxTimer);
       const c = client.current; client.current = null; audioIn.current = null;
       void c?.stopStreaming().catch(() => undefined);
-      if (timer.current) window.clearTimeout(timer.current);
+      if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
+      if (speakReject.current) { const rej = speakReject.current; speakReject.current = null; rej(new Error("anam stream closed")); }
       setSpeaking(false);
       if (statusRef.current !== "failed") { statusRef.current = "failed"; setStatus("failed"); onStatusRef.current?.("failed"); }
     }
     return () => {
-      dead = true; window.clearTimeout(watchdog);
-      if (timer.current) window.clearTimeout(timer.current);
+      dead = true; window.clearTimeout(watchdog); window.clearTimeout(maxTimer);
+      if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
+      if (speakReject.current) { const rej = speakReject.current; speakReject.current = null; rej(new Error("anam unmounted")); }
       const c = client.current; client.current = null; audioIn.current = null;
       void c?.stopStreaming().catch(() => undefined);
     };
@@ -127,14 +132,19 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
         if (timer.current) window.clearTimeout(timer.current);
         for (let i = 0; i < pcm.byteLength; i += CHUNK) a.sendAudioChunk(pcm.slice(i, Math.min(pcm.byteLength, i + CHUNK)));
         a.endSequence();
-      } catch (e) { reject(e); return; }
+      } catch (e) { reject(e instanceof Error ? e : new Error(String(e))); return; }
       env.current = { t0: performance.now(), e: rms(pcm) };
       setSpeaking(true);
+      speakReject.current = reject;
       const ms = (pcm.byteLength / 2 / RATE) * 1000 + 400;  // длительность звука + задержка потока
-      timer.current = window.setTimeout(() => { setSpeaking(false); env.current = null; timer.current = null; resolve(); }, ms);
+      timer.current = window.setTimeout(() => {
+        speakReject.current = null;
+        setSpeaking(false); env.current = null; timer.current = null; resolve();
+      }, ms);
     }),
     stop: () => {
       if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
+      if (speakReject.current) { speakReject.current = null; }
       env.current = null; setSpeaking(false);
       try { client.current?.interruptPersona(); } catch { /* поток уже закрыт */ }
     },

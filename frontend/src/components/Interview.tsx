@@ -585,11 +585,27 @@ export function InterviewRoom() {
       {s.stub && <Alert kind="info">Демо-режим: разговор по шаблону, без модели и голоса; оценка — по фиксированному правилу, итог помечен «демо».</Alert>}
       <audio ref={player.audioRef} className="hidden" />
       {(s.status === "created" || live || s.status === "evaluating") && (
-        <div className="card flex justify-center !py-3" data-testid="iv-visual">
+        <div className="card flex flex-col items-center gap-2 !py-3" data-testid="iv-visual">
           {anamOn ? <AnamAvatar ref={anam} sessionId={s.id} state={wave} level={level} name="Интервьюер" size={200}
               onStatus={(st) => { if (st === "failed") setAnamOff(true); }} />
             : avatar ? <InterviewerAvatar state={wave} level={level} name="Интервьюер" caption={caption} size={200} />
             : <VoiceWave state={wave} level={level} name="Интервьюер" caption={caption} size={120} />}
+          {live && ch === "voice" && (
+            <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-brand-ink/70" data-testid="iv-channel-lamps">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F3FA] px-2.5 py-0.5">
+                <span className={`h-2 w-2 rounded-full ${anamOn ? "bg-emerald-500" : "bg-sky-500"}`} aria-hidden="true" />
+                {anamOn ? "Видео WebRTC (Anam)" : "Портрет ИИ"}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F3FA] px-2.5 py-0.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                Голос ElevenLabs
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F3FA] px-2.5 py-0.5">
+                <span className={`h-2 w-2 rounded-full ${rec === "recording" ? "animate-pulse bg-emerald-500" : "bg-emerald-500/70"}`} aria-hidden="true" />
+                Распознавание Deepgram
+              </span>
+            </div>
+          )}
         </div>
       )}
       {note && <p className="text-sm text-brand-ink/75" role="status">{note}</p>}
@@ -621,7 +637,7 @@ export function InterviewRoom() {
             {c.context && <p className="line-clamp-3 border-t border-brand-night/10 pt-2 text-xs text-brand-ink/75" data-testid="iv-context">Ваш письменный ответ в тесте: «{c.context}»</p>}
           </div>
           <div className="flex justify-center">
-            <VoiceAnswerButton testId="iv-record" disabled={busy} maxSeconds={90} silenceMs={2000}
+            <VoiceAnswerButton testId="iv-record" disabled={busy} maxSeconds={90} silenceMs={3500}
               autoStartKey={autoListenKey}
               transcribe={(b) => postAudio(`/interview/sessions/${id}/transcribe`, b)}
               onBeforeStart={() => { player.stop(); anam.current?.stop(); setNote(null); setErr(null); setConfirmEnd(false); }}

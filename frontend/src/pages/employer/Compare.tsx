@@ -6,6 +6,7 @@ import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, plainText
 import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
 import { ReasonLevel } from "../../components/CandidateCard";  // Ф6 (Н5)
 import { ExecAdvisor } from "../../components/ExecAdvisor";  // Н1: ИИ-советник руководителя (живой диалог)
+import { DecisionProofStrip } from "../../components/UnderTheHood";
 
 interface Cell { level: string; status: string; text: string; value?: number; best?: boolean }
 interface Row { key: string; group: string; title: string; requirement?: string | null; quote?: string | null; weight?: number | null; hint?: string }
@@ -108,6 +109,7 @@ export function Compare() {
         </div>
       </div>
       <ExecAdvisor needId={id!} refs={cs.map((c) => c.ref)} version={data.need.version} />
+      <DecisionProofStrip totalCandidates={data.selection_total} version={data.need.version} />
       {done && <Alert kind="ok">{done}</Alert>}
       <WhyBlock why={data.why} />
       <LevelLegend />

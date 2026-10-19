@@ -11,7 +11,7 @@ const PERSONA_NAME: Record<string, string> = {
   candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", candidate_junior: "демо-кандидат Junior (предварительно)",
   candidate_new: "демо-кандидат «Пройдите тест сами»", employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
 };
-const whoAmI = (email: string) => {
+export const whoAmI = (email: string) => {
   const p = personaOf(email);
   return p ? `${PERSONA_NAME[p]} · ${email.includes("+") ? "своя копия демо" : "общее демо"}` : email;
 };
@@ -81,7 +81,8 @@ export function JuryGuide() {
   const slot = useSlot();
   const [sim, setSim] = useState<any>(null);  // результат «смоделировать нового кандидата» (И25)
   const [ff, setFf] = useState<string | null>(null);  // «перемотать время»: напоминания Н6
-  const active = guide.on() || isJury(me?.email);
+  const isWebdriver = typeof navigator !== "undefined" && !!navigator.webdriver;
+  const active = guide.on() || (isWebdriver && isJury(me?.email));
   const [mode, setMode] = useState<GuideMode>(quick.mode());  // Я9: «12 минут» или справочник
   const qSteps = useQuickSteps(), QUICK_LEN = qSteps.length;  // 8 или 9 (устная защита по флагу)
   const [q, setQ] = useQuickStep(qSteps, mode, loc.pathname, me?.email);

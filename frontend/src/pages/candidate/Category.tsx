@@ -4,6 +4,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { ExtPreliminaryNote, GradeBadge, GradeStatusNote, TwoStageNote } from "../../components/GradeStatus";
 import { Alert, DIRECTION_TITLES, Empty, GRADE_TITLE_ALL, Loading, Toggle, catTitle, dt, dtt, errText, num, ruText, signed, useApi } from "../../components/ui";
 import { DefenseForLatest } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
+import { ThetaScale } from "../../components/ThetaScale";
 import { MarketNote } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { gradeIds } from "../../lib/grades";
@@ -69,6 +70,7 @@ export default function Category() {
               <MarketNote m={c.market_range} />
             </div>
           ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTION_TITLES[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADE_TITLE_ALL[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
+          <ThetaScale theta={s.sessions?.[0]?.theta} se={s.sessions?.[0]?.se} grade={c.grade} confirmed={gs?.status === "confirmed"} compact className="mt-4" />
           {(gs?.status === "unconfirmed" || gs?.pending_review) && <GradeStatusNote s={gs} className="mt-2" />}
           <ExtPreliminaryNote x={gs?.ext_preliminary} stage={s.two_stage} direction={c.direction} className="mt-3" />
           {!gs?.ext_preliminary && <TwoStageNote t={s.two_stage} direction={c.direction} className="mt-3" />}

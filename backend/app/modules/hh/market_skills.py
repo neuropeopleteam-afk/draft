@@ -13,7 +13,7 @@ from app.modules.hh import snapshot
 from app.modules.hh.directions import HH_DIRECTIONS
 
 TOP = 8
-STATUS_TITLES = {"confirmed": "подтверждён тестом (T1)", "weak": "проверен, результат ниже 50 %",
+STATUS_TITLES = {"confirmed": "подтверждён тестом", "weak": "проверен, результат ниже 50 %",
                  "declared": "заявлен, не подтверждён", "missing": "не подтверждён"}
 
 
@@ -67,7 +67,7 @@ def block(direction: str | None, grade: str | None, bundle, test_tags: frozenset
                           "text": "навык проверяется в тесте направления (повтор — по правилам пересдачи)"}
             elif t in task:
                 action = {"kind": "task", "title": "Короткое задание", "href": "/candidate/assignments",
-                          "text": "задание с автопроверкой по этому навыку — результат попадёт в профиль (T1)"}
+                          "text": "задание с автопроверкой по этому навыку — результат попадёт в профиль"}
             else:
                 action = {"kind": "probe", "title": None, "href": None,
                           "text": "заданий на этот навык пока нет — подтвердить можно задачей-зондом работодателя"}
@@ -76,7 +76,10 @@ def block(direction: str | None, grade: str | None, bundle, test_tags: frozenset
                       "action": action})
     scope_title = (f"категория {_dir_title(direction)} · {GRADES.get(grade, grade)}"
                    if s["scope"] == "category" else f"направление {_dir_title(direction)}")
+    dem = ((snapshot.demand_data() or {}).get("directions") or {}).get(direction) or {}
+    sk_dir = ((snapshot.skills_data() or {}).get("directions") or {}).get(direction) or {}
     return {"source": "hh.ru", "scope": s["scope"], "scope_title": scope_title, "n": s["n"], "as_of": s["as_of"],
+            "market_total": dem.get("russia"), "direction_n": sk_dir.get("n") or s["n"],
             "items": items, "not_confirmed": todo,
             "note": (f"Доля из {s['n']} вакансий hh.ru ({s['as_of'][8:10]}.{s['as_of'][5:7]}.{s['as_of'][:4]}), где навык "
                      "есть в «Ключевых навыках» или в тексте. Только агрегат: сами вакансии hh.ru на платформе не "

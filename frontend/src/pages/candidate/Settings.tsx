@@ -24,7 +24,7 @@ export function Fsp() {
   if (error) return <Alert>{error}</Alert>;
   return (
     <div className="max-w-3xl space-y-6">
-      <PageTitle title="Паспорт ФСП" subtitle="Достижения в соревнованиях по дисциплинам спортивного программирования (ЕВСК) — подтверждённые реестром факты (T2)." />
+      <PageTitle title="Паспорт ФСП" subtitle="Достижения в соревнованиях по дисциплинам спортивного программирования (ЕВСК) — факты, подтверждённые реестром Федерации." />
       <section className="card space-y-4">
         <div className="flex items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p>{data.origin && <OriginTag o={data.origin} />}</div>
         <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром ФСП.` : data.note}</p>
@@ -33,7 +33,7 @@ export function Fsp() {
           <span className="text-brand-plum" aria-label="Связь">↔</span>
           <div><p className="font-bold text-brand-night">Ваш профиль</p><p className="mt-1 text-xs text-brand-ink/70">{data.identity_linked ? "Вход подтверждён OIDC" : data.linked ? "Демо-паспорт" : "Ожидает связи"}</p></div>
         </div>
-        {data.registry?.demo && <Alert kind="info">Достижения получены из синтетического API реестра. Это демонстрационные данные, не официальный реестр ФСП.</Alert>}
+        {data.registry?.demo && <Alert kind="info">Демонстрационный стенд реестра ФСП: показаны тестовые спортивные достижения для проверки сценария.</Alert>}
         {data.registry_warning && <Alert kind="info">{data.registry_warning}</Alert>}
         {data.sport_rank && <p className="text-sm">Спортивный разряд: <b>{data.sport_rank}</b></p>}
         <FspIdLinkButton linkedVia={data.link_source} />
@@ -41,7 +41,7 @@ export function Fsp() {
           setMsg(null);
           try { await api("/me/fsp/registry-sync", { body: {} }); await reload(); setMsg({ k: "ok", t: "Достижения обновлены из API реестра." }); }
           catch (e) { setMsg({ k: "error", t: errText(e) }); }
-        }}>Обновить достижения из реестра{data.link_source === "demo" ? " (мок)" : ""}</button>}
+        }}>Обновить достижения из реестра</button>}
         {data.link_source !== "keycloak" && <>
         <p className="pt-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-ink/65">Или укажите ФСП ID вручную — до подтверждения реестром</p>
         <div className="flex flex-wrap items-end gap-3">
@@ -52,7 +52,19 @@ export function Fsp() {
         {data.fsp_id_claimed && !data.linked && <p className="text-xs text-brand-plum">Указан ФСП ID {data.fsp_id_claimed} — ожидает подтверждения реестром.</p>}
         {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       </section>
-      {data.rating && <section className="card space-y-3"><h2 className="font-bold text-brand-night">Сила паспорта ФСП: {num(data.rating.strength, 3)}</h2><p className="text-sm text-brand-ink/70">{data.rating.policy}</p><p className="text-xs text-brand-ink/65">Учтено соревнований: {num(data.rating.competitions, 0)}. В подборке ФСП — бонус с весом 0,10; грейд он не меняет.</p></section>}
+      {data.rating && (
+        <section className="card space-y-3" title={`Коэффициент: ${num(data.rating.strength, 3)}`}>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-bold text-brand-night">Индекс достижений ФСП: {Math.round((Number(data.rating.strength) || 0) * 100)} из 100</h2>
+            <span className="text-xs font-semibold text-emerald-800">+10 % вес в подборках работодателей</span>
+          </div>
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-brand-night/10" aria-hidden="true">
+            <div className="h-full rounded-full bg-brand-strong" style={{ width: `${Math.max(4, Math.min(100, Math.round((Number(data.rating.strength) || 0) * 100)))}%` }} />
+          </div>
+          <p className="text-sm text-brand-ink/70">{data.rating.policy}</p>
+          <p className="text-xs text-brand-ink/65">Учтено соревнований: {num(data.rating.competitions, 0)}. Даёт приоритет внутри своей категории и виден компаниям как подтверждённый факт.</p>
+        </section>
+      )}
       {data.achievements?.length ? (
         <section className="card">
           <h2 className="font-bold text-brand-night">Достижения</h2>

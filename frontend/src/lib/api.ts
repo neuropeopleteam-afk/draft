@@ -165,6 +165,15 @@ async function fetchRetry(url: string, init: RequestInit, tries = 3, timeoutMs =
 let errorHook: ((path: string, status: number, code: string) => void) | null = null;
 export const setApiErrorHook = (fn: typeof errorHook) => { errorHook = fn; };
 
+let _lastTimingMs: number | null = null;
+export const lastApiTimingMs = (): number | null => _lastTimingMs;
+
+function recordTiming(res: Response, fallbackMs: number) {
+  const st = res.headers.get("Server-Timing");
+  const m = st?.match(/dur=([0-9.]+)/);
+  _lastTimingMs = m ? Math.max(1, Math.round(Number(m[1]))) : Math.max(1, Math.round(fallbackMs));
+}
+
 export async function api<T>(path: string, opts: { method?: string; body?: unknown; auth?: boolean; token?: string } = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
@@ -174,9 +183,11 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
   const method = opts.method ?? (opts.body !== undefined ? "POST" : "GET");
   const init: RequestInit = { method, headers, body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined };
   // GET идемпотентен: при обрыве или зависании соединения повторяем (до 2 раз, таймаут 15 с).
+  const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
   let res: Response;
   try { res = method === "GET" ? await fetchRetry(apiUrl(path), init) : await fetch(apiUrl(path), init); }
   catch (e) { errorHook?.(path, 0, "network"); throw e; }
+  recordTiming(res, (typeof performance !== "undefined" ? performance.now() : Date.now()) - t0);
   const body = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
     const { code, message } = messageFrom(res.status, body);

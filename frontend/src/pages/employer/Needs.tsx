@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { CandidateCard, SCORE_HINT } from "../../components/CandidateCard";
 import { CompactCard } from "../../components/CompactCard";  // Я10: компактная подборка
 import { TournamentLaunch } from "../../components/FspTournament";  // Н5: отборочный турнир ФСП под вакансию
+import { DecisionProofStrip } from "../../components/UnderTheHood";
 import { NeedScope, scopeOptions } from "../../components/NeedScope";  // Я10: что проверено тестом по потребности
 import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
@@ -562,6 +563,7 @@ export function Selection() {
                   {ordered.length > 0 && wide && expandBtn}
                 </div>
               </div>
+              {ordered.length > 0 && <DecisionProofStrip totalCandidates={s.total} version={s.version} />}
               {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
                 <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Балл — доля требований, подтверждённых тестом; порядок подборки не меняется. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
               </div>}

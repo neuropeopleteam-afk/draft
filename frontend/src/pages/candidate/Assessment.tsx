@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEve
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { DefensePanel } from "../../components/Interview";
 import { IncidentSandbox, isIncidentTask } from "../../components/IncidentSandbox";  // Н2: пульт инцидента к архитектурным заданиям  // Я15: устная защита ответа, по желанию
+import { ThetaScale } from "../../components/ThetaScale";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, signed, useApi, plainText } from "../../components/ui";
 import { api } from "../../lib/api";
@@ -401,6 +402,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
   const extGrade = grade === "lead" || grade === "principal";
   useEffect(() => { if (!(grade in levels)) setGrade(levels.senior ? "senior" : "middle"); }, [grade, levels]);
   const chosen = status?.specializations?.find((s: any) => s.direction === dir);
+  const currentGrade = chosen ? chosen.grade : status?.current?.grade;
   const expressOk = !!status?.express_available;
   const [mode, setMode] = useState<Mode>(expressOk && (express || q.get("mode") === "express") ? "express" : "full");
   const ex = expressFor(status, grade);
@@ -450,14 +452,17 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
       {(chosen?.category_id ?? status?.current?.category_id) && (
         <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}{status?.current?.grade_preliminary && (!chosen || chosen.direction === status.current.direction) ? " (предварительно)" : ""}</b> · <Link className="font-semibold underline" to="/candidate/category">подробнее</Link></Alert>
       )}
-      <div className={`mt-6 grid gap-3 sm:grid-cols-2 ${Object.keys(levels).length > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`} data-testid="grade-cards">
+      <div className={`mt-5 grid gap-3 sm:grid-cols-2 ${Object.keys(levels).length > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`} data-testid="grade-cards">
         {Object.entries(levels).map(([id, t]) => (
           <button key={id} type="button" onClick={() => setGrade(id)} aria-pressed={grade === id}
-            className={`rounded-2xl border p-5 text-left transition-colors ${grade === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
-            <p className="text-lg font-bold text-brand-night">{t}</p>
+            className={`rounded-2xl border p-4 text-left transition-all ${grade === id ? "border-2 border-brand bg-brand-blush/40 shadow-sm" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-lg font-bold text-brand-night">{t}</p>
+              {currentGrade === id && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-900">✓ Ваш грейд</span>}
+            </div>
             {/* И23 (VS.1): уровень — по навыкам; Ф4: на карточке коротко, полный текст и стаж — ниже */}
             <p className="mt-1 text-xs leading-relaxed text-brand-ink/80">{GRADE_SKILLS_SHORT[id]}</p>
-            <span className="mt-3 flex flex-wrap gap-1.5">
+            <span className="mt-2.5 flex flex-wrap gap-1.5">
               {!hint.data && status?.claimed_grade === id && <span className="chip">Подсказка по стажу из опроса</span>}
               {hint.data?.suggested === id && <span className="chip">По вашему стажу</span>}
               {retakeLocks[id] && <span className="chip">Повтор с {dt(retakeLocks[id]).replace(/ г\.$/, "")}</span>}
@@ -465,7 +470,35 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           </button>
         ))}
       </div>
-      <p className="mt-2 text-xs text-brand-ink/65">
+
+      {/* Главный блок запуска — сразу под карточками уровней на первом экране без прокрутки */}
+      <div className="mt-4 rounded-2xl border-2 border-brand/25 bg-brand-blush/20 p-4" data-testid="test-launch-box">
+        {locked && <div className="mb-3"><Alert kind="info">Следующая смена грейда в направлении {DIRECTION_TITLES[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
+        {retakeLocked && !locked && (
+          <div className="mb-3"><Alert kind="info">Повторить тест на {GRADE_TITLE_ALL[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
+        )}
+        {error && <div className="mb-3"><Alert>{error}</Alert></div>}
+        {!resume && (
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-brand-ink/85">
+            <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+            <span>Я ознакомлен(а) и даю согласие оператору платформы на обработку сведений о ходе прохождения теста (время ответов, действия в интерфейсе) с целью проверки самостоятельности выполнения.</span>
+          </label>
+        )}
+        {!resume && (
+          <details className="ml-7 mt-1 text-xs text-brand-ink/70">
+            <summary className="cursor-pointer font-semibold text-brand-plum">Условия</summary>
+            <p className="mt-1">Сведения о ходе теста (время ответов, действия в интерфейсе теста) обрабатываются с целью проверки самостоятельности выполнения и указания достоверности результата работодателям. Сведения хранятся вместе с результатом теста.</p>
+          </details>
+        )}
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button className="btn-primary" onClick={() => start()} disabled={busy || locked || retakeLocked || (!resume && !ack)}>
+            {busy ? "Готовим задания…" : resume ? "Продолжить тест" : mode === "express" ? "Начать экспресс-тест" : "Начать тест"}
+          </button>
+          <button className="btn-ghost" onClick={onEditSurvey}>{status?.specializations?.length < 2 ? "Добавить второе направление" : "Изменить ответы опроса"}</button>
+        </div>
+      </div>
+
+      <p className="mt-3 text-xs text-brand-ink/65">
         Стаж — ориентир, не условие: {Object.entries(levels).map(([id, t]) => `${t} — ${expText(id, levels).replace(/^обычно /, "").replace(/ опыта$/, "")}`).join(" · ")}.
       </p>
       <details className="mt-1 text-xs text-brand-ink/75">
@@ -525,32 +558,9 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         </p>
       )}
       <IntegrityNotice />
-      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTION_TITLES[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
-      {retakeLocked && !locked && (
-        <div className="mt-4"><Alert kind="info">Повторить тест на {GRADE_TITLE_ALL[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
-      )}
       {status?.sandbox_active && quota && (
         <div className="mt-4"><Alert kind="info"><span title="Лимит не даёт выкачать банк заданий перезапусками; продолжение начатого теста его не тратит.">Демо-режим: новых тестов за 24 часа осталось {quota.left} из {quota.limit}.</span></Alert></div>
       )}
-      <div className="mt-4"><Alert>{error}</Alert></div>
-      {!resume && (
-        <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-brand-ink/80">
-          <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={ack} onChange={(e) => setAck(e.target.checked)} />
-          <span>Я ознакомлен(а) и даю согласие оператору платформы на обработку сведений о ходе прохождения теста (время ответов, действия в интерфейсе) с целью проверки самостоятельности выполнения.</span>
-        </label>
-      )}
-      {!resume && (
-        <details className="ml-7 mt-1 text-xs text-brand-ink/70">
-          <summary className="cursor-pointer font-semibold text-brand-plum">Условия</summary>
-          <p className="mt-1">Сведения о ходе теста (время ответов, действия в интерфейсе теста) обрабатываются с целью проверки самостоятельности выполнения и указания достоверности результата работодателям. Сведения хранятся вместе с результатом теста.</p>
-        </details>
-      )}
-      <div className="mt-6 flex flex-wrap gap-3">
-        <button className="btn-primary" onClick={() => start()} disabled={busy || locked || retakeLocked || (!resume && !ack)}>
-          {busy ? "Готовим задания…" : resume ? "Продолжить тест" : mode === "express" ? "Начать экспресс-тест" : "Начать тест"}
-        </button>
-        <button className="btn-ghost" onClick={onEditSurvey}>{status?.specializations?.length < 2 ? "Добавить второе направление" : "Изменить ответы опроса"}</button>
-      </div>
     </>
   );
 }
@@ -958,6 +968,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
+      <ThetaScale theta={r.theta} se={r.se} grade={r.claimed_grade} confirmed={r.confirmed} className="mt-4" />
       {/* Н1: сразу после письменной части — живой ИИ-интервьюер зовёт в устный разговор (метка достоверности) */}
       <DefensePanel sessionId={sessionId} live="auto" />
       {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}
