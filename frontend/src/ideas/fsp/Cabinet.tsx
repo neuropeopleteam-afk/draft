@@ -411,8 +411,11 @@ export function FspCups() {
       <Head title="Кубки работодателей" subtitle="Кубок — публичное мероприятие платформы: компания и условия открыты, участники — только числом. Места записываются в паспорт ФСП (уровень «платформа», T1)." />
       <Body>{(rep) => {
         const cups: any[] = rep.cups;
-        if (!cups.length) return <Alert kind="info">За выбранный период кубков не было.</Alert>;
+        const tours: any[] = rep.tournaments ?? [];
         return (
+          <>
+          {tours.length > 0 && <Tournaments items={tours} k={rep.k} />}
+          {!cups.length ? <Alert kind="info">За выбранный период кубков не было.</Alert> : (
           <div className="grid gap-4 lg:grid-cols-2">
             {cups.map((c) => (
               <article key={c.id} className="card space-y-3">
@@ -440,9 +443,51 @@ export function FspCups() {
               </article>
             ))}
           </div>
+          )}
+          </>
         );
       }}</Body>
     </div>
+  );
+}
+
+/** Н5: отборочные турниры «Компания × ФСП» под вакансии — дисциплина, стек, задания, приз; участники только числом. */
+function Tournaments({ items, k }: { items: any[]; k: number }) {
+  return (
+    <section className="space-y-3" aria-labelledby="fsp-tournaments">
+      <div>
+        <h2 id="fsp-tournaments" className="flex flex-wrap items-center gap-2 text-lg font-bold text-brand-night">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-night px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-white"><span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />ФСП</span>
+          Отборочные турниры «Компания × ФСП»
+        </h2>
+        <p className="mt-1 text-sm text-brand-ink/65">Кубки, запущенные работодателями под конкретную вакансию: три задания банка под обязательный стек, топ-5 — прямой оффер и очки в рейтинг ФСП. Группы меньше {k} участников — без чисел.</p>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {items.map((t) => (
+          <article key={t.id} className="card space-y-3 border-l-4 border-brand">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{t.discipline} · {t.category_title}</p>
+                <h3 className="mt-1 text-base font-bold text-brand-night">{t.title}</h3>
+                <p className="text-sm text-brand-ink/65">{t.company} · {t.position_title}</p>
+              </div>
+              <Phase p={t.phase} />
+            </div>
+            {t.stack?.length > 0 && <p className="flex flex-wrap gap-1.5">{t.stack.map((s: string) => <span key={s} className="rounded-full bg-[#F7F4FA] px-2.5 py-0.5 text-xs font-semibold text-brand-night">{s}</span>)}</p>}
+            <ol className="list-decimal space-y-0.5 pl-5 text-sm text-brand-ink/80">{t.tasks.map((x: string, i: number) => <li key={i}>{x}</li>)}</ol>
+            <dl className="grid grid-cols-3 gap-2 text-center">
+              {[["Участники", t.participants], ["Оценено", t.scored], ["Приглашены", t.invited]].map(([n, v]) => (
+                <div key={n as string} className="rounded-xl bg-[#F7F4FA] px-2 py-2">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-brand-ink/65">{n}</dt>
+                  <dd className="mt-0.5 text-base font-bold tabular-nums text-brand-night">{fk(v as number | null)}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="text-xs leading-relaxed text-brand-ink/65">{t.prize}{t.ends_at ? ` · до ${dt(t.ends_at)}` : ""}{t.best_pct != null ? ` · лучший балл ${t.best_pct} %` : ""}</p>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 

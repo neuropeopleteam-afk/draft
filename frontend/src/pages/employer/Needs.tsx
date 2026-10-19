@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { CandidateCard, SCORE_HINT } from "../../components/CandidateCard";
 import { CompactCard } from "../../components/CompactCard";  // Я10: компактная подборка
+import { TournamentLaunch } from "../../components/FspTournament";  // Н5: отборочный турнир ФСП под вакансию
 import { NeedScope, scopeOptions } from "../../components/NeedScope";  // Я10: что проверено тестом по потребности
 import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
@@ -685,6 +686,8 @@ export function Selection() {
             <p className="text-xs leading-relaxed text-brand-ink/65">{SCORE_HINT}</p>
         </div>
       )}
+      {/* Н5: в подборке мало подходящих — отборочный турнир ФСП под эту же потребность (три задания под стек, топ-5 — оффер) */}
+      {id && <TournamentLaunch needId={id} title={need.data.title} />}
       {/* Я10: текст потребности с цитатами и подписка — после решения «кого пригласить»; при находках ст. 64 раскрыт */}
       <details className="card group" open={hasBias || undefined} data-testid="need-text">
         <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">

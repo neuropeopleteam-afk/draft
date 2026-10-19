@@ -314,6 +314,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/employer/cups/{cup_id}/cancel"): "employer_own",
     ("POST", "/api/employer/cups/{cup_id}/finish"): "employer_own",
     ("POST", "/api/employer/cups/{cup_id}/entries/{entry_id}/score"): "employer_own",
+    ("POST", "/api/employer/cups/{cup_id}/entries/{entry_id}/invite"): "employer_own",  # Н5: призёр в 1 клик
+    ("POST", "/api/employer/cups/from-need/{need_id}"): "employer_own",  # Н5: отборочный турнир ФСП под вакансию
     ("GET", "/api/employer/vacancies"): "employer",
     ("POST", "/api/employer/vacancies"): "employer",
     ("PATCH", "/api/employer/vacancies/{vid}"): "employer_own",

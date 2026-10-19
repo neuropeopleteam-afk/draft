@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Literal
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -16,6 +16,7 @@ from app.core.enums import UserRole
 from app.core.errors import api_error, err
 from app.cup import service as svc
 from app.cup import tasks as auto
+from app.cup import tournament
 from app.cup.models import Cup, CupEntry
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
@@ -24,6 +25,7 @@ from app.modules.contact.salary import basis_out, basis_title
 from app.modules.invitations import service as inv_svc
 from app.modules.invitations.models import Invitation
 from app.modules.jury import scope as jury_scope
+from app.modules.matching.models import EmployerNeed
 from app.modules.matching.router import my_company
 from app.modules.notifications.mailer import notify
 from app.modules.profiles.models import CandidateProfile, Company
@@ -124,6 +126,7 @@ def cup_out(db: Session, cup: Cup, side: str) -> dict:
         "participants": sum(cnt.values()), "submitted": cnt.get("submitted", 0) + cnt.get("scored", 0),
         "to_review": cnt.get("submitted", 0), "summary": cup.summary or {},
         "finalized_at": _iso(cup.finalized_at), "is_demo": cup.is_demo,
+        "tournament": tournament.public(cup, side),  # Н5: «Паспорт соревновательной задачи ФСП» (турнир под вакансию)
     }
     if side == "employer":
         out["task_text"] = cup.task_text
@@ -273,6 +276,28 @@ def create(data: CupIn, user: User = Depends(employer), db: Session = Depends(ge
     return cup_out(db, cup, "employer")
 
 
+@employer_router.post("/from-need/{need_id}", status_code=201,
+                      summary="Запустить отборочный турнир ФСП под вакансию (из потребности)",
+                      description="Н5. Кубок компании × ФСП по дисциплине «Продуктовое программирование»: три задания "
+                                  "банка с автопроверкой под обязательный стек потребности, приз — прямой оффер с "
+                                  "вилкой из потребности для топ-5 призёров и очки в рейтинг ФСП. В ответе — кубок и "
+                                  "tournament («Паспорт соревновательной задачи ФСП»). Повтор по той же потребности, "
+                                  "пока турнир идёт, возвращает его же (200, created=false).",
+                      responses={**E_AUTH, 200: {"description": "Турнир по этой потребности уже идёт — он и возвращён"},
+                                 404: err("Потребность не найдена"),
+                                 422: err("Направление вне кубков, вилка шире правила 1,5× или мало заданий")})
+def from_need(need_id: uuid.UUID, response: Response, user: User = Depends(employer),
+              db: Session = Depends(get_db)) -> dict:
+    c = my_company(db, user)
+    need = db.get(EmployerNeed, need_id)
+    if need is None or need.company_id != c.id:
+        raise api_error(404, "need_not_found", "Потребность не найдена")
+    cup, created = tournament.create_from_need(db, user, c, need)
+    if not created:
+        response.status_code = 200
+    return {**cup_out(db, cup, "employer"), "created": created}
+
+
 @employer_router.get("/{cup_id}", summary="Кубок: таблица результатов и решения для оценки", responses=E_AUTH)
 def get_cup(cup_id: uuid.UUID, bg: BackgroundTasks, user: User = Depends(employer),
             db: Session = Depends(get_db)) -> dict:
@@ -291,6 +316,22 @@ def score(cup_id: uuid.UUID, entry_id: uuid.UUID, data: ScoreIn, bg: BackgroundT
     if e is None or e.cup_id != cup.id:
         raise api_error(404, "cup_entry_not_found", "Решение не найдено")
     svc.score_by_employer(db, cup, e, score_pct=data.score_pct, criteria=data.criteria, comment=data.comment)
+    return get_cup(cup_id, bg, user, db)
+
+
+@employer_router.post("/{cup_id}/entries/{entry_id}/invite", summary="Пригласить призёра в один клик",
+                      description="Н5. Приглашение с вилкой кубка участнику из топ-N текущей таблицы (турнир может ещё "
+                                  "идти). Имя и контакты — только после принятия приглашения, как обычно.",
+                      responses={**E_AUTH, 404: err("Не найдено"),
+                                 409: err("Не призёр, уже приглашён, решение не оценено или лимит 30 дней")})
+def invite_entry(cup_id: uuid.UUID, entry_id: uuid.UUID, bg: BackgroundTasks, user: User = Depends(employer),
+                 db: Session = Depends(get_db)) -> dict:
+    cup, c = _own_cup(db, user, cup_id)
+    e = db.get(CupEntry, entry_id)
+    if e is None or e.cup_id != cup.id:
+        raise api_error(404, "cup_entry_not_found", "Участник не найден")
+    inv = tournament.invite_entry(db, user, c, cup, e)
+    notify_invited(bg, db, db.get(Cup, cup_id), [inv.id])
     return get_cup(cup_id, bg, user, db)
 
 
