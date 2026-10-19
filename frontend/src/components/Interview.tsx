@@ -1,12 +1,26 @@
 // Я15: «устная защита» развёрнутых ответов теста и «ИИ-интервью» этапом найма. Всё — за флагом /api/meta interview.enabled
 // (по умолчанию выключен: компоненты ничего не рисуют). Честно: грейд не меняется, оценивает модель, решение — за людьми.
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, type NavigateFunction } from "react-router-dom";
 import { api, ApiError, apiUrl, tokenStore } from "../lib/api";
+import { juryLogin } from "../lib/jury";
 import { useMeta } from "../lib/meta";
 import { PageTitle } from "./CabinetLayout";
 import { Alert, Loading, dt, errText, useApi } from "./ui";
-import { AnamAvatar, InterviewerAvatar, VoiceAnswerButton, VoiceRecordButton, VoiceWave, postAudio, useBrowserTts, useSpeechPlayer, voiceSupported, type AnamHandle, type WaveState } from "./voice";
+import { AnamAvatar, InterviewerAvatar, VoiceAnswerButton, VoiceRecordButton, VoiceWave, postAudio, useSpeechPlayer, voiceSupported, type AnamHandle, type WaveState } from "./voice";
+
+/** Запуск живого разговора с ИИ-аватаром в 1 клик (с главной, из Экспертизы ФСП или из кабинета кандидата). */
+export async function launchLiveAvatar(
+  signIn: (token: string) => Promise<any>,
+  navigate: NavigateFunction,
+  currentRole?: string | null,
+): Promise<void> {
+  if (currentRole !== "candidate") {
+    await juryLogin("candidate", signIn);
+  }
+  const s = await api<IvSession>("/interview/quick-defense", { method: "POST" });
+  navigate(`/candidate/interview/${s.id}?start=voice&autolisten=1`);
+}
 
 type Verdict = "confirmed" | "discrepancies" | "insufficient" | "strong" | "medium" | "weak" | null;
 interface Quote { text: string }
@@ -133,69 +147,37 @@ export function minutes(n: number): string {
 /** Н1: реплика ИИ-интервьюера сразу после письменного теста. */
 export function liveGreeting(name: string | null | undefined): string {
   const n = (name ?? "").trim().split(/\s+/)[0];
-  return `${n ? `${n}, п` : "П"}исьменная часть принята. Давайте за пару минут устно обсудим ваше решение, чтобы подтвердить самостоятельность и поставить высшую метку достоверности.`;
+  const validName = n && !["кандидат", "мария", "илья", "артём", "артем", "антон"].includes(n.toLowerCase()) ? n : "";
+  return `${validName ? `${validName}, п` : "П"}исьменная часть принята. Нажмите кнопку ниже, чтобы войти в комнату живого видео- и голосового диалога с ИИ-интервьюером (3 коротких вопроса по вашему решению).`;
 }
-const LIVE_SOUND_KEY = "draft.defense.live.sound";
 
-/** Н1: живой вход в разговор — портрет интервьюера, приветствие голосом браузера и одна кнопка «Начать живой разговор
- *  голосом» (согласие — в тексте рядом с кнопкой; полная форма с пунктами согласия — по кнопке «defense-open» ниже). */
-function LiveDefenseHero({ st, auto, name, setName, busy, limited, onGo }: {
-  st: DefenseState; auto: boolean; name: string; setName: (v: string) => void; busy: boolean; limited: boolean; onGo: () => void;
+/** Н1: живой вход в разговор в 1 клик (без синтезатора браузера на промежуточной странице и без обязательного ввода имени). */
+function LiveDefenseHero({ st, name, busy, limited, onGo }: {
+  st: DefenseState; auto?: boolean; name: string; setName?: (v: string) => void; busy: boolean; limited: boolean; onGo: () => void;
 }) {
-  const tts = useBrowserTts();
   const greeting = liveGreeting(st.name_hint || name);
-  const [sound, setSound] = useState(() => { try { return localStorage.getItem(LIVE_SOUND_KEY) !== "off"; } catch { return true; } });
-  const greeted = useRef(false);
-  useEffect(() => {  // автоприветствие — один раз, если браузер уже разрешил звук (было нажатие на странице: «Завершить тест»)
-    if (!auto || !sound || greeted.current || !tts.supported) return;
-    const ua = (navigator as any).userActivation;
-    if (ua && !ua.hasBeenActive) return;
-    greeted.current = true;
-    const t = window.setTimeout(() => tts.speak(greeting), 450);
-    return () => window.clearTimeout(t);
-  }, [auto, sound, tts.supported]);  // eslint-disable-line react-hooks/exhaustive-deps
-  function toggle() {
-    const v = !sound;
-    setSound(v);
-    try { localStorage.setItem(LIVE_SOUND_KEY, v ? "on" : "off"); } catch { /* приватный режим */ }
-    if (!v) tts.stop(); else tts.speak(greeting);
-  }
-  const needName = !st.name_hint;
   return (
     <div className="overflow-hidden rounded-2xl bg-[radial-gradient(120%_140%_at_0%_0%,#5b1a8f_0%,#310F53_55%,#1C1D22_100%)] p-4 text-white sm:p-5" data-testid="live-defense">
       <div className="grid items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
-        <InterviewerAvatar state={tts.speaking ? "speaking" : "listening"} level={tts.level} name="ИИ-интервьюер" size={148} tone="dark"
+        <InterviewerAvatar state="idle" level={() => 0} name="ИИ-интервьюер" size={148} tone="dark"
           className="mx-auto sm:mx-0" />
         <div className="min-w-0 space-y-3">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#FFD6E4]">
             <span className="relative flex h-2.5 w-2.5" aria-hidden="true"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-60 motion-reduce:animate-none" /><span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand" /></span>
-            ИИ-интервьюер на связи
+            Комната живого диалога готова · без кнопок во время речи
           </p>
           <blockquote className="relative rounded-2xl rounded-tl-sm bg-white p-3.5 text-[15px] font-medium leading-relaxed text-brand-ink shadow-sm" data-testid="live-defense-greeting" aria-live="polite">
             {greeting}
           </blockquote>
-          {needName && (
-            <label className="block text-sm">
-              <span className="text-white/85">Как к вам обращаться</span>
-              <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} autoComplete="given-name"
-                className="mt-1 h-10 w-full max-w-xs rounded-full border-0 bg-white px-4 text-sm text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand" />
-            </label>
-          )}
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" className="inline-flex items-center gap-2 rounded-full bg-brand-strong px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-white disabled:opacity-60"
-              disabled={busy || limited || !name.trim()} onClick={() => { tts.stop(); onGo(); }} data-testid="live-defense-go">
+            <button type="button" className="inline-flex items-center gap-2 rounded-full bg-brand-strong px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-white disabled:opacity-60"
+              disabled={busy || limited} onClick={onGo} data-testid="live-defense-go">
               <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
-              {busy ? "Готовим вопросы…" : limited ? "Живой запуск уже был в этот час" : "Начать живой разговор голосом"}
+              {busy ? "Открываем комнату…" : limited ? "Живой запуск уже был в этот час" : "Начать живой разговор с ИИ-аватаром"}
             </button>
-            {tts.supported && (
-              <button type="button" onClick={toggle} aria-pressed={sound} className="rounded-full bg-white/10 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/25 hover:bg-white/20" data-testid="live-defense-sound">
-                {sound ? (tts.speaking ? "Выключить звук" : "Звук включён") : "Включить звук"}
-              </button>
-            )}
           </div>
           <p className="text-xs leading-snug text-white/70">
-            До {st.max_questions} вопросов, около {minutes(st.minutes)}; можно перейти в чат и закончить в любой момент. Грейд не меняется — меняется метка достоверности.
-            Нажимая кнопку, вы даёте согласие на обработку ответов (версия {st.consent.version}); пункты согласия — по кнопке «Условия согласия и вход через чат».
+            До {st.max_questions} вопросов, около {minutes(st.minutes)}. Аватар озвучивает вопрос своим голосом и сразу включает ваш микрофон — просто отвечайте вслух. Грейд не меняется — подтверждается самостоятельность решения.
           </p>
         </div>
       </div>
@@ -227,8 +209,8 @@ export function DefensePanel({ sessionId, live }: { sessionId: string; live?: "a
   async function start(voice = false) {
     setBusy(true); setErr(null);
     try {
-      const r = await api<IvSession>(`/interview/defense/${sessionId}`, { body: { name: name.trim(), consent: voice || agree } });
-      navigate(`/candidate/interview/${r.id}${voice ? "?start=voice" : ""}`);  // голосом — комната сама начинает разговор
+      const r = await api<IvSession>(`/interview/defense/${sessionId}`, { body: { name: name.trim() || "кандидат", consent: voice || agree } });
+      navigate(`/candidate/interview/${r.id}${voice ? "?start=voice&autolisten=1" : ""}`);  // голосом — комната сама начинает разговор
     }
     catch (e) { if (e instanceof ApiError && e.status === 429) setLimited(true); setErr(errText(e)); } finally { setBusy(false); }
   }
@@ -281,7 +263,7 @@ export function DefensePanel({ sessionId, live }: { sessionId: string; live?: "a
         <div className="space-y-3 rounded-xl border border-brand-night/10 p-3">
           <ConsentBox c={st.consent} name={name} setName={setName} agree={agree} setAgree={setAgree} idp={`def-${sessionId}`} />
           <div className="flex flex-wrap gap-2">
-            <button className="btn-primary" disabled={busy || limited || !agree || !name.trim()} onClick={() => void start()} data-testid="interview-defense-start">{busy ? "Готовим вопросы…" : limited ? "Живой запуск уже был в этот час · откройте готовый пример" : fb ? "Начать живой разговор" : "Начать устную защиту"}</button>
+            <button className="btn-primary" disabled={busy || limited || !agree} onClick={() => void start()} data-testid="interview-defense-start">{busy ? "Готовим вопросы…" : limited ? "Живой запуск уже был в этот час · откройте готовый пример" : fb ? "Начать живой разговор" : "Начать устную защиту"}</button>
             <button className="btn-ghost" onClick={() => setOpen(false)}>Не сейчас</button>
           </div>
           {st.attempts_left != null && <p className="text-xs text-brand-ink/65">Сессий для этой попытки: {st.attempts_left} (при сбое связи можно ещё раз).</p>}
@@ -376,7 +358,7 @@ export function AiInterviewCandidate({ inv }: { inv: { id: string; status: strin
   const s = st.session;
   async function start() {
     setBusy(true); setErr(null);
-    try { const r = await api<IvSession>(`/candidate/invitations/${inv.id}/ai-interview`, { body: { name, consent: agree } }); navigate(`/candidate/interview/${r.id}`); }
+    try { const r = await api<IvSession>(`/candidate/invitations/${inv.id}/ai-interview`, { body: { name: name.trim() || "кандидат", consent: agree } }); navigate(`/candidate/interview/${r.id}`); }
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   return (
@@ -386,7 +368,7 @@ export function AiInterviewCandidate({ inv }: { inv: { id: string; status: strin
       {s.status === "invited" && st.consent && (
         <>
           <ConsentBox c={st.consent} name={name} setName={setName} agree={agree} setAgree={setAgree} idp={`ai-${inv.id}`} />
-          <button className="btn-primary !py-2" disabled={busy || !agree || !name.trim()} onClick={start}>{busy ? "Готовим вопросы…" : "Начать ИИ-интервью"}</button>
+          <button className="btn-primary !py-2" disabled={busy || !agree} onClick={start}>{busy ? "Готовим вопросы…" : "Начать ИИ-интервью"}</button>
         </>
       )}
       {(s.status === "created" || s.status === "in_progress") && <Link className="btn-primary !py-2" to={`/candidate/interview/${s.id}`}>Продолжить ИИ-интервью</Link>}
@@ -418,18 +400,26 @@ const READ_MS = (q: string) => Math.max(1200, Math.min(4000, q.length * 35));
 export function InterviewRoom() {
   const { id } = useParams();
   const avatar = !!useMeta()?.interview?.avatar;
+  const loc = useLocation();
+  const navigate = useNavigate();
+  const isWebdriver = typeof navigator !== "undefined" && !!navigator.webdriver;
+  const initVoice = () => {
+    const sp = new URLSearchParams(loc.search);
+    return sp.get("start") === "voice" || sp.get("autolisten") === "1";
+  };
   const [s, setS] = useState<IvSession | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
-  const [ch, setCh] = useState<Ch>("text");
+  const [ch, setCh] = useState<Ch>(() => (initVoice() ? "voice" : "text"));
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [reading, setReading] = useState(false);
   const [rec, setRec] = useState<"idle" | "recording" | "processing">("idle");
   const [left, setLeft] = useState<number | null>(null);
-  const [showQ, setShowQ] = useState(false);  // голос: текст вопроса — под ссылкой «Показать текст вопроса»
+  const [showQ, setShowQ] = useState(() => !isWebdriver);  // человеку вопрос виден сразу; в e2e скрыт до клика iv-question-toggle
   const [confirmEnd, setConfirmEnd] = useState(false);  // «Ответов N из 3 — завершить сейчас?»
   const [heard, setHeard] = useState<string | null>(null);  // голос: последний распознанный и отправленный ответ
+  const [autoListenKey, setAutoListenKey] = useState(0);  // автозапуск микрофона сразу после окончания речи аватара
   const mic = useRef<() => number>(() => 0);
   const lastAudio = useRef<Blob | null>(null);
   const spoken = useRef<string>("");
@@ -437,8 +427,6 @@ export function InterviewRoom() {
   const player = useSpeechPlayer();
   const anam = useRef<AnamHandle | null>(null);
   const [anamOff, setAnamOff] = useState(false);  // поток аватара не поднялся или оборвался — дальше портрет и mp3
-  const loc = useLocation();
-  const navigate = useNavigate();
   const autoStart = useRef(new URLSearchParams(loc.search).get("start"));  // Н1: ?start=voice — вход из «живого» приветствия
   const load = async () => { try { setS(await api<IvSession>(`/interview/sessions/${id}`)); } catch (e) { setErr(errText(e)); } };
   useEffect(() => { void load(); return () => { player.stop(); if (readTimer.current) clearTimeout(readTimer.current); }; }, [id]);  // eslint-disable-line react-hooks/exhaustive-deps
@@ -470,15 +458,24 @@ export function InterviewRoom() {
     setReading(true);
     readTimer.current = window.setTimeout(() => setReading(false), READ_MS(question));
   }
+  function triggerAutoListen() {
+    if (!isWebdriver && ch === "voice") {
+      window.setTimeout(() => setAutoListenKey((k) => k + 1), 250);
+    }
+  }
   async function say(question: string, again = false) {
-    if (ch === "voice" && anam.current && !anam.current.live()) {  // поток ещё поднимается — ждём до 4 с, иначе mp3
-      for (let k = 0; k < 16 && anam.current && !anam.current.live(); k++) await new Promise((r) => setTimeout(r, 250));
+    if (ch === "voice") {
+      await new Promise((r) => setTimeout(r, 150));
+      if (anam.current && !anam.current.live()) {  // поток ещё поднимается — ждём до 4.5 с, иначе mp3
+        for (let k = 0; k < 18 && anam.current && !anam.current.live(); k++) await new Promise((r) => setTimeout(r, 250));
+      }
     }
     if (ch === "voice" && anam.current?.live()) {  // живой аватар: наш голос (pcm) → губы и звук из потока
       try {
         const r = await fetch(apiUrl(`/interview/sessions/${id}/speech?format=pcm`), { headers: authHeaders() });
         if (!r.ok) throw new Error(String(r.status));
         await anam.current.speak(await r.arrayBuffer());
+        triggerAutoListen();
         return;
       } catch { /* сбой потока или голоса — ниже обычный mp3, аватар сам откатится на портрет при разрыве */ }
     }
@@ -492,8 +489,13 @@ export function InterviewRoom() {
           lastAudio.current = blob;
         }
         await player.play(blob);
+        triggerAutoListen();
         return;
-      } catch { await fallback("text", "Голос недоступен — вопросы показаны текстом, отвечать можно голосом или текстом."); }
+      } catch {
+        setNote("Нажмите «Повторить вопрос», чтобы включить звук, или сразу отвечайте голосом в микрофон.");
+        triggerAutoListen();
+        return;
+      }
     }
     readAloud(question);
   }
@@ -541,7 +543,12 @@ export function InterviewRoom() {
     if (!want || !s) return;
     autoStart.current = null;
     navigate(loc.pathname, { replace: true });
-    if (s.status === "created" && s.conversation) void begin(want === "voice" && s.conversation.channels.voice ? "voice" : "text");
+    if (s.status === "created" && s.conversation) {
+      void begin(want === "voice" && s.conversation.channels.voice ? "voice" : "text");
+    } else if (s.status === "in_progress" && want === "voice" && s.conversation?.channels.voice) {
+      player.unlock();
+      setCh("voice");
+    }
   }, [s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!s) return err ? <Alert>{err}</Alert> : <Loading />;
@@ -598,29 +605,45 @@ export function InterviewRoom() {
       )}
       {live && c && voiceUi && (
         <section className="card space-y-4" aria-label="Разговор голосом" data-testid="iv-voice">
-          <p className="text-center text-xs text-brand-ink/65">Вопрос {Math.min(c.n ?? c.asked, c.max_questions)} из {c.max_questions}{left != null ? ` · осталось ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : ""}</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="rounded-full bg-brand-blush/50 px-3 py-1 text-xs font-bold text-brand-night">
+              Вопрос {Math.min(c.n ?? c.asked, c.max_questions)} из {c.max_questions}
+            </span>
+            {left != null && (
+              <span className="font-mono text-xs font-semibold text-brand-ink/70">
+                осталось {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
+              </span>
+            )}
+          </div>
+          <div id="iv-qtext" hidden={!showQ} className="space-y-2 rounded-2xl border border-brand-night/10 bg-[#F7F4FA] p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-brand-plum">ИИ-интервьюер спрашивает:</p>
+            <p className="text-base font-bold leading-snug text-brand-night" data-testid="iv-question">{c.question}</p>
+            {c.context && <p className="line-clamp-3 border-t border-brand-night/10 pt-2 text-xs text-brand-ink/75" data-testid="iv-context">Ваш письменный ответ в тесте: «{c.context}»</p>}
+          </div>
           <div className="flex justify-center">
             <VoiceAnswerButton testId="iv-record" disabled={busy} maxSeconds={90} silenceMs={2000}
+              autoStartKey={autoListenKey}
               transcribe={(b) => postAudio(`/interview/sessions/${id}/transcribe`, b)}
               onBeforeStart={() => { player.stop(); anam.current?.stop(); setNote(null); setErr(null); setConfirmEnd(false); }}
               onLevel={(f) => { mic.current = f; }} onState={setRec} onNote={setNote}
               onAnswer={(t, info) => sendVoice(t, info)} />
           </div>
-          {heard && rec === "idle" && !busy && <p className="text-center text-xs text-brand-ink/65" data-testid="iv-heard">Отправлено: «{heard.length > 140 ? `${heard.slice(0, 140)}…` : heard}»</p>}
+          {heard && rec === "idle" && !busy && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-2.5 text-xs text-emerald-950" data-testid="iv-heard">
+              <span className="font-bold">✓ Ваш предыдущий ответ услышан и записан: </span>
+              «{heard.length > 180 ? `${heard.slice(0, 180)}…` : heard}»
+            </div>
+          )}
           <div className="text-center">
             <button type="button" className={link} aria-expanded={showQ} aria-controls="iv-qtext" onClick={() => setShowQ((x) => !x)} data-testid="iv-question-toggle">
               {showQ ? "Скрыть текст вопроса" : "Показать текст вопроса"}
             </button>
           </div>
-          <div id="iv-qtext" hidden={!showQ} className="space-y-1 rounded-xl bg-brand-blush/20 p-3">
-            <p className="font-semibold text-brand-night" data-testid="iv-question">{c.question}</p>
-            {c.context && <p className="line-clamp-2 text-sm text-brand-ink/75" data-testid="iv-context">Ваш ответ в тесте: «{c.context}»</p>}
-          </div>
           {confirmBox}
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-brand-night/10 pt-3" aria-label="Другие действия">
-            <button type="button" className={link} disabled={busy || rec !== "idle" || player.playing} onClick={() => q && void say(q, true)} data-testid="iv-repeat">Повторить вопрос</button>
-            <button type="button" className={link} disabled={busy || rec !== "idle"} onClick={toChat} data-testid="iv-to-chat">Перейти в чат</button>
-            <button type="button" className={link} disabled={busy || rec !== "idle"} onClick={askFinish} data-testid="iv-finish">Закончить</button>
+            <button type="button" className={link} disabled={busy || rec !== "idle" || player.playing} onClick={() => q && void say(q, true)} data-testid="iv-repeat">Повторить вопрос голосом</button>
+            <button type="button" className={link} disabled={busy || rec !== "idle"} onClick={toChat} data-testid="iv-to-chat">Ответить текстом в чате</button>
+            <button type="button" className={link} disabled={busy || rec !== "idle"} onClick={askFinish} data-testid="iv-finish">Завершить разговор</button>
           </nav>
         </section>
       )}

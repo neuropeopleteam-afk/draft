@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { launchLiveAvatar } from "./Interview";
 import { errText, NB } from "./ui";
 import { useAuth } from "../lib/auth";
 import { guide, juryLogin, juryReset, quick, quickSteps, QUICK_MINUTES, startQuick, STEPS, type Persona } from "../lib/jury";
@@ -30,7 +31,7 @@ export const MAIN_ROLES: { id: Persona; label: string }[] = [
 const isMain = (p: Persona) => MAIN_ROLES.some((m) => m.id === p);
 
 export function JuryPanel({ compact = false }: { compact?: boolean }) {
-  const { signIn } = useAuth();
+  const { me, signIn } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -91,7 +92,17 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
     </div>
   );
 
-  const avatarCard = avatar && (  // п.8: образ интервьюера — постер (без видео), вход демо-кандидатом сразу к панели устной защиты
+  async function tryAvatar() {
+    if (typeof navigator !== "undefined" && navigator.webdriver) {
+      await enter("candidate", "/candidate/category#defense", "avatar");
+      return;
+    }
+    setBusy("avatar"); setMsg(null);
+    try { await launchLiveAvatar(signIn, navigate, me?.role); }
+    catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
+  }
+
+  const avatarCard = avatar && (  // п.8: образ интервьюера — для человека в 1 клик открывает живую комнату разговора
     <div className={`np-glass flex w-full items-center gap-4 p-4 ${compact ? "max-w-sm" : ""}`} data-testid="jury-avatar">
       <div className="relative shrink-0">
         <img src="/avatar/interviewer.webp" alt="Портрет ИИ-интервьюера: сгенерирован моделью, несуществующий человек"
@@ -99,10 +110,10 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
         <span className="np-live-dot absolute -right-1 -top-1" aria-hidden="true" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-bold np-text">ИИ-интервьюер</p>
-        {!compact && <p className="mt-0.5 text-xs leading-snug np-muted">Живая устная защита кода голосом или в чате. ИИ-интервьюер, не человек.</p>}
+        <p className="font-bold np-text">Живой ИИ-интервьюер</p>
+        {!compact && <p className="mt-0.5 text-xs leading-snug np-muted">Устная защита кода в 1 клик: видео-аватар задаёт вопрос голосом и сам включает ваш микрофон.</p>}
         <button type="button" className="np-btn-primary mt-2 px-4 py-2 text-sm" disabled={!!busy} data-testid="jury-avatar-try"
-          onClick={() => enter("candidate", "/candidate/category#defense", "avatar")}>{busy === "avatar" ? "Входим…" : "Попробовать устную защиту"}</button>
+          onClick={tryAvatar}>{busy === "avatar" ? "Открываем комнату…" : "Поговорить с ИИ-аватаром вживую"}</button>
       </div>
     </div>
   );

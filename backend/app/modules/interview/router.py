@@ -179,7 +179,7 @@ class CandidateInterviewOut(BaseModel):
 
 
 class StartIn(BaseModel):
-    name: str = Field(min_length=1, max_length=60, description="Как обращаться — одно слово, без фамилии")
+    name: str = Field("", max_length=60, description="Как обращаться — одно слово, без фамилии (по желанию)")
     consent: bool
 
 
@@ -222,6 +222,14 @@ def defense_start(session_id: uuid.UUID, body: StartIn, user: User = Depends(can
                   db: Session = Depends(get_db)) -> dict:
     ts = svc.own_attempt(db, user, session_id)
     return svc.view(svc.start_defense(db, user, ts, body.name, body.consent), "candidate")
+
+
+@router.post("/quick-defense", status_code=201, response_model=SessionOut,
+             summary="Живой разговор с ИИ-интервьюером в один клик (последняя попытка теста, сразу голосом)",
+             responses={**AUTH, **OFF, 404: err("Завершённых попыток нет"), 422: err("Защищать нечего"),
+                        429: err("Лимит сессий")})
+def quick_defense_start(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    return svc.view(svc.quick_defense(db, user), "candidate")
 
 
 # ------------------------------------------------------------------ кандидат: разговор

@@ -29579,15 +29579,14 @@
             "type": "boolean"
           },
           "name": {
-            "description": "Как обращаться — одно слово, без фамилии",
+            "default": "",
+            "description": "Как обращаться — одно слово, без фамилии (по желанию)",
             "maxLength": 60,
-            "minLength": 1,
             "title": "Name",
             "type": "string"
           }
         },
         "required": [
-          "name",
           "consent"
         ],
         "title": "StartIn",
@@ -36851,7 +36850,7 @@
                 }
               }
             },
-            "description": "Нет согласия. Коды `detail.code`: `consent_required` — Нужно согласие на обработку ответов; `name_required` — Как к вам обращаться — одно слово, без фамилии; `insufficient_context`."
+            "description": "Нет согласия. Коды `detail.code`: `consent_required` — Нужно согласие на обработку ответов; `insufficient_context`."
           },
           "429": {
             "content": {
@@ -56787,7 +56786,7 @@
                 }
               }
             },
-            "description": "Защищать нечего или нет согласия. Коды `detail.code`: `consent_required` — Нужно согласие на обработку ответов; `name_required` — Как к вам обращаться — одно слово, без фамилии; `insufficient_context`."
+            "description": "Защищать нечего или нет согласия. Коды `detail.code`: `consent_required` — Нужно согласие на обработку ответов; `insufficient_context`."
           },
           "429": {
             "content": {
@@ -56812,6 +56811,119 @@
           }
         ],
         "summary": "Начать устную защиту развёрнутых ответов (по желанию; грейд не меняется)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/quick-defense": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "quick_defense_start_api_interview_quick_defense_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__interview__router__SessionOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "test_session_not_found",
+                    "message": "Завершённых попыток теста пока нет"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Завершённых попыток нет. Коды `detail.code`: `test_session_not_found` — Завершённых попыток теста пока нет."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_disabled",
+                    "message": "Устная защита и ИИ-интервью выключены"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Выключено флагом (interview_disabled) или сессия в другом состоянии. Коды `detail.code`: `interview_disabled` — Устная защита и ИИ-интервью выключены; `defense_done` — Устная защита этой попытки уже пройдена или попытки закончились; `interview_closed` — Сессия уже завершена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "consent_required",
+                    "message": "Нужно согласие на обработку ответов"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Защищать нечего. Коды `detail.code`: `consent_required` — Нужно согласие на обработку ответов; `insufficient_context`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_daily_cap",
+                    "message": "Дневной лимит сессий исчерпан — попробуйте завтра"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Лимит сессий. Коды `detail.code`: `interview_daily_cap` — Дневной лимит сессий исчерпан — попробуйте завтра; `jury_limit` — В песочнице жюри — один живой запуск в час; готовый пример — ниже; `interview_user_limit` — Не больше нескольких сессий в сутки — попробуйте завтра."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "interview_unavailable",
+                    "message": "Интервьюер сейчас недоступен — попробуйте позже"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `interview_unavailable` — Интервьюер сейчас недоступен — попробуйте позже."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Живой разговор с ИИ-интервьюером в один клик (последняя попытка теста, сразу голосом)",
         "tags": [
           "interview"
         ]

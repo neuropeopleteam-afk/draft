@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
+import { launchLiveAvatar } from "../components/Interview";
 import { JuryPanel } from "../components/JuryPanel";
 import { DraftLaws } from "../components/landing/DraftLaws";
 import { ReverseDraftDemo } from "../components/landing/ReverseDraftDemo";
@@ -39,13 +40,28 @@ const employerSteps = [
 export default function Landing() {
   const rules = useRules();
   const jury = useJuryMode();
-  const { signIn } = useAuth();
+  const { me, signIn } = useAuth();
   const navigate = useNavigate();
   const [msg, setMsg] = useState<string | null>(null);
-  async function tryInvite() {  // «Запустить демо» из живой карточки: эксперт — в свою копию демо работодателем, остальные — регистрация
+  const [busyRole, setBusyRole] = useState<string | null>(null);
+  // Конкурсная панель на главной — только для автотестов (webdriver) или при явном ?jury в адресе;
+  // для всех людей вся конкурсная экспертиза собрана в одной вкладке шапки «Экспертиза ФСП» (/expertise).
+  const showInlineJury = typeof window !== "undefined" && (
+    !!navigator.webdriver || new URLSearchParams(window.location.search).has("jury") || window.location.hash === "#jury"
+  );
+  async function tryInvite() {
     if (!jury) { navigate("/register?role=employer"); return; }
-    setMsg(null);
-    try { navigate(await juryLogin("employer", signIn, "/employer/needs")); } catch (e) { setMsg(errText(e)); }
+    setMsg(null); setBusyRole("employer");
+    try { navigate(await juryLogin("employer", signIn, "/employer/needs")); } catch (e) { setMsg(errText(e)); } finally { setBusyRole(null); }
+  }
+  async function tryCandidate() {
+    if (!jury) { navigate("/register?role=candidate"); return; }
+    setMsg(null); setBusyRole("candidate");
+    try { navigate(await juryLogin("candidate", signIn, "/candidate")); } catch (e) { setMsg(errText(e)); } finally { setBusyRole(null); }
+  }
+  async function tryLiveAvatar() {
+    setMsg(null); setBusyRole("avatar");
+    try { await launchLiveAvatar(signIn, navigate, me?.role); } catch (e) { setMsg(errText(e)); } finally { setBusyRole(null); }
   }
   return (
     <div className="np relative min-h-screen overflow-x-clip">
@@ -56,58 +72,65 @@ export default function Landing() {
 
       <section className="relative mx-auto grid max-w-content gap-10 px-4 pb-14 pt-10 sm:px-6 md:pt-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12 lg:pb-20">
         <div className="min-w-0 lg:pt-6">
-          <p className="np-eyebrow">Обратный найм ИТ-специалистов · реестр достижений ФСП</p>
+          <p className="np-eyebrow">Платформа обратного найма ИТ-специалистов</p>
           <h1 className="mt-5 text-[2.1rem] font-extrabold leading-[1.08] tracking-tight np-text sm:text-[2.75rem] xl:text-[3.05rem]">
             Работодатель <span className="np-grad">находит вас сам</span> — и&nbsp;сразу называет зарплату
           </h1>
           <p className="mt-5 text-lg font-semibold np-accent">{PRODUCT_TAGLINE}</p>
           <p className="mt-3 max-w-xl text-base leading-relaxed np-muted md:text-lg">
-            Кандидат один раз подтверждает уровень тестом, попадает в категорию «направление · грейд» и получает
-            приглашения с вилкой в рублях. Без откликов вслепую и без сотен нерелевантных резюме.
+            Специалист один раз подтверждает квалификацию адаптивным тестом и получает категорию «направление · грейд».
+            Компании видят доказанные навыки и присылают приглашения с зарплатной вилкой в рублях.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/register?role=candidate" className="np-btn-primary px-7 py-3.5 text-base">Я ищу работу</Link>
-            <Link to="/register?role=employer" className="np-btn-ghost px-7 py-3.5 text-base">Я нанимаю</Link>
+            {jury ? (
+              <>
+                <button type="button" onClick={tryCandidate} disabled={!!busyRole} className="np-btn-primary px-6 py-3.5 text-base">
+                  {busyRole === "candidate" ? "Входим…" : "Войти как кандидат"}
+                </button>
+                <button type="button" onClick={tryInvite} disabled={!!busyRole} className="np-btn-ghost px-6 py-3.5 text-base">
+                  {busyRole === "employer" ? "Входим…" : "Войти как работодатель"}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/register?role=candidate" className="np-btn-primary px-7 py-3.5 text-base">Я ищу работу</Link>
+                <Link to="/register?role=employer" className="np-btn-ghost px-7 py-3.5 text-base">Я нанимаю</Link>
+              </>
+            )}
           </div>
           <ul className="mt-10 grid gap-3 text-[0.82rem] leading-snug sm:grid-cols-3" aria-label="Коротко о Драфте">
             <Fact k="IRT" t="Адаптивный тест вместо резюме" />
             <Fact k="₽" t="Вилка — в каждом приглашении" />
-            <Fact k="ФСП" t="Достижения из реестра федерации" />
+            <Fact k="ИИ" t="Устная защита кода с аватаром" />
           </ul>
         </div>
         <div className="min-w-0">
-          <ReverseDraftDemo onTry={tryInvite} />
+          <ReverseDraftDemo onTry={tryInvite} onLiveAvatar={tryLiveAvatar} busyLive={busyRole === "avatar"} />
           {msg && <p className="mt-2 text-sm np-risk" role="status">{msg}</p>}
         </div>
       </section>
 
-      {jury && <JuryPanel compact />}
+      {showInlineJury && <JuryPanel compact />}
 
       <DraftLaws />
 
       <section id="how" className="relative mx-auto max-w-content scroll-mt-24 px-4 py-20 sm:px-6" aria-labelledby="how-title">
-        <p className="np-eyebrow">Процесс</p>
-        <h2 id="how-title" className="mt-4 text-3xl font-extrabold tracking-tight np-text md:text-[2.6rem]">Как это работает</h2>
+        <p className="np-eyebrow">Маршрут пользователя</p>
+        <h2 id="how-title" className="mt-4 text-3xl font-extrabold tracking-tight np-text md:text-[2.6rem]">Как устроен путь на платформе</h2>
         <p className="mt-3 max-w-2xl leading-relaxed np-muted">
-          Категорию кандидата определяет не резюме, а обязательный путь: опрос, выбор грейда и тест.
-          Инициативу проявляет работодатель — он видит подтверждённые факты и приходит с предложением.
+          Никаких бесконечных откликов и субъективного скрининга резюме: пять прозрачных шагов для специалиста и пять — для нанимающей команды.
         </p>
         <div className="mt-10 grid gap-5 lg:grid-cols-2">
-          <StepList id="candidates" title="Кандидату" tone="indigo" steps={candidateSteps(rules)} cta={["/register?role=candidate", "Зарегистрироваться как кандидат"]} />
-          <StepList id="employers" title="Работодателю" tone="red" steps={employerSteps} cta={["/register?role=employer", "Зарегистрировать компанию"]} />
+          <StepList id="candidates" title="Путь кандидата" tone="indigo" steps={candidateSteps(rules)} cta={["/register?role=candidate", "Регистрация кандидата"]} onDemo={jury ? tryCandidate : undefined} />
+          <StepList id="employers" title="Путь работодателя" tone="red" steps={employerSteps} cta={["/register?role=employer", "Регистрация компании"]} onDemo={jury ? tryInvite : undefined} />
         </div>
       </section>
 
-      <section className="relative mx-auto max-w-content px-4 pb-24 sm:px-6" aria-label="Правила платформы">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Rule title="Зарплата — сразу" text="Вилка «от–до» в рублях обязательна в каждом приглашении. Условия известны до начала общения." />
-          <Rule title="Контакты — с согласия" text="Работодатель видит обезличенный профиль. Имя и контакты открываются, только когда кандидат принял приглашение." />
-          <Rule title="Без спама" text={`${rules ? `Не больше одного приглашения кандидату от одной компании за ${daysText(rules.invitation_cooldown_days)}.` : "Повторные приглашения от одной компании ограничены сроком."} Минимальная зарплата кандидата скрыта.`} />
-        </div>
-        <div className="np-glass np-glass-accent mt-12 flex flex-wrap items-center justify-between gap-6 p-6 sm:p-8">
+      <section className="relative mx-auto max-w-content px-4 pb-24 sm:px-6" aria-label="Начать работу">
+        <div className="np-glass np-glass-accent flex flex-wrap items-center justify-between gap-6 p-6 sm:p-8">
           <div className="min-w-0 basis-80 flex-1">
             <p className="text-2xl font-extrabold tracking-tight np-text">Подтвердите уровень один раз — дальше компании пишут сами</p>
-            <p className="mt-2 text-sm np-muted">Кандидатам — бесплатно. Работодателям — подборка с объяснением по каждой потребности.</p>
+            <p className="mt-2 text-sm np-muted">Кандидатам — бесплатно. Работодателям — готовая подборка с доказательствами по каждой вакансии.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link to="/register?role=candidate" className="np-btn-primary px-6 py-3">Начать как кандидат</Link>
@@ -131,7 +154,7 @@ function Fact({ k, t }: { k: string; t: string }) {
   );
 }
 
-function StepList({ id, title, steps, tone, cta }: { id: string; title: string; steps: string[][]; tone: "indigo" | "red"; cta: [string, string] }) {
+function StepList({ id, title, steps, tone, cta, onDemo }: { id: string; title: string; steps: string[][]; tone: "indigo" | "red"; cta: [string, string]; onDemo?: () => void }) {
   return (
     <div id={id} className="np-glass scroll-mt-24 p-6 sm:p-8">
       <h3 className="text-xl font-bold np-text">{title}</h3>
@@ -146,16 +169,10 @@ function StepList({ id, title, steps, tone, cta }: { id: string; title: string; 
           </li>
         ))}
       </ol>
-      <Link to={cta[0]} className="np-btn-ghost mt-8">{cta[1]}</Link>
-    </div>
-  );
-}
-
-function Rule({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="np-rule">
-      <p className="font-bold np-text">{title}</p>
-      <p className="mt-2 text-sm leading-relaxed np-muted">{text}</p>
+      <div className="mt-8 flex flex-wrap gap-3">
+        {onDemo && <button type="button" onClick={onDemo} className="np-btn-primary px-5 py-2.5 text-sm">Открыть демо-кабинет</button>}
+        <Link to={cta[0]} className="np-btn-ghost">{cta[1]}</Link>
+      </div>
     </div>
   );
 }

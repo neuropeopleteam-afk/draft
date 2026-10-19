@@ -10,7 +10,15 @@ _OPEN = {
     "defense": "Здравствуйте, {name}, я — ИИ-интервьюер {product}, задам {n} по вашим письменным ответам. ",
     "interview": "Здравствуйте, {name}, я — ИИ-интервьюер {product}, задам {n} о вашем опыте, это около {m}. ",
 }
+_OPEN_GENERIC = {
+    "defense": "Здравствуйте, я — ИИ-интервьюер {product}, задам {n} по вашим письменным ответам. ",
+    "interview": "Здравствуйте, я — ИИ-интервьюер {product}, задам {n} о вашем опыте, это около {m}. ",
+}
 MAX_QUESTION_WORDS = 25
+
+
+def is_generic_name(name: str | None) -> bool:
+    return (name or "").strip().lower() in ("", "кандидат", "собеседник", "гость", "участник", "эксперт")
 
 
 def plural(n: int, one: str, few: str, many: str) -> str:
@@ -23,6 +31,10 @@ def plural(n: int, one: str, few: str, many: str) -> str:
 _CLOSE = {
     "defense": "Спасибо, {name}, я всё записала. Объяснения увидит работодатель, результат теста не меняется. Хорошего дня.",
     "interview": "Спасибо, {name}, я всё записала. Итог увидит работодатель, решение принимает человек. Хорошего дня.",
+}
+_CLOSE_GENERIC = {
+    "defense": "Спасибо, я всё записала. Объяснения увидит работодатель, результат теста не меняется. Хорошего дня.",
+    "interview": "Спасибо, я всё записала. Итог увидит работодатель, решение принимает человек. Хорошего дня.",
 }
 # {lead} — «В задании «…» вы написали: «первые слова ответа».» (короткий фрагмент, не цитата целиком)
 _FIRST_ASK = ("Почему вы решили именно так?", "Почему именно так, а не иначе?", "Как вы проверите, что это работает?")
@@ -48,8 +60,9 @@ def rules_turn(spec: SessionSpec, transcript: Transcript, kind: str, k: int | No
     from .prompts import genitive
 
     name = spec.candidate_name
+    generic = is_generic_name(name)
     if kind == "closing":
-        return _CLOSE[spec.mode].format(name=name)
+        return _CLOSE_GENERIC[spec.mode] if generic else _CLOSE[spec.mode].format(name=name)
     items = plan(spec)
     if kind == "repeat":
         last = next((u for u in reversed(transcript.items) if u.who == "interviewer" and u.kind in ("opening", "question")), None)
@@ -72,7 +85,8 @@ def rules_turn(spec: SessionSpec, transcript: Transcript, kind: str, k: int | No
     if kind == "opening":
         n = plural(spec.max_questions, "короткий вопрос", "коротких вопроса", "коротких вопросов")
         m = plural(spec.duration_min, "минуты", "минут", "минут")
-        prefix = _OPEN[spec.mode].format(name=name, n=n, m=m, product=genitive(product))
+        tpl = _OPEN_GENERIC[spec.mode] if generic else _OPEN[spec.mode]
+        prefix = tpl.format(name=name, n=n, m=m, product=genitive(product))
     return prefix + q
 
 

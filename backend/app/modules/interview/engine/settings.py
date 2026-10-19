@@ -40,6 +40,7 @@ class InterviewSettings(BaseSettings):
     interview_turn_secret: str | None = None
     interview_turn_only: bool = False
     interview_jury_avatar: bool = False
+    interview_engine_jury_per_hour: int = 1
 
     interview_daily_cap_usd: float = Field(default=15.0, ge=0)
     interview_price_tts_1000: float = Field(default=0.15, ge=0)  # USD за 1000 знаков
