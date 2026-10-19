@@ -591,6 +591,7 @@ def markdown(rep: dict) -> str:
            f"{x.get('commit') or '—'}, {str(x.get('generated_at') or '—')[:16].replace('T', ' ')} UTC, "
            f"config {x.get('config_hash') or '—'}." for x in sig.get("extra_runs", [])],
          *([""] if sig.get("extra_runs") else []),
+         *w1_md(rep),
          "Банк ×1 — ожидаемый по карточке банка: направление — Lead 1 короткое + 1 развёрнутое, Principal 1 развёрнутое; "
          "общий блок — Lead 2 + 2, Principal 1 + 1. Блок — до K коротких трудных заданий за ≤ 25 мин после основной "
          "части (тем, кто заявил Lead/Principal, и подтвердившим Senior с θ̂, не исключающим Lead).", "",
@@ -616,6 +617,25 @@ def markdown(rep: dict) -> str:
           "кратность × (короткие, развёрнутые) из строки банка ×1.", ""]
     L += robustness_md(rep)
     return "\n".join(L) + "\n"
+
+
+def w1_md(rep: dict) -> list[str]:
+    """W1 (19.10): основной сценарий второго этапа Lead/Principal — до и после улучшенного выбора, на одном банке."""
+    w = rep.get("main")
+    if not w:
+        return []
+    L = ["## Основной сценарий второго этапа (W1, 19.10)", "", w["text"], "",
+         "| Вариант | confirm | Lead точно | Principal точно | Senior точно | Выше (все) | Выше: присвоен Lead/Principal | "
+         "Мин (ср.) | Второй этап, доля |", "|---|---|---|---|---|---|---|---|---|"]
+    for key in w["rows"]:
+        v = rep["variants"].get(key)
+        if not v:
+            continue
+        b = v.get("by_true_level", {})
+        L.append(f"| {v['text']} | {_n(v['confirm'])} | {_p((b.get('lead') or {}).get('exact'))} | "
+                 f"{_p((b.get('principal') or {}).get('exact'))} | {_p((b.get('senior') or {}).get('exact'))} | "
+                 f"{_p(v['above'])} | {_p(v.get('above_ext'))} | {_n(v.get('minutes_mean'))} | {_p(v.get('block_share'))} |")
+    return L + ["", *[f"* {x}" for x in w.get("caveats", [])], ""]
 
 
 def robustness(rep: dict) -> list[dict]:

@@ -91,10 +91,29 @@ def _stack_cell(b, tag: str) -> tuple[dict, float | None]:
     if f is not None:  # проверялось тестом, но ниже порога подтверждения
         sc = float(f.value.get("score", 0))
         return ({"level": "T1", "status": "mismatch", "text": skill_check_text(f)}, sc)
+    from app.modules.matching import implied  # W1: подтверждённый фреймворк подтверждает базовый язык (как в балле)
+    imp = implied.implied_by(b.skills_t1, tag)
+    if imp is not None:
+        sc = implied.IMPLIED_FACTOR * float(imp[1].value.get("score", 0))
+        return ({"level": "T1", "status": "confirmed", "implied_by": imp[0],
+                 "text": f"Подтверждён через {tag_title(imp[0])}: {skill_evidence_text(imp[1])}"}, sc)
     if tag in b.stack_t0:
         return ({"level": "T0", "status": "declared",
                  "text": "Заявлено кандидатом — в ранжирование не входит, можно проверить коротким заданием"}, None)
     return {"level": "none", "status": "missing", "text": "Нет данных"}, None
+
+
+def _tag_value(b, tag: str) -> float:
+    """Доля подтверждения навыка в балле подбора (как ranking.stack_part): прямое T1 или через фреймворк × 0,9."""
+    f = b.skills_t1.get(tag)
+    if skill_confirmed(f):
+        return float(f.value.get("score", 0))
+    if f is None:
+        from app.modules.matching import implied
+        imp = implied.implied_by(b.skills_t1, tag)
+        if imp is not None:
+            return implied.IMPLIED_FACTOR * float(imp[1].value.get("score", 0))
+    return 0.0
 
 
 def _pts(x: float) -> str:
@@ -266,8 +285,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         why_items.append({
             "ref": p.public_ref, "score": s, "comps": comps,
             "theta": t0.get("theta"), "se": t0.get("se"),
-            "tags": {it["tag"]: (float(b.skills_t1[it["tag"]].value.get("score", 0))
-                                 if skill_confirmed(b.skills_t1.get(it["tag"])) else 0.0)
+            "tags": {it["tag"]: _tag_value(b, it["tag"])
                      for z in ("stack_required", "stack_desired") for it in req.get(z) or []}})
         cells: dict[str, dict] = {}
         cells["score"] = {"level": "T1", "status": "confirmed", "text": f"{round(s * 100)} из 100",
