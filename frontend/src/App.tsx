@@ -2,6 +2,7 @@ import { Suspense, useEffect } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { RouteAnnouncer, SkipLink } from "./components/A11y";  // А11: пропуск навигации, смена экрана
 import { JuryGuide } from "./components/JuryGuide";
+import { InteractiveAvatarTour } from "./components/InteractiveAvatarTour";
 import { StudyDock } from "./components/study/StudyDock";
 import { RouteBoundary, RouteFallback } from "./components/Boot";  // Я16: загрузка экрана, ошибка загрузки — экран повтора
 import Landing from "./pages/Landing";
@@ -253,6 +254,7 @@ export default function App() {
     </Suspense>
     </RouteBoundary>
     <JuryGuide />
+    <InteractiveAvatarTour />
     <HashScroll />
     <StudyDock />
     <RouteAnnouncer />

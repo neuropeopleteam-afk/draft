@@ -523,7 +523,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           {/* Ф6 (В7, Н8) + Ф4: на первом экране — коротко; правило остановки и погрешность — под «Подробнее» */}
           <p className="mt-2 text-brand-ink/75">
             {mode === "express"
-              ? <><span className="chip mr-1.5" data-testid="jury-brief">Краткий режим жюри</span>{`Не полный тест (до 80 минут): без дотестирования${grade === "senior" ? ", за Senior длиннее" : ""}; результат помечен «экспресс», интервал оценки шире, чем у полного. Только в демо-режиме жюри.`}</>
+              ? <><span className="chip mr-1.5" data-testid="jury-brief">Экспресс-калибровка · 5 минут</span>{`Быстрая проверка уровня (5–7 задач банка 2PL IRT без дотестирования${grade === "senior" ? ", за Senior — до 12" : ""}) вместо полного 80-минутного теста.`}</>
               : <FullLength len={len.data} brief />}
           </p>
           <details className="mt-2 text-xs text-brand-ink/70">

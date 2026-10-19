@@ -38,7 +38,7 @@ function ThemeIcon({ dark }: { dark: boolean }) {
 /** Шапка публичных страниц. premium — главная и «Экспертиза ФСП» (стеклянная шапка, тёмная/светлая тема, .np);
  *  dark оставлен для совместимости (тёмная шапка без переключателя темы). */
 export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; premium?: boolean }) {
-  const { me } = useAuth();
+  const { me, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const [theme, , toggleTheme] = useTheme();
   const box = useRef<HTMLDivElement>(null);
@@ -96,7 +96,16 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
             )}
           </div>
           {me ? (
-            <Link to={cabinetPath(me.role)} className={`${cta} px-3.5 sm:px-5`}><span className="sm:hidden">Кабинет</span><span className="hidden sm:inline">Личный кабинет</span></Link>
+            <div className="flex items-center gap-2">
+              <Link to={cabinetPath(me.role)} className={`${cta} px-3.5 sm:px-5`}><span className="sm:hidden">Кабинет</span><span className="hidden sm:inline">Личный кабинет</span></Link>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className={premium ? "np-btn-ghost !px-3 !py-2 text-xs sm:text-sm" : "btn-ghost !px-3 !py-2 text-xs sm:text-sm"}
+              >
+                Выйти
+              </button>
+            </div>
           ) : (
             <>
               <Link to="/login" className={`hidden rounded-lg px-2 py-2 text-sm font-semibold sm:inline-flex ${link}`}>Войти</Link>
