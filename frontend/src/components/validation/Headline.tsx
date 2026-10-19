@@ -1,5 +1,6 @@
 import { Alert, Loading, NB, num, pct, signed, useApi } from "../ui";
 import { ProvenanceLine, RetestVsTruth } from "./Provenance";
+import { ScrollX } from "../A11y";
 
 /** Первый экран /validation: «5 чисел, которые доказывают механику» (backend: app/modules/validation/headline.py).
  *  Каждое число — из расчёта с подписью мира; нет расчёта — нет числа. */
@@ -35,6 +36,7 @@ export default function Headline() {
             {it.pair && <p className="text-xs tabular-nums text-brand-ink/70">nDCG@10: {num(it.pair[0], 3)} против {num(it.pair[1], 3)}</p>}
             <p className="mt-2 text-sm leading-snug text-brand-ink/80">{it.text}</p>
             {it.note && <p className="mt-1 text-xs text-brand-ink/65">{it.note}</p>}
+            {it.protocol_note && <p className="mt-1 text-xs text-brand-ink/65" data-testid="headline-protocol-note">{it.protocol_note}</p>}
             <div className="mt-auto pt-3">
               <a href={`#${it.anchor}`} className="text-sm font-semibold text-brand-plum underline">Подробнее в разделе</a>
               <ProvenanceLine p={it.provenance} className="mt-1.5" />
@@ -44,6 +46,38 @@ export default function Headline() {
         ))}
       </ol>
       <RetestVsTruth v={data.retest_vs_truth} className="mt-3" />
+      <Protocols v={data.protocols} className="mt-3" />
     </section>
+  );
+}
+
+/** Д5: сверка двух протоколов с одним порогом P — перебор правил (make grade-sweep: числа docs/NUMBERS.json и слайдов)
+ *  и контрольный прогон всего пути с настройками продукта (make path-retest: числа карточек выше). */
+export function Protocols({ v, className = "" }: { v?: any; className?: string }) {
+  if (!v) return null;
+  const rows: [string, any][] = [[`Перебор правил, P${NB}≥${NB}${v.sweep?.confirm_level} (make grade-sweep)`, v.sweep], [`Весь путь, P${NB}≥${NB}${v.path?.confirm_level} (make path-retest, карточки)`, v.path]];
+  return (
+    <div className={`rounded-2xl bg-white p-4 ring-1 ring-brand-night/10 ${className}`} data-testid="headline-protocols">
+      <p className="text-sm font-semibold leading-snug text-brand-night">Два протокола, один порог</p>
+      <ScrollX label="Сверка протоколов" className="mt-2 overflow-x-auto">
+        <table className="w-full min-w-[34rem] text-left text-sm">
+          <caption className="sr-only">Перебор правил и повтор всего пути при одном пороге уверенности</caption>
+          <thead className="text-xs text-brand-ink/70">
+            <tr>{["Протокол", "Точно", "Выше истинного", "Повтор: совпало", "κw повтора", "Банк"].map((h) => <th key={h} scope="col" className="px-2 py-1 font-semibold">{h}</th>)}</tr>
+          </thead>
+          <tbody>
+            {rows.map(([k, x]) => (
+              <tr key={k} className="border-t border-brand-night/5 tabular-nums">
+                <th scope="row" className="px-2 py-1 font-medium text-brand-night">{k}</th>
+                <td className="px-2 py-1">{pct(x?.exact, 1)}</td><td className="px-2 py-1">{pct(x?.over, 1)}</td>
+                <td className="px-2 py-1">{pct(x?.retest_exact, 1)}</td><td className="px-2 py-1">{num(x?.retest_kappa, 3)}</td>
+                <td className="px-2 py-1"><code>{String(x?.bank ?? "—").slice(0, 8)}</code>{x?.bank_families ? ` · ${x.bank_families} семейств` : ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ScrollX>
+      <p className="mt-2 text-xs leading-relaxed text-brand-ink/75">{v.text}</p>
+    </div>
   );
 }
