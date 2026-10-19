@@ -394,6 +394,8 @@ def finalize(db: Session, cup: Cup, actor: User | None, *, early: bool = False) 
     invited: list[uuid.UUID] = []
     notes = []
     for e in order[: cup.invite_top_n]:
+        if e.invitation_id:  # Н5: уже приглашён «в один клик» во время турнира — второе приглашение не нужно
+            continue
         if e.score < cup.min_score:
             e.invite_note = f"балл ниже порога приглашения {round(cup.min_score * 100)} %"
             db.commit()
@@ -427,8 +429,10 @@ def finalize(db: Session, cup: Cup, actor: User | None, *, early: bool = False) 
         invited.append(inv.id)
         db.commit()
     cup = db.get(Cup, cup.id)
-    cup.summary = {"joined": len(rows), "placed": total, "expired": sum(1 for e in rows if e.status == "expired"),
-                   "invited": len(invited), "invite_top_n": cup.invite_top_n,
+    keep = {k: v for k, v in (cup.summary or {}).items() if k == "tournament"}  # Н5: паспорт турнира ФСП остаётся
+    cup.summary = {**keep, "joined": len(rows), "placed": total, "expired": sum(1 for e in rows if e.status == "expired"),
+                   "invited": sum(1 for e in order[: cup.invite_top_n] if db.get(CupEntry, e.id).invitation_id),
+                   "invite_top_n": cup.invite_top_n,
                    "best_pct": round(order[0].score * 100) if order else None, "finalized_at": now.isoformat(),
                    "early": bool(early and ph == "active")}
     flag_modified(cup, "summary")
