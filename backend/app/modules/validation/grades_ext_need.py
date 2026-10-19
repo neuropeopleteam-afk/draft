@@ -196,6 +196,13 @@ SCENARIOS = {
     "g_real_v2_p420_m25": dict(real=True, mult=0, a=None, block=10, partial="gpcm", block_item_time=420.0, block_minutes=25,
                                block_trigger="product", block_min_new=3, block_pool="all",
                                bank_note="после новых коротких Principal 11.10; второй этап как в продукте, 420 с, 10 заданий за 25 мин"),
+    # W1 (19.10): улучшенный выбор второго этапа для заявивших Lead/Principal — информация GPCM (частичный балл 0–4 у
+    # развёрнутых частей коротких заданий; 2PL у остальных) сразу в обоих порогах 2,0 и 3,0 с весами по апостериорной
+    # плотности текущей оценки у каждого порога (взвешенная информация в порогах классификации), до 12 заданий за 25 мин,
+    # оценка θ — по ответам обоих этапов (одна апостериорная), решение — как в продукте. Задан до прогона, считается один раз
+    "g_real_v3_w12_m25": dict(real=True, mult=0, a=None, block=12, partial="gpcm", block_item_time=420.0, block_minutes=25,
+                              block_trigger="product", block_min_new=3, block_pool="all", block_select="weighted_pc",
+                              bank_note="второй этап W1: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин"),
     "g_real_v2_d4_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
                               block_trigger="product", block_min_new=3, block_pool="all", directions=("qa", "security", "mobile", "analyst"),
                               bank_note="после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 300 с"),
@@ -226,6 +233,8 @@ def scen_text(s: dict) -> str:
                              f"a {_x(s['a'])}" if add else ""),
                           (f"второй этап до {s['block']} заданий ≤ {s['block_item_time']:g} с за {s['block_minutes']:g} мин"
                            + (" (только заявившим Lead/Principal)" if s.get("block_trigger") == "product" else "")
+                           + (", выбор — взвешенная информация GPCM в порогах 2,0 и 3,0" if s.get("block_select") == "weighted_pc"
+                              else "")
                            if s["block"] and "block_item_time" in s
                            else f"блок {s['block']} заданий" if s["block"] else "без блока"),
                           "частичный балл 0–4 (GPCM, шум оценщика)" if s["partial"] == "gpcm" else "развёрнутые 0/1"])
@@ -354,7 +363,13 @@ def run_session_x(pool, cand, truth, cfg, counter, claimed, history, rng, det, s
                      and p.time_limit_s <= left]
             if not cands:
                 break
-            item = max(cands, key=lambda p: p.information(target))
+            if s.get("block_select") == "weighted_pc":  # W1: Σ_c φ((θ̂ − c)/SE) · I_GPCM(c), c ∈ {2,0; 3,0}
+                wts = [(c, float(np.exp(-0.5 * ((sess.theta - c) / max(sess.se, 1e-6)) ** 2))) for c in (cut_l, cut_p)]
+                pc = bool(cfg.partial_credit)
+                item = max(cands, key=lambda p: sum(w * (p.information_pc(c) if pc else p.information(c))
+                                                     for c, w in wts))
+            else:
+                item = max(cands, key=lambda p: p.information(target))
             x, log_t = responder(item, rng)
             sess.record(item, x, log_t, time_s=float(np.exp(log_t)) if log_t is not None else None)
             n_block += 1

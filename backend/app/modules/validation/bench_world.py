@@ -151,6 +151,10 @@ class BenchConfig:
     claim_stuff: float = 0.40  # … приписывающих навыки своего направления, которыми не владеют
     claim_stuff_n: tuple[int, int] = (1, 3)  # сколько навыков приписывают, от и до включительно
     claim_omit: float = 0.10  # … вероятность не указать в резюме навык, которым владеет
+    # W1, сбалансированный протокол (matching_bench --balanced): где считать плотность min_relevant_per_need —
+    # pool — по всему пулу (строгий протокол), category — среди кандидатов точной категории потребности (то, что
+    # подбор показывает первым), как отбор запросов с ≥ 10 релевантными в стандартных IR-бенчмарках
+    min_relevant_scope: str = "pool"
 
     def to_dict(self) -> dict:
         """Конфигурация для подписи. Ручки других условий измерения в значениях по умолчанию не пишутся — конфигурация и
@@ -163,7 +167,7 @@ class BenchConfig:
 
 
 COMPARE_KNOBS = ("dirs", "need_grade_p", "need_required", "theta_model", "band_p", "band_top", "t0_model", "claim_over",
-                 "claim_under", "claim_stuff", "claim_stuff_n", "claim_omit")
+                 "claim_under", "claim_stuff", "claim_stuff_n", "claim_omit", "min_relevant_scope")
 
 
 @dataclass
@@ -556,7 +560,12 @@ def generate(cfg: BenchConfig, blocks: dict | None = None) -> World:
         for _ in range(50):
             n = _make_need(i, rn, cfg)
             row = [true_relevance(n, c.latent, cfg) for c in cands]
-            if sum(1 for r in row if r >= 2) >= cfg.min_relevant_per_need:
+            if cfg.min_relevant_scope == "category":
+                hits = sum(1 for r, c in zip(row, cands, strict=True) if r >= 2 and c.obs.category_grade == n.grade
+                           and c.obs.direction_declared == n.direction)
+            else:
+                hits = sum(1 for r in row if r >= 2)
+            if hits >= cfg.min_relevant_per_need:
                 break
             resampled += 1
         needs.append(n)

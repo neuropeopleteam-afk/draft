@@ -42,8 +42,10 @@ from app.modules.hh.directions import GRADE_WORDS, HH_DIRECTIONS, NEW_DIRECTIONS
 CACHE = Path(os.environ.get("HH_CORPUS_DIR") or ROOT.parent / "data_local/hh_corpus")
 CORPUS = ROOT / "docs/realdata/hh_match_corpus.json"
 DATA = ROOT / "backend/app/modules/hh/data"
-OUT_MATCH = ROOT / "backend/app/modules/validation/data/hh_match.json"
-MD_MATCH = ROOT / "docs/validation/HH_MATCH.md"
+# HH_MATCH_OUT — каталог для абляций (json и md туда, файлы репозитория не трогаются)
+_ABL = os.environ.get("HH_MATCH_OUT")
+OUT_MATCH = Path(_ABL) / "hh_match.json" if _ABL else ROOT / "backend/app/modules/validation/data/hh_match.json"
+MD_MATCH = Path(_ABL) / "HH_MATCH.md" if _ABL else ROOT / "docs/validation/HH_MATCH.md"
 MD_DEMAND = ROOT / "docs/realdata/HH_DEMAND.md"
 GRADES = ["intern", "junior", "middle", "senior"]
 # Добор корпуса, если вакансий со словом грейда в названии мало: опыт hh.ru (непересекающиеся диапазоны)
@@ -340,6 +342,10 @@ def match(limit: int) -> None:
     from app.modules.matching import grade_above, need_parser
     from app.modules.matching.ranking import algorithm, build_selection
 
+    from app.modules.catalog import ext as catalog_ext
+
+    # W1: направления каталога — видимые сейчас (5 базовых; с CATALOG_EXT_ENABLED и банком — все 9)
+    DIRECTIONS = [d for d in HH_DIRECTIONS if d in DIRECTIONS or catalog_ext.is_visible(d)]  # noqa: N806
     corpus, items, raws = _load_corpus()
     get_engine()
     per = defaultdict(Counter)
@@ -457,7 +463,11 @@ def match(limit: int) -> None:
                      "теста (модель, не люди). Метки — из полей hh.ru: направление — роль и слова названия, грейд — слово "
                      "в названии, навыки — «Ключевые навыки» → теги справочника (разбору не даются). «Подтверждённые» — "
                      "кандидаты, у которых грейд подтверждён тестом. Покрытие требований — доля обязательных навыков "
-                     "потребности, подтверждённых тестом (T1), у лучшего из первых пяти.",
+                     "потребности, подтверждённых тестом (T1), у лучшего из первых пяти; подтверждённый фреймворк "
+                     "засчитывается как подтверждение базового языка (FastAPI/Django → Python, React/Vue → JavaScript, "
+                     "Spring → Java, PostgreSQL → SQL, Docker/Kubernetes → Linux; балл × 0,9; флаг MATCH_IMPLIED, "
+                     "matching/implied.py).",
+           "implied": os.environ.get("MATCH_IMPLIED", "1"),
            "overall": _summary(tot, allcv, covs(list(per))),
            "catalog_only": _summary(cat_tot, [x for d in catalog for x in cov_best[d]], covs(catalog)),
            "grade_above": {"compare": compare, "flag": grade_above.FLAG, "min_exact": grade_above.MIN_EXACT,
@@ -522,7 +532,8 @@ def render_match(r: dict) -> str:
              f"**{LABEL_NOTE[0].upper() + LABEL_NOTE[1:]}.** Корпус собран {r['corpus_collected_at']}: {r['n_corpus']} вакансий "
              f"девяти направлений (в прогоне {r['n']}, недоступно {r['n_missing']}). Прогон {r['generated_at'][:10]}, код "
              f"`{r['code_commit']}`, алгоритм `{r['algorithm']}`. Пересчёт: `cd backend && DATABASE_URL=sqlite:///<демо-БД> "
-             "python ../tools/realdata/hh_plus.py match` (демо-БД: `alembic upgrade head` + `python -m app.modules.demo.seed`).", "",
+             "python ../tools/realdata/hh_plus.py match` с `CATALOG_EXT_ENABLED=1` (все 9 направлений) и `HH_CORPUS_DIR=<сырые вакансии>` "
+             "(демо-БД: `alembic upgrade head` + `python -m app.modules.demo.seed` с тем же флагом).", "",
              f"**Методика.** {r['method']}", "",
              "В репозитории — номера вакансий, ссылки и производные метки (`docs/realdata/hh_match_corpus.json`); тексты "
              "вакансий не хранятся (FTT.6: парсинг — только для тестовых данных).", "",
@@ -570,6 +581,15 @@ def render_match(r: dict) -> str:
         lines.append(f"| {x['title']} | {x['n']} | {'да' if x['in_catalog'] else 'нет (новое)'} | {pd} | {_p(x['direction_ok'])} | "
                      f"{_p(x['grade_ok'])} | {_p(x['confirmed_any'])} | {_p(x['confirmed_right_direction'])} | "
                      f"{_m(x['req_coverage_best_top5'])} | {_p(x['req_full_top5'])} |")
+    if r.get("w1"):
+        w = r["w1"]
+        lines += ["", "## Что изменилось (W1, 19.10): по шагам", "", w["text"], "",
+                  "| Шаг | Направлений в каталоге | Подтверждённый кандидат в направлении вакансии (все 9) | "
+                  "Покрытие обязательных у лучшего из 5 (все 9) | Направление разобрано верно |", "|---|---|---|---|---|"]
+        for row in w["rows"]:
+            lines.append(f"| {row['title']} | {row['dirs']} | {_p(row['confirmed_right_direction'])} | "
+                         f"{_m(row['req_coverage_best_top5'])} | {_p(row['direction_ok']) if row.get('direction_ok') else '—'} |")
+        lines += ["", *[f"* {x}" for x in w.get("caveats", [])]]
     new = [x for x in r["directions"].values() if not x["in_catalog"]]
     if new:
         lines += ["", "**Новые направления.** Пока их нет в каталоге (флаг каталога выключен), разбор относит такие вакансии к "
@@ -593,9 +613,12 @@ def main() -> None:
     sub.add_parser("skills")
     m = sub.add_parser("match")
     m.add_argument("--limit", type=int, default=10)
+    sub.add_parser("render", help="только HH_MATCH.md из hh_match.json")
     a = ap.parse_args()
     {"collect": lambda: collect(a.per), "demand": demand, "market": market_snapshot, "skills": skills,
-     "match": lambda: match(a.limit)}[a.cmd]()
+     "match": lambda: match(a.limit),
+     "render": lambda: MD_MATCH.write_text(render_match(json.loads(OUT_MATCH.read_text(encoding="utf-8"))),
+                                           encoding="utf-8")}[a.cmd]()
 
 
 if __name__ == "__main__":

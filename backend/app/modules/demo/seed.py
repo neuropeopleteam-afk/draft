@@ -153,7 +153,8 @@ def _user(db: Session, email: str, role: UserRole, pwd_hash: str) -> User:
 
 
 def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade: str, pwd_hash: str, with_fsp: bool,
-               status: str = "confirmed", *, core_override: list[str] | None = None, audience: str | None = None):
+               status: str = "confirmed", *, core_override: list[str] | None = None, audience: str | None = None,
+               k_override: int | None = None, tested_share: float = 0.75, t1_only: set[str] | frozenset | None = None):
     """Демо-кандидат. status — статус грейда (единая модель): confirmed — категория подтверждена тестом;
     provisional — «Junior (предварительно)» (только grade == junior); unconfirmed_notest — опрос пройден, теста нет;
     unconfirmed_failed — тест на заявленный грейд его не подтвердил (категории нет).
@@ -164,7 +165,7 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
     name = f"{rnd.choice(FIRST_F if female else FIRST_M)} {last}"
     exp = round(rnd.uniform(*EXP[grade]), 1)
     core = core_override or CORE[direction]
-    k = {"intern": 3, "junior": 4, "middle": 6, "senior": 8, "lead": 9, "principal": 10}[grade]
+    k = k_override or {"intern": 3, "junior": 4, "middle": 6, "senior": 8, "lead": 9, "principal": 10}[grade]
     stack = list(dict.fromkeys(core[:3] + rnd.sample(core[3:], min(len(core) - 3, k - 2))))[:k]
     roles = [{"qa": "tester", "analyst": "analyst", "devops": "devops"}.get(direction, "developer")]
     if grade in ("senior", "lead", "principal"):
@@ -274,13 +275,15 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
                          evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=f"test_session:{ts.id}",
                          created_at=created))
     # Навыки, проверенные заданиями: часть заявленного стека, у сильных — больше
-    tested = [t for t in stack if rnd.random() < 0.75]
+    tested = [t for t in stack if rnd.random() < tested_share]
     for t in tested:
         total = rnd.randint(2, 4)
         corr = max(0, min(total, int(round(total * min(1.0, 0.45 + 0.25 * (theta - CUT[grade]) + rnd.uniform(-0.2, 0.25))))))
         # New dictionary entries broaden T0, not the actual assessment bank's coverage.
         # Consume RNG identically, but do not invent confirmation for unsupported new tags.
         if audience and t in {"kotlin", "csharp", "php", "kubernetes"}:
+            continue
+        if t1_only is not None and t not in t1_only:  # W1: T1 — только навыки, которые проверяет банк направления
             continue
         db.add(CandidateFact(user_id=u.id, kind="skill", key=t, title=tag_title(t),
                              value={"score": round(corr / total, 2), "correct": corr, "total": total},
@@ -544,6 +547,85 @@ def extend_catalog_ext(db: Session, rng_seed: int = 20261010) -> dict:
     return {"added": added, "directions": dirs, "needs": needs}
 
 
+# ------------------------------------------------------------------ связки навыков из спроса hh.ru (W1)
+# Модельные кандидаты (модель, не люди) с реалистичными связками подтверждённых навыков по 9 направлениям: связки —
+# частые сочетания «Ключевых навыков» вакансий hh.ru (backend/app/modules/hh/data/skills.json, корпус 414 вакансий
+# 10.10.2026). Подтверждение тестом (T1) — только у навыков, которые проверяют задания банка направления и общего блока
+# (matching.coverage.bank_tags); остальное — заявлено (T0). Номера 801…, по 14 на направление (2 стажёра, 4 Junior,
+# 4 Middle, 4 Senior), закреплены за направлением — порядок включения направлений их не сдвигает; 500 исходных
+# демо-кандидатов, 501–580 и 701+ не меняются. Направления расширения — только видимые (CATALOG_EXT_ENABLED и банк).
+MARKET_FIRST = 801
+MARKET_DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security", "devops", "data_eng", "mobile", "analyst")
+MARKET_GRADES = ["intern"] * 2 + ["junior"] * 4 + ["middle"] * 4 + ["senior"] * 4
+MARKET_K = {"intern": 5, "junior": 7, "middle": 9, "senior": 11}
+MARKET_BUNDLES: dict[str, list[list[str]]] = {
+    "backend": [["python", "fastapi", "postgresql", "docker", "rest-api", "git", "sql", "redis", "asyncio", "http",
+                 "rabbitmq", "linux"],
+                ["python", "django", "postgresql", "rest-api", "git", "docker", "sql", "redis", "http", "pytest",
+                 "rabbitmq", "linux"],
+                ["go", "postgresql", "docker", "kafka", "git", "rest-api", "redis", "http", "sql", "linux", "rabbitmq"],
+                ["java", "postgresql", "kafka", "docker", "git", "rest-api", "sql", "http", "redis", "rabbitmq",
+                 "linux"]],
+    "frontend": [["javascript", "typescript", "react", "html-css", "git", "state-management", "http", "vite-webpack",
+                  "frontend-testing", "a11y", "docker", "sql"],
+                 ["javascript", "typescript", "html-css", "react", "git", "http", "vite-webpack", "state-management",
+                  "sql", "frontend-testing", "docker"]],
+    "data_ml": [["python", "sql", "statistics", "pandas", "scikit-learn", "nlp", "algorithms", "git", "docker",
+                 "mlops", "linux", "airflow"],
+                ["python", "nlp", "sql", "statistics", "algorithms", "pandas", "git", "docker", "mlops", "linux",
+                 "scikit-learn"]],
+    "qa": [["sql", "test-design", "api-testing", "git", "http", "python", "pytest", "load-testing", "docker", "ci-cd",
+            "linux", "algorithms"],
+           ["test-design", "sql", "api-testing", "http", "git", "javascript", "frontend-testing", "ci-cd", "docker",
+            "load-testing", "linux"]],
+    "security": [["linux", "siem-soc", "network-security", "cryptography", "http", "owasp", "git", "python",
+                  "forensics", "docker", "sql", "javascript"]],
+    "devops": [["linux", "ci-cd", "git", "docker", "kubernetes", "python", "sql", "http", "monitoring", "networking",
+                "nginx", "cloud", "sre"]],
+    "data_eng": [["sql", "python", "airflow", "etl", "dwh", "git", "kafka", "docker", "linux", "streaming",
+                  "data-quality", "http"]],
+    "mobile": [["kotlin", "android", "git", "http", "rest-api", "mobile-architecture", "docker", "sql", "linux"],
+               ["swift", "ios", "git", "http", "rest-api", "mobile-architecture", "sql", "docker", "linux"],
+               ["javascript", "git", "http", "rest-api", "frontend-testing", "mobile-architecture", "docker", "sql"]],
+    "analyst": [["sql", "http", "requirements", "bpmn", "uml", "user-stories", "integrations", "er-modeling",
+                 "python", "git", "test-design", "statistics"]],
+}
+MARKET_TESTED_SHARE = 0.9
+
+
+def extend_market_bundles(db: Session, rng_seed: int = 20261019) -> dict:
+    """Идемпотентно: по 14 модельных кандидатов на направление со связками навыков из спроса hh.ru (W1)."""
+    from app.modules.catalog import ext
+    from app.modules.matching.coverage import bank_tags
+
+    dirs = [d for d in MARKET_DIRECTIONS if ext.is_visible(d)]
+    existing = set(db.scalars(select(User.email).where(User.email.like("demo-candidate-%@demo.invalid"))))
+    pwd_hash = hash_password(secrets.token_urlsafe(24))
+    added = 0
+    for d in dirs:
+        first = MARKET_FIRST + MARKET_DIRECTIONS.index(d) * len(MARKET_GRADES)
+        testable = set(bank_tags(d))
+        for k, grade in enumerate(MARKET_GRADES):
+            idx = first + k
+            if f"demo-candidate-{idx:03d}@demo.invalid" in existing:
+                continue
+            rnd = random.Random(rng_seed + idx)
+            bundles = MARKET_BUNDLES[d]
+            core = bundles[k % len(bundles)]
+            p = _candidate(db, rnd, idx, d, grade, pwd_hash, with_fsp=k % 4 == 0, core_override=core,
+                           k_override=min(MARKET_K[grade], len(core)), tested_share=MARKET_TESTED_SHARE,
+                           t1_only=testable)
+            if p is not None:
+                p.headline = f"{direction_title(d)} · {grade} (модель, не люди)"
+                p.about = (f"Модельный кандидат направления «{direction_title(d)}» (модель, не люди): связка навыков из "
+                           "частых сочетаний в вакансиях hh.ru; подтверждены тестом только навыки, которые проверяет банк.")
+                p.privacy = {"demo_audience": "model", "demo_model": True}
+            added += 1
+        db.flush()
+    db.commit()
+    return {"added": added, "directions": dirs}
+
+
 def demo_pool_size(db: Session) -> int:
     """Демо-пользователи основных демо-данных — без учёток жюри и гостей живой демонстрации (@jury.example.com):
     их api создаёт сам при старте (общее демо, запасная песочница), и они не значат, что 150 кандидатов уже есть."""
@@ -592,6 +674,8 @@ def main() -> None:
         print(f"Демо-вакансии: {vacancies_demo.ensure(db)}")  # отдельной командой их легко забыть
         # модельные кандидаты новых направлений каталога (только при CATALOG_EXT_ENABLED и проверенном банке)
         print(f"Модельные кандидаты новых направлений: {extend_catalog_ext(db)}")
+        # W1: модельные кандидаты со связками навыков из спроса hh.ru (9 направлений; расширение — только видимое)
+        print(f"Модельные кандидаты со связками навыков hh.ru: {extend_market_bundles(db)}")
 
 
 if __name__ == "__main__":
