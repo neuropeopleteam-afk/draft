@@ -96,6 +96,9 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 grade-sweep: ## Перебор параметров теста ради точности уровня (Парето, два мира σ 0,5 / 0,35) → data/grade_sweep.json, docs/validation/GRADE_ACCURACY.md (≈ 20 мин на 8 ядрах)
 	cd backend && python -m app.modules.validation.grade_sweep $(SWEEP_ARGS)
 
+accuracy-views: ## Три числа точности грейда (вдали от порога, без занижения заявки, строго) → data/accuracy_views.json, docs/validation/ACCURACY_VIEWS.md
+	cd backend && python -m app.modules.validation.accuracy_views
+
 two-stage: ## Двухэтапное подтверждение у границы: «одна сессия / две сессии», Парето по L и длине второго этапа → data/two_stage.json, docs/validation/TWO_STAGE.md (≈ 4 мин на 8 ядрах)
 	cd backend && python -m app.modules.validation.two_stage $(TWO_STAGE_ARGS)
 
@@ -108,7 +111,7 @@ grades-ext-sim: ## Путь-повтор с 6 уровнями (Lead, Principal;
 grades-ext-need: ## Что нужно для точности Lead/Principal ≥ 64 %: банк, блок Lead/Principal, частичный балл → data/grades_ext_need.json, docs/validation/GRADES_EXT_NEED.md
 	cd backend && GRADES_EXT_ENABLED=1 python -m app.modules.validation.grades_ext_need $(SIM_ARGS)
 
-.PHONY: bench bench-quick match-bench-compare stability intern-cut grade-above fsp-regression path-retest path-retest-ext grade-sweep two-stage grade-compare grades-ext-sim grades-ext-need partial-credit-sim
+.PHONY: accuracy-views bench bench-quick match-bench-compare stability intern-cut grade-above fsp-regression path-retest path-retest-ext grade-sweep two-stage grade-compare grades-ext-sim grades-ext-need partial-credit-sim
 
 compose-check: ## Версия Docker Compose: нужна v2.24+ (в docker-compose.yml env_file с required: false)
 	@v=$$($(COMPOSE) version --short 2>/dev/null | sed 's/^v//'); \

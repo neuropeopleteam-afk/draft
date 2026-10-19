@@ -214,7 +214,7 @@ def run_task(args: tuple) -> list[dict]:
     counter = ExposureControl(0.3, k=dict(k))
     det = CanaryDetector()
     out = {key(p): {k_: [] for k_ in ("true", "claimed", "l1", "l2", "one1", "one2", "min1", "rmin1", "ritems1",
-                                       "ref1", "ref2", "off1", "kind1", "status1", "stop1")} for p in pts}
+                                       "ref1", "ref2", "off1", "kind1", "status1", "stop1", "theta")} for p in pts}
     for j, c in enumerate(cands):
         if not j0 <= j < j1:
             continue
@@ -246,6 +246,7 @@ def run_task(args: tuple) -> list[dict]:
             o["kind1"].append(r1["kind"] or "")
             o["status1"].append(p1["status"])
             o["stop1"].append(r1["stop"] or "")
+            o["theta"].append(round(float(c.theta), 4))  # истинный θ (W1: точность вдали от порога)
     return [{"key": key(p), "point": p, "direction": d, "part": j0, **out[key(p)]} for p in pts]
 
 

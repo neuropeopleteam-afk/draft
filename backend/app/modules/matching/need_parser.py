@@ -596,6 +596,48 @@ def apply_weights(text: str, required: list[dict], desired: list[dict]) -> None:
             it["weight"] = 0.3
 
 
+# W1: роль в названии вакансии для направлений расширения (только при видимом направлении): «аналитик» без слов
+# данных/ML/SOC — системный или бизнес-аналитик; администратор Linux/виртуализации — DevOps/SRE
+_TITLE_ANALYST = re.compile(r"аналитик(?![а-яё])|analyst", re.I)
+_TITLE_NOT_ANALYST = re.compile(r"данных|data|\bbi\b|\bml\b|machine|soc|безопасн|security|etl|dwh|продукт\w* аналитик"
+                                r"|product analyst", re.I)
+_TITLE_DEVOPS = re.compile(r"системн\w* администратор|linux[ -]?(?:engineer|инженер|администратор)|"
+                           r"инженер\w* (?:виртуализац|vmware|openstack)|vmware|openstack", re.I)
+_TITLE_LANG_DEV = re.compile(r"(?:Python|Go|Golang|Java|Kotlin|PHP|C#|C\+\+|С\+\+|\.NET)[ -]*(?:разработ|developer)|"
+                             r"разработчик\w*\s+(?:Python|Go|Golang|Java|PHP|C#|C\+\+|С\+\+|\.NET)", re.I)
+_TITLE_DATA_ENG = re.compile(r"data[ -]?инженер|etl\b|\bdwh\b", re.I)
+
+
+def _title_line_dirs(dtext: str, dkw: dict[str, list[str]]) -> dict[str, int]:
+    """Направления по первой строке текста (название вакансии): ключевые слова и правила названия расширения."""
+    line = dtext.split("\n", 1)[0][:200]
+    found = find_keys(line, dkw)
+    vis = catalog_ext.visible_ext()
+    if "data_eng" in vis and _TITLE_DATA_ENG.search(line):
+        found["data_eng"] = found.get("data_eng", 0) + 1
+    if "devops" in vis and _TITLE_DEVOPS.search(line):
+        found["devops"] = found.get("devops", 0) + 1
+    if not found and _TITLE_LANG_DEV.search(line):  # «Java Developer Senior», «Разработчик С++ (middle)»
+        return {"backend": 1}
+    if "analyst" in vis and "analyst" not in found and _TITLE_ANALYST.search(line) \
+            and not _TITLE_NOT_ANALYST.search(line):
+        found["analyst"] = 1
+    # QA и ИБ в названии — своя роль (как own_title ниже); иначе расширение каталога важнее базового направления
+    # в названии («Data Engineer» с «ML» рядом)
+    own = {d: n for d, n in found.items() if d in ("qa", "security")}
+    ext_hit = {d: n for d, n in found.items() if d in vis}
+    return own or ext_hit or found
+
+
+def _title_names_other(text: str, direction: str) -> bool:
+    """W1: название вакансии (первая строка) прямо называет другую роль каталога — «Data Engineer …», а iOS/Android
+    встречаются только в описании компании: профессия из первых строк (coverage.own_direction) его не перебивает."""
+    if not catalog_ext.visible_ext():
+        return False
+    first = _title_line_dirs(negated_directions(text), direction_keywords())
+    return bool(first) and direction not in first
+
+
 def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | None = None) -> dict:
     """Детерминированный разбор. Возвращает требования в каноническом виде (см. normalize) с цитатами.
 
@@ -630,6 +672,12 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
     # Some public texts start with an introductory line and put the role on the next line.
     head = dtext[:200].split(":", 1)[0]
     title_dirs = find_keys(head, dkw)
+    # W1 (9 направлений): с видимым расширением каталога роль в первой строке (название вакансии) важнее слов
+    # описания в первых 200 знаках — «Middle/Senior Data Engineer\n… моделей данных …» не уходит в Data/ML
+    if catalog_ext.visible_ext():
+        first = _title_line_dirs(dtext, dkw)
+        if first:
+            title_dirs = first
     if "qa" in title_dirs:
         title_dirs = {"qa": title_dirs["qa"]}
     # Incidental testing, models or interfaces in responsibilities do not change a developer's role.
@@ -1068,7 +1116,8 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
         if not hint_direction:
             merged["direction"] = cov["nearest_direction"]
             merged["evidence"]["direction"] = cov["evidence"]
-    elif not hint_direction and (own := own_direction(text)) and merged.get("direction") != own["direction"]:
+    elif not hint_direction and (own := own_direction(text)) and merged.get("direction") != own["direction"] \
+            and not _title_names_other(masked, own["direction"]):
         merged["direction"] = own["direction"]  # расширение каталога: своё направление вместо ближайшего
         merged["evidence"]["direction"] = own["evidence"]
     merged["weight_rule"] = weight_rule()  # Я11 (С3-3): правило весов — рядом с весами в карточке

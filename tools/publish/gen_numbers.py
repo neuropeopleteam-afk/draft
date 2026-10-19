@@ -99,6 +99,45 @@ def static_numbers() -> dict:
                 ("under", pr["total"]["truth"]["under_share"]), ("none", pr["total"]["truth"]["no_category_share"]),
                 ("retest_exact", pr["total"]["path_grade"]["exact"]), ("retest_kappa", pr["total"]["path_grade"]["kappa_w"]))},
         }
+    # W1: три прозрачных числа точности грейда (make accuracy-views) — первыми в grade_accuracy
+    av_p = ROOT / "backend/app/modules/validation/data/accuracy_views.json"
+    if grade is not None and av_p.exists():
+        av = json.loads(av_p.read_text(encoding="utf-8"))
+        v = av["views"]
+        rt = v["strict_pool"].get("retest") or {}
+        grade = {"views": {
+            "far_from_cut": {"exact": v["far_from_cut"]["exact"], "ci": v["far_from_cut"]["exact_ci"],
+                             "share": v["far_from_cut"]["share"], "rule": "одна сессия, |θ − порог| ≥ 0,45"},
+            "no_under_claim": {"exact": v["no_under_claim"]["exact"], "ci": v["no_under_claim"]["exact_ci"],
+                               "share": v["no_under_claim"]["share"], "over": v["no_under_claim"]["over"],
+                               "rule": "заявленный ≥ истинного, двухэтапное подтверждение у границы"},
+            "strict_pool": {"exact": v["strict_pool"]["exact"], "ci": v["strict_pool"]["exact_ci"],
+                            "under_claim_share": v["strict_pool"]["under_claim_share"],
+                            "retest_exact": rt.get("exact"), "retest_kappa": rt.get("kappa_w"),
+                            "within_1": rt.get("within_1"), "rule": "весь пул, одна сессия"},
+            "commit": av["signature"]["commit"], "bank": av["signature"].get("bank"),
+            "generated_at": av["signature"]["generated_at"][:10], "command": "make accuracy-views"}, **grade}
+    # W1: Lead/Principal — основной сценарий второго этапа (make grades-ext-need)
+    gx_p = ROOT / "backend/app/modules/validation/data/grades_ext_need.json"
+    lead = None
+    if gx_p.exists():
+        gx = json.loads(gx_p.read_text(encoding="utf-8"))
+        cur = gx.get("main") or {}
+        vv = (gx.get("variants") or {}).get(cur.get("key") or "")
+        if vv:
+            b_ = vv["by_true_level"]
+            lead = {"scenario": cur["key"], "text": vv.get("text"), "lead": (b_.get("lead") or {}).get("exact"),
+                    "principal": (b_.get("principal") or {}).get("exact"), "senior": (b_.get("senior") or {}).get("exact"),
+                    "above": vv.get("above"), "above_ext": vv.get("above_ext"), "minutes_mean": vv.get("minutes_mean"),
+                    "previous": cur.get("previous"), "command": "make grades-ext-need"}
+    # W1: подбор на вакансиях hh.ru (модельный пул, модель, не люди)
+    hh_p = ROOT / "backend/app/modules/validation/data/hh_match.json"
+    hh = None
+    if hh_p.exists():
+        h = json.loads(hh_p.read_text(encoding="utf-8"))
+        hh = {k: h.get(k) for k in ("generated_at", "code_commit", "algorithm", "n", "catalog_directions", "overall",
+                                    "catalog_only") if h.get(k) is not None}
+        hh["note"] = "модельный пул кандидатов демо-стенда (модель, не люди); покрытие зависит от состава пула"
     # e2e в коде
     specs = sorted((ROOT / "e2e/tests").glob("*.spec.ts"))
     n_tests = sum(len(re.findall(r"^\s*test\(", p.read_text(encoding="utf-8"), re.M)) for p in specs)
@@ -116,8 +155,16 @@ def static_numbers() -> dict:
         "matching": {
             "algorithm": bench["algorithm"], "world": sig["world"], "seed": sig["seed"], "bench_commit": sig["commit"],
             "bank_hash": sig["bank"], "generated_at": sig["generated_at"],
-            "p5": plat["p@5"], "ndcg10": plat["ndcg@10"], "mrr": plat["mrr"],
+            "p5": plat["p@5"], "ndcg10": plat["ndcg@10"], "mrr": plat["mrr"], "p10": plat["p@10"],
+            "protocol": "строгий (основной)",
+            # W1: стандартный сбалансированный протокол (≥ 10 релевантных в категории потребности), тот же подбор
+            "balanced": ({"p5": bp["p@5"], "p10": bp["p@10"], "ndcg10": bp["ndcg@10"], "mrr": bp["mrr"],
+                          "config_hash": bench["balanced"]["config_hash"],
+                          "relevant_in_category": bench["balanced"]["world"]["relevant_in_category"]}
+                         if (bp := ((bench.get("balanced") or {}).get("metrics") or {}).get("platform")) else None),
         },
+        "lead_principal": lead,
+        "hh_match": hh,
         "e2e_in_code": {"spec_files": len(specs), "scenarios": n_tests},
         "validation_report": validation,
         "grade_accuracy": grade,
@@ -319,7 +366,7 @@ def main() -> int:
     if a.check:
         # сравниваем статическую часть (без тестов: они приходят из журнала) и тексты блоков
         for k in ("bank", "migrations", "memory_limits_mib", "matching", "e2e_in_code", "validation_report",
-                  "grade_accuracy", "deploy", "boot", "load", "demo", "evidence"):
+                  "grade_accuracy", "lead_principal", "hh_match", "deploy", "boot", "load", "demo", "evidence"):
             if old.get(k) != n[k]:
                 bad.append(f"docs/NUMBERS.json: раздел «{k}» устарел")
     else:
