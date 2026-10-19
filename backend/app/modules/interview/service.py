@@ -514,15 +514,24 @@ def compare_cell(b: dict | None) -> dict:
 
 # ------------------------------------------------------------------ вид
 
+def _clean_title(t: str | None) -> str | None:
+    """Заголовок задания без хвостового «:», «;», «,» — в строке «Задание: … · подтверждено» не было «: ·»."""
+    return t.rstrip(" :;,—-") or t if t else t
+
+
 def view(row: InterviewSession, audience: str, *, transcript: bool = False) -> dict:
     r = row.result or {}
     meta_ = row.context_meta or {}
     titles = {t["id"]: t.get("title") for t in meta_.get("tasks") or []}
     # ИИ-интервью компании: итог и разбор видит только она (кандидату — статус); устную защиту кандидат видит сам
     done = row.status == "completed" and not (audience == "candidate" and row.mode == "interview")
+    if row.is_example and done:  # примеры, засеянные до Д3: «(правило примера)», проценты ≤ 100
+        from app.modules.interview.demo import example_wording
+
+        r = example_wording(r)
     qs = [{"n": q.get("n"), "question": q.get("question") or "", "task_id": q.get("task_id"),
-           "task_title": titles.get(q.get("task_id")), "skill": q.get("skill"), "level": q.get("level") or "no_data",
-           "level_title": LEVEL_TITLES.get(q.get("level"), "нет данных"),
+           "task_title": _clean_title(titles.get(q.get("task_id"))), "skill": q.get("skill"),
+           "level": q.get("level") or "no_data", "level_title": LEVEL_TITLES.get(q.get("level"), "нет данных"),
            "quotes": [{"text": c["text"]} for c in q.get("quotes") or []], "reasoning": q.get("reasoning") or None,
            "lowered": bool(q.get("lowered"))} for q in (r.get("questions") or [])] if done else []
     return {"id": str(row.id), "mode": row.mode, "status": row.status,
@@ -536,7 +545,7 @@ def view(row: InterviewSession, audience: str, *, transcript: bool = False) -> d
             "created_at": row.created_at, "completed_at": row.completed_at, "expires_at": row.expires_at,
             "example": row.is_example, "example_label": EXAMPLE_LABEL if row.is_example else None,
             "stub": row.engine == "stub" or bool(r.get("stub")), "jury": bool(row.jury_scope),
-            "tasks": [{"id": t["id"], "title": t.get("title")} for t in meta_.get("tasks") or []],
+            "tasks": [{"id": t["id"], "title": _clean_title(t.get("title"))} for t in meta_.get("tasks") or []],
             "skills": [s_["name"] for s_ in meta_.get("skills") or []], "note": row.note if audience == "employer" else None,
             "transcript": row.transcript if transcript and done and audience == "employer" else None,
             "result_hidden": row.status == "completed" and not done,

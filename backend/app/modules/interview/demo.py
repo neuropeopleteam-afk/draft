@@ -1,12 +1,13 @@
 """Готовые примеры устной защиты для песочниц жюри — «пример, модельный кандидат».
 
 Разговор не вёлся: реплики «кандидата» — модельные (начало его же письменного ответа или нарочно чужой текст), оценка —
-правилом заглушки. Сеется всегда (дёшево, без моделей); показывается только при INTERVIEW_ENABLED. Живой запуск жюри —
+по фиксированному правилу примера, не моделью. Сеется всегда (дёшево, без моделей); показывается только при INTERVIEW_ENABLED. Живой запуск жюри —
 отдельно, с лимитом 1 в час на песочницу и не длиннее INTERVIEW_JURY_MINUTES.
 """
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 
 from sqlalchemy import select
@@ -23,6 +24,27 @@ log = logging.getLogger("interview.demo")
 
 OFFTOPIC = ("Честно говоря, здесь я бы просто взял готовое решение из интернета, точно не помню, как оно устроено "
             "внутри, но обычно всё работает и так.")
+
+
+_PCT = re.compile(r"(\d+(?:[.,]\d+)?)\s*%")
+
+
+def cap_percent(text: str) -> str:
+    """Проценты в подписи — не больше 100 (совпадение ключевых слов не бывает «183 %»)."""
+    return _PCT.sub(lambda m: f"{min(100, round(float(m.group(1).replace(',', '.'))))} %", text or "")
+
+
+def example_wording(raw: dict) -> dict:
+    """Подписи готового примера: «(правило примера)» и «по фиксированному правилу примера, не моделью» вместо подписи
+    правила StubPort (pt.STUB_RULE), проценты ≤ 100 — и для примеров, засеянных раньше."""
+    def fix(t):
+        if not isinstance(t, str):
+            return t
+        t = t.replace(f"({pt.STUB_RULE})", "(правило примера)").replace(pt.STUB_RULE_BY, "по фиксированному правилу примера")
+        return cap_percent(t)
+    qs = [{**q, "reasoning": fix(q.get("reasoning"))} for q in raw.get("questions") or []]
+    return {**raw, "questions": qs, "flags": [fix(f) for f in raw.get("flags") or []],
+            "summary": fix(raw.get("summary"))}
 
 
 def _attempt(db: Session, user_id) -> TestSession | None:
@@ -56,9 +78,9 @@ def _example(db: Session, user_id, honest: bool) -> InterviewSession | None:
         written = (by_task.get(q["task_id"]) or {}).get("answer") or ""
         said = (written[:260].rsplit(" ", 1)[0] + ". Поэтому я так и написала.") if honest else OFFTOPIC
         transcript.append({"who": "candidate", "text": said, "n": q["n"], "channel": "voice"})
-    raw = port.evaluate(est, transcript)
+    raw = example_wording(port.evaluate(est, transcript))
     raw["summary"] = ("Пример, модельный кандидат: реплики модельные, разговор не вёлся — так результат выглядит на "
-                      "карточке. Оценка — правилом заглушки, не моделью.")
+                      "карточке. Оценка — по фиксированному правилу примера, не моделью.")
     raw["stub"] = False
     row = InterviewSession(id=uuid.uuid4(), mode="defense", candidate_user_id=user_id, test_session_id=ts.id,
                            status="in_progress", engine="example", is_example=True, minutes=3, max_questions=3,
