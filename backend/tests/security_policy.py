@@ -298,6 +298,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/share/{token}/reactions"): "open404",
     ("GET", "/api/employer/needs/{need_id}/compare"): "employer_own",
     ("POST", "/api/employer/needs/{need_id}/advisor"): "employer_own",  # Н1 ИИ-советник руководителя
+    ("POST", "/api/employer/needs/{need_id}/advisor/avatar-token"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/advisor/speech"): "employer_own",
     ("GET", "/api/employer/probes"): "employer",
     ("POST", "/api/employer/probes"): "employer_ref",
     ("POST", "/api/employer/probes/{probe_id}/review"): "employer_own",

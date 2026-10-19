@@ -5,9 +5,9 @@
 // (без генерации моделью), озвучка — синтез речи браузера ru-RU женским голосом; образ — наши клипы /avatar/*.
 // Без поддержки голоса в браузере панель остаётся текстовой; звук выключается одной кнопкой и запоминается.
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { api } from "../lib/api";
+import { api, apiUrl, tokenStore } from "../lib/api";
 import { errText } from "./ui";
-import { InterviewerAvatar, useBrowserTts, useLiveDictation, type WaveState } from "./voice";
+import { AnamAvatar, type AnamHandle, type AnamStatus, InterviewerAvatar, useBrowserTts, useLiveDictation, type WaveState } from "./voice";
 
 interface AdvCand {
   ref: string; score: number; rank_in_selection: number | null; category_title: string | null; provisional: boolean;
@@ -74,27 +74,81 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
   const [q, setQ] = useState("");
   const [sound, setSound] = useState(() => { try { return localStorage.getItem(SOUND_KEY) !== "off"; } catch { return true; } });
   const [waitTap, setWaitTap] = useState(false);  // браузер не дал озвучить без нажатия — кнопка «Озвучить доклад»
+  const [anamStatus, setAnamStatus] = useState<AnamStatus>("connecting");
+  const [serverSpeaking, setServerSpeaking] = useState(false);
+  const anamRef = useRef<AnamHandle | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const tts = useBrowserTts();
   const soundRef = useRef(sound);
   soundRef.current = sound;
   const key = `${needId}|${refs.join(",")}|${version ?? ""}`;
 
-  const say = useCallback((a: AdvisorOut, auto = false) => {
-    if (!soundRef.current || !tts.supported) return;
-    if (auto && !hasActivation()) { setWaitTap(true); return; }
-    setWaitTap(false);
-    tts.speak(a.speech);
+  const stopAllSpeech = useCallback(() => {
+    anamRef.current?.stop();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
+    }
+    setServerSpeaking(false);
+    tts.stop();
   }, [tts]);
 
+  const say = useCallback(async (a: AdvisorOut, auto = false) => {
+    if (!soundRef.current) return;
+    if (auto && !hasActivation()) { setWaitTap(true); return; }
+    setWaitTap(false);
+    stopAllSpeech();
+    const t = tokenStore.get();
+    const headers: Record<string, string> = { "Content-Type": "application/json", ...(t ? { Authorization: `Bearer ${t}` } : {}) };
+
+    if (anamRef.current?.live()) {
+      try {
+        const r = await fetch(apiUrl(`/employer/needs/${needId}/advisor/speech`), {
+          method: "POST", headers, body: JSON.stringify({ text: a.speech, format: "pcm" }),
+        });
+        if (r.ok && r.headers.get("X-Voice-Stub") !== "1") {
+          const pcm = await r.arrayBuffer();
+          if (pcm.byteLength > 100) {
+            setServerSpeaking(true);
+            try { await anamRef.current.speak(pcm); } finally { setServerSpeaking(false); }
+            return;
+          }
+        }
+      } catch { /* переход на серверный mp3 ниже */ }
+    }
+
+    try {
+      const r = await fetch(apiUrl(`/employer/needs/${needId}/advisor/speech`), {
+        method: "POST", headers, body: JSON.stringify({ text: a.speech, format: "mp3" }),
+      });
+      if (r.ok && r.headers.get("X-Voice-Stub") !== "1") {
+        const blob = await r.blob();
+        if (blob.size > 100) {
+          const url = URL.createObjectURL(blob);
+          const el = new Audio(url);
+          audioRef.current = el;
+          setServerSpeaking(true);
+          el.onended = () => { URL.revokeObjectURL(url); setServerSpeaking(false); audioRef.current = null; };
+          el.onerror = () => { URL.revokeObjectURL(url); setServerSpeaking(false); audioRef.current = null; };
+          await el.play();
+          return;
+        }
+      }
+    } catch { /* локальный стенд без внешнего ключа — запасной синтез браузера */ }
+
+    if (tts.supported) tts.speak(a.speech);
+  }, [needId, stopAllSpeech, tts]);
+
   const ask = useCallback(async (question: string | null) => {
-    tts.stop();
+    stopAllSpeech();
     setBusy(true); setErr(null); setNote(null);
     try {
       const a = await api<AdvisorOut>(`/employer/needs/${needId}/advisor`, { body: { question, refs, version } });
       setCur((prev) => { if (prev && prev.question) setHist((h) => [{ q: prev.question!, a: prev }, ...h].slice(0, 4)); return a; });
-      say(a, question === null);
+      void say(a, question === null);
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
-  }, [needId, refs, version, say, tts]);
+  }, [needId, refs, version, say, stopAllSpeech]);
 
   useEffect(() => { setCur(null); setHist([]); void ask(null); }, [key]);  // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -108,7 +162,7 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
     const v = !sound;
     setSound(v);
     try { localStorage.setItem(SOUND_KEY, v ? "on" : "off"); } catch { /* приватный режим */ }
-    if (!v) tts.stop();
+    if (!v) stopAllSpeech();
   }
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -119,11 +173,12 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
   }
   function mic() {
     if (dict.listening) { dict.stop(); return; }
-    tts.stop(); setNote(null);
+    stopAllSpeech(); setNote(null);
     void dict.start();
   }
 
-  const state: WaveState = busy ? "thinking" : dict.listening ? "listening" : tts.speaking ? "speaking" : "idle";
+  const anySpeaking = serverSpeaking || tts.speaking;
+  const state: WaveState = busy ? "thinking" : dict.listening ? "listening" : anySpeaking ? "speaking" : "idle";
   const level = dict.listening ? dict.level : tts.level;
   const phaseText = dict.phase === "pause" ? "Пауза — отправлю вопрос через пару секунд" : dict.phase === "speaking" ? "Слышу вас" : "Слушаю — задайте вопрос";
   const chips = cur?.chips?.length ? cur.chips : CHIPS;
@@ -134,19 +189,26 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
       <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand/25 blur-3xl" />
       <div className="relative grid gap-5 p-4 sm:p-6 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-7">
         <div className="flex flex-row items-center gap-4 lg:flex-col lg:items-stretch">
-          <InterviewerAvatar state={state} level={level} name="ИИ-советник" size={176} tone="dark" className="shrink-0 [&>div]:!w-[7.5rem] sm:[&>div]:!w-[9rem] lg:[&>div]:!w-full" />
+          {anamStatus !== "failed" ? (
+            <AnamAvatar ref={anamRef} sessionId={needId} tokenPath={`/employer/needs/${needId}/advisor/avatar-token`}
+              state={state} level={level} name="ИИ-советник" size={176} tone="dark" onStatus={setAnamStatus}
+              className="shrink-0 [&>div]:!w-[7.5rem] sm:[&>div]:!w-[9rem] lg:[&>div]:!w-full" />
+          ) : (
+            <InterviewerAvatar state={state} level={level} name="ИИ-советник" size={176} tone="dark"
+              className="shrink-0 [&>div]:!w-[7.5rem] sm:[&>div]:!w-[9rem] lg:[&>div]:!w-full" />
+          )}
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <button type="button" onClick={toggleSound} aria-pressed={sound} data-testid="advisor-sound"
               className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
               {sound ? "Звук включён" : "Звук выключен"}
             </button>
-            {cur && tts.supported && sound && (
-              <button type="button" disabled={busy} onClick={() => (tts.speaking ? tts.stop() : say(cur))} data-testid="advisor-say"
+            {cur && sound && (
+              <button type="button" disabled={busy} onClick={() => (anySpeaking ? stopAllSpeech() : void say(cur))} data-testid="advisor-say"
                 className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-brand-night transition hover:bg-brand-blush disabled:opacity-60">
-                {tts.speaking ? "Остановить голос" : waitTap ? "Озвучить доклад" : "Озвучить ещё раз"}
+                {anySpeaking ? "Остановить голос" : waitTap ? "Озвучить доклад" : "Озвучить ещё раз"}
               </button>
             )}
-            <p className="text-[11px] leading-snug text-white/70">Образ нарисован ИИ, это не человек. Голос — синтез речи браузера.</p>
+            <p className="text-[11px] leading-snug text-white/70">Образ нарисован ИИ, это не человек. Живая мимика и синтез речи.</p>
           </div>
         </div>
 
