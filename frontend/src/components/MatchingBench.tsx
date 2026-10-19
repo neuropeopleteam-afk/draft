@@ -229,7 +229,7 @@ function JuniorBlock({ jr }: { jr: any }) {
           <Table head={["Штраф", "nDCG@10 Junior", "p@5 Junior", "nDCG@10 все", "Предварительных в топ-10 / топ-20 Junior-потребностей", "Перцентиль места подходящих предварительных"]}
             hi={pen.findIndex((p) => p.penalty === jr.penalty_product)}
             rows={pen.map((p) => [n2(p.penalty), n2(p.junior_needs?.["ndcg@10"]), n2(p.junior_needs?.["p@5"]), n2(p.all?.["ndcg@10"]), `${pct(p.provisional_in_top10_junior_needs)} / ${pct(p.provisional_in_top20_junior_needs)}`, n2(p.relevant_provisional_percentile_junior_needs)])} />
-          <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Перцентиль места: 0 — вершина выдачи, 1 — конец. Предварительные у порога почти не попадают в верх выдачи и без штрафа (компонент теста у них мал), поэтому в мире из {intRu(jr.columns?.[2]?.world?.n_candidates)} кандидатов штраф на топ-10 не влияет; в маленьком пуле (как на демо-стенде) он заметнее. Штраф {n2(jr.penalty_product)} задан до бенчмарка (решение владельца 06.10, вес одного зонда) и на нём не подбирался; выделена строка продукта.</p>
+          <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Перцентиль места: 0 — вершина выдачи, 1 — конец. Предварительные у порога почти не попадают в верх выдачи и без штрафа (компонент теста у них мал), поэтому в мире из {intRu(jr.columns?.[2]?.world?.n_candidates)} кандидатов штраф на топ-10 не влияет; в маленьком пуле (как на демо-стенде) он заметнее. Штраф {n2(jr.penalty_product)} задан до бенчмарка (решение владельца 06.10, вес одного задания с вилкой) и на нём не подбирался; выделена строка продукта.</p>
         </>
       )}
     </>

@@ -118,7 +118,7 @@ def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, 
             ev.append({"level": "T2", "kind": "fsp", "text": achievement_text(a)})
     for pr in db.scalars(select(Probe).where(Probe.company_id == company_id, Probe.candidate_user_id == candidate_id,
                                             Probe.status == ProbeStatus.reviewed)).all():
-        ev.append({"level": "T1", "kind": "probe", "text": f"Зонд «{pr.title}»: {(pr.review or {}).get('verdict_title', 'оценён')}"})
+        ev.append({"level": "T1", "kind": "probe", "text": f"Задание с вилкой «{pr.title}»: {(pr.review or {}).get('verdict_title', 'оценён')}"})
     for f in b.probes_t1:  # задания работодателя с автопроверкой (И7)
         if (f.value or {}).get("origin") == "assignment":
             ev.append({"level": "T1", "kind": "assignment", "text": f"{f.title}: {f.value.get('verdict')}"})
