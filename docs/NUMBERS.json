@@ -40,51 +40,100 @@
   "algorithm": "match-v1.3",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "25770a6",
-  "bank_hash": "f563cfcaebf63aef",
-  "generated_at": "2026-10-11T15:22:45+00:00",
+  "bench_commit": "b544962",
+  "bank_hash": "4d44ffb455f03520",
+  "generated_at": "2026-10-19T18:01:01+00:00",
   "p5": {
-   "mean": 0.762,
-   "lo": 0.73,
-   "hi": 0.793
+   "mean": 0.751,
+   "lo": 0.717,
+   "hi": 0.784
   },
   "ndcg10": {
-   "mean": 0.565,
-   "lo": 0.542,
-   "hi": 0.588
+   "mean": 0.566,
+   "lo": 0.54,
+   "hi": 0.592
   },
   "mrr": {
-   "mean": 0.921,
-   "lo": 0.89,
-   "hi": 0.947
+   "mean": 0.896,
+   "lo": 0.862,
+   "hi": 0.926
   },
   "p10": {
-   "mean": 0.738,
-   "lo": 0.711,
-   "hi": 0.765
+   "mean": 0.725,
+   "lo": 0.696,
+   "hi": 0.755
   },
   "protocol": "строгий (основной)",
-  "balanced": null
+  "balanced": {
+   "p5": {
+    "mean": 0.752,
+    "lo": 0.718,
+    "hi": 0.785
+   },
+   "p10": {
+    "mean": 0.731,
+    "lo": 0.703,
+    "hi": 0.76
+   },
+   "ndcg10": {
+    "mean": 0.567,
+    "lo": 0.541,
+    "hi": 0.592
+   },
+   "mrr": {
+    "mean": 0.899,
+    "lo": 0.866,
+    "hi": 0.929
+   },
+   "config_hash": "2a4b2ae4a4c0",
+   "relevant_in_category": {
+    "mean": 54.1,
+    "min": 10,
+    "max": 125,
+    "below_min": 0
+   }
+  }
  },
- "lead_principal": null,
+ "lead_principal": {
+  "scenario": "g_real_v3_w12_m25|0.6|top",
+  "text": "реальный банк Lead/Principal (второй этап W1: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин, априорные b и a), второй этап до 12 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), выбор — взвешенная информация GPCM в порогах 2,0 и 3,0, частичный балл 0–4 (GPCM, шум оценщика)",
+  "lead": 0.593,
+  "principal": 0.424,
+  "senior": 0.581,
+  "above": 0.025,
+  "above_ext": 0.019,
+  "minutes_mean": 80.0,
+  "previous": {
+   "key": "g_real_v2_p420_m25|0.6|top",
+   "on_bank": "76c4164b6ce83743",
+   "lead": 0.582,
+   "principal": 0.42,
+   "above": 0.019
+  },
+  "command": "make grades-ext-need"
+ },
  "hh_match": {
-  "generated_at": "2026-10-11T11:01:12+00:00",
-  "code_commit": "9a3b9fce",
+  "generated_at": "2026-10-19T17:56:15+00:00",
+  "code_commit": "b5449623",
   "algorithm": "match-v1.3",
   "n": 414,
   "catalog_directions": [
+   "analyst",
    "backend",
+   "data_eng",
    "data_ml",
+   "devops",
    "frontend",
+   "mobile",
    "qa",
    "security"
   ],
   "overall": {
    "n": 414,
    "direction_ok": {
-    "k": 216,
-    "n": 236,
-    "share": 0.915
+    "k": 374,
+    "n": 414,
+    "share": 0.903
    },
    "grade_ok": {
     "k": 335,
@@ -92,68 +141,68 @@
     "share": 0.963
    },
    "req_coverage_mean_top5": {
-    "mean": 0.276,
-    "n": 369
+    "mean": 0.333,
+    "n": 378
    },
    "grade_above_applied": {
-    "k": 150,
+    "k": 144,
     "n": 414,
-    "share": 0.362
+    "share": 0.348
    },
    "top5_above_share": {
-    "k": 378,
-    "n": 2053,
-    "share": 0.184
+    "k": 311,
+    "n": 1990,
+    "share": 0.156
    },
    "grade_above_off": {
     "selection_nonempty": {
-     "k": 391,
+     "k": 405,
      "n": 414,
-     "share": 0.944
+     "share": 0.978
     },
     "confirmed_any": {
-     "k": 391,
+     "k": 405,
      "n": 414,
-     "share": 0.944
+     "share": 0.978
     },
     "confirmed_exact": {
-     "k": 354,
+     "k": 376,
      "n": 414,
-     "share": 0.855
+     "share": 0.908
     },
     "confirmed_right_direction": {
-     "k": 206,
+     "k": 372,
      "n": 414,
-     "share": 0.498
+     "share": 0.899
     },
     "req_coverage_best_top5": {
-     "mean": 0.323,
-     "n": 369
+     "mean": 0.414,
+     "n": 378
     },
     "req_coverage_mean_top5": {
-     "mean": 0.234,
-     "n": 369
+     "mean": 0.298,
+     "n": 378
     },
     "req_full_top5": {
-     "k": 36,
-     "n": 369,
-     "share": 0.098
+     "k": 54,
+     "n": 378,
+     "share": 0.143
     },
     "req_full_top5_confirmed": {
-     "k": 36,
-     "n": 369,
-     "share": 0.098
+     "k": 54,
+     "n": 378,
+     "share": 0.143
     }
    },
    "with_required": {
-    "k": 369,
+    "k": 378,
     "n": 414,
-    "share": 0.891
+    "share": 0.913
    },
    "key_skills_recall": {
-    "k": 737,
+    "k": 735,
     "n": 895,
-    "share": 0.823
+    "share": 0.821
    },
    "selection_nonempty": {
     "k": 414,
@@ -166,142 +215,142 @@
     "share": 1.0
    },
    "confirmed_exact": {
-    "k": 354,
+    "k": 376,
     "n": 414,
-    "share": 0.855
+    "share": 0.908
    },
    "confirmed_right_direction": {
-    "k": 219,
+    "k": 379,
     "n": 414,
-    "share": 0.529
-   },
-   "req_coverage_best_top5": {
-    "mean": 0.39,
-    "n": 369
-   },
-   "req_full_top5": {
-    "k": 46,
-    "n": 369,
-    "share": 0.125
-   },
-   "req_full_top5_confirmed": {
-    "k": 46,
-    "n": 369,
-    "share": 0.125
-   },
-   "required_mean": 5.5
-  },
-  "catalog_only": {
-   "n": 236,
-   "direction_ok": {
-    "k": 216,
-    "n": 236,
     "share": 0.915
    },
+   "req_coverage_best_top5": {
+    "mean": 0.472,
+    "n": 378
+   },
+   "req_full_top5": {
+    "k": 66,
+    "n": 378,
+    "share": 0.175
+   },
+   "req_full_top5_confirmed": {
+    "k": 66,
+    "n": 378,
+    "share": 0.175
+   },
+   "required_mean": 6.6
+  },
+  "catalog_only": {
+   "n": 414,
+   "direction_ok": {
+    "k": 374,
+    "n": 414,
+    "share": 0.903
+   },
    "grade_ok": {
-    "k": 206,
-    "n": 210,
-    "share": 0.981
+    "k": 335,
+    "n": 348,
+    "share": 0.963
    },
    "req_coverage_mean_top5": {
-    "mean": 0.319,
-    "n": 219
+    "mean": 0.333,
+    "n": 378
    },
    "grade_above_applied": {
-    "k": 99,
-    "n": 236,
-    "share": 0.419
+    "k": 144,
+    "n": 414,
+    "share": 0.348
    },
    "top5_above_share": {
-    "k": 259,
-    "n": 1172,
-    "share": 0.221
+    "k": 311,
+    "n": 1990,
+    "share": 0.156
    },
    "grade_above_off": {
     "selection_nonempty": {
-     "k": 221,
-     "n": 236,
-     "share": 0.936
+     "k": 405,
+     "n": 414,
+     "share": 0.978
     },
     "confirmed_any": {
-     "k": 221,
-     "n": 236,
-     "share": 0.936
+     "k": 405,
+     "n": 414,
+     "share": 0.978
     },
     "confirmed_exact": {
-     "k": 208,
-     "n": 236,
-     "share": 0.881
+     "k": 376,
+     "n": 414,
+     "share": 0.908
     },
     "confirmed_right_direction": {
-     "k": 206,
-     "n": 236,
-     "share": 0.873
+     "k": 372,
+     "n": 414,
+     "share": 0.899
     },
     "req_coverage_best_top5": {
-     "mean": 0.365,
-     "n": 219
+     "mean": 0.414,
+     "n": 378
     },
     "req_coverage_mean_top5": {
-     "mean": 0.267,
-     "n": 219
+     "mean": 0.298,
+     "n": 378
     },
     "req_full_top5": {
-     "k": 23,
-     "n": 219,
-     "share": 0.105
+     "k": 54,
+     "n": 378,
+     "share": 0.143
     },
     "req_full_top5_confirmed": {
-     "k": 23,
-     "n": 219,
-     "share": 0.105
+     "k": 54,
+     "n": 378,
+     "share": 0.143
     }
    },
    "with_required": {
-    "k": 219,
-    "n": 236,
-    "share": 0.928
+    "k": 378,
+    "n": 414,
+    "share": 0.913
    },
    "key_skills_recall": {
-    "k": 507,
-    "n": 615,
-    "share": 0.824
+    "k": 735,
+    "n": 895,
+    "share": 0.821
    },
    "selection_nonempty": {
-    "k": 236,
-    "n": 236,
+    "k": 414,
+    "n": 414,
     "share": 1.0
    },
    "confirmed_any": {
-    "k": 236,
-    "n": 236,
+    "k": 414,
+    "n": 414,
     "share": 1.0
    },
    "confirmed_exact": {
-    "k": 208,
-    "n": 236,
-    "share": 0.881
+    "k": 376,
+    "n": 414,
+    "share": 0.908
    },
    "confirmed_right_direction": {
-    "k": 219,
-    "n": 236,
-    "share": 0.928
+    "k": 379,
+    "n": 414,
+    "share": 0.915
    },
    "req_coverage_best_top5": {
-    "mean": 0.445,
-    "n": 219
+    "mean": 0.472,
+    "n": 378
    },
    "req_full_top5": {
-    "k": 30,
-    "n": 219,
-    "share": 0.137
+    "k": 66,
+    "n": 378,
+    "share": 0.175
    },
    "req_full_top5_confirmed": {
-    "k": 30,
-    "n": 219,
-    "share": 0.137
+    "k": 66,
+    "n": 378,
+    "share": 0.175
    },
-   "required_mean": 5.8
+   "required_mean": 6.6
   },
   "note": "модельный пул кандидатов демо-стенда (модель, не люди); покрытие зависит от состава пула"
  },
@@ -317,9 +366,46 @@
   "report_matches_bank": true
  },
  "grade_accuracy": {
+  "views": {
+   "far_from_cut": {
+    "exact": 0.8338,
+    "ci": [
+     0.7908,
+     0.8739
+    ],
+    "share": 0.1396,
+    "rule": "одна сессия, |θ − порог| ≥ 0,45"
+   },
+   "no_under_claim": {
+    "exact": 0.8215,
+    "ci": [
+     0.8049,
+     0.8371
+    ],
+    "share": 0.8448,
+    "over": 0.0966,
+    "rule": "заявленный ≥ истинного, двухэтапное подтверждение у границы"
+   },
+   "strict_pool": {
+    "exact": 0.6508,
+    "ci": [
+     0.632,
+     0.6696
+    ],
+    "under_claim_share": 0.1552,
+    "retest_exact": 0.787,
+    "retest_kappa": 0.869,
+    "within_1": 0.998,
+    "rule": "весь пул, одна сессия"
+   },
+   "commit": "b544962",
+   "bank": "4d44ffb455f03520",
+   "generated_at": "2026-10-19",
+   "command": "make accuracy-views"
+  },
   "confirm_level": 0.6,
-  "path_retest_commit": "25770a6",
-  "path_retest_at": "2026-10-11",
+  "path_retest_commit": "b544962",
+  "path_retest_at": "2026-10-19",
   "sweep_commit": "8f4d6d2",
   "sweep_points": 98,
   "before": {
@@ -341,15 +427,15 @@
    "minutes_mean": 56.563
   },
   "sweep_bank": "76c4164b6ce83743",
-  "path_retest_bank": "f563cfcaebf63aef",
+  "path_retest_bank": "4d44ffb455f03520",
   "path_retest_bank_families": 268,
   "path_retest": {
-   "exact": 0.645,
-   "over": 0.079,
-   "under": 0.267,
-   "none": 0.026,
-   "retest_exact": 0.805,
-   "retest_kappa": 0.877
+   "exact": 0.658,
+   "over": 0.071,
+   "under": 0.264,
+   "none": 0.031,
+   "retest_exact": 0.787,
+   "retest_kappa": 0.869
   }
  },
  "deploy": {
