@@ -33,12 +33,16 @@ export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
   const matchedTask = ok.filter((x) => skillSource(x.text) === "task").map((x) => skillName(x) + (isMust(x) ? "" : " (желательно)"));
   // по состоянию, обязательные первыми: «Go — только заявлен; Kubernetes, CI/CD — не проверялись»
   const label = (x: any) => skillName(x) + (isMust(x) ? "" : " (желательно)");
+  // D3 п. 1: язык ядра подтверждён через фреймворк (implied_via: FastAPI → Python) — не «только заявлен», а отдельной
+  // пометкой, чтобы не противоречить зелёной строке «Основной язык роли — Python: подтверждён тестом (через FastAPI)»
+  const implied = stack.filter((x) => x.implied_via && (x.status === "declared" || x.status === "missing"))
+    .map((x) => `${label(x)} — напрямую не проверялся (подтверждён через ${x.implied_via})`);
   const unchecked = (["declared", "missing"] as const).map((st) => {
-    const xs = stack.filter((x) => x.status === st).sort((a, b) => Number(isMust(b)) - Number(isMust(a))).map(label);
+    const xs = stack.filter((x) => x.status === st && !x.implied_via).sort((a, b) => Number(isMust(b)) - Number(isMust(a))).map(label);
     if (!xs.length) return null;
     const one = xs.length === 1;
     return `${xs.join(", ")} — ${st === "declared" ? (one ? "только заявлен" : "только заявлены") : (one ? "не проверялся" : "не проверялись")}`;
-  }).filter((x): x is string => !!x);
+  }).filter((x): x is string => !!x).concat(implied);
   const risks: string[] = [];
   const req = r.must?.required_total ?? 0, miss = r.must?.missing_total ?? 0;
   if (miss > 0) risks.push(`не подтверждено тестом обязательных: ${miss} из ${req}`);  // «риск не виден» при 2 из 4 вводил бы в заблуждение

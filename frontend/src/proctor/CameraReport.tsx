@@ -52,8 +52,8 @@ export function CameraReport({ sessionId }: { sessionId: string }) {
                 <tr key={i} className="border-t border-brand-night/5">
                   <td className="py-1 pr-3 tabular-nums">{e.position}</td>
                   <td className="py-1 pr-3">{e.title}{e.kind === "multi_face" && e.faces ? ` (${e.faces})` : ""}</td>
-                  <td className="py-1 pr-3 tabular-nums">{fmt(e.duration_s)}</td>
-                  <td className="py-1 text-brand-ink/65">{e.counted ? "да" : "нет, короче порога"}</td>
+                  <td className="py-1 pr-3 tabular-nums">{e.kind === "printscreen" ? "—" : fmt(e.duration_s)}</td>
+                  <td className="py-1 text-brand-ink/65">{e.kind === "printscreen" ? "отмечено" : e.counted ? "да" : "нет, короче порога"}</td>
                 </tr>
               ))}
             </tbody>

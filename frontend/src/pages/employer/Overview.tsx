@@ -81,7 +81,7 @@ export function Company() {
   }
   return (
     <div className="max-w-3xl space-y-6">
-      <PageTitle title="Профиль компании" subtitle="Кандидат увидит это в приглашении и зонде." />
+      <PageTitle title="Профиль компании" subtitle="Кандидат увидит это в приглашении и в задании с вилкой." />
       <CompanyTariffLine />
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card grid gap-4 sm:grid-cols-2">

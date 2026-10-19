@@ -286,6 +286,28 @@ def test_events_recorded_and_result_for_candidate(client):
     assert mine[0]["summary"]["mode"] == "on"
 
 
+def test_printscreen_event_in_journal_not_in_camera_points(client):
+    """D3 п. 3: снимок экрана (PrintScreen) — событие журнала с русской подписью; в баллы камеры не входит (его считает
+    сигнал задания printscreen в assessment/integrity.py — один раз)."""
+    agg = rules.aggregate("camera", [{"position": 1, "time_s": 30.0}],
+                          [{"position": 1, "kind": "printscreen", "duration_ms": 0}],
+                          {"1": {"ms": 30_000, "frames": 40, "face": 40}}, [{"from": 1, "to": None}])
+    assert agg["points"] == 0 and agg["remarks"] == []
+    assert rules.KIND_TITLES["printscreen"] == "Снимок экрана (PrintScreen)" and "printscreen" in rules.EVENT_KINDS
+    t = _candidate(client)
+    client.post("/api/proctor/consent", headers=H(t))
+    s = _session(client, t)
+    sid, first = s["session_id"], s["item"]["item_id"]
+    assert client.post(f"/api/proctor/sessions/{sid}/start", json={"mode": "camera"}, headers=H(t)).status_code == 200
+    r = client.post(f"/api/proctor/sessions/{sid}/events", headers=H(t), json={
+        "events": [{"item_id": first, "kind": "printscreen", "duration_ms": 0}],
+        "observed": [{"item_id": first, "ms": 20_000, "frames": 28, "face": 28}]})
+    assert r.status_code == 200 and r.json()["accepted"] == 1, r.text
+    v = client.get(f"/api/proctor/sessions/{sid}", headers=H(t)).json()
+    assert v["events"][0]["kind"] == "printscreen" and v["events"][0]["title"] == "Снимок экрана (PrintScreen)"
+    assert v["summary"]["title"] == "Камера: включена, замечаний нет"
+
+
 def test_revoke_closes_window_mid_test(client):
     t = _candidate(client)
     client.post("/api/proctor/consent", headers=H(t))

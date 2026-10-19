@@ -30,19 +30,21 @@ function WhyBlock({ why }: { why: Why[] }) {
     <section className="card space-y-3" aria-label="Почему один кандидат выше другого">
       <h2 className="text-sm font-bold text-brand-night">Почему выше</h2>
       {/* аудит №1: колонки по ширине блока, а не экрана — при узкой колонке (панель проводника) уровни не наезжают на текст */}
-      <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-3">
+      {/* D3 п. 2: при открытой панели проводника (1440 px) пары не сжимаются уже 20rem — блок прокручивается по горизонтали */}
+      <div className="-mx-1 overflow-x-auto px-1 pb-1" data-testid="why-scroll">
+      <ul className="grid min-w-[20rem] grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-3">
         {why.map((w) => (
           <li key={`${w.higher}-${w.lower}`} className="rounded-xl bg-[#F7F6FB] p-4 text-sm">
             <p className="font-semibold text-brand-night">{ruText(w.summary)}</p>
             {w.pro.length > 0 && (
               <ul className="mt-2 space-y-1.5">
                 {w.pro.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2"><span className="shrink-0"><Level level={f.level} /></span><span className="min-w-0 flex-1">{ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-emerald-700">+{pts(f.points)}</span></li>
+                  <li key={i} className="flex items-start gap-2"><span className="shrink-0"><Level level={f.level} /></span><span className="min-w-0 flex-1 break-words">{ruText(f.text)}</span><span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-emerald-700">+{pts(f.points)}</span></li>
                 ))}
               </ul>
             )}
             {w.con.map((f, i) => (
-              <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><Level level={f.level} /><span className="flex-1">В пользу {w.lower}: {ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-brand-plum">−{pts(f.points)}</span></p>
+              <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><span className="shrink-0"><Level level={f.level} /></span><span className="min-w-0 flex-1 break-words">В пользу {w.lower}: {ruText(f.text)}</span><span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-brand-plum">−{pts(f.points)}</span></p>
             ))}
             {(() => {  // FIX7 п. 11: показаны топ-3 «за» и главный «против» — остаток разницы виден отдельной строкой
               const rest = w.diff - w.pro.reduce((t, f) => t + f.points, 0) - w.con.reduce((t, f) => t + f.points, 0);
@@ -54,6 +56,7 @@ function WhyBlock({ why }: { why: Why[] }) {
           </li>
         ))}
       </ul>
+      </div>
       <p className="text-xs text-brand-ink/65">Баллы из 100 — вклад каждого факта в разницу. Учитывается только проверенное: тест, достижения из реестра ФСП, оценённые задания работодателя. Ядро роли (основной язык, фреймворк или специализация) в балл не входит — о нём отдельная строка.</p>
     </section>
   );
@@ -65,7 +68,7 @@ const STATUS_TEXT: Record<string, string> = {
   unconfirmed: "text-brand-ink/65",
 };
 
-/** Сравнение 2–3 кандидатов рядом по требованиям потребности; отсюда — сразу зонд или приглашение. */
+/** Сравнение 2–3 кандидатов рядом по требованиям потребности; отсюда — сразу задание с вилкой или приглашение. */
 export function Compare() {
   const { id } = useParams();
   const [sp] = useSearchParams();
@@ -90,10 +93,12 @@ export function Compare() {
     if (g && g.group === r.group) g.rows.push(r); else groups.push({ group: r.group, rows: [r] });
   }
   const back = `/employer/needs/${id}${data.need.version ? `/v/${data.need.version}` : ""}`;
-  const cols = `minmax(12rem,16rem) repeat(${cs.length}, minmax(0,1fr))`;
+  // D3 п. 2: колонка кандидата не уже 15rem — при открытой панели проводника «12 минут» (1440 px) числа и бейджи
+  // не обрезаются и не наезжают: таблица прокручивается по горизонтали внутри своего контейнера
+  const cols = `minmax(12rem,16rem) repeat(${cs.length}, minmax(15rem,1fr))`;
 
   return (
-    <div className="max-w-6xl space-y-5">
+    <div className="min-w-0 max-w-6xl space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageTitle title="Сравнение кандидатов" subtitle={`«${data.need.title}»${data.need.version ? `, подборка, версия ${data.need.version}` : ""}. Рядом — только факты по требованиям потребности; сказанное кандидатом о себе в балл не входит. Кандидаты обезличены.`} />
         <div className="flex flex-wrap gap-2">
@@ -104,8 +109,8 @@ export function Compare() {
       {done && <Alert kind="ok">{done}</Alert>}
       <WhyBlock why={data.why} />
       <LevelLegend />
-      <div className="overflow-x-auto rounded-2xl border border-brand-night/10">
-        <div role="table" aria-label="Сравнение кандидатов" style={{ display: "grid", gridTemplateColumns: cols, minWidth: `${14 + cs.length * 15}rem` }}>
+      <div className="max-w-full overflow-x-auto rounded-2xl border border-brand-night/10" data-testid="compare-scroll">
+        <div role="table" aria-label="Сравнение кандидатов" style={{ display: "grid", gridTemplateColumns: cols, minWidth: `${12 + cs.length * 15}rem` }}>
           <div role="row" className="contents">
             <div role="columnheader" className="sticky left-0 z-10 border-b border-brand-night/10 bg-white p-4 text-xs text-brand-ink/65">
               Требование потребности и цитата из текста
@@ -152,7 +157,7 @@ export function Compare() {
                         {!cell ? <span className="text-brand-ink/65">—</span> : (
                           <div className="flex items-start gap-2">
                             {cell.level !== "market" && <ReasonLevel r={{ ...cell, weight: r.weight }} />}
-                            <p className={STATUS_TEXT[cell.status] ?? ""}>{ruText(cell.text)}{cell.best && <span className="ml-1 whitespace-nowrap text-xs font-semibold text-emerald-700">лучше в строке</span>}</p>
+                            <p className={`min-w-0 flex-1 break-words ${STATUS_TEXT[cell.status] ?? ""}`}>{ruText(cell.text)}{cell.best && <span className="ml-1 whitespace-nowrap text-xs font-semibold text-emerald-700">лучше в строке</span>}</p>
                           </div>
                         )}
                       </div>

@@ -93,7 +93,7 @@ def _stack_cell(b, tag: str) -> tuple[dict, float | None]:
         return ({"level": "T1", "status": "mismatch", "text": skill_check_text(f)}, sc)
     if tag in b.stack_t0:
         return ({"level": "T0", "status": "declared",
-                 "text": "Заявлено кандидатом — в ранжирование не входит, можно проверить зондом"}, None)
+                 "text": "Заявлено кандидатом — в ранжирование не входит, можно проверить коротким заданием"}, None)
     return {"level": "none", "status": "missing", "text": "Нет данных"}, None
 
 
@@ -142,8 +142,8 @@ def why_pairs(items: list[dict], req: dict) -> list[dict]:
             factors.append({"level": "T2", "points": df, "label": "ФСП", "a": fs(a), "b": fs(b)})
         dp = w["probe"] * (a["comps"]["probe"] - b["comps"]["probe"]) * 100
         if abs(dp) >= 0.05:
-            pr = (lambda x: f"оценка {x['comps']['probe'] * 100:.0f} %" if x["comps"]["probe"] else "нет")
-            factors.append({"level": "T1", "points": dp, "label": "зонд", "a": pr(a), "b": pr(b)})
+            pr = (lambda x: f"{x['comps']['probe'] * 100:.0f} %" if x["comps"]["probe"] else "нет")
+            factors.append({"level": "T1", "points": dp, "label": "задание с вилкой", "a": pr(a), "b": pr(b)})
         # «Junior (предварительно)» — −0,05 к скору: подтверждённый выше при прочих равных
         dv = -(a["comps"].get("provisional", 0.0) - b["comps"].get("provisional", 0.0)) * 100
         if abs(dv) >= 0.05:
@@ -154,7 +154,7 @@ def why_pairs(items: list[dict], req: dict) -> list[dict]:
         con = [f for f in factors if f["points"] < 0][-1:]  # главный фактор в пользу второго
         if diff < 0.5:
             summary = (f"{a['ref']} и {b['ref']} почти равны: разница {_pts(diff)} {_balls(diff)} из 100 — "
-                       f"решит зонд")
+                       f"решит короткое задание")
         else:
             summary = f"{a['ref']} выше {b['ref']} на {_pts(diff)} {_balls(diff)} из 100"
         for f in factors:
@@ -212,7 +212,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
 
     rows: list[dict] = [
         {"key": "score", "group": "Итог", "title": "Соответствие потребности",
-         "hint": "Только подтверждённое: тест, навыки T1, ФСП T2, зонды. Заявленное (T0) в скор не входит"},
+         "hint": "Только подтверждённое: тест, навыки, подтверждённые тестом, реестр ФСП, задания с вилкой. Заявленное кандидатом в скор не входит"},
         {"key": "category", "group": "Тест", "title": "Категория и грейд",
          "requirement": want_title,
          "quote": ((req.get("evidence") or {}).get("grade") or {}).get("quote")},
@@ -236,17 +236,18 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
             rows.append({"key": f"stack:{it['tag']}", "group": label, "title": tag_title(it["tag"]),
                          "weight": it.get("weight"), "quote": _quote(it)})
     if req.get("experience_years_min"):
-        rows.append({"key": "experience", "group": "Фильтры (T0)", "title": "Опыт",
+        rows.append({"key": "experience", "group": "Фильтры (заявлено)", "title": "Опыт",
                      "requirement": f"от {req['experience_years_min']:g} лет",
                      "quote": ((req.get("evidence") or {}).get("experience_years_min") or {}).get("quote")})
     if req.get("work_format"):
-        rows.append({"key": "work_format", "group": "Фильтры (T0)", "title": "Формат работы",
+        rows.append({"key": "work_format", "group": "Фильтры (заявлено)", "title": "Формат работы",
                      "requirement": WF_TITLES.get(req["work_format"]),
                      "quote": ((req.get("evidence") or {}).get("work_format") or {}).get("quote")})
     rows += [
         {"key": "fsp", "group": "Паспорт ФСП", "title": "Достижения ФСП",
-         "hint": "Только подтверждённые реестром (T2); нет истории — " + NO_FSP_SHORT},
-        {"key": "probe", "group": "Зонды", "title": "Зонды"},
+         "hint": "Только подтверждённые реестром ФСП; нет истории — " + NO_FSP_SHORT},
+        {"key": "probe", "group": "Задания с вилкой", "title": "Задания с вилкой",
+         "hint": "Короткие задания работодателя с вилкой зарплаты; оценённое задание подтверждает навык"},
         {"key": "market", "group": "Рынок", "title": "Ожидания по рынку категории",
          "requirement": _salary_req(req.get("salary_from"), req.get("salary_to")),
          "quote": ((req.get("evidence") or {}).get("salary") or {}).get("quote"),
@@ -340,6 +341,12 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                 cell, val = _stack_cell(b, it["tag"])
                 if val is not None:
                     cell["value"] = val
+                ci = why_items[-1].get("core")
+                if (ci and ci.get("state") == "confirmed" and ci.get("implied") and ci.get("via")
+                        and it["tag"] in (ci.get("tags") or []) and cell["status"] in ("declared", "missing")):
+                    # D3 п. 1: язык подтверждён через фреймворк — строка языка не противоречит строке ядра
+                    cell["implied_via"] = ci["via"]
+                    cell["text"] = f"Напрямую не проверялся — подтверждён тестом через {ci['via']}"
                 cells[f"stack:{it['tag']}"] = cell
         if req.get("experience_years_min"):
             ey = c.get("experience_years")
@@ -375,10 +382,10 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
             best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))
             cells["probe"] = {"level": "T1", "status": "confirmed",
                               "text": f"{quoted(probe_title(best.title, best.value.get('verdict')))} — {best.value.get('verdict', 'оценено')}"
-                                      + (f"; всего зондов: {len(b.probes_t1)}" if len(b.probes_t1) > 1 else ""),
+                                      + (f"; всего заданий: {len(b.probes_t1)}" if len(b.probes_t1) > 1 else ""),
                               "value": float(best.value.get("score", 0))}
         else:
-            cells["probe"] = {"level": "none", "status": "neutral", "text": "Зондов пока нет"}
+            cells["probe"] = {"level": "none", "status": "neutral", "text": "Заданий с вилкой пока нет"}
         cells["market"] = _market_cell(cats.get(b.category_id or ""), req)
         for k, cell in cells.items():
             if isinstance(cell.get("value"), (int, float)):

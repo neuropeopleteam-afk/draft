@@ -139,6 +139,17 @@ class CameraController {
     void this.flush();
   }
 
+  /** D3 п. 3: мгновенное событие (снимок экрана PrintScreen) — в журнал камеры по текущему заданию, если камера
+   *  включена; без камеры сигнал уходит только с ответом на задание (signals.printscreen). */
+  mark(kind: "printscreen") {
+    const itemId = this.snap.itemId;
+    if (this.snap.status !== "on" || !itemId || !this.snap.sessionId) return;
+    const now = Date.now();
+    this.pending.push({ item_id: itemId, kind, duration_ms: 0, at_ms: now });
+    if (this.pending.length > MAX_PENDING) this.pending.splice(0, this.pending.length - MAX_PENDING);
+    void this.flush();
+  }
+
   /** Выключить камеру: кнопкой (user), из-за сбоя (error) или при уходе со страницы теста (navigate — камера
    * выключается, окно наблюдения на сервере не закрывается, его закроет /start при возврате или finish). */
   async stop(reason: StopReason): Promise<void> {

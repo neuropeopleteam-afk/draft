@@ -200,7 +200,7 @@ def record(db: Session, user: User, ts: TestSession, events: list[dict], observe
     accepted = 0
     for e in events:
         it = items.get(e.get("item_id"))
-        if it is None or e.get("kind") not in rules.KINDS:
+        if it is None or e.get("kind") not in rules.EVENT_KINDS:
             continue
         if ps.events_count >= MAX_EVENTS_PER_SESSION:
             ps.events_dropped += 1

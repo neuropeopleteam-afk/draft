@@ -71,7 +71,8 @@ BASE_KEYS = ("focus_lost", "hidden_ms", "paste", "paste_chars", "copy")
 # Новые сигналы интерфейса (И9) — в словаре, только если клиент их прислал (старые клиенты и API не наказываются
 # правилами, о которых не знали): полноэкранный режим и динамика набора развёрнутого ответа.
 EXT_KEYS = ("fs_exit", "fs_out_ms", "fs_ms", "fs_na", "typed", "inserted", "dropped", "deleted", "keys", "ik_cv",
-            "active_ms")
+            "active_ms", "printscreen")  # printscreen — нажатия PrintScreen за задание (D3 п. 3)
+PRINTSCREEN_TITLE = "Снимок экрана (PrintScreen)"
 MS_KEYS = {"hidden_ms", "fs_out_ms", "fs_ms", "active_ms"}
 MAX_KEYS = {"fs_na", "ik_cv"}  # при сложении шагов задания — максимум, а не сумма
 FAST_TEXT_CPS = 8.0  # символов в секунду по часам сервера: ≈ 90 слов в минуту без единой паузы на чтение и мысль
@@ -335,7 +336,7 @@ _KIND_BY_PREFIX = (
     ("Мгновенные верные", "assist"), ("Быстрые верные", "none"),
     ("Вставка готового текста", "assist"), ("В развёрнутом ответе — невидимая метка", "assist"),
     ("Развёрнутый ответ появился быстрее", "assist"), ("Развёрнутый ответ в основном не набран", "assist"),
-    ("Слишком ровный ритм", "assist"), ("В развёрнутом ответе — инструкции", "answer"),
+    ("Слишком ровный ритм", "assist"), (PRINTSCREEN_TITLE, "behavior"), ("В развёрнутом ответе — инструкции", "answer"),
     ("В развёрнутом ответе — утверждения", "answer"), ("Сигналов нарушений нет", "none"), ("И ещё ", "none"),
     ("нет лица в кадре", "camera"), ("в кадре несколько лиц", "camera"), ("камера ", "camera"), ("Камера", "camera"),
 )
@@ -380,7 +381,7 @@ def candidate_view(integ: dict | None) -> dict | None:
 
 
 JURY_NOTE = ("Демо-режим жюри: так причины видит работодатель. Кандидат вне демо-режима видит только уровень и общую "
-             "причину (Р27).")
+             "причину — механику проверки кандидату не раскрываем.")
 
 
 def jury_view(integ: dict | None) -> dict | None:
@@ -454,6 +455,12 @@ def proctoring_source(done: list[dict], extra: dict) -> tuple[list[tuple[int, st
         reasons.append((2 if len(copy_items) >= 3 else 1,
                         f"Попытка скопировать текст задания: {_n(len(copy_items), 'задание', 'задания', 'заданий')}",
                         "behavior"))
+    shot_items = [i for i in with_sig if (i["signals"].get("printscreen") or 0) > 0]
+    shots = sum(int(i["signals"].get("printscreen") or 0) for i in shot_items)
+    if shot_items:  # D3 п. 3: клавиша PrintScreen во время задания — текст задания, вероятно, сохраняли снимком
+        reasons.append((2 if len(shot_items) >= 3 else 1,
+                        f"{PRINTSCREEN_TITLE}: {_n(shots, 'раз', 'раза', 'раз')} "
+                        f"({_n(len(shot_items), 'задание', 'задания', 'заданий')})", "behavior"))
     marks = [i for i in done if i.get("ai_mark_hit")]
     if marks:  # невидимая метка из текста задания появилась в ответе — текст копировали в нейросеть
         reasons.append((3, "В развёрнутом ответе — невидимая метка из текста задания: текст задания, вероятно, "
@@ -476,7 +483,8 @@ def proctoring_source(done: list[dict], extra: dict) -> tuple[list[tuple[int, st
         reasons.append((1, "В развёрнутом ответе — утверждения об оценке собственного ответа "
                            f"({_n(len(meta), 'задание', 'задания', 'заданий')}); при оценке они не учитываются", "answer"))
     return reasons, {"fs_items": len(fs_items), "fs_exits": fs_exits, "fs_out_s": round(fs_out_s, 1),
-                     "fs_never": fs_never, "copy_items": len(copy_items), "ai_mark_items": len(marks),
+                     "fs_never": fs_never, "copy_items": len(copy_items), "printscreen_items": len(shot_items),
+                     "printscreen": shots, "ai_mark_items": len(marks),
                      "fast_text_items": len(fast_txt), "not_typed_items": len(typing["not_typed"]),
                      "even_rhythm_items": len(typing["even_rhythm"]), "meta_claims_items": len(meta)}
 

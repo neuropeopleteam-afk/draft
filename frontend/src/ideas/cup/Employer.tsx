@@ -118,7 +118,7 @@ function CreateCup({ open, onClose, onCreated }: { open: boolean; onClose: () =>
     setF((x) => ({
       ...x, title: x.title || p.title, task_text: p.task_text, time_limit_min: Math.min(120, Math.max(5, p.time_limit_min || 30)),
       salary_from: String(p.salary_from), salary_to: String(p.salary_to), salary_basis: (p.salary_basis as Basis) || "gross",
-      description: x.description || `Открытая задача из нашего зонда «${p.title}». Решения оцениваем вслепую, лучшим — приглашение с вилкой кубка.`,
+      description: x.description || `Открытая задача из нашего короткого задания «${p.title}». Решения оцениваем вслепую, лучшим — приглашение с вилкой кубка.`,
     }));
   }
   function example() {
@@ -159,8 +159,8 @@ function CreateCup({ open, onClose, onCreated }: { open: boolean; onClose: () =>
           <span className="text-brand-ink/70">Быстрый старт:</span>
           <button type="button" className="btn-light px-3 py-1.5 text-xs" onClick={example}>Заполнить примером</button>
           {templates.length > 0 && (
-            <select className="input w-auto max-w-full py-1.5 text-xs" aria-label="Взять задачу из зонда" value="" onChange={(e) => fromProbe(e.target.value)}>
-              <option value="">Взять задачу из зонда…</option>
+            <select className="input w-auto max-w-full py-1.5 text-xs" aria-label="Взять задачу из короткого задания" value="" onChange={(e) => fromProbe(e.target.value)}>
+              <option value="">Взять задачу из короткого задания…</option>
               {templates.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
             </select>
           )}

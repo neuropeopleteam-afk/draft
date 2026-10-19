@@ -1,16 +1,31 @@
-import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { cabinetPath, useAuth } from "../lib/auth";
 import { Logo } from "./Logo";
 import { useMeta } from "../lib/meta";
 
 const NAV: [string, string][] = [["/#jury", "Демо для жюри"], ["/criteria", "Критерии ТЗ"], ["/#how", "Как это работает"],
   ["/#candidates", "Кандидатам"], ["/#employers", "Работодателям"], ["/api/docs", "API"]];
+// D3 п. 5: в меню до 1024 px — те же разделы и «Как мы проверяем себя» (/validation): на 390 px эксперт ходит между
+// публичными страницами без прокрутки к подвалу
+const MOBILE_NAV: [string, string][] = [...NAV.slice(0, 2), ["/validation", "Как мы проверяем себя"], ...NAV.slice(2)];
+const SPA = (to: string) => to.startsWith("/criteria") || to.startsWith("/validation");
 const item = "rounded-lg px-3 py-2 hover:bg-brand-blush/40";
 
 export function SiteHeader({ dark = false }: { dark?: boolean }) {
   const { me } = useAuth();
-  const menu = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const loc = useLocation();
+  useEffect(() => { setOpen(false); }, [loc.pathname, loc.hash]);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); btn.current?.focus(); } };
+    document.addEventListener("mousedown", away); document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", away); document.removeEventListener("keydown", esc); };
+  }, [open]);
   const link = dark ? "text-white/80 hover:text-white" : "text-brand-ink/70 hover:text-brand-night";
   return (
     <header className={dark ? "bg-brand-night" : "border-b border-brand-night/10 bg-white"}>
@@ -21,14 +36,17 @@ export function SiteHeader({ dark = false }: { dark?: boolean }) {
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
           {/* С2 №10: до 1024 px — кнопка «Меню» с теми же ссылками (на телефоне в ней и «Войти») */}
-          <details ref={menu} className="relative lg:hidden" data-testid="site-menu">
-            <summary className={`cursor-pointer list-none rounded-lg px-2 py-2 text-sm font-semibold [&::-webkit-details-marker]:hidden ${link}`}>Меню</summary>
-            <nav aria-label="Меню сайта" onClick={() => menu.current?.removeAttribute("open")}
-              className="absolute right-0 z-50 mt-2 flex w-60 flex-col rounded-xl bg-white p-2 text-sm font-medium text-brand-night shadow-xl ring-1 ring-brand-night/10">
-              {NAV.map(([to, t]) => to.startsWith("/criteria") ? <Link key={to} to={to} className={item}>{t}</Link> : <a key={to} href={to} className={item}>{t}</a>)}
-              {!me && <Link to="/login" className={`${item} sm:hidden`}>Войти</Link>}
-            </nav>
-          </details>
+          <div ref={box} className="relative lg:hidden" data-testid="site-menu">
+            <button ref={btn} type="button" aria-expanded={open} aria-controls="site-menu-nav" onClick={() => setOpen(!open)}
+              className={`rounded-lg px-2 py-2 text-sm font-semibold ${link}`}>Меню</button>
+            {open && (
+              <nav id="site-menu-nav" aria-label="Меню сайта" onClick={() => setOpen(false)}
+                className="absolute right-0 z-50 mt-2 flex w-64 max-w-[calc(100vw-2rem)] flex-col rounded-xl bg-white p-2 text-sm font-medium text-brand-night shadow-xl ring-1 ring-brand-night/10">
+                {MOBILE_NAV.map(([to, t]) => SPA(to) ? <Link key={to} to={to} className={item}>{t}</Link> : <a key={to} href={to} className={item}>{t}</a>)}
+                {!me && <Link to="/login" className={`${item} sm:hidden`}>Войти</Link>}
+              </nav>
+            )}
+          </div>
           {me ? (
             <Link to={cabinetPath(me.role)} className={`${dark ? "btn-light" : "btn-primary"} px-4 sm:px-5`}>Личный кабинет</Link>
           ) : (
