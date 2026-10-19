@@ -831,7 +831,7 @@ export function TestRun() {
         {s.is_sandbox && (away.focus > 0 || away.paste > 0 || away.copy > 0) && (
           <div className="mt-4"><Alert kind="info">
             Демо-режим жюри: зафиксировано за тест — {[away.focus > 0 && `уход со вкладки: ${away.focus}`, away.paste > 0 && `вставка текста: ${away.paste}`, away.copy > 0 && `копирование задания: ${away.copy}`].filter(Boolean).join(", ")}.
-            Кандидат вне демо-режима этой плашки не видит (Р27): ему — только уровень достоверности и общая причина после теста.
+            Кандидат вне демо-режима этой плашки не видит — механику проверки ему не раскрываем: ему — только уровень достоверности и общая причина после теста.
           </Alert></div>
         )}
         <div className="mt-4"><Alert>{error}</Alert></div>
