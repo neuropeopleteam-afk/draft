@@ -18786,53 +18786,53 @@
    "block_pool": "all",
    "bank_note": "после новых коротких Principal 11.10; второй этап как в продукте, 420 с, 10 заданий за 25 мин",
    "n": 1000,
-   "exact": 0.575,
-   "above": 0.019,
-   "below": 0.406,
+   "exact": 0.568,
+   "above": 0.029,
+   "below": 0.403,
    "none": 0.0,
-   "retest_exact": 0.678,
-   "minutes_mean": 79.1,
-   "minutes_p90": 99.1,
-   "block_share": 0.482,
-   "ext_assigned": 0.421,
-   "above_ext": 0.012,
-   "ext_false_share": 0.029,
+   "retest_exact": 0.663,
+   "minutes_mean": 79.7,
+   "minutes_p90": 99.4,
+   "block_share": 0.492,
+   "ext_assigned": 0.426,
+   "above_ext": 0.018,
+   "ext_false_share": 0.042,
    "by_true_level": {
     "middle": {
      "n": 152,
-     "exact": 0.842,
-     "above": 0.046,
-     "below": 0.112,
+     "exact": 0.822,
+     "above": 0.072,
+     "below": 0.105,
      "minutes_mean": 66.6,
-     "minutes_p90": 75.6,
+     "minutes_p90": 75.0,
      "block_minutes_mean": 0.0
     },
     "senior": {
      "n": 313,
-     "exact": 0.556,
-     "above": 0.019,
-     "below": 0.425,
-     "minutes_mean": 69.6,
-     "minutes_p90": 78.7,
-     "block_minutes_mean": 1.8
+     "exact": 0.559,
+     "above": 0.032,
+     "below": 0.409,
+     "minutes_mean": 70.2,
+     "minutes_p90": 79.1,
+     "block_minutes_mean": 2.0
     },
     "lead": {
      "n": 297,
-     "exact": 0.582,
-     "above": 0.02,
-     "below": 0.397,
-     "minutes_mean": 85.8,
-     "minutes_p90": 100.0,
-     "block_minutes_mean": 15.4
+     "exact": 0.596,
+     "above": 0.027,
+     "below": 0.377,
+     "minutes_mean": 86.3,
+     "minutes_p90": 100.8,
+     "block_minutes_mean": 16.1
     },
     "principal": {
      "n": 238,
-     "exact": 0.42,
+     "exact": 0.382,
      "above": 0.0,
-     "below": 0.58,
-     "minutes_mean": 91.3,
-     "minutes_p90": 101.1,
-     "block_minutes_mean": 21.5
+     "below": 0.618,
+     "minutes_mean": 92.1,
+     "minutes_p90": 101.8,
+     "block_minutes_mean": 21.3
     }
    }
   },
@@ -18876,53 +18876,53 @@
    "block_pool": "all",
    "bank_note": "после новых коротких Principal 11.10; второй этап как в продукте, 420 с, 10 заданий за 25 мин",
    "n": 1000,
-   "exact": 0.544,
-   "above": 0.014,
-   "below": 0.442,
+   "exact": 0.543,
+   "above": 0.027,
+   "below": 0.43,
    "none": 0.0,
-   "retest_exact": 0.656,
-   "minutes_mean": 79.1,
-   "minutes_p90": 99.1,
-   "block_share": 0.482,
-   "ext_assigned": 0.412,
-   "above_ext": 0.011,
-   "ext_false_share": 0.027,
+   "retest_exact": 0.658,
+   "minutes_mean": 79.7,
+   "minutes_p90": 99.4,
+   "block_share": 0.492,
+   "ext_assigned": 0.418,
+   "above_ext": 0.017,
+   "ext_false_share": 0.041,
    "by_true_level": {
     "middle": {
      "n": 152,
-     "exact": 0.849,
-     "above": 0.02,
-     "below": 0.132,
+     "exact": 0.822,
+     "above": 0.066,
+     "below": 0.112,
      "minutes_mean": 66.6,
-     "minutes_p90": 75.6,
+     "minutes_p90": 75.0,
      "block_minutes_mean": 0.0
     },
     "senior": {
      "n": 313,
-     "exact": 0.524,
-     "above": 0.019,
-     "below": 0.457,
-     "minutes_mean": 69.6,
-     "minutes_p90": 78.7,
-     "block_minutes_mean": 1.8
+     "exact": 0.53,
+     "above": 0.029,
+     "below": 0.441,
+     "minutes_mean": 70.2,
+     "minutes_p90": 79.1,
+     "block_minutes_mean": 2.0
     },
     "lead": {
      "n": 297,
-     "exact": 0.556,
-     "above": 0.017,
-     "below": 0.428,
-     "minutes_mean": 85.8,
-     "minutes_p90": 100.0,
-     "block_minutes_mean": 15.4
+     "exact": 0.576,
+     "above": 0.027,
+     "below": 0.397,
+     "minutes_mean": 86.3,
+     "minutes_p90": 100.8,
+     "block_minutes_mean": 16.1
     },
     "principal": {
      "n": 238,
-     "exact": 0.361,
+     "exact": 0.34,
      "above": 0.0,
-     "below": 0.639,
-     "minutes_mean": 91.3,
-     "minutes_p90": 101.1,
-     "block_minutes_mean": 21.5
+     "below": 0.66,
+     "minutes_mean": 92.1,
+     "minutes_p90": 101.8,
+     "block_minutes_mean": 21.3
     }
    }
   },
@@ -19567,6 +19567,188 @@
      "block_minutes_mean": 18.3
     }
    }
+  },
+  "g_real_v3_w12_m25|0.6|top": {
+   "scenario": "g_real_v3_w12_m25",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (второй этап W1: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин, априорные b и a), второй этап до 12 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), выбор — взвешенная информация GPCM в порогах 2,0 и 3,0, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 12,
+   "partial": "gpcm",
+   "block_item_time": 420.0,
+   "block_minutes": 25,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "block_select": "weighted_pc",
+   "bank_note": "второй этап W1: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин",
+   "n": 1000,
+   "exact": 0.586,
+   "above": 0.025,
+   "below": 0.389,
+   "none": 0.0,
+   "retest_exact": 0.633,
+   "minutes_mean": 80.0,
+   "minutes_p90": 100.1,
+   "block_share": 0.491,
+   "ext_assigned": 0.43,
+   "above_ext": 0.019,
+   "ext_false_share": 0.044,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.836,
+     "above": 0.039,
+     "below": 0.125,
+     "minutes_mean": 66.7,
+     "minutes_p90": 74.9,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.581,
+     "above": 0.035,
+     "below": 0.383,
+     "minutes_mean": 71.0,
+     "minutes_p90": 79.8,
+     "block_minutes_mean": 2.4
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.593,
+     "above": 0.027,
+     "below": 0.38,
+     "minutes_mean": 86.3,
+     "minutes_p90": 101.5,
+     "block_minutes_mean": 16.1
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.424,
+     "above": 0.0,
+     "below": 0.576,
+     "minutes_mean": 92.4,
+     "minutes_p90": 102.0,
+     "block_minutes_mean": 21.6
+    }
+   }
+  },
+  "g_real_v3_w12_m25|0.65|top": {
+   "scenario": "g_real_v3_w12_m25",
+   "confirm": 0.65,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (второй этап W1: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин, априорные b и a), второй этап до 12 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), выбор — взвешенная информация GPCM в порогах 2,0 и 3,0, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 12,
+   "partial": "gpcm",
+   "block_item_time": 420.0,
+   "block_minutes": 25,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "block_select": "weighted_pc",
+   "bank_note": "второй этап W1: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин",
+   "n": 1000,
+   "exact": 0.551,
+   "above": 0.021,
+   "below": 0.428,
+   "none": 0.0,
+   "retest_exact": 0.623,
+   "minutes_mean": 80.0,
+   "minutes_p90": 100.1,
+   "block_share": 0.491,
+   "ext_assigned": 0.419,
+   "above_ext": 0.016,
+   "ext_false_share": 0.038,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.822,
+     "above": 0.033,
+     "below": 0.145,
+     "minutes_mean": 66.7,
+     "minutes_p90": 74.9,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.53,
+     "above": 0.029,
+     "below": 0.441,
+     "minutes_mean": 71.0,
+     "minutes_p90": 79.8,
+     "block_minutes_mean": 2.4
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.569,
+     "above": 0.024,
+     "below": 0.407,
+     "minutes_mean": 86.3,
+     "minutes_p90": 101.5,
+     "block_minutes_mean": 16.1
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.382,
+     "above": 0.0,
+     "below": 0.618,
+     "minutes_mean": 92.4,
+     "minutes_p90": 102.0,
+     "block_minutes_mean": 21.6
+    }
+   }
   }
  },
  "signature": {
@@ -19727,6 +19909,18 @@
     "seed": 20261011,
     "config_hash": "c2a93dba04f3",
     "command": "make grades-ext-need"
+   },
+   {
+    "scenarios": "g_real_v2_p420_m25, g_real_v3_w12_m25",
+    "reps": "0",
+    "confirms": "0.6,0.65",
+    "worlds": "top",
+    "commit": "b544962",
+    "bank": "4d44ffb455f03520",
+    "generated_at": "2026-10-19T18:03:59+00:00",
+    "seed": 20261011,
+    "config_hash": "d2e9cfc35ec7",
+    "command": "make grades-ext-need"
    }
   ]
  },
@@ -19735,5 +19929,27 @@
   "exact_principal": 0.64,
   "above_max": 0.07
  },
- "seconds": 141.5
+ "seconds": 119.1,
+ "main": {
+  "key": "g_real_v3_w12_m25|0.6|top",
+  "rows": [
+   "g_real_v2_p420_m25|0.6|top",
+   "g_real_v3_w12_m25|0.6|top",
+   "g_real_v2_p420_m25|0.65|top",
+   "g_real_v3_w12_m25|0.65|top"
+  ],
+  "previous": {
+   "key": "g_real_v2_p420_m25|0.6|top",
+   "on_bank": "76c4164b6ce83743",
+   "lead": 0.582,
+   "principal": 0.42,
+   "above": 0.019
+  },
+  "text": "Второй этап для заявивших Lead/Principal (как в продукте, Я26). До: выбор задания — информация 2PL в ближайшем неопределённом пороге, до 10 заданий ≤ 420 с за 25 мин. После (W1): информация GPCM (частичный балл 0–4 у развёрнутых частей) сразу в обоих порогах 2,0 и 3,0 с весами по апостериорной плотности оценки у каждого порога, до 12 заданий за 25 мин; θ — одна апостериорная оценка по ответам обоих этапов; решение — как в продукте. Оба варианта пересчитаны в одном прогоне на текущем банке (те же кандидаты и истина), сценарий задан до прогона и считается один раз.",
+  "caveats": [
+   "Цель штаба Lead и Principal ≥ 64–68 % при завышении ≤ 5 % не достигнута: Lead 59,3 %, Principal 42,4 %, завышение 2,5 % (confirm 0,6). Выбор заданий добавил Principal +4,2 п. п., Lead −0,3 п. п. (в пределах шума).",
+   "Узкое место — банк, а не правило выбора: коротких заданий с трудностью у порога Principal (3,0) мало, поэтому после 12 заданий SE у порога 3,0 остаётся большой; что дали бы новые короткие Principal — строки g_real_pb_* ниже (на прежнем банке).",
+   "На прежнем банке (76c4164b) тот же сценарий «до» давал Lead 58,2 % / Principal 42,0 %; на текущем — 59,6 % / 38,2 %: часть разницы — снимок банка."
+  ]
+ }
 }

@@ -286,7 +286,14 @@ def grade_row(g: dict | None) -> list[str]:
                if (p := g.get("path_retest")) else "")
             + f" | перебор {g['sweep_points']} вариантов, коммит `{g['sweep_commit']}`, банк `{g.get('sweep_bank') or '—'}`; путь — "
             f"коммит `{g['path_retest_commit']}`, банк `{g.get('path_retest_bank') or '—'}`, {g['path_retest_at']}; `make grade-sweep`, "
-            "`make path-retest`, `docs/validation/GRADE_ACCURACY.md` |"]
+            "`make path-retest`, `docs/validation/GRADE_ACCURACY.md` |"] + ([
+        f"| Точность грейда: три числа (модель, не люди) | а) вдали от порога (\\|θ − порог\\| ≥ 0,45, {pc(av['far_from_cut']['share'])} пула): "
+        f"**{pc(av['far_from_cut']['exact'])}**; б) без занижения заявки ({pc(av['no_under_claim']['share'])} пула, два этапа у "
+        f"границы): **{pc(av['no_under_claim']['exact'])}**, выше {pc(av['no_under_claim']['over'])}; в) строго, весь пул (заявили ниже "
+        f"истинного {pc(av['strict_pool']['under_claim_share'])}): **{pc(av['strict_pool']['exact'])}**, повтор "
+        f"{pc(av['strict_pool']['retest_exact'])}, κw {fnum(av['strict_pool']['retest_kappa'])}, ±1 {pc(av['strict_pool']['within_1'])} | "
+        f"коммит `{av['commit']}`, банк `{av.get('bank') or '—'}`, {av['generated_at']}; `make accuracy-views`, "
+        "`docs/validation/ACCURACY_VIEWS.md` |"] if (av := g.get("views")) else [])
 
 
 def render_numbers(n: dict) -> str:
@@ -309,7 +316,9 @@ def render_numbers(n: dict) -> str:
         f"`backend/migrations/versions`, `alembic heads` |",
         f"| Подбор (модель, не люди) | P@5 **{fnum(mt['p5']['mean'])}** [{fnum(mt['p5']['lo'])}; {fnum(mt['p5']['hi'])}], "
         f"nDCG@10 **{fnum(mt['ndcg10']['mean'])}** [{fnum(mt['ndcg10']['lo'])}; {fnum(mt['ndcg10']['hi'])}], MRR {fnum(mt['mrr']['mean'])}; "
-        f"синтетический мир со скрытой истиной, {mt['world'].split(': ')[-1]}, seed {mt['seed']}, алгоритм `{mt['algorithm']}` | "
+        f"синтетический мир со скрытой истиной, {mt['world'].split(': ')[-1]}, seed {mt['seed']}, алгоритм `{mt['algorithm']}`"
+        + (f"; сбалансированный протокол (≥ 10 релевантных в категории): P@5 {fnum(bl['p5']['mean'])}, P@10 {fnum(bl['p10']['mean'])}, "
+           f"nDCG@10 {fnum(bl['ndcg10']['mean'])}, MRR {fnum(bl['mrr']['mean'])}" if (bl := mt.get("balanced")) else "") + " | "
         f"`make bench`, `docs/validation/MATCHING_BENCH.md`, `docs/validation/matching_bench.json` |",
         validation_row(n["validation_report"], b["families"]),
         *grade_row(n.get("grade_accuracy")),
