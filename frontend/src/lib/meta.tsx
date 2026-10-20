@@ -2,6 +2,21 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { api } from "./api";
 import { DIRECTIONS, DIRECTION_TITLES } from "../components/ui";
 
+export {
+  NUMBERS,
+  getAnticheatMetrics,
+  getExpertAgreement,
+  getHhMatchMetrics,
+  getJuryBanner,
+  getLandingCards,
+  getLeakKVariants,
+  getMatchingMetrics,
+  getMutationMetrics,
+  getRecomputeTable,
+  getSprtVerdict,
+  type LandingCardMetric,
+} from "./numbers";
+
 // Название продукта задаётся в одном месте — backend/app/core/config.py (product_name) — и приходит из /api/meta.
 export interface Meta {
   product_name: string; version: string; jury_mode_available: boolean; jury_tab_enabled?: boolean; demo_sandbox: boolean; assessment_engine: string;
@@ -93,80 +108,6 @@ export function usePageTitle(title: string, description?: string) {
     }
     return () => { ownTitle = false; if (loaded) document.title = defaultTitle(loaded); };
   }, [title, description, product]);
-}
-
-export interface LandingCardItem {
-  id: string;
-  eyebrow: string;
-  value: string;
-  accent: string;
-  subtext: string;
-  provenance: string;
-  recompute?: string;
-  code_ref?: string;
-}
-
-export interface JuryBannerData {
-  headline_ru: string;
-  claims_ru: string[];
-}
-
-/** Единый объект цифр для главной страницы (совместим с frontend/src/lib/numbers.ts от А4, значения из docs/NUMBERS.json). */
-export function getLandingCards(): LandingCardItem[] {
-  return [
-    {
-      id: "bank",
-      eyebrow: "Калиброванный банк задач",
-      value: "1 504",
-      accent: "семейства · 30 080 вариантов",
-      subtext: "10 702 проверки исполнением в песочнице, 0 сбоев генерации (20 зёрен)",
-      provenance: "docs/NUMBERS.json · коммит 603474f · python -m assessment_bank",
-      recompute: "python -m assessment_bank",
-      code_ref: "backend/assessment_bank/validator.py",
-    },
-    {
-      id: "matching",
-      eyebrow: "Точность ранжирования",
-      value: "75,1 %",
-      accent: "P@5 · MRR 89,6 %",
-      subtext: "Двухъярусный отбор по подтверждённым навыкам и достижениям ФСП (nDCG@10 56,6 %)",
-      provenance: "Бенчмарк от 20.10.2026, коммит 7d2962f, синтетический мир 200×2000 (seed 20261006)",
-      recompute: "python -m app.modules.validation",
-      code_ref: "backend/app/modules/matching/scoring.py",
-    },
-    {
-      id: "grading",
-      eyebrow: "Подтверждение заявленного грейда",
-      value: "97,5 %",
-      accent: "точность уверенных вердиктов",
-      subtext: "Ложное подтверждение ≤ 2,5 % · 0 грубых ошибок (на 2+ ступени) · доп. этап в спорных случаях",
-      provenance: "Последовательный тест SPRT (2PL/GPCM, лимит продукта ≤ 16 заданий / ≤ 60 мин, симуляция N = 3 000)",
-      recompute: "python docs/audit_2010/scripts/sim.py",
-      code_ref: "backend/app/modules/assessment/engine.py",
-    },
-    {
-      id: "anticheat",
-      eyebrow: "Защита оценщика и рынок",
-      value: "100 %",
-      accent: "известных шаблонов (1 160 вар.)",
-      subtext: "Нормализация + изоляция ответа + обязательные цитаты; срез 414 вакансий hh.ru (покрытие проверяемых навыков 82,7 %)",
-      provenance: "Панель 116 атак × 10 обфускаций + срез hh.ru (docs/NUMBERS.json, коммит 18254a5)",
-      recompute: "python -m tools.grader_check",
-      code_ref: "backend/app/modules/assessment/grader.py",
-    },
-  ];
-}
-
-export function getJuryBanner(): JuryBannerData {
-  return {
-    headline_ru: "Ключевые показатели ядра (с условиями измерения из docs/NUMBERS.json):",
-    claims_ru: [
-      "Банк заданий: 1 504 семейства · 30 080 вариантов на 20 зёрнах (10 702 проверки исполнением, 0 ошибок).",
-      "Подтверждение заявленного грейда (SPRT): 97,5 % точность уверенных решений, ложное подтверждение ≤ 2,5 %, 0 ошибок на 2+ ступени (симуляция 2PL/GPCM, ≤ 60 мин).",
-      "Ранжирование подбора (match-v1.3): P@5 = 75,1 % (ДИ 71,7–78,4 %), MRR = 89,6 % на синтетическом мире 200 потребностей × 2 000 кандидатов.",
-      "Защита ИИ-оценщика: 100 % известных шаблонов инъекций (1 160 вариаций деобфускации) + обязательные цитаты и вторая оценка при расхождении.",
-    ],
-  };
 }
 
 /** Заголовок вкладки по экрану (WCAG 2.4.2): «<заголовок h1> · Драфт»; null — общий. Вызывает RouteAnnouncer

@@ -81,20 +81,20 @@ export function ExpertHome() {
     <div className="max-w-4xl space-y-6">
       <PageTitle
         title="Кабинет эксперта-методиста"
-        subtitle="Калибровка эталонного набора подбора, слепая оценка развёрнутых ответов по рубрикам, настройка порогов грейдов по методу Ангоффа и разбор апелляций кандидатов."
+        subtitle="Калибровка эталонного набора подбора, слепая оценка развёрнутых ответов по рубрикам, настройка порогов грейдов по методу Ангоффа и проверка ответов кандидатов."
       />
       <section className="card flex flex-wrap items-center justify-between gap-4 border-l-4 border-l-brand">
         <div className="max-w-xl">
           <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-plum">Оперативная очередь</p>
-          <h2 className="mt-1 text-lg font-bold text-brand-night">Очередь проверки ответов и апелляций кандидатов</h2>
+          <h2 className="mt-1 text-lg font-bold text-brand-night">Очередь проверки развёрнутых ответов</h2>
           <p className="mt-1 text-sm text-brand-ink/75">
-            Развёрнутые ответы, где две модели разошлись в оценке, сработал защитный фильтр или кандидат подал апелляцию на пересмотр по рубрике.
+            Развёрнутые ответы, где две модели разошлись в оценке или сработал защитный фильтр, оцениваются экспертом вслепую по критериям рубрики.
           </p>
         </div>
-        <Link to="/expert/review" className="btn-primary shrink-0">Открыть очередь и апелляции</Link>
+        <Link to="/expert/review" className="btn-primary shrink-0">Открыть очередь проверки</Link>
       </section>
       {!me?.in_panel ? (
-        <Alert kind="info">Для калибровочных пакетов A, B, C используйте персональную ссылку эксперта. Оперативная проверка ответов и апелляций доступна в разделе <Link className="font-semibold underline" to="/expert/review">«Очередь и апелляции»</Link>.</Alert>
+        <Alert kind="info">Для калибровочных пакетов A, B, C используйте персональную ссылку эксперта. Оперативная проверка ответов доступна в разделе <Link className="font-semibold underline" to="/expert/review">«Очередь проверки»</Link>.</Alert>
       ) : (
         <>
           <DemoNote me={me} />

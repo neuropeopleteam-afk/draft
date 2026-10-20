@@ -3,33 +3,26 @@ import { PageTitle } from "../components/CabinetLayout";
 import { Alert, DIRECTION_TITLES, Empty, Loading, Seg, catTitle, dtt, errText, num, signed, useApi } from "../components/ui";
 import { api } from "../lib/api";
 
-type Mode = "pending" | "appeals" | "llm" | "reviewed";
+type Mode = "pending" | "llm" | "reviewed";
 const FORMAT: Record<string, string> = { open_answer: "Развёрнутый ответ", open_book_3step: "Open book, шаг 3 — объяснение" };
 const MARKS = [{ v: 0, t: "0 — нет" }, { v: 0.5, t: "0,5 — частично" }, { v: 1, t: "1 — полностью" }];
 
-/** Экран эксперта-методиста: развёрнутые ответы «на проверке», апелляции кандидатов и выборочная проверка оценок ИИ — по рубрике. */
+/** Экран эксперта-методиста: развёрнутые ответы «на проверке» и выборочная проверка оценок ИИ — по рубрике. */
 export default function Expert() {
   const [mode, setMode] = useState<Mode>("pending");
   const [tick, setTick] = useState(0);
-  const queueMode = mode === "appeals" ? "pending" : mode;
-  const { data, error, loading } = useApi<any>(`/expert/queue?mode=${queueMode}`, [queueMode, tick]);
+  const { data, error, loading } = useApi<any>(`/expert/queue?mode=${mode}`, [mode, tick]);
   const agr = useApi<any>("/expert/agreement", [tick]);
-
-  const rawItems: any[] = data?.items ?? [];
-  const items = mode === "appeals"
-    ? rawItems.filter((it) => it.appeal || it.llm?.error === "graders_disagree" || it.llm?.second?.verdict === "disagree" || it.status === "pending")
-    : rawItems;
 
   return (
     <div className="max-w-4xl">
       <PageTitle
-        title="Очередь проверки и апелляции"
-        subtitle="Слепая оценка развёрнутых ответов по критериям рубрики (0 / 0,5 / 1 с весами). Решение методиста пересчитывает уровень кандидата и имеет приоритет над автоматической оценкой; подтверждённый грейд принудительно не понижается."
+        title="Проверка развёрнутых ответов"
+        subtitle="Ответ оценивается по каждому критерию рубрики: 0, 0,5 или 1 — с весами критериев. Оценка эксперта сразу входит в результат теста; грейд принудительно не понижается."
       />
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <Seg label="Очередь" value={mode} onChange={setMode} options={[
           { id: "pending", title: `На проверке${data?.counts ? ` · ${data.counts.pending}` : ""}` },
-          { id: "appeals", title: `Апелляции и споры${data?.counts?.appeals != null ? ` · ${data.counts.appeals}` : ""}` },
           { id: "llm", title: `Калибровка ИИ вслепую${data?.counts ? ` · ${data.counts.llm}` : ""}` },
           { id: "reviewed", title: `Проверено${data?.counts ? ` · ${data.counts.reviewed}` : ""}` },
         ]} />
@@ -39,34 +32,15 @@ export default function Expert() {
           </p>
         )}
       </div>
-      {mode === "appeals" && (
-        <div className="mt-4 rounded-2xl border border-brand/25 bg-[#F3F2FB] p-4 text-sm text-brand-night" data-testid="expert-appeals-banner">
-          <p className="font-bold">Регламент рассмотрения апелляций и расхождений оценок</p>
-          <p className="mt-1 text-xs leading-relaxed text-brand-ink/80">
-            Сюда попадают ответы, по которым кандидат запросил пересмотр или две независимые модели разошлись больше чем на 0,35 балла. Эксперт оценивает ответ по критериям рубрики без персональных данных кандидата; при повышении балла апостериорная оценка и вердикт по грейду обновляются автоматически.
-          </p>
-        </div>
-      )}
       {mode === "llm" && (
         <p className="mt-3 text-sm text-brand-ink/70">
           Ответы, которые уже оценены автоматически. Балл системы скрыт, пока вы не выставите собственный по критериям рубрики, — так измеряется несмещённое согласие эксперта и модели.
         </p>
       )}
       <div className="mt-6 space-y-5">
-        {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !items.length
-          ? (
-            <Empty
-              title={mode === "appeals" ? "Активных апелляций нет" : mode === "pending" ? "Очередь проверки пуста" : "Записей пока нет"}
-              text={
-                mode === "appeals"
-                  ? "Все спорные ответы и апелляции кандидатов разобраны. Новые запросы на пересмотр появятся здесь автоматически."
-                  : mode === "pending"
-                    ? "Все развёрнутые ответы оценены. Ответ попадает сюда при расхождении двух оценок или срабатывании защитного фильтра."
-                    : undefined
-              }
-            />
-          )
-          : items.map((it: any) => <ReviewItem key={`${it.session_id}-${it.token}-${it.part}`} it={it} mode={mode} onDone={() => setTick((x) => x + 1)} />)}
+        {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.items?.length
+          ? <Empty title={mode === "pending" ? "Очередь пуста" : "Пока ничего нет"} text={mode === "pending" ? "Все развёрнутые ответы оценены. Ответ попадает сюда при расхождении двух оценок или срабатывании защитного фильтра." : undefined} />
+          : data.items.map((it: any) => <ReviewItem key={`${it.session_id}-${it.token}-${it.part}`} it={it} mode={mode} onDone={() => setTick((x) => x + 1)} />)}
       </div>
     </div>
   );
@@ -93,7 +67,6 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
     <article className="card">
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="chip">{FORMAT[it.format] ?? it.format}</span>
-        {mode === "appeals" && <span className="chip bg-brand-blush text-brand-plum">Апелляция / спор оценок</span>}
         <span className="text-brand-ink/65">Кандидат {it.candidate_ref ?? "—"} · {DIRECTION_TITLES[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
         {it.session_status === "finished" && it.status === "pending" && <span className="chip bg-brand-blush text-brand-plum">результат предварительный</span>}
         {it.llm?.second && <span className="chip bg-[#ECEAF8] text-brand-night" title={`Причины второй оценки: ${(it.llm.checks ?? []).join(", ")}`}>Две оценки: {it.llm.model_label ?? "модель 1"} {num(it.llm.scores?.[0])} · {it.llm.second.model_label ?? "модель 2"} {it.llm.second.score == null ? "—" : num(it.llm.second.score)}{it.llm.error === "graders_disagree" || it.llm.second.verdict === "disagree" ? " — разошлись" : ""}{it.llm.second.status === "pending" ? " — вторая оценка выполняется" : it.llm.second.after_finish ? " (вторая — в фоне, после итога теста)" : ""}</span>}
@@ -111,7 +84,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
         <details className="mt-3 rounded-xl bg-[#F3F2FB] p-3 text-sm">
           <summary className="cursor-pointer font-semibold text-brand-night">Эталоны: сильный, средний, слабый ответ</summary>
           {(["strong", "medium", "weak"] as const).map((k) => it.rubric[k] && (
-            <p key={k} className="mt-2 text-brand-ink/80"><b>{{ strong: "Сильный", medium: "Средний", weak: "Слабый" }[k]}:</b> {it.rubric[k]}</p>))}
+            <p key={k} className="mt-2 text-brand-ink/80\"><b>{{ strong: "Сильный", medium: "Средний", weak: "Слабый" }[k]}:</b> {it.rubric[k]}</p>))}
           {it.rubric.scoring_notes && <p className="mt-2 text-xs text-brand-ink/65">{it.rubric.scoring_notes}</p>}
         </details>
       )}
@@ -128,18 +101,18 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
             </div>
           </div>
         ))}
-        {!done && <textarea className="input" rows={2} aria-label="Комментарий эксперта" placeholder="Комментарий методиста (для кандидата и протокола апелляции)" value={comment} onChange={(e) => setComment(e.target.value)} />}
+        {!done && <textarea className="input" rows={2} aria-label="Комментарий эксперта" placeholder="Комментарий (необязательно): что упущено, что верно" value={comment} onChange={(e) => setComment(e.target.value)} />}
       </fieldset>
       {err && <div className="mt-3"><Alert>{err}</Alert></div>}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-brand-ink/75">{score != null ? <>Итог по рубрике: <b className="text-brand-night">{num(score)}</b></> : "Оцените все критерии"}</p>
-        {!done && <button className="btn-primary" disabled={score == null || busy} onClick={submit}>{busy ? "Сохраняем…" : "Сохранить решение методиста"}</button>}
+        {!done && <button className="btn-primary" disabled={score == null || busy} onClick={submit}>{busy ? "Сохраняем…" : "Сохранить оценку"}</button>}
       </div>
       {(res || mode === "reviewed") && (
         <div className="mt-3"><Alert kind="ok">
-          {res?.review?.applied || it.method === "expert" ? "Решение методиста вошло в результат теста." : "Оценка сохранена для калибровки."}
-          {(res?.review?.llm_score ?? it.llm?.score) != null && ` Автоматический балл: ${num(Number(res?.review?.llm_score ?? it.llm?.score))}.`}
-          {res?.recomputed && ` Результат пересчитан: уровень = ${signed(res.theta)}, грейд ${res.confirmed ? "подтверждён" : "не подтверждён"}.`}
+          {res?.review?.applied || it.method === "expert" ? "Оценка эксперта вошла в результат теста." : "Оценка сохранена рядом с оценкой модели."}
+          {(res?.review?.llm_score ?? it.llm?.score) != null && ` Балл ${it.llm?.model_label ?? "модели"}: ${num(Number(res?.review?.llm_score ?? it.llm?.score))}.`}
+          {res?.recomputed && ` Результат пересчитан: θ = ${signed(res.theta)}, грейд ${res.confirmed ? "подтверждён" : "не подтверждён"}.`}
           {res && <button className="ml-2 font-semibold underline" onClick={onDone}>Обновить очередь</button>}
         </Alert></div>
       )}

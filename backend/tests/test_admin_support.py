@@ -111,8 +111,25 @@ def test_tariff_request_and_admin_approval(client, monkeypatch):
         my_reqs = client.get("/api/tariffs/requests/my", headers=_h(te)).json()["items"]
         assert len(my_reqs) == 1 and my_reqs[0]["id"] == req_id and my_reqs[0]["status"] == "pending"
 
-        # администратор одобряет заявку -> тариф «Найм» включается
+        # гостевая заявка с чужим названием компании не привязывается автоматически по совпадению имени
+        g_req = client.post(
+            "/api/tariffs/request",
+            json={"plan": "partner", "company_name": "ООО Вектор", "contact_email": "stranger@example.com"},
+        )
+        assert g_req.status_code == 201
+        g_id = g_req.json()["request"]["id"]
+        assert g_req.json()["request"]["company_id"] is None
+
+        # администратор одобряет заявку вошедшего работодателя -> тариф «Найм» включается
         ta = _admin_token()
+        # гостевую заявку без явного company_id одобрить нельзя (400 company_required)
+        bad_approve = client.post(
+            "/api/admin/requests/tariff-resolve",
+            json={"request_id": g_id, "action": "approve"},
+            headers=_h(ta),
+        )
+        assert bad_approve.status_code == 400 and bad_approve.json()["detail"]["code"] == "company_required"
+
         approve = client.post(
             "/api/admin/requests/tariff-resolve",
             json={"request_id": req_id, "action": "approve", "admin_note": "Договор согласован"},
@@ -127,7 +144,14 @@ def test_tariff_request_and_admin_approval(client, monkeypatch):
         get_settings.cache_clear()
 
 
-def test_admin_overview_funnel_users_companies_and_flags(client):
+def test_admin_overview_funnel_users_companies_and_flags(client, monkeypatch, tmp_path):
+    import app.core.flags as flags_mod
+
+    flag_file = tmp_path / "jury_off"
+    monkeypatch.setenv("JURY_OFF_FLAG", str(flag_file))
+    monkeypatch.setattr(flags_mod, "_PATHS", (str(flag_file),))
+    flags_mod._cache = (0.0, False)
+
     tc = register_and_verify(client, email="f-cand@example.com", full_name="Кандидат Воронки")
     te = register_and_verify(client, email="f-emp@example.com", role="employer", company_name="Компания Воронки")
     ta = _admin_token()

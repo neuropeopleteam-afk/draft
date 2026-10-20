@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useState } from "react";
-import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { RouteAnnouncer, SkipLink } from "./components/A11y";
 import { JuryGuide } from "./components/JuryGuide";
 import { InteractiveAvatarTour } from "./components/InteractiveAvatarTour";
@@ -10,7 +10,9 @@ import { candidateSections } from "./pages/candidate/sections";
 import { employerSections } from "./pages/employer/sections";
 import { panelSections } from "./pages/expert/sections";
 import { fspSections } from "./ideas/fsp/sections";
+import { useAuth } from "./lib/auth";
 import { HashScroll } from "./lib/hashScroll";
+import { juryLogin } from "./lib/jury";
 import { useDemoAccess, useDemoUi } from "./lib/juryMode";
 import { lazyNamed } from "./lib/lazyPage";
 import { preloadSections } from "./lib/preload";
@@ -172,6 +174,25 @@ function DemoGuard({ children }: { children: React.ReactElement }) {
   return children;
 }
 
+/** Автоматический вход демо-аналитиком ФСП при переходе на /demo/fsp-benefit → /fsp/benefit внутри CabinetLayout. */
+function DemoFspBenefitRedirect() {
+  const { me, signIn, loading } = useAuth();
+  const navigate = useNavigate();
+  const started = useRef(false);
+  useEffect(() => {
+    if (loading || started.current) return;
+    if (me?.role === "fsp_analyst" || me?.role === "admin") {
+      navigate("/fsp/benefit", { replace: true });
+      return;
+    }
+    started.current = true;
+    juryLogin("fsp", signIn, "/fsp/benefit")
+      .then((to) => navigate(to, { replace: true }))
+      .catch(() => navigate("/login", { replace: true }));
+  }, [loading, me?.role, signIn, navigate]);
+  return <RouteFallback />;
+}
+
 export default function App() {
   useEffect(() => { preloadSections(PRELOAD); }, []);
   return (
@@ -182,23 +203,22 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
 
-      {/* Раздел «Демо для жюри» (/demo/*) */}
+      {/* Раздел «Демо для жюри» (/demo/*) и совместимые прямые маршруты для e2e/проводника */}
       <Route path="/demo" element={<DemoGuard><DemoHub /></DemoGuard>} />
       <Route path="/demo/warroom" element={<DemoGuard><WarRoom /></DemoGuard>} />
       <Route path="/demo/validation" element={<DemoGuard><Validation /></DemoGuard>} />
       <Route path="/demo/criteria" element={<DemoGuard><Criteria /></DemoGuard>} />
       <Route path="/demo/live" element={<DemoGuard><LivePitch /></DemoGuard>} />
       <Route path="/demo/go" element={<DemoGuard><JuryGo /></DemoGuard>} />
-      <Route path="/demo/fsp-benefit" element={<DemoGuard><FspBenefit /></DemoGuard>} />
+      <Route path="/demo/fsp-benefit" element={<DemoGuard><DemoFspBenefitRedirect /></DemoGuard>} />
 
-      {/* Переадресации со старых адресов демо и дублей (301/replace с сохранением hash/search) */}
       <Route path="/expertise" element={<RedirectPreserve to="/demo" />} />
-      <Route path="/warroom" element={<RedirectPreserve to="/demo/warroom" />} />
-      <Route path="/validation" element={<RedirectPreserve to="/demo/validation" />} />
-      <Route path="/criteria" element={<RedirectPreserve to="/demo/criteria" />} />
+      <Route path="/warroom" element={<DemoGuard><WarRoom /></DemoGuard>} />
+      <Route path="/validation" element={<DemoGuard><Validation /></DemoGuard>} />
+      <Route path="/criteria" element={<DemoGuard><Criteria /></DemoGuard>} />
       <Route path="/jury/live" element={<RedirectPreserve to="/demo/live" />} />
-      <Route path="/jury/go" element={<RedirectPreserve to="/demo/go" />} />
-      <Route path="/security" element={<Navigate to="/demo/validation#red-button" replace />} />
+      <Route path="/jury/go" element={<DemoGuard><JuryGo /></DemoGuard>} />
+      <Route path="/security" element={<Navigate to="/validation#red-button" replace />} />
       <Route path="/tariffs/live" element={<Navigate to="/pricing" replace />} />
 
       <Route path="/study" element={<StudyAbout />} />
@@ -291,7 +311,7 @@ export default function App() {
           <Route path="cups" element={<FspCups />} />
           <Route path="method" element={<FspMethod />} />
         </Route>
-        <Route path="benefit" element={<Navigate to="/demo/fsp-benefit" replace />} />
+        <Route path="benefit" element={<FspBenefit />} />
         <Route path="partners" element={<FspPartners />} />
         <Route path="trio" element={<TrioPage role="fsp" />} />
         <Route path="security" element={<TwoFactorSettings />} />

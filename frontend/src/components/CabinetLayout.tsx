@@ -5,6 +5,7 @@ import { api, type Role } from "../lib/api";
 import { MESSAGES_CHANGED } from "./Chat";
 import { useHiringTodo } from "./Hiring";
 import { Logo } from "./Logo";
+import { MobileTabBar } from "./mobile/MobileTabBar";
 import { GuideSlot, whoAmI } from "./JuryGuide";
 import { juryLogin, type Persona } from "../lib/jury";
 import { useDemoUi } from "../lib/juryMode";
@@ -79,7 +80,7 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
             Выйти
           </button>
         </div>
-        <nav ref={navRef} className="nav-strip flex gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
+        <nav ref={navRef} className="nav-strip hidden gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
           <NavItem to={base} end label="Обзор" />
           {sections.map((s) => (
             <NavItem
@@ -226,8 +227,7 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
           </div>
         </footer>
       </div>
-      {/* Слот под нижнюю мобильную навигацию А7: <MobileTabBar role={role} sections={sections} base={base} unread={unread} hiringTodo={hiringTodo} /> */}
-      <div id="mobile-tabbar-slot" data-testid="mobile-tabbar-slot" className="md:hidden" />
+      <MobileTabBar role={role} sections={sections} base={base} unread={unread} hiringTodo={hiringTodo} showJury={demoUi} />
     </div>
   );
 }

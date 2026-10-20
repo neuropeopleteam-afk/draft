@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Literal
 import uuid
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 import jwt
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import func, select
@@ -20,6 +20,7 @@ from app.core.deps import get_current_user, oauth2_scheme, require_role
 from app.core.enums import InvitationStatus, TestSessionStatus, UserRole
 from app.core.errors import api_error, err
 from app.core.flags import jury_on
+from app.core.ratelimit import SlidingWindow, client_ip, hit
 from app.core.security import decode_access_token
 from app.modules.admin.models import SupportTicket, TariffRequest
 from app.modules.assessment.models import TestSession
@@ -103,6 +104,10 @@ class AdminCompanyTariffIn(BaseModel):
 class AdminTariffResolveIn(BaseModel):
     request_id: uuid.UUID
     action: Literal["approve", "reject"]
+    company_id: uuid.UUID | None = Field(
+        None,
+        description="Целевая компания для подключения тарифа (обязательна при одобрении гостевой заявки без company_id)",
+    )
     admin_note: str | None = Field(None, max_length=500)
 
 
@@ -183,17 +188,26 @@ def support_meta() -> dict:
     }
 
 
+_support_rl = SlidingWindow(5, 3600)
+_tariff_req_rl = SlidingWindow(5, 3600)
+
+
 @support_router.post(
     "",
     status_code=status.HTTP_201_CREATED,
     summary="Отправить обращение в службу поддержки (запись в БД и уведомление на почту поддержки)",
-    responses={422: err("Не указана контактная почта (`email_required`) или неверные поля")},
+    responses={
+        422: err("Не указана контактная почта (`email_required`) или неверные поля"),
+        429: err("Слишком частые обращения (`too_many_requests`)"),
+    },
 )
 def create_support_ticket(
+    request: Request,
     data: SupportTicketIn,
     user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db),
 ) -> dict:
+    hit(_support_rl, client_ip(request), "too_many_requests", "Слишком много обращений с вашего адреса. Повторите через час")
     s = get_settings()
     email = (str(data.email).strip().lower() if data.email else None) or (user.email if user else None)
     if not email:
@@ -246,13 +260,18 @@ def my_support_tickets(user: User = Depends(get_current_user), db: Session = Dep
     "/request",
     status_code=status.HTTP_201_CREATED,
     summary="Оставить заявку на подключение тарифа «Найм» или «Партнёр ФСП» (без автоподключения, включает админ)",
-    responses={422: err("Не указаны название компании (`company_required`) или контактная почта (`email_required`)")},
+    responses={
+        422: err("Не указаны название компании (`company_required`) или контактная почта (`email_required`)"),
+        429: err("Слишком частые заявки (`too_many_requests`)"),
+    },
 )
 def create_tariff_request(
+    request: Request,
     data: TariffRequestIn,
     user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db),
 ) -> dict:
+    hit(_tariff_req_rl, client_ip(request), "too_many_requests", "Слишком много заявок с вашего адреса. Повторите через час")
     s = get_settings()
     company: Company | None = None
     if user and user.role == UserRole.employer:
@@ -371,57 +390,101 @@ def _apply_company_tariff(db: Session, company: Company, plan_id: str, actor: Us
 def _compute_funnel(db: Session, include_demo: bool = False, days: int = 14) -> dict:
     user_cond = [] if include_demo else [User.is_demo.is_(False)]
     comp_cond = [] if include_demo else [Company.is_demo.is_(False)]
+    user_subq = select(User.id).where(*user_cond)
+    comp_subq = select(Company.id).where(*comp_cond)
 
-    users = db.scalars(select(User).where(*user_cond)).all()
-    user_ids = {u.id for u in users}
-    companies = db.scalars(select(Company).where(*comp_cond)).all()
-    comp_ids = {c.id for c in companies}
-
-    sessions = [
-        s
-        for s in db.scalars(select(TestSession)).all()
-        if s.user_id in user_ids
-    ]
-    finished_sessions = [s for s in sessions if s.status == TestSessionStatus.finished]
-
-    needs = [
-        n
-        for n in db.scalars(select(EmployerNeed)).all()
-        if n.company_id in comp_ids
-    ]
-    invs = [
-        i
-        for i in db.scalars(select(Invitation)).all()
-        if i.company_id in comp_ids
-    ]
-    accepted_invs = [i for i in invs if i.status == InvitationStatus.accepted]
-
-    cand_profiles = [
-        cp
-        for cp in db.scalars(select(CandidateProfile)).all()
-        if cp.user_id in user_ids and cp.current_category_id is not None
-    ]
+    registrations = int(db.scalar(select(func.count(User.id)).where(*user_cond)) or 0)
+    verified_users = int(
+        db.scalar(select(func.count(User.id)).where(*user_cond, User.is_email_verified.is_(True))) or 0
+    )
+    candidates = int(
+        db.scalar(select(func.count(User.id)).where(*user_cond, User.role == UserRole.candidate)) or 0
+    )
+    employers = int(
+        db.scalar(select(func.count(User.id)).where(*user_cond, User.role == UserRole.employer)) or 0
+    )
+    tests_started = int(
+        db.scalar(select(func.count(TestSession.id)).where(TestSession.user_id.in_(user_subq))) or 0
+    )
+    tests_finished = int(
+        db.scalar(
+            select(func.count(TestSession.id)).where(
+                TestSession.user_id.in_(user_subq),
+                TestSession.status == TestSessionStatus.finished,
+            )
+        )
+        or 0
+    )
+    confirmed_grades = int(
+        db.scalar(
+            select(func.count(CandidateProfile.user_id)).where(
+                CandidateProfile.user_id.in_(user_subq),
+                CandidateProfile.current_category_id.is_not(None),
+            )
+        )
+        or 0
+    )
+    needs_created = int(
+        db.scalar(select(func.count(EmployerNeed.id)).where(EmployerNeed.company_id.in_(comp_subq))) or 0
+    )
+    invitations_sent = int(
+        db.scalar(select(func.count(Invitation.id)).where(Invitation.company_id.in_(comp_subq))) or 0
+    )
+    invitations_accepted = int(
+        db.scalar(
+            select(func.count(Invitation.id)).where(
+                Invitation.company_id.in_(comp_subq),
+                Invitation.status == InvitationStatus.accepted,
+            )
+        )
+        or 0
+    )
 
     today = utcnow().astimezone(MSK).date()
+    start_day = today - timedelta(days=days - 1)
+    cutoff = datetime(start_day.year, start_day.month, start_day.day, tzinfo=MSK).astimezone(UTC)
+
+    recent_users = db.scalars(select(User.created_at).where(*user_cond, User.created_at >= cutoff)).all()
+    recent_finished = db.scalars(
+        select(TestSession.finished_at).where(
+            TestSession.user_id.in_(user_subq),
+            TestSession.status == TestSessionStatus.finished,
+            TestSession.finished_at.is_not(None),
+            TestSession.finished_at >= cutoff,
+        )
+    ).all()
+    recent_needs = db.scalars(
+        select(EmployerNeed.created_at).where(
+            EmployerNeed.company_id.in_(comp_subq),
+            EmployerNeed.created_at >= cutoff,
+        )
+    ).all()
+    recent_invs = db.scalars(
+        select(Invitation.created_at).where(
+            Invitation.company_id.in_(comp_subq),
+            Invitation.created_at >= cutoff,
+        )
+    ).all()
+    recent_acc = db.execute(
+        select(Invitation.responded_at, Invitation.created_at).where(
+            Invitation.company_id.in_(comp_subq),
+            Invitation.status == InvitationStatus.accepted,
+            Invitation.created_at >= cutoff - timedelta(days=30),
+        )
+    ).all()
+
     by_day = []
     for offset in range(days - 1, -1, -1):
         d = today - timedelta(days=offset)
-        d_str = d.isoformat()
         by_day.append(
             {
-                "date": d_str,
-                "registrations": sum(1 for u in users if as_aware(u.created_at).astimezone(MSK).date() == d),
-                "tests_finished": sum(
-                    1
-                    for s in finished_sessions
-                    if s.finished_at and as_aware(s.finished_at).astimezone(MSK).date() == d
-                ),
-                "needs_created": sum(1 for n in needs if as_aware(n.created_at).astimezone(MSK).date() == d),
-                "invitations_sent": sum(1 for i in invs if as_aware(i.created_at).astimezone(MSK).date() == d),
+                "date": d.isoformat(),
+                "registrations": sum(1 for ts in recent_users if as_aware(ts).astimezone(MSK).date() == d),
+                "tests_finished": sum(1 for ts in recent_finished if ts and as_aware(ts).astimezone(MSK).date() == d),
+                "needs_created": sum(1 for ts in recent_needs if as_aware(ts).astimezone(MSK).date() == d),
+                "invitations_sent": sum(1 for ts in recent_invs if as_aware(ts).astimezone(MSK).date() == d),
                 "invitations_accepted": sum(
-                    1
-                    for i in accepted_invs
-                    if as_aware(i.responded_at or i.created_at).astimezone(MSK).date() == d
+                    1 for resp_at, cr_at in recent_acc if as_aware(resp_at or cr_at).astimezone(MSK).date() == d
                 ),
             }
         )
@@ -430,16 +493,16 @@ def _compute_funnel(db: Session, include_demo: bool = False, days: int = 14) -> 
         "include_demo": include_demo,
         "days": days,
         "totals": {
-            "registrations": len(users),
-            "verified_users": sum(1 for u in users if u.is_email_verified),
-            "candidates": sum(1 for u in users if u.role == UserRole.candidate),
-            "employers": sum(1 for u in users if u.role == UserRole.employer),
-            "tests_started": len(sessions),
-            "tests_finished": len(finished_sessions),
-            "confirmed_grades": len(cand_profiles),
-            "needs_created": len(needs),
-            "invitations_sent": len(invs),
-            "invitations_accepted": len(accepted_invs),
+            "registrations": registrations,
+            "verified_users": verified_users,
+            "candidates": candidates,
+            "employers": employers,
+            "tests_started": tests_started,
+            "tests_finished": tests_finished,
+            "confirmed_grades": confirmed_grades,
+            "needs_created": needs_created,
+            "invitations_sent": invitations_sent,
+            "invitations_accepted": invitations_accepted,
         },
         "by_day": by_day,
     }
@@ -676,7 +739,11 @@ def admin_requests(
 @admin_router.post(
     "/requests/tariff-resolve",
     summary="Одобрить (с включением тарифа компании) или отклонить заявку на тариф",
-    responses={**ADMIN_ERR, 404: err("Заявка не найдена (`request_not_found`)")},
+    responses={
+        **ADMIN_ERR,
+        400: err("Для гостевой заявки без привязки к компании не указан `company_id` (`company_required`)"),
+        404: err("Заявка или компания не найдена (`request_not_found`, `company_not_found`)"),
+    },
 )
 def admin_resolve_tariff_request(
     data: AdminTariffResolveIn,
@@ -686,17 +753,25 @@ def admin_resolve_tariff_request(
     req = db.get(TariffRequest, data.request_id)
     if req is None:
         raise api_error(404, "request_not_found", "Заявка на тариф не найдена")
+
+    if data.action == "approve":
+        target_cid = req.company_id or data.company_id
+        if target_cid is None:
+            raise api_error(
+                400,
+                "company_required",
+                "Заявка подана гостем без входа в кабинет: укажите целевую компанию (company_id) для подключения тарифа",
+            )
+        company = db.get(Company, target_cid)
+        if company is None:
+            raise api_error(404, "company_not_found", "Указанная компания не найдена")
+        req.company_id = company.id
+        _apply_company_tariff(db, company, req.plan, actor, (data.admin_note or "").strip() or None)
+
     req.status = "approved" if data.action == "approve" else "rejected"
     req.admin_note = (data.admin_note or "").strip() or None
     req.resolved_by = actor.id
     req.resolved_at = utcnow()
-
-    company: Company | None = db.get(Company, req.company_id) if req.company_id else None
-    if company is None and req.company_name:
-        company = db.scalar(select(Company).where(Company.name == req.company_name))
-    if data.action == "approve" and company is not None:
-        req.company_id = company.id
-        _apply_company_tariff(db, company, req.plan, actor, req.admin_note)
 
     db.commit()
     db.refresh(req)
@@ -745,22 +820,23 @@ def admin_get_flags(_: User = Depends(admin_only)) -> dict:
 
 
 @admin_router.post("/flags", summary="Переключить демо-режим жюри (jury_mode) без перезапуска сервера", responses=ADMIN_ERR)
-def admin_set_flags(data: AdminFlagsIn, _: User = Depends(admin_only)) -> dict:
+def admin_set_flags(data: AdminFlagsIn, actor: User = Depends(admin_only)) -> dict:
     import app.core.flags as flags_mod
 
     flag_file = Path(os.environ.get("JURY_OFF_FLAG", "/tmp/spectrek_jury_off"))
-    try:
-        if data.jury_mode:
-            for p in flags_mod._PATHS:
-                try:
-                    if os.path.exists(p):
-                        os.remove(p)
-                except OSError:
-                    pass
-        else:
+    if data.jury_mode:
+        for p in flags_mod._PATHS:
+            try:
+                if os.path.exists(p):
+                    os.remove(p)
+            except OSError:
+                pass
+    else:
+        try:
             flag_file.parent.mkdir(parents=True, exist_ok=True)
             flag_file.write_text("off\n", encoding="utf-8")
-    except OSError:
-        Path("/tmp/spectrek_jury_off").write_text("off\n", encoding="utf-8")
+        except OSError:
+            Path("/tmp/spectrek_jury_off").write_text("off\n", encoding="utf-8")
     flags_mod._cache = (0.0, not data.jury_mode)
+    log.info("Администратор %s переключил jury_mode=%s", actor.email, data.jury_mode)
     return _flags_state()

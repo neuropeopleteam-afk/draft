@@ -155,7 +155,7 @@ def forgot_password(db: Session, email: str) -> str | None:
         .limit(1)
     )
     if last and (utcnow() - as_aware(last.created_at)).total_seconds() < s.email_code_resend_seconds:
-        raise api_error(429, "too_frequent", "Повторно запросить код можно через минуту")
+        return None  # не раскрываем наличие адреса и не переотправляем письмо чаще раза в минуту
     code = _issue_code(db, user, VerificationPurpose.password_reset)
     db.commit()
     _send_password_reset_code(user.email, code)

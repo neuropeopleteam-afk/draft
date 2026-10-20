@@ -187,6 +187,9 @@ export default function Support() {
                   placeholder="Опишите ваш вопрос или задачу..."
                 />
               </div>
+              <p className="text-xs text-brand-ink/60">
+                Нажимая кнопку, вы соглашаетесь с <Link to="/privacy" className="font-semibold text-brand hover:underline">Политикой обработки персональных данных</Link> и <Link to="/consent" className="font-semibold text-brand hover:underline">Согласием на обработку ПДн</Link>.
+              </p>
               <button
                 type="submit"
                 className="btn-primary px-6"

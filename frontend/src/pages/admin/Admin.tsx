@@ -30,12 +30,15 @@ export default function Admin() {
   const [userQ, setUserQ] = useState("");
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [noteText, setNoteText] = useState<Record<string, string>>({});
+  const [reqCompanyId, setReqCompanyId] = useState<Record<string, string>>({});
 
   const canLoad = !!me && me.role === "admin";
   const ov = useApi<any>(canLoad ? `/admin/overview?include_demo=${includeDemo}` : null, [canLoad, includeDemo, tick]);
   const reqs = useApi<any>(canLoad && (tab === "requests" || tab === "support" || tab === "overview") ? "/admin/requests" : null, [canLoad, tab, tick]);
   const comps = useApi<any>(
-    canLoad && tab === "companies" ? `/admin/companies?include_demo=${includeDemo}&q=${encodeURIComponent(companyQ)}` : null,
+    canLoad && (tab === "companies" || tab === "requests")
+      ? `/admin/companies?include_demo=${includeDemo}&q=${encodeURIComponent(tab === "companies" ? companyQ : "")}`
+      : null,
     [canLoad, tab, includeDemo, companyQ, tick]
   );
   const users = useApi<any>(
@@ -62,11 +65,16 @@ export default function Admin() {
     }
   }
 
-  async function resolveTariff(id: string, action: "approve" | "reject") {
+  async function resolveTariff(id: string, action: "approve" | "reject", companyId?: string | null) {
     setBusy(`t-${id}`); setMsg(null);
     try {
       await api("/admin/requests/tariff-resolve", {
-        body: { request_id: id, action, admin_note: noteText[id] || null },
+        body: {
+          request_id: id,
+          action,
+          company_id: companyId || reqCompanyId[id] || null,
+          admin_note: noteText[id] || null,
+        },
       });
       setMsg({ k: "ok", t: action === "approve" ? "Заявка одобрена, тариф компании активирован." : "Заявка отклонена." });
       refreshAll();
@@ -304,6 +312,11 @@ export default function Admin() {
                           <span className="ml-2 rounded-full bg-brand-blush px-2.5 py-0.5 text-xs font-bold text-brand-plum">
                             Тариф «{r.plan_title}»
                           </span>
+                          {!r.company_id && (
+                            <span className="ml-2 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-900">
+                              Гостевая заявка (контакт не подтверждён как сотрудник компании)
+                            </span>
+                          )}
                         </div>
                         <span className="text-xs text-brand-ink/60">{dtt(r.created_at)}</span>
                       </div>
@@ -313,6 +326,19 @@ export default function Admin() {
                       {r.comment && <p className="rounded-xl bg-[#F3F2FB] p-2.5 text-xs text-brand-night">{r.comment}</p>}
                       {r.status === "pending" ? (
                         <div className="flex flex-wrap items-center gap-2 pt-1">
+                          {!r.company_id && (
+                            <select
+                              aria-label="Выберите компанию для подключения тарифа"
+                              className="input max-w-xs text-xs"
+                              value={reqCompanyId[r.id] ?? ""}
+                              onChange={(e) => setReqCompanyId({ ...reqCompanyId, [r.id]: e.target.value })}
+                            >
+                              <option value="">— Выберите компанию в базе —</option>
+                              {(comps.data?.items ?? []).map((c: any) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </select>
+                          )}
                           <input
                             className="input max-w-xs text-xs"
                             placeholder="Комментарий (номер договора / счёта)"
@@ -321,8 +347,8 @@ export default function Admin() {
                           />
                           <button
                             type="button"
-                            disabled={busy === `t-${r.id}`}
-                            onClick={() => resolveTariff(r.id, "approve")}
+                            disabled={busy === `t-${r.id}` || (!r.company_id && !reqCompanyId[r.id])}
+                            onClick={() => resolveTariff(r.id, "approve", r.company_id)}
                             className="btn-primary px-3.5 py-1.5 text-xs"
                             data-testid={`approve-tariff-${r.id}`}
                           >

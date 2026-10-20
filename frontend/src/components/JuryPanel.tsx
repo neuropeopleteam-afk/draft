@@ -5,7 +5,8 @@ import { errText, NB } from "./ui";
 import { useAuth } from "../lib/auth";
 import { guide, juryLogin, juryReset, juryToken, quick, quickSteps, QUICK_MINUTES, startQuick, STEPS, type Persona } from "../lib/jury";
 import { api } from "../lib/api";
-import { getJuryBanner, useMeta } from "../lib/meta";
+import { useMeta } from "../lib/meta";
+import { getJuryBanner, NUMBERS } from "../lib/numbers";
 
 /** W2: вход жюри — один компонент для двух мест.
  *  compact — плашка быстрого старта на главной (только для экспертов жюри и в демо-режиме, lib/juryMode.ts);
@@ -127,6 +128,9 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
   );
 
   const banner = getJuryBanner();
+  const claimLines = Array.isArray(banner.claims_ru)
+    ? banner.claims_ru
+    : Object.values(banner.claims_ru ?? {});
   const splitTracks = (
     <div className="mt-5 grid gap-4 border-t pt-5 np-border md:grid-cols-2" data-testid="jury-split-tracks">
       <div className="rounded-2xl border border-indigo-400/30 bg-indigo-950/20 p-4">
@@ -152,19 +156,19 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
       </div>
       <div className="rounded-2xl border border-rose-400/30 bg-rose-950/20 p-4">
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300">Маршрут Б · Техническое и научное жюри (3–5 мин)</span>
-        <h3 className="mt-1 text-base font-extrabold np-text">Математика теста, 1 504 семейства и проверка античита в 1 клик</h3>
+        <h3 className="mt-1 text-base font-extrabold np-text">Математика теста, {NUMBERS.bank.families.toLocaleString("ru-RU")} семейств и проверка античита в 1 клик</h3>
         <p className="mt-1 text-xs leading-relaxed np-muted">
-          Запустите проверку защиты оценщика, валидацию банка заданий и последовательный тест подтверждения грейда (SPRT) с открытыми протоколами расчёта.
+          Запустите проверку защиты оценщика, валидацию банка заданий и протоколы подтверждения грейда с открытыми командами пересчёта.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link to="/demo/warroom" className="np-btn-primary px-3 py-1.5 text-xs">
             1. Боевой ИИ-Полигон (/demo/warroom)
           </Link>
-          <Link to="/demo/validation" className="np-btn-ghost px-3 py-1.5 text-xs">
-            2. Валидация 1 504 семейств (/demo/validation)
+          <Link to="/validation" className="np-btn-ghost px-3 py-1.5 text-xs">
+            2. Валидация банка (/validation)
           </Link>
-          <Link to="/demo/criteria" className="np-btn-ghost px-3 py-1.5 text-xs">
-            3. Сверка с ТЗ (/demo/criteria)
+          <Link to="/criteria" className="np-btn-ghost px-3 py-1.5 text-xs">
+            3. Сверка с ТЗ (/criteria)
           </Link>
           <button type="button" disabled={off} onClick={() => setQr(true)} className="np-btn-ghost px-3 py-1.5 text-xs">
             4. Криптопаспорт Ed25519
@@ -174,7 +178,7 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
       <div className="rounded-xl border border-emerald-400/25 bg-emerald-950/15 px-4 py-3 text-xs leading-relaxed np-muted md:col-span-2" data-testid="jury-numbers-banner">
         <b className="np-text">{banner.headline_ru}</b>
         <ul className="mt-1.5 list-disc space-y-1 pl-4">
-          {banner.claims_ru.map((c) => <li key={c}>{c}</li>)}
+          {claimLines.map((c) => <li key={c}>{c}</li>)}
         </ul>
       </div>
     </div>
@@ -182,10 +186,10 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
 
   const links = (
     <p className={`text-xs np-muted ${compact ? "mt-5" : "mt-8"}`} data-testid="jury-links">
-      Для экспертов: <Link to="/demo/criteria" className="font-semibold np-accent hover:underline">критерии ТЗ</Link>
-      {" · "}<Link to="/demo/validation" className="font-semibold np-accent hover:underline">как мы проверяем себя</Link>
+      Для экспертов: <Link to="/criteria" className="font-semibold np-accent hover:underline">критерии ТЗ</Link>
+      {" · "}<Link to="/validation" className="font-semibold np-accent hover:underline">как мы проверяем себя</Link>
       {" · "}<Link to="/demo/live" className="font-semibold np-accent hover:underline">демонстрация в зале (QR)</Link>
-      {" · "}<Link to="/demo/fsp-benefit" className="font-semibold np-accent hover:underline">польза для ФСП</Link>
+      {" · "}<Link to="/fsp/benefit" className="font-semibold np-accent hover:underline">польза для ФСП</Link>
       {compact && <>{" · "}<Link to="/demo" className="font-semibold np-accent hover:underline">весь раздел «Демо для жюри»</Link></>}
     </p>
   );

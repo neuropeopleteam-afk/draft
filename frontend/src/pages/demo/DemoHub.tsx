@@ -11,6 +11,7 @@ import { useAuth } from "../../lib/auth";
 import { juryLogin, type Persona } from "../../lib/jury";
 import { useDemoAccess } from "../../lib/juryMode";
 import { usePageTitle } from "../../lib/meta";
+import { NUMBERS } from "../../lib/numbers";
 
 const CRITERIA_3MIN: {
   id: string;
@@ -33,10 +34,10 @@ const CRITERIA_3MIN: {
     id: "c2",
     weight: "25 %",
     title: "2. Тестирование, валидация и категоризация",
-    summary: "Банк 1 504 семейств (30 080 вариантов), классификационный адаптивный тест (2PL/SPRT), трёхзначный вердикт («подтверждён / доп. этап / не подтверждён»), защита от утечки заданий и промпт-инъекций.",
+    summary: `Банк ${NUMBERS.bank.families.toLocaleString("ru-RU")} семейств заданий с параметрической генерацией вариантов, классификационный адаптивный тест, трёхзначный вердикт («подтверждён / доп. этап / не подтверждён»), защита от утечки заданий и промпт-инъекций.`,
     actions: [
       { label: "Пройти экспресс-тест (1 клик)", persona: "candidate_new", to: "/candidate/express", testid: "c3m-test", primary: true },
-      { label: "Протоколы валидации и античит", to: "/demo/validation", testid: "c3m-validation" },
+      { label: "Протоколы валидации и античит", to: "/validation", testid: "c3m-validation" },
     ],
   },
   {
@@ -53,7 +54,7 @@ const CRITERIA_3MIN: {
     id: "c4",
     weight: "7 %",
     title: "4. Техническая проработка и архитектура",
-    summary: "Более 360 маршрутов API с автоматической проверкой матрицы прав доступа, криптопаспорт грейда с асимметричной подписью Ed25519 (JWKS), устойчивая дозагрузка модулей.",
+    summary: "Полная спецификация OpenAPI со строгой матрицей прав доступа по ролям, криптопаспорт грейда с асимметричной подписью Ed25519 (JWKS), устойчивая дозагрузка модулей.",
     actions: [
       { label: "Боевой ИИ-Полигон (архитектура вживую)", to: "/demo/warroom", testid: "c3m-warroom", primary: true },
       { label: "Спецификация OpenAPI / Swagger", to: "/api/docs", testid: "c3m-openapi" },
@@ -100,7 +101,7 @@ const TZ_MAP: {
     items: [
       { req: "Регистрация с кодом подтверждения и согласием 152-ФЗ", impl: "Почта + 6-значный код + вход через ФСП ID", persona: null, to: "/register?role=candidate" },
       { req: "Первичный опрос, стек и загрузка резюме (PDF)", impl: "Разбор стека + локальное обезличивание ФИО", persona: "candidate", to: "/candidate/profile" },
-      { req: "Адаптивное тестирование и защита от утечки заданий", impl: "Индивидуальные варианты из 1 504 семейств + SPRT", persona: "candidate_new", to: "/candidate/express" },
+      { req: "Адаптивное тестирование и защита от утечки заданий", impl: `Индивидуальные варианты из ${NUMBERS.bank.families.toLocaleString("ru-RU")} семейств + адаптивный отбор`, persona: "candidate_new", to: "/candidate/express" },
       { req: "Присвоение категории «направление · грейд» и статус", impl: "Подтверждён / нужен доп. этап / не подтверждён + паспорт Ed25519", persona: "candidate", to: "/candidate/category" },
       { req: "Обратная связь и карта навыков без раскрытия ключей", impl: "Профиль тем относительно грейда и спроса рынка", persona: "candidate", to: "/candidate/feedback" },
       { req: "Профиль кандидата без истории ФСП (без занижения)", impl: "Кандидат Илья Сергеев ранжируется по тесту без штрафа", persona: "candidate_nofsp", to: "/candidate/invitations" },
@@ -441,7 +442,7 @@ export default function DemoHub() {
                 <p className="font-mono text-xs font-bold text-rose-300">ВЕКТОР 01 · УГАДЫВАНИЕ НА SENIOR</p>
                 <h3 className="mt-1 text-base font-bold np-text">Попробуйте получить Senior случайными ответами</h3>
                 <p className="mt-2 text-xs leading-relaxed np-muted">
-                  Последовательный критерий SPRT и кодовые задания без вариантов ответа удерживают вероятность ложного подтверждения грейда на уровне ≤ 2,5 %.
+                  Адаптивный отбор у порога грейда и практические кодовые задания без вариантов ответа не позволяют подтвердить уровень случайным перебором.
                 </p>
                 <button
                   type="button"

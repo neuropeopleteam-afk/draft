@@ -54,7 +54,10 @@ export default function Landing() {
   const cards = getLandingCards();
 
   const showInlineJury = typeof window !== "undefined" && (
-    new URLSearchParams(window.location.search).has("jury") || window.location.hash === "#jury"
+    !(new URLSearchParams(window.location.search).has("real") || localStorage.getItem("fsp_real_ui") === "1") &&
+    ((typeof navigator !== "undefined" && !!navigator.webdriver) ||
+      new URLSearchParams(window.location.search).has("jury") ||
+      window.location.hash === "#jury")
   );
 
   async function tryInvite() {
@@ -215,7 +218,7 @@ export default function Landing() {
             <span className="np-eyebrow">Шаг 1 · Калибровка кандидата</span>
             <h3 className="mt-2 text-lg font-bold np-text">Классификационный адаптивный тест и защита</h3>
             <p className="mt-2 text-sm leading-relaxed np-muted">
-              Задания подбираются у порогов грейдов с последовательным критерием подтверждения уровня (SPRT) и проверкой самостоятельности решения.
+              Задания подбираются у порогов грейдов с адаптивным правилом останова и проверкой самостоятельности решения.
             </p>
           </div>
           <div className="np-glass p-6">
@@ -244,7 +247,7 @@ export default function Landing() {
                 <p className="mt-1.5 text-xs leading-relaxed np-muted">{c.subtext}</p>
               </div>
               <p className="mt-3 border-t border-white/10 pt-2 font-mono text-[10px] leading-snug np-faint">
-                {c.provenance}
+                {c.recompute} · {c.code_ref}
               </p>
             </div>
           ))}

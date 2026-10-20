@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.errors import api_error, err
+from app.core.ratelimit import SlidingWindow, client_ip, hit
 from app.modules.auth import service, twofa
 from app.modules.auth.schemas import (
     ForgotPasswordIn,
@@ -59,6 +60,10 @@ def resend_code(data: ResendCodeIn, db: Session = Depends(get_db)) -> ResendCode
     return ResendCodeOut(dev_verification_code=code if get_settings().effective_dev_mode else None)
 
 
+_forgot_ip_rl = SlidingWindow(10, 900)
+_forgot_email_rl = SlidingWindow(3, 900)
+
+
 @router.post(
     "/forgot",
     response_model=ForgotPasswordOut,
@@ -66,7 +71,9 @@ def resend_code(data: ResendCodeIn, db: Session = Depends(get_db)) -> ResendCode
     summary="Запрос кода восстановления пароля по почте (15 минут, без раскрытия наличия адреса)",
     responses={429: err("Слишком частые запросы")},
 )
-def forgot_password(data: ForgotPasswordIn, db: Session = Depends(get_db)) -> ForgotPasswordOut:
+def forgot_password(request: Request, data: ForgotPasswordIn, db: Session = Depends(get_db)) -> ForgotPasswordOut:
+    hit(_forgot_ip_rl, client_ip(request), "too_many_requests", "Слишком частые запросы. Повторите попытку позже")
+    hit(_forgot_email_rl, service.normalize_email(data.email), "too_many_requests", "Слишком частые запросы. Повторите попытку позже")
     code = service.forgot_password(db, data.email)
     return ForgotPasswordOut(dev_reset_code=code if get_settings().effective_dev_mode else None)
 

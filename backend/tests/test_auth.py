@@ -123,8 +123,9 @@ def test_forgot_and_reset_password_flow(client):
     code = r.json()["dev_reset_code"]
     assert code and len(code) == 6
 
-    # повторный запрос раньше минуты — 429
-    assert client.post("/api/auth/forgot", json={"email": "forgot@example.com"}).status_code == 429
+    # повторный запрос раньше минуты молча возвращает 202 (не раскрывает наличие адреса в системе)
+    r2 = client.post("/api/auth/forgot", json={"email": "forgot@example.com"})
+    assert r2.status_code == 202 and r2.json()["dev_reset_code"] is None
 
     # слабый пароль — 422
     assert client.post(
