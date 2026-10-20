@@ -233,7 +233,9 @@ export function InteractiveAvatarTour() {
     setOpen(true);
     if (debugFlag()) {
       (window as unknown as { __elena?: unknown }).__elena = {
-        say: (t: string) => eng.injectUser(String(t ?? "")), ui: () => eng.getUi(), pause: () => eng.togglePause(), close: () => eng.close(),
+        say: (t: string) => eng.injectUser(String(t ?? "")), hear: (t: string) => eng.hear(String(t ?? "")),
+        stt: (e: Parameters<ElenaEngine["injectStt"]>[0]) => eng.injectStt(e),
+        ui: () => eng.getUi(), pause: () => eng.togglePause(), close: () => eng.close(),
       };
     }
     eng.start(track, stepIndex);   // синхронно в обработчике нажатия: звук и микрофон разрешаются этим жестом

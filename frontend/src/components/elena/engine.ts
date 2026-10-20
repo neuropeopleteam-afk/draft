@@ -652,6 +652,19 @@ export class ElenaEngine {
     void this.runTurn(text.trim());
   }
 
+  /** Для проверок: событие распознавания как от микрофона (перебивание, эхо, окна между экранами). */
+  injectStt(e: SttEvent) { this.onStt(e); }
+
+  /** Для проверок (window.__elena.hear): «произнести» фразу как собеседник — слово за словом, как присылает распознавание. */
+  async hear(text: string, wordMs = 220) {
+    const w = text.trim().split(/\s+/).filter(Boolean);
+    if (!w.length) return;
+    this.onStt({ type: "speech_started" });
+    for (let i = 1; i <= w.length; i++) { await sleep(wordMs); this.onStt({ type: "interim", text: w.slice(0, i).join(" ") }); }
+    await sleep(wordMs);
+    this.onStt({ type: "final", text: w.join(" "), speech_final: true });
+  }
+
   // ------------------------------------------------------------------ таймеры и ожидание
 
   /** Потолок разговора: минуты видеопотока платные — по истечении Настя договаривает фразу, прощается и закрывается. */
