@@ -1,0 +1,48 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: data_ml.llm_gpus.junior_fwd_k3
+title: 'Число GPU для инференса LLM по токенам в секунду — прямой расчёт с учётом: производительность GPU, пиковый коэффициент,
+  запас загрузки GPU'
+direction: data_ml
+skills:
+- llm
+- gpu
+- model_serving
+- vllm
+- capacity_planning
+target_grades:
+- junior
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - floor
+    - gpu_mul
+    - gpu_plus1
+    - in_out
+    - no_gpu
+    - no_peak
+    - no_util
+    - peak_twice
+    - per_min
+    - plus
+    - util_free
+    construct: 'Инференс LLM: поток запросов × длина ответа / производительность GPU с пиком, запасом и недоступностью. Ступень
+      3 из 5: взаимодействуют 3 поправочных фактора(ов) (производительность GPU; пиковый коэффициент; запас загрузки GPU);
+      прямой расчёт по модели.'
+    wave: 20.10-S
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.47
+  a: 3.0
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Инференс LLM: поток запросов × длина ответа / производительность GPU с пиком,
+    запасом и недоступностью; 3 взаимодействующих фактора(ов) (производительность GPU, пиковый коэффициент, запас загрузки
+    GPU), прямой расчёт по модели. Грейд Junior (b -0,47 по числу факторов и направлению вопроса: прямой расчёт легче обратной
+    задачи; волна 20.10-S, без калибровки панелью). σ 0,3'
+generator: assessment_bank.families.data_ml.s15_llm_gpus_fwd_k3
+version: 1
+description: 'Junior: число GPU для инференса LLM по токенам в секунду — прямой расчёт по модели. 3 фактора(ов): производительность
+  GPU, пиковый коэффициент, запас загрузки GPU. Ключ — исполнением модели (точные дроби).'

@@ -1,0 +1,49 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: data_ml.fraud_alerts.senior_solve_prec_k3
+title: 'Нагрузка на аналитиков от алертов модели антифрода — обратная задача: наименьший допустимый вход «точность модели,
+  %» с учётом: полнота, точность, белые списки'
+direction: data_ml
+skills:
+- machine_learning
+- classification_metrics
+- precision_recall
+- antifraud
+target_grades:
+- senior
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - floor
+    - no_prec
+    - no_recall
+    - no_whitelist
+    - pct
+    - per1000
+    - per100k
+    - prec_fp
+    - prec_mul
+    - recall_miss
+    - whitelist_only
+    - whitelist_plus
+    construct: 'Precision/recall в операционных числах: пойманные = позитивы × recall, алерты = пойманные / precision. Ступень
+      3 из 5: взаимодействуют 3 поправочных фактора(ов) (полнота; точность; белые списки); обратная задача: наименьший вход
+      «точность модели, %» на сетке с шагом 1, при котором команда справится.'
+    wave: 20.10-S
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 1.12
+  a: 1.45
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Precision/recall в операционных числах: пойманные = позитивы × recall, алерты
+    = пойманные / precision; 3 взаимодействующих фактора(ов) (полнота, точность, белые списки), обратная задача: наименьший
+    вход «точность модели, %» на сетке с шагом 1, при котором команда справится. Грейд Senior (b 1,12 по числу факторов и
+    направлению вопроса: прямой расчёт легче обратной задачи; волна 20.10-S, без калибровки панелью). σ 0,3'
+generator: assessment_bank.families.data_ml.s15_fraud_alerts_solve_prec_k3
+version: 1
+description: 'Senior: нагрузка на аналитиков от алертов модели антифрода — обратная задача: наименьший вход «точность модели,
+  %» на сетке с шагом 1, при котором команда справится. 3 фактора(ов): полнота, точность, белые списки. Ключ — исполнением
+  модели (точные дроби), для обратной задачи — ещё и линейным перебором сетки.'
