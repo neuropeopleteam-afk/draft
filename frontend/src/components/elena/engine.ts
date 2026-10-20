@@ -137,6 +137,19 @@ export function findTarget(selector: string): HTMLElement | null {
   return null;
 }
 
+/** Высота закреплённой шапки страницы (блок не должен прятаться под ней). */
+export function topInset(): number {
+  let inset = 0;
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>("header, nav, [class*='sticky'], [class*='fixed']"))) {
+    if (el.closest("[data-testid=interactive-avatar-tour]")) continue;
+    const cs = getComputedStyle(el);
+    if (cs.position !== "sticky" && cs.position !== "fixed") continue;
+    const r = el.getBoundingClientRect();
+    if (r.top <= 4 && r.bottom > 0 && r.height < window.innerHeight * 0.4 && r.width > window.innerWidth * 0.4) inset = Math.max(inset, r.bottom);
+  }
+  return Math.round(inset || 64);
+}
+
 /** Что сейчас на экране — заголовок и видимые надписи (Елена отвечает «по экрану» и может показать элемент). */
 function screenSnapshot(): { title: string; items: string[] } {
   const root = document.querySelector("main") ?? document.body;
@@ -228,6 +241,7 @@ export class ElenaEngine {
   private micKnown: Promise<MicState> | null = null;
   private lastMicLogged: MicState | null = null;
   private lastDuck = 0;
+  private viewSeq = 0;
 
   constructor(private d: ElenaDeps) {
     this.voice = new Voice(d.avatar);
@@ -772,8 +786,26 @@ export class ElenaEngine {
       return;
     }
     if (a === "goto" && meta.step && STEPS[meta.step]) {
-      // посреди обзора — показать и вернуться; без обзора — показать и слушать дальше
-      if (this.pos && (this.resumePending || this.paused || this.touring)) this.detour = this.resumePos();
+      // посреди обзора: этот же экран — просто продолжаем; экран дальше по обзору — идём вперёд с него;
+      // экран не из обзора или уже пройденный — показать и вернуться. Без обзора — показать и слушать дальше.
+      const p = this.pos;
+      if (p && (this.resumePending || this.paused || this.touring)) {
+        const k = p.track ? p.ids.indexOf(meta.step) : -1;
+        if (k === p.i) {
+          if (nav) await nav;
+          if (!this.alive(ep)) return;
+          this.paused = false;
+          void this.resumeTour(ep);
+          return;
+        }
+        if (k > p.i) {
+          if (nav) await nav;
+          if (!this.alive(ep)) return;
+          void this.runSteps({ ...p, i: k, b: 0 }, ep, { bridge: true });
+          return;
+        }
+        this.detour = this.resumePos();
+      }
       if (nav) await nav;
       if (!this.alive(ep)) return;
       this.paused = false;
@@ -965,13 +997,15 @@ export class ElenaEngine {
     return this.alive(ep);
   }
 
-  /** Блок — в кадр: ждём, пока раскладка устоится (над блоком догружаются карточки), прокручиваем и проверяем ещё
-   *  раз (переход по адресу может вернуть прокрутку наверх). */
+  /** Блок — в кадр: ждём, пока раскладка устоится (над блоком догружаются карточки), и ставим блок в верхнюю часть
+   *  экрана под закреплённой шапкой (внизу справа — окно Елены). Новый вызов отменяет прошлый (без «перетягивания»). */
   private async bringIntoView(selector: string, ep: number) {
+    const my = ++this.viewSeq;
+    const live = () => this.alive(ep) && my === this.viewSeq;
     let prev = NaN;
     for (let i = 0; i < 6; i++) {
       const el = findTarget(selector);
-      if (!el || !this.alive(ep)) return;
+      if (!el || !live()) return;
       const top = el.getBoundingClientRect().top + window.scrollY;
       if (Math.abs(top - prev) < 2) break;
       prev = top;
@@ -979,13 +1013,15 @@ export class ElenaEngine {
     }
     for (let k = 0; k < 2; k++) {
       const el = findTarget(selector);
-      if (!el || !this.alive(ep)) return;
+      if (!el || !live()) return;
+      const inset = topInset();
       const r = el.getBoundingClientRect();
-      const fits = r.top >= 72 && r.bottom <= window.innerHeight - 24;
+      const fits = r.top >= inset + 8 && r.top <= window.innerHeight * 0.5 && r.bottom <= window.innerHeight - 24;
       if (fits) return;
-      const top = r.height > window.innerHeight * 0.6 ? r.top - 88 : r.top - (window.innerHeight - r.height) / 2;
-      window.scrollTo({ top: Math.max(0, window.scrollY + top), behavior: "smooth" });
-      await sleep(450);
+      const dy = r.top - (inset + 20);
+      if (Math.abs(dy) < 4) return;
+      window.scrollTo({ top: Math.max(0, window.scrollY + dy), behavior: "smooth" });
+      await sleep(480);
     }
   }
 

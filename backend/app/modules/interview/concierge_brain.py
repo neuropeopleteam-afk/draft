@@ -30,12 +30,12 @@ log = logging.getLogger("interview.concierge")
 
 MSK = timezone(timedelta(hours=3))
 # «провайдер=модель@усилие рассуждений». Замеры 20.10 на полной подсказке с историей: Claude Haiku 5.5 — 2,2–2,6 с,
-# Gemini 2.5 Flash — 1,4–1,6 с (страховка, если основная задумалась дольше LLM_HEDGE_S); Sonnet 5.5 с историей
+# Gemini 2.5 Flash — 1,4–2,1 с (страховка, если основная задумалась дольше LLM_HEDGE_S); Sonnet 5.5 с историей
 # разговора начинает рассуждать (5–7 с) — для живого разговора медленно, он не в цепочке. Опус — наставник в фоне.
 LLM_MODELS = [m.strip() for m in os.environ.get(
     "CONCIERGE_BRAIN_MODELS",
     "openrouter=anthropic/claude-haiku-5.5@minimal|openrouter=google/gemini-2.5-flash").split("|") if m.strip()]
-LLM_HEDGE_S = float(os.environ.get("CONCIERGE_LLM_HEDGE_S", "2.4"))
+LLM_HEDGE_S = float(os.environ.get("CONCIERGE_LLM_HEDGE_S", "3.2"))
 LLM_DEADLINE_S = float(os.environ.get("CONCIERGE_LLM_DEADLINE_S", "7.0"))
 SUPERVISOR_MODEL = os.environ.get("CONCIERGE_SUPERVISOR_MODEL", "openrouter=anthropic/claude-opus-5.5@low").strip()
 TRANSCRIPT_DAYS = int(os.environ.get("CONCIERGE_TRANSCRIPT_DAYS", "30"))

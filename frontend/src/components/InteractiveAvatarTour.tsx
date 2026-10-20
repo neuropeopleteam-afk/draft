@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { juryLogin } from "../lib/jury";
-import { ElenaEngine, findTarget, type ElenaUi, type Stage } from "./elena/engine";
+import { ElenaEngine, findTarget, topInset, type ElenaUi, type Stage } from "./elena/engine";
 import { TOUR_STEPS, type TourTrack } from "./elena/steps";
 import { AnamAvatar, type AnamHandle } from "./voice";
 
@@ -36,8 +36,8 @@ function rectOf(selector: string | null): Box | null {
   const r = el.getBoundingClientRect();
   if (r.bottom < 0 || r.top > window.innerHeight) return null;
   const pad = 6;
-  // высокий блок: рамка — в пределах видимой части экрана (не заезжает под верхнюю панель)
-  const top = Math.max(r.top - pad, 68);
+  // высокий блок: рамка — в пределах видимой части экрана (не заезжает под закреплённую шапку)
+  const top = Math.max(r.top - pad, topInset() + 2);
   const bottom = Math.min(r.bottom + pad, window.innerHeight - 6);
   if (bottom - top < 24) return null;
   return { top, left: r.left - pad, width: r.width + pad * 2, height: bottom - top };
@@ -288,7 +288,7 @@ export function InteractiveAvatarTour() {
   const paused = ui.phase === "paused";
   const wave = ui.phase === "thinking" ? "thinking" : "listening";
   const lbl = MIC_LABEL[ui.mic] ?? MIC_LABEL.off;
-  const micText = ui.mic === "on" && ui.userTalking ? "Слышу вас" : large || !f.small ? lbl.long : lbl.short;
+  const micText = ui.mic === "on" && ui.userTalking ? "Слышу вас" : large ? lbl.long : lbl.short;
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
 
