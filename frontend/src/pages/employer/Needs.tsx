@@ -365,7 +365,7 @@ export function Needs() {
         <DictateNeed fieldId="need" disabled={busy} onText={(t) => { setText((x) => (x.trim() ? `${x.trimEnd()} ${t}` : t)); setReq(null); fp.reset(); }} />
         {!req && (
           <div className="flex flex-wrap gap-4 text-sm">
-            <button type="button" className="font-semibold text-brand hover:underline" onClick={() => setText(EXAMPLE)}>Подставить пример</button>
+            <button type="button" data-testid="sample-need" className="font-semibold text-brand hover:underline" onClick={() => setText(EXAMPLE)}>Подставить пример</button>
             <button type="button" className="font-semibold text-brand-plum hover:underline" onClick={() => setText(EXAMPLE_BIAS)}>Пример с нарушением ст. 64 ТК РФ</button>
           </div>
         )}

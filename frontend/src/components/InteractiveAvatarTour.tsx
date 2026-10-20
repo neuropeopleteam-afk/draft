@@ -13,9 +13,11 @@ export interface TourStep {
   persona: Persona | null;
   path: string;
   selector: string;
+  clickSelector?: string;
   badge: string;
   speech: string;
   pointerLabel: string;
+  clickLabel?: string;
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -24,40 +26,48 @@ export const TOUR_STEPS: TourStep[] = [
     track: "all",
     persona: null,
     path: "/",
-    selector: "[data-testid='reverse-draft-demo'], main h1",
+    selector: "[data-testid='demo-invite'], [data-tour='hero-candidate-btn']",
+    clickSelector: "[data-testid='demo-invite']",
     badge: "Главная · 1/10",
-    speech: "Начнём с первого экрана главной страницы. Слева находятся кнопки входа для кандидата и для работодателя, а справа — интерактивная карточка профиля: здесь специалист один раз подтверждает квалификацию адаптивным тестом, а компании присылают приглашения сразу с зарплатной вилкой в рублях.",
-    pointerLabel: "Витрина кандидата и ползунок зарплатного предложения",
+    speech: "Начнём с первого экрана главной страницы. Справа — интерактивная карточка обезличенного специалиста: я нажимаю кнопку Попробовать пригласить, чтобы показать, как работодатель сразу отправляет оффер с зарплатной вилкой в рублях.",
+    pointerLabel: "Нажимаем «Попробовать пригласить» на карточке кандидата",
+    clickLabel: "Тык по кнопке приглашения",
   },
   {
     id: "land-2-laws",
     track: "all",
     persona: null,
     path: "/",
-    selector: "#laws",
+    selector: "#laws-tab-candidate, #laws-tab-fsp, #laws",
+    clickSelector: "#laws-tab-candidate",
     badge: "Главная · 2/10",
-    speech: "Чуть ниже расположен блок Четыре закона Драфта. В нём три вкладки — Работодатель, Кандидат и Федерация спортивного программирования. Нажимая на каждую вкладку, вы видите, как платформа заменяет субъективные резюме на проверенные факты.",
-    pointerLabel: "Переключатель 3 вкладок: Работодатель · Кандидат · ФСП",
+    speech: "Ниже расположен блок Четыре закона Драфта. Я нажимаю на вкладку От лица кандидата, а затем на вкладку для Федерации спортивного программирования — карточки мгновенно перестраиваются под выбранную роль.",
+    pointerLabel: "Нажимаем вкладки ролей: Работодатель · Кандидат · ФСП",
+    clickLabel: "Тык по вкладке роли",
   },
   {
-    id: "land-3-how",
+    id: "land-3-enter",
     track: "all",
     persona: null,
     path: "/",
-    selector: "#how",
+    selector: "[data-tour='hero-candidate-btn'], [data-tour='hero-employer-btn'], #how",
+    clickSelector: "[data-tour='hero-candidate-btn']",
     badge: "Главная · 3/10",
-    speech: "Ниже показаны три этапа работы платформы и отдельные маршруты из пяти шагов для специалистов и для нанимающих команд. А теперь я плавно открою личный кабинет, чтобы показать поля и разделы внутри.",
-    pointerLabel: "Этапы работы платформы и маршруты по ролям",
+    speech: "А теперь я нажимаю кнопку входа на главной странице и перевожу вас прямо внутрь личного кабинета, чтобы по шагам показать все рабочие кнопки.",
+    pointerLabel: "Нажимаем кнопку входа в личный кабинет",
+    clickLabel: "Тык — вход в кабинет",
   },
   {
     id: "cand-1-overview",
     track: "candidate",
     persona: "candidate",
     path: "/candidate",
-    selector: "[data-tour='cand-roadmap']",
+    selector: "[data-tour='cand-step-2-btn'], [data-tour='cand-roadmap']",
+    clickSelector: "[data-tour='cand-step-2-btn']",
     badge: "Кандидат · 4/10",
-    speech: "Мы в кабинете кандидата в разделе Обзор. В верхней полосе вы всегда можете переключить роль в один клик или нажать кнопку Выйти. А в центре экрана — дорожная карта из четырёх шагов: стек, адаптивный тест, устная защита кода и приглашения с вилкой.",
-    pointerLabel: "Дорожная карта кандидата: 4 шага по порядку",
+    speech: "Мы в кабинете кандидата. Сверху закреплена панель переключения ролей и кнопка Выйти, а в центре — дорожная карта из четырёх шагов. Я нажимаю кнопку второго шага, чтобы открыть выбор грейда и адаптивный тест.",
+    pointerLabel: "Дорожная карта: нажимаем переход к выбору грейда и тесту",
+    clickLabel: "Тык — к выбору грейда",
   },
   {
     id: "cand-2-assessment",
@@ -65,29 +75,34 @@ export const TOUR_STEPS: TourStep[] = [
     persona: "candidate_new",
     path: "/candidate/assessment",
     selector: "[data-testid='test-launch-box'], [data-testid='grade-cards']",
+    clickSelector: "[data-testid='grade-cards'] button:nth-child(4)",
     badge: "Кандидат · 5/10",
-    speech: "В разделе Опрос и тест на первом экране расположены шесть карточек грейдов — от Стажёра до Principal. Вы выбираете карточку нужного уровня, ставите галочку согласия в розовом блоке прямо под карточками и нажимаете кнопку Начать тест.",
-    pointerLabel: "Карточки выбора грейда, галочка согласия и кнопка «Начать тест»",
+    speech: "На экране Опрос и тест сразу видны шесть карточек грейдов. Я нажимаю на карточку целевого уровня, а прямо под ней в розовом блоке находятся галочка согласия и кнопка Начать тест.",
+    pointerLabel: "Выбираем карточку грейда и кнопку «Начать тест»",
+    clickLabel: "Тык по карточке грейда",
   },
   {
     id: "cand-3-feedback",
     track: "candidate",
     persona: "candidate",
     path: "/candidate/feedback",
-    selector: "[data-testid='theta-scale']",
+    selector: "[data-testid='theta-scale'], [data-testid='route-source']",
+    clickSelector: "[data-testid='theta-scale'] summary",
     badge: "Кандидат · 6/10",
-    speech: "В разделе Карта навыков и рост сверху показана шкала способности по итогам теста, под ней — блок Маршрут роста с кнопками перехода к проверочным задачам, а ниже — сравнение ваших навыков с открытыми вакансиями на рынке.",
-    pointerLabel: "Шкала уровня по тесту и маршрут роста с кнопками",
+    speech: "В разделе Карта навыков и рост сверху показана шкала психометрии по итогам теста. Я нажимаю на математическую справку под шкалой, а ниже расположены Маршрут роста с кнопками действий и сравнение со спросом на рынке.",
+    pointerLabel: "Шкала психометрии 2PL IRT и кнопки «Маршрута роста»",
+    clickLabel: "Тык — формула расчёта",
   },
   {
     id: "cand-4-invitations",
     track: "candidate",
     persona: "candidate_nofsp",
     path: "/candidate/invitations",
-    selector: "main .card, main h1",
+    selector: "main .card button, main .card, main h1",
     badge: "Кандидат · 7/10",
-    speech: "В разделе Приглашения собраны предложения от компаний. В каждой карточке сразу указана зарплатная вилка в рублях, индекс доверия работодателя и кнопки Принять, Отклонить или Предложить свою вилку. Контакты открываются только после вашего согласия.",
-    pointerLabel: "Приглашение компании с зарплатной вилкой и кнопкой «Принять»",
+    speech: "В разделе Приглашения собраны офферы от компаний. В каждой карточке сразу открыта зарплатная вилка в рублях и расположены кнопки Принять, Отклонить или Предложить свою вилку.",
+    pointerLabel: "Кнопки «Принять и открыть контакты» и «Предложить вилку»",
+    clickLabel: "Выбор решения по офферу",
   },
   {
     id: "emp-1-needs",
@@ -95,9 +110,11 @@ export const TOUR_STEPS: TourStep[] = [
     persona: "employer",
     path: "/employer/needs",
     selector: "#need, [data-tour='emp-roadmap']",
+    clickSelector: "button[data-testid='sample-need'], main button.btn-ghost",
     badge: "Работодатель · 8/10",
-    speech: "Мы перешли в кабинет работодателя в раздел Потребности и подборки. В текстовое поле Кого вы ищете вы вставляете описание вакансии своими словами или нажимаете кнопку Подставить пример, а затем кнопку Разобрать требования. Система сама выделит стек и проверит рыночность зарплаты.",
-    pointerLabel: "Поле «Кого вы ищете», кнопка «Подставить пример» и «Разобрать требования»",
+    speech: "Мы в кабинете работодателя. Здесь я нажимаю кнопку Подставить пример — поле автоматически заполняется текстом вакансии, после чего кнопка Разобрать требования выделяет стек и проверяет текст по Трудовому кодексу.",
+    pointerLabel: "Поле вакансии: нажимаем «Подставить пример» и «Разобрать требования»",
+    clickLabel: "Тык — подставить пример",
   },
   {
     id: "emp-2-compare",
@@ -105,19 +122,23 @@ export const TOUR_STEPS: TourStep[] = [
     persona: "employer",
     path: "/employer/compare",
     selector: "[data-testid='decision-proof-strip'], [data-testid='exec-advisor'], main h1",
+    clickSelector: "[data-testid='decision-proof-strip'] summary",
     badge: "Работодатель · 9/10",
-    speech: "На экране сравнения кандидатов вверху работает ИИ-советник руководителя, который помогает выбрать лидера и подготовить вопросы к финальному созвону, а ниже в таблице видны подтверждённые навыки каждого кандидата и кнопка Пригласить с указанием вилки.",
-    pointerLabel: "Советник руководителя, таблица сравнения и кнопка «Пригласить»",
+    speech: "На экране сравнения кандидатов сверху видна полоса формулы ранжирования и ИИ-советник руководителя, а ниже в таблице — подтверждённые навыки каждого специалиста и кнопка Пригласить с зарплатной вилкой.",
+    pointerLabel: "Полоса формулы ранжирования, советник и кнопка «Пригласить»",
+    clickLabel: "Тык — детали формулы",
   },
   {
     id: "fsp-1-cabinet",
     track: "fsp",
     persona: "fsp",
     path: "/fsp",
-    selector: "main .card, main h1",
+    selector: "main button[role='tab'], main .card, main h1",
+    clickSelector: "main button[role='tab']:nth-child(2)",
     badge: "Федерация ФСП · 10/10",
-    speech: "И третий кабинет платформы — кабинет Федерации спортивного программирования. В верхних вкладках здесь открываются спрос работодателей по регионам России, влияние спортивных достижений на зарплатные предложения и кубки работодателей. Если хотите что-то уточнить — просто скажите в микрофон.",
-    pointerLabel: "Вкладки аналитики спроса по РФ и эффекта соревнований ФСП",
+    speech: "И третий кабинет — кабинет Федерации спортивного программирования. Я переключаю верхние вкладки аналитики: здесь видны спрос работодателей по регионам России, влияние спортивных достижений на вилки в офферах и отборочные кубки.",
+    pointerLabel: "Переключаем вкладки аналитики спроса и соревнований ФСП",
+    clickLabel: "Тык по вкладке аналитики",
   },
 ];
 
@@ -147,9 +168,9 @@ interface ChatTurn {
 
 /**
  * Живой голосовой ИИ-проводник Елена.
- * Никаких кнопок выбора роли, текстовых полей и технических ярлыков:
- * после нажатия открывается крупный живой видеопортрет Елены, она здоровается, спрашивает имя и роль,
- * сама включает микрофон и в живом диалоге (на базе RAG по всем экранам и полям сайта) плавно ведёт пользователя с первой страницы.
+ * Начинает с главной страницы (/), визуально подводит курсор к кнопкам и вкладкам,
+ * делает наглядный «тык» (анимация клика + реальное переключение вкладок/примеров)
+ * и ведёт пользователя по выбранной роли или по всему сайту без пауз и задержек.
  */
 export function InteractiveAvatarTour() {
   const { me, signIn } = useAuth();
@@ -167,23 +188,54 @@ export function InteractiveAvatarTour() {
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [thinking, setThinking] = useState(false);
+  const [clicking, setClicking] = useState(false);
   const [history, setHistory] = useState<ChatTurn[]>([]);
   const [targetRect, setTargetRect] = useState<BoxRect | null>(null);
 
   const anamRef = useRef<AnamHandle | null>(null);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const stepTimerRef = useRef<number | null>(null);
+  const clickTimerRef = useRef<number | null>(null);
   const spokenStepRef = useRef<string | null>(null);
   const mediaRecRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const silenceTimerRef = useRef<number | null>(null);
   const speakAbortRef = useRef<AbortController | null>(null);
+  const audioCacheRef = useRef<Map<string, Promise<ArrayBuffer | null>>>(new Map());
 
   const steps =
     track === "all"
       ? TOUR_STEPS
       : TOUR_STEPS.filter((s) => s.track === "all" || s.track === track);
   const step = steps[Math.min(idx, Math.max(0, steps.length - 1))] ?? TOUR_STEPS[0];
+
+  const fetchCachedAudio = useCallback((text: string, format: "pcm" | "mp3", signal?: AbortSignal): Promise<ArrayBuffer | null> => {
+    const clean = text.trim();
+    if (!clean) return Promise.resolve(null);
+    const key = `${format}:${clean}`;
+    const existing = audioCacheRef.current.get(key);
+    if (existing) return existing;
+    const p = fetch(apiUrl("/interview/concierge/speech"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: clean, format }),
+      signal,
+    })
+      .then((r) => (r.ok ? r.arrayBuffer() : null))
+      .then((buf) => (buf && buf.byteLength > 100 ? buf : null))
+      .catch(() => {
+        audioCacheRef.current.delete(key);
+        return null;
+      });
+    audioCacheRef.current.set(key, p);
+    return p;
+  }, []);
+
+  const prefetchStepAudio = useCallback((nextStep: TourStep | undefined) => {
+    if (!nextStep) return;
+    void fetchCachedAudio(nextStep.speech, "pcm");
+    void fetchCachedAudio(nextStep.speech, "mp3");
+  }, [fetchCachedAudio]);
 
   const stopAudio = useCallback(() => {
     speakAbortRef.current?.abort();
@@ -220,32 +272,23 @@ export function InteractiveAvatarTour() {
     speakAbortRef.current = ac;
 
     try {
-      if (anamRef.current?.live()) {
-        const res = await fetch(apiUrl("/interview/concierge/speech"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: clean, format: "pcm" }),
-          signal: ac.signal,
-        });
-        if (res.ok) {
-          const pcm = await res.arrayBuffer();
-          if (ac.signal.aborted) return;
-          if (pcm.byteLength > 100 && anamRef.current?.live()) {
-            await anamRef.current.speak(pcm);
-            return;
-          }
+      // Параллельно загружаем PCM-дорожку и ждём готовности живого видеопотока Anam (до 4.2 с),
+      // чтобы даже первая приветственная фраза гарантированно шла с синхронизацией губ
+      if (anamRef.current) {
+        const [pcm, isReady] = await Promise.all([
+          fetchCachedAudio(clean, "pcm", ac.signal),
+          anamRef.current.waitReady ? anamRef.current.waitReady(4200) : Promise.resolve(anamRef.current.live()),
+        ]);
+        if (ac.signal.aborted) return;
+        if (isReady && pcm && pcm.byteLength > 100 && anamRef.current?.live()) {
+          await anamRef.current.speak(pcm.slice(0));
+          return;
         }
       }
 
-      const resMp3 = await fetch(apiUrl("/interview/concierge/speech"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: clean, format: "mp3" }),
-        signal: ac.signal,
-      });
-      if (!resMp3.ok) return;
-      const blob = await resMp3.blob();
-      if (ac.signal.aborted || blob.size < 100) return;
+      const mp3Buf = await fetchCachedAudio(clean, "mp3", ac.signal);
+      if (ac.signal.aborted || !mp3Buf || mp3Buf.byteLength < 100) return;
+      const blob = new Blob([mp3Buf], { type: "audio/mpeg" });
       await new Promise<void>((resolve) => {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
@@ -266,7 +309,40 @@ export function InteractiveAvatarTour() {
         setSpeaking(false);
       }
     }
-  }, [stopAudio]);
+  }, [stopAudio, fetchCachedAudio]);
+
+  // Наглядный «тык» по целевой кнопке или вкладке на экране
+  const triggerVisualClick = useCallback((currentStep: TourStep) => {
+    const rawSel = currentStep.clickSelector || currentStep.selector;
+    const selectors = rawSel.split(",").map((s) => s.trim()).filter(Boolean);
+    let targetEl: HTMLElement | null = null;
+    for (const sel of selectors) {
+      const found = document.querySelector<HTMLElement>(sel);
+      if (found && found.offsetParent !== null) {
+        targetEl = found;
+        break;
+      }
+    }
+    setClicking(true);
+    if (clickTimerRef.current) window.clearTimeout(clickTimerRef.current);
+    clickTimerRef.current = window.setTimeout(() => setClicking(false), 1100);
+
+    if (!targetEl) return;
+    // Выполняем безопасное интерактивное действие на странице (переключение вкладки, показ примера, пробный оффер)
+    if (currentStep.id === "land-1-hero" || currentStep.id === "land-2-laws" || currentStep.id === "cand-2-assessment" || currentStep.id === "cand-3-feedback" || currentStep.id === "emp-1-needs" || currentStep.id === "emp-2-compare" || currentStep.id === "fsp-1-cabinet") {
+      try {
+        targetEl.click();
+      } catch { /* ignore */ }
+      if (currentStep.id === "land-2-laws") {
+        window.setTimeout(() => {
+          const fspTab = document.querySelector<HTMLElement>("#laws-tab-fsp");
+          if (fspTab) {
+            try { fspTab.click(); } catch { /* ignore */ }
+          }
+        }, 1600);
+      }
+    }
+  }, []);
 
   const startMicRef = useRef<() => Promise<void>>(async () => {});
 
@@ -304,21 +380,30 @@ export function InteractiveAvatarTour() {
         setUserName(r.user_name);
         sessionStorage.setItem("draft.concierge.name", r.user_name);
       }
+      const nextRole: TourTrack = r.detected_role || track;
       if (r.detected_role) {
         setTrack(r.detected_role);
       }
+      // Предзагружаем первый шаг маршрута, пока Елена произносит ответ
+      const nextTrackSteps =
+        nextRole === "all"
+          ? TOUR_STEPS
+          : TOUR_STEPS.filter((s) => s.track === "all" || s.track === nextRole);
+      prefetchStepAudio(nextTrackSteps[0]);
+
       setHistory((h) => [...h, { who: "elena", text: r.reply }]);
       await speakVoice(r.reply);
 
       if (!r.start_tour) {
-        // Елена уточнила роль (например, человек назвал только имя) — снова включаем микрофон и ждём ответ
         void startMicRef.current();
         return;
       }
 
       spokenStepRef.current = null;
       if (typeof r.jump_to_step === "number") {
-        setIdx(r.jump_to_step);
+        const jumpId = TOUR_STEPS[r.jump_to_step]?.id;
+        const mappedIdx = jumpId ? nextTrackSteps.findIndex((s) => s.id === jumpId) : -1;
+        setIdx(mappedIdx >= 0 ? mappedIdx : 0);
       } else if (phase === "greeting") {
         setIdx(0);
       }
@@ -329,7 +414,7 @@ export function InteractiveAvatarTour() {
       setPhase("tour");
       setPaused(false);
     }
-  }, [history, userName, track, loc.pathname, idx, phase, stopAudio, stopMic, speakVoice]);
+  }, [history, userName, track, loc.pathname, idx, phase, stopAudio, stopMic, speakVoice, prefetchStepAudio]);
 
   const startMic = useCallback(async () => {
     if (recording || transcribing) {
@@ -383,6 +468,7 @@ export function InteractiveAvatarTour() {
       let lastSpeechAt = Date.now();
       const startedAt = Date.now();
 
+      // Быстрый детектор окончания фразы (1300 мс тишины после речи вместо 2600 мс)
       silenceTimerRef.current = window.setInterval(() => {
         analyser.getByteTimeDomainData(buf);
         let sum = 0;
@@ -391,18 +477,18 @@ export function InteractiveAvatarTour() {
           sum += v * v;
         }
         const rmsVal = Math.sqrt(sum / buf.length);
-        if (rmsVal > 0.035) {
+        if (rmsVal > 0.032) {
           heardSpeech = true;
           lastSpeechAt = Date.now();
         }
         const now = Date.now();
-        if ((heardSpeech && now - lastSpeechAt > 2600) || now - startedAt > 15000) {
+        if ((heardSpeech && now - lastSpeechAt > 1300) || now - startedAt > 10000) {
           if (silenceTimerRef.current) window.clearInterval(silenceTimerRef.current);
           silenceTimerRef.current = null;
           void ctx.close().catch(() => undefined);
           if (rec.state !== "inactive") rec.stop();
         }
-      }, 120);
+      }, 90);
 
       rec.start();
       setRecording(true);
@@ -437,16 +523,17 @@ export function InteractiveAvatarTour() {
     return () => window.removeEventListener(TOUR_EVENT, onTour);
   }, [stopAudio, stopMic]);
 
-  // Живое знакомство при открытии (остаёмся на текущей странице, Елена представляется и включает микрофон)
+  // Живое знакомство при открытии (параллельно прогреваем первый шаг и ждём видеопоток в speakVoice)
   useEffect(() => {
     if (!open || phase !== "greeting") return;
     let cancelled = false;
+    prefetchStepAudio(TOUR_STEPS[0]);
     (async () => {
-      await new Promise((r) => setTimeout(r, 1100));
+      await new Promise((r) => setTimeout(r, 250));
       if (cancelled) return;
       const greetText = userName
-        ? `Здравствуйте, ${userName}. Меня зовут Елена, я проводник платформы Драфт. Скажите, пожалуйста, в какой роли вы сегодня — кандидат или работодатель, или провести вас по всему сайту с самого начала?`
-        : "Здравствуйте. Меня зовут Елена, я цифровой проводник платформы Драфт. Скажите, пожалуйста, как вас зовут и в какой роли вы сегодня — кандидат или работодатель? Я отвечу на ваши вопросы и проведу по всему сайту.";
+        ? `Здравствуйте, ${userName}. Меня зовут Елена, я проводник платформы Драфт. Скажите, в какой роли вы сегодня — кандидат или работодатель, или провести вас по всему сайту с самого начала?`
+        : "Здравствуйте. Меня зовут Елена, я цифровой проводник платформы Драфт. Скажите, пожалуйста, как вас зовут и в какой роли вы сегодня — кандидат или работодатель? Я наглядно покажу все кнопки и проведу по сайту.";
       await speakVoice(greetText);
       if (cancelled) return;
       void startMicRef.current();
@@ -454,7 +541,7 @@ export function InteractiveAvatarTour() {
     return () => { cancelled = true; };
   }, [open, phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Плавное ведение по сайту с первой страницы
+  // Плавное ведение по сайту начиная с главной с наглядным нажатием кнопок («тык») и предзагрузкой следующего шага
   useEffect(() => {
     if (!open || phase !== "tour" || paused || recording || transcribing || thinking || !step) return;
     if (spokenStepRef.current === step.id) return;
@@ -480,8 +567,18 @@ export function InteractiveAvatarTour() {
         if (!cancelled && loc.pathname !== step.path) navigate(step.path);
       }
 
-      await new Promise((r) => setTimeout(r, 700));
+      await new Promise((r) => setTimeout(r, 450));
       if (cancelled) return;
+
+      // Предзагружаем аудио следующего шага, пока звучит текущий
+      if (idx + 1 < steps.length) {
+        prefetchStepAudio(steps[idx + 1]);
+      }
+
+      // Наглядный «тык» по кнопке/вкладке текущего шага
+      window.setTimeout(() => {
+        if (!cancelled && !paused) triggerVisualClick(step);
+      }, 900);
 
       const prefix = userName && idx === 0 ? `${userName}, ` : "";
       await speakVoice(prefix + step.speech);
@@ -495,21 +592,22 @@ export function InteractiveAvatarTour() {
         } else {
           setPaused(true);
         }
-      }, 3400);
+      }, 1400);
     })();
 
     return () => {
       cancelled = true;
       if (stepTimerRef.current) window.clearTimeout(stepTimerRef.current);
     };
-  }, [open, phase, paused, recording, transcribing, thinking, step, idx, steps.length, me, signIn, navigate, loc.pathname, userName, speakVoice]);
+  }, [open, phase, paused, recording, transcribing, thinking, step, idx, steps, me, signIn, navigate, loc.pathname, userName, speakVoice, prefetchStepAudio, triggerVisualClick]);
 
   const updateSpotlight = useCallback(() => {
     if (!open || phase !== "tour" || !step) {
       setTargetRect(null);
       return;
     }
-    const selectors = step.selector.split(",").map((s) => s.trim()).filter(Boolean);
+    const rawSel = step.clickSelector || step.selector;
+    const selectors = [...rawSel.split(","), ...step.selector.split(",")].map((s) => s.trim()).filter(Boolean);
     let el: HTMLElement | null = null;
     for (const sel of selectors) {
       const found = document.querySelector<HTMLElement>(sel);
@@ -550,8 +648,8 @@ export function InteractiveAvatarTour() {
         }
       }
       updateSpotlight();
-    }, 450);
-    const iv = window.setInterval(updateSpotlight, 350);
+    }, 350);
+    const iv = window.setInterval(updateSpotlight, 280);
     window.addEventListener("scroll", updateSpotlight, true);
     window.addEventListener("resize", updateSpotlight);
     return () => {
@@ -587,13 +685,20 @@ export function InteractiveAvatarTour() {
     );
   }
 
+  const cursorX = targetRect ? Math.min(window.innerWidth - 48, targetRect.left + Math.min(targetRect.width * 0.5, 160)) : 0;
+  const cursorY = targetRect ? Math.min(window.innerHeight - 48, targetRect.top + Math.min(targetRect.height * 0.55, 42)) : 0;
+
   return (
     <>
-      {/* Подсветка текущего блока и указатель */}
+      {/* Подсветка текущего блока, указатель и анимированный курсор «тык» по кнопке */}
       {phase === "tour" && targetRect && (
         <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden print:hidden" aria-hidden="true">
           <div
-            className="absolute rounded-2xl border-[3px] border-brand shadow-[0_0_0_5px_rgba(225,29,72,0.22),0_0_28px_rgba(99,102,241,0.4)] transition-all duration-300"
+            className={`absolute rounded-2xl border-[3px] border-brand transition-all duration-300 ${
+              clicking
+                ? "scale-[0.985] bg-brand/15 shadow-[0_0_0_8px_rgba(225,29,72,0.38),0_0_36px_rgba(225,29,72,0.65)]"
+                : "shadow-[0_0_0_5px_rgba(225,29,72,0.22),0_0_28px_rgba(99,102,241,0.4)]"
+            }`}
             style={{
               top: `${targetRect.top}px`,
               left: `${targetRect.left}px`,
@@ -605,7 +710,7 @@ export function InteractiveAvatarTour() {
             className="absolute flex items-center gap-2 transition-all duration-300"
             style={{
               top: `${Math.max(12, targetRect.top - 44)}px`,
-              left: `${Math.min(window.innerWidth - 310, Math.max(12, targetRect.left + 10))}px`,
+              left: `${Math.min(window.innerWidth - 320, Math.max(12, targetRect.left + 10))}px`,
             }}
           >
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1 text-[11px] font-extrabold text-white shadow-lg ring-2 ring-white">
@@ -614,6 +719,37 @@ export function InteractiveAvatarTour() {
               </svg>
               {step.pointerLabel}
             </span>
+          </div>
+
+          {/* Виртуальный курсор-рука Елены, делающий наглядный «тык» по кнопке */}
+          <div
+            className="absolute transition-all duration-500 ease-out"
+            style={{
+              top: `${cursorY}px`,
+              left: `${cursorX}px`,
+            }}
+          >
+            <span
+              className={` pointer-events-none absolute -left-4 -top-4 h-10 w-10 rounded-full border-2 border-brand ${
+                clicking ? "animate-ping bg-brand/40 opacity-100" : "opacity-40"
+              }`}
+            />
+            <div
+              className={`relative flex items-center gap-1.5 transition-transform duration-200 ${
+                clicking ? "translate-y-1 scale-90" : "scale-100"
+              }`}
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-white shadow-xl ring-2 ring-white">
+                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
+                  <path d="M9 2a2 2 0 00-2 2v8.268l-1.586-1.586a2 2 0 00-2.828 2.828l5.414 5.414A4 4 0 0010.828 20H16a4 4 0 004-4v-4a2 2 0 00-2-2h-5V4a2 2 0 00-2-2H9z" />
+                </svg>
+              </span>
+              {step.clickLabel && (
+                <span className="rounded-full bg-[#120E24]/95 px-2.5 py-0.5 text-[10px] font-extrabold text-white shadow-lg ring-1 ring-brand/60">
+                  {step.clickLabel}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -685,9 +821,9 @@ export function InteractiveAvatarTour() {
           {/* Полный текст текущей реплики без обрезки */}
           <p className="text-xs leading-relaxed text-white/90">
             {thinking
-              ? "Секунду, формулирую ответ…"
+              ? "Секунду, открываю нужный экран…"
               : transcribing
-              ? "Обрабатываю ваши слова…"
+              ? "Распознаю ваши слова…"
               : subtitle || "Здравствуйте. Меня зовут Елена, я цифровой проводник платформы Драфт."}
           </p>
 

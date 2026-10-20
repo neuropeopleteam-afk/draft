@@ -464,19 +464,17 @@ export function InterviewRoom() {
     }
   }
   async function say(question: string, again = false) {
-    if (ch === "voice") {
-      await new Promise((r) => setTimeout(r, 150));
-      if (anam.current && !anam.current.live()) {  // поток ещё поднимается — ждём до 4.5 с, иначе mp3
-        for (let k = 0; k < 18 && anam.current && !anam.current.live(); k++) await new Promise((r) => setTimeout(r, 250));
-      }
-    }
-    if (ch === "voice" && anam.current?.live()) {  // живой аватар: наш голос (pcm) → губы и звук из потока
+    if (ch === "voice" && anam.current) {  // параллельно тянем pcm-голос и ждём готовности видеопотока (до 4.5 с)
       try {
-        const r = await fetch(apiUrl(`/interview/sessions/${id}/speech?format=pcm`), { headers: authHeaders() });
-        if (!r.ok) throw new Error(String(r.status));
-        await anam.current.speak(await r.arrayBuffer());
-        triggerAutoListen();
-        return;
+        const [pcmRes, isLive] = await Promise.all([
+          fetch(apiUrl(`/interview/sessions/${id}/speech?format=pcm`), { headers: authHeaders() }),
+          anam.current.waitReady ? anam.current.waitReady(4500) : Promise.resolve(anam.current.live()),
+        ]);
+        if (isLive && pcmRes.ok && anam.current?.live()) {
+          await anam.current.speak(await pcmRes.arrayBuffer());
+          triggerAutoListen();
+          return;
+        }
       } catch { /* сбой потока или голоса — ниже обычный mp3, аватар сам откатится на портрет при разрыве */ }
     }
     if (ch === "voice") {

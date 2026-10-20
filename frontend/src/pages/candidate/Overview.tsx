@@ -74,7 +74,7 @@ export default function CandidateOverview() {
               </p>
             </div>
             <div className="mt-3">
-              <Link to="/candidate/assessment" className="btn-primary !px-3.5 !py-1.5 text-xs">
+              <Link to="/candidate/assessment" data-tour="cand-step-2-btn" className="btn-primary !px-3.5 !py-1.5 text-xs">
                 {category ? "Повысить грейд / к тесту" : "Начать тест на грейд"}
               </Link>
             </div>

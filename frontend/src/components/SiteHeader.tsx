@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cabinetPath, useAuth } from "../lib/auth";
-import { JURY_TAB } from "../lib/juryMode";
+import { useJuryTab } from "../lib/juryMode";
 import { useTheme } from "../lib/theme";
 import { Logo } from "./Logo";
 import { useMeta } from "../lib/meta";
@@ -39,6 +39,7 @@ function ThemeIcon({ dark }: { dark: boolean }) {
  *  dark оставлен для совместимости (тёмная шапка без переключателя темы). */
 export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; premium?: boolean }) {
   const { me, signOut } = useAuth();
+  const juryTab = useJuryTab();
   const [open, setOpen] = useState(false);
   const [theme, , toggleTheme] = useTheme();
   const box = useRef<HTMLDivElement>(null);
@@ -65,7 +66,7 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
           {NAV.map(([to, t]) => <a key={to} href={to} className={link}>{t}</a>)}
         </nav>
         <div className="flex items-center gap-1.5 sm:gap-3">
-          {JURY_TAB && (
+          {juryTab && (
             <Link to="/expertise" aria-label="Экспертиза ФСП" aria-current={onExpertise ? "page" : undefined} data-testid="expertise-tab"
               className={premium ? `np-shield ${onExpertise ? "np-shield-on" : ""}`
                 : `inline-flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm font-semibold ring-1 transition-colors sm:px-3 ${dark ? "text-white ring-white/25 hover:bg-white/10" : "text-brand-plum ring-brand-night/15 hover:bg-brand-blush/40"}`}>
@@ -89,7 +90,7 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
               <nav id="site-menu-nav" aria-label="Меню сайта" onClick={() => setOpen(false)}
                 className="absolute right-0 z-50 mt-2 flex w-64 max-w-[calc(100vw-2rem)] flex-col rounded-xl bg-white p-2 text-sm font-medium text-brand-night shadow-xl ring-1 ring-brand-night/10">
                 {MOBILE_NAV.map(([to, t]) => <a key={to} href={to} className={item}>{t}</a>)}
-                {JURY_TAB && <Link to="/expertise" className={`${item} inline-flex items-center gap-2 font-semibold text-brand-plum`}><ShieldIcon />Экспертиза ФСП</Link>}
+                {juryTab && <Link to="/expertise" className={`${item} inline-flex items-center gap-2 font-semibold text-brand-plum`}><ShieldIcon />Экспертиза ФСП</Link>}
                 {premium && <button type="button" className={`${item} text-left sm:hidden`} onClick={toggleTheme}>{theme === "dark" ? "Светлая тема" : "Тёмная тема"}</button>}
                 {!me && <Link to="/login" className={`${item} sm:hidden`}>Войти</Link>}
               </nav>
@@ -120,6 +121,7 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
 
 export function SiteFooter({ premium = false }: { premium?: boolean }) {
   const tariffs = !!useMeta()?.tariffs?.enabled;  // Я29: ссылка на тарифы — только при TARIFFS_ENABLED
+  const juryTab = useJuryTab();
   const a = premium ? "np-navlink" : "hover:text-brand-night";
   return (
     <footer className={premium ? "np-footer" : "border-t border-brand-night/10 bg-white"}>
@@ -127,7 +129,7 @@ export function SiteFooter({ premium = false }: { premium?: boolean }) {
         <p>Драфт — платформа обратного найма ИТ-специалистов. Открытый код, лицензия MIT.</p>
         <p className="flex flex-wrap gap-x-5 gap-y-2">
           {tariffs && <a className={a} href="/tariffs">Тарифы</a>}
-          {JURY_TAB && <a className={a} href="/expertise">Экспертиза ФСП</a>}
+          {juryTab && <a className={a} href="/expertise">Экспертиза ФСП</a>}
           <a className={a} href="/validation">Как мы проверяем себя</a>
           <a className={a} href="/api/docs">Документация API</a>
           <a className={a} href="/api/health">Статус сервиса</a>

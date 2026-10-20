@@ -57,10 +57,13 @@ def avatar_token(persona_name: str | None = None) -> AvatarToken:
     # Режим передачи звука: Anam рисует только лицо; голос — наш синтез, поэтому voiceId и LLM здесь не нужны.
     # Выбор региона у организации недоступен — не шлём. avatarModel — cara-4 (единственная для собственных аватаров).
     body = {"personaConfig": {"name": name, "avatarId": s.anam_avatar_id, "avatarModel": "cara-4",
-                              "enableAudioPassthrough": True},
+                              "directorNotes": {"expressivity": 0.09},
+                              "enableAudioPassthrough": True,
+                              "maxSessionLengthSeconds": s.anam_max_session_s},
             # плашки поставщика на видео нет (решение владельца 11.10: под образом только «Интервьюер: говорит / слушает»);
-            # честность — в самом экране: подзаголовок «Оценка — модель, не люди», alt/aria «сгенерированный образ, не человек»
-            "sessionOptions": {"showAIAvatarDisclosure": False},
+            # videoQuality="high" — поток сразу в высокой чёткости без 20-секундного размытия; запись на стороне поставщика выключена
+            "sessionOptions": {"showAIAvatarDisclosure": False, "videoQuality": "high",
+                               "sessionReplay": {"enableSessionReplay": False}},
             "clientLabel": "draft-interview"}
     try:
         resp = relay.request("POST", HOST, "/v1/auth/session-token",

@@ -84,17 +84,17 @@ export default function Landing() {
           <div className="mt-8 flex flex-wrap gap-3">
             {jury ? (
               <>
-                <button type="button" onClick={tryCandidate} disabled={!!busyRole} className="np-btn-primary px-6 py-3.5 text-base">
+                <button type="button" onClick={tryCandidate} disabled={!!busyRole} data-tour="hero-candidate-btn" className="np-btn-primary px-6 py-3.5 text-base">
                   {busyRole === "candidate" ? "Входим…" : "Войти как кандидат"}
                 </button>
-                <button type="button" onClick={tryInvite} disabled={!!busyRole} className="np-btn-ghost px-6 py-3.5 text-base">
+                <button type="button" onClick={tryInvite} disabled={!!busyRole} data-tour="hero-employer-btn" className="np-btn-ghost px-6 py-3.5 text-base">
                   {busyRole === "employer" ? "Входим…" : "Войти как работодатель"}
                 </button>
               </>
             ) : (
               <>
-                <Link to="/register?role=candidate" className="np-btn-primary px-7 py-3.5 text-base">Я ищу работу</Link>
-                <Link to="/register?role=employer" className="np-btn-ghost px-7 py-3.5 text-base">Я нанимаю</Link>
+                <Link to="/register?role=candidate" data-tour="hero-candidate-btn" className="np-btn-primary px-7 py-3.5 text-base">Я ищу работу</Link>
+                <Link to="/register?role=employer" data-tour="hero-employer-btn" className="np-btn-ghost px-7 py-3.5 text-base">Я нанимаю</Link>
               </>
             )}
           </div>
@@ -145,6 +145,28 @@ export default function Landing() {
             </p>
           </div>
         </div>
+        <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Цифры математического ядра под капотом">
+          <div className="np-glass px-5 py-4">
+            <dt className="text-xs font-semibold uppercase tracking-wider np-faint">Калиброванный банк задач</dt>
+            <dd className="mt-1 text-2xl font-extrabold tabular-nums np-text">403 <span className="text-sm font-semibold np-accent">семейства · 8 060 вариантов</span></dd>
+            <p className="mt-1 text-xs np-muted">2 450 проверок исполнением в песочнице, 0 сбоев</p>
+          </div>
+          <div className="np-glass px-5 py-4">
+            <dt className="text-xs font-semibold uppercase tracking-wider np-faint">Точность ранжирования</dt>
+            <dd className="mt-1 text-2xl font-extrabold tabular-nums np-text">76,2 % <span className="text-sm font-semibold np-accent">P@5 · MRR 92,1 %</span></dd>
+            <p className="mt-1 text-xs np-muted">Двухъярусный отбор по доказанным навыкам и ФСП</p>
+          </div>
+          <div className="np-glass px-5 py-4">
+            <dt className="text-xs font-semibold uppercase tracking-wider np-faint">Точность оценки грейда</dt>
+            <dd className="mt-1 text-2xl font-extrabold tabular-nums np-text">83,4 % <span className="text-sm font-semibold np-accent">вдали от порога</span></dd>
+            <p className="mt-1 text-xs np-muted">99,4 % попаданий в пределах ±1 смежного уровня</p>
+          </div>
+          <div className="np-glass px-5 py-4">
+            <dt className="text-xs font-semibold uppercase tracking-wider np-faint">Защита оценщика и рынок</dt>
+            <dd className="mt-1 text-2xl font-extrabold tabular-nums np-text">0 / 116 <span className="text-sm font-semibold np-accent">атак · 1 344 вакансии</span></dd>
+            <p className="mt-1 text-xs np-muted">Устойчивость к инъекциям и живой срез рынка hh.ru</p>
+          </div>
+        </dl>
       </section>
 
       <section id="candidates" className="relative mx-auto max-w-content scroll-mt-24 px-4 py-14 sm:px-6" aria-labelledby="cand-sec-title">
@@ -184,8 +206,21 @@ export default function Landing() {
             <p className="mt-2 text-sm np-muted">Кандидатам — бесплатно. Работодателям — готовая подборка с доказательствами по каждой вакансии.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link to="/register?role=candidate" className="np-btn-primary px-6 py-3">Начать как кандидат</Link>
-            <Link to="/register?role=employer" className="np-btn-ghost px-6 py-3">Начать как компания</Link>
+            {jury ? (
+              <>
+                <button type="button" onClick={tryCandidate} disabled={!!busyRole} className="np-btn-primary px-6 py-3">
+                  {busyRole === "candidate" ? "Входим…" : "Войти как кандидат"}
+                </button>
+                <button type="button" onClick={tryInvite} disabled={!!busyRole} className="np-btn-ghost px-6 py-3">
+                  {busyRole === "employer" ? "Входим…" : "Войти как компания"}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/register?role=candidate" className="np-btn-primary px-6 py-3">Начать как кандидат</Link>
+                <Link to="/register?role=employer" className="np-btn-ghost px-6 py-3">Начать как компания</Link>
+              </>
+            )}
           </div>
         </div>
       </section>

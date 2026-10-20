@@ -6,6 +6,14 @@ import { useMeta } from "./meta";
  *  (коммерческая выкладка без конкурсного хаба). */
 export const JURY_TAB = import.meta.env.VITE_JURY_TAB !== "false";
 
+/** Живой переключатель вкладки «Экспертиза ФСП» без пересборки: управляется одной командой на сервере (/opt/spectrek_fsp/ops/jury-tab off|on). */
+export function useJuryTab(): boolean {
+  const meta = useMeta();
+  if (!JURY_TAB) return false;
+  if (meta && meta.jury_tab_enabled === false) return false;
+  return true;
+}
+
 const KEY = "jury_mode";
 
 /** Признак «на главную пришёл эксперт жюри или включён демо-режим жюри»: тогда на главной — компактная плашка

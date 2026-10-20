@@ -11,7 +11,9 @@ import { InterviewerAvatar } from "./InterviewerAvatar";
 import { WAVE_LABEL, type WaveState } from "./VoiceWave";
 
 const RATE = 16000;                 // pcm_s16le, моно
-const CHUNK = 4096;                 // байт за сообщение (~128 мс)
+const CHUNK = 8192;                 // байт за сообщение (~256 мс при 16 кГц моно)
+const WARMUP_BYTES = 2560;          // 80 мс тишины перед первым чанком для мгновенного пробуждения липсинка Anam
+const LOOKAHEAD_MS = 3500;          // опережение отправки чанков (как на эталонном стенде другое решение, чтобы не рвать канал залпом)
 const CONNECT_TIMEOUT_MS = 12000;   // не дождались видео — откат
 
 type AnamSdk = typeof import("@anam-ai/js-sdk");
@@ -25,6 +27,8 @@ export type AnamStatus = "connecting" | "live" | "failed";
 export interface AnamHandle {
   /** Поток готов: можно отдавать звук реплики. */
   live(): boolean;
+  /** Дождаться готовности потока (до timeoutMs мс): разрешается true, если поток live, иначе false. */
+  waitReady?(timeoutMs?: number): Promise<boolean>;
   /** Озвучить реплику (pcm_s16le 16 кГц моно): губы в потоке, звук — из потока. Разрешается, когда реплика договорена; сбой → reject. */
   speak(pcm: ArrayBuffer): Promise<void>;
   /** Прервать текущую реплику (ответ кандидата, «Закончить»). */
@@ -67,11 +71,27 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   const [speaking, setSpeaking] = useState(false);
   const env = useRef<{ t0: number; e: Float32Array } | null>(null);
   const timer = useRef<number | null>(null);
+  const speakSeq = useRef<number>(0);
   const speakReject = useRef<((e: Error) => void) | null>(null);
+  const readyWaiters = useRef<Array<(ok: boolean) => void>>([]);
   const onStatusRef = useRef(onStatus);
   onStatusRef.current = onStatus;
 
-  const set = (s: AnamStatus) => { if (statusRef.current === "failed") return; statusRef.current = s; setStatus(s); onStatusRef.current?.(s); };
+  const notifyWaiters = (ok: boolean) => {
+    const list = readyWaiters.current.splice(0, readyWaiters.current.length);
+    for (const fn of list) {
+      try { fn(ok); } catch { /* ignore */ }
+    }
+  };
+
+  const set = (s: AnamStatus) => {
+    if (statusRef.current === "failed") return;
+    statusRef.current = s;
+    setStatus(s);
+    onStatusRef.current?.(s);
+    if (s === "live" && audioIn.current) notifyWaiters(true);
+    if (s === "failed") notifyWaiters(false);
+  };
 
   useEffect(() => {
     let dead = false;
@@ -94,12 +114,32 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
           ...(tok.relay_only ? { rtcConfiguration: { iceTransportPolicy: "relay" as RTCIceTransportPolicy } } : {}),
         });
         client.current = c;
+        const ensureAudioStream = () => {
+          if (dead || !client.current) return;
+          if (!audioIn.current) {
+            try {
+              audioIn.current = client.current.createAgentAudioInputStream({ encoding: "pcm_s16le", sampleRate: RATE, channels: 1 });
+            } catch { /* ещё не стартовал streamingClient */ }
+          }
+          const v = document.getElementById(videoId) as HTMLVideoElement | null;
+          if (v) {
+            v.muted = false;
+            void v.play().catch(() => undefined);
+          }
+          if (audioIn.current) {
+            window.clearTimeout(watchdog);
+            set("live");
+          }
+        };
         c.addListener(sdk.AnamEvent.CONNECTION_CLOSED, () => { if (!dead) fail(); });
-        c.addListener(sdk.AnamEvent.VIDEO_PLAY_STARTED, () => { if (dead) return; window.clearTimeout(watchdog); set("live"); });
+        if (sdk.AnamEvent.SESSION_READY) {
+          c.addListener(sdk.AnamEvent.SESSION_READY, () => { ensureAudioStream(); });
+        }
+        c.addListener(sdk.AnamEvent.VIDEO_PLAY_STARTED, () => { ensureAudioStream(); });
         watchdog = window.setTimeout(() => { if (!dead && statusRef.current !== "live") fail(); }, CONNECT_TIMEOUT_MS);
         await c.streamToVideoElement(videoId);
         if (dead) { void c.stopStreaming().catch(() => undefined); return; }
-        audioIn.current = c.createAgentAudioInputStream({ encoding: "pcm_s16le", sampleRate: RATE, channels: 1 });
+        ensureAudioStream();
         // предел сессии у поставщика — за 5 с до него тихо уходим на портрет, не дожидаясь обрыва
         maxTimer = window.setTimeout(() => { if (!dead) fail(); }, Math.max(30, (tok.max_seconds || 600) - 5) * 1000);
       } catch { if (!dead) fail(); }
@@ -107,17 +147,21 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     function fail() {
       window.clearTimeout(watchdog);
       window.clearTimeout(maxTimer);
+      speakSeq.current += 1;
       const c = client.current; client.current = null; audioIn.current = null;
       void c?.stopStreaming().catch(() => undefined);
       if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
       if (speakReject.current) { const rej = speakReject.current; speakReject.current = null; rej(new Error("anam stream closed")); }
       setSpeaking(false);
       if (statusRef.current !== "failed") { statusRef.current = "failed"; setStatus("failed"); onStatusRef.current?.("failed"); }
+      notifyWaiters(false);
     }
     return () => {
       dead = true; window.clearTimeout(watchdog); window.clearTimeout(maxTimer);
+      speakSeq.current += 1;
       if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
       if (speakReject.current) { const rej = speakReject.current; speakReject.current = null; rej(new Error("anam unmounted")); }
+      notifyWaiters(false);
       const c = client.current; client.current = null; audioIn.current = null;
       void c?.stopStreaming().catch(() => undefined);
     };
@@ -125,24 +169,75 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
 
   useImperativeHandle(ref, () => ({
     live: () => statusRef.current === "live" && !!audioIn.current,
+    waitReady: (timeoutMs = 4500) => {
+      if (statusRef.current === "live" && audioIn.current) return Promise.resolve(true);
+      if (statusRef.current === "failed") return Promise.resolve(false);
+      return new Promise<boolean>((resolve) => {
+        let done = false;
+        const finish = (ok: boolean) => {
+          if (done) return;
+          done = true;
+          window.clearTimeout(tid);
+          resolve(ok);
+        };
+        const tid = window.setTimeout(() => finish(statusRef.current === "live" && !!audioIn.current), timeoutMs);
+        readyWaiters.current.push(finish);
+      });
+    },
     speak: (pcm: ArrayBuffer) => new Promise<void>((resolve, reject) => {
       const a = audioIn.current;
       if (!a || statusRef.current !== "live" || pcm.byteLength < 2) { reject(new Error("anam not live")); return; }
-      try {
-        if (timer.current) window.clearTimeout(timer.current);
-        for (let i = 0; i < pcm.byteLength; i += CHUNK) a.sendAudioChunk(pcm.slice(i, Math.min(pcm.byteLength, i + CHUNK)));
-        a.endSequence();
-      } catch (e) { reject(e instanceof Error ? e : new Error(String(e))); return; }
+      if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
+      const mySeq = ++speakSeq.current;
+      speakReject.current = reject;
       env.current = { t0: performance.now(), e: rms(pcm) };
       setSpeaking(true);
-      speakReject.current = reject;
-      const ms = (pcm.byteLength / 2 / RATE) * 1000 + 400;  // длительность звука + задержка потока
-      timer.current = window.setTimeout(() => {
-        speakReject.current = null;
-        setSpeaking(false); env.current = null; timer.current = null; resolve();
-      }, ms);
+
+      const cleanLen = pcm.byteLength - (pcm.byteLength % 2);
+      const durMs = (cleanLen / 2 / RATE) * 1000;
+      const t0 = performance.now();
+
+      (async () => {
+        try {
+          // 80 мс тишины перед первым чанком пробуждают артикуляцию губ Anam без съедания первого слога
+          a.sendAudioChunk(new ArrayBuffer(WARMUP_BYTES));
+          await new Promise((r) => window.setTimeout(r, 45));
+          for (let i = 0; i < cleanLen; i += CHUNK) {
+            if (speakSeq.current !== mySeq || statusRef.current !== "live" || !audioIn.current) return;
+            const sentMs = (i / 2 / RATE) * 1000;
+            const waitMs = sentMs - (performance.now() - t0) - LOOKAHEAD_MS;
+            if (waitMs > 15) {
+              await new Promise((r) => window.setTimeout(r, waitMs));
+              if (speakSeq.current !== mySeq || statusRef.current !== "live" || !audioIn.current) return;
+            }
+            a.sendAudioChunk(pcm.slice(i, Math.min(cleanLen, i + CHUNK)));
+          }
+          if (speakSeq.current === mySeq && audioIn.current) {
+            a.endSequence();
+          }
+        } catch (e) {
+          if (speakSeq.current === mySeq) {
+            speakReject.current = null;
+            setSpeaking(false);
+            env.current = null;
+            reject(e instanceof Error ? e : new Error(String(e)));
+          }
+          return;
+        }
+        if (speakSeq.current !== mySeq) return;
+        const remainMs = Math.max(80, durMs - (performance.now() - t0) + 320);
+        timer.current = window.setTimeout(() => {
+          if (speakSeq.current !== mySeq) return;
+          speakReject.current = null;
+          setSpeaking(false);
+          env.current = null;
+          timer.current = null;
+          resolve();
+        }, remainMs);
+      })();
     }),
     stop: () => {
+      speakSeq.current += 1;
       if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
       if (speakReject.current) { speakReject.current = null; }
       env.current = null; setSpeaking(false);

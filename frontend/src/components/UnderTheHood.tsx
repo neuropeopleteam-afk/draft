@@ -22,7 +22,7 @@ export function DecisionProofStrip({ totalCandidates, version, className = "" }:
             Формула ранжирования match-v1.3
           </span>
           <span className="text-xs font-semibold text-brand-night">
-            Точность на эталонном корпусе P@5 = <b>77,6 %</b> · фильтр ст. 64 ТК РФ активен
+            Точность на эталонном корпусе P@5 = <b>76,2 %</b> (MRR = <b>92,1 %</b>) · фильтр ст. 64 ТК РФ активен
           </span>
           {ms != null && (
             <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-800 ring-1 ring-emerald-200">
@@ -67,7 +67,7 @@ export function DecisionProofStrip({ totalCandidates, version, className = "" }:
           <div>
             <p className="font-bold text-brand-night">2. Банк и античит</p>
             <p className="mt-1">
-              403 параметрических семейства (8 060 вариантов, 2 450 проверок исполнением в песочнице). Открытые ответы проверяются двухконтурным оценщиком с дословными цитатами и защитой от промпт-инъекций (0 из 116 атак).
+              403 параметрических семейства (8 060 вариантов, 2 450 проверок исполнением в песочнице). Открытые ответы проверяются двухконтурным оценщиком с дословными цитатами и защитой от промпт-инъекций (0 из 116 измеренных атак).
             </p>
           </div>
           <div>

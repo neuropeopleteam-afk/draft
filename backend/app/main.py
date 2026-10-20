@@ -224,7 +224,9 @@ def create_app() -> FastAPI:
         from app.modules.catalog import levels as _levels
 
         return {"product_name": s.product_name, "version": s.app_version, "operator": OPERATOR,
-                "jury_mode_available": s.jury_mode_available, "demo_sandbox": s.demo_sandbox,
+                "jury_mode_available": s.jury_mode_available and not os.path.exists("/tmp/spectrek_jury_off"),
+                "jury_tab_enabled": not os.path.exists("/tmp/spectrek_jury_off"),
+                "demo_sandbox": s.demo_sandbox,
                 "proctor_camera": get_settings().proctor_camera_enabled,  # на запросе (не замыкание s): флаг переключается без пересоздания app; false — экрана камеры нет
                 "llm": llm_status(), "assessment_engine": get_engine().name,
                 # сроки правил грейда и приглашений — из настроек, тексты интерфейса берут их отсюда (Ф3)
