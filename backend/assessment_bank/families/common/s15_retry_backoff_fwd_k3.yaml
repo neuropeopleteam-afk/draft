@@ -1,0 +1,47 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: common.retry_backoff.junior_fwd_k3
+title: 'Худшее время до ошибки при ретраях с экспоненциальной паузой — прямой расчёт с учётом: TLS-рукопожатия, джиттер пауз,
+  сетевые задержки'
+direction: common
+skills:
+- resilience
+- retries
+- http
+- distributed_systems
+target_grades:
+- junior
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - floor
+    - jitter_n
+    - linear
+    - net_only
+    - net_twice
+    - no_jitter
+    - no_net
+    - no_pauses
+    - no_tls
+    - pauses_n
+    - tls_once
+    construct: 'Худший случай ретраев: попытки × таймаут + паузы 2ⁱ·b с поправками на джиттер, рукопожатия и сеть. Ступень
+      3 из 5: взаимодействуют 3 поправочных фактора(ов) (TLS-рукопожатия; джиттер пауз; сетевые задержки); прямой расчёт по
+      модели.'
+    wave: 20.10-S
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.36
+  a: 3.0
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Худший случай ретраев: попытки × таймаут + паузы 2ⁱ·b с поправками на джиттер,
+    рукопожатия и сеть; 3 взаимодействующих фактора(ов) (TLS-рукопожатия, джиттер пауз, сетевые задержки), прямой расчёт по
+    модели. Грейд Junior (b -0,36 по числу факторов и направлению вопроса: прямой расчёт легче обратной задачи; волна 20.10-S,
+    без калибровки панелью). σ 0,3'
+generator: assessment_bank.families.common.s15_retry_backoff_fwd_k3
+version: 1
+description: 'Junior: худшее время до ошибки при ретраях с экспоненциальной паузой — прямой расчёт по модели. 3 фактора(ов):
+  TLS-рукопожатия, джиттер пауз, сетевые задержки. Ключ — исполнением модели (точные дроби).'
