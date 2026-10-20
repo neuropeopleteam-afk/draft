@@ -86,12 +86,36 @@ def _candidate_title(db: Session, t: TrioThread, inv: Invitation | None) -> str:
     return f"Кандидат {p.public_ref}" if p.public_ref else "Кандидат"
 
 
+def _trio_user(user: User = Depends(get_current_user)) -> User:
+    if user.role not in (UserRole.candidate, UserRole.employer, *FSP_ROLES):
+        raise api_error(403, "forbidden", "Недостаточно прав")
+    return user
+
+
+def _party_user(user: User = Depends(get_current_user)) -> User:
+    if user.role not in (UserRole.candidate, UserRole.employer):
+        raise api_error(403, "forbidden", "Только для кандидата или работодателя")
+    return user
+
+
+def _cand_user(user: User = Depends(get_current_user)) -> User:
+    if user.role != UserRole.candidate:
+        raise api_error(403, "forbidden", "Согласие даёт только кандидат")
+    return user
+
+
 def _resolve(db: Session, user: User, tid: uuid.UUID) -> tuple[TrioThread, str]:
     t = db.get(TrioThread, tid)
     side = _side(db, user, t) if t else None
     if t is None or side is None:
         raise api_error(404, "trio_not_found", "Канал не найден")
     return t, side
+
+
+def _resolve_dep(tid: uuid.UUID, user: User = Depends(_trio_user),
+                 db: Session = Depends(get_db)) -> tuple[TrioThread, str, User]:
+    t, side = _resolve(db, user, tid)
+    return t, side, user
 
 
 def _msg_out(m: TrioMessage, side: str) -> dict:
@@ -179,7 +203,7 @@ def meta() -> dict:
 
 
 @router.get("/threads", summary="Мои трёхсторонние каналы", responses=AUTH)
-def threads(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[dict]:
+def threads(user: User = Depends(_trio_user), db: Session = Depends(get_db)) -> list[dict]:
     q = select(TrioThread)
     if user.role == UserRole.candidate:
         q = q.where(TrioThread.candidate_user_id == user.id)
@@ -198,7 +222,7 @@ def threads(user: User = Depends(get_current_user), db: Session = Depends(get_db
 
 
 @router.get("/eligible", summary="Приглашения, по которым можно открыть канал с ФСП", responses=AUTH)
-def eligible(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[dict]:
+def eligible(user: User = Depends(_party_user), db: Session = Depends(get_db)) -> list[dict]:
     q = select(Invitation).where(Invitation.status.in_(
         (InvitationStatus.sent, InvitationStatus.viewed, InvitationStatus.accepted)))
     if user.role == UserRole.candidate:
@@ -226,7 +250,7 @@ def eligible(user: User = Depends(get_current_user), db: Session = Depends(get_d
 
 @router.post("/threads", status_code=201, summary="Подключить представителя ФСП к приглашению",
              responses={**AUTH, 409: err("Канал по этому приглашению уже есть")})
-def create(data: CreateIn, bg: BackgroundTasks, user: User = Depends(get_current_user),
+def create(data: CreateIn, bg: BackgroundTasks, user: User = Depends(_party_user),
            db: Session = Depends(get_db)) -> dict:
     inv = db.get(Invitation, data.invitation_id)
     nf = api_error(404, "invitation_not_found", "Приглашение не найдено")
@@ -258,26 +282,26 @@ def create(data: CreateIn, bg: BackgroundTasks, user: User = Depends(get_current
 
 
 @router.get("/threads/{tid}", summary="Канал и сообщения", responses=AUTH)
-def get_thread(tid: uuid.UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
-    t, side = _resolve(db, user, tid)
+def get_thread(resolved: tuple[TrioThread, str, User] = Depends(_resolve_dep),
+               db: Session = Depends(get_db)) -> dict:
+    t, side, _ = resolved
     return _thread_out(db, t, side, full=True)
 
 
 @router.post("/threads/{tid}/messages", status_code=201, summary="Написать в канал",
              responses={**AUTH, 409: err("Канал закрыт или ждёт согласия кандидата"), 429: err("Слишком много сообщений")})
-def post_message(tid: uuid.UUID, data: MessageIn, bg: BackgroundTasks, user: User = Depends(get_current_user),
+def post_message(data: MessageIn, bg: BackgroundTasks,
+                 resolved: tuple[TrioThread, str, User] = Depends(_resolve_dep),
                  db: Session = Depends(get_db)) -> dict:
-    t, side = _resolve(db, user, tid)
+    t, side, user = resolved
     m = _post(db, user, t, side, data.body)
     _notify(bg, db, t, side, m.body)
     return _thread_out(db, t, side, full=True)
 
 
 @router.post("/threads/{tid}/consent", summary="Кандидат соглашается подключить ФСП", responses=AUTH)
-def consent(tid: uuid.UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+def consent(tid: uuid.UUID, user: User = Depends(_cand_user), db: Session = Depends(get_db)) -> dict:
     t, side = _resolve(db, user, tid)
-    if side != "candidate":
-        raise api_error(403, "forbidden", "Согласие даёт только кандидат")
     if t.status == "pending":
         t.status = "active"
         t.activated_at = utcnow()
@@ -287,8 +311,9 @@ def consent(tid: uuid.UUID, user: User = Depends(get_current_user), db: Session 
 
 
 @router.post("/threads/{tid}/close", summary="Закрыть канал (дальше только чтение)", responses=AUTH)
-def close(tid: uuid.UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
-    t, side = _resolve(db, user, tid)
+def close(resolved: tuple[TrioThread, str, User] = Depends(_resolve_dep),
+          db: Session = Depends(get_db)) -> dict:
+    t, side, _ = resolved
     if t.status != "closed":
         t.status = "closed"
         t.closed_at = utcnow()

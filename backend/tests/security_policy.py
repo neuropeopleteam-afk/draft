@@ -382,6 +382,15 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/messages/unread"): "auth",
     ("GET", "/api/messages/{kind}/{tid}"): "thread_party",
     ("POST", "/api/messages/{kind}/{tid}"): "thread_party",
+    # А2: трёхсторонняя связь работодатель ↔ кандидат ↔ представитель ФСП (tw01)
+    ("GET", "/api/trio/meta"): "open",
+    ("GET", "/api/trio/threads"): ("auth", {"expert": 403, "jury_expert": 403}),
+    ("GET", "/api/trio/eligible"): ("auth", {"admin": 403, "fsp_analyst": 403, "expert": 403, "jury_expert": 403, "jury_fsp": 403}),
+    ("POST", "/api/trio/threads"): ("auth", {"admin": 403, "fsp_analyst": 403, "expert": 403, "jury_expert": 403, "jury_fsp": 403}),
+    ("GET", "/api/trio/threads/{tid}"): ("auth404", {"employer_other": 404, "expert": 403, "jury_expert": 403, "jury_other_employer": 404, "jury_other_candidate": 404}),
+    ("POST", "/api/trio/threads/{tid}/messages"): ("auth404", {"employer_other": 404, "expert": 403, "jury_expert": 403, "jury_other_employer": 404, "jury_other_candidate": 404}),
+    ("POST", "/api/trio/threads/{tid}/consent"): "candidate_own404",
+    ("POST", "/api/trio/threads/{tid}/close"): ("auth404", {"employer_other": 404, "expert": 403, "jury_expert": 403, "jury_other_employer": 404, "jury_other_candidate": 404}),
     # ---------------------------------------------------------------- эксперт проверки ответов, панель разметки
     ("GET", "/api/expert/queue"): "expert",
     ("POST", "/api/expert/review"): "expert",
