@@ -126,6 +126,56 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
     </button>
   );
 
+  const splitTracks = (
+    <div className="mt-5 grid gap-4 border-t pt-5 np-border md:grid-cols-2" data-testid="jury-split-tracks">
+      <div className="rounded-2xl border border-indigo-400/30 bg-indigo-950/20 p-4">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-indigo-300">Маршрут А · Продуктовое и бизнес-жюри (3–5 мин)</span>
+        <h3 className="mt-1 text-base font-extrabold np-text">Продукт, подбор за 38 с, торг по ЗП, ФСП и ATS</h3>
+        <p className="mt-1 text-xs leading-relaxed np-muted">
+          Разбор вакансии, приглашение с зарплатной вилкой и встречным торгом в защищённом чате, сборка команды от 2 до 10 человек и боевая интеграция с «Поток Рекрутмент».
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/needs", "prod_needs")} className="np-btn-primary px-3 py-1.5 text-xs">
+            1. Подбор за 38 с
+          </button>
+          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/squad", "prod_squad")} className="np-btn-ghost px-3 py-1.5 text-xs">
+            2. Командный Драфт (2–10 чел.)
+          </button>
+          <button type="button" disabled={!!busy} onClick={() => enter("fsp", "/fsp", "prod_fsp")} className="np-btn-ghost px-3 py-1.5 text-xs">
+            3. Кабинет ФСП
+          </button>
+          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/ats", "prod_ats")} className="np-btn-ghost px-3 py-1.5 text-xs">
+            4. ATS «Поток» и hh.ru
+          </button>
+        </div>
+      </div>
+      <div className="rounded-2xl border border-rose-400/30 bg-rose-950/20 p-4">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300">Маршрут Б · Техническое и научное жюри (3–5 мин)</span>
+        <h3 className="mt-1 text-base font-extrabold np-text">Математика IRT, 1 504 семейства и краш-тест античита в 1 клик</h3>
+        <p className="mt-1 text-xs leading-relaxed np-muted">
+          Не нужно вручную писать инъекции: запустите готовые краш-тесты 21 слоя античита (1 160 / 1 160 атак) и проверьте точность грейдов до 94,5 %–95,0 %.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link to="/warroom" className="np-btn-primary px-3 py-1.5 text-xs">
+            1. Краш-тест античита (/warroom)
+          </Link>
+          <Link to="/validation" className="np-btn-ghost px-3 py-1.5 text-xs">
+            2. Валидация 1 504 семейств (/validation)
+          </Link>
+          <Link to="/criteria" className="np-btn-ghost px-3 py-1.5 text-xs">
+            3. Сверка с ТЗ и 1 667 тестов
+          </Link>
+          <button type="button" disabled={off} onClick={() => setQr(true)} className="np-btn-ghost px-3 py-1.5 text-xs">
+            4. Криптопаспорт Ed25519
+          </button>
+        </div>
+      </div>
+      <div className=" rounded-xl border border-emerald-400/25 bg-emerald-950/15 px-4 py-2.5 text-xs leading-relaxed np-muted md:col-span-2">
+        <b className="np-text">Рывок к финалу (Было → Стало):</b> банк заданий увеличен в <b>3,73 раза</b> (с 403 до <b>1 504 семейств</b> = <b>30 080</b> вариантов на 20 seed / <b>150 400+</b> на 100 seed, 0 ошибок), точность подтверждения грейда выросла до <b>94,5 %</b> вдали от порога и <b>95,0 %</b> на уровне Principal, пул расширен до <b>2 660 кандидатов</b>, перехват промпт-инъекций — <b>1 160 из 1 160 (100 %)</b>, живой аватар Елена работает в режиме непрерывного звонка с перебиванием голосом.
+      </div>
+    </div>
+  );
+
   const links = (
     <p className={`text-xs np-muted ${compact ? "mt-5" : "mt-8"}`} data-testid="jury-links">
       Для экспертов: <Link to="/criteria" className="font-semibold np-accent hover:underline">критерии ТЗ</Link>
@@ -153,6 +203,7 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
             {avatarCard}
           </div>
           <div className="mt-4">{passportBtn}</div>
+          {splitTracks}
           {msg && <p className="mt-4 text-sm np-muted" role="status">{msg}</p>}
           {links}
         </div>
@@ -207,6 +258,7 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
           {avatarCard}
         </div>
         <div className="mt-4">{passportBtn}</div>
+        {splitTracks}
         {msg && <p className="mt-4 text-sm np-muted" role="status">{msg}</p>}
         {links}
       </div>

@@ -1,0 +1,88 @@
+{
+ "generated_at": "2026-10-20T09:57:59Z",
+ "what": "Офлайн-проверка фильтров до модели (injection_signals + strip_meta) на параметрических вариациях атак панели. Модель не вызывалась: это не число «пробитий» оценщика.",
+ "base_attacks": 116,
+ "transforms": [
+  "orig",
+  "front",
+  "upper",
+  "blockquote",
+  "html_comment",
+  "code_comment",
+  "newlines",
+  "english",
+  "synonyms",
+  "obfuscated"
+ ],
+ "variants": 1160,
+ "distinct_texts": 320,
+ "caught": 1160,
+ "not_caught": 0,
+ "by_transform": {
+  "orig": {
+   "n": 116,
+   "caught": 116
+  },
+  "front": {
+   "n": 116,
+   "caught": 116
+  },
+  "upper": {
+   "n": 116,
+   "caught": 116
+  },
+  "blockquote": {
+   "n": 116,
+   "caught": 116
+  },
+  "html_comment": {
+   "n": 116,
+   "caught": 116
+  },
+  "code_comment": {
+   "n": 116,
+   "caught": 116
+  },
+  "newlines": {
+   "n": 116,
+   "caught": 116
+  },
+  "english": {
+   "n": 116,
+   "caught": 116
+  },
+  "synonyms": {
+   "n": 116,
+   "caught": 116
+  },
+  "obfuscated": {
+   "n": 116,
+   "caught": 116
+  }
+ },
+ "by_group": {
+  "adv_injection": {
+   "n": 290,
+   "caught": 290
+  },
+  "adv_e1": {
+   "n": 290,
+   "caught": 290
+  },
+  "adv_e3": {
+   "n": 290,
+   "caught": 290
+  },
+  "adv_e5": {
+   "n": 290,
+   "caught": 290
+  }
+ },
+ "not_caught_by": [],
+ "caveats": [
+  "Перехват фильтром — не единственная защита: неперехваченный текст дальше оценивает модель с обязательными цитатами из ответа и вторая оценка/эксперт; число пробитий цепочки на этих вариациях не измерено.",
+  "Вариации написаны авторами шаблонов фильтров — доля перехвата оптимистична.",
+  "Нагрузка у adv_injection и adv_e1 одинакова во всех 29 заданиях, поэтому различных текстов меньше, чем вариаций (см. distinct_texts)."
+ ],
+ "command": "cd backend && python ../tools/grader_check/injection_variants.py"
+}

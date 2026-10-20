@@ -24,6 +24,7 @@ ROWS = (
     ("g_real_v2_p300|0.6|top", "real_v2_p300"),
     ("g_real_v2_p420|0.6|top", "real_v2_p420"),
     ("g_real_v2_p420_m25|0.6|top", "real_v2_m25"),
+    ("g_real_v3_w12_m25|0.6|top", "real_v3_w12"),
     ("a_x3|0.6|top", "bank"),
     ("c_x2|0.6|top", "partial"),
     ("b_k15_x2|0.6|top", "block"),
@@ -47,6 +48,7 @@ ROLE_TITLES = {
     "real_v2_p420": "Банк после новых семейств и второй этап как в продукте сейчас: до 8 коротких до 7 мин за 15 мин "
                     "(GRADES_EXT_REFINE_ITEM_TIME_S 420)",
     "real_v2_m25": "То же, до 10 заданий за 25 мин — что дал бы второй этап длиннее",
+    "real_v3_w12": "Банк волны 20.10-S (1 504 семейства) + второй этап W1 (взвешенная информация GPCM в порогах 2,0 и 3,0, до 12 заданий за 25 мин)",
     "bank": "Только банк ×3",
     "partial": "Банк ×2 и частичный балл 0–4",
     "block": "Банк ×2 и блок Lead/Principal (15 заданий)",
@@ -80,6 +82,7 @@ def view() -> dict:
     d = json.loads(NEED.read_text(encoding="utf-8"))
     var = d.get("variants") or {}
     out["rows"] = [_row(var[k], role) for k, role in ROWS if k in var]
+    out["main"] = d.get("main")
     pop = var.get("base|0.8|pop")
     if pop:
         by = pop.get("by_true_level") or {}

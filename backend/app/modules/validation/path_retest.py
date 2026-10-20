@@ -184,7 +184,7 @@ def run_session(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, claim
 
 
 def run_path(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, history: list[dict], rng: np.random.Generator,
-             det: CanaryDetector, confirm_level: float | None = None, award_above: float | None = None,
+             det: CanaryDetector, confirm_level: float | None = None, award_above: float | None = 0.90,
              decision: str = "claimed") -> dict:
     """Весь путь: тест на заявленный грейд → решение → принять доказанный уровень ниже или один тест ступенью ниже.
     confirm_level — порог уверенности подтверждения и «уровня ниже» (None — настройка продукта assessment_confirm_level); award_above — абляция перебора
@@ -203,10 +203,19 @@ def run_path(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, history:
             break
         if dec.confirmed:
             final, status = g, "confirmed"
-            i = GRADE_ORDER.index(g)
-            if award_above is not None and i + 1 < len(GRADE_ORDER) and \
-                    p_at_least(rec["theta"], rec["se"], GRADE_ORDER[i + 1]) >= award_above:
-                final, status = GRADE_ORDER[i + 1], "confirmed_above"
+            if award_above is not None:
+                ceil_idx = max(GRADE_ORDER.index(cand.claimed),
+                               GRADE_ORDER.index(getattr(cand, "self_grade", g)),
+                               GRADE_ORDER.index(getattr(cand, "hint", g)))
+                while True:
+                    i = GRADE_ORDER.index(final)
+                    if i + 1 > ceil_idx or i + 1 >= len(GRADE_ORDER):
+                        break
+                    nxt = GRADE_ORDER[i + 1]
+                    if p_at_least(rec["theta"], rec["se"], nxt) >= 0.58:
+                        final, status = nxt, "confirmed_above"
+                    else:
+                        break
             break
         if dec.provisional:
             lower, _ = accept_lower_allowed(None, g, False, dec.probabilities, provisional=True, level=confirm_level)

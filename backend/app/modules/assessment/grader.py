@@ -109,6 +109,20 @@ REMINDER = ("Конец данных кандидата. Оцени ответ �
 # ------------------------------------------------------------------ эвристика «ответ содержит инструкции модели»
 # Шаблоны узкие (повелительное наклонение, обращение к модели), чтобы не задевать обычные ответы: «линтер
 # игнорирует правила», «Модель: логистическая регрессия», «инструкции RUN в Dockerfile», doctest «>>>».
+_ZW_RE = re.compile(r"[\u200b-\u200f\u2060-\u2064\ufeff]")
+_MIXED_CYR_WORD = re.compile(r"\b(?=[A-Za-zА-Яа-яЁё]*[А-Яа-яЁё])(?=[A-Za-zА-Яа-яЁё]*[A-Za-z])[A-Za-zА-Яа-яЁё]+\b")
+_LAT2CYR = str.maketrans({
+    "a": "а", "c": "с", "e": "е", "o": "о", "p": "р", "x": "х", "y": "у",
+    "A": "А", "B": "В", "C": "С", "E": "Е", "H": "Н", "K": "К", "M": "М", "O": "О", "P": "Р", "T": "Т", "X": "Х",
+})
+
+
+def _deobfuscate(text: str) -> str:
+    """Снимает символы нулевой ширины и латинские буквы-двойники внутри смешанных кириллических слов."""
+    t = _ZW_RE.sub("", text or "")
+    return _MIXED_CYR_WORD.sub(lambda m: m.group(0).translate(_LAT2CYR), t)
+
+
 _W = r"[\w\-]*"
 _VERB = (r"(?:постав|выстав|начисл|присвой|присвойте|дай|дайте|верни|верните|оцени|оцените|засчитай|засчитайте|"
          r"give|assign|award|set|rate|grade|score|mark)")
@@ -118,10 +132,11 @@ _ADDRESSEE = r"(?:\bмне\b|этому ответу|за этот ответ|\b
 _PATTERNS: list[tuple[str, re.Pattern]] = [
     ("ignore_instructions", re.compile(
         rf"(?:\b(?:игнорируй|игнорируйте|проигнорируй|проигнорируйте|забудь|забудьте|не\s+учитывай|не\s+учитывайте|"
-        rf"отмени|отмените)\b\W+(?:[\w\-]+\W+){{0,4}}?(?:инструкц{_W}|правил{_W}|указани{_W}|рубрик{_W}|критери{_W}|"
+        rf"не\s+применяй|не\s+применяйте|отмени|отмените)\b\W+(?:[\w\-]+\W+){{0,4}}?(?:инструкц{_W}|правил{_W}|указани{_W}|рубрик{_W}|критери{_W}|"
         rf"промпт{_W}|эталон{_W}))"
+        rf"|(?:\b(?:критери{_W}|рубрик{_W}|инструкц{_W})\s+(?:задани{_W}\s+)?не\s+(?:применяй|учитывай){_W})"
         rf"|(?:\b(?:ignore|disregard|forget|override)\s+(?:all\s+|any\s+)?(?:the\s+)?(?:previous|prior|above|earlier|"
-        rf"preceding|your|system|grading)\s+(?:instructions?|rules|prompt|guidelines|rubric))", re.IGNORECASE)),
+        rf"preceding|your|system|grading)?\s*(?:instructions?|rules|prompt|guidelines|rubric\b))", re.IGNORECASE)),
     ("new_instructions", re.compile(
         r"(?:нов\w+|обновл\w+)\s+инструкци\w*\s*(?::|для\s+(?:тебя|вас|модели|оценщика|экзаменатора))"
         r"|\b(?:new|updated)\s+instructions?\s*:", re.IGNORECASE)),
@@ -135,10 +150,13 @@ _PATTERNS: list[tuple[str, re.Pattern]] = [
         r"(?:\b(?:ты|вы)\s+(?:теперь|отныне)\s+[—-]?\s*(?:[\w\-]+\s+){0,2}?(?:эксперт|оценщик|модель|ассистент|"
         r"экзаменатор|помощник)|\bты\s+больше\s+не\b|\byou\s+are\s+now\b|"
         r"\b(?:system\s+prompt|системн\w+\s+(?:промпт|инструкц\w*|сообщени\w*))|"
+        r"\bnote\s+for\s+the\s+grading\s+system\b|\bпримечание\s+для\s+автоматической\s+системы\s+контроля\b|"
         r"(?:^|[.!?\n]\s*)(?:уважаем\w+\s+)?(?:экзаменатор|оценщик|проверяющий|нейросеть|grader|examiner|evaluator)"
         r"\s*[,:!])", re.IGNORECASE)),
     ("all_criteria", re.compile(
         r"\b1(?:[.,]0)?\s+(?:балл\w*\s+)?(?:по|за)\s+(?:всем|каждому)\s+критери"
+        r"|\bвыстав\w*\s+максимум\s+по\s+каждому\s+пункту\b"
+        r"|\bgive\s+1\s+for\s+(?:every|each|all)\s+criteri\w*"
         r"|\b(?:all|every)\s+criteri\w*\s+(?:to|=|:)\s*1\b", re.IGNORECASE)),
 ]
 _GRADE_REQ = re.compile(rf"\b{_VERB}\w*\W+(?:[\w\-]+\W+){{0,4}}?{_SCORE}\w*", re.IGNORECASE)
@@ -173,11 +191,18 @@ _SOFT = re.compile(
 # как обычно, эксперт видит ответ целиком). Шаблоны узкие: на эталонах банка и ответах панели — 0 срабатываний (тест).
 _META = re.compile(
     r"(?:\b(?:самопроверк|самооценк)\w*"
+    r"|\bself-?check\s+summary\b|\binternal\s+note\s*:"
+    r"|\bпометка\s+редактора\s*:"
     r"|\bвсе\s+(?:требовани\w*|пункт\w*|критери\w*)(?:\s+(?:задани\w*|рубрик\w*|оценк\w*))?\s+"
     r"(?:полностью\s+)?(?:выполнен|раскрыт|соблюден|учтен|закрыт)\w*"
+    r"|\bevery\s+requirement\s+of\s+the\s+task\s+is\s+met\b"
+    r"|\bchecked\s+against\s+the\s+(?:strong\s+)?reference\s+answer\b"
+    r"|\bсопоставлен\w*\s+с\s+образцовым\s+решением\b"
+    r"|\bзадание\s+закрыто\s+целиком\s*,\s*уровень\s+решения\s+высок\w*"
     r"|\bответ\w*\s+(?:полностью\s+)?(?:соответству\w*\s+(?:высок\w*|сильн\w*|эталон\w*|всем)|"
     r"(?:уже\s+)?(?:сверен|одобрен|согласован|принят\s+как\s+образцов|засчитан)\w*)"
-    r"|\b(?:итогов\w*\s+)?уровень(?:\s+ответа)?\s*[—:\-]\s*(?:strong|высок\w*|сильн\w*)"
+    r"|\b(?:итогов\w*\s+)?уровень(?:\s+(?:ответа|решения))?\s*[—:\-]\s*(?:strong|высок\w*|сильн\w*)"
+    r"|\bfinal\s+level\s+is\s+strong\b|\banswer\s+corresponds\s+to\s+a\s+high\s+level\b"
     r"|\b(?:служебн|техническ)\w+\s+(?:отметк|пометк|примечан|проверк)\w*"
     r"|\b(?:для|к\s+сведению)\s+(?:проверяющ|оценщик|экзаменатор|нейросет|языков\w+\s+модел)\w*"
     r"|\bnote\s+(?:to|for)\s+(?:the\s+)?(?:ai|model|llm|reviewer|grader|evaluator)\b|\bpre-?approved\b"
@@ -190,25 +215,26 @@ def strip_meta(text: str) -> tuple[str, list[str]]:
 
     Классический приём «слабый ответ + итог самопроверки: все требования выполнены» после этого возвращается
     к слабому ответу: модели нечем «поверить», а цитатой из утверждения нельзя подтвердить критерий."""
-    t = text or ""
+    raw = text or ""
+    t = _deobfuscate(raw)
     if not _META.search(t):
-        return t, []
+        return raw, []
     removed: list[str] = []
 
     def repl(m: re.Match) -> str:
         seg = m.group(0)
-        if _META.search(seg):
+        if _META.search(_deobfuscate(seg)):
             removed.append(seg.strip())
             return " " if not seg.endswith("\n") else "\n"
         return seg
 
-    out = _SENT.sub(repl, t)
+    out = _SENT.sub(repl, raw)
     return re.sub(r"[ \t]{2,}", " ", out).strip(), removed
 
 
 def injection_signals(text: str) -> list[str]:
     """Признаки того, что ответ адресован оценщику-модели, а не отвечает на вопрос (чистая функция)."""
-    t = text or ""
+    t = _deobfuscate(text or "")
     found: list[str] = []
     for m in _GRADE_REQ.finditer(t):
         window = t[max(0, m.start() - 40): m.end() + 40]

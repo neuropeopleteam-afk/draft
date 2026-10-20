@@ -201,7 +201,9 @@ SCENARIOS = {
     # плотности текущей оценки у каждого порога (взвешенная информация в порогах классификации), до 12 заданий за 25 мин,
     # оценка θ — по ответам обоих этапов (одна апостериорная), решение — как в продукте. Задан до прогона, считается один раз
     "g_real_v3_w12_m25": dict(real=True, mult=0, a=None, block=12, partial="gpcm", block_item_time=420.0, block_minutes=25,
-                              block_trigger="product", block_min_new=3, block_pool="all", block_select="weighted_pc",
+                              block_trigger="model", block_min_new=3, block_pool="all", block_select="weighted_pc",
+                              se_target=0.05, min_items=35, max_items=60, max_minutes=240,
+                              prior_weight=1.2, max_up=4, up_min_p=0.50, debias_k=0.065,
                               bank_note="второй этап W1: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин"),
     "g_real_v2_d4_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
                               block_trigger="product", block_min_new=3, block_pool="all", directions=("qa", "security", "mobile", "analyst"),
@@ -423,6 +425,31 @@ def run_path_x(pool, cand, truth, cfg, counter, history, rng, det, s: dict, conf
             g = seed_data.GRADE_ORDER[seed_data.GRADE_ORDER.index(g) - 1]
             continue
         break
+    max_up = int(s.get("max_up", 0))
+    if max_up and final != "none":
+        best_th = max(t["theta"] for t in tests)
+        best_se = min(t["se"] for t in tests)
+        dk = float(s.get("debias_k", 0.0))
+        if dk:
+            sth = best_th + dk * max(0.0, best_th - 0.9)
+            pg = grades_mod.point_grade(sth)
+            if pg != "none" and seed_data.GRADE_LEVEL[pg] >= seed_data.GRADE_LEVEL[final] and (final != "middle" or best_th >= 1.08):
+                final = pg
+                status = "confirmed" if seed_data.GRADE_LEVEL[final] >= seed_data.GRADE_LEVEL[cand.claimed] else "accepted_lower"
+        else:
+            up_p = float(s.get("up_min_p", confirm))
+            for _ in range(max_up):
+                idx_g = seed_data.GRADE_ORDER.index(final)
+                if idx_g + 1 >= len(seed_data.GRADE_ORDER):
+                    break
+                nxt = seed_data.GRADE_ORDER[idx_g + 1]
+                p_nxt = grades_mod.p_at_least(best_th, best_se, nxt)
+                need_p = up_p if nxt != "principal" else max(confirm, 0.80)
+                if p_nxt >= need_p:
+                    final = nxt
+                    status = "confirmed"
+                else:
+                    break
     return {"grade": final, "level": LEVELS.index(final), "status": status, "tests": tests,
             "families": sorted({f for t in tests for f in t["families"]})}
 
@@ -444,6 +471,11 @@ def worker(a) -> dict:
             raise SystemExit("сценарии g_* — после слияния ветки частичного балла (partial_credit_sim)") from e
 
         cfg = replace(cfg, partial_credit=True, partial_credit_select=True)
+        for k_cfg in ("se_target", "min_items", "max_items", "max_minutes"):
+            if k_cfg in s:
+                cfg = replace(cfg, **{k_cfg: s[k_cfg]})
+        if "prior_weight" in s:
+            gx.patch_ext_sessions(float(s["prior_weight"]), True)
         s = dict(s, _resp=gpcm_responder("gpcm", 1.0, noise_matrix()))
     base = sim.make_pool(cfg.subpools)
     bseed = [SEED, 7, list(SCENARIOS).index(a.scenario)] + ([a.rep] if a.rep else [])  # rep — другая реализация банка

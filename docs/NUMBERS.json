@@ -1,27 +1,27 @@
 {
  "bank": {
-  "families": 455,
+  "families": 1504,
   "by_direction": {
-   "analyst": 34,
-   "backend": 62,
-   "common": 72,
-   "data_eng": 43,
-   "data_ml": 45,
-   "devops": 39,
-   "frontend": 46,
-   "mobile": 37,
-   "qa": 40,
-   "security": 37
+   "analyst": 142,
+   "backend": 154,
+   "common": 173,
+   "data_eng": 151,
+   "data_ml": 153,
+   "devops": 146,
+   "frontend": 154,
+   "mobile": 138,
+   "qa": 148,
+   "security": 145
   },
-  "source_commit": "58f9903",
-  "content_hash": "3be97c425f78ca15",
-  "pass": 425,
+  "source_commit": "603474f",
+  "content_hash": "82a05fdbacf00481",
+  "pass": 1474,
   "warn": 30,
   "fail": 0,
-  "checks": 2909,
+  "checks": 10702,
   "checks_failed": 0,
-  "variants": 9100,
-  "unique_variants": 9076
+  "variants": 30080,
+  "unique_variants": 30080
  },
  "migrations": {
   "revisions": 35,
@@ -96,13 +96,13 @@
  },
  "lead_principal": {
   "scenario": "g_real_v3_w12_m25|0.6|top",
-  "text": "реальный банк Lead/Principal (второй этап GPCM: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин, априорные b и a), второй этап до 12 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), выбор — взвешенная информация GPCM в порогах 2,0 и 3,0, частичный балл 0–4 (GPCM, шум оценщика)",
-  "lead": 0.593,
-  "principal": 0.424,
-  "senior": 0.581,
-  "above": 0.025,
-  "above_ext": 0.019,
-  "minutes_mean": 80.0,
+  "text": "реальный банк Lead/Principal (второй этап W1: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин, априорные b и a), второй этап до 12 заданий ≤ 420 с за 25 мин, выбор — взвешенная информация GPCM в порогах 2,0 и 3,0, частичный балл 0–4 (GPCM, шум оценщика)",
+  "lead": 0.879,
+  "principal": 0.95,
+  "senior": 0.738,
+  "above": 0.064,
+  "above_ext": 0.056,
+  "minutes_mean": 101.2,
   "previous": {
    "key": "g_real_v2_p420_m25|0.6|top",
    "on_bank": "76c4164b6ce83743",
@@ -368,39 +368,39 @@
  "grade_accuracy": {
   "views": {
    "far_from_cut": {
-    "exact": 0.8338,
+    "exact": 0.9451,
     "ci": [
-     0.7908,
-     0.8739
+     0.9066,
+     0.978
     ],
-    "share": 0.1396,
+    "share": 0.182,
     "rule": "одна сессия, |θ − порог| ≥ 0,45"
    },
    "no_under_claim": {
-    "exact": 0.8215,
+    "exact": 0.8707,
     "ci": [
-     0.8049,
-     0.8371
+     0.847,
+     0.8933
     ],
-    "share": 0.8448,
-    "over": 0.0966,
+    "share": 0.843,
+    "over": 0.0735,
     "rule": "заявленный ≥ истинного, двухэтапное подтверждение у границы"
    },
    "strict_pool": {
-    "exact": 0.6508,
+    "exact": 0.808,
     "ci": [
-     0.632,
-     0.6696
+     0.783,
+     0.832
     ],
-    "under_claim_share": 0.1552,
-    "retest_exact": 0.787,
-    "retest_kappa": 0.869,
-    "within_1": 0.998,
+    "under_claim_share": 0.157,
+    "retest_exact": 0.805,
+    "retest_kappa": 0.877,
+    "within_1": 0.997,
     "rule": "весь пул, одна сессия"
    },
-   "commit": "b544962",
-   "bank": "4d44ffb455f03520",
-   "generated_at": "2026-10-19",
+   "commit": "18254a5",
+   "bank": "82a05fdbacf00481",
+   "generated_at": "2026-10-20",
    "command": "make accuracy-views"
   },
   "confirm_level": 0.6,
@@ -452,7 +452,7 @@
   "fix_errors_after": 0
  },
  "demo": {
-  "candidates": 860,
+  "candidates": 2660,
   "employers": 10,
   "needs": 17,
   "vacancies": 11
