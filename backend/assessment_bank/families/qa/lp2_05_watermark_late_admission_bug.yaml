@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: qa.principal_v2.watermark_late_admission_bug
+title: 'Обеспечение качества (QA): Потеря граничного события на стыке водяного знака и допустимого опоздания'
+direction: qa
+skills:
+- test_design
+- pytest
+- api_testing
+- load_testing
+- test_architecture
+target_grades:
+- principal
+format: find_bug
+language: python
+invariants:
+  defect_type: watermark_off_by_one
+  extra:
+    wave: LP-v2
+    slot: 5
+    direction_ru: Обеспечение качества (QA)
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.1
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Обеспечение качества (QA): потеря граничного события
+    на стыке водяного знака и допустимого опоздания; формат find_bug, целевые грейды principal (b = 3,1 у порога
+    старшего грейда).'
+generator: assessment_bank.families.qa.lp2_05_watermark_late_admission_bug
+version: 1
+description: 'Обеспечение качества (QA) (principal): Потеря граничного события на стыке водяного знака и допустимого
+  опоздания. Проверка исполнением и рубрикой.'

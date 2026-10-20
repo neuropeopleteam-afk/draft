@@ -1,0 +1,38 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: qa.principal_v2.read_repair_monotonic_ob3
+title: 'Обеспечение качества (QA): Немонотонное чтение при неполном кворуме и гонке read-repair (3 шага)'
+direction: qa
+skills:
+- test_design
+- pytest
+- api_testing
+- load_testing
+- test_architecture
+target_grades:
+- principal
+format: open_book_3step
+language: python
+invariants:
+  defect_type: non_monotonic_quorum_read
+  extra:
+    wave: LP-v2
+    slot: 22
+    direction_ru: Обеспечение качества (QA)
+  n_options: 4
+time_limit_s: 720
+canary: false
+prior_difficulty:
+  b: 2.84
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Обеспечение качества (QA): немонотонное чтение
+    при неполном кворуме и гонке read-repair (3 шага); формат open_book_3step, целевые грейды principal (b = 2,84
+    у порога старшего грейда).'
+  step_offsets:
+  - -0.35
+  - 0.0
+  - 0.35
+generator: assessment_bank.families.qa.lp2_22_read_repair_monotonic_ob3
+version: 1
+description: 'Обеспечение качества (QA) (principal): Немонотонное чтение при неполном кворуме и гонке read-repair
+  (3 шага). Проверка исполнением и рубрикой.'
