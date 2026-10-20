@@ -1,4 +1,4 @@
-"""mobile.principal_v2.hot_partition_skew_stall_inc — incident_sim (lead, principal). Мобильная разработка: Инцидент: деградация p99 из-за перекоса горячего ключа и блокировки очереди.
+"""mobile.principal_v2.hot_partition_skew_stall_inc — open_book_3step (lead, principal). Мобильная разработка: Инцидент: деградация p99 из-за перекоса горячего ключа и блокировки очереди.
 
 Волна LP-v2: содержательное семейство старших грейдов (проверка исполнением и рубрикой).
 """

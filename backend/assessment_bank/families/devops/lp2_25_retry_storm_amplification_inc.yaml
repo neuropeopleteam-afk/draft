@@ -10,7 +10,7 @@ skills:
 - ci_cd
 target_grades:
 - lead
-format: incident_sim
+format: open_book_3step
 language: python
 invariants:
   defect_type: cascading_retry_storm
@@ -18,6 +18,7 @@ invariants:
     wave: LP-v2
     slot: 25
     direction_ru: DevOps и SRE
+    incident_sim: true
   n_options: 4
 time_limit_s: 600
 canary: false
@@ -26,7 +27,7 @@ prior_difficulty:
   a: 1.3
   sigma_variant: 0.25
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). DevOps и SRE: инцидент: каскадный шторм повторов
-    между слоями без бюджета ретраев; формат incident_sim, целевые грейды lead (b = 2,13 у порога старшего грейда).'
+    между слоями без бюджета ретраев; формат open_book_3step, целевые грейды lead (b = 2,13 у порога старшего грейда).'
   step_offsets:
   - -0.35
   - 0.0

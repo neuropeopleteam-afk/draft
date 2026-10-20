@@ -1,4 +1,4 @@
-"""data_eng.principal_v2.stale_cache_poison_rollout_inc — incident_sim (principal). Инженерия данных: Инцидент: отравление общего кэша несовместимой схемой при канарской выкладке.
+"""data_eng.principal_v2.stale_cache_poison_rollout_inc — open_book_3step (principal). Инженерия данных: Инцидент: отравление общего кэша несовместимой схемой при канарской выкладке.
 
 Волна LP-v2: содержательное семейство старших грейдов (проверка исполнением и рубрикой).
 """

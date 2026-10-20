@@ -10,7 +10,7 @@ skills:
 - ui_threading
 target_grades:
 - principal
-format: incident_sim
+format: open_book_3step
 language: python
 invariants:
   defect_type: schema_rollout_cache_poison
@@ -18,6 +18,7 @@ invariants:
     wave: LP-v2
     slot: 27
     direction_ru: Мобильная разработка
+    incident_sim: true
   n_options: 4
 time_limit_s: 780
 canary: false
@@ -26,8 +27,8 @@ prior_difficulty:
   a: 1.3
   sigma_variant: 0.25
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Мобильная разработка: инцидент: отравление общего
-    кэша несовместимой схемой при канарской выкладке; формат incident_sim, целевые грейды principal (b = 3,03 у
-    порога старшего грейда).'
+    кэша несовместимой схемой при канарской выкладке; формат open_book_3step, целевые грейды principal (b = 3,03
+    у порога старшего грейда).'
   step_offsets:
   - -0.35
   - 0.0

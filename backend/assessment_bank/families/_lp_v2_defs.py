@@ -289,14 +289,14 @@ SLOT_SPECS: list[tuple[int, str, str, list[str], float, int, str, str]] = [
     (23, "shard_rebalance_epoch_ob3", "open_book_3step", ["principal"], 3.12, 720, "rebalance_epoch_routing",
      "Потеря обновлений во время онлайн-миграции шарда между эпохами (3 шага)"),
 
-    # 24..27: incident_sim (4)
-    (24, "pool_starvation_cascade_inc", "incident_sim", ["senior", "lead"], 1.86, 540, "pool_exhaustion_in_tx",
+    # 24..27: open_book_3step с интерактивным симулятором инцидента (incident_sim: true в invariants.extra и pv["incident"])
+    (24, "pool_starvation_cascade_inc", "open_book_3step", ["senior", "lead"], 1.86, 540, "pool_exhaustion_in_tx",
      "Инцидент: исчерпание пула соединений из-за внешнего вызова внутри транзакции"),
-    (25, "retry_storm_amplification_inc", "incident_sim", ["lead"], 2.12, 600, "cascading_retry_storm",
+    (25, "retry_storm_amplification_inc", "open_book_3step", ["lead"], 2.12, 600, "cascading_retry_storm",
      "Инцидент: каскадный шторм повторов между слоями без бюджета ретраев"),
-    (26, "hot_partition_skew_stall_inc", "incident_sim", ["lead", "principal"], 2.58, 660, "partition_hotkey_skew",
+    (26, "hot_partition_skew_stall_inc", "open_book_3step", ["lead", "principal"], 2.58, 660, "partition_hotkey_skew",
      "Инцидент: деградация p99 из-за перекоса горячего ключа и блокировки очереди"),
-    (27, "stale_cache_poison_rollout_inc", "incident_sim", ["principal"], 2.98, 780, "schema_rollout_cache_poison",
+    (27, "stale_cache_poison_rollout_inc", "open_book_3step", ["principal"], 2.98, 780, "schema_rollout_cache_poison",
      "Инцидент: отравление общего кэша несовместимой схемой при канарской выкладке"),
 
     # 28..31: open_answer (4)
@@ -331,7 +331,12 @@ def yaml_spec_for(direction: str, slot_idx: int) -> dict[str, Any]:
     b = round(b_base + (dir_idx - 4.5) * 0.015, 2)
     inv: dict[str, Any] = {
         "defect_type": defect,
-        "extra": {"wave": "LP-v2", "slot": slot_idx, "direction_ru": dm["ru"]},
+        "extra": {
+            "wave": "LP-v2",
+            "slot": slot_idx,
+            "direction_ru": dm["ru"],
+            **({"incident_sim": True} if 24 <= slot_idx <= 27 else {}),
+        },
     }
     if fmt == "choose_fix":
         inv["n_options"] = 4
@@ -1211,10 +1216,8 @@ def make_lp_v2(direction: str, slot_idx: int):
             return _gen_choose_fix(fid, direction, slot_idx, seed)
         if fmt == "predict_output":
             return _gen_predict_output(fid, direction, slot_idx, seed)
-        if fmt == "open_book_3step":
-            return _gen_ob3_or_incident(fid, direction, slot_idx, seed, is_incident=False)
-        if fmt == "incident_sim":
-            return _gen_ob3_or_incident(fid, direction, slot_idx, seed, is_incident=True)
+        if fmt in ("open_book_3step", "incident_sim"):
+            return _gen_ob3_or_incident(fid, direction, slot_idx, seed, is_incident=(24 <= slot_idx <= 27 or fmt == "incident_sim"))
         return _gen_open_answer(fid, direction, slot_idx, seed)
 
     return generate

@@ -11,7 +11,7 @@ skills:
 target_grades:
 - senior
 - lead
-format: incident_sim
+format: open_book_3step
 language: python
 invariants:
   defect_type: pool_exhaustion_in_tx
@@ -19,6 +19,7 @@ invariants:
     wave: LP-v2
     slot: 24
     direction_ru: Backend-разработка
+    incident_sim: true
   n_options: 4
 time_limit_s: 540
 canary: false
@@ -27,7 +28,7 @@ prior_difficulty:
   a: 1.3
   sigma_variant: 0.25
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Backend-разработка: инцидент: исчерпание пула соединений
-    из-за внешнего вызова внутри транзакции; формат incident_sim, целевые грейды senior, lead (b = 1,81 у порога
+    из-за внешнего вызова внутри транзакции; формат open_book_3step, целевые грейды senior, lead (b = 1,81 у порога
     старшего грейда).'
   step_offsets:
   - -0.35

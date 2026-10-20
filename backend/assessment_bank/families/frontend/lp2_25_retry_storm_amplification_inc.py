@@ -1,4 +1,4 @@
-"""frontend.lead_v2.retry_storm_amplification_inc — incident_sim (lead). Frontend-разработка: Инцидент: каскадный шторм повторов между слоями без бюджета ретраев.
+"""frontend.lead_v2.retry_storm_amplification_inc — open_book_3step (lead). Frontend-разработка: Инцидент: каскадный шторм повторов между слоями без бюджета ретраев.
 
 Волна LP-v2: содержательное семейство старших грейдов (проверка исполнением и рубрикой).
 """

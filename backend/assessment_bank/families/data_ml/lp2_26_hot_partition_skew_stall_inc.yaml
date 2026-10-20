@@ -11,7 +11,7 @@ skills:
 target_grades:
 - lead
 - principal
-format: incident_sim
+format: open_book_3step
 language: python
 invariants:
   defect_type: partition_hotkey_skew
@@ -19,6 +19,7 @@ invariants:
     wave: LP-v2
     slot: 26
     direction_ru: Аналитика данных и ML
+    incident_sim: true
   n_options: 4
 time_limit_s: 660
 canary: false
@@ -27,8 +28,8 @@ prior_difficulty:
   a: 1.3
   sigma_variant: 0.25
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Аналитика данных и ML: инцидент: деградация p99
-    из-за перекоса горячего ключа и блокировки очереди; формат incident_sim, целевые грейды lead, principal (b =
-    2,56 у порога старшего грейда).'
+    из-за перекоса горячего ключа и блокировки очереди; формат open_book_3step, целевые грейды lead, principal (b
+    = 2,56 у порога старшего грейда).'
   step_offsets:
   - -0.35
   - 0.0

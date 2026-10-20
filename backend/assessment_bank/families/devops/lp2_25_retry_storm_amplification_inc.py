@@ -1,4 +1,4 @@
-"""devops.lead_v2.retry_storm_amplification_inc — incident_sim (lead). DevOps и SRE: Инцидент: каскадный шторм повторов между слоями без бюджета ретраев.
+"""devops.lead_v2.retry_storm_amplification_inc — open_book_3step (lead). DevOps и SRE: Инцидент: каскадный шторм повторов между слоями без бюджета ретраев.
 
 Волна LP-v2: содержательное семейство старших грейдов (проверка исполнением и рубрикой).
 """
