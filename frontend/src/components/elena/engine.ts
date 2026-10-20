@@ -87,6 +87,7 @@ const PIPE_MS = 650;               // звук из видеопотока зв�
 const IDLE_AFTER_GREETING_MS = 8000;
 const IDLE_AFTER_QUESTION_MS = 9000;
 const RESUME_AFTER_ANSWER_MS = 1100;
+const RESUME_AFTER_QUESTION_MS = 4500;   // Елена спросила («Показать …?») — даём время ответить «да»
 const FILLER_AFTER_MS = 450;
 const STALE_INTERIM_MS = 2200;     // промежуточный текст не меняется — считаем фразу законченной
 const REPEAT_IF_HEARD_LESS = 0.6;
@@ -242,7 +243,9 @@ export class ElenaEngine {
   private lastMicLogged: MicState | null = null;
   private viewSeq = 0;
   private submitWait = 0;               // реплика человека ждёт, пока Елена договорит фразу
+  private replyBusy = false;            // ответ прозвучал, но его действие (обзор, переход) ещё не началось
   private shownSteps = new Set<string>();
+  private lastAsked = false;            // ответ закончился вопросом — обзор ждёт дольше, чтобы человек успел ответить
 
   constructor(private d: ElenaDeps) {
     this.voice = new Voice(d.avatar);
@@ -609,7 +612,7 @@ export class ElenaEngine {
         let quiet = 0;   // два тихих такта подряд: Елена договорила, следующий шаг (обзор, переход) уже начался
         this.submitWait = window.setInterval(() => {
           if (this.closed) return;
-          if (this.voice.speaking()) { quiet = 0; return; }
+          if (this.voice.speaking() || this.replyBusy) { quiet = 0; return; }
           if (++quiet < 2) return;
           window.clearInterval(this.submitWait);
           this.submitWait = 0;
@@ -681,6 +684,7 @@ export class ElenaEngine {
         } else if (item.t === "meta") {
           window.clearTimeout(killer);
           meta = item as Meta;
+          this.replyBusy = true;
           this.remember("user", text);
           this.pendingText = "";
           if (meta.user_name) this.setName(meta.user_name);
@@ -699,6 +703,7 @@ export class ElenaEngine {
         }
       }
     } catch (e) {
+      this.replyBusy = false;
       window.clearTimeout(filler);
       window.clearTimeout(killer);
       if (this.turnCtl === ctl) this.turnCtl = null;
@@ -713,17 +718,20 @@ export class ElenaEngine {
     window.clearTimeout(filler);
     window.clearTimeout(killer);
     if (this.turnCtl === ctl) this.turnCtl = null;
-    if (!this.alive(ep) || !meta) return;
+    if (!this.alive(ep) || !meta) { this.replyBusy = false; return; }
     if (meta.text) this.remember("elena", meta.text);
     if (utter) {
       const res = await utter.end();
-      if (res === "aborted" || !this.alive(ep)) return;
+      if (res === "aborted" || !this.alive(ep)) { this.replyBusy = false; return; }
     } else if (meta.text) {
       // голос ответа не пришёл потоком — пробуем обычной загрузкой
       const res = await this.sayText(meta.text, ep, undefined, false);
-      if (res === "aborted" || !this.alive(ep)) return;
+      if (res === "aborted" || !this.alive(ep)) { this.replyBusy = false; return; }
     }
-    await this.act(meta, ep, nav);
+    this.lastAsked = /\?\s*$/.test(meta.text ?? "");
+    const acting = this.act(meta, ep, nav);
+    this.replyBusy = false;          // действие запущено синхронно (обзор уже «начат») — отложенная реплика может идти
+    await acting;
   }
 
   private playFiller(ep: number) {
@@ -900,7 +908,7 @@ export class ElenaEngine {
 
   /** После ответа на вопрос: прерванный обзор продолжается сам, если человек молчит. */
   private afterAnswer(ep: number) {
-    if (this.resumePending && !this.paused) { this.scheduleResume(ep, RESUME_AFTER_ANSWER_MS); return; }
+    if (this.resumePending && !this.paused) { this.scheduleResume(ep, this.lastAsked ? RESUME_AFTER_QUESTION_MS : RESUME_AFTER_ANSWER_MS); return; }
     this.set({ phase: this.paused ? "paused" : "listening" });
     if (!this.paused && !this.everToured && this.script) {
       const sc = this.script;
