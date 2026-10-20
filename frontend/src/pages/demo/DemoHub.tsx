@@ -34,7 +34,7 @@ const CRITERIA_3MIN: {
     id: "c2",
     weight: "25 %",
     title: "2. Тестирование, валидация и категоризация",
-    summary: `Банк ${NUMBERS.bank.families.toLocaleString("ru-RU")} семейств заданий с параметрической генерацией вариантов, классификационный адаптивный тест, трёхзначный вердикт («подтверждён / доп. этап / не подтверждён»), защита от утечки заданий и промпт-инъекций.`,
+    summary: `Банк ${NUMBERS.bank.families.toLocaleString("ru-RU")} семейств заданий с параметрической генерацией вариантов, адаптивный тест с подтверждением заявленного грейда, защита от утечки заданий и промпт-инъекций.`,
     actions: [
       { label: "Пройти экспресс-тест (1 клик)", persona: "candidate_new", to: "/candidate/express", testid: "c3m-test", primary: true },
       { label: "Протоколы валидации и античит", to: "/validation", testid: "c3m-validation" },
