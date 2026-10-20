@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, GRADE_TITLE_ALL, Loading, catTitle, dt, plainText, useApi } from "../../components/ui";
+import { Alert, Empty, GRADE_TITLE_ALL, Loading, catTitle, dt, plainText, range, rub, useApi } from "../../components/ui";
 import HhMarketSkills, { type HhMarket } from "../../components/HhMarketSkills";  // Я12б: «Что сейчас просит рынок» (hh.ru)
 import { ThetaScale } from "../../components/ThetaScale";
 
@@ -196,6 +196,62 @@ function Competitions({ list, url }: { list: Comp[]; url?: string }) {
   );
 }
 
+/** P1 (А2): блок «Спрос на ваш профиль и чего не хватает до приглашений» — потребности категории, медианная вилка и 2 навыка для роста в подборках. */
+export function DemandGapBanner({ fb: fbProp }: { fb?: FeedbackData | null }) {
+  const { data: fbLoaded } = useApi<FeedbackData>(fbProp === undefined ? "/assessment/feedback" : null);
+  const fb = fbProp ?? fbLoaded;
+  if (!fb?.available || !fb.demand) return null;
+  const d = fb.demand;
+  const topMissing = (d.items ?? [])
+    .filter((x) => x.status !== "confirmed")
+    .sort((a, b) => (b.required * 2 + b.desired) - (a.required * 2 + a.desired))
+    .slice(0, 2);
+  const hhSal = (fb.market_hh as any)?.salary;
+  const needsCount = d.sources_in_category || d.sources || 0;
+  return (
+    <section className="card space-y-3 border-brand/25 bg-gradient-to-r from-[#FBF8FC] to-white" data-testid="candidate-demand-gap">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand">Аналитика спроса на ваш профиль</p>
+          <h2 className="mt-0.5 text-base font-bold text-brand-night">Спрос на ваш профиль и чего не хватает до приглашений</h2>
+        </div>
+        <span className="rounded-full bg-[#ECEAF8] px-2.5 py-1 text-xs font-semibold text-brand-night">
+          {catTitle(fb.session?.category_id)}
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl bg-white p-3 ring-1 ring-brand-night/10">
+          <p className="text-xs font-semibold text-brand-ink/65">Потребностей и вакансий</p>
+          <p className="mt-1 text-xl font-extrabold text-brand-night">{needsCount}</p>
+          <p className="text-xs text-brand-ink/65">ищут вашу категорию на платформе</p>
+        </div>
+        <div className="rounded-xl bg-white p-3 ring-1 ring-brand-night/10">
+          <p className="text-xs font-semibold text-brand-ink/65">Ориентир вилки категории</p>
+          <p className="mt-1 text-lg font-extrabold text-brand-night">
+            {hhSal?.median ? rub(hhSal.median) : hhSal?.from || hhSal?.to ? range(hhSal.from, hhSal.to) : "по категории"}
+          </p>
+          <p className="text-xs text-brand-ink/65">{hhSal?.from && hhSal?.to ? `вилка ${range(hhSal.from, hhSal.to)}` : "открытые данные рынка и офферы"}</p>
+        </div>
+        <div className="rounded-xl bg-white p-3 ring-1 ring-brand-night/10">
+          <p className="text-xs font-semibold text-brand-ink/65">Покрытие обязательного стека</p>
+          <p className="mt-1 text-xl font-extrabold text-brand-night">{pct(d.avg_required_coverage)}</p>
+          <p className="text-xs text-brand-ink/65">полное совпадение: {d.full_match} из {d.with_required}</p>
+        </div>
+      </div>
+      {topMissing.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-blush/30 px-3.5 py-2.5 text-sm">
+          <p className="text-brand-night">
+            <b>2 навыка, подтверждение которых сильнее всего поднимет вас в подборках:</b>{" "}
+            {topMissing.map((x) => `${x.title} (в ${x.required + x.desired} из ${d.sources} вакансий)`).join(" и ")}.
+          </p>
+          <Link to="/candidate/assessment" className="btn-primary shrink-0 !px-3.5 !py-1.5 text-xs">
+            Подтвердить тестом →
+          </Link>
+        </div>
+      )}
+    </section>
+  );
+}
 /** Короткая сводка для экрана результата теста. */
 export function FeedbackSummary({ sessionId, fallbackLink = false }: { sessionId: string; fallbackLink?: boolean }) {
   const { data: fb, loading } = useApi<FeedbackData>(`/assessment/feedback?session_id=${sessionId}`, [sessionId]);
@@ -248,6 +304,7 @@ export default function Feedback() {
         <Alert kind="info">Достоверность результата снижена. Общая причина: {s.integrity.reasons.join("; ").toLowerCase()}. {s.integrity.note ?? "Оценку уровня и грейд это не меняет."}</Alert>
       )}
       {fb.source === "facts" && <Alert kind="info">Подробной разбивки по заданиям для этого теста нет — карта построена по навыкам, подтверждённым тестом.</Alert>}
+      <DemandGapBanner fb={fb} />
       <ThetaScale theta={s.theta} se={s.se} grade={s.claimed_grade} confirmed={s.confirmed} />
       {fb.route && fb.route.length > 0 && <Route steps={fb.route} />}
       <SkillMap fb={fb} />

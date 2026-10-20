@@ -25,6 +25,7 @@ function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market, hh }:
 }) {
   const f = Number(from), t = Number(to);
   const wide = f > 0 && t > f * SALARY_MAX_RATIO;
+  const veryWide = f > 0 && t > f * 3.5;
   return (
     <div className="space-y-3">
       <div><p className="label">Сумма указана</p><BasisSeg value={basis} onChange={setBasis} /></div>
@@ -34,7 +35,8 @@ function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market, hh }:
           <Field label="Вилка до, ₽ в месяц" htmlFor="st"><input id="st" required type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
         </div>
         <p className={`mt-2 text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/65"}`}>
-          {wide ? `Вилка слишком широкая: при «от» ${rub(f)} «до» — не выше ${rub(maxTo(from))}.`
+          {veryWide ? `Слишком широкая вилка (разрыв более 3,5×): размытые диапазоны снижают отклик и индекс ответственности работодателя. При «от» ${rub(f)} укажите «до» не выше ${rub(maxTo(from))}.`
+            : wide ? `Вилка слишком широкая: при «от» ${rub(f)} «до» — не выше ${rub(maxTo(from))}.`
             : f > 0 && t >= f ? `${otherBasis(f, t, basis)} · по шкале НДФЛ 13–22 %. «До» — не больше чем в 1,5 раза выше «от».`
               : "«До» — не больше чем в 1,5 раза выше «от»: узкая вилка показывает кандидату реальное предложение."}
         </p>

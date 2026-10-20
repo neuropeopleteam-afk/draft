@@ -535,50 +535,50 @@ def _maria_extras(db: Session, eu: User, maria: CandidateProfile) -> None:
 
 def _jury_trio(db: Session, eu: User, c: Company, maria: CandidateProfile, fsp_u: User) -> None:
     """А2 (PR-18): демо трёхсторонней связи внутри песочницы жюри (работодатель, кандидат Мария и ФСП)."""
+    from app.core.enums import InvitationStatus
     from app.modules.invitations.models import Invitation
     from app.modules.trio.models import TrioMessage, TrioThread
 
     try:
-        now = utcnow()
-        # 1. Канал у Марии по приглашению от «Логистики Онлайн» — активен, с ответом представителя ФСП
-        inv_m = db.scalar(select(Invitation).where(Invitation.candidate_user_id == maria.user_id)
-                          .order_by(Invitation.created_at).limit(1))
-        if inv_m is not None and db.scalar(select(TrioThread.id).where(TrioThread.invitation_id == inv_m.id)) is None:
-            tm = TrioThread(invitation_id=inv_m.id, company_id=inv_m.company_id, candidate_user_id=maria.user_id,
-                            topic="fsp_check", created_by_side="candidate", created_by=maria.user_id,
-                            status="active", activated_at=now)
-            db.add(tm)
-            db.flush()
-            db.add_all([
-                TrioMessage(thread_id=tm.id, sender_side="system",
-                            body="Кандидат подключил представителя ФСП к переписке."),
-                TrioMessage(thread_id=tm.id, sender_user_id=maria.user_id, sender_side="candidate",
-                            body="Прошу представителя ФСП подтвердить мои результаты Всероссийского чемпионата по продуктовому программированию для работодателя."),
-                TrioMessage(thread_id=tm.id, sender_user_id=fsp_u.id, sender_side="fsp",
-                            body="Подтверждаем по реестру ФСП: 2 место Всероссийского чемпионата по продуктовому программированию (дисциплина ЕВСК). Достижение верифицировано."),
-            ])
-        # 2. Канал у работодателя «Северный платёж» по принятому приглашению — активен и виден обеим сторонам и ФСП
-        inv_e = db.scalar(select(Invitation).where(
-            Invitation.company_id == c.id, Invitation.candidate_user_id != maria.user_id,
-            Invitation.status == InvitationStatus.accepted,
-        ).order_by(Invitation.created_at).limit(1))
-        if inv_e is not None and db.scalar(select(TrioThread.id).where(TrioThread.invitation_id == inv_e.id)) is None:
-            te = TrioThread(invitation_id=inv_e.id, company_id=c.id, candidate_user_id=inv_e.candidate_user_id,
-                            topic="offer", created_by_side="employer", created_by=eu.id,
-                            status="active", activated_at=now)
-            db.add(te)
-            db.flush()
-            db.add_all([
-                TrioMessage(thread_id=te.id, sender_side="system",
-                            body="Кандидат согласился: представитель ФСП подключён к каналу."),
-                TrioMessage(thread_id=te.id, sender_user_id=eu.id, sender_side="employer",
-                            body="Коллеги из ФСП, просим подтвердить участие кандидата в кубке по алгоритмическому программированию перед финальным оффером."),
-                TrioMessage(thread_id=te.id, sender_user_id=fsp_u.id, sender_side="fsp",
-                            body="Проверено по протоколам ФСП: участие и зачётный результат подтверждены."),
-            ])
-        db.commit()
+        with db.begin_nested():
+            now = utcnow()
+            # 1. Канал у Марии по приглашению от «Логистики Онлайн» — активен, с ответом представителя ФСП
+            inv_m = db.scalar(select(Invitation).where(Invitation.candidate_user_id == maria.user_id)
+                              .order_by(Invitation.created_at).limit(1))
+            if inv_m is not None and db.scalar(select(TrioThread.id).where(TrioThread.invitation_id == inv_m.id)) is None:
+                tm = TrioThread(invitation_id=inv_m.id, company_id=inv_m.company_id, candidate_user_id=maria.user_id,
+                                topic="fsp_check", created_by_side="candidate", created_by=maria.user_id,
+                                status="active", activated_at=now)
+                db.add(tm)
+                db.flush()
+                db.add_all([
+                    TrioMessage(thread_id=tm.id, sender_side="system",
+                                body="Кандидат подключил представителя ФСП к переписке."),
+                    TrioMessage(thread_id=tm.id, sender_user_id=maria.user_id, sender_side="candidate",
+                                body="Прошу представителя ФСП подтвердить мои результаты Всероссийского чемпионата по продуктовому программированию для работодателя."),
+                    TrioMessage(thread_id=tm.id, sender_user_id=fsp_u.id, sender_side="fsp",
+                                body="Подтверждаем по реестру ФСП: 2 место Всероссийского чемпионата по продуктовому программированию (дисциплина ЕВСК). Достижение верифицировано."),
+                ])
+            # 2. Канал у работодателя «Северный платёж» по принятому приглашению — активен и виден обеим сторонам и ФСП
+            inv_e = db.scalar(select(Invitation).where(
+                Invitation.company_id == c.id, Invitation.candidate_user_id != maria.user_id,
+                Invitation.status == InvitationStatus.accepted,
+            ).order_by(Invitation.created_at).limit(1))
+            if inv_e is not None and db.scalar(select(TrioThread.id).where(TrioThread.invitation_id == inv_e.id)) is None:
+                te = TrioThread(invitation_id=inv_e.id, company_id=c.id, candidate_user_id=inv_e.candidate_user_id,
+                                topic="offer", created_by_side="employer", created_by=eu.id,
+                                status="active", activated_at=now)
+                db.add(te)
+                db.flush()
+                db.add_all([
+                    TrioMessage(thread_id=te.id, sender_side="system",
+                                body="Кандидат согласился: представитель ФСП подключён к каналу."),
+                    TrioMessage(thread_id=te.id, sender_user_id=eu.id, sender_side="employer",
+                                body="Коллеги из ФСП, просим подтвердить участие кандидата в кубке по алгоритмическому программированию перед финальным оффером."),
+                    TrioMessage(thread_id=te.id, sender_user_id=fsp_u.id, sender_side="fsp",
+                                body="Проверено по протоколам ФСП: участие и зачётный результат подтверждены."),
+                ])
     except Exception:  # noqa: BLE001
-        db.rollback()
         log.exception("jury: demo trio failed")
 
 

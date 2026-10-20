@@ -189,7 +189,7 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
     if mr and audience == "employer":
         el.append(Paragraph("Рынок категории", st["h2"]))
         el.append(Paragraph(f"{_rub(mr['from'])} – {_rub(mr['to'])} (25–75-й перцентиль, медиана {_rub(mr.get('median'))}). "
-                            "Источник: калькулятор зарплат Хабр Карьеры.", st["p"]))
+                            "Источник: открытые данные рынка и офферы на платформе.", st["p"]))
     el.append(Spacer(1, 10))
     el.append(Paragraph(f"Сформировано {date.today():%d.%m.%Y} · обезличенный идентификатор {_esc(card.get('ref'))}",
                         st["small"]))

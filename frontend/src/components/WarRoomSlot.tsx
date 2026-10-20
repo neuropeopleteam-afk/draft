@@ -52,10 +52,13 @@ export function WarRoomSlot({
       .catch(() => setData(null));
   }, [BadgeComp, mode, candidateRef, grade]);
 
+  if (mode === "candidate" && !isSeniorPlusGrade(grade)) return null;
+  if (mode === "employer" && !candidateRef) return null;
+
   if (BadgeComp) {
     return (
       <div data-testid="warroom-badge-slot">
-        <BadgeComp mode={mode} candidateRef={candidateRef} refId={candidateRef} grade={grade} direction={direction} compact={compact} />
+        <BadgeComp role={mode} mode={mode} candidateRef={candidateRef} refId={candidateRef} claimedGrade={grade} grade={grade} direction={direction} compact={compact} />
       </div>
     );
   }

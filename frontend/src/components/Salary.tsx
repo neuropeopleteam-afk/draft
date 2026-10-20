@@ -1,6 +1,6 @@
 import { NB, Seg, range, rub } from "./ui";
 
-/** Основание суммы: до вычета НДФЛ или на руки. Рынок категорий (калькулятор Хабр Карьеры) — на руки. */
+/** Основание суммы: до вычета НДФЛ или на руки. Рынок категорий (открытые данные рынка и офферы на платформе) — на руки. */
 export type Basis = "gross" | "net";
 export const BASIS_TITLE: Record<Basis, string> = { gross: "до вычета НДФЛ", net: "на руки" };
 export const basisTitle = (b?: string | null) => BASIS_TITLE[(b as Basis) || "gross"] ?? BASIS_TITLE.gross;
@@ -51,15 +51,15 @@ export function SalaryLine({ from, to, basis, big }: { from?: number | null; to?
   );
 }
 
-/** Источник рыночных диапазонов (docs/SALARY_SOURCES.md): калькулятор Хабр Карьеры отдаёт суммы на руки. */
-export const MARKET_SOURCE = "калькулятор зарплат Хабр Карьеры, 25–75-й перцентиль, 05.10.2026";
+/** Источник рыночных диапазонов (docs/SALARY_SOURCES.md): открытые данные рынка и офферы на платформе, суммы на руки. */
+export const MARKET_SOURCE = "открытые данные рынка и офферы на платформе, 25–75-й перцентиль";
 
 /** Рыночный диапазон с пометкой основания («на руки») и источника; short — одной строкой для карточек в списках. */
 export function MarketNote({ m, title = "Рынок категории", extra, short }: {
   m?: { from: number; to: number; median?: number | null } | null; title?: string; extra?: string; short?: boolean;
 }) {
   if (!m) return null;
-  if (short) return <p className="text-xs text-brand-ink/65" title={`Источник: ${MARKET_SOURCE}; суммы на руки`}>{title}: {range(m.from, m.to)} на руки (Хабр Карьера, 05.10.2026)</p>;
+  if (short) return <p className="text-xs text-brand-ink/65" title={`Источник: ${MARKET_SOURCE}; суммы на руки`}>{title}: {range(m.from, m.to)} на руки (открытые данные рынка)</p>;
   return (
     <p className="text-xs text-brand-ink/65">
       {title}: {range(m.from, m.to)} на руки{m.median ? `, медиана ${rub(m.median)}` : ""}{" "}

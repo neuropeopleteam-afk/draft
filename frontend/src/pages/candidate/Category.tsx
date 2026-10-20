@@ -12,6 +12,8 @@ import { useMeta } from "../../lib/meta";
 import { Specializations } from "../../components/Specializations";
 import { PassportShare } from "../../passport/Share";
 import { AttemptsLink } from "../../components/AttemptsCompare";
+import { WarRoomSlot } from "../../components/WarRoomSlot";
+import { TaskAppealButton } from "../../components/TaskAppeal";
 
 const REASON: Record<string, string> = {
   initial: "Первое присвоение", retest_up: "Пересдача на грейд выше", retest_down: "Пересдача на грейд ниже", sandbox: "Режим проверки для жюри",
@@ -134,6 +136,7 @@ export default function Category() {
         {s.sessions.some((t: any) => t.status === "finished") && <Link className="btn-ghost" to="/candidate/feedback">Карта навыков и маршрут роста</Link>}
       </section>
       {c.category_id && <PassportShare />}
+      <WarRoomSlot mode="candidate" grade={c.grade ?? s.claimed_grade} direction={c.direction ?? s.survey_direction} />
       <DefenseForLatest sessions={s.sessions} direction={c.direction} live="manual" />
       <div className="grid gap-6 md:grid-cols-2">
         <section className="card">
@@ -164,7 +167,12 @@ export default function Category() {
                     {t.theta != null && <p className="text-brand-ink/65">уровень по шкале теста {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : t.accepted_lower ? `не подтверждён, принят ${GRADE_TITLE_ALL[t.accepted_lower] ?? t.accepted_lower}` : t.provisional ? "предварительно" : "не подтверждён"}</p>}
                   </div>
                   {t.status === "in_progress" && <Link className="text-sm font-semibold text-brand" to={`/candidate/assessment/test/${t.id}`}>Продолжить</Link>}
-                  {t.status === "finished" && <Link className="shrink-0 text-sm font-semibold text-brand" to={`/candidate/feedback?session=${t.id}`}>Разбор</Link>}
+                  {t.status === "finished" && (
+                    <div className="flex shrink-0 items-center gap-3">
+                      <Link className="text-sm font-semibold text-brand" to={`/candidate/feedback?session=${t.id}`}>Разбор</Link>
+                      <TaskAppealButton sessionId={t.id} direction={t.direction} grade={t.claimed_grade} compact />
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

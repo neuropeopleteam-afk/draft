@@ -288,8 +288,8 @@ function SquadBuilder() {
           <Range id="squad-budget" label="3. Месячный бюджет ФОТ команды" value={budget} min={BUDGET_MIN} max={BUDGET_MAX} step={50_000}
             onChange={setBudget} fmt={(v) => rub(v)} />
           <div className="md:w-72">
-            <Toggle checked={fspFirst} onChange={setFspFirst} label="Приоритет призёрам и разрядникам ФСП (T2)"
-              hint="Разряд подтверждён федерацией — весит как +0,3 θ" />
+            <Toggle checked={fspFirst} onChange={setFspFirst} label="Приоритет призёрам и разрядникам ФСП"
+              hint="Разряд подтверждён федерацией — даёт приоритет при равном уровне" />
           </div>
         </div>
       </section>
@@ -316,7 +316,7 @@ function SquadBuilder() {
               <tr className="border-b border-brand-night/10 text-left text-[11px] uppercase tracking-[0.08em] text-brand-lavender">
                 <th className="py-2 pr-3 font-semibold">Роль · профиль</th>
                 <th className="py-2 pr-3 font-semibold">Грейд</th>
-                <th className="py-2 pr-3 font-semibold">Шкала θ</th>
+                <th className="py-2 pr-3 font-semibold" title="Оценка по адаптивной шкале теста">Уровень по тесту</th>
                 <th className="py-2 pr-3 font-semibold">Паспорт</th>
                 <th className="py-2 pr-3 font-semibold">ФСП</th>
                 <th className="py-2 pr-3 text-right font-semibold">Ожидания</th>
@@ -338,11 +338,11 @@ function SquadBuilder() {
                     </span>
                   </td>
                   <td className="py-3 pr-3"><span className="font-mono text-xs">Ed25519 {t.x.key}</span><span className="block text-xs text-emerald-700">✓ подпись верна</span></td>
-                  <td className="py-3 pr-3 text-xs">{t.x.fsp ? <><span className="chip !px-2 !py-0.5">T2</span> <span className="mt-1 block max-w-[13rem] leading-snug">{t.x.fsp}</span></> : <span className="text-brand-ink/55">нет истории — нейтрально</span>}</td>
+                  <td className="py-3 pr-3 text-xs">{t.x.fsp ? <><span className="chip !px-2 !py-0.5">реестр ФСП</span> <span className="mt-1 block max-w-[13rem] leading-snug">{t.x.fsp}</span></> : <span className="text-brand-ink/55">нет истории — нейтрально</span>}</td>
                   <td className="py-3 pr-3 text-right font-semibold tabular-nums">{rub(t.x.salary)}</td>
                   <td className="py-3 text-right">
                     <button type="button" className="text-xs font-semibold text-brand hover:underline" onClick={() => swap(t.i)}
-                      title={`${t.alt.code}: θ ${th(t.alt.theta)}, ${rub(t.alt.salary)}`}>Заменить</button>
+                      title={`${t.alt.code}: индекс ${th(t.alt.theta)}, ${rub(t.alt.salary)}`}>Заменить</button>
                   </td>
                 </tr>
               ))}
@@ -392,7 +392,7 @@ const M = {
   agencyFee: 0.2,                                                         // комиссия агентства, доля годового дохода
 };
 
-function HireRoi() {
+export function HireRoi() {
   const [hires, setHires] = useState(40);
   const [salary, setSalary] = useState(250_000);
   const r = useMemo(() => {
@@ -654,7 +654,7 @@ function CodeDna() {
         <section className="card space-y-4" aria-live="polite" aria-label="Результат рентгена">
           <div className="grid gap-3 sm:grid-cols-3">
             <Kpi label="Вероятность слепой ИИ-генерации" value={`${res.ai}${NB}%`} tone={res.ai >= 60 ? "warn" : "ok"} />
-            <Kpi label="Реальный инженерный уровень" value={`θ ${th(res.theta)}`} hint={res.grade} />
+            <Kpi label="Реальный инженерный уровень" value={res.grade} hint={`индекс по шкале теста ${th(res.theta)}`} />
             <Kpi label="Сверка со стилем кандидата в тесте" value={`${res.style}${NB}%`} tone={res.style >= 70 ? "ok" : "warn"} />
           </div>
           <Alert kind={verdict.kind}>{verdict.t}</Alert>

@@ -74,6 +74,11 @@ export function Invitations() {
                   <div className="mt-1.5 flex flex-wrap items-center gap-2">
                     {i.company?.fsp_partner && <PartnerBadge on />}
                     <VacancyGuardBadge vacancy={i} trust={i.trust ?? trust[i.id]} compact />
+                    {trust[i.id]?.summary && (
+                      <span className="text-xs text-brand-ink/65" data-testid="invitation-responsibility-note">
+                        · {trust[i.id].summary}
+                      </span>
+                    )}
                   </div>
                   {i.below_my_minimum && <p className="mt-1 text-xs font-semibold text-brand-plum">Верх вилки ниже вашего минимума</p>}
                   {i.counter && <p className="mt-1 text-xs font-semibold text-amber-800">Встречное условие («Да, если…») ждёт ответа работодателя</p>}
