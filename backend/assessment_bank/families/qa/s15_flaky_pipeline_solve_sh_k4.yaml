@@ -1,0 +1,54 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: qa.flaky_pipeline.lead_solve_sh_k4
+title: 'Длительность тестового пайплайна с флаки-тестами — обратная задача: наименьший допустимый вход «число шардов» с учётом:
+  шарды, флаки-тесты, поднятие окружения, test impact analysis'
+direction: qa
+skills:
+- test_automation
+- ci_cd
+- flaky_tests
+- pytest
+target_grades:
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - env_only
+    - env_twice
+    - flaky_all
+    - flaky_once
+    - floor
+    - half
+    - hours
+    - no_env
+    - no_flaky
+    - no_shards
+    - no_tia
+    - sec
+    - shards_mul
+    - shards_plus1
+    - tia_only
+    - tia_plus
+    construct: 'Время прогона: тесты × длительность / шарды с перезапусками флаки, окружением и test impact analysis. Ступень
+      4 из 5: взаимодействуют 4 поправочных фактора(ов) (шарды; флаки-тесты; поднятие окружения; test impact analysis); обратная
+      задача: наименьший вход «число шардов» на сетке с шагом 1, при котором пайплайн уложится.'
+    wave: 20.10-S
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: 2.07
+  a: 3.0
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Время прогона: тесты × длительность / шарды с перезапусками флаки, окружением
+    и test impact analysis; 4 взаимодействующих фактора(ов) (шарды, флаки-тесты, поднятие окружения, test impact analysis),
+    обратная задача: наименьший вход «число шардов» на сетке с шагом 1, при котором пайплайн уложится. Грейд Lead (b 2,07
+    по числу факторов и направлению вопроса: прямой расчёт легче обратной задачи; волна 20.10-S, без калибровки панелью).
+    σ 0,3'
+generator: assessment_bank.families.qa.s15_flaky_pipeline_solve_sh_k4
+version: 1
+description: 'Lead: длительность тестового пайплайна с флаки-тестами — обратная задача: наименьший вход «число шардов» на
+  сетке с шагом 1, при котором пайплайн уложится. 4 фактора(ов): шарды, флаки-тесты, поднятие окружения, test impact analysis.
+  Ключ — исполнением модели (точные дроби), для обратной задачи — ещё и линейным перебором сетки.'

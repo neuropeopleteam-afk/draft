@@ -1,0 +1,48 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: qa.device_matrix.middle_fwd_k4
+title: 'Число прогонов в матрице устройств — прямой расчёт с учётом: локали, pairwise-сокращение, тесты на комбинацию, перезапуски'
+direction: qa
+skills:
+- mobile_testing
+- test_design
+- pairwise_testing
+- device_farm
+target_grades:
+- middle
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - floor
+    - half
+    - locales_plus1
+    - no_locales
+    - no_pairwise
+    - no_reruns
+    - no_tests
+    - pairwise_rest
+    - plus
+    - reruns_only
+    - reruns_twice
+    - sq
+    - tests_plus1
+    construct: 'Матрица: устройства × версии ОС × локали, pairwise-сокращение, тесты на комбинацию и перезапуски. Ступень
+      4 из 5: взаимодействуют 4 поправочных фактора(ов) (локали; pairwise-сокращение; тесты на комбинацию; перезапуски); прямой
+      расчёт по модели.'
+    wave: 20.10-S
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.05
+  a: 3.0
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Матрица: устройства × версии ОС × локали, pairwise-сокращение, тесты на комбинацию
+    и перезапуски; 4 взаимодействующих фактора(ов) (локали, pairwise-сокращение, тесты на комбинацию, перезапуски), прямой
+    расчёт по модели. Грейд Middle (b -0,05 по числу факторов и направлению вопроса: прямой расчёт легче обратной задачи;
+    волна 20.10-S, без калибровки панелью). σ 0,3'
+generator: assessment_bank.families.qa.s15_device_matrix_fwd_k4
+version: 1
+description: 'Middle: число прогонов в матрице устройств — прямой расчёт по модели. 4 фактора(ов): локали, pairwise-сокращение,
+  тесты на комбинацию, перезапуски. Ключ — исполнением модели (точные дроби).'
