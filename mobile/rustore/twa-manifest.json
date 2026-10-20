@@ -10,7 +10,7 @@
   "navigationColorDark": "#310F53",
   "navigationDividerColor": "#F3EEF8",
   "navigationDividerColorDark": "#310F53",
-  "backgroundColor": "#310F53",
+  "backgroundColor": "#FBF8FC",
   "enableNotifications": true,
   "startUrl": "/?source=twa",
   "iconUrl": "https://fsp-draft.ru/icons/icon-512.png",
@@ -18,7 +18,7 @@
   "monochromeIconUrl": "https://fsp-draft.ru/icons/badge-72.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "/opt/spectrek_fsp/secrets/rustore/draft-upload.keystore",
+    "path": "./draft-upload.keystore",
     "alias": "draft"
   },
   "appVersionName": "1.1.0",
@@ -64,7 +64,10 @@
   ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "DisplayOverride": [
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [
     "standalone",
     "minimal-ui"
   ],

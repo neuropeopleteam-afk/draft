@@ -57,11 +57,7 @@ self.addEventListener("activate", (e) => {
   })());
 });
 
-const OFFLINE = `<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Нет связи — Драфт</title><body style="font-family:Montserrat,system-ui,sans-serif;padding:2rem;background:#FBF8FC;color:#310F53;text-align:center">
-<h1 style="font-size:1.25rem">Нет подключения к интернету</h1><p style="color:#4A4B52">Проверьте сеть или отключите VPN. При восстановлении связи страница обновится сама.</p>
-<button onclick="location.reload()" style="min-height:48px;padding:.7rem 1.25rem;border-radius:.75rem;border:0;background:#E0004C;color:#fff;font-weight:700">Повторить подключение</button>
-<script>window.addEventListener("online",function(){location.reload()});</script></body></html>`;
+const OFFLINE = `<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Нет связи — Драфт</title><p style="font-family:system-ui,sans-serif;padding:2rem;text-align:center">Нет подключения к интернету. Проверьте сеть и обновите страницу.</p>`;
 
 const RELOGIN = `<!doctype html><meta charset="utf-8"><title>Вход на стенд</title>
 <script>location.reload()</script><p style="font-family:system-ui,sans-serif">Нужен вход на стенд, обновляем страницу…</p>`;

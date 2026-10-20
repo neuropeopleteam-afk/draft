@@ -1,13 +1,13 @@
 <shortcuts xmlns:android='http://schemas.android.com/apk/res/android'>
-    <shortcut android:shortcutId='shortcut0' android:enabled='true' android:icon='@drawable/ic_notification_icon' android:shortcutShortLabel='@string/shortcut_short_name_0' android:shortcutLongLabel='@string/shortcut_name_0'>
+    <shortcut android:shortcutId='shortcut0' android:enabled='true' android:icon='@drawable/ic_shortcut_icon' android:shortcutShortLabel='@string/shortcut_short_name_0' android:shortcutLongLabel='@string/shortcut_name_0'>
         <intent android:action='android.intent.action.MAIN' android:targetPackage='ru.fspdraft.app' android:targetClass='ru.fspdraft.app.LauncherActivity' android:data='https://fsp-draft.ru/employer/needs?source=twa-shortcut' />
         <categories android:name='android.intent.category.LAUNCHER' />
     </shortcut>
-    <shortcut android:shortcutId='shortcut1' android:enabled='true' android:icon='@drawable/ic_notification_icon' android:shortcutShortLabel='@string/shortcut_short_name_1' android:shortcutLongLabel='@string/shortcut_name_1'>
+    <shortcut android:shortcutId='shortcut1' android:enabled='true' android:icon='@drawable/ic_shortcut_icon' android:shortcutShortLabel='@string/shortcut_short_name_1' android:shortcutLongLabel='@string/shortcut_name_1'>
         <intent android:action='android.intent.action.MAIN' android:targetPackage='ru.fspdraft.app' android:targetClass='ru.fspdraft.app.LauncherActivity' android:data='https://fsp-draft.ru/candidate/assessment?source=twa-shortcut' />
         <categories android:name='android.intent.category.LAUNCHER' />
     </shortcut>
-    <shortcut android:shortcutId='shortcut2' android:enabled='true' android:icon='@drawable/ic_notification_icon' android:shortcutShortLabel='@string/shortcut_short_name_2' android:shortcutLongLabel='@string/shortcut_name_2'>
+    <shortcut android:shortcutId='shortcut2' android:enabled='true' android:icon='@drawable/ic_shortcut_icon' android:shortcutShortLabel='@string/shortcut_short_name_2' android:shortcutLongLabel='@string/shortcut_name_2'>
         <intent android:action='android.intent.action.MAIN' android:targetPackage='ru.fspdraft.app' android:targetClass='ru.fspdraft.app.LauncherActivity' android:data='https://fsp-draft.ru/candidate/invitations?source=twa-shortcut' />
         <categories android:name='android.intent.category.LAUNCHER' />
     </shortcut>

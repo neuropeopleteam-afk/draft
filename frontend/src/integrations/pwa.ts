@@ -102,7 +102,7 @@ export const platform = (): "ios" | "android" | "desktop" => {
 
 /** Проверка встроенного браузера мессенджера (Telegram, ВК и др.), где системная установка на экран «Домой» скрыта. */
 export const isInAppBrowser = (): boolean =>
-  /(Telegram|VKClient|VkApp|Instagram|FBAN|FBIOS|Line|MicroMessenger)/i.test(navigator.userAgent || "");
+  /(Telegram|VKClient|VkApp|Instagram|FBAN|FBIOS|\bLine\/|MicroMessenger)/i.test(navigator.userAgent || "");
 
 export async function promptInstall(): Promise<string> {
   if (!deferred) return "unavailable";

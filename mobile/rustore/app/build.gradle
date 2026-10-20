@@ -32,7 +32,7 @@ def twaManifest = [
     navigationColorDark: '#310F53', // The color used for the dark navbar.
     navigationDividerColor: '#F3EEF8', // The navbar divider color.
     navigationDividerColorDark: '#310F53', // The dark navbar divider color.
-    backgroundColor: '#310F53', // The color used for the splash screen background.
+    backgroundColor: '#FBF8FC', // The color used for the splash screen background.
     enableNotifications: true, // Set to true to enable notification delegation.
     // Every shortcut must include the following fields:
     // - name: String that will show up in the shortcut.
@@ -44,19 +44,19 @@ def twaManifest = [
             name: 'Подборка кандидатов',
             short_name: 'Подборка',
             url: 'https://fsp-draft.ru/employer/needs?source=twa-shortcut',
-            icon: 'ic_notification_icon'
+            icon: 'ic_shortcut_icon'
         ],
         [
             name: 'Мой грейд и тест',
             short_name: 'Мой грейд',
             url: 'https://fsp-draft.ru/candidate/assessment?source=twa-shortcut',
-            icon: 'ic_notification_icon'
+            icon: 'ic_shortcut_icon'
         ],
         [
             name: 'Приглашения и диалоги',
             short_name: 'Приглашения',
             url: 'https://fsp-draft.ru/candidate/invitations?source=twa-shortcut',
-            icon: 'ic_notification_icon'
+            icon: 'ic_shortcut_icon'
         ]
     ],
     // The duration of fade out animation in milliseconds to be played when removing splash screen.
