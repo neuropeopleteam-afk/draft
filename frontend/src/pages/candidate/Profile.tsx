@@ -15,6 +15,7 @@ export default function Profile() {
   const [msg, setMsg] = useState<{ k: "ok" | "error"; t: string } | null>(null);
   const resume = useApi<any>("/me/resume");
   const card = useApi<any>("/me/card");
+  const fsp = useApi<any>("/me/fsp");
   const [upload, setUpload] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -37,7 +38,7 @@ export default function Profile() {
   }
 
   async function applyResume(id: string) {
-    try { await api(`/me/resume/${id}/apply`, { body: {} }); await card.reload(); setMsg({ k: "ok", t: "Поля резюме добавлены в профиль как заявленные (T0): работодатель видит их с пометкой «указано кандидатом, не проверено». Подтверждает навыки тест (T1)." }); }
+    try { await api(`/me/resume/${id}/apply`, { body: {} }); await card.reload(); setMsg({ k: "ok", t: "Поля резюме добавлены в профиль как самозаявленные: работодатель видит их с пометкой «самозаявлено». Подтверждает навыки проверка на платформе." }); }
     catch (e) { setMsg({ k: "error", t: errText(e) }); }
   }
 
@@ -67,8 +68,8 @@ export default function Profile() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-bold text-brand-night">Резюме PDF или DOCX</h2>
-            <p className="mt-1 max-w-xl text-sm text-brand-ink/65">Извлечём стек, роли, стаж и софт-скиллы — как заявленные (T0), не подтверждённые тестом. ФИО, контакты, адрес, дата рождения и возраст вырезаются на нашем сервере до любой обработки моделью (город остаётся для подбора); исходный файл не хранится. До 5 МБ.</p>
-            <LlmOff className="mt-1 max-w-xl text-xs text-brand-ink/65">LLM на этой установке не подключён: резюме разбирается по словарям и правилам, нераспознанное добавьте вручную.</LlmOff>
+            <p className="mt-1 max-w-xl text-sm text-brand-ink/65">Извлечём стек, роли, стаж и софт-скиллы — как самозаявленные, не подтверждённые тестом. ФИО, контакты, адрес, дата рождения и возраст вырезаются на нашем сервере до любой обработки моделью (город остаётся для подбора); исходный файл не хранится. До 5 МБ.</p>
+            <LlmOff className="mt-1 max-w-xl text-xs text-brand-ink/65">Языковая модель на этой установке не подключена: резюме разбирается по словарям и правилам, нераспознанное добавьте вручную.</LlmOff>
           </div>
           <label className={`btn-primary cursor-pointer ${busy ? "pointer-events-none opacity-60" : ""}`}>
             {busy ? "Распознаём…" : "Загрузить PDF или DOCX"}
@@ -92,6 +93,19 @@ export default function Profile() {
                 </div>
               )}
             </div>
+            {r.text_preview && (
+              <details className="rounded-xl border border-brand-night/10 bg-[#F7F6FB] p-3.5 text-sm" data-testid="resume-llm-view">
+                <summary className="cursor-pointer font-semibold text-brand-night">
+                  Что видит языковая модель (текст резюме после вырезания ФИО и контактов, 152-ФЗ)
+                </summary>
+                <p className="mt-1 text-xs text-brand-ink/65">
+                  Ниже — обезличенный текст, очищенный на сервере до извлечения навыков. ФИО, телефон, почта, ссылки и паспортные данные в модель не передаются.
+                </p>
+                <pre className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-lg bg-white p-3 font-mono text-xs text-brand-ink/80 ring-1 ring-brand-night/10">
+                  {r.text_preview}
+                </pre>
+              </details>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <Extracted title="Стек" items={r.extracted?.stack?.map((s: any) => s.title)} />
               <Extracted title="Роли" items={r.extracted?.roles?.map((s: any) => s.title)} />
@@ -101,6 +115,32 @@ export default function Profile() {
             <button className="btn-ghost" onClick={() => applyResume(r.id)}>Добавить в профиль</button>
           </div>
         ) : <p className="mt-4 text-sm text-brand-ink/65">Резюме ещё не загружено.</p>}
+      </section>
+
+      <section className="card space-y-3" data-testid="profile-fsp-block">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-bold text-brand-night">Паспорт ФСП</h2>
+            <Level level={fsp.data?.linked ? "T2" : "none"} />
+          </div>
+          <Link to="/candidate/fsp" className="btn-ghost !px-3.5 !py-1.5 text-xs">
+            Управление паспортом и протоколы ФСП →
+          </Link>
+        </div>
+        {fsp.data?.achievements?.length ? (
+          <div className="space-y-2 text-sm">
+            {fsp.data.sport_rank && <p className="text-brand-ink/80">Спортивный разряд: <b>{fsp.data.sport_rank}</b></p>}
+            <ul className="space-y-1 text-brand-ink/75">
+              {fsp.data.achievements.slice(0, 3).map((a: any, i: number) => (
+                <li key={i}>• {a.text}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-sm text-brand-ink/70">
+            Подтвердите спортивные достижения по официальным протоколам ФСП (2025–2026) или укажите ФСП ID — это даёт дополнительный вес в подборках работодателей. Отсутствие истории ФСП не штрафуется.
+          </p>
+        )}
       </section>
 
       <section>

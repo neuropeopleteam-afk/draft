@@ -37,6 +37,28 @@
     "schemas": {
       "AcceptIn": {
         "properties": {
+          "shared_contacts": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "full_name",
+                    "email",
+                    "phone",
+                    "telegram",
+                    "github"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Выборочное согласие на открытие контактов (по умолчанию открываются все указанные в профиле)",
+            "title": "Shared Contacts"
+          },
           "slot_index": {
             "anyOf": [
               {
@@ -7655,7 +7677,8 @@
               "fsp_check",
               "offer",
               "dispute",
-              "internship"
+              "internship",
+              "appeal"
             ],
             "title": "Topic",
             "type": "string"
@@ -21161,6 +21184,75 @@
         "title": "ProposedSlot",
         "type": "object"
       },
+      "ProtocolConfirmIn": {
+        "properties": {
+          "consent_employers": {
+            "default": true,
+            "description": "Показывать подтверждённые достижения работодателям в карточке",
+            "title": "Consent Employers",
+            "type": "boolean"
+          },
+          "key_hashes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 25,
+            "minItems": 1,
+            "title": "Key Hashes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key_hashes"
+        ],
+        "title": "ProtocolConfirmIn",
+        "type": "object"
+      },
+      "ProtocolSearchIn": {
+        "properties": {
+          "birth_date": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Дата рождения (необязательно)",
+            "title": "Birth Date"
+          },
+          "fio": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ФИО (по умолчанию берётся из профиля кандидата)",
+            "title": "Fio"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Название команды (необязательно)",
+            "title": "Team"
+          }
+        },
+        "title": "ProtocolSearchIn",
+        "type": "object"
+      },
       "PublicShareOut": {
         "additionalProperties": true,
         "properties": {
@@ -22415,6 +22507,7 @@
             "default": "admin",
             "enum": [
               "integrity_annulled",
+              "appeal_revoked",
               "admin"
             ],
             "title": "Reason",
@@ -30040,7 +30133,7 @@
                 "type": "null"
               }
             ],
-            "description": "Почему такая вилка (необязательно)",
+            "description": "Почему такая вилка или условие (необязательно)",
             "title": "Comment"
           },
           "salary_basis": {
@@ -30072,6 +30165,37 @@
             "maximum": 10000000.0,
             "title": "Salary To",
             "type": "integer"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Встречное условие по сроку выхода или графику («Да, если…»)",
+            "title": "Start Date"
+          },
+          "work_format": {
+            "anyOf": [
+              {
+                "enum": [
+                  "remote",
+                  "hybrid",
+                  "office",
+                  "any"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Встречное условие по формату работы («Да, если…»)",
+            "title": "Work Format"
           }
         },
         "required": [
@@ -39335,7 +39459,7 @@
                 "example": {
                   "detail": {
                     "code": "counter_not_higher",
-                    "message": "Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение"
+                    "message": "Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение или укажите условие по формату/сроку"
                   }
                 },
                 "schema": {
@@ -39343,7 +39467,7 @@
                 }
               }
             },
-            "description": "Вилка не по правилам. Коды `detail.code`: `counter_not_higher` — Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение; `counter_too_far` — Встречное «от» — не выше … … (1,5 × «до» приглашения): иначе это уже другое предложение; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Вилка не по правилам. Коды `detail.code`: `counter_not_higher` — Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение или укажите условие по формату/сроку; `counter_too_far` — Встречное «от» — не выше … … (1,5 × «до» приглашения): иначе это уже другое предложение; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
           }
         },
         "security": [
@@ -57472,6 +57596,73 @@
         ]
       }
     },
+    "/api/fsp-cabinet/regions": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "regions_api_fsp_cabinet_regions_get",
+        "parameters": [
+          {
+            "description": "Период, дней (по умолчанию — всё время)",
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 730,
+                  "minimum": 7,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Период, дней (по умолчанию — всё время)",
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Regions Api Fsp Cabinet Regions Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Карта талантов по регионам и федеральным округам РФ",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
     "/api/fsp-cabinet/report": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
@@ -62711,7 +62902,7 @@
                 }
               }
             },
-            "description": "Согласие на обработку отзывается через удаление учётной записи. Коды `detail.code`: `use_account_deletion` — Согласие на обработку отзывается удалением учётной записи: Кабинет — Мои данные. Или напишите оператору: …."
+            "description": "Согласие на обработку отзывается через удаление учётной записи. Коды `detail.code`: `use_account_deletion` — Согласие на обработку отзывается удалением учётной записи: Кабинет — Мои данные. Или напишите оператору: …; `not_accepted` — Отозвать доступ можно только по принятому приглашению; `already_revoked` — Доступ к контактам уже отозван."
           },
           "422": {
             "content": {
@@ -63545,6 +63736,116 @@
           }
         ],
         "summary": "Указать ФСП ID (заглушка: сохраняется как заявленный, без проверки реестром)",
+        "tags": [
+          "candidate"
+        ]
+      }
+    },
+    "/api/me/fsp/protocols/confirm": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "confirm_fsp_protocols_api_me_fsp_protocols_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtocolConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Confirm Fsp Protocols Api Me Fsp Protocols Confirm Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Подтвердить выбранные достижения из официальных протоколов ФСП",
+        "tags": [
+          "candidate"
+        ]
+      }
+    },
+    "/api/me/fsp/protocols/search": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "search_fsp_protocols_api_me_fsp_protocols_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtocolSearchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Search Fsp Protocols Api Me Fsp Protocols Search Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Поиск достижений кандидата в индексе официальных протоколов ФСП",
         "tags": [
           "candidate"
         ]
@@ -68303,6 +68604,9 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -68372,6 +68676,9 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -68421,6 +68728,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           },
           "404": {
             "content": {
@@ -68537,6 +68847,9 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -68606,6 +68919,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           },
           "404": {
             "content": {
@@ -68760,6 +69076,9 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -68838,6 +69157,51 @@
           }
         ],
         "summary": "Написать в канал",
+        "tags": [
+          "trio"
+        ]
+      }
+    },
+    "/api/trio/unread": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "unread_api_trio_unread_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Unread Api Trio Unread Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал не найден или недоступен"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Число трёхсторонних каналов, требующих внимания или согласия",
         "tags": [
           "trio"
         ]

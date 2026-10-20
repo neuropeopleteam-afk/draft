@@ -8,6 +8,7 @@ import { BarList, Donut, Funnel, Heatmap, Legend, PairBars, RangeChart, StackBar
 import { MODE_SHORT, Phase } from "../shared";
 import { CameraStats } from "../../proctor/CameraStats";
 import FspRankConverter from "../../components/FspRankConverter";
+import { TalentMap } from "./TalentMap";
 
 type Rep = any;
 interface Ctx { rep: Rep | null; loading: boolean; error: string | null; days: string; setDays: (d: string) => void }
@@ -133,9 +134,9 @@ export function FspOverview() {
               </ul>
             </section>
             <div className="grid gap-5 lg:grid-cols-2">
-              <Card title="ФСП и приглашения" sub="Доля кандидатов, получивших приглашение" more={{ to: "effect", label: "Подробнее" }}>
+              <Card title="ФСП и приглашения" sub="Доля кандидатов, получивших приглашение" more={{ to: "/fsp/effect", label: "Подробнее" }}>
                 <div className="grid grid-cols-3 gap-2">
-                  <Donut value={fsp.invite_rate} label="с достижениями ФСП (T2)" tone="night" />
+                  <Donut value={fsp.invite_rate} label="с достижениями ФСП" tone="night" />
                   <Donut value={nofsp.invite_rate} label="без истории ФСП (нейтрально)" tone="lavender" />
                   <Donut value={o.acceptance_rate} label="приглашений принято (из отвеченных)" tone="brand" />
                 </div>
@@ -155,6 +156,7 @@ export function FspOverview() {
                   }))} />
               </Card>
             </div>
+            <TalentMap data={rep.regions_map} />
             <FspRankConverter />
             <CameraStats days={days === "all" ? null : Number(days)} />
           </>
@@ -192,12 +194,13 @@ export function FspDemand() {
         return (
           <>
             <DemoNote rep={rep} />
+            <TalentMap data={rep.regions_map} />
             <Card title="Категории «направление · грейд»" sub="Выберите показатель. Пустая клетка с пунктиром — группа меньше 5 человек.">
               <Seg label="Показатель" value={metric} onChange={setMetric} options={METRICS.map(({ id, title }) => ({ id, title }))} />
               <Heatmap rows={DIRS} cols={GRS} cell={get} fmt={m.fmt} tone={metric === "needs" || metric === "invitations" ? "brand" : "night"} />
               {noGrade.length > 0 && <p className="text-xs text-brand-ink/65">Потребности без грейда: {noGrade.map(([d, n]) => `${DIRECTION_TITLES[d] ?? d} — ${n}`).join(", ")}.</p>}
             </Card>
-            <Card title="Навыки в потребностях" sub="Сколько потребностей требуют навык (обязательно и желательно) и как часто приглашают тех, кто подтвердил его тестом (T1).">
+            <Card title="Навыки в потребностях" sub="Сколько потребностей требуют навык (обязательно и желательно) и как часто приглашают тех, кто подтвердил его на платформе.">
               <Legend items={[{ tone: "brand", label: "обязательно" }, { tone: "soft", label: "желательно" }]} />
               <ul className="space-y-3">
                 {skills.map((s) => (
@@ -277,7 +280,7 @@ export function FspEffect() {
           <>
             <DemoNote rep={rep} />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-5 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
-              <Stat label="С ФСП (T2)" value={fpct(fsp.invite_rate)} hint={`приглашены ${fk(fsp.invited)} из ${fk(fsp.candidates)}`} />
+              <Stat label="С достижениями ФСП" value={fpct(fsp.invite_rate)} hint={`приглашены ${fk(fsp.invited)} из ${fk(fsp.candidates)}`} />
               <Stat label="Без истории ФСП" value={fpct(nofsp.invite_rate)} hint={`приглашены ${fk(nofsp.invited)} из ${fk(nofsp.candidates)} · без штрафа`} />
               <Stat label="Отношение" value={fx(fsp.lift_vs_no_fsp)} hint={`с поправкой на категорию ${fx(fsp.adjusted_ratio)} к ожидаемому`} />
             </div>
@@ -305,7 +308,7 @@ export function FspEffect() {
             <Alert kind="info">
               Связь наблюдательная, а не причинная: рейтинг внутри категории уже учитывает достижения ФСП (их вес в рейтинге — 25 %), поэтому
               рядом с прямым отношением показан коэффициент с поправкой на категорию — приглашённые к ожидаемым при доле приглашённых
-              в категории каждого кандидата. Кубки работодателей (мероприятия платформы, T1) здесь не учитываются — они в «Воронках».
+              в категории каждого кандидата. Кубки работодателей (мероприятия платформы) здесь не учитываются — они в «Воронках».
             </Alert>
           </>
         );
@@ -365,7 +368,7 @@ export function FspSalaries() {
                   rows={rows.filter((r) => r.accepted_mid_median && r.declined_mid_median).map((r) => ({ key: r.category_id, label: r.title, a: r.accepted_mid_median, b: r.declined_mid_median }))} />
               </Card>
             )}
-            <p className="text-xs text-brand-ink/65">Рынок — {rows.find((r) => r.market_source)?.market_source ?? "Хабр Карьера"}, p25–p75 по категории.</p>
+            <p className="text-xs text-brand-ink/65">Рынок — открытые данные рынка и офферы на платформе, p25–p75 по категории.</p>
           </>
         );
       }}</Body>
@@ -389,7 +392,7 @@ export function FspFunnel() {
               <Funnel stages={f.cups} tone="brand" />
             </Card>
             <div className="grid gap-5 lg:grid-cols-2">
-              <Card title="С достижениями ФСП (T2)"><Funnel stages={f.fsp} tone="night" /></Card>
+              <Card title="С достижениями ФСП"><Funnel stages={f.fsp} tone="night" /></Card>
               <Card title="Без истории ФСП"><Funnel stages={f.no_fsp} tone="lavender" /></Card>
             </div>
             <Card title="Конверсии рядом" sub="Доля перешедших на следующий этап">

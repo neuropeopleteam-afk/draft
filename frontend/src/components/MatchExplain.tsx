@@ -1,57 +1,42 @@
-import { useState } from "react";
-import { num } from "./ui";
+import { useEffect, useMemo, useState } from "react";
+import { api } from "../lib/api";
+import { plainText as ruText } from "./ui";
 
-export interface ExplainSkillTested {
+export interface ExplainSkillItem {
   title: string;
-  required: boolean;
+  required?: boolean;
   score_pct?: number | null;
   via?: string | null;
-  source: string;
-  text: string;
+  source?: string;
+  text?: string;
 }
 
-export interface ExplainGap {
+export interface ExplainFspItem {
+  text: string;
+  relevance?: string | null;
+  source?: string;
+}
+
+export interface ExplainProbeItem {
   title: string;
-  required: boolean;
-  state: "low" | "declared" | "untested";
-  state_title: string;
-  text: string;
-  action: string;
+  verdict: string;
 }
 
-export interface ExplainBreakdownRow {
+export interface ExplainGapItem {
+  title: string;
+  required?: boolean;
+  state: "low" | "declared" | "untested" | string;
+  state_title: string;
+  text?: string;
+  action?: string;
+}
+
+export interface ExplainBreakdownItem {
   key: string;
   label: string;
   weight_pct: number;
-  raw_pct: number;
+  raw_pct?: number;
   points100: number;
-}
-
-export interface ExplainWhyAboveNext {
-  current_ref?: string;
-  next_ref: string;
-  score_diff100?: number;
-  headline: string;
-  reasons?: { kind: string; text: string }[];
-}
-
-export interface ExplainOfferForecast {
-  probability: number;
-  pct: number;
-  level: "high" | "medium" | "low";
-  title: string;
-  factors?: string[];
-  note: string;
-}
-
-export interface SalaryCalibrationInfo {
-  status: "not_set" | "below_market" | "below_median" | "competitive";
-  current_top?: number | null;
-  current_top_net?: number | null;
-  recommended_to?: number | null;
-  recommended_net?: number | null;
-  additional_candidates: number;
-  text: string;
 }
 
 export interface MatchExplainData {
@@ -60,11 +45,9 @@ export interface MatchExplainData {
   score100: number;
   rank?: number | null;
   tier_label?: string;
-  required_confirmed: number;
-  required_total: number;
-  t0_in_score?: boolean;
-  ranking_basis_ru?: string;
-  grade: {
+  required_confirmed?: number;
+  required_total?: number;
+  grade?: {
     title: string;
     status: "confirmed" | "provisional" | "unconfirmed" | string;
     status_title: string;
@@ -76,239 +59,358 @@ export interface MatchExplainData {
     title: string;
     state: "confirmed" | "declared" | "absent" | string;
     via?: string | null;
-    headline?: string | null;
-    text?: string | null;
+    headline?: string;
+    text?: string;
   } | null;
-  skills_tested: ExplainSkillTested[];
-  skills_fsp: { text: string; relevance?: string | null; source: string }[];
-  skills_probes: { title: string; verdict: string }[];
-  gaps: ExplainGap[];
-  breakdown: ExplainBreakdownRow[];
-  offer_forecast?: ExplainOfferForecast | null;
-  why_above_next?: ExplainWhyAboveNext | null;
-}
-
-export interface VacancyGuardFlag {
-  code: string;
-  severity: "high" | "medium" | "low";
-  title: string;
-  text: string;
-  quote?: string | null;
-}
-
-export interface VacancyGuardData {
-  status: "verified" | "caution" | "high_risk";
-  badge_title: string;
-  risk_score: number;
-  is_suspicious: boolean;
-  flags: VacancyGuardFlag[];
-  summary: string;
-  egrul?: {
-    status: "verified" | "liquidated" | "failed" | "unverified";
-    badge: string;
-    active?: boolean | null;
-    name_matches?: boolean | null;
-    registered_at?: string | null;
-    text: string;
-  } | null;
-  responsibility?: {
-    score: number;
-    level: "high" | "medium" | "low";
-    badge: string;
-    response_rate_pct: number;
-    median_response_hours: number;
-    realistic_salary_pct: number;
-    cancelled_invitations_pct: number;
-    summary: string;
-  } | null;
+  skills_tested: ExplainSkillItem[];
+  skills_fsp: ExplainFspItem[];
+  skills_probes?: ExplainProbeItem[];
+  gaps: ExplainGapItem[];
+  breakdown?: ExplainBreakdownItem[];
 }
 
 export interface MatchExplainProps {
-  /** Поле item.explain (в подборке) или card.match.explain (в карточке кандидата). */
+  /** Готовый объект explain из results[i].explain или candidate.match.explain */
   explain?: MatchExplainData | null;
-  /** Запасной источник: сам элемент results[i] или card.match, если explain ещё не развёрнут. */
+  /** Объект кандидата (карточка c или элемент results[i] из подборки) */
+  candidate?: any;
+  /** Синоним candidate для совместимости с MatchingBenchUpload (А5) */
   item?: any;
-  /** Клик по кнопке «Проверить коротким заданием» у непроверенного навыка. */
-  onCreateProbe?: (skillTitle: string) => void;
-  /** Компактный режим для карточки в списке подборки (по умолчанию false — полный блок). */
+  /** Балл соответствия 0..1 (если передаётся отдельно от candidate) */
+  score?: number | null;
+  /** Причины reasons[] из подборки (для сборки на клиенте, если explain не передан) */
+  reasons?: any[];
+  /** Сводка обязательных навыков must из подборки */
+  must?: any;
+  /** Ядро роли core из подборки */
+  core?: any;
+  /** Компоненты балла (test, stack_required, stack_desired, fsp, probe) */
+  components?: Record<string, number> | null;
+  /** Если переданы needId и candidateRef, компонент сам догрузит explain из API при отсутствии локальных данных */
+  needId?: string;
+  candidateRef?: string;
+  version?: number;
+  /** Компактный режим (для свёрнутой карточки в списке подборки) */
   compact?: boolean;
+  /** Раскрыть подробное разложение по умолчанию */
+  defaultOpen?: boolean;
   className?: string;
 }
 
-const GRADE_BADGE_STYLES: Record<string, string> = {
-  confirmed: "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600/20",
-  provisional: "bg-amber-50 text-amber-900 ring-1 ring-amber-600/25",
-  unconfirmed: "bg-slate-100 text-slate-700 ring-1 ring-slate-400/25",
-};
+const WEIGHT_META: [string, string, number][] = [
+  ["test", "Сила результата теста на грейд", 0.45],
+  ["stack_required", "Обязательные навыки (проверены тестом)", 0.35],
+  ["stack_desired", "Желательные навыки (проверены тестом)", 0.05],
+  ["fsp", "Достижения в реестре ФСП", 0.10],
+  ["probe", "Короткие задания работодателей", 0.05],
+];
 
-const FORECAST_STYLES: Record<string, string> = {
-  high: "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600/20",
-  medium: "bg-amber-50 text-amber-900 ring-1 ring-amber-600/25",
-  low: "bg-rose-50 text-rose-900 ring-1 ring-rose-600/25",
-};
+function cleanJargon(s?: string | null): string {
+  if (!s) return "";
+  return ruText(
+    s
+      .replace(/\s*\(T[012]\)/g, "")
+      .replace(/,\s*θ\s*=\s*[^,.;)]+/g, "")
+      .replace(/\bT1\b/g, "тест платформы")
+      .replace(/\bT2\b/g, "реестр ФСП")
+      .replace(/\bT0\b/g, "самоописание")
+  );
+}
 
-function buildFallbackExplain(item: any): MatchExplainData | null {
-  if (!item) return null;
-  if (item.explain) return item.explain as MatchExplainData;
-  if (item.match?.explain) return item.match.explain as MatchExplainData;
-  const card = item.card || item;
-  const match = item.match || item;
-  const score = Number(match.score ?? 0);
-  const reasons: any[] = match.reasons || [];
-  const skills_tested: ExplainSkillTested[] = [];
-  const gaps: ExplainGap[] = [];
+/** Собирает структуру MatchExplainData на клиенте из полей карточки (если готовый explain не передан). */
+export function buildClientExplain(props: MatchExplainProps): MatchExplainData | null {
+  if (props.explain) return props.explain;
+  const raw = props.candidate ?? props.item;
+  if (raw?.explain) return raw.explain as MatchExplainData;
+  if (raw?.match?.explain) return raw.match.explain as MatchExplainData;
+
+  const c = raw?.card ?? raw;
+  const reasons: any[] = props.reasons ?? raw?.reasons ?? raw?.match?.reasons ?? [];
+  const must = props.must ?? raw?.must ?? raw?.match?.must ?? {};
+  const core = props.core ?? raw?.core ?? raw?.match?.core ?? null;
+  const comps = props.components ?? raw?.components ?? raw?.match?.components ?? {};
+  const scoreVal = props.score ?? raw?.score ?? raw?.match?.score;
+
+  if (!c && !reasons.length && scoreVal == null) return null;
+
+  const score100 = scoreVal != null ? Math.round(Number(scoreVal) * 100) : 0;
+  const rank = raw?.rank ?? raw?.rank_in_selection ?? null;
+  const gradeStatus: string =
+    raw?.grade_status ??
+    comps?.grade_status ??
+    c?.status?.status ??
+    (c?.category?.preliminary ? "provisional" : "confirmed");
+
+  const catTitle =
+    c?.category?.title ??
+    (c?.claimed?.title ? `${c.claimed.title}` : "Категория не присвоена");
+
+  const confirmedScores = new Map<string, number>();
+  for (const sk of c?.skills_confirmed ?? []) {
+    if (sk?.title && sk?.score != null) {
+      confirmedScores.set(String(sk.title).toLowerCase(), Math.round(Number(sk.score) * 100));
+    }
+  }
+
+  const skills_tested: ExplainSkillItem[] = [];
+  const gaps: ExplainGapItem[] = [];
+
   for (const r of reasons) {
-    const req = String(r.requirement || "");
-    if (!req.startsWith("Обязательно: ") && !req.startsWith("Желательно: ")) continue;
-    const [zone, title] = req.split(": ", 2);
-    const isReq = zone === "Обязательно";
-    if (r.status === "confirmed") {
+    const reqStr = String(r?.requirement ?? "");
+    if (!reqStr.startsWith("Обязательно: ") && !reqStr.startsWith("Желательно: ")) continue;
+    const isReq = reqStr.startsWith("Обязательно: ");
+    const title = reqStr.replace(/^(Обязательно|Желательно): /, "");
+    const st = r?.status;
+    const via = r?.implied_via ?? r?.implied_by ?? null;
+    const rawTxt = String(r?.text ?? "");
+    const pctMatch = rawTxt.match(/(\d+)\s*%/);
+    const pctVal = confirmedScores.get(title.toLowerCase()) ?? (pctMatch ? Number(pctMatch[1]) : null);
+
+    if (st === "confirmed" || via) {
       skills_tested.push({
         title,
         required: isReq,
-        score_pct: null,
-        via: r.implied_by || r.implied_via || null,
-        source: "Подтверждено заданиями теста",
-        text: String(r.text || ""),
+        score_pct: pctVal,
+        via,
+        source: via
+          ? `Подтверждено косвенно через ${via}`
+          : rawTxt.toLowerCase().includes("заданием работодателя")
+            ? "Подтверждено заданием работодателя"
+            : "Подтверждено заданиями теста",
+        text: cleanJargon(rawTxt),
       });
     } else {
+      const state = st === "mismatch" ? "low" : st === "declared" ? "declared" : "untested";
+      const state_title =
+        state === "low"
+          ? "Проверялся на платформе, порог пока не набран"
+          : state === "declared"
+            ? "Указан в анкете, тестом ещё не проверялся"
+            : "В тесте кандидата этот навык не проверялся";
       gaps.push({
         title,
         required: isReq,
-        state: r.status === "declared" ? "declared" : r.status === "mismatch" ? "low" : "untested",
-        state_title:
-          r.status === "declared"
-            ? "Указан в анкете, тестом ещё не проверялся"
-            : "Не проверялся в тесте кандидата",
-        text: String(r.text || ""),
-        action: `Проверить коротким заданием по навыку «${title}»`,
+        state,
+        state_title,
+        text: cleanJargon(rawTxt),
+        action: `Проверить коротким заданием по навыку «${title}» (10–15 мин)`,
       });
     }
   }
-  const reqTotal = skills_tested.filter((s) => s.required).length + gaps.filter((g) => g.required).length;
-  const reqConfirmed = skills_tested.filter((s) => s.required).length;
-  const gs = match.grade_status || card?.status?.status || "confirmed";
+
+  if (!skills_tested.length && Array.isArray(c?.skills_confirmed)) {
+    for (const sk of c.skills_confirmed.slice(0, 5)) {
+      skills_tested.push({
+        title: sk.title ?? sk.tag,
+        required: false,
+        score_pct: sk.score != null ? Math.round(Number(sk.score) * 100) : null,
+        source: "Подтверждено заданиями теста",
+      });
+    }
+  }
+
+  const fspInfo = c?.fsp ?? {};
+  const skills_fsp: ExplainFspItem[] = !fspInfo.hidden && Array.isArray(fspInfo.achievements)
+    ? fspInfo.achievements.slice(0, 4).map((a: any) => ({
+        text: a.text ?? "Достижение ФСП",
+        relevance: a.relevance?.title ?? null,
+        source: "Подтверждено реестром ФСП",
+      }))
+    : [];
+
+  const skills_probes: ExplainProbeItem[] = Array.isArray(c?.probes)
+    ? c.probes.slice(0, 3).map((p: any) => ({
+        title: p.title ?? "Задание работодателя",
+        verdict: p.verdict ?? "Проверено",
+      }))
+    : [];
+
+  const reqTotal = Number(must?.required_total ?? skills_tested.filter((s) => s.required).length + gaps.filter((g) => g.required).length);
+  const reqMissing = Number(must?.missing_total ?? gaps.filter((g) => g.required).length);
+  const reqConfirmed = Math.max(0, reqTotal - reqMissing);
+
+  const headGrade =
+    gradeStatus === "confirmed"
+      ? `Грейд ${catTitle} подтверждён тестом`
+      : gradeStatus === "provisional"
+        ? `Категория ${catTitle} присвоена предварительно`
+        : `Уровень заявлен кандидатом (${catTitle})`;
+
+  const headStack =
+    reqTotal > 0
+      ? reqMissing === 0
+        ? `все обязательные навыки подтверждены (${reqConfirmed} из ${reqTotal})`
+        : `подтверждено ${reqConfirmed} из ${reqTotal} обязательных навыков`
+      : skills_tested.length > 0
+        ? `подтверждено навыков: ${skills_tested.length}`
+        : "ранжирование по силе теста";
+
+  const summaryParts: string[] = [];
+  if (rank) summaryParts.push(`Место #${rank} в подборке (соответствие ${score100} из 100).`);
+  else if (scoreVal != null) summaryParts.push(`Итоговое соответствие требованиям — ${score100} из 100.`);
+  if (skills_tested.length) {
+    summaryParts.push(
+      `Проверено на платформе: ${skills_tested
+        .slice(0, 4)
+        .map((s) => (s.score_pct ? `${s.title} (${s.score_pct} %)` : s.title))
+        .join(", ")}.`
+    );
+  }
+  if (skills_fsp.length) {
+    summaryParts.push(`Реестр ФСП: ${skills_fsp[0].text}.`);
+  }
+  const reqGaps = gaps.filter((g) => g.required);
+  if (reqGaps.length) {
+    summaryParts.push(`Что уточнить коротким заданием: ${reqGaps.map((g) => g.title).join(", ")}.`);
+  }
+
+  const t = c?.test;
+  const gradeText = t
+    ? `Решено ${t.correct} из ${t.answered} заданий${t.integrity?.title ? ` · достоверность: ${String(t.integrity.title).toLowerCase()}` : ""}`
+    : "Тест по направлению ещё не пройден";
+
+  const breakdown: ExplainBreakdownItem[] = Object.keys(comps).length
+    ? WEIGHT_META.map(([key, label, defW]) => {
+        const w = reqTotal === 0 && key === "test" ? 0.8 : reqTotal === 0 && key === "stack_required" ? 0.0 : defW;
+        const val = Number(comps[key] ?? 0);
+        return {
+          key,
+          label,
+          weight_pct: Math.round(w * 100),
+          raw_pct: Math.round(val * 100),
+          points100: Math.round(w * val * 1000) / 10,
+        };
+      })
+    : [];
+
   return {
-    headline: `${card?.category?.title || "Кандидат"} · подтверждено ${reqConfirmed} из ${reqTotal} обязательных навыков`,
-    summary: `Соответствие требованиям — ${Math.round(score * 100)} из 100.`,
-    score100: Math.round(score * 100),
-    rank: match.rank ?? null,
-    tier_label: reqTotal > 0 && reqConfirmed === reqTotal ? "Полное покрытие обязательных навыков" : undefined,
+    headline: `${headGrade} · ${headStack}`,
+    summary: summaryParts.join(" "),
+    score100,
+    rank,
+    tier_label:
+      reqTotal > 0
+        ? reqMissing === 0
+          ? "Полное покрытие обязательных навыков"
+          : `Не хватает подтверждения ${reqMissing} обязат. навыка`
+        : "Оценка по результату теста и ФСП",
     required_confirmed: reqConfirmed,
     required_total: reqTotal,
     grade: {
-      title: card?.category?.title || "Категория",
-      status: gs,
+      title: catTitle,
+      status: gradeStatus,
       status_title:
-        gs === "confirmed"
+        gradeStatus === "confirmed"
           ? "Подтверждён на платформе"
-          : gs === "provisional"
+          : gradeStatus === "provisional"
             ? "Предварительно"
             : "Самозаявлено",
-      text: "Оценка по результатам адаптивного теста",
-      hint: null,
+      text: gradeText,
     },
-    core: match.core || null,
+    core: core?.title
+      ? {
+          label: core.label ?? "Основной навык роли",
+          title: core.title,
+          state: core.state,
+          via: core.via,
+          headline: core.headline,
+          text: cleanJargon(core.text),
+        }
+      : null,
     skills_tested,
-    skills_fsp: (card?.fsp?.achievements || []).slice(0, 3).map((a: any) => ({
-      text: a.text || "Достижение ФСП",
-      relevance: a.relevance?.title || null,
-      source: "Подтверждено реестром ФСП",
-    })),
-    skills_probes: (card?.probes || []).slice(0, 2).map((p: any) => ({
-      title: p.title || "Задание работодателя",
-      verdict: p.verdict || "Проверено",
-    })),
+    skills_fsp,
+    skills_probes,
     gaps,
-    breakdown: [],
-    why_above_next: item.why_above_next || match.why_above_next || null,
-    offer_forecast: item.offer_forecast || match.offer_forecast || null,
+    breakdown,
   };
 }
 
 /**
- * Понятное объяснение места кандидата в выдаче для HR и нанимающего менеджера.
- * Встраивается в карточки подборки работодателя и в детальную карточку кандидата (А2).
+ * Компонент объяснимости подбора «Почему этот кандидат здесь».
+ * Предназначен для вставки в карточку кандидата в подборке работодателя и на экран детального просмотра.
  */
-export function MatchExplain({
-  explain: explainProp,
-  item,
-  onCreateProbe,
-  compact = false,
-  className = "",
-}: MatchExplainProps) {
-  const data = explainProp || buildFallbackExplain(item);
-  const [showBreakdown, setShowBreakdown] = useState(false);
+export function MatchExplain(props: MatchExplainProps) {
+  const { needId, candidateRef, version, compact = false, defaultOpen = false, className = "" } = props;
+  const localData = useMemo(() => buildClientExplain(props), [
+    props.explain,
+    props.candidate,
+    props.score,
+    props.reasons,
+    props.must,
+    props.core,
+    props.components,
+  ]);
+  const [remoteData, setRemoteData] = useState<MatchExplainData | null>(null);
+  const [open, setOpen] = useState(defaultOpen);
 
+  useEffect(() => {
+    if (localData || !needId || !candidateRef) return;
+    let cancelled = false;
+    const qs = new URLSearchParams({ need_id: needId });
+    if (version != null) qs.set("v", String(version));
+    api<any>(`/employer/candidates/${encodeURIComponent(candidateRef)}?${qs.toString()}`)
+      .then((res) => {
+        if (!cancelled && res?.match?.explain) {
+          setRemoteData(res.match.explain);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [localData, needId, candidateRef, version]);
+
+  const data = localData ?? remoteData;
   if (!data) return null;
 
-  const gradeBadge = GRADE_BADGE_STYLES[data.grade.status] || GRADE_BADGE_STYLES.confirmed;
-  const reqGaps = data.gaps.filter((g) => g.required);
-  const whyNext = data.why_above_next || item?.why_above_next;
-  const forecast = data.offer_forecast;
+  const reqGaps = data.gaps.filter((g) => g.required !== false);
 
   if (compact) {
     return (
       <div
-        data-testid="match-explain-compact"
-        className={`rounded-xl bg-[#FBF9FE] p-3 ring-1 ring-brand-night/10 ${className}`}
+        className={`mt-2.5 rounded-xl border border-brand-night/10 bg-[#F9F8FE] px-3 py-2.5 text-sm ${className}`}
+        data-testid="match-explain"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${gradeBadge}`}>
-              {data.grade.status_title}
+          <p className="font-semibold text-brand-night">{data.headline}</p>
+          {data.required_total ? (
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                data.required_confirmed === data.required_total
+                  ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200"
+                  : "bg-amber-50 text-amber-900 ring-1 ring-amber-200"
+              }`}
+            >
+              Обязательный стек: {data.required_confirmed} из {data.required_total}
             </span>
-            {data.tier_label && (
-              <span className="rounded-full bg-brand-blush/50 px-2.5 py-0.5 text-xs font-semibold text-brand-plum">
-                {data.tier_label}
-              </span>
-            )}
-            {forecast && (
-              <span
-                data-testid="offer-forecast-chip"
-                title={forecast.note}
-                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${FORECAST_STYLES[forecast.level] || FORECAST_STYLES.medium}`}
-              >
-                Принятие приглашения: {forecast.title}
-              </span>
-            )}
-          </div>
-          <span className="text-xs font-bold text-brand-night tabular-nums">
-            Соответствие: {data.score100} из 100
-          </span>
+          ) : null}
         </div>
-        <p className="mt-1.5 text-xs font-medium text-brand-night">{data.headline}</p>
-        {whyNext?.headline && (
-          <p
-            data-testid="why-above-next"
-            className="mt-1 rounded-lg bg-indigo-50/75 px-2.5 py-1 text-xs font-medium text-indigo-950 ring-1 ring-indigo-600/15"
-          >
-            {whyNext.headline}
-          </p>
-        )}
         {data.skills_tested.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-medium text-brand-ink/65">Подтверждено тестом:</span>
             {data.skills_tested.slice(0, 5).map((s) => (
               <span
                 key={s.title}
-                title={`${s.source}: ${s.text}`}
-                className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-900 ring-1 ring-emerald-600/20"
+                title={s.source}
+                className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-900 ring-1 ring-emerald-200/80"
               >
-                <span>✓ {s.title}</span>
-                {s.score_pct != null && <span className="text-emerald-700/80">({s.score_pct} %)</span>}
-              </span>
-            ))}
-            {reqGaps.slice(0, 3).map((g) => (
-              <span
-                key={g.title}
-                title={g.state_title}
-                className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900 ring-1 ring-amber-600/20"
-              >
-                <span>? {g.title}</span>
-                <span className="text-amber-800/75">({g.state === "declared" ? "заявлен" : "не проверялся"})</span>
+                {s.title}
+                {s.score_pct != null ? ` ${s.score_pct} %` : ""}
+                {s.via ? ` (через ${s.via})` : ""}
               </span>
             ))}
           </div>
+        )}
+        {data.skills_fsp.length > 0 && (
+          <p className="mt-1 text-xs font-medium text-brand-plum">
+            Реестр ФСП: <span className="font-normal text-brand-ink/80">{data.skills_fsp[0].text}</span>
+          </p>
+        )}
+        {reqGaps.length > 0 && (
+          <p className="mt-1 text-xs text-amber-900">
+            <span className="font-semibold">Не проверено тестом:</span>{" "}
+            {reqGaps.map((g) => `${g.title} (${g.state_title.toLowerCase()})`).join(", ")}
+          </p>
         )}
       </div>
     );
@@ -316,374 +418,240 @@ export function MatchExplain({
 
   return (
     <section
+      className={`mt-3 rounded-xl border border-brand-night/10 bg-[#F9F8FE] p-3.5 text-sm ${className}`}
       data-testid="match-explain"
-      aria-label="Почему этот кандидат подходит"
-      className={`rounded-2xl bg-[#FBF9FE] p-4 sm:p-5 ring-1 ring-brand-night/10 ${className}`}
+      aria-label="Почему кандидат в подборке"
     >
-      {/* Шапка: место, итоговый балл из 100 и статус грейда */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            {data.rank != null && (
-              <span className="rounded-lg bg-brand-night px-2.5 py-0.5 text-xs font-bold text-white tabular-nums">
-                Место #{data.rank}
-              </span>
-            )}
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${gradeBadge}`}>
-              {data.grade.status_title}
-            </span>
-            {data.tier_label && (
-              <span className="rounded-full bg-brand-blush/50 px-2.5 py-0.5 text-xs font-semibold text-brand-plum">
-                {data.tier_label}
-              </span>
-            )}
-          </div>
-          <h4 className="mt-2 text-base font-bold text-brand-night">{data.headline}</h4>
-          <p className="mt-1 text-sm leading-relaxed text-brand-ink/80">{data.summary}</p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-plum">
+            Почему кандидат в подборке
+          </p>
+          <p className="mt-0.5 font-bold text-brand-night">{data.headline}</p>
+          <p className="mt-1 text-xs leading-relaxed text-brand-ink/75">{data.summary}</p>
         </div>
-
-        <div className="flex flex-col items-end rounded-xl bg-white px-3.5 py-2 ring-1 ring-brand-night/10">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-ink/60">
-            Балл подбора
-          </span>
-          <span className="text-2xl font-extrabold text-brand-night tabular-nums">
-            {data.score100}
-            <span className="text-sm font-semibold text-brand-ink/50"> / 100</span>
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          className="shrink-0 rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-brand ring-1 ring-brand-night/10 hover:bg-brand-night/5"
+        >
+          {open ? "Свернуть разбор" : "Разбор по факторам"}
+        </button>
       </div>
 
-      {/* P0: «Почему №1 выше №2» — граница со следующим кандидатом в подборке */}
-      {whyNext?.headline && (
-        <div
-          data-testid="why-above-next"
-          className="mt-3 rounded-xl bg-indigo-50/80 px-3.5 py-2.5 text-xs leading-relaxed text-indigo-950 ring-1 ring-indigo-600/20"
-        >
-          <span className="font-bold">Почему выше следующего в списке: </span>
-          <span>{whyNext.headline}</span>
-        </div>
-      )}
-
-      {/* Прогноз принятия приглашения */}
-      {forecast && (
-        <div
-          data-testid="offer-forecast"
-          className="mt-3 rounded-xl bg-white p-3 ring-1 ring-brand-night/10"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-ink/65">
-              Вероятность принять приглашение
-            </span>
-            <span
-              className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${FORECAST_STYLES[forecast.level] || FORECAST_STYLES.medium}`}
-            >
-              {forecast.title}
-            </span>
-          </div>
-          {forecast.factors && forecast.factors.length > 0 && (
-            <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-xs text-brand-ink/80">
-              {forecast.factors.map((f, i) => (
-                <li key={i}>{f}</li>
-              ))}
-            </ul>
-          )}
-          <p className="mt-1.5 text-[11px] text-brand-ink/60">{forecast.note}</p>
-        </div>
-      )}
-
-      {/* Основной язык / фреймворк роли (ядро) */}
-      {data.core && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs ring-1 ring-brand-night/10">
-          <span className="font-semibold text-brand-night">
-            {data.core.label} — {data.core.title}:
-          </span>
-          <span
-            className={`rounded-md px-2 py-0.5 font-semibold ${
-              data.core.state === "confirmed"
-                ? "bg-emerald-50 text-emerald-900"
-                : data.core.state === "declared"
-                  ? "bg-amber-50 text-amber-900"
-                  : "bg-rose-50 text-rose-900"
-            }`}
-          >
-            {data.core.state === "confirmed"
-              ? data.core.via
-                ? `подтверждено (через ${data.core.via})`
-                : "подтверждено тестом"
-              : data.core.state === "declared"
-                ? "указано в анкете, не проверялось"
-                : "не обнаружено в профиле"}
-          </span>
-          {data.core.text && <span className="text-brand-ink/70">{data.core.text}</span>}
-        </div>
-      )}
-
-      {/* Три колонки доказательств: Проверено тестом / Достижения ФСП и задания / Что уточнить */}
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
-        {/* 1. Подтверждённые навыки (тест платформы) */}
-        <div className="rounded-xl bg-white p-3.5 ring-1 ring-brand-night/8">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-bold uppercase tracking-wider text-emerald-900">
-              Подтверждено тестом
-            </p>
-            {data.required_total > 0 && (
-              <span className="text-xs font-semibold text-emerald-800 tabular-nums">
-                {data.required_confirmed} из {data.required_total} обяз.
-              </span>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-brand-ink/70" title={data.grade.hint || undefined}>
-            {data.grade.text}
-          </p>
+      <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+        <div className="rounded-lg bg-white p-2.5 ring-1 ring-brand-night/5">
+          <p className="text-xs font-semibold text-emerald-800">Подтверждено заданиями</p>
           {data.skills_tested.length > 0 ? (
-            <ul className="mt-2.5 space-y-1.5">
+            <ul className="mt-1.5 flex flex-wrap gap-1">
               {data.skills_tested.map((s) => (
-                <li key={s.title} className="flex items-start justify-between gap-2 text-xs">
-                  <span className="font-semibold text-brand-night">
-                    ✓ {s.title}
-                    {s.via && <span className="font-normal text-brand-ink/65"> (через {s.via})</span>}
-                  </span>
-                  <span className="shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-900 tabular-nums">
-                    {s.score_pct != null ? `${s.score_pct} %` : "проверено"}
-                  </span>
+                <li
+                  key={s.title}
+                  title={s.text || s.source}
+                  className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-900"
+                >
+                  {s.title}
+                  {s.score_pct != null ? ` · ${s.score_pct} %` : ""}
+                  {s.via ? ` (через ${s.via})` : ""}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-xs text-brand-ink/60">
-              По обязательным навыкам этой вакансии тестовых заданий у кандидата пока не было.
-            </p>
+            <p className="mt-1 text-xs text-brand-ink/60">Навыки из стека потребности ещё не проверялись</p>
           )}
         </div>
 
-        {/* 2. Практика и достижения: Реестр ФСП + задания работодателей */}
-        <div className="rounded-xl bg-white p-3.5 ring-1 ring-brand-night/8">
-          <p className="text-xs font-bold uppercase tracking-wider text-brand-plum">
-            Соревнования ФСП и практика
-          </p>
+        <div className="rounded-lg bg-white p-2.5 ring-1 ring-brand-night/5">
+          <p className="text-xs font-semibold text-brand-plum">Реестр ФСП и задания</p>
           {data.skills_fsp.length > 0 ? (
-            <ul className="mt-2 space-y-1.5 text-xs">
-              {data.skills_fsp.map((a, idx) => (
-                <li key={idx} className="leading-snug text-brand-night">
-                  <span className="font-semibold">{a.text}</span>
-                  {a.relevance && <span className="block text-[11px] text-brand-ink/65">{a.relevance}</span>}
-                </li>
+            <ul className="mt-1 space-y-1 text-xs text-brand-ink/80">
+              {data.skills_fsp.slice(0, 2).map((a, i) => (
+                <li key={i}>{a.text}</li>
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-xs text-brand-ink/65">
-              Записей в реестре ФСП нет — это не снижает балл за тест и навыки (правило справедливости 4/5).
-            </p>
+            <p className="mt-1 text-xs text-brand-ink/60">Записей в реестре ФСП нет (штрафа нет)</p>
           )}
-
-          {data.skills_probes.length > 0 && (
-            <div className="mt-3 border-t border-brand-night/10 pt-2">
-              <p className="text-[11px] font-semibold text-brand-ink/70">Короткие задания работодателей:</p>
-              <ul className="mt-1 space-y-1 text-xs">
-                {data.skills_probes.map((p, idx) => (
-                  <li key={idx} className="text-brand-night">
-                    <span className="font-medium">{p.title}</span> — {p.verdict}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {data.skills_probes && data.skills_probes.length > 0 && (
+            <p className="mt-1 text-xs text-brand-ink/75">
+              Задания: {data.skills_probes.map((p) => `${p.title} (${p.verdict})`).join(", ")}
+            </p>
           )}
         </div>
 
-        {/* 3. Пробелы и быстрая допроверка коротким заданием */}
-        <div className="rounded-xl bg-white p-3.5 ring-1 ring-brand-night/8">
-          <p className="text-xs font-bold uppercase tracking-wider text-amber-900">
-            Что стоит уточнить
-          </p>
+        <div className="rounded-lg bg-white p-2.5 ring-1 ring-brand-night/5">
+          <p className="text-xs font-semibold text-amber-900">Чего не хватает / что проверить</p>
           {data.gaps.length > 0 ? (
-            <ul className="mt-2 space-y-2 text-xs">
-              {data.gaps.slice(0, 4).map((g) => (
-                <li key={g.title} className="rounded-lg bg-amber-50/60 p-2 ring-1 ring-amber-500/20">
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="font-semibold text-brand-night">
-                      {g.title}
-                      {g.required && <span className="ml-1 text-[11px] text-amber-900">(обяз.)</span>}
-                    </span>
-                    <span className="text-[11px] text-amber-900/80">
-                      {g.state === "declared"
-                        ? "из анкеты"
-                        : g.state === "low"
-                          ? "ниже порога"
-                          : "не проверялся"}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-[11px] text-brand-ink/70">{g.state_title}</p>
-                  {onCreateProbe && (
-                    <button
-                      type="button"
-                      onClick={() => onCreateProbe(g.title)}
-                      className="mt-1.5 inline-flex items-center rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-brand-plum shadow-xs ring-1 ring-brand-plum/25 hover:bg-brand-blush/30"
-                    >
-                      + Короткое задание по {g.title}
-                    </button>
-                  )}
+            <ul className="mt-1 space-y-1 text-xs text-brand-ink/80">
+              {data.gaps.slice(0, 3).map((g) => (
+                <li key={g.title}>
+                  <span className="font-semibold text-brand-night">{g.title}:</span> {g.state_title.toLowerCase()}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-xs text-emerald-800">
-              Все обязательные и желательные навыки вакансии проверены на платформе.
-            </p>
+            <p className="mt-1 text-xs text-emerald-800">Все обязательные требования потребности подтверждены</p>
           )}
         </div>
       </div>
 
-      {/* Раскрывающееся слагаемое балла */}
-      {data.breakdown && data.breakdown.length > 0 && (
-        <div className="mt-3 border-t border-brand-night/10 pt-2.5">
-          <button
-            type="button"
-            onClick={() => setShowBreakdown((v) => !v)}
-            aria-expanded={showBreakdown}
-            className="text-xs font-semibold text-brand-plum hover:underline"
-          >
-            {showBreakdown
-              ? "Скрыть расчёт балла соответствия"
-              : "Показать, как сложился балл из 100 (самоописание резюме = 0 %)"}
-          </button>
-          {showBreakdown && (
-            <div className="mt-2.5">
-              {data.ranking_basis_ru && (
-                <p className="mb-2 text-xs text-brand-ink/70">{data.ranking_basis_ru}</p>
-              )}
-              <div className="grid gap-2 sm:grid-cols-5">
-                {data.breakdown.map((b) => (
-                  <div key={b.key} className="rounded-lg bg-white p-2.5 text-xs ring-1 ring-brand-night/10">
-                    <p className="font-semibold text-brand-night">{b.label}</p>
-                    <p className="mt-1 text-sm font-bold text-brand-plum tabular-nums">
-                      +{num(b.points100, 1)} <span className="text-xs font-normal text-brand-ink/60">из {b.weight_pct}</span>
-                    </p>
-                    <p className="text-[11px] text-brand-ink/60">выполнение: {b.raw_pct} %</p>
-                  </div>
-                ))}
+      {open && data.breakdown && data.breakdown.length > 0 && (
+        <div className="mt-3 rounded-lg bg-white p-3 ring-1 ring-brand-night/5" data-testid="match-explain-breakdown">
+          <p className="text-xs font-semibold text-brand-night">
+            Из чего складывается балл соответствия ({data.score100} из 100 · самоописание резюме в балл не входит):
+          </p>
+          <div className="mt-2 space-y-1.5">
+            {data.breakdown.map((b) => (
+              <div key={b.key} className="grid grid-cols-[1fr_auto] items-center gap-2 text-xs sm:grid-cols-[16rem_1fr_auto]">
+                <span className="text-brand-ink/80">
+                  {b.label} <span className="text-brand-ink/50">(вес {b.weight_pct} %)</span>
+                </span>
+                <span className="hidden h-1.5 rounded-full bg-brand-night/5 sm:block" aria-hidden="true">
+                  <span
+                    className="block h-1.5 rounded-full bg-brand-plum"
+                    style={{ width: `${Math.min(100, Math.max(4, b.raw_pct ?? 0))}%` }}
+                  />
+                </span>
+                <span className="font-semibold tabular-nums text-brand-night">+{b.points100.toFixed(1).replace(".", ",")}</span>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       )}
     </section>
   );
 }
 
-/**
- * Баннер калибровки зарплатной вилки потребности («если поднять вилку до X — +N подтверждённых кандидатов»).
- */
-export function SalaryCalibrationBanner({
-  calibration,
-  className = "",
-}: {
-  calibration?: SalaryCalibrationInfo | null;
-  className?: string;
-}) {
-  if (!calibration || !calibration.text) return null;
-  const isWarn = calibration.status === "below_market" || calibration.status === "below_median";
-  return (
-    <div
-      data-testid="salary-calibration"
-      className={`rounded-xl p-3 text-xs ring-1 ${
-        isWarn
-          ? "bg-amber-50/90 text-amber-950 ring-amber-500/30"
-          : "bg-emerald-50/75 text-emerald-950 ring-emerald-500/20"
-      } ${className}`}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-bold">
-          {isWarn ? "Калибровка вилки по рынку категории:" : "Позиция вилки на рынке категории:"}
-        </span>
-        {calibration.additional_candidates > 0 && (
-          <span className="rounded-full bg-white px-2.5 py-0.5 font-bold text-brand-plum ring-1 ring-brand-plum/25">
-            +{calibration.additional_candidates} подтверждённых кандидатов
-          </span>
-        )}
-      </div>
-      <p className="mt-1 leading-relaxed">{calibration.text}</p>
-    </div>
-  );
+export interface VacancyGuardFlag {
+  code: string;
+  severity: "high" | "medium" | "low" | string;
+  title: string;
+  text: string;
+  quote?: string | null;
 }
 
-/**
- * Плашка защиты от фиктивных вакансий, проверки ЕГРЮЛ по ИНН и индекса ответственности работодателя.
- */
+export interface VacancyGuardData {
+  status: "verified" | "caution" | "high_risk" | string;
+  badge_title: string;
+  risk_score: number;
+  is_suspicious: boolean;
+  flags: VacancyGuardFlag[];
+  summary: string;
+}
+
+/** Клиентская проверка вакансии на признаки фиктивности (если серверный блок guard не передан). */
+export function evaluateVacancyGuard(vacancy?: any, trust?: any, guard?: VacancyGuardData | null): VacancyGuardData | null {
+  if (guard) return guard;
+  if (vacancy?.vacancy_guard) return vacancy.vacancy_guard as VacancyGuardData;
+  if (!vacancy && !trust) return null;
+
+  const title = String(vacancy?.title ?? "");
+  const desc = String(vacancy?.description ?? "");
+  const full = `${title}\n${desc}`;
+  const flags: VacancyGuardFlag[] = [];
+  let risk = 0;
+
+  if (/(после\s+оплат\w*\s+(обучен|стажировк|курс)|платн\w+\s+(обучен|стажировк)|взнос\s+за\s+(оформлен|доступ))/i.test(full)) {
+    flags.push({
+      code: "paid_fee",
+      severity: "high",
+      title: "Требование оплаты от кандидата",
+      text: "В описании есть условие платного обучения или взноса перед оформлением.",
+    });
+    risk += 55;
+  }
+  if (/(быстр\w+\s+заработ\w*|л[её]гк\w+\s+деньг|высок\w+\s+доход\s+с\s+первого\s+дня|ежедневн\w+\s+выплат)/i.test(full)) {
+    flags.push({
+      code: "scam_phrases",
+      severity: "high",
+      title: "Маркеры вакансии-приманки",
+      text: "Обнаружены формулировки «быстрый заработок» или «высокий доход с первого дня без опыта».",
+    });
+    risk += 40;
+  }
+  const offerSal = trust?.offer_salary ?? vacancy?.trust?.offer_salary;
+  if (offerSal?.status === "warn") {
+    flags.push({
+      code: "salary_bait",
+      severity: "high",
+      title: "Вилка вне рыночного диапазона",
+      text: String(offerSal.text ?? "Зарплатная вилка существенно отклоняется от рынка категории."),
+    });
+    risk += 40;
+  }
+  const tLevel = trust?.level ?? vacancy?.trust?.level;
+  if (tLevel === "low") {
+    flags.push({
+      code: "low_company_trust",
+      severity: "high",
+      title: "Неподтверждённый работодатель",
+      text: String(trust?.summary ?? vacancy?.trust?.summary ?? "Компания не подтверждена в реестре ФНС или имеет жалобы."),
+    });
+    risk += 35;
+  }
+
+  const riskScore = Math.min(100, risk);
+  const status = riskScore >= 40 ? "high_risk" : flags.length > 0 ? "caution" : "verified";
+  return {
+    status,
+    badge_title:
+      status === "high_risk"
+        ? "Риск фиктивной вакансии"
+        : status === "caution"
+          ? "Требует внимания"
+          : "Проверенная вакансия",
+    risk_score: riskScore,
+    is_suspicious: status !== "verified",
+    flags,
+    summary: flags[0]?.text ?? "Зарплатная вилка в пределах рынка, реквизиты работодателя проверены.",
+  };
+}
+
+/** Бейдж и предупреждение защиты от фиктивных вакансий (для карточек вакансий в кабинете кандидата). */
 export function VacancyGuardBadge({
   guard,
-  className = "",
+  vacancy,
+  trust,
+  compact = false,
 }: {
   guard?: VacancyGuardData | null;
-  className?: string;
+  vacancy?: any;
+  trust?: any;
+  compact?: boolean;
 }) {
-  if (!guard) return null;
+  const g = useMemo(() => evaluateVacancyGuard(vacancy, trust, guard), [guard, vacancy, trust]);
+  if (!g) return null;
 
-  const egrulBadge = guard.egrul?.badge;
-  const respBadge = guard.responsibility?.badge;
+  const cls =
+    g.status === "high_risk"
+      ? "bg-rose-50 text-rose-900 ring-rose-200"
+      : g.status === "caution"
+        ? "bg-amber-50 text-amber-900 ring-amber-200"
+        : "bg-emerald-50 text-emerald-800 ring-emerald-200";
 
-  if (guard.status === "verified") {
+  if (compact || !g.is_suspicious) {
     return (
-      <div
+      <span
         data-testid="vacancy-guard-badge"
-        title={guard.summary}
-        className={`inline-flex flex-wrap items-center gap-1.5 ${className}`}
+        data-status={g.status}
+        title={g.summary}
+        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${cls}`}
       >
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-900 ring-1 ring-emerald-600/20">
-          <span>✓ {guard.badge_title}</span>
-        </span>
-        {egrulBadge && egrulBadge !== guard.badge_title && (
-          <span
-            title={guard.egrul?.text}
-            className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-400/20"
-          >
-            {egrulBadge}
-          </span>
-        )}
-        {respBadge && (
-          <span
-            title={guard.responsibility?.summary}
-            className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-900 ring-1 ring-indigo-600/20"
-          >
-            {respBadge}
-          </span>
-        )}
-      </div>
+        {g.badge_title}
+      </span>
     );
   }
 
-  const isHigh = guard.status === "high_risk";
-  const boxStyle = isHigh
-    ? "bg-rose-50 text-rose-950 ring-1 ring-rose-500/30"
-    : "bg-amber-50 text-amber-950 ring-1 ring-amber-500/30";
-
   return (
     <div
-      data-testid="vacancy-guard-badge"
-      className={`rounded-xl p-3 text-xs ${boxStyle} ${className}`}
+      data-testid="vacancy-guard-alert"
+      data-status={g.status}
+      className={`mt-2 rounded-xl p-3 text-xs ring-1 ${cls}`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-bold">
-            {isHigh ? "Предупреждение защиты кандидатов: " : "Обратите внимание: "}
-            {guard.badge_title}
-          </span>
-          {egrulBadge && (
-            <span className="rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold">
-              {egrulBadge}
-            </span>
-          )}
-          {respBadge && (
-            <span className="rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold">
-              {respBadge}
-            </span>
-          )}
-        </div>
-        <span className="rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold tabular-nums">
-          риск {guard.risk_score} / 100
-        </span>
-      </div>
-      <ul className="mt-1.5 list-disc space-y-1 pl-4">
-        {guard.flags.map((f) => (
+      <p className="font-bold">{g.badge_title}</p>
+      <ul className="mt-1 list-disc space-y-0.5 pl-4">
+        {g.flags.map((f) => (
           <li key={f.code}>
             <span className="font-semibold">{f.title}:</span> {f.text}
           </li>

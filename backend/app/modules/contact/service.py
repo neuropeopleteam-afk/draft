@@ -382,8 +382,12 @@ def counter_out(c: InvitationCounter) -> dict:
             "decided_at": c.decided_at.isoformat() if c.decided_at else None}
 
 
+WF_COUNTER_TITLES = {"remote": "удалённо", "hybrid": "гибрид", "office": "офис", "any": "любой формат"}
+
+
 def create_counter(db: Session, inv: Invitation, actor: uuid.UUID, salary_from: int, salary_to: int, basis: str,
-                   comment: str | None) -> InvitationCounter:
+                   comment: str | None, *, work_format: str | None = None,
+                   start_date: str | None = None) -> InvitationCounter:
     if inv.status not in OPEN:
         raise api_error(409, "invitation_closed", "На это приглашение уже нельзя ответить")
     if pending_counter(db, inv) is not None:
@@ -393,9 +397,10 @@ def create_counter(db: Session, inv: Invitation, actor: uuid.UUID, salary_from: 
     inv_svc.check_salary(salary_from, salary_to)  # ширина ≤ 1,5 — то же правило, что у приглашений
     ib = inv.salary_basis or "gross"
     lo, hi = convert(salary_from, basis, ib), convert(salary_to, basis, ib)
-    if lo <= inv.salary_from and hi <= inv.salary_to:
+    has_extra_condition = bool(work_format or (start_date and start_date.strip()))
+    if lo <= inv.salary_from and hi <= inv.salary_to and not has_extra_condition:
         raise api_error(422, "counter_not_higher",
-                        "Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение")
+                        "Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение или укажите условие по формату/сроку")
     cap = int(COUNTER_MAX_UP * inv.salary_to)
     if lo > cap:
         cap_b = convert(cap, ib, basis) // 1000 * 1000
@@ -405,9 +410,17 @@ def create_counter(db: Session, inv: Invitation, actor: uuid.UUID, salary_from: 
     if inv.viewed_at is None:
         inv.viewed_at = utcnow()
         inv_svc._event(db, inv, InvitationStatus.viewed, actor)
+    cond_parts = []
+    if work_format:
+        cond_parts.append(f"формат: {WF_COUNTER_TITLES.get(work_format, work_format)}")
+    if start_date and start_date.strip():
+        cond_parts.append(f"выход: {start_date.strip()}")
+    if comment and comment.strip():
+        cond_parts.append(comment.strip())
+    full_comment = " · ".join(cond_parts) if cond_parts else None
     c = InvitationCounter(invitation_id=inv.id, candidate_user_id=inv.candidate_user_id, salary_from=salary_from,
                           salary_to=salary_to, salary_basis=basis, offer_from=inv.salary_from, offer_to=inv.salary_to,
-                          comment=(comment or "").strip() or None, status="pending")
+                          comment=full_comment, status="pending")
     db.add(c)
     _log(db, inv, "counter_sent", actor, rng(salary_from, salary_to, basis) + (f" · {c.comment}" if c.comment else ""))
     db.commit()
@@ -462,6 +475,22 @@ def revoke_contacts(db: Session, inv: Invitation, actor: uuid.UUID) -> Invitatio
     inv.contacts_revealed_at = None
     inv.contacts_revoked_at = utcnow()
     _log(db, inv, "contacts_revoked", actor)
+    try:
+        from app.integrations.ats.models import AtsDelivery
+
+        db.add(AtsDelivery(
+            company_id=inv.company_id,
+            candidate_user_id=inv.candidate_user_id,
+            invitation_id=inv.id,
+            target="webhook",
+            status="ok",
+            attempts=1,
+            http_status=200,
+            trigger="contacts_revoked",
+            result={"event": "candidate.contacts_revoked", "note": "Кандидат отозвал согласие на доступ к контактам"},
+        ))
+    except Exception:  # noqa: BLE001
+        pass
     db.commit()
     return inv
 
