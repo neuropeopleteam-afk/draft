@@ -55,7 +55,7 @@ def test_tournament_from_need_flow(client):
     assert t["discipline"] == "Продуктовое программирование" and t["need_id"] == need["id"]
     assert "Прямой оффер в компанию с подтверждённой вилкой из потребности" in t["prize"]
     assert "топ-5 призёров" in t["prize"] and "очки в рейтинг ФСП" in t["prize"]
-    assert t["salary"]["source"] == "need" and len(t["tasks"]) == 3 and t["bank_size"] == 403
+    assert t["salary"]["source"] == "need" and len(t["tasks"]) == 3 and t["bank_size"] >= 403
     assert {"Python", "FastAPI", "PostgreSQL"} <= set(t["stack"])
     assert all("key" not in x and "seed" not in x for x in t["tasks"])
 

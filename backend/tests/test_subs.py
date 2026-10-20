@@ -17,10 +17,10 @@ from tests.conftest import register_and_verify
 
 NEED_TEXT = "Ищем бэкенд-разработчика middle: обязательно Python и PostgreSQL, желательно Kafka. Удалённо, 200–280 тыс."
 UTC = timezone.utc
-T1 = datetime(2026, 10, 20, 7, 0, tzinfo=UTC)   # 10:00 по Москве, вторник
-T1_EVE = datetime(2026, 10, 20, 17, 0, tzinfo=UTC)  # 20:00
-T1_NIGHT = datetime(2026, 10, 20, 20, 30, tzinfo=UTC)  # 23:30 — тихие часы
-T2 = datetime(2026, 10, 21, 6, 30, tzinfo=UTC)  # 09:30 следующего дня
+T1 = datetime(2027, 10, 19, 7, 0, tzinfo=UTC)   # 10:00 по Москве, вторник
+T1_EVE = datetime(2027, 10, 19, 17, 0, tzinfo=UTC)  # 20:00
+T1_NIGHT = datetime(2027, 10, 19, 20, 30, tzinfo=UTC)  # 23:30 — тихие часы
+T2 = datetime(2027, 10, 20, 6, 30, tzinfo=UTC)  # 09:30 следующего дня
 
 
 class Mails(list):

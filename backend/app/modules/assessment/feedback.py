@@ -63,9 +63,13 @@ _EXTRA_TOPICS = [({"networking", "cidr", "ipv4", "routing"}, "networking", "Се
                  ({"web_security", "xss", "csp"}, "web-security", "Безопасность веб-клиента"),
                  ({"performance", "latency", "capacity_planning"}, "system-performance", "Производительность систем"),
                  # уровни Lead/Principal (банк feat/bank-ext; выдаются только с GRADES_EXT_ENABLED)
-                 ({"incident_analysis", "postmortem", "reliability", "slo"}, "reliability", "Надёжность и разбор инцидентов"),
-                 ({"technical_strategy", "engineering_metrics", "system_design"}, "tech-strategy",
-                  "Техническая стратегия и проектирование")]
+                 ({"incident_analysis", "postmortem", "reliability", "slo", "resilience", "retries", "microservices"},
+                  "reliability", "Надёжность и разбор инцидентов"),
+                 ({"technical_strategy", "engineering_metrics", "system_design", "cloud", "finops", "cost_optimization"},
+                  "tech-strategy", "Техническая стратегия и проектирование"),
+                 ({"agile", "scrum", "planning", "teamwork"}, "team-planning", "Планирование спринтов и командная работа"),
+                 ({"data_labeling", "data_quality", "budgeting"}, "data-quality", "Разметка и качество данных для ML"),
+                 ({"bug_tracking", "jira", "qa_process", "kanban"}, "qa-process", "Управление дефектами и процессы QA")]
 
 # Аспекты темы — навыки семейств банка по-русски. Навык без названия здесь в аспекты не выводится
 # (обычно это сама тема: python, sql, javascript …).

@@ -131,7 +131,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
   };
 
   return (
-    <section className="card space-y-5" data-testid="fsp-talent-map">
+    <section className="card min-w-0 overflow-hidden space-y-5" data-testid="fsp-talent-map">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand">Региональная аналитика ФСП</p>
@@ -189,7 +189,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
             </select>
           </label>
         </div>
-        <div className="min-w-[14rem]">
+        <div>
           <Toggle
             checked={realOnly}
             onChange={setRealOnly}
@@ -199,7 +199,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-        <div className="rounded-2xl border border-brand-night/10 bg-[#FBFAFF] p-3">
+        <div className="min-w-0 rounded-2xl border border-brand-night/10 bg-[#FBFAFF] p-3">
           <svg
             viewBox="0 0 830 340"
             className="h-auto w-full select-none"
@@ -291,7 +291,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between rounded-2xl border border-brand-night/10 bg-white p-4" data-testid="fsp-talent-map-detail">
+        <div className="flex min-w-0 flex-col justify-between rounded-2xl border border-brand-night/10 bg-white p-4" data-testid="fsp-talent-map-detail">
           <div className="space-y-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>

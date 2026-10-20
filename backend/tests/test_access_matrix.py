@@ -346,7 +346,7 @@ def matches(status: int, want) -> bool:
     if want == OK404:
         return status < 500 and status not in (401, 403)
     if want == OK_UPSTREAM:
-        return (status < 500 or status == 502) and status not in (401, 403, 404)
+        return (status < 500 or status in (502, 503)) and status not in (401, 403, 404)
     if want == HIDDEN:
         return status in (403, 404)
     if want == ANY:

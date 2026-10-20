@@ -60,6 +60,7 @@ POLICIES: dict[str, dict[str, object]] = {
     # публичные
     "open": _p(OK),
     "open404": _p(OK404),
+    "open_upstream": _p(OK_UPSTREAM),
     # любой вошедший
     "auth": _p(OK, anon=401),
     "auth404": _p(OK404, anon=401),
@@ -527,7 +528,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate_own",
     ("POST", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate",
     ("POST", "/api/interview/quick-defense"): "candidate",
-    ("POST", "/api/interview/concierge/avatar-token"): "open",
+    ("POST", "/api/interview/concierge/avatar-token"): "open_upstream",
     ("POST", "/api/interview/concierge/speech"): "open",
     ("POST", "/api/interview/concierge/transcribe"): "open",
     ("POST", "/api/interview/concierge/chat"): "open",

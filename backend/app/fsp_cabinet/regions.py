@@ -185,8 +185,9 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
         dist_id, reg_title = resolve_geo(city, idx)
         st = dist_stats[dist_id]
         st["demand_needs"] += 1
-        if n.direction:
-            st["demand_by_direction"][n.direction] += 1
+        n_dir = getattr(n, "direction_id", None) or (n.requirements or {}).get("direction")
+        if n_dir:
+            st["demand_by_direction"][n_dir] += 1
         st["regions"][reg_title]["demand"] += 1
 
     prof_by_uid = {p.user_id: (idx, p) for idx, p in enumerate(profiles)}
