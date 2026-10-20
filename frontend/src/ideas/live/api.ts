@@ -54,10 +54,25 @@ export interface Feed extends RoomOut {
 }
 
 const KEY = (code: string) => `jury_live_guest_${code}`;
+const memTokens = new Map<string, string>();
 export const guestToken = {
-  get: (code: string) => localStorage.getItem(KEY(code)),
-  set: (code: string, t: string) => localStorage.setItem(KEY(code), t),
-  clear: (code: string) => localStorage.removeItem(KEY(code)),
+  get: (code: string): string | null => {
+    const k = KEY(code);
+    try { return localStorage.getItem(k) || sessionStorage.getItem(k) || memTokens.get(k) || null; }
+    catch { return memTokens.get(k) || null; }
+  },
+  set: (code: string, t: string): void => {
+    const k = KEY(code);
+    memTokens.set(k, t);
+    try { localStorage.setItem(k, t); } catch { /* Safari Private / WebView */ }
+    try { sessionStorage.setItem(k, t); } catch { /* ignore */ }
+  },
+  clear: (code: string): void => {
+    const k = KEY(code);
+    memTokens.delete(k);
+    try { localStorage.removeItem(k); } catch { /* ignore */ }
+    try { sessionStorage.removeItem(k); } catch { /* ignore */ }
+  },
 };
 
 /** Запрос гостя: без JWT, с токеном гостя из этого браузера. */

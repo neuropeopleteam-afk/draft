@@ -154,7 +154,7 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https"
                     android:host="@string/hostName"
-                
+                    android:pathPrefix="/"
                 />
             </intent-filter>
 

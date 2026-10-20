@@ -67,6 +67,7 @@ from app.modules.tariffs import router as tariffs_api  # тарифы работ
 from app.modules.fsp.registry import router as fsp_registry_router
 from app.modules.trio import router as trio_api  # трёхсторонняя связь: работодатель ↔ кандидат ↔ ФСП
 from app.modules.admin import router as admin_api  # А1: поддержка, заявки на тарифы, мини-админка
+from app.modules.telegram import router as telegram_api  # А7: уведомления в Telegram
 from app.passport.router import TAGS as PASSPORT_TAGS
 from app.passport.router import router as passport_router
 
@@ -148,7 +149,7 @@ def create_app() -> FastAPI:
         ),
         openapi_tags=(TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS
                       + mutual.TAGS + study_api.TAGS + hh_api.TAGS + interview.TAGS + tariffs_api.TAGS + trio_api.TAGS
-                      + admin_api.TAGS),
+                      + admin_api.TAGS + telegram_api.TAGS),
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -197,7 +198,7 @@ def create_app() -> FastAPI:
               voice.router,  # «Надиктовать» потребность (за флагом VOICE_NEED_ENABLED)
               tariffs_api.public_router, tariffs_api.employer_router, tariffs_api.fsp_router,  # тарифы (Я29)
               trio_api.router,  # трёхсторонняя связь
-              admin_api.support_router, admin_api.tariff_request_router, admin_api.admin_router):  # А1: поддержка, заявки на тарифы, мини-админка
+              admin_api.support_router, admin_api.tariff_request_router, admin_api.admin_router, telegram_api.router):  # А1+А7: поддержка, заявки на тарифы, мини-админка; Telegram
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)

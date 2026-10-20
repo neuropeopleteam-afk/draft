@@ -558,6 +558,12 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/admin/requests/support-resolve"): "admin",
     ("GET", "/api/admin/flags"): "admin",
     ("POST", "/api/admin/flags"): "admin",
+    # А7: уведомления в Telegram (привязка по одноразовому коду, проверка и вебхук бота)
+    ("GET", "/api/telegram/status"): "auth",
+    ("POST", "/api/telegram/link"): "auth",
+    ("DELETE", "/api/telegram/link"): "auth",
+    ("POST", "/api/telegram/test"): "auth",
+    ("POST", "/api/telegram/webhook"): "open",
 }
 
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)
