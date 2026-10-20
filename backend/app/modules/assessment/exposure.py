@@ -29,16 +29,18 @@ from pathlib import Path
 from assessment_bank.psychometrics import CATSession, ExposureControl, PoolItem
 
 K_FILE = Path(__file__).with_name("exposure_k.json")
-DEFAULT_FORMAT_LIMITS = {"open_book_3step": 2, "open_answer": 1}
+DEFAULT_FORMAT_LIMITS = {"open_book_3step": 2, "open_answer": 1, "incident_sim": 2}
 
 
 class AppCATSession(CATSession):
-    """CATSession с ограничением числа заданий одного формата в сессии."""
+    """CATSession с ограничением числа заданий одного формата в сессии и поддержкой отбора у порогов грейдов."""
 
     def __init__(self, *args, max_per_format: dict[str, int] | None = None, max_item_time_s: float | None = None,
-                 seen: dict[str, int] | None = None, ext_lru: bool = False, **kwargs):
+                 seen: dict[str, int] | None = None, ext_lru: bool = False,
+                 code_open_share: float = 0.0, **kwargs):
         self.max_per_format = dict(DEFAULT_FORMAT_LIMITS if max_per_format is None else max_per_format)
         self.max_item_time_s = max_item_time_s
+        self.code_open_share = float(code_open_share)
         super().__init__(*args, **kwargs)
         self._fmt = {fid: i.format for fid, i in self.items.items()}
         self.seen = {str(k): int(v) for k, v in (seen or {}).items()}
@@ -61,9 +63,16 @@ class AppCATSession(CATSession):
         if self.max_item_time_s is not None:
             cands = [i for i in cands if i.time_limit_s <= self.max_item_time_s]
         if not self.max_per_format:
-            return cands
-        cnt = self.format_counts()
-        return [i for i in cands if cnt.get(i.format, 0) < self.max_per_format.get(i.format, 10**6)]
+            out = cands
+        else:
+            cnt = self.format_counts()
+            out = [i for i in cands if cnt.get(i.format, 0) < self.max_per_format.get(i.format, 10**6)]
+        if self.code_open_share > 0.0 and out:
+            from app.modules.assessment.sprt import CODE_OPEN_FORMATS, filter_code_open_pool
+            cnt = self.format_counts()
+            n_co = sum(v for k, v in cnt.items() if k in CODE_OPEN_FORMATS)
+            out = filter_code_open_pool(out, self.n_scored, n_co, self.code_open_share)
+        return out
 
     def _candidates(self) -> list[PoolItem]:
         base = self._limit(super()._candidates())

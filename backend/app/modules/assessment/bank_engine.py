@@ -81,7 +81,8 @@ MAX_TEXT = 20_000
 
 
 def bank_manifest() -> dict:
-    p = Path(assessment_bank.__file__).parent / "BANK_SYNC.json"
+    local_p = Path(__file__).resolve().parents[3] / "assessment_bank" / "BANK_SYNC.json"
+    p = local_p if local_p.exists() else (Path(assessment_bank.__file__).parent / "BANK_SYNC.json")
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -422,6 +423,18 @@ class BankEngine:
         scored = [i for i in done if not i["canary"]]
         # потолок категории по длине теста и погрешности — то же отображение θ → категория, что у мини-теста (grades)
         dec = decide_grade(theta, se, claimed, n_items=len(scored), direction=state["direction"])
+        from app.modules.assessment import sprt as sprt_mod
+        verdict_obj = sprt_mod.compute_verdict(
+            done,
+            lookup,
+            claimed,
+            theta,
+            se,
+            confirmed=dec.confirmed,
+            assigned_grade=dec.assigned,
+            mode=state.get("mode") or "full",
+            incident_stage=state.get("incident_stage"),
+        )
 
         new_scored = [i for i in state["items"] if i["done"] and not i["canary"]]
         pending = [i for i in scored if any(v is None for v in i["x"])]
@@ -488,7 +501,9 @@ class BankEngine:
             "trace": [[round(t, 3), round(s_, 3)] for t, s_ in sess.trace],
             "grading": [{"format": i["format"], "parts": [g.get("method") if g else "auto" for g in i["grading"]],
                          "status": "pending" if any(v is None for v in i["x"]) else "scored"}
-                        for i in scored if i["format"] in ("open_answer", "open_book_3step")],
+                        for i in scored if i["format"] in ("open_answer", "open_book_3step", "incident_sim")],
+            "verdict": verdict_obj.as_dict(),
+            "sprt": verdict_obj.as_dict(),
         }
         if state.get("mode") == "refine":  # Я26: итог уточнения — по общей оценке обеих сессий
             from app.modules.assessment.two_stage import refine_result
@@ -646,7 +661,8 @@ class BankEngine:
             "theta_before": round(float(sess.theta), 3),
             "repeat": pi.family_id in (state.get("seen") or {}),  # И26: семейство из прошлой попытки (запасной путь LRU)
             "public": {"stem": pv["stem"], "code": pv["code"], "options": pv["options"], "steps": steps,
-                       "code_lines": len((pv["code"] or "").splitlines())},
+                       "code_lines": len((pv["code"] or "").splitlines()),
+                       **({"incident": pv["incident"]} if pv.get("incident") is not None else {})},
             "key": v.answer_key.model_dump(include={"kind", "value", "accept"}),
             "rubric": v.rubric.model_dump() if v.rubric else None,
             "answers": {}, "x": [None] * spec.n_parts, "grading": [None] * spec.n_parts, "done": False,
@@ -670,7 +686,7 @@ class BankEngine:
 
     @staticmethod
     def _answer_kind(it: dict, step: int) -> str:
-        if it["format"] == "open_book_3step":
+        if it["format"] in ("open_book_3step", "incident_sim"):
             return "text" if step == 3 else "option"
         return ANSWER_KIND.get(it["format"], "option")
 
@@ -679,7 +695,7 @@ class BankEngine:
         opts = it["public"]["options"]
         if not opts:
             return None
-        if it["format"] == "open_book_3step":
+        if it["format"] in ("open_book_3step", "incident_sim"):
             return [{k: o[k] for k in ("id", "text", "code") if o.get(k) is not None}
                     for o in opts if o.get("step") == step] or None
         return [{k: o[k] for k in ("id", "text", "code") if o.get(k) is not None} for o in opts]
@@ -716,7 +732,7 @@ class BankEngine:
             got = normalize_output(a["1"]["value"])
             ok = got == normalize_output(str(key["value"])) or got in {normalize_output(x) for x in key.get("accept", [])}
             it["x"][0] = float(ok)
-        elif fmt == "open_book_3step":
+        elif fmt in ("open_book_3step", "incident_sim"):
             for k in (1, 2):
                 it["x"][k - 1] = float(a[str(k)]["value"] == key["value"].get(str(k)))
             if it["x"][2] is None:
@@ -748,7 +764,7 @@ class BankEngine:
         """Индексы частей задания с развёрнутым ответом (оцениваются по рубрике)."""
         if it["format"] == "open_answer":
             return [0]
-        if it["format"] == "open_book_3step":
+        if it["format"] in ("open_book_3step", "incident_sim"):
             return [2]
         return []
 
@@ -765,7 +781,7 @@ class BankEngine:
                 out.append({
                     "token": it["token"], "part": part, "format": it["format"], "position": it["position"],
                     "stem": it["public"]["stem"], "code": it["public"]["code"], "code_language": it.get("language"),
-                    "step_prompt": steps[part]["prompt"] if it["format"] == "open_book_3step" and len(steps) > part else None,
+                    "step_prompt": steps[part]["prompt"] if it["format"] in ("open_book_3step", "incident_sim") and len(steps) > part else None,
                     "rubric": it.get("rubric"), "answer": ans.get("value"), "skills": it.get("skills", []),
                     # disputed (И27): вторая оценка в фоне разошлась с первой уже после итога — ответ эксперту
                     "status": "pending" if it["x"][part] is None or (g.get("disputed") and not g.get("expert"))
@@ -823,7 +839,7 @@ class BankEngine:
     def _public(self, state: dict, it: dict) -> ItemPublic:
         k = self._current_step(it)
         steps = it["public"]["steps"]
-        is_ob3 = it["format"] == "open_book_3step"
+        is_ob3 = it["format"] in ("open_book_3step", "incident_sim")
         c = state["cfg"]
         return ItemPublic(
             item_id=it["token"], position=it["position"], total=self._total_est(state), format=it["format"],
@@ -835,6 +851,7 @@ class BankEngine:
             elapsed_s=int(max(0, time.time() - it["issued_at"])), block="common" if it["block"] == "common" else "direction",
             adaptive=True, min_items=c["min_items"], max_items=c["max_items"],
             answered=sum(1 for i in state["items"] if i["done"]), extension=bool(it.get("ext")) or state.get("mode") in ("confirm", "refine"),
+            incident=it["public"].get("incident"),
         )
 
     @staticmethod

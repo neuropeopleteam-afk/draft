@@ -19,7 +19,15 @@
 """
 from __future__ import annotations
 
-from assessment_bank.psychometrics.gpcm import K, TEXT_FORMATS, points as _points, text_parts
+from assessment_bank.psychometrics.gpcm import K, TEXT_FORMATS as _BANK_TEXT_FORMATS, points as _points, text_parts as _bank_text_parts
+
+TEXT_FORMATS = tuple(dict.fromkeys((*_BANK_TEXT_FORMATS, "incident_sim")))
+
+
+def text_parts(fmt: str, n_parts: int = 1) -> list[int]:
+    if fmt == "incident_sim":
+        return [2] if n_parts >= 3 else ([n_parts - 1] if n_parts > 0 else [])
+    return _bank_text_parts(fmt, n_parts)
 
 MODEL = "GPCM 0–4"
 SCALE_RU = {

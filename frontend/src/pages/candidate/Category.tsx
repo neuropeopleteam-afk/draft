@@ -71,6 +71,12 @@ export default function Category() {
             </div>
           ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTION_TITLES[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADE_TITLE_ALL[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
           <ThetaScale theta={s.sessions?.[0]?.theta} se={s.sessions?.[0]?.se} grade={c.grade} confirmed={gs?.status === "confirmed"} compact className="mt-4" />
+          {s.sessions?.[0]?.verdict && (
+            <p className="mt-2 text-xs text-brand-ink/75" data-testid="category-sprt-verdict">
+              Вердикт последнего теста: <b>{s.sessions[0].verdict.title}</b>
+              {s.sessions[0].verdict.followup?.needed ? ` (рекомендован ${s.sessions[0].verdict.followup.minutes}-минутный доп. этап у порога)` : ""}
+            </p>
+          )}
           {(gs?.status === "unconfirmed" || gs?.pending_review) && <GradeStatusNote s={gs} className="mt-2" />}
           <ExtPreliminaryNote x={gs?.ext_preliminary} stage={s.two_stage} direction={c.direction} className="mt-3" />
           {!gs?.ext_preliminary && <TwoStageNote t={s.two_stage} direction={c.direction} className="mt-3" />}

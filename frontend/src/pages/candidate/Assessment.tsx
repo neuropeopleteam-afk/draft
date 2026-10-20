@@ -964,10 +964,12 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     try { setR(await api<any>(`/assessment/sessions/${sessionId}/accept-lower`, { method: "POST" })); await refresh(); }
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
+  const v = r.verdict ?? r.details?.verdict;
   const title = r.mode === "refine" && r.two_stage?.refine ? (r.two_stage.status === "passed" ? "Уточнение уровня пройдено" : "Уточнение не подтвердило уровень у границы")
     : r.accepted_lower ? `Принят уровень ${GRADE_TITLE_ALL[r.accepted_lower] ?? r.accepted_lower}`
     : r.confirmed && r.grade_preliminary ? `${GRADE_TITLE_ALL[r.grade_preliminary.grade] ?? r.grade_preliminary.grade} по тесту — предварительно`
     : r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
+    : v?.status === "needs_followup" ? "Нужен дополнительный этап у границы грейда"
     : r.category_provisional ? (r.mode === "confirm" ? "Дотестирование не подтвердило грейд" : "Грейд присвоен предварительно")
     : "Грейд не подтверждён";
   // Я26 + Я25: у Lead/Principal «предварительно» уточнение — «второй этап» в пометке (кнопка там же, без второго блока)
@@ -991,6 +993,33 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
       <ThetaScale theta={r.theta} se={r.se} grade={r.claimed_grade} confirmed={r.confirmed} className="mt-4" />
+      {v && (
+        <div
+          className={`card mt-4 border text-sm ${
+            v.status === "confirmed"
+              ? "border-emerald-300/70 bg-emerald-50/50"
+              : v.status === "needs_followup"
+              ? "border-amber-300/70 bg-amber-50/50"
+              : "border-brand-night/10 bg-white"
+          }`}
+          data-testid="sprt-verdict-card"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-bold text-brand-night">
+              Трёхзначный вердикт теста: <span data-testid="sprt-verdict-title">{v.title}</span>
+            </p>
+            <span className="chip tabular-nums">
+              Вероятность соответствия {Math.round((v.p_claimed ?? r.p_claimed ?? 0) * 100)} % · практических заданий {v.code_open_count ?? 0} из {v.n_scored ?? r.answered}
+            </span>
+          </div>
+          <p className="mt-1.5 text-brand-ink/80">{v.explanation}</p>
+          {v.incident_stage && (
+            <p className="mt-1.5 rounded-lg bg-white/80 px-3 py-1.5 text-xs font-medium text-brand-night" data-testid="incident-stage-summary">
+              {v.incident_stage.summary_ru}
+            </p>
+          )}
+        </div>
+      )}
       {/* Н1: сразу после письменной части — живой ИИ-интервьюер зовёт в устный разговор (метка достоверности) */}
       <DefensePanel sessionId={sessionId} live="auto" />
       {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}

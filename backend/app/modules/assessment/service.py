@@ -469,7 +469,9 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
         # Кандидату — только ход теста; показатели детектора утечек и контрольные задания видны в данных сессии,
         # не в ответе. Достоверность — уровень и общая причина (Р27), подробности — работодателю
         "details": {k: res.details.get(k) for k in ("stop_reason", "n_scored", "time_used_s",
-                                                     "extension", "pending_review", "n_families_in_bank", "mode")},
+                                                     "extension", "pending_review", "n_families_in_bank", "mode",
+                                                     "verdict", "sprt")},
+        "verdict": (res.details or {}).get("verdict"),
         "integrity": candidate_view((res.details or {}).get("integrity")),
     }
     _ext_preliminary(result, specialization)
@@ -633,6 +635,8 @@ def result(db: Session, ts: TestSession) -> dict:
         out.pop("two_stage", None)
     out["second_opinions"] = second_op.summary(ts.result.get("state") or {})  # И27: текущее состояние фона
     _add_level_position(out, ts)
+    if "verdict" not in out and (er.get("details") or {}).get("verdict"):
+        out["verdict"] = er["details"]["verdict"]
     out.update({"current_grade": specialization.grade_id, "category_id": specialization.category_id,
                 "category_status": specialization.status, "mode": _mode(ts),
                 "sandbox": is_sandbox(profile), "retake_same_grade_days": get_settings().retake_same_grade_days,
@@ -883,6 +887,8 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
             "theta": s.theta, "se": s.theta_se, "confirmed": (s.result or {}).get("engine_result", {}).get("confirmed"),
             "provisional": (s.result or {}).get("engine_result", {}).get("provisional"), "mode": _mode(s),
             "accepted_lower": ((s.result or {}).get("outcome") or {}).get("accepted_lower"),
+            "verdict": (((s.result or {}).get("engine_result") or {}).get("details") or {}).get("verdict")
+                       or ((s.result or {}).get("outcome") or {}).get("verdict"),
             "message": (s.result or {}).get("outcome", {}).get("message"), "is_sandbox": s.is_sandbox,
             "started_at": s.started_at.isoformat() if s.started_at else None,
             "finished_at": s.finished_at.isoformat() if s.finished_at else None,

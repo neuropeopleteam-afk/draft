@@ -55,7 +55,7 @@ class ItemOut(BaseModel):
     item_id: str
     position: int = Field(description="Номер задания в сессии")
     total: int = Field(description="Ориентир общего числа заданий (адаптивный тест может закончиться раньше)")
-    format: str = Field(description="find_bug | predict_output | choose_fix | open_book_3step | mcq_concept | open_answer")
+    format: str = Field(description="find_bug | predict_output | choose_fix | open_book_3step | incident_sim | mcq_concept | open_answer")
     stem: str
     options: list[OptionOut] | None = None
     code: str | None = None
@@ -74,6 +74,7 @@ class ItemOut(BaseModel):
     max_items: int | None = None
     answered: int = 0
     extension: bool = Field(False, description="Задание дотестирования: результат у порога грейда")
+    incident: dict | None = Field(None, description="Данные интерактивного симулятора инцидента (для формата incident_sim)")
 
 
 class SessionOut(BaseModel):
