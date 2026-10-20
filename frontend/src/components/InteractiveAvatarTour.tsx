@@ -330,7 +330,9 @@ export function InteractiveAvatarTour() {
     : micOn ? "Секунду…" : lbl.short;
   // подсказка «ваша очередь»: в паузах обзора и когда Настя спросила — чтобы было видно, что можно говорить
   const turnHint = listening && (ui.phase === "listening" || ui.phase === "paused")
-    ? (ui.phase === "paused" ? "Пауза. Скажите «дальше» или спросите" : f.small ? "Говорите" : "Можно говорить: вопрос, «дальше» или «покажи …»")
+    ? (ui.phase === "paused" ? (large ? "Пауза. Скажите «дальше» или спросите" : "Пауза — скажите «дальше»")
+      : !large ? "Можно говорить"
+      : ui.track ? "Можно говорить: вопрос, «дальше» или «покажи …»" : "Говорите: назовите раздел или задайте вопрос")
     : null;
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
@@ -382,7 +384,7 @@ export function InteractiveAvatarTour() {
 
           {turnHint && !ui.userTalking && (
             <div className={`pointer-events-none absolute inset-x-0 flex justify-center ${large ? "bottom-[4.6rem]" : f.small ? "bottom-[3.1rem]" : "bottom-[3.4rem]"}`} aria-live="polite" data-testid="elena-turn-hint">
-              <span className={`flex items-center gap-2 rounded-full bg-emerald-600/85 px-3 py-1 font-medium text-white shadow-lg backdrop-blur ${large ? "text-sm" : "text-[11px]"}`}>
+              <span className={`flex items-center gap-2 whitespace-nowrap rounded-full bg-emerald-600/85 px-3 py-1 font-medium text-white shadow-lg backdrop-blur ${large ? "text-sm" : "text-[11px]"}`}>
                 <span className="relative flex h-2 w-2" aria-hidden="true">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
