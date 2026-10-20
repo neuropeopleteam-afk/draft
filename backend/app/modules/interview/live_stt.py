@@ -44,7 +44,14 @@ _by_ip: dict[str, int] = {}
 _total = 0
 
 
-def dg_url() -> str:
+# Профиль «guide» (Елена на сайте): слова сайта — распознаются точнее (подсказка ключевых слов поставщику).
+GUIDE_KEYTERMS = ("Драфт", "Елена", "работодатель", "работодателя", "кандидат", "кандидата", "Федерация",
+                  "ФСП", "грейд", "кабинет", "пропустить", "пропусти", "дальше", "подожди", "вакансия", "приглашение",
+                  "зарплатная вилка", "паспорт честности", "устная защита", "карта навыков", "Командный Драфт",
+                  "Полигон", "жюри", "тест на грейд", "подборка", "оффер")
+
+
+def dg_url(profile: str | None = None, keyterms: bool = True) -> str:
     s = get_interview_settings()
     params = {
         "model": os.environ.get("LIVE_STT_MODEL", s.deepgram_model or "nova-3"),
@@ -60,7 +67,14 @@ def dg_url() -> str:
         "utterance_end_ms": os.environ.get("LIVE_STT_UTTERANCE_END_MS", "1000"),
         "vad_events": "true",
     }
-    return f"{DG_HOST}?{urlencode(params)}"
+    pairs = list(params.items())
+    if profile == "guide":
+        pairs = [(k, os.environ.get("LIVE_STT_GUIDE_ENDPOINTING", "700") if k == "endpointing" else
+                  os.environ.get("LIVE_STT_GUIDE_UTTERANCE_END_MS", "1500") if k == "utterance_end_ms" else v)
+                 for k, v in pairs]
+        if keyterms and os.environ.get("LIVE_STT_GUIDE_KEYTERMS", "1") != "0":
+            pairs += [("keyterm", t) for t in GUIDE_KEYTERMS]
+    return f"{DG_HOST}?{urlencode(pairs)}"
 
 
 def _client_ip(ws: WebSocket) -> str:
@@ -113,8 +127,16 @@ async def bridge(ws: WebSocket) -> None:
     dg = None
     try:
         await ws.accept()
+        profile = ws.query_params.get("p") if hasattr(ws, "query_params") else None
+        profile = profile if profile in ("guide",) else None
         try:
-            dg = await _connect_dg(dg_url(), s.deepgram_api_key)
+            try:
+                dg = await _connect_dg(dg_url(profile), s.deepgram_api_key)
+            except Exception:  # noqa: BLE001 — подсказки слов не приняты: открываем без них
+                if profile != "guide":
+                    raise
+                log.warning("live_stt: профиль guide без подсказок слов")
+                dg = await _connect_dg(dg_url(profile, keyterms=False), s.deepgram_api_key)
         except Exception as e:  # noqa: BLE001 — сеть/поставщик
             log.warning("live_stt: поставщик не открылся: %s", type(e).__name__)
             await ws.send_text(json.dumps({"type": "error", "message": "stt_connect"}))

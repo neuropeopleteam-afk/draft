@@ -73,6 +73,8 @@ export interface AnamAvatarProps {
   fill?: boolean;
   /** Не подключаться до первого connect()/waitReady()/speak() — экраны, где разговор начинается по кнопке. */
   deferConnect?: boolean;
+  /** Кадр, пока поток подключается (по умолчанию — портрет интервьюера). */
+  poster?: string;
 }
 
 const PIPELINE_MS = 650;      // звук из потока звучит примерно через столько после отправки
@@ -112,7 +114,7 @@ const loadSdk = () => (sdkPromise ??= import("@anam-ai/js-sdk"));
 
 export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamAvatar(
   { sessionId, state, level, name = "Интервьюер", size = 200, tone = "light", className = "", tokenPath, onStatus, onSpeaking,
-    fill = false, deferConnect = false }, ref,
+    fill = false, deferConnect = false, poster }, ref,
 ) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const vid = (k: "a" | "b") => `anam-${uid}-${k}`;
@@ -574,7 +576,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   const frame = (
     <div className={fill ? "relative h-full w-full overflow-hidden bg-[#15131C]" : "relative aspect-square max-w-full overflow-hidden rounded-3xl bg-[#15131C]"}
       style={fill ? undefined : { width: size }}>
-      <img src="/avatar/interviewer.webp" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
+      <img src={poster ?? "/avatar/interviewer.webp"} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
       {fallback && !isLive && (
         <div className="absolute inset-0" data-testid="avatar-fallback">
           <InterviewerAvatar state={state} level={level} name={name} size={fill ? 640 : size} tone={tone} glow={false}

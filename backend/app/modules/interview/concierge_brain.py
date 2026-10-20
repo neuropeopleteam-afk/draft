@@ -29,12 +29,15 @@ from app.modules.interview import concierge_rag as rag
 log = logging.getLogger("interview.concierge")
 
 MSK = timezone(timedelta(hours=3))
-# «провайдер=модель@усилие рассуждений». Замеры 20.10 на полной подсказке с историей: Claude Haiku 5.5 — 2,2–2,6 с,
-# Gemini 2.5 Flash — 1,4–2,1 с (страховка, если основная задумалась дольше LLM_HEDGE_S); Sonnet 5.5 с историей
-# разговора начинает рассуждать (5–7 с) — для живого разговора медленно, он не в цепочке. Опус — наставник в фоне.
+# «провайдер=модель@усилие рассуждений» («@~N» — рассуждение с потолком N токенов). Отвечают Claude Sonnet 5 и Sonnet 5.5
+# (обе спрашиваются сразу, берём ответ первой; замеры 20.10 на полной подсказке: 2,4–3,9 и 2,6–5,0 с). Gemini 2.5 Flash
+# (~1,5 с) — страховка: её ответ берём, только если ни одна Sonnet не ответила за LLM_PREFER_S. Пауза закрывается
+# короткой связкой («Секунду.»). Опус — наставник в фоне.
 LLM_MODELS = [m.strip() for m in os.environ.get(
     "CONCIERGE_BRAIN_MODELS",
-    "openrouter=anthropic/claude-haiku-5.5@minimal|openrouter=google/gemini-2.5-flash").split("|") if m.strip()]
+    "openrouter=anthropic/claude-sonnet-5@minimal|openrouter=anthropic/claude-sonnet-5.5@minimal"
+    "|openrouter=google/gemini-2.5-flash").split("|") if m.strip()]
+LLM_PRIMARY_N = int(os.environ.get("CONCIERGE_LLM_PRIMARY_N", "2"))   # сколько первых моделей — основные
 LLM_HEDGE_S = float(os.environ.get("CONCIERGE_LLM_HEDGE_S", "3.2"))  # не используется: обе модели — сразу
 LLM_DEADLINE_S = float(os.environ.get("CONCIERGE_LLM_DEADLINE_S", "8.0"))
 SUPERVISOR_MODEL = os.environ.get("CONCIERGE_SUPERVISOR_MODEL", "openrouter=anthropic/claude-opus-5.5@low").strip()
@@ -60,6 +63,31 @@ STEP_TITLES: dict[str, str] = {
     "warroom": "Боевой ИИ-Полигон: архитектура и атаки на оценщика",
     "val-arena": "проверка механики: числа точности и арена ранжирования",
 }
+
+SECTION_TITLES = {"candidate": "кандидат", "employer": "работодатель", "fsp": "Федерация", "public": "техническое жюри"}
+SECTION_ORDER = ("candidate", "employer", "fsp", "public")
+
+
+def section_of(step: str | None) -> str | None:
+    if not step:
+        return None
+    if step.startswith("cand-"):
+        return "candidate"
+    if step.startswith("emp-"):
+        return "employer"
+    if step.startswith("fsp-"):
+        return "fsp"
+    if step in ("warroom", "val-arena"):
+        return "public"
+    return None
+
+
+def next_section(step: str | None) -> str | None:
+    sec = section_of(step)
+    if sec not in SECTION_ORDER:
+        return None
+    k = SECTION_ORDER.index(sec)
+    return SECTION_ORDER[k + 1] if k + 1 < len(SECTION_ORDER) else None
 
 
 # ------------------------------------------------------------------ стенограммы
@@ -276,29 +304,46 @@ SYSTEM_STATIC = """Ты — Елена, живой голосовой прово
 7. Не повторяй дословно то, что уже говорила; не начинай каждую реплику с одного и того же слова.
 8. Не извиняйся и не рассказывай о себе («я сбилась», «я торопилась», «я перебила вас», «я запуталась») — просто \
 отвечай по делу.
-9. Если неясно, о чём человек, — переспроси одним коротким вопросом, а не угадывай.
+9. Реплики приходят из распознавания живой речи и бывают обрывочными или с ошибками («прослей», «криволось»). \
+Если смысл неясен — переспроси одним коротким вопросом («Не расслышала — вы хотите пропустить работодателя?»). \
+Не угадывай, не открывай экран наугад и не пересказывай вопрос человека («Поняла вас, вы спрашиваете…») — сразу по делу.
 10. Прямо просят показать — показывай сразу (goto или point), без встречного вопроса. Сама предлагаешь — спроси \
 («Показать, как это выглядит?») и обязательно укажи step или point: показ начнётся, когда человек согласится.
+11. Ты задала вопрос — реплика человека, скорее всего, ответ на него. Ответ «нет», «не надо» на предложение — не \
+показывай, спроси, что интереснее.
+12. Сама между кабинетами не прыгай: другой кабинет (кандидат, работодатель, Федерация, жюри) — только если человек \
+прямо попросил или согласился. Не возвращайся к разделу, который человек попросил пропустить.
+13. Не здоровайся повторно, если уже здоровалась.
 
 Решение — поле action:
-• "answer" — ответ на вопрос или реплику (если шёл обзор, он сам продолжится после ответа);
+• "answer" — ответ на вопрос или реплику; если шёл обзор, после ответа ты сама спросишь, продолжать ли;
 • "goto" — показать нужный экран: step — один из шагов ниже; reply — короткая связка («Сейчас покажу.»);
 • "point" — показать элемент на текущем экране: point — точный текст элемента из списка «Элементы на экране»; \
 ты подсвечиваешь его сама, поэтому не описывай словами, где он находится («внизу», «справа»);
 • "start_tour" — начать обзор: role — all, candidate, employer или fsp;
-• "pause" — просит подождать; "resume" — продолжить обзор; "end" — закончить разговор.
+• "next_section" — идёт обзор, а человеку не интересен текущий раздел («не про это», «пропусти», «это не надо», \
+«давай дальше другое»): пропустить его остаток и перейти к следующему разделу обзора; reply — короткая связка с \
+названием следующего раздела («Хорошо, тогда кабинет Федерации.»);
+• "pause" — просит подождать или остановиться; "resume" — продолжить обзор; "end" — закончить разговор.
 user_name — только если человек прямо назвал своё имя («меня зовут…», «я Анна», «Олег»), в именительном падеже, \
 с заглавной буквы; слова вроде «сразу», «давай», «покажи» — не имена. Иначе null.
 Просит показать что-то, что есть среди шагов, — выбирай "goto", а не рассказ без показа.
 
+Порядок обзора всего сайта по разделам: кандидат (cand-overview, cand-assessment, cand-category, cand-defense, \
+cand-feedback) → работодатель (emp-needs, emp-compare, emp-squad, emp-invitations) → Федерация (fsp-cabinet, \
+fsp-effect) → техническое жюри (warroom, val-arena). Между разделами ты спрашиваешь, есть ли вопросы.
+
 Шаги обзора (для step):
 {steps}
 
-Примеры хорошей длины:
+Примеры:
 — «Сколько длится тест?» → «Зависит от ответов: полный режим — от восьми до шестнадцати заданий, экспресс — пять–семь. \
-Показать, где выбирают режим?»
+Показать, где выбирают режим?» (action answer, step cand-assessment — покажешь, если человек согласится)
 — «А как работодатель поймёт, что я не списал?» → «Задания каждый раз генерируются заново, а у попытки есть паспорт \
 честности и устная защита. Покажу, как это выглядит.» (action goto, step cand-defense)
+— (обзор на разделе работодателя) «Так, подожди, кабинет работодателя, а можно мне не про это?» → «Хорошо, \
+работодателя пропустим. Дальше — кабинет Федерации.» (action next_section)
+— «Покажи вот, значит, что значит» → «Что именно показать или объяснить?» (action answer)
 
 Ответ — строго один JSON-объект без пояснений и без markdown:
 {{"reply": "...", "action": "answer", "step": null, "point": null, "role": null, "user_name": null}}
@@ -313,7 +358,8 @@ def _static_prompt() -> str:
 
 
 def _dynamic(s: Session | None, *, message: str, name: str | None, role: str | None, path: str, step: str | None,
-             touring: bool, paused: bool, screen: dict | None, numbers: dict | None) -> str:
+             touring: bool, paused: bool, screen: dict | None, numbers: dict | None, awaiting: str | None = None,
+             last_said: str = "") -> str:
     shown = [STEP_TITLES.get(x, x) for x in (s.shown if s else [])][-8:]
     tour = ("на паузе" if paused else f"идёт, сейчас шаг «{STEP_TITLES.get(step or '', step or '—')}»" if touring
             else "не идёт")
@@ -327,14 +373,23 @@ def _dynamic(s: Session | None, *, message: str, name: str | None, role: str | N
         asks = sum(1 for t in all_said if re.search(r"обращаться|как вас зовут", t.lower()))
         just_asked = bool(said) and bool(re.search(r"обращаться|как вас зовут", said[-1].lower()))
         if asks < 2 and not (just_asked and asks >= 2) and (s is None or s.turns < 10):
-            name_hint = ("Имя пока неизвестно — не выдумывай его; в конце ответа коротко спроси, как к человеку "
-                         "обращаться.")
+            name_hint = ("Имя пока неизвестно — не выдумывай его. Если в ответе нет другого вопроса к человеку, в конце "
+                         "коротко спроси, как к нему обращаться.")
         else:
             name_hint = "Имя пока неизвестно — не выдумывай его и не переспрашивай сейчас."
     lines = [
         f"Собеседник: {name or 'имя пока неизвестно'}; роль: {role or 'не выбрана'}; обзор: {tour}. {name_hint}",
         f"Уже показано: {', '.join(shown) if shown else 'пока ничего'}.",
     ]
+    sec = section_of(step) if (touring or paused) else None
+    if sec:
+        nxt = next_section(step)
+        lines.append(f"Обзор сейчас в разделе «{SECTION_TITLES[sec]}». Следующий раздел обзора — "
+                     f"{'«' + SECTION_TITLES[nxt] + '»' if nxt else 'нет, это последний'}.")
+    last_q = (last_said or (s.last_elena if s else "") or "").strip()
+    if awaiting and last_q.endswith("?"):
+        lines.append(f"Ты только что спросила: «{last_q[:300]}» — и ждёшь ответа. Реплика человека, скорее всего, "
+                     "ответ на этот вопрос.")
     if step and s and step in s.shown:
         lines.append(f"Экран «{STEP_TITLES.get(step, step)}» ты уже показывала: просят подробнее — расскажи больше "
                      "или покажи элемент (point), не открывай этот экран заново.")
@@ -421,7 +476,7 @@ TURN_SCHEMA = {"type": "json_schema", "json_schema": {"name": "elena_turn", "str
     "required": ["reply", "action", "step", "point", "role", "user_name"],
     "properties": {
         "reply": {"type": "string"},
-        "action": {"type": "string", "enum": ["answer", "goto", "point", "start_tour", "pause", "resume", "end"]},
+        "action": {"type": "string", "enum": ["answer", "goto", "point", "start_tour", "next_section", "pause", "resume", "end"]},
         "step": {"type": ["string", "null"]}, "point": {"type": ["string", "null"]},
         "role": {"type": ["string", "null"]}, "user_name": {"type": ["string", "null"]},
     }}}}
@@ -460,7 +515,10 @@ def _ask(msgs: list[dict], spec: str, timeout: float, max_tokens: int = 420, sch
     try:
         url, headers, extra = llm._endpoint(prov, get_settings())
         body = {"model": model, "messages": use, "temperature": 0.35, "max_tokens": max_tokens, **extra}
-        if effort:
+        if effort.startswith("~") and effort[1:].isdigit():
+            body["reasoning"] = {"max_tokens": int(effort[1:])}   # короткое рассуждение с потолком
+            body["max_tokens"] = max_tokens + int(effort[1:])
+        elif effort:
             body["reasoning"] = {"effort": effort}
         if schema:
             body["response_format"] = schema
@@ -490,18 +548,17 @@ def _ask(msgs: list[dict], spec: str, timeout: float, max_tokens: int = 420, sch
         return None
 
 
-LLM_PREFER_S = float(os.environ.get("CONCIERGE_LLM_PREFER_S", "2.6"))
+LLM_PREFER_S = float(os.environ.get("CONCIERGE_LLM_PREFER_S", "4.2"))
 
 
 def answer(message: str, *, sid: str | None, name: str | None, role: str | None, path: str, step: str | None,
            touring: bool, paused: bool, screen: dict | None, history: list[dict] | None,
-           numbers: dict | None = None) -> dict | None:
-    """Ответ модели. Обе модели спрашиваются сразу: ответ основной (первой в LLM_MODELS) берём, если он пришёл за
-    LLM_PREFER_S; позже — тот, что пришёл первым (обычно быстрая успевает за ~1,5 с). Пауза — не больше ~2,6 с, даже
-    когда у поставщика основной модели «пробка»."""
+           numbers: dict | None = None, awaiting: str | None = None, last_said: str = "") -> dict | None:
+    """Ответ модели. Модели спрашиваются сразу: берём первый ответ основных (первые LLM_PRIMARY_N в LLM_MODELS); если
+    ни одна основная не ответила за LLM_PREFER_S — лучший из пришедших (по порядку в списке)."""
     s = session(sid)
     dyn = _dynamic(s, message=message, name=name, role=role, path=path, step=step, touring=touring, paused=paused,
-                   screen=screen, numbers=numbers)
+                   screen=screen, numbers=numbers, awaiting=awaiting, last_said=last_said)
     msgs = _messages(s, dyn, message, history)
     models = list(LLM_MODELS)
     if not models:
@@ -518,7 +575,7 @@ def answer(message: str, *, sid: str | None, name: str | None, role: str | None,
     while pending and time.monotonic() < deadline:
         now = time.monotonic()
         prefer_left = t0 + LLM_PREFER_S - now
-        if 0 in got:
+        if any(k < max(1, LLM_PRIMARY_N) for k in got):
             break
         if prefer_left <= 0 and got:
             break
@@ -530,7 +587,8 @@ def answer(message: str, *, sid: str | None, name: str | None, role: str | None,
                 got[futs[f]] = d
     if not got:
         return None
-    k = min(got)
+    prim = [k for k in got if k < max(1, LLM_PRIMARY_N)]
+    k = prim[0] if prim else min(got)
     d = got[k]
     d["_ms"] = int((time.monotonic() - t0) * 1000)
     return d

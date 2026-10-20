@@ -30,7 +30,12 @@ export class Voice {
   private current = "";
   private tail = { text: "", until: 0 };
 
-  constructor(private avatar: () => AnamHandle | null) {}
+  private lookahead: number;
+
+  /** lookaheadMs — на сколько вперёд отправлять звук в видеопоток (по умолчанию ~2 с). */
+  constructor(private avatar: () => AnamHandle | null, opts: { lookaheadMs?: number } = {}) {
+    this.lookahead = opts.lookaheadMs ?? LOOKAHEAD_MS;
+  }
 
   /** Звучит ли сейчас её голос (с запасом на задержку потока). */
   speaking(): boolean { return performance.now() < this.until; }
@@ -85,7 +90,7 @@ export class Voice {
           // ровная подача: не дальше LOOKAHEAD вперёд от реального времени (для потока аватара)
           if (writer?.ok && startedAt) {
             const ahead = sentMs - (performance.now() - startedAt);
-            if (ahead > LOOKAHEAD_MS) { await sleep(Math.min(250, ahead - LOOKAHEAD_MS)); continue; }
+            if (ahead > self.lookahead) { await sleep(Math.min(250, ahead - self.lookahead)); continue; }
           }
           send(queue.shift()!);
         }

@@ -47,16 +47,19 @@ def ice_servers() -> list[dict] | None:
     return out
 
 
-def avatar_token(persona_name: str | None = None, director_notes: dict | None = None) -> AvatarToken:
+def avatar_token(persona_name: str | None = None, director_notes: dict | None = None,
+                 avatar_id: str | None = None) -> AvatarToken:
+    """avatar_id — своё лицо (Елена-проводник); по умолчанию — ANAM_AVATAR_ID (интервьюер)."""
     s = get_interview_settings()
     name = persona_name or s.interviewer_name
     if not s.interview_anam_enabled:
         raise EngineError("avatar_unavailable", "Канал «аватар» выключен — доступны каналы «голос» и «текст»")
-    if s.interview_stub or not s.anam_api_key or not s.anam_avatar_id:
+    face = (avatar_id or s.anam_avatar_id or "").strip()
+    if s.interview_stub or not s.anam_api_key or not face:
         raise EngineError("avatar_unavailable", "Аватар не настроен — доступны каналы «голос» и «текст»")
     # Режим передачи звука: Anam рисует только лицо; голос — наш синтез, поэтому voiceId и LLM здесь не нужны.
     # Выбор региона у организации недоступен — не шлём. avatarModel — cara-4 (единственная для собственных аватаров).
-    body = {"personaConfig": {"name": name, "avatarId": s.anam_avatar_id, "avatarModel": "cara-4",
+    body = {"personaConfig": {"name": name, "avatarId": face, "avatarModel": "cara-4",
                               "directorNotes": director_notes or {"expressivity": 0.09},
                               "enableAudioPassthrough": True,
                               "maxSessionLengthSeconds": s.anam_max_session_s},

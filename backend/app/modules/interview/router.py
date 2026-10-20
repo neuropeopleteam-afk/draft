@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Literal
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, WebSocket
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, WebSocket
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -536,7 +536,8 @@ def concierge_avatar_token() -> dict:
     try:
         from app.modules.interview.engine.providers import avatar as av
 
-        t = av.avatar_token(persona_name="Елена", director_notes=cg.anam_director_notes())
+        t = av.avatar_token(persona_name="Елена", director_notes=cg.anam_director_notes(),
+                            avatar_id=cg.ANAM_AVATAR_ID or None)
         return t.model_dump(mode="json") if hasattr(t, "model_dump") else dict(t)
     except ImportError:
         pass
@@ -596,6 +597,8 @@ class ConciergeTurnIn(BaseModel):
     # что сейчас на экране: заголовок и видимые кнопки/заголовки (Елена отвечает «по экрану» и может показать элемент)
     screen: dict | None = None
     last_said: str = Field("", max_length=600)
+    # чего ждёт Елена после своей реплики: checkin | continue | detour | start | answer
+    awaiting: str | None = Field(None, max_length=16)
 
 
 class ConciergeEventIn(BaseModel):
@@ -620,7 +623,8 @@ def concierge_turn(body: ConciergeTurnIn) -> StreamingResponse:
                   "items": [str(x)[:80] for x in (items if isinstance(items, list) else [])][:40]}
     gen = cg.turn_stream(body.message, user_name=(body.user_name or None), role=body.role, current_path=body.current_path,
                          step_id=body.step_id, touring=body.touring, paused=body.paused, history=body.history,
-                         session_id=body.session_id, screen=screen, last_said=body.last_said)
+                         session_id=body.session_id, screen=screen, last_said=body.last_said,
+                         awaiting=body.awaiting if body.awaiting in ("checkin", "continue", "detour", "start", "answer") else None)
     return StreamingResponse(gen, media_type="application/x-ndjson",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
@@ -635,11 +639,11 @@ def concierge_event(body: ConciergeEventIn) -> Response:
 
 
 @router.get("/concierge/script", summary="Сценарий обзора Елены: приветствие, реплики шагов, связки (голос — из кэша)")
-def concierge_script() -> dict:
+def concierge_script(name: str | None = Query(None, max_length=40)) -> dict:
     from app.modules.interview import concierge as cg
 
     cg.warm_async()
-    return cg.script()
+    return cg.script(name)
 
 
 @router.websocket("/live/stt")
