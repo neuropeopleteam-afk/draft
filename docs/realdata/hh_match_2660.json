@@ -1,0 +1,1719 @@
+{
+ "generated_at": "2026-10-20T14:28:26+00:00",
+ "code_commit": "unknown",
+ "algorithm": "match-v1.3",
+ "label_note": "тексты — реальные вакансии hh.ru, кандидаты — модельные (модель, не люди)",
+ "corpus_collected_at": "2026-10-10",
+ "n_corpus": 414,
+ "n": 414,
+ "n_missing": 0,
+ "limit": 10,
+ "catalog_directions": [
+  "analyst",
+  "backend",
+  "data_eng",
+  "data_ml",
+  "devops",
+  "frontend",
+  "mobile",
+  "qa",
+  "security"
+ ],
+ "method": "Текст вакансии (название + описание) → разбор потребности путём правил (parse_need, без LLM) → подборка (build_selection, настройки по умолчанию) на демо-пуле: модельные кандидаты с результатами теста (модель, не люди). Метки — из полей hh.ru: направление — роль и слова названия, грейд — слово в названии, навыки — «Ключевые навыки» → теги справочника (разбору не даются). «Подтверждённые» — кандидаты, у которых грейд подтверждён тестом. Покрытие требований — доля обязательных навыков потребности, подтверждённых тестом (T1), у лучшего из первых пяти; подтверждённый фреймворк засчитывается как подтверждение базового языка (FastAPI/Django → Python, React/Vue → JavaScript, Spring → Java, PostgreSQL → SQL, Docker/Kubernetes → Linux; балл × 0,9; флаг MATCH_IMPLIED, matching/implied.py). Нормированные метрики (поля *_testable и ceiling): проверяемое ядро — обязательные навыки, которые банк направления подтверждает тестом напрямую или через implied; ceiling — средняя по вакансиям доля таких навыков среди всех обязательных (максимум сырого покрытия при идеальном пуле); req_coverage_best_top5_testable — доля навыков ядра, подтверждённых у лучшего из пяти; req_full_top5_testable — в пятёрке есть кандидат со всем ядром.",
+ "implied": "1",
+ "overall": {
+  "n": 414,
+  "direction_ok": {
+   "k": 374,
+   "n": 414,
+   "share": 0.903
+  },
+  "grade_ok": {
+   "k": 318,
+   "n": 348,
+   "share": 0.914
+  },
+  "req_coverage_mean_top5": {
+   "mean": 0.468,
+   "n": 378
+  },
+  "grade_above_applied": {
+   "k": 97,
+   "n": 414,
+   "share": 0.234
+  },
+  "top5_above_share": {
+   "k": 185,
+   "n": 2008,
+   "share": 0.092
+  },
+  "grade_above_off": {
+   "selection_nonempty": {
+    "k": 406,
+    "n": 414,
+    "share": 0.981
+   },
+   "confirmed_any": {
+    "k": 406,
+    "n": 414,
+    "share": 0.981
+   },
+   "confirmed_exact": {
+    "k": 376,
+    "n": 414,
+    "share": 0.908
+   },
+   "confirmed_right_direction": {
+    "k": 370,
+    "n": 414,
+    "share": 0.894
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.545,
+    "n": 378
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.444,
+    "n": 378
+   },
+   "req_full_top5": {
+    "k": 81,
+    "n": 378,
+    "share": 0.214
+   },
+   "req_full_top5_confirmed": {
+    "k": 81,
+    "n": 378,
+    "share": 0.214
+   }
+  },
+  "with_required": {
+   "k": 378,
+   "n": 414,
+   "share": 0.913
+  },
+  "key_skills_recall": {
+   "k": 735,
+   "n": 895,
+   "share": 0.821
+  },
+  "selection_nonempty": {
+   "k": 407,
+   "n": 414,
+   "share": 0.983
+  },
+  "confirmed_any": {
+   "k": 407,
+   "n": 414,
+   "share": 0.983
+  },
+  "confirmed_exact": {
+   "k": 376,
+   "n": 414,
+   "share": 0.908
+  },
+  "confirmed_right_direction": {
+   "k": 371,
+   "n": 414,
+   "share": 0.896
+  },
+  "req_coverage_best_top5": {
+   "mean": 0.57,
+   "n": 378
+  },
+  "req_full_top5": {
+   "k": 96,
+   "n": 378,
+   "share": 0.254
+  },
+  "req_full_top5_confirmed": {
+   "k": 96,
+   "n": 378,
+   "share": 0.254
+  },
+  "required_mean": 6.6,
+  "req_coverage_best_top5_testable": {
+   "mean": 0.827,
+   "n": 374
+  },
+  "req_full_top5_testable": {
+   "k": 173,
+   "n": 374,
+   "share": 0.463
+  },
+  "ceiling": {
+   "mean": 0.832,
+   "n": 378
+  },
+  "req_coverage_best_top5_raw_to_ceiling": 0.686
+ },
+ "catalog_only": {
+  "n": 414,
+  "direction_ok": {
+   "k": 374,
+   "n": 414,
+   "share": 0.903
+  },
+  "grade_ok": {
+   "k": 318,
+   "n": 348,
+   "share": 0.914
+  },
+  "req_coverage_mean_top5": {
+   "mean": 0.468,
+   "n": 378
+  },
+  "grade_above_applied": {
+   "k": 97,
+   "n": 414,
+   "share": 0.234
+  },
+  "top5_above_share": {
+   "k": 185,
+   "n": 2008,
+   "share": 0.092
+  },
+  "grade_above_off": {
+   "selection_nonempty": {
+    "k": 406,
+    "n": 414,
+    "share": 0.981
+   },
+   "confirmed_any": {
+    "k": 406,
+    "n": 414,
+    "share": 0.981
+   },
+   "confirmed_exact": {
+    "k": 376,
+    "n": 414,
+    "share": 0.908
+   },
+   "confirmed_right_direction": {
+    "k": 370,
+    "n": 414,
+    "share": 0.894
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.545,
+    "n": 378
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.444,
+    "n": 378
+   },
+   "req_full_top5": {
+    "k": 81,
+    "n": 378,
+    "share": 0.214
+   },
+   "req_full_top5_confirmed": {
+    "k": 81,
+    "n": 378,
+    "share": 0.214
+   }
+  },
+  "with_required": {
+   "k": 378,
+   "n": 414,
+   "share": 0.913
+  },
+  "key_skills_recall": {
+   "k": 735,
+   "n": 895,
+   "share": 0.821
+  },
+  "selection_nonempty": {
+   "k": 407,
+   "n": 414,
+   "share": 0.983
+  },
+  "confirmed_any": {
+   "k": 407,
+   "n": 414,
+   "share": 0.983
+  },
+  "confirmed_exact": {
+   "k": 376,
+   "n": 414,
+   "share": 0.908
+  },
+  "confirmed_right_direction": {
+   "k": 371,
+   "n": 414,
+   "share": 0.896
+  },
+  "req_coverage_best_top5": {
+   "mean": 0.57,
+   "n": 378
+  },
+  "req_full_top5": {
+   "k": 96,
+   "n": 378,
+   "share": 0.254
+  },
+  "req_full_top5_confirmed": {
+   "k": 96,
+   "n": 378,
+   "share": 0.254
+  },
+  "required_mean": 6.6,
+  "req_coverage_best_top5_testable": {
+   "mean": 0.827,
+   "n": 374
+  },
+  "req_full_top5_testable": {
+   "k": 173,
+   "n": 374,
+   "share": 0.463
+  },
+  "ceiling": {
+   "mean": 0.832,
+   "n": 378
+  },
+  "req_coverage_best_top5_raw_to_ceiling": 0.686
+ },
+ "grade_above": {
+  "compare": true,
+  "flag": "MATCH_GRADE_ABOVE",
+  "min_exact": 30,
+  "keep": 2,
+  "note": "«до» — тот же код и разбор с MATCH_GRADE_ABOVE=0 (match-v1.2), «после» — продукт по умолчанию (match-v1.3): в точной категории меньше 30 подтверждённых — добор категории на ступень выше, первые 2 места — лучшие точного уровня"
+ },
+ "directions": {
+  "analyst": {
+   "title": "Системный / бизнес-аналитик",
+   "in_catalog": true,
+   "n": 48,
+   "parsed_direction": {
+    "analyst": 40,
+    "—": 4,
+    "frontend": 1,
+    "data_ml": 1,
+    "security": 1,
+    "qa": 1
+   },
+   "direction_ok": {
+    "k": 40,
+    "n": 48,
+    "share": 0.833
+   },
+   "grade_ok": {
+    "k": 38,
+    "n": 41,
+    "share": 0.927
+   },
+   "with_required": {
+    "k": 35,
+    "n": 48,
+    "share": 0.729
+   },
+   "key_skills_recall": {
+    "k": 22,
+    "n": 25,
+    "share": 0.88
+   },
+   "selection_nonempty": {
+    "k": 46,
+    "n": 48,
+    "share": 0.958
+   },
+   "confirmed_any": {
+    "k": 46,
+    "n": 48,
+    "share": 0.958
+   },
+   "confirmed_exact": {
+    "k": 40,
+    "n": 48,
+    "share": 0.833
+   },
+   "confirmed_right_direction": {
+    "k": 41,
+    "n": 48,
+    "share": 0.854
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.688,
+    "n": 35
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.576,
+    "n": 35
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.63,
+    "n": 35
+   },
+   "req_full_top5": {
+    "k": 18,
+    "n": 35,
+    "share": 0.514
+   },
+   "req_full_top5_confirmed": {
+    "k": 18,
+    "n": 35,
+    "share": 0.514
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.855,
+    "n": 35
+   },
+   "req_full_top5_testable": {
+    "k": 23,
+    "n": 35,
+    "share": 0.657
+   },
+   "ceiling": {
+    "mean": 0.901,
+    "n": 35
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "sql",
+     "n": 2
+    },
+    {
+     "tag": "api-testing",
+     "n": 1
+    }
+   ]
+  },
+  "backend": {
+   "title": "Backend",
+   "in_catalog": true,
+   "n": 48,
+   "parsed_direction": {
+    "backend": 44,
+    "data_ml": 2,
+    "qa": 1,
+    "security": 1
+   },
+   "direction_ok": {
+    "k": 44,
+    "n": 48,
+    "share": 0.917
+   },
+   "grade_ok": {
+    "k": 44,
+    "n": 48,
+    "share": 0.917
+   },
+   "with_required": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "key_skills_recall": {
+    "k": 261,
+    "n": 299,
+    "share": 0.873
+   },
+   "selection_nonempty": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_right_direction": {
+    "k": 44,
+    "n": 48,
+    "share": 0.917
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.517,
+    "n": 48
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.385,
+    "n": 48
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.495,
+    "n": 48
+   },
+   "req_full_top5": {
+    "k": 6,
+    "n": 48,
+    "share": 0.125
+   },
+   "req_full_top5_confirmed": {
+    "k": 6,
+    "n": 48,
+    "share": 0.125
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.79,
+    "n": 48
+   },
+   "req_full_top5_testable": {
+    "k": 16,
+    "n": 48,
+    "share": 0.333
+   },
+   "ceiling": {
+    "mean": 0.856,
+    "n": 48
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "cv",
+     "n": 11
+    },
+    {
+     "tag": "rest-api",
+     "n": 3
+    },
+    {
+     "tag": "kubernetes",
+     "n": 2
+    },
+    {
+     "tag": "docker",
+     "n": 2
+    },
+    {
+     "tag": "kafka",
+     "n": 2
+    }
+   ]
+  },
+  "data_eng": {
+   "title": "Инженер данных",
+   "in_catalog": true,
+   "n": 45,
+   "parsed_direction": {
+    "data_eng": 38,
+    "data_ml": 5,
+    "backend": 2
+   },
+   "direction_ok": {
+    "k": 38,
+    "n": 45,
+    "share": 0.844
+   },
+   "grade_ok": {
+    "k": 24,
+    "n": 30,
+    "share": 0.8
+   },
+   "with_required": {
+    "k": 38,
+    "n": 45,
+    "share": 0.844
+   },
+   "key_skills_recall": {
+    "k": 80,
+    "n": 102,
+    "share": 0.784
+   },
+   "selection_nonempty": {
+    "k": 42,
+    "n": 45,
+    "share": 0.933
+   },
+   "confirmed_any": {
+    "k": 42,
+    "n": 45,
+    "share": 0.933
+   },
+   "confirmed_exact": {
+    "k": 38,
+    "n": 45,
+    "share": 0.844
+   },
+   "confirmed_right_direction": {
+    "k": 35,
+    "n": 45,
+    "share": 0.778
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.513,
+    "n": 38
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.421,
+    "n": 38
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.508,
+    "n": 38
+   },
+   "req_full_top5": {
+    "k": 3,
+    "n": 38,
+    "share": 0.079
+   },
+   "req_full_top5_confirmed": {
+    "k": 3,
+    "n": 38,
+    "share": 0.079
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.763,
+    "n": 38
+   },
+   "req_full_top5_testable": {
+    "k": 11,
+    "n": 38,
+    "share": 0.289
+   },
+   "ceiling": {
+    "mean": 0.804,
+    "n": 38
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "statistics",
+     "n": 6
+    },
+    {
+     "tag": "sql",
+     "n": 6
+    },
+    {
+     "tag": "python",
+     "n": 6
+    },
+    {
+     "tag": "spark",
+     "n": 2
+    },
+    {
+     "tag": "http",
+     "n": 1
+    }
+   ]
+  },
+  "data_ml": {
+   "title": "Data/ML",
+   "in_catalog": true,
+   "n": 45,
+   "parsed_direction": {
+    "data_ml": 41,
+    "backend": 2,
+    "data_eng": 1,
+    "devops": 1
+   },
+   "direction_ok": {
+    "k": 41,
+    "n": 45,
+    "share": 0.911
+   },
+   "grade_ok": {
+    "k": 35,
+    "n": 37,
+    "share": 0.946
+   },
+   "with_required": {
+    "k": 45,
+    "n": 45,
+    "share": 1.0
+   },
+   "key_skills_recall": {
+    "k": 39,
+    "n": 54,
+    "share": 0.722
+   },
+   "selection_nonempty": {
+    "k": 45,
+    "n": 45,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 45,
+    "n": 45,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 42,
+    "n": 45,
+    "share": 0.933
+   },
+   "confirmed_right_direction": {
+    "k": 41,
+    "n": 45,
+    "share": 0.911
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.559,
+    "n": 45
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.46,
+    "n": 45
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.541,
+    "n": 45
+   },
+   "req_full_top5": {
+    "k": 8,
+    "n": 45,
+    "share": 0.178
+   },
+   "req_full_top5_confirmed": {
+    "k": 8,
+    "n": 45,
+    "share": 0.178
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.806,
+    "n": 45
+   },
+   "req_full_top5_testable": {
+    "k": 15,
+    "n": 45,
+    "share": 0.333
+   },
+   "ceiling": {
+    "mean": 0.847,
+    "n": 45
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "sql",
+     "n": 2
+    },
+    {
+     "tag": "python",
+     "n": 2
+    },
+    {
+     "tag": "algorithms",
+     "n": 2
+    },
+    {
+     "tag": "pandas",
+     "n": 1
+    },
+    {
+     "tag": "numpy",
+     "n": 1
+    }
+   ]
+  },
+  "devops": {
+   "title": "DevOps / SRE",
+   "in_catalog": true,
+   "n": 47,
+   "parsed_direction": {
+    "devops": 41,
+    "security": 3,
+    "data_ml": 2,
+    "data_eng": 1
+   },
+   "direction_ok": {
+    "k": 41,
+    "n": 47,
+    "share": 0.872
+   },
+   "grade_ok": {
+    "k": 38,
+    "n": 44,
+    "share": 0.864
+   },
+   "with_required": {
+    "k": 46,
+    "n": 47,
+    "share": 0.979
+   },
+   "key_skills_recall": {
+    "k": 73,
+    "n": 90,
+    "share": 0.811
+   },
+   "selection_nonempty": {
+    "k": 45,
+    "n": 47,
+    "share": 0.957
+   },
+   "confirmed_any": {
+    "k": 45,
+    "n": 47,
+    "share": 0.957
+   },
+   "confirmed_exact": {
+    "k": 43,
+    "n": 47,
+    "share": 0.915
+   },
+   "confirmed_right_direction": {
+    "k": 39,
+    "n": 47,
+    "share": 0.83
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.579,
+    "n": 46
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.498,
+    "n": 46
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.563,
+    "n": 46
+   },
+   "req_full_top5": {
+    "k": 13,
+    "n": 46,
+    "share": 0.283
+   },
+   "req_full_top5_confirmed": {
+    "k": 13,
+    "n": 46,
+    "share": 0.283
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.832,
+    "n": 46
+   },
+   "req_full_top5_testable": {
+    "k": 21,
+    "n": 46,
+    "share": 0.457
+   },
+   "ceiling": {
+    "mean": 0.845,
+    "n": 46
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "python",
+     "n": 6
+    },
+    {
+     "tag": "sql",
+     "n": 5
+    },
+    {
+     "tag": "git",
+     "n": 4
+    },
+    {
+     "tag": "airflow",
+     "n": 1
+    },
+    {
+     "tag": "linux",
+     "n": 1
+    }
+   ]
+  },
+  "frontend": {
+   "title": "Frontend",
+   "in_catalog": true,
+   "n": 47,
+   "parsed_direction": {
+    "frontend": 44,
+    "security": 2,
+    "backend": 1
+   },
+   "direction_ok": {
+    "k": 44,
+    "n": 47,
+    "share": 0.936
+   },
+   "grade_ok": {
+    "k": 38,
+    "n": 40,
+    "share": 0.95
+   },
+   "with_required": {
+    "k": 47,
+    "n": 47,
+    "share": 1.0
+   },
+   "key_skills_recall": {
+    "k": 116,
+    "n": 144,
+    "share": 0.806
+   },
+   "selection_nonempty": {
+    "k": 47,
+    "n": 47,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 47,
+    "n": 47,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 42,
+    "n": 47,
+    "share": 0.894
+   },
+   "confirmed_right_direction": {
+    "k": 44,
+    "n": 47,
+    "share": 0.936
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.598,
+    "n": 47
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.493,
+    "n": 47
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.537,
+    "n": 47
+   },
+   "req_full_top5": {
+    "k": 15,
+    "n": 47,
+    "share": 0.319
+   },
+   "req_full_top5_confirmed": {
+    "k": 15,
+    "n": 47,
+    "share": 0.319
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.85,
+    "n": 47
+   },
+   "req_full_top5_testable": {
+    "k": 22,
+    "n": 47,
+    "share": 0.468
+   },
+   "ceiling": {
+    "mean": 0.866,
+    "n": 47
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "javascript",
+     "n": 7
+    },
+    {
+     "tag": "typescript",
+     "n": 6
+    },
+    {
+     "tag": "vue",
+     "n": 5
+    },
+    {
+     "tag": "linux",
+     "n": 2
+    },
+    {
+     "tag": "git",
+     "n": 1
+    }
+   ]
+  },
+  "mobile": {
+   "title": "Мобильная разработка",
+   "in_catalog": true,
+   "n": 38,
+   "parsed_direction": {
+    "mobile": 37,
+    "backend": 1
+   },
+   "direction_ok": {
+    "k": 37,
+    "n": 38,
+    "share": 0.974
+   },
+   "grade_ok": {
+    "k": 23,
+    "n": 23,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 38,
+    "n": 38,
+    "share": 1.0
+   },
+   "key_skills_recall": {
+    "k": 53,
+    "n": 63,
+    "share": 0.841
+   },
+   "selection_nonempty": {
+    "k": 38,
+    "n": 38,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 38,
+    "n": 38,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 33,
+    "n": 38,
+    "share": 0.868
+   },
+   "confirmed_right_direction": {
+    "k": 37,
+    "n": 38,
+    "share": 0.974
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.516,
+    "n": 38
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.422,
+    "n": 38
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.512,
+    "n": 38
+   },
+   "req_full_top5": {
+    "k": 1,
+    "n": 38,
+    "share": 0.026
+   },
+   "req_full_top5_confirmed": {
+    "k": 1,
+    "n": 38,
+    "share": 0.026
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.775,
+    "n": 38
+   },
+   "req_full_top5_testable": {
+    "k": 11,
+    "n": 38,
+    "share": 0.289
+   },
+   "ceiling": {
+    "mean": 0.799,
+    "n": 38
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "javascript",
+     "n": 2
+    },
+    {
+     "tag": "java",
+     "n": 2
+    },
+    {
+     "tag": "react",
+     "n": 2
+    },
+    {
+     "tag": "typescript",
+     "n": 1
+    },
+    {
+     "tag": "rabbitmq",
+     "n": 1
+    }
+   ]
+  },
+  "qa": {
+   "title": "QA",
+   "in_catalog": true,
+   "n": 48,
+   "parsed_direction": {
+    "qa": 48
+   },
+   "direction_ok": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "grade_ok": {
+    "k": 43,
+    "n": 48,
+    "share": 0.896
+   },
+   "with_required": {
+    "k": 45,
+    "n": 48,
+    "share": 0.938
+   },
+   "key_skills_recall": {
+    "k": 64,
+    "n": 86,
+    "share": 0.744
+   },
+   "selection_nonempty": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_right_direction": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.493,
+    "n": 45
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.392,
+    "n": 45
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.467,
+    "n": 45
+   },
+   "req_full_top5": {
+    "k": 12,
+    "n": 45,
+    "share": 0.267
+   },
+   "req_full_top5_confirmed": {
+    "k": 12,
+    "n": 45,
+    "share": 0.267
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.826,
+    "n": 43
+   },
+   "req_full_top5_testable": {
+    "k": 23,
+    "n": 43,
+    "share": 0.535
+   },
+   "ceiling": {
+    "mean": 0.743,
+    "n": 45
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "api-testing",
+     "n": 4
+    },
+    {
+     "tag": "sql",
+     "n": 4
+    },
+    {
+     "tag": "manual-testing",
+     "n": 3
+    },
+    {
+     "tag": "git",
+     "n": 2
+    },
+    {
+     "tag": "allure",
+     "n": 2
+    }
+   ]
+  },
+  "security": {
+   "title": "Информационная безопасность",
+   "in_catalog": true,
+   "n": 48,
+   "parsed_direction": {
+    "security": 41,
+    "backend": 3,
+    "—": 3,
+    "qa": 1
+   },
+   "direction_ok": {
+    "k": 41,
+    "n": 48,
+    "share": 0.854
+   },
+   "grade_ok": {
+    "k": 35,
+    "n": 37,
+    "share": 0.946
+   },
+   "with_required": {
+    "k": 36,
+    "n": 48,
+    "share": 0.75
+   },
+   "key_skills_recall": {
+    "k": 27,
+    "n": 32,
+    "share": 0.844
+   },
+   "selection_nonempty": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 42,
+    "n": 48,
+    "share": 0.875
+   },
+   "confirmed_right_direction": {
+    "k": 42,
+    "n": 48,
+    "share": 0.875
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.709,
+    "n": 36
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.61,
+    "n": 36
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.691,
+    "n": 36
+   },
+   "req_full_top5": {
+    "k": 20,
+    "n": 36,
+    "share": 0.556
+   },
+   "req_full_top5_confirmed": {
+    "k": 20,
+    "n": 36,
+    "share": 0.556
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.971,
+    "n": 34
+   },
+   "req_full_top5_testable": {
+    "k": 31,
+    "n": 34,
+    "share": 0.912
+   },
+   "ceiling": {
+    "mean": 0.825,
+    "n": 36
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "linux",
+     "n": 3
+    },
+    {
+     "tag": "cryptography",
+     "n": 1
+    },
+    {
+     "tag": "network-security",
+     "n": 1
+    }
+   ]
+  }
+ },
+ "errors_top": [
+  {
+   "id": "138188773",
+   "field": "grade",
+   "expected": "junior",
+   "actual": "intern"
+  },
+  {
+   "id": "138011006",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "qa"
+  },
+  {
+   "id": "138294924",
+   "field": "grade",
+   "expected": "middle",
+   "actual": "senior"
+  },
+  {
+   "id": "138143805",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "data_ml"
+  },
+  {
+   "id": "134758085",
+   "field": "grade",
+   "expected": "middle",
+   "actual": "senior"
+  },
+  {
+   "id": "138230953",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138230953",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "138016959",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "security"
+  },
+  {
+   "id": "137055616",
+   "field": "direction",
+   "expected": "frontend",
+   "actual": "security"
+  },
+  {
+   "id": "138232682",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "138259381",
+   "field": "direction",
+   "expected": "frontend",
+   "actual": "backend"
+  },
+  {
+   "id": "138259381",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "138176406",
+   "field": "direction",
+   "expected": "frontend",
+   "actual": "security"
+  },
+  {
+   "id": "138159849",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137248285",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137398852",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "137392697",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "138309862",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "136185340",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "137362110",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "137362110",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138299229",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "backend"
+  },
+  {
+   "id": "138232263",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "data_eng"
+  },
+  {
+   "id": "137993835",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "137611084",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "backend"
+  },
+  {
+   "id": "138312596",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "devops"
+  },
+  {
+   "id": "138307968",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "138313312",
+   "field": "direction",
+   "expected": "security",
+   "actual": "backend"
+  },
+  {
+   "id": "138313312",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138029689",
+   "field": "direction",
+   "expected": "security",
+   "actual": "backend"
+  },
+  {
+   "id": "136760085",
+   "field": "direction",
+   "expected": "security",
+   "actual": "qa"
+  },
+  {
+   "id": "137908800",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137213441",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "134071500",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "134071500",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "136185330",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "135866115",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "135866115",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137539539",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "middle"
+  },
+  {
+   "id": "137123830",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138191979",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "138191979",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138321976",
+   "field": "direction",
+   "expected": "security",
+   "actual": "backend"
+  },
+  {
+   "id": "138320217",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138317940",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137915609",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "138069810",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "134340872",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138116116",
+   "field": "grade",
+   "expected": "intern",
+   "actual": "senior"
+  },
+  {
+   "id": "137476209",
+   "field": "grade",
+   "expected": "intern",
+   "actual": "junior"
+  },
+  {
+   "id": "135610513",
+   "field": "grade",
+   "expected": "junior",
+   "actual": "senior"
+  },
+  {
+   "id": "137834534",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "security"
+  },
+  {
+   "id": "137748320",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138298675",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138178189",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "security"
+  },
+  {
+   "id": "138118769",
+   "field": "grade",
+   "expected": "junior",
+   "actual": "senior"
+  },
+  {
+   "id": "137920616",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "security"
+  },
+  {
+   "id": "138239467",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "data_eng"
+  },
+  {
+   "id": "138184379",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137428672",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "138320008",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "137601924",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138304325",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138257202",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138221813",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138043975",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138001953",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137956441",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138304166",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "backend"
+  },
+  {
+   "id": "138301211",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138228530",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "data_ml"
+  },
+  {
+   "id": "137895426",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "data_ml"
+  },
+  {
+   "id": "137895426",
+   "field": "grade",
+   "expected": "middle",
+   "actual": "senior"
+  },
+  {
+   "id": "136103046",
+   "field": "grade",
+   "expected": "middle",
+   "actual": "senior"
+  },
+  {
+   "id": "137708295",
+   "field": "grade",
+   "expected": "middle",
+   "actual": "senior"
+  },
+  {
+   "id": "137175880",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "backend"
+  },
+  {
+   "id": "137133877",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138272688",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "137611092",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  },
+  {
+   "id": "138187993",
+   "field": "grade",
+   "expected": "senior",
+   "actual": "lead"
+  }
+ ],
+ "errors_by_field": {
+  "grade": 30,
+  "direction": 40,
+  "stack": 35
+ }
+}
