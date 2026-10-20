@@ -1,0 +1,54 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: data_eng.spark_executors.principal_solve_v_k5
+title: 'Число executor-ов Spark для джоба в срок — обратная задача: наименьший допустимый вход «скорость одного ядра, МБ/с»
+  с учётом: ядра executor-а, shuffle, перекос партиций, полезная загрузка, спекуляция'
+direction: data_eng
+skills:
+- spark
+- big_data
+- hadoop
+- performance_tuning
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - bits
+    - cores_mul
+    - cores_plus1
+    - floor
+    - hour
+    - no_60
+    - no_cores
+    - no_shuffle
+    - no_skew
+    - no_spec
+    - no_util
+    - shuffle_only
+    - shuffle_twice
+    - skew_twice
+    - spec_twice
+    - util_free
+    construct: 'Spark: объём / (скорость на ядро × ядра executor-а × время) с перекосом партиций, shuffle и спекуляцией. Ступень
+      5 из 5: взаимодействуют 5 поправочных фактора(ов) (ядра executor-а; shuffle; перекос партиций; полезная загрузка; спекуляция);
+      обратная задача: наименьший вход «скорость одного ядра, МБ/с» на сетке с шагом 1, при котором квоты хватит.'
+    wave: 20.10-S
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: 2.84
+  a: 3.0
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Spark: объём / (скорость на ядро × ядра executor-а × время) с перекосом партиций,
+    shuffle и спекуляцией; 5 взаимодействующих фактора(ов) (ядра executor-а, shuffle, перекос партиций, полезная загрузка,
+    спекуляция), обратная задача: наименьший вход «скорость одного ядра, МБ/с» на сетке с шагом 1, при котором квоты хватит.
+    Грейд Principal (b 2,84 по числу факторов и направлению вопроса: прямой расчёт легче обратной задачи; волна 20.10-S, без
+    калибровки панелью). σ 0,3'
+generator: assessment_bank.families.data_eng.s15_spark_executors_solve_v_k5
+version: 1
+description: 'Principal: число executor-ов Spark для джоба в срок — обратная задача: наименьший вход «скорость одного ядра,
+  МБ/с» на сетке с шагом 1, при котором квоты хватит. 5 фактора(ов): ядра executor-а, shuffle, перекос партиций, полезная
+  загрузка, спекуляция. Ключ — исполнением модели (точные дроби), для обратной задачи — ещё и линейным перебором сетки.'
