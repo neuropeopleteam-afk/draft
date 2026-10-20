@@ -24,6 +24,7 @@ import os
 import re
 import threading
 import time
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterator, Literal
@@ -387,15 +388,21 @@ def warm_async() -> None:
         except OSError:
             pass
         n = 0
-        for text in script_texts():
-            if cached(text, "pcm24"):
-                continue
-            try:
-                synth_bytes(text, "pcm24")
-                n += 1
-            except TtsError as e:
-                log.warning("concierge warm: %s", e)
-                break
+        # mp3 — постоянные фразы и реплики шагов для браузера (в 6 раз меньше PCM), PCM 24 кГц — для потока ответа;
+        # плюс типовые ответы на выбор роли без имени (звучат сразу, без синтеза)
+        texts = script_texts()
+        extra = [_start_reply(None, r, False) for r in ROLES]
+        try:
+            for text in [*texts, *extra]:
+                for fmt in ("mp3", "pcm24"):
+                    if fmt == "mp3" and text in extra:
+                        continue
+                    if cached(text, fmt):
+                        continue
+                    synth_bytes(text, fmt)
+                    n += 1
+        except TtsError as e:
+            log.warning("concierge warm: %s", e)
         log.info("concierge warm: озвучено %d новых фраз", n)
 
     threading.Thread(target=run, name="concierge-warm", daemon=True).start()
@@ -736,6 +743,20 @@ def _norm(text: str) -> str:
     return " ".join(_words(text))
 
 
+INTERJ = re.compile(r"^\s*(?:ой[\s,]+)?(?:подожди(?:те)?|погоди(?:те)?|стоп|стой(?:те)?|секунд(?:у|очку)|минуту|"
+                    r"постой(?:те)?|извините|простите|елена|лена|слушай(?:те)?)[\s,.!—-]+(?:(?:а|и|но|ну|так|пожалуйста)[\s,]+)?",
+                    re.IGNORECASE)
+
+
+def strip_interjection(message: str) -> str:
+    """«Подождите, а сколько длится тест?» → «сколько длится тест?»: просьба подождать перед вопросом — не пауза обзора."""
+    m = INTERJ.match(message or "")
+    if not m:
+        return message
+    rest = message[m.end():].strip()
+    return rest if len(_words(rest)) >= 2 else message
+
+
 def classify(message: str, *, touring: bool, paused: bool) -> dict | None:
     """Мгновенное решение без модели или None (нужна модель)."""
     t = _norm(message)
@@ -789,6 +810,8 @@ val-arena (цифры точности).
 {"reply": "...", "action": "answer"|"start_tour"|"goto"|"pause"|"end", "role": "all"|"candidate"|"employer"|"fsp"|null,
  "step": "<id шага>"|null, "user_name": "Имя"|null}"""
 
+LLM_HEDGE_S = float(os.environ.get("CONCIERGE_LLM_HEDGE_S", "1.8"))
+_LLM_POOL = ThreadPoolExecutor(max_workers=8, thread_name_prefix="concierge-llm")
 LLM_MODELS = [m.strip() for m in os.environ.get(
     "CONCIERGE_LLM_MODELS", "openrouter=google/gemini-2.5-flash|openrouter=google/gemini-2.5-flash-lite").split("|") if m.strip()]
 
@@ -814,20 +837,46 @@ def _llm(message: str, *, user_name: str | None, role: str | None, current_path:
         if c:
             msgs.append({"role": w, "content": c[:400]})
     msgs.append({"role": "user", "content": message.strip()[:600]})
-    deadline = time.monotonic() + 6.0
-    for model in LLM_MODELS:
-        left = deadline - time.monotonic()
-        if left < 1.0:
-            break
+
+    def ask(model: str, timeout: float) -> dict | None:
         try:
-            res = llm.chat(msgs, temperature=0.3, max_tokens=180, want_json=True, model=model, timeout_s=min(4.5, left))
+            res = llm.chat(msgs, temperature=0.3, max_tokens=180, want_json=True, model=model, timeout_s=timeout)
         except Exception as e:  # noqa: BLE001
             log.warning("concierge llm %s: %s", model, type(e).__name__)
-            continue
+            return None
         if res.ok and isinstance(res.data, dict) and isinstance(res.data.get("reply"), str) and res.data["reply"].strip():
             d = dict(res.data)
             d["_model"] = res.model
             return d
+        return None
+
+    # «страховочный» запрос: основная модель не ответила за LLM_HEDGE_S — параллельно спрашиваем следующую,
+    # берём первый годный ответ (хвост задержки 5–6 с → ~2,5 с, цена — лишний короткий запрос изредка)
+    deadline = time.monotonic() + 6.0
+    models = list(LLM_MODELS)
+    if not models:
+        return None
+    futs = [_LLM_POOL.submit(ask, models[0], 5.0)]
+    started = 1
+    hedge_at = time.monotonic() + LLM_HEDGE_S
+    while futs:
+        now = time.monotonic()
+        if now >= deadline:
+            break
+        until = hedge_at if started < len(models) else deadline
+        done, _ = wait(futs, timeout=max(0.05, min(deadline, until) - now), return_when=FIRST_COMPLETED)
+        for f in done:
+            futs.remove(f)
+            d = f.result()
+            if d:
+                return d
+        if started < len(models) and (time.monotonic() >= hedge_at or not futs):
+            left = deadline - time.monotonic()
+            if left < 1.0:
+                break
+            futs.append(_LLM_POOL.submit(ask, models[started], left))
+            started += 1
+            hedge_at = time.monotonic() + LLM_HEDGE_S
     return None
 
 
@@ -839,7 +888,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     Возвращает {reply, phrase, action, role, step, user_name, kind}. phrase — ключ постоянной фразы из кэша (если
     reply пустой). action: ask_role | start_tour | goto | answer | pause | resume | repeat | prev | end | none.
     """
-    msg = (message or "").strip()
+    msg = strip_interjection((message or "").strip())
     name_now = extract_name(msg, None) if not user_name else None
     name = user_name or name_now
     first_time = bool(name_now)

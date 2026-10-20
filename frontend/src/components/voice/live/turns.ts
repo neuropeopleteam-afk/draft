@@ -89,9 +89,9 @@ export function endDelay(text: string, mode: "guide" | "answer" = "guide"): numb
     return n < 4 ? 2600 : 1900;
   }
   if (UNFINISHED.test(t)) return 1500;
-  if (/[?]$/.test(t)) return 250;
-  if (n <= 3) return 350;
-  return 650;
+  if (/[?]$/.test(t)) return 200;
+  if (n <= 3) return 300;
+  return 450;
 }
 
 export function stripEndMarker(text: string): string {

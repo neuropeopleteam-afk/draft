@@ -15,6 +15,7 @@ import type { AnamHandle } from "../voice/AnamAvatar";
 import { LiveListener, liveSttSupported, type MicState, type SttEvent } from "../voice/live/listener";
 import { SpeechBuffer, bargeIn, endDelay, isBackchannel, isEcho, words } from "../voice/live/turns";
 import { Voice, type SayResult, type Utterance } from "../voice/live/voice";
+import { fetchPhrasePcm } from "../voice/live/decode";
 import { STEPS, TRACKS, trackFor, type TourStep, type TourTrack } from "./steps";
 
 export type Phase = "idle" | "connecting" | "greeting" | "listening" | "thinking" | "answering" | "touring" | "paused";
@@ -68,7 +69,7 @@ const BYTES_PER_MS = (RATE * 2) / 1000;
 const PIPE_MS = 650;               // звук из видеопотока звучит примерно через столько после отправки
 const IDLE_AFTER_GREETING_MS = 7000;
 const IDLE_AFTER_QUESTION_MS = 9000;
-const RESUME_AFTER_ANSWER_MS = 1300;
+const RESUME_AFTER_ANSWER_MS = 1000;
 const FILLER_AFTER_MS = 450;
 const STALE_INTERIM_MS = 2200;     // промежуточный текст не меняется — считаем фразу законченной
 const REPEAT_IF_HEARD_LESS = 0.6;
@@ -160,6 +161,7 @@ export class ElenaEngine {
   private lastTrack: TourTrack | null = null;
   private lastSaid = "";
   private micKnown: Promise<MicState> | null = null;
+  private lastDuck = 0;
 
   constructor(private d: ElenaDeps) {
     this.voice = new Voice(d.avatar);
@@ -190,17 +192,11 @@ export class ElenaEngine {
 
   // ------------------------------------------------------------------ голос
 
-  private fetchPcm(text: string): Promise<Uint8Array | null> {
-    return fetch(apiUrl("/interview/concierge/speech"), {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, format: "pcm24" }),
-    }).then(async (r) => (r.ok ? new Uint8Array(await r.arrayBuffer()) : null)).catch(() => null);
-  }
-
-  /** Звук фразы: из памяти, иначе загрузка (сразу, вне очереди предзагрузки). */
-  private pcm(text: string): Promise<Uint8Array | null> {
+  /** Звук фразы: из памяти, иначе загрузка (сразу, вне очереди предзагрузки; low — фоновая предзагрузка). */
+  private pcm(text: string, low = false): Promise<Uint8Array | null> {
     let p = this.cache.get(text);
     if (!p) {
-      p = this.fetchPcm(text);
+      p = fetchPhrasePcm(apiUrl("/interview/concierge/speech"), text, low);
       this.cache.set(text, p);
       void p.then((v) => { if (!v) this.cache.delete(text); });
     }
@@ -215,7 +211,7 @@ export class ElenaEngine {
         const t = this.queue.shift()!;
         if (this.cache.has(t)) continue;
         this.loading++;
-        void this.pcm(t).finally(() => { this.loading--; next(); });
+        void this.pcm(t, true).finally(() => { this.loading--; next(); });
       }
     };
     next();
@@ -293,10 +289,12 @@ export class ElenaEngine {
     if (!this.alive(ep)) return;
     if (!sc) { this.close(); return; }
     this.script = sc;
-    const greet = this.pcm(sc.greeting);
+    const greet = track ? Promise.resolve(null) : this.pcm(sc.greeting);
     const firstSteps = TRACKS[track ?? "all"].slice(stepIndex, stepIndex + 2).map((id) => sc.steps[id]);
-    this.prefetch([sc.phrases.nomic, sc.nudge, ...sc.fillers.slice(0, 2), ...firstSteps, sc.bridges.candidate,
-      sc.phrases.hello, sc.phrases.pause, ...Object.values(sc.bridges), ...sc.fillers.slice(2)]);
+    // остальное — в фоне после приветствия: на медленной связи приветствие не делит канал с предзагрузкой
+    const rest = [sc.nudge, ...sc.fillers.slice(0, 2), ...firstSteps, sc.bridges.candidate, sc.phrases.hello, sc.phrases.pause,
+      ...Object.values(sc.bridges), ...sc.fillers.slice(2), sc.phrases.nomic];
+    void Promise.race([greet, sleep(2500)]).then(() => { if (!this.closed) this.prefetch(rest); });
     // поток аватара и звук приветствия — параллельно; ждём не дольше 6 с, иначе говорим запасным голосом
     await Promise.race([Promise.all([this.waitAvatar(6000), greet]), sleep(6500)]);
     if (!this.alive(ep)) return;
@@ -389,7 +387,13 @@ export class ElenaEngine {
 
   private onStt(e: SttEvent) {
     if (this.closed) return;
-    if (e.type === "ready" || e.type === "speech_started") return;
+    if (e.type === "ready") return;
+    if (e.type === "speech_started") {
+      // голос человека поверх её реплики — сразу чуть тише (как живой собеседник), стоп — когда станет ясно, что это реплика
+      const now = performance.now();
+      if (this.voice.speaking() && this.voice.sinceStart() > 1200 && now - this.lastDuck > 2500) { this.lastDuck = now; this.duckFor(1400); }
+      return;
+    }
     if (e.type === "error") { this.set({ mic: "error" }); return; }
     if (e.type === "interim" || e.type === "final") {
       const text = e.text.trim();
@@ -419,7 +423,7 @@ export class ElenaEngine {
         this.endTimer = 0;
         this.armStale();
       }
-      if (e.type === "final" && e.speech_final) this.armEnd(false);
+      if (e.type === "final") this.armEnd(false, e.speech_final ? 0 : 350);
       return;
     }
     if (e.type === "speech_final_empty" || e.type === "utterance_end") {
@@ -462,12 +466,12 @@ export class ElenaEngine {
     }, STALE_INTERIM_MS);
   }
 
-  private armEnd(force: boolean) {
+  private armEnd(force: boolean, extra = 0) {
     const text = this.buf.read();
     if (!text) return;
     window.clearTimeout(this.endTimer);
     const v = this.buf.version;
-    const delay = force ? 120 : endDelay(text, "guide");
+    const delay = force ? 120 : endDelay(text, "guide") + extra;
     this.endTimer = window.setTimeout(() => {
       this.endTimer = 0;
       if (this.buf.version === v) this.submit();
@@ -506,6 +510,9 @@ export class ElenaEngine {
     this.replyStarted = false;
     const ctl = new AbortController();
     this.turnCtl = ctl;
+    // ответ сервера завис (связь) — не ждём вечно: через 9 с без решения — короткая просьба повторить
+    let timedOut = false;
+    const killer = window.setTimeout(() => { timedOut = true; ctl.abort(); }, 9000);
     this.set({ phase: "thinking", click: null });
     let filler = 0;
     let utter: Utterance | null = null;
@@ -528,6 +535,7 @@ export class ElenaEngine {
         if (item.t === "ack") {
           if (item.kind === "llm") filler = window.setTimeout(() => this.playFiller(ep), FILLER_AFTER_MS);
         } else if (item.t === "meta") {
+          window.clearTimeout(killer);
           meta = item as Meta;
           this.remember("user", text);
           this.pendingText = "";
@@ -551,8 +559,9 @@ export class ElenaEngine {
       }
     } catch (e) {
       window.clearTimeout(filler);
+      window.clearTimeout(killer);
       if (this.turnCtl === ctl) this.turnCtl = null;
-      if ((e as { name?: string })?.name === "AbortError" || !this.alive(ep)) return;
+      if (((e as { name?: string })?.name === "AbortError" && !timedOut) || !this.alive(ep)) return;
       // сеть или сервер подвели — короткая просьба повторить, обзор (если шёл) продолжится
       this.remember("user", text);
       this.pendingText = "";
@@ -561,6 +570,7 @@ export class ElenaEngine {
       return;
     }
     window.clearTimeout(filler);
+    window.clearTimeout(killer);
     if (this.turnCtl === ctl) this.turnCtl = null;
     if (!this.alive(ep) || !meta) return;
     if (meta.text) this.remember("elena", meta.text);
@@ -754,20 +764,42 @@ export class ElenaEngine {
         this.d.navigate(step.path);
       }
     }
-    const el = await this.waitEl(step.selector, ep, 7000);
+    // экран грузится долго — не молчим: через 2,5 с говорим, подсветка появится, как только блок откроется
+    const el = await this.waitEl(step.selector, ep, 2500);
     const b = await bridgeDone;
     if (!this.alive(ep) || b === "aborted") return false;
-    if (!el) return false;
-    if (scroll) {
+    if (el && scroll) await this.bringIntoView(step.selector, ep);
+    return this.alive(ep);
+  }
+
+  /** Экран догрузился уже во время реплики — подсветить и показать блок, как только он появится (до 8 с). */
+  private async lateView(selector: string, ep: number) {
+    const el = await this.waitEl(selector, ep, 8000);
+    if (el && this.alive(ep)) await this.bringIntoView(selector, ep);
+  }
+
+  /** Блок — в кадр: ждём, пока раскладка устоится (над блоком догружаются карточки), прокручиваем и проверяем ещё
+   *  раз (переход по адресу может вернуть прокрутку наверх). */
+  private async bringIntoView(selector: string, ep: number) {
+    let prev = NaN;
+    for (let i = 0; i < 8; i++) {
+      const el = findTarget(selector);
+      if (!el || !this.alive(ep)) return;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      if (Math.abs(top - prev) < 2) break;
+      prev = top;
+      await sleep(100);
+    }
+    for (let k = 0; k < 2; k++) {
+      const el = findTarget(selector);
+      if (!el || !this.alive(ep)) return;
       const r = el.getBoundingClientRect();
       const fits = r.top >= 72 && r.bottom <= window.innerHeight - 24;
-      if (!fits) {
-        const top = r.height > window.innerHeight * 0.6 ? r.top - 88 : r.top - (window.innerHeight - r.height) / 2;
-        window.scrollTo({ top: Math.max(0, window.scrollY + top), behavior: "smooth" });
-        await sleep(380);
-      }
+      if (fits) return;
+      const top = r.height > window.innerHeight * 0.6 ? r.top - 88 : r.top - (window.innerHeight - r.height) / 2;
+      window.scrollTo({ top: Math.max(0, window.scrollY + top), behavior: "smooth" });
+      await sleep(450);
     }
-    return true;
   }
 
   private planClick(step: TourStep, u: Utterance, totalMs: number, ep: number) {
@@ -802,17 +834,17 @@ export class ElenaEngine {
       this.set({ phase: "touring", track, stepNo: i + 1, stepTotal: ids.length });
       const bridge = prevCab !== step.cabinet ? sc.bridges[step.cabinet] ?? null : null;
       const ok = await this.enter(step, ep, bridge);
-      if (!this.alive(ep)) return;
+      if (!this.alive(ep) || !ok) return;
       prevCab = step.cabinet;
       this.lastCabinet = step.cabinet;
-      if (!ok) continue;
       this.set({ target: step.selector, click: null });
+      if (!findTarget(step.selector)) void this.lateView(step.selector, ep);
       const text = sc.steps[step.id];
       const res = await this.sayText(text, ep, (u, total) => { this.stepUtter = u; this.planClick(step, u, total, ep); });
       this.stepUtter = null;
       if (res === "aborted" || !this.alive(ep)) return;
       this.heard = 1;
-      await sleep(200);
+      await sleep(150);
     }
     if (!this.alive(ep)) return;
     this.touring = false;

@@ -82,6 +82,16 @@ const STALL_MS = 5000;
 const ROTATE_AHEAD_S = 75;    // плановая пересадка на свежую сессию — в паузе, не позже чем за 75 с до предела
 const FORCE_AHEAD_S = 12;
 const MAX_FAILS = 3;
+const BACKGROUND_RETRY_MS = [3000, 6000, 10000, 15000, 25000, 40000];
+// Видеопоток недоступен по лимиту (минуты периода исчерпаны, все места заняты): помним 10 минут в пределах вкладки —
+// следующие экраны не ждут подключения и сразу говорят запасным голосом с живым портретом.
+const LIMIT_KEY = "draft.avatar.limit";
+const LIMIT_MS = 10 * 60 * 1000;
+const LIMIT_RX = /429|minutes|limit|quota|Too Many/i;
+function limitedRecently(): boolean {
+  try { const v = Number(sessionStorage.getItem(LIMIT_KEY) || 0); return v > 0 && Date.now() - v < LIMIT_MS; } catch { return false; }
+}
+function markLimited() { try { sessionStorage.setItem(LIMIT_KEY, String(Date.now())); } catch { /* ignore */ } }
 const AFTER_INTERRUPT_MS = 200;
 
 const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
@@ -114,6 +124,9 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   const [needsUnlock, setNeedsUnlock] = useState(false);
 
   const statusRef = useRef<AnamStatus>(deferConnect ? "idle" : "connecting");
+  // запасной режим: видеопоток не поднялся — портрет «говорит» вместе с запасным голосом, подключение — в фоне
+  const fallbackRef = useRef(false);
+  const [fallback, setFallback] = useState(false);
   const active = useRef<Slot | null>(null);
   const dead = useRef(false);
   const rotating = useRef(false);
@@ -180,19 +193,28 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   async function playVideo(k: "a" | "b", sound: boolean) {
     const v = videoEl(k);
     if (!v) return;
-    v.muted = !sound;
     v.volume = ducked.current ? 0.35 : 1;
-    try {
-      await v.play();
-      if (sound) { unlockNeeded.current = false; if (!dead.current) setNeedsUnlock(false); }
-    } catch {
-      if (!sound) return;
-      // автозапуск звука запрещён: видео без звука (губы видны), звук — по первому касанию
-      v.muted = true;
-      try { await v.play(); } catch { /* кадры придут после касания */ }
-      unlockNeeded.current = true;
-      if (!dead.current) setNeedsUnlock(true);
+    const activated = () => (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive ?? false;
+    // play() прерывается, когда поток переподключает srcObject (AbortError), — это не запрет автозапуска: повторяем
+    for (let attempt = 0; attempt < 5; attempt++) {
+      v.muted = !sound;
+      try {
+        await v.play();
+        if (sound) { unlockNeeded.current = false; if (!dead.current) setNeedsUnlock(false); }
+        return;
+      } catch (e) {
+        if (dead.current || !v.srcObject) return;
+        const name = (e as { name?: string })?.name;
+        if (name === "NotAllowedError" && (!sound || !activated() || attempt >= 1)) break;
+        await new Promise((r) => window.setTimeout(r, 120 * (attempt + 1)));
+      }
     }
+    if (!sound) return;
+    // автозапуск звука запрещён: видео без звука (губы видны), звук — по первому касанию
+    v.muted = true;
+    try { await v.play(); } catch { /* кадры придут после касания */ }
+    unlockNeeded.current = true;
+    if (!dead.current) setNeedsUnlock(true);
   }
 
   function watchFrames(k: "a" | "b") {
@@ -246,7 +268,11 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
         if (!settled) finish(new Error("closed"));
         else onSlotClosed(slot);
       });
-      client.streamToVideoElement(vid(k)).catch((e: unknown) => finish(e instanceof Error ? e : new Error(String(e))));
+      client.streamToVideoElement(vid(k)).catch((e: unknown) => {
+        const err = e instanceof Error ? e : new Error(String(e));
+        if (LIMIT_RX.test(`${err.message} ${String((e as { status?: number })?.status ?? "")}`)) markLimited();
+        finish(err);
+      });
     });
     if (dead.current) { void client.stopStreaming().catch(() => undefined); throw new Error("unmounted"); }
     return slot;
@@ -263,6 +289,8 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   function activate(slot: Slot) {
     const prev = active.current;
     active.current = slot;
+    fallbackRef.current = false;
+    if (!dead.current) setFallback(false);
     setShown(slot.key);
     void playVideo(slot.key, !unlockNeeded.current);
     watchFrames(slot.key);
@@ -276,21 +304,47 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     }
   }
 
+  function releaseWaiters() {
+    const list = waiters.current.splice(0);
+    for (const fn of list) { try { fn(false); } catch { /* ignore */ } }
+  }
+
   async function startFirst() {
     if (started.current || dead.current) return;
     started.current = true;
-    setStatus("connecting");
-    for (let attempt = 0; attempt < 2 && !dead.current; attempt++) {
-      try {
-        const slot = await openSlot("a", false);
-        activate(slot);
-        return;
-      } catch {
-        if (dead.current) return;
-        await sleep(1200);
+    const limited = limitedRecently();
+    if (!limited) {
+      setStatus("connecting");
+      for (let attempt = 0; attempt < 2 && !dead.current; attempt++) {
+        try {
+          const slot = await openSlot("a", false);
+          activate(slot);
+          return;
+        } catch {
+          if (dead.current) return;
+          if (limitedRecently()) break;   // лимит — повтор сразу бесполезен
+          await sleep(1200);
+        }
       }
     }
-    setStatus("failed");
+    // видеопоток пока не поднялся: голос идёт запасным путём, портрет говорит вместе с ним, а подключение
+    // повторяется в фоне — как только место освободится, губы оживут со следующей реплики
+    fallbackRef.current = true;
+    if (!dead.current) setFallback(true);
+    setStatus("reconnecting");
+    releaseWaiters();
+    const plan = limitedRecently() ? [60000, 120000] : BACKGROUND_RETRY_MS;
+    for (const wait of plan) {
+      await sleep(wait);
+      if (dead.current || active.current) return;
+      try {
+        const slot = await openSlot(Math.random() < 0.5 ? "a" : "b", false);
+        if (dead.current) { void slot.client.stopStreaming().catch(() => undefined); return; }
+        activate(slot);
+        return;
+      } catch { /* следующая попытка */ }
+    }
+    if (!dead.current && !active.current) setStatus("failed");
   }
 
   /** Пересадка на свежую сессию: planned — в паузе перед пределом; closed/stall — поток уже не работает. */
@@ -418,7 +472,8 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     const v = videoEl(slot.key);
     if (v && (v.muted || v.paused)) {
       v.muted = false;
-      void v.play().then(() => { unlockNeeded.current = false; if (!dead.current) setNeedsUnlock(false); }).catch(() => undefined);
+      void v.play().then(() => { unlockNeeded.current = false; if (!dead.current) setNeedsUnlock(false); })
+        .catch(() => { v.muted = true; void v.play().catch(() => undefined); });  // звук ещё нельзя — хотя бы губы
     }
   }
 
@@ -428,6 +483,8 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     const watchdog = window.setInterval(() => {
       const slot = active.current;
       if (!slot || dead.current || statusRef.current !== "live" || rotating.current) return;
+      // звук был заблокирован, а пользователь уже взаимодействовал со страницей — включаем сами
+      if (unlockNeeded.current && (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive) unlock();
       const now = Date.now();
       const visible = document.visibilityState === "visible";
       if (visible && performance.now() - lastFrame.current > STALL_MS) { void rotate("stall"); return; }
@@ -437,6 +494,9 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     }, 1000);
     const onVisible = () => { if (document.visibilityState === "visible") lastFrame.current = performance.now(); };
     const onGesture = () => { if (unlockNeeded.current) unlock(); };
+    // закрытие или перезагрузка вкладки — сессию видеопотока закрываем сразу (место не висит до тайм-аута)
+    const onHide = () => { const s = active.current; if (s) { s.dead = true; void s.client.stopStreaming().catch(() => undefined); } };
+    window.addEventListener("pagehide", onHide);
     document.addEventListener("visibilitychange", onVisible);
     document.addEventListener("pointerdown", onGesture, true);
     document.addEventListener("keydown", onGesture, true);
@@ -447,6 +507,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
       document.removeEventListener("visibilitychange", onVisible);
       document.removeEventListener("pointerdown", onGesture, true);
       document.removeEventListener("keydown", onGesture, true);
+      window.removeEventListener("pagehide", onHide);
       const list = waiters.current.splice(0);
       for (const fn of list) { try { fn(false); } catch { /* ignore */ } }
       const slot = active.current;
@@ -463,6 +524,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
       requestConnect();
       if (statusRef.current === "live" && active.current) return Promise.resolve(true);
       if (statusRef.current === "failed") return Promise.resolve(false);
+      if (fallbackRef.current) return Promise.resolve(false);
       return new Promise<boolean>((resolve) => {
         let done = false;
         const fin = (okv: boolean) => { if (done) return; done = true; window.clearTimeout(tid); resolve(okv); };
@@ -501,7 +563,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   }), []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (status === "failed") {
-    return <InterviewerAvatar state={state} level={level} name={name} size={fill ? 640 : size} tone={tone} glow={!fill}
+    return <InterviewerAvatar state={state} level={level} name={name} size={fill ? 640 : size} tone={tone} glow={false}
       className={fill ? `h-full w-full [&>div]:!h-full [&>div]:!w-full [&>div]:!rounded-none [&>figcaption]:hidden ${className}` : className} />;
   }
 
@@ -513,6 +575,12 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     <div className={fill ? "relative h-full w-full overflow-hidden bg-[#15131C]" : "relative aspect-square max-w-full overflow-hidden rounded-3xl bg-[#15131C]"}
       style={fill ? undefined : { width: size }}>
       <img src="/avatar/interviewer.webp" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
+      {fallback && !isLive && (
+        <div className="absolute inset-0" data-testid="avatar-fallback">
+          <InterviewerAvatar state={state} level={level} name={name} size={fill ? 640 : size} tone={tone} glow={false}
+            className="h-full w-full [&>div]:!h-full [&>div]:!w-full [&>div]:!rounded-none [&>figcaption]:hidden" />
+        </div>
+      )}
       {(["a", "b"] as const).map((k) => (
         <video key={k} id={vid(k)} autoPlay playsInline disablePictureInPicture
           aria-label={k === shown ? `${name}: сгенерированный образ, не человек` : undefined} aria-hidden={k !== shown}
@@ -533,7 +601,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   if (fill) {
     return (
       <div className={`relative h-full w-full ${className}`} data-testid="interviewer-avatar" data-state={shownState}
-        data-mode={isLive ? "anam" : status}>
+        data-mode={isLive ? "anam" : fallback ? "fallback" : status}>
         {frame}
       </div>
     );

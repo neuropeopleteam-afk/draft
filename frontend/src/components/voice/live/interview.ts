@@ -7,6 +7,7 @@ import type { AnamHandle } from "../AnamAvatar";
 import { LiveListener, liveSttSupported, type MicState, type SttEvent } from "./listener";
 import { SpeechBuffer, bargeIn, endDelay, isEcho, stripEndMarker, words } from "./turns";
 import { Voice } from "./voice";
+import { fetchPhrasePcm } from "./decode";
 
 export type LivePhase = "starting" | "speaking" | "listening" | "thinking" | "off";
 export interface LiveView { phase: LivePhase; mic: MicState; talking: boolean }
@@ -72,11 +73,7 @@ export class LiveInterview {
       gate: () => this.busy,
     });
     void this.listener.start();
-    for (const f of FILLERS) {
-      this.fillers.set(f, fetch(apiUrl("/interview/concierge/speech"), {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: f, format: "pcm24" }),
-      }).then(async (r) => (r.ok ? new Uint8Array(await r.arrayBuffer()) : null)).catch(() => null));
-    }
+    for (const f of FILLERS) this.fillers.set(f, fetchPhrasePcm(apiUrl("/interview/concierge/speech"), f, true));
   }
 
   toggleMute() {
@@ -107,7 +104,10 @@ export class LiveInterview {
     }
     if (my !== this.asking || this.closed) return;
     try {
-      const r = await fetch(this.d.speechUrl(), { headers: this.d.headers() });
+      const ctl = new AbortController();
+      const tid = window.setTimeout(() => ctl.abort(), 7000);   // начало голоса не пришло за 7 с — слушаем без него
+      const r = await fetch(this.d.speechUrl(), { headers: this.d.headers(), signal: ctl.signal });
+      window.clearTimeout(tid);
       if (!r.ok || !r.body) throw new Error(String(r.status));
       if (my !== this.asking || this.closed) { void r.body.cancel().catch(() => undefined); return; }
       await this.voice.say(question, r.body, RATE);
@@ -151,7 +151,7 @@ export class LiveInterview {
         this.endTimer = 0;
         this.armStale();
       }
-      if (e.type === "final" && e.speech_final) this.armEnd();
+      if (e.type === "final") this.armEnd();
       return;
     }
     if (e.type === "speech_final_empty" || e.type === "utterance_end") {

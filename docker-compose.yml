@@ -98,6 +98,9 @@ services:
       # Демо-ATS (заглушки Talantix, «Поток», Хантфлоу, вебхук) api вызывает сам у себя — напрямую, без адреса сайта
       # (localhost:8140 изнутри контейнера недоступен). В настройках компании и в интерфейсе — публичный адрес.
       ATS_STUB_BASE_URL: ${ATS_STUB_BASE_URL:-http://127.0.0.1:8000}
+      # Предел длины одной сессии видеопотока аватара: тариф обрезает сессию на 180 с (exitStatus CLOSED_BY_ENGINE),
+      # клиент пересаживается на свежую сессию в паузе заранее, а не посреди реплики
+      ANAM_MAX_SESSION_S: ${ANAM_MAX_SESSION_S:-180}
       # Адрес и имя модели сервиса llm-local; провайдер local используется, только если он есть в LLM_CHAIN
       LLM_LOCAL_BASE_URL: ${LLM_LOCAL_BASE_URL:-http://llm-local:8080/v1}
       LLM_LOCAL_MODEL: ${LLM_LOCAL_MODEL:-qwen3.5-9b}

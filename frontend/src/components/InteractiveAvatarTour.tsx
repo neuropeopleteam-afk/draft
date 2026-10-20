@@ -33,7 +33,11 @@ function rectOf(selector: string | null): Box | null {
   const r = el.getBoundingClientRect();
   if (r.bottom < 0 || r.top > window.innerHeight) return null;
   const pad = 6;
-  return { top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
+  // высокий блок: рамка — в пределах видимой части экрана (не заезжает под верхнюю панель)
+  const top = Math.max(r.top - pad, 68);
+  const bottom = Math.min(r.bottom + pad, window.innerHeight - 6);
+  if (bottom - top < 24) return null;
+  return { top, left: r.left - pad, width: r.width + pad * 2, height: bottom - top };
 }
 
 /** Подсветка блока, о котором говорит Елена: тонкая аккуратная рамка без свечения. */
@@ -236,14 +240,14 @@ export function InteractiveAvatarTour() {
 
   return (
     <>
-      {(ui.phase === "touring" || ui.phase === "paused" || ui.phase === "answering" || ui.phase === "listening") && <Spotlight selector={ui.target} />}
+      {ui.phase !== "connecting" && ui.phase !== "greeting" && ui.phase !== "idle" && <Spotlight selector={ui.target} />}
       <TourCursor click={ui.click} />
 
       <aside aria-label="Елена — проводник по платформе" data-testid="interactive-avatar-tour" data-phase={ui.phase} data-mic={ui.mic}
         className="fixed bottom-3 right-3 z-50 w-[13rem] overflow-hidden rounded-[1.6rem] bg-[#0E0B18] shadow-[0_16px_44px_rgba(10,8,22,0.42)] ring-1 ring-black/10 sm:bottom-5 sm:right-5 sm:w-[22rem] print:hidden">
         <div className="relative aspect-[4/5] w-full sm:aspect-square">
-          <AnamAvatar ref={anamRef} sessionId="concierge-elena" tokenPath="/interview/concierge/avatar-token" state={wave}
-            name="Елена" fill />
+          <AnamAvatar ref={anamRef} sessionId="concierge-elena" tokenPath="/interview/concierge/avatar-token"
+            state={ui.speaking ? "speaking" : wave} level={() => engineRef.current?.voice.level() ?? 0} name="Елена" fill />
 
           {ui.stepTotal > 0 && (
             <div className="pointer-events-none absolute inset-x-12 top-3.5 flex gap-1" aria-hidden="true" data-testid="elena-progress">
