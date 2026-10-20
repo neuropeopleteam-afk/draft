@@ -1,0 +1,161 @@
+{
+  "bank_commit": "38f00032",
+  "synced_at": "2026-10-20T18:12:44Z",
+  "total_families": 1824,
+  "canaries": 12,
+  "by_direction": {
+    "analyst": 174,
+    "backend": 186,
+    "common": 205,
+    "data_eng": 183,
+    "data_ml": 185,
+    "devops": 178,
+    "frontend": 186,
+    "mobile": 170,
+    "qa": 180,
+    "security": 177
+  },
+  "by_format": {
+    "choose_fix": 139,
+    "find_bug": 127,
+    "mcq_concept": 1234,
+    "open_answer": 97,
+    "open_book_3step": 102,
+    "predict_output": 125
+  },
+  "by_grade": {
+    "intern": 116,
+    "junior": 308,
+    "middle": 518,
+    "senior": 624,
+    "lead": 271,
+    "principal": 266
+  },
+  "grade_details": {
+    "intern": {
+      "families": 116,
+      "mcq": 91,
+      "non_mcq": 25,
+      "mcq_share": 0.7845,
+      "non_mcq_share": 0.2155,
+      "time_min_s": 90,
+      "time_max_s": 240,
+      "b_min": -1.5,
+      "b_max": -0.8
+    },
+    "junior": {
+      "families": 308,
+      "mcq": 206,
+      "non_mcq": 102,
+      "mcq_share": 0.6688,
+      "non_mcq_share": 0.3312,
+      "time_min_s": 90,
+      "time_max_s": 360,
+      "b_min": -1.5,
+      "b_max": 0.3
+    },
+    "middle": {
+      "families": 518,
+      "mcq": 383,
+      "non_mcq": 135,
+      "mcq_share": 0.7394,
+      "non_mcq_share": 0.2606,
+      "time_min_s": 90,
+      "time_max_s": 1200,
+      "b_min": -0.7,
+      "b_max": 1.1
+    },
+    "senior": {
+      "families": 624,
+      "mcq": 481,
+      "non_mcq": 143,
+      "mcq_share": 0.7708,
+      "non_mcq_share": 0.2292,
+      "time_min_s": 120,
+      "time_max_s": 1500,
+      "b_min": 0.3,
+      "b_max": 1.95
+    },
+    "lead": {
+      "families": 271,
+      "mcq": 36,
+      "non_mcq": 235,
+      "mcq_share": 0.1328,
+      "non_mcq_share": 0.8672,
+      "time_min_s": 360,
+      "time_max_s": 1800,
+      "b_min": 1.6,
+      "b_max": 2.65
+    },
+    "principal": {
+      "families": 266,
+      "mcq": 95,
+      "non_mcq": 171,
+      "mcq_share": 0.3571,
+      "non_mcq_share": 0.6429,
+      "time_min_s": 360,
+      "time_max_s": 1800,
+      "b_min": 2.4,
+      "b_max": 3.31
+    }
+  },
+  "validator_20_seeds": {
+    "n_seeds": 20,
+    "n_variants": 36480,
+    "n_unique": 36416,
+    "unique_ratio": 0.9982,
+    "failed": 0,
+    "passed": 1824
+  },
+  "validator_100_seeds": {
+    "n_seeds": 100,
+    "n_families_sampled": 365,
+    "n_variants_sampled": 36500,
+    "n_unique_sampled": 36440,
+    "unique_ratio": 0.9984,
+    "total_capacity_100_seeds": 182400,
+    "projected_unique_100_seeds": 182100,
+    "failed": 0
+  },
+  "wave_2010s_audit": {
+    "n_families": 1049,
+    "n_options": 5,
+    "n_variants_tested": 10490,
+    "key_position_by_magnitude": {
+      "0": 0.2,
+      "1": 0.2,
+      "2": 0.2,
+      "3": 0.2,
+      "4": 0.2
+    },
+    "key_position_by_letter": {
+      "A": 0.2,
+      "B": 0.2,
+      "C": 0.2,
+      "D": 0.2,
+      "E": 0.2
+    },
+    "max_magnitude_skew_pp": 0.0,
+    "inverse_tasks_tested": 6950,
+    "limit_equals_answer": 0,
+    "limit_equals_model_at_key": 0,
+    "multi_grade_shared_templates": 0
+  },
+  "mutation_self_check": {
+    "n_code_families": 493,
+    "n_ref_passed": 493,
+    "n_mutants": 1972,
+    "n_killed": 1972,
+    "mutation_kill_rate": 1.0
+  },
+  "independent_verification": {
+    "decimal_solver_variants": 5245,
+    "decimal_solver_matched": 5245,
+    "decimal_solver_match_rate": 1.0,
+    "external_llm_sampled_families": 183,
+    "external_llm_sample_pct": 10.03,
+    "external_llm_pass": 183,
+    "external_llm_pass_rate": 1.0
+  },
+  "incident_sim_families": 40
+}

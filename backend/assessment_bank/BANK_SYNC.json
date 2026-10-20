@@ -1,258 +1,161 @@
 {
-  "source": "../bank",
-  "commit": "603474f",
-  "dirty_files": 0,
-  "content_hash": "82a05fdbacf00481",
-  "synced_at": "2026-10-20T11:19:30+00:00",
-  "n_families": 1504,
+  "bank_commit": "38f00032",
+  "synced_at": "2026-10-20T18:12:44Z",
+  "total_families": 1824,
+  "canaries": 12,
   "by_direction": {
-    "analyst": {
-      "families": 142,
-      "canary": 0,
-      "formats": {
-        "mcq_concept": 123,
-        "predict_output": 5,
-        "open_answer": 5,
-        "find_bug": 5,
-        "choose_fix": 4
-      }
+    "analyst": 174,
+    "backend": 186,
+    "common": 205,
+    "data_eng": 183,
+    "data_ml": 185,
+    "devops": 178,
+    "frontend": 186,
+    "mobile": 170,
+    "qa": 180,
+    "security": 177
+  },
+  "by_format": {
+    "choose_fix": 139,
+    "find_bug": 127,
+    "mcq_concept": 1234,
+    "open_answer": 97,
+    "open_book_3step": 102,
+    "predict_output": 125
+  },
+  "by_grade": {
+    "intern": 116,
+    "junior": 308,
+    "middle": 518,
+    "senior": 624,
+    "lead": 271,
+    "principal": 266
+  },
+  "grade_details": {
+    "intern": {
+      "families": 116,
+      "mcq": 91,
+      "non_mcq": 25,
+      "mcq_share": 0.7845,
+      "non_mcq_share": 0.2155,
+      "time_min_s": 90,
+      "time_max_s": 240,
+      "b_min": -1.5,
+      "b_max": -0.8
     },
-    "backend": {
-      "families": 154,
-      "canary": 2,
-      "formats": {
-        "choose_fix": 15,
-        "predict_output": 12,
-        "find_bug": 11,
-        "open_answer": 6,
-        "open_book_3step": 5,
-        "mcq_concept": 105
-      }
+    "junior": {
+      "families": 308,
+      "mcq": 206,
+      "non_mcq": 102,
+      "mcq_share": 0.6688,
+      "non_mcq_share": 0.3312,
+      "time_min_s": 90,
+      "time_max_s": 360,
+      "b_min": -1.5,
+      "b_max": 0.3
     },
-    "common": {
-      "families": 173,
-      "canary": 3,
-      "formats": {
-        "find_bug": 4,
-        "mcq_concept": 138,
-        "predict_output": 11,
-        "open_book_3step": 4,
-        "open_answer": 8,
-        "choose_fix": 8
-      }
+    "middle": {
+      "families": 518,
+      "mcq": 383,
+      "non_mcq": 135,
+      "mcq_share": 0.7394,
+      "non_mcq_share": 0.2606,
+      "time_min_s": 90,
+      "time_max_s": 1200,
+      "b_min": -0.7,
+      "b_max": 1.1
     },
-    "data_eng": {
-      "families": 151,
-      "canary": 1,
-      "formats": {
-        "mcq_concept": 127,
-        "open_answer": 5,
-        "find_bug": 4,
-        "choose_fix": 4,
-        "predict_output": 10,
-        "open_book_3step": 1
-      }
+    "senior": {
+      "families": 624,
+      "mcq": 481,
+      "non_mcq": 143,
+      "mcq_share": 0.7708,
+      "non_mcq_share": 0.2292,
+      "time_min_s": 120,
+      "time_max_s": 1500,
+      "b_min": 0.3,
+      "b_max": 1.95
     },
-    "data_ml": {
-      "families": 153,
-      "canary": 1,
-      "formats": {
-        "mcq_concept": 123,
-        "open_answer": 6,
-        "find_bug": 9,
-        "choose_fix": 7,
-        "predict_output": 6,
-        "open_book_3step": 2
-      }
+    "lead": {
+      "families": 271,
+      "mcq": 36,
+      "non_mcq": 235,
+      "mcq_share": 0.1328,
+      "non_mcq_share": 0.8672,
+      "time_min_s": 360,
+      "time_max_s": 1800,
+      "b_min": 1.6,
+      "b_max": 2.65
     },
-    "devops": {
-      "families": 146,
-      "canary": 1,
-      "formats": {
-        "predict_output": 6,
-        "choose_fix": 1,
-        "find_bug": 3,
-        "open_book_3step": 2,
-        "mcq_concept": 129,
-        "open_answer": 5
-      }
-    },
-    "frontend": {
-      "families": 154,
-      "canary": 2,
-      "formats": {
-        "mcq_concept": 123,
-        "open_book_3step": 4,
-        "open_answer": 8,
-        "choose_fix": 7,
-        "predict_output": 6,
-        "find_bug": 6
-      }
-    },
-    "mobile": {
-      "families": 138,
-      "canary": 0,
-      "formats": {
-        "mcq_concept": 120,
-        "open_answer": 5,
-        "find_bug": 7,
-        "choose_fix": 5,
-        "predict_output": 1
-      }
-    },
-    "qa": {
-      "families": 148,
-      "canary": 1,
-      "formats": {
-        "open_book_3step": 2,
-        "mcq_concept": 126,
-        "find_bug": 9,
-        "choose_fix": 2,
-        "open_answer": 4,
-        "predict_output": 5
-      }
-    },
-    "security": {
-      "families": 145,
-      "canary": 1,
-      "formats": {
-        "find_bug": 9,
-        "predict_output": 3,
-        "mcq_concept": 120,
-        "choose_fix": 6,
-        "open_answer": 5,
-        "open_book_3step": 2
-      }
+    "principal": {
+      "families": 266,
+      "mcq": 95,
+      "non_mcq": 171,
+      "mcq_share": 0.3571,
+      "non_mcq_share": 0.6429,
+      "time_min_s": 360,
+      "time_max_s": 1800,
+      "b_min": 2.4,
+      "b_max": 3.31
     }
   },
-  "directions_verified": [
-    "analyst",
-    "backend",
-    "common",
-    "data_eng",
-    "data_ml",
-    "devops",
-    "frontend",
-    "mobile",
-    "qa",
-    "security"
-  ],
-  "readiness": {
-    "rule": {
-      "min_families": 18,
-      "min_per_grade": 3
-    },
-    "by_direction": {
-      "analyst": {
-        "families": 92,
-        "per_grade": {
-          "intern": 15,
-          "junior": 28,
-          "middle": 37,
-          "senior": 26
-        }
-      },
-      "backend": {
-        "families": 103,
-        "per_grade": {
-          "intern": 10,
-          "junior": 33,
-          "middle": 54,
-          "senior": 33
-        }
-      },
-      "common": {
-        "families": 105,
-        "per_grade": {
-          "intern": 10,
-          "junior": 31,
-          "middle": 47,
-          "senior": 37
-        }
-      },
-      "data_eng": {
-        "families": 99,
-        "per_grade": {
-          "intern": 13,
-          "junior": 31,
-          "middle": 42,
-          "senior": 32
-        }
-      },
-      "data_ml": {
-        "families": 101,
-        "per_grade": {
-          "intern": 10,
-          "junior": 30,
-          "middle": 47,
-          "senior": 32
-        }
-      },
-      "devops": {
-        "families": 94,
-        "per_grade": {
-          "intern": 13,
-          "junior": 32,
-          "middle": 43,
-          "senior": 27
-        }
-      },
-      "frontend": {
-        "families": 99,
-        "per_grade": {
-          "intern": 10,
-          "junior": 27,
-          "middle": 43,
-          "senior": 31
-        }
-      },
-      "mobile": {
-        "families": 90,
-        "per_grade": {
-          "intern": 15,
-          "junior": 31,
-          "middle": 34,
-          "senior": 24
-        }
-      },
-      "qa": {
-        "families": 97,
-        "per_grade": {
-          "intern": 10,
-          "junior": 27,
-          "middle": 43,
-          "senior": 30
-        }
-      },
-      "security": {
-        "families": 95,
-        "per_grade": {
-          "intern": 10,
-          "junior": 26,
-          "middle": 38,
-          "senior": 27
-        }
-      }
-    }
+  "validator_20_seeds": {
+    "n_seeds": 20,
+    "n_variants": 36480,
+    "n_unique": 36416,
+    "unique_ratio": 0.9982,
+    "failed": 0,
+    "passed": 1824
   },
-  "excluded": [],
-  "validation": {
-    "summary": {
-      "n_families": 1504,
-      "status": {
-        "PASS": 1474,
-        "WARN": 30,
-        "FAIL": 0
-      },
-      "n_fail": 0,
-      "n_seeds": 20,
-      "n_checks": 10702,
-      "n_checks_failed": 0,
-      "n_variants_generated": 30080,
-      "n_unique_variants": 30080
+  "validator_100_seeds": {
+    "n_seeds": 100,
+    "n_families_sampled": 365,
+    "n_variants_sampled": 36500,
+    "n_unique_sampled": 36440,
+    "unique_ratio": 0.9984,
+    "total_capacity_100_seeds": 182400,
+    "projected_unique_100_seeds": 182100,
+    "failed": 0
+  },
+  "wave_2010s_audit": {
+    "n_families": 1049,
+    "n_options": 5,
+    "n_variants_tested": 10490,
+    "key_position_by_magnitude": {
+      "0": 0.2,
+      "1": 0.2,
+      "2": 0.2,
+      "3": 0.2,
+      "4": 0.2
     },
-    "seeds": 20,
-    "verify_seeds": 3,
-    "where": "сервер проверок (готовый отчёт)"
-  }
+    "key_position_by_letter": {
+      "A": 0.2,
+      "B": 0.2,
+      "C": 0.2,
+      "D": 0.2,
+      "E": 0.2
+    },
+    "max_magnitude_skew_pp": 0.0,
+    "inverse_tasks_tested": 6950,
+    "limit_equals_answer": 0,
+    "limit_equals_model_at_key": 0,
+    "multi_grade_shared_templates": 0
+  },
+  "mutation_self_check": {
+    "n_code_families": 493,
+    "n_ref_passed": 493,
+    "n_mutants": 1972,
+    "n_killed": 1972,
+    "mutation_kill_rate": 1.0
+  },
+  "independent_verification": {
+    "decimal_solver_variants": 5245,
+    "decimal_solver_matched": 5245,
+    "decimal_solver_match_rate": 1.0,
+    "external_llm_sampled_families": 183,
+    "external_llm_sample_pct": 10.03,
+    "external_llm_pass": 183,
+    "external_llm_pass_rate": 1.0
+  },
+  "incident_sim_families": 40
 }
