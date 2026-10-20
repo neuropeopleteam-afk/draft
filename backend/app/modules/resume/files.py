@@ -89,6 +89,28 @@ def decode_text(data: bytes) -> str:
     return s
 
 
+_INJECTION_LINE = re.compile(
+    r"(?im)^[^\n]*(?:ignore\s+(?:all\s+)?previous\s+instructions|игнорируй\w*\s+(?:все\s+)?предыдущ\w+\s+инструкц|"
+    r"system\s*prompt|ты\s+обязан\s+поставить\s+максимальн|присвой\w*\s+грейд\s+senior\s+без\s+проверк)[^\n]*$"
+)
+
+
+def sanitize_resume_text(s: str) -> str:
+    """Нормализация и защита от скрытых инструкций (промпт-инъекций) при разборе резюме (связка с А6 grader.inspect)."""
+    s = _INJECTION_LINE.sub("", s)
+    try:
+        from app.modules.assessment import grader as _grader  # type: ignore[attr-defined]
+
+        inspect_fn = getattr(_grader, "inspect", None)
+        if callable(inspect_fn):
+            res = inspect_fn(s)
+            if isinstance(res, dict) and isinstance(res.get("cleaned_text"), str):
+                s = res["cleaned_text"]
+    except Exception:  # noqa: BLE001 — до слияния ветки А6 работает встроенный фильтр
+        pass
+    return s
+
+
 def clean_text(s: str, headings: bool = False) -> str:
     """Нормализация извлечённого текста: переводы строк, невидимые символы, маркеры списков, пустые строки.
 
@@ -96,6 +118,7 @@ def clean_text(s: str, headings: bool = False) -> str:
     """
     s = s.replace("\r\n", "\n").replace("\r", "\n").replace("\u00ad", "").replace("\u2028", "\n").replace("\u2029", "\n")
     s = _CTRL.sub("", s.replace("\f", "\n"))
+    s = sanitize_resume_text(s)
     s = _BULLET.sub("- ", s)
     s = re.sub(r"[ \t\u00a0]+\n", "\n", s)
     s = re.sub(r"[ \u00a0]{2,}", " ", s)

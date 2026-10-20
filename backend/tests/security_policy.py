@@ -522,6 +522,9 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/interview/concierge/event"): "open",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
+    # А5: режим «Принесите свой набор» для жюри (подбор, метрики P@5/P@10/nDCG@10/MRR, объяснение, выгрузка CSV)
+    ("GET", "/api/employer/benchmark/sample"): "open",
+    ("POST", "/api/employer/benchmark/upload"): "sandbox_employer",
 }
 
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)

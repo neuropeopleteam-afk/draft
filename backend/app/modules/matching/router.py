@@ -148,6 +148,7 @@ class Filters(BaseModel):
     conditions_off: bool = Field(False, description="Ф2: не применять условия потребности (формат, город) — показать "
                                                     "всех; по умолчанию условия применяются сразу")
     exclude_refs: list[str] | None = Field(None, max_length=200, description="Исключить отмеченных «не подходит» (Н2)")
+    real_only: bool = Field(False, description="Исключить модельные и синтетические профили (profiles.is_synthetic)")
 
 
 class SelectionIn(BaseModel):
@@ -176,6 +177,9 @@ def _req_dict(r: Requirements | dict, text: str) -> dict:
         req["coverage"] = cov
     # И18: вне справочника, исключённое отрицанием, вилка не в рублях; И27: найденное моделью вне справочника
     req.update(text_notes(text, req, extra=d.get("unknown_terms")))
+    from app.modules.matching import vacancy_guard
+
+    req["vacancy_guard"] = vacancy_guard.assess_need_dict(req, text)
     return req
 
 
@@ -267,6 +271,17 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         v.filters = {**filters, META: meta}
         db.commit()
     st = [_result_status(r) for r in v.results]
+    from app.modules.matching import explain as explain_mod
+
+    enriched_results = [
+        {**r} if r.get("explain") else {**r, "explain": explain_mod.build_explain_from_result(r, v.requirements, ranking.WEIGHTS)}
+        for r in v.results
+    ]
+    explain_mod.annotate_selection_neighbors(enriched_results, v.requirements, ranking.WEIGHTS)
+    confirmed_n = sum(1 for x in st if x == "confirmed")
+    salary_cal = meta.get("salary_calibration") or explain_mod.compute_salary_calibration(
+        confirmed_n, v.requirements, recs[0].get("market_range") if recs else None
+    )
     return {
         "version": v.version, "parent_version": v.parent_version, "created_at": v.created_at.isoformat(),
         "filters": filters, "requirements": v.requirements, "algorithm": v.algorithm_version,
@@ -275,12 +290,16 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         "core": meta.get("core"),  # Я1: ядро роли версии (None — у потребности нет ядра или версия до Я1)
         # Я12б: добор ступенью выше (None — версия до match-v1.3); text — пояснение для работодателя
         "grade_above": meta.get("grade_above"),
+        "salary_calibration": salary_cal,
+        "rerank_diff": meta.get("rerank_diff"),
+        "t0_in_score": False,
+        "ranking_basis_ru": explain_mod.RANKING_BASIS_RU,
         "scope": _scope_out(db, v),  # Я10: что тест проверяет / НЕ проверяет и зонды по потребности (не меняет порядок)
         "weights": ranking.WEIGHTS, "levels": ranking.LEVELS, "provisional_penalty": ranking.PROVISIONAL_PENALTY,
         "categories": recs,
-        "total": len(v.results), "results": v.results,
+        "total": len(enriched_results), "results": enriched_results,
         # единая модель статуса: сколько в выдаче подтверждённых / предварительных / не подтверждённых
-        "confirmed_matched": sum(1 for x in st if x == "confirmed"),
+        "confirmed_matched": confirmed_n,
         "provisional_matched": sum(1 for x in st if x == "provisional"),
         "unconfirmed_matched": sum(1 for x in st if x == "unconfirmed"),
     }
@@ -488,7 +507,7 @@ class AdvisorIn(BaseModel):
 
 class AdvisorSpeechIn(BaseModel):
     text: str = Field("Краткий доклад по кандидатам.", min_length=1, max_length=1200, description="Текст реплики советника для озвучивания")
-    format: Literal["mp3", "pcm"] = Field("mp3", description="mp3 — аудио, pcm — pcm_s16le 16 кГц моно для липсинка Anam")
+    format: Literal["mp3", "pcm"] = Field("mp3", description="mp3 — аудио, pcm — pcm_s16le 16 кГц моно для синхронизации видеоаватара")
 
 
 @router.post("/needs/{need_id}/advisor", summary="ИИ-советник руководителя: ответ по сравниваемым кандидатам",
@@ -515,7 +534,7 @@ def need_advisor(need_id: uuid.UUID, data: AdvisorIn | None = None, user: User =
     return advisor.advise(db, c, n, refs, data.version, data.question)
 
 
-@router.post("/needs/{need_id}/advisor/avatar-token", summary="Сеансовый токен живого видеоаватара Anam для ИИ-советника руководителя",
+@router.post("/needs/{need_id}/advisor/avatar-token", summary="Сеансовый токен живого видеоаватара для ИИ-советника руководителя",
              responses={**AUTH, 404: err("Потребность не найдена"), 503: err("Аватар выключен или недоступен")})
 def need_advisor_avatar_token(need_id: uuid.UUID, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     from app.modules.interview import port as pt
@@ -528,7 +547,7 @@ def need_advisor_avatar_token(need_id: uuid.UUID, user: User = Depends(employer)
         raise api_error(503, "avatar_unavailable", "Аватар недоступен — доступны каналы «голос» и «текст»") from None
 
 
-@router.post("/needs/{need_id}/advisor/speech", summary="Озвучка реплики ИИ-советника руководителя (ElevenLabs mp3 или pcm_16000 для липсинка Anam)",
+@router.post("/needs/{need_id}/advisor/speech", summary="Озвучка реплики ИИ-советника руководителя (mp3 или pcm_16000 для синхронизации видеоаватара)",
              responses={**AUTH, 404: err("Потребность не найдена"), 503: err("Синтез речи недоступен")})
 def need_advisor_speech(need_id: uuid.UUID, data: AdvisorSpeechIn | None = None, user: User = Depends(employer),
                         db: Session = Depends(get_db)) -> Response:
@@ -559,12 +578,14 @@ def search_candidates(
     fsp: bool = Query(False, description="Только с паспортом ФСП"),
     confirmed: bool = Query(False, description="Только подтверждённый грейд: без «Junior (предварительно)» и без "
                                                "«грейд не подтверждён» (по умолчанию они показываются ниже подтверждённых)"),
+    real_only: bool = Query(False, description="Исключить модельные и синтетические профили (profiles.is_synthetic)"),
     limit: int = Query(30, ge=1, le=100), offset: int = Query(0, ge=0),
     user: User = Depends(employer), db: Session = Depends(get_db),
 ) -> dict:
     my_company(db, user)
     return ranking.search(db, direction=direction, grade=grade, category=category, stack=stack or None,
-                          stack_level=stack_level, fsp_only=fsp, limit=limit, offset=offset, confirmed_only=confirmed)
+                          stack_level=stack_level, fsp_only=fsp, limit=limit, offset=offset,
+                          confirmed_only=confirmed, real_only=real_only)
 
 
 @router.get("/categories", summary="Категории с числом видимых кандидатов и рыночным диапазоном", responses=AUTH)
@@ -615,8 +636,12 @@ def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
         core = core_skill.describe(b, req)  # Я1: «Основной язык роли — Go: не заявлен»
         if core:
             reasons = core_skill.annotate(reasons[:1] + [core_skill.reason(core)] + reasons[1:], core)
-        out["match"] = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons, "must": must,
-                        "core": core, "version": sv.version if sv is not None else None}
+        from app.modules.matching import explain as explain_mod
+
+        match_obj = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons, "must": must,
+                     "core": core, "version": sv.version if sv is not None else None}
+        match_obj["explain"] = explain_mod.build_explain_from_result({"card": out, **match_obj}, req, ranking.WEIGHTS)
+        out["match"] = match_obj
     until = cooldown_until(db, c.id, p.user_id)
     inv = db.scalars(select(Invitation).where(Invitation.company_id == c.id, Invitation.candidate_user_id == p.user_id)
                      .order_by(Invitation.created_at.desc())).all()
@@ -657,3 +682,41 @@ def candidate_pdf(ref: str, user: User = Depends(employer), db: Session = Depend
     pdf = render_profile(card(b, cats), contacts=contacts, audience="employer", passport=for_pdf(db, p.user_id))
     return Response(pdf, media_type="application/pdf",
                     headers={"Content-Disposition": f'attachment; filename="profile-{ref}.pdf"'})
+
+
+# ------------------------------------------------------------------ «Принесите свой набор» для жюри (А5)
+
+class BenchmarkUploadIn(BaseModel):
+    content: str = Field("", max_length=2_000_000, description="Содержимое файла JSON или CSV (до 2 МБ)")
+    format: Literal["json", "csv"] = Field("json", description="Формат файла: json или csv")
+    k: int = Field(5, ge=1, le=50, description="Размер топа для выдачи по каждой вакансии")
+
+
+def _sandbox_employer(user: User = Depends(require_role(UserRole.employer, UserRole.admin))) -> User:
+    from app.modules.jury import scope as jury_scope
+
+    if not jury_scope.key_of(user.email) or not user.is_demo:
+        raise api_error(403, "sandbox_required", "Откройте демо-песочницу жюри в роли работодателя")
+    return user
+
+
+@router.get("/benchmark/sample", summary="Образец набора жюри (JSON или CSV) для режима «Принесите свой набор»")
+def benchmark_sample(format: Literal["json", "csv"] = Query("json")) -> Response:
+    from app.modules.matching.bench_upload import sample_dataset_response
+
+    content, mime, fname = sample_dataset_response(format)
+    return Response(
+        content=content,
+        media_type=mime,
+        headers={"Content-Disposition": f'attachment; filename="{fname}"', "Cache-Control": "no-store"},
+    )
+
+
+@router.post("/benchmark/upload", summary="Ранжирование, метрики P@5/P@10/nDCG@10/MRR и объяснения на наборе жюри",
+             responses={**AUTH, 422: err("Некорректный формат набора данных")})
+def benchmark_upload(data: BenchmarkUploadIn, response: Response, user: User = Depends(_sandbox_employer)) -> dict:
+    from app.modules.matching.bench_upload import evaluate_uploaded_dataset
+
+    response.headers["Cache-Control"] = "no-store"
+    return evaluate_uploaded_dataset(data.content, data.format, data.k)
+

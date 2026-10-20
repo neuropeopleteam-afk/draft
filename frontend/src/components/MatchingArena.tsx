@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NB, num, pct, useApi } from "./ui";
 import { ScrollX } from "./A11y";
+import { MatchExplain, type MatchExplainData } from "./MatchExplain";
 
 /** KF4 «Арена метрик»: первый экран /validation — Драфт против поиска по резюме на одном мире со скрытой истиной
  *  (backend: app/modules/validation/matching_bench.py → data/matching_bench.json, пересчёт make bench) и точность
@@ -120,7 +121,89 @@ function RankingArena() {
         Пересчёт: <code>{data.command ?? "make bench"}</code>{data.generated_at ? ` · ${String(data.generated_at).slice(0, 10)}` : ""}.
       </p>
       <HhRadar />
+      <ExplainPreview />
     </div>
+  );
+}
+
+const SAMPLE_EXPLAIN: MatchExplainData = {
+  headline: "Backend — Middle · подтверждено 3 из 3 обязательных навыков",
+  summary: "Соответствие требованиям — 92 из 100. Подтверждено заданиями теста: Python, FastAPI, PostgreSQL. Есть профильные достижения в реестре ФСП.",
+  score100: 92,
+  rank: 1,
+  tier_label: "Полное покрытие обязательных навыков",
+  required_confirmed: 3,
+  required_total: 3,
+  t0_in_score: false,
+  ranking_basis_ru: "Ранжирование опирается только на подтверждённый грейд и навыки из теста (T1) и реестр ФСП (T2). Самоописание из резюме (T0) имеет вес 0 %.",
+  grade: {
+    title: "Backend — Middle",
+    status: "confirmed",
+    status_title: "Подтверждён на платформе",
+    text: "Оценка теста в категории — 88 из 100",
+    hint: "Вероятность соответствия грейду по адаптивному тесту — 94 %",
+  },
+  core: {
+    label: "Основной язык роли",
+    title: "Python",
+    state: "confirmed",
+    text: "подтверждён в 4 заданиях адаптивного теста",
+  },
+  skills_tested: [
+    { title: "Python", required: true, score_pct: 91, source: "Подтверждено заданиями теста", text: "Python (91 % в тесте)" },
+    { title: "FastAPI", required: true, score_pct: 86, source: "Подтверждено заданиями теста", text: "FastAPI (86 % в тесте)" },
+    { title: "PostgreSQL", required: true, score_pct: 84, source: "Подтверждено заданиями теста", text: "PostgreSQL (84 % в тесте)" },
+  ],
+  skills_fsp: [
+    { text: "Кубок России по спортивному программированию — 2-е место (продуктовое программирование)", relevance: "Прямое совпадение со стеком вакансии", source: "Подтверждено реестром ФСП" },
+  ],
+  skills_probes: [],
+  gaps: [
+    {
+      title: "Docker",
+      required: false,
+      state: "declared",
+      state_title: "Указан в анкете, тестом ещё не проверялся",
+      text: "Заявлен в резюме",
+      action: "Проверить коротким заданием по навыку «Docker»",
+    },
+  ],
+  breakdown: [
+    { key: "test", label: "Результат теста в категории", weight_pct: 40, raw_pct: 88, points100: 35.2 },
+    { key: "stack_required", label: "Обязательные навыки (по тесту)", weight_pct: 30, raw_pct: 100, points100: 30.0 },
+    { key: "stack_desired", label: "Желательные навыки", weight_pct: 10, raw_pct: 80, points100: 8.0 },
+    { key: "fsp", label: "Достижения в реестре ФСП", weight_pct: 10, raw_pct: 88, points100: 8.8 },
+    { key: "probe", label: "Короткие задания работодателя", weight_pct: 10, raw_pct: 100, points100: 10.0 },
+  ],
+  why_above_next: {
+    next_ref: "CND-002",
+    score_diff100: 11,
+    headline: "Выше кандидата №2 на 11 п. из 100: подтверждено больше обязательных навыков в тесте (3 против 2); выше результат адаптивного теста (+7 п.).",
+  },
+  offer_forecast: {
+    probability: null,
+    pct: null,
+    level: "high",
+    title: "Благоприятные факторы (процент не рассчитывается: мало данных о принятиях)",
+    factors: [
+      "Предложение в верхней трети рынка для категории (240 000 ₽ до вычета НДФЛ ≈ 208 800 ₽ на руки)",
+      "Формат работы совпадает с предпочтениями кандидата",
+      "Полное совпадение подтверждённого обязательного стека снижает риск отказа на техническом этапе",
+    ],
+    note: "Числовая вероятность принятия приглашения появится после накопления статистики ответов кандидатов.",
+  },
+};
+
+function ExplainPreview() {
+  return (
+    <details className="mt-4 rounded-2xl bg-brand-night/5 p-4 text-sm" data-testid="arena-explain-preview">
+      <summary className="cursor-pointer font-semibold text-brand-night">
+        Как работодатель видит карточку кандидата №1: объяснение выбора и сравнение с №2
+      </summary>
+      <div className="mt-3">
+        <MatchExplain explain={SAMPLE_EXPLAIN} />
+      </div>
+    </details>
   );
 }
 
