@@ -174,6 +174,9 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/me/fsp"): "candidate",
     ("POST", "/api/me/fsp/link"): "candidate",
     ("POST", "/api/me/fsp/registry-sync"): "candidate",
+    # А2: проверка и подтверждение достижений по официальным протоколам ФСП
+    ("POST", "/api/me/fsp/protocols/search"): "candidate",
+    ("POST", "/api/me/fsp/protocols/confirm"): "candidate",
     ("PUT", "/api/me/jury-mode"): ("candidate", {"candidate": 403}),  # только демо-учётки: живому кандидату 403
     ("GET", "/api/me/onboarding"): "candidate",
     ("PUT", "/api/me/onboarding"): "candidate",
@@ -382,6 +385,16 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/messages/unread"): "auth",
     ("GET", "/api/messages/{kind}/{tid}"): "thread_party",
     ("POST", "/api/messages/{kind}/{tid}"): "thread_party",
+    # А2: трёхсторонняя связь работодатель ↔ кандидат ↔ представитель ФСП (tw01)
+    ("GET", "/api/trio/meta"): "open",
+    ("GET", "/api/trio/unread"): ("auth", {"expert": 403, "jury_expert": 403}),
+    ("GET", "/api/trio/threads"): ("auth", {"expert": 403, "jury_expert": 403}),
+    ("GET", "/api/trio/eligible"): ("auth", {"admin": 403, "fsp_analyst": 403, "expert": 403, "jury_expert": 403, "jury_fsp": 403}),
+    ("POST", "/api/trio/threads"): ("auth", {"admin": 403, "fsp_analyst": 403, "expert": 403, "jury_expert": 403, "jury_fsp": 403}),
+    ("GET", "/api/trio/threads/{tid}"): ("auth404", {"employer_other": 404, "expert": 403, "jury_expert": 403, "jury_other_employer": 404, "jury_other_candidate": 404}),
+    ("POST", "/api/trio/threads/{tid}/messages"): ("auth404", {"employer_other": 404, "expert": 403, "jury_expert": 403, "jury_other_employer": 404, "jury_other_candidate": 404}),
+    ("POST", "/api/trio/threads/{tid}/consent"): "candidate_own404",
+    ("POST", "/api/trio/threads/{tid}/close"): ("auth404", {"employer_other": 404, "expert": 403, "jury_expert": 403, "jury_other_employer": 404, "jury_other_candidate": 404}),
     # ---------------------------------------------------------------- эксперт проверки ответов, панель разметки
     ("GET", "/api/expert/queue"): "expert",
     ("POST", "/api/expert/review"): "expert",
@@ -402,6 +415,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/fsp-cabinet/fsp-effect"): "fsp",
     ("GET", "/api/fsp-cabinet/cups"): "fsp",
     ("GET", "/api/fsp-cabinet/report"): "fsp",
+    ("GET", "/api/fsp-cabinet/regions"): "fsp",  # А2: карта талантов по регионам РФ
     ("GET", "/api/fsp-cabinet/export/{section}.csv"): "fsp",
     ("GET", "/api/admin/sus"): "admin",
     ("POST", "/api/admin/passports/{pid}/revoke"): ("admin", {"admin": OK404}),  # feat/passport; паспорт не создаётся
@@ -525,6 +539,25 @@ POLICY: dict[tuple[str, str], Policy] = {
     # А5: режим «Принесите свой набор» для жюри (подбор, метрики P@5/P@10/nDCG@10/MRR, объяснение, выгрузка CSV)
     ("GET", "/api/employer/benchmark/sample"): "open",
     ("POST", "/api/employer/benchmark/upload"): "sandbox_employer",
+    # ---------------------------------------------------------------- А1: восстановление пароля, поддержка, заявки на тариф, мини-админка
+    ("POST", "/api/auth/forgot"): "open",
+    ("POST", "/api/auth/reset"): "open",
+    ("GET", "/api/support"): "open",
+    ("POST", "/api/support"): "open",
+    ("GET", "/api/support/my"): "auth",
+    ("POST", "/api/tariffs/request"): "open",
+    ("GET", "/api/tariffs/requests/my"): "employer",
+    ("GET", "/api/admin/overview"): "admin",
+    ("GET", "/api/admin/funnel"): "admin",
+    ("GET", "/api/admin/users"): "admin",
+    ("POST", "/api/admin/users/status"): "admin",
+    ("GET", "/api/admin/companies"): "admin",
+    ("POST", "/api/admin/companies/tariff"): "admin",
+    ("GET", "/api/admin/requests"): "admin",
+    ("POST", "/api/admin/requests/tariff-resolve"): "admin",
+    ("POST", "/api/admin/requests/support-resolve"): "admin",
+    ("GET", "/api/admin/flags"): "admin",
+    ("POST", "/api/admin/flags"): "admin",
 }
 
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)

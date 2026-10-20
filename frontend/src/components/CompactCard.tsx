@@ -5,8 +5,9 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { GradeBadge } from "./GradeStatus";
 import { ScoreBox } from "./CandidateCard";
-import { range } from "./ui";
+import { DemoProfileBadge, range } from "./ui";
 import { FitBadge, type Fit } from "../pages/mutual/shared";
+import { MatchExplain } from "./MatchExplain";
 
 const SKILL = /^(Обязательно|Желательно): /;
 const skillName = (r: any) => String(r.requirement).replace(SKILL, "");
@@ -102,6 +103,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
             <GradeBadge s={c.status} claimed={c.claimed} />
+            <DemoProfileBadge c={c} />
             {c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
             {badge}
           </div>
@@ -118,6 +120,9 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
         <Line label="Риск" tone="text-amber-900" testid="compact-risk">{f.risks.length ? f.risks.join("; ") : "по подтверждённым данным не виден"}</Line>
         {f.salary && <Line label="Зарплата" tone="text-brand-plum" testid="compact-salary">{f.salary}{fit && fit.level !== "low" ? <span className="ml-2 align-middle"><FitBadge fit={fit} short /></span> : null}</Line>}
       </ul>
+      <div className="mt-2">
+        <MatchExplain explain={r.explain} candidate={c} score={r.score} reasons={r.reasons} must={r.must} core={r.core} needId={needId} candidateRef={r.ref} version={version} compact />
+      </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {/* аудит №2: после «Отправить приглашение» — «Приглашён ✓», кнопка неактивна */}
         <button type="button" className="btn-primary !px-4 !py-2 disabled:opacity-60" onClick={onInvite} disabled={sent} data-testid={sent ? "card-invited" : undefined}>{sent ? "Приглашён ✓" : "Пригласить"}</button>

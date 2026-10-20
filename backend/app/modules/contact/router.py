@@ -47,7 +47,11 @@ class CounterIn(BaseModel):
     salary_to: int = Field(gt=0, le=10_000_000, description="Встречная вилка «до», ₽ в месяц")
     salary_basis: Literal["gross", "net"] | None = Field(
         None, description="gross — до вычета НДФЛ, net — на руки; по умолчанию — как в приглашении")
-    comment: str | None = Field(None, max_length=1000, description="Почему такая вилка (необязательно)")
+    work_format: Literal["remote", "hybrid", "office", "any"] | None = Field(
+        None, description="Встречное условие по формату работы («Да, если…»)")
+    start_date: str | None = Field(
+        None, max_length=120, description="Встречное условие по сроку выхода или графику («Да, если…»)")
+    comment: str | None = Field(None, max_length=1000, description="Почему такая вилка или условие (необязательно)")
 
     @model_validator(mode="after")
     def _range(self):
@@ -149,7 +153,8 @@ def counter(inv_id: uuid.UUID, data: CounterIn, bg: BackgroundTasks, user: User 
             db: Session = Depends(get_db)) -> dict:
     i = _cand_inv(db, user, inv_id)
     basis = data.salary_basis or i.salary_basis or "gross"
-    svc.create_counter(db, i, user.id, data.salary_from, data.salary_to, basis, data.comment)
+    svc.create_counter(db, i, user.id, data.salary_from, data.salary_to, basis, data.comment,
+                       work_format=data.work_format, start_date=data.start_date)
     ref = db.get(CandidateProfile, user.id).public_ref
     r = svc.rng(data.salary_from, data.salary_to, basis)
     _tell(bg, _employer_of(db, i), f"Встречное предложение кандидата {ref}",

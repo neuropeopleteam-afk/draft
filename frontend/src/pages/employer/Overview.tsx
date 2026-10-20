@@ -1,11 +1,78 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Field, Stat, errText, useApi } from "../../components/ui";
+import { Alert, Field, Stat, cleanCompanyName, errText, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { CompanyTrustCard } from "../../integrations/Trust";
 import { InvitesLeft, PartnerBadge, useTariffsOn } from "./Tariffs";  // Я29: тариф и остаток приглашений
+import { HireRoi } from "./SquadDraft";
+
+function InvitationFunnelWidget({ invitations }: { invitations: any[] }) {
+  const now = Date.now();
+  const d30 = 30 * 86_400_000;
+  const cur = invitations.filter((i) => {
+    const t = i.created_at ? new Date(i.created_at).getTime() : now;
+    return now - t <= d30;
+  });
+  const prev = invitations.filter((i) => {
+    const t = i.created_at ? new Date(i.created_at).getTime() : 0;
+    return now - t > d30 && now - t <= 2 * d30;
+  });
+  const count = (arr: any[]) => ({
+    sent: arr.length,
+    viewed: arr.filter((i) => i.viewed_at || ["viewed", "accepted", "declined"].includes(i.status)).length,
+    accepted: arr.filter((i) => i.status === "accepted").length,
+    declined: arr.filter((i) => i.status === "declined").length,
+  });
+  const c = count(cur);
+  const p = count(prev);
+  const reasonsMap: Record<string, number> = {};
+  for (const i of invitations) {
+    if (i.status === "declined") {
+      const r = (i.decline_reason || "Без указания причины").trim();
+      reasonsMap[r] = (reasonsMap[r] || 0) + 1;
+    }
+  }
+  const topReasons = Object.entries(reasonsMap).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const stages = [
+    { key: "sent", label: "Отправлено", cur: c.sent, prev: p.sent },
+    { key: "viewed", label: "Просмотрено", cur: c.viewed, prev: p.viewed },
+    { key: "accepted", label: "Принято", cur: c.accepted, prev: p.accepted },
+    { key: "declined", label: "Отказ", cur: c.declined, prev: p.declined },
+  ];
+  return (
+    <section className="card mt-8 space-y-4" data-testid="employer-invite-funnel">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-bold text-brand-night">Воронка приглашений: последние 30 дней</h2>
+          <p className="text-xs text-brand-ink/65">Сравнение с предыдущими 30 днями и сводка причин отказов кандидатов</p>
+        </div>
+        <Link to="/employer/invitations" className="text-sm font-semibold text-brand hover:underline">Все приглашения →</Link>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {stages.map((s) => {
+          const diff = s.cur - s.prev;
+          return (
+            <div key={s.key} className="rounded-xl bg-[#FBF8FC] p-3 ring-1 ring-brand-night/5">
+              <p className="text-xs font-semibold text-brand-ink/65">{s.label}</p>
+              <p className="mt-1 text-xl font-extrabold tabular-nums text-brand-night">{s.cur}</p>
+              <p className="mt-0.5 text-[11px] text-brand-ink/60">
+                пред. 30 дн.: {s.prev} ({diff > 0 ? `+${diff}` : diff})
+              </p>
+            </div>
+          );
+        })}
+      </div>
+      {topReasons.length > 0 && (
+        <div className="rounded-xl bg-[#F3F2FB] px-3.5 py-2.5 text-xs text-brand-ink/80">
+          <b className="text-brand-night">Причины отказов:</b>{" "}
+          {topReasons.map(([r, n]) => `«${r}» (${n})`).join(" · ")}
+        </div>
+      )}
+    </section>
+  );
+}
 
 export default function EmployerOverview() {
   const { me } = useAuth();
@@ -26,7 +93,7 @@ export default function EmployerOverview() {
   const demoName = company?.name?.match(/^Демо жюри:\s*(.+)$/)?.[1];
   return (
     <div className="max-w-4xl">
-      <PageTitle title={demoName ? `Кабинет компании «${demoName.replace(/^«(.*)»$/, "$1")}»` : company?.name ?? "Кабинет работодателя"}
+      <PageTitle title={demoName ? `Кабинет компании «${demoName.replace(/^«(.*)»$/, "$1")}»` : cleanCompanyName(company?.name) || "Кабинет работодателя"}
         subtitle={demoName ? "Демо-компания для проверки" : "Проверенные кандидаты по категории — выходите на контакт первым."} />
       <div className="mt-3"><InvitesLeft compact /></div>
       {/* 1 → 2 → 4 колонки по ширине блока (index.css .stat-grid): в режиме жюри справа открыт проводник, и в 4 узкие
@@ -47,6 +114,17 @@ export default function EmployerOverview() {
         </div>
         <span className="btn shrink-0 bg-white text-brand-night group-hover:bg-brand-blush">Собрать звено →</span>
       </Link>
+      <InvitationFunnelWidget invitations={inv.data ?? []} />
+      <section className="mt-8 space-y-3" data-testid="employer-overview-roi">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold text-brand-night">Экономика найма</h2>
+            <p className="text-xs text-brand-ink/65">Расчёт экономии инженерных часов, снижения риска ошибочного найма и отказа от агентской комиссии</p>
+          </div>
+          <Link to="/employer/squad?tab=roi" className="text-sm font-semibold text-brand hover:underline">Открыть на весь экран →</Link>
+        </div>
+        <HireRoi />
+      </section>
       <section className="card mt-8">
         <h2 className="text-lg font-bold text-brand-night">С чего начать</h2>
         <ol className="mt-4 space-y-3">

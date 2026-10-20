@@ -3,9 +3,13 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthShell, FormError } from "../components/AuthShell";
 import { api, ApiError, type RegisterOut, type Role } from "../lib/api";
 import { FspIdMark } from "../integrations/FspId";
+import { useDemoUi } from "../lib/juryMode";
+import { usePageTitle } from "../lib/meta";
 import { Alert, errText, useApi } from "../components/ui";
 
 export default function Register() {
+  usePageTitle("Регистрация", "Создайте аккаунт работодателя или ИТ-специалиста на платформе подтверждённого найма «Драфт».");
+  const demoUi = useDemoUi();
   const [params] = useSearchParams();
   const [role, setRole] = useState<Role>(params.get("role") === "employer" ? "employer" : "candidate");
   const [form, setForm] = useState({ email: "", password: "", full_name: "", company_name: "" });
@@ -48,10 +52,11 @@ export default function Register() {
       title="Регистрация"
       lead={<>Уже есть аккаунт? <Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Войти</Link></>}
     >
-      {/* UX-2: жюри регистрироваться не нужно — одна строка со ссылкой на вход в один клик */}
-      <p className="mb-6 rounded-xl bg-[#F3F2FB] px-4 py-3 text-sm text-brand-night" data-testid="register-jury-hint">
-        Для проверки регистрироваться не нужно — <Link to="/" className="font-semibold text-brand hover:underline">на главной есть вход в один клик</Link>
-      </p>
+      {demoUi && (
+        <p className="mb-6 rounded-xl bg-[#F3F2FB] px-4 py-3 text-sm text-brand-night" data-testid="register-jury-hint">
+          Для проверки регистрироваться не нужно — <Link to="/demo" className="font-semibold text-brand hover:underline">в разделе «Демо для жюри» есть вход в один клик</Link>
+        </p>
+      )}
       <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-brand-blush/50 p-1" role="tablist" aria-label="Роль">
         {(["candidate", "employer"] as Role[]).map((r) => (
           <button key={r} type="button" role="tab" aria-selected={role === r} onClick={() => setRole(r)}
@@ -102,15 +107,14 @@ export default function Register() {
         <FormError message={error} />
         <button type="submit" className="btn-primary w-full" disabled={busy}>{busy ? "Отправляем…" : "Зарегистрироваться"}</button>
       </form>
-      <RegisterFspId role={role} />
+      <RegisterFspId role={role} showDemo={demoUi} />
     </AuthShell>
   );
 }
 
 interface FspConfig { enabled: boolean; demo_accounts: { username: string; title: string }[]; demo_password: string | null; note: string }
 
-/** UX-2: ФСП ID на регистрации — кнопка и одна строка, демо-учётки свёрнуты. Свой блок: FspIdLogin («Вход») не меняем. */
-function RegisterFspId({ role }: { role: Role }) {
+function RegisterFspId({ role, showDemo = false }: { role: Role; showDemo?: boolean }) {
   const { data } = useApi<FspConfig>("/fsp-id/config");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -130,7 +134,7 @@ function RegisterFspId({ role }: { role: Role }) {
       </button>
       <p className="text-center text-xs text-brand-ink/70">{data.enabled ? (role === "candidate" ? "Без пароля, достижения ФСП — сразу в паспорт." : "Без пароля: кабинет компании создадим при первом входе.") : "ФСП ID на этом сервере ещё не подключён."}</p>
       <Alert>{err}</Alert>
-      {data.demo_accounts.length > 0 && (
+      {showDemo && data.demo_accounts.length > 0 && (
         <details className="text-xs text-brand-night" data-testid="fsp-demo-accounts">
           <summary className="cursor-pointer text-center font-semibold text-brand-plum hover:text-brand">Демо-учётки ФСП ID</summary>
           <div className="mt-2 rounded-xl bg-[#F3F2FB] p-4 leading-relaxed">

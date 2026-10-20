@@ -87,12 +87,31 @@ def contacts_revealed(db: Session, company_id: uuid.UUID, candidate_id: uuid.UUI
     ).limit(1))
 
 
-def candidate_contacts(db: Session, candidate_id: uuid.UUID) -> dict:
+def candidate_contacts(db: Session, candidate_id: uuid.UUID, inv: Invitation | None = None) -> dict:
     p = db.get(CandidateProfile, candidate_id)
     u = db.get(User, candidate_id)
     if p.deleted_at is not None:  # кандидат удалил учётную запись («Мои данные»): контактов больше нет
-        return {"full_name": None, "email": None, "phone": None, "telegram": None}
-    return {"full_name": p.full_name, "email": u.email, "phone": p.phone, "telegram": p.telegram}
+        return {"full_name": None, "email": None, "phone": None, "telegram": None, "github": None}
+    if inv is None:
+        inv = db.scalar(select(Invitation).where(
+            Invitation.candidate_user_id == candidate_id,
+            Invitation.status == InvitationStatus.accepted,
+            Invitation.contacts_revealed_at.is_not(None),
+        ).order_by(Invitation.responded_at.desc()).limit(1))
+    allowed = (inv.employment_terms or {}).get("shared_contacts") if inv is not None else None
+    allow = set(allowed) if isinstance(allowed, list) and allowed else None
+    github = (p.privacy or {}).get("github")
+    out = {
+        "full_name": p.full_name if (allow is None or "full_name" in allow) else None,
+        "email": u.email if (allow is None or "email" in allow) else None,
+        "phone": p.phone if (allow is None or "phone" in allow) else None,
+        "telegram": p.telegram if (allow is None or "telegram" in allow) else None,
+    }
+    if github:
+        out["github"] = github if (allow is None or "github" in allow) else None
+    if allow is not None:
+        out["shared_contacts"] = list(allow)
+    return out
 
 
 def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, need: EmployerNeed | None) -> list[dict]:

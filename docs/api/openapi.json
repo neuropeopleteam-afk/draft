@@ -37,6 +37,28 @@
     "schemas": {
       "AcceptIn": {
         "properties": {
+          "shared_contacts": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "full_name",
+                    "email",
+                    "phone",
+                    "telegram",
+                    "github"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Выборочное согласие на открытие контактов (по умолчанию открываются все указанные в профиле)",
+            "title": "Shared Contacts"
+          },
           "slot_index": {
             "anyOf": [
               {
@@ -55,6 +77,138 @@
         "title": "AcceptIn",
         "type": "object"
       },
+      "AdminCompanyTariffIn": {
+        "properties": {
+          "company_id": {
+            "format": "uuid",
+            "title": "Company Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "plan": {
+            "enum": [
+              "start",
+              "hire",
+              "partner"
+            ],
+            "title": "Plan",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_id",
+          "plan"
+        ],
+        "title": "AdminCompanyTariffIn",
+        "type": "object"
+      },
+      "AdminFlagsIn": {
+        "properties": {
+          "jury_mode": {
+            "title": "Jury Mode",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "jury_mode"
+        ],
+        "title": "AdminFlagsIn",
+        "type": "object"
+      },
+      "AdminSupportResolveIn": {
+        "properties": {
+          "admin_reply": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Reply"
+          },
+          "status": {
+            "default": "resolved",
+            "enum": [
+              "resolved",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_id"
+        ],
+        "title": "AdminSupportResolveIn",
+        "type": "object"
+      },
+      "AdminTariffResolveIn": {
+        "properties": {
+          "action": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "admin_note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admin Note"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Целевая компания для подключения тарифа (обязательна при одобрении гостевой заявки без company_id)",
+            "title": "Company Id"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "action"
+        ],
+        "title": "AdminTariffResolveIn",
+        "type": "object"
+      },
       "AdminTwoFactorResetIn": {
         "properties": {
           "email": {
@@ -67,6 +221,41 @@
           "email"
         ],
         "title": "AdminTwoFactorResetIn",
+        "type": "object"
+      },
+      "AdminUserStatusIn": {
+        "properties": {
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserRole"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "AdminUserStatusIn",
         "type": "object"
       },
       "AdvisorIn": {
@@ -6937,13 +7126,96 @@
         "title": "ConciergeChatOut",
         "type": "object"
       },
+      "ConciergeEventIn": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "session_id": {
+            "maxLength": 64,
+            "minLength": 8,
+            "title": "Session Id",
+            "type": "string"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "text": {
+            "default": "",
+            "maxLength": 1200,
+            "title": "Text",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "open",
+              "say",
+              "step",
+              "close",
+              "mic",
+              "point"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "type"
+        ],
+        "title": "ConciergeEventIn",
+        "type": "object"
+      },
       "ConciergeSpeechIn": {
         "properties": {
           "format": {
             "default": "mp3",
             "enum": [
               "mp3",
-              "pcm"
+              "pcm",
+              "pcm24"
             ],
             "title": "Format",
             "type": "string"
@@ -6959,6 +7231,124 @@
           "text"
         ],
         "title": "ConciergeSpeechIn",
+        "type": "object"
+      },
+      "ConciergeTurnIn": {
+        "properties": {
+          "awaiting": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awaiting"
+          },
+          "current_path": {
+            "default": "/",
+            "maxLength": 200,
+            "title": "Current Path",
+            "type": "string"
+          },
+          "history": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 20,
+            "title": "History",
+            "type": "array"
+          },
+          "last_said": {
+            "default": "",
+            "maxLength": 600,
+            "title": "Last Said",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 1500,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "paused": {
+            "default": false,
+            "title": "Paused",
+            "type": "boolean"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "screen": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screen"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "step_id": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Id"
+          },
+          "touring": {
+            "default": false,
+            "title": "Touring",
+            "type": "boolean"
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Name"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ConciergeTurnIn",
         "type": "object"
       },
       "ConnectionIn": {
@@ -7258,6 +7648,46 @@
           "engine"
         ],
         "title": "ConversationOut",
+        "type": "object"
+      },
+      "CreateIn": {
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Первое сообщение (необязательно)",
+            "title": "Body"
+          },
+          "invitation_id": {
+            "format": "uuid",
+            "title": "Invitation Id",
+            "type": "string"
+          },
+          "topic": {
+            "default": "general",
+            "enum": [
+              "general",
+              "fsp_check",
+              "offer",
+              "dispute",
+              "internship",
+              "appeal"
+            ],
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invitation_id"
+        ],
+        "title": "CreateIn",
         "type": "object"
       },
       "CriterionIn": {
@@ -12055,6 +12485,43 @@
           }
         },
         "title": "FinishIn",
+        "type": "object"
+      },
+      "ForgotPasswordIn": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "ForgotPasswordIn",
+        "type": "object"
+      },
+      "ForgotPasswordOut": {
+        "properties": {
+          "dev_reset_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Только в режиме разработки (DEV_MODE)",
+            "title": "Dev Reset Code"
+          },
+          "sent": {
+            "default": true,
+            "title": "Sent",
+            "type": "boolean"
+          }
+        },
+        "title": "ForgotPasswordOut",
         "type": "object"
       },
       "FreshnessOut": {
@@ -17099,22 +17566,6 @@
         "title": "MeOut",
         "type": "object"
       },
-      "MessageIn": {
-        "properties": {
-          "body": {
-            "description": "До принятия приглашения — до 1000 символов, контакты в тексте маскируются",
-            "maxLength": 4000,
-            "minLength": 1,
-            "title": "Body",
-            "type": "string"
-          }
-        },
-        "required": [
-          "body"
-        ],
-        "title": "MessageIn",
-        "type": "object"
-      },
       "MessagePostedOut": {
         "additionalProperties": true,
         "properties": {
@@ -20733,6 +21184,75 @@
         "title": "ProposedSlot",
         "type": "object"
       },
+      "ProtocolConfirmIn": {
+        "properties": {
+          "consent_employers": {
+            "default": true,
+            "description": "Показывать подтверждённые достижения работодателям в карточке",
+            "title": "Consent Employers",
+            "type": "boolean"
+          },
+          "key_hashes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 25,
+            "minItems": 1,
+            "title": "Key Hashes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key_hashes"
+        ],
+        "title": "ProtocolConfirmIn",
+        "type": "object"
+      },
+      "ProtocolSearchIn": {
+        "properties": {
+          "birth_date": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Дата рождения (необязательно)",
+            "title": "Birth Date"
+          },
+          "fio": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ФИО (по умолчанию берётся из профиля кандидата)",
+            "title": "Fio"
+          },
+          "team": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Название команды (необязательно)",
+            "title": "Team"
+          }
+        },
+        "title": "ProtocolSearchIn",
+        "type": "object"
+      },
       "PublicShareOut": {
         "additionalProperties": true,
         "properties": {
@@ -21777,6 +22297,47 @@
         "title": "ResendCodeOut",
         "type": "object"
       },
+      "ResetPasswordIn": {
+        "properties": {
+          "code": {
+            "maxLength": 6,
+            "minLength": 6,
+            "pattern": "^\\d{6}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "new_password": {
+            "description": "Не менее 8 символов, буквы и цифры",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "code",
+          "new_password"
+        ],
+        "title": "ResetPasswordIn",
+        "type": "object"
+      },
+      "ResetPasswordOut": {
+        "properties": {
+          "ok": {
+            "default": true,
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "title": "ResetPasswordOut",
+        "type": "object"
+      },
       "RespondIn": {
         "properties": {
           "accept": {
@@ -21946,6 +22507,7 @@
             "default": "admin",
             "enum": [
               "integrity_annulled",
+              "appeal_revoked",
               "admin"
             ],
             "title": "Reason",
@@ -23996,6 +24558,65 @@
         "title": "SubscriptionsOut",
         "type": "object"
       },
+      "SupportTicketIn": {
+        "properties": {
+          "category": {
+            "default": "general",
+            "enum": [
+              "general",
+              "tariff",
+              "technical",
+              "privacy",
+              "partner"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Контактная почта (для вошедшего пользователя подставляется автоматически)",
+            "title": "Email"
+          },
+          "message": {
+            "maxLength": 4000,
+            "minLength": 5,
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "subject": {
+            "maxLength": 200,
+            "minLength": 3,
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "message"
+        ],
+        "title": "SupportTicketIn",
+        "type": "object"
+      },
       "SurveyIn": {
         "properties": {
           "belief": {
@@ -24635,6 +25256,81 @@
           "created_at"
         ],
         "title": "TalantixTokenOut",
+        "type": "object"
+      },
+      "TariffRequestIn": {
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "company_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Name"
+          },
+          "contact_email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Email"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "contact_phone": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
+          },
+          "plan": {
+            "default": "hire",
+            "enum": [
+              "hire",
+              "partner"
+            ],
+            "title": "Plan",
+            "type": "string"
+          }
+        },
+        "title": "TariffRequestIn",
         "type": "object"
       },
       "TaskRef": {
@@ -29437,7 +30133,7 @@
                 "type": "null"
               }
             ],
-            "description": "Почему такая вилка (необязательно)",
+            "description": "Почему такая вилка или условие (необязательно)",
             "title": "Comment"
           },
           "salary_basis": {
@@ -29469,6 +30165,37 @@
             "maximum": 10000000.0,
             "title": "Salary To",
             "type": "integer"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Встречное условие по сроку выхода или графику («Да, если…»)",
+            "title": "Start Date"
+          },
+          "work_format": {
+            "anyOf": [
+              {
+                "enum": [
+                  "remote",
+                  "hybrid",
+                  "office",
+                  "any"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Встречное условие по формату работы («Да, если…»)",
+            "title": "Work Format"
           }
         },
         "required": [
@@ -29476,6 +30203,22 @@
           "salary_to"
         ],
         "title": "CounterIn",
+        "type": "object"
+      },
+      "app__modules__contact__router__MessageIn": {
+        "properties": {
+          "body": {
+            "description": "До принятия приглашения — до 1000 символов, контакты в тексте маскируются",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "MessageIn",
         "type": "object"
       },
       "app__modules__contact__router__NoteIn": {
@@ -30411,6 +31154,21 @@
         ],
         "title": "ChooseIn",
         "type": "object"
+      },
+      "app__modules__trio__router__MessageIn": {
+        "properties": {
+          "body": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "MessageIn",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -30577,6 +31335,367 @@
         ]
       }
     },
+    "/api/admin/companies": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_companies_api_admin_companies_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_demo",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Demo",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Companies Api Admin Companies Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Список компаний и их текущих тарифов",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/companies/tariff": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_set_company_tariff_api_admin_companies_tariff_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCompanyTariffIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Set Company Tariff Api Admin Companies Tariff Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_not_found",
+                    "message": "Компания не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Компания не найдена (`company_not_found`). Коды `detail.code`: `company_not_found` — Компания не найдена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Включить или изменить тариф компании («Старт», «Найм», «Партнёр ФСП»)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/flags": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_get_flags_api_admin_flags_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Get Flags Api Admin Flags Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Состояние переключателей режима жюри и функций платформы",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_set_flags_api_admin_flags_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminFlagsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Set Flags Api Admin Flags Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Переключить демо-режим жюри (jury_mode) без перезапуска сервера",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/funnel": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_funnel_api_admin_funnel_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_demo",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Demo",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 14,
+              "maximum": 90,
+              "minimum": 7,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Funnel Api Admin Funnel Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Воронка продукта по дням на собственных данных платформы",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/overview": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_overview_api_admin_overview_get",
+        "parameters": [
+          {
+            "description": "Включать демо-учётки и демо-компании в воронку",
+            "in": "query",
+            "name": "include_demo",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Включать демо-учётки и демо-компании в воронку",
+              "title": "Include Demo",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Overview Api Admin Overview Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Сводка мини-админки: счётчики, заявки, флаги и воронка продукта",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/passports/{pid}/revoke": {
       "post": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
@@ -30654,6 +31773,199 @@
         "summary": "Отозвать паспорт решением администратора (аннулирование результата по проверке достоверности)",
         "tags": [
           "passport"
+        ]
+      }
+    },
+    "/api/admin/requests": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_requests_api_admin_requests_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Requests Api Admin Requests Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Все заявки на тарифы, партнёрство ФСП и обращения в поддержку",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/requests/support-resolve": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_resolve_support_ticket_api_admin_requests_support_resolve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSupportResolveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Resolve Support Ticket Api Admin Requests Support Resolve Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "ticket_not_found",
+                    "message": "Обращение не найдено"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Обращение не найдено (`ticket_not_found`). Коды `detail.code`: `ticket_not_found` — Обращение не найдено."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Ответить на обращение в поддержку и закрыть/решить его",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/requests/tariff-resolve": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_resolve_tariff_request_api_admin_requests_tariff_resolve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminTariffResolveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Resolve Tariff Request Api Admin Requests Tariff Resolve Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Заявка подана гостем без входа в кабинет: укажите целевую компанию (company_id) для подключения тарифа"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Для гостевой заявки без привязки к компании не указан `company_id` (`company_required`). Коды `detail.code`: `company_required` — Заявка подана гостем без входа в кабинет: укажите целевую компанию (company_id) для подключения тарифа."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "request_not_found",
+                    "message": "Заявка на тариф не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Заявка или компания не найдена (`request_not_found`, `company_not_found`). Коды `detail.code`: `request_not_found` — Заявка на тариф не найдена; `company_not_found` — Указанная компания не найдена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Одобрить (с включением тарифа компании) или отклонить заявку на тариф",
+        "tags": [
+          "admin"
         ]
       }
     },
@@ -30745,6 +32057,183 @@
         "summary": "Админка: все анкеты SUS (без ПДн: роль, контекст, ответы, балл, комментарий)",
         "tags": [
           "sus"
+        ]
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_users_api_admin_users_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_demo",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Demo",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Users Api Admin Users Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Список пользователей платформы",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/users/status": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
+        "operationId": "admin_user_status_api_admin_users_status_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUserStatusIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin User Status Api Admin Users Status Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "user_not_found",
+                    "message": "Пользователь не найден"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Пользователь не найден (`user_not_found`). Коды `detail.code`: `user_not_found` — Пользователь не найден."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "self_change",
+                    "message": "Нельзя заблокировать или снять права со своей учётной записи"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Нельзя заблокировать или понизить собственную учётку (`self_change`). Коды `detail.code`: `self_change` — Нельзя заблокировать или снять права со своей учётной записи."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Активация, блокировка или смена роли пользователя",
+        "tags": [
+          "admin"
         ]
       }
     },
@@ -34419,6 +35908,64 @@
         ]
       }
     },
+    "/api/auth/forgot": {
+      "post": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "forgot_password_api_auth_forgot_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForgotPasswordOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "too_many_requests",
+                    "message": "Слишком частые запросы. Повторите попытку позже. Повторите через …"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком частые запросы. Коды `detail.code`: `too_many_requests` — Слишком частые запросы. Повторите попытку позже. Повторите через …."
+          }
+        },
+        "summary": "Запрос кода восстановления пароля по почте (15 минут, без раскрытия наличия адреса)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/auth/login": {
       "post": {
         "description": "Вход по почте и паролю. Ответ — токен доступа (JWT): передавайте его в заголовке `Authorization: Bearer <токен>`. Если у учётной записи включён второй фактор, вместо токена приходит `second_factor_required` и промежуточный `pending_token` — завершите вход через `POST /api/auth/2fa/verify`.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
@@ -34634,6 +36181,80 @@
           }
         },
         "summary": "Повторная отправка кода подтверждения",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/reset": {
+      "post": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "reset_password_api_auth_reset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPasswordOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invalid_code",
+                    "message": "Неверный или просроченный код"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Неверный или просроченный код. Коды `detail.code`: `invalid_code` — Неверный или просроченный код."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "too_many_attempts",
+                    "message": "Слишком много попыток ввода кода. Попробуйте через час: новый код лимит не сбрасывает"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Превышено число попыток ввода кода. Коды `detail.code`: `too_many_attempts` — Слишком много попыток ввода кода. Попробуйте через час: новый код лимит не сбрасывает."
+          }
+        },
+        "summary": "Установка нового пароля по 6-значному коду из письма (до 5 попыток)",
         "tags": [
           "auth"
         ]
@@ -37838,7 +39459,7 @@
                 "example": {
                   "detail": {
                     "code": "counter_not_higher",
-                    "message": "Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение"
+                    "message": "Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение или укажите условие по формату/сроку"
                   }
                 },
                 "schema": {
@@ -37846,7 +39467,7 @@
                 }
               }
             },
-            "description": "Вилка не по правилам. Коды `detail.code`: `counter_not_higher` — Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение; `counter_too_far` — Встречное «от» — не выше … … (1,5 × «до» приглашения): иначе это уже другое предложение; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Вилка не по правилам. Коды `detail.code`: `counter_not_higher` — Встречная вилка не выше предложенной — если она вас устраивает, просто примите приглашение или укажите условие по формату/сроку; `counter_too_far` — Встречное «от» — не выше … … (1,5 × «до» приглашения): иначе это уже другое предложение; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
           }
         },
         "security": [
@@ -55975,6 +57596,73 @@
         ]
       }
     },
+    "/api/fsp-cabinet/regions": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "regions_api_fsp_cabinet_regions_get",
+        "parameters": [
+          {
+            "description": "Период, дней (по умолчанию — всё время)",
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 730,
+                  "minimum": 7,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Период, дней (по умолчанию — всё время)",
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Regions Api Fsp Cabinet Regions Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Карта талантов по регионам и федеральным округам РФ",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
     "/api/fsp-cabinet/report": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
@@ -57099,7 +58787,7 @@
             "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `avatar_unavailable` — Живой видеопоток временно недоступен — включён голосовой режим."
           }
         },
-        "summary": "Живой аватар ИИ-проводника Елены: токен сессии Anam с липсинком",
+        "summary": "Живой аватар ИИ-проводника Елены: токен сессии видеопотока с движением губ",
         "tags": [
           "interview"
         ]
@@ -57142,6 +58830,94 @@
           }
         },
         "summary": "Живой диалог с ИИ-проводником Еленой: знакомство по имени, выбор роли и ответы на вопросы",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/event": {
+      "post": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "concierge_event_api_interview_concierge_event_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConciergeEventIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "summary": "Событие разговора с Еленой для стенограммы: открытие, реплика обзора, шаг, закрытие",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/script": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "concierge_script_api_interview_concierge_script_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Concierge Script Api Interview Concierge Script Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "summary": "Сценарий обзора Елены: приветствие, реплики шагов, связки (голос — из кэша)",
         "tags": [
           "interview"
         ]
@@ -57192,7 +58968,7 @@
             "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `tts_unavailable` — Синтез речи временно недоступен."
           }
         },
-        "summary": "Голос ИИ-проводника Елены (ElevenLabs, mp3 или pcm для липсинка Anam)",
+        "summary": "Голос ИИ-проводника Елены (mp3 или PCM для живого аватара)",
         "tags": [
           "interview"
         ]
@@ -57262,7 +59038,42 @@
             "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `stt_unavailable` — Распознавание речи временно недоступно."
           }
         },
-        "summary": "Распознавание голоса собеседника для ИИ-проводника Елены (Deepgram Nova-2)",
+        "summary": "Распознавание голоса собеседника для ИИ-проводника Елены",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/turn": {
+      "post": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "concierge_turn_api_interview_concierge_turn_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConciergeTurnIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "summary": "Ход живого разговора с Еленой: решение и голос ответа одним потоком (NDJSON)",
         "tags": [
           "interview"
         ]
@@ -57925,7 +59736,7 @@
             "OAuth2PasswordBearer": []
           }
         ],
-        "summary": "Живой аватар: токен сессии Anam (INTERVIEW_ANAM_ENABLED)",
+        "summary": "Живой аватар: токен сессии видеопотока (INTERVIEW_ANAM_ENABLED)",
         "tags": [
           "interview"
         ]
@@ -58221,7 +60032,7 @@
     },
     "/api/interview/sessions/{session_id}/speech": {
       "get": {
-        "description": "format=pcm — pcm_s16le 16 кГц моно (audio/pcm) для живого аватара (Anam, передача звука); по умолчанию mp3.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "format=pcm — pcm_s16le 16 кГц моно (audio/pcm) для живого аватара (Anam, передача звука); по умолчанию mp3.\nformat=pcm24 — PCM 24 кГц потоком (первый звук ≈ 0,7 с): живой разговор без пауз, тот же голос, что у проводника.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "session_speech_api_interview_sessions__session_id__speech_get",
         "parameters": [
           {
@@ -58242,7 +60053,8 @@
               "default": "mp3",
               "enum": [
                 "mp3",
-                "pcm"
+                "pcm",
+                "pcm24"
               ],
               "title": "Format",
               "type": "string"
@@ -61090,7 +62902,7 @@
                 }
               }
             },
-            "description": "Согласие на обработку отзывается через удаление учётной записи. Коды `detail.code`: `use_account_deletion` — Согласие на обработку отзывается удалением учётной записи: Кабинет — Мои данные. Или напишите оператору: …."
+            "description": "Согласие на обработку отзывается через удаление учётной записи. Коды `detail.code`: `use_account_deletion` — Согласие на обработку отзывается удалением учётной записи: Кабинет — Мои данные. Или напишите оператору: …; `not_accepted` — Отозвать доступ можно только по принятому приглашению; `already_revoked` — Доступ к контактам уже отозван."
           },
           "422": {
             "content": {
@@ -61924,6 +63736,116 @@
           }
         ],
         "summary": "Указать ФСП ID (заглушка: сохраняется как заявленный, без проверки реестром)",
+        "tags": [
+          "candidate"
+        ]
+      }
+    },
+    "/api/me/fsp/protocols/confirm": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "confirm_fsp_protocols_api_me_fsp_protocols_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtocolConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Confirm Fsp Protocols Api Me Fsp Protocols Confirm Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Подтвердить выбранные достижения из официальных протоколов ФСП",
+        "tags": [
+          "candidate"
+        ]
+      }
+    },
+    "/api/me/fsp/protocols/search": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "search_fsp_protocols_api_me_fsp_protocols_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtocolSearchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Search Fsp Protocols Api Me Fsp Protocols Search Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Поиск достижений кандидата в индексе официальных протоколов ФСП",
         "tags": [
           "candidate"
         ]
@@ -63457,7 +65379,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MessageIn"
+                "$ref": "#/components/schemas/app__modules__contact__router__MessageIn"
               }
             }
           },
@@ -66070,6 +67992,131 @@
         ]
       }
     },
+    "/api/support": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "support_meta_api_support_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Support Meta Api Support Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Контакты службы поддержки и категории обращений (публично)",
+        "tags": [
+          "support"
+        ]
+      },
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "create_support_ticket_api_support_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportTicketIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Support Ticket Api Support Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "email_required",
+                    "message": "Укажите контактную почту для ответа"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не указана контактная почта (`email_required`) или неверные поля. Коды `detail.code`: `email_required` — Укажите контактную почту для ответа."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "too_many_requests",
+                    "message": "Слишком много обращений с вашего адреса. Повторите через час. Повторите через …"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком частые обращения (`too_many_requests`). Коды `detail.code`: `too_many_requests` — Слишком много обращений с вашего адреса. Повторите через час. Повторите через …."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Отправить обращение в службу поддержки (запись в БД и уведомление на почту поддержки)",
+        "tags": [
+          "support"
+        ]
+      }
+    },
+    "/api/support/my": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "my_support_tickets_api_support_my_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response My Support Tickets Api Support My Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Мои обращения в службу поддержки",
+        "tags": [
+          "support"
+        ]
+      }
+    },
     "/api/sus": {
       "post": {
         "description": "После входа — одна анкета на контекст (повтор заменяет прежнюю), не больше 5 отправок в час. Без входа — не больше 3 анкет в сутки с адреса; в сводке такие ответы идут отдельно.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
@@ -66425,6 +68472,738 @@
         "summary": "Тарифы работодателя: цены, лимиты, функции (публично)",
         "tags": [
           "tariffs"
+        ]
+      }
+    },
+    "/api/tariffs/request": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "create_tariff_request_api_tariffs_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TariffRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Tariff Request Api Tariffs Request Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Укажите название компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не указаны название компании (`company_required`) или контактная почта (`email_required`). Коды `detail.code`: `company_required` — Укажите название компании; `email_required` — Укажите контактную почту."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "too_many_requests",
+                    "message": "Слишком много заявок с вашего адреса. Повторите через час. Повторите через …"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком частые заявки (`too_many_requests`). Коды `detail.code`: `too_many_requests` — Слишком много заявок с вашего адреса. Повторите через час. Повторите через …."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Оставить заявку на подключение тарифа «Найм» или «Партнёр ФСП» (без автоподключения, включает админ)",
+        "tags": [
+          "tariffs"
+        ]
+      }
+    },
+    "/api/tariffs/requests/my": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "my_tariff_requests_api_tariffs_requests_my_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response My Tariff Requests Api Tariffs Requests My Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Заявки моей компании на подключение тарифов",
+        "tags": [
+          "tariffs"
+        ]
+      }
+    },
+    "/api/trio/eligible": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "eligible_api_trio_eligible_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Eligible Api Trio Eligible Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал не найден или недоступен"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Приглашения, по которым можно открыть канал с ФСП",
+        "tags": [
+          "trio"
+        ]
+      }
+    },
+    "/api/trio/meta": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "meta_api_trio_meta_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Meta Api Trio Meta Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Темы канала и правила трёхсторонней связи",
+        "tags": [
+          "trio"
+        ]
+      }
+    },
+    "/api/trio/threads": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "threads_api_trio_threads_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Threads Api Trio Threads Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал не найден или недоступен"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Мои трёхсторонние каналы",
+        "tags": [
+          "trio"
+        ]
+      },
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "create_api_trio_threads_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Api Trio Threads Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invitation_not_found",
+                    "message": "Приглашение не найдено"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал не найден или недоступен. Коды `detail.code`: `invitation_not_found` — Приглашение не найдено."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "trio_closed",
+                    "message": "Канал закрыт — только чтение"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал по этому приглашению уже есть. Коды `detail.code`: `trio_closed` — Канал закрыт — только чтение; `trio_pending` — Кандидат ещё не согласился подключить ФСП."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "message_empty",
+                    "message": "Напишите сообщение"
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `message_empty` — Напишите сообщение."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "messages_rate",
+                    "message": "Слишком много сообщений подряд — попробуйте через несколько минут"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `messages_rate` — Слишком много сообщений подряд — попробуйте через несколько минут."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Подключить представителя ФСП к приглашению",
+        "tags": [
+          "trio"
+        ]
+      }
+    },
+    "/api/trio/threads/{tid}": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "get_thread_api_trio_threads__tid__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Thread Api Trio Threads  Tid  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "trio_not_found",
+                    "message": "Канал не найден"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал не найден или недоступен. Коды `detail.code`: `trio_not_found` — Канал не найден."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Канал и сообщения",
+        "tags": [
+          "trio"
+        ]
+      }
+    },
+    "/api/trio/threads/{tid}/close": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "close_api_trio_threads__tid__close_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Close Api Trio Threads  Tid  Close Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "trio_not_found",
+                    "message": "Канал не найден"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал не найден или недоступен. Коды `detail.code`: `trio_not_found` — Канал не найден."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Закрыть канал (дальше только чтение)",
+        "tags": [
+          "trio"
+        ]
+      }
+    },
+    "/api/trio/threads/{tid}/consent": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "consent_api_trio_threads__tid__consent_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Consent Api Trio Threads  Tid  Consent Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "trio_not_found",
+                    "message": "Канал не найден"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал не найден или недоступен. Коды `detail.code`: `trio_not_found` — Канал не найден."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Кандидат соглашается подключить ФСП",
+        "tags": [
+          "trio"
+        ]
+      }
+    },
+    "/api/trio/threads/{tid}/messages": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "post_message_api_trio_threads__tid__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tid",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__trio__router__MessageIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Post Message Api Trio Threads  Tid  Messages Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "trio_not_found",
+                    "message": "Канал не найден"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал не найден или недоступен. Коды `detail.code`: `trio_not_found` — Канал не найден."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "trio_closed",
+                    "message": "Канал закрыт — только чтение"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал закрыт или ждёт согласия кандидата. Коды `detail.code`: `trio_closed` — Канал закрыт — только чтение; `trio_pending` — Кандидат ещё не согласился подключить ФСП."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "message_empty",
+                    "message": "Напишите сообщение"
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `message_empty` — Напишите сообщение."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "messages_rate",
+                    "message": "Слишком много сообщений подряд — попробуйте через несколько минут"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много сообщений. Коды `detail.code`: `messages_rate` — Слишком много сообщений подряд — попробуйте через несколько минут."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Написать в канал",
+        "tags": [
+          "trio"
+        ]
+      }
+    },
+    "/api/trio/unread": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "unread_api_trio_unread_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Unread Api Trio Unread Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Канал не найден или недоступен"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Число трёхсторонних каналов, требующих внимания или согласия",
+        "tags": [
+          "trio"
         ]
       }
     },
@@ -69881,6 +72660,18 @@
     {
       "description": "Тарифы работодателя: «Старт» (бесплатно), «Найм» (цена по запросу, демо-счёт без суммы), «Партнёр ФСП» (выдаёт ФСП); лимит приглашений в месяц. Кандидатам всегда бесплатно. Без TARIFFS_ENABLED — 404 tariffs_disabled.",
       "name": "tariffs"
+    },
+    {
+      "description": "Трёхсторонняя связь по приглашению: работодатель ↔ кандидат ↔ представитель ФСП (согласие кандидата, маскировка контактов до принятия)",
+      "name": "trio"
+    },
+    {
+      "description": "Служба поддержки и обратная связь (/support): приём обращений и история своих заявок",
+      "name": "support"
+    },
+    {
+      "description": "Мини-админка (/admin): пользователи, компании, заявки на тарифы и партнёрство, обращения, флаги и воронка продукта",
+      "name": "admin"
     }
   ]
 }

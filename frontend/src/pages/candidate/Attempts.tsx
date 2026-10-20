@@ -4,6 +4,7 @@ import { AttemptsCompare, type Comparison } from "../../components/AttemptsCompa
 import { Alert, DIRECTION_TITLES, Empty, GRADE_TITLE_ALL, Loading, dtt, num, signed, useApi } from "../../components/ui";
 import { DefensePanel } from "../../components/Interview";  // Я15: устная защита последней попытки (шаг проводника)
 import { IntegrityBadge } from "../../components/IntegrityBadge";  // KF2: паспорт честности попытки (5 контуров)
+import { TaskAppealButton } from "../../components/TaskAppeal";
 
 /** Две попытки теста рядом (И26): θ ± погрешность, точность, грейд и статус, время, повторы заданий, что изменилось. */
 
@@ -55,6 +56,12 @@ export default function Attempts() {
       {/* KF2: паспорт честности последней попытки; при двух попытках — у каждой в сравнении (AttemptsCompare) */}
       {items.length > 0 && (items.length < 2 || !cmp) && <IntegrityBadge sessionId={items[items.length - 1].id} />}
       {items.length > 0 && <DefensePanel sessionId={items[items.length - 1].id} live="manual" />}
+      {items.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-night/10 bg-[#F7F6FB] px-4 py-3 text-sm">
+          <span className="text-brand-ink/75">Возник вопрос по условию или оценке задания последней попытки?</span>
+          <TaskAppealButton sessionId={items[items.length - 1].id} direction={data.direction} grade={items[items.length - 1].claimed_grade} />
+        </div>
+      )}
       {items.length < 2 ? (
         <Empty title={items.length ? "Пока одна попытка" : "Попыток ещё нет"}
           text={items.length ? "Сравнение появится после второй завершённой попытки в этом направлении." : "Пройдите тест — затем повторите его, чтобы увидеть две попытки рядом."}

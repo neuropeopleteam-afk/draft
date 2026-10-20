@@ -7,28 +7,39 @@ type Mode = "pending" | "llm" | "reviewed";
 const FORMAT: Record<string, string> = { open_answer: "Развёрнутый ответ", open_book_3step: "Open book, шаг 3 — объяснение" };
 const MARKS = [{ v: 0, t: "0 — нет" }, { v: 0.5, t: "0,5 — частично" }, { v: 1, t: "1 — полностью" }];
 
-/** Экран эксперта: развёрнутые ответы «на проверке» и выборочная проверка оценок LLM — по рубрике. */
+/** Экран эксперта-методиста: развёрнутые ответы «на проверке» и выборочная проверка оценок ИИ — по рубрике. */
 export default function Expert() {
   const [mode, setMode] = useState<Mode>("pending");
   const [tick, setTick] = useState(0);
   const { data, error, loading } = useApi<any>(`/expert/queue?mode=${mode}`, [mode, tick]);
   const agr = useApi<any>("/expert/agreement", [tick]);
+
   return (
     <div className="max-w-4xl">
-      <PageTitle title="Проверка развёрнутых ответов"
-        subtitle="Ответ оценивается по каждому критерию рубрики: 0, 0,5 или 1 — с весами критериев. Оценка эксперта сразу входит в результат теста; грейд принудительно не понижается." />
+      <PageTitle
+        title="Проверка развёрнутых ответов"
+        subtitle="Ответ оценивается по каждому критерию рубрики: 0, 0,5 или 1 — с весами критериев. Оценка эксперта сразу входит в результат теста; грейд принудительно не понижается."
+      />
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <Seg label="Очередь" value={mode} onChange={setMode} options={[
           { id: "pending", title: `На проверке${data?.counts ? ` · ${data.counts.pending}` : ""}` },
-          { id: "llm", title: `Проверка LLM вслепую${data?.counts ? ` · ${data.counts.llm}` : ""}` },
+          { id: "llm", title: `Калибровка ИИ вслепую${data?.counts ? ` · ${data.counts.llm}` : ""}` },
           { id: "reviewed", title: `Проверено${data?.counts ? ` · ${data.counts.reviewed}` : ""}` },
         ]} />
-        {agr.data?.n > 0 && <p className="text-sm text-brand-ink/70">Согласие LLM и экспертов: {agr.data.n} пар, средняя разница {agr.data.mae}, в пределах 0,25 — {Math.round(agr.data.within_025 * 100)} %</p>}
+        {agr.data?.n > 0 && (
+          <p className="text-sm text-brand-ink/70">
+            Согласие с экспертной панелью: {agr.data.n} пар, средняя разница {agr.data.mae}, в пределах 0,25 — {Math.round(agr.data.within_025 * 100)} %
+          </p>
+        )}
       </div>
-      {mode === "llm" && <p className="mt-3 text-sm text-brand-ink/70">Ответы, которые уже оценил LLM. Балл модели скрыт, пока вы не поставите свой, — так считается честное согласие для выбора модели оценщика.</p>}
+      {mode === "llm" && (
+        <p className="mt-3 text-sm text-brand-ink/70">
+          Ответы, которые уже оценены автоматически. Балл системы скрыт, пока вы не выставите собственный по критериям рубрики, — так измеряется несмещённое согласие эксперта и модели.
+        </p>
+      )}
       <div className="mt-6 space-y-5">
         {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.items?.length
-          ? <Empty title={mode === "pending" ? "Очередь пуста" : "Пока ничего нет"} text={mode === "pending" ? "Все развёрнутые ответы оценены. Ответ попадает сюда, если LLM не смог его оценить." : undefined} />
+          ? <Empty title={mode === "pending" ? "Очередь пуста" : "Пока ничего нет"} text={mode === "pending" ? "Все развёрнутые ответы оценены. Ответ попадает сюда при расхождении двух оценок или срабатывании защитного фильтра." : undefined} />
           : data.items.map((it: any) => <ReviewItem key={`${it.session_id}-${it.token}-${it.part}`} it={it} mode={mode} onDone={() => setTick((x) => x + 1)} />)}
       </div>
     </div>
@@ -58,13 +69,13 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
         <span className="chip">{FORMAT[it.format] ?? it.format}</span>
         <span className="text-brand-ink/65">Кандидат {it.candidate_ref ?? "—"} · {DIRECTION_TITLES[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
         {it.session_status === "finished" && it.status === "pending" && <span className="chip bg-brand-blush text-brand-plum">результат предварительный</span>}
-        {it.llm?.second && <span className="chip bg-[#ECEAF8] text-brand-night" title={`Причины второй оценки: ${(it.llm.checks ?? []).join(", ")}`}>Две оценки: {it.llm.model_label ?? "LLM"} {num(it.llm.scores?.[0])} · {it.llm.second.model_label ?? "вторая"} {it.llm.second.score == null ? "—" : num(it.llm.second.score)}{it.llm.error === "graders_disagree" || it.llm.second.verdict === "disagree" ? " — разошлись" : ""}{it.llm.second.status === "pending" ? " — вторая оценка выполняется" : it.llm.second.after_finish ? " (вторая — в фоне, после итога теста)" : ""}</span>}
-        {it.llm?.error === "prompt_injection_suspected" && <span className="chip bg-brand-night text-white" title={it.llm.injection_note ?? undefined}>Похоже на инструкции оценщику — LLM не вызывался</span>}
+        {it.llm?.second && <span className="chip bg-[#ECEAF8] text-brand-night" title={`Причины второй оценки: ${(it.llm.checks ?? []).join(", ")}`}>Две оценки: {it.llm.model_label ?? "модель 1"} {num(it.llm.scores?.[0])} · {it.llm.second.model_label ?? "модель 2"} {it.llm.second.score == null ? "—" : num(it.llm.second.score)}{it.llm.error === "graders_disagree" || it.llm.second.verdict === "disagree" ? " — разошлись" : ""}{it.llm.second.status === "pending" ? " — вторая оценка выполняется" : it.llm.second.after_finish ? " (вторая — в фоне, после итога теста)" : ""}</span>}
+        {it.llm?.error === "prompt_injection_suspected" && <span className="chip bg-brand-night text-white" title={it.llm.injection_note ?? undefined}>Подозрение на инструкцию оценщику — передано методисту</span>}
       </div>
       <p className="mt-3 whitespace-pre-line font-semibold leading-relaxed text-brand-night">{it.stem}</p>
       {it.code && <pre tabIndex={0} aria-label="Код задания" className="mt-3 max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{it.code}</code></pre>}
       {it.step_prompt && <p className="mt-3 rounded-xl bg-brand-blush/30 px-4 py-3 text-sm font-semibold text-brand-night">{it.step_prompt}</p>}
-      {it.llm?.injection_note && <div className="mt-3"><Alert kind="info">{it.llm.injection_note} Оцените ответ по рубрике как обычно: попытка повлиять на оценщика уже учтена в «достоверности результата».</Alert></div>}
+      {it.llm?.injection_note && <div className="mt-3"><Alert kind="info">{it.llm.injection_note} Оцените ответ по рубрике как обычно: попытка повлиять на оценщика уже учтена в индексе самостоятельности.</Alert></div>}
       <div className="mt-4">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Ответ кандидата</p>
         <p className="mt-1 whitespace-pre-line rounded-xl border border-brand-night/10 bg-white p-3 text-sm leading-relaxed text-brand-ink">{it.answer || "— пустой ответ —"}</p>
@@ -73,7 +84,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
         <details className="mt-3 rounded-xl bg-[#F3F2FB] p-3 text-sm">
           <summary className="cursor-pointer font-semibold text-brand-night">Эталоны: сильный, средний, слабый ответ</summary>
           {(["strong", "medium", "weak"] as const).map((k) => it.rubric[k] && (
-            <p key={k} className="mt-2 text-brand-ink/80"><b>{{ strong: "Сильный", medium: "Средний", weak: "Слабый" }[k]}:</b> {it.rubric[k]}</p>))}
+            <p key={k} className="mt-2 text-brand-ink/80\"><b>{{ strong: "Сильный", medium: "Средний", weak: "Слабый" }[k]}:</b> {it.rubric[k]}</p>))}
           {it.rubric.scoring_notes && <p className="mt-2 text-xs text-brand-ink/65">{it.rubric.scoring_notes}</p>}
         </details>
       )}
@@ -99,8 +110,8 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
       </div>
       {(res || mode === "reviewed") && (
         <div className="mt-3"><Alert kind="ok">
-          {res?.review?.applied || it.method === "expert" ? "Оценка эксперта вошла в результат теста." : "Оценка сохранена рядом с оценкой LLM."}
-          {(res?.review?.llm_score ?? it.llm?.score) != null && ` Балл ${it.llm?.model_label ?? "LLM"}: ${num(Number(res?.review?.llm_score ?? it.llm?.score))}.`}
+          {res?.review?.applied || it.method === "expert" ? "Оценка эксперта вошла в результат теста." : "Оценка сохранена рядом с оценкой модели."}
+          {(res?.review?.llm_score ?? it.llm?.score) != null && ` Балл ${it.llm?.model_label ?? "модели"}: ${num(Number(res?.review?.llm_score ?? it.llm?.score))}.`}
           {res?.recomputed && ` Результат пересчитан: θ = ${signed(res.theta)}, грейд ${res.confirmed ? "подтверждён" : "не подтверждён"}.`}
           {res && <button className="ml-2 font-semibold underline" onClick={onDone}>Обновить очередь</button>}
         </Alert></div>
