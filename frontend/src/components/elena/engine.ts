@@ -545,7 +545,7 @@ export class ElenaEngine {
       void this.runTour({ ids: TRACKS[track], track, i: stepIndex, b: 0 }, ep, { bridge: true, named: true });
       return;
     }
-    const mic = this.listener?.getState() ?? "error";
+    const mic: MicState = this.d.fakeMic ? "on" : this.listener?.getState() ?? "error";
     if (mic === "denied" || mic === "nodevice" || mic === "error") {
       this.noMic = true;
       this.set({ phase: "greeting" });
@@ -1259,7 +1259,7 @@ export class ElenaEngine {
       this.pos = { ids, track, i, b: b0 };
       this.curStep = step.id;
       this.prefetchFrom(ids, i + 1);
-      this.set({ phase: "touring", track, stepNo: track ? i + 1 : 0, stepTotal: track ? ids.length : 0 });
+      this.set({ phase: "touring", track, stepNo: track ? i + 1 : 0, stepTotal: track ? ids.length : 0, target: null, click: null });
       let bridge = prevCab !== step.cabinet ? this.bridgeText(step.cabinet, firstBridge, !!opts.named) : null;
       if (bridge) firstBridge = false;   // главная без связки — «Начнём со стороны кандидата» звучит на первом кабинете
       if (i === start.i) {
