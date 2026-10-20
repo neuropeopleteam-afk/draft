@@ -846,6 +846,7 @@ def extract_name(text: str, current_name: str | None = None, asked: bool = False
             return _cap(cand)
     if current_name:
         return current_name
+    t = re.sub(r"^\s*(?:настя|анастасия|настенька)[,.!\s]+", "", t, flags=re.I)   # «Настя, Алексей» — обращение к ней, имя дальше
     m = _SIMPLE_NAME_RE.match(t)
     if m:
         cand = m.group(1).strip()
@@ -1025,6 +1026,9 @@ CMD_PAUSE = re.compile(r"^(?:ой\s+)?(?:стоп|пауза|подожди(?:т
                        r"остановитесь|замолчи|тише|хватит пока|не так быстро|постой(?:те)?|стой(?:те)?)\b")
 CMD_RESUME = re.compile(r"^(?:ну\s+|да\s+|давай(?:те)?\s+)?(?:дальше|продолжа\w*|продолжим|поехали|вперёд|вперед|следующ\w*|"
                         r"давай(?:те)? дальше|идём дальше|идем дальше|едем дальше)\b")
+CONT_YES = re.compile(r"^(?:да|ага|угу|конечно|всё|все|понятно|ясно|хорошо|ок|окей|ладно|давай|давайте|продолжаем|продолжай|продолжайте|"
+                      r"продолжим|дальше|идём|идем|поехали|вперёд|вперед|спасибо)(?:[,.!\s]+(?:да|всё|все|понятно|ясно|дальше|продолжаем|"
+                      r"продолжай|продолжайте|продолжим|давай|давайте|поехали|спасибо|идём|идем|конечно|хорошо|ок|окей))*[.!]*$")
 CMD_REPEAT = re.compile(r"\b(?:повтори(?:те)?|ещё раз|еще раз|не расслышал\w*|что ты сказала|что вы сказали)\b")
 CMD_BACK = re.compile(r"^(?:назад|вернись|вернитесь|верни(?:те)?|предыдущ\w*|обратно)\b")
 CMD_BYE = re.compile(r"\b(?:до свидания|пока пока|закончим|заканчива\w*|заверш\w*|выключ\w*|закрой\w*|спасибо[, ]+всё|"
@@ -1215,6 +1219,9 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     if awaiting in ("continue", "detour") and words_n <= 5 and CMD_NO.search(t_norm):
         ack("instant")
         return {**base, "kind": "instant", "action": "pause", "phrase": "no_more"}
+    if awaiting == "continue" and words_n <= 5 and CONT_YES.search(t_norm):
+        ack("instant")   # «Всё понятно? Идём дальше?» — «понятно», «да, дальше», «всё ясно» — продолжаем
+        return {**base, "kind": "instant", "action": "resume"}
     if (touring or paused) and words_n <= 7 and CMD_SKIP.search(t_norm):
         ack("instant")
         nxt = brain.next_section(step_id)
