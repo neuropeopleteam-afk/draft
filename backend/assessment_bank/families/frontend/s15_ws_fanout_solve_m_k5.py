@@ -1,0 +1,11 @@
+"""frontend.ws_fanout.principal_solve_m_k5 — mcq_concept (Principal). Поток сообщений WebSocket на узел чата — обратная задача: наибольший допустимый вход «сообщений в минуту на пользователя» с учётом: фан-аут, служебные события, деление по узлам, запас узла, heartbeat.
+
+Модель предметной области (MODEL: answer, traps, fmt, brute), ловушки и тексты — базовая модель
+«ws_fanout» в families/_w2010_scale_cat_frontend.py, ступень 5 из 5, обратная задача по «m»;
+текст модели семейства собирает _w2010_scale_defs.model_source, генерация — _w2010_kit.numeric_variant.
+"""
+from assessment_bank.families._w2010_scale_defs import make
+
+FAMILY_ID = "frontend.ws_fanout.principal_solve_m_k5"
+N_ABOVE = (0, 1, 2, 3)  # при каком числе ловушек «выше ключа» подбор выполним (пробная выборка генератора волны)
+generate = make(FAMILY_ID, N_ABOVE)

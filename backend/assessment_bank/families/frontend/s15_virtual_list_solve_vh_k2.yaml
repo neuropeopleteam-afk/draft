@@ -1,0 +1,45 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: frontend.virtual_list.junior_solve_vh_k2
+title: 'Число DOM-узлов виртуализированного списка — обратная задача: наибольший допустимый вход «высота окна, px» с учётом:
+  overscan, ячейки в строке'
+direction: frontend
+skills:
+- react
+- virtualization
+- dom
+- web_performance
+target_grades:
+- junior
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - cols_plus1
+    - dpr
+    - floor
+    - half
+    - no_cols
+    - no_overscan
+    - overscan_4
+    - overscan_one
+    construct: 'Виртуализация: видимые строки ⌈высота окна / высота строки⌉ + overscan, затем ячейки и узлы. Ступень 2 из
+      5: взаимодействуют 2 поправочных фактора(ов) (overscan; ячейки в строке); обратная задача: наибольший вход «высота окна,
+      px» на сетке с шагом 20, при котором бюджет DOM будет соблюдён.'
+    wave: 20.10-S
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.35
+  a: 1.45
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Виртуализация: видимые строки ⌈высота окна / высота строки⌉ + overscan, затем
+    ячейки и узлы; 2 взаимодействующих фактора(ов) (overscan, ячейки в строке), обратная задача: наибольший вход «высота окна,
+    px» на сетке с шагом 20, при котором бюджет DOM будет соблюдён. Грейд Junior (b -0,35 по числу факторов и направлению
+    вопроса: прямой расчёт легче обратной задачи; волна 20.10-S, без калибровки панелью). σ 0,3'
+generator: assessment_bank.families.frontend.s15_virtual_list_solve_vh_k2
+version: 1
+description: 'Junior: число DOM-узлов виртуализированного списка — обратная задача: наибольший вход «высота окна, px» на сетке
+  с шагом 20, при котором бюджет DOM будет соблюдён. 2 фактора(ов): overscan, ячейки в строке. Ключ — исполнением модели (точные
+  дроби), для обратной задачи — ещё и линейным перебором сетки.'
