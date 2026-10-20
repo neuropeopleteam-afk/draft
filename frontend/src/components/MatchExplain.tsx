@@ -36,16 +36,16 @@ export interface ExplainWhyAboveNext {
 }
 
 export interface ExplainOfferForecast {
-  probability: number;
-  pct: number;
-  level: "high" | "medium" | "low";
+  probability?: number | null;
+  pct?: number | null;
+  level: "high" | "medium" | "low" | "insufficient_data" | string;
   title: string;
   factors?: string[];
   note: string;
 }
 
 export interface SalaryCalibrationInfo {
-  status: "not_set" | "below_market" | "below_median" | "competitive";
+  status: "not_set" | "below_market" | "below_median" | "competitive" | "insufficient_data" | string;
   current_top?: number | null;
   current_top_net?: number | null;
   recommended_to?: number | null;
@@ -112,13 +112,14 @@ export interface VacancyGuardData {
     text: string;
   } | null;
   responsibility?: {
-    score: number;
-    level: "high" | "medium" | "low";
+    score?: number | null;
+    level: "high" | "medium" | "low" | "insufficient_data" | string;
     badge: string;
-    response_rate_pct: number;
-    median_response_hours: number;
-    realistic_salary_pct: number;
-    cancelled_invitations_pct: number;
+    response_rate_pct?: number | null;
+    median_response_hours?: number | null;
+    realistic_salary_pct?: number | null;
+    cancelled_invitations_pct?: number | null;
+    events_count?: number;
     summary: string;
   } | null;
 }
@@ -145,6 +146,7 @@ const FORECAST_STYLES: Record<string, string> = {
   high: "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-600/20",
   medium: "bg-amber-50 text-amber-900 ring-1 ring-amber-600/25",
   low: "bg-rose-50 text-rose-900 ring-1 ring-rose-600/25",
+  insufficient_data: "bg-slate-100 text-slate-700 ring-1 ring-slate-400/25",
 };
 
 function buildFallbackExplain(item: any): MatchExplainData | null {

@@ -31,12 +31,20 @@ from app.core.errors import api_error
 from app.modules.catalog.dictionary import find_stack
 from app.modules.catalog.seed_data import DIRECTIONS, GRADES, active_stack, known_tag
 from app.modules.fsp.models import FspAchievement
-from app.modules.matching import core_skill, explain as explain_mod, must_have
+from app.modules.matching import bias as bias_mod, core_skill, explain as explain_mod, must_have
 from app.modules.matching.need_parser import parse_need
 from app.modules.matching.ranking import algorithm, score_candidate, selection_order
 from app.modules.profiles.facts import Bundle
 from app.modules.profiles.models import CandidateFact, CandidateProfile
-from app.modules.validation.matching_eval import mrr as eval_mrr, ndcg as eval_ndcg, precision as eval_precision
+from app.modules.validation.matching_eval import ndcg as eval_ndcg
+
+
+def eval_precision(rels: list[int], k: int, threshold: int = 2) -> float:
+    return sum(1 for r in rels[:k] if r >= threshold) / max(k, 1)
+
+
+def eval_rr(rels: list[int], threshold: int = 2) -> float:
+    return next((1.0 / idx for idx, r in enumerate(rels, start=1) if r >= threshold), 0.0)
 
 MAX_UPLOAD_BYTES = 2_000_000
 MAX_NEEDS = 100
@@ -299,7 +307,7 @@ def _to_bundle(c: dict[str, Any]) -> Bundle:
         privacy={},
         roles=[],
     )
-    b = Bundle(profile=p, unconfirmed=unconf)
+    b = Bundle(profile=p)
     if unconf:
         b.claimed_direction_id = c["direction"]
         b.claimed_grade_id = c["grade"]
@@ -445,27 +453,29 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         if need_labels:
             rels_ordered = [need_labels.get(r["candidate_id"], 0) for r in rows]
             all_rels = list(need_labels.values())
+            rel_threshold = 1 if (all_rels and max(all_rels) <= 1) else 2
             k5 = min(5, max(1, len(eligible)))
             k10 = min(10, max(1, len(eligible)))
+            k_eff = min(k, max(1, len(eligible)))
             metrics = {
-                "p@5": round(eval_precision(rels_ordered, k5), 4),
-                "p@10": round(eval_precision(rels_ordered, k10), 4),
-                f"p@{k}": round(eval_precision(rels_ordered, min(k, max(1, len(eligible)))), 4),
+                "p@5": round(eval_precision(rels_ordered, k5, rel_threshold), 4),
+                "p@10": round(eval_precision(rels_ordered, k10, rel_threshold), 4),
+                f"p@{k}": round(eval_precision(rels_ordered, k_eff, rel_threshold), 4),
                 "ndcg@5": round(eval_ndcg(rels_ordered, all_rels, 5), 4),
                 "ndcg@10": round(eval_ndcg(rels_ordered, all_rels, 10), 4),
                 f"ndcg@{k}": round(eval_ndcg(rels_ordered, all_rels, k), 4),
-                "mrr": round(eval_mrr(rels_ordered), 4),
+                "mrr": round(eval_rr(rels_ordered, rel_threshold), 4),
             }
             plat_metrics_list.append(metrics)
 
             base_order = _baseline_t0_order(parsed["candidates"], req)
             base_rels = [need_labels.get(cid, 0) for cid in base_order]
             base_metrics_list.append({
-                "p@5": round(eval_precision(base_rels, k5), 4),
-                "p@10": round(eval_precision(base_rels, k10), 4),
+                "p@5": round(eval_precision(base_rels, k5, rel_threshold), 4),
+                "p@10": round(eval_precision(base_rels, k10, rel_threshold), 4),
                 "ndcg@5": round(eval_ndcg(base_rels, all_rels, 5), 4),
                 "ndcg@10": round(eval_ndcg(base_rels, all_rels, 10), 4),
-                "mrr": round(eval_mrr(base_rels), 4),
+                "mrr": round(eval_rr(base_rels, rel_threshold), 4),
             })
 
         per_need.append({
@@ -499,6 +509,31 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
             key: round(summary[key] - baseline_summary[key], 4)
             for key in ("p@5", "p@10", "ndcg@5", "ndcg@10", "mrr")
         }
+
+    # Оценка правила справедливости 4/5 для кандидатов без истории ФСП на загруженном наборе
+    with_fsp_hits, with_fsp_tot = 0, 0
+    no_fsp_hits, no_fsp_tot = 0, 0
+    for n in per_need:
+        top_ids = {r["candidate_id"] for r in (n.get("results") or [])[:5]}
+        for cid, b in bundles.items():
+            if b.unconfirmed:
+                continue
+            has_fsp = bool(b.achievements)
+            in_top = cid in top_ids
+            if has_fsp:
+                with_fsp_tot += 1
+                with_fsp_hits += int(in_top)
+            else:
+                no_fsp_tot += 1
+                no_fsp_hits += int(in_top)
+    rate_no_fsp = no_fsp_hits / max(no_fsp_tot, 1) if no_fsp_tot else 1.0
+    rate_with_fsp = with_fsp_hits / max(with_fsp_tot, 1) if with_fsp_tot else rate_no_fsp
+    fairness = bias_mod.fairness_four_fifths(
+        rate_no_fsp,
+        rate_with_fsp,
+        n_without_fsp=no_fsp_tot,
+        n_with_fsp=with_fsp_tot,
+    )
 
     # Генерация CSV для мгновенного скачивания
     csv_buf = io.StringIO()
@@ -550,6 +585,7 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         "summary": summary,
         "baseline_t0": baseline_summary,
         "diff_vs_baseline": diff_vs_baseline,
+        "fairness": fairness,
         "per_need": per_need,
         "csv_export": "\ufeff" + csv_buf.getvalue(),
         "note": (

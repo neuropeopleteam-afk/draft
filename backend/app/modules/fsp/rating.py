@@ -41,15 +41,14 @@ RELEVANCE_POLICY = (" Результат по дисциплине, близко
 
 
 def team_factor(a) -> float:
-    """Личный результат весит больше командного; внутри команды учитываются размер и роль участника."""
-    ts = getattr(a, "team_size", None)
-    if not ts or ts <= 1:
+    """Личный результат весит больше командного (поле team из индекса протоколов ФСП)."""
+    team = getattr(a, "team", None)
+    if not team:
         return 1.0
-    role = str(getattr(a, "team_role", "") or getattr(a, "role", "") or "").lower()
-    base = max(0.75, 1.0 / (1.0 + 0.06 * (int(ts) - 1)))
-    if role in ("captain", "lead", "капитан", "тимлид", "лидер"):
-        return min(0.95, round(base + 0.06, 4))
-    return round(base, 4)
+    if isinstance(team, (list, tuple, set)):
+        n = len(team)
+        return max(0.80, round(1.0 / (1.0 + 0.05 * max(0, n - 1)), 4)) if n > 1 else 1.0
+    return 0.92
 
 
 def details(achievements, *, today: date | None = None, direction: str | None = None,

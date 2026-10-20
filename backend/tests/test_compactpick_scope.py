@@ -17,9 +17,11 @@ def test_devops_scope_nearest_tested_and_not_tested():
     assert sc and sc["out_of_catalog"] and sc["role"] == "devops" and sc["nearest_title"] == "Backend"
     tested = {x["title"] for x in sc["tested"]}
     untested = {x["title"]: x for x in sc["not_tested"]}
-    assert {"Linux", "Docker"} <= tested                      # есть в заданиях теста Backend
-    assert "Kubernetes" in untested and untested["Kubernetes"]["why"] == "нет заданий в тесте направления"
+    assert {"Linux", "Docker", "Kubernetes"} <= tested        # есть в заданиях теста Backend и общего блока (волна 20.10)
     assert untested["Terraform"]["why"] == "вне справочника"  # unknown_terms парсера
+    sc_sec = scope(parse_need(DEVOPS + " Интеграция SIEM.", use_llm=False))
+    untested_sec = {x["title"]: x for x in sc_sec["not_tested"]}
+    assert "SIEM и SOC" in untested_sec and untested_sec["SIEM и SOC"]["why"] == "нет заданий в тесте направления"
     assert not tested & set(untested)                         # навык не может быть сразу и там, и там
     assert sc["tested_note"] and sc["not_tested_note"]        # общий текст coverage для роли
     assert sc["probe"]["title"] == PROBES["devops"][0] and len(sc["probe"]["task"]) >= 20
@@ -42,7 +44,7 @@ def test_every_out_of_catalog_role_has_probe_template():
 
 def test_test_tags_follow_bank_direction():
     be, fe = bank_tags("backend"), bank_tags("frontend")
-    assert "python" in be and "kubernetes" not in be
+    assert "python" in be and "fastapi" in be and "fastapi" not in fe and "selenium" not in be
     assert be != fe and bank_tags(None) == cov_mod._bank_tags("")
 
 

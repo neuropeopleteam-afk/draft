@@ -78,8 +78,16 @@ def compute_offer_forecast(
     comps: dict[str, Any],
     req_confirmed: int,
     req_total: int,
+    *,
+    accepted_count: int | None = None,
+    invited_count: int | None = None,
 ) -> dict[str, Any]:
-    """Прогноз вероятности принятия приглашения кандидатом по объективным параметрам предложения и рынка категории."""
+    """Оценка факторов принятия приглашения кандидатом.
+
+    Без накопленной статистики реальных принятий (invited_count >= 5) процент не выдумывается
+    (возвращается ``status = 'insufficient_data'``, ``probability = None``, ``pct = None``),
+    а работодателю показываются только объективные факторы совпадения словами.
+    """
     market = card.get("market_range") or {}
     m_lo = market.get("from")
     m_hi = market.get("to")
@@ -90,25 +98,25 @@ def compute_offer_forecast(
     is_net = bool(req.get("salary_net"))
     offer_net = round((s_to or 0) * (1.0 if is_net else 0.87)) if s_to else None
 
-    prob = 0.68
     factors: list[str] = []
+    positive_signals = 0
+    negative_signals = 0
 
     # 1. Вилка против рыночных ожиданий категории
     if offer_net and m_med:
         if m_hi and offer_net >= m_hi:
-            prob += 0.16
+            positive_signals += 2
             factors.append(f"Верх вилки ({_rub(offer_net)} на руки) на уровне верхнего квартиля рынка категории ({_rub(m_hi)})")
         elif offer_net >= m_med:
-            prob += 0.10
+            positive_signals += 1
             factors.append(f"Вилка ({_rub(offer_net)} на руки) не ниже медианы рынка категории ({_rub(m_med)})")
         elif m_lo and offer_net >= m_lo:
-            prob -= 0.04
             factors.append(f"Вилка в нижней половине рынка категории ({_rub(m_lo)} – {_rub(m_hi)} на руки)")
         else:
-            prob -= 0.24
-            factors.append(f"Верх вилки ниже рыночного диапазона категории (от {_rub(m_lo)} на руки) — высокий риск отказа")
+            negative_signals += 2
+            factors.append(f"Верх вилки ({_rub(offer_net)} на руки) ниже рыночного диапазона категории (от {_rub(m_lo)} на руки)")
     else:
-        factors.append("Зарплатная вилка в потребности не ограничена (ориентир — рынок категории)")
+        factors.append("Зарплатная вилка в потребности не указана (ориентир — рынок категории)")
 
     # 2. Совпадение формата работы и локации (с различением прямого совпадения города и готовности к переезду)
     cand_fmt = card.get("work_format")
@@ -118,52 +126,60 @@ def compute_offer_forecast(
     req_city = (req.get("city") or "").strip()
 
     if cand_fmt == "remote" and ("remote" in req_fmts or not req_fmts):
-        prob += 0.06
+        positive_signals += 1
         factors.append("Удалённый формат работы полностью совпадает")
     elif req_city and any(f in ("office", "hybrid") for f in req_fmts):
         if cand_city and cand_city.lower() == req_city.lower():
-            prob += 0.05
+            positive_signals += 1
             factors.append(f"Город присутствия совпадает ({cand_city})")
         elif reloc:
-            prob -= 0.04
             factors.append(f"Кандидат в г. {cand_city or 'другом регионе'}, готов к переезду в {req_city} (смягчает несовпадение города, но требует времени на релокацию)")
         else:
-            prob -= 0.15
+            negative_signals += 2
             factors.append(f"Требуется присутствие в г. {req_city}, у кандидата указан {cand_city or 'другой город'} без переезда")
     elif not req_fmts or cand_fmt in req_fmts or cand_fmt == "any":
-        prob += 0.04
+        positive_signals += 1
         factors.append("Формат работы подходит кандидату")
 
     # 3. Соответствие стека
     if req_total > 0:
-        cov = req_confirmed / req_total
-        if cov >= 0.75:
-            prob += 0.05
-            factors.append(f"Высокое совпадение проверенного стека ({req_confirmed} из {req_total})")
-        elif cov < 0.4:
-            prob -= 0.05
+        if req_confirmed == req_total:
+            positive_signals += 1
+            factors.append(f"Подтверждены все обязательные навыки роли ({req_confirmed} из {req_total})")
+        elif req_confirmed > 0:
+            factors.append(f"Подтверждено {req_confirmed} из {req_total} обязательных навыков")
 
-    # 4. Свежесть / активность на платформе
-    fresh = card.get("freshness") or {}
-    if fresh.get("level") == "high" or "недавно" in str(fresh.get("text") or "").lower():
-        prob += 0.03
-
-    prob = round(min(0.95, max(0.15, prob)), 2)
-    pct = round(prob * 100)
-    if prob >= 0.75:
-        level, l_title = "high", f"Высокая ({pct} %)"
-    elif prob >= 0.50:
-        level, l_title = "medium", f"Средняя ({pct} %)"
+    if negative_signals >= 2:
+        level = "low"
+        qual_title = "Есть расхождения по условиям (оценка по факторам)"
+    elif positive_signals >= 2 and negative_signals == 0:
+        level = "high"
+        qual_title = "Условия совпадают с рынком и профилем (оценка по факторам)"
     else:
-        level, l_title = "low", f"Низкая ({pct} %)"
+        level = "medium"
+        qual_title = "Частичное совпадение условий (оценка по факторам)"
+
+    if invited_count is not None and invited_count >= 5 and accepted_count is not None:
+        prob = round(max(0.0, min(1.0, accepted_count / invited_count)), 2)
+        pct = round(prob * 100)
+        return {
+            "status": "measured",
+            "probability": prob,
+            "pct": pct,
+            "level": level,
+            "title": f"{pct} % (по {invited_count} приглашениям)",
+            "factors": factors[:3],
+            "note": f"Доля принятых приглашений по фактическим данным ({accepted_count} из {invited_count}).",
+        }
 
     return {
-        "probability": prob,
-        "pct": pct,
+        "status": "insufficient_data",
+        "probability": None,
+        "pct": None,
         "level": level,
-        "title": l_title,
+        "title": qual_title,
         "factors": factors[:3],
-        "note": "Оценка модели по вилке относительно рынка категории, формату работы, релокации и совпадению стека; будет уточнена на реальных принятиях приглашений",
+        "note": "Мало данных о реальных принятиях приглашений для расчёта процента — показаны факторы совпадения вилки, формата и стека.",
     }
 
 
@@ -301,7 +317,7 @@ def compute_salary_calibration(
     req: dict[str, Any] | None,
     market_range: dict[str, Any] | None,
 ) -> dict[str, Any] | None:
-    """Калибровка зарплатной вилки потребности: сколько подтверждённых кандидатов войдёт в коридор при повышении вилки."""
+    """Калибровка зарплатной вилки потребности строго по фактическому числу подтверждённых кандидатов в пуле (без выдуманных констант)."""
     if not req or not market_range:
         return None
     m_lo = market_range.get("from")
@@ -310,6 +326,7 @@ def compute_salary_calibration(
     if not m_lo or not m_hi:
         return None
 
+    actual_confirmed = max(0, int(scored_count_confirmed or 0))
     s_from = req.get("salary_from")
     s_to = req.get("salary_to") or s_from
     is_net = bool(req.get("salary_net"))
@@ -320,45 +337,66 @@ def compute_salary_calibration(
             "market_median": m_med,
             "market_to": m_hi,
             "recommended_to": m_med or m_hi,
+            "confirmed_in_pool": actual_confirmed,
             "additional_candidates": 0,
-            "text": f"Рыночный ориентир категории на руки: {_rub(m_lo)} – {_rub(m_hi)} (медиана {_rub(m_med)}). Укажите вилку не ниже медианы для максимального отклика.",
+            "text": (
+                f"Рыночный ориентир категории на руки: {_rub(m_lo)} – {_rub(m_hi)} (медиана {_rub(m_med)}). "
+                f"В подборке сейчас подтверждённых кандидатов: {actual_confirmed}."
+            ),
         }
 
     top_net = round(s_to * (1.0 if is_net else 0.87))
-    pool = max(scored_count_confirmed, 5)
+    if actual_confirmed == 0:
+        return {
+            "status": "below_market" if top_net < m_lo else "below_median" if (m_med and top_net < m_med) else "competitive",
+            "current_top": s_to,
+            "current_top_net": top_net,
+            "recommended_to": (m_med or m_lo) if is_net else int(round((m_med or m_lo) / 0.87, -3)),
+            "confirmed_in_pool": 0,
+            "additional_candidates": 0,
+            "text": f"В выбранной категории сейчас 0 подтверждённых кандидатов (рыночный коридор категории: {_rub(m_lo)} – {_rub(m_hi)} на руки).",
+        }
+
     if top_net < m_lo:
         target_net = m_med or m_lo
         target_offer = target_net if is_net else int(round(target_net / 0.87, -3))
-        gain = max(2, round(pool * 0.45))
         return {
             "status": "below_market",
             "current_top": s_to,
             "current_top_net": top_net,
             "recommended_to": target_offer,
             "recommended_net": target_net,
-            "additional_candidates": gain,
-            "text": f"Верх вилки ({_rub(top_net)} на руки) ниже рынка категории. Если поднять вилку до {_rub(target_offer)} — в рыночный коридор ожиданий войдут ещё +{gain} подтверждённых кандидатов.",
+            "confirmed_in_pool": actual_confirmed,
+            "additional_candidates": actual_confirmed,
+            "text": (
+                f"Верх вилки ({_rub(top_net)} на руки) ниже нижней границы рынка категории ({_rub(m_lo)} на руки). "
+                f"Если поднять вилку до {_rub(target_offer)} — все {actual_confirmed} подтверждённых кандидатов подборки войдут в рыночный коридор категории."
+            ),
         }
     if m_med and top_net < m_med:
-        target_net = m_hi
+        target_net = m_med
         target_offer = target_net if is_net else int(round(target_net / 0.87, -3))
-        gain = max(1, round(pool * 0.25))
         return {
             "status": "below_median",
             "current_top": s_to,
             "current_top_net": top_net,
             "recommended_to": target_offer,
             "recommended_net": target_net,
-            "additional_candidates": gain,
-            "text": f"Вилка ниже медианы категории ({_rub(m_med)} на руки). Если поднять верхнюю границу до {_rub(target_offer)} — станут доступны ещё +{gain} сильных подтверждённых кандидатов.",
+            "confirmed_in_pool": actual_confirmed,
+            "additional_candidates": 0,
+            "text": (
+                f"Верх вилки ({_rub(top_net)} на руки) в нижней половине рынка категории ({_rub(m_lo)} – {_rub(m_hi)}, медиана {_rub(m_med)}). "
+                f"В подборке {actual_confirmed} подтверждённых кандидатов; повышение до медианы ({_rub(target_offer)}) укрепит конкурентность предложения."
+            ),
         }
     return {
         "status": "competitive",
         "current_top": s_to,
         "current_top_net": top_net,
         "recommended_to": s_to,
+        "confirmed_in_pool": actual_confirmed,
         "additional_candidates": 0,
-        "text": f"Ваша вилка ({_rub(top_net)} на руки) конкурентна относительно рынка категории ({_rub(m_lo)} – {_rub(m_hi)} на руки).",
+        "text": f"Ваша вилка ({_rub(top_net)} на руки) находится внутри или выше медианы рынка категории ({_rub(m_lo)} – {_rub(m_hi)} на руки; в подборке {actual_confirmed} подтверждённых кандидатов).",
     }
 
 
@@ -459,13 +497,19 @@ def build_explain_from_result(
                 "text": f"Подтверждено на платформе ({round(float(sk.get('score') or 0) * 100)} %)",
             })
 
-    # 2. Достижения ФСП (реестр) с честным разграничением командного/индивидуального вклада (P2)
+    # 2. Достижения ФСП (реестр) с честным разграничением командного/индивидуального вклада и подсветкой протокола
+    from app.modules.fsp.relevance import protocol_highlight
+
     skills_fsp: list[dict[str, Any]] = []
     if not fsp_info.get("hidden"):
         for ach in (fsp_info.get("achievements") or [])[:4]:
+            disc = ach.get("discipline")
+            hl = protocol_highlight(disc, req.get("direction")) if disc else {}
             skills_fsp.append({
                 "text": ach.get("text") or "Достижение ФСП",
-                "relevance": (ach.get("relevance") or {}).get("title"),
+                "relevance": (ach.get("relevance") or {}).get("title") or hl.get("title") or None,
+                "focus_title": hl.get("focus_title"),
+                "highlighted_tags": hl.get("tags") or [],
                 "source": "Подтверждено реестром ФСП (подтверждает соревновательную дисциплину и опыт; конкретный технологический стек проверяется индивидуальным тестом)",
             })
 

@@ -15,7 +15,10 @@ def _extract_visible_page_text(page) -> str:
     chunks: list[str] = []
 
     def visitor(text, cm, tm, font_dict, font_size):
-        if not text or not text.strip():
+        if not text:
+            return
+        if not text.strip():
+            chunks.append(text)
             return
         try:
             scale_y = abs(float(tm[3])) if tm and len(tm) > 3 else 1.0

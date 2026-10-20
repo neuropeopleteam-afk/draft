@@ -31,10 +31,19 @@ def _first_role(text: str):
     """Первая профессия вне базового каталога в заголовке/первых строках → (совпадение, строка ROLES) или None."""
     # Profession is decided from the title/first lines, not from incidental SDK mentions.
     head = text[:400]
-    if re.search(r"\bqa\b|\bsdet\b|тестировщик|тестирован", head.split("\n")[0], re.I):
+    first_line = head.split("\n")[0]
+    if re.search(r"\bqa\b|\bsdet\b|тестировщик|тестирован|data\s*engineer|дата[- ]?инженер|инженер\s+данных|\bdwh\b|\bspark\b", first_line, re.I):
         return None
     # Несколько ролей в заголовке («Бизнес-аналитик / аналитик 1С») — берём названную первой (И18)
-    hits = [(m, r) for r in ROLES if (m := re.search(r[2], head, re.I))]
+    hits = []
+    for r in ROLES:
+        m = re.search(r[2], head, re.I)
+        if not m:
+            continue
+        if r[0] == "1c" and "\n" in head and m.start() > len(first_line):
+            if not re.search(r"(?:разработ|программист)\w*\s+1[сc]|1[сc][- ]*(?:разработ|программист)", head, re.I):
+                continue
+        hits.append((m, r))
     return min(hits, key=lambda h: h[0].start()) if hits else None
 
 
@@ -115,21 +124,23 @@ def bank_tags(direction: str | None) -> frozenset[str]:
     return _bank_tags(direction or "")
 
 
-@lru_cache(maxsize=16)
-def _bank_tags(direction: str) -> frozenset[str]:
+@lru_cache(maxsize=1)
+def _cached_specs() -> tuple:
     from assessment_bank import load_specs
 
-    from app.modules.assessment.skill_map import to_stack_tags
+    return tuple(load_specs().values())
 
-    from app.modules.catalog.ext import enabled as ext_enabled, in_active_pool
+
+@lru_cache(maxsize=16)
+def _bank_tags(direction: str) -> frozenset[str]:
+    from app.modules.assessment.skill_map import to_stack_tags
+    from app.modules.catalog.ext import in_active_pool
 
     out: set[str] = set()
-    for s in load_specs().values():
+    for s in _cached_specs():
         if s.canary or s.direction not in (direction, "common") or not in_active_pool(s):
             continue
         out.update(to_stack_tags(s.direction, s.skills))
-    if not ext_enabled() and direction in ("backend", "frontend"):
-        out.discard("kubernetes")
     return frozenset(out)
 
 
