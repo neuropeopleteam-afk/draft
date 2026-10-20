@@ -1,0 +1,55 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: devops.k8s_nodes.lead_solve_pods_k5
+title: 'Число узлов Kubernetes под requests подов — обратная задача: наибольший допустимый вход «число подов» с учётом: размер
+  узла, системный резерв, запас по узлам, рост, резерв на отказ'
+direction: devops
+skills:
+- kubernetes
+- capacity_planning
+- linux
+- cloud
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - floor
+    - growth_only
+    - growth_twice
+    - limits
+    - no_growth
+    - no_milli
+    - no_node
+    - no_spare
+    - no_sys
+    - no_util
+    - node_mul
+    - node_plus1
+    - per_pod
+    - spare_twice
+    - sys_minus
+    - sys_ratio
+    - util_free
+    construct: 'Узлы кластера: поды × requests CPU / allocatable узла с системными резервами, запасом и N+1. Ступень 5 из
+      5: взаимодействуют 5 поправочных фактора(ов) (размер узла; системный резерв; запас по узлам; рост; резерв на отказ);
+      обратная задача: наибольший вход «число подов» на сетке с шагом 30, при котором квоты хватит.'
+    wave: 20.10-S
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: 3.04
+  a: 3.0
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Узлы кластера: поды × requests CPU / allocatable узла с системными резервами,
+    запасом и N+1; 5 взаимодействующих фактора(ов) (размер узла, системный резерв, запас по узлам, рост, резерв на отказ),
+    обратная задача: наибольший вход «число подов» на сетке с шагом 30, при котором квоты хватит. Грейд Principal (b 3,04
+    по числу факторов и направлению вопроса: прямой расчёт легче обратной задачи; волна 20.10-S, без калибровки панелью).
+    σ 0,3'
+generator: assessment_bank.families.devops.s15_k8s_nodes_solve_pods_k5
+version: 1
+description: 'Principal: число узлов Kubernetes под requests подов — обратная задача: наибольший вход «число подов» на сетке
+  с шагом 30, при котором квоты хватит. 5 фактора(ов): размер узла, системный резерв, запас по узлам, рост, резерв на отказ.
+  Ключ — исполнением модели (точные дроби), для обратной задачи — ещё и линейным перебором сетки.'

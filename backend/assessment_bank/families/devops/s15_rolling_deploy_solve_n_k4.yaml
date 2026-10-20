@@ -1,0 +1,51 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: devops.rolling_deploy.senior_solve_n_k4
+title: 'Длительность rolling update деплоя — обратная задача: наибольший допустимый вход «число подов» с учётом: время волны,
+  drain, повторы волн, кластеры'
+direction: devops
+skills:
+- kubernetes
+- deployment
+- ci_cd
+- sre
+target_grades:
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - all
+    - clusters_plus1
+    - drain_only
+    - drain_twice
+    - floor
+    - no_clusters
+    - no_drain
+    - no_retry
+    - plus1
+    - ready_only
+    - retry_minus
+    - retry_ratio
+    - start_only
+    - wave_twice
+    construct: 'Rolling update: ⌈поды / maxSurge⌉ волн × (старт + readiness) с drain, повторами и кластерами. Ступень 4 из
+      5: взаимодействуют 4 поправочных фактора(ов) (время волны; drain; повторы волн; кластеры); обратная задача: наибольший
+      вход «число подов» на сетке с шагом 5, при котором деплой уложится в окно.'
+    wave: 20.10-S
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 1.98
+  a: 1.45
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Rolling update: ⌈поды / maxSurge⌉ волн × (старт + readiness) с drain, повторами
+    и кластерами; 4 взаимодействующих фактора(ов) (время волны, drain, повторы волн, кластеры), обратная задача: наибольший
+    вход «число подов» на сетке с шагом 5, при котором деплой уложится в окно. Грейд Lead (b 1,98 по числу факторов и направлению
+    вопроса: прямой расчёт легче обратной задачи; волна 20.10-S, без калибровки панелью). σ 0,3'
+generator: assessment_bank.families.devops.s15_rolling_deploy_solve_n_k4
+version: 1
+description: 'Lead: длительность rolling update деплоя — обратная задача: наибольший вход «число подов» на сетке с шагом 5,
+  при котором деплой уложится в окно. 4 фактора(ов): время волны, drain, повторы волн, кластеры. Ключ — исполнением модели
+  (точные дроби), для обратной задачи — ещё и линейным перебором сетки.'

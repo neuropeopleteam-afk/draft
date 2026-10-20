@@ -1,0 +1,53 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: devops.prom_tsdb.principal_solve_d_k5
+title: 'Диск Prometheus под временные ряды — обратная задача: наибольший допустимый вход «retention, дней» с учётом: индексы,
+  WAL, HA-пара, запас диска, recording rules'
+direction: devops
+skills:
+- prometheus
+- monitoring
+- observability
+- storage
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - bytes16
+    - floor
+    - ha_plus1
+    - hours
+    - index_only
+    - index_twice
+    - no_ha
+    - no_index
+    - no_iv
+    - no_rules
+    - no_util
+    - no_wal
+    - rules_twice
+    - util_free
+    - wal_only
+    - wal_twice
+    construct: 'TSDB: активные ряды / интервал скрейпа × байты на сэмпл × retention с WAL, репликой и запасом. Ступень 5 из
+      5: взаимодействуют 5 поправочных фактора(ов) (индексы; WAL; HA-пара; запас диска; recording rules); обратная задача:
+      наибольший вход «retention, дней» на сетке с шагом 2, при котором диска хватит.'
+    wave: 20.10-S
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: 2.92
+  a: 3.0
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). TSDB: активные ряды / интервал скрейпа × байты на сэмпл × retention с WAL, репликой
+    и запасом; 5 взаимодействующих фактора(ов) (индексы, WAL, HA-пара, запас диска, recording rules), обратная задача: наибольший
+    вход «retention, дней» на сетке с шагом 2, при котором диска хватит. Грейд Principal (b 2,92 по числу факторов и направлению
+    вопроса: прямой расчёт легче обратной задачи; волна 20.10-S, без калибровки панелью). σ 0,3'
+generator: assessment_bank.families.devops.s15_prom_tsdb_solve_d_k5
+version: 1
+description: 'Principal: диск Prometheus под временные ряды — обратная задача: наибольший вход «retention, дней» на сетке
+  с шагом 2, при котором диска хватит. 5 фактора(ов): индексы, WAL, HA-пара, запас диска, recording rules. Ключ — исполнением
+  модели (точные дроби), для обратной задачи — ещё и линейным перебором сетки.'
