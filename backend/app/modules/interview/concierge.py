@@ -636,19 +636,16 @@ def warm_async() -> None:
         except OSError:
             pass
         n = 0
-        # mp3 — постоянные фразы и реплики шагов для браузера (в 6 раз меньше PCM), PCM 24 кГц — для потока ответа;
-        # плюс типовые ответы на выбор роли без имени (звучат сразу, без синтеза)
+        # постоянные фразы, реплики шагов и типовые ответы на выбор роли (звучат сразу, без синтеза)
         texts = script_texts()
         extra = [_start_reply(None, r, False, ft) for r in ROLES for ft in (True, False)]
         try:
+            # только PCM 24 кГц: Настя говорит им и в видеопоток, и запасным голосом; mp3 грел бы вдвое больше знаков синтеза
             for text in [*texts, *extra]:
-                for fmt in ("mp3", "pcm24"):
-                    if fmt == "mp3" and text in extra:
-                        continue
-                    if cached(text, fmt):
-                        continue
-                    synth_bytes(text, fmt)
-                    n += 1
+                if cached(text, "pcm24"):
+                    continue
+                synth_bytes(text, "pcm24")
+                n += 1
         except TtsError as e:
             log.warning("concierge warm: %s", e)
         log.info("concierge warm: озвучено %d новых фраз", n)

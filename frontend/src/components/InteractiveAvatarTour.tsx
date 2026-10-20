@@ -6,7 +6,8 @@
 // «Думаю»), в паузах — открыт (подпись «Слушаю»): тогда можно спросить, сказать «стоп», «дальше», «повтори»,
 // «назад», «покажи тест». Остановить её в любой момент — кнопкой паузы.
 // Логика разговора и обзора — components/elena/engine.ts, экраны и подсветка — components/elena/steps.ts.
-// Проверки без микрофона и видеопотока: ?elena_debug=1 даёт window.__elena.say("текст"), ?elena_novideo=1 — без видео.
+// Проверки без микрофона и видеопотока: ?elena_debug=1 даёт window.__elena.say("текст"), ?elena_novideo=1 — без видео,
+// ?elena_fakemic=1 — микрофон считается включённым (реплики только текстом). Флаги запоминаются в localStorage; =0 снимает.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
@@ -205,6 +206,7 @@ export function InteractiveAvatarTour() {
     engineRef.current?.close();
     const eng = new ElenaEngine({
       noVideo: noVideoFlag(),
+      fakeMic: flag("fakemic"),
       avatar: () => anamRef.current,
       navigate: (to) => navRef.current(to),
       path: () => window.location.pathname,

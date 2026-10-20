@@ -63,6 +63,8 @@ export interface ElenaDeps {
   onClose: () => void;
   /** Без видеопотока (проверки, экономия минут): голос — через Web Audio, портрет статичный. */
   noVideo?: boolean;
+  /** Проверки без микрофона: считать микрофон включённым, реплики человека — текстом через injectUser(). */
+  fakeMic?: boolean;
 }
 
 interface Bridge { first?: string; first_named?: string; next?: string }
@@ -453,7 +455,10 @@ export class ElenaEngine {
   start(track?: TourTrack, stepIndex = 0) {
     this.voice.unlock();
     this.watch();
-    if (liveSttSupported()) {
+    if (this.d.fakeMic) {
+      this.set({ mic: "on" });
+      this.micKnown = Promise.resolve<MicState>("on");
+    } else if (liveSttSupported()) {
       this.listener = new LiveListener({
         path: "/api/interview/live/stt?p=guide",
         gate: () => this.micGated(),
