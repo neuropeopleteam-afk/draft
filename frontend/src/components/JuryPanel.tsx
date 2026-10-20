@@ -5,7 +5,7 @@ import { errText, NB } from "./ui";
 import { useAuth } from "../lib/auth";
 import { guide, juryLogin, juryReset, juryToken, quick, quickSteps, QUICK_MINUTES, startQuick, STEPS, type Persona } from "../lib/jury";
 import { api } from "../lib/api";
-import { useMeta } from "../lib/meta";
+import { getJuryBanner, useMeta } from "../lib/meta";
 
 /** W2: вход жюри — один компонент для двух мест.
  *  compact — плашка быстрого старта на главной (только для экспертов жюри и в демо-режиме, lib/juryMode.ts);
@@ -126,17 +126,18 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
     </button>
   );
 
+  const banner = getJuryBanner();
   const splitTracks = (
     <div className="mt-5 grid gap-4 border-t pt-5 np-border md:grid-cols-2" data-testid="jury-split-tracks">
       <div className="rounded-2xl border border-indigo-400/30 bg-indigo-950/20 p-4">
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-indigo-300">Маршрут А · Продуктовое и бизнес-жюри (3–5 мин)</span>
-        <h3 className="mt-1 text-base font-extrabold np-text">Продукт, подбор за 38 с, торг по ЗП, ФСП и ATS</h3>
+        <h3 className="mt-1 text-base font-extrabold np-text">Продукт, подбор с объяснением, торг по ЗП, ФСП и ATS</h3>
         <p className="mt-1 text-xs leading-relaxed np-muted">
           Разбор вакансии, приглашение с зарплатной вилкой и встречным торгом в защищённом чате, сборка команды от 2 до 10 человек и боевая интеграция с «Поток Рекрутмент».
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/needs", "prod_needs")} className="np-btn-primary px-3 py-1.5 text-xs">
-            1. Подбор за 38 с
+            1. Подборка и требования
           </button>
           <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/squad", "prod_squad")} className="np-btn-ghost px-3 py-1.5 text-xs">
             2. Командный Драфт (2–10 чел.)
@@ -151,37 +152,41 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
       </div>
       <div className="rounded-2xl border border-rose-400/30 bg-rose-950/20 p-4">
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300">Маршрут Б · Техническое и научное жюри (3–5 мин)</span>
-        <h3 className="mt-1 text-base font-extrabold np-text">Математика IRT, 1 504 семейства и краш-тест античита в 1 клик</h3>
+        <h3 className="mt-1 text-base font-extrabold np-text">Математика теста, 1 504 семейства и проверка античита в 1 клик</h3>
         <p className="mt-1 text-xs leading-relaxed np-muted">
-          Не нужно вручную писать инъекции: запустите готовые краш-тесты 21 слоя античита (1 160 / 1 160 атак) и проверьте точность грейдов до 94,5 %–95,0 %.
+          Запустите проверку защиты оценщика, валидацию банка заданий и последовательный тест подтверждения грейда (SPRT) с открытыми протоколами расчёта.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Link to="/warroom" className="np-btn-primary px-3 py-1.5 text-xs">
-            1. Краш-тест античита (/warroom)
+          <Link to="/demo/warroom" className="np-btn-primary px-3 py-1.5 text-xs">
+            1. Боевой ИИ-Полигон (/demo/warroom)
           </Link>
-          <Link to="/validation" className="np-btn-ghost px-3 py-1.5 text-xs">
-            2. Валидация 1 504 семейств (/validation)
+          <Link to="/demo/validation" className="np-btn-ghost px-3 py-1.5 text-xs">
+            2. Валидация 1 504 семейств (/demo/validation)
           </Link>
-          <Link to="/criteria" className="np-btn-ghost px-3 py-1.5 text-xs">
-            3. Сверка с ТЗ и 1 667 тестов
+          <Link to="/demo/criteria" className="np-btn-ghost px-3 py-1.5 text-xs">
+            3. Сверка с ТЗ (/demo/criteria)
           </Link>
           <button type="button" disabled={off} onClick={() => setQr(true)} className="np-btn-ghost px-3 py-1.5 text-xs">
             4. Криптопаспорт Ed25519
           </button>
         </div>
       </div>
-      <div className=" rounded-xl border border-emerald-400/25 bg-emerald-950/15 px-4 py-2.5 text-xs leading-relaxed np-muted md:col-span-2">
-        <b className="np-text">Рывок к финалу (Было → Стало):</b> банк заданий увеличен в <b>3,73 раза</b> (с 403 до <b>1 504 семейств</b> = <b>30 080</b> вариантов на 20 seed / <b>150 400+</b> на 100 seed, 0 ошибок), точность подтверждения грейда выросла до <b>94,5 %</b> вдали от порога и <b>95,0 %</b> на уровне Principal, пул расширен до <b>2 660 кандидатов</b>, перехват промпт-инъекций — <b>1 160 из 1 160 (100 %)</b>, живой аватар Елена работает в режиме непрерывного звонка с перебиванием голосом.
+      <div className="rounded-xl border border-emerald-400/25 bg-emerald-950/15 px-4 py-3 text-xs leading-relaxed np-muted md:col-span-2" data-testid="jury-numbers-banner">
+        <b className="np-text">{banner.headline_ru}</b>
+        <ul className="mt-1.5 list-disc space-y-1 pl-4">
+          {banner.claims_ru.map((c) => <li key={c}>{c}</li>)}
+        </ul>
       </div>
     </div>
   );
 
   const links = (
     <p className={`text-xs np-muted ${compact ? "mt-5" : "mt-8"}`} data-testid="jury-links">
-      Для экспертов: <Link to="/criteria" className="font-semibold np-accent hover:underline">критерии ТЗ</Link>
-      {" · "}<Link to="/validation" className="font-semibold np-accent hover:underline">как мы проверяем себя</Link>
-      {" · "}<Link to="/jury/live" className="font-semibold np-accent hover:underline">демонстрация в зале (QR)</Link>
-      {compact && <>{" · "}<Link to="/expertise" className="font-semibold np-accent hover:underline">вся экспертиза ФСП</Link></>}
+      Для экспертов: <Link to="/demo/criteria" className="font-semibold np-accent hover:underline">критерии ТЗ</Link>
+      {" · "}<Link to="/demo/validation" className="font-semibold np-accent hover:underline">как мы проверяем себя</Link>
+      {" · "}<Link to="/demo/live" className="font-semibold np-accent hover:underline">демонстрация в зале (QR)</Link>
+      {" · "}<Link to="/demo/fsp-benefit" className="font-semibold np-accent hover:underline">польза для ФСП</Link>
+      {compact && <>{" · "}<Link to="/demo" className="font-semibold np-accent hover:underline">весь раздел «Демо для жюри»</Link></>}
     </p>
   );
 
@@ -227,7 +232,7 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <button type="button" className="np-btn-primary px-7 py-4 text-base" disabled={!!busy} onClick={quickStart} data-testid="jury-quick">
                 {busy === "quick" ? "Входим…" : `Начать проверку за ${QUICK_MINUTES} минут`}</button>
-              <Link to="/jury/go" className="np-btn-ghost px-5 py-3.5 text-sm">Выбрать сценарий</Link>
+              <Link to="/demo/go" className="np-btn-ghost px-5 py-3.5 text-sm">Выбрать сценарий</Link>
             </div>
           </div>
           <ol className="grid content-start gap-2 text-sm" aria-label="Шаги проверки за 12 минут">
