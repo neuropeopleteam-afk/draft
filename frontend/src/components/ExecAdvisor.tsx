@@ -102,11 +102,8 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
     const t = tokenStore.get();
     const headers: Record<string, string> = { "Content-Type": "application/json", ...(t ? { Authorization: `Bearer ${t}` } : {}) };
 
-    if (anamRef.current && !anamRef.current.live()) {
-      for (let k = 0; k < 16 && anamRef.current && !anamRef.current.live(); k++) {
-        await new Promise((r) => setTimeout(r, 250));
-      }
-    }
+    // видеопоток советника поднимается по первому «Озвучить» (не на каждом открытии страницы сравнения)
+    if (anamRef.current && !anamRef.current.live()) await anamRef.current.waitReady(5000);
     if (anamRef.current?.live()) {
       try {
         const r = await fetch(apiUrl(`/employer/needs/${needId}/advisor/speech`), {
@@ -196,7 +193,7 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
         <div className="flex flex-row items-center gap-4 lg:flex-col lg:items-stretch">
           {anamStatus !== "failed" ? (
             <AnamAvatar ref={anamRef} sessionId={needId} tokenPath={`/employer/needs/${needId}/advisor/avatar-token`}
-              state={state} level={level} name="ИИ-советник" size={176} tone="dark" onStatus={setAnamStatus}
+              state={state} level={level} name="ИИ-советник" size={176} tone="dark" onStatus={setAnamStatus} deferConnect
               className="shrink-0 [&>div]:!w-[7.5rem] sm:[&>div]:!w-[9rem] lg:[&>div]:!w-full" />
           ) : (
             <InterviewerAvatar state={state} level={level} name="ИИ-советник" size={176} tone="dark"

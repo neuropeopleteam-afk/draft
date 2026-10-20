@@ -6,8 +6,8 @@ from datetime import datetime
 from typing import Literal
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request
-from fastapi.responses import Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, WebSocket
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -346,15 +346,43 @@ async def session_transcribe(session_id: uuid.UUID, request: Request, user: User
 @router.get("/sessions/{session_id}/speech", summary="Голос интервьюера: текущий вопрос (аудио)",
             responses={**AUTH, 200: {"content": {"audio/mpeg": {}}}, 404: err("Сессия не найдена"),
                        503: err("Голос недоступен — вопрос показан текстом")}, response_class=Response)
-def session_speech(session_id: uuid.UUID, format: Literal["mp3", "pcm"] = "mp3", user: User = Depends(candidate),
+def session_speech(session_id: uuid.UUID, format: Literal["mp3", "pcm", "pcm24"] = "mp3", user: User = Depends(candidate),
                    db: Session = Depends(get_db)) -> Response:
-    """format=pcm — pcm_s16le 16 кГц моно (audio/pcm) для живого аватара (Anam, передача звука); по умолчанию mp3."""
+    """format=pcm — pcm_s16le 16 кГц моно (audio/pcm) для живого аватара (Anam, передача звука); по умолчанию mp3.
+    format=pcm24 — PCM 24 кГц потоком (первый звук ≈ 0,7 с): живой разговор без пауз, тот же голос, что у проводника."""
     row = svc.own_session(db, user, session_id)
     st = row.state or {}
     # идёт разговор — текущий вопрос; только что закрыт (время вышло, «Закончить») — прощание ведущей
     q = st.get("q") if row.status == "in_progress" else st.get("closing") if row.status in ("evaluating", "completed") else None
     if not q:
         raise api_error(409, "interview_closed", "Разговор не идёт")
+    if format == "pcm24":
+        from app.modules.interview import concierge as cg
+        from app.modules.interview.engine.cost import estimate_cost
+
+        gen = cg.synth_stream(q, "pcm24")
+        try:
+            first = next(gen)
+        except StopIteration:
+            first = b""
+        except cg.TtsError:
+            raise api_error(503, "tts_unavailable", "Голос недоступен — вопрос показан текстом") from None
+        try:
+            svc.add_cost(row, "tts_usd", estimate_cost("tts", len(q)))
+            db.commit()
+        except Exception:  # noqa: BLE001 — учёт расхода не должен ронять голос
+            db.rollback()
+
+        def body_iter():
+            if first:
+                yield first
+            try:
+                yield from gen
+            except cg.TtsError:
+                return
+
+        return StreamingResponse(body_iter(), media_type="audio/pcm",
+                                 headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no", "X-Voice-Rate": "24000"})
     try:
         audio, mime, usd = pt.get_port().speak(q, "pcm_16000" if format == "pcm" else "mp3")
     except pt.EngineUnavailable:
@@ -364,7 +392,7 @@ def session_speech(session_id: uuid.UUID, format: Literal["mp3", "pcm"] = "mp3",
     return Response(audio, media_type=mime, headers={"Cache-Control": "no-store"})
 
 
-@router.post("/sessions/{session_id}/avatar-token", summary="Живой аватар: токен сессии Anam (INTERVIEW_ANAM_ENABLED)",
+@router.post("/sessions/{session_id}/avatar-token", summary="Живой аватар: токен сессии видеопотока (INTERVIEW_ANAM_ENABLED)",
              response_model=AvatarTokenOut,
              responses={**AUTH, **OFF, 404: err("Сессия не найдена"), 503: err("Аватар недоступен — экран показывает свой портрет")})
 def session_avatar_token(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
@@ -478,7 +506,8 @@ def stage_start(inv_id: uuid.UUID, body: StartIn, user: User = Depends(candidate
 
 class ConciergeSpeechIn(BaseModel):
     text: str = Field(min_length=1, max_length=1000)
-    format: Literal["mp3", "pcm"] = "mp3"
+    # pcm24 — PCM 24 кГц потоком (живой аватар и запасной голос проводника); pcm — 16 кГц целиком (советник, стенд)
+    format: Literal["mp3", "pcm", "pcm24"] = "mp3"
 
 
 class ConciergeChatIn(BaseModel):
@@ -499,7 +528,7 @@ class ConciergeChatOut(BaseModel):
 
 
 @router.post("/concierge/avatar-token", response_model=AvatarTokenOut,
-             summary="Живой аватар ИИ-проводника Елены: токен сессии Anam с липсинком")
+             summary="Живой аватар ИИ-проводника Елены: токен сессии видеопотока с движением губ")
 def concierge_avatar_token() -> dict:
     try:
         return pt.get_port().avatar_token()
@@ -507,20 +536,81 @@ def concierge_avatar_token() -> dict:
         raise api_error(503, "avatar_unavailable", "Живой видеопоток временно недоступен — включён голосовой режим") from None
 
 
-@router.post("/concierge/speech", summary="Голос ИИ-проводника Елены (ElevenLabs, mp3 или pcm для липсинка Anam)",
+@router.post("/concierge/speech", summary="Голос ИИ-проводника Елены (mp3 или PCM для живого аватара)",
              response_class=Response)
 def concierge_speech(body: ConciergeSpeechIn) -> Response:
     from app.modules.interview import concierge as cg
 
+    text = body.text.strip()
+    if body.format == "pcm24":
+        hit = cg.cached(text, "pcm24")
+        if hit:
+            return Response(hit, media_type="audio/pcm", headers={"Cache-Control": "public, max-age=86400", "X-Voice-Rate": "24000"})
+        gen = cg.synth_stream(text, "pcm24")
+        try:
+            first = next(gen)
+        except StopIteration:
+            first = b""
+        except cg.TtsError:
+            raise api_error(503, "tts_unavailable", "Синтез речи временно недоступен") from None
+
+        def body_iter():
+            if first:
+                yield first
+            try:
+                yield from gen
+            except cg.TtsError:
+                return
+
+        return StreamingResponse(body_iter(), media_type="audio/pcm",
+                                 headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no", "X-Voice-Rate": "24000"})
     try:
-        audio, mime = cg.cached_speak(body.text.strip(), "pcm_16000" if body.format == "pcm" else "mp3")
+        audio, mime = cg.cached_speak(text, "pcm_16000" if body.format == "pcm" else "mp3")
     except pt.EngineUnavailable:
         raise api_error(503, "tts_unavailable", "Синтез речи временно недоступен") from None
     return Response(audio, media_type=mime, headers={"Cache-Control": "public, max-age=3600"})
 
 
+class ConciergeTurnIn(BaseModel):
+    message: str = Field(min_length=1, max_length=1500)
+    user_name: str | None = Field(None, max_length=60)
+    role: str | None = Field(None, max_length=32)
+    current_path: str = Field("/", max_length=200)
+    step_id: str | None = Field(None, max_length=40)
+    touring: bool = False
+    paused: bool = False
+    history: list[dict] = Field(default_factory=list, max_length=20)
+
+
+@router.post("/concierge/turn", summary="Ход живого разговора с Еленой: решение и голос ответа одним потоком (NDJSON)",
+             response_class=StreamingResponse)
+def concierge_turn(body: ConciergeTurnIn) -> StreamingResponse:
+    from app.modules.interview import concierge as cg
+
+    gen = cg.turn_stream(body.message, user_name=(body.user_name or None), role=body.role, current_path=body.current_path,
+                         step_id=body.step_id, touring=body.touring, paused=body.paused, history=body.history)
+    return StreamingResponse(gen, media_type="application/x-ndjson",
+                             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+
+
+@router.get("/concierge/script", summary="Сценарий обзора Елены: приветствие, реплики шагов, связки (голос — из кэша)")
+def concierge_script() -> dict:
+    from app.modules.interview import concierge as cg
+
+    cg.warm_async()
+    return cg.script()
+
+
+@router.websocket("/live/stt")
+async def live_stt(ws: WebSocket) -> None:
+    """Живое распознавание речи (разговор «как по видеосвязи»): PCM 16 кГц от браузера → события распознавания."""
+    from app.modules.interview import live_stt as ls
+
+    await ls.bridge(ws)
+
+
 @router.post("/concierge/transcribe", response_model=TranscribeOut,
-             summary="Распознавание голоса собеседника для ИИ-проводника Елены (Deepgram Nova-2)")
+             summary="Распознавание голоса собеседника для ИИ-проводника Елены")
 async def concierge_transcribe(request: Request) -> dict:
     from app.core.config import get_settings
 

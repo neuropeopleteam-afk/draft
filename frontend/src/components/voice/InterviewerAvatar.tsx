@@ -45,9 +45,11 @@ export interface InterviewerAvatarProps {
   className?: string;
   /** Н1: подпись на тёмном фоне (панель советника руководителя). */
   tone?: "light" | "dark";
+  /** false — без свечения и цветной рамки (виджет проводника: чистый портрет). */
+  glow?: boolean;
 }
 
-export function InterviewerAvatar({ state, level, name = "Интервьюер", size = 200, className = "", tone = "light" }: InterviewerAvatarProps) {
+export function InterviewerAvatar({ state, level, name = "Интервьюер", size = 200, className = "", tone = "light", glow = true }: InterviewerAvatarProps) {
   const box = useRef<HTMLDivElement | null>(null);
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const vids = useRef<Partial<Record<WaveState, HTMLVideoElement | null>>>({});
@@ -122,7 +124,7 @@ export function InterviewerAvatar({ state, level, name = "Интервьюер",
       smooth += (raw - smooth) * 0.3;
       // «говорю» без анализатора уровня (чат: человек читает вопрос) — мягкая синтетическая речь
       const amp = reduce ? 0 : s === "speaking" ? Math.max(smooth, 0.25 + 0.25 * Math.abs(Math.sin(t * 7.5)) * Math.abs(Math.sin(t * 2.3))) : smooth;
-      frame.style.boxShadow = reduce ? `0 0 0 3px ${RING[s]}` : `0 0 0 3px ${RING[s]}, 0 0 ${Math.round(10 + 34 * amp)}px ${Math.round(2 + 8 * amp)}px ${RING[s]}`;
+      frame.style.boxShadow = !glow ? "none" : reduce ? `0 0 0 3px ${RING[s]}` : `0 0 0 3px ${RING[s]}, 0 0 ${Math.round(10 + 34 * amp)}px ${Math.round(2 + 8 * amp)}px ${RING[s]}`;
       g.clearRect(0, 0, W, W);
       if (modeRef.current === "still" && !reduce) {
         if (s === "thinking") {  // «думаю» — три бегущие точки в углу
@@ -137,7 +139,7 @@ export function InterviewerAvatar({ state, level, name = "Интервьюер",
     };
     draw();
     return () => cancelAnimationFrame(raf);
-  }, [size, reduce, reduce ? state : "", mode]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [size, reduce, reduce ? state : "", mode, glow]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const label = WAVE_LABEL[state].toLowerCase();
   return (

@@ -126,7 +126,7 @@ function useArchitectVoice() {
 
 function AvatarStage({ voice, name, role, size = 150, compact = false }: { voice: Voice; name: string; role: string; size?: number; compact?: boolean }) {
   const state = voice.speaking ? "speaking" : "listening";
-  const chan = voice.channel === "anam" ? "видеопоток Anam · липсинк" : voice.channel === "mp3" ? "голос ElevenLabs · портрет" : voice.channel === "browser" ? "голос браузера · портрет" : "готова к разговору";
+  const chan = voice.channel === "anam" ? "живое видео · движение губ" : voice.channel === "mp3" ? "голос · портрет" : voice.channel === "browser" ? "голос браузера · портрет" : "готова к разговору";
   return (
     <div className={`flex ${compact ? "flex-row items-center gap-4" : "flex-col items-center gap-3 text-center"}`} data-testid="wr-avatar">
       <div className="relative shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-black shadow-[0_0_40px_-8px_rgba(99,91,255,0.7)]" style={{ width: size, height: size }}>

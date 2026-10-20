@@ -61,7 +61,7 @@ export function ListeningMeter({ level, vad, phase, liveText, hasLiveSr }: { lev
           {liveText ? "Слышу и распознаю вашу речь в реальном времени:" : hasLiveSr ? "Говорите в микрофон — ваши слова появятся здесь:" : "Микрофон записывает ваш ответ:"}
         </p>
         <p className="mt-1 min-h-[1.5rem] text-sm font-medium leading-relaxed text-brand-night" data-testid="iv-live-transcript">
-          {liveText ? `«${liveText}»` : hasLiveSr ? "Слушаю вас… Просто начните говорить, после паузы 3,5 с ответ уйдёт сам." : "Говорите спокойно — после паузы 3,5 с сервер Deepgram распознает и запишет ваш ответ."}
+          {liveText ? `«${liveText}»` : hasLiveSr ? "Слушаю вас… Просто начните говорить, после паузы 3,5 с ответ уйдёт сам." : "Говорите спокойно — после паузы 3,5 с ответ распознается и запишется сам."}
         </p>
       </div>
     </div>

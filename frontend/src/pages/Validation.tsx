@@ -572,7 +572,7 @@ function LlmTable({ llm, note, panel }: { llm: any; note?: string; panel?: strin
       {llm.caveat && <div className="mb-3"><Alert kind="info">{llm.caveat}</Alert></div>}
       <Table head={["Модель", "Роль", "Прогонов", panel ? `κ с консенсусом ${panel}` : "κ с консенсусом экспертов", panel ? "κ с прогонами панели, среднее" : "κ с экспертами, среднее", panel ? "κ между прогонами панели" : "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
         rows={llm.models.map((x: any) => [x.model, x.product == null ? "—" : x.product ? "в продукте" : "эталон", x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), inj(x), x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
-      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). ${panel ? `Сравнение — с консенсусом ${panel} (прогоны модели, не люди), поэтому вывод справочный. ` : ""}${rule} В продукте — модели цепочки оценщика (Claude через OpenRouter, запасная — YandexGPT); остальные — эталон для сравнения. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
+      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). ${panel ? `Сравнение — с консенсусом ${panel} (прогоны модели, не люди), поэтому вывод справочный. ` : ""}${rule} В продукте — модели цепочки оценщика (Claude, запасная — YandexGPT); остальные — эталон для сравнения. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
     </>
   );
 }

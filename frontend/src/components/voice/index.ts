@@ -11,6 +11,13 @@ export type { VoiceWaveProps, WaveState } from "./VoiceWave";
 export { InterviewerAvatar } from "./InterviewerAvatar";
 export type { InterviewerAvatarProps } from "./InterviewerAvatar";
 export { AnamAvatar } from "./AnamAvatar";
-export type { AnamAvatarProps, AnamHandle, AnamStatus } from "./AnamAvatar";
+export type { AnamAvatarProps, AnamHandle, AnamStatus, AnamWriter } from "./AnamAvatar";
+// Живой разговор «как по видеосвязи»: микрофон один раз, потоковое распознавание, голос в поток аватара с запасным выводом
+export { LiveListener, liveSttSupported } from "./live/listener";
+export type { MicState, SttEvent } from "./live/listener";
+export { SpeechBuffer, bargeIn, endDelay, isBackchannel, isEcho, stripEndMarker, words } from "./live/turns";
+export { Voice } from "./live/voice";
+export type { SayResult, Utterance } from "./live/voice";
+export { PcmPlayer } from "./live/player";
 export { dictationSupported, pickRuVoice, ttsSupported, useBrowserTts, useLiveDictation } from "./browserSpeech";
 export type { DictationOptions } from "./browserSpeech";

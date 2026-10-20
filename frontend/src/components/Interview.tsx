@@ -8,6 +8,7 @@ import { useMeta } from "../lib/meta";
 import { PageTitle } from "./CabinetLayout";
 import { Alert, Loading, dt, errText, useApi } from "./ui";
 import { AnamAvatar, InterviewerAvatar, VoiceAnswerButton, VoiceRecordButton, VoiceWave, postAudio, useSpeechPlayer, voiceSupported, type AnamHandle, type WaveState } from "./voice";
+import { LiveInterview, liveInterviewSupported, type LiveView } from "./voice/live/interview";
 
 /** Запуск живого разговора с ИИ-аватаром в 1 клик (с главной, из Экспертизы ФСП или из кабинета кандидата). */
 export async function launchLiveAvatar(
@@ -385,6 +386,46 @@ type Ch = "voice" | "text";
 const authHeaders = (): Record<string, string> => { const t = tokenStore.get(); return t ? { Authorization: `Bearer ${t}` } : {}; };
 const READ_MS = (q: string) => Math.max(1200, Math.min(4000, q.length * 35));
 
+const LIVE_HINT: Record<string, string> = {
+  starting: "Включаю микрофон…",
+  speaking: "Интервьюер говорит — можно перебить и сразу отвечать",
+  listening: "Отвечайте голосом — я слушаю",
+  talking: "Слушаю…",
+  thinking: "Записываю ответ…",
+  muted: "Микрофон выключен — нажмите, чтобы включить",
+};
+
+/** Живой микрофон устной защиты: включён весь разговор, кольцо — громкость голоса, нажатие — выключить/включить. */
+function LiveMic({ view, level, onToggle }: { view: LiveView; level: () => number; onToggle: () => void }) {
+  const ring = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const el = ring.current;
+      if (el) { const l = level(); el.style.transform = `scale(${1 + Math.min(0.5, l)})`; el.style.opacity = l > 0.04 ? "0.9" : "0.25"; }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [level]);
+  const muted = view.mic === "muted";
+  const hint = muted ? LIVE_HINT.muted : view.mic === "connecting" || view.phase === "starting" ? LIVE_HINT.starting
+    : view.phase === "thinking" ? LIVE_HINT.thinking : view.phase === "speaking" ? LIVE_HINT.speaking : view.talking ? LIVE_HINT.talking : LIVE_HINT.listening;
+  return (
+    <div className="flex flex-col items-center gap-2" data-testid="iv-live" data-phase={view.phase} data-mic={view.mic}>
+      <button type="button" onClick={onToggle} aria-label={muted ? "Включить микрофон" : "Выключить микрофон"} aria-pressed={!muted}
+        className={`relative flex h-16 w-16 items-center justify-center rounded-full text-white shadow-md transition ${muted ? "bg-rose-600 hover:bg-rose-500" : "bg-brand-night hover:bg-brand-plum"}`}
+        data-testid="iv-live-mic">
+        <span ref={ring} className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-emerald-400 transition-transform duration-100" aria-hidden="true" />
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="9" y="3" width="6" height="11" rx="3" fill={muted ? "none" : "currentColor"} /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" />{muted && <path d="m4 4 16 16" />}
+        </svg>
+      </button>
+      <p className="text-sm text-brand-ink/75" aria-live="polite" data-testid="iv-live-hint">{hint}</p>
+    </div>
+  );
+}
+
 /**
  * /candidate/interview/:id — разговор голосом или в чате. Визуал собеседника — собственная анимация (VoiceWave: круг и
  * волна голоса, состояния «говорю / слушаю / думаю»), без изображений людей (регламент п. 5.11); при
@@ -416,7 +457,7 @@ export function InterviewRoom() {
   const [reading, setReading] = useState(false);
   const [rec, setRec] = useState<"idle" | "recording" | "processing">("idle");
   const [left, setLeft] = useState<number | null>(null);
-  const [showQ, setShowQ] = useState(() => !isWebdriver);  // человеку вопрос виден сразу; в e2e скрыт до клика iv-question-toggle
+  const [showQ, setShowQ] = useState(false);  // вопрос звучит голосом; текст — по ссылке «Показать текст вопроса»
   const [confirmEnd, setConfirmEnd] = useState(false);  // «Ответов N из 3 — завершить сейчас?»
   const [heard, setHeard] = useState<string | null>(null);  // голос: последний распознанный и отправленный ответ
   const [autoListenKey, setAutoListenKey] = useState(0);  // автозапуск микрофона сразу после окончания речи аватара
@@ -428,6 +469,12 @@ export function InterviewRoom() {
   const anam = useRef<AnamHandle | null>(null);
   const [anamOff, setAnamOff] = useState(false);  // поток аватара не поднялся или оборвался — дальше портрет и mp3
   const autoStart = useRef(new URLSearchParams(loc.search).get("start"));  // Н1: ?start=voice — вход из «живого» приветствия
+  // живой режим «как по видеосвязи»: микрофон один раз, ответ уходит сам по паузе; e2e (webdriver) — прежняя кнопка
+  const lv = useRef<LiveInterview | null>(null);
+  const [lview, setLview] = useState<LiveView | null>(null);
+  const [liveOff, setLiveOff] = useState(false);
+  const qRef = useRef<string | null>(null);
+  useEffect(() => () => { lv.current?.stop(); lv.current = null; }, []);
   const load = async () => { try { setS(await api<IvSession>(`/interview/sessions/${id}`)); } catch (e) { setErr(errText(e)); } };
   useEffect(() => { void load(); return () => { player.stop(); if (readTimer.current) clearTimeout(readTimer.current); }; }, [id]);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {  // оценка в фоне — опрос раз в 3 с
@@ -443,9 +490,31 @@ export function InterviewRoom() {
     const t = setInterval(tick, 1000);
     return () => clearInterval(t);
   }, [s?.conversation?.deadline]);
+  useEffect(() => {  // Н1: живой вход — разговор начинается сам, без второго нажатия «Начать разговор»
+    const want = autoStart.current;
+    if (!want || !s) return;
+    autoStart.current = null;
+    navigate(loc.pathname, { replace: true });
+    if (s.status === "created" && s.conversation) {
+      void begin(want === "voice" && s.conversation.channels.voice ? "voice" : "text");
+    } else if (s.status === "in_progress" && want === "voice" && s.conversation?.channels.voice) {
+      player.unlock();
+      setCh("voice");
+      if (s.conversation.channels.stt) startLive();
+    }
+  }, [s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
   const q = s?.conversation?.question ?? null;
+  qRef.current = q;
   useEffect(() => { if (q && s?.status === "in_progress" && spoken.current !== q) { spoken.current = q; void say(q); } }, [q, s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (s && s.status !== "in_progress" && !bye) { player.stop(); anam.current?.stop(); } }, [s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!s || s.status === "in_progress" || s.status === "created" || bye) return;
+    player.stop(); anam.current?.stop();
+    const L = lv.current;
+    if (L) {  // разговор закрылся после последнего ответа — прощание тем же голосом, затем микрофон выключается
+      if (s.status === "evaluating" || s.status === "completed") void L.closing().finally(() => { if (lv.current === L) { lv.current = null; setLview(null); } });
+      else stopLive();
+    }
+  }, [s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
   const [bye, setBye] = useState<string | null>(null);  // прощание ведущей: время вышло или «Закончить»
   useEffect(() => { if (left === 0 && s?.status === "in_progress" && !busy) void finish(true); }, [left]);  // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -463,7 +532,31 @@ export function InterviewRoom() {
       window.setTimeout(() => setAutoListenKey((k) => k + 1), 250);
     }
   }
+  function startLive(): boolean {
+    if (lv.current) return true;
+    if (isWebdriver || liveOff || !liveInterviewSupported()) return false;
+    const L = new LiveInterview({
+      avatar: () => anam.current,
+      speechUrl: () => apiUrl(`/interview/sessions/${id}/speech?format=pcm24`),
+      headers: authHeaders,
+      onView: (v) => { if (lv.current === L) setLview(v); },
+      onAnswer: async (answer) => { const ok = await post(answer, true); if (ok) setHeard(answer); return ok; },
+      onRepeat: () => { const qq = qRef.current; if (qq && lv.current === L) void L.ask(qq); },
+      onUnavailable: () => {
+        if (lv.current !== L) return;
+        stopLive();
+        setLiveOff(true);
+        setNote("Микрофон недоступен — отвечайте кнопкой «Ответить» или текстом в чате.");
+      },
+    });
+    lv.current = L;
+    L.start();
+    setLview({ phase: "starting", mic: "connecting", talking: false });
+    return true;
+  }
+  function stopLive() { lv.current?.stop(); lv.current = null; setLview(null); }
   async function say(question: string, again = false) {
+    if (ch === "voice" && lv.current) { await lv.current.ask(question); return; }
     if (ch === "voice" && anam.current) {  // параллельно тянем pcm-голос и ждём готовности видеопотока (до 4.5 с)
       try {
         const [pcmRes, isLive] = await Promise.all([
@@ -498,12 +591,16 @@ export function InterviewRoom() {
     readAloud(question);
   }
   async function begin(want: Ch) {
-    if (want === "voice") player.unlock();  // Web Audio — из нажатия (правило автозапуска)
+    if (want === "voice") {
+      player.unlock();  // Web Audio — из нажатия (правило автозапуска)
+      if (s?.conversation?.channels.stt) startLive();  // микрофон — один раз на весь разговор
+    }
     setBusy(true); setErr(null); setNote(null); setCh(want);
     try { setS(await api<IvSession>(`/interview/sessions/${id}/begin`, { body: { channel: want } })); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
-  async function post(answer: string): Promise<boolean> {
-    player.stop(); anam.current?.stop(); lastAudio.current = null;
+  async function post(answer: string, keepVoice = false): Promise<boolean> {
+    if (!keepVoice) { player.stop(); anam.current?.stop(); }
+    lastAudio.current = null;
     setBusy(true); setErr(null); setNote(null); setConfirmEnd(false);
     try { setS(await api<IvSession>(`/interview/sessions/${id}/answer`, { body: { text: answer, channel: ch } })); return true; }
     catch (e) { setErr(errText(e)); return false; } finally { setBusy(false); }
@@ -519,14 +616,17 @@ export function InterviewRoom() {
     }
   }
   async function finish(timeUp = false) {
-    player.stop(); anam.current?.stop(); setConfirmEnd(false);
+    player.stop(); anam.current?.stop(); lv.current?.voice.stop(); setConfirmEnd(false);
     setBusy(true); setErr(null);
     try {
       const r = await api<IvSession>(`/interview/sessions/${id}/finish`, { method: "POST" });
       setS(r);
       if (r.status === "evaluating" || r.status === "completed") {
         setBye(timeUp ? "Время вышло. Спасибо, я всё записала — разговор закончен." : "Спасибо, я всё записала — разговор закончен.");
-        if (ch === "voice") {  // прощание — тем же голосом; не вышло — только текст
+        const L = lv.current;
+        if (L) {
+          void L.closing().finally(() => { if (lv.current === L) { lv.current = null; setLview(null); } });
+        } else if (ch === "voice") {  // прощание — тем же голосом; не вышло — только текст
           try {
             const a = await fetch(apiUrl(`/interview/sessions/${id}/speech`), { headers: authHeaders() });
             if (a.ok) void player.play(await a.blob());
@@ -536,26 +636,15 @@ export function InterviewRoom() {
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
 
-  useEffect(() => {  // Н1: живой вход — разговор начинается сам, без второго нажатия «Начать разговор»
-    const want = autoStart.current;
-    if (!want || !s) return;
-    autoStart.current = null;
-    navigate(loc.pathname, { replace: true });
-    if (s.status === "created" && s.conversation) {
-      void begin(want === "voice" && s.conversation.channels.voice ? "voice" : "text");
-    } else if (s.status === "in_progress" && want === "voice" && s.conversation?.channels.voice) {
-      player.unlock();
-      setCh("voice");
-    }
-  }, [s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!s) return err ? <Alert>{err}</Alert> : <Loading />;
   const c = s.conversation;
   const title = s.mode === "defense" ? "Устная защита ответов" : "ИИ-интервью";
   const live = s.status === "in_progress";
-  const wave: WaveState = s.status === "evaluating" || busy || rec === "processing" ? "thinking"
-    : !live ? "idle" : rec === "recording" ? "listening" : player.playing || reading ? "speaking" : "listening";
-  const level = () => (rec === "recording" ? mic.current() : player.level());
+  const wave: WaveState = s.status === "evaluating" || busy || rec === "processing" || lview?.phase === "thinking" ? "thinking"
+    : !live ? "idle" : lview ? (lview.phase === "speaking" ? "speaking" : "listening")
+    : rec === "recording" ? "listening" : player.playing || reading ? "speaking" : "listening";
+  const level = () => (lv.current ? lv.current.level() : rec === "recording" ? mic.current() : player.level());
   // живой аватар — только в канале «голос», пока идёт разговор, если движок его даёт и поток не отказал
   const anamOn = avatar && !anamOff && ch === "voice" && live && !!c?.channels.avatar;
   // голос: одна кнопка «Ответить» — если есть распознавание и браузер умеет записывать; иначе поле ответа
@@ -564,7 +653,7 @@ export function InterviewRoom() {
   function askFinish() {  // меньше 3 ответов — короткое подтверждение, иначе сразу
     if (c && answered < Math.min(3, c.max_questions)) setConfirmEnd(true); else void finish();
   }
-  const toChat = () => { player.stop(); anam.current?.stop(); setConfirmEnd(false); void fallback("text", "Перешли в чат: вопросы — текстом, отвечать можно и голосом."); };
+  const toChat = () => { player.stop(); anam.current?.stop(); stopLive(); setConfirmEnd(false); void fallback("text", "Перешли в чат: вопросы — текстом, отвечать можно и голосом."); };
   const link = "text-sm text-brand-ink/70 underline underline-offset-2 hover:text-brand-night disabled:opacity-50";
   const confirmBox = confirmEnd && c ? (
     <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm" role="alertdialog" aria-labelledby="iv-end-q" data-testid="iv-finish-confirm">
@@ -619,14 +708,15 @@ export function InterviewRoom() {
             {c.context && <p className="line-clamp-3 border-t border-brand-night/10 pt-2 text-xs text-brand-ink/75" data-testid="iv-context">Ваш письменный ответ в тесте: «{c.context}»</p>}
           </div>
           <div className="flex justify-center">
+            {lview ? <LiveMic view={lview} level={() => lv.current?.micLevel() ?? 0} onToggle={() => lv.current?.toggleMute()} /> :
             <VoiceAnswerButton testId="iv-record" disabled={busy} maxSeconds={90} silenceMs={3500}
               autoStartKey={autoListenKey}
               transcribe={(b) => postAudio(`/interview/sessions/${id}/transcribe`, b)}
               onBeforeStart={() => { player.stop(); anam.current?.stop(); setNote(null); setErr(null); setConfirmEnd(false); }}
               onLevel={(f) => { mic.current = f; }} onState={setRec} onNote={setNote}
-              onAnswer={(t, info) => sendVoice(t, info)} />
+              onAnswer={(t, info) => sendVoice(t, info)} />}
           </div>
-          {heard && rec === "idle" && !busy && (
+          {heard && rec === "idle" && !busy && !lview?.talking && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-2.5 text-xs text-emerald-950" data-testid="iv-heard">
               <span className="font-bold">✓ Ваш предыдущий ответ услышан и записан: </span>
               «{heard.length > 180 ? `${heard.slice(0, 180)}…` : heard}»
