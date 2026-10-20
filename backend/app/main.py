@@ -66,6 +66,7 @@ from app.modules.voice import router as voice  # голосовой ввод п�
 from app.modules.tariffs import router as tariffs_api  # тарифы работодателя, «Польза для ФСП» (Я29, TARIFFS_ENABLED)
 from app.modules.fsp.registry import router as fsp_registry_router
 from app.modules.trio import router as trio_api  # трёхсторонняя связь: работодатель ↔ кандидат ↔ ФСП
+from app.modules.warroom import router as warroom_api  # А9: Боевой ИИ-Полигон
 from app.passport.router import TAGS as PASSPORT_TAGS
 from app.passport.router import router as passport_router
 
@@ -92,7 +93,7 @@ TAGS = [
     {"name": "my-data", "description": "«Мои данные»: что хранится о пользователе, выгрузка JSON, удаление, отзыв раскрытых контактов"},
     {"name": "validation", "description": "Публичные метрики качества: валидация теста и подбора, критерии ТЗ, проверка своих данных"},
     {"name": "fsp-registry", "description": "Предложение контракта реестра ФСП и его синтетический мок (не официальный API ФСП)"},
-] + subs_api.TAGS
+] + subs_api.TAGS + warroom_api.TAGS
 
 
 @asynccontextmanager
@@ -194,7 +195,8 @@ def create_app() -> FastAPI:
               interview.router, interview.candidate_router, interview.employer_router,  # устная защита (Я15)
               voice.router,  # «Надиктовать» потребность (за флагом VOICE_NEED_ENABLED)
               tariffs_api.public_router, tariffs_api.employer_router, tariffs_api.fsp_router,  # тарифы (Я29)
-              trio_api.router):  # трёхсторонняя связь
+              trio_api.router,  # трёхсторонняя связь
+              warroom_api.router):  # А9: Боевой ИИ-Полигон
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)

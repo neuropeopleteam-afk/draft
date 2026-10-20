@@ -522,6 +522,14 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/interview/concierge/event"): "open",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
+    # А9: Боевой ИИ-Полигон (/api/warroom/*)
+    ("GET", "/api/warroom/scenarios"): "open",
+    ("GET", "/api/warroom/scenarios/{scenario_id}"): "open",
+    ("POST", "/api/warroom/simulate"): "open",
+    ("POST", "/api/warroom/evaluate"): "open",
+    ("GET", "/api/warroom/attempts/my"): "candidate",
+    ("GET", "/api/warroom/candidates/{ref}"): "employer_ref",
+    ("POST", "/api/warroom/anticheat/inspect"): "open",
 }
 
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)
@@ -534,6 +542,8 @@ PARAM_OVERRIDES: dict[tuple[str, str], dict[str, object]] = {
     ("GET", "/api/messages/{kind}/{tid}"): {"kind": "invitation"},
     ("POST", "/api/messages/{kind}/{tid}"): {"kind": "invitation"},
     ("GET", "/api/employer/needs/parse/{job_id}"): {"job_id": "00000000-0000-4000-8000-000000000027"},  # И27
+    # А9: Боевой ИИ-Полигон
+    ("GET", "/api/warroom/scenarios/{scenario_id}"): {"scenario_id": "payment"},
 }
 
 # Маршруты, меняющие состояние так, что дальнейшие проверки могут сломаться (сброс песочницы отзывает токены,
