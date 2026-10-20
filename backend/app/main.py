@@ -65,6 +65,7 @@ from app.modules.validation.router import router as validation_router
 from app.modules.voice import router as voice  # голосовой ввод потребности (VOICE_NEED_ENABLED)
 from app.modules.tariffs import router as tariffs_api  # тарифы работодателя, «Польза для ФСП» (Я29, TARIFFS_ENABLED)
 from app.modules.fsp.registry import router as fsp_registry_router
+from app.modules.trio import router as trio_api  # трёхсторонняя связь: работодатель ↔ кандидат ↔ ФСП
 from app.passport.router import TAGS as PASSPORT_TAGS
 from app.passport.router import router as passport_router
 
@@ -145,7 +146,7 @@ def create_app() -> FastAPI:
             "сервера — `docs/api/openapi.json` в репозитории (обзор — `docs/API.md`)."
         ),
         openapi_tags=(TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS
-                      + mutual.TAGS + study_api.TAGS + hh_api.TAGS + interview.TAGS + tariffs_api.TAGS),
+                      + mutual.TAGS + study_api.TAGS + hh_api.TAGS + interview.TAGS + tariffs_api.TAGS + trio_api.TAGS),
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -192,7 +193,8 @@ def create_app() -> FastAPI:
               hh_api.router, hh_api.validation_router,  # hh.ru (Я12): без HH_ENABLED и токена — 404 hh_disabled
               interview.router, interview.candidate_router, interview.employer_router,  # устная защита (Я15)
               voice.router,  # «Надиктовать» потребность (за флагом VOICE_NEED_ENABLED)
-              tariffs_api.public_router, tariffs_api.employer_router, tariffs_api.fsp_router):  # тарифы (Я29)
+              tariffs_api.public_router, tariffs_api.employer_router, tariffs_api.fsp_router,  # тарифы (Я29)
+              trio_api.router):  # трёхсторонняя связь
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
