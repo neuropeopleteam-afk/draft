@@ -575,10 +575,10 @@ export class ElenaEngine {
   }
 
   /** Обзор встаёт и ждёт: реплика человека будет обработана, потом обзор продолжится со следующей реплики. */
-  private holdForUser() {
+  private holdForUser(heard = 1) {
     this.touring = false;
     this.resumePending = true;
-    this.heard = 1;
+    this.heard = heard;
     this.set({ phase: "listening", click: null });
   }
 
@@ -606,11 +606,14 @@ export class ElenaEngine {
     // Елена договаривает фразу — реплика ждёт её конца (её не перебивают), потом сразу ответ
     if (this.voice.speaking()) {
       if (!this.submitWait) {
+        let quiet = 0;   // два тихих такта подряд: Елена договорила, следующий шаг (обзор, переход) уже начался
         this.submitWait = window.setInterval(() => {
-          if (this.closed || this.voice.speaking()) return;
+          if (this.closed) return;
+          if (this.voice.speaking()) { quiet = 0; return; }
+          if (++quiet < 2) return;
           window.clearInterval(this.submitWait);
           this.submitWait = 0;
-          if (this.touring) this.holdForUser();
+          if (this.touring) this.holdForUser(this.stepUtter ? this.stepUtter.progress() : this.heard);
           this.submit();
         }, 120);
       }
@@ -765,11 +768,16 @@ export class ElenaEngine {
     const a = meta.action ?? "answer";
     const sc = this.script!;
     if (a === "start_tour") {
-      if (nav) await nav;
-      if (!this.alive(ep)) return;
+      const role = this.roleOf(meta);
+      // обзор уже «начат»: если человек заговорит, пока открывается экран, — обзор подождёт и продолжится с начала
+      this.pos = { ids: TRACKS[role], track: role, i: 0, b: 0 };
+      this.heard = 0;
+      this.touring = true;
       this.paused = false;
       this.detour = null;
-      void this.runTour(this.roleOf(meta), 0, 0, ep, { bridge: true, named: false });
+      if (nav) await nav;
+      if (!this.alive(ep)) return;
+      void this.runTour(role, 0, 0, ep, { bridge: true, named: false });
       return;
     }
     if (a === "goto" && meta.step && STEPS[meta.step]) {
@@ -851,7 +859,11 @@ export class ElenaEngine {
       return;
     }
     if (a === "ask_role") {
-      this.set({ phase: "listening" });
+      // новый вопрос «что показать?» — прежний недосмотренный обзор не продолжаем сами
+      this.resumePending = false;
+      this.touring = false;
+      this.pos = null;
+      this.set({ phase: "listening", stepNo: 0, stepTotal: 0 });
       this.armIdle(ep, IDLE_AFTER_QUESTION_MS, async () => {
         if ((await this.sayText(sc.nudge_role ?? sc.nudge, ep)) !== "done") return;
         void this.runTour("all", 0, 0, ep, { bridge: true, named: false });

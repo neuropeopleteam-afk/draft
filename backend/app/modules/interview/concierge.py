@@ -914,6 +914,10 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             return {**base, "kind": "instant", "action": "goto", "step": offer["step"], "phrase": "goto"}
         if act == "point" and offer.get("point"):
             return {**base, "kind": "instant", "action": "point", "point": offer["point"], "reply": "Вот здесь."}
+    if first_time and (touring or paused) and words_n <= 4 and not is_q:
+        # назвался посреди обзора — знакомимся и продолжаем с того же места
+        ack("instant")
+        return {**base, "kind": "instant", "action": "resume", "reply": f"Очень приятно, {name}."}
     quick = classify(msg, touring=touring, paused=paused)
     if quick:
         ack("instant")
@@ -958,8 +962,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         g = detect_goto(msg, strict=False)
         if g:
             return {**base, "kind": "fallback", "action": "goto", "step": g, "phrase": "goto"}
-        return {**base, "kind": "fallback", "action": "answer",
-                "reply": "Не успела найти точный ответ. Давайте покажу на экране — спросите ещё раз чуть иначе."}
+        return {**base, "kind": "fallback", "action": "answer", "reply": _kb_answer(msg, current_path, step_id)}
     reply = _drop_self_talk(_clean_reply(d.get("reply", "")))
     if name and reply.lower().startswith(name.lower() + ","):
         # имя — не в каждой реплике: звучало в двух последних — убираем обращение
@@ -1007,6 +1010,25 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         "model": d.get("_model"),
         "llm_ms": d.get("_ms"),
     }
+
+
+def _kb_answer(msg: str, path: str, step: str | None) -> str:
+    """Модели не ответили вовремя — ответ из базы знаний: предложения самого подходящего блока, где есть слова вопроса."""
+    from app.modules.interview import concierge_rag as rag
+
+    try:
+        chunks = rag.retrieve(msg, current_path=path, step=step, k=2)
+    except Exception:  # noqa: BLE001
+        chunks = []
+    common = set(rag.tokens("кандидат кандидаты работодатель работодатели драфт платформа сайт федерация фсп экран"))
+    q = set(rag.tokens(msg)) - common
+    for c in chunks:
+        sents = [x.strip() for x in re.split(r"(?<=[.!?])\s+", c.text) if len(x.strip()) > 25]
+        best = sorted(sents, key=lambda x: -len(q & set(rag.tokens(x))))[:2]
+        best = [x for x in best if q & set(rag.tokens(x))]
+        if best:
+            return _brief(" ".join(best), 240)
+    return "Скажу коротко: это лучше один раз увидеть. Скажите, какой экран открыть, — покажу."
 
 
 _TURNS_HOUR: list[float] = []

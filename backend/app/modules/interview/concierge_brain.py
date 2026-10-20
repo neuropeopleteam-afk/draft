@@ -35,8 +35,8 @@ MSK = timezone(timedelta(hours=3))
 LLM_MODELS = [m.strip() for m in os.environ.get(
     "CONCIERGE_BRAIN_MODELS",
     "openrouter=anthropic/claude-haiku-5.5@minimal|openrouter=google/gemini-2.5-flash").split("|") if m.strip()]
-LLM_HEDGE_S = float(os.environ.get("CONCIERGE_LLM_HEDGE_S", "3.2"))
-LLM_DEADLINE_S = float(os.environ.get("CONCIERGE_LLM_DEADLINE_S", "7.0"))
+LLM_HEDGE_S = float(os.environ.get("CONCIERGE_LLM_HEDGE_S", "3.2"))  # не используется: обе модели — сразу
+LLM_DEADLINE_S = float(os.environ.get("CONCIERGE_LLM_DEADLINE_S", "8.0"))
 SUPERVISOR_MODEL = os.environ.get("CONCIERGE_SUPERVISOR_MODEL", "openrouter=anthropic/claude-opus-5.5@low").strip()
 TRANSCRIPT_DAYS = int(os.environ.get("CONCIERGE_TRANSCRIPT_DAYS", "30"))
 _POOL = ThreadPoolExecutor(max_workers=8, thread_name_prefix="concierge-llm")
@@ -490,10 +490,15 @@ def _ask(msgs: list[dict], spec: str, timeout: float, max_tokens: int = 420, sch
         return None
 
 
+LLM_PREFER_S = float(os.environ.get("CONCIERGE_LLM_PREFER_S", "2.6"))
+
+
 def answer(message: str, *, sid: str | None, name: str | None, role: str | None, path: str, step: str | None,
            touring: bool, paused: bool, screen: dict | None, history: list[dict] | None,
            numbers: dict | None = None) -> dict | None:
-    """Ответ модели: первая годная из LLM_MODELS; «страховочный» запрос к следующей — если основная молчит LLM_HEDGE_S."""
+    """Ответ модели. Обе модели спрашиваются сразу: ответ основной (первой в LLM_MODELS) берём, если он пришёл за
+    LLM_PREFER_S; позже — тот, что пришёл первым (обычно быстрая успевает за ~1,5 с). Пауза — не больше ~2,6 с, даже
+    когда у поставщика основной модели «пробка»."""
     s = session(sid)
     dyn = _dynamic(s, message=message, name=name, role=role, path=path, step=step, touring=touring, paused=paused,
                    screen=screen, numbers=numbers)
@@ -507,29 +512,28 @@ def answer(message: str, *, sid: str | None, name: str | None, role: str | None,
     def ok(d: dict | None) -> bool:
         return bool(d and isinstance(d.get("reply"), str) and d["reply"].strip())
 
-    futs = [_POOL.submit(_ask, msgs, models[0], LLM_DEADLINE_S - 0.5, 420, TURN_SCHEMA)]
-    started = 1
-    hedge_at = t0 + LLM_HEDGE_S
-    while futs:
+    futs = {_POOL.submit(_ask, msgs, spec, LLM_DEADLINE_S - 0.3, 420, TURN_SCHEMA): k for k, spec in enumerate(models[:3])}
+    got: dict[int, dict] = {}
+    pending = set(futs)
+    while pending and time.monotonic() < deadline:
         now = time.monotonic()
-        if now >= deadline:
+        prefer_left = t0 + LLM_PREFER_S - now
+        if 0 in got:
             break
-        until = hedge_at if started < len(models) else deadline
-        done, _ = wait(futs, timeout=max(0.05, min(deadline, until) - now), return_when=FIRST_COMPLETED)
+        if prefer_left <= 0 and got:
+            break
+        done, pending = wait(pending, timeout=max(0.05, min(deadline - now, prefer_left if prefer_left > 0 else deadline - now)),
+                             return_when=FIRST_COMPLETED)
         for f in done:
-            futs.remove(f)
             d = f.result()
             if ok(d):
-                d["_ms"] = int((time.monotonic() - t0) * 1000)
-                return d
-        if started < len(models) and (time.monotonic() >= hedge_at or not futs):
-            left = deadline - time.monotonic()
-            if left < 1.0:
-                break
-            futs.append(_POOL.submit(_ask, msgs, models[started], left, 420, TURN_SCHEMA))
-            started += 1
-            hedge_at = time.monotonic() + LLM_HEDGE_S
-    return None
+                got[futs[f]] = d
+    if not got:
+        return None
+    k = min(got)
+    d = got[k]
+    d["_ms"] = int((time.monotonic() - t0) * 1000)
+    return d
 
 
 # ------------------------------------------------------------------ наставник
