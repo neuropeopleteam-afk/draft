@@ -1,0 +1,54 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: backend.idem_redis.lead_solve_lam_k5
+title: 'Память Redis под ключи идемпотентности — обратная задача: наибольший допустимый вход «поток запросов в секунду» с
+  учётом: накладные расходы Redis, фрагментация, запас maxmemory, шардирование, рост трафика'
+direction: backend
+skills:
+- redis
+- idempotency
+- api_design
+- capacity_planning
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - bits
+    - frag_only
+    - frag_twice
+    - growth_only
+    - growth_twice
+    - maxmem_free
+    - minutes
+    - no_frag
+    - no_growth
+    - no_maxmem
+    - no_overhead
+    - no_shards
+    - overhead_only
+    - overhead_twice
+    - shards_mul
+    - shards_plus1
+    construct: 'Объём хранилища ключей идемпотентности: поток × TTL × размер записи с накладными расходами. Ступень 5 из 5:
+      взаимодействуют 5 поправочных фактора(ов) (накладные расходы Redis; фрагментация; запас maxmemory; шардирование; рост
+      трафика); обратная задача: наибольший вход «поток запросов в секунду» на сетке с шагом 200, при котором памяти хватит.'
+    wave: 20.10-S
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: 2.91
+  a: 3.0
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Объём хранилища ключей идемпотентности: поток × TTL × размер записи с накладными
+    расходами; 5 взаимодействующих фактора(ов) (накладные расходы Redis, фрагментация, запас maxmemory, шардирование, рост
+    трафика), обратная задача: наибольший вход «поток запросов в секунду» на сетке с шагом 200, при котором памяти хватит.
+    Грейд Principal (b 2,91 по числу факторов и направлению вопроса: прямой расчёт легче обратной задачи; волна 20.10-S, без
+    калибровки панелью). σ 0,3'
+generator: assessment_bank.families.backend.s15_idem_redis_solve_lam_k5
+version: 1
+description: 'Principal: память Redis под ключи идемпотентности — обратная задача: наибольший вход «поток запросов в секунду»
+  на сетке с шагом 200, при котором памяти хватит. 5 фактора(ов): накладные расходы Redis, фрагментация, запас maxmemory,
+  шардирование, рост трафика. Ключ — исполнением модели (точные дроби), для обратной задачи — ещё и линейным перебором сетки.'

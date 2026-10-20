@@ -1,0 +1,11 @@
+"""backend.retry_storm.senior_fwd_k5 — mcq_concept (Senior). Нагрузка на зависимость при шторме ретраев — прямой расчёт с учётом: деление по подам, ретраи на двух уровнях, пиковый коэффициент, отброс лимитером, служебные вызовы.
+
+Модель предметной области (MODEL: answer, traps, fmt), ловушки и тексты — базовая модель
+«retry_storm» в families/_w2010_scale_cat_backend.py, ступень 5 из 5, прямой расчёт;
+текст модели семейства собирает _w2010_scale_defs.model_source, генерация — _w2010_kit.numeric_variant.
+"""
+from assessment_bank.families._w2010_scale_defs import make
+
+FAMILY_ID = "backend.retry_storm.senior_fwd_k5"
+N_ABOVE = (0, 1, 2, 3)  # при каком числе ловушек «выше ключа» подбор выполним (пробная выборка генератора волны)
+generate = make(FAMILY_ID, N_ABOVE)

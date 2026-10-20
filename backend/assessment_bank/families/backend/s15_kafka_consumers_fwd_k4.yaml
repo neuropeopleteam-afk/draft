@@ -1,0 +1,49 @@
+# Волна 20.10-S: файл собран tools/w2010_scale1500.py из families/_w2010_scale_cat_*.py — правьте каталог базовых моделей, не YAML.
+family_id: backend.kafka_consumers.middle_fwd_k4
+title: 'Число консьюмеров и партиций Kafka-топика — прямой расчёт с учётом: запас по загрузке, рост потока, повторная обработка,
+  запас на выкатку'
+direction: backend
+skills:
+- kafka
+- messaging
+- capacity_planning
+- backend
+target_grades:
+- middle
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - floor
+    - growth_only
+    - growth_twice
+    - hour
+    - no_growth
+    - no_min
+    - no_retry
+    - no_surge
+    - no_util
+    - retry_only
+    - retry_twice
+    - surge_twice
+    - util_free
+    construct: 'Пропускная способность группы консьюмеров: пиковый поток / производительность консьюмера с поправками. Ступень
+      4 из 5: взаимодействуют 4 поправочных фактора(ов) (запас по загрузке; рост потока; повторная обработка; запас на выкатку);
+      прямой расчёт по модели.'
+    wave: 20.10-S
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 0.1
+  a: 1.45
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Пропускная способность группы консьюмеров: пиковый поток / производительность
+    консьюмера с поправками; 4 взаимодействующих фактора(ов) (запас по загрузке, рост потока, повторная обработка, запас на
+    выкатку), прямой расчёт по модели. Грейд Middle (b 0,1 по числу факторов и направлению вопроса: прямой расчёт легче обратной
+    задачи; волна 20.10-S, без калибровки панелью). σ 0,3'
+generator: assessment_bank.families.backend.s15_kafka_consumers_fwd_k4
+version: 1
+description: 'Middle: число консьюмеров и партиций Kafka-топика — прямой расчёт по модели. 4 фактора(ов): запас по загрузке,
+  рост потока, повторная обработка, запас на выкатку. Ключ — исполнением модели (точные дроби).'
