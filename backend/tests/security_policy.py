@@ -174,6 +174,9 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/me/fsp"): "candidate",
     ("POST", "/api/me/fsp/link"): "candidate",
     ("POST", "/api/me/fsp/registry-sync"): "candidate",
+    # А2: проверка и подтверждение достижений по официальным протоколам ФСП
+    ("POST", "/api/me/fsp/protocols/search"): "candidate",
+    ("POST", "/api/me/fsp/protocols/confirm"): "candidate",
     ("PUT", "/api/me/jury-mode"): ("candidate", {"candidate": 403}),  # только демо-учётки: живому кандидату 403
     ("GET", "/api/me/onboarding"): "candidate",
     ("PUT", "/api/me/onboarding"): "candidate",
