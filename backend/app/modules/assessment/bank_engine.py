@@ -423,18 +423,6 @@ class BankEngine:
         scored = [i for i in done if not i["canary"]]
         # потолок категории по длине теста и погрешности — то же отображение θ → категория, что у мини-теста (grades)
         dec = decide_grade(theta, se, claimed, n_items=len(scored), direction=state["direction"])
-        from app.modules.assessment import sprt as sprt_mod
-        verdict_obj = sprt_mod.compute_verdict(
-            done,
-            lookup,
-            claimed,
-            theta,
-            se,
-            confirmed=dec.confirmed,
-            assigned_grade=dec.assigned,
-            mode=state.get("mode") or "full",
-            incident_stage=state.get("incident_stage"),
-        )
 
         new_scored = [i for i in state["items"] if i["done"] and not i["canary"]]
         pending = [i for i in scored if any(v is None for v in i["x"])]
@@ -468,6 +456,27 @@ class BankEngine:
             for i in done], pk, extra=state.get("integrity_extra") or {},  # extra — сигналы сессии внешних модулей
             theta=theta, soft_fast=state.get("mode") == "express" or bool(state.get("sandbox")), lz=lz)
         integ.setdefault("signals", {})["lz"] = lz  # индекс l_z — в сигналы достоверности (защита, IntegrityBadge)
+        from app.modules.assessment import sprt as sprt_mod
+        verdict_obj = sprt_mod.compute_verdict(
+            done,
+            lookup,
+            claimed,
+            theta,
+            se,
+            confirmed=dec.confirmed,
+            assigned_grade=dec.assigned,
+            mode=state.get("mode") or "full",
+            incident_stage=state.get("incident_stage"),
+            suspicious=state.get("suspicious") if state.get("suspicious") is not None else {
+                "integrity": integ,
+                "flagged": integ.get("level") == "low" or det.flagged or bool((integ.get("signals") or {}).get("format_gap_flag")),
+                "level": integ.get("level"),
+                "preknowledge_flagged": det.flagged,
+                "format_gap_flag": bool((integ.get("signals") or {}).get("format_gap_flag")),
+                "lz": lz,
+                "reasons": list(integ.get("reasons") or []) if integ.get("level") == "low" else [],
+            },
+        )
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families, "mode": state.get("mode", "full"),
             "length": {"min_items": state["cfg"]["min_items"], "max_items": state["cfg"]["max_items"],
@@ -827,6 +836,95 @@ class BankEngine:
             rec["llm_score"] = it["x"][part]
         state.setdefault("outbox", []).append({"type": "review", "token": token})
         return rec
+
+    # ------------------------------------------------------------------ апелляция кандидата по заданию (А4/А8)
+    def list_appeals(self, state: dict) -> list[dict]:
+        out = []
+        for it in state.get("items", []):
+            ap = it.get("appeal")
+            if ap:
+                out.append({
+                    "item_id": it["token"],
+                    "position": it["position"],
+                    "format": it["format"],
+                    **ap,
+                })
+        return out
+
+    def submit_appeal(self, state: dict, item_id: str, reason: str, actor: str = "candidate") -> dict | None:
+        """Кандидат оспаривает задание → статус задания ``under_review``, пересчёт θ и вердикта без спорного задания."""
+        it = next((i for i in state.get("items", []) if i.get("token") == item_id), None)
+        if it is None:
+            return None
+        ap = {
+            "status": "under_review",
+            "reason": (reason or "").strip()[:2000],
+            "actor": actor,
+            "created_at": time.time(),
+        }
+        it["appeal"] = ap
+        active_state = {
+            **state,
+            "items": [i for i in state.get("items", []) if (i.get("appeal") or {}).get("status") not in ("under_review", "excluded")],
+        }
+        res_without = self.finish(active_state) if any(i.get("done") for i in active_state["items"]) else None
+        ap["recomputed_without_item"] = {
+            "theta": res_without.theta if res_without else None,
+            "se": res_without.se if res_without else None,
+            "confirmed": res_without.confirmed if res_without else None,
+            "verdict": (res_without.details or {}).get("verdict") if res_without else None,
+        }
+        return {"item_id": it["token"], "position": it["position"], "format": it["format"], **ap}
+
+    def resolve_appeal(
+        self,
+        state: dict,
+        item_id: str,
+        decision: str,
+        score: float | None = None,
+        comment: str | None = None,
+        reviewer: str = "expert",
+    ) -> dict | None:
+        """Решение эксперта по апелляции: ``uphold_candidate`` (засчитать / выставить score), ``exclude`` (исключить из θ)
+        или ``uphold_key`` (оставить исходную оценку).
+        """
+        it = next((i for i in state.get("items", []) if i.get("token") == item_id), None)
+        if it is None:
+            return None
+        ap = dict(it.get("appeal") or {"reason": "", "created_at": time.time()})
+        if decision == "exclude":
+            ap["status"] = "excluded"
+        elif decision == "uphold_candidate":
+            ap["status"] = "resolved_upheld"
+            new_sc = 1.0 if score is None else max(0.0, min(1.0, float(score)))
+            it["x"] = [new_sc] * len(it.get("x") or [1.0])
+            it["done"] = True
+            it.setdefault("time_s", 60.0)
+            it.setdefault("log_t", math.log(max(1.0, float(it["time_s"]))))
+        else:
+            ap["status"] = "resolved_rejected"
+            if score is not None:
+                new_sc = max(0.0, min(1.0, float(score)))
+                it["x"] = [new_sc] * len(it.get("x") or [1.0])
+                it.setdefault("time_s", 60.0)
+                it.setdefault("log_t", math.log(max(1.0, float(it["time_s"]))))
+        ap["decision"] = decision
+        ap["comment"] = (comment or "").strip()[:2000]
+        ap["reviewer"] = reviewer
+        ap["resolved_at"] = time.time()
+        it["appeal"] = ap
+        active_state = {
+            **state,
+            "items": [i for i in state.get("items", []) if (i.get("appeal") or {}).get("status") not in ("under_review", "excluded")],
+        }
+        res_after = self.finish(active_state) if any(i.get("done") for i in active_state["items"]) else None
+        ap["recomputed_after_resolution"] = {
+            "theta": res_after.theta if res_after else None,
+            "se": res_after.se if res_after else None,
+            "confirmed": res_after.confirmed if res_after else None,
+            "verdict": (res_after.details or {}).get("verdict") if res_after else None,
+        }
+        return {"item_id": it["token"], "position": it["position"], "format": it["format"], **ap}
 
     def _total_est(self, state: dict) -> int:
         c = state["cfg"]

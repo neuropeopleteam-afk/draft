@@ -900,3 +900,39 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         "surveys": [{"id": str(s.id), "direction": s.direction_id, "claimed_grade": s.claimed_grade_id,
                      "at": s.created_at.isoformat()} for s in surveys],
     }
+
+
+def list_session_appeals(db: Session, ts: TestSession) -> dict:
+    """Список апелляций по заданиям сессии."""
+    st = dict((ts.result or {}).get("state") or {})
+    eng = get_engine(st.get("engine"))
+    fn = getattr(eng, "list_appeals", None)
+    appeals = fn(st) if callable(fn) else []
+    return {"session_id": str(ts.id), "appeals": appeals}
+
+
+def submit_item_appeal(db: Session, ts: TestSession, item_id: str, reason: str, actor: str = "candidate") -> dict:
+    """Подать апелляцию по заданию: задание помечается `under_review`, вердикт пересчитывается без него."""
+    res_obj = dict(ts.result or {})
+    st = dict(res_obj.get("state") or {})
+    eng = get_engine(st.get("engine"))
+    fn = getattr(eng, "submit_appeal", None)
+    if not callable(fn):
+        raise AppError(409, "appeals_unsupported", "Движок сессии не поддерживает апелляции по заданиям")
+    rec = fn(st, item_id=item_id, reason=reason, actor=actor)
+    if rec is None:
+        raise AppError(404, "item_not_found", "Задание в этой сессии не найдено")
+    res_obj["state"] = st
+    recomp = rec.get("recomputed_without_item") or {}
+    if recomp.get("verdict") and isinstance(res_obj.get("engine_result"), dict):
+        er = dict(res_obj["engine_result"])
+        det = dict(er.get("details") or {})
+        det["verdict"] = recomp["verdict"]
+        det["sprt"] = recomp["verdict"]
+        er["details"] = det
+        res_obj["engine_result"] = er
+    ts.result = res_obj
+    flag_modified(ts, "result")
+    db.commit()
+    return {"session_id": str(ts.id), "appeal": rec, "appeals": list_session_appeals(db, ts)["appeals"]}
+

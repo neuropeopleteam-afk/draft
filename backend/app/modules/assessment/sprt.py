@@ -49,6 +49,7 @@ VERDICT_TITLES: dict[str, str] = {
     "confirmed": "Подтверждён",
     "not_confirmed": "Не подтверждён",
     "needs_followup": "Нужен доп. этап",
+    "needs_oral_defense": "Нужен доп. этап / устная защита",
 }
 
 
@@ -175,6 +176,10 @@ class ThreeValuedVerdict:
     followup_cut_grade: str
     explanation: str
     incident_stage: dict | None = None
+    suspicious_flagged: bool = False
+    suspicious_reasons: tuple[str, ...] = ()
+    oral_defense_required: bool = False
+    integrity_followup: dict | None = None
 
     def as_dict(self) -> dict:
         out = {
@@ -194,6 +199,8 @@ class ThreeValuedVerdict:
             "n_scored": self.n_scored,
             "code_open_count": self.code_open_count,
             "code_open_share": round(self.code_open_share, 3),
+            "suspicious_flagged": self.suspicious_flagged,
+            "suspicious_reasons": list(self.suspicious_reasons),
             "followup": {
                 "needed": self.followup_needed,
                 "minutes": self.followup_minutes,
@@ -202,12 +209,116 @@ class ThreeValuedVerdict:
                 "cut_grade_title": GRADE_RU.get(self.followup_cut_grade, self.followup_cut_grade),
                 "cut": round(self.cut, 3),
                 "incident_recommended": self.claimed_grade in SENIOR_PLUS_GRADES,
+                "oral_defense_required": self.oral_defense_required,
+                "kind": (self.integrity_followup or {}).get("followup_kind") or ("oral_defense" if self.oral_defense_required else ("stage2" if self.followup_needed else None)),
+                "triggered_factors": list((self.integrity_followup or {}).get("triggered_factors") or ()),
             },
             "explanation": self.explanation,
         }
         if self.incident_stage is not None:
             out["incident_stage"] = self.incident_stage
+        if self.integrity_followup is not None:
+            out["integrity_followup"] = self.integrity_followup
         return out
+
+
+def evaluate_integrity_followup(
+    integrity_dict: dict | None,
+    scored_items: list[dict] | None = None,
+    *,
+    decoy_hits: int = 0,
+) -> dict:
+    """Единый контур античита А6 + разрыва форм теста А4 (``integrity_followup``).
+
+    Использует ``integrity_followup(integrity, decoy_hits=...)`` из ``app.modules.proctor.rules`` или
+    ``app.modules.assessment.grader`` (А6) через ``getattr``, а до слияния ветки А6 — совместимую заглушку с тем же
+    контрактом и порогом ``threshold_points = 2``. Добавляет фактор ``"form_gap"`` в ``triggered_factors`` по тому же
+    правилу накопления баллов риска.
+    """
+    from app.modules.assessment import integrity as integ_mod
+
+    integ = dict(integrity_dict or {})
+    sig = dict(integ.get("signals") or {})
+    fg = integ_mod.format_gap_logits(scored_items or []) if scored_items is not None else None
+    if fg and fg.get("flagged") and not sig.get("format_gap_flag"):
+        sig["format_gap"] = fg["gap_logits"]
+        sig["format_gap_flag"] = True
+        sig["theta_mcq"] = fg["theta_mcq"]
+        sig["theta_code"] = fg["theta_code"]
+        integ["signals"] = sig
+        integ["points"] = int(integ.get("points") or 0) + int(fg.get("points") or 1)
+        rs = list(integ.get("reasons") or [])
+        if fg.get("employer_reason") and fg["employer_reason"] not in rs:
+            rs.append(fg["employer_reason"])
+        integ["reasons"] = rs
+
+    ext_fn = None
+    try:
+        from app.modules.proctor import rules as proctor_rules
+        ext_fn = getattr(proctor_rules, "integrity_followup", None)
+    except Exception:
+        ext_fn = None
+    if ext_fn is None:
+        try:
+            from app.modules.assessment import grader as grader_mod
+            ext_fn = getattr(grader_mod, "integrity_followup", None)
+        except Exception:
+            ext_fn = None
+
+    decoy_n = int(decoy_hits or sig.get("ai_mark_items") or 0)
+    if callable(ext_fn):
+        res = dict(ext_fn(integ, decoy_hits=decoy_n))
+    else:
+        pts = int(integ.get("points") or 0)
+        threshold = 2
+        factors: list[str] = []
+        if sig.get("lz_flag") or (isinstance(sig.get("lz"), (int, float)) and float(sig["lz"]) < -2.0):
+            factors.append("person_fit")
+        if (sig.get("fast_correct") or 0) >= 2 or (sig.get("instant_correct") or 0) >= 1 or (sig.get("fast_text_items") or 0) >= 1 or sig.get("preknowledge_flagged"):
+            factors.append("time_anomaly")
+        if (sig.get("focus_lost_items") or 0) >= 2 or (sig.get("hidden_s") or 0) >= 30 or (sig.get("fs_exits") or 0) >= 2:
+            factors.append("focus_lost")
+        if (sig.get("paste_items") or 0) >= 1 or (sig.get("not_typed_items") or 0) >= 1 or (sig.get("even_rhythm_items") or 0) >= 1:
+            factors.append("paste_origin")
+        if decoy_n > 0 or (sig.get("copy_items") or 0) >= 1 or (sig.get("printscreen_items") or 0) >= 1:
+            factors.append("copy_decoy")
+        if integ.get("camera"):
+            factors.append("camera")
+        if sig.get("format_gap_flag") or (fg and fg.get("flagged")):
+            factors.append("form_gap")
+        decoy_hit = bool(decoy_n > 0 or sig.get("preknowledge_flagged"))
+        needs = bool(pts >= threshold or decoy_hit)
+        emp_view = integ_mod.summary_for_employer(integ) or {}
+        cand_view = integ_mod.candidate_view(integ) or {}
+        res = {
+            "honesty_index": round(max(0.0, min(1.0, 1.0 - 0.15 * pts - (0.25 if decoy_hit else 0.0))), 3),
+            "risk_points": pts,
+            "threshold_points": threshold,
+            "needs_followup_stage": needs,
+            "followup_kind": ("oral_defense" if (decoy_hit or pts >= 3 or "form_gap" in factors or "person_fit" in factors) else "stage2") if needs else None,
+            "triggered_factors": factors,
+            "decoy_hit": decoy_hit,
+            "employer_reason_ru": "; ".join(emp_view.get("reasons") or []),
+            "candidate_reason_ru": "; ".join(cand_view.get("reasons") or []),
+        }
+
+    # Гарантируем, что "form_gap" присутствует в triggered_factors единым путём, если разрыв форм сработал
+    tf = list(res.get("triggered_factors") or [])
+    if (sig.get("format_gap_flag") or (fg and fg.get("flagged"))) and "form_gap" not in tf:
+        tf.append("form_gap")
+        res["triggered_factors"] = tf
+        res["risk_points"] = max(int(res.get("risk_points") or 0), int(fg.get("points") or 1) if fg else 1)
+        if int(res["risk_points"]) >= int(res.get("threshold_points") or 2) or (fg and fg["gap_logits"] > integ_mod.FORMAT_GAP_WARN):
+            res["needs_followup_stage"] = True
+            if not res.get("followup_kind"):
+                res["followup_kind"] = "oral_defense"
+        if fg and fg.get("employer_reason") and fg["employer_reason"] not in (res.get("employer_reason_ru") or ""):
+            res["employer_reason_ru"] = (
+                f"{res['employer_reason_ru']}; {fg['employer_reason']}" if res.get("employer_reason_ru") else fg["employer_reason"]
+            )
+    if fg is not None:
+        res["format_gap"] = fg
+    return res
 
 
 def incorporate_incident_stage(
@@ -292,11 +403,18 @@ def compute_verdict(
     delta: float = DEFAULT_DELTA,
     boundary_level: float = 0.80,
     incident_stage: dict | None = None,
+    suspicious: bool | dict | None = None,
 ) -> ThreeValuedVerdict:
-    """Вычисляет статистику SPRT и трёхзначный вердикт по завершённым заданиям сессии (с учётом Боевого этапа А9)."""
+    """Вычисляет статистику SPRT и трёхзначный вердикт по завершённым заданиям сессии (с учётом Боевого этапа А9 и сигналов античита А6)."""
     cut = float(GRADE_CUTS.get(claimed_grade, 0.0))
     A = sprt_bound(alpha)
-    scored = [it for it in done_items if not it.get("canary") and it.get("done", True)]
+    # Исключаем задания, находящиеся на апелляции со статусом under_review или excluded
+    scored = [
+        it for it in done_items
+        if not it.get("canary")
+        and it.get("done", True)
+        and (it.get("appeal") or {}).get("status") not in ("under_review", "excluded")
+    ]
     llr = 0.0
     code_open = 0
     for it in scored:
@@ -364,11 +482,63 @@ def compute_verdict(
         if assigned_grade in ("none", None):
             assigned_grade = claimed_grade
 
+    # Разбор признака подозрительной попытки от античита (А6) и разрыва форм теста (А4/А6):
+    # единый механизм через evaluate_integrity_followup (не автоматический бан, а перевод в доп. этап / устную защиту)
+    from app.modules.assessment.integrity import FORMAT_GAP_TITLE
+    integ_input = suspicious.get("integrity") if isinstance(suspicious, dict) and isinstance(suspicious.get("integrity"), dict) else (
+        suspicious if isinstance(suspicious, dict) and "signals" in suspicious else {}
+    )
+    ifrel = evaluate_integrity_followup(integ_input, scored)
+    susp_flagged = bool(ifrel.get("needs_followup_stage"))
+    susp_reasons: list[str] = []
+    if ifrel.get("employer_reason_ru"):
+        for part_r in str(ifrel["employer_reason_ru"]).split("; "):
+            if part_r and part_r not in susp_reasons and "Сигналов нарушений нет" not in part_r:
+                susp_reasons.append(part_r)
+    if isinstance(suspicious, dict):
+        if suspicious.get("flagged") or suspicious.get("suspicious") or suspicious.get("level") in ("low",) or suspicious.get("format_gap_flag"):
+            susp_flagged = True
+            ifrel["needs_followup_stage"] = True
+            if not ifrel.get("followup_kind"):
+                ifrel["followup_kind"] = "oral_defense"
+        if suspicious.get("format_gap_flag") and not any(FORMAT_GAP_TITLE in r for r in susp_reasons):
+            susp_reasons.append(FORMAT_GAP_TITLE)
+        if suspicious.get("preknowledge_flagged"):
+            susp_flagged = True
+            ifrel["needs_followup_stage"] = True
+            if "аномалия времени и точности на контрольных заданиях" not in susp_reasons:
+                susp_reasons.append("аномалия времени и точности на контрольных заданиях")
+        lz_val = suspicious.get("lz")
+        if isinstance(lz_val, (int, float)) and float(lz_val) < -2.0:
+            susp_flagged = True
+            ifrel["needs_followup_stage"] = True
+            lz_txt = f"несогласованный профиль ответов person-fit l_z = {float(lz_val):.2f}"
+            if lz_txt not in susp_reasons:
+                susp_reasons.append(lz_txt)
+        for r in suspicious.get("reasons") or ():
+            if str(r) not in susp_reasons and "Сигналов нарушений нет" not in str(r):
+                susp_reasons.append(str(r))
+        if susp_flagged and not susp_reasons:
+            susp_reasons.append("сигналы прокторинга / потери фокуса или аномальной скорости")
+    elif bool(suspicious):
+        susp_flagged = True
+        ifrel["needs_followup_stage"] = True
+        if not ifrel.get("followup_kind"):
+            ifrel["followup_kind"] = "oral_defense"
+        if not susp_reasons:
+            susp_reasons.append("сигналы проверки самостоятельности выполнения")
+
     # Трёхзначный вердикт:
-    # - если это уже второй этап (mode == "refine" или "confirm") или пройден Боевой этап инцидента, решение окончательное;
+    # - если попытка помечена античитом как подозрительная и претендует на подтверждение (или в серой зоне),
+    #   автоматического бана нет: вердикт переводится в needs_followup с обязательной устной защитой / доп. этапом;
+    # - если это уже второй этап (mode == "refine" или "confirm") или пройден Боевой этап инцидента (без неснятых подозрений), решение окончательное;
     # - в основном тесте: если |LLR| < A и P(θ ≥ порога) лежит в пограничной полосе (1 − L; L), назначается 15-минутный доп. этап.
     in_grey_zone = (abs(llr) < A) and ((1.0 - boundary_level) < p_claim < boundary_level)
-    if mode in ("refine", "confirm") or inc_norm is not None:
+    oral_required = False
+    if susp_flagged and (confirmed or in_grey_zone or p_claim >= (1.0 - boundary_level)):
+        status = "needs_followup"
+        oral_required = True
+    elif mode in ("refine", "confirm") or inc_norm is not None:
         status = "confirmed" if confirmed else "not_confirmed"
     elif in_grey_zone:
         status = "needs_followup"
@@ -382,7 +552,15 @@ def compute_verdict(
     followup_needed = status == "needs_followup"
     g_title = GRADE_RU.get(claimed_grade, claimed_grade)
     p_pct = round(100 * p_claim)
-    if status == "confirmed":
+    title_str = VERDICT_TITLES["needs_oral_defense"] if oral_required else VERDICT_TITLES[status]
+    if oral_required:
+        reasons_txt = f" ({'; '.join(susp_reasons)})" if susp_reasons else ""
+        expl = (
+            f"Вердикт: нужен дополнительный этап / устная защита по уровню {g_title}{reasons_txt}. "
+            "Платформа не применяет автоматических банов: чтобы подтвердить самостоятельность решения и снять сомнения, "
+            f"пройдите 3-минутную устную защиту ответа или {DEFAULT_FOLLOWUP_MINUTES}-минутный дополнительный этап у порога."
+        )
+    elif status == "confirmed":
         expl = (
             f"Вердикт: уровень {g_title} подтверждён с высокой статистической надёжностью "
             f"(вероятность соответствия {p_pct} %, индекс последовательного теста LLR = {llr:+.2f} при пороге ±{A:.2f})."
@@ -409,10 +587,10 @@ def compute_verdict(
 
     return ThreeValuedVerdict(
         status=status,
-        title=VERDICT_TITLES[status],
+        title=title_str,
         confident=(status != "needs_followup"),
         claimed_grade=claimed_grade,
-        assigned_grade=assigned_grade if confirmed else ("none" if assigned_grade == claimed_grade else assigned_grade),
+        assigned_grade=assigned_grade if (confirmed and not oral_required) else ("none" if assigned_grade == claimed_grade else assigned_grade),
         llr=llr,
         threshold_a=A,
         alpha=alpha,
@@ -428,4 +606,8 @@ def compute_verdict(
         followup_cut_grade=claimed_grade,
         explanation=expl,
         incident_stage=inc_norm,
+        suspicious_flagged=susp_flagged,
+        suspicious_reasons=tuple(susp_reasons),
+        oral_defense_required=oral_required,
+        integrity_followup=ifrel,
     )

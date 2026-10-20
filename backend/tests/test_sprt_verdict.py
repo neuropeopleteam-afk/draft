@@ -109,3 +109,55 @@ def test_incident_sim_format_in_bank_engine():
         incident={"service": "payments-api", "release": "2026.10.20"},
     )
     assert pub.incident["service"] == "payments-api"
+
+
+def test_format_gap_and_integrity_followup_unified():
+    from app.modules.assessment.integrity import FORMAT_GAP_TITLE, assess, format_gap_logits
+
+    # 4 идеальных ответа на сложных MCQ (b = 1.5) при 3 провалах на базовом коде (b = -0.5) → разрыв > 0.80 логита
+    items = [
+        {"format": "mcq_concept", "canary": False, "time_s": 40.0, "time_limit_s": 120, "score": 1.0, "b": 1.5, "a": 1.2}
+        for _ in range(4)
+    ] + [
+        {"format": "find_bug", "canary": False, "time_s": 90.0, "time_limit_s": 180, "score": 0.0, "b": -0.5, "a": 1.35}
+        for _ in range(3)
+    ]
+    fg = format_gap_logits(items)
+    assert fg is not None and fg["flagged"] is True
+    assert fg["gap_logits"] > 0.80
+    assert FORMAT_GAP_TITLE in fg["employer_reason"]
+
+    integ = assess(items, theta=0.8)
+    assert integ["signals"]["format_gap_flag"] is True
+    assert any(FORMAT_GAP_TITLE in r for r in integ["reasons"])
+
+    # Единый контур compute_verdict переводит вердикт в needs_followup с устной защитой и фактором "form_gap"
+    done_for_v = [
+        {"canary": False, "done": True, "format": it["format"], "x": [it["score"]], "pool": {"a": [it["a"]], "b": [it["b"]]}}
+        for it in items
+    ]
+    v = sprt.compute_verdict(
+        done_for_v, {}, "middle", theta=0.65, se=0.30, confirmed=True, assigned_grade="middle",
+        suspicious={"integrity": integ},
+    )
+    assert v.status == "needs_followup"
+    assert v.oral_defense_required is True
+    assert "form_gap" in (v.integrity_followup or {}).get("triggered_factors", [])
+
+
+def test_item_appeal_recomputes_verdict():
+    eng = BankEngine()
+    st = eng.start(direction="backend", claimed_grade="middle", stack_tags=["python"], seed=42)
+    it = eng.next_item(st)
+    assert it is not None
+    # Завершаем задание с неверным ответом и подаём апелляцию
+    st["items"][0]["x"] = [0.0]
+    st["items"][0]["done"] = True
+    rec = eng.submit_appeal(st, item_id=it.item_id, reason="Неоднозначное условие задачи", actor="cand@example.org")
+    assert rec is not None
+    assert rec["status"] == "under_review"
+    assert len(eng.list_appeals(st)) == 1
+    res = eng.resolve_appeal(st, item_id=it.item_id, decision="uphold_candidate", score=1.0, comment="Апелляция удовлетворена")
+    assert res is not None and res["status"] == "resolved_upheld"
+    assert st["items"][0]["x"] == [1.0]
+

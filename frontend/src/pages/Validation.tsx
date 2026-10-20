@@ -12,6 +12,8 @@ import RuLlm from "../components/validation/RuLlm";
 import Strongest from "../components/validation/Strongest";
 import RetestLive from "../components/validation/RetestLive";  // И26: доля повторов заданий между попытками
 import Headline from "../components/validation/Headline";
+import CheatChallenge from "../components/validation/CheatChallenge";
+import { getRecomputeTable } from "../lib/numbers";
 import { ProvenanceLine, Snapshots, type Prov } from "../components/validation/Provenance";  // Я8: происхождение чисел, снимки расчётов
 import PathRetest, { CalibrationCard, GradeAccuracy, TwoStage } from "../components/validation/PathRetest";
 import LiveUsers from "../components/validation/LiveUsers";
@@ -54,6 +56,10 @@ export default function Validation() {
         <Headline />
         {/* KF4: «Арена метрик» — Драфт против поиска по резюме и точность грейда, сразу под «5 числами», над «Красной кнопкой» */}
         <MatchingArena />
+        <div className="mt-8">
+          <CheatChallenge />
+        </div>
+        <HowToRecompute />
         {loading ? <div className="mt-8"><Loading /></div> : error ? <div className="mt-8"><Alert>{error}</Alert></div> : r?.missing
           ? <div className="mt-8"><Alert kind="info">Отчёт ещё не построен: запустите make validate.</Alert></div> : null}
         {r && !r.missing && !loading && !error ? <Report r={r} before={<Before />} /> : <FoldGroup><Before /></FoldGroup>}
@@ -81,6 +87,63 @@ function HowToRead() {
       </p>
       <FoldAllButton className="mt-2" />
     </div>
+  );
+}
+
+function HowToRecompute() {
+  const rows = getRecomputeTable();
+  if (!rows.length) return null;
+  return (
+    <section
+      id="how-to-recompute"
+      data-testid="validation-how-to-recompute"
+      className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <span className="chip-lime">Воспроизводимость · единый реестр docs/NUMBERS.json</span>
+          <h2 className="mt-1.5 text-lg font-extrabold text-brand-night">Как пересчитать самостоятельно</h2>
+        </div>
+        <code className="rounded bg-brand-night/5 px-2 py-1 text-xs text-brand-night">
+          python3 tools/publish/gen_numbers.py
+        </code>
+      </div>
+      <p className="mt-1 text-xs text-brand-ink/70">
+        Каждая ключевая цифра на сайте собирается из открытых скриптов и сохраняется в <code>docs/NUMBERS.json</code>{" "}
+        с указанием выборки, зерна генератора случайных чисел, одной команды пересчёта (<code>recompute</code>) и файла
+        исходного кода (<code>code_ref</code>).
+      </p>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-brand-night/10 text-[11px] uppercase tracking-wider text-brand-ink/60">
+              <th className="py-2 pr-3">Раздел</th>
+              <th className="py-2 pr-3">Показатель</th>
+              <th className="py-2 pr-3">Условия и выборка N</th>
+              <th className="py-2 pr-3">Команда пересчёта (recompute)</th>
+              <th className="py-2">Исходный код (code_ref)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-brand-night/5">
+            {rows.map((row) => (
+              <tr key={row.section}>
+                <td className="py-2 pr-3 font-semibold text-brand-night">{row.section}</td>
+                <td className="py-2 pr-3 font-bold tabular-nums text-brand-plum">{row.metric}</td>
+                <td className="py-2 pr-3 text-brand-ink/75">{row.sample}</td>
+                <td className="py-2 pr-3">
+                  <code className="rounded bg-brand-cream/60 px-1.5 py-0.5 text-[11px] text-brand-night">
+                    {row.command}
+                  </code>
+                </td>
+                <td className="py-2">
+                  <code className="text-[11px] text-brand-ink/75">{row.code_ref}</code>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 

@@ -1,0 +1,701 @@
+{
+ "signature": {
+  "world": "кросс-валидированная симуляция 6 грейдов (Стажёр…Principal): train N=1000, held-out test N=3000",
+  "seed": 2026102002,
+  "config_hash": "7685436e20f6",
+  "commit": "8e8f365",
+  "bank": "82a05fdbacf00481",
+  "n": 3000,
+  "command": "python -m app.modules.validation.sprt_verdict",
+  "generated_at": "2026-10-20T17:08:20+00:00"
+ },
+ "generated_at": "2026-10-20T17:08:20+00:00",
+ "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
+ "code_ref": "backend/app/modules/validation/sprt_verdict.py",
+ "cross_validation": {
+  "protocol": "Подбор порогов (α, δ) выполнен на независимой обучающей выборке (seed 2026102001); все отчётные метрики посчитаны один раз на отложенной контрольной выборке (seed 2026102002) без донастройки.",
+  "train_seed": 2026102001,
+  "test_seed": 2026102002,
+  "retest_seed": 2026102003,
+  "n_train_per_point": 1000,
+  "n_test": 3000,
+  "chosen_params": {
+   "alpha": 0.02,
+   "delta": 0.35,
+   "min_sprt_items": 6,
+   "code_open_share": 0.333,
+   "followup_minutes": 15
+  },
+  "train_grid": [
+   {
+    "alpha": 0.05,
+    "delta": 0.3,
+    "precision_decided": 0.9651,
+    "decided_share": 0.831,
+    "false_confirm_decided": 0.0072,
+    "exact_with_followup": 0.838,
+    "minutes_mean": 46.1
+   },
+   {
+    "alpha": 0.05,
+    "delta": 0.35,
+    "precision_decided": 0.962,
+    "decided_share": 0.869,
+    "false_confirm_decided": 0.0173,
+    "exact_with_followup": 0.824,
+    "minutes_mean": 44.8
+   },
+   {
+    "alpha": 0.05,
+    "delta": 0.4,
+    "precision_decided": 0.9509,
+    "decided_share": 0.876,
+    "false_confirm_decided": 0.0285,
+    "exact_with_followup": 0.801,
+    "minutes_mean": 43.6
+   },
+   {
+    "alpha": 0.03,
+    "delta": 0.3,
+    "precision_decided": 0.9706,
+    "decided_share": 0.816,
+    "false_confirm_decided": 0.0123,
+    "exact_with_followup": 0.815,
+    "minutes_mean": 49.2
+   },
+   {
+    "alpha": 0.03,
+    "delta": 0.35,
+    "precision_decided": 0.9667,
+    "decided_share": 0.841,
+    "false_confirm_decided": 0.0119,
+    "exact_with_followup": 0.845,
+    "minutes_mean": 46.5
+   },
+   {
+    "alpha": 0.03,
+    "delta": 0.4,
+    "precision_decided": 0.9671,
+    "decided_share": 0.851,
+    "false_confirm_decided": 0.0129,
+    "exact_with_followup": 0.822,
+    "minutes_mean": 45.8
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.3,
+    "precision_decided": 0.9888,
+    "decided_share": 0.802,
+    "false_confirm_decided": 0.0075,
+    "exact_with_followup": 0.822,
+    "minutes_mean": 51.2
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.35,
+    "precision_decided": 0.9889,
+    "decided_share": 0.81,
+    "false_confirm_decided": 0.0025,
+    "exact_with_followup": 0.844,
+    "minutes_mean": 48.2
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.4,
+    "precision_decided": 0.9756,
+    "decided_share": 0.861,
+    "false_confirm_decided": 0.0081,
+    "exact_with_followup": 0.824,
+    "minutes_mean": 46.1
+   }
+  ]
+ },
+ "main": {
+  "n": 3000,
+  "precision_decided": 0.9763,
+  "precision_decided_ci": [
+   0.9701,
+   0.9817
+  ],
+  "decided_share": 0.803,
+  "verdict_accuracy_after_followup": 0.9283,
+  "verdict_accuracy_after_followup_ci": [
+   0.9197,
+   0.9377
+  ],
+  "false_confirm_decided": 0.0095,
+  "false_confirm_overall": 0.0197,
+  "false_confirm_overall_ci": [
+   0.0143,
+   0.0243
+  ],
+  "exact_single_stage": 0.7853,
+  "exact_single_stage_ci": [
+   0.7703,
+   0.8
+  ],
+  "exact_with_followup": 0.8207,
+  "exact_with_followup_ci": [
+   0.808,
+   0.834
+  ],
+  "exact_far_from_cut": 0.9808,
+  "exact_far_from_cut_ci": [
+   0.9679,
+   0.9915
+  ],
+  "far_from_cut_share": 0.156,
+  "within_1": 1.0,
+  "within_1_ci": [
+   1.0,
+   1.0
+  ],
+  "gross_error_rate": 0.0,
+  "gross_error_count": 0,
+  "over_rate": 0.0943,
+  "under_rate": 0.085,
+  "followup_share": 0.4823,
+  "items_mean": 16.4,
+  "minutes_mean": 48.7,
+  "code_open_share": 0.671,
+  "by_grade": {
+   "intern": {
+    "n_true": 179,
+    "n_claimed": 195,
+    "exact_grade": 0.8268,
+    "within_1": 1.0,
+    "verdict_accuracy_all": 1.0,
+    "verdict_precision_decided": 1.0,
+    "decided_share": 1.0,
+    "false_confirm_rate": 0.0
+   },
+   "junior": {
+    "n_true": 470,
+    "n_claimed": 419,
+    "exact_grade": 0.8,
+    "within_1": 1.0,
+    "verdict_accuracy_all": 0.9666,
+    "verdict_precision_decided": 0.9815,
+    "decided_share": 0.9021,
+    "false_confirm_rate": 0.0095
+   },
+   "middle": {
+    "n_true": 865,
+    "n_claimed": 729,
+    "exact_grade": 0.815,
+    "within_1": 1.0,
+    "verdict_accuracy_all": 0.9287,
+    "verdict_precision_decided": 0.9731,
+    "decided_share": 0.8162,
+    "false_confirm_rate": 0.0247
+   },
+   "senior": {
+    "n_true": 786,
+    "n_claimed": 775,
+    "exact_grade": 0.8333,
+    "within_1": 1.0,
+    "verdict_accuracy_all": 0.9226,
+    "verdict_precision_decided": 0.9758,
+    "decided_share": 0.7458,
+    "false_confirm_rate": 0.0232
+   },
+   "lead": {
+    "n_true": 485,
+    "n_claimed": 545,
+    "exact_grade": 0.7979,
+    "within_1": 1.0,
+    "verdict_accuracy_all": 0.8972,
+    "verdict_precision_decided": 0.968,
+    "decided_share": 0.745,
+    "false_confirm_rate": 0.0239
+   },
+   "principal": {
+    "n_true": 215,
+    "n_claimed": 337,
+    "exact_grade": 0.8884,
+    "within_1": 1.0,
+    "verdict_accuracy_all": 0.9021,
+    "verdict_precision_decided": 0.9728,
+    "decided_share": 0.7626,
+    "false_confirm_rate": 0.0178
+   }
+  }
+ },
+ "retest": {
+  "n": 3000,
+  "exact": 0.7387,
+  "exact_ci": [
+   0.7227,
+   0.7547
+  ],
+  "within_1": 0.9997,
+  "two_or_more_steps": 0.0003,
+  "kappa_w": 0.9147,
+  "verdict_consistency": 0.8917,
+  "verdict_consistency_ci": [
+   0.8807,
+   0.903
+  ],
+  "r_theta": 0.9488
+ },
+ "scenarios": {
+  "baseline_mcq4": {
+   "title": "1. Базовый CAT (16 MCQ с 4 вариантами, отбор в θ̂, 1 этап)",
+   "metrics": {
+    "n": 3000,
+    "precision_decided": 0.9642,
+    "precision_decided_ci": [
+     0.9553,
+     0.9719
+    ],
+    "decided_share": 0.6417,
+    "verdict_accuracy_after_followup": 0.8543,
+    "verdict_accuracy_after_followup_ci": [
+     0.8417,
+     0.867
+    ],
+    "false_confirm_decided": 0.0145,
+    "false_confirm_overall": 0.036,
+    "false_confirm_overall_ci": [
+     0.0297,
+     0.043
+    ],
+    "exact_single_stage": 0.6897,
+    "exact_single_stage_ci": [
+     0.672,
+     0.7053
+    ],
+    "exact_with_followup": 0.6897,
+    "exact_with_followup_ci": [
+     0.6723,
+     0.706
+    ],
+    "exact_far_from_cut": 0.8242,
+    "exact_far_from_cut_ci": [
+     0.7854,
+     0.8562
+    ],
+    "far_from_cut_share": 0.146,
+    "within_1": 0.9957,
+    "within_1_ci": [
+     0.9933,
+     0.9977
+    ],
+    "gross_error_rate": 0.0043,
+    "gross_error_count": 13,
+    "over_rate": 0.1677,
+    "under_rate": 0.1427,
+    "followup_share": 0.0,
+    "items_mean": 16.0,
+    "minutes_mean": 24.0,
+    "code_open_share": 0.0,
+    "by_grade": {
+     "intern": {
+      "n_true": 194,
+      "n_claimed": 206,
+      "exact_grade": 0.6546,
+      "within_1": 0.9742,
+      "verdict_accuracy_all": 1.0,
+      "verdict_precision_decided": 1.0,
+      "decided_share": 1.0,
+      "false_confirm_rate": 0.0
+     },
+     "junior": {
+      "n_true": 447,
+      "n_claimed": 430,
+      "exact_grade": 0.5951,
+      "within_1": 0.9866,
+      "verdict_accuracy_all": 0.9116,
+      "verdict_precision_decided": 0.9823,
+      "decided_share": 0.7884,
+      "false_confirm_rate": 0.0488
+     },
+     "middle": {
+      "n_true": 814,
+      "n_claimed": 675,
+      "exact_grade": 0.7064,
+      "within_1": 0.9988,
+      "verdict_accuracy_all": 0.8548,
+      "verdict_precision_decided": 0.9698,
+      "decided_share": 0.637,
+      "false_confirm_rate": 0.0385
+     },
+     "senior": {
+      "n_true": 872,
+      "n_claimed": 826,
+      "exact_grade": 0.7397,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8281,
+      "verdict_precision_decided": 0.9505,
+      "decided_share": 0.563,
+      "false_confirm_rate": 0.0387
+     },
+     "lead": {
+      "n_true": 502,
+      "n_claimed": 544,
+      "exact_grade": 0.6713,
+      "within_1": 0.998,
+      "verdict_accuracy_all": 0.8346,
+      "verdict_precision_decided": 0.9554,
+      "decided_share": 0.5772,
+      "false_confirm_rate": 0.0294
+     },
+     "principal": {
+      "n_true": 171,
+      "n_claimed": 319,
+      "exact_grade": 0.6959,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.7837,
+      "verdict_precision_decided": 0.924,
+      "decided_share": 0.5361,
+      "false_confirm_rate": 0.0408
+     }
+    }
+   }
+  },
+  "honest_mcq5_cut": {
+   "title": "2. Честные MCQ (5 вариантов без перекоса ключа) + отбор у порогов грейдов",
+   "metrics": {
+    "n": 3000,
+    "precision_decided": 0.9562,
+    "precision_decided_ci": [
+     0.9469,
+     0.9654
+    ],
+    "decided_share": 0.6847,
+    "verdict_accuracy_after_followup": 0.859,
+    "verdict_accuracy_after_followup_ci": [
+     0.8473,
+     0.8713
+    ],
+    "false_confirm_decided": 0.0175,
+    "false_confirm_overall": 0.0357,
+    "false_confirm_overall_ci": [
+     0.0293,
+     0.0427
+    ],
+    "exact_single_stage": 0.716,
+    "exact_single_stage_ci": [
+     0.6997,
+     0.7313
+    ],
+    "exact_with_followup": 0.716,
+    "exact_with_followup_ci": [
+     0.6997,
+     0.7317
+    ],
+    "exact_far_from_cut": 0.8406,
+    "exact_far_from_cut_ci": [
+     0.8108,
+     0.8705
+    ],
+    "far_from_cut_share": 0.1673,
+    "within_1": 0.995,
+    "within_1_ci": [
+     0.9927,
+     0.9973
+    ],
+    "gross_error_rate": 0.005,
+    "gross_error_count": 15,
+    "over_rate": 0.149,
+    "under_rate": 0.135,
+    "followup_share": 0.0,
+    "items_mean": 16.0,
+    "minutes_mean": 24.0,
+    "code_open_share": 0.0,
+    "by_grade": {
+     "intern": {
+      "n_true": 178,
+      "n_claimed": 188,
+      "exact_grade": 0.6573,
+      "within_1": 0.9438,
+      "verdict_accuracy_all": 1.0,
+      "verdict_precision_decided": 1.0,
+      "decided_share": 1.0,
+      "false_confirm_rate": 0.0
+     },
+     "junior": {
+      "n_true": 484,
+      "n_claimed": 467,
+      "exact_grade": 0.6756,
+      "within_1": 0.9938,
+      "verdict_accuracy_all": 0.8994,
+      "verdict_precision_decided": 0.9725,
+      "decided_share": 0.7773,
+      "false_confirm_rate": 0.0343
+     },
+     "middle": {
+      "n_true": 838,
+      "n_claimed": 667,
+      "exact_grade": 0.7542,
+      "within_1": 0.9976,
+      "verdict_accuracy_all": 0.8756,
+      "verdict_precision_decided": 0.9676,
+      "decided_share": 0.6942,
+      "false_confirm_rate": 0.048
+     },
+     "senior": {
+      "n_true": 837,
+      "n_claimed": 816,
+      "exact_grade": 0.7097,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8272,
+      "verdict_precision_decided": 0.9412,
+      "decided_share": 0.625,
+      "false_confirm_rate": 0.049
+     },
+     "lead": {
+      "n_true": 456,
+      "n_claimed": 548,
+      "exact_grade": 0.7215,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8449,
+      "verdict_precision_decided": 0.9493,
+      "decided_share": 0.6113,
+      "false_confirm_rate": 0.0292
+     },
+     "principal": {
+      "n_true": 207,
+      "n_claimed": 314,
+      "exact_grade": 0.7198,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.7866,
+      "verdict_precision_decided": 0.9077,
+      "decided_share": 0.621,
+      "false_confirm_rate": 0.0096
+     }
+    }
+   }
+  },
+  "mix_single_stage": {
+   "title": "3. Классификационный CAT у порогов + 1/3 заданий с кодом и открытым ответом (1 этап, до 16 заданий)",
+   "metrics": {
+    "n": 3000,
+    "precision_decided": 0.9819,
+    "precision_decided_ci": [
+     0.976,
+     0.9869
+    ],
+    "decided_share": 0.7907,
+    "verdict_accuracy_after_followup": 0.922,
+    "verdict_accuracy_after_followup_ci": [
+     0.912,
+     0.9313
+    ],
+    "false_confirm_decided": 0.0072,
+    "false_confirm_overall": 0.023,
+    "false_confirm_overall_ci": [
+     0.018,
+     0.0283
+    ],
+    "exact_single_stage": 0.8197,
+    "exact_single_stage_ci": [
+     0.8057,
+     0.8337
+    ],
+    "exact_with_followup": 0.8197,
+    "exact_with_followup_ci": [
+     0.806,
+     0.833
+    ],
+    "exact_far_from_cut": 0.9702,
+    "exact_far_from_cut_ci": [
+     0.9532,
+     0.9851
+    ],
+    "far_from_cut_share": 0.1567,
+    "within_1": 1.0,
+    "within_1_ci": [
+     1.0,
+     1.0
+    ],
+    "gross_error_rate": 0.0,
+    "gross_error_count": 0,
+    "over_rate": 0.0997,
+    "under_rate": 0.0807,
+    "followup_share": 0.0,
+    "items_mean": 16.0,
+    "minutes_mean": 45.0,
+    "code_open_share": 0.625,
+    "by_grade": {
+     "intern": {
+      "n_true": 194,
+      "n_claimed": 206,
+      "exact_grade": 0.8557,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 1.0,
+      "verdict_precision_decided": 1.0,
+      "decided_share": 1.0,
+      "false_confirm_rate": 0.0
+     },
+     "junior": {
+      "n_true": 491,
+      "n_claimed": 449,
+      "exact_grade": 0.7943,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.9532,
+      "verdict_precision_decided": 0.9822,
+      "decided_share": 0.8753,
+      "false_confirm_rate": 0.0178
+     },
+     "middle": {
+      "n_true": 868,
+      "n_claimed": 768,
+      "exact_grade": 0.8065,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.918,
+      "verdict_precision_decided": 0.9848,
+      "decided_share": 0.7734,
+      "false_confirm_rate": 0.0312
+     },
+     "senior": {
+      "n_true": 799,
+      "n_claimed": 744,
+      "exact_grade": 0.8385,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.922,
+      "verdict_precision_decided": 0.9752,
+      "decided_share": 0.7581,
+      "false_confirm_rate": 0.0255
+     },
+     "lead": {
+      "n_true": 466,
+      "n_claimed": 526,
+      "exact_grade": 0.794,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8783,
+      "verdict_precision_decided": 0.9791,
+      "decided_share": 0.7281,
+      "false_confirm_rate": 0.0247
+     },
+     "principal": {
+      "n_true": 182,
+      "n_claimed": 307,
+      "exact_grade": 0.8956,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.9088,
+      "verdict_precision_decided": 0.9784,
+      "decided_share": 0.7557,
+      "false_confirm_rate": 0.0163
+     }
+    }
+   }
+  },
+  "sprt_verdict_product": {
+   "title": "4. Продуктовый стандарт: SPRT (α = 0,02, δ = 0,35) + 1/3 код/открытые + 3-значный вердикт + 15-мин доп. этап у границы и Боевой этап для Senior+",
+   "metrics": {
+    "n": 3000,
+    "precision_decided": 0.9763,
+    "precision_decided_ci": [
+     0.9701,
+     0.9817
+    ],
+    "decided_share": 0.803,
+    "verdict_accuracy_after_followup": 0.9283,
+    "verdict_accuracy_after_followup_ci": [
+     0.9197,
+     0.9377
+    ],
+    "false_confirm_decided": 0.0095,
+    "false_confirm_overall": 0.0197,
+    "false_confirm_overall_ci": [
+     0.0143,
+     0.0243
+    ],
+    "exact_single_stage": 0.7853,
+    "exact_single_stage_ci": [
+     0.7703,
+     0.8
+    ],
+    "exact_with_followup": 0.8207,
+    "exact_with_followup_ci": [
+     0.808,
+     0.834
+    ],
+    "exact_far_from_cut": 0.9808,
+    "exact_far_from_cut_ci": [
+     0.9679,
+     0.9915
+    ],
+    "far_from_cut_share": 0.156,
+    "within_1": 1.0,
+    "within_1_ci": [
+     1.0,
+     1.0
+    ],
+    "gross_error_rate": 0.0,
+    "gross_error_count": 0,
+    "over_rate": 0.0943,
+    "under_rate": 0.085,
+    "followup_share": 0.4823,
+    "items_mean": 16.4,
+    "minutes_mean": 48.7,
+    "code_open_share": 0.671,
+    "by_grade": {
+     "intern": {
+      "n_true": 179,
+      "n_claimed": 195,
+      "exact_grade": 0.8268,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 1.0,
+      "verdict_precision_decided": 1.0,
+      "decided_share": 1.0,
+      "false_confirm_rate": 0.0
+     },
+     "junior": {
+      "n_true": 470,
+      "n_claimed": 419,
+      "exact_grade": 0.8,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.9666,
+      "verdict_precision_decided": 0.9815,
+      "decided_share": 0.9021,
+      "false_confirm_rate": 0.0095
+     },
+     "middle": {
+      "n_true": 865,
+      "n_claimed": 729,
+      "exact_grade": 0.815,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.9287,
+      "verdict_precision_decided": 0.9731,
+      "decided_share": 0.8162,
+      "false_confirm_rate": 0.0247
+     },
+     "senior": {
+      "n_true": 786,
+      "n_claimed": 775,
+      "exact_grade": 0.8333,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.9226,
+      "verdict_precision_decided": 0.9758,
+      "decided_share": 0.7458,
+      "false_confirm_rate": 0.0232
+     },
+     "lead": {
+      "n_true": 485,
+      "n_claimed": 545,
+      "exact_grade": 0.7979,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8972,
+      "verdict_precision_decided": 0.968,
+      "decided_share": 0.745,
+      "false_confirm_rate": 0.0239
+     },
+     "principal": {
+      "n_true": 215,
+      "n_claimed": 337,
+      "exact_grade": 0.8884,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.9021,
+      "verdict_precision_decided": 0.9728,
+      "decided_share": 0.7626,
+      "false_confirm_rate": 0.0178
+     }
+    }
+   }
+  }
+ },
+ "claim_ru": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,6 % уверенных решений (95 % ДИ [97,0 %; 98,2 %]); уверенный вердикт на первом этапе получают 80,3 % кандидатов в среднем за 49 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 82,1 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 98,1 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 0,9 %, повторяемость (test–retest) κw = 0,915 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),",
+ "seconds": 58.45
+}

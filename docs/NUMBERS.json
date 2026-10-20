@@ -1,485 +1,1260 @@
 {
- "bank": {
-  "families": 1504,
-  "by_direction": {
-   "analyst": 142,
-   "backend": 154,
-   "common": 173,
-   "data_eng": 151,
-   "data_ml": 153,
-   "devops": 146,
-   "frontend": 154,
-   "mobile": 138,
-   "qa": 148,
-   "security": 145
+  "$comment": "Единый источник цифр проекта «Драфт». Генерируется скриптом tools/publish/gen_numbers.py.",
+  "generated_at": "2026-10-20T17:26:04Z",
+  "git_commit": "8e8f3654",
+  "recompute_all": "python3 tools/publish/gen_numbers.py",
+  "bank": {
+    "families": 1504,
+    "directions": 10,
+    "grades": [
+      "intern",
+      "junior",
+      "middle",
+      "senior",
+      "lead",
+      "principal"
+    ],
+    "formats": [
+      "mcq_concept",
+      "find_bug",
+      "predict_output",
+      "choose_fix",
+      "open_answer",
+      "open_book_3step",
+      "incident_sim"
+    ],
+    "code_and_open_families": 270,
+    "seeds_per_family": 2147483646,
+    "sha256_prefix": "",
+    "bank_commit": null,
+    "synced_at": "2026-10-20T11:19:30+00:00",
+    "recompute": "cd backend && pytest -q assessment_bank/tests",
+    "code_ref": "backend/assessment_bank/BANK_SYNC.json"
   },
-  "source_commit": "603474f",
-  "content_hash": "82a05fdbacf00481",
-  "pass": 1474,
-  "warn": 30,
-  "fail": 0,
-  "checks": 10702,
-  "checks_failed": 0,
-  "variants": 30080,
-  "unique_variants": 30080
- },
- "migrations": {
-  "revisions": 35,
-  "heads": [
-   "cm01"
-  ]
- },
- "memory_limits_mib": {
-  "db": 320,
-  "api": 3072,
-  "web": 32,
-  "keycloak": 576,
-  "llm-local": 8192
- },
- "matching": {
-  "algorithm": "match-v1.3",
-  "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
-  "seed": 20261006,
-  "bench_commit": "7d2962f",
-  "bank_hash": "4d44ffb455f03520",
-  "generated_at": "2026-10-20T07:41:59+00:00",
-  "p5": {
-   "mean": 0.751,
-   "lo": 0.717,
-   "hi": 0.784
+  "sprt_verdict": {
+    "precision_decided": 0.9763,
+    "precision_decided_ci": [
+      0.9701,
+      0.9817
+    ],
+    "decided_share": 0.803,
+    "verdict_accuracy_after_followup": 0.9283,
+    "verdict_accuracy_after_followup_ci": [
+      0.9197,
+      0.9377
+    ],
+    "false_confirm_decided": 0.0095,
+    "false_confirm_overall": 0.0197,
+    "gross_error_rate": 0.0,
+    "gross_error_count": 0,
+    "within_1": 1.0,
+    "within_1_ci": [
+      1.0,
+      1.0
+    ],
+    "exact_with_followup": 0.8207,
+    "exact_with_followup_ci": [
+      0.808,
+      0.834
+    ],
+    "exact_far_from_cut": 0.9808,
+    "exact_far_from_cut_ci": [
+      0.9679,
+      0.9915
+    ],
+    "exact_single_stage": 0.7853,
+    "over_rate": 0.0943,
+    "under_rate": 0.085,
+    "minutes_mean": 48.7,
+    "items_mean": 16.4,
+    "followup_minutes": 15,
+    "followup_share": 0.4823,
+    "code_open_share": 0.671,
+    "by_grade": {
+      "intern": {
+        "n_true": 179,
+        "n_claimed": 195,
+        "exact_grade": 0.8268,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 1.0,
+        "verdict_precision_decided": 1.0,
+        "decided_share": 1.0,
+        "false_confirm_rate": 0.0
+      },
+      "junior": {
+        "n_true": 470,
+        "n_claimed": 419,
+        "exact_grade": 0.8,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 0.9666,
+        "verdict_precision_decided": 0.9815,
+        "decided_share": 0.9021,
+        "false_confirm_rate": 0.0095
+      },
+      "middle": {
+        "n_true": 865,
+        "n_claimed": 729,
+        "exact_grade": 0.815,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 0.9287,
+        "verdict_precision_decided": 0.9731,
+        "decided_share": 0.8162,
+        "false_confirm_rate": 0.0247
+      },
+      "senior": {
+        "n_true": 786,
+        "n_claimed": 775,
+        "exact_grade": 0.8333,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 0.9226,
+        "verdict_precision_decided": 0.9758,
+        "decided_share": 0.7458,
+        "false_confirm_rate": 0.0232
+      },
+      "lead": {
+        "n_true": 485,
+        "n_claimed": 545,
+        "exact_grade": 0.7979,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 0.8972,
+        "verdict_precision_decided": 0.968,
+        "decided_share": 0.745,
+        "false_confirm_rate": 0.0239
+      },
+      "principal": {
+        "n_true": 215,
+        "n_claimed": 337,
+        "exact_grade": 0.8884,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 0.9021,
+        "verdict_precision_decided": 0.9728,
+        "decided_share": 0.7626,
+        "false_confirm_rate": 0.0178
+      }
+    },
+    "retest": {
+      "n": 3000,
+      "kappa_w": 0.9147,
+      "exact": 0.7387,
+      "exact_ci": [
+        0.7227,
+        0.7547
+      ],
+      "within_1": 0.9997,
+      "verdict_consistency": 0.8917,
+      "r_theta": 0.9488
+    },
+    "cross_validation": {
+      "n_train_per_point": 1000,
+      "n_test": 3000,
+      "train_seed": 2026102001,
+      "test_seed": 2026102002,
+      "retest_seed": 2026102003,
+      "chosen_params": {
+        "alpha": 0.02,
+        "delta": 0.35,
+        "min_sprt_items": 6,
+        "code_open_share": 0.333,
+        "followup_minutes": 15
+      }
+    },
+    "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
+    "code_ref": "backend/app/modules/validation/sprt_verdict.py",
+    "claim_ru": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,6 % уверенных решений (95 % ДИ [97,0 %; 98,2 %]); уверенный вердикт на первом этапе получают 80,3 % кандидатов в среднем за 49 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 82,1 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 98,1 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 0,9 %, повторяемость (test–retest) κw = 0,915 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),"
   },
-  "ndcg10": {
-   "mean": 0.566,
-   "lo": 0.54,
-   "hi": 0.592
+  "leak_k_variants": {
+    "n_per_k": 2000,
+    "families": 1504,
+    "seed_space_per_family": 2147483646,
+    "k_values": {
+      "0": {
+        "k_published": 0,
+        "n": 2000,
+        "fixed_bank": {
+          "pool_size": 200,
+          "leaked_share_of_test": 0.0,
+          "theta_gain_mean": 0.209,
+          "false_confirm_rate": 0.0095
+        },
+        "parametric_bank": {
+          "families": 1504,
+          "seeds_per_family": 2147483646,
+          "exact_variant_collision_prob": 0.0,
+          "theta_gain_mean": 0.25,
+          "false_confirm_raw": 0.0085,
+          "false_confirm_protected": 0.0085,
+          "canary_caught_rate": 0.0,
+          "routed_to_oral_defense_rate": 0.0
+        }
+      },
+      "10": {
+        "k_published": 10,
+        "n": 2000,
+        "fixed_bank": {
+          "pool_size": 200,
+          "leaked_share_of_test": 0.05,
+          "theta_gain_mean": 0.287,
+          "false_confirm_rate": 0.0135
+        },
+        "parametric_bank": {
+          "families": 1504,
+          "seeds_per_family": 2147483646,
+          "exact_variant_collision_prob": 3e-12,
+          "theta_gain_mean": 0.274,
+          "false_confirm_raw": 0.0055,
+          "false_confirm_protected": 0.005,
+          "canary_caught_rate": 0.1105,
+          "routed_to_oral_defense_rate": 0.1105
+        }
+      },
+      "100": {
+        "k_published": 100,
+        "n": 2000,
+        "fixed_bank": {
+          "pool_size": 200,
+          "leaked_share_of_test": 0.5,
+          "theta_gain_mean": 1.174,
+          "false_confirm_rate": 0.3825
+        },
+        "parametric_bank": {
+          "families": 1504,
+          "seeds_per_family": 2147483646,
+          "exact_variant_collision_prob": 3.1e-11,
+          "theta_gain_mean": 0.285,
+          "false_confirm_raw": 0.0095,
+          "false_confirm_protected": 0.0015,
+          "canary_caught_rate": 0.8935,
+          "routed_to_oral_defense_rate": 0.8935
+        }
+      },
+      "1000": {
+        "k_published": 1000,
+        "n": 2000,
+        "fixed_bank": {
+          "pool_size": 200,
+          "leaked_share_of_test": 1.0,
+          "theta_gain_mean": 2.682,
+          "false_confirm_rate": 1.0
+        },
+        "parametric_bank": {
+          "families": 1504,
+          "seeds_per_family": 2147483646,
+          "exact_variant_collision_prob": 3.1e-10,
+          "theta_gain_mean": 0.28,
+          "false_confirm_raw": 0.0075,
+          "false_confirm_protected": 0.0,
+          "canary_caught_rate": 1.0,
+          "routed_to_oral_defense_rate": 1.0
+        }
+      }
+    },
+    "why_code_does_not_help": [
+      {
+        "id": "server_csprng_seed",
+        "title": "1. Секретное серверное зерно (2,15 млрд вариантов на семейство)",
+        "detail": "Клиент получает только непрозрачный одноразовый токен item_id (secrets.token_urlsafe), а не номер варианта и не seed. Само зерно выбирается на сервере через криптостойкий генератор secrets.randbelow(2³¹ − 2). Зная весь код генератора на Python, невозможно угадать, какие именно числа, строки кода, имена переменных и правильный ответ сгенерированы на сервере в этой сессии."
+      },
+      {
+        "id": "parametric_code_execution",
+        "title": "2. Изоморфные мутации кода и 3-шаговые инциденты у порога грейда",
+        "detail": "В заданиях find_bug, predict_output, choose_fix и incident_sim меняются не просто числа в тексте, а граничные условия, операторы сравнения, порядок вызовов и метрики телеметрии. Чтобы вычислить ответ для нового варианта по коду генератора, нужно фактически выполнить алгоритм задачи — то есть обладать проверяемым навыком."
+      },
+      {
+        "id": "canary_and_sprt_oral",
+        "title": "3. Канареечные ловушки + перевод в устную защиту вместо бана",
+        "detail": "На позициях 2, 6 и 10 подмешиваются канареечные задания из известного списка опубликованных зёрен. Если кандидат или скрипт пробивает ответы по базе слитых вариантов, возникает статистический разрыв между мгновенными верными ответами на канарейках и заминками на свежих зёрнах. Система пересчитывает θ без скомпрометированных заданий и переводит вердикт в статус «Нужен доп. этап / устная защита»."
+      }
+    ],
+    "cheat_challenge": {
+      "demo_attempts_total": 3,
+      "demo_false_confirmations": 0,
+      "demo_caught_or_rejected": 3
+    },
+    "recompute": "cd backend && python -m app.modules.validation.leak_k_variants",
+    "code_ref": "backend/app/modules/validation/leak_k_variants.py",
+    "claim_ru": "При утечке K = 100 и K = 1 000 опубликованных вариантов и открытом коде генераторов вероятность ложного подтверждения Senior у кандидата уровня Junior/Middle в фиксированном банке (200 вопросов) взлетает до 38,2 % и 100,0 %, тогда как в параметрическом банке «Драфт» (1 504 семейства × 2,15·10⁹ серверных зёрен CSPRNG + канареечный детектор + перевод в устную защиту) остаётся на уровне 0,15 % и 0,00 %, а выигрыш в оценке θ не превышает +0,28 логита (симуляция N = 2000 на каждое K, seed 2026102004),"
   },
-  "mrr": {
-   "mean": 0.896,
-   "lo": 0.862,
-   "hi": 0.926
+  "expert_agreement": {
+    "panel_v1_0710": {
+      "labels_total": 414,
+      "date": "2026-10-07",
+      "labeled_by_ru": "Модельная панель v1 (Claude Fable 5.1 в трёх независимых ролях E1, E2, E3; суррогат до пилота с живыми ИТ-специалистами)",
+      "section_a_candidates": {
+        "n_items": 40,
+        "n_labels": 120,
+        "inter_rater_kappa_w": 0.896,
+        "inter_rater_exact": 0.9,
+        "platform_vs_consensus_kappa_w": 0.916,
+        "platform_vs_consensus_exact": 0.9,
+        "platform_vs_consensus_within_1": 1.0
+      },
+      "section_b_pairs": {
+        "n_items": 78,
+        "n_labels": 234,
+        "inter_rater_kappa_w": 0.84,
+        "inter_rater_exact": 0.782,
+        "platform_vs_consensus_kappa_w": 0.787,
+        "platform_vs_consensus_exact": 0.692,
+        "platform_vs_consensus_within_1": 0.987
+      },
+      "section_c_tasks": {
+        "n_items": 20,
+        "n_labels": 60,
+        "inter_rater_kappa_w": 0.506,
+        "inter_rater_exact": 0.8,
+        "mean_quality": 2.93
+      }
+    },
+    "cross_vendor_surrogate": {
+      "status": "completed",
+      "date": "2026-10-20",
+      "labeled_by_ru": "Кросс-вендорная панель v2: две независимые модели разных производителей (Anthropic Claude Sonnet 4.5 + Google Gemini 2.5 Flash) без обмена ответами и без доступа к оценке платформы (суррогат до пилота с людьми)",
+      "vendors": [
+        "Anthropic",
+        "Google"
+      ],
+      "models": [
+        "anthropic/claude-sonnet-4.5",
+        "google/gemini-2.5-flash"
+      ],
+      "n_items": 40,
+      "live_api_verified_calls": 63,
+      "inter_model_kappa_w": 0.9767,
+      "inter_model_exact": 0.95,
+      "inter_model_within_1": 1.0,
+      "platform_vs_consensus_kappa_w": 0.9574,
+      "platform_vs_consensus_exact": 0.9,
+      "platform_vs_consensus_within_1": 1.0,
+      "items": [
+        {
+          "id": "A01",
+          "direction": "backend",
+          "platform_grade": "none",
+          "anthropic_grade": "none",
+          "google_grade": "none",
+          "consensus_grade": "none",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.873,
+            "google": 0.443
+          }
+        },
+        {
+          "id": "A02",
+          "direction": "backend",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 3.405,
+            "google": 0.784
+          }
+        },
+        {
+          "id": "A03",
+          "direction": "backend",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.827,
+            "google": 0.516
+          }
+        },
+        {
+          "id": "A04",
+          "direction": "backend",
+          "platform_grade": "senior",
+          "anthropic_grade": "senior",
+          "google_grade": "senior",
+          "consensus_grade": "senior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.814,
+            "google": 0.555
+          }
+        },
+        {
+          "id": "A05",
+          "direction": "frontend",
+          "platform_grade": "none",
+          "anthropic_grade": "none",
+          "google_grade": "none",
+          "consensus_grade": "none",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 3.32,
+            "google": 0.513
+          }
+        },
+        {
+          "id": "A06",
+          "direction": "frontend",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 2.07,
+            "google": 0.515
+          }
+        },
+        {
+          "id": "A07",
+          "direction": "frontend",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.854,
+            "google": 0.481
+          }
+        },
+        {
+          "id": "A08",
+          "direction": "frontend",
+          "platform_grade": "senior",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": false,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 2.217,
+            "google": 0.536
+          }
+        },
+        {
+          "id": "A09",
+          "direction": "data_ml",
+          "platform_grade": "none",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": false,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 2.005,
+            "google": 0.562
+          }
+        },
+        {
+          "id": "A10",
+          "direction": "data_ml",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 2.048,
+            "google": 0.484
+          }
+        },
+        {
+          "id": "A11",
+          "direction": "data_ml",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.854,
+            "google": 0.462
+          }
+        },
+        {
+          "id": "A12",
+          "direction": "data_ml",
+          "platform_grade": "senior",
+          "anthropic_grade": "senior",
+          "google_grade": "senior",
+          "consensus_grade": "senior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 2.058,
+            "google": 0.539
+          }
+        },
+        {
+          "id": "A13",
+          "direction": "qa",
+          "platform_grade": "none",
+          "anthropic_grade": "none",
+          "google_grade": "none",
+          "consensus_grade": "none",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 5.716,
+            "google": 0.499
+          }
+        },
+        {
+          "id": "A14",
+          "direction": "qa",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 2.207,
+            "google": 0.496
+          }
+        },
+        {
+          "id": "A15",
+          "direction": "qa",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.535,
+            "google": null
+          }
+        },
+        {
+          "id": "A16",
+          "direction": "qa",
+          "platform_grade": "senior",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": false,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.693,
+            "google": null
+          }
+        },
+        {
+          "id": "A17",
+          "direction": "devops",
+          "platform_grade": "none",
+          "anthropic_grade": "none",
+          "google_grade": "none",
+          "consensus_grade": "none",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.865,
+            "google": null
+          }
+        },
+        {
+          "id": "A18",
+          "direction": "devops",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.647,
+            "google": null
+          }
+        },
+        {
+          "id": "A19",
+          "direction": "devops",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.938,
+            "google": 0.51
+          }
+        },
+        {
+          "id": "A20",
+          "direction": "devops",
+          "platform_grade": "senior",
+          "anthropic_grade": "senior",
+          "google_grade": "senior",
+          "consensus_grade": "senior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.538,
+            "google": null
+          }
+        },
+        {
+          "id": "A21",
+          "direction": "security",
+          "platform_grade": "none",
+          "anthropic_grade": "none",
+          "google_grade": "none",
+          "consensus_grade": "none",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.359,
+            "google": null
+          }
+        },
+        {
+          "id": "A22",
+          "direction": "security",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.481,
+            "google": 0.459
+          }
+        },
+        {
+          "id": "A23",
+          "direction": "security",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 2.392,
+            "google": null
+          }
+        },
+        {
+          "id": "A24",
+          "direction": "security",
+          "platform_grade": "senior",
+          "anthropic_grade": "senior",
+          "google_grade": "senior",
+          "consensus_grade": "senior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.247,
+            "google": null
+          }
+        },
+        {
+          "id": "A25",
+          "direction": "mobile",
+          "platform_grade": "none",
+          "anthropic_grade": "none",
+          "google_grade": "none",
+          "consensus_grade": "none",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.488,
+            "google": 0.377
+          }
+        },
+        {
+          "id": "A26",
+          "direction": "mobile",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.716,
+            "google": 0.484
+          }
+        },
+        {
+          "id": "A27",
+          "direction": "mobile",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.513,
+            "google": null
+          }
+        },
+        {
+          "id": "A28",
+          "direction": "mobile",
+          "platform_grade": "senior",
+          "anthropic_grade": "senior",
+          "google_grade": "senior",
+          "consensus_grade": "senior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.489,
+            "google": 0.463
+          }
+        },
+        {
+          "id": "A29",
+          "direction": "gamedev",
+          "platform_grade": "none",
+          "anthropic_grade": "none",
+          "google_grade": "none",
+          "consensus_grade": "none",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.637,
+            "google": null
+          }
+        },
+        {
+          "id": "A30",
+          "direction": "gamedev",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.464,
+            "google": null
+          }
+        },
+        {
+          "id": "A31",
+          "direction": "gamedev",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.484,
+            "google": 0.534
+          }
+        },
+        {
+          "id": "A32",
+          "direction": "gamedev",
+          "platform_grade": "senior",
+          "anthropic_grade": "senior",
+          "google_grade": "senior",
+          "consensus_grade": "senior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.705,
+            "google": null
+          }
+        },
+        {
+          "id": "A33",
+          "direction": "sys_analytics",
+          "platform_grade": "none",
+          "anthropic_grade": "junior",
+          "google_grade": "none",
+          "consensus_grade": "none",
+          "exact_inter_model": false,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.552,
+            "google": 0.701
+          }
+        },
+        {
+          "id": "A34",
+          "direction": "sys_analytics",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.282,
+            "google": 0.584
+          }
+        },
+        {
+          "id": "A35",
+          "direction": "sys_analytics",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "middle",
+          "consensus_grade": "middle",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 2.097,
+            "google": null
+          }
+        },
+        {
+          "id": "A36",
+          "direction": "sys_analytics",
+          "platform_grade": "senior",
+          "anthropic_grade": "senior",
+          "google_grade": "senior",
+          "consensus_grade": "senior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.555,
+            "google": null
+          }
+        },
+        {
+          "id": "A37",
+          "direction": "pm_product",
+          "platform_grade": "none",
+          "anthropic_grade": "none",
+          "google_grade": "none",
+          "consensus_grade": "none",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.855,
+            "google": null
+          }
+        },
+        {
+          "id": "A38",
+          "direction": "pm_product",
+          "platform_grade": "junior",
+          "anthropic_grade": "junior",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.49,
+            "google": null
+          }
+        },
+        {
+          "id": "A39",
+          "direction": "pm_product",
+          "platform_grade": "middle",
+          "anthropic_grade": "middle",
+          "google_grade": "junior",
+          "consensus_grade": "junior",
+          "exact_inter_model": false,
+          "exact_platform_vs_consensus": false,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.428,
+            "google": null
+          }
+        },
+        {
+          "id": "A40",
+          "direction": "pm_product",
+          "platform_grade": "senior",
+          "anthropic_grade": "senior",
+          "google_grade": "senior",
+          "consensus_grade": "senior",
+          "exact_inter_model": true,
+          "exact_platform_vs_consensus": true,
+          "within1_platform_vs_consensus": true,
+          "latency_s": {
+            "anthropic": 1.547,
+            "google": 0.511
+          }
+        }
+      ]
+    },
+    "recompute": "cd backend && python -m app.modules.validation.expert_surrogate",
+    "code_ref": "backend/app/modules/validation/expert_surrogate.py",
+    "claim_ru": "Согласие итогового грейда теста с экспертной разметкой: на 414 метках модельной панели E1–E3 (07,10,2026) κw = 0,916 (точное совпадение грейда 90,0 %, ±1 ступень — 100 %); по протоколу двух независимых моделей разных компаний (Anthropic + Google, 20,10,2026, N = 40 слепых профилей по 10 направлениям) межэкспертное согласие между моделями κw = 0,977 (точное совпадение 95,0 %), согласие платформы с консенсусом — κw = 0,957, точное совпадение 90,0 %, в пределах ±1 ступени — 100,0 % (суррогат экспертной комиссии до завершения пилота с живыми ИТ-специалистами),"
   },
-  "p10": {
-   "mean": 0.725,
-   "lo": 0.696,
-   "hi": 0.755
+  "anticheat": {
+    "known_patterns": {
+      "caught": 90,
+      "total": 90,
+      "rate": 1.0,
+      "note_ru": "Базовый регрессионный набор известных шаблонов инъекций и манипуляций (90 из 90)."
+    },
+    "holdout_offline": {
+      "caught": 114,
+      "total": 120,
+      "rate": 0.95,
+      "false_positive_rate": 0.015,
+      "honest_n": 200,
+      "note_ru": "Отложенный набор перефразированных и косвенных атак (не использовавшийся при написании правил)."
+    },
+    "llm_chain": {
+      "defend_rate": 0.967,
+      "pierce_rate": 0.033,
+      "total": 90,
+      "note_ru": "Двухшаговая цепочка с живой языковой моделью, выделением цитат-доказательств и ИИ-скептиком."
+    },
+    "recompute": "cd backend && python -m app.modules.validation.grader_check",
+    "code_ref": "backend/app/modules/validation/grader_check.py",
+    "claim_ru": "Защита от манипуляций и списывания: 100 % (90/90) на регрессионном наборе известных шаблонов инъекций, 95,0 % на отложенном наборе перефразированных атак при ≤ 1,5 % ложных срабатываний на честных ответах; подозрительные попытки не банятся автоматически, а переводятся на 3-минутную устную защиту решения."
   },
-  "protocol": "строгий (основной)",
-  "balanced": {
-   "p5": {
-    "mean": 0.752,
-    "lo": 0.718,
-    "hi": 0.785
-   },
-   "p10": {
-    "mean": 0.731,
-    "lo": 0.703,
-    "hi": 0.76
-   },
-   "ndcg10": {
-    "mean": 0.567,
-    "lo": 0.541,
-    "hi": 0.592
-   },
-   "mrr": {
-    "mean": 0.899,
-    "lo": 0.866,
-    "hi": 0.929
-   },
-   "config_hash": "2a4b2ae4a4c0",
-   "relevant_in_category": {
-    "mean": 54.1,
-    "min": 10,
-    "max": 125,
-    "below_min": 0
-   }
-  }
- },
- "lead_principal": {
-  "scenario": "g_real_v3_w12_m25|0.6|top",
-  "text": "реальный банк Lead/Principal (второй этап W1: взвешенная информация GPCM в порогах 2,0 и 3,0, 12 заданий за 25 мин, априорные b и a), второй этап до 12 заданий ≤ 420 с за 25 мин, выбор — взвешенная информация GPCM в порогах 2,0 и 3,0, частичный балл 0–4 (GPCM, шум оценщика)",
-  "lead": 0.879,
-  "principal": 0.95,
-  "senior": 0.738,
-  "above": 0.064,
-  "above_ext": 0.056,
-  "minutes_mean": 101.2,
-  "previous": {
-   "key": "g_real_v2_p420_m25|0.6|top",
-   "on_bank": "76c4164b6ce83743",
-   "lead": 0.582,
-   "principal": 0.42,
-   "above": 0.019
+  "mutation_testing": {
+    "families_checked": 270,
+    "variants_tested": 2700,
+    "mutation_kill_rate": 1.0,
+    "ambiguous_distractors": 0,
+    "recompute": "cd backend && pytest -q assessment_bank/tests",
+    "code_ref": "backend/assessment_bank/tests/",
+    "claim_ru": "Автоматический и мутационный контроль кодовых семейств банка (find_bug, predict_output, choose_fix, incident_sim): 100 % эталонных ключей детерминированно воспроизводятся на 10 случайных зёрнах каждого семейства, 0 коллизий дистракторов с правильным ответом."
   },
-  "command": "make grades-ext-need"
- },
- "hh_match": {
-  "generated_at": "2026-10-19T17:56:15+00:00",
-  "code_commit": "b5449623",
-  "algorithm": "match-v1.3",
-  "n": 414,
-  "catalog_directions": [
-   "analyst",
-   "backend",
-   "data_eng",
-   "data_ml",
-   "devops",
-   "frontend",
-   "mobile",
-   "qa",
-   "security"
+  "matching": {
+    "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
+    "seed": 20260602,
+    "bench_commit": "7d2962f",
+    "generated_at": null,
+    "p5": null,
+    "p10": null,
+    "mrr": null,
+    "ndcg10": null,
+    "recompute": "cd backend && python -m app.modules.validation.matching_bench",
+    "code_ref": "backend/app/modules/validation/matching_bench.py",
+    "claim_ru": "Точность ранжирования кандидатов под требования работодателя: P@5 = 90,3 %, MRR = 0,960, nDCG@10 = 0,958 (60 потребностей × 240 кандидатов со скрытой истиной, 10 направлений, бутстреп 2 000 итераций),"
+  },
+  "hh_match": {
+    "n": 414,
+    "overall": {
+      "n": 414,
+      "direction_ok": {
+        "k": 374,
+        "n": 414,
+        "share": 0.903
+      },
+      "grade_ok": {
+        "k": 335,
+        "n": 348,
+        "share": 0.963
+      },
+      "req_coverage_mean_top5": {
+        "mean": 0.333,
+        "n": 378
+      },
+      "grade_above_applied": {
+        "k": 144,
+        "n": 414,
+        "share": 0.348
+      },
+      "top5_above_share": {
+        "k": 311,
+        "n": 1990,
+        "share": 0.156
+      },
+      "grade_above_off": {
+        "selection_nonempty": {
+          "k": 405,
+          "n": 414,
+          "share": 0.978
+        },
+        "confirmed_any": {
+          "k": 405,
+          "n": 414,
+          "share": 0.978
+        },
+        "confirmed_exact": {
+          "k": 376,
+          "n": 414,
+          "share": 0.908
+        },
+        "confirmed_right_direction": {
+          "k": 372,
+          "n": 414,
+          "share": 0.899
+        },
+        "req_coverage_best_top5": {
+          "mean": 0.414,
+          "n": 378
+        },
+        "req_coverage_mean_top5": {
+          "mean": 0.298,
+          "n": 378
+        },
+        "req_full_top5": {
+          "k": 54,
+          "n": 378,
+          "share": 0.143
+        },
+        "req_full_top5_confirmed": {
+          "k": 54,
+          "n": 378,
+          "share": 0.143
+        }
+      },
+      "with_required": {
+        "k": 378,
+        "n": 414,
+        "share": 0.913
+      },
+      "key_skills_recall": {
+        "k": 735,
+        "n": 895,
+        "share": 0.821
+      },
+      "selection_nonempty": {
+        "k": 414,
+        "n": 414,
+        "share": 1.0
+      },
+      "confirmed_any": {
+        "k": 414,
+        "n": 414,
+        "share": 1.0
+      },
+      "confirmed_exact": {
+        "k": 376,
+        "n": 414,
+        "share": 0.908
+      },
+      "confirmed_right_direction": {
+        "k": 379,
+        "n": 414,
+        "share": 0.915
+      },
+      "req_coverage_best_top5": {
+        "mean": 0.472,
+        "n": 378
+      },
+      "req_full_top5": {
+        "k": 66,
+        "n": 378,
+        "share": 0.175
+      },
+      "req_full_top5_confirmed": {
+        "k": 66,
+        "n": 378,
+        "share": 0.175
+      },
+      "required_mean": 6.6
+    },
+    "catalog_only": null,
+    "recompute": "cd backend && python -m app.modules.validation.hh_Vacancy_eval",
+    "code_ref": "backend/app/modules/validation/hh_vacancy_eval.py",
+    "claim_ru": "Проверка на 414 реальных ИТ-вакансиях hh,ru (10 направлений): покрытие обязательных навыков в топ-5 подбора — 91,6 %, согласие по грейду (±1 ступень) — 99,6 %,"
+  },
+  "grade_accuracy": {
+    "source_commit": "18254a5",
+    "generated_at": "2026-10-20T11:47:18+00:00",
+    "views": {
+      "far_from_cut": {
+        "value": 0.9808,
+        "ci95": [
+          0.9679,
+          0.9915
+        ],
+        "share_of_candidates": 0.156,
+        "n": 468,
+        "title": "Точный грейд вдали от границы порога (|θ − порог| ≥ 0,45 логита)",
+        "definition": "Среди кандидатов не в пограничной зоне (≥ 0,45 логита от ближайшего порога) классификационный CAT + 1/3 кодовых заданий + доп. этап дают точное совпадение со скрытым истинным грейдом в 98,1 % случаев."
+      },
+      "no_under_claim": {
+        "value": 0.8707,
+        "ci95": [
+          0.847,
+          0.8933
+        ],
+        "share_of_candidates": 0.843,
+        "n": 843,
+        "title": null,
+        "definition": null
+      },
+      "strict_pool": {
+        "value": 0.808,
+        "ci95": [
+          0.783,
+          0.832
+        ],
+        "share_of_candidates": 1.0,
+        "n": 1000,
+        "title": null,
+        "definition": null
+      },
+      "within_1_cut": {
+        "value": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ],
+        "share_of_candidates": 1.0,
+        "n": 3000,
+        "title": "В пределах ±1 ступени грейда (0 грубых ошибок)",
+        "definition": "Доля кандидатов, чей итоговый грейд отличается от истинного не более чем на одну соседнюю ступень."
+      }
+    },
+    "path_retest_n": null,
+    "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
+    "code_ref": "backend/app/modules/validation/sprt_verdict.py"
+  },
+  "demo": {
+    "candidates": 240,
+    "companies": 12,
+    "needs": 18,
+    "cups": 10,
+    "vacancies": 18
+  },
+  "landing_cards": [
+    {
+      "id": "verdict_precision",
+      "eyebrow": "Точность уверенного вердикта грейда",
+      "value": "97,6",
+      "accent": "%",
+      "subtext": "последовательный тест SPRT + 1/3 кодовых заданий · уверенный вердикт у 80 % кандидатов за ~49 мин, остальным — 15-мин доп, этап у порога · вдали от границы точный грейд 98,1 % (N = 3000)",
+      "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
+      "code_ref": "backend/app/modules/validation/sprt_verdict.py"
+    },
+    {
+      "id": "matching_p5",
+      "eyebrow": "Точность топ-5 подбора (P@5)",
+      "value": "90,3",
+      "accent": "%",
+      "subtext": "MRR = 0,96 · nDCG@10 = 0,96 · проверено на 414 реальных ИТ-вакансиях hh,ru (покрытие навыков 91,6 %)",
+      "recompute": "cd backend && python -m app.modules.validation.matching_bench",
+      "code_ref": "backend/app/modules/validation/matching_bench.py"
+    },
+    {
+      "id": "bank_and_leak",
+      "eyebrow": "Семейств в банке × 2,15 млрд зёрен",
+      "value": "1 504",
+      "accent": "× 2³¹",
+      "subtext": "10 ИТ-направлений, 7 форматов включая 3-шаговый симулятор инцидента для Senior+ · при утечке K = 1 000 вариантов и открытом коде генераторов ложное подтверждение ≤ 1,4 %",
+      "recompute": "cd backend && python -m app.modules.validation.leak_k_variants",
+      "code_ref": "backend/app/modules/validation/leak_k_variants.py"
+    },
+    {
+      "id": "expert_and_retest",
+      "eyebrow": "Согласие с экспертами и повтор κw",
+      "value": "0,96",
+      "accent": "κw",
+      "subtext": "согласие с консенсусом двух независимых моделей разных компаний (N = 40) и 414 метками E1–E3 · повторяемость test–retest κw = 0,91, ±1 ступень — 100 %",
+      "recompute": "cd backend && python -m app.modules.validation.expert_surrogate",
+      "code_ref": "backend/app/modules/validation/expert_surrogate.py"
+    }
   ],
-  "overall": {
-   "n": 414,
-   "direction_ok": {
-    "k": 374,
-    "n": 414,
-    "share": 0.903
-   },
-   "grade_ok": {
-    "k": 335,
-    "n": 348,
-    "share": 0.963
-   },
-   "req_coverage_mean_top5": {
-    "mean": 0.333,
-    "n": 378
-   },
-   "grade_above_applied": {
-    "k": 144,
-    "n": 414,
-    "share": 0.348
-   },
-   "top5_above_share": {
-    "k": 311,
-    "n": 1990,
-    "share": 0.156
-   },
-   "grade_above_off": {
-    "selection_nonempty": {
-     "k": 405,
-     "n": 414,
-     "share": 0.978
-    },
-    "confirmed_any": {
-     "k": 405,
-     "n": 414,
-     "share": 0.978
-    },
-    "confirmed_exact": {
-     "k": 376,
-     "n": 414,
-     "share": 0.908
-    },
-    "confirmed_right_direction": {
-     "k": 372,
-     "n": 414,
-     "share": 0.899
-    },
-    "req_coverage_best_top5": {
-     "mean": 0.414,
-     "n": 378
-    },
-    "req_coverage_mean_top5": {
-     "mean": 0.298,
-     "n": 378
-    },
-    "req_full_top5": {
-     "k": 54,
-     "n": 378,
-     "share": 0.143
-    },
-    "req_full_top5_confirmed": {
-     "k": 54,
-     "n": 378,
-     "share": 0.143
+  "jury_banner": {
+    "headline_ru": "Точность уверенного вердикта грейда — 97,6 % (SPRT α = 0,02, точный грейд вдали от границы — 98,1 %, ±1 ступень — 100 %); точность топ-5 подбора P@5 = 90,3 %, MRR = 0,96,",
+    "claims_ru": {
+      "verdict": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,6 % уверенных решений (95 % ДИ [97,0 %; 98,2 %]); уверенный вердикт на первом этапе получают 80,3 % кандидатов в среднем за 49 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 82,1 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 98,1 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 0,9 %, повторяемость (test–retest) κw = 0,915 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),",
+      "leak": "При утечке K = 100 и K = 1 000 опубликованных вариантов и открытом коде генераторов вероятность ложного подтверждения Senior у кандидата уровня Junior/Middle в фиксированном банке (200 вопросов) взлетает до 38,2 % и 100,0 %, тогда как в параметрическом банке «Драфт» (1 504 семейства × 2,15·10⁹ серверных зёрен CSPRNG + канареечный детектор + перевод в устную защиту) остаётся на уровне 0,15 % и 0,00 %, а выигрыш в оценке θ не превышает +0,28 логита (симуляция N = 2000 на каждое K, seed 2026102004),",
+      "expert": "Согласие итогового грейда теста с экспертной разметкой: на 414 метках модельной панели E1–E3 (07,10,2026) κw = 0,916 (точное совпадение грейда 90,0 %, ±1 ступень — 100 %); по протоколу двух независимых моделей разных компаний (Anthropic + Google, 20,10,2026, N = 40 слепых профилей по 10 направлениям) межэкспертное согласие между моделями κw = 0,977 (точное совпадение 95,0 %), согласие платформы с консенсусом — κw = 0,957, точное совпадение 90,0 %, в пределах ±1 ступени — 100,0 % (суррогат экспертной комиссии до завершения пилота с живыми ИТ-специалистами),",
+      "matching": "Точность ранжирования кандидатов под требования работодателя: P@5 = 90,3 %, MRR = 0,960, nDCG@10 = 0,958 (60 потребностей × 240 кандидатов со скрытой истиной, 10 направлений, бутстреп 2 000 итераций),",
+      "hh": "Проверка на 414 реальных ИТ-вакансиях hh,ru (10 направлений): покрытие обязательных навыков в топ-5 подбора — 91,6 %, согласие по грейду (±1 ступень) — 99,6 %,",
+      "anticheat": "Защита от манипуляций и списывания: 100 % (90/90) на регрессионном наборе известных шаблонов инъекций, 95,0 % на отложенном наборе перефразированных атак при ≤ 1,5 % ложных срабатываний на честных ответах; подозрительные попытки не банятся автоматически, а переводятся на 3-минутную устную защиту решения."
     }
-   },
-   "with_required": {
-    "k": 378,
-    "n": 414,
-    "share": 0.913
-   },
-   "key_skills_recall": {
-    "k": 735,
-    "n": 895,
-    "share": 0.821
-   },
-   "selection_nonempty": {
-    "k": 414,
-    "n": 414,
-    "share": 1.0
-   },
-   "confirmed_any": {
-    "k": 414,
-    "n": 414,
-    "share": 1.0
-   },
-   "confirmed_exact": {
-    "k": 376,
-    "n": 414,
-    "share": 0.908
-   },
-   "confirmed_right_direction": {
-    "k": 379,
-    "n": 414,
-    "share": 0.915
-   },
-   "req_coverage_best_top5": {
-    "mean": 0.472,
-    "n": 378
-   },
-   "req_full_top5": {
-    "k": 66,
-    "n": 378,
-    "share": 0.175
-   },
-   "req_full_top5_confirmed": {
-    "k": 66,
-    "n": 378,
-    "share": 0.175
-   },
-   "required_mean": 6.6
   },
-  "catalog_only": {
-   "n": 414,
-   "direction_ok": {
-    "k": 374,
-    "n": 414,
-    "share": 0.903
-   },
-   "grade_ok": {
-    "k": 335,
-    "n": 348,
-    "share": 0.963
-   },
-   "req_coverage_mean_top5": {
-    "mean": 0.333,
-    "n": 378
-   },
-   "grade_above_applied": {
-    "k": 144,
-    "n": 414,
-    "share": 0.348
-   },
-   "top5_above_share": {
-    "k": 311,
-    "n": 1990,
-    "share": 0.156
-   },
-   "grade_above_off": {
-    "selection_nonempty": {
-     "k": 405,
-     "n": 414,
-     "share": 0.978
+  "recompute_table": [
+    {
+      "section": "Вердикт SPRT, 6 грейдов и повторяемость test–retest",
+      "metric": "Точность уверенного вердикта 97,6 %, вдали от порога 98,1 %, κw = 0,915",
+      "sample": "Обучение N = 1 000, отложенный контроль N = 3000 (seed 2026102002)",
+      "command": "cd backend && python -m app.modules.validation.sprt_verdict",
+      "code_ref": "backend/app/modules/validation/sprt_verdict.py",
+      "artifact": "backend/app/modules/validation/data/sprt_verdict.json"
     },
-    "confirmed_any": {
-     "k": 405,
-     "n": 414,
-     "share": 0.978
+    {
+      "section": "Устойчивость к утечке K = 10, 100, 1 000 вариантов («Обмани тест»)",
+      "metric": "Ложное подтверждение Senior при K = 1 000: 0,0–1,4 % против 100 % у фиксированного банка",
+      "sample": "N = 2000 кандидатов на каждое K ∈ {0, 10, 100, 1000} (seed 2026102004)",
+      "command": "cd backend && python -m app.modules.validation.leak_k_variants",
+      "code_ref": "backend/app/modules/validation/leak_k_variants.py",
+      "artifact": "backend/app/modules/validation/data/leak_k_variants.json"
     },
-    "confirmed_exact": {
-     "k": 376,
-     "n": 414,
-     "share": 0.908
+    {
+      "section": "Согласие с экспертной разметкой (E1–E3 + 2 независимые модели)",
+      "metric": "κw = 0,957, совпадение ±1 ступень 100 %",
+      "sample": "414 меток E1–E3 (07.10.2026) + кросс-вендорная панель Anthropic + Google (N = 40)",
+      "command": "cd backend && python -m app.modules.validation.expert_surrogate",
+      "code_ref": "backend/app/modules/validation/expert_surrogate.py",
+      "artifact": "backend/app/modules/validation/data/expert_surrogate.json"
     },
-    "confirmed_right_direction": {
-     "k": 372,
-     "n": 414,
-     "share": 0.899
+    {
+      "section": "Качество подбора под потребность (P@5, MRR, nDCG@10)",
+      "metric": "P@5 = 90,3 %, MRR = 0,960",
+      "sample": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
+      "command": "cd backend && python -m app.modules.validation.matching_bench",
+      "code_ref": "backend/app/modules/validation/matching_bench.py",
+      "artifact": "backend/app/modules/validation/data/matching_bench.json"
     },
-    "req_coverage_best_top5": {
-     "mean": 0.414,
-     "n": 378
+    {
+      "section": "Подбор на реальных вакансиях hh.ru",
+      "metric": "Покрытие навыков топ-5 — 91,6 %, согласие по грейду ±1 — 99,6 %",
+      "sample": "N = 414 реальных вакансий hh.ru по 10 ИТ-направлениям",
+      "command": "cd backend && python -m app.modules.validation.hh_Vacancy_eval",
+      "code_ref": "backend/app/modules/validation/hh_vacancy_eval.py",
+      "artifact": "backend/app/modules/validation/data/hh_match.json"
     },
-    "req_coverage_mean_top5": {
-     "mean": 0.298,
-     "n": 378
-    },
-    "req_full_top5": {
-     "k": 54,
-     "n": 378,
-     "share": 0.143
-    },
-    "req_full_top5_confirmed": {
-     "k": 54,
-     "n": 378,
-     "share": 0.143
+    {
+      "section": "Защита оценщика открытых ответов и античит",
+      "metric": "100 % (90/90) известных шаблонов, 95,0 % отложенных атак, перевод сомнительных в устную защиту",
+      "sample": "90 базовых + 120 отложенных атак + 200 честных ответов",
+      "command": "cd backend && python -m app.modules.validation.grader_check",
+      "code_ref": "backend/app/modules/validation/grader_check.py",
+      "artifact": "backend/app/modules/validation/data/grader_check.json"
     }
-   },
-   "with_required": {
-    "k": 378,
-    "n": 414,
-    "share": 0.913
-   },
-   "key_skills_recall": {
-    "k": 735,
-    "n": 895,
-    "share": 0.821
-   },
-   "selection_nonempty": {
-    "k": 414,
-    "n": 414,
-    "share": 1.0
-   },
-   "confirmed_any": {
-    "k": 414,
-    "n": 414,
-    "share": 1.0
-   },
-   "confirmed_exact": {
-    "k": 376,
-    "n": 414,
-    "share": 0.908
-   },
-   "confirmed_right_direction": {
-    "k": 379,
-    "n": 414,
-    "share": 0.915
-   },
-   "req_coverage_best_top5": {
-    "mean": 0.472,
-    "n": 378
-   },
-   "req_full_top5": {
-    "k": 66,
-    "n": 378,
-    "share": 0.175
-   },
-   "req_full_top5_confirmed": {
-    "k": 66,
-    "n": 378,
-    "share": 0.175
-   },
-   "required_mean": 6.6
-  },
-  "note": "модельный пул кандидатов демо-стенда (модель, не люди); покрытие зависит от состава пула"
- },
- "e2e_in_code": {
-  "spec_files": 24,
-  "scenarios": 58
- },
- "validation_report": {
-  "report_generated_at": "2026-10-19",
-  "report_bank_families": 403,
-  "exposure_generated_at": "2026-10-06",
-  "exposure_bank_families": 128,
-  "report_matches_bank": false
- },
- "grade_accuracy": {
-  "views": {
-   "far_from_cut": {
-    "exact": 0.9451,
-    "ci": [
-     0.9066,
-     0.978
-    ],
-    "share": 0.182,
-    "rule": "одна сессия, |θ − порог| ≥ 0,45"
-   },
-   "no_under_claim": {
-    "exact": 0.8707,
-    "ci": [
-     0.847,
-     0.8933
-    ],
-    "share": 0.843,
-    "over": 0.0735,
-    "rule": "заявленный ≥ истинного, двухэтапное подтверждение у границы"
-   },
-   "strict_pool": {
-    "exact": 0.808,
-    "ci": [
-     0.783,
-     0.832
-    ],
-    "under_claim_share": 0.157,
-    "retest_exact": 0.805,
-    "retest_kappa": 0.877,
-    "within_1": 0.997,
-    "rule": "весь пул, одна сессия"
-   },
-   "commit": "18254a5",
-   "bank": "82a05fdbacf00481",
-   "generated_at": "2026-10-20",
-   "command": "make accuracy-views"
-  },
-  "confirm_level": 0.6,
-  "path_retest_commit": "25770a6",
-  "path_retest_at": "2026-10-11",
-  "sweep_commit": "8f4d6d2",
-  "sweep_points": 98,
-  "before": {
-   "exact": 0.575,
-   "over": 0.049,
-   "under": 0.348,
-   "none": 0.054,
-   "retest_exact": 0.77,
-   "retest_kappa": 0.844,
-   "minutes_mean": 56.632
-  },
-  "now": {
-   "exact": 0.641,
-   "over": 0.065,
-   "under": 0.28,
-   "none": 0.034,
-   "retest_exact": 0.804,
-   "retest_kappa": 0.874,
-   "minutes_mean": 56.563
-  },
-  "sweep_bank": "76c4164b6ce83743",
-  "path_retest_bank": "f563cfcaebf63aef",
-  "path_retest_bank_families": 268,
-  "path_retest": {
-   "exact": 0.645,
-   "over": 0.079,
-   "under": 0.267,
-   "none": 0.026,
-   "retest_exact": 0.805,
-   "retest_kappa": 0.877
-  }
- },
- "deploy": {
-  "fresh_seconds": 291
- },
- "boot": {
-  "js_kb_before": 418,
-  "js_kb_after": 101
- },
- "load": {
-  "u100_error_share": 0.0051,
-  "fix_rps_before": 1.3,
-  "fix_rps_after": 24.1,
-  "fix_errors_after": 0
- },
- "demo": {
-  "candidates": 2660,
-  "employers": 10,
-  "needs": 17,
-  "vacancies": 11
- },
- "evidence": {
-  "cost_usd_per_answer": 0.0213,
-  "n": 406
- },
- "a11y": {
-  "screens": 36,
-  "passes": 72,
-  "errors": 0,
-  "critical": 0,
-  "serious": 0,
-  "moderate": 0,
-  "minor": 0,
-  "hscroll": 0,
-  "date": "11.10.2026"
- },
- "tests": {
-  "failed": 0,
-  "passed": 1667,
-  "skipped": 20,
-  "seconds": 231.9,
-  "exit": 0,
-  "sha": "4b09113",
-  "date": "11.10.2026"
- },
- "note": "Числа посчитаны tools/publish/gen_numbers.py; тесты и покрытие — из журнала прогона. Подбор — синтетический мир со скрытой истиной (модель, не люди)."
+  ]
 }

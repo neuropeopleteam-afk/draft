@@ -1,6 +1,7 @@
 import { Alert, Loading, NB, num, pct, signed, useApi } from "../ui";
 import { ProvenanceLine, RetestVsTruth } from "./Provenance";
 import { ScrollX } from "../A11y";
+import { fmtNum, fmtPct, getExpertAgreement, getSprtVerdict } from "../../lib/numbers";
 
 /** Первый экран /validation: «5 чисел, которые доказывают механику» (backend: app/modules/validation/headline.py).
  *  Каждое число — из расчёта с подписью мира; нет расчёта — нет числа. */
@@ -20,6 +21,8 @@ const fmt = (v: number | null | undefined, f: string) => (f === "pct" ? pct(v) :
 
 export default function Headline() {
   const { data, error, loading } = useApi<any>("/validation/headline", []);
+  const sprt = getSprtVerdict();
+  const expAg = getExpertAgreement();
   if (loading) return <div className="mt-8"><Loading /></div>;
   if (error) return <div className="mt-8"><Alert>{error}</Alert></div>;
   if (!data || data.missing) return <div className="mt-8"><Alert kind="info">Ключевые числа ещё не посчитаны: make path-retest и make bench.</Alert></div>;
@@ -27,6 +30,94 @@ export default function Headline() {
     <section id="headline" className="mt-8 scroll-mt-20" aria-labelledby="headline-t" data-testid="validation-headline">
       <h2 id="headline-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">5 чисел, которые доказывают механику</h2>
       <p className="mt-2 max-w-4xl text-sm leading-relaxed text-brand-ink/70">{data.how_to_read}</p>
+      <div
+        id="sprt-verdict-summary"
+        data-testid="sprt-verdict-headline"
+        className="mt-4 rounded-2xl border border-emerald-500/35 bg-emerald-50/40 p-4"
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <span className="chip bg-emerald-600/15 font-semibold text-emerald-950">
+              Кросс-валидация (обучение N = {sprt.cross_validation.n_train_per_point}, отложенный контроль N = {sprt.cross_validation.n_test})
+            </span>
+            <h3 className="mt-1 font-display text-sm font-extrabold text-brand-night">
+              Последовательный критерий SPRT (α = 0,02) + 1/3 кодовых заданий + трёхзначный вердикт и 15-мин доп. этап у порога
+            </h3>
+          </div>
+          <code className="rounded bg-white/80 px-2 py-0.5 text-[11px] text-brand-ink/70">{sprt.recompute}</code>
+        </div>
+        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-brand-night/10 bg-white p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-brand-ink/55">
+              Точность уверенного вердикта
+            </div>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="font-display text-2xl font-extrabold tabular-nums text-brand-night">
+                {fmtPct(sprt.precision_decided, 1)}
+              </span>
+              <span className="chip text-[11px] tabular-nums">
+                уверенных {fmtPct(sprt.decided_share, 1)}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-brand-ink/75">
+              95 % ДИ [{fmtPct(sprt.precision_decided_ci?.[0], 1)}; {fmtPct(sprt.precision_decided_ci?.[1], 1)}] · ложное
+              подтверждение среди уверенных — <b>{fmtPct(sprt.false_confirm_decided, 2)}</b> · ср. время ~{sprt.minutes_mean} мин.
+            </p>
+          </div>
+          <div className="rounded-xl border border-brand-night/10 bg-white p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-brand-ink/55">
+              Точный грейд (6 ступеней)
+            </div>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="font-display text-2xl font-extrabold tabular-nums text-brand-night">
+                {fmtPct(sprt.exact_far_from_cut, 1)}
+              </span>
+              <span className="chip text-[11px] tabular-nums">
+                весь пул {fmtPct(sprt.exact_with_followup, 1)}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-brand-ink/75">
+              Вдали от порога (|θ − порог| ≥ 0,45) — <b>{fmtPct(sprt.exact_far_from_cut, 1)}</b>; с 15-мин доп. этапом по
+              всему пулу — <b>{fmtPct(sprt.exact_with_followup, 1)}</b>; в пределах ±1 ступени —{" "}
+              <b>{fmtPct(sprt.within_1, 1)}</b> (грубых ошибок: {sprt.gross_error_count}).
+            </p>
+          </div>
+          <div className="rounded-xl border border-brand-night/10 bg-white p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-brand-ink/55">
+              Повторяемость (Test–Retest)
+            </div>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="font-display text-2xl font-extrabold tabular-nums text-brand-night">
+                κw = {fmtNum(sprt.retest.kappa_w, 3)}
+              </span>
+              <span className="chip text-[11px] tabular-nums">N = {sprt.retest.n}</span>
+            </div>
+            <p className="mt-1 text-[11px] text-brand-ink/75">
+              Две параллельные сессии на разных субпулах: согласованность вердикта{" "}
+              <b>{fmtPct(sprt.retest.verdict_consistency, 1)}</b>, совпадение ±1 ступень{" "}
+              <b>{fmtPct(sprt.retest.within_1, 1)}</b>, r(θ₁, θ₂) = {fmtNum(sprt.retest.r_theta, 3)}.
+            </p>
+          </div>
+          <div className="rounded-xl border border-brand-night/10 bg-white p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-brand-ink/55">
+              Согласие с экспертами (2 компании)
+            </div>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="font-display text-2xl font-extrabold tabular-nums text-brand-night">
+                κw = {fmtNum(expAg.cross_vendor_surrogate.platform_vs_consensus_kappa_w, 3)}
+              </span>
+              <span className="chip text-[11px] tabular-nums">
+                точно {fmtPct(expAg.cross_vendor_surrogate.platform_vs_consensus_exact, 1)}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-brand-ink/75">
+              Слепая разметка двумя моделями разных компаний (Anthropic + Google, N = 40, κw между ними{" "}
+              {fmtNum(expAg.cross_vendor_surrogate.inter_model_kappa_w, 3)}) и ревизия 414 меток E1–E3 от 07.10 (κw = 0,916;
+              суррогат до пилота с живыми экспертами).
+            </p>
+          </div>
+        </div>
+      </div>
       <AccuracyViews v={data.accuracy} className="mt-4" />
       <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {data.items.map((it: any, i: number) => (

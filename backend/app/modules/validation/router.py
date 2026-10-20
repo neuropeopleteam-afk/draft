@@ -400,3 +400,59 @@ def attempts_repeat(db: Session = Depends(get_db)):
     from app.modules.validation import attempts_repeat as ar
 
     return {"synthetic": ar.load(), "live": ar.live(db)}
+
+
+# --- А4: кросс-валидированный последовательный тест SPRT, трёхзначный вердикт, утечка K вариантов и вызов «Обмани тест» ---
+SPRT_VERDICT_JSON = Path(__file__).resolve().parent / "data" / "sprt_verdict.json"
+LEAK_K_JSON = Path(__file__).resolve().parent / "data" / "leak_k_variants.json"
+CHEAT_LOG_JSON = Path(__file__).resolve().parent / "data" / "cheat_challenge_log.json"
+EXPERT_SURROGATE_JSON = Path(__file__).resolve().parent / "data" / "expert_surrogate.json"
+
+
+@router.get("/sprt-verdict", summary="Кросс-валидированная симуляция методики грейда: SPRT, 3-значный вердикт, доп. этап и повтор κw")
+def get_sprt_verdict():
+    if not SPRT_VERDICT_JSON.exists():
+        return {"missing": True}
+    return json.loads(SPRT_VERDICT_JSON.read_text(encoding="utf-8"))
+
+
+@router.get("/leak-k-variants", summary="Устойчивость к утечке K = 10, 100, 1000 вариантов и открытому коду генератора")
+def get_leak_k_variants():
+    if not LEAK_K_JSON.exists():
+        return {"missing": True}
+    return json.loads(LEAK_K_JSON.read_text(encoding="utf-8"))
+
+
+@router.get("/cheat-challenge", summary="Вызов жюри «Обмани тест»: статистика попыток, ложных подтверждений и причины защиты")
+def get_cheat_challenge():
+    leak_d = json.loads(LEAK_K_JSON.read_text(encoding="utf-8")) if LEAK_K_JSON.exists() else {}
+    log_d = json.loads(CHEAT_LOG_JSON.read_text(encoding="utf-8")) if CHEAT_LOG_JSON.exists() else {}
+    return {
+        **log_d,
+        "k_values": leak_d.get("k_values", {}),
+        "claim_ru": leak_d.get("claim_ru", ""),
+        "recompute": leak_d.get("recompute", "cd backend && python -m app.modules.validation.leak_k_variants"),
+        "code_ref": leak_d.get("code_ref", "backend/app/modules/validation/leak_k_variants.py"),
+    }
+
+
+class CheatAttemptIn(BaseModel):
+    strategy: str = "dump_lookup_1000"
+    claimed_grade: str = "senior"
+    actor: str | None = None
+
+
+@router.post("/cheat-challenge/attempt", summary="Запустить и записать демонстрационную попытку вызова «Обмани тест»")
+def post_cheat_attempt(body: CheatAttemptIn | None = None):
+    from app.modules.validation.leak_k_variants import record_cheat_attempt
+
+    b = body or CheatAttemptIn()
+    return record_cheat_attempt(strategy=b.strategy, claimed_grade=b.claimed_grade, actor=b.actor)
+
+
+@router.get("/expert-surrogate", summary="Ревизия 414 меток E1–E3 (07.10) и кросс-вендорный протокол двух независимых моделей")
+def get_expert_surrogate():
+    if EXPERT_SURROGATE_JSON.exists():
+        return json.loads(EXPERT_SURROGATE_JSON.read_text(encoding="utf-8"))
+    return {"missing": True}
+

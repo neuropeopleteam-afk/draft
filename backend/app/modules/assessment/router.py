@@ -229,3 +229,29 @@ def get_attempts(direction: DirectionId | None = None,
     from app.modules.assessment.attempts import for_candidate
 
     return for_candidate(db, user.id, direction, a, b)
+
+
+class AppealIn(BaseModel):
+    item_id: str = Field("", max_length=64, description="Токен спорного задания сессии")
+    reason: str = Field("", max_length=2000, description="Причина апелляции кандидата по заданию")
+
+
+@router.get("/sessions/{session_id}/appeals", summary="Список апелляций по заданиям сессии теста",
+            responses={**AUTH, 404: err("Сессия не найдена")})
+def get_appeals(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    return service.list_session_appeals(db, service.get_own_session(db, user.id, session_id))
+
+
+@router.post("/sessions/{session_id}/appeals",
+             summary="Оспорить задание теста: статус задания «на проверке», пересчёт вердикта без спорного задания",
+             responses={**AUTH, 404: err("Сессия или задание не найдены")})
+def create_appeal(session_id: uuid.UUID, body: AppealIn | None = None, user: User = Depends(candidate),
+                  db: Session = Depends(get_db)) -> dict:
+    ts = service.get_own_session(db, user.id, session_id, lock=True)
+    if body is None or not body.item_id.strip() or len(body.reason.strip()) < 3:
+        from app.core.errors import AppError
+        raise AppError(422, "invalid_appeal", "Укажите токен задания и причину апелляции (от 3 символов)")
+    return service.submit_item_appeal(
+        db, ts, item_id=body.item_id.strip(), reason=body.reason.strip(), actor=user.email,
+    )
+
