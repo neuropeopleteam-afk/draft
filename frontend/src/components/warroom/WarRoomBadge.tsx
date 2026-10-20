@@ -123,7 +123,7 @@ export function CandidateWarRoomStage({
             </span>
           </div>
           <p className="mt-1.5 font-mono text-[10px] text-white/45">
-            Подпись SHA-256: {best.sha256_sig.slice(0, 24)}… · результат виден работодателям в карточке профиля
+            Контрольная сумма записи SHA-256: {best.sha256_sig.slice(0, 24)}…
           </p>
         </div>
       )}

@@ -46,11 +46,13 @@ export default function ArchitectureMode({
   voice,
   scenarios = FALLBACK_SCENARIOS,
   measuresCatalog = FALLBACK_MEASURES,
+  demoMode = true,
   onScenarioUpdated,
 }: {
   voice: Voice;
   scenarios?: ScenarioPublic[];
   measuresCatalog?: MeasureSpec[];
+  demoMode?: boolean;
   onScenarioUpdated?: (scn: ScenarioPublic) => void;
 }) {
   const { me, signIn } = useAuth();
@@ -68,7 +70,6 @@ export default function ArchitectureMode({
 
   const s = useMemo(() => scenarios.find((x) => x.id === sid) ?? scenarios[0], [scenarios, sid]);
 
-  // Выбранные меры и их численные параметры: { measureId: { paramKey: number } }
   const [selectedMeasures, setSelectedMeasures] = useState<Record<string, Record<string, number>>>({});
   const [appliedMeasures, setAppliedMeasures] = useState<Record<string, Record<string, number>>>({});
   const [patchIdx, setPatchIdx] = useState<number>(1);
@@ -100,33 +101,31 @@ export default function ArchitectureMode({
         method: "POST",
         body: {
           scenario_id: s.id,
-          seed: s.seed,
+          seed: demoMode ? s.seed : undefined,
           measures: buildMeasuresPayload(selectedMeasures),
           code_patch: code,
+          demo: demoMode,
         },
       })
         .then((res) => {
           if (active) setSimPreview(res);
         })
         .catch(() => {
-          /* офлайн — остаются текущие значения */
+          /* офлайн */
         });
     }, 120);
     return () => {
       active = false;
       window.clearTimeout(timer);
     };
-  }, [s.id, s.seed, selectedMeasures, code, buildMeasuresPayload]);
+  }, [s.id, s.seed, selectedMeasures, code, demoMode, buildMeasuresPayload]);
 
-  // Секундомер инцидента и накопленные потери бизнеса до устранения сбоя
   useEffect(() => {
     const iv = window.setInterval(() => {
       setSec((x) => x + 1);
       setLostRub((x) => {
         const currentLoss =
-          phase === "applied" && evalResult
-            ? evalResult.metrics.loss_rub_sec
-            : s.base.loss;
+          phase === "applied" && evalResult ? evalResult.metrics.loss_rub_sec : s.base.loss;
         return x + currentLoss;
       });
     }, 1000);
@@ -153,10 +152,11 @@ export default function ArchitectureMode({
   };
 
   const regenerateSeedVariant = async () => {
+    if (!demoMode) return;
     const nextSeed = ((s.seed + 373) % 8999) + 1000;
     try {
       const updated = await api<ScenarioPublic>(
-        `/warroom/scenarios/${encodeURIComponent(s.id)}?seed=${nextSeed}`
+        `/warroom/scenarios/${encodeURIComponent(s.id)}?seed=${nextSeed}&demo=true`
       );
       onScenarioUpdated?.(updated);
       setPhase("incident");
@@ -199,8 +199,10 @@ export default function ArchitectureMode({
   };
 
   const fillOptimalDemo = () => {
+    if (!demoMode) return;
+    const reqIds = s.required ?? ["idem", "cb", "pgb"];
     const opt: Record<string, Record<string, number>> = {};
-    s.required.forEach((id) => {
+    reqIds.forEach((id) => {
       const spec = measuresCatalog.find((m) => m.id === id);
       const defaults: Record<string, number> = {};
       spec?.params.forEach((p) => {
@@ -227,17 +229,18 @@ export default function ArchitectureMode({
         method: "POST",
         body: {
           scenario_id: s.id,
-          seed: s.seed,
+          seed: demoMode ? s.seed : undefined,
           measures: buildMeasuresPayload(selectedMeasures),
           code_patch: code,
           justification,
           elapsed_s: Math.max(30, sec),
-          save: true,
+          save: !demoMode,
+          demo: demoMode,
         },
       });
       for (const line of res.feedback.deploy_log) {
         setDeployLog((l) => [...l, line]);
-        await sleep(240);
+        await sleep(220);
       }
       setAppliedMeasures({ ...selectedMeasures });
       setEvalResult(res);
@@ -345,39 +348,44 @@ export default function ArchitectureMode({
         ))}
       </div>
 
-      {/* Индивидуальный параметризованный вариант (защита от утечки) */}
+      {/* Информационная полоса режима: в демо-витрине — кнопки примера без сохранения в профиль; в боевом режиме кандидата — индивидуальный серверный вариант */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-400/25 bg-indigo-950/20 px-4 py-2.5">
         <div className="text-xs text-white/80">
           <span className="font-bold text-indigo-200">
-            Параметризованный вариант #{s.seed}
+            {demoMode
+              ? `Демонстрационная витрина · вариант #${s.seed}`
+              : `Боевой этап кандидата · индивидуальный серверный вариант #${s.seed}`}
           </span>{" "}
           · сервис <code className="font-mono text-white">{s.service}</code> (релиз{" "}
-          <code className="font-mono text-white">{s.release}</code>) · входные числа нагрузки и бюджет
-          генерируются индивидуально для защиты от утечки готовых ответов.
+          <code className="font-mono text-white">{s.release}</code>) ·{" "}
+          {demoMode
+            ? "режим демонстрации: доступны эталонные примеры, результат не сохраняется в профиль кандидата."
+            : "числа нагрузки и бюджет зафиксированы сервером для вашей учётной записи."}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={fillOptimalDemo}
-            data-testid="wr-fill-optimal"
-            className="rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-200 hover:bg-emerald-500/25"
-          >
-            Подставить эталонное решение
-          </button>
-          <button
-            type="button"
-            onClick={() => void regenerateSeedVariant()}
-            data-testid="wr-change-seed"
-            className="rounded-lg border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-white/85 hover:bg-white/15"
-          >
-            Новый вариант чисел
-          </button>
-        </div>
+        {demoMode && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={fillOptimalDemo}
+              data-testid="wr-fill-optimal"
+              className="rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-200 hover:bg-emerald-500/25"
+            >
+              Подставить эталонное решение (демо)
+            </button>
+            <button
+              type="button"
+              onClick={() => void regenerateSeedVariant()}
+              data-testid="wr-change-seed"
+              className="rounded-lg border border-white/20 bg-white/5 px-3 py-1 text-xs font-semibold text-white/85 hover:bg-white/15"
+            >
+              Новый вариант чисел
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
         <div className="min-w-0 space-y-4">
-          {/* Живая схема микросервисов и 6 физических метрик (включая бюджет) */}
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0a0918]">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-2.5">
               <p className="flex items-center gap-2 text-sm font-bold text-white">
@@ -389,8 +397,8 @@ export default function ArchitectureMode({
                 {incidentOn ? `АВАРИЯ В ПРОДАКШНЕ · ${s.title}` : `ИНЦИДЕНТ УСТРАНЁН · ${s.title}`}
               </p>
               <p className="font-mono text-xs text-white/55">
-                Время {String(Math.floor(sec / 60)).padStart(2, "0")}:{String(sec % 60).padStart(2, "0")} ·
-                накопленный ущерб {nf(lostRub)} ₽
+                Время {String(Math.floor(sec / 60)).padStart(2, "0")}:
+                {String(sec % 60).padStart(2, "0")} · накопленный ущерб {nf(lostRub)} ₽
               </p>
             </div>
             <div className="overflow-x-auto px-2 pt-2">
@@ -407,12 +415,21 @@ export default function ArchitectureMode({
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 p-3 md:grid-cols-3 xl:grid-cols-6" data-testid="wr-metrics">
+            <div
+              className="grid grid-cols-2 gap-2 p-3 md:grid-cols-3 xl:grid-cols-6"
+              data-testid="wr-metrics"
+            >
               <MetricTile
                 label="Успешный поток"
                 value={nf(shownMetrics.rps)}
                 unit="RPS"
-                tone={shownMetrics.error_rate_pct > 5 ? "bad" : shownMetrics.error_rate_pct > 0.5 ? "warn" : "ok"}
+                tone={
+                  shownMetrics.error_rate_pct > 5
+                    ? "bad"
+                    : shownMetrics.error_rate_pct > 0.5
+                      ? "warn"
+                      : "ok"
+                }
                 hint={`вход ${nf(s.base.rps)} RPS`}
               />
               <MetricTile
@@ -475,9 +492,7 @@ export default function ArchitectureMode({
                       key={m.id}
                       className={`rounded-xl border transition ${
                         on
-                          ? m.trap
-                            ? "border-amber-400/60 bg-amber-400/10"
-                            : "border-emerald-400/60 bg-emerald-400/10"
+                          ? "border-indigo-400/60 bg-indigo-500/10"
                           : "border-white/10 bg-black/20 hover:border-white/25"
                       }`}
                     >
@@ -491,7 +506,7 @@ export default function ArchitectureMode({
                       >
                         <span
                           className={`relative h-5 w-9 shrink-0 rounded-full transition ${
-                            on ? (m.trap ? "bg-amber-400" : "bg-emerald-400") : "bg-white/15"
+                            on ? "bg-indigo-400" : "bg-white/15"
                           }`}
                         >
                           <span
@@ -513,12 +528,10 @@ export default function ArchitectureMode({
                         </span>
                       </button>
 
-                      {/* Настраиваемые численные параметры включённой меры */}
                       {on && m.params.length > 0 && (
                         <div className="space-y-2 border-t border-white/10 bg-black/30 px-3 py-2.5">
                           {m.params.map((p) => {
                             const val = paramValues[p.key] ?? p.default;
-                            const isOpt = val >= p.opt_min && val <= p.opt_max;
                             return (
                               <div key={p.key} className="space-y-1">
                                 <div className="flex items-center justify-between text-[11px]">
@@ -528,11 +541,7 @@ export default function ArchitectureMode({
                                   >
                                     {p.label}
                                   </label>
-                                  <span
-                                    className={`font-mono font-bold ${
-                                      isOpt ? "text-emerald-300" : "text-amber-300"
-                                    }`}
-                                  >
+                                  <span className="font-mono font-bold text-indigo-200">
                                     {nf(val)} {p.unit}
                                   </span>
                                 </div>
@@ -547,12 +556,9 @@ export default function ArchitectureMode({
                                     updateMeasureParam(m.id, p.key, Number(e.target.value))
                                   }
                                   data-testid={`wr-param-${m.id}-${p.key}`}
-                                  className="h-1.5 w-full cursor-pointer accent-emerald-400"
+                                  className="h-1.5 w-full cursor-pointer accent-indigo-400"
                                 />
-                                <p className="text-[10px] text-white/45">
-                                  Рекомендуемый диапазон: {nf(p.opt_min)}–{nf(p.opt_max)} {p.unit}.{" "}
-                                  {p.hint}
-                                </p>
+                                <p className="text-[10px] text-white/45">{p.hint}</p>
                               </div>
                             );
                           })}
@@ -623,16 +629,18 @@ export default function ArchitectureMode({
                   <p className="text-xs font-semibold uppercase tracking-wider text-white/60">
                     3. Письменное обоснование решения (рубрика с цитатами)
                   </p>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setJustification(SAMPLE_JUSTIFICATIONS[s.id] ?? SAMPLE_JUSTIFICATIONS.payment)
-                    }
-                    data-testid="wr-fill-justification"
-                    className="text-[11px] font-bold text-indigo-300 hover:underline"
-                  >
-                    Заполнить пример обоснования
-                  </button>
+                  {demoMode && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setJustification(SAMPLE_JUSTIFICATIONS[s.id] ?? SAMPLE_JUSTIFICATIONS.payment)
+                      }
+                      data-testid="wr-fill-justification"
+                      className="text-[11px] font-bold text-indigo-300 hover:underline"
+                    >
+                      Заполнить пример обоснования (демо)
+                    </button>
+                  )}
                 </div>
                 <p className="mt-1 text-[11px] text-white/55">
                   Опишите: (1) первопричину и узкое место, (2) почему выбраны эти меры и параметры с учётом
@@ -748,7 +756,7 @@ export default function ArchitectureMode({
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-extrabold text-white">
                   {evalResult.passed
-                    ? `Инцидент закрыт · уровень ${evalResult.confirmed_grade.toUpperCase()}`
+                    ? `Инцидент устранён · ориентир ${evalResult.confirmed_grade.toUpperCase()}`
                     : "Частичное решение · требуется доработка"}
                 </p>
                 <span className="rounded-lg bg-white/15 px-2 py-0.5 font-mono text-xs font-extrabold text-white">
@@ -763,7 +771,6 @@ export default function ArchitectureMode({
                 {nf(evalResult.rubric.rubric_score * 100)} %
               </p>
 
-              {/* Разбор по рубрике с дословными цитатами */}
               <div className="mt-3 space-y-2 border-t border-white/10 pt-3" data-testid="wr-rubric">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">
                   Разбор обоснования с проверкой дословных цитат:
@@ -808,11 +815,11 @@ export default function ArchitectureMode({
                 >
                   <p className="font-bold">
                     {evalResult.saved_to_db
-                      ? "Результат сохранён в профиле и засчитан в методику грейда"
-                      : "Результат подписан криптографическим хешем SHA-256"}
+                      ? "Результат сохранён в вашем профиле кандидата"
+                      : "Демонстрационный расчёт (без сохранения в профиль кандидата)"}
                   </p>
                   <p className="mt-0.5 break-all font-mono text-[10px] text-emerald-200/75">
-                    SHA-256: {evalResult.sha256_sig.slice(0, 32)}…
+                    Контрольная сумма записи SHA-256: {evalResult.sha256_sig.slice(0, 32)}…
                   </p>
                 </div>
                 <button

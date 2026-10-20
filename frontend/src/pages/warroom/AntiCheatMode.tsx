@@ -350,10 +350,12 @@ export default function AntiCheatMode({
   voice,
   contours = FALLBACK_CONTOURS,
   signals = FALLBACK_SIGNALS,
+  demoMode = true,
 }: {
   voice: Voice;
   contours?: AntiCheatContourSpec[];
   signals?: AntiCheatSignalSpec[];
+  demoMode?: boolean;
 }) {
   const { me, signIn } = useAuth();
   const navigate = useNavigate();
@@ -424,9 +426,9 @@ export default function AntiCheatMode({
           method: "POST",
           body: {
             answer_text: txt,
-            canary_word: CANARY_WORD,
             attack_preset: opts.attack_preset,
             check_lz: Boolean(opts.check_lz || lzShown),
+            demo: demoMode,
             telemetry: {
               ...telemetryRef.current,
               key_intervals_ms: opts.key_intervals_ms ?? realKeys,
@@ -1106,42 +1108,49 @@ export default function AntiCheatMode({
         </section>
       )}
 
-      <details className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/70">
-        <summary className="cursor-pointer font-bold text-white">
-          Каталог всех {signals.length} сигналов в 5 контурах честности (как устроена проверка на сервере)
-        </summary>
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          {signals.map((s) => {
-            const c = contours.find((x) => x.n === s.c);
-            return (
-              <div
-                key={s.n}
-                className={`rounded-xl border p-2.5 text-xs ${
-                  lit.has(s.n)
-                    ? "border-rose-400/50 bg-rose-500/10 text-rose-100"
-                    : "border-white/10 bg-black/20 text-white/75"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold">
-                    <span
-                      className="mr-1.5 font-mono"
-                      style={{ color: c?.color ?? "#fff" }}
-                    >
-                      #{s.n}
+      {demoMode && (
+        <details className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/70">
+          <summary className="cursor-pointer font-bold text-white">
+            Каталог всех {signals.length} сигналов в 5 контурах честности (демонстрационная витрина для жюри)
+          </summary>
+          <p className="mt-2 text-xs text-white/55">
+            Демонстрация на подготовленных примерах: фильтр текста оценщика, проверка варианта-двойника,
+            динамика набора и согласованность ответов рассчитываются функциями сервера. В обычном режиме
+            кандидата внутренние названия сигналов и пороги скрыты.
+          </p>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {signals.map((s) => {
+              const c = contours.find((x) => x.n === s.c);
+              return (
+                <div
+                  key={s.n}
+                  className={`rounded-xl border p-2.5 text-xs ${
+                    lit.has(s.n)
+                      ? "border-rose-400/50 bg-rose-500/10 text-rose-100"
+                      : "border-white/10 bg-black/20 text-white/75"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold">
+                      <span
+                        className="mr-1.5 font-mono"
+                        style={{ color: c?.color ?? "#fff" }}
+                      >
+                        #{s.n}
+                      </span>
+                      {s.name}
                     </span>
-                    {s.name}
-                  </span>
-                  <span className="shrink-0 font-mono text-[10px] text-white/50">
-                    +{s.pts} б.
-                  </span>
+                    <span className="shrink-0 font-mono text-[10px] text-white/50">
+                      +{s.pts} б.
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-white/50">{s.how_it_works}</p>
                 </div>
-                <p className="mt-1 text-[11px] text-white/50">{s.how_it_works}</p>
-              </div>
-            );
-          })}
-        </div>
-      </details>
+              );
+            })}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

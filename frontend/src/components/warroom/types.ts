@@ -21,8 +21,8 @@ export interface MeasureParamSpec {
   max: number;
   step: number;
   default: number;
-  opt_min: number;
-  opt_max: number;
+  opt_min?: number;
+  opt_max?: number;
   unit: string;
   hint: string;
 }
@@ -31,10 +31,10 @@ export interface MeasureSpec {
   id: string;
   label: string;
   tech: string;
-  heals: NodeId[];
+  heals?: NodeId[];
   badge: string;
   at: NodeId;
-  trap: boolean;
+  trap?: boolean;
   base_cost_rub: number;
   params: MeasureParamSpec[];
 }
@@ -61,7 +61,7 @@ export interface RubricCriterionSpec {
   id: string;
   title: string;
   weight: number;
-  reference: string;
+  reference?: string;
   score?: number;
   quote?: string;
 }
@@ -79,9 +79,9 @@ export interface ScenarioPublic {
   story: string;
   labels: Partial<Record<NodeId, string>>;
   problem: NodeId[];
-  required: string[];
-  helpful: string[];
-  harmful: string[];
+  required?: string[];
+  helpful?: string[];
+  harmful?: string[];
   base: {
     rps: number;
     p99_ms: number;
@@ -107,9 +107,10 @@ export interface ScenarioPublic {
   patches: ScenarioPatch[];
   checks: ScenarioCheck[];
   rubric: RubricCriterionSpec[];
-  deploy: string[];
-  win: string;
+  deploy?: string[];
+  win?: string;
   incident?: Record<string, unknown>;
+  demo_mode?: boolean;
 }
 
 export interface SimulateMetrics {
@@ -201,6 +202,7 @@ export interface IncidentStage {
 }
 
 export interface EvaluateResult extends SimulateResult {
+  mode?: "combat" | "demo";
   rubric: RubricResult;
   total_score: number;
   passed: boolean;
@@ -212,6 +214,11 @@ export interface EvaluateResult extends SimulateResult {
   voice_summary_ru: string;
   attempt_id?: string | null;
   saved_to_db?: boolean;
+  sprt_preview?: {
+    theta_post: number;
+    se_post: number;
+    llr_delta: number;
+  } | null;
 }
 
 export interface AntiCheatContourSpec {
@@ -239,6 +246,8 @@ export interface GraderInspectLayer {
 }
 
 export interface AntiCheatInspectResult {
+  demo_mode?: boolean;
+  demo_notice_ru?: string;
   total_signals_catalog: number;
   triggered_count: number;
   triggered_numbers: number[];

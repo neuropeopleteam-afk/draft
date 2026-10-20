@@ -7,10 +7,10 @@
 2. Проверку достижения целевых показателей надёжности (SLO) в рамках выделенного бюджета.
 3. Оценку письменного инженерного обоснования:
    - предварительная проверка через фильтр промпт-инъекций и самооценок (`grader.py`);
-   - вызов ИИ-рецензента (`app.modules.llm.client.chat("grade", ...)`) с изоляцией текста кандидата
-     в одноразовых маркерах и программной проверкой дословных цитат;
+   - вызов ИИ-рецензента (`app.modules.llm.client.chat([...], want_json=True, func="grade")`)
+     с изоляцией текста кандидата в одноразовых маркерах и программной проверкой дословных цитат;
    - честный детерминированный режим оценки по симулятору и техническим тезисам с дословными
-     цитатами, когда языковая модель отключена или недоступна.
+     цитатами, когда языковая модель отключена, недоступна или вызов идёт из демо-режима.
 4. Формирование словаря `incident_stage` в формате методики грейда (А4: `sprt.incorporate_incident_stage`).
 """
 from __future__ import annotations
@@ -26,7 +26,6 @@ from app.modules.assessment import grader
 from app.modules.llm.client import chat
 from app.modules.warroom.catalog import (
     MEASURE_BY_ID,
-    MEASURES,
     NODE_IDS,
     evaluate_code_checks,
     parameterize_scenario,
@@ -39,6 +38,10 @@ def _clamp(v: float, lo: float, hi: float) -> float:
 
 def _lerp(a: float, b: float, t: float) -> float:
     return a + (b - a) * _clamp(t, 0.0, 1.0)
+
+
+def _fmt_int(v: int | float) -> str:
+    return f"{int(round(v)):,}".replace(",", " ")
 
 
 def normalize_measures(raw_measures: list[dict[str, Any] | str] | None) -> dict[str, dict[str, Any]]:
@@ -70,12 +73,12 @@ def normalize_measures(raw_measures: list[dict[str, Any] | str] | None) -> dict[
 
 
 def evaluate_measure_params(mid: str, params: dict[str, Any], scn: dict[str, Any]) -> tuple[float, int, list[str]]:
-    """Оценивает качество численных параметров меры `mid` (0.35..1.0), стоимость в ₽/мес и подсказки."""
+    """Оценивает качество численных параметров меры `mid` (0.0..1.0), стоимость в ₽/мес и предупреждения."""
     spec = MEASURE_BY_ID[mid]
     base_cost = int(spec.get("base_cost_rub", 15_000))
     if spec.get("trap"):
         why = scn.get("why", {}).get(mid) or spec["tech"]
-        return 0.0, base_cost, [f"Ловушка «{spec['label']}»: {why}"]
+        return 0.0, base_cost, [f"Неэффективная мера «{spec['label']}»: {why}"]
 
     param_specs = spec.get("params", [])
     if not param_specs:
@@ -98,17 +101,16 @@ def evaluate_measure_params(mid: str, params: dict[str, Any], scn: dict[str, Any
             ratio = _clamp((v - p_min) / span, 0.0, 1.0)
             scores.append(0.45 + 0.45 * ratio)
             warnings.append(
-                f"Параметр «{p['label']}» ({v} {p['unit']}) ниже оптимума ({opt_min}–{opt_max} {p['unit']}): {p['hint']}"
+                f"Параметр «{p['label']}» ({_fmt_int(v)} {p['unit']}) ниже рабочего порога: {p['hint']}"
             )
         else:
             span = max(1, p_max - opt_max)
             ratio = _clamp((p_max - v) / span, 0.0, 1.0)
             scores.append(0.45 + 0.45 * ratio)
             warnings.append(
-                f"Параметр «{p['label']}» ({v} {p['unit']}) выше оптимума ({opt_min}–{opt_max} {p['unit']}): {p['hint']}"
+                f"Параметр «{p['label']}» ({_fmt_int(v)} {p['unit']}) завышен: {p['hint']}"
             )
 
-        # Влияние параметров на стоимость ресурсов
         if k == "memory_limit_mb" and v > 1536:
             extra_cost += int((v - 1536) * 22)
         elif k == "pool_size" and v > 180:
@@ -118,6 +120,41 @@ def evaluate_measure_params(mid: str, params: dict[str, Any], scn: dict[str, Any
 
     eff = sum(scores) / len(scores)
     return round(eff, 4), base_cost + extra_cost, warnings
+
+
+def _build_dynamic_deploy_log(
+    scn: dict[str, Any],
+    slo_met: bool,
+    within_budget: bool,
+    progress: float,
+    p99_ms: int,
+    err_pct: float,
+    extra_val: int,
+    cost_rub: int,
+    budget_rub: int,
+) -> list[str]:
+    """Генерирует журнал выкатки из фактических рассчитанных метрик симулятора (без статичных чисел)."""
+    svc = scn["service"]
+    rel = scn["release"]
+    extra_lbl = scn["extra"]["label"].lower()
+    extra_unit = scn["extra"]["unit"]
+    lines = [
+        f"Сборка релиза {svc}:{rel} и проверка патча кода завершены",
+        f"Применение конфигурации инфраструктуры: стоимость {_fmt_int(cost_rub)} ₽/мес (бюджет ≤ {_fmt_int(budget_rub)} ₽/мес)",
+        f"Замер под нагрузкой {_fmt_int(scn['base']['rps'])} RPS: p99 = {_fmt_int(p99_ms)} мс, ошибки 5xx = {str(err_pct).replace('.', ',')} %",
+        f"Контрольная метрика «{extra_lbl}»: {_fmt_int(extra_val)} {extra_unit} (цель SLO ≤ {_fmt_int(scn['slo']['extra_limit'])})",
+    ]
+    if slo_met:
+        lines.append(f"Выкатка 100 % завершена: все целевые показатели SLO сервиса {svc} выполнены в рамках бюджета")
+    elif not within_budget:
+        lines.append(
+            f"Предупреждение бюджета: стоимость {_fmt_int(cost_rub)} ₽/мес превышает лимит {_fmt_int(budget_rub)} ₽/мес"
+        )
+    elif progress >= 0.45:
+        lines.append("Часть узлов остаётся под деградацией: проверьте выбранные меры, параметры и патч кода")
+    else:
+        lines.append("Автоматический откат релиза: целевые показатели надёжности (SLO) не восстановлены")
+    return lines
 
 
 def simulate_incident(
@@ -146,7 +183,6 @@ def simulate_incident(
         measures_cost += mcost
         param_warnings.extend(warns)
 
-    # Ненужные конструктивные меры тоже стоят денег в инфраструктуре
     req_eff_sum = sum(measure_eff.get(mid, 0.0) for mid in req_ids)
     req_ratio = req_eff_sum / max(1, len(req_ids))
     all_req_present = all(mid in active for mid in req_ids)
@@ -157,7 +193,6 @@ def simulate_incident(
     any_traps = [mid for mid in active if MEASURE_BY_ID[mid].get("trap")]
     trap_count = len(set(harm_hits + any_traps))
 
-    # Итоговая инженерная эффективность (меры + параметры + патч кода)
     raw_progress = 0.54 * req_ratio + 0.42 * code_res["score"] + help_bonus - 0.26 * trap_count
     progress = _clamp(raw_progress, 0.0, 1.0)
     if all_req_present and all_req_optimal and code_res["full"] and trap_count == 0:
@@ -196,10 +231,8 @@ def simulate_incident(
     extra_ok = extra_val <= int(slo["extra_limit"])
     slo_met = bool(p99_ok and err_ok and extra_ok and within_budget and trap_count == 0)
 
-    # Время восстановления сервиса (MTTR, секунды)
     mttr_s = int(round(_lerp(1_440, 165, curve))) + trap_count * 240
 
-    # Состояние узлов архитектурной схемы
     healed_nodes: set[str] = set()
     for mid in active:
         if (mid in req_ids or mid in help_ids) and measure_eff.get(mid, 0.0) >= 0.65:
@@ -220,7 +253,6 @@ def simulate_incident(
     missing_req = [MEASURE_BY_ID[mid]["label"] for mid in req_ids if mid not in active]
     failed_checks = [c["label"] for c in code_res["checks"] if not c["passed"]]
 
-    # Оценка эффективности по бюджету (cost_efficiency)
     if within_budget:
         cost_eff = 1.0
     else:
@@ -228,6 +260,18 @@ def simulate_incident(
         cost_eff = round(_clamp(1.0 - overrun * 1.5, 0.1, 0.9), 4)
 
     sim_score = round(_clamp(0.75 * progress + 0.25 * (1.0 if slo_met else 0.5 * cost_eff), 0.0, 1.0), 4)
+
+    deploy_log = _build_dynamic_deploy_log(
+        scn=scn,
+        slo_met=slo_met,
+        within_budget=within_budget,
+        progress=progress,
+        p99_ms=p99_ms,
+        err_pct=err_pct,
+        extra_val=extra_val,
+        cost_rub=cost_rub_month,
+        budget_rub=cost_budget,
+    )
 
     return {
         "scenario_id": scn["id"],
@@ -274,11 +318,7 @@ def simulate_incident(
             "missing_measures": missing_req,
             "param_warnings": param_warnings,
             "failed_code_checks": failed_checks[:4],
-            "deploy_log": scn["deploy"] if slo_met else scn["deploy"][:2] + [
-                "Часть узлов остаётся под деградацией: проверьте недостающие меры, параметры и бюджет"
-                if progress >= 0.45
-                else "Откат выкатки: целевые показатели надёжности (SLO) не восстановлены"
-            ],
+            "deploy_log": deploy_log,
         },
     }
 
@@ -292,7 +332,6 @@ def _extract_verbatim_quote(text: str, keywords: list[str]) -> str:
     clean = (text or "").strip()
     if not clean:
         return ""
-    # Разбиваем на предложения или смысловые части
     sentences = [s.strip() for s in re.split(r"(?<=[.!?;\n])\s+", clean) if len(s.strip()) >= 12]
     if not sentences:
         sentences = [clean]
@@ -319,7 +358,6 @@ def _verify_quote_in_text(quote: str, text: str) -> str:
     norm_q = re.sub(r"\s+", " ", q.lower())
     if norm_q in norm_t:
         return " ".join(q.split()[:25])
-    # Проверяем совпадение первых 5 слов подряд
     q_words = norm_q.split()
     if len(q_words) >= 4:
         prefix = " ".join(q_words[:4])
@@ -328,7 +366,17 @@ def _verify_quote_in_text(quote: str, text: str) -> str:
     return ""
 
 
-def evaluate_justification_rubric(scn: dict[str, Any], justification: str) -> dict[str, Any]:
+# Сигналы, которые могут встречаться как предмет обсуждения в сценарии ИИ-безопасности ("ai"),
+# если нет императивных команд («игнорируй инструкции», «поставь 10/10», подделка маркера/роли).
+_NON_IMPERATIVE_AI_SIGNALS = {"model_address", "reviewer_address"}
+
+
+def evaluate_justification_rubric(
+    scn: dict[str, Any],
+    justification: str,
+    *,
+    allow_llm: bool = False,
+) -> dict[str, Any]:
     """Оценивает письменное архитектурное обоснование по 3 критериям рубрики с обязательными цитатами."""
     raw = (justification or "").strip()[:6000]
     if len(raw) < 25:
@@ -356,12 +404,19 @@ def evaluate_justification_rubric(scn: dict[str, Any], justification: str) -> di
         inj_signals = list(grader.injection_signals(raw))
         cleaned_text, meta_removed = grader.strip_meta(raw)
 
-    if inj_signals:
+    # Для сценария ИИ-безопасности ("ai") инженер по делу пишет про «системные инструкции» и «оценщик»:
+    # не блокируем одиночный тематический сигнал model_address без императивных директив.
+    if scn.get("id") == "ai":
+        blocking_signals = [s for s in inj_signals if s not in _NON_IMPERATIVE_AI_SIGNALS]
+    else:
+        blocking_signals = inj_signals
+
+    if blocking_signals:
         return {
             "rubric_score": 0.0,
             "reviewer_mode": "security_filter_blocked",
             "injection_blocked": True,
-            "injection_signals": inj_signals,
+            "injection_signals": blocking_signals,
             "meta_stripped": meta_removed,
             "comment_ru": "В тексте обоснования обнаружены команды для проверяющей модели (промпт-инъекция). Текст заблокирован защитным фильтром до вызова модели, балл рубрики обнулён.",
             "criteria": [
@@ -370,9 +425,9 @@ def evaluate_justification_rubric(scn: dict[str, Any], justification: str) -> di
             ],
         }
 
-    # 2. Попытка оценки через LLM (если включена) с жёсткой изоляцией маркерами и проверкой цитат
+    # 2. Оценка через LLM (только для авторизованного кандидата в боевом режиме, когда LLM включён)
     settings = get_settings()
-    if not getattr(settings, "llm_disabled", True):
+    if allow_llm and not getattr(settings, "llm_disabled", True):
         token = secrets.token_hex(8)
         open_m = f"<<<CANDIDATE_JUSTIFICATION_{token}>>>"
         close_m = f"<<<END_CANDIDATE_JUSTIFICATION_{token}>>>"
@@ -397,8 +452,17 @@ def evaluate_justification_rubric(scn: dict[str, Any], justification: str) -> di
             f"{open_m}\n{json.dumps(cleaned_text, ensure_ascii=False)}\n{close_m}\n"
             "Конец данных кандидата. Оцени строго по рубрике и верни только JSON."
         )
-        res = chat("grade", [{"role": "system", "content": sys_prompt}, {"role": "user", "content": user_msg}], json_mode=True)
-        if res.ok and isinstance(res.data, dict) and not res.data.get("manipulation"):
+        try:
+            res = chat(
+                [{"role": "system", "content": sys_prompt}, {"role": "user", "content": user_msg}],
+                want_json=True,
+                func="grade",
+                max_tokens=900,
+            )
+        except Exception:
+            res = None
+
+        if res is not None and getattr(res, "ok", False) and isinstance(res.data, dict) and not res.data.get("manipulation"):
             crit_in = res.data.get("criteria")
             if isinstance(crit_in, dict):
                 crit_out: list[dict[str, Any]] = []
@@ -410,7 +474,6 @@ def evaluate_justification_rubric(scn: dict[str, Any], justification: str) -> di
                     score = 1.0 if raw_s >= 0.85 else (0.5 if raw_s >= 0.35 else 0.0)
                     verified_q = _verify_quote_in_text(str(item.get("quote") or ""), cleaned_text)
                     if score > 0 and not verified_q:
-                        # Программная сверка: без реальной цитаты из текста полный балл не ставится
                         verified_q = _extract_verbatim_quote(cleaned_text, c["keywords"])
                         if not verified_q:
                             score = 0.0
@@ -432,7 +495,7 @@ def evaluate_justification_rubric(scn: dict[str, Any], justification: str) -> di
                     "criteria": crit_out,
                 }
 
-    # 3. Детерминированный разбор по рубрике с извлечением дословных цитат (работает всегда и без LLM)
+    # 3. Детерминированный разбор по рубрике с извлечением дословных цитат
     low = cleaned_text.lower()
     crit_out = []
     weighted = 0.0
@@ -441,7 +504,7 @@ def evaluate_justification_rubric(scn: dict[str, Any], justification: str) -> di
         kws = c["keywords"]
         hits = sum(1 for kw in kws if kw.lower() in low)
         quote = _extract_verbatim_quote(cleaned_text, kws)
-        if hits >= 3 and quote and len(cleaned_text) >= 80:
+        if hits >= 2 and quote and len(cleaned_text) >= 80:
             score = 1.0
         elif hits >= 1 and quote:
             score = 0.5
@@ -493,14 +556,14 @@ def evaluate_solution(
     code_patch: str | None = None,
     justification: str = "",
     elapsed_s: int = 180,
+    *,
+    allow_llm: bool = False,
 ) -> dict[str, Any]:
     """Полная оценка решения боевого инцидента: симулятор + код + рубрика с цитатами + `incident_stage` (А4)."""
     scn = parameterize_scenario(scenario_id, seed)
     sim = simulate_incident(scenario_id, seed, measures, code_patch)
-    rub = evaluate_justification_rubric(scn, justification)
+    rub = evaluate_justification_rubric(scn, justification, allow_llm=allow_llm)
 
-    # Если человек написал обоснование — учитываем 45% симулятор + 25% патч + 30% рубрика;
-    # если поле обоснования оставлено пустым (быстрый прогон пульта), оцениваем объективно симулятор + патч (макс 0.85 без постмортема, либо 0.70*sim+0.30*code)
     has_just = len((justification or "").strip()) >= 25
     if rub["injection_blocked"]:
         total_score = round(0.35 * sim["scores"]["sim_score"] + 0.15 * sim["scores"]["code_score"], 4)
@@ -529,15 +592,22 @@ def evaluate_solution(
     )
 
     crit_map = {c["id"]: c["score"] for c in rub["criteria"]}
+    cost_str = _fmt_int(sim["metrics"]["cost_rub_month"])
+    budget_str = _fmt_int(sim["metrics"]["cost_budget_rub_month"])
+    p99_str = _fmt_int(sim["metrics"]["p99_ms"])
+    level_note = (
+        f"результат этапа соответствует уровню {confirmed_grade.capitalize()}"
+        if passed
+        else f"целевой уровень {scn['target_grade'].capitalize()} не достигнут (текущий ориентир — {confirmed_grade.capitalize()})"
+    )
     summary_ru = (
         f"Инцидент «{scn['title']}» ({scn['direction_title']}): "
         f"{'SLO выполнены в рамках бюджета' if slo_met else 'SLO не выполнены'}, "
-        f"p99 = {sim['metrics']['p99_ms']} мс, стоимость = {sim['metrics']['cost_rub_month']:,} ₽/мес "
-        f"(бюджет {sim['metrics']['cost_budget_rub_month']:,} ₽/мес), "
-        f"итоговый балл {round(total_score * 100)} % (уровень {confirmed_grade.capitalize()})."
-    ).replace(",", " ")
+        f"p99 = {p99_str} мс, стоимость = {cost_str} ₽/мес "
+        f"(бюджет {budget_str} ₽/мес), "
+        f"итоговый балл {round(total_score * 100)} % ({level_note})."
+    )
 
-    # Структура `incident_stage` по контракту А4 (sprt.incorporate_incident_stage)
     incident_stage = {
         "scenario_id": scn["id"],
         "direction": scn["direction"],
@@ -574,13 +644,13 @@ def evaluate_solution(
     if passed and total_score >= 0.82:
         voice_summary = (
             f"Инцидент «{scn['title']}» устранён. {scn['win']} "
-            f"Задержка p99 снижена до {sim['metrics']['p99_ms']} миллисекунд, бюджет инфраструктуры соблюдён. "
-            f"Итоговый балл — {round(total_score * 100)} процентов, подтверждён уровень {confirmed_grade.capitalize()}."
+            f"Задержка p99 снижена до {p99_str} миллисекунд, бюджет инфраструктуры соблюдён. "
+            f"Итоговый балл — {round(total_score * 100)} процентов, результат боевого этапа соответствует уровню {confirmed_grade.capitalize()}."
         )
     else:
         issues: list[str] = []
         if sim["feedback"]["missing_measures"]:
-            issues.append("не включены ключевые меры: " + ", ".join(sim["feedback"]["missing_measures"]))
+            issues.append("не включены ключевые меры")
         if not sim["slo"]["within_budget"]:
             issues.append("превышен бюджет инфраструктуры")
         if sim["feedback"]["param_warnings"]:
@@ -591,9 +661,9 @@ def evaluate_solution(
             issues.append("не заполнено письменное обоснование")
         issue_str = "; ".join(issues[:3]) if issues else "часть показателей не достигла целевого порога"
         voice_summary = (
-            f"Решение выкачено частично: задержка p99 составляет {sim['metrics']['p99_ms']} миллисекунд, "
+            f"Решение выкачено частично: задержка p99 составляет {p99_str} миллисекунд, "
             f"ошибки — {str(sim['metrics']['error_rate_pct']).replace('.', ',')} процента. "
-            f"Обратите внимание: {issue_str}. Итоговый балл — {round(total_score * 100)} процентов."
+            f"Обратите внимание: {issue_str}. Итоговый балл — {round(total_score * 100)} процентов, требуется доработка до целевого уровня {scn['target_grade'].capitalize()}."
         )
 
     return {

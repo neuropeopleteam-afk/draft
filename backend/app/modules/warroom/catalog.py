@@ -1272,8 +1272,11 @@ def parameterize_scenario(scenario_id: str, seed: int = 1001) -> dict[str, Any]:
 
     Возвращает полный словарь сценария, включая совместимый со схемой `incident_sim` (А3)
     блок `incident = {service, release, slo, series, logs, actions}`.
+    Если `scenario_id` неизвестен — выбрасывает `KeyError`.
     """
-    base_scn = SCENARIO_BY_ID.get(scenario_id) or BASE_SCENARIOS[0]
+    if scenario_id not in SCENARIO_BY_ID:
+        raise KeyError(f"Unknown scenario_id: {scenario_id}")
+    base_scn = SCENARIO_BY_ID[scenario_id]
     scn = copy.deepcopy(base_scn)
     h = _seed_hash(scn["id"], seed)
 

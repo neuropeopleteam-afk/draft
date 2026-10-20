@@ -127,7 +127,7 @@ export function ArchDiagram({
       return;
     }
     if (p.id === "pgb") return;
-    (badges[p.at] ??= []).push({ label: p.badge, on: isLive, trap: p.trap });
+    (badges[p.at] ??= []).push({ label: p.badge, on: isLive, trap: Boolean(p.trap) });
   });
 
   const fast = applied && sloMet;

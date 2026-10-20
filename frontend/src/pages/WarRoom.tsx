@@ -1,7 +1,7 @@
 // Боевой ИИ-Полигон Драфта (/warroom и /demo/warroom) — практический этап подтверждения старших грейдов
-// (Senior / Lead / Principal) и интерактивный стенд проверки античита на реальных модулях бэкенда.
+// (Senior / Lead / Principal) для кандидатов и интерактивная демонстрационная витрина для жюри.
 import { useEffect, useState, type ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   FALLBACK_CONTOURS,
   FALLBACK_MEASURES,
@@ -48,7 +48,23 @@ function NavBtn({
 export default function WarRoom() {
   usePageTitle("Боевой ИИ-Полигон");
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { me, signOut } = useAuth();
+
+  // Реальный боевой режим включается для вошедшего кандидата (не демо-учётки жюри) вне маршрута /demo
+  const isJuryAccount = Boolean(
+    me?.email && (me.email.toLowerCase().endsWith("@jury.example.com") || me.email.toLowerCase().startsWith("jury"))
+  );
+  const isCombatCandidate = Boolean(
+    me &&
+      me.role === "candidate" &&
+      !isJuryAccount &&
+      !location.pathname.startsWith("/demo") &&
+      searchParams.get("demo") !== "1"
+  );
+  const demoMode = !isCombatCandidate;
+
   const [mode, setMode] = useState<"arch" | "cheat">(() =>
     typeof window !== "undefined" && window.location.hash === "#anticheat" ? "cheat" : "arch"
   );
@@ -67,7 +83,7 @@ export default function WarRoom() {
       measures: MeasureSpec[];
       anticheat_contours: AntiCheatContourSpec[];
       anticheat_signals: AntiCheatSignalSpec[];
-    }>("/warroom/scenarios")
+    }>(`/warroom/scenarios?demo=${demoMode ? "true" : "false"}`)
       .then((res) => {
         if (!alive) return;
         if (res.scenarios?.length) setScenarios(res.scenarios);
@@ -81,7 +97,7 @@ export default function WarRoom() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [demoMode]);
 
   const handleScenarioUpdated = (updated: ScenarioPublic) => {
     setScenarios((cur) => cur.map((x) => (x.id === updated.id ? updated : x)));
@@ -120,16 +136,30 @@ export default function WarRoom() {
           <NavBtn to="/candidate" testid="wr-nav-candidate">
             Кабинет кандидата
           </NavBtn>
-          <NavBtn to="/employer" testid="wr-nav-employer">
-            Кабинет работодателя
-          </NavBtn>
-          <NavBtn to="/expertise" testid="wr-nav-expertise">
-            Экспертиза ФСП
-          </NavBtn>
+          {demoMode && (
+            <>
+              <NavBtn to="/employer" testid="wr-nav-employer">
+                Кабинет работодателя
+              </NavBtn>
+              <NavBtn to="/expertise" testid="wr-nav-expertise">
+                Экспертиза ФСП
+              </NavBtn>
+            </>
+          )}
           <span className="ml-auto" />
-          <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-rose-400/40 bg-rose-500/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-rose-200 md:flex">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />
-            боевой контур
+          <span
+            className={`hidden shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest md:flex ${
+              isCombatCandidate
+                ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
+                : "border-rose-400/40 bg-rose-500/10 text-rose-200"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 animate-pulse rounded-full ${
+                isCombatCandidate ? "bg-emerald-400" : "bg-rose-400"
+              }`}
+            />
+            {isCombatCandidate ? "боевой этап кандидата" : "демо-витрина полигона"}
           </span>
           {me && (
             <NavBtn
@@ -152,7 +182,9 @@ export default function WarRoom() {
         className="relative mx-auto max-w-[1400px] px-3 pb-24 pt-5 outline-none sm:px-6"
       >
         <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-300">
-          Драфт · практическое подтверждение старших уровней (Senior · Lead · Principal)
+          {isCombatCandidate
+            ? "Драфт · практический боевой этап кандидата (Senior · Lead · Principal)"
+            : "Драфт · демонстрационная витрина архитектурного симулятора и контуров честности"}
         </p>
         <h1 className="mt-1 text-3xl font-black leading-tight tracking-tight md:text-4xl">
           Боевой ИИ-Полигон{" "}
@@ -162,9 +194,8 @@ export default function WarRoom() {
         </h1>
         <p className="mt-2 max-w-4xl text-sm leading-relaxed text-white/70">
           Старшие инженерные уровни нельзя измерить только выбором из вариантов. Восстановите
-          работу системы под пиковой нагрузкой в рамках бюджета инфраструктуры, защитите решение
-          письменным обоснованием с проверкой дословных цитат — или проверьте, как 21 сигнал в 5
-          контурах честности перехватывает несамостоятельное прохождение.
+          работу системы под пиковой нагрузкой в рамках бюджета инфраструктуры и защитите решение
+          письменным обоснованием с проверкой дословных цитат.
         </p>
 
         <div
@@ -208,14 +239,13 @@ export default function WarRoom() {
             }`}
           >
             <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-rose-200">
-              Режим Б
+              Режим Б · Демонстрационный стенд
             </span>
             <p className="mt-1 text-lg font-extrabold md:text-xl">
               Полигон Перехвата Нечестных Попыток
             </p>
             <p className="mt-1 text-xs text-white/65">
-              Проверка через реальный античит сервера · 5 контуров и {signals.length} сигнал ·
-              вызов на 3-минутную устную защиту
+              Демонстрация на подготовленных примерах · фильтр оценщика, вариант-двойник и 5 контуров честности
             </p>
           </button>
         </div>
@@ -226,16 +256,22 @@ export default function WarRoom() {
               voice={voice}
               scenarios={scenarios}
               measuresCatalog={measures}
+              demoMode={demoMode}
               onScenarioUpdated={handleScenarioUpdated}
             />
           ) : (
-            <AntiCheatMode voice={voice} contours={contours} signals={signals} />
+            <AntiCheatMode
+              voice={voice}
+              contours={contours}
+              signals={signals}
+              demoMode={demoMode}
+            />
           )}
         </div>
 
         <p className="mt-10 text-center text-[11px] text-white/40">
-          Расчёт метрик, бюджета, рубрики с цитатами и античита выполняется на сервере
-          (/api/warroom/*). Устная защита запускается в комнате видеоинтервью.
+          Расчёт метрик, бюджета, рубрики с цитатами и фильтрации текста выполняется на сервере
+          (/api/warroom/*). В демонстрационном режиме попытки не сохраняются в профиль кандидата.
         </p>
       </main>
     </div>
