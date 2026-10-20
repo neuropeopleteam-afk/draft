@@ -7,11 +7,15 @@ from app.core.db import get_db
 from app.core.errors import api_error, err
 from app.modules.auth import service, twofa
 from app.modules.auth.schemas import (
+    ForgotPasswordIn,
+    ForgotPasswordOut,
     LoginIn,
     RegisterIn,
     RegisterOut,
     ResendCodeIn,
     ResendCodeOut,
+    ResetPasswordIn,
+    ResetPasswordOut,
     TokenOut,
     TwoFactorChallengeOut,
     VerifyEmailIn,
@@ -53,6 +57,29 @@ def verify_email(data: VerifyEmailIn, db: Session = Depends(get_db)) -> TokenOut
 def resend_code(data: ResendCodeIn, db: Session = Depends(get_db)) -> ResendCodeOut:
     code = service.resend_code(db, data.email)
     return ResendCodeOut(dev_verification_code=code if get_settings().effective_dev_mode else None)
+
+
+@router.post(
+    "/forgot",
+    response_model=ForgotPasswordOut,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Запрос кода восстановления пароля по почте (15 минут, без раскрытия наличия адреса)",
+    responses={429: err("Слишком частые запросы")},
+)
+def forgot_password(data: ForgotPasswordIn, db: Session = Depends(get_db)) -> ForgotPasswordOut:
+    code = service.forgot_password(db, data.email)
+    return ForgotPasswordOut(dev_reset_code=code if get_settings().effective_dev_mode else None)
+
+
+@router.post(
+    "/reset",
+    response_model=ResetPasswordOut,
+    summary="Установка нового пароля по 6-значному коду из письма (до 5 попыток)",
+    responses={400: err("Неверный или просроченный код"), 429: err("Превышено число попыток ввода кода")},
+)
+def reset_password(data: ResetPasswordIn, db: Session = Depends(get_db)) -> ResetPasswordOut:
+    service.reset_password(db, data.email, data.code, data.new_password)
+    return ResetPasswordOut(ok=True)
 
 
 @router.post(

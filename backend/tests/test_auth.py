@@ -113,3 +113,75 @@ def test_resend_code_throttled_and_old_code_invalidated(client):
 def test_resend_code_unknown_email_does_not_leak(client):
     r = client.post("/api/auth/resend-code", json={"email": "nobody@example.com"})
     assert r.status_code == 202 and r.json()["dev_verification_code"] is None
+
+
+def test_forgot_and_reset_password_flow(client):
+    old_token = register_and_verify(client, email="forgot@example.com")
+    # запрос кода сброса пароля
+    r = client.post("/api/auth/forgot", json={"email": "FORGOT@example.com"})
+    assert r.status_code == 202
+    code = r.json()["dev_reset_code"]
+    assert code and len(code) == 6
+
+    # повторный запрос раньше минуты — 429
+    assert client.post("/api/auth/forgot", json={"email": "forgot@example.com"}).status_code == 429
+
+    # слабый пароль — 422
+    assert client.post(
+        "/api/auth/reset",
+        json={"email": "forgot@example.com", "code": code, "new_password": "onlyletters"},
+    ).status_code == 422
+
+    # неверный код — 400
+    bad = client.post(
+        "/api/auth/reset",
+        json={"email": "forgot@example.com", "code": "000000" if code != "000000" else "999999", "new_password": "NewPassw0rd!"},
+    )
+    assert bad.status_code == 400 and bad.json()["detail"]["code"] == "invalid_code"
+
+    # верный код — меняет пароль и отзывает прежние сессии (token_version)
+    ok = client.post(
+        "/api/auth/reset",
+        json={"email": "forgot@example.com", "code": code, "new_password": "NewPassw0rd!"},
+    )
+    assert ok.status_code == 200 and ok.json()["ok"] is True
+
+    # повторное использование того же кода отклоняется
+    reuse = client.post(
+        "/api/auth/reset",
+        json={"email": "forgot@example.com", "code": code, "new_password": "NewPassw0rd2!"},
+    )
+    assert reuse.status_code == 400
+
+    # старый токен больше не действует, старый пароль не подходит, новый — работает
+    assert client.get("/api/me", headers={"Authorization": f"Bearer {old_token}"}).status_code == 401
+    assert client.post("/api/auth/login", json={"email": "forgot@example.com", "password": "Passw0rd!"}).status_code == 401
+    login_ok = client.post("/api/auth/login", json={"email": "forgot@example.com", "password": "NewPassw0rd!"})
+    assert login_ok.status_code == 200 and login_ok.json()["access_token"]
+
+
+def test_forgot_unknown_email_and_reset_lockout(client):
+    # неизвестный email не раскрывается
+    r = client.post("/api/auth/forgot", json={"email": "unknown-user@example.com"})
+    assert r.status_code == 202 and r.json()["dev_reset_code"] is None
+    assert client.post(
+        "/api/auth/reset",
+        json={"email": "unknown-user@example.com", "code": "123456", "new_password": "NewPassw0rd!"},
+    ).status_code == 400
+
+    # блокировка после 5 неверных попыток ввода кода сброса
+    register_and_verify(client, email="lockreset@example.com")
+    code = client.post("/api/auth/forgot", json={"email": "lockreset@example.com"}).json()["dev_reset_code"]
+    wrong = "000000" if code != "000000" else "999999"
+    for _ in range(5):
+        resp = client.post(
+            "/api/auth/reset",
+            json={"email": "lockreset@example.com", "code": wrong, "new_password": "NewPassw0rd!"},
+        )
+        assert resp.status_code in (400, 429)
+    locked = client.post(
+        "/api/auth/reset",
+        json={"email": "lockreset@example.com", "code": code, "new_password": "NewPassw0rd!"},
+    )
+    assert locked.status_code == 429 and locked.json()["detail"]["code"] == "too_many_attempts"
+

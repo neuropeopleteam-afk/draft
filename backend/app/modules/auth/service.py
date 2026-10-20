@@ -22,7 +22,7 @@ from app.core.security import (
 )
 from app.modules.auth.models import Consent, EmailVerification, User
 from app.modules.auth.schemas import RegisterIn, TokenOut, UserOut
-from app.modules.notifications.mailer import send_verification_code
+from app.modules.notifications.mailer import Message, get_mailer, send_verification_code
 from app.modules.profiles.models import CandidateProfile, Company, EmployerProfile
 from app.modules.profiles.refs import new_public_ref
 
@@ -67,15 +67,17 @@ def register_user(db: Session, data: RegisterIn) -> tuple[User, str]:
     return user, code
 
 
-def _issue_code(db: Session, user: User) -> str:
+def _issue_code(db: Session, user: User, purpose: VerificationPurpose = VerificationPurpose.email_confirm) -> str:
     s = get_settings()
-    # Прежние неиспользованные коды гасим — действует только последний. Неудачные попытки переносятся на новый
+    # Прежние неиспользованные коды этой же цели гасим — действует только последний. Неудачные попытки переносятся на новый
     # код (окно — час): повторная отправка не обнуляет лимит ввода.
     inherited = 0
     window_start = utcnow() - timedelta(minutes=CODE_ATTEMPTS_WINDOW_MIN)
     for v in db.scalars(
         select(EmailVerification).where(
-            EmailVerification.user_id == user.id, EmailVerification.consumed_at.is_(None)
+            EmailVerification.user_id == user.id,
+            EmailVerification.purpose == purpose,
+            EmailVerification.consumed_at.is_(None),
         )
     ):
         if as_aware(v.created_at) >= window_start:
@@ -85,7 +87,7 @@ def _issue_code(db: Session, user: User) -> str:
     db.add(
         EmailVerification(
             user_id=user.id,
-            purpose=VerificationPurpose.email_confirm,
+            purpose=purpose,
             code_hash=hash_code(code),
             expires_at=utcnow() + timedelta(minutes=s.email_code_ttl_minutes),
             attempts=inherited,
@@ -101,16 +103,104 @@ def resend_code(db: Session, email: str) -> str | None:
         return None  # не раскрываем, есть ли такой адрес
     last = db.scalar(
         select(EmailVerification)
-        .where(EmailVerification.user_id == user.id)
+        .where(
+            EmailVerification.user_id == user.id,
+            EmailVerification.purpose == VerificationPurpose.email_confirm,
+        )
         .order_by(EmailVerification.created_at.desc())
         .limit(1)
     )
     if last and (utcnow() - as_aware(last.created_at)).total_seconds() < s.email_code_resend_seconds:
         raise api_error(429, "too_frequent", "Повторно запросить код можно через минуту")
-    code = _issue_code(db, user)
+    code = _issue_code(db, user, VerificationPurpose.email_confirm)
     db.commit()
     send_verification_code(user.email, code)
     return code
+
+
+def _send_password_reset_code(email: str, code: str) -> None:
+    import logging
+
+    s = get_settings()
+    log = logging.getLogger("notifications")
+    text = (
+        f"Здравствуйте!\n\nКод для восстановления пароля на платформе «{s.product_name}»: {code}\n"
+        f"Код действует {s.email_code_ttl_minutes} минут.\n\n"
+        "Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо."
+    )
+    html = (
+        f"<p>Здравствуйте!</p><p>Код для восстановления пароля: <b style='font-size:20px'>{code}</b></p>"
+        f"<p>Код действует {s.email_code_ttl_minutes} минут.</p>"
+    )
+    try:
+        get_mailer().send(Message(to=email, subject="Восстановление пароля", text=text, html=html))
+    except Exception:  # noqa: BLE001
+        log.exception("Не удалось отправить письмо сброса пароля на %s", email)
+    if s.effective_dev_mode:
+        log.warning("DEV_MODE: код сброса пароля для %s: %s", email, code)
+
+
+def forgot_password(db: Session, email: str) -> str | None:
+    s = get_settings()
+    user = db.scalar(select(User).where(User.email == normalize_email(email)))
+    if user is None or not user.is_active or user.is_demo:
+        return None  # не раскрываем наличие адреса в системе
+    last = db.scalar(
+        select(EmailVerification)
+        .where(
+            EmailVerification.user_id == user.id,
+            EmailVerification.purpose == VerificationPurpose.password_reset,
+        )
+        .order_by(EmailVerification.created_at.desc())
+        .limit(1)
+    )
+    if last and (utcnow() - as_aware(last.created_at)).total_seconds() < s.email_code_resend_seconds:
+        raise api_error(429, "too_frequent", "Повторно запросить код можно через минуту")
+    code = _issue_code(db, user, VerificationPurpose.password_reset)
+    db.commit()
+    _send_password_reset_code(user.email, code)
+    return code
+
+
+def reset_password(db: Session, email: str, code: str, new_password: str) -> User:
+    s = get_settings()
+    key = normalize_email(email)
+    user = db.scalar(select(User).where(User.email == key))
+    if user is None or not user.is_active or user.is_demo:
+        verify_password(_DUMMY_HASH, new_password)
+        raise api_error(400, "invalid_code", "Неверный или просроченный код")
+    v = db.scalar(
+        select(EmailVerification)
+        .where(
+            EmailVerification.user_id == user.id,
+            EmailVerification.purpose == VerificationPurpose.password_reset,
+            EmailVerification.consumed_at.is_(None),
+        )
+        .order_by(EmailVerification.created_at.desc())
+        .limit(1)
+    )
+    if v is None or as_aware(v.expires_at) < utcnow():
+        raise api_error(400, "invalid_code", "Неверный или просроченный код")
+    if v.attempts >= s.email_code_max_attempts:
+        raise api_error(
+            429,
+            "too_many_attempts",
+            "Слишком много попыток ввода кода. Попробуйте через час: новый код лимит не сбрасывает",
+        )
+    if not codes_equal(v.code_hash, code):
+        v.attempts += 1
+        db.commit()
+        raise api_error(400, "invalid_code", "Неверный или просроченный код")
+    v.consumed_at = utcnow()
+    user.password_hash = hash_password(new_password)
+    user.token_version = (user.token_version or 0) + 1
+    if not user.is_email_verified:
+        user.is_email_verified = True
+        user.email_verified_at = utcnow()
+    with _LOGIN_LOCK:
+        _LOGIN_FAILS.pop(key, None)
+    db.commit()
+    return user
 
 
 def verify_email(db: Session, email: str, code: str) -> User:
@@ -124,7 +214,11 @@ def verify_email(db: Session, email: str, code: str) -> User:
         raise api_error(400, "invalid_code", "Неверный или просроченный код. Если почта уже подтверждена — войдите по паролю")
     v = db.scalar(
         select(EmailVerification)
-        .where(EmailVerification.user_id == user.id, EmailVerification.consumed_at.is_(None))
+        .where(
+            EmailVerification.user_id == user.id,
+            EmailVerification.purpose == VerificationPurpose.email_confirm,
+            EmailVerification.consumed_at.is_(None),
+        )
         .order_by(EmailVerification.created_at.desc())
         .limit(1)
     )
