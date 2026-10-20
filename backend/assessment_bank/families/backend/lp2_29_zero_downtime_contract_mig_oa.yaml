@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: backend.lead_v2.zero_downtime_contract_mig_oa
+title: 'Backend-разработка: План миграции схемы и контрактов под нагрузкой без окна простоя (Expand-Contract)'
+direction: backend
+skills:
+- fastapi
+- postgresql
+- asyncio
+- rest_api
+- caching
+target_grades:
+- lead
+format: open_answer
+language: text
+invariants:
+  defect_type: expand_contract_migration
+  extra:
+    wave: LP-v2
+    slot: 29
+    direction_ru: Backend-разработка
+time_limit_s: 600
+canary: false
+prior_difficulty:
+  b: 2.23
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Backend-разработка: план миграции схемы и контрактов
+    под нагрузкой без окна простоя (expand-contract); формат open_answer, целевые грейды lead (b = 2,23 у порога
+    старшего грейда).'
+generator: assessment_bank.families.backend.lp2_29_zero_downtime_contract_mig_oa
+version: 1
+description: 'Backend-разработка (lead): План миграции схемы и контрактов под нагрузкой без окна простоя (Expand-Contract).
+  Проверка исполнением и рубрикой.'

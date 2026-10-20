@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: backend.principal_v2.outbox_atomic_reclaim_fix
+title: 'Backend-разработка: Повторный захват зависших сообщений transactional outbox без дублей'
+direction: backend
+skills:
+- fastapi
+- postgresql
+- asyncio
+- rest_api
+- caching
+target_grades:
+- principal
+format: choose_fix
+language: python
+invariants:
+  defect_type: outbox_stuck_lease
+  extra:
+    wave: LP-v2
+    slot: 11
+    direction_ru: Backend-разработка
+  n_options: 4
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.79
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Backend-разработка: повторный захват зависших сообщений
+    transactional outbox без дублей; формат choose_fix, целевые грейды principal (b = 2,79 у порога старшего грейда).'
+generator: assessment_bank.families.backend.lp2_11_outbox_atomic_reclaim_fix
+version: 1
+description: 'Backend-разработка (principal): Повторный захват зависших сообщений transactional outbox без дублей.
+  Проверка исполнением и рубрикой.'
