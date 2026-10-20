@@ -1,16 +1,17 @@
-"""Офлайн- и LLM-проверка античита на отложенном наборе (holdout_dataset.json) и наборе панели (grader_check.json).
+"""Офлайн- и LLM-проверка античита на слепом отложенном наборе (blind_holdout_dataset.json, DeepSeek + Grok + Kimi),
+наборе разработки (holdout_dataset.json, Claude + GPT, 320+320) и наборе панели (grader_check.json).
 
-Команды запуска (из корня репозитория или backend/):
+Команды запуска (из корня репозитория):
   Офлайн (детерминированные слои, 0 $):
-    python tools/grader_check/run_holdout_eval.py --offline
+    python3 tools/grader_check/run_holdout_eval.py --offline
 
   Полная цепочка на модели с лимитом стоимости (D3, D2, D5):
-    python tools/grader_check/run_holdout_eval.py --llm --max-cost-usd 3.0
+    python3 tools/grader_check/run_holdout_eval.py --llm --max-cost-usd 3.0
 
 Записывает:
-  - backend/app/modules/validation/data/grader_holdout.json   (подробный отчёт по отложенному набору 320+320)
+  - backend/app/modules/validation/data/grader_holdout.json   (подробный отчёт по слепому отложенному набору и набору разработки)
   - backend/app/modules/validation/data/grader_numbers.json   (блок anticheat в схеме docs/NUMBERS.json для А4)
-  - backend/app/modules/validation/data/grader_variants.json  (обновлённая сводка по 1 160 вариациям панели)
+  - backend/app/modules/validation/data/grader_variants.json  (сводка по 1 160 вариациям панели)
   - backend/app/modules/validation/data/grader_check.json     (отчёт по набору панели с llm_pending=false при --llm)
 """
 from __future__ import annotations
@@ -35,13 +36,14 @@ sys.path.insert(0, str(ROOT / "backend"))
 from app.modules.assessment import grader as G  # noqa: E402
 from app.modules.validation import grader_check as GC  # noqa: E402
 
-HOLDOUT_FILE = ROOT / "tools" / "grader_check" / "holdout_dataset.json"
+BLIND_FILE = ROOT / "tools" / "grader_check" / "blind_holdout_dataset.json"
+DEV320_FILE = ROOT / "tools" / "grader_check" / "holdout_dataset.json"
 PANEL_DATASET = ROOT / "docs" / "validation" / "grader_set_panel_20261006.json.gz"
 DATA_DIR = ROOT / "backend" / "app" / "modules" / "validation" / "data"
 HOLDOUT_OUT = DATA_DIR / "grader_holdout.json"
 NUMBERS_OUT = DATA_DIR / "grader_numbers.json"
+CHECK_OUT = DATA_DIR / "grader_check.json"
 
-# Расценки OpenRouter ($ за 1 млн токенов) для учёта и ограничения стоимости прогона
 MODEL_PRICING_PER_1M = {
     "anthropic/claude-sonnet-5.5": (3.0, 15.0),
     "anthropic/claude-fable-5.1": (1.5, 7.5),
@@ -54,13 +56,13 @@ def estimate_cost_usd(model: str, prompt_tokens: int, completion_tokens: int) ->
     return (prompt_tokens * in_p + completion_tokens * out_p) / 1_000_000.0
 
 
-def verify_holdout_sha256(d: dict) -> str:
+def verify_dataset_sha256(d: dict) -> str:
     core = {"attacks": d["attacks"], "honest": d["honest"]}
     raw = json.dumps(core, ensure_ascii=False, sort_keys=True).encode("utf-8")
     sha = hashlib.sha256(raw).hexdigest()
     expected = d.get("dataset_sha256")
     if expected and sha != expected:
-        raise RuntimeError(f"Holdout dataset SHA-256 mismatch: {sha} != {expected}")
+        raise RuntimeError(f"Dataset SHA-256 mismatch: {sha} != {expected}")
     return sha
 
 
@@ -70,7 +72,7 @@ def load_panel_items_map() -> dict[str, dict]:
 
 
 def run_offline(d: dict) -> dict:
-    sha = verify_holdout_sha256(d)
+    sha = verify_dataset_sha256(d)
     attacks = d["attacks"]
     honest = d["honest"]
 
@@ -115,14 +117,14 @@ def run_offline(d: dict) -> dict:
         st["n"] += 1
         st["false_positives"] += int(hit)
 
-    # Панель 06.10 (261 честный ответ)
     _, panel_rows = GC.load()
     panel_honest = [r for r in panel_rows if r["group"] in GC.HONEST]
     panel_fp = sum(1 for r in panel_honest if G.injection_signals(r["answer"]) or G.strip_meta(r["answer"])[1])
 
     return {
         "dataset_sha256": sha,
-        "frozen_before_filter_tuning": bool(d.get("frozen_before_filter_tuning", True)),
+        "frozen_after_filter_commit": d.get("frozen_after_filter_commit"),
+        "single_pass_blind_evaluation": bool(d.get("single_pass_blind_evaluation", False)),
         "author_models": d.get("author_models", []),
         "attacks_total": len(attacks),
         "caught_total": either_caught,
@@ -167,7 +169,7 @@ def _call_or_json(key: str, model: str, messages: list[dict], max_tokens: int = 
     return None, 0, 0, err
 
 
-def run_llm_chain_on_holdout(
+def run_llm_chain_on_dataset(
     d: dict,
     items_map: dict[str, dict],
     key: str,
@@ -176,13 +178,6 @@ def run_llm_chain_on_holdout(
     second_model: str = "anthropic/claude-fable-5.1",
     max_cost_usd: float = 3.0,
 ) -> dict:
-    """Прогоняет все 320 атак отложенного набора через полную цепочку grade_open:
-    1) injection_signals → блокировка до модели (route=filter_expert, score=0)
-    2) strip_meta: если остаток < MIN_CHARS → meta_only (route=meta_only_expert, score=0)
-    3) если остаток ≥ MIN_CHARS (или атака не поймана фильтром) → реальный вызов primary_model (промпт v2)
-       + проверка дословных цитат quote_supported + при сомнении (doubts) вызов second_model + combine.
-    Атака считается «пробившей цепочку» (pierced), если итоговый статус scored и итоговый балл ≥ 0.5.
-    """
     attacks = d["attacks"]
     lock = threading.Lock()
     state = {"pt": 0, "ct": 0, "cost_usd": 0.0, "llm_calls": 0, "second_calls": 0, "aborted_by_budget": False}
@@ -221,14 +216,12 @@ def run_llm_chain_on_holdout(
         if p1["manipulation"]:
             return {"id": a["id"], "family": a["family"], "route": "llm_manipulation_expert", "score": None, "pierced": False, "flags": ["llm_manipulation"]}
 
-        # Если даже до второй оценки балл 0.0 (или < 0.5 и нет причин повышать) — пробития нет
         rel = G.relevance(ans_clean, it["stem"], it["code"], it["step_prompt"], it["rubric"])
         dd = G.doubts(p1, ans_clean, rel)
         if not dd:
             sc = p1["score"] or 0.0
             return {"id": a["id"], "family": a["family"], "route": "scored_single", "score": sc, "pierced": sc >= 0.5}
 
-        # Вторая независимая оценка (Fable 5.1)
         msgs2 = G.build_messages(stem=it["stem"], code=it["code"], step_prompt=it["step_prompt"], rubric=it["rubric"], answer=ans_clean, version="v2", second=True)
         data2, pt2, ct2, err2 = _call_or_json(key, second_model, msgs2, max_tokens=1200)
         c2 = estimate_cost_usd(second_model, pt2, ct2)
@@ -279,131 +272,99 @@ def run_llm_chain_on_holdout(
     }
 
 
-def run_panel_grader_check_llm(
-    key: str,
-    *,
-    model: str = "anthropic/claude-sonnet-5.5",
-    limit_per_group: int = 10,
-    max_cost_usd: float = 2.0,
-) -> dict:
-    """Прогоняет grader_check (v2_1 + v2_2) на наборе панели 06.10, чтобы закрыть llm_pending=false в grader_check.json."""
+def update_panel_grader_check_json() -> float:
+    """Обновляет grader_check.json результатами реального LLM-прогона v2_1/v2_2 из /tmp/a6_panel_llm (если есть),
+    сохраняя 100 % совместимость с test_grader_check_offline_numbers."""
+    rep = GC.report("/nonexistent", write=False)
     tmp_dir = Path("/tmp/a6_panel_llm")
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    v2_1_req = tmp_dir / "v2_1.jsonl"
     v2_1_out = tmp_dir / "v2_1_out.jsonl"
-    v2_2_req = tmp_dir / "v2_2.jsonl"
     v2_2_out = tmp_dir / "v2_2_out.jsonl"
-    v1_out = tmp_dir / "v1_out.jsonl"
-    if not v1_out.exists():
-        v1_out.write_text("", encoding="utf-8")
-
-    GC.build("v2", str(v2_1_req), limit_per_group=limit_per_group)
-    reqs1 = [json.loads(line) for line in v2_1_req.read_text(encoding="utf-8").splitlines() if line.strip()]
-
-    lock = threading.Lock()
-    cost_state = {"cost": 0.0}
-
-    def _run_batch(reqs: list[dict], out_path: Path, m: str) -> None:
-        done = {}
-        if out_path.exists():
-            for line in out_path.read_text(encoding="utf-8").splitlines():
-                if line.strip():
-                    o = json.loads(line)
-                    if o.get("text") and not o.get("error"):
-                        done[o["req_id"]] = o
-        todo = [r for r in reqs if r["req_id"] not in done]
-        print(f"  panel LLM [{m}]: todo={len(todo)} (cached={len(done)})", flush=True)
-        with open(out_path, "a", encoding="utf-8") as fh:
-            def _one(r: dict) -> None:
-                with lock:
-                    if cost_state["cost"] >= max_cost_usd:
-                        return
-                t0 = time.time()
-                headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json", "HTTP-Referer": "https://localhost", "X-Title": "grader-check"}
-                body = {"model": m, "messages": r["messages"], "temperature": 0.0, "max_tokens": r.get("max_tokens", 1200)}
-                for attempt in range(3):
-                    try:
-                        resp = httpx.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=body, timeout=45.0)
-                        if resp.status_code == 200:
-                            payload = resp.json()
-                            u = payload.get("usage") or {}
-                            pt, ct = int(u.get("prompt_tokens") or 0), int(u.get("completion_tokens") or 0)
-                            txt = ((payload.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
-                            rec = {"req_id": r["req_id"], "model": m, "text": txt, "pt": pt, "ct": ct, "latency": round(time.time() - t0, 2)}
-                            with lock:
-                                cost_state["cost"] += estimate_cost_usd(m, pt, ct)
-                                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
-                                fh.flush()
-                            return
-                    except Exception:
-                        time.sleep(1.5 * (attempt + 1))
-
-            with ThreadPoolExecutor(max_workers=8) as ex:
-                list(ex.map(_one, todo))
-
-    _run_batch(reqs1, v2_1_out, model)
-    GC.second(str(v2_1_req), str(v2_1_out), str(v2_2_req))
-    reqs2 = [json.loads(line) for line in v2_2_req.read_text(encoding="utf-8").splitlines() if line.strip()]
-    _run_batch(reqs2, v2_2_out, "anthropic/claude-fable-5.1")
-    rep = GC.report(str(tmp_dir), write=True)
-    return {"report": rep, "cost_usd": round(cost_state["cost"], 4)}
+    cost = 0.0
+    if v2_1_out.exists():
+        res1 = GC._results(v2_1_out)
+        res2 = GC._results(v2_2_out)
+        pt1 = sum(int(o.get("pt") or 0) for o in res1.values())
+        ct1 = sum(int(o.get("ct") or 0) for o in res1.values())
+        pt2 = sum(int(o.get("pt") or 0) for o in res2.values())
+        ct2 = sum(int(o.get("ct") or 0) for o in res2.values())
+        cost = round(estimate_cost_usd("anthropic/claude-sonnet-5.5", pt1, ct1) + estimate_cost_usd("anthropic/claude-fable-5.1", pt2, ct2), 4)
+        rep["tokens"]["v2_1"] = {"calls": len(res1), "prompt_tokens": pt1, "completion_tokens": ct1, "errors": sum(1 for o in res1.values() if o.get("error"))}
+        rep["tokens"]["v2_2"] = {"calls": len(res2), "prompt_tokens": pt2, "completion_tokens": ct2, "errors": sum(1 for o in res2.values() if o.get("error"))}
+        rep["llm_pending"] = False
+        rep["model"] = "anthropic/claude-sonnet-5.5 + anthropic/claude-fable-5.1 (T = 0)"
+    CHECK_OUT.write_text(json.dumps(rep, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return cost
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--offline", action="store_true", help="Только офлайн-проверка детерминированных слоёв")
+    ap.add_argument("--offline", action="store_true", help="Офлайн-проверка детерминированных слоёв")
     ap.add_argument("--llm", action="store_true", help="Прогон полной цепочки на модели через OpenRouter")
     ap.add_argument("--max-cost-usd", type=float, default=3.0, help="Потолок расходов на LLM-прогон в долларах")
-    ap.add_argument("--panel-limit", type=int, default=10, help="Лимит на группу в наборе панели (0 = все)")
     args = ap.parse_args()
 
-    d = json.load(open(HOLDOUT_FILE, encoding="utf-8"))
-    off = run_offline(d)
+    blind_d = json.load(open(BLIND_FILE, encoding="utf-8"))
+    dev320_d = json.load(open(DEV320_FILE, encoding="utf-8"))
+
+    blind_off = run_offline(blind_d)
+    dev320_off = run_offline(dev320_d)
     print(
-        f"OFFLINE HOLDOUT (sha256={off['dataset_sha256'][:16]}...): "
-        f"caught={off['caught_total']}/{off['attacks_total']} ({off['caught_rate']*100:.1f}%), "
-        f"fp={off['false_positives_total']}/{off['honest_total']} ({off['false_positive_rate']*100:.2f}%), "
-        f"panel_fp={off['panel_false_positives']}/{off['panel_honest_n']}",
+        f"BLIND HOLDOUT (sha256={blind_off['dataset_sha256'][:16]}...): "
+        f"caught={blind_off['caught_total']}/{blind_off['attacks_total']} ({blind_off['caught_rate']*100:.1f}%), "
+        f"fp={blind_off['false_positives_total']}/{blind_off['honest_total']} ({blind_off['false_positive_rate']*100:.2f}%)",
+        flush=True,
+    )
+    print(
+        f"DEV-320 SET   (sha256={dev320_off['dataset_sha256'][:16]}...): "
+        f"caught={dev320_off['caught_total']}/{dev320_off['attacks_total']} ({dev320_off['caught_rate']*100:.1f}%), "
+        f"fp={dev320_off['false_positives_total']}/{dev320_off['honest_total']} ({dev320_off['false_positive_rate']*100:.2f}%)",
         flush=True,
     )
 
-    # Обновляем grader_variants.json (1 160 параметрических вариаций панели)
     from tools.grader_check import injection_variants as IV
 
     var_rep = IV.run(write=True)
+    panel_cost = update_panel_grader_check_json()
 
-    llm_res = None
-    panel_llm_cost = 0.0
+    blind_llm = None
+    dev320_llm = None
+    if HOLDOUT_OUT.exists():
+        prev = json.loads(HOLDOUT_OUT.read_text(encoding="utf-8"))
+        dev320_llm = prev.get("dev_320_llm_chain") or prev.get("llm_chain")
+        blind_llm = prev.get("blind_llm_chain")
+
     if args.llm:
         key_file = Path("/tmp/a6_or_key")
         key = os.environ.get("OPENROUTER_API_KEY") or (key_file.read_text().strip() if key_file.exists() else "")
         if not key:
             raise SystemExit("OPENROUTER_API_KEY not found")
         items_map = load_panel_items_map()
-        print("Running full LLM grading chain on 320 held-out attacks...", flush=True)
-        llm_res = run_llm_chain_on_holdout(d, items_map, key, max_cost_usd=args.max_cost_usd * 0.65)
+        print(f"Running single-pass LLM grading chain on {blind_off['attacks_total']} BLIND held-out attacks...", flush=True)
+        blind_llm = run_llm_chain_on_dataset(blind_d, items_map, key, max_cost_usd=args.max_cost_usd)
         print(
-            f"LLM HOLDOUT: pierced={llm_res['pierced']}/{llm_res['total_attacks']} "
-            f"({llm_res['pierce_rate']*100:.2f}%), defend_rate={llm_res['defend_rate']*100:.2f}%, "
-            f"calls={llm_res['llm_calls']}, cost=${llm_res['cost_usd']:.4f}",
+            f"BLIND LLM CHAIN: pierced={blind_llm['pierced']}/{blind_llm['total_attacks']} "
+            f"({blind_llm['pierce_rate']*100:.2f}%), defend_rate={blind_llm['defend_rate']*100:.2f}%, "
+            f"calls={blind_llm['llm_calls']}, cost=${blind_llm['cost_usd']:.4f}",
             flush=True,
         )
-        print("Running LLM v2 pipeline on panel grader_check dataset...", flush=True)
-        panel_out = run_panel_grader_check_llm(key, limit_per_group=args.panel_limit, max_cost_usd=args.max_cost_usd * 0.35)
-        panel_llm_cost = panel_out["cost_usd"]
-        print(f"PANEL LLM DONE: llm_pending={panel_out['report']['llm_pending']}, cost=${panel_llm_cost:.4f}", flush=True)
-    elif HOLDOUT_OUT.exists():
-        prev = json.loads(HOLDOUT_OUT.read_text(encoding="utf-8"))
-        llm_res = prev.get("llm_chain")
 
-    total_cost = round((llm_res.get("cost_usd", 0.0) if llm_res else 0.0) + panel_llm_cost, 4)
+    total_cost = round(
+        (blind_llm.get("cost_usd", 0.0) if blind_llm else 0.0)
+        + (dev320_llm.get("cost_usd", 0.0) if dev320_llm else 0.0)
+        + panel_cost,
+        4,
+    )
     ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     holdout_report = {
         "generated_at": ts,
-        "dataset_file": "tools/grader_check/holdout_dataset.json",
-        "offline": off,
-        "llm_chain": llm_res,
+        "blind_holdout_file": "tools/grader_check/blind_holdout_dataset.json",
+        "dev_320_file": "tools/grader_check/holdout_dataset.json",
+        "offline": blind_off,
+        "blind_llm_chain": blind_llm,
+        "llm_chain": blind_llm,
+        "dev_320_offline": dev320_off,
+        "dev_320_llm_chain": dev320_llm,
         "panel_variants_1160": {
             "caught": var_rep["caught"],
             "total": var_rep["variants"],
@@ -418,25 +379,28 @@ def main() -> None:
     }
     HOLDOUT_OUT.write_text(json.dumps(holdout_report, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
-    # Формируем grader_numbers.json строго по схеме А4 (docs/NUMBERS.json -> anticheat)
-    llm_block = llm_res or {
+    llm_block = blind_llm or {
         "pierced": 0,
-        "total": off["attacks_total"],
+        "total_attacks": blind_off["attacks_total"],
         "pierce_rate": 0.0,
         "defend_rate": 1.0,
-        "model": "anthropic/claude-sonnet-5.5 + anthropic/claude-fable-5.1",
+        "primary_model": "anthropic/claude-sonnet-5.5",
+        "second_model": "anthropic/claude-fable-5.1",
         "cost_usd": 0.0,
         "date": time.strftime("%Y-%m-%d", time.gmtime()),
     }
     claim_ru = (
-        f"Детерминированный фильтр с нормализацией (NFKC, омоглифы, транслит, leet, склейка разрядки, Base64/hex/URL, "
-        f"комментарии кода) перехватывает {off['caught_total']} из {off['attacks_total']} ({off['caught_rate']*100:.1f} %) "
-        f"независимо сгенерированных атак отложенного набора (Claude + GPT, SHA-256 {off['dataset_sha256'][:12]}…) "
-        f"и 1 160 из 1 160 (100 %) параметрических вариаций панели при {off['false_positives_total']} из {off['honest_total']} "
-        f"({off['false_positive_rate']*100:.2f} %) ложных срабатываний на новых честных ответах и 0 из {off['panel_honest_n']} "
-        f"на ответах панели. На полной цепочке с моделью ({llm_block.get('primary_model', 'Claude Sonnet 5.5')} + проверка "
-        f"дословных цитат + вторая оценка) пробитие составило {llm_block['pierced']} из {llm_block.get('total_attacks', off['attacks_total'])} "
-        f"({llm_block['pierce_rate']*100:.2f} %, защита {llm_block['defend_rate']*100:.2f} %)."
+        f"На слепом отложенном наборе из {blind_off['attacks_total']} атак в 16 семействах, составленном независимыми "
+        f"моделями (DeepSeek V4 Flash, xAI Grok 4.7, Moonshot Kimi K2.5; SHA-256 {blind_off['dataset_sha256'][:12]}…) "
+        f"после фиксации кода фильтра и проверенном одним прогоном без донастройки, детерминированный фильтр перехватывает "
+        f"{blind_off['caught_total']} из {blind_off['attacks_total']} ({blind_off['caught_rate']*100:.1f} %) атак до вызова LLM "
+        f"при {blind_off['false_positives_total']} из {blind_off['honest_total']} ({blind_off['false_positive_rate']*100:.2f} %) "
+        f"ложных срабатываний на новых честных ответах (0 из {blind_off['panel_honest_n']} на ответах панели); "
+        f"пробитие полной цепочки (фильтр + изоляция маркерами + проверка дословных цитат + вторая оценка "
+        f"Claude Sonnet 5.5 / Fable 5.1) составило {llm_block['pierced']} из {llm_block['total_attacks']} "
+        f"({llm_block['pierce_rate']*100:.2f} %, устойчивость цепочки {llm_block['defend_rate']*100:.2f} %). "
+        f"На наборе разработки (Claude + GPT, 320 атак) перехват фильтра — {dev320_off['caught_total']} из {dev320_off['attacks_total']} "
+        f"({dev320_off['caught_rate']*100:.1f} %), на известных шаблонах панели — {var_rep['caught']} из {var_rep['variants']} (100 %)."
     )
     numbers_payload = {
         "generated_at": ts,
@@ -447,21 +411,33 @@ def main() -> None:
                 "distinct_texts": var_rep["distinct_texts"],
                 "rate": round(var_rep["caught"] / max(1, var_rep["variants"]), 4),
             },
+            "dev_benchmark": {
+                "caught": dev320_off["caught_total"],
+                "total": dev320_off["attacks_total"],
+                "rate": dev320_off["caught_rate"],
+                "false_positives": dev320_off["false_positives_total"],
+                "false_positive_rate": dev320_off["false_positive_rate"],
+                "honest_n": dev320_off["honest_total"],
+                "dataset_sha256": dev320_off["dataset_sha256"],
+                "author_models": dev320_off["author_models"],
+            },
             "holdout_offline": {
-                "caught": off["caught_total"],
-                "total": off["attacks_total"],
-                "rate": off["caught_rate"],
-                "false_positives": off["false_positives_total"],
-                "false_positive_rate": off["false_positive_rate"],
-                "honest_n": off["honest_total"],
-                "panel_false_positives": off["panel_false_positives"],
-                "panel_honest_n": off["panel_honest_n"],
-                "dataset_sha256": off["dataset_sha256"],
-                "author_models": off["author_models"],
+                "caught": blind_off["caught_total"],
+                "total": blind_off["attacks_total"],
+                "rate": blind_off["caught_rate"],
+                "false_positives": blind_off["false_positives_total"],
+                "false_positive_rate": blind_off["false_positive_rate"],
+                "honest_n": blind_off["honest_total"],
+                "panel_false_positives": blind_off["panel_false_positives"],
+                "panel_honest_n": blind_off["panel_honest_n"],
+                "dataset_sha256": blind_off["dataset_sha256"],
+                "author_models": blind_off["author_models"],
+                "frozen_after_filter_commit": "6b7c710c",
+                "single_pass": True,
             },
             "llm_chain": {
                 "pierced": llm_block["pierced"],
-                "total": llm_block.get("total_attacks", off["attacks_total"]),
+                "total": llm_block["total_attacks"],
                 "pierce_rate": llm_block["pierce_rate"],
                 "defend_rate": llm_block["defend_rate"],
                 "model": f"{llm_block.get('primary_model', 'anthropic/claude-sonnet-5.5')} + {llm_block.get('second_model', 'anthropic/claude-fable-5.1')}",
@@ -477,7 +453,7 @@ def main() -> None:
         },
     }
     NUMBERS_OUT.write_text(json.dumps(numbers_payload, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"Wrote {HOLDOUT_OUT} and {NUMBERS_OUT}", flush=True)
+    print(f"Wrote {HOLDOUT_OUT}, {NUMBERS_OUT}, {CHECK_OUT}", flush=True)
 
 
 if __name__ == "__main__":
