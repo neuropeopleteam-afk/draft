@@ -5,6 +5,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, dateOnly, Empty, errText, Loading, Seg, useApi, years } from "../../components/ui";
 import { api, isChallenge, tokenStore, type AuthResult } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { useDemoUi } from "../../lib/juryMode";
 import { challengePath } from "../../lib/twofa";
 
 /* Экспертная разметка: A — пары «потребность — кандидат», B — ответы по рубрике, C — пороги грейдов (Ангофф).
@@ -33,8 +34,9 @@ function Bar({ done, total, label = "Размечено" }: { done: number; tota
 }
 
 function DemoNote({ me }: { me: Me | null }) {
-  if (!me?.in_panel || !me.is_demo) return null;
-  return <Alert kind="info">Демо-назначение: небольшая часть пакета. Оценки сохраняются, но в метрики на странице «Валидация» не входят — там считаются только оценки приглашённых экспертов.</Alert>;
+  const demoUi = useDemoUi();
+  if (!demoUi || !me?.in_panel || !me.is_demo) return null;
+  return <Alert kind="info">Демо-назначение: небольшая часть пакета. Оценки сохраняются, но в метрики на странице валидации не входят — там учитываются только оценки основной панели экспертов.</Alert>;
 }
 
 /* ------------------------------------------------------------------ вход по ссылке */
@@ -77,9 +79,22 @@ export function ExpertHome() {
   const left = me?.progress ? Object.values(me.progress).reduce((a, p) => a + p.minutes_left, 0) : 0;
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Экспертная разметка" subtitle="Три коротких задания. Ваши оценки — эталон, по которому проверяется подбор кандидатов, оценка ответов моделью и пороги грейдов." />
+      <PageTitle
+        title="Кабинет эксперта-методиста"
+        subtitle="Калибровка эталонного набора подбора, слепая оценка развёрнутых ответов по рубрикам, настройка порогов грейдов по методу Ангоффа и разбор апелляций кандидатов."
+      />
+      <section className="card flex flex-wrap items-center justify-between gap-4 border-l-4 border-l-brand">
+        <div className="max-w-xl">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-plum">Оперативная очередь</p>
+          <h2 className="mt-1 text-lg font-bold text-brand-night">Очередь проверки ответов и апелляций кандидатов</h2>
+          <p className="mt-1 text-sm text-brand-ink/75">
+            Развёрнутые ответы, где две модели разошлись в оценке, сработал защитный фильтр или кандидат подал апелляцию на пересмотр по рубрике.
+          </p>
+        </div>
+        <Link to="/expert/review" className="btn-primary shrink-0">Открыть очередь и апелляции</Link>
+      </section>
       {!me?.in_panel ? (
-        <Alert kind="info">Вы вошли не по персональной ссылке эксперта. Разметка доступна по ссылке-приглашению; проверка ответов кандидатов — в разделе <Link className="font-semibold underline" to="/expert/review">«Очередь проверки»</Link>.</Alert>
+        <Alert kind="info">Для калибровочных пакетов A, B, C используйте персональную ссылку эксперта. Оперативная проверка ответов и апелляций доступна в разделе <Link className="font-semibold underline" to="/expert/review">«Очередь и апелляции»</Link>.</Alert>
       ) : (
         <>
           <DemoNote me={me} />
