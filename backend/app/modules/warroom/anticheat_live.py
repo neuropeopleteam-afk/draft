@@ -340,6 +340,20 @@ def integrity_followup_compat(integ: dict[str, Any], decoy_hits: int = 0) -> dic
     }
 
 
+_INJECTION_CODE_RU: dict[str, str] = {
+    "ignore_instructions": "попытка отменить системные правила оценщика",
+    "score_request": "прямое требование выставить максимальный балл",
+    "role_injection": "подмена системной роли (system / assistant)",
+    "json_verdict": "вставка готового JSON-вердикта в текст ответа",
+    "marker_spoof": "попытка закрыть или подделать разделитель данных",
+    "reviewer_address": "обращение напрямую к проверяющей модели",
+}
+
+
+def _ru_sig(code: str) -> str:
+    return _INJECTION_CODE_RU.get(code, f"шаблон манипуляции ({code})")
+
+
 def _fallback_grader_inspect(text: str) -> dict[str, Any]:
     """Совместимая обёртка над `grader.py`, если `grader.inspect` из ветки А6 ещё не влита."""
     fn = getattr(grader, "inspect", None)
@@ -350,6 +364,7 @@ def _fallback_grader_inspect(text: str) -> dict[str, Any]:
     deobf_fn = getattr(grader, "_deobfuscate", None)
     normalized = deobf_fn(raw) if callable(deobf_fn) else raw
     inj = list(grader.injection_signals(raw))
+    inj_titles = [_ru_sig(s) for s in inj]
     cleaned, meta_removed = grader.strip_meta(raw)
     soft_fn = getattr(grader, "_soft_signals", None)
     soft = list(soft_fn(cleaned)) if callable(soft_fn) else []
@@ -367,7 +382,7 @@ def _fallback_grader_inspect(text: str) -> dict[str, Any]:
         "normalized": normalized,
         "normalizations": normalizations,
         "signals": inj,
-        "signal_titles": [f"Перехвачен шаблон манипуляции: {s}" for s in inj],
+        "signal_titles": inj_titles,
         "meta_removed": meta_removed,
         "cleaned_text": cleaned,
         "soft_signals": soft,
@@ -382,7 +397,7 @@ def _fallback_grader_inspect(text: str) -> dict[str, Any]:
                 "id": "hard_filter",
                 "title": "2. Предварительный фильтр промпт-инъекций",
                 "triggered": bool(inj),
-                "details": inj or ["Прямых команд оценщику не обнаружено"],
+                "details": inj_titles or ["Прямых команд оценщику не обнаружено"],
             },
             {
                 "id": "strip_meta",
@@ -522,7 +537,8 @@ def inspect_anticheat_live(payload: dict[str, Any]) -> dict[str, Any]:
     if has_zw or has_canary_word:
         _hit([7], f"В тексте ответа обнаружено скрытое контрольное слово из условия («{canary_word}»)", severe=True)
     if grader_report["signals"]:
-        _hit([8], f"Фильтр оценщика перехватил промпт-инъекцию: {', '.join(grader_report['signals'][:3])}", severe=True)
+        titles = grader_report.get("signal_titles") or [_ru_sig(s) for s in grader_report["signals"]]
+        _hit([8], f"Фильтр оценщика перехватил промпт-инъекцию: {', '.join(titles[:3])}", severe=True)
     if grader_report["meta_removed"]:
         _hit([9], f"Вырезаны служебные приписки и самооценка из ответа ({len(grader_report['meta_removed'])} шт.)")
     if paste_count > 0 or paste_chars > 0:

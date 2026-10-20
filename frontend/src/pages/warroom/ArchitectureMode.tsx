@@ -98,12 +98,12 @@ export default function ArchitectureMode({
     const timer = window.setTimeout(() => {
       api<SimulateResult>("/warroom/simulate", {
         method: "POST",
-        body: JSON.stringify({
+        body: {
           scenario_id: s.id,
           seed: s.seed,
           measures: buildMeasuresPayload(selectedMeasures),
           code_patch: code,
-        }),
+        },
       })
         .then((res) => {
           if (active) setSimPreview(res);
@@ -225,7 +225,7 @@ export default function ArchitectureMode({
     try {
       const res = await api<EvaluateResult>("/warroom/evaluate", {
         method: "POST",
-        body: JSON.stringify({
+        body: {
           scenario_id: s.id,
           seed: s.seed,
           measures: buildMeasuresPayload(selectedMeasures),
@@ -233,7 +233,7 @@ export default function ArchitectureMode({
           justification,
           elapsed_s: Math.max(30, sec),
           save: true,
-        }),
+        },
       });
       for (const line of res.feedback.deploy_log) {
         setDeployLog((l) => [...l, line]);
@@ -393,17 +393,19 @@ export default function ArchitectureMode({
                 накопленный ущерб {nf(lostRub)} ₽
               </p>
             </div>
-            <div className="px-2 pt-2">
-              <ArchDiagram
-                scenario={s}
-                measuresCatalog={measuresCatalog}
-                stagedIds={stagedIds}
-                liveIds={liveIds}
-                nodeTones={activeResult?.node_tones}
-                applied={phase === "applied"}
-                sloMet={!!evalResult?.slo.slo_met}
-                score={evalResult?.total_score ?? previewScore}
-              />
+            <div className="overflow-x-auto px-2 pt-2">
+              <div className="min-w-[600px] md:min-w-0">
+                <ArchDiagram
+                  scenario={s}
+                  measuresCatalog={measuresCatalog}
+                  stagedIds={stagedIds}
+                  liveIds={liveIds}
+                  nodeTones={activeResult?.node_tones}
+                  applied={phase === "applied"}
+                  sloMet={!!evalResult?.slo.slo_met}
+                  score={evalResult?.total_score ?? previewScore}
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2 p-3 md:grid-cols-3 xl:grid-cols-6" data-testid="wr-metrics">
               <MetricTile

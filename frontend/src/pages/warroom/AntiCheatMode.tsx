@@ -422,7 +422,7 @@ export default function AntiCheatMode({
       try {
         const res = await api<AntiCheatInspectResult>("/warroom/anticheat/inspect", {
           method: "POST",
-          body: JSON.stringify({
+          body: {
             answer_text: txt,
             canary_word: CANARY_WORD,
             attack_preset: opts.attack_preset,
@@ -431,7 +431,7 @@ export default function AntiCheatMode({
               ...telemetryRef.current,
               key_intervals_ms: opts.key_intervals_ms ?? realKeys,
             },
-          }),
+          },
         });
         setInspectRes(res);
         setLit((cur) => {
@@ -524,10 +524,11 @@ export default function AntiCheatMode({
     telemetryRef.current.paste += 1;
     telemetryRef.current.paste_chars += GPT_ANSWER.length;
     setGptText("");
-    for (let i = 0; i <= GPT_ANSWER.length; i += 10) {
+    for (let i = 0; i <= GPT_ANSWER.length; i += 12) {
       setGptText(GPT_ANSWER.slice(0, i));
-      await sleep(16);
+      await sleep(14);
     }
+    setGptText(GPT_ANSWER);
     await sleep(150);
     setAnswer(GPT_ANSWER);
     await runBackendInspect(GPT_ANSWER, { attack_preset: "gpt" });
@@ -825,7 +826,12 @@ export default function AntiCheatMode({
                     Многослойный фильтр текста оценщика (бэкенд):
                   </p>
                   <span className="font-mono text-[10px] text-white/60">
-                    маршрут: {inspectRes.grader_inspect.route}
+                    маршрут:{" "}
+                    {inspectRes.grader_inspect.route === "expert"
+                      ? "эксперту (блокировка LLM)"
+                      : inspectRes.grader_inspect.route === "llm_second"
+                        ? "двойная проверка"
+                        : "штатная оценка"}
                   </span>
                 </div>
                 {inspectRes.grader_inspect.layers.map((layer) => (
