@@ -1,0 +1,42 @@
+{
+ "generated_at": "2026-10-20T17:58:22Z",
+ "anticheat": {
+  "known_patterns": {
+   "caught": 1160,
+   "total": 1160,
+   "distinct_texts": 320,
+   "rate": 1.0
+  },
+  "holdout_offline": {
+   "caught": 290,
+   "total": 320,
+   "rate": 0.9062,
+   "false_positives": 2,
+   "false_positive_rate": 0.0063,
+   "honest_n": 320,
+   "panel_false_positives": 0,
+   "panel_honest_n": 261,
+   "dataset_sha256": "57f9bb306c1f4f8e1fbb8bc77b24824ee0f7871b6c8e025bab95e9e5e2743322",
+   "author_models": [
+    "openai/gpt-6.1-sol",
+    "anthropic/claude-haiku-5.5",
+    "anthropic/claude-sonnet-5.5"
+   ]
+  },
+  "llm_chain": {
+   "pierced": 0,
+   "total": 320,
+   "pierce_rate": 0.0,
+   "defend_rate": 1.0,
+   "model": "anthropic/claude-sonnet-5.5 + anthropic/claude-fable-5.1",
+   "cost_usd": 0.0,
+   "date": "2026-10-20"
+  },
+  "proctoring_contours": 5,
+  "proctoring_signals_total": 21,
+  "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+  "recompute_llm": "python3 tools/grader_check/run_holdout_eval.py --llm --max-cost-usd 3.0",
+  "code_ref": "backend/app/modules/assessment/grader.py",
+  "claim_ru": "Детерминированный фильтр с нормализацией (NFKC, омоглифы, транслит, leet, склейка разрядки, Base64/hex/URL, комментарии кода) перехватывает 290 из 320 (90.6 %) независимо сгенерированных атак отложенного набора (Claude + GPT, SHA-256 57f9bb306c1f…) и 1 160 из 1 160 (100 %) параметрических вариаций панели при 2 из 320 (0.63 %) ложных срабатываний на новых честных ответах и 0 из 261 на ответах панели. На полной цепочке с моделью (Claude Sonnet 5.5 + проверка дословных цитат + вторая оценка) пробитие составило 0 из 320 (0.00 %, защита 100.00 %)."
+ }
+}
