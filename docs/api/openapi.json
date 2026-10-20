@@ -303,7 +303,7 @@
         "properties": {
           "format": {
             "default": "mp3",
-            "description": "mp3 — аудио, pcm — pcm_s16le 16 кГц моно для липсинка Anam",
+            "description": "mp3 — аудио, pcm — pcm_s16le 16 кГц моно для синхронизации видеоаватара",
             "enum": [
               "mp3",
               "pcm"
@@ -321,6 +321,73 @@
           }
         },
         "title": "AdvisorSpeechIn",
+        "type": "object"
+      },
+      "AntiCheatInspectIn": {
+        "properties": {
+          "answer_text": {
+            "default": "",
+            "maxLength": 12000,
+            "title": "Answer Text",
+            "type": "string"
+          },
+          "attack_preset": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attack Preset"
+          },
+          "camera_events": {
+            "items": {
+              "$ref": "#/components/schemas/CameraEventIn"
+            },
+            "maxItems": 30,
+            "title": "Camera Events",
+            "type": "array"
+          },
+          "check_lz": {
+            "default": false,
+            "title": "Check Lz",
+            "type": "boolean"
+          },
+          "demo": {
+            "default": true,
+            "title": "Demo",
+            "type": "boolean"
+          },
+          "lz_items": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/LzItemIn"
+                },
+                "maxItems": 40,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lz Items"
+          },
+          "lz_theta": {
+            "default": 1.2,
+            "maximum": 4.5,
+            "minimum": -4.0,
+            "title": "Lz Theta",
+            "type": "number"
+          },
+          "telemetry": {
+            "$ref": "#/components/schemas/TelemetryIn"
+          }
+        },
+        "title": "AntiCheatInspectIn",
         "type": "object"
       },
       "ApplicationOut": {
@@ -4313,6 +4380,37 @@
         "title": "BeginIn",
         "type": "object"
       },
+      "BenchmarkUploadIn": {
+        "properties": {
+          "content": {
+            "default": "",
+            "description": "Содержимое файла JSON или CSV (до 2 МБ)",
+            "maxLength": 2000000,
+            "title": "Content",
+            "type": "string"
+          },
+          "format": {
+            "default": "json",
+            "description": "Формат файла: json или csv",
+            "enum": [
+              "json",
+              "csv"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "k": {
+            "default": 5,
+            "description": "Размер топа для выдачи по каждой вакансии",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "K",
+            "type": "integer"
+          }
+        },
+        "title": "BenchmarkUploadIn",
+        "type": "object"
+      },
       "Body_need_from_file_api_employer_needs_file_post": {
         "properties": {
           "file": {
@@ -4798,6 +4896,39 @@
           "rules"
         ],
         "title": "CabinetSalariesOut",
+        "type": "object"
+      },
+      "CameraEventIn": {
+        "properties": {
+          "duration_ms": {
+            "default": 5000,
+            "maximum": 3600000.0,
+            "minimum": 0.0,
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "faces": {
+            "default": 0,
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Faces",
+            "type": "integer"
+          },
+          "kind": {
+            "default": "no_face",
+            "maxLength": 32,
+            "title": "Kind",
+            "type": "string"
+          },
+          "position": {
+            "default": 1,
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "title": "CameraEventIn",
         "type": "object"
       },
       "CandidateAssignmentsOut": {
@@ -11107,6 +11238,81 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "EvaluateIn": {
+        "properties": {
+          "code_patch": {
+            "anyOf": [
+              {
+                "maxLength": 12000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Patch"
+          },
+          "demo": {
+            "default": false,
+            "title": "Demo",
+            "type": "boolean"
+          },
+          "elapsed_s": {
+            "default": 180,
+            "maximum": 7200.0,
+            "minimum": 1.0,
+            "title": "Elapsed S",
+            "type": "integer"
+          },
+          "justification": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Justification",
+            "type": "string"
+          },
+          "measures": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MeasureItemIn"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "title": "Measures",
+            "type": "array"
+          },
+          "save": {
+            "default": true,
+            "title": "Save",
+            "type": "boolean"
+          },
+          "scenario_id": {
+            "default": "payment",
+            "maxLength": 32,
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "maximum": 999999.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          }
+        },
+        "title": "EvaluateIn",
+        "type": "object"
+      },
       "EventsIn": {
         "properties": {
           "events": {
@@ -12391,6 +12597,12 @@
               }
             ],
             "title": "Min Score"
+          },
+          "real_only": {
+            "default": false,
+            "description": "Исключить модельные и синтетические профили (profiles.is_synthetic)",
+            "title": "Real Only",
+            "type": "boolean"
           },
           "relaxation": {
             "anyOf": [
@@ -17451,6 +17663,40 @@
         "title": "LiveRoomPublicOut",
         "type": "object"
       },
+      "LzItemIn": {
+        "properties": {
+          "a": {
+            "default": 1.0,
+            "maximum": 5.0,
+            "minimum": 0.1,
+            "title": "A",
+            "type": "number"
+          },
+          "b": {
+            "default": 0.0,
+            "maximum": 5.0,
+            "minimum": -5.0,
+            "title": "B",
+            "type": "number"
+          },
+          "t": {
+            "default": 25.0,
+            "maximum": 3600.0,
+            "minimum": 0.5,
+            "title": "T",
+            "type": "number"
+          },
+          "x": {
+            "default": 0,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "X",
+            "type": "integer"
+          }
+        },
+        "title": "LzItemIn",
+        "type": "object"
+      },
       "MapItem": {
         "properties": {
           "id": {
@@ -17564,6 +17810,37 @@
           "created_at"
         ],
         "title": "MeOut",
+        "type": "object"
+      },
+      "MeasureItemIn": {
+        "properties": {
+          "id": {
+            "maxLength": 32,
+            "title": "Id",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "MeasureItemIn",
         "type": "object"
       },
       "MessagePostedOut": {
@@ -23386,24 +23663,6 @@
         "title": "SimilarIn",
         "type": "object"
       },
-      "SimulateIn": {
-        "properties": {
-          "need_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Need Id"
-          }
-        },
-        "title": "SimulateIn",
-        "type": "object"
-      },
       "SkillFreshnessOut": {
         "additionalProperties": true,
         "properties": {
@@ -25355,6 +25614,167 @@
           "id"
         ],
         "title": "TaskRef",
+        "type": "object"
+      },
+      "TelemetryIn": {
+        "properties": {
+          "active_ms": {
+            "default": 25000,
+            "maximum": 86400000.0,
+            "minimum": 1.0,
+            "title": "Active Ms",
+            "type": "integer"
+          },
+          "ai_mark_hit": {
+            "default": false,
+            "title": "Ai Mark Hit",
+            "type": "boolean"
+          },
+          "api_bypass": {
+            "default": false,
+            "title": "Api Bypass",
+            "type": "boolean"
+          },
+          "canary_fast": {
+            "default": false,
+            "title": "Canary Fast",
+            "type": "boolean"
+          },
+          "copy": {
+            "default": 0,
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Copy",
+            "type": "integer"
+          },
+          "decoy_hit": {
+            "default": false,
+            "title": "Decoy Hit",
+            "type": "boolean"
+          },
+          "even_rhythm": {
+            "default": false,
+            "title": "Even Rhythm",
+            "type": "boolean"
+          },
+          "fast_text": {
+            "default": false,
+            "title": "Fast Text",
+            "type": "boolean"
+          },
+          "fast_wrong": {
+            "default": false,
+            "title": "Fast Wrong",
+            "type": "boolean"
+          },
+          "focus_lost": {
+            "default": 0,
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Focus Lost",
+            "type": "integer"
+          },
+          "fs_exit": {
+            "default": 0,
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Fs Exit",
+            "type": "integer"
+          },
+          "fs_out_ms": {
+            "default": 0,
+            "maximum": 86400000.0,
+            "minimum": 0.0,
+            "title": "Fs Out Ms",
+            "type": "integer"
+          },
+          "hidden_ms": {
+            "default": 0,
+            "maximum": 86400000.0,
+            "minimum": 0.0,
+            "title": "Hidden Ms",
+            "type": "integer"
+          },
+          "ik_cv": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ik Cv"
+          },
+          "ik_cv_float": {
+            "anyOf": [
+              {
+                "maximum": 10.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ik Cv Float"
+          },
+          "key_intervals_ms": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 300,
+            "title": "Key Intervals Ms",
+            "type": "array"
+          },
+          "not_typed": {
+            "default": false,
+            "title": "Not Typed",
+            "type": "boolean"
+          },
+          "paste": {
+            "default": 0,
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Paste",
+            "type": "integer"
+          },
+          "paste_chars": {
+            "default": 0,
+            "maximum": 500000.0,
+            "minimum": 0.0,
+            "title": "Paste Chars",
+            "type": "integer"
+          },
+          "preknowledge_flagged": {
+            "default": false,
+            "title": "Preknowledge Flagged",
+            "type": "boolean"
+          },
+          "printscreen": {
+            "default": 0,
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Printscreen",
+            "type": "integer"
+          },
+          "typed": {
+            "anyOf": [
+              {
+                "maximum": 500000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Typed"
+          }
+        },
+        "title": "TelemetryIn",
         "type": "object"
       },
       "ThreadBriefOut": {
@@ -31105,6 +31525,24 @@
         "title": "PrefsIn",
         "type": "object"
       },
+      "app__modules__subs__router__SimulateIn": {
+        "properties": {
+          "need_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Id"
+          }
+        },
+        "title": "SimulateIn",
+        "type": "object"
+      },
       "app__modules__subs__router__SubscriptionIn": {
         "properties": {
           "enabled": {
@@ -31168,6 +31606,63 @@
           "body"
         ],
         "title": "MessageIn",
+        "type": "object"
+      },
+      "app__modules__warroom__router__SimulateIn": {
+        "properties": {
+          "code_patch": {
+            "anyOf": [
+              {
+                "maxLength": 12000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Patch"
+          },
+          "demo": {
+            "default": false,
+            "title": "Demo",
+            "type": "boolean"
+          },
+          "measures": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MeasureItemIn"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "maxItems": 20,
+            "title": "Measures",
+            "type": "array"
+          },
+          "scenario_id": {
+            "default": "payment",
+            "maxLength": 32,
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "maximum": 999999.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          }
+        },
+        "title": "SimulateIn",
         "type": "object"
       }
     },
@@ -44666,6 +45161,152 @@
         ]
       }
     },
+    "/api/employer/benchmark/sample": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "benchmark_sample_api_employer_benchmark_sample_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "title": "Format",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "summary": "Образец набора жюри (JSON или CSV) для режима «Принесите свой набор»",
+        "tags": [
+          "employer"
+        ]
+      }
+    },
+    "/api/employer/benchmark/upload": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель, администратор.",
+        "operationId": "benchmark_upload_api_employer_benchmark_upload_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BenchmarkUploadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Benchmark Upload Api Employer Benchmark Upload Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "sandbox_required",
+                    "message": "Откройте демо-песочницу жюри в роли работодателя"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для работодателя. Коды `detail.code`: `sandbox_required` — Откройте демо-песочницу жюри в роли работодателя; `forbidden` — Недостаточно прав для этого действия."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "company_required — сначала заполните профиль компании"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "dataset_too_large",
+                    "message": "Размер файла не должен превышать 2 МБ."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком большой запрос или файл. Коды `detail.code`: `dataset_too_large` — Размер файла не должен превышать 2 МБ.."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invalid_dataset",
+                    "message": "Данные не прошли проверку"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Некорректный формат набора данных. Коды `detail.code`: `invalid_dataset`; `empty_dataset` — Передан пустой набор данных. Загрузите файл JSON или CSV либо используйте образец.; `invalid_json_root` — Корнем JSON должен быть объект с полями needs (или vacancies) и candidates.; `empty_csv` — В CSV-файле нет строк данных.; `invalid_json` — Ошибка разбора JSON: проверьте синтаксис файла (…).; `invalid_csv` — Не удалось прочитать CSV: …; `invalid_csv_row` — Строка …: укажите столбец kind (need / candidate / label) или плоские столбцы need_id и candidate_id.; `no_needs` — В наборе должна быть хотя бы одна вакансия (поле needs или vacancies).; ещё 6."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Ранжирование, метрики P@5/P@10/nDCG@10/MRR и объяснения на наборе жюри",
+        "tags": [
+          "employer"
+        ]
+      }
+    },
     "/api/employer/candidates": {
       "get": {
         "description": "Поиск кандидатов в общем пуле: фильтры по направлению, грейду, категории, стеку (`stack`, `stack_level`), связке с ФСП и подтверждённости; постранично (`limit`, `offset`). Кандидаты, скрывшие профиль, не показываются.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
@@ -44787,6 +45428,18 @@
               "default": false,
               "description": "Только подтверждённый грейд: без «Junior (предварительно)» и без «грейд не подтверждён» (по умолчанию они показываются ниже подтверждённых)",
               "title": "Confirmed",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Исключить модельные и синтетические профили (profiles.is_synthetic)",
+            "in": "query",
+            "name": "real_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Исключить модельные и синтетические профили (profiles.is_synthetic)",
+              "title": "Real Only",
               "type": "boolean"
             }
           },
@@ -50760,7 +51413,7 @@
             "OAuth2PasswordBearer": []
           }
         ],
-        "summary": "Сеансовый токен живого видеоаватара Anam для ИИ-советника руководителя",
+        "summary": "Сеансовый токен живого видеоаватара для ИИ-советника руководителя",
         "tags": [
           "employer"
         ]
@@ -50878,7 +51531,7 @@
             "OAuth2PasswordBearer": []
           }
         ],
-        "summary": "Озвучка реплики ИИ-советника руководителя (ElevenLabs mp3 или pcm_16000 для липсинка Anam)",
+        "summary": "Озвучка реплики ИИ-советника руководителя (mp3 или pcm_16000 для синхронизации видеоаватара)",
         "tags": [
           "employer"
         ]
@@ -58759,6 +59412,25 @@
       "post": {
         "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "concierge_avatar_token_api_interview_concierge_avatar_token_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sid",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -58769,6 +59441,32 @@
               }
             },
             "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "too_many_requests",
+                    "message": "Слишком много запросов — попробуйте через минуту"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `too_many_requests` — Слишком много запросов — попробуйте через минуту; `avatar_budget` — Видеопоток на сегодня исчерпан — включён голосовой режим."
           },
           "503": {
             "content": {
@@ -58787,7 +59485,31 @@
             "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `avatar_unavailable` — Живой видеопоток временно недоступен — включён голосовой режим."
           }
         },
-        "summary": "Живой аватар ИИ-проводника Елены: токен сессии видеопотока с движением губ",
+        "summary": "Живой аватар ИИ-проводника Насти: токен сессии видеопотока с движением губ",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/budget": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "concierge_budget_usage_api_interview_concierge_budget_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Concierge Budget Usage Api Interview Concierge Budget Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Сегодняшние расходы проводника Насти и лимиты (для владельца)",
         "tags": [
           "interview"
         ]
@@ -58829,7 +59551,7 @@
             "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
           }
         },
-        "summary": "Живой диалог с ИИ-проводником Еленой: знакомство по имени, выбор роли и ответы на вопросы",
+        "summary": "Живой диалог с ИИ-проводником Настей: знакомство по имени, выбор роли и ответы на вопросы",
         "tags": [
           "interview"
         ]
@@ -58864,7 +59586,7 @@
             "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
           }
         },
-        "summary": "Событие разговора с Еленой для стенограммы: открытие, реплика обзора, шаг, закрытие",
+        "summary": "Событие разговора с Настей для стенограммы: открытие, реплика обзора, шаг, закрытие",
         "tags": [
           "interview"
         ]
@@ -58917,7 +59639,7 @@
             "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
           }
         },
-        "summary": "Сценарий обзора Елены: приветствие, реплики шагов, связки (голос — из кэша)",
+        "summary": "Сценарий обзора Насти: приветствие, реплики шагов, связки (голос — из кэша)",
         "tags": [
           "interview"
         ]
@@ -58951,6 +59673,22 @@
             },
             "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
           },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "too_many_requests",
+                    "message": "Слишком много запросов — попробуйте через минуту"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `too_many_requests` — Слишком много запросов — попробуйте через минуту; `tts_budget` — Синтез речи на сегодня исчерпан."
+          },
           "503": {
             "content": {
               "application/json": {
@@ -58968,7 +59706,7 @@
             "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `tts_unavailable` — Синтез речи временно недоступен."
           }
         },
-        "summary": "Голос ИИ-проводника Елены (mp3 или PCM для живого аватара)",
+        "summary": "Голос ИИ-проводника Насти (mp3 или PCM для живого аватара)",
         "tags": [
           "interview"
         ]
@@ -59038,7 +59776,7 @@
             "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `stt_unavailable` — Распознавание речи временно недоступно."
           }
         },
-        "summary": "Распознавание голоса собеседника для ИИ-проводника Елены",
+        "summary": "Распознавание голоса собеседника для ИИ-проводника Насти",
         "tags": [
           "interview"
         ]
@@ -59071,9 +59809,25 @@
               }
             },
             "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "too_many_requests",
+                    "message": "Слишком много запросов — попробуйте через минуту"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `too_many_requests` — Слишком много запросов — попробуйте через минуту."
           }
         },
-        "summary": "Ход живого разговора с Еленой: решение и голос ответа одним потоком (NDJSON)",
+        "summary": "Ход живого разговора с Настей: решение и голос ответа одним потоком (NDJSON)",
         "tags": [
           "interview"
         ]
@@ -62061,7 +62815,7 @@
               "schema": {
                 "anyOf": [
                   {
-                    "$ref": "#/components/schemas/SimulateIn"
+                    "$ref": "#/components/schemas/app__modules__subs__router__SimulateIn"
                   },
                   {
                     "type": "null"
@@ -68581,6 +69335,266 @@
         ]
       }
     },
+    "/api/telegram/link": {
+      "delete": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "delete_link_api_telegram_link_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete Link Api Telegram Link Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Отключить уведомления в Telegram и отвязать чат",
+        "tags": [
+          "telegram"
+        ]
+      },
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "create_link_api_telegram_link_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Link Api Telegram Link Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Сгенерировать одноразовый код и ссылку для привязки Telegram",
+        "tags": [
+          "telegram"
+        ]
+      }
+    },
+    "/api/telegram/status": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "get_status_api_telegram_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Status Api Telegram Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Статус привязки Telegram и готовности бота на сервере",
+        "tags": [
+          "telegram"
+        ]
+      }
+    },
+    "/api/telegram/test": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "send_test_api_telegram_test_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Send Test Api Telegram Test Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "telegram_not_configured",
+                    "message": "Токен бота Telegram на сервере ещё не задан"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Бот не настроен или чат Telegram ещё не привязан. Коды `detail.code`: `telegram_not_configured` — Токен бота Telegram на сервере ещё не задан; `telegram_not_linked` — Сначала привяжите Telegram по кнопке «Получать в Telegram»."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Отправить проверочное уведомление в привязанный чат Telegram",
+        "tags": [
+          "telegram"
+        ]
+      }
+    },
+    "/api/telegram/webhook": {
+      "post": {
+        "description": "**Доступ:** вход по JWT не требуется; ключ или подпись передаются в заголовке `x-telegram-bot-api-secret-token`.",
+        "operationId": "webhook_api_telegram_webhook_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-telegram-bot-api-secret-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Telegram-Bot-Api-Secret-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Update",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Webhook Api Telegram Webhook Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "telegram_webhook_forbidden",
+                    "message": "Неверный секрет вебхука"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Недостаточно прав. Коды `detail.code`: `telegram_webhook_forbidden` — Неверный секрет вебхука."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invitation_closed",
+                    "message": "На это приглашение уже нельзя ответить"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Конфликт с текущим состоянием. Коды `detail.code`: `invitation_closed` — На это приглашение уже нельзя ответить."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "light_work_minor_only",
+                    "message": "Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»"
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата."
+          }
+        },
+        "summary": "Вебхук Telegram Bot API (/start <code> и кнопки Принять / Отклонить)",
+        "tags": [
+          "telegram"
+        ]
+      }
+    },
     "/api/trio/eligible": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
@@ -72510,6 +73524,519 @@
           "validation"
         ]
       }
+    },
+    "/api/warroom/anticheat/inspect": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "anticheat_inspect_endpoint_api_warroom_anticheat_inspect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AntiCheatInspectIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Anticheat Inspect Endpoint Api Warroom Anticheat Inspect Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "warroom_anticheat_rate_limited",
+                    "message": "Слишком много проверок античита. Повторите через …"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `warroom_anticheat_rate_limited` — Слишком много проверок античита. Повторите через …."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Режим Б: проверка ответа и телеметрии античитом бэкенда",
+        "tags": [
+          "warroom"
+        ]
+      }
+    },
+    "/api/warroom/attempts/my": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "my_attempts_api_warroom_attempts_my_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response My Attempts Api Warroom Attempts My Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Мои попытки прохождения Боевого ИИ-Полигона (для кабинета кандидата)",
+        "tags": [
+          "warroom"
+        ]
+      }
+    },
+    "/api/warroom/candidates/{ref}": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "candidate_warroom_api_warroom_candidates__ref__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "title": "Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Candidate Warroom Api Warroom Candidates  Ref  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "candidate_not_found",
+                    "message": "Кандидат не найден или скрыл профиль"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Кандидат не найден. Коды `detail.code`: `candidate_not_found` — Кандидат не найден или скрыл профиль."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Конфликт с текущим состоянием. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Результаты Боевого ИИ-Полигона кандидата для карточки работодателя",
+        "tags": [
+          "warroom"
+        ]
+      }
+    },
+    "/api/warroom/evaluate": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "evaluate_endpoint_api_warroom_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Evaluate Endpoint Api Warroom Evaluate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "scenario_not_found",
+                    "message": "Боевой сценарий не найден"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сценарий не найден. Коды `detail.code`: `scenario_not_found` — Боевой сценарий не найден."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "warroom_evaluate_rate_limited",
+                    "message": "Слишком много проверок решения. Повторите через …"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `warroom_evaluate_rate_limited` — Слишком много проверок решения. Повторите через …; `warroom_attempt_limit_reached` — Достигнут лимит боевых попыток по этому сценарию (…)."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Полная оценка решения инцидента (симулятор + код + рубрика с цитатами)",
+        "tags": [
+          "warroom"
+        ]
+      }
+    },
+    "/api/warroom/scenarios": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "list_scenarios_api_warroom_scenarios_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "seed",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 999999,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Seed"
+            }
+          },
+          {
+            "in": "query",
+            "name": "demo",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Demo",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Scenarios Api Warroom Scenarios Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Каталог 8 боевых инцидентов, архитектурных мер и контуров античита",
+        "tags": [
+          "warroom"
+        ]
+      }
+    },
+    "/api/warroom/scenarios/{scenario_id}": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "get_scenario_api_warroom_scenarios__scenario_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seed",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 999999,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Seed"
+            }
+          },
+          {
+            "in": "query",
+            "name": "demo",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Demo",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Scenario Api Warroom Scenarios  Scenario Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "scenario_not_found",
+                    "message": "Боевой сценарий не найден"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сценарий не найден. Коды `detail.code`: `scenario_not_found` — Боевой сценарий не найден."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Параметризованный по seed боевой инцидент",
+        "tags": [
+          "warroom"
+        ]
+      }
+    },
+    "/api/warroom/simulate": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "simulate_endpoint_api_warroom_simulate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__warroom__router__SimulateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Simulate Endpoint Api Warroom Simulate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "scenario_not_found",
+                    "message": "Боевой сценарий не найден"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сценарий не найден. Коды `detail.code`: `scenario_not_found` — Боевой сценарий не найден."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "warroom_simulate_rate_limited",
+                    "message": "Слишком много запросов к симулятору. Повторите через …"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `warroom_simulate_rate_limited` — Слишком много запросов к симулятору. Повторите через …."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Детерминированный расчёт метрик, стоимости и проверки кода",
+        "tags": [
+          "warroom"
+        ]
+      }
     }
   },
   "tags": [
@@ -72584,6 +74111,10 @@
     {
       "description": "Подписка на потребность («новые подходящие»), уведомления кабинета, напоминания",
       "name": "subscriptions"
+    },
+    {
+      "description": "Боевой ИИ-Полигон: детерминированный симулятор архитектурных инцидентов и проверка античита",
+      "name": "warroom"
     },
     {
       "description": "Переписка по приглашению и отклику, встречное предложение кандидата, отзыв доступа к контактам",
@@ -72672,6 +74203,10 @@
     {
       "description": "Мини-админка (/admin): пользователи, компании, заявки на тарифы и партнёрство, обращения, флаги и воронка продукта",
       "name": "admin"
+    },
+    {
+      "description": "Уведомления в Telegram: привязка по одноразовому коду и быстрые ответы на приглашения",
+      "name": "telegram"
     }
   ]
 }
