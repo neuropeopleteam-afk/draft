@@ -44,3 +44,4 @@ from app.modules.mutual.models import CandidatePreference, OfferFitCheck, Select
 from app.modules.interview.models import InterviewSession  # noqa: E402,F401 — устная защита и ИИ-интервью (Я15)
 from app.modules.tariffs.models import CompanyTariff, DemoInvoice  # noqa: E402,F401 — тарифы работодателя (Я29)
 from app.modules.trio.models import TrioMessage, TrioThread  # noqa: E402,F401 — трёхсторонняя связь (работодатель ↔ кандидат ↔ ФСП)
+from app.modules.admin.models import SupportTicket, TariffRequest  # noqa: E402,F401 — А1: заявки на тариф и обращения в поддержку

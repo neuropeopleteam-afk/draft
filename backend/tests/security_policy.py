@@ -522,6 +522,25 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/interview/concierge/event"): "open",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
+    # ---------------------------------------------------------------- А1: восстановление пароля, поддержка, заявки на тариф, мини-админка
+    ("POST", "/api/auth/forgot"): "open",
+    ("POST", "/api/auth/reset"): "open",
+    ("GET", "/api/support"): "open",
+    ("POST", "/api/support"): "open",
+    ("GET", "/api/support/my"): "auth",
+    ("POST", "/api/tariffs/request"): "open",
+    ("GET", "/api/tariffs/requests/my"): "employer",
+    ("GET", "/api/admin/overview"): "admin",
+    ("GET", "/api/admin/funnel"): "admin",
+    ("GET", "/api/admin/users"): "admin",
+    ("POST", "/api/admin/users/status"): "admin",
+    ("GET", "/api/admin/companies"): "admin",
+    ("POST", "/api/admin/companies/tariff"): "admin",
+    ("GET", "/api/admin/requests"): "admin",
+    ("POST", "/api/admin/requests/tariff-resolve"): "admin",
+    ("POST", "/api/admin/requests/support-resolve"): "admin",
+    ("GET", "/api/admin/flags"): "admin",
+    ("POST", "/api/admin/flags"): "admin",
 }
 
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)
