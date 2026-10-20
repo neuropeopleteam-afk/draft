@@ -1,21 +1,20 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-const HOLD_MS = 1500;
+const HOLD_MS = 1800;
 const USER_EVENTS = ["wheel", "touchstart", "keydown", "mousedown", "pointerdown"] as const;
 
 /**
- * Прокрутка к якорю из адреса (/validation#red-button), когда страница догружается частями: блоки выше якоря
- * (бенчмарк, экспертная разметка) появляются после первой отрисовки и сдвигают его вниз. Пока раскладка меняется
- * (до 1,5 с), якорь возвращается к верху экрана; как только человек сам прокручивает или нажимает клавишу —
- * страница больше не двигается.
+ * Прокрутка к якорю из адреса (/validation#red-button, /validation#evaluate, /validation#protocols),
+ * когда страница догружается частями или меняется хэш маршрута.
  */
 export function useHashScroll(ready: boolean) {
+  const loc = useLocation();
   useEffect(() => {
-    const id = decodeURIComponent(location.hash.slice(1));
+    const id = decodeURIComponent((loc.hash || window.location.hash).slice(1));
     if (!ready || !id) return;
     return holdAnchor(id);
-  }, [ready]);
+  }, [ready, loc.hash, loc.key]);
 }
 
 /** То же для любого экрана (К1, ссылки /criteria: /employer/ats#ats-stages, /candidate/category#passport):

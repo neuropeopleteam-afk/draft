@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Управление вкладкой «Экспертиза ФСП» и режимом жюри одной командой за < 1 секунду без пересборки.
+# Использование: /opt/spectrek_fsp/ops/jury-mode on|off|status
+set -euo pipefail
+
+DIR="/opt/spectrek_fsp/runtime"
+FLAG="$DIR/jury_off"
+CONTAINER_FLAG="/tmp/spectrek_jury_off"
+
+cmd="${1:-status}"
+case "$cmd" in
+  off)
+    mkdir -p "$DIR"
+    date -Is > "$FLAG.tmp" && mv -f "$FLAG.tmp" "$FLAG"
+    docker exec spectrek_fsp-api-1 sh -c "touch $CONTAINER_FLAG" 2>/dev/null || true
+    echo "Режим жюри и вкладка «Экспертиза ФСП» ВЫКЛЮЧЕНЫ (чистый коммерческий режим)."
+    ;;
+  on)
+    rm -f "$FLAG"
+    docker exec spectrek_fsp-api-1 sh -c "rm -f $CONTAINER_FLAG" 2>/dev/null || true
+    echo "Режим жюри и вкладка «Экспертиза ФСП» ВКЛЮЧЕНЫ."
+    ;;
+  status)
+    ;;
+  *)
+    echo "Использование: $0 {on|off|status}" >&2
+    exit 2
+    ;;
+esac
+
+sleep 0.5
+curl -fsS https://fsp-draft.ru/api/meta | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+print("Статус /api/meta -> jury_mode_available:", d.get("jury_mode_available"), "| jury_tab_enabled:", d.get("jury_tab_enabled"))
+'

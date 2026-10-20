@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Alert, errText, num, pct, ruText } from "../ui";
 import { api, apiUrl, tokenStore } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -7,6 +8,7 @@ import { isJury, juryToken } from "../../lib/jury";
 /** A private request-only laboratory; nothing is added to needs or candidate tables. */
 export default function ClosedSet() {
   const { me, signIn } = useAuth();
+  const loc = useLocation();
   const [content, setContent] = useState("");
   const [format, setFormat] = useState<"json" | "csv">("json");
   const [k, setK] = useState(5);
@@ -14,9 +16,12 @@ export default function ClosedSet() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [filename, setFilename] = useState("");
-  // Ф6 (В10): форма свёрнута — сначала доказательства («5 чисел» выше), затем свои данные по кнопке; по #closed-set — раскрыта
-  // W2: #evaluate — короткий адрес из «Экспертизы ФСП» («Проверка на своём JSON/CSV-наборе»)
+  // Ф6 (В10): форма свёрнута — сначала доказательства («5 чисел» выше), затем свои данные по кнопке; по #closed-set / #evaluate — раскрыта
   const [open, setOpen] = useState(() => window.location.hash === "#closed-set" || window.location.hash === "#evaluate");
+  useEffect(() => {
+    const h = loc.hash || window.location.hash;
+    if (h === "#closed-set" || h === "#evaluate") setOpen(true);
+  }, [loc.hash]);
   const body = { content, format, k };
   const authenticate = async () => {
     if (!isJury(me?.email) || !["employer", "admin"].includes(me?.role ?? "")) {

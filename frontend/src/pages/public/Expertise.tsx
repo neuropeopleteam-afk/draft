@@ -16,9 +16,9 @@ import { usePageTitle } from "../../lib/meta";
 const LINKS: { to: string; n: string; title: string; text: string; cta: string; testid: string }[] = [
   { to: "/criteria", n: "01", title: "Выполнение 7 критериев ТЗ", testid: "exp-criteria",
     text: "Раздел 6 ТЗ по подпунктам: что сделать, что увидите, чем доказано и честное ограничение. Шесть критериев продукта и питч.", cta: "Открыть критерии" },
-  { to: "/validation", n: "02", title: "Протоколы валидации и точности", testid: "exp-validation",
+  { to: "/validation#protocols", n: "02", title: "Протоколы валидации и точности", testid: "exp-validation",
     text: "Метрики подбора и теста с подписью расчёта: синтетика, модельная разметка, повтор теста, калибровка и ограничения.", cta: "Открыть протоколы" },
-  { to: "/security", n: "03", title: "Красная кнопка: атаки на ИИ и античит", testid: "exp-security",
+  { to: "/validation#red-button", n: "03", title: "Красная кнопка: атаки на ИИ и античит", testid: "exp-security",
     text: "Атакуйте сами на живых демо-данных в памяти: инъекции в оценщик, утечка банка заданий, завышение ответов.", cta: "Запустить атаку" },
   { to: "/validation#evaluate", n: "04", title: "Проверка на своём JSON/CSV-наборе", testid: "exp-evaluate",
     text: "Свои анонимные потребности и профили (до 50 и 500) — выдача и p@k/nDCG@k на ваших данных; данные живут только в памяти запроса.", cta: "Загрузить набор" },
@@ -34,7 +34,10 @@ export default function Expertise() {
 
   async function openCandidateAvatar() {
     setBusy("cand-avatar"); setErr(null);
-    try { await launchLiveAvatar(signIn, navigate, me?.role); }
+    try {
+      if (me?.role !== "candidate") await juryLogin("candidate", signIn);
+      await launchLiveAvatar(signIn, navigate, "candidate");
+    }
     catch (e) { setErr(errText(e)); } finally { setBusy(null); }
   }
 
@@ -133,7 +136,7 @@ export default function Expertise() {
           </div>
 
           {showIncident && (
-            <div className="mt-5 rounded-3xl bg-white p-4 text-brand-ink shadow-xl sm:p-6">
+            <div className="mt-5">
               <IncidentSandbox />
             </div>
           )}

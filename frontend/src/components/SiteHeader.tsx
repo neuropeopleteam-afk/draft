@@ -98,7 +98,7 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
           </div>
           {me ? (
             <div className="flex items-center gap-2">
-              <Link to={cabinetPath(me.role)} className={`${cta} px-3.5 sm:px-5`}><span className="sm:hidden">Кабинет</span><span className="hidden sm:inline">Личный кабинет</span></Link>
+              <Link to={cabinetPath(me.role)} className={`${cta} whitespace-nowrap px-3.5 sm:px-5`}><span className="sm:hidden">Кабинет</span><span className="hidden sm:inline">Личный кабинет</span></Link>
               <button
                 type="button"
                 onClick={() => signOut()}
@@ -126,7 +126,7 @@ export function SiteFooter({ premium = false }: { premium?: boolean }) {
   return (
     <footer className={premium ? "np-footer" : "border-t border-brand-night/10 bg-white"}>
       <div className={`mx-auto flex max-w-content flex-col gap-3 px-6 py-8 text-sm md:flex-row md:items-center md:justify-between ${premium ? "" : "text-brand-ink/70"}`}>
-        <p>Драфт — платформа обратного найма ИТ-специалистов. Открытый код, лицензия MIT.</p>
+        <p>Драфт — платформа обратного найма ИТ-специалистов (команда Neuropeople). Открытый код, лицензия MIT.</p>
         <p className="flex flex-wrap gap-x-5 gap-y-2">
           {tariffs && <a className={a} href="/tariffs">Тарифы</a>}
           {juryTab && <a className={a} href="/expertise">Экспертиза ФСП</a>}

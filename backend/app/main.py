@@ -218,14 +218,16 @@ def create_app() -> FastAPI:
 
     @app.get("/api/meta", tags=["system"], summary="Название продукта, оператор ПДн, статус LLM и движка теста")
     def meta() -> dict:
+        from app.core.flags import jury_on
         from app.modules.assessment.engine import get_engine
         from app.modules.catalog import ext as catalog_ext
         from app.modules.llm.client import status as llm_status
         from app.modules.catalog import levels as _levels
 
+        j_on = jury_on()
         return {"product_name": s.product_name, "version": s.app_version, "operator": OPERATOR,
-                "jury_mode_available": s.jury_mode_available and not os.path.exists("/tmp/spectrek_jury_off"),
-                "jury_tab_enabled": not os.path.exists("/tmp/spectrek_jury_off"),
+                "jury_mode_available": j_on,
+                "jury_tab_enabled": j_on,
                 "demo_sandbox": s.demo_sandbox,
                 "proctor_camera": get_settings().proctor_camera_enabled,  # на запросе (не замыкание s): флаг переключается без пересоздания app; false — экрана камеры нет
                 "llm": llm_status(), "assessment_engine": get_engine().name,

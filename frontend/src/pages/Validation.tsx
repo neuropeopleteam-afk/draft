@@ -60,9 +60,9 @@ export default function Validation() {
   );
 }
 
-/** «Как читать», снимки и закрытый набор — первыми внутри «Подробных расчётов» (FINAL-UX E). */
+/** «Как читать» и снимки — первыми внутри «Подробных расчётов»; «Закрытый набор жюри» (#evaluate) вынесен наружу для прямого перехода с /expertise. */
 function Before() {
-  return <><HowToRead /><Fold><Snapshots /></Fold><Fold><ClosedSet /></Fold></>;
+  return <><HowToRead /><Fold><Snapshots /></Fold></>;
 }
 
 /** SIMPLIFY п.3: короткое «как читать» простыми словами — под «5 чисел»; разделы ниже свёрнуты (Fold). */
@@ -95,8 +95,9 @@ function Report({ r, before }: { r: any; before?: ReactNode }) {
   const world = `${r.n_per_direction ?? "—"} синтетических кандидатов на направление × ${dirs.length}, банк ${rp.bank_n_families ?? "—"} семейств (коммит банка ${rp.bank_commit ?? "—"}), отчёт ${rdate || "—"}`;
   return (
     <AsOf.Provider value={{ date: rdate, world, prov: pv.stamp }}>
-      {/* FINAL-UX E: «Красная кнопка» — на виду сразу под «5 числами»; всё остальное — под «Подробные расчёты» */}
+      {/* FINAL-UX E: «Красная кнопка» и «Закрытый набор жюри» (#evaluate) — на виду сразу под «5 числами»; подробные таблицы — под «Подробные расчёты» */}
       <RedButton attacks={r.attacks ?? []} />
+      <ClosedSet />
       <FoldGroup>
       {before}
       <p className="mt-4 text-xs text-brand-ink/65" data-testid="report-signature">Отчёт симуляции построен {dtt(r.generated_at)} · {r.n_per_direction} синтетических кандидатов на направление · {num(r.seconds, 0)} с · банк расчёта: {rp.bank_n_families ?? "—"} семейств, коммит {rp.bank_commit ?? "—"}{pv.code_commit && pv.code_commit !== "unknown" ? ` · код стенда ${pv.code_commit}` : ""}</p>

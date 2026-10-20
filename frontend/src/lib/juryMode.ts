@@ -25,6 +25,14 @@ const KEY = "jury_mode";
 export function useJuryMode(): boolean {
   const meta = useMeta();
   const { me } = useAuth();
+  if (meta && meta.jury_mode_available === false) {
+    try {
+      localStorage.removeItem(KEY);
+      localStorage.removeItem("jury_scenario");
+      localStorage.removeItem("jury_guide");
+    } catch { /* ignore */ }
+    return false;
+  }
   if (import.meta.env.VITE_JURY_DEMO === "true") return true;
   let remembered = false;
   try {

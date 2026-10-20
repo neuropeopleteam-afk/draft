@@ -72,7 +72,7 @@ export default function Landing() {
 
       <section className="relative mx-auto grid max-w-content gap-10 px-4 pb-14 pt-10 sm:px-6 md:pt-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12 lg:pb-20">
         <div className="min-w-0 lg:pt-6">
-          <p className="np-eyebrow">Платформа обратного найма ИТ-специалистов</p>
+          <p className="np-eyebrow">Платформа обратного найма ИТ-специалистов · команда Neuropeople</p>
           <h1 className="mt-5 text-[2.1rem] font-extrabold leading-[1.08] tracking-tight np-text sm:text-[2.75rem] xl:text-[3.05rem]">
             Работодатель <span className="np-grad">находит вас сам</span> — и&nbsp;сразу называет зарплату
           </h1>
@@ -163,8 +163,8 @@ export default function Landing() {
           </div>
           <div className="np-glass px-5 py-4">
             <dt className="text-xs font-semibold uppercase tracking-wider np-faint">Защита оценщика и рынок</dt>
-            <dd className="mt-1 text-2xl font-extrabold tabular-nums np-text">0 / 116 <span className="text-sm font-semibold np-accent">атак · 1 344 вакансии</span></dd>
-            <p className="mt-1 text-xs np-muted">Устойчивость к инъекциям и живой срез рынка hh.ru</p>
+            <dd className="mt-1 text-2xl font-extrabold tabular-nums np-text">0 / 116 <span className="text-sm font-semibold np-accent">атак · 7 587 вакансий</span></dd>
+            <p className="mt-1 text-xs np-muted">Измеренные инъекции и срез hh.ru по 9 направлениям (1 344 — Backend)</p>
           </div>
         </dl>
       </section>
@@ -246,7 +246,7 @@ function StepList({ id, title, steps, tone, cta, onDemo }: { id: string; title: 
       <h3 className="text-xl font-bold np-text">{title}</h3>
       <ol className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {steps.map(([t, d], i) => (
-          <li key={t} className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <li key={t} className="flex flex-col gap-2 rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-4">
             <span className={`np-num ${tone === "indigo" ? "np-num-indigo" : "np-num-red"}`}>{i + 1}</span>
             <p className="font-semibold np-text">{t}</p>
             <p className="text-xs leading-relaxed np-muted">{d}</p>

@@ -8,7 +8,7 @@ import { DEMO, type DemoCandidate } from "./demoData";
 const money = (v: number) => v.toLocaleString("ru-RU").replace(/\s/g, NB);
 type Flow = "idle" | "sent" | "viewed" | "accepted";
 
-export function ReverseDraftDemo({ onTry }: { onTry: () => void; onLiveAvatar?: () => void; busyLive?: boolean }) {
+export function ReverseDraftDemo({ onTry, onLiveAvatar, busyLive }: { onTry: () => void; onLiveAvatar?: () => void; busyLive?: boolean }) {
   const [i, setI] = useState(0);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const c = DEMO[i];
@@ -20,10 +20,10 @@ export function ReverseDraftDemo({ onTry }: { onTry: () => void; onLiveAvatar?: 
     setI(n); tabs.current[n]?.focus();
   }
   return (
-    <div className="np-glass np-glass-accent relative p-4 sm:p-5" role="region" aria-label="Обратный драфт в действии: пример интерфейса">
+    <div className="np-glass np-glass-accent relative p-4 sm:p-5" role="region" aria-label="Обратный драфт в действии: пример интерфейса" data-testid="reverse-draft-demo">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="np-eyebrow">Обратный драфт в действии</p>
-        <span className="np-chip">Живой интерфейс</span>
+        <p className="np-eyebrow">Обратный драфт в действии · 9 направлений</p>
+        <span className="np-chip">Интерактивный пример</span>
       </div>
       <div role="tablist" aria-label="Направление" onKeyDown={onKey} className="np-tabs mt-3">
         {DEMO.map((d, k) => (
@@ -33,25 +33,30 @@ export function ReverseDraftDemo({ onTry }: { onTry: () => void; onLiveAvatar?: 
         ))}
       </div>
       <div id="dir-panel" role="tabpanel" aria-labelledby={`dir-tab-${c.key}`} className="mt-3">
-        <CandidateCard key={c.key} c={c} onTry={onTry} />
+        <CandidateCard key={c.key} c={c} onTry={onTry} onLiveAvatar={onLiveAvatar} busyLive={busyLive} />
       </div>
-      <p className="mt-3 text-[11px] np-faint">Демонстрация интерфейса · профиль специалиста обезличен до согласия</p>
+      <p className="mt-3 text-[11px] np-faint">Профиль специалиста обезличен до согласия · в каталоге также Аналитика, QA и Data Engineering</p>
     </div>
   );
 }
 
-function CandidateCard({ c, onTry }: { c: DemoCandidate; onTry: () => void }) {
+function CandidateCard({ c, onTry, onLiveAvatar, busyLive }: { c: DemoCandidate; onTry: () => void; onLiveAvatar?: () => void; busyLive?: boolean }) {
   const [from, setFrom] = useState(c.salary.from);
   const [flow, setFlow] = useState<Flow>("idle");
   const timers = useRef<number[]>([]);
-  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
+  const clearTimers = () => {
+    timers.current.forEach((t) => window.clearTimeout(t));
+    timers.current = [];
+  };
+  useEffect(() => () => clearTimers(), []);
   const to = from + c.salary.spread;
   const pos = (from - c.salary.min) / (c.salary.max - c.salary.spread - c.salary.min);
   const fit = pos >= 0.45 ? { t: "Сильное предложение для этой категории", k: "np-ok" } : pos >= 0.25 ? { t: "Рабочее предложение", k: "np-accent" } : { t: "Ниже обычного для категории — ответ менее вероятен", k: "np-risk" };
   function invite() {
-    if (flow !== "idle") { onTry(); return; }
+    if (flow === "accepted") { onTry(); return; }
+    clearTimers();
     setFlow("sent");
-    timers.current.push(window.setTimeout(() => setFlow("viewed"), 1100), window.setTimeout(() => setFlow("accepted"), 2400));
+    timers.current.push(window.setTimeout(() => setFlow("viewed"), 900), window.setTimeout(() => setFlow("accepted"), 1900));
   }
   const pct = Math.round(Math.max(0, Math.min(1, pos)) * 100);
   return (
@@ -76,7 +81,7 @@ function CandidateCard({ c, onTry }: { c: DemoCandidate; onTry: () => void }) {
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
         <Proof tone="ok" title="Подтверждено тестом IRT и реестром ФСП" items={c.proved} />
         <Proof tone="indigo" title="Косвенно проверено" items={c.indirect} />
-        <Proof tone="calm" title="Риск: 0 сигналов" items={c.risk} />
+        <Proof tone="calm" title="Сигналов риска нет" items={c.risk} />
       </div>
 
       <p className="np-cup mt-3">
@@ -90,15 +95,20 @@ function CandidateCard({ c, onTry }: { c: DemoCandidate; onTry: () => void }) {
           <output htmlFor={`salary-${c.key}`} className="text-lg font-extrabold tabular-nums np-text" data-testid="demo-salary">{money(from)}{NB}– {money(to)}{NB}₽</output>
         </div>
         <input id={`salary-${c.key}`} type="range" className="np-range mt-2 w-full" min={c.salary.min} max={c.salary.max - c.salary.spread} step={c.salary.step}
-          value={from} onChange={(e) => { setFrom(Number(e.target.value)); if (flow !== "idle") setFlow("idle"); }}
+          value={from} onChange={(e) => { clearTimers(); setFrom(Number(e.target.value)); if (flow !== "idle") setFlow("idle"); }}
           style={{ ["--np-fill" as string]: `${pct}%` }} aria-valuetext={`от ${money(from)} до ${money(to)} рублей`} />
         <p className={`mt-1.5 text-xs font-semibold ${fit.k}`}>{fit.t}</p>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-2.5">
         <button type="button" className="np-btn-primary px-5 py-2.5 text-sm" onClick={invite} data-testid="demo-invite">
-          {flow === "idle" ? "Попробовать пригласить" : "Запустить демо"}
+          {flow === "accepted" ? "Открыть подборку в кабинете" : "Попробовать пригласить"}
         </button>
+        {onLiveAvatar && (
+          <button type="button" className="np-btn-ghost px-3.5 py-2 text-xs font-semibold" onClick={onLiveAvatar} disabled={busyLive} data-testid="demo-live-avatar">
+            {busyLive ? "Подключаем…" : "Устная защита с ИИ-аватаром"}
+          </button>
+        )}
         <FlowLine flow={flow} />
       </div>
     </article>
