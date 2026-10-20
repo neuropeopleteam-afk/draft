@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { IncidentSandbox } from "../../components/IncidentSandbox";
 import { launchLiveAvatar } from "../../components/Interview";
 import { JuryPanel } from "../../components/JuryPanel";
+import { MatchingBenchUpload } from "../../components/MatchingBenchUpload";
 import { ShieldIcon, SiteFooter, SiteHeader } from "../../components/SiteHeader";
 import { Alert, errText } from "../../components/ui";
 import { api } from "../../lib/api";
@@ -475,24 +476,24 @@ export default function DemoHub() {
           </div>
         </section>
 
-        {/* Принесите свой набор пар (встроенный + слот для компонента А5 MatchingBenchUpload) */}
-        <section id="demo-custom-bench" className="mt-14 scroll-mt-24" aria-labelledby="bench-title" data-testid="demo-custom-bench">
+        {/* Принесите свой набор пар (компонент А5 MatchingBenchUpload + быстрый JSON-стенд) */}
+        <section id="demo-custom-bench" className="mt-14 scroll-mt-24 space-y-5" aria-labelledby="bench-title" data-testid="demo-custom-bench">
+          <MatchingBenchUpload defaultOpen />
           <div className="np-glass p-6 sm:p-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-2xl">
-                <p className="np-eyebrow">Независимая проверка качества ранжирования (критерий 1 · 35 %)</p>
-                <h2 id="bench-title" className="mt-1 text-2xl font-extrabold tracking-tight np-text md:text-3xl">
-                  Принесите свой набор пар «вакансия — кандидат»
+                <p className="np-eyebrow">Интерактивный JSON-редактор · Проверка закрытого набора в браузере</p>
+                <h2 id="bench-title" className="mt-1 text-xl font-extrabold tracking-tight np-text md:text-2xl">
+                  Быстрая правка JSON-набора пар прямо на странице
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed np-muted">
-                  Вставьте собственный JSON-набор потребностей и профилей кандидатов (или используйте готовый пример ниже) — сервер в реальном времени рассчитает ранжирование и метрики P@5, nDCG@10 и MRR.
+                  Отредактируйте JSON потребностей и профилей кандидатов прямо в поле ниже и запустите расчёт ранжирования одной кнопкой.
                 </p>
               </div>
               <Link to="/demo/validation#evaluate" className="np-btn-ghost px-4 py-2 text-xs">
                 Расширенный стенд CSV/JSON →
               </Link>
             </div>
-            {/* Слот под компонент А5 components/MatchingBenchUpload.tsx при слиянии */}
             <div id="a5-matching-bench-upload-slot" data-testid="a5-matching-bench-upload-slot" className="mt-4">
               <textarea
                 aria-label="JSON-набор потребностей и кандидатов для проверки"
