@@ -21,8 +21,15 @@ from typing import Iterable, Sequence
 
 import numpy as np
 
-from app.modules.assessment.grades import GRADE_RU, p_at_least
-from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
+from app.modules.assessment.grades import GRADE_RU, p_at_least as _p_at_least_base
+from app.modules.catalog.seed_data import ALL_GRADE_CUTS as GRADE_CUTS, GRADE_ORDER
+
+
+def p_at_least(theta: float, se: float, grade: str) -> float:
+    cut = GRADE_CUTS.get(grade)
+    if cut is None:
+        return _p_at_least_base(theta, se, grade)
+    return 0.5 * (1.0 + math.erf((float(theta) - float(cut)) / (max(float(se), 1e-6) * math.sqrt(2.0))))
 
 CODE_OPEN_FORMATS: frozenset[str] = frozenset({
     "find_bug",
@@ -139,11 +146,12 @@ def filter_code_open_pool(
     n_code_open: int,
     target_share: float = DEFAULT_CODE_OPEN_SHARE,
 ) -> list:
-    """Обеспечивает долю ≥ 1/3 кодовых и открытых заданий с автопроверкой в сессии.
+    """Обеспечивает долю ≥ ``target_share`` (по умолчанию ≥ 1/3) кодовых и открытых заданий с автопроверкой в сессии.
 
     Если к шагу ``n_scored + 1`` доля выданных кодовых/открытых заданий отстаёт от ``target_share`` (например, каждое
     третье задание: позиции 3, 6, 9, 12, 15), и в доступном пуле ``cands`` есть задания форматов ``CODE_OPEN_FORMATS``,
-    выбор ограничивается ими. Если таких заданий в пуле не осталось — возвращается исходный список ``cands``.
+    выбор ограничивается ими. На остальных шагах движок свободно выбирает наиболее информативное задание (включая
+    быстрые кодовые задания ``find_bug``, ``predict_output``, ``choose_fix`` с ``a = 1,3``).
     """
     if not cands or target_share <= 0.0:
         return cands

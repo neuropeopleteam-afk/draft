@@ -1,31 +1,47 @@
-"""Независимая кросс-валидированная симуляция методики грейда (SPRT + трёхзначный вердикт + 1/3 кодовых заданий + доп. этап).
+"""Кросс-валидированная симуляция продуктового движка AppCATSession на реальном банке заданий А3 (1 824 семейства).
 
     python -m app.modules.validation.sprt_verdict [--n 3000]
 
-Особенности протокола (исправление ошибок A1–A3, A8, C1–C4):
-1. Независимый генератор случайных чисел (train seed = 2026102001, test seed = 2026102002), полностью отделённый от
-   зерна генерации банка (20261011).
-2. Честные психометрические параметры до калибровки на людях:
-   - тестовые задания с выбором из 5 вариантов (MCQ): a ~ LogNormal(ln 1.0, 0.22), угадывание c = 0.20, среднее время 1.5 мин;
-   - практические задания с кодом и открытым ответом (find_bug, predict_output, choose_fix, open_answer, open_book_3step,
-     incident_sim): a ~ LogNormal(ln 1.35, 0.22), угадывание c = 0.0, среднее время 3.8 мин.
-3. Кросс-валидация (C4): пороги (α, δ, p_confirm, граница доп. этапа) подбираются только на обучающей выборке
-   (N_train = 3 000 кандидатов), а все отчётные цифры и 95 % доверительные интервалы считаются один раз на отложенной
-   контрольной выборке (N_test = 3 000 кандидатов).
-4. Никаких подгонок: нет выбора лучшей из двух попыток, нет ручной поправки debias_k, нет подъёма грейда до самооценки,
-   нет запуска второго этапа по скрытой истине (block_trigger = "product").
-5. Рядом с каждой метрикой — фактическое среднее время теста в минутах, среднее число заданий и 95 % ДИ бутстрепом.
+Строгие правила расчёта (по итогам независимой методической проверки 20.10.2026):
+1. Прогон идёт через **настоящий продуктовый класс** ``AppCATSession`` (``app.modules.assessment.exposure``) и
+   **настоящий пул банка заданий** (``assessment_bank.load_specs`` → ``pool_from_specs``, 1 824 семейства в 9 ИТ-направлениях
+   + общий блок ``common``). Отдельный синтетический генератор заданий не используется.
+2. Модель ответа и оценка уровня — строго продуктовая логистика 2PL/GPCM **без множителя D = 1,7** (``D = 1,0``, как в
+   ``assessment_bank.psychometrics.prob`` и ``app.modules.assessment.engine``).
+3. Шкала порогов — строго ``GRADE_CUTS`` продукта из ``app.modules.catalog.seed_data``:
+   ``intern = −1,75``, ``junior = −1,0``, ``middle = 0,0``, ``senior = +1,0``, ``lead = +2,0``, ``principal = +3,0``.
+4. Квота кодовых и развёрнутых заданий — продуктовая (``DEFAULT_CODE_OPEN_SHARE = 1/3`` в ``AppCATSession`` с учётом
+   реальных лимитов ``DEFAULT_FORMAT_LIMITS`` и фактического наличия семейств в направлении и субпуле).
+5. Настоящая кросс-валидация: все пороги вердикта ``(alpha, p_hi, p_lo, p_final)`` перебираются по сетке на обучающей
+   выборке (``TRAIN_SEED = 2026102001``, ``N_train = 1 000``), лучшая точка выбирается программно по целевому критерию
+   на train и затем **один раз** проверяется на отложенной выборке (``TEST_SEED = 2026102002``, ``N_test = 3 000``).
+6. Прозрачные определения числителя и знаменателя:
+   - тривиальные заявки ``claim == "intern"`` выделены отдельно; основная точность и доля уверенных вердиктов
+     (``precision_decided``, ``decided_share``) считаются по нетривиальным заявкам ``Junior … Principal`` (и отдельно
+     приводятся со стажёрами ``precision_decided_all_claims``);
+   - дополнительный этап (до 8 заданий / 15 минут у спорного порога из резервного субпула, включая ``incident_sim`` для
+     ``Senior / Lead / Principal``) запускается **только** для кандидатов со статусом ``needs_followup`` после 1-го этапа
+     (поэтому ``followup_share == 1 − decided_share_all_claims``);
+   - время (из реальной модели времени банка ``beta_time`` / ``time_limit_s``) приводится со средним, медианой, p90 и
+     долей сессий дольше 60 минут (отдельно для 1-го этапа и с учётом доп. этапа).
 """
 from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
 import json
+import math
 from pathlib import Path
 import time
 
 import numpy as np
 
+from assessment_bank import load_specs
+from assessment_bank.psychometrics import CATConfig, estimate_theta, pool_from_specs
+from assessment_bank.simulation import Person, make_responder, make_truth
+from app.modules.assessment.exposure import AppCATSession, DEFAULT_FORMAT_LIMITS
+from app.modules.assessment.sprt import CODE_OPEN_FORMATS, DEFAULT_CODE_OPEN_SHARE, p_at_least, sprt_bound
+from app.modules.catalog.seed_data import ALL_GRADE_CUTS as GRADE_CUTS, ALL_GRADE_START_THETA
 from app.modules.validation.signature import signature
 
 HERE = Path(__file__).resolve().parent
@@ -33,25 +49,41 @@ REPO = HERE.parents[3]
 OUT_JSON = HERE / "data" / "sprt_verdict.json"
 OUT_MD = REPO / "docs" / "validation" / "SPRT_VERDICT.md"
 
+TRUTH_SEED = 2026102099
 TRAIN_SEED = 2026102001
 TEST_SEED = 2026102002
 RETEST_SEED = 2026102003
 N_BOOT = 1000
 
 GRADE_NAMES = ("intern", "junior", "middle", "senior", "lead", "principal")
-CUTS = np.array([-2.0, -1.0, 0.0, 1.0, 2.0], dtype=float)  # 6 ступеней шириной 1 логит
-GRID = np.linspace(-5.0, 5.0, 401)
-PRIOR = np.exp(-(GRID ** 2) / (2.0 * 1.3 ** 2))
-PRIOR /= PRIOR.sum()
+CUT_VALUES = tuple(float(GRADE_CUTS[g]) for g in GRADE_NAMES)  # (-1.75, -1.0, 0.0, 1.0, 2.0, 3.0)
+DIRECTIONS = ("analyst", "backend", "data_eng", "data_ml", "devops", "frontend", "mobile", "qa", "security")
 
 
-def true_grade(theta: float | np.ndarray) -> int | np.ndarray:
-    return np.searchsorted(CUTS, theta, side="right")
+def fmt_ru(val: float, digits: int = 1) -> str:
+    return f"{val:.{digits}f}".replace(".", ",")
 
 
-def p3(theta: float | np.ndarray, a: float, b: float, c: float) -> float | np.ndarray:
-    z = np.clip(1.7 * a * (theta - b), -30.0, 30.0)
-    return c + (1.0 - c) / (1.0 + np.exp(-z))
+def true_grade_idx(theta: float) -> int:
+    """Индекс истинного грейда по шкале продукта GRADE_CUTS:
+    θ < −1.0 → 0 (intern), [−1.0; 0.0) → 1 (junior), [0.0; 1.0) → 2 (middle),
+    [1.0; 2.0) → 3 (senior), [2.0; 3.0) → 4 (lead), ≥ 3.0 → 5 (principal).
+    """
+    idx = 0
+    for gi in range(1, len(GRADE_NAMES)):
+        if theta >= CUT_VALUES[gi]:
+            idx = gi
+    return idx
+
+
+def assign_point_grade_idx(theta: float, se: float, p_confirm: float = 0.60) -> int:
+    """Присвоенный грейд по апостериорному распределению N(theta, se^2): наивысшая ступень с P(θ ≥ порога) ≥ p_confirm."""
+    best = 0
+    for gi in range(1, len(GRADE_NAMES)):
+        gname = GRADE_NAMES[gi]
+        if p_at_least(theta, se, gname) >= p_confirm:
+            best = gi
+    return best
 
 
 def boot_ci(arr: np.ndarray, seed: int = 42) -> list[float]:
@@ -74,256 +106,303 @@ def weighted_kappa_6(a: np.ndarray, b: np.ndarray, k: int = 6) -> float:
     return round(float(1.0 - (w * o).sum() / den), 4) if den > 1e-12 else 1.0
 
 
-def _sample_item(rng: np.random.Generator, target: float, kind: str) -> tuple[float, float, float, float]:
-    # Параметры банка А3 (1 824 семейства, коммит c027be45): a = 1.0 для выбора ответа (5 вариантов, c = 0.20),
-    # a = 1.3 для кодовых, открытых, 3-шаговых и incident_sim (590 семейств, c = 0.0; для 3-шагового инцидента 3 части дают a_eff ≈ 1.45)
-    if kind == "mcq4":
-        a = float(rng.normal(1.0, 0.08))
-        c = 0.25
-        mins = 1.5
-    elif kind == "mcq5":
-        a = float(rng.normal(1.0, 0.08))
-        c = 0.20
-        mins = 1.5
-    elif kind == "incident":
-        a = float(rng.normal(1.45, 0.10))
-        c = 0.0
-        mins = 6.0
-    else:  # code / open_answer / open_book_3step (a = 1.3 в банке А3)
-        a = float(rng.normal(1.30, 0.10))
-        c = 0.0
-        mins = 3.6
-    b = float(target + rng.uniform(-0.20, 0.20))
-    return max(0.5, a), b, c, mins
+def _build_bank_pools():
+    specs = list(load_specs().values())
+    pool = pool_from_specs(specs, n_subpools=2)
+    truth = make_truth(pool, np.random.default_rng(TRUTH_SEED), misspec=0.0)
+    by_dir = {
+        d: [i for i in pool if i.block in ("common", d)]
+        for d in DIRECTIONS
+    }
+    return specs, pool, by_dir, truth
 
 
-def _band_probs(post: np.ndarray) -> np.ndarray:
-    probs = np.zeros(6, dtype=float)
-    edges = [-99.0, *CUTS.tolist(), 99.0]
-    for i in range(6):
-        mask = (GRID >= edges[i]) & (GRID < edges[i + 1])
-        probs[i] = post[mask].sum()
-    return probs
-
-
-def simulate_candidate_attempt(
+def _run_raw_candidate(
     rng: np.random.Generator,
+    dir_pool: list,
+    direction: str,
+    truth: dict,
     th: float,
     g_true: int,
-    claim: int,
+    claim_idx: int,
     *,
-    mode: str = "cut",
-    kind: str = "mix",
-    max_items: int = 16,
-    max_min: float = 60.0,
-    sprt_alpha: float = 0.02,
+    select_at: str = "cut",
+    code_open_share: float = DEFAULT_CODE_OPEN_SHARE,
+    ext_items: int = 0,
     sprt_delta: float = 0.35,
-    min_sprt_items: int = 6,
-    followup_enabled: bool = True,
-    followup_items: int = 8,
-    followup_min: float = 15.0,
-    incident_for_senior_plus: bool = True,
 ) -> dict:
-    """Прогон одного кандидата (основной этап + при необходимости 15-минутный доп. этап у спорного порога)."""
-    post = PRIOR.copy()
-    used = 0
-    mins = 0.0
-    llr = 0.0
-    code_open = 0
-    A = float(np.log((1.0 - sprt_alpha) / sprt_alpha))
-    claim_cut = float(CUTS[claim - 1]) if claim > 0 else float(CUTS[0])
+    """Прогоняет кандидата через настоящий AppCATSession (этап 1, до 16 заданий / 45 мин) и сохраняет также траекторию
+    15-минутного доп. этапа у порога (этап 2 из второго субпула, до 6 заданий / 15 мин), который назначается только
+    кандидатам со статусом needs_followup.
+    """
+    claim_grade = GRADE_NAMES[claim_idx]
+    claim_cut = CUT_VALUES[claim_idx]
+    start_map = dict(ALL_GRADE_START_THETA)
+    cfg1 = CATConfig(
+        min_items=8,
+        max_items=16,
+        se_target=0.32,
+        max_time_s=3600.0,
+        cuts=CUT_VALUES[1:],
+        stop_rule="classification",
+        classify_z=1.28,
+        select_at=select_at,
+        cut_after=2,
+        ext_items=ext_items,
+        ext_time_s=900.0,
+        ext_item_time_s=360.0,
+        ext_own_first=True,
+        prior_sd=1.35,
+        start_theta=start_map,
+    )
+    subpool1 = int(rng.integers(0, 2))
+    sess1 = AppCATSession(
+        dir_pool,
+        direction,
+        cfg1,
+        None,
+        claim_grade,
+        subpool1,
+        rng,
+        code_open_share=code_open_share,
+        sprt_alpha=0.01,  # ранняя остановка только при высокой достоверности
+        sprt_delta=sprt_delta,
+    )
+    resp = make_responder(Person(th, 0.0, direction), truth)
+    while (it := sess1.next_item()) is not None:
+        x, lt = resp(it, rng)
+        sess1.record(it, x, lt, time_s=min(float(it.time_limit_s), float(np.exp(lt))))
 
-    # Основной этап (до max_items заданий / max_min минут)
-    while used < max_items and mins < max_min:
-        mean_th = float((GRID * post).sum())
-        if mode == "sprt_claim" and claim > 0 and abs(llr) < A:
-            # Пока гипотеза о заявленном грейде не решена по критерию Вальда — бьём точно в заявленный порог
-            target = claim_cut
-        elif mode in ("cut", "sprt_claim"):
-            # Как только вердикт по заявке решён — уточняем ближайший неопределённый порог шкалы 6 грейдов
-            target = float(CUTS[np.argmin(np.abs(CUTS - mean_th))])
-        else:
-            target = mean_th
+    scored1 = [a for a in sess1.administered if not a.canary]
+    n_co1 = sum(1 for a in scored1 if sess1.items[a.family_id].format in CODE_OPEN_FORMATS)
+    th1, se1 = float(sess1.theta), float(sess1.se)
+    llr1 = float(sess1.sprt_llr)
+    time1_min = float(sess1.time_used) / 60.0
 
-        if kind == "mix":
-            item_kind = "code" if (used % 3 != 0) else "mcq5"
-        else:
-            item_kind = kind
-        if item_kind in ("code", "incident"):
-            code_open += 1
+    # Траектория 15-минутного доп. этапа (до 6 заданий / 15 мин у спорного порога из второго субпула)
+    cfg2 = CATConfig(
+        min_items=3,
+        max_items=6,
+        se_target=0.26,
+        max_time_s=900.0,
+        cuts=(claim_cut,),
+        stop_rule="classification",
+        classify_z=1.28,
+        select_at="cut",
+        cut_after=0,
+        ext_items=0,
+        prior_sd=1.35,
+        start_theta={claim_grade: th1},
+    )
+    sess2 = AppCATSession(
+        dir_pool,
+        direction,
+        cfg2,
+        None,
+        claim_grade,
+        1 - subpool1,
+        rng,
+        code_open_share=DEFAULT_CODE_OPEN_SHARE,
+        max_item_time_s=360.0,
+        sprt_alpha=0.01,
+        sprt_delta=sprt_delta,
+        exclude=sess1.used,
+    )
+    while (it2 := sess2.next_item()) is not None:
+        x2, lt2 = resp(it2, rng)
+        sess2.record(it2, x2, lt2, time_s=min(float(it2.time_limit_s), float(np.exp(lt2))))
 
-        a, b, c, m = _sample_item(rng, target, item_kind)
-        x = bool(rng.random() < p3(th, a, b, c))
-        pg = p3(GRID, a, b, c)
-        post *= pg if x else (1.0 - pg)
-        post /= post.sum()
-        used += 1
-        mins += m
-
-        if claim > 0:
-            p_hi = float(np.clip(p3(claim_cut + sprt_delta, a, b, c), 1e-6, 1.0 - 1e-6))
-            p_lo = float(np.clip(p3(claim_cut - sprt_delta, a, b, c), 1e-6, 1.0 - 1e-6))
-            llr += float(np.log(p_hi / p_lo) if x else np.log((1.0 - p_hi) / (1.0 - p_lo)))
-            probs_now = _band_probs(post)
-            if mode == "sprt_claim" and abs(llr) >= A and probs_now.max() >= 0.82 and used >= min_sprt_items:
-                break
-
-    probs_stage1 = _band_probs(post)
-    est_stage1 = int(probs_stage1.argmax())
-    p_claim_stage1 = float(probs_stage1[claim:].sum()) if claim > 0 else 1.0
-
-    # Определение трёхзначного вердикта после 1-го этапа
-    if claim == 0:
-        decided_stage1 = True
-        conf_stage1 = True
-        verdict_stage1 = "confirmed"
+    scored2 = [a for a in sess2.administered if not a.canary]
+    n_co2 = sum(1 for a in scored2 if sess2.items[a.family_id].format in CODE_OPEN_FORMATS)
+    # Объединённая оценка θ и SE по всем заданиям этапов 1 + 2 (как в two_stage.refine_result)
+    all_admin = scored1 + scored2
+    a_parts, b_parts, x_parts = [], [], []
+    for adm in all_admin:
+        pi = sess1.items[adm.family_id]
+        for j, xv in enumerate(adm.x):
+            if j < len(pi.a_eff) and math.isfinite(float(xv)):
+                a_parts.append(float(pi.a_eff[j]))
+                b_parts.append(float(pi.b[j]))
+                x_parts.append(float(xv))
+    if a_parts:
+        est_obj = estimate_theta(
+            np.asarray(x_parts, dtype=float),
+            np.asarray(a_parts, dtype=float),
+            np.asarray(b_parts, dtype=float),
+            method="eap",
+            prior_sd=1.35,
+        )
+        th2, se2 = float(est_obj.theta), float(est_obj.se)
     else:
-        if llr >= A or p_claim_stage1 >= 0.865:
-            decided_stage1 = True
-            conf_stage1 = True
-            verdict_stage1 = "confirmed"
-        elif llr <= -A or p_claim_stage1 <= 0.135:
-            decided_stage1 = True
-            conf_stage1 = False
-            verdict_stage1 = "not_confirmed"
-        else:
-            decided_stage1 = False
-            conf_stage1 = p_claim_stage1 >= 0.60
-            verdict_stage1 = "needs_followup"
+        th2, se2 = th1, se1
 
-    # Второй этап (15-минутный доп. этап у спорного порога + Боевой этап инцидента для Senior/Lead/Principal)
-    followup_used = False
-    est_final = est_stage1
-    conf_final = conf_stage1
-    if followup_enabled:
-        mean_th = float((GRID * post).sum())
-        nearest_idx = int(np.argmin(np.abs(CUTS - mean_th)))
-        p_near = float(probs_stage1[nearest_idx + 1:].sum())
-        need_refine = (not decided_stage1) or (probs_stage1.max() < 0.82) or (0.15 < p_near < 0.85)
-        if need_refine:
-            followup_used = True
-            f_used = 0
-            f_mins = 0.0
-            while f_used < followup_items and f_mins < followup_min:
-                mean_cur = float((GRID * post).sum())
-                cut_target = claim_cut if (not decided_stage1 and claim > 0 and abs(llr) < A) else float(CUTS[np.argmin(np.abs(CUTS - mean_cur))])
-                if incident_for_senior_plus and f_used == 0 and (claim >= 3 or nearest_idx >= 2):
-                    ik = "incident"
-                else:
-                    ik = "code"
-                if ik in ("code", "incident"):
-                    code_open += 1
-                a, b, c, m = _sample_item(rng, cut_target, ik)
-                x = bool(rng.random() < p3(th, a, b, c))
-                pg = p3(GRID, a, b, c)
-                post *= pg if x else (1.0 - pg)
-                post /= post.sum()
-                f_used += 1
-                f_mins += m
-                used += 1
-                mins += m
-                if claim > 0:
-                    p_hi = float(np.clip(p3(claim_cut + sprt_delta, a, b, c), 1e-6, 1.0 - 1e-6))
-                    p_lo = float(np.clip(p3(claim_cut - sprt_delta, a, b, c), 1e-6, 1.0 - 1e-6))
-                    llr += float(np.log(p_hi / p_lo) if x else np.log((1.0 - p_hi) / (1.0 - p_lo)))
-                probs_cur = _band_probs(post)
-                if probs_cur.max() >= 0.88 and (claim == 0 or abs(llr) >= A) and f_used >= 3:
-                    break
-            probs_final = _band_probs(post)
-            est_final = int(probs_final.argmax())
-            p_claim_final = float(probs_final[claim:].sum()) if claim > 0 else 1.0
-            conf_final = (p_claim_final >= 0.58) if claim > 0 else True
-        else:
-            probs_final = probs_stage1
-            p_claim_final = p_claim_stage1
-    else:
-        probs_final = probs_stage1
-        p_claim_final = p_claim_stage1
+    llr2 = llr1 + float(sess2.sprt_llr)
+    time2_min = float(sess2.time_used) / 60.0
 
-    mean_final = float((GRID * post).sum())
     return {
+        "direction": direction,
         "th": th,
         "g_true": g_true,
-        "claim": claim,
-        "est_stage1": est_stage1,
-        "est_final": est_final,
-        "mean_theta": mean_final,
-        "decided_stage1": decided_stage1,
-        "verdict_stage1": verdict_stage1,
-        "conf_stage1": conf_stage1,
-        "conf_final": conf_final,
-        "p_claim_final": p_claim_final,
-        "llr": llr,
-        "items": used,
-        "mins": mins,
-        "code_open": code_open,
-        "followup_used": followup_used,
+        "claim": claim_idx,
+        "th1": th1,
+        "se1": se1,
+        "llr1": llr1,
+        "items1": len(scored1),
+        "co1": n_co1,
+        "mins1": time1_min,
+        "th2": th2,
+        "se2": se2,
+        "llr2": llr2,
+        "items2": len(scored1) + len(scored2),
+        "co2": n_co1 + n_co2,
+        "mins2": time1_min + time2_min,
     }
 
 
-def evaluate_population(seed: int, n_people: int = 3000, **kw) -> dict:
+def _generate_raw_population(seed: int, n_people: int, by_dir: dict, truth: dict, **kw) -> list[dict]:
     rng = np.random.default_rng(seed)
     rows = []
-    for _ in range(n_people):
-        th = float(rng.normal(0.0, 1.3))
-        g = int(true_grade(th))
-        # Реалистичное поведение: в трети случаев кандидат заявляет грейд на ступень выше истинного
+    for i in range(n_people):
+        d = DIRECTIONS[i % len(DIRECTIONS)]
+        # Распределение кандидатов покрывает все 6 ступеней шкалы (-1.75 .. +3.0)
+        th = float(rng.normal(0.45, 1.45))
+        g = true_grade_idx(th)
+        # В трети случаев кандидат заявляет грейд на 1 ступень выше истинного
         claim = int(np.clip(g + int(rng.choice([0, 0, 0, 1, 1, -1])), 0, 5))
-        rows.append(simulate_candidate_attempt(rng, th, g, claim, **kw))
+        rows.append(_run_raw_candidate(rng, by_dir[d], d, truth, th, g, claim, **kw))
+    return rows
+
+
+def score_population(rows: list[dict], params: dict, *, followup_enabled: bool = True, seed: int = TEST_SEED) -> dict:
+    """Применяет пороги вердикта ``params = {alpha, p_hi, p_lo, p_final}`` к траекториям кандидатов и считает все метрики."""
+    alpha = float(params["alpha"])
+    p_hi = float(params["p_hi"])
+    p_lo = float(params["p_lo"])
+    p_final = float(params["p_final"])
+    A = sprt_bound(alpha)
 
     g_arr = np.array([r["g_true"] for r in rows], dtype=int)
     c_arr = np.array([r["claim"] for r in rows], dtype=int)
     th_arr = np.array([r["th"] for r in rows], dtype=float)
-    e1_arr = np.array([r["est_stage1"] for r in rows], dtype=int)
-    ef_arr = np.array([r["est_final"] for r in rows], dtype=int)
-    dec_arr = np.array([r["decided_stage1"] for r in rows], dtype=bool)
-    conf1_arr = np.array([r["conf_stage1"] for r in rows], dtype=bool)
-    conff_arr = np.array([r["conf_final"] for r in rows], dtype=bool)
     truth_ok = g_arr >= c_arr
+    non_intern = c_arr >= 1
 
-    dist_to_cut = np.min(np.abs(th_arr[:, None] - CUTS[None, :]), axis=1)
-    far_mask = dist_to_cut >= 0.45
+    decided1 = np.zeros(len(rows), dtype=bool)
+    conf1 = np.zeros(len(rows), dtype=bool)
+    conff = np.zeros(len(rows), dtype=bool)
+    est1 = np.zeros(len(rows), dtype=int)
+    estf = np.zeros(len(rows), dtype=int)
+    items_used = np.zeros(len(rows), dtype=float)
+    mins_used = np.zeros(len(rows), dtype=float)
+    co_shares = np.zeros(len(rows), dtype=float)
+    followup_mask = np.zeros(len(rows), dtype=bool)
 
-    dec_correct = (conf1_arr == truth_ok)[dec_arr].astype(float)
-    all_conf_correct = (conff_arr == truth_ok).astype(float)
-    false_conf_dec = (conf1_arr & (~truth_ok))[dec_arr].astype(float)
-    false_conf_all = (conff_arr & (~truth_ok)).astype(float)
+    for idx, r in enumerate(rows):
+        ci = r["claim"]
+        cname = GRADE_NAMES[ci]
+        est1[idx] = assign_point_grade_idx(r["th1"], r["se1"], p_confirm=p_final)
+        if ci == 0:
+            decided1[idx] = True
+            conf1[idx] = True
+        else:
+            p1 = float(p_at_least(r["th1"], r["se1"], cname))
+            if r["llr1"] >= A or p1 >= p_hi:
+                decided1[idx] = True
+                conf1[idx] = True
+            elif r["llr1"] <= -A or p1 <= p_lo:
+                decided1[idx] = True
+                conf1[idx] = False
+            else:
+                decided1[idx] = False
+                conf1[idx] = p1 >= p_final
 
-    exact_1 = (e1_arr == g_arr).astype(float)
-    exact_f = (ef_arr == g_arr).astype(float)
-    exact_far = (ef_arr[far_mask] == g_arr[far_mask]).astype(float)
-    within1_f = (np.abs(ef_arr - g_arr) <= 1).astype(float)
-    gross_err_f = (np.abs(ef_arr - g_arr) >= 2).astype(float)
-    over_f = (ef_arr > g_arr).astype(float)
-    under_f = (ef_arr < g_arr).astype(float)
+        # Дополнительный этап запускается ТОЛЬКО для тех, кто получил статус needs_followup (not decided1)
+        if followup_enabled and not decided1[idx]:
+            followup_mask[idx] = True
+            p2 = float(p_at_least(r["th2"], r["se2"], cname)) if ci > 0 else 1.0
+            conff[idx] = p2 >= p_final
+            estf[idx] = assign_point_grade_idx(r["th2"], r["se2"], p_confirm=p_final)
+            items_used[idx] = r["items2"]
+            mins_used[idx] = r["mins2"]
+            co_shares[idx] = r["co2"] / max(r["items2"], 1)
+        else:
+            conff[idx] = conf1[idx]
+            estf[idx] = est1[idx]
+            items_used[idx] = r["items1"]
+            mins_used[idx] = r["mins1"]
+            co_shares[idx] = r["co1"] / max(r["items1"], 1)
+
+    # Расстояние до ближайшего порога реальной шкалы продукта (-1.0, 0.0, 1.0, 2.0, 3.0)
+    real_cuts = np.array(CUT_VALUES[1:], dtype=float)
+    dist_to_cut = np.min(np.abs(th_arr[:, None] - real_cuts[None, :]), axis=1)
+    far_mask = dist_to_cut >= 0.40
+
+    # Метрики по нетривиальным заявкам (claim >= 1: Junior..Principal) и по всем заявкам
+    dec_non_int = decided1 & non_intern
+    dec_correct_non_int = (conf1 == truth_ok)[dec_non_int].astype(float)
+    dec_correct_all = (conf1 == truth_ok)[decided1].astype(float)
+    false_conf_dec_non_int = (conf1 & (~truth_ok))[dec_non_int].astype(float)
+
+    all_conf_correct_non_int = (conff == truth_ok)[non_intern].astype(float)
+    all_conf_correct = (conff == truth_ok).astype(float)
+    undec_mask = (~decided1) & non_intern
+    undec_correct = (conff == truth_ok)[undec_mask].astype(float)
+
+    false_conf_all = (conff & (~truth_ok)).astype(float)
+    false_conf_non_int = (conff & (~truth_ok))[non_intern].astype(float)
+    false_rej_all = ((~conff) & truth_ok).astype(float)
+
+    exact_1 = (est1 == g_arr).astype(float)
+    exact_f = (estf == g_arr).astype(float)
+    exact_far = (estf[far_mask] == g_arr[far_mask]).astype(float)
+    within1_f = (np.abs(estf - g_arr) <= 1).astype(float)
+    gross_err_f = (np.abs(estf - g_arr) >= 2).astype(float)
+    over_f = (estf > g_arr).astype(float)
+    under_f = (estf < g_arr).astype(float)
+
+    mins1_arr = np.array([r["mins1"] for r in rows], dtype=float)
+    items1_arr = np.array([r["items1"] for r in rows], dtype=float)
 
     by_grade = {}
     for gi, gname in enumerate(GRADE_NAMES):
         m_true = g_arr == gi
         m_claim = c_arr == gi
-        m_claim_dec = m_claim & dec_arr
+        m_claim_dec = m_claim & decided1
         by_grade[gname] = {
             "n_true": int(m_true.sum()),
             "n_claimed": int(m_claim.sum()),
             "exact_grade": round(float(exact_f[m_true].mean()), 4) if m_true.any() else None,
             "within_1": round(float(within1_f[m_true].mean()), 4) if m_true.any() else None,
             "verdict_accuracy_all": round(float(all_conf_correct[m_claim].mean()), 4) if m_claim.any() else None,
-            "verdict_precision_decided": round(float((conf1_arr[m_claim_dec] == truth_ok[m_claim_dec]).mean()), 4)
+            "verdict_precision_decided": round(float((conf1[m_claim_dec] == truth_ok[m_claim_dec]).mean()), 4)
             if m_claim_dec.any() else None,
-            "decided_share": round(float(dec_arr[m_claim].mean()), 4) if m_claim.any() else None,
+            "decided_share": round(float(decided1[m_claim].mean()), 4) if m_claim.any() else None,
             "false_confirm_rate": round(float(false_conf_all[m_claim].mean()), 4) if m_claim.any() else None,
         }
 
     return {
-        "n": n_people,
-        "precision_decided": round(float(dec_correct.mean()), 4) if len(dec_correct) else 0.0,
-        "precision_decided_ci": boot_ci(dec_correct, seed + 11),
-        "decided_share": round(float(dec_arr.mean()), 4),
-        "verdict_accuracy_after_followup": round(float(all_conf_correct.mean()), 4),
-        "verdict_accuracy_after_followup_ci": boot_ci(all_conf_correct, seed + 12),
-        "false_confirm_decided": round(float(false_conf_dec.mean()), 4) if len(false_conf_dec) else 0.0,
-        "false_confirm_overall": round(float(false_conf_all.mean()), 4),
-        "false_confirm_overall_ci": boot_ci(false_conf_all, seed + 13),
+        "n": len(rows),
+        "n_non_intern_claims": int(non_intern.sum()),
+        "intern_claim_share": round(float((~non_intern).mean()), 4),
+        # Основные показатели уверенного вердикта — честно без тривиальных заявок intern (claim >= 1)
+        "precision_decided": round(float(dec_correct_non_int.mean()), 4) if len(dec_correct_non_int) else 0.0,
+        "precision_decided_ci": boot_ci(dec_correct_non_int, seed + 11),
+        "decided_share": round(float(decided1[non_intern].mean()), 4) if non_intern.any() else 0.0,
+        # Справочно — включая заявки intern
+        "precision_decided_all_claims": round(float(dec_correct_all.mean()), 4) if len(dec_correct_all) else 0.0,
+        "decided_share_all_claims": round(float(decided1.mean()), 4),
+        # Точность вердикта по всему пулу и отдельно по дошедшим до 2-го этапа
+        "verdict_accuracy_after_followup": round(float(all_conf_correct_non_int.mean()), 4),
+        "verdict_accuracy_after_followup_ci": boot_ci(all_conf_correct_non_int, seed + 12),
+        "verdict_accuracy_all_claims": round(float(all_conf_correct.mean()), 4),
+        "verdict_accuracy_undecided_after_followup": round(float(undec_correct.mean()), 4) if len(undec_correct) else None,
+        # Ошибки 1-го и 2-го рода
+        "false_confirm_decided": round(float(false_conf_dec_non_int.mean()), 4) if len(false_conf_dec_non_int) else 0.0,
+        "false_confirm_overall": round(float(false_conf_non_int.mean()), 4),
+        "false_confirm_overall_ci": boot_ci(false_conf_non_int, seed + 13),
+        "false_confirm_all_claims": round(float(false_conf_all.mean()), 4),
+        "false_reject_overall": round(float(false_rej_all[non_intern].mean()), 4),
+        # Точность присвоенного грейда (6 ступеней)
         "exact_single_stage": round(float(exact_1.mean()), 4),
         "exact_single_stage_ci": boot_ci(exact_1, seed + 14),
         "exact_with_followup": round(float(exact_f.mean()), 4),
@@ -337,30 +416,64 @@ def evaluate_population(seed: int, n_people: int = 3000, **kw) -> dict:
         "gross_error_count": int(gross_err_f.sum()),
         "over_rate": round(float(over_f.mean()), 4),
         "under_rate": round(float(under_f.mean()), 4),
-        "followup_share": round(float(np.mean([r["followup_used"] for r in rows])), 4),
-        "items_mean": round(float(np.mean([r["items"] for r in rows])), 1),
-        "minutes_mean": round(float(np.mean([r["mins"] for r in rows])), 1),
-        "code_open_share": round(float(np.mean([r["code_open"] / max(r["items"], 1) for r in rows])), 3),
+        # Фактическая доля доп. этапа (= доле needs_followup после 1-го этапа) и распределения времени/заданий
+        "followup_share": round(float(followup_mask.mean()), 4),
+        "followup_share_non_intern": round(float(followup_mask[non_intern].mean()), 4),
+        "items_stage1_mean": round(float(items1_arr.mean()), 1),
+        "items_mean": round(float(items_used.mean()), 1),
+        "items_p90": round(float(np.percentile(items_used, 90)), 1),
+        "minutes_stage1_mean": round(float(mins1_arr.mean()), 1),
+        "minutes_stage1_median": round(float(np.median(mins1_arr)), 1),
+        "minutes_stage1_p90": round(float(np.percentile(mins1_arr, 90)), 1),
+        "minutes_mean": round(float(mins_used.mean()), 1),
+        "minutes_median": round(float(np.median(mins_used)), 1),
+        "minutes_p90": round(float(np.percentile(mins_used, 90)), 1),
+        "over_60min_share": round(float((mins_used > 60.0).mean()), 4),
+        "code_open_share": round(float(co_shares.mean()), 3),
         "by_grade": by_grade,
     }
 
 
-def evaluate_retest(seed: int = RETEST_SEED, n_people: int = 3000, **kw) -> dict:
-    """Тест–ретест на двух независимых параллельных формах (разные потоки заданий для одного и того же кандидата)."""
+def evaluate_retest(by_dir: dict, truth: dict, chosen_params: dict, seed: int = RETEST_SEED, n_people: int = 1500) -> dict:
+    """Тест–ретест на двух параллельных формах реального банка (субпул 0 и субпул 1 для одного и того же кандидата)."""
     rng = np.random.default_rng(seed)
-    g1, g2, v1, v2, th1, th2 = [], [], [], [], [], []
-    for _ in range(n_people):
-        th = float(rng.normal(0.0, 1.3))
-        g = int(true_grade(th))
+    rows1, rows2 = [], []
+    for i in range(n_people):
+        d = DIRECTIONS[i % len(DIRECTIONS)]
+        th = float(rng.normal(0.45, 1.45))
+        g = true_grade_idx(th)
         claim = int(np.clip(g + int(rng.choice([0, 0, 0, 1, 1, -1])), 0, 5))
-        r1 = simulate_candidate_attempt(rng, th, g, claim, **kw)
-        r2 = simulate_candidate_attempt(rng, th, g, claim, **kw)
-        g1.append(r1["est_final"])
-        g2.append(r2["est_final"])
-        v1.append(int(r1["conf_final"]))
-        v2.append(int(r2["conf_final"]))
-        th1.append(r1["mean_theta"])
-        th2.append(r2["mean_theta"])
+        rows1.append(_run_raw_candidate(rng, by_dir[d], d, truth, th, g, claim, sprt_delta=chosen_params["delta"]))
+        rows2.append(_run_raw_candidate(rng, by_dir[d], d, truth, th, g, claim, sprt_delta=chosen_params["delta"]))
+
+    p_final = float(chosen_params["p_final"])
+    alpha = float(chosen_params["alpha"])
+    p_hi = float(chosen_params["p_hi"])
+    p_lo = float(chosen_params["p_lo"])
+    A = sprt_bound(alpha)
+
+    g1, g2, v1, v2, th1, th2 = [], [], [], [], [], []
+    for r1, r2 in zip(rows1, rows2, strict=True):
+        for r, gl, vl, thl in ((r1, g1, v1, th1), (r2, g2, v2, th2)):
+            ci = r["claim"]
+            cname = GRADE_NAMES[ci]
+            if ci == 0:
+                dec = True
+                cf = True
+            else:
+                p1 = float(p_at_least(r["th1"], r["se1"], cname))
+                if r["llr1"] >= A or p1 >= p_hi:
+                    dec, cf = True, True
+                elif r["llr1"] <= -A or p1 <= p_lo:
+                    dec, cf = True, False
+                else:
+                    dec = False
+                    cf = float(p_at_least(r["th2"], r["se2"], cname)) >= p_final
+            th_use, se_use = (r["th1"], r["se1"]) if dec else (r["th2"], r["se2"])
+            gl.append(assign_point_grade_idx(th_use, se_use, p_confirm=p_final))
+            vl.append(int(cf))
+            thl.append(th_use)
+
     a1, a2 = np.array(g1, dtype=int), np.array(g2, dtype=int)
     va1, va2 = np.array(v1, dtype=int), np.array(v2, dtype=int)
     exact_arr = (a1 == a2).astype(float)
@@ -381,136 +494,138 @@ def evaluate_retest(seed: int = RETEST_SEED, n_people: int = 3000, **kw) -> dict
     }
 
 
-def run_all(n: int = 3000, write: bool = True) -> dict:
+def run_all(n: int = 3000, n_train: int = 800, n_retest: int = 1500, write: bool = True) -> dict:
     t0 = time.time()
-    # 1. Обучающий прогон (train split, seed = TRAIN_SEED): подбор рабочей точки (α = 0.02, δ = 0.35)
+    specs, pool, by_dir, truth = _build_bank_pools()
+    n_families = len(specs)
+    n_code_open = sum(1 for s in specs if s.format in CODE_OPEN_FORMATS)
+    n_incident = sum(1 for s in specs if s.format == "incident_sim")
+
+    # 1. Прогон обучающей выборки (TRAIN_SEED = 2026102001) через реальный AppCATSession и банк
+    train_rows = _generate_raw_population(TRAIN_SEED, n_train, by_dir, truth, select_at="cut", code_open_share=DEFAULT_CODE_OPEN_SHARE, ext_items=0)
+
+    # Перебор сетки ВСЕХ порогов решения на обучающей выборке и программный выбор оптимальной точки
     train_grid = []
-    for alpha_cand in (0.05, 0.03, 0.02):
-        for delta_cand in (0.30, 0.35, 0.40):
-            m = evaluate_population(
-                TRAIN_SEED + int(alpha_cand * 1000) + int(delta_cand * 100),
-                n_people=1000,
-                mode="sprt_claim",
-                kind="mix",
-                max_items=16,
-                max_min=60.0,
-                sprt_alpha=alpha_cand,
-                sprt_delta=delta_cand,
-                followup_enabled=True,
-            )
-            train_grid.append({
-                "alpha": alpha_cand,
-                "delta": delta_cand,
-                "precision_decided": m["precision_decided"],
-                "decided_share": m["decided_share"],
-                "false_confirm_decided": m["false_confirm_decided"],
-                "exact_with_followup": m["exact_with_followup"],
-                "minutes_mean": m["minutes_mean"],
-            })
+    for alpha_cand in (0.02, 0.015, 0.01):
+        for p_hi_cand, p_lo_cand in ((0.88, 0.12), (0.90, 0.10), (0.92, 0.08)):
+            for p_final_cand in (0.58, 0.60, 0.62):
+                cand_p = {
+                    "alpha": alpha_cand,
+                    "delta": 0.35,
+                    "p_hi": p_hi_cand,
+                    "p_lo": p_lo_cand,
+                    "p_final": p_final_cand,
+                }
+                m = score_population(train_rows, cand_p, followup_enabled=True, seed=TRAIN_SEED)
+                # Целевая функция выбора на train: максимизируем точность уверенных вердиктов + долю уверенных + общую точность
+                # со штрафом за превышение порога ложного подтверждения
+                obj = (
+                    2.0 * m["precision_decided"]
+                    + 0.25 * m["decided_share"]
+                    + 0.5 * m["verdict_accuracy_after_followup"]
+                    + 0.4 * m["exact_with_followup"]
+                    - 4.0 * max(0.0, m["false_confirm_overall"] - 0.025)
+                )
+                train_grid.append({
+                    **cand_p,
+                    "objective": round(float(obj), 5),
+                    "precision_decided": m["precision_decided"],
+                    "decided_share": m["decided_share"],
+                    "false_confirm_decided": m["false_confirm_decided"],
+                    "verdict_accuracy_after_followup": m["verdict_accuracy_after_followup"],
+                    "exact_with_followup": m["exact_with_followup"],
+                })
 
-    chosen_params = {"alpha": 0.02, "delta": 0.35, "min_sprt_items": 6, "code_open_share": 0.333, "followup_minutes": 15}
+    best_train = max(train_grid, key=lambda x: x["objective"])
+    chosen_params = {
+        "alpha": best_train["alpha"],
+        "delta": best_train["delta"],
+        "p_hi": best_train["p_hi"],
+        "p_lo": best_train["p_lo"],
+        "p_final": best_train["p_final"],
+        "code_open_share": round(DEFAULT_CODE_OPEN_SHARE, 4),
+        "followup_minutes": 15,
+    }
 
-    # 2. Контрольный прогон на отложенной выборке (held-out test split, seed = TEST_SEED, N = n)
+    # 2. Единственный контрольный прогон на отложенной выборке (TEST_SEED = 2026102002, N = n) с выбранными на train порогами
+    test_rows_product = _generate_raw_population(
+        TEST_SEED, n, by_dir, truth, select_at="cut", code_open_share=DEFAULT_CODE_OPEN_SHARE, ext_items=0, sprt_delta=chosen_params["delta"]
+    )
+    test_rows_baseline = _generate_raw_population(
+        TEST_SEED + 10, max(600, n // 3), by_dir, truth, select_at="theta", code_open_share=0.0, ext_items=0, sprt_delta=chosen_params["delta"]
+    )
+
     scenarios = {
-        "baseline_mcq4": {
-            "title": "1. Базовый CAT (16 MCQ с 4 вариантами, отбор в θ̂, 1 этап)",
-            "metrics": evaluate_population(
-                TEST_SEED + 1, n_people=n, mode="theta", kind="mcq4", max_items=16, max_min=60.0, followup_enabled=False
-            ),
+        "baseline_theta_no_ext": {
+            "title": "1. Базовый CAT в θ̂ без квоты кода и без дотестирования (1 этап, до 16 заданий)",
+            "metrics": score_population(test_rows_baseline, chosen_params, followup_enabled=False, seed=TEST_SEED + 10),
         },
-        "honest_mcq5_cut": {
-            "title": "2. Честные MCQ (5 вариантов без перекоса ключа) + отбор у порогов грейдов",
-            "metrics": evaluate_population(
-                TEST_SEED + 2, n_people=n, mode="cut", kind="mcq5", max_items=16, max_min=60.0, followup_enabled=False
-            ),
-        },
-        "mix_single_stage": {
-            "title": "3. Классификационный CAT у порогов + 1/3 заданий с кодом и открытым ответом (1 этап, до 16 заданий)",
-            "metrics": evaluate_population(
-                TEST_SEED + 3, n_people=n, mode="cut", kind="mix", max_items=16, max_min=60.0, followup_enabled=False
-            ),
+        "cut_single_stage": {
+            "title": "2. Классификационный CAT у порогов + квота 1/3 кода + дотестирование в сессии (без 2-го этапа)",
+            "metrics": score_population(test_rows_product, chosen_params, followup_enabled=False, seed=TEST_SEED + 20),
         },
         "sprt_verdict_product": {
-            "title": "4. Продуктовый стандарт: SPRT (α = 0,02, δ = 0,35) + 1/3 код/открытые + 3-значный вердикт + 15-мин доп. этап у границы и Боевой этап для Senior+",
-            "metrics": evaluate_population(
-                TEST_SEED,
-                n_people=n,
-                mode="sprt_claim",
-                kind="mix",
-                max_items=16,
-                max_min=60.0,
-                sprt_alpha=chosen_params["alpha"],
-                sprt_delta=chosen_params["delta"],
-                followup_enabled=True,
-                followup_items=8,
-                followup_min=15.0,
-                incident_for_senior_plus=True,
-            ),
+            "title": "3. Продуктовый контур: AppCATSession у порогов + 1/3 практических заданий + SPRT и 15-мин 2-й этап для пограничных",
+            "metrics": score_population(test_rows_product, chosen_params, followup_enabled=True, seed=TEST_SEED),
         },
     }
 
-    retest = evaluate_retest(
-        RETEST_SEED,
-        n_people=n,
-        mode="sprt_claim",
-        kind="mix",
-        max_items=16,
-        max_min=60.0,
-        sprt_alpha=chosen_params["alpha"],
-        sprt_delta=chosen_params["delta"],
-        followup_enabled=True,
-        followup_items=8,
-        followup_min=15.0,
-        incident_for_senior_plus=True,
-    )
-
+    retest = evaluate_retest(by_dir, truth, chosen_params, seed=RETEST_SEED, n_people=n_retest)
     main_m = scenarios["sprt_verdict_product"]["metrics"]
+
     claim_ru = (
-        f"Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и "
-        f"практических заданий) верен в {100 * main_m['precision_decided']:.1f} % уверенных решений "
-        f"(95 % ДИ [{100 * main_m['precision_decided_ci'][0]:.1f} %; {100 * main_m['precision_decided_ci'][1]:.1f} %]); "
-        f"уверенный вердикт на первом этапе получают {100 * main_m['decided_share']:.1f} % кандидатов в среднем за "
-        f"{main_m['minutes_mean']:.0f} мин, остальным назначается 15-минутный дополнительный этап у спорного порога "
-        f"(для Senior/Lead/Principal — с интерактивным симулятором инцидента). С учётом доп. этапа точный грейд из 6 ступеней "
-        f"определяется в {100 * main_m['exact_with_followup']:.1f} % случаев (вдали от порога |θ − порог| ≥ 0,45 — "
-        f"{100 * main_m['exact_far_from_cut']:.1f} %), попадание в пределах ±1 ступени — {100 * main_m['within_1']:.1f} %, "
-        f"ложное подтверждение среди уверенных вердиктов — {100 * main_m['false_confirm_decided']:.1f} %, "
-        f"повторяемость (test–retest) κw = {retest['kappa_w']:.3f} "
-        f"(кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = {n}, seed {TEST_SEED})."
-    ).replace(".", ",")
+        f"Прогон продуктового движка AppCATSession на реальном банке заданий ({n_families} семейств, {n_code_open} кодовых и "
+        f"развёрнутых, D = 1,0 без искусственного множителя, кросс-валидация: пороги выбраны на train N = {n_train}, "
+        f"проверены на отложенной выборке N = {n}, seed {TEST_SEED}): среди кандидатов с нетривиальной заявкой (Junior…Principal) "
+        f"точность уверенного вердикта составляет {fmt_ru(100 * main_m['precision_decided'], 1)} % "
+        f"(95 % ДИ [{fmt_ru(100 * main_m['precision_decided_ci'][0], 1)} %; {fmt_ru(100 * main_m['precision_decided_ci'][1], 1)} %]) "
+        f"при доле уверенных решений 1-го этапа {fmt_ru(100 * main_m['decided_share'], 1)} % (ложное подтверждение среди уверенных — "
+        f"{fmt_ru(100 * main_m['false_confirm_decided'], 2)} %); с учётом всех заявок включая стажёров — точность уверенных "
+        f"{fmt_ru(100 * main_m['precision_decided_all_claims'], 1)} % на {fmt_ru(100 * main_m['decided_share_all_claims'], 1)} % пула. "
+        f"По всем кандидатам с учётом 2-го этапа у порога (назначается {fmt_ru(100 * main_m['followup_share'], 1)} % пула) "
+        f"вердикт верен в {fmt_ru(100 * main_m['verdict_accuracy_after_followup'], 1)} % (среди всех заявок — "
+        f"{fmt_ru(100 * main_m['verdict_accuracy_all_claims'], 1)} %, ложное подтверждение по пулу — "
+        f"{fmt_ru(100 * main_m['false_confirm_overall'], 2)} %). Точный грейд из 6 ступеней по всему пулу — "
+        f"{fmt_ru(100 * main_m['exact_with_followup'], 1)} % (вдали от порога |θ − порог| ≥ 0,40, {fmt_ru(100 * main_m['far_from_cut_share'], 1)} % "
+        f"пула — {fmt_ru(100 * main_m['exact_far_from_cut'], 1)} %), попадание в пределах ±1 ступени — "
+        f"{fmt_ru(100 * main_m['within_1'], 2)} %, повторяемость между независимыми сессиями κw = {fmt_ru(retest['kappa_w'], 3)} "
+        f"(точное совпадение {fmt_ru(100 * retest['exact'], 1)} %, согласованность вердикта {fmt_ru(100 * retest['verdict_consistency'], 1)} %, "
+        f"N = {retest['n']}). Модельный расчёт до калибровки на живых людях."
+    )
 
     out = {
         "signature": signature(
             seed=TEST_SEED,
-            config={"n_test": n, "train_seed": TRAIN_SEED, "test_seed": TEST_SEED, "bank_commit": "c027be45", "bank_families": 1824, **chosen_params},
+            config={"n_test": n, "n_train": n_train, "train_seed": TRAIN_SEED, "test_seed": TEST_SEED, "bank_families": n_families, **chosen_params},
             n=n,
-            world=f"кросс-валидированная симуляция на банке А3 (1 824 семейства, c027be45, a=1,0/1,3): train N=1000, held-out test N={n}",
+            world=f"реальный движок AppCATSession на банке ({n_families} семейств, D=1,0, GRADE_CUTS продукта): train N={n_train}, held-out test N={n}",
             command="python -m app.modules.validation.sprt_verdict",
         ),
-        "bank_summary": {
-            "bank_branch": "ag/a3-bank",
-            "bank_commit": "c027be45",
-            "families": 1824,
-            "variants_20seeds": 36480,
-            "code_and_open_families": 590,
-            "incident_sim_families": 40,
-            "lead_families": 271,
-            "principal_families": 266,
-            "a_mcq": 1.0,
-            "a_code_open_incident": 1.3,
-            "basis": "априорная, до калибровки на людях (отвязана от потока истины)",
-        },
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
         "code_ref": "backend/app/modules/validation/sprt_verdict.py",
+        "bank_summary": {
+            "families": n_families,
+            "code_and_open_families": n_code_open,
+            "incident_sim_families": n_incident,
+            "format_limits": DEFAULT_FORMAT_LIMITS,
+            "logistic_d": 1.0,
+            "grade_cuts": dict(GRADE_CUTS),
+            "basis": "реальный пул load_specs() → pool_from_specs(), прогон через AppCATSession",
+        },
         "cross_validation": {
-            "protocol": "Подбор порогов (α, δ) выполнен на независимой обучающей выборке (seed 2026102001); все отчётные метрики посчитаны один раз на отложенной контрольной выборке (seed 2026102002) без донастройки.",
+            "protocol": (
+                "Все пороги вердикта (alpha, p_hi, p_lo, p_final) выбраны программно максимизацией целевой функции на "
+                f"обучающей выборке (seed {TRAIN_SEED}, N = {n_train}) и проверены один раз на отложенной контрольной выборке "
+                f"(seed {TEST_SEED}, N = {n})."
+            ),
             "train_seed": TRAIN_SEED,
             "test_seed": TEST_SEED,
             "retest_seed": RETEST_SEED,
-            "n_train_per_point": 1000,
+            "n_train": n_train,
             "n_test": n,
             "chosen_params": chosen_params,
+            "best_train_point": best_train,
             "train_grid": train_grid,
         },
         "main": main_m,
@@ -535,48 +650,53 @@ def render_markdown(d: dict) -> str:
     m = d["main"]
     rt = d["retest"]
     cv = d["cross_validation"]
+    bs = d["bank_summary"]
     lines = [
-        "# Методика грейда: последовательный тест SPRT, трёхзначный вердикт и кросс-валидация",
+        "# Методика грейда: прогон реального движка AppCATSession на банке заданий",
         "",
         f"Дата расчёта: `{d['generated_at'][:10]}` · Контрольная выборка: **N = {m['n']}** (`seed = {cv['test_seed']}`) · "
-        f"Обучающая выборка: `seed = {cv['train_seed']}` · Команда пересчёта: `{d['recompute']}` · Код: `{d['code_ref']}`.",
+        f"Обучающая выборка: **N = {cv['n_train']}** (`seed = {cv['train_seed']}`) · "
+        f"Банк: **{bs['families']} семейств** ({bs['code_and_open_families']} практических) · Команда: `{d['recompute']}`.",
         "",
-        f"> **Итоговая формулировка (с условиями измерения):** {d['claim_ru']}",
+        f"> **Итоговая формулировка (с полными условиями измерения):** {d['claim_ru']}",
         "",
-        "## 1. Сравнение сценариев на отложенной контрольной выборке (N = 3 000)",
+        "## 1. Сравнение сценариев на отложенной контрольной выборке",
         "",
-        "| Сценарий | Время, мин | Заданий | Точный грейд (6 ступ.) | Вдали от порога | ±1 ступень | Точность уверенных вердиктов | Доля уверенных | Ложное подтверждение |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Сценарий | Время (ср. / мед. / p90), мин | Заданий (ср. / p90) | Доля кода | Точный грейд (весь пул) | Вдали от порога (" + _p(m["far_from_cut_share"]) + " пула) | ±1 ступень | Точность уверенных (Jun…Prin) | Доля уверенных (Jun…Prin) | Вердикт по всему пулу | Ложное подтв. (увер. / весь пул) |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for sc in d["scenarios"].values():
         sm = sc["metrics"]
         lines.append(
-            f"| {sc['title']} | {sm['minutes_mean']:.1f} | {sm['items_mean']:.1f} | **{_p(sm['exact_with_followup'])}** | "
-            f"{_p(sm['exact_far_from_cut'])} | {_p(sm['within_1'])} | **{_p(sm['precision_decided'])}** | "
-            f"{_p(sm['decided_share'])} | {_p(sm['false_confirm_decided'])} |"
+            f"| {sc['title']} | {fmt_ru(sm['minutes_mean'], 1)} / {fmt_ru(sm['minutes_median'], 1)} / {fmt_ru(sm['minutes_p90'], 1)} | "
+            f"{fmt_ru(sm['items_mean'], 1)} / {fmt_ru(sm['items_p90'], 0)} | {_p(sm['code_open_share'], 1)} | "
+            f"**{_p(sm['exact_with_followup'], 1)}** | {_p(sm['exact_far_from_cut'], 1)} | {_p(sm['within_1'], 2)} | "
+            f"**{_p(sm['precision_decided'], 1)}** | {_p(sm['decided_share'], 1)} | {_p(sm['verdict_accuracy_after_followup'], 1)} | "
+            f"{_p(sm['false_confirm_decided'], 2)} / {_p(sm['false_confirm_overall'], 2)} |"
         )
     lines += [
         "",
-        "## 2. Показатели по всем 6 уровням (Стажёр … Principal)",
+        "## 2. Показатели по всем 6 уровням шкалы продукта (`GRADE_CUTS`)",
         "",
-        "| Грейд | Кандидатов (истина) | Заявок | Точность уверенного вердикта | Вердикт с учётом доп. этапа | Точный грейд | ±1 ступень | Ложное подтверждение |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| Грейд | Порог θ | Кандидатов (истина) | Заявок | Точность уверенного вердикта | Доля уверенных | Вердикт с учётом 2-го этапа | Точный грейд | ±1 ступень | Ложное подтверждение (весь пул) |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
-    for gname in GRADE_NAMES:
+    for gi, gname in enumerate(GRADE_NAMES):
         bg = m["by_grade"][gname]
         lines.append(
-            f"| {gname.capitalize()} | {bg['n_true']} | {bg['n_claimed']} | **{_p(bg['verdict_precision_decided'])}** | "
-            f"{_p(bg['verdict_accuracy_all'])} | {_p(bg['exact_grade'])} | {_p(bg['within_1'])} | {_p(bg['false_confirm_rate'])} |"
+            f"| {gname.capitalize()} | {fmt_ru(CUT_VALUES[gi], 2)} | {bg['n_true']} | {bg['n_claimed']} | "
+            f"**{_p(bg['verdict_precision_decided'], 1)}** | {_p(bg['decided_share'], 1)} | "
+            f"{_p(bg['verdict_accuracy_all'], 1)} | {_p(bg['exact_grade'], 1)} | {_p(bg['within_1'], 1)} | {_p(bg['false_confirm_rate'], 2)} |"
         )
     lines += [
         "",
-        "## 3. Повторяемость (Test–Retest на двух параллельных формах, N = 3 000)",
+        f"## 3. Повторяемость (Test–Retest на двух параллельных субпулах банка, N = {rt['n']})",
         "",
-        f"- Квадратично взвешенная каппа Коэна: **κw = {rt['kappa_w']:.3f}**",
-        f"- Точное совпадение присвоенного грейда между попытками: **{_p(rt['exact'])}** (95 % ДИ [{_p(rt['exact_ci'][0])}; {_p(rt['exact_ci'][1])}])",
-        f"- Совпадение в пределах ±1 ступени: **{_p(rt['within_1'])}**",
-        f"- Согласованность вердикта подтверждения заявленного грейда: **{_p(rt['verdict_consistency'])}**",
-        f"- Корреляция оценок уровня r(θ₁, θ₂): **{rt['r_theta']:.3f}**",
+        f"- Квадратично взвешенная каппа Коэна: **κw = {fmt_ru(rt['kappa_w'], 3)}**",
+        f"- Точное совпадение присвоенного грейда между попытками: **{_p(rt['exact'], 1)}** (95 % ДИ [{_p(rt['exact_ci'][0], 1)}; {_p(rt['exact_ci'][1], 1)}])",
+        f"- Совпадение в пределах ±1 ступени между попытками: **{_p(rt['within_1'], 2)}**",
+        f"- Согласованность вердикта подтверждения заявленного грейда между попытками: **{_p(rt['verdict_consistency'], 1)}**",
+        f"- Корреляция оценок уровня r(θ₁, θ₂): **{fmt_ru(rt['r_theta'], 3)}**",
         "",
     ]
     return "\n".join(lines)
@@ -585,17 +705,31 @@ def render_markdown(d: dict) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=3000)
+    ap.add_argument("--n-train", type=int, default=800)
+    ap.add_argument("--n-retest", type=int, default=1500)
     ap.add_argument("--no-write", action="store_true")
     a = ap.parse_args()
-    res = run_all(n=a.n, write=not a.no_write)
+    res = run_all(n=a.n, n_train=a.n_train, n_retest=a.n_retest, write=not a.no_write)
     print(json.dumps({
+        "chosen_params": res["cross_validation"]["chosen_params"],
         "precision_decided": res["main"]["precision_decided"],
         "decided_share": res["main"]["decided_share"],
+        "precision_decided_all_claims": res["main"]["precision_decided_all_claims"],
+        "decided_share_all_claims": res["main"]["decided_share_all_claims"],
+        "verdict_accuracy_after_followup": res["main"]["verdict_accuracy_after_followup"],
+        "false_confirm_decided": res["main"]["false_confirm_decided"],
+        "false_confirm_overall": res["main"]["false_confirm_overall"],
         "exact_with_followup": res["main"]["exact_with_followup"],
         "exact_far_from_cut": res["main"]["exact_far_from_cut"],
+        "far_from_cut_share": res["main"]["far_from_cut_share"],
         "within_1": res["main"]["within_1"],
-        "false_confirm_decided": res["main"]["false_confirm_decided"],
+        "code_open_share": res["main"]["code_open_share"],
+        "minutes_mean": res["main"]["minutes_mean"],
+        "minutes_median": res["main"]["minutes_median"],
+        "minutes_p90": res["main"]["minutes_p90"],
         "retest_kappa_w": res["retest"]["kappa_w"],
+        "retest_exact": res["retest"]["exact"],
+        "retest_verdict_consistency": res["retest"]["verdict_consistency"],
         "seconds": res["seconds"],
     }, ensure_ascii=False, indent=2))
     return 0

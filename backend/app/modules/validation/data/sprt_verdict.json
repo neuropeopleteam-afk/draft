@@ -1,181 +1,490 @@
 {
  "signature": {
-  "world": "кросс-валидированная симуляция на банке А3 (1 824 семейства, c027be45, a=1,0/1,3): train N=1000, held-out test N=3000",
+  "world": "реальный движок AppCATSession на банке (1824 семейств, D=1,0, GRADE_CUTS продукта): train N=800, held-out test N=3000",
   "seed": 2026102002,
-  "config_hash": "5734fd71fa8c",
-  "commit": "6229b82",
-  "bank": "82a05fdbacf00481",
+  "config_hash": "e49bf4fc37ba",
+  "commit": "7e471d0",
+  "bank": null,
   "n": 3000,
   "command": "python -m app.modules.validation.sprt_verdict",
-  "generated_at": "2026-10-20T17:42:45+00:00"
+  "generated_at": "2026-10-20T18:46:18+00:00"
  },
- "bank_summary": {
-  "bank_branch": "ag/a3-bank",
-  "bank_commit": "c027be45",
-  "families": 1824,
-  "variants_20seeds": 36480,
-  "code_and_open_families": 590,
-  "incident_sim_families": 40,
-  "lead_families": 271,
-  "principal_families": 266,
-  "a_mcq": 1.0,
-  "a_code_open_incident": 1.3,
-  "basis": "априорная, до калибровки на людях (отвязана от потока истины)"
- },
- "generated_at": "2026-10-20T17:42:45+00:00",
+ "generated_at": "2026-10-20T18:46:18+00:00",
  "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
  "code_ref": "backend/app/modules/validation/sprt_verdict.py",
+ "bank_summary": {
+  "families": 1824,
+  "code_and_open_families": 590,
+  "incident_sim_families": 0,
+  "format_limits": {
+   "open_book_3step": 2,
+   "open_answer": 1,
+   "incident_sim": 1
+  },
+  "logistic_d": 1.0,
+  "grade_cuts": {
+   "intern": -1.75,
+   "junior": -1.0,
+   "middle": 0.0,
+   "senior": 1.0,
+   "lead": 2.0,
+   "principal": 3.0
+  },
+  "basis": "реальный пул load_specs() → pool_from_specs(), прогон через AppCATSession"
+ },
  "cross_validation": {
-  "protocol": "Подбор порогов (α, δ) выполнен на независимой обучающей выборке (seed 2026102001); все отчётные метрики посчитаны один раз на отложенной контрольной выборке (seed 2026102002) без донастройки.",
+  "protocol": "Все пороги вердикта (alpha, p_hi, p_lo, p_final) выбраны программно максимизацией целевой функции на обучающей выборке (seed 2026102001, N = 800) и проверены один раз на отложенной контрольной выборке (seed 2026102002, N = 3000).",
   "train_seed": 2026102001,
   "test_seed": 2026102002,
   "retest_seed": 2026102003,
-  "n_train_per_point": 1000,
+  "n_train": 800,
   "n_test": 3000,
   "chosen_params": {
    "alpha": 0.02,
    "delta": 0.35,
-   "min_sprt_items": 6,
-   "code_open_share": 0.333,
+   "p_hi": 0.9,
+   "p_lo": 0.1,
+   "p_final": 0.62,
+   "code_open_share": 0.3333,
    "followup_minutes": 15
+  },
+  "best_train_point": {
+   "alpha": 0.02,
+   "delta": 0.35,
+   "p_hi": 0.9,
+   "p_lo": 0.1,
+   "p_final": 0.62,
+   "objective": 2.77845,
+   "precision_decided": 0.9744,
+   "decided_share": 0.5752,
+   "false_confirm_decided": 0.0128,
+   "verdict_accuracy_after_followup": 0.8437,
+   "exact_with_followup": 0.705
   },
   "train_grid": [
    {
-    "alpha": 0.05,
-    "delta": 0.3,
-    "precision_decided": 0.9698,
-    "decided_share": 0.828,
-    "false_confirm_decided": 0.0145,
-    "exact_with_followup": 0.806,
-    "minutes_mean": 48.3
-   },
-   {
-    "alpha": 0.05,
-    "delta": 0.35,
-    "precision_decided": 0.964,
-    "decided_share": 0.833,
-    "false_confirm_decided": 0.0144,
-    "exact_with_followup": 0.805,
-    "minutes_mean": 47.6
-   },
-   {
-    "alpha": 0.05,
-    "delta": 0.4,
-    "precision_decided": 0.956,
-    "decided_share": 0.864,
-    "false_confirm_decided": 0.0116,
-    "exact_with_followup": 0.797,
-    "minutes_mean": 45.1
-   },
-   {
-    "alpha": 0.03,
-    "delta": 0.3,
-    "precision_decided": 0.9793,
-    "decided_share": 0.772,
-    "false_confirm_decided": 0.0039,
-    "exact_with_followup": 0.8,
-    "minutes_mean": 52.5
-   },
-   {
-    "alpha": 0.03,
-    "delta": 0.35,
-    "precision_decided": 0.9735,
-    "decided_share": 0.792,
-    "false_confirm_decided": 0.0114,
-    "exact_with_followup": 0.804,
-    "minutes_mean": 48.7
-   },
-   {
-    "alpha": 0.03,
-    "delta": 0.4,
-    "precision_decided": 0.9664,
-    "decided_share": 0.833,
-    "false_confirm_decided": 0.012,
-    "exact_with_followup": 0.791,
-    "minutes_mean": 48.2
-   },
-   {
     "alpha": 0.02,
-    "delta": 0.3,
-    "precision_decided": 0.9756,
-    "decided_share": 0.779,
-    "false_confirm_decided": 0.0051,
-    "exact_with_followup": 0.808,
-    "minutes_mean": 53.3
+    "delta": 0.35,
+    "p_hi": 0.88,
+    "p_lo": 0.12,
+    "p_final": 0.58,
+    "objective": 2.746,
+    "precision_decided": 0.9621,
+    "decided_share": 0.6224,
+    "false_confirm_decided": 0.0166,
+    "verdict_accuracy_after_followup": 0.8496,
+    "exact_with_followup": 0.7075
    },
    {
     "alpha": 0.02,
     "delta": 0.35,
-    "precision_decided": 0.9753,
-    "decided_share": 0.809,
-    "false_confirm_decided": 0.0074,
-    "exact_with_followup": 0.811,
-    "minutes_mean": 50.9
+    "p_hi": 0.88,
+    "p_lo": 0.12,
+    "p_final": 0.6,
+    "objective": 2.75048,
+    "precision_decided": 0.9621,
+    "decided_share": 0.6224,
+    "false_confirm_decided": 0.0166,
+    "verdict_accuracy_after_followup": 0.8496,
+    "exact_with_followup": 0.7037
    },
    {
     "alpha": 0.02,
-    "delta": 0.4,
-    "precision_decided": 0.9635,
-    "decided_share": 0.823,
-    "false_confirm_decided": 0.0134,
-    "exact_with_followup": 0.819,
-    "minutes_mean": 48.9
+    "delta": 0.35,
+    "p_hi": 0.88,
+    "p_lo": 0.12,
+    "p_final": 0.62,
+    "objective": 2.75838,
+    "precision_decided": 0.9621,
+    "decided_share": 0.6224,
+    "false_confirm_decided": 0.0166,
+    "verdict_accuracy_after_followup": 0.8422,
+    "exact_with_followup": 0.7037
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.35,
+    "p_hi": 0.9,
+    "p_lo": 0.1,
+    "p_final": 0.58,
+    "objective": 2.76598,
+    "precision_decided": 0.9744,
+    "decided_share": 0.5752,
+    "false_confirm_decided": 0.0128,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.7087
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.35,
+    "p_hi": 0.9,
+    "p_lo": 0.1,
+    "p_final": 0.6,
+    "objective": 2.7705,
+    "precision_decided": 0.9744,
+    "decided_share": 0.5752,
+    "false_confirm_decided": 0.0128,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.35,
+    "p_hi": 0.9,
+    "p_lo": 0.1,
+    "p_final": 0.62,
+    "objective": 2.77845,
+    "precision_decided": 0.9744,
+    "decided_share": 0.5752,
+    "false_confirm_decided": 0.0128,
+    "verdict_accuracy_after_followup": 0.8437,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.35,
+    "p_hi": 0.92,
+    "p_lo": 0.08,
+    "p_final": 0.58,
+    "objective": 2.75848,
+    "precision_decided": 0.9795,
+    "decided_share": 0.5044,
+    "false_confirm_decided": 0.0117,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.7087
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.35,
+    "p_hi": 0.92,
+    "p_lo": 0.08,
+    "p_final": 0.6,
+    "objective": 2.763,
+    "precision_decided": 0.9795,
+    "decided_share": 0.5044,
+    "false_confirm_decided": 0.0117,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.35,
+    "p_hi": 0.92,
+    "p_lo": 0.08,
+    "p_final": 0.62,
+    "objective": 2.77095,
+    "precision_decided": 0.9795,
+    "decided_share": 0.5044,
+    "false_confirm_decided": 0.0117,
+    "verdict_accuracy_after_followup": 0.8437,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.015,
+    "delta": 0.35,
+    "p_hi": 0.88,
+    "p_lo": 0.12,
+    "p_final": 0.58,
+    "objective": 2.746,
+    "precision_decided": 0.9621,
+    "decided_share": 0.6224,
+    "false_confirm_decided": 0.0166,
+    "verdict_accuracy_after_followup": 0.8496,
+    "exact_with_followup": 0.7075
+   },
+   {
+    "alpha": 0.015,
+    "delta": 0.35,
+    "p_hi": 0.88,
+    "p_lo": 0.12,
+    "p_final": 0.6,
+    "objective": 2.75048,
+    "precision_decided": 0.9621,
+    "decided_share": 0.6224,
+    "false_confirm_decided": 0.0166,
+    "verdict_accuracy_after_followup": 0.8496,
+    "exact_with_followup": 0.7037
+   },
+   {
+    "alpha": 0.015,
+    "delta": 0.35,
+    "p_hi": 0.88,
+    "p_lo": 0.12,
+    "p_final": 0.62,
+    "objective": 2.75838,
+    "precision_decided": 0.9621,
+    "decided_share": 0.6224,
+    "false_confirm_decided": 0.0166,
+    "verdict_accuracy_after_followup": 0.8422,
+    "exact_with_followup": 0.7037
+   },
+   {
+    "alpha": 0.015,
+    "delta": 0.35,
+    "p_hi": 0.9,
+    "p_lo": 0.1,
+    "p_final": 0.58,
+    "objective": 2.76598,
+    "precision_decided": 0.9744,
+    "decided_share": 0.5752,
+    "false_confirm_decided": 0.0128,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.7087
+   },
+   {
+    "alpha": 0.015,
+    "delta": 0.35,
+    "p_hi": 0.9,
+    "p_lo": 0.1,
+    "p_final": 0.6,
+    "objective": 2.7705,
+    "precision_decided": 0.9744,
+    "decided_share": 0.5752,
+    "false_confirm_decided": 0.0128,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.015,
+    "delta": 0.35,
+    "p_hi": 0.9,
+    "p_lo": 0.1,
+    "p_final": 0.62,
+    "objective": 2.77845,
+    "precision_decided": 0.9744,
+    "decided_share": 0.5752,
+    "false_confirm_decided": 0.0128,
+    "verdict_accuracy_after_followup": 0.8437,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.015,
+    "delta": 0.35,
+    "p_hi": 0.92,
+    "p_lo": 0.08,
+    "p_final": 0.58,
+    "objective": 2.75848,
+    "precision_decided": 0.9795,
+    "decided_share": 0.5044,
+    "false_confirm_decided": 0.0117,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.7087
+   },
+   {
+    "alpha": 0.015,
+    "delta": 0.35,
+    "p_hi": 0.92,
+    "p_lo": 0.08,
+    "p_final": 0.6,
+    "objective": 2.763,
+    "precision_decided": 0.9795,
+    "decided_share": 0.5044,
+    "false_confirm_decided": 0.0117,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.015,
+    "delta": 0.35,
+    "p_hi": 0.92,
+    "p_lo": 0.08,
+    "p_final": 0.62,
+    "objective": 2.77095,
+    "precision_decided": 0.9795,
+    "decided_share": 0.5044,
+    "false_confirm_decided": 0.0117,
+    "verdict_accuracy_after_followup": 0.8437,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.01,
+    "delta": 0.35,
+    "p_hi": 0.88,
+    "p_lo": 0.12,
+    "p_final": 0.58,
+    "objective": 2.746,
+    "precision_decided": 0.9621,
+    "decided_share": 0.6224,
+    "false_confirm_decided": 0.0166,
+    "verdict_accuracy_after_followup": 0.8496,
+    "exact_with_followup": 0.7075
+   },
+   {
+    "alpha": 0.01,
+    "delta": 0.35,
+    "p_hi": 0.88,
+    "p_lo": 0.12,
+    "p_final": 0.6,
+    "objective": 2.75048,
+    "precision_decided": 0.9621,
+    "decided_share": 0.6224,
+    "false_confirm_decided": 0.0166,
+    "verdict_accuracy_after_followup": 0.8496,
+    "exact_with_followup": 0.7037
+   },
+   {
+    "alpha": 0.01,
+    "delta": 0.35,
+    "p_hi": 0.88,
+    "p_lo": 0.12,
+    "p_final": 0.62,
+    "objective": 2.75838,
+    "precision_decided": 0.9621,
+    "decided_share": 0.6224,
+    "false_confirm_decided": 0.0166,
+    "verdict_accuracy_after_followup": 0.8422,
+    "exact_with_followup": 0.7037
+   },
+   {
+    "alpha": 0.01,
+    "delta": 0.35,
+    "p_hi": 0.9,
+    "p_lo": 0.1,
+    "p_final": 0.58,
+    "objective": 2.76598,
+    "precision_decided": 0.9744,
+    "decided_share": 0.5752,
+    "false_confirm_decided": 0.0128,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.7087
+   },
+   {
+    "alpha": 0.01,
+    "delta": 0.35,
+    "p_hi": 0.9,
+    "p_lo": 0.1,
+    "p_final": 0.6,
+    "objective": 2.7705,
+    "precision_decided": 0.9744,
+    "decided_share": 0.5752,
+    "false_confirm_decided": 0.0128,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.01,
+    "delta": 0.35,
+    "p_hi": 0.9,
+    "p_lo": 0.1,
+    "p_final": 0.62,
+    "objective": 2.77845,
+    "precision_decided": 0.9744,
+    "decided_share": 0.5752,
+    "false_confirm_decided": 0.0128,
+    "verdict_accuracy_after_followup": 0.8437,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.01,
+    "delta": 0.35,
+    "p_hi": 0.92,
+    "p_lo": 0.08,
+    "p_final": 0.58,
+    "objective": 2.75848,
+    "precision_decided": 0.9795,
+    "decided_share": 0.5044,
+    "false_confirm_decided": 0.0117,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.7087
+   },
+   {
+    "alpha": 0.01,
+    "delta": 0.35,
+    "p_hi": 0.92,
+    "p_lo": 0.08,
+    "p_final": 0.6,
+    "objective": 2.763,
+    "precision_decided": 0.9795,
+    "decided_share": 0.5044,
+    "false_confirm_decided": 0.0117,
+    "verdict_accuracy_after_followup": 0.851,
+    "exact_with_followup": 0.705
+   },
+   {
+    "alpha": 0.01,
+    "delta": 0.35,
+    "p_hi": 0.92,
+    "p_lo": 0.08,
+    "p_final": 0.62,
+    "objective": 2.77095,
+    "precision_decided": 0.9795,
+    "decided_share": 0.5044,
+    "false_confirm_decided": 0.0117,
+    "verdict_accuracy_after_followup": 0.8437,
+    "exact_with_followup": 0.705
    }
   ]
  },
  "main": {
   "n": 3000,
-  "precision_decided": 0.9774,
+  "n_non_intern_claims": 2541,
+  "intern_claim_share": 0.153,
+  "precision_decided": 0.9459,
   "precision_decided_ci": [
-   0.9714,
-   0.9833
+   0.9334,
+   0.957
   ],
-  "decided_share": 0.78,
-  "verdict_accuracy_after_followup": 0.9233,
+  "decided_share": 0.5671,
+  "precision_decided_all_claims": 0.9589,
+  "decided_share_all_claims": 0.6333,
+  "verdict_accuracy_after_followup": 0.8363,
   "verdict_accuracy_after_followup_ci": [
-   0.9143,
-   0.9323
+   0.8209,
+   0.8501
   ],
-  "false_confirm_decided": 0.0124,
-  "false_confirm_overall": 0.0257,
+  "verdict_accuracy_all_claims": 0.8613,
+  "verdict_accuracy_undecided_after_followup": 0.6927,
+  "false_confirm_decided": 0.0118,
+  "false_confirm_overall": 0.0327,
   "false_confirm_overall_ci": [
-   0.02,
-   0.0313
+   0.0256,
+   0.0397
   ],
-  "exact_single_stage": 0.764,
+  "false_confirm_all_claims": 0.0277,
+  "false_reject_overall": 0.1311,
+  "exact_single_stage": 0.6773,
   "exact_single_stage_ci": [
-   0.7493,
-   0.7787
+   0.659,
+   0.6947
   ],
-  "exact_with_followup": 0.806,
+  "exact_with_followup": 0.691,
   "exact_with_followup_ci": [
-   0.792,
-   0.8207
+   0.6733,
+   0.7073
   ],
-  "exact_far_from_cut": 0.9566,
+  "exact_far_from_cut": 0.8351,
   "exact_far_from_cut_ci": [
-   0.9361,
-   0.9749
+   0.8097,
+   0.8593
   ],
-  "far_from_cut_share": 0.146,
-  "within_1": 0.9997,
+  "far_from_cut_share": 0.289,
+  "within_1": 0.9953,
   "within_1_ci": [
-   0.999,
-   1.0
+   0.9927,
+   0.9977
   ],
-  "gross_error_rate": 0.0003,
-  "gross_error_count": 1,
-  "over_rate": 0.109,
-  "under_rate": 0.085,
-  "followup_share": 0.56,
-  "items_mean": 17.3,
-  "minutes_mean": 51.5,
-  "code_open_share": 0.676,
+  "gross_error_rate": 0.0047,
+  "gross_error_count": 14,
+  "over_rate": 0.0867,
+  "under_rate": 0.2223,
+  "followup_share": 0.3667,
+  "followup_share_non_intern": 0.4329,
+  "items_stage1_mean": 14.9,
+  "items_mean": 16.5,
+  "items_p90": 21.0,
+  "minutes_stage1_mean": 50.2,
+  "minutes_stage1_median": 52.6,
+  "minutes_stage1_p90": 59.0,
+  "minutes_mean": 54.6,
+  "minutes_median": 56.7,
+  "minutes_p90": 70.9,
+  "over_60min_share": 0.273,
+  "code_open_share": 0.931,
   "by_grade": {
    "intern": {
-    "n_true": 186,
-    "n_claimed": 195,
-    "exact_grade": 0.7688,
+    "n_true": 493,
+    "n_claimed": 459,
+    "exact_grade": 0.8722,
     "within_1": 1.0,
     "verdict_accuracy_all": 1.0,
     "verdict_precision_decided": 1.0,
@@ -183,358 +492,278 @@
     "false_confirm_rate": 0.0
    },
    "junior": {
-    "n_true": 504,
-    "n_claimed": 468,
-    "exact_grade": 0.7778,
-    "within_1": 1.0,
-    "verdict_accuracy_all": 0.9487,
-    "verdict_precision_decided": 0.985,
-    "decided_share": 0.8526,
-    "false_confirm_rate": 0.0256
+    "n_true": 632,
+    "n_claimed": 584,
+    "exact_grade": 0.7041,
+    "within_1": 0.9968,
+    "verdict_accuracy_all": 0.9007,
+    "verdict_precision_decided": 0.9678,
+    "decided_share": 0.6918,
+    "false_confirm_rate": 0.036
    },
    "middle": {
-    "n_true": 830,
-    "n_claimed": 727,
-    "exact_grade": 0.8169,
-    "within_1": 1.0,
-    "verdict_accuracy_all": 0.9312,
-    "verdict_precision_decided": 0.9809,
-    "decided_share": 0.7923,
-    "false_confirm_rate": 0.0289
+    "n_true": 783,
+    "n_claimed": 691,
+    "exact_grade": 0.7152,
+    "within_1": 0.9974,
+    "verdict_accuracy_all": 0.8683,
+    "verdict_precision_decided": 0.9633,
+    "decided_share": 0.5514,
+    "false_confirm_rate": 0.0492
    },
    "senior": {
-    "n_true": 823,
-    "n_claimed": 786,
-    "exact_grade": 0.8299,
-    "within_1": 1.0,
-    "verdict_accuracy_all": 0.9135,
-    "verdict_precision_decided": 0.9704,
-    "decided_share": 0.7303,
-    "false_confirm_rate": 0.0305
+    "n_true": 657,
+    "n_claimed": 685,
+    "exact_grade": 0.6088,
+    "within_1": 0.9939,
+    "verdict_accuracy_all": 0.7854,
+    "verdict_precision_decided": 0.9146,
+    "decided_share": 0.4788,
+    "false_confirm_rate": 0.0292
    },
    "lead": {
-    "n_true": 486,
-    "n_claimed": 507,
-    "exact_grade": 0.7922,
-    "within_1": 0.9979,
-    "verdict_accuracy_all": 0.9073,
-    "verdict_precision_decided": 0.9701,
-    "decided_share": 0.7258,
-    "false_confirm_rate": 0.0197
+    "n_true": 307,
+    "n_claimed": 371,
+    "exact_grade": 0.557,
+    "within_1": 0.9902,
+    "verdict_accuracy_all": 0.8356,
+    "verdict_precision_decided": 0.9631,
+    "decided_share": 0.5849,
+    "false_confirm_rate": 0.0135
    },
    "principal": {
-    "n_true": 171,
-    "n_claimed": 317,
-    "exact_grade": 0.8012,
-    "within_1": 1.0,
-    "verdict_accuracy_all": 0.8707,
-    "verdict_precision_decided": 0.9649,
-    "decided_share": 0.7192,
-    "false_confirm_rate": 0.0315
+    "n_true": 128,
+    "n_claimed": 210,
+    "exact_grade": 0.5234,
+    "within_1": 0.9766,
+    "verdict_accuracy_all": 0.719,
+    "verdict_precision_decided": 0.8649,
+    "decided_share": 0.5286,
+    "false_confirm_rate": 0.0143
    }
   }
  },
  "retest": {
-  "n": 3000,
-  "exact": 0.738,
+  "n": 1500,
+  "exact": 0.6367,
   "exact_ci": [
-   0.7217,
-   0.7537
+   0.6133,
+   0.66
   ],
-  "within_1": 0.9993,
-  "two_or_more_steps": 0.0007,
-  "kappa_w": 0.9173,
-  "verdict_consistency": 0.892,
+  "within_1": 0.9887,
+  "two_or_more_steps": 0.0113,
+  "kappa_w": 0.8822,
+  "verdict_consistency": 0.844,
   "verdict_consistency_ci": [
-   0.8817,
-   0.9033
+   0.8267,
+   0.8627
   ],
-  "r_theta": 0.9492
+  "r_theta": 0.9206
  },
  "scenarios": {
-  "baseline_mcq4": {
-   "title": "1. Базовый CAT (16 MCQ с 4 вариантами, отбор в θ̂, 1 этап)",
+  "baseline_theta_no_ext": {
+   "title": "1. Базовый CAT в θ̂ без квоты кода и без дотестирования (1 этап, до 16 заданий)",
    "metrics": {
-    "n": 3000,
-    "precision_decided": 0.9658,
+    "n": 1000,
+    "n_non_intern_claims": 852,
+    "intern_claim_share": 0.148,
+    "precision_decided": 0.963,
     "precision_decided_ci": [
-     0.9579,
-     0.9737
+     0.9475,
+     0.9786
     ],
-    "decided_share": 0.6337,
-    "verdict_accuracy_after_followup": 0.8543,
+    "decided_share": 0.6033,
+    "precision_decided_all_claims": 0.9713,
+    "decided_share_all_claims": 0.662,
+    "verdict_accuracy_after_followup": 0.8263,
     "verdict_accuracy_after_followup_ci": [
-     0.842,
-     0.8667
+     0.7993,
+     0.8509
     ],
-    "false_confirm_decided": 0.0153,
-    "false_confirm_overall": 0.035,
+    "verdict_accuracy_all_claims": 0.852,
+    "verdict_accuracy_undecided_after_followup": 0.6183,
+    "false_confirm_decided": 0.0117,
+    "false_confirm_overall": 0.0376,
     "false_confirm_overall_ci": [
-     0.0287,
-     0.042
+     0.0258,
+     0.0505
     ],
-    "exact_single_stage": 0.6893,
+    "false_confirm_all_claims": 0.032,
+    "false_reject_overall": 0.1362,
+    "exact_single_stage": 0.681,
     "exact_single_stage_ci": [
-     0.6717,
-     0.7063
+     0.654,
+     0.707
     ],
-    "exact_with_followup": 0.6893,
+    "exact_with_followup": 0.681,
     "exact_with_followup_ci": [
-     0.672,
-     0.705
+     0.653,
+     0.711
     ],
-    "exact_far_from_cut": 0.8265,
+    "exact_far_from_cut": 0.8042,
     "exact_far_from_cut_ci": [
-     0.79,
-     0.8607
+     0.7587,
+     0.8497
     ],
-    "far_from_cut_share": 0.146,
-    "within_1": 0.996,
+    "far_from_cut_share": 0.286,
+    "within_1": 0.998,
     "within_1_ci": [
-     0.9933,
-     0.998
+     0.995,
+     1.0
     ],
-    "gross_error_rate": 0.004,
-    "gross_error_count": 12,
-    "over_rate": 0.1697,
-    "under_rate": 0.141,
+    "gross_error_rate": 0.002,
+    "gross_error_count": 2,
+    "over_rate": 0.095,
+    "under_rate": 0.224,
     "followup_share": 0.0,
-    "items_mean": 16.0,
-    "minutes_mean": 24.0,
-    "code_open_share": 0.0,
+    "followup_share_non_intern": 0.0,
+    "items_stage1_mean": 14.8,
+    "items_mean": 14.8,
+    "items_p90": 16.0,
+    "minutes_stage1_mean": 49.0,
+    "minutes_stage1_median": 51.6,
+    "minutes_stage1_p90": 59.1,
+    "minutes_mean": 49.0,
+    "minutes_median": 51.6,
+    "minutes_p90": 59.1,
+    "over_60min_share": 0.0,
+    "code_open_share": 0.861,
     "by_grade": {
      "intern": {
-      "n_true": 194,
-      "n_claimed": 206,
-      "exact_grade": 0.6753,
-      "within_1": 0.9845,
+      "n_true": 155,
+      "n_claimed": 148,
+      "exact_grade": 0.871,
+      "within_1": 1.0,
       "verdict_accuracy_all": 1.0,
       "verdict_precision_decided": 1.0,
       "decided_share": 1.0,
       "false_confirm_rate": 0.0
      },
      "junior": {
-      "n_true": 447,
-      "n_claimed": 430,
-      "exact_grade": 0.6309,
-      "within_1": 0.9888,
-      "verdict_accuracy_all": 0.9093,
-      "verdict_precision_decided": 0.9792,
-      "decided_share": 0.7837,
-      "false_confirm_rate": 0.0442
+      "n_true": 210,
+      "n_claimed": 204,
+      "exact_grade": 0.6857,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8824,
+      "verdict_precision_decided": 0.9795,
+      "decided_share": 0.7157,
+      "false_confirm_rate": 0.0343
      },
      "middle": {
-      "n_true": 814,
-      "n_claimed": 675,
-      "exact_grade": 0.7101,
-      "within_1": 0.9963,
-      "verdict_accuracy_all": 0.8607,
-      "verdict_precision_decided": 0.9718,
-      "decided_share": 0.6311,
-      "false_confirm_rate": 0.0356
+      "n_true": 273,
+      "n_claimed": 222,
+      "exact_grade": 0.696,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8108,
+      "verdict_precision_decided": 0.952,
+      "decided_share": 0.5631,
+      "false_confirm_rate": 0.0631
      },
      "senior": {
-      "n_true": 872,
-      "n_claimed": 826,
-      "exact_grade": 0.7179,
-      "within_1": 0.9989,
-      "verdict_accuracy_all": 0.822,
-      "verdict_precision_decided": 0.9602,
-      "decided_share": 0.5472,
-      "false_confirm_rate": 0.04
+      "n_true": 207,
+      "n_claimed": 198,
+      "exact_grade": 0.6087,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8283,
+      "verdict_precision_decided": 0.9912,
+      "decided_share": 0.5758,
+      "false_confirm_rate": 0.0253
      },
      "lead": {
-      "n_true": 502,
-      "n_claimed": 544,
-      "exact_grade": 0.6534,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.8254,
-      "verdict_precision_decided": 0.9487,
-      "decided_share": 0.5735,
-      "false_confirm_rate": 0.0331
+      "n_true": 110,
+      "n_claimed": 161,
+      "exact_grade": 0.5545,
+      "within_1": 0.9909,
+      "verdict_accuracy_all": 0.8199,
+      "verdict_precision_decided": 0.9667,
+      "decided_share": 0.559,
+      "false_confirm_rate": 0.0124
      },
      "principal": {
-      "n_true": 171,
-      "n_claimed": 319,
-      "exact_grade": 0.7193,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.8056,
-      "verdict_precision_decided": 0.9286,
-      "decided_share": 0.5266,
-      "false_confirm_rate": 0.0345
+      "n_true": 45,
+      "n_claimed": 67,
+      "exact_grade": 0.5556,
+      "within_1": 0.9778,
+      "verdict_accuracy_all": 0.7164,
+      "verdict_precision_decided": 0.8462,
+      "decided_share": 0.5821,
+      "false_confirm_rate": 0.0597
      }
     }
    }
   },
-  "honest_mcq5_cut": {
-   "title": "2. Честные MCQ (5 вариантов без перекоса ключа) + отбор у порогов грейдов",
+  "cut_single_stage": {
+   "title": "2. Классификационный CAT у порогов + квота 1/3 кода + дотестирование в сессии (без 2-го этапа)",
    "metrics": {
     "n": 3000,
-    "precision_decided": 0.9541,
+    "n_non_intern_claims": 2541,
+    "intern_claim_share": 0.153,
+    "precision_decided": 0.9459,
     "precision_decided_ci": [
-     0.9447,
-     0.963
+     0.9334,
+     0.9577
     ],
-    "decided_share": 0.675,
-    "verdict_accuracy_after_followup": 0.848,
+    "decided_share": 0.5671,
+    "precision_decided_all_claims": 0.9589,
+    "decided_share_all_claims": 0.6333,
+    "verdict_accuracy_after_followup": 0.8201,
     "verdict_accuracy_after_followup_ci": [
-     0.836,
-     0.8607
+     0.8036,
+     0.8343
     ],
-    "false_confirm_decided": 0.0183,
-    "false_confirm_overall": 0.0387,
+    "verdict_accuracy_all_claims": 0.8477,
+    "verdict_accuracy_undecided_after_followup": 0.6555,
+    "false_confirm_decided": 0.0118,
+    "false_confirm_overall": 0.0378,
     "false_confirm_overall_ci": [
-     0.032,
-     0.0457
+     0.0303,
+     0.0449
     ],
-    "exact_single_stage": 0.6993,
+    "false_confirm_all_claims": 0.032,
+    "false_reject_overall": 0.1421,
+    "exact_single_stage": 0.6773,
     "exact_single_stage_ci": [
-     0.681,
-     0.7153
+     0.6587,
+     0.6933
     ],
-    "exact_with_followup": 0.6993,
+    "exact_with_followup": 0.6773,
     "exact_with_followup_ci": [
-     0.682,
-     0.715
+     0.662,
+     0.6933
     ],
-    "exact_far_from_cut": 0.8088,
+    "exact_far_from_cut": 0.8143,
     "exact_far_from_cut_ci": [
-     0.7729,
-     0.8426
+     0.7843,
+     0.8386
     ],
-    "far_from_cut_share": 0.1673,
+    "far_from_cut_share": 0.289,
     "within_1": 0.9953,
     "within_1_ci": [
-     0.993,
+     0.9927,
      0.9977
     ],
     "gross_error_rate": 0.0047,
     "gross_error_count": 14,
-    "over_rate": 0.1577,
-    "under_rate": 0.143,
+    "over_rate": 0.091,
+    "under_rate": 0.2317,
     "followup_share": 0.0,
-    "items_mean": 16.0,
-    "minutes_mean": 24.0,
-    "code_open_share": 0.0,
+    "followup_share_non_intern": 0.0,
+    "items_stage1_mean": 14.9,
+    "items_mean": 14.9,
+    "items_p90": 16.0,
+    "minutes_stage1_mean": 50.2,
+    "minutes_stage1_median": 52.6,
+    "minutes_stage1_p90": 59.0,
+    "minutes_mean": 50.2,
+    "minutes_median": 52.6,
+    "minutes_p90": 59.0,
+    "over_60min_share": 0.0,
+    "code_open_share": 0.934,
     "by_grade": {
      "intern": {
-      "n_true": 178,
-      "n_claimed": 188,
-      "exact_grade": 0.6404,
-      "within_1": 0.9438,
-      "verdict_accuracy_all": 1.0,
-      "verdict_precision_decided": 1.0,
-      "decided_share": 1.0,
-      "false_confirm_rate": 0.0
-     },
-     "junior": {
-      "n_true": 484,
-      "n_claimed": 467,
-      "exact_grade": 0.655,
-      "within_1": 0.9917,
-      "verdict_accuracy_all": 0.8844,
-      "verdict_precision_decided": 0.9676,
-      "decided_share": 0.7923,
-      "false_confirm_rate": 0.0385
-     },
-     "middle": {
-      "n_true": 838,
-      "n_claimed": 667,
-      "exact_grade": 0.7411,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.8801,
-      "verdict_precision_decided": 0.9623,
-      "decided_share": 0.6762,
-      "false_confirm_rate": 0.0525
-     },
-     "senior": {
-      "n_true": 837,
-      "n_claimed": 816,
-      "exact_grade": 0.7001,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.8174,
-      "verdict_precision_decided": 0.9545,
-      "decided_share": 0.5931,
-      "false_confirm_rate": 0.0551
-     },
-     "lead": {
-      "n_true": 456,
-      "n_claimed": 548,
-      "exact_grade": 0.6952,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.8248,
-      "verdict_precision_decided": 0.9351,
-      "decided_share": 0.6186,
-      "false_confirm_rate": 0.0274
-     },
-     "principal": {
-      "n_true": 207,
-      "n_claimed": 314,
-      "exact_grade": 0.6908,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.7548,
-      "verdict_precision_decided": 0.8964,
-      "decided_share": 0.6146,
-      "false_confirm_rate": 0.0096
-     }
-    }
-   }
-  },
-  "mix_single_stage": {
-   "title": "3. Классификационный CAT у порогов + 1/3 заданий с кодом и открытым ответом (1 этап, до 16 заданий)",
-   "metrics": {
-    "n": 3000,
-    "precision_decided": 0.9814,
-    "precision_decided_ci": [
-     0.9757,
-     0.987
-    ],
-    "decided_share": 0.7693,
-    "verdict_accuracy_after_followup": 0.9107,
-    "verdict_accuracy_after_followup_ci": [
-     0.9003,
-     0.9203
-    ],
-    "false_confirm_decided": 0.0069,
-    "false_confirm_overall": 0.025,
-    "false_confirm_overall_ci": [
-     0.02,
-     0.031
-    ],
-    "exact_single_stage": 0.798,
-    "exact_single_stage_ci": [
-     0.7823,
-     0.812
-    ],
-    "exact_with_followup": 0.798,
-    "exact_with_followup_ci": [
-     0.7843,
-     0.813
-    ],
-    "exact_far_from_cut": 0.9511,
-    "exact_far_from_cut_ci": [
-     0.9298,
-     0.9681
-    ],
-    "far_from_cut_share": 0.1567,
-    "within_1": 1.0,
-    "within_1_ci": [
-     1.0,
-     1.0
-    ],
-    "gross_error_rate": 0.0,
-    "gross_error_count": 0,
-    "over_rate": 0.1123,
-    "under_rate": 0.0897,
-    "followup_share": 0.0,
-    "items_mean": 16.0,
-    "minutes_mean": 45.0,
-    "code_open_share": 0.625,
-    "by_grade": {
-     "intern": {
-      "n_true": 194,
-      "n_claimed": 206,
-      "exact_grade": 0.799,
+      "n_true": 493,
+      "n_claimed": 459,
+      "exact_grade": 0.858,
       "within_1": 1.0,
       "verdict_accuracy_all": 1.0,
       "verdict_precision_decided": 1.0,
@@ -542,113 +771,130 @@
       "false_confirm_rate": 0.0
      },
      "junior": {
-      "n_true": 491,
-      "n_claimed": 449,
-      "exact_grade": 0.7739,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.9332,
-      "verdict_precision_decided": 0.9869,
-      "decided_share": 0.8508,
-      "false_confirm_rate": 0.02
+      "n_true": 632,
+      "n_claimed": 584,
+      "exact_grade": 0.6962,
+      "within_1": 0.9968,
+      "verdict_accuracy_all": 0.8938,
+      "verdict_precision_decided": 0.9678,
+      "decided_share": 0.6918,
+      "false_confirm_rate": 0.0479
      },
      "middle": {
-      "n_true": 868,
-      "n_claimed": 768,
-      "exact_grade": 0.7961,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.9219,
-      "verdict_precision_decided": 0.9846,
-      "decided_share": 0.7604,
-      "false_confirm_rate": 0.0286
+      "n_true": 783,
+      "n_claimed": 691,
+      "exact_grade": 0.6935,
+      "within_1": 0.9974,
+      "verdict_accuracy_all": 0.8307,
+      "verdict_precision_decided": 0.9633,
+      "decided_share": 0.5514,
+      "false_confirm_rate": 0.0608
      },
      "senior": {
-      "n_true": 799,
-      "n_claimed": 744,
-      "exact_grade": 0.8185,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.9046,
-      "verdict_precision_decided": 0.9688,
-      "decided_share": 0.7325,
-      "false_confirm_rate": 0.0296
+      "n_true": 657,
+      "n_claimed": 685,
+      "exact_grade": 0.5845,
+      "within_1": 0.9939,
+      "verdict_accuracy_all": 0.7635,
+      "verdict_precision_decided": 0.9146,
+      "decided_share": 0.4788,
+      "false_confirm_rate": 0.0277
      },
      "lead": {
-      "n_true": 466,
-      "n_claimed": 526,
-      "exact_grade": 0.7704,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.865,
-      "verdict_precision_decided": 0.9783,
-      "decided_share": 0.7015,
-      "false_confirm_rate": 0.0285
+      "n_true": 307,
+      "n_claimed": 371,
+      "exact_grade": 0.5635,
+      "within_1": 0.9902,
+      "verdict_accuracy_all": 0.8383,
+      "verdict_precision_decided": 0.9631,
+      "decided_share": 0.5849,
+      "false_confirm_rate": 0.0135
      },
      "principal": {
-      "n_true": 182,
-      "n_claimed": 307,
-      "exact_grade": 0.8516,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.8827,
-      "verdict_precision_decided": 0.982,
-      "decided_share": 0.7231,
-      "false_confirm_rate": 0.0228
+      "n_true": 128,
+      "n_claimed": 210,
+      "exact_grade": 0.5391,
+      "within_1": 0.9766,
+      "verdict_accuracy_all": 0.7333,
+      "verdict_precision_decided": 0.8649,
+      "decided_share": 0.5286,
+      "false_confirm_rate": 0.0095
      }
     }
    }
   },
   "sprt_verdict_product": {
-   "title": "4. Продуктовый стандарт: SPRT (α = 0,02, δ = 0,35) + 1/3 код/открытые + 3-значный вердикт + 15-мин доп. этап у границы и Боевой этап для Senior+",
+   "title": "3. Продуктовый контур: AppCATSession у порогов + 1/3 практических заданий + SPRT и 15-мин 2-й этап для пограничных",
    "metrics": {
     "n": 3000,
-    "precision_decided": 0.9774,
+    "n_non_intern_claims": 2541,
+    "intern_claim_share": 0.153,
+    "precision_decided": 0.9459,
     "precision_decided_ci": [
-     0.9714,
-     0.9833
+     0.9334,
+     0.957
     ],
-    "decided_share": 0.78,
-    "verdict_accuracy_after_followup": 0.9233,
+    "decided_share": 0.5671,
+    "precision_decided_all_claims": 0.9589,
+    "decided_share_all_claims": 0.6333,
+    "verdict_accuracy_after_followup": 0.8363,
     "verdict_accuracy_after_followup_ci": [
-     0.9143,
-     0.9323
+     0.8209,
+     0.8501
     ],
-    "false_confirm_decided": 0.0124,
-    "false_confirm_overall": 0.0257,
+    "verdict_accuracy_all_claims": 0.8613,
+    "verdict_accuracy_undecided_after_followup": 0.6927,
+    "false_confirm_decided": 0.0118,
+    "false_confirm_overall": 0.0327,
     "false_confirm_overall_ci": [
-     0.02,
-     0.0313
+     0.0256,
+     0.0397
     ],
-    "exact_single_stage": 0.764,
+    "false_confirm_all_claims": 0.0277,
+    "false_reject_overall": 0.1311,
+    "exact_single_stage": 0.6773,
     "exact_single_stage_ci": [
-     0.7493,
-     0.7787
+     0.659,
+     0.6947
     ],
-    "exact_with_followup": 0.806,
+    "exact_with_followup": 0.691,
     "exact_with_followup_ci": [
-     0.792,
-     0.8207
+     0.6733,
+     0.7073
     ],
-    "exact_far_from_cut": 0.9566,
+    "exact_far_from_cut": 0.8351,
     "exact_far_from_cut_ci": [
-     0.9361,
-     0.9749
+     0.8097,
+     0.8593
     ],
-    "far_from_cut_share": 0.146,
-    "within_1": 0.9997,
+    "far_from_cut_share": 0.289,
+    "within_1": 0.9953,
     "within_1_ci": [
-     0.999,
-     1.0
+     0.9927,
+     0.9977
     ],
-    "gross_error_rate": 0.0003,
-    "gross_error_count": 1,
-    "over_rate": 0.109,
-    "under_rate": 0.085,
-    "followup_share": 0.56,
-    "items_mean": 17.3,
-    "minutes_mean": 51.5,
-    "code_open_share": 0.676,
+    "gross_error_rate": 0.0047,
+    "gross_error_count": 14,
+    "over_rate": 0.0867,
+    "under_rate": 0.2223,
+    "followup_share": 0.3667,
+    "followup_share_non_intern": 0.4329,
+    "items_stage1_mean": 14.9,
+    "items_mean": 16.5,
+    "items_p90": 21.0,
+    "minutes_stage1_mean": 50.2,
+    "minutes_stage1_median": 52.6,
+    "minutes_stage1_p90": 59.0,
+    "minutes_mean": 54.6,
+    "minutes_median": 56.7,
+    "minutes_p90": 70.9,
+    "over_60min_share": 0.273,
+    "code_open_share": 0.931,
     "by_grade": {
      "intern": {
-      "n_true": 186,
-      "n_claimed": 195,
-      "exact_grade": 0.7688,
+      "n_true": 493,
+      "n_claimed": 459,
+      "exact_grade": 0.8722,
       "within_1": 1.0,
       "verdict_accuracy_all": 1.0,
       "verdict_precision_decided": 1.0,
@@ -656,59 +902,59 @@
       "false_confirm_rate": 0.0
      },
      "junior": {
-      "n_true": 504,
-      "n_claimed": 468,
-      "exact_grade": 0.7778,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.9487,
-      "verdict_precision_decided": 0.985,
-      "decided_share": 0.8526,
-      "false_confirm_rate": 0.0256
+      "n_true": 632,
+      "n_claimed": 584,
+      "exact_grade": 0.7041,
+      "within_1": 0.9968,
+      "verdict_accuracy_all": 0.9007,
+      "verdict_precision_decided": 0.9678,
+      "decided_share": 0.6918,
+      "false_confirm_rate": 0.036
      },
      "middle": {
-      "n_true": 830,
-      "n_claimed": 727,
-      "exact_grade": 0.8169,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.9312,
-      "verdict_precision_decided": 0.9809,
-      "decided_share": 0.7923,
-      "false_confirm_rate": 0.0289
+      "n_true": 783,
+      "n_claimed": 691,
+      "exact_grade": 0.7152,
+      "within_1": 0.9974,
+      "verdict_accuracy_all": 0.8683,
+      "verdict_precision_decided": 0.9633,
+      "decided_share": 0.5514,
+      "false_confirm_rate": 0.0492
      },
      "senior": {
-      "n_true": 823,
-      "n_claimed": 786,
-      "exact_grade": 0.8299,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.9135,
-      "verdict_precision_decided": 0.9704,
-      "decided_share": 0.7303,
-      "false_confirm_rate": 0.0305
+      "n_true": 657,
+      "n_claimed": 685,
+      "exact_grade": 0.6088,
+      "within_1": 0.9939,
+      "verdict_accuracy_all": 0.7854,
+      "verdict_precision_decided": 0.9146,
+      "decided_share": 0.4788,
+      "false_confirm_rate": 0.0292
      },
      "lead": {
-      "n_true": 486,
-      "n_claimed": 507,
-      "exact_grade": 0.7922,
-      "within_1": 0.9979,
-      "verdict_accuracy_all": 0.9073,
-      "verdict_precision_decided": 0.9701,
-      "decided_share": 0.7258,
-      "false_confirm_rate": 0.0197
+      "n_true": 307,
+      "n_claimed": 371,
+      "exact_grade": 0.557,
+      "within_1": 0.9902,
+      "verdict_accuracy_all": 0.8356,
+      "verdict_precision_decided": 0.9631,
+      "decided_share": 0.5849,
+      "false_confirm_rate": 0.0135
      },
      "principal": {
-      "n_true": 171,
-      "n_claimed": 317,
-      "exact_grade": 0.8012,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.8707,
-      "verdict_precision_decided": 0.9649,
-      "decided_share": 0.7192,
-      "false_confirm_rate": 0.0315
+      "n_true": 128,
+      "n_claimed": 210,
+      "exact_grade": 0.5234,
+      "within_1": 0.9766,
+      "verdict_accuracy_all": 0.719,
+      "verdict_precision_decided": 0.8649,
+      "decided_share": 0.5286,
+      "false_confirm_rate": 0.0143
      }
     }
    }
   }
  },
- "claim_ru": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,7 % уверенных решений (95 % ДИ [97,1 %; 98,3 %]); уверенный вердикт на первом этапе получают 78,0 % кандидатов в среднем за 52 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 80,6 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 95,7 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 1,2 %, повторяемость (test–retest) κw = 0,917 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),",
- "seconds": 119.01
+ "claim_ru": "Прогон продуктового движка AppCATSession на реальном банке заданий (1824 семейств, 590 кодовых и развёрнутых, D = 1,0 без искусственного множителя, кросс-валидация: пороги выбраны на train N = 800, проверены на отложенной выборке N = 3000, seed 2026102002): среди кандидатов с нетривиальной заявкой (Junior…Principal) точность уверенного вердикта составляет 94,6 % (95 % ДИ [93,3 %; 95,7 %]) при доле уверенных решений 1-го этапа 56,7 % (ложное подтверждение среди уверенных — 1,18 %); с учётом всех заявок включая стажёров — точность уверенных 95,9 % на 63,3 % пула. По всем кандидатам с учётом 2-го этапа у порога (назначается 36,7 % пула) вердикт верен в 83,6 % (среди всех заявок — 86,1 %, ложное подтверждение по пулу — 3,27 %). Точный грейд из 6 ступеней по всему пулу — 69,1 % (вдали от порога |θ − порог| ≥ 0,40, 28,9 % пула — 83,5 %), попадание в пределах ±1 ступени — 99,53 %, повторяемость между независимыми сессиями κw = 0,882 (точное совпадение 63,7 %, согласованность вердикта 84,4 %, N = 1500). Модельный расчёт до калибровки на живых людях.",
+ "seconds": 217.78
 }

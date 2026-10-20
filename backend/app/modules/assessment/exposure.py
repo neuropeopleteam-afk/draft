@@ -27,20 +27,43 @@ import json
 from pathlib import Path
 
 from assessment_bank.psychometrics import CATSession, ExposureControl, PoolItem
+from app.modules.assessment.sprt import (
+    CODE_OPEN_FORMATS,
+    DEFAULT_ALPHA,
+    DEFAULT_CODE_OPEN_SHARE,
+    DEFAULT_DELTA,
+    filter_code_open_pool,
+    select_target_cut,
+    sprt_bound,
+    step_llr,
+)
+from app.modules.catalog.seed_data import ALL_GRADE_CUTS as GRADE_CUTS
 
 K_FILE = Path(__file__).with_name("exposure_k.json")
-DEFAULT_FORMAT_LIMITS = {"open_book_3step": 2, "open_answer": 1, "incident_sim": 2}
+DEFAULT_FORMAT_LIMITS = {"open_book_3step": 2, "open_answer": 1, "incident_sim": 1}
+LONG_FORMATS = frozenset({"open_book_3step", "open_answer", "incident_sim"})
+MAX_LONG_FORMATS_TOTAL = 2  # не более 2 длинных многошаговых/развёрнутых заданий за сессию, чтобы уложиться в 60 мин
 
 
 class AppCATSession(CATSession):
-    """CATSession с ограничением числа заданий одного формата в сессии и поддержкой отбора у порогов грейдов."""
+    """CATSession с ограничением числа заданий одного формата, квотой ≥ 1/3 кодовых/открытых заданий,
+    классификационным отбором у порогов грейдов и последовательным критерием Вальда (SPRT).
+    """
 
     def __init__(self, *args, max_per_format: dict[str, int] | None = None, max_item_time_s: float | None = None,
                  seen: dict[str, int] | None = None, ext_lru: bool = False,
-                 code_open_share: float = 0.0, **kwargs):
+                 code_open_share: float | None = None, sprt_alpha: float = DEFAULT_ALPHA,
+                 sprt_delta: float = DEFAULT_DELTA, **kwargs):
         self.max_per_format = dict(DEFAULT_FORMAT_LIMITS if max_per_format is None else max_per_format)
         self.max_item_time_s = max_item_time_s
-        self.code_open_share = float(code_open_share)
+        # По умолчанию в полном тесте (без жёсткого ограничения времени одного задания экспресс-режима) доля кода/открытых ≥ 1/3
+        if code_open_share is None:
+            self.code_open_share = DEFAULT_CODE_OPEN_SHARE if max_item_time_s is None else 0.0
+        else:
+            self.code_open_share = float(code_open_share)
+        self.sprt_alpha = float(sprt_alpha)
+        self.sprt_delta = float(sprt_delta)
+        self.sprt_llr: float = 0.0
         super().__init__(*args, **kwargs)
         self._fmt = {fid: i.format for fid, i in self.items.items()}
         self.seen = {str(k): int(v) for k, v in (seen or {}).items()}
@@ -59,29 +82,66 @@ class AppCATSession(CATSession):
                 out[f] = out.get(f, 0) + 1
         return out
 
+    def _target(self) -> float:
+        """Целевая точка максимальной информации: в режиме ``select_at="cut"`` после ``cut_after`` шагов
+        выбирает порог заявленного/ближайшего неопределённого грейда через ``sprt.select_target_cut``.
+        """
+        if self.cfg.select_at == "cut" and self.n_scored >= self.cfg.cut_after:
+            return select_target_cut(
+                self.theta, self.se, self.claimed_grade, self.cfg.cuts, self.uncertain_cuts()
+            )
+        return super()._target()
+
+    def record(self, item: PoolItem, x, log_t: float | None = None, time_s: float = 0.0) -> None:
+        super().record(item, x, log_t=log_t, time_s=time_s)
+        if not item.canary:
+            cut = float(GRADE_CUTS.get(self.claimed_grade, 0.0))
+            self.sprt_llr += step_llr(x, item.a_eff, item.b, cut, fmt=item.format, delta=self.sprt_delta)
+
+    def is_finished(self) -> bool:
+        if (
+            self.n_scored >= self.cfg.min_items
+            and self.cfg.stop_rule == "classification"
+            and abs(self.sprt_llr) >= sprt_bound(self.sprt_alpha)
+            and self.grade_determined()
+        ):
+            self.stop_reason = "classified"
+            return True
+        return super().is_finished()
+
     def _limit(self, cands: list[PoolItem]) -> list[PoolItem]:
         if self.max_item_time_s is not None:
             cands = [i for i in cands if i.time_limit_s <= self.max_item_time_s]
         if not self.max_per_format:
-            out = cands
-        else:
-            cnt = self.format_counts()
-            out = [i for i in cands if cnt.get(i.format, 0) < self.max_per_format.get(i.format, 10**6)]
-            # В полном тесте (min_items >= 8) гарантируем выдачу хотя бы одного развёрнутого задания (open_answer / open_book_3step)
-            # к 5-му оцениваемому шагу, даже если тестовых семейств mcq_concept в банке в несколько раз больше
-            if (
-                self.cfg.min_items >= 8
-                and not self.seen
-                and self.n_scored >= 4
-                and cnt.get("open_answer", 0) + cnt.get("open_book_3step", 0) == 0
-                and (self.max_per_format.get("open_answer", 0) > 0 or self.max_per_format.get("open_book_3step", 0) > 0)
-            ):
-                open_cands = [i for i in out if i.format in ("open_answer", "open_book_3step")]
-                if open_cands:
-                    out = open_cands
+            return cands
+        cnt = self.format_counts()
+        out = [i for i in cands if cnt.get(i.format, 0) < self.max_per_format.get(i.format, 10**6)]
+        n_long = sum(cnt.get(f, 0) for f in LONG_FORMATS)
+        if n_long >= MAX_LONG_FORMATS_TOTAL:
+            short_out = [i for i in out if i.format not in LONG_FORMATS]
+            if short_out:
+                out = short_out
+        return out
+
+    def _apply_format_quota(self, cands: list[PoolItem]) -> list[PoolItem]:
+        """Применяет квоту ≥ 1/3 практических заданий (код и развёрнутые ответы) и гарантирует хотя бы одно
+        развёрнутое задание в полном тесте ТОЛЬКО внутри уже отобранного яруса новизны (не вытесняя новые семейства
+        виденными).
+        """
+        if not cands:
+            return cands
+        out = cands
+        cnt = self.format_counts()
+        if (
+            self.cfg.min_items >= 8
+            and self.n_scored >= 4
+            and cnt.get("open_answer", 0) + cnt.get("open_book_3step", 0) == 0
+            and (self.max_per_format.get("open_answer", 0) > 0 or self.max_per_format.get("open_book_3step", 0) > 0)
+        ):
+            open_cands = [i for i in out if i.format in ("open_answer", "open_book_3step")]
+            if open_cands:
+                out = open_cands
         if self.code_open_share > 0.0 and out:
-            from app.modules.assessment.sprt import CODE_OPEN_FORMATS, filter_code_open_pool
-            cnt = self.format_counts()
             n_co = sum(v for k, v in cnt.items() if k in CODE_OPEN_FORMATS)
             out = filter_code_open_pool(out, self.n_scored, n_co, self.code_open_share)
         return out
@@ -89,18 +149,19 @@ class AppCATSession(CATSession):
     def _candidates(self) -> list[PoolItem]:
         base = self._limit(super()._candidates())
         if not self.seen:
-            return base
+            return self._apply_format_quota(base)
         # 1) новые семейства своего субпула — как прежде (кончился блок — берётся другой блок, см. CATSession._next_main);
         # 2) новые семейства других активных субпулов; 3) LRU по блокам — виденные давнее всего, с новым вариантом
         fresh = [i for i in base if i.family_id not in self.seen]
         if fresh:
-            return fresh
+            return self._apply_format_quota(fresh)
         left = self.cfg.max_time_s - self.time_used
         reserve = self._limit([i for i in self._reserve if i.family_id not in self.used and i.time_limit_s <= left])
         fresh = [i for i in reserve if i.family_id not in self.seen]
         if fresh:
-            return fresh
-        return [i for common in (True, False) for i in self._oldest([r for r in reserve if (r.block == "common") == common])]
+            return self._apply_format_quota(fresh)
+        oldest = [i for common in (True, False) for i in self._oldest([r for r in reserve if (r.block == "common") == common])]
+        return self._apply_format_quota(oldest)
 
     def _ext_candidates(self) -> list[PoolItem]:
         base = self._limit(super()._ext_candidates())

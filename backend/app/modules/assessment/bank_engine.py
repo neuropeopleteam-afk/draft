@@ -605,6 +605,7 @@ class BankEngine:
         if state["claimed_grade"] == "intern":
             excl.update(intern_exclusions(pool, state["direction"]))
         kw = dict(max_per_format=cfg.get("max_per_format", {}), max_item_time_s=cfg.get("max_item_time_s"),
+                  code_open_share=cfg.get("code_open_share", 0.0 if state.get("mode") == "express" else 1.0 / 3.0),
                   exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl,
                   seen=state.get("seen"), ext_lru=state.get("mode") in ("confirm", "refine"))
         if state.get("mode") == "refine":  # Я26: вторая сессия у границы — правило выбора и стопа из two_stage
