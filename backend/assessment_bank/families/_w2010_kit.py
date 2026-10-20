@@ -1,39 +1,82 @@
-"""Общий конструктор расчётных и кодовых семейств волны 10 (1 000+ семейств).
-
-Требования волны:
-* в каждом варианте есть проверка исполнением (``Check``): модель предметной области считает
-  эталонный ответ, а для обратных задач — ещё и независимая проверка полным перебором сетки;
-* все дистракторы получаются из явных ловушек модели (забытый множитель, неверное округление,
-  перепутанные единицы, ошибка в направлении неравенства и т.п.) и проверяются в той же программе;
-* место правильного ответа по величине не фиксировано: в вариантах с числовыми ответами ключ
-  равновероятно оказывается на любом месте по возрастанию (среди 4 или 5 вариантов).
-"""
+"""Общий конструктор расчётных и кодовых семейств волны 10 и волны 20.10-S."""
 from __future__ import annotations
 
+import contextlib
+from fractions import Fraction
 import hashlib
+import io
 import math
 import random
-from fractions import Fraction
+import sqlite3
 from typing import Any, Callable, Sequence
+import zlib
 
-from assessment_bank.gen_utils import LETTERS, build_variant, changed_lines, make_options, make_rng, py_harness
+from assessment_bank.gen_utils import LETTERS, build_variant, make_options, make_rng
 from assessment_bank.schema import AnswerKey, Check, Option, Variant
 
+SHORT_NOTE = "Ответ проверяется программой-моделью по тем же числам, что в условии."
 
-def num(v: int | float | Fraction, *, decimals: int | None = None) -> str:
+
+def num(v: int | float | Fraction, nd: int = 0, *, decimals: int | None = None) -> str:
     """Форматирование числа по-русски: неразрывный пробел между тысячами, запятая в дробной части."""
+    if decimals is not None:
+        nd = decimals
     if isinstance(v, Fraction):
-        if v.denominator == 1 and decimals is None:
+        if v.denominator == 1 and nd == 0:
             v = int(v)
         else:
             v = float(v)
-    if decimals is not None:
-        s = f"{float(v):,.{decimals}f}"
+    if nd > 0:
+        s = f"{float(v):,.{nd}f}"
     elif isinstance(v, int) or (isinstance(v, float) and v.is_integer()):
         s = f"{int(round(v)):,}"
     else:
         s = f"{float(v):,.2f}".rstrip("0").rstrip(".")
     return s.replace(",", "\u00a0").replace(".", ",")
+
+
+def key_pos(family_id: str, seed: int, n: int = 4) -> int:
+    return (zlib.crc32(family_id.encode()) + seed) % n
+
+
+def place(
+    family_id: str,
+    seed: int,
+    rng: Any,
+    good: tuple[str, str | None],
+    wrong: Sequence[tuple[str, str | None]],
+) -> tuple[list[Option], str]:
+    """Ключ — на позицию key_pos, остальные — в случайном порядке."""
+    ws = list(wrong)
+    rng.shuffle(ws)
+    pos = key_pos(family_id, seed, len(ws) + 1)
+    items = ws[:pos] + [good] + ws[pos:]
+    if len({(t, c) for t, c in items}) != len(items):
+        raise ValueError("варианты ответа совпадают")
+    opts = [Option(id=LETTERS[i], text=t, code=c) for i, (t, c) in enumerate(items)]
+    return opts, LETTERS[pos]
+
+
+def _letter_program(model: str, P: dict, shown: dict[str, str], expr: str) -> str:
+    return (
+        f"{model}\n\nP = {P!r}\nopts = {shown!r}\nans = {expr}\n"
+        "hit = [k for k, t in opts.items() if t == ans]\n"
+        "print(hit[0] if len(hit) == 1 else 'AMBIGUOUS')\n"
+    )
+
+
+def search(rng: Any, sample: Callable[[Any], dict], accept: Callable[[dict], Any], tries: int = 20000):
+    for _ in range(tries):
+        p = sample(rng)
+        r = accept(p)
+        if r is not None:
+            return p, r
+    raise RuntimeError("не удалось подобрать параметры")
+
+
+def _distinct(vals: Sequence[float], rel: float, abs_min: float) -> bool:
+    v = sorted(vals)
+    return all(b - a >= max(rel * max(abs(b), 1e-9), abs_min) for a, b in zip(v, v[1:]))
 
 
 _CHECK_TMPL = """{model}
@@ -58,7 +101,7 @@ print(expected_key)
 
 
 def load_model(model: str) -> dict[str, Any]:
-    ns: dict[str, Any] = {"Fraction": Fraction, "F": Fraction, "math": math, "num": num}
+    ns: dict[str, Any] = {"__name__": "model", "Fraction": Fraction, "F": Fraction, "math": math, "num": num}
     exec(compile(model, "<model>", "exec"), ns)  # noqa: S102 — исполняется только собственный код генератора
     return ns
 
@@ -143,30 +186,30 @@ def numeric_variant(
     sample: Callable[[random.Random], dict[str, Any]],
     model: str,
     stem: Callable[[dict[str, Any], Any], str],
-    explain: Callable[[dict[str, Any], Any, list[str]], str],
+    explain: Callable[[dict[str, Any], Any, Any], str],
     code: Callable[[dict[str, Any], Any], str | None] | None = None,
     accept: Callable[[dict[str, Any], dict[str, Any]], bool] | None = None,
     rel: float = 0.04,
     abs_min: float = 1.0,
     tries: int = 800,
-    note: str = "Ответ и ловушки проверяются программой-моделью предметной области (plus перебор сетки для обратных задач).",
+    note: str = SHORT_NOTE,
     trap_desc: dict[str, str] | None = None,
-    n_above_choices: tuple[int, ...] = (0, 1, 2, 3),
+    n_above_choices: Sequence[int] = (0, 1, 2, 3),
     n_distractors: int = 3,
     ns_cached: dict[str, Any] | None = None,
     stratified: bool = False,
 ) -> Variant:
     """Собрать расчётный вариант с гарантированным разбросом дистракторов и проверкой исполнением."""
     rng = make_rng(family_id, seed)
-    ctx = contexts[seed % len(contexts)]
+    ctx = contexts[seed % len(contexts)] if len(contexts) >= 4 else rng.choice(list(contexts))
     ns = ns_cached if ns_cached is not None else load_model(model)
     fmt = ns["fmt"]
-    brute_fn = ns.get("brute")
     fam_h = int.from_bytes(hashlib.sha256(family_id.encode("utf-8")).digest()[:4], "big")
+    choices_tup = tuple(n_above_choices)
     if stratified:
-        target_na = n_above_choices[(fam_h + seed) % len(n_above_choices)]
+        target_na = choices_tup[(fam_h + seed) % len(choices_tup)]
     else:
-        target_na = rng.choice(n_above_choices)
+        target_na = choices_tup[seed % len(choices_tup)]
     trap_keys = sorted(trap_desc) if trap_desc else []
     trap_first = trap_keys[seed % len(trap_keys)] if trap_keys else None
 
@@ -189,7 +232,7 @@ def numeric_variant(
         if picked is not None:
             break
     else:
-        order = list(n_above_choices)
+        order = list(choices_tup)
         rng.shuffle(order)
         for _ in range(tries):
             P = sample(rng)
@@ -214,6 +257,8 @@ def numeric_variant(
 
     key_str = fmt(ans)
     trap_names = [n for n, _ in picked]
+    raw_all = ns["traps"](P)
+    trap_dict = {n: raw_all[n] for n in trap_names if n in raw_all}
     if stratified:
         n_tot = n_distractors + 1
         key_idx = (fam_h // 7 + seed * 2) % n_tot
@@ -229,14 +274,17 @@ def numeric_variant(
                 di += 1
         key = LETTERS[key_idx]
     else:
-        opts, key = make_options(rng, (key_str, None), [(s, None) for _, s in picked])
+        opts, key = place(family_id, seed, rng, (key_str, None), [(s, None) for _, s in picked])
     shown = {o.id: o.text for o in opts}
     prog = _CHECK_TMPL.format(model=model.strip(), params=repr(P), options=repr(shown), key=key)
     chk = Check(name="model_and_traps", runner="python", program=prog, expect="stdout_equals",
                 expected_stdout=key, embeds_display_code=False)
-    ctx_name = ctx[0] if isinstance(ctx, tuple) else str(ctx)
+    ctx_name = ctx if isinstance(ctx, str) else ctx[0]
     code_str = code(P, ctx) if code is not None else None
-    expl = explain(P, ans, trap_names)
+    try:
+        expl = explain(P, ans, trap_dict if not stratified else trap_names)
+    except Exception:
+        expl = explain(P, ans, trap_names)
     if trap_desc:
         td = "; ".join(f"{n} — {trap_desc[n]}" for n in trap_names if n in trap_desc)
         if td:
@@ -250,81 +298,129 @@ def numeric_variant(
         context=ctx_name,
         verification="execution",
         checks=[chk],
+        language="text",
         display_code_note=note,
-        params={**P, "n_above": n_above, "traps": trap_names},
+        params={**P, "answer": float(ans) if isinstance(ans, Fraction) else ans, "n_above": n_above, "traps": trap_names},
     )
+
+
+def choice_variant(
+    family_id: str,
+    seed: int,
+    *,
+    contexts: Sequence[Any],
+    alts: dict[str, str],
+    sample: Callable[[Any], dict],
+    model: str,
+    stem: Callable[[dict, Any], str],
+    explain: Callable[[dict, str, dict], str],
+    trap_first: str | None = None,
+    note: str = SHORT_NOTE,
+    trap_desc: dict[str, str] | None = None,
+) -> Any:
+    rng = make_rng(family_id, seed)
+    ctx = contexts[seed % len(contexts)] if len(contexts) >= 4 else rng.choice(list(contexts))
+    order = list(alts)
+    target = order[(seed * 7 + zlib.crc32(family_id.encode())) % len(order)]
+    ns = load_model(model)
+
+    def ok(P):
+        b = ns["best"](P)
+        if b != target:
+            return None
+        tr = ns["traps"](P)
+        if sum(1 for v in tr.values() if v != b) < 2:
+            return None
+        return b, tr
+
+    P, (b, tr) = search(rng, sample, ok)
+    opts, key = place(family_id, seed, rng, (alts[b], None), [(alts[m], None) for m in order if m != b])
+    shown = {o.id: o.text for o in opts}
+    labels = repr(alts)
+    checks = [Check(name="model", runner="python",
+                    program=_letter_program(model + f"\nLABELS = {labels}\n", P, shown, "LABELS[best(P)]"),
+                    expect="stdout_equals", expected_stdout=key, embeds_display_code=False)]
+    wrong = [k for k, v in sorted(tr.items()) if v != b]
+    tname = trap_first if trap_first in wrong else wrong[0]
+    checks.append(Check(name=f"trap:{tname}", runner="python",
+                        program=_letter_program(model + f"\nLABELS = {labels}\n", P, shown,
+                                                f"LABELS[traps(P)[{tname!r}]]"),
+                        expect="stdout_differs", expected_stdout=key, embeds_display_code=False))
+    expl = explain(P, b, tr)
+    if trap_desc:
+        expl += " Ловушки: " + "; ".join(f"{trap_desc[n]} — «{alts[m]}»" for n, m in sorted(tr.items()) if m != b) + "."
+    ak = AnswerKey(kind="option", value=key, explanation=expl)
+    params = {k: v for k, v in P.items()}
+    params.update({"best": b, "traps": tr})
+    return build_variant(family_id, seed, stem=stem(P, ctx), options=opts, answer_key=ak,
+                         context=ctx if isinstance(ctx, str) else ctx[0], verification="execution",
+                         checks=checks, language="text", display_code_note=note, params=params)
+
+
+def run_py(program: str) -> str:
+    buf = io.StringIO()
+    ns: dict[str, Any] = {"__name__": "__main__"}
+    try:
+        with contextlib.redirect_stdout(buf):
+            exec(compile(program, "<fix>", "exec"), ns)  # noqa: S102 — наш код и показанные варианты
+    except Exception as exc:  # noqa: BLE001 — падение = «другой вывод»
+        return buf.getvalue().strip() + f"\nERROR {type(exc).__name__}"
+    return buf.getvalue().strip()
+
+
+def run_sql(setup: str, query: str) -> str:
+    con = sqlite3.connect(":memory:")
+    try:
+        con.executescript(setup)
+        rows = con.execute(query).fetchall()
+    except sqlite3.Error as exc:
+        return f"ERROR: {exc}"
+    finally:
+        con.close()
+    return "\n".join("|".join("NULL" if v is None else str(v) for v in r) for r in rows)
 
 
 def codefix_variant(
     family_id: str,
     seed: int,
+    rng: Any,
     *,
-    contexts: Sequence[Any],
+    ctx: str,
+    stem: str,
+    runner: str,
+    buggy: str,
+    good: str,
+    wrongs: Sequence[tuple[str, str]],
+    label: str,
+    harness: Callable[[str], str] | None,
+    setup: str = "",
+    explanation: str,
     defect_type: str,
-    build: Callable[[random.Random, Any], dict[str, Any]],
-) -> Variant:
-    """Собрать вариант ``find_bug`` или ``choose_fix`` с проверкой всех патчей в песочнице."""
-    from assessment_bank.registry import get_spec
+    params: dict[str, Any],
+    language: str,
+) -> Any:
+    """runner python: harness(code) -> программа (код дословно + тест, печать результата); sqlite: setup + запрос."""
+    def out(code):
+        return run_py(harness(code)) if runner == "python" else run_sql(setup, code)
 
-    spec = get_spec(family_id)
-    rng = make_rng(family_id, seed)
-    ctx = contexts[seed % len(contexts)]
-    d = build(rng, ctx)
-    buggy: str = d["buggy"].strip("\n")
-    fixed: str = d["fixed"].strip("\n")
-    tests: str = d["tests"]
-    runner: str = d.get("runner", "python")
-    harness: Callable[[str, str], str] = d.get("harness", py_harness)
-    ch = changed_lines(buggy, fixed)
-    assert len(ch) == 1, f"{family_id}: changed_lines={ch}"
-    line_no = next(iter(ch))
-    ctx_name = ctx[0] if isinstance(ctx, tuple) else str(ctx)
-
-    if spec.format == "find_bug":
-        checks = [
-            Check(name="buggy_fails", runner=runner, program=harness(buggy, tests), expect="fail"),
-            Check(name="fixed_passes", runner=runner, program=harness(fixed, tests), expect="pass",
-                  embeds_display_code=False),
-        ]
-        return build_variant(
-            family_id, seed,
-            stem=d["stem"],
-            code=buggy,
-            answer_key=AnswerKey(kind="line", value=line_no, explanation=d["explain"]),
-            context=ctx_name,
-            verification="execution",
-            checks=checks,
-            defect_type=defect_type,
-            params={"fixed_code": fixed, "bug_line": line_no, **d.get("params", {})},
-        )
-
-    label = d.get("label", f"Заменить строку {line_no} на:")
-    opts, key = make_options(
-        rng,
-        (label, d["fix_line"]),
-        [(label, bad) for bad in d["bad_lines"]],
-    )
-    blines = buggy.splitlines()
-    checks = []
+    ref = out(good)
+    if not ref or "ERROR" in ref:
+        raise RuntimeError(f"эталон не исполняется: {ref[:200]}")
+    if out(buggy) == ref:
+        raise RuntimeError("показанный код совпадает с эталоном по выводу")
+    for name, w in wrongs:
+        if out(w) == ref:
+            raise RuntimeError(f"неверная замена {name} даёт вывод эталона")
+    opts, key = place(family_id, seed, rng, (label, good), [(label, w) for _n, w in wrongs])
+    files = {"setup.sql": setup} if runner == "sqlite" else {}
+    prog = (lambda c: c) if runner == "sqlite" else harness
+    checks = [Check(name="buggy_differs", runner=runner, program=prog(buggy), files=files,
+                    expect="stdout_differs", expected_stdout=ref)]
     for o in opts:
-        patched = "\n".join(blines[: line_no - 1] + [o.code or ""] + blines[line_no:])
-        checks.append(Check(
-            name=f"option:{o.id}",
-            runner=runner,
-            program=harness(patched, tests),
-            expect="pass" if o.id == key else "fail",
-            embeds_display_code=False,
-        ))
-    return build_variant(
-        family_id, seed,
-        stem=d["stem"],
-        code=buggy,
-        options=opts,
-        answer_key=AnswerKey(kind="option", value=key, explanation=d["explain"]),
-        context=ctx_name,
-        verification="execution",
-        checks=checks,
-        defect_type=defect_type,
-        display_code_note="Каждый вариант подставляется в строку с дефектом и прогоняется тестами в песочнице.",
-        params={"bug_line": line_no, **d.get("params", {})},
-    )
+        checks.append(Check(name=f"option:{o.id}", runner=runner, program=prog(o.code), files=files,
+                            embeds_display_code=False,
+                            expect="stdout_equals" if o.id == key else "stdout_differs", expected_stdout=ref))
+    ak = AnswerKey(kind="option", value=key, explanation=explanation)
+    return build_variant(family_id, seed, stem=stem, code=buggy, options=opts, answer_key=ak, context=ctx,
+                         verification="execution", checks=checks, defect_type=defect_type, language=language,
+                         params={**params, "wrongs": [n for n, _ in wrongs]})

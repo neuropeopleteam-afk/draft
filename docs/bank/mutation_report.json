@@ -1,0 +1,42 @@
+{
+  "seed": 1,
+  "n_code_families": 493,
+  "n_ref_passed": 493,
+  "ref_pass_rate": 1.0,
+  "n_mutants": 1972,
+  "n_killed": 1972,
+  "mutation_kill_rate": 1.0,
+  "by_format": {
+    "predict_output": {
+      "families": 125,
+      "mutants": 500,
+      "killed": 500,
+      "kill_rate": 1.0
+    },
+    "find_bug": {
+      "families": 127,
+      "mutants": 508,
+      "killed": 508,
+      "kill_rate": 1.0
+    },
+    "choose_fix": {
+      "families": 139,
+      "mutants": 556,
+      "killed": 556,
+      "kill_rate": 1.0
+    },
+    "open_book_3step": {
+      "families": 62,
+      "mutants": 248,
+      "killed": 248,
+      "kill_rate": 1.0
+    },
+    "incident_sim": {
+      "families": 40,
+      "mutants": 160,
+      "killed": 160,
+      "kill_rate": 1.0
+    }
+  },
+  "elapsed_s": 50.72
+}
