@@ -1,30 +1,56 @@
 family_id: backend.reliability.retry_deadline_ob3
 title: Повторы с экспоненциальной задержкой и общим дедлайном (открытая книга)
 direction: backend
-skills: [python, reliability, retries, timeouts, distributed_systems]
-target_grades: [middle, senior]
+skills:
+- python
+- reliability
+- retries
+- timeouts
+- distributed_systems
+target_grades:
+- middle
+- senior
 format: open_book_3step
 language: python
 invariants:
-  code_lines: [17, 17]
-  operations: [11, 11]
+  code_lines:
+  - 17
+  - 17
+  operations:
+  - 11
+  - 11
   defect_type: retry_policy
   n_options: 4
   extra:
-    subtypes: [off_by_one, retries_permanent, ignores_delay, uncapped_timeout]
-    step3_conditions: [storm, non_idempotent, nested, propagation]
+    subtypes:
+    - off_by_one
+    - retries_permanent
+    - ignores_delay
+    - uncapped_timeout
+    step3_conditions:
+    - storm
+    - non_idempotent
+    - nested
+    - propagation
 time_limit_s: 900
 canary: false
 prior_difficulty:
   b: 0.7
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.4
-  step_offsets: [-0.3, 0.1, 0.9]
-  basis: "17 строк, 11 операций, пять требований к политике повторов; шаг 1 требует трассировки подменяемых часов по сценарию ответов, шаг 2 — четыре функции, отличающиеся одной строкой; четыре подтипа дефекта разной заметности → σ выше; шаг 3 — шторм повторов, неидемпотентный POST, вложенные повторы или передача дедлайна; Middle/Senior"
+  step_offsets:
+  - -0.3
+  - 0.1
+  - 0.9
+  basis: Априорная, до калибровки на людях (a = 1,3). 17 строк, 11 операций, пять требований к политике повторов;
+    шаг 1 требует трассировки подменяемых часов по сценарию ответов, шаг 2 — четыре функции, отличающиеся одной
+    строкой; четыре подтипа дефекта разной заметности → σ выше; шаг 3 — шторм повторов, неидемпотентный POST, вложенные
+    повторы или передача дедлайна; Middle/Senior
 generator: assessment_bank.families.backend.retry_deadline_ob3
 version: 1
-description: >
-  call_with_retry с подменяемыми часами и одной ошибкой политики (лишняя попытка, повтор
-  постоянной ошибки, дедлайн без учёта задержки, timeout без остатка бюджета). Шаг 1 —
-  сценарий ответов, нарушающий требования; шаг 2 — исправленная функция; шаг 3 —
-  поведение в системе: шторм повторов, идемпотентность, вложенные повторы, дедлайны.
+description: 'call_with_retry с подменяемыми часами и одной ошибкой политики (лишняя попытка, повтор постоянной
+  ошибки, дедлайн без учёта задержки, timeout без остатка бюджета). Шаг 1 — сценарий ответов, нарушающий требования;
+  шаг 2 — исправленная функция; шаг 3 — поведение в системе: шторм повторов, идемпотентность, вложенные повторы,
+  дедлайны.
+
+  '

@@ -1,25 +1,41 @@
 family_id: qa.load.slo_capacity_mcq
 title: Интерпретация нагрузочного теста — запас по SLO и закон Литтла
 direction: qa
-skills: [performance_testing, load_testing, slo, percentiles, littles_law]
-target_grades: [middle, senior]
+skills:
+- performance_testing
+- load_testing
+- slo
+- percentiles
+- littles_law
+target_grades:
+- middle
+- senior
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    kinds: [capacity, little]
-    capacity_distractors: [p50, no_errors, max_rps, p99]
+    kinds:
+    - capacity
+    - little
+    capacity_distractors:
+    - p50
+    - no_errors
+    - max_rps
+    - p99
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.4
   a: 1.0
   sigma_variant: 0.35
-  basis: "Таблица из 7 ступеней с ловушками (медиана, быстрые отказы 503 с «улучшенным» p95, пик RPS за пределами SLO) или расчёт по закону Литтла со средним и p95; требует опыта чтения отчётов нагрузочного тестирования (Middle/Senior)"
+  basis: Априорная, до калибровки на людях (a = 1,0). Таблица из 7 ступеней с ловушками (медиана, быстрые отказы
+    503 с «улучшенным» p95, пик RPS за пределами SLO) или расчёт по закону Литтла со средним и p95; требует опыта
+    чтения отчётов нагрузочного тестирования (Middle/Senior)
 generator: assessment_bank.families.qa.load_slo_capacity_mcq
 version: 1
-description: >
-  По результатам ступенчатого нагрузочного теста найти максимальную нагрузку в рамках SLO
-  или по закону Литтла оценить число виртуальных пользователей / одновременных запросов.
-  Ключ проверяется исполнением расчёта по показанным числам.
+description: 'По результатам ступенчатого нагрузочного теста найти максимальную нагрузку в рамках SLO или по закону
+  Литтла оценить число виртуальных пользователей / одновременных запросов. Ключ проверяется исполнением расчёта
+  по показанным числам.
+
+  '

@@ -1,25 +1,39 @@
 family_id: data_eng.orch.trigger_rule_output
 title: Оркестрация (Airflow) — состояния задач после падения одной (trigger_rule)
 direction: data_eng
-skills: [airflow, orchestration, dags, data_pipelines]
-target_grades: [junior, middle]
+skills:
+- airflow
+- orchestration
+- dags
+- data_pipelines
+target_grades:
+- junior
+- middle
 format: predict_output
 language: python
 invariants:
-  code_lines: [12, 20]
+  code_lines:
+  - 12
+  - 20
   extra:
     subtype: trigger_rule_propagation
-    tasks: [5, 7]
+    tasks:
+    - 5
+    - 7
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.3
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.35
-  basis: "DAG из 5–7 задач BashOperator с 1–2 зависимостями и 1–3 особыми правилами (all_done, one_failed, none_failed); одна задача падает, в части вариантов ещё одна пропускает себя; в каждом варианте есть upstream_failed, сработавшее особое правило и ловушка (one_failed → skipped, none_failed после skipped). Нужно различать skipped и upstream_failed. Граница Junior/Middle, ближе к Middle"
+  basis: Априорная, до калибровки на людях (a = 1,3). DAG из 5–7 задач BashOperator с 1–2 зависимостями и 1–3 особыми
+    правилами (all_done, one_failed, none_failed); одна задача падает, в части вариантов ещё одна пропускает себя;
+    в каждом варианте есть upstream_failed, сработавшее особое правило и ловушка (one_failed → skipped, none_failed
+    после skipped). Нужно различать skipped и upstream_failed. Граница Junior/Middle, ближе к Middle
 generator: assessment_bank.families.data_eng.orch_trigger_rule_output
 version: 1
-description: >
-  Предсказать состояние каждой задачи DAG Airflow (success / failed / skipped / upstream_failed) после падения
-  одной задачи. Ключ — расчёт генератора; проверка — исполнение показанного кода DAG с заглушками airflow и моделью
-  правил запуска.
+description: 'Предсказать состояние каждой задачи DAG Airflow (success / failed / skipped / upstream_failed) после
+  падения одной задачи. Ключ — расчёт генератора; проверка — исполнение показанного кода DAG с заглушками airflow
+  и моделью правил запуска.
+
+  '

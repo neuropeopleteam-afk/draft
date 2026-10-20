@@ -1,28 +1,45 @@
 family_id: backend.java.session_registry_leak_fix
 title: Java — утечка памяти через долгоживущую коллекцию (выбор исправления)
 direction: backend
-skills: [java, java_memory, java_collections]
-target_grades: [junior, middle]
+skills:
+- java
+- java_memory
+- java_collections
+target_grades:
+- junior
+- middle
 format: choose_fix
 language: java
 invariants:
-  code_lines: [32, 42]
-  operations: [23, 31]
+  code_lines:
+  - 32
+  - 42
+  operations:
+  - 23
+  - 31
   n_options: 4
   defect_type: collection_leak_get_not_remove
   extra:
     subtype: get_instead_of_remove
-    distractors: [set_local_null, remove_by_object, weak]
+    distractors:
+    - set_local_null
+    - remove_by_object
+    - weak
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.0
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.25
-  basis: "Версия 2 (08.10, было find_bug с неоднозначным ключом: p 0,03). Два класса, 32–42 значащие строки; симптом дан (OOM, объекты с флагом false удерживаются полем реестра); состав вариантов фиксирован: remove(id) против локального null, remove по объекту (Map.remove(Object)) и WeakHashMap (значение держит свой ключ); нужно понимать, что достижимые от долгоживущей коллекции объекты GC не собирает; ключ однозначен и проверяется исполнением на JVM; Junior/Middle"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Версия 2 (08.10, было find_bug с неоднозначным ключом: p
+    0,03). Два класса, 32–42 значащие строки; симптом дан (OOM, объекты с флагом false удерживаются полем реестра);
+    состав вариантов фиксирован: remove(id) против локального null, remove по объекту (Map.remove(Object)) и WeakHashMap
+    (значение держит свой ключ); нужно понимать, что достижимые от долгоживущей коллекции объекты GC не собирает;
+    ключ однозначен и проверяется исполнением на JVM; Junior/Middle'
 generator: assessment_bank.families.backend.java_session_registry_leak_fix
 version: 2
-description: >
-  Выбрать исправление поля и метода закрытия реестра, при котором закрытые объекты исчезают из Map. Проверка
-  исполнением (javac + JVM): половина объектов закрыта — в реестре остаётся вторая половина, затем реестр
+description: 'Выбрать исправление поля и метода закрытия реестра, при котором закрытые объекты исчезают из Map.
+  Проверка исполнением (javac + JVM): половина объектов закрыта — в реестре остаётся вторая половина, затем реестр
   пуст и все объекты инвалидированы; для WeakHashMap подтверждено, что записи не очищаются после System.gc().
+
+  '

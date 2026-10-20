@@ -1,13 +1,23 @@
 family_id: data_eng.sql.left_join_filter_bug
 title: SQL — условие на правую таблицу в WHERE ломает LEFT JOIN
 direction: data_eng
-skills: [sql, joins, null_semantics, reporting]
-target_grades: [junior, middle]
+skills:
+- sql
+- joins
+- null_semantics
+- reporting
+target_grades:
+- junior
+- middle
 format: find_bug
 language: sql
 invariants:
-  code_lines: [6, 8]
-  operations: [6, 6]
+  code_lines:
+  - 6
+  - 8
+  operations:
+  - 6
+  - 6
   defect_type: outer_join_filter
   extra:
     subtype: where_on_right_table
@@ -15,11 +25,14 @@ time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.3
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Запрос 6–8 строк: LEFT JOIN, условие на правую таблицу в WHERE (4 вида условий), COUNT(r.id) или COALESCE(SUM); симптом «пропадают строки» дан; ловушки-«не ошибки» — COUNT(r.id) и COALESCE. Граница Junior/Middle"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Запрос 6–8 строк: LEFT JOIN, условие на правую таблицу в
+    WHERE (4 вида условий), COUNT(r.id) или COALESCE(SUM); симптом «пропадают строки» дан; ловушки-«не ошибки» —
+    COUNT(r.id) и COALESCE. Граница Junior/Middle'
 generator: assessment_bank.families.data_eng.sql_left_join_filter_bug
 version: 2
-description: >
-  Найти строку запроса, из-за которой LEFT JOIN теряет записи без совпадений. Ключ — исполнение показанного
+description: 'Найти строку запроса, из-за которой LEFT JOIN теряет записи без совпадений. Ключ — исполнение показанного
   запроса в sqlite: дефектный теряет строки, исправленный совпадает с эталоном.
+
+  '

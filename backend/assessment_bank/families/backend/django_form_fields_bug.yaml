@@ -1,13 +1,23 @@
 family_id: backend.django.form_fields_bug
 title: Безопасность форм Django — ModelForm с fields = "__all__"
 direction: backend
-skills: [django, django_forms, mass_assignment, python]
-target_grades: [junior, middle]
+skills:
+- django
+- django_forms
+- mass_assignment
+- python
+target_grades:
+- junior
+- middle
 format: find_bug
 language: python
 invariants:
-  code_lines: [17, 23]
-  operations: [11, 15]
+  code_lines:
+  - 17
+  - 23
+  operations:
+  - 11
+  - 15
   defect_type: mass_assignment
   extra:
     subtype: fields_all
@@ -15,12 +25,14 @@ time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.5
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.25
-  basis: "17–23 строки: модель с двумя служебными полями, ModelForm, функция сохранения; симптом дан (пользователи меняют служебные поля через POST); порядок опций Meta и служебные строки варьируются; Junior/Middle"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). 17–23 строки: модель с двумя служебными полями, ModelForm,
+    функция сохранения; симптом дан (пользователи меняют служебные поля через POST); порядок опций Meta и служебные
+    строки варьируются; Junior/Middle'
 generator: assessment_bank.families.backend.django_form_fields_bug
 version: 1
-description: >
-  Найти строку, из-за которой ModelForm принимает служебные поля из POST. Проверка исполнением
-  настоящего Django: атака со служебными полями блокируется, обычное редактирование проходит и не
-  сбрасывает флаги.
+description: 'Найти строку, из-за которой ModelForm принимает служебные поля из POST. Проверка исполнением настоящего
+  Django: атака со служебными полями блокируется, обычное редактирование проходит и не сбрасывает флаги.
+
+  '

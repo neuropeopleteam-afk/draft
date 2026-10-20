@@ -1,26 +1,44 @@
 family_id: common.perf.fanout_tail_mcq
 title: Fan-out и хвост задержки — доля медленных запросов при ожидании всех бэкендов
 direction: common
-skills: [performance, latency, probability, distributed_systems, capacity_planning]
-target_grades: [senior]
+skills:
+- performance
+- latency
+- probability
+- distributed_systems
+- capacity_planning
+target_grades:
+- senior
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    fanout: [30, 800]
-    percentiles: ["99", "99,5", "99,9"]
-    distractors: [same_as_backend, union_bound, complement]
+    fanout:
+    - 30
+    - 800
+    percentiles:
+    - '99'
+    - 99,5
+    - 99,9
+    distractors:
+    - same_as_backend
+    - union_bound
+    - complement
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: 0.7
-  a: 1.1
+  a: 1.0
   sigma_variant: 0.25
-  basis: "Без кода; нужно перейти от перцентиля бэкенда к вероятности «хотя бы один из N медленный» = 1 − (1 − q)^N (усиление хвоста при fan-out, Dean & Barroso «The Tail at Scale»). N·q в диапазоне 0,3–0,9, поэтому оценка суммой заметно расходится с вероятностью; дистракторы — три типичные ошибки одной числовой формы, верный ответ не крайний. Один подтип, варьируются контекст, N, перцентиль; Senior"
+  basis: Априорная, до калибровки на людях (a = 1,0). Без кода; нужно перейти от перцентиля бэкенда к вероятности
+    «хотя бы один из N медленный» = 1 − (1 − q)^N (усиление хвоста при fan-out, Dean & Barroso «The Tail at Scale»).
+    N·q в диапазоне 0,3–0,9, поэтому оценка суммой заметно расходится с вероятностью; дистракторы — три типичные
+    ошибки одной числовой формы, верный ответ не крайний. Один подтип, варьируются контекст, N, перцентиль; Senior
 generator: assessment_bank.families.common.perf_fanout_tail_mcq
 version: 1
-description: >
-  Запрос рассылается на N независимых бэкендов и ждёт всех; у каждого p99 (p99,5, p99,9)
-  задержки равен L. Какая доля запросов медленнее L? Ключ проверяется исполнением: точный
-  расчёт вероятности (Fraction) и сопоставление с вариантами.
+description: 'Запрос рассылается на N независимых бэкендов и ждёт всех; у каждого p99 (p99,5, p99,9) задержки равен
+  L. Какая доля запросов медленнее L? Ключ проверяется исполнением: точный расчёт вероятности (Fraction) и сопоставление
+  с вариантами.
+
+  '

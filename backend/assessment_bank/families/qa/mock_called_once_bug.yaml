@@ -1,24 +1,39 @@
 family_id: qa.mock.called_once_bug
 title: Тестирование — проверка мока без числа вызовов
 direction: qa
-skills: [unittest_mock, test_review, false_positive, python]
-target_grades: [junior, middle]
+skills:
+- unittest_mock
+- test_review
+- false_positive
+- python
+target_grades:
+- junior
+- middle
 format: find_bug
 language: python
 invariants:
-  code_lines: [16, 16]
-  operations: [5, 40]
+  code_lines:
+  - 16
+  - 16
+  operations:
+  - 5
+  - 40
   defect_type: mock_call_count_unchecked
-  extra: {subtype: last_call_only_assert}
+  extra:
+    subtype: last_call_only_assert
 time_limit_s: 210
 canary: false
 prior_difficulty:
   b: 0.2
   a: 1.3
   sigma_variant: 0.25
-  basis: "Порог Junior/Middle: три теста в переменном порядке (16 строк); одна проверка смотрит только последний вызов мока (assert_called_with / call_args), регрессия — повторная отправка события; ловушки — настоящие assert_called_once_with, assert_not_called, pytest.raises. Исполняемый ключ на правильной реализации и мутанте, один подтип."
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Порог Junior/Middle: три теста в переменном порядке (16 строк);
+    одна проверка смотрит только последний вызов мока (assert_called_with / call_args), регрессия — повторная отправка
+    события; ловушки — настоящие assert_called_once_with, assert_not_called, pytest.raises. Исполняемый ключ на
+    правильной реализации и мутанте, один подтип.'
 generator: assessment_bank.families.qa.mock_called_once_bug
 version: 1
-description: >
-  Добор 10.10 (порог J/M, qa): проверка мока не учитывает число вызовов — повторная отправка события не поймана.
-  Тесты исполняются на правильной реализации и мутанте до и после исправления.
+description: 'Добор 10.10 (порог J/M, qa): проверка мока не учитывает число вызовов — повторная отправка события
+  не поймана. Тесты исполняются на правильной реализации и мутанте до и после исправления.
+
+  '

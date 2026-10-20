@@ -1,23 +1,33 @@
 family_id: analyst.principal.payback_cohort_mcq
 title: Месяц окупаемости привлечения клиента по кривой удержания когорты (Principal, короткое)
 direction: analyst
-skills: [product_metrics, product_analytics, data_analysis, statistics]
-target_grades: [principal]
+skills:
+- product_metrics
+- product_analytics
+- data_analysis
+- statistics
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    distractors: "три из семи моделей ошибок: no_churn, d_from_start, r1_flat (ниже ключа); r1_compound, d_twice, r1_ratio, r1_first (выше); меньше ключа 1–3 равновероятно"
+    distractors: 'три из семи моделей ошибок: no_churn, d_from_start, r1_flat (ниже ключа); r1_compound, d_twice,
+      r1_ratio, r1_first (выше); меньше ключа 1–3 равновероятно'
 time_limit_s: 420
 canary: false
 prior_difficulty:
   b: 2.5
-  a: 1.3
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: окупаемость канала привлечения по кривой удержания когорты с резким оттоком первого месяца и геометрическим хвостом. Senior и Lead обычно считают без оттока, с одним средним удержанием или неверно стыкуют две части кривой; Principal строит накопленную маржу помесячно. Ловушки с обеих сторон от ключа"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Короткое расчётное задание у границы Lead/Principal: окупаемость
+    канала привлечения по кривой удержания когорты с резким оттоком первого месяца и геометрическим хвостом. Senior
+    и Lead обычно считают без оттока, с одним средним удержанием или неверно стыкуют две части кривой; Principal
+    строит накопленную маржу помесячно. Ловушки с обеих сторон от ключа'
 generator: assessment_bank.families.analyst.principal_payback_cohort_mcq
 version: 1
-description: >
-  Первый месяц, когда накопленная маржа когорты покрывает стоимость привлечения, при удержании «r1 во втором
-  месяце, затем доля d от прошлого месяца». Ключ — программа: помесячная имитация когорты точными дробями.
+description: 'Первый месяц, когда накопленная маржа когорты покрывает стоимость привлечения, при удержании «r1 во
+  втором месяце, затем доля d от прошлого месяца». Ключ — программа: помесячная имитация когорты точными дробями.
+
+  '

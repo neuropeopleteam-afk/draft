@@ -1,13 +1,22 @@
 family_id: data_eng.etl.csv_parse_bug
 title: ETL — разбор CSV через split(",") при полях с запятыми
 direction: data_eng
-skills: [etl, python, data_validation]
-target_grades: [intern, junior]
+skills:
+- etl
+- python
+- data_validation
+target_grades:
+- intern
+- junior
 format: find_bug
 language: python
 invariants:
-  code_lines: [14, 17]
-  operations: [10, 14]
+  code_lines:
+  - 14
+  - 17
+  operations:
+  - 10
+  - 14
   defect_type: naive_csv_split
   extra:
     subtype: quoted_comma
@@ -15,10 +24,13 @@ time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.8
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Код 14–17 строк: заголовок разобран csv.reader, строки — split(\",\"); симптом и пример поля с запятой даны в условии. Junior, ближе к Intern"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Код 14–17 строк: заголовок разобран csv.reader, строки —
+    split(","); симптом и пример поля с запятой даны в условии. Junior, ближе к Intern'
 generator: assessment_bank.families.data_eng.etl_csv_parse_bug
 version: 1
-description: >
-  Найти строку, где CSV разбирается без учёта кавычек. Ключ — исполнение показанного кода в песочнице Python.
+description: 'Найти строку, где CSV разбирается без учёта кавычек. Ключ — исполнение показанного кода в песочнице
+  Python.
+
+  '

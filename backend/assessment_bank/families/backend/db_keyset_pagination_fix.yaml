@@ -1,27 +1,46 @@
 family_id: backend.db.keyset_pagination_fix
 title: Курсорная пагинация — одинаковые метки времени и сравнение пар
 direction: backend
-skills: [python, sql, pagination, api, indexes]
-target_grades: [middle, senior]
+skills:
+- python
+- sql
+- pagination
+- api
+- indexes
+target_grades:
+- middle
+- senior
 format: choose_fix
 language: python
 invariants:
-  code_lines: [9, 9]
-  operations: [6, 6]
+  code_lines:
+  - 9
+  - 9
+  operations:
+  - 6
+  - 6
   defect_type: keyset_tiebreak
   n_options: 4
   extra:
-    distractors: [ge, and_ids, id_only, swapped]
+    distractors:
+    - ge
+    - and_ids
+    - id_only
+    - swapped
 time_limit_s: 420
 canary: false
 prior_difficulty:
   b: 0.6
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.3
-  basis: "9 строк, 6 операций; четыре варианта функции отличаются только условием WHERE и порядком параметров; нужно согласовать условие курсора с ORDER BY при неуникальной метке времени и немонотонном id, отличить row values от покомпонентного AND; данные гарантируют ошибку каждого дистрактора; Middle/Senior"
+  basis: Априорная, до калибровки на людях (a = 1,3). 9 строк, 6 операций; четыре варианта функции отличаются только
+    условием WHERE и порядком параметров; нужно согласовать условие курсора с ORDER BY при неуникальной метке времени
+    и немонотонном id, отличить row values от покомпонентного AND; данные гарантируют ошибку каждого дистрактора;
+    Middle/Senior
 generator: assessment_bank.families.backend.db_keyset_pagination_fix
 version: 1
-description: >
-  Keyset-пагинация по (created_at, id) теряет записи с одинаковой меткой времени. Кандидат
-  выбирает условие курсора, при котором обход всех страниц выдаёт каждую запись ровно один
-  раз. Ключ проверяется исполнением в sqlite3 и моделью выдачи на Python.
+description: 'Keyset-пагинация по (created_at, id) теряет записи с одинаковой меткой времени. Кандидат выбирает
+  условие курсора, при котором обход всех страниц выдаёт каждую запись ровно один раз. Ключ проверяется исполнением
+  в sqlite3 и моделью выдачи на Python.
+
+  '

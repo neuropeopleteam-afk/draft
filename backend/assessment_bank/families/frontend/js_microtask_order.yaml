@@ -1,27 +1,53 @@
 family_id: frontend.js.microtask_order
 title: Цикл событий — await, цепочки then, queueMicrotask и таймеры
 direction: frontend
-skills: [javascript, event_loop, promises, async_await]
-target_grades: [middle, senior]
+skills:
+- javascript
+- event_loop
+- promises
+- async_await
+target_grades:
+- middle
+- senior
 format: mcq_concept
 language: javascript
 invariants:
-  code_lines: [12, 18]
-  operations: [11, 17]
+  code_lines:
+  - 12
+  - 18
+  operations:
+  - 11
+  - 17
   n_options: 4
   extra:
-    statements: [async, then2, timeout, timeout_micro, log, qm, executor, then1]
-    distractor_models: [timers_first, chain_eager, await_sync, executor_async, qm_macro, source_order]
+    statements:
+    - async
+    - then2
+    - timeout
+    - timeout_micro
+    - log
+    - qm
+    - executor
+    - then1
+    distractor_models:
+    - timers_first
+    - chain_eager
+    - await_sync
+    - executor_async
+    - qm_macro
+    - source_order
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.6
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.35
-  basis: "5–6 инструкций, 8–10 выводов: async-функция с await, цепочка из двух then, таймер (иногда с вложенной микрозадачей); дистракторы — типичные неверные модели цикла событий; Middle/Senior"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). 5–6 инструкций, 8–10 выводов: async-функция с await, цепочка
+    из двух then, таймер (иногда с вложенной микрозадачей); дистракторы — типичные неверные модели цикла событий;
+    Middle/Senior'
 generator: assessment_bank.families.frontend.js_microtask_order
 version: 1
-description: >
-  Выбрать порядок вывода. Правильный порядок и дистракторы вычисляет модель цикла событий
-  (верная и «ошибочные ментальные модели»), ключ сверяется с исполнением показанного кода
-  в Node.js.
+description: 'Выбрать порядок вывода. Правильный порядок и дистракторы вычисляет модель цикла событий (верная и
+  «ошибочные ментальные модели»), ключ сверяется с исполнением показанного кода в Node.js.
+
+  '

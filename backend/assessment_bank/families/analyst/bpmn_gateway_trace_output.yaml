@@ -1,8 +1,14 @@
 family_id: analyst.bpmn.gateway_trace_output
 title: Процесс BPMN в текстовой записи — путь экземпляра через исключающие шлюзы
 direction: analyst
-skills: [bpmn, gateways, business_processes, process_modeling]
-target_grades: [intern, junior]
+skills:
+- bpmn
+- gateways
+- business_processes
+- process_modeling
+target_grades:
+- intern
+- junior
 format: predict_output
 language: text
 invariants: {}
@@ -10,11 +16,14 @@ time_limit_s: 180
 canary: false
 prior_difficulty:
   b: -1.1
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.25
-  basis: "Модель из 6–9 задач и 3–4 XOR-шлюзов, путь вычисляется прямым проходом по данным; ловушки — граница «>» / «>=», условие на ветви «иначе», обход с возвратом против выхода в конец. Стажёр/Junior, у порога Junior (b ≈ −1,1)"
+  basis: Априорная, до калибровки на людях (a = 1,3). Модель из 6–9 задач и 3–4 XOR-шлюзов, путь вычисляется прямым
+    проходом по данным; ловушки — граница «>» / «>=», условие на ветви «иначе», обход с возвратом против выхода
+    в конец. Стажёр/Junior, у порога Junior (b ≈ −1,1)
 generator: assessment_bank.families.analyst.bpmn_gateway_trace_output
 version: 1
-description: >
-  Текстовая модель процесса с исключающими шлюзами и данные экземпляра; нужно назвать выполненные задачи
+description: 'Текстовая модель процесса с исключающими шлюзами и данные экземпляра; нужно назвать выполненные задачи
   по порядку. Ключ: интерпретатор на Python разбирает показанную модель дословно.
+
+  '

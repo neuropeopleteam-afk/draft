@@ -1,26 +1,43 @@
 family_id: analyst.sql.retention_cohort_fix
 title: Удержание дня N по когортам — знаменатель теряет невернувшихся
 direction: analyst
-skills: [sql, joins, null_semantics, product_analytics]
-target_grades: [middle, senior]
+skills:
+- sql
+- joins
+- null_semantics
+- product_analytics
+target_grades:
+- middle
+- senior
 format: choose_fix
 language: sql
 invariants:
-  code_lines: [9, 9]
-  operations: [5, 5]
+  code_lines:
+  - 9
+  - 9
+  operations:
+  - 5
+  - 5
   defect_type: inner_join_denominator
   n_options: 4
   extra:
-    distractors: [left_where, no_distinct, on_or_after]
+    distractors:
+    - left_where
+    - no_distinct
+    - on_or_after
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.7
   a: 1.3
   sigma_variant: 0.2
-  basis: "Все четыре варианта почти одинаковы; главный «почти верный» — LEFT JOIN с условием в WHERE (превращается во внутреннее соединение), плюс подсчёт сессий без DISTINCT и другая метрика «не раньше дня N». Нужно понимать, где фильтр стоит относительно внешнего соединения. Middle/Senior (b ≈ 0,7)"
+  basis: Априорная, до калибровки на людях (a = 1,3). Все четыре варианта почти одинаковы; главный «почти верный»
+    — LEFT JOIN с условием в WHERE (превращается во внутреннее соединение), плюс подсчёт сессий без DISTINCT и другая
+    метрика «не раньше дня N». Нужно понимать, где фильтр стоит относительно внешнего соединения. Middle/Senior
+    (b ≈ 0,7)
 generator: assessment_bank.families.analyst.sql_retention_cohort_fix
 version: 1
-description: >
-  Запрос удержания дня N по когортам регистрации теряет невернувшихся пользователей в знаменателе. Ключ:
+description: 'Запрос удержания дня N по когортам регистрации теряет невернувшихся пользователей в знаменателе. Ключ:
   каждый вариант исполняется в sqlite3 на данных, где проявляются все ошибки дистракторов.
+
+  '

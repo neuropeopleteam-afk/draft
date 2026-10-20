@@ -1,28 +1,45 @@
 family_id: backend.db.transaction_fix
 title: Атомарный перевод — границы транзакции, commit и rollback
 direction: backend
-skills: [python, sqlite, transactions, atomicity, error_handling]
-target_grades: [middle]
+skills:
+- python
+- sqlite
+- transactions
+- atomicity
+- error_handling
+target_grades:
+- middle
 format: choose_fix
 language: python
 invariants:
-  code_lines: [11, 11]
-  operations: [9, 9]
+  code_lines:
+  - 11
+  - 11
+  operations:
+  - 9
+  - 9
   defect_type: partial_commit
   n_options: 4
   extra:
-    distractors: [rollback_db_only, rollback_value_only, commit_before_check, swallow_errors]
+    distractors:
+    - rollback_db_only
+    - rollback_value_only
+    - commit_before_check
+    - swallow_errors
 time_limit_s: 360
 canary: false
 prior_difficulty:
   b: 0.3
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.3
-  basis: "11 строк, 9 операций; четыре варианта одной формы (12 строк try/except), отличаются деталью: какие исключения откатывают транзакцию, где стоит commit, подавляется ли ошибка; нужно знать семантику `with con:` в sqlite3 и то, что незафиксированная транзакция попадёт в следующий commit; Middle"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). 11 строк, 9 операций; четыре варианта одной формы (12 строк
+    try/except), отличаются деталью: какие исключения откатывают транзакцию, где стоит commit, подавляется ли ошибка;
+    нужно знать семантику `with con:` в sqlite3 и то, что незафиксированная транзакция попадёт в следующий commit;
+    Middle'
 generator: assessment_bank.families.backend.db_transaction_fix
 version: 1
-description: >
-  Перевод между счетами (баллами, складами) в sqlite3 фиксирует списание до проверок.
-  Кандидат выбирает исправление, при котором оба изменения атомарны, ошибки откатывают всё,
-  а открытой транзакции не остаётся. Ключ проверяется исполнением сценария из четырёх
-  операций с проверкой состояния и con.in_transaction.
+description: 'Перевод между счетами (баллами, складами) в sqlite3 фиксирует списание до проверок. Кандидат выбирает
+  исправление, при котором оба изменения атомарны, ошибки откатывают всё, а открытой транзакции не остаётся. Ключ
+  проверяется исполнением сценария из четырёх операций с проверкой состояния и con.in_transaction.
+
+  '

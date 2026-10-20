@@ -1,25 +1,46 @@
 family_id: common.strategy.tco_horizon_mcq
 title: Стоимость владения на горизонте с ростом нагрузки — подписка, управляемый сервис, своя установка или разработка
 direction: common
-skills: [technical_strategy, capacity_planning, architecture, system_design, engineering_metrics]
-target_grades: [principal]
+skills:
+- technical_strategy
+- capacity_planning
+- architecture
+- system_design
+- engineering_metrics
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    traps: [first_month, no_growth, no_people]
-    plans: [saas, managed, self, build]
-    key_plans: [managed, self, build]
+    traps:
+    - first_month
+    - no_growth
+    - no_people
+    plans:
+    - saas
+    - managed
+    - self
+    - build
+    key_plans:
+    - managed
+    - self
+    - build
 time_limit_s: 600
 canary: false
 prior_difficulty:
   b: 2.7
-  a: 1.4
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Решение «купить или сделать» по полной стоимости владения: разовые затраты, люди и цена за единицу при сложном росте нагрузки на горизонте 2–4 года. Верный вариант меняется (управляемый сервис, своя установка, разработка), параметры подобраны так, что упрощения («дешевле на старте» — всегда, и без роста нагрузки или без затрат на людей) ведут к неверному варианту — угадать по одному признаку нельзя. Lead обычно сравнивает по текущей нагрузке или без людей — граница Lead/Principal (θ ≈ 3,0); σ 0,3"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Решение «купить или сделать» по полной стоимости владения:
+    разовые затраты, люди и цена за единицу при сложном росте нагрузки на горизонте 2–4 года. Верный вариант меняется
+    (управляемый сервис, своя установка, разработка), параметры подобраны так, что упрощения («дешевле на старте»
+    — всегда, и без роста нагрузки или без затрат на людей) ведут к неверному варианту — угадать по одному признаку
+    нельзя. Lead обычно сравнивает по текущей нагрузке или без людей — граница Lead/Principal (θ ≈ 3,0); σ 0,3'
 generator: assessment_bank.families.common.strategy_tco_horizon_mcq
 version: 1
-description: >
-  Principal: какой из четырёх вариантов платформы дешевле за горизонт с учётом роста нагрузки и затрат на
-  людей. Ключ — исполнением: помесячный проигрыш горизонта.
+description: 'Principal: какой из четырёх вариантов платформы дешевле за горизонт с учётом роста нагрузки и затрат
+  на людей. Ключ — исполнением: помесячный проигрыш горизонта.
+
+  '

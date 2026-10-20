@@ -1,22 +1,36 @@
 family_id: security.crypto.nonce_lifecycle_bug
 title: Жизненный цикл nonce в адаптере криптографической библиотеки
 direction: security
-skills: [secure_code_review, python, secure_randomness, nonce_uniqueness]
-target_grades: [senior]
+skills:
+- secure_code_review
+- python
+- secure_randomness
+- nonce_uniqueness
+target_grades:
+- senior
 format: find_bug
 language: python
 invariants:
-  code_lines: [8, 8]
-  operations: [6, 6]
+  code_lines:
+  - 8
+  - 8
+  operations:
+  - 6
+  - 6
   defect_type: nonce_reuse_at_import
-  extra: {nonce_bytes: 12, fixed_lines: 1, encryption: not_implemented}
+  extra:
+    nonce_bytes: 12
+    fixed_lines: 1
+    encryption: not_implemented
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: 0.6
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.2
-  basis: "8 строк; CSPRNG присутствует и выглядит безопасно, но значение создаётся один раз при импорте; требуется анализ жизненного цикла и области ключа, не поиск слабого генератора."
+  basis: Априорная, до калибровки на людях (a = 1,3). 8 строк; CSPRNG присутствует и выглядит безопасно, но значение
+    создаётся один раз при импорте; требуется анализ жизненного цикла и области ключа, не поиск слабого генератора.
 generator: assessment_bank.families.security.nonce_lifecycle_bug
 version: 1
-description: "Тесты доказывают отдельный вызов источника на операцию; не заявляют доказательство криптостойкости или межпроцессной уникальности."
+description: Тесты доказывают отдельный вызов источника на операцию; не заявляют доказательство криптостойкости
+  или межпроцессной уникальности.

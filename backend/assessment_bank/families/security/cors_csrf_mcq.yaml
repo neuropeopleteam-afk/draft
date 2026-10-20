@@ -1,20 +1,32 @@
 family_id: security.web.cors_csrf_mcq
 title: CORS с credentials и отдельная CSRF-защита
 direction: security
-skills: [cors, csrf, http, secure_configuration]
-target_grades: [middle]
+skills:
+- cors
+- csrf
+- http
+- secure_configuration
+target_grades:
+- middle
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
-  extra: {origins: explicit_single_origin, mutation: csrf_token_and_origin}
+  extra:
+    origins: explicit_single_origin
+    mutation: csrf_token_and_origin
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: 0.3
   a: 1.0
   sigma_variant: 0.2
-  basis: "Четыре равных по структуре политики; нужно не смешать CORS и CSRF, исключить звёздочку и произвольное отражение Origin для cookie-сессии. Версия 2 (калибровка 05.10: решалась малыми моделями — условие дословно содержало контракт «CSRF-токен и проверка Origin»): условие задаёт только цели, дистракторы отличаются от верного одним атрибутом и выражают заблуждения «CSRF отсечёт CORS», «токен только для JSON», «*»/отражение Origin"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Четыре равных по структуре политики; нужно не смешать CORS
+    и CSRF, исключить звёздочку и произвольное отражение Origin для cookie-сессии. Версия 2 (калибровка 05.10: решалась
+    малыми моделями — условие дословно содержало контракт «CSRF-токен и проверка Origin»): условие задаёт только
+    цели, дистракторы отличаются от верного одним атрибутом и выражают заблуждения «CSRF отсечёт CORS», «токен только
+    для JSON», «*»/отражение Origin'
 generator: assessment_bank.families.security.cors_csrf_mcq
 version: 3
-description: "Ключ сверен исполняемым предикатом заданной политики; браузерное поведение не моделируется. Версия 2: в условии цели, а не перечень мер; дистракторы на один атрибут от верного."
+description: 'Ключ сверен исполняемым предикатом заданной политики; браузерное поведение не моделируется. Версия
+  2: в условии цели, а не перечень мер; дистракторы на один атрибут от верного.'

@@ -1,27 +1,45 @@
 family_id: mobile.js.token_refresh_fix
 title: Параллельные 401 и одноразовый refresh-токен — одно обновление на всех
 direction: mobile
-skills: [networking, authentication, javascript, promises, concurrency]
-target_grades: [middle, senior]
+skills:
+- networking
+- authentication
+- javascript
+- promises
+- concurrency
+target_grades:
+- middle
+- senior
 format: choose_fix
 language: javascript
 invariants:
-  code_lines: [14, 14]
-  operations: [11, 11]
+  code_lines:
+  - 14
+  - 14
+  operations:
+  - 11
+  - 11
   defect_type: parallel_refresh
   n_options: 4
   extra:
-    distractors: [never_reset, stale_token, retry_refresh]
+    distractors:
+    - never_reset
+    - stale_token
+    - retry_refresh
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.8
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.2
-  basis: "Нужно связать симптом (выкидывает после паузы) с ротацией refresh-токена и параллельными 401; фиксированный состав дистракторов: два почти верных single-flight (без сброса промиса; повтор со старым токеном) и «повторить refresh»; верный ответ не самый длинный. Различает Middle и Senior (b ≈ 0,8 — у порога Senior)"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Нужно связать симптом (выкидывает после паузы) с ротацией
+    refresh-токена и параллельными 401; фиксированный состав дистракторов: два почти верных single-flight (без сброса
+    промиса; повтор со старым токеном) и «повторить refresh»; верный ответ не самый длинный. Различает Middle и
+    Senior (b ≈ 0,8 — у порога Senior)'
 generator: assessment_bank.families.mobile.js_token_refresh_fix
 version: 1
-description: >
-  Несколько параллельных запросов получают 401 и каждый обновляет токены; сервер с ротацией отзывает сессию при
-  повторном refresh-токене. Ключ: модель сервера в Node, две волны параллельных запросов; верен только
+description: 'Несколько параллельных запросов получают 401 и каждый обновляет токены; сервер с ротацией отзывает
+  сессию при повторном refresh-токене. Ключ: модель сервера в Node, две волны параллельных запросов; верен только
   single-flight со сбросом промиса и повтором с новым токеном.
+
+  '

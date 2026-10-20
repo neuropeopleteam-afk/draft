@@ -1,23 +1,34 @@
 family_id: mobile.principal.crash_users_mcq
-title: Доля пользователей без ошибок за неделю при доле сессий с ошибкой и неравномерной активности (Principal, короткое)
+title: Доля пользователей без ошибок за неделю при доле сессий с ошибкой и неравномерной активности (Principal,
+  короткое)
 direction: mobile
-skills: [mobile_performance, mobile_release_management, statistics, architecture]
-target_grades: [principal]
+skills:
+- mobile_performance
+- mobile_release_management
+- statistics
+- architecture
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    distractors: "три из восьми моделей ошибок: mean_sessions, linear, max_sessions (ниже ключа); per_session, daily, min_sessions, median_user (выше), unweighted; меньше ключа 0–3 равновероятно"
+    distractors: 'три из восьми моделей ошибок: mean_sessions, linear, max_sessions (ниже ключа); per_session, daily,
+      min_sessions, median_user (выше), unweighted; меньше ключа 0–3 равновероятно'
 time_limit_s: 360
 canary: false
 prior_difficulty:
   b: 2.5
-  a: 1.3
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: перевод цели качества мобильного приложения с сессий на пользователей. Нужно считать по сегментам активности (неравенство Йенсена: «средний пользователь» даёт заниженную долю без ошибок), за неделю. Senior и Lead обычно считают через среднее число сессий или приравнивают доли; Principal считает по распределению. Ловушки с обеих сторон от ключа"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Короткое расчётное задание у границы Lead/Principal: перевод
+    цели качества мобильного приложения с сессий на пользователей. Нужно считать по сегментам активности (неравенство
+    Йенсена: «средний пользователь» даёт заниженную долю без ошибок), за неделю. Senior и Lead обычно считают через
+    среднее число сессий или приравнивают доли; Principal считает по распределению. Ловушки с обеих сторон от ключа'
 generator: assessment_bank.families.mobile.principal_crash_users_mcq
 version: 1
-description: >
-  Доля пользователей без единой ошибки за неделю при заданной доле сессий с ошибкой и сегментах
-  активности. Ключ — программа: перебор сессий каждого сегмента точными дробями.
+description: 'Доля пользователей без единой ошибки за неделю при заданной доле сессий с ошибкой и сегментах активности.
+  Ключ — программа: перебор сессий каждого сегмента точными дробями.
+
+  '

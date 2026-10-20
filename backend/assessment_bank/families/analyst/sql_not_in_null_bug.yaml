@@ -1,13 +1,22 @@
 family_id: analyst.sql.not_in_null_bug
 title: «Нет ни одной записи» через NOT IN — пустой отчёт из-за NULL в подзапросе
 direction: analyst
-skills: [sql, null_semantics, data_analysis]
-target_grades: [junior, middle]
+skills:
+- sql
+- null_semantics
+- data_analysis
+target_grades:
+- junior
+- middle
 format: find_bug
 language: sql
 invariants:
-  code_lines: [6, 6]
-  operations: [8, 8]
+  code_lines:
+  - 6
+  - 6
+  operations:
+  - 8
+  - 8
   defect_type: not_in_with_null
 time_limit_s: 210
 canary: false
@@ -15,9 +24,12 @@ prior_difficulty:
   b: -0.1
   a: 1.3
   sigma_variant: 0.2
-  basis: "Запрос 7 строк, все строки синтаксически верны; нужно знать трёхзначную логику SQL: NOT IN с NULL в подзапросе не бывает истинным. Подсказка про NULL в столбце дана, но вывод «отчёт пустой» требует понимания. Классический разделитель Junior/Middle (b ≈ −0,1)"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Запрос 7 строк, все строки синтаксически верны; нужно знать
+    трёхзначную логику SQL: NOT IN с NULL в подзапросе не бывает истинным. Подсказка про NULL в столбце дана, но
+    вывод «отчёт пустой» требует понимания. Классический разделитель Junior/Middle (b ≈ −0,1)'
 generator: assessment_bank.families.analyst.sql_not_in_null_bug
 version: 1
-description: >
-  Отчёт «кто без записей» через NOT IN по столбцу, где хранятся NULL; результат пуст. Ключ: показанный
+description: 'Отчёт «кто без записей» через NOT IN по столбцу, где хранятся NULL; результат пуст. Ключ: показанный
   запрос исполняется в sqlite3 — дефектный расходится с эталоном, исправленный совпадает.
+
+  '

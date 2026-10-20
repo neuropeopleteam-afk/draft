@@ -1,25 +1,47 @@
 family_id: data_ml.arch.recsys_serving_open
 title: Выдача рекомендаций под бюджет задержки — этапы и число кандидатов, признаки без расхождения, холодный старт
 direction: data_ml
-skills: [ml_systems, ranking, training_serving_skew, latency, ab_testing]
-target_grades: [lead]
+skills:
+- ml_systems
+- ranking
+- training_serving_skew
+- latency
+- ab_testing
+target_grades:
+- lead
 format: open_answer
 language: text
 invariants:
   extra:
-    twists: [feedback_loop, skew, cold_start]
-    criteria: [stages, features, fallback, twist, verify]
-    anchors: [max_candidates_in_budget, ranking_cores_peak]
-    scale: "0–4"
+    twists:
+    - feedback_loop
+    - skew
+    - cold_start
+    criteria:
+    - stages
+    - features
+    - fallback
+    - twist
+    - verify
+    anchors:
+    - max_candidates_in_budget
+    - ranking_cores_peak
+    scale: 0–4
 time_limit_s: 1500
 canary: false
 prior_difficulty:
   b: 1.9
-  a: 1.4
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Архитектура выдачи целиком: двухэтапная схема с числом кандидатов, посчитанным по доле бюджета задержки, стоимости оценки и параллельности, ядра на ранжирование в пике, признаки с одним определением для обучения и выдачи, холодный старт и запасной путь, особенность варианта (петля популярности, расхождение обучения и выдачи по признакам «последних действий», большая доля новых объектов) и проверка офлайн и онлайн. Senior обычно называет «ANN + бустинг» без расчёта бюджета и без запасного пути — граница Senior/Lead (θ ≈ 2,0); рубрика 0–4 по пяти критериям, σ 0,3"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Архитектура выдачи целиком: двухэтапная схема с числом кандидатов,
+    посчитанным по доле бюджета задержки, стоимости оценки и параллельности, ядра на ранжирование в пике, признаки
+    с одним определением для обучения и выдачи, холодный старт и запасной путь, особенность варианта (петля популярности,
+    расхождение обучения и выдачи по признакам «последних действий», большая доля новых объектов) и проверка офлайн
+    и онлайн. Senior обычно называет «ANN + бустинг» без расчёта бюджета и без запасного пути — граница Senior/Lead
+    (θ ≈ 2,0); рубрика 0–4 по пяти критериям, σ 0,3'
 generator: assessment_bank.families.data_ml.arch_recsys_serving_open
 version: 1
-description: >
-  Lead: архитектура персональной выдачи под бюджет задержки p99 — этапы, признаки, холодный старт, запасной
+description: 'Lead: архитектура персональной выдачи под бюджет задержки p99 — этапы, признаки, холодный старт, запасной
   путь и особенность варианта. Рубрика 0–4; оценка с цитатами-доказательствами.
+
+  '

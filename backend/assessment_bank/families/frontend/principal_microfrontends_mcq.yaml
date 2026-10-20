@@ -1,24 +1,44 @@
 family_id: frontend.strategy.principal_microfrontends_mcq
 title: Деление фронтенда между командами — релизный поезд, монорепозиторий, микрофронтенды или отдельные приложения
 direction: frontend
-skills: [frontend_architecture, monorepo, web_performance, technical_strategy, architecture]
-target_grades: [principal]
+skills:
+- frontend_architecture
+- monorepo
+- web_performance
+- technical_strategy
+- architecture
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    plans: [mono, monorepo, federation, apps]
-    traps: [max_independence, no_extra_cost, without_lcp_cost]
+    plans:
+    - mono
+    - monorepo
+    - federation
+    - apps
+    traps:
+    - max_independence
+    - no_extra_cost
+    - without_lcp_cost
 time_limit_s: 420
 canary: false
 prior_difficulty:
   b: 2.7
-  a: 1.4
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: организация фронтенда нескольких команд выбирается по сумме цены ожидания изменений (среднее ожидание релизного поезда — половина интервала), платформенной доплаты и потери выручки от LCP (дублирующиеся зависимости микрофронтендов, полные перезагрузки между отдельными приложениями). Верный вариант распределён поровну; ловушки — «максимальная независимость», «без доплаты», расчёт без цены LCP — отличаются от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном). Lead обычно выбирает микрофронтенды «ради независимости команд»; Principal переводит ожидание и скорость страниц в деньги — граница Lead/Principal (θ ≈ 3,0); σ 0,3"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Короткое расчётное задание у границы Lead/Principal: организация
+    фронтенда нескольких команд выбирается по сумме цены ожидания изменений (среднее ожидание релизного поезда —
+    половина интервала), платформенной доплаты и потери выручки от LCP (дублирующиеся зависимости микрофронтендов,
+    полные перезагрузки между отдельными приложениями). Верный вариант распределён поровну; ловушки — «максимальная
+    независимость», «без доплаты», расчёт без цены LCP — отличаются от ответа хотя бы в двух случаях (если верна
+    сама ловушка — хотя бы в одном). Lead обычно выбирает микрофронтенды «ради независимости команд»; Principal
+    переводит ожидание и скорость страниц в деньги — граница Lead/Principal (θ ≈ 3,0); σ 0,3'
 generator: assessment_bank.families.frontend.principal_microfrontends_mcq
 version: 1
-description: >
-  Principal (короткое, 7 мин): как разделить фронтенд между командами по годовой цене. Ключ — исполнением:
+description: 'Principal (короткое, 7 мин): как разделить фронтенд между командами по годовой цене. Ключ — исполнением:
   равномерное поступление изменений и расписание выпусков каждого варианта.
+
+  '

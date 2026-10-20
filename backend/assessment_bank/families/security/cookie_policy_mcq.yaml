@@ -1,20 +1,29 @@
 family_id: security.web.cookie_policy_mcq
 title: Cookie-флаги и изоляция сессии по хосту
 direction: security
-skills: [http, cookies, secure_defaults, csrf]
-target_grades: [junior]
+skills:
+- http
+- cookies
+- secure_defaults
+- csrf
+target_grades:
+- junior
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
-  extra: {policy: secure_httponly_host_only_lax}
+  extra:
+    policy: secure_httponly_host_only_lax
 time_limit_s: 180
 canary: false
 prior_difficulty:
   b: -0.8
   a: 1.0
   sigma_variant: 0.2
-  basis: "Четыре сопоставимые конфигурации с фиксированным составом дистракторов: Secure=false; Domain задан + срок в 12–48 раз больше; Domain задан + срока нет; контракт явно задаёт host-only, HTTPS, срок и отдельный CSRF-контроль. Версия 3 (08.10): состав зафиксирован после панели ext4 (случайный выбор признаков давал неизоморфность), длины вариантов не выдают ключ."
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Четыре сопоставимые конфигурации с фиксированным составом
+    дистракторов: Secure=false; Domain задан + срок в 12–48 раз больше; Domain задан + срока нет; контракт явно
+    задаёт host-only, HTTPS, срок и отдельный CSRF-контроль. Версия 3 (08.10): состав зафиксирован после панели
+    ext4 (случайный выбор признаков давал неизоморфность), длины вариантов не выдают ключ.'
 generator: assessment_bank.families.security.cookie_policy_mcq
 version: 3
-description: "Независимый исполняемый предикат проверяет конфигурацию, но не имитирует браузер."
+description: Независимый исполняемый предикат проверяет конфигурацию, но не имитирует браузер.

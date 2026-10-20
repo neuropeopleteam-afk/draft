@@ -1,23 +1,37 @@
 family_id: mobile.kotlin.flow_lifecycle_mcq
 title: Kotlin Flow в UI — сбор с учётом жизненного цикла (repeatOnLifecycle)
 direction: mobile
-skills: [kotlin, coroutines, flow, android, android_lifecycle]
-target_grades: [middle, senior]
+skills:
+- kotlin
+- coroutines
+- flow
+- android
+- android_lifecycle
+target_grades:
+- middle
+- senior
 format: mcq_concept
 language: kotlin
 invariants:
   n_options: 4
   extra:
-    distractors: [plain, when_started, created]
+    distractors:
+    - plain
+    - when_started
+    - created
 time_limit_s: 180
 canary: false
 prior_difficulty:
   b: 0.7
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.2
-  basis: "Фиксированный состав дистракторов: все четыре варианта собирают поток, два «почти верных» (launchWhenStarted приостанавливает сборщик, но не производителя; repeatOnLifecycle(CREATED) активен в фоне) требуют понимать разницу между приостановкой и отменой; варианты одной длины. Middle/Senior (b ≈ 0,7)"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Фиксированный состав дистракторов: все четыре варианта собирают
+    поток, два «почти верных» (launchWhenStarted приостанавливает сборщик, но не производителя; repeatOnLifecycle(CREATED)
+    активен в фоне) требуют понимать разницу между приостановкой и отменой; варианты одной длины. Middle/Senior
+    (b ≈ 0,7)'
 generator: assessment_bank.families.mobile.kotlin_flow_lifecycle_mcq
 version: 1
-description: >
-  Выбор способа сбора callbackFlow в Activity/Fragment, при котором в фоне снимается подписка на источник.
+description: 'Выбор способа сбора callbackFlow в Activity/Fragment, при котором в фоне снимается подписка на источник.
   Ключ — справочная таблица по документации Android (исполнение невозможно).
+
+  '

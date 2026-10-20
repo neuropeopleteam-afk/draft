@@ -1,21 +1,34 @@
 family_id: devops.inc.incident_open
 title: Ведение инцидента в продакшене — стабилизация, причина, действия после
 direction: devops
-skills: [incident_response, sre, postmortem, tls, reliability]
-target_grades: [senior]
+skills:
+- incident_response
+- sre
+- postmortem
+- tls
+- reliability
+target_grades:
+- senior
 format: open_answer
 language: text
 invariants:
   extra:
-    topics: [disk_full, bad_deploy, cert_expiry, retry_storm]
+    topics:
+    - disk_full
+    - bad_deploy
+    - cert_expiry
+    - retry_storm
 time_limit_s: 1200
 canary: false
 prior_difficulty:
   b: 1.3
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Развёрнутый ответ по идущему инциденту с цифрами, четыре темы (диск БД и WAL, неудачная выкладка с миграцией, истёкший сертификат, лавина повторов); рубрика из трёх критериев — стабилизация без вреда, подтверждение причины данными, системные меры. Senior"
+  basis: Априорная, до калибровки на людях (a = 1,3). Развёрнутый ответ по идущему инциденту с цифрами, четыре темы
+    (диск БД и WAL, неудачная выкладка с миграцией, истёкший сертификат, лавина повторов); рубрика из трёх критериев
+    — стабилизация без вреда, подтверждение причины данными, системные меры. Senior
 generator: assessment_bank.families.devops.inc_incident_open
 version: 1
-description: >
-  Открытый вопрос дежурному: первые действия, поиск причины и меры после инцидента. Оценивается по рубрике.
+description: 'Открытый вопрос дежурному: первые действия, поиск причины и меры после инцидента. Оценивается по рубрике.
+
+  '

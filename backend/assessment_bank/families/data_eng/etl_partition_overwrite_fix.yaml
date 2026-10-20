@@ -1,13 +1,24 @@
 family_id: data_eng.etl.partition_overwrite_fix
 title: ETL — идемпотентный перезапуск дневной загрузки (перезапись партиции в транзакции)
 direction: data_eng
-skills: [etl, idempotency, backfill, partitioning, sql]
-target_grades: [middle, senior]
+skills:
+- etl
+- idempotency
+- backfill
+- partitioning
+- sql
+target_grades:
+- middle
+- senior
 format: choose_fix
 language: sql
 invariants:
-  code_lines: [2, 2]
-  operations: [3, 3]
+  code_lines:
+  - 2
+  - 2
+  operations:
+  - 3
+  - 3
   n_options: 4
   extra:
     subtype: atomic_partition_overwrite
@@ -17,9 +28,13 @@ prior_difficulty:
   b: 0.5
   a: 1.3
   sigma_variant: 0.25
-  basis: "Загрузка 2 строки дописывает день; требования — идемпотентность и атомарность при сбое; верное — DELETE дня + INSERT в транзакции; почти верные фиксированного состава — те же команды без транзакции (сбой оставляет день пустым), «вставить, если дня нет», OR IGNORE. Middle, ближе к границе Middle/Senior"
+  basis: Априорная, до калибровки на людях (a = 1,3). Загрузка 2 строки дописывает день; требования — идемпотентность
+    и атомарность при сбое; верное — DELETE дня + INSERT в транзакции; почти верные фиксированного состава — те
+    же команды без транзакции (сбой оставляет день пустым), «вставить, если дня нет», OR IGNORE. Middle, ближе к
+    границе Middle/Senior
 generator: assessment_bank.families.data_eng.etl_partition_overwrite_fix
 version: 1
-description: >
-  Выбрать загрузку, которая перезаписывает день атомарно и идемпотентно. Каждый вариант исполняется в sqlite3
-  на сценариях «успешный перезапуск» и «перезапуск со сбоем».
+description: 'Выбрать загрузку, которая перезаписывает день атомарно и идемпотентно. Каждый вариант исполняется
+  в sqlite3 на сценариях «успешный перезапуск» и «перезапуск со сбоем».
+
+  '

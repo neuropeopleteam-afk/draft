@@ -1,27 +1,42 @@
 family_id: common.docker.cache_order_fix
 title: Dockerfile — порядок COPY и установки зависимостей ради кэша слоёв
 direction: common
-skills: [docker, dockerfile, docker_build_cache]
-target_grades: [junior, middle]
+skills:
+- docker
+- dockerfile
+- docker_build_cache
+target_grades:
+- junior
+- middle
 format: choose_fix
 language: dockerfile
 invariants:
-  code_lines: [5, 7]
-  operations: [5, 7]
+  code_lines:
+  - 5
+  - 7
+  operations:
+  - 5
+  - 7
   n_options: 4
   defect_type: deps_after_full_copy
   extra:
-    distractors: [install_before_copy, req_then_all_then_run, dockerignore_only]
+    distractors:
+    - install_before_copy
+    - req_then_all_then_run
+    - dockerignore_only
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.6
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.2
-  basis: "Dockerfile из 5–7 инструкций, четыре варианта по 5–8 строк; верный и дистрактор «файл зависимостей первым, но COPY . . до RUN» различаются порядком двух строк; состав дистракторов фиксирован, варьируются стек, имена и служебные инструкции; Junior/Middle"
+  basis: Априорная, до калибровки на людях (a = 1,3). Dockerfile из 5–7 инструкций, четыре варианта по 5–8 строк;
+    верный и дистрактор «файл зависимостей первым, но COPY . . до RUN» различаются порядком двух строк; состав дистракторов
+    фиксирован, варьируются стек, имена и служебные инструкции; Junior/Middle
 generator: assessment_bank.families.common.docker_cache_order_fix
 version: 2
-description: >
-  Установка зависимостей выполняется заново при каждом изменении кода. Выбрать порядок инструкций,
-  при котором слой установки берётся из кэша. Проверка исполнением модели сборки: повторная сборка
-  после изменения файла кода — верный вариант не переустанавливает зависимости, остальные падают или ставят заново.
+description: 'Установка зависимостей выполняется заново при каждом изменении кода. Выбрать порядок инструкций, при
+  котором слой установки берётся из кэша. Проверка исполнением модели сборки: повторная сборка после изменения файла
+  кода — верный вариант не переустанавливает зависимости, остальные падают или ставят заново.
+
+  '

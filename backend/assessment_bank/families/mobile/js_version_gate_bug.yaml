@@ -1,23 +1,35 @@
 family_id: mobile.js.version_gate_bug
 title: Обязательное обновление — версии сравниваются как строки
 direction: mobile
-skills: [mobile_release, javascript, rest_api]
-target_grades: [intern, junior]
+skills:
+- mobile_release
+- javascript
+- rest_api
+target_grades:
+- intern
+- junior
 format: find_bug
 language: javascript
 invariants:
-  code_lines: [14, 16]
-  operations: [11, 12]
+  code_lines:
+  - 14
+  - 16
+  operations:
+  - 11
+  - 12
   defect_type: string_compare_version
 time_limit_s: 150
 canary: false
 prior_difficulty:
   b: -1.3
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.2
-  basis: "14–17 строк, одна ошибочная строка (части версии — строки); симптом с двузначной частью версии подсказывает лексикографическое сравнение, но строки сравнения рядом выглядят верно. Стажёр (b ≈ −1,3), у порога Junior"
+  basis: Априорная, до калибровки на людях (a = 1,3). 14–17 строк, одна ошибочная строка (части версии — строки);
+    симптом с двузначной частью версии подсказывает лексикографическое сравнение, но строки сравнения рядом выглядят
+    верно. Стажёр (b ≈ −1,3), у порога Junior
 generator: assessment_bank.families.mobile.js_version_gate_bug
 version: 1
-description: >
-  Проверка минимальной версии сравнивает части версии как строки. Ключ: в Node на парах версий с
-  двузначными частями дефектный код ошибается, исправленный — нет.
+description: 'Проверка минимальной версии сравнивает части версии как строки. Ключ: в Node на парах версий с двузначными
+  частями дефектный код ошибается, исправленный — нет.
+
+  '
