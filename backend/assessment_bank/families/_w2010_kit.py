@@ -192,6 +192,7 @@ def numeric_variant(
     rel: float = 0.04,
     abs_min: float = 1.0,
     tries: int = 800,
+    trap_first: str | None = None,
     note: str = SHORT_NOTE,
     trap_desc: dict[str, str] | None = None,
     n_above_choices: Sequence[int] = (0, 1, 2, 3),
@@ -211,7 +212,8 @@ def numeric_variant(
     else:
         target_na = choices_tup[seed % len(choices_tup)]
     trap_keys = sorted(trap_desc) if trap_desc else []
-    trap_first = trap_keys[seed % len(trap_keys)] if trap_keys else None
+    if trap_first is None and trap_keys:
+        trap_first = trap_keys[seed % len(trap_keys)]
 
     picked: list[tuple[str, str]] | None = None
     P: dict[str, Any] = {}
