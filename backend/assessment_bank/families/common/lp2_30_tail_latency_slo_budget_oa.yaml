@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: common.principal_v2.tail_latency_slo_budget_oa
+title: 'Общеинженерный контур: Системная архитектура удержания p99 в жёстком SLO при десятикратных пиках'
+direction: common
+skills:
+- algorithms
+- sql
+- http
+- python
+- asyncio
+target_grades:
+- principal
+format: open_answer
+language: text
+invariants:
+  defect_type: tail_latency_architecture
+  extra:
+    wave: LP-v2
+    slot: 30
+    direction_ru: Общеинженерный контур
+time_limit_s: 780
+canary: false
+prior_difficulty:
+  b: 2.85
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Общеинженерный контур: системная архитектура удержания
+    p99 в жёстком slo при десятикратных пиках; формат open_answer, целевые грейды principal (b = 2,85 у порога старшего
+    грейда).'
+generator: assessment_bank.families.common.lp2_30_tail_latency_slo_budget_oa
+version: 1
+description: 'Общеинженерный контур (principal): Системная архитектура удержания p99 в жёстком SLO при десятикратных
+  пиках. Проверка исполнением и рубрикой.'
