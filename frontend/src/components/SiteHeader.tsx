@@ -4,14 +4,14 @@ import { cabinetPath, useAuth } from "../lib/auth";
 import { useJuryTab } from "../lib/juryMode";
 import { useTheme } from "../lib/theme";
 import { Logo } from "./Logo";
-import { useMeta } from "../lib/meta";
+import { InstallAppButton } from "./InstallAppButton";
 
 // W2: в шапке — только разделы продукта. Всё для экспертов (проверка за 12 минут, критерии ТЗ, валидация, атаки,
 // свой набор данных) — в одной вкладке «Экспертиза ФСП» (/expertise) справа, со значком щита (флаг VITE_JURY_TAB).
 const NAV: [string, string][] = [["/#laws", "Почему Драфт"], ["/#how", "Как это работает"],
   ["/#candidates", "Кандидатам"], ["/#employers", "Работодателям"]];
 // в меню до 1024 px — те же разделы и документация API (на широком экране API — в подвале)
-const MOBILE_NAV: [string, string][] = [...NAV, ["/api/docs", "API"]];
+const MOBILE_NAV: [string, string][] = [...NAV, ["/pricing", "Тарифы и пакеты ФСП"], ["/install", "Приложение на телефон"], ["/api/docs", "API"]];
 const item = "rounded-lg px-3 py-2 hover:bg-brand-blush/40";
 
 export function ShieldIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -60,18 +60,19 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
   const cta = premium ? "np-btn-primary" : dark ? "btn-light" : "btn-primary";
   return (
     <header className={premium ? "np-header" : dark ? "bg-brand-night" : "border-b border-brand-night/10 bg-white"}>
-      <div className="mx-auto flex max-w-content items-center justify-between gap-2 px-4 py-3.5 sm:gap-6 sm:px-6">
+      <div className="mx-auto flex max-w-content items-center justify-between gap-2 px-3 py-3.5 sm:gap-6 sm:px-6 xl:gap-4">
         <Link to="/" aria-label="На главную" className="shrink-0"><Logo light={onDark} /></Link>
-        <nav className="hidden items-center gap-5 whitespace-nowrap text-sm font-medium lg:flex xl:gap-7" aria-label="Основная навигация">
+        <nav className="hidden items-center gap-5 whitespace-nowrap text-sm font-medium xl:flex xl:gap-5" aria-label="Основная навигация">
           {NAV.map(([to, t]) => <a key={to} href={to} className={link}>{t}</a>)}
         </nav>
-        <div className="flex items-center gap-1.5 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-2.5 xl:gap-2">
+          <InstallAppButton premium={premium} />
           {juryTab && (
             <Link to="/expertise" aria-label="Экспертиза ФСП" aria-current={onExpertise ? "page" : undefined} data-testid="expertise-tab"
-              className={premium ? `np-shield ${onExpertise ? "np-shield-on" : ""}`
-                : `inline-flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm font-semibold ring-1 transition-colors sm:px-3 ${dark ? "text-white ring-white/25 hover:bg-white/10" : "text-brand-plum ring-brand-night/15 hover:bg-brand-blush/40"}`}>
+              className={premium ? `max-sm:!hidden np-shield ${onExpertise ? "np-shield-on" : ""}`
+                : `max-sm:!hidden inline-flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm font-semibold ring-1 transition-colors sm:px-3 ${dark ? "text-white ring-white/25 hover:bg-white/10" : "text-brand-plum ring-brand-night/15 hover:bg-brand-blush/40"}`}>
               <ShieldIcon />
-              <span className="hidden whitespace-nowrap sm:inline">Экспертиза ФСП</span>
+              <span className="hidden whitespace-nowrap lg:inline xl:hidden">Экспертиза ФСП</span>
             </Link>
           )}
           {premium && (
@@ -79,8 +80,8 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
               <ThemeIcon dark={theme === "dark"} />
             </button>
           )}
-          {/* С2 №10: до 1024 px — кнопка «Меню» с теми же ссылками (на телефоне в ней и «Войти», и тема) */}
-          <div ref={box} className="relative lg:hidden" data-testid="site-menu">
+          {/* С2 №10: до 1280 px — кнопка «Меню» с теми же ссылками (на телефоне в ней и «Войти», и тема) */}
+          <div ref={box} className="relative xl:hidden" data-testid="site-menu">
             <button ref={btn} type="button" aria-expanded={open} aria-controls="site-menu-nav" onClick={() => setOpen(!open)}
               className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold ${premium ? "np-iconbtn" : link}`}>
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" strokeLinecap="round" /></svg>
@@ -110,7 +111,7 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
           ) : (
             <>
               <Link to="/login" className={`hidden rounded-lg px-2 py-2 text-sm font-semibold sm:inline-flex ${link}`}>Войти</Link>
-              <Link to="/register" className={`${cta} px-3.5 sm:px-5`}>Регистрация</Link>
+              <Link to="/register" className={`${cta} px-3 sm:px-5`}>Регистрация</Link>
             </>
           )}
         </div>
@@ -120,7 +121,6 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
 }
 
 export function SiteFooter({ premium = false }: { premium?: boolean }) {
-  const tariffs = !!useMeta()?.tariffs?.enabled;  // Я29: ссылка на тарифы — только при TARIFFS_ENABLED
   const juryTab = useJuryTab();
   const a = premium ? "np-navlink" : "hover:text-brand-night";
   return (
@@ -128,7 +128,8 @@ export function SiteFooter({ premium = false }: { premium?: boolean }) {
       <div className={`mx-auto flex max-w-content flex-col gap-3 px-6 py-8 text-sm md:flex-row md:items-center md:justify-between ${premium ? "" : "text-brand-ink/70"}`}>
         <p>Драфт — платформа обратного найма ИТ-специалистов (команда Neuropeople). Открытый код, лицензия MIT.</p>
         <p className="flex flex-wrap gap-x-5 gap-y-2">
-          {tariffs && <a className={a} href="/tariffs">Тарифы</a>}
+          <a className={a} href="/pricing">Тарифы и пакеты ФСП</a>
+          <a className={a} href="/install">Приложение</a>
           {juryTab && <a className={a} href="/expertise">Экспертиза ФСП</a>}
           <a className={a} href="/validation">Как мы проверяем себя</a>
           <a className={a} href="/api/docs">Документация API</a>

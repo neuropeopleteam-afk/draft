@@ -61,7 +61,9 @@ const pg = {
   passport: () => import("./passport/VerifyPage"),
   criteria: () => import("./pages/Criteria"),  // К1: проверка по критериям ТЗ
   interview: () => import("./components/Interview"),  // Я15: разговор устной защиты и ИИ-интервью
-  tariffs: () => import("./pages/employer/Tariffs"),  // Я29: тарифы работодателя (TARIFFS_ENABLED)
+  tariffs: () => import("./pages/employer/Tariffs"),
+  monetization: () => import("./pages/public/Monetization"),  // «Тарифы и монетизация»: работодатели и спонсоры ФСП
+  trio: () => import("./pages/trio/Trio"),  // трёхсторонняя связь работодатель ↔ кандидат ↔ ФСП  // Я29: тарифы работодателя (TARIFFS_ENABLED)
   fspBenefit: () => import("./ideas/fsp/Benefit"),  // Я29: «Польза для ФСП» и «Партнёры ФСП»
   expertise: () => import("./pages/public/Expertise"),  // W2: единый хаб «Экспертиза ФСП»
   warroom: () => import("./pages/WarRoom"),  // Боевой ИИ-Полигон: живая архитектура + видеоаватар + радар античита
@@ -75,6 +77,8 @@ const PRELOAD = [pg.cabinet, pg.assessment, pg.needs, pg.search, pg.validation, 
 const CabinetLayout = lazyNamed(pg.cabinet, "CabinetLayout");
 const InterviewRoom = lazyNamed(pg.interview, "InterviewRoom");
 const TariffsPublic = lazyNamed(pg.tariffs, "default");
+const Monetization = lazyNamed(pg.monetization, "default");
+const TrioPage = lazyNamed(pg.trio, "TrioPage");
 const EmployerTariffs = lazyNamed(pg.tariffs, "EmployerTariffs");
 const FspBenefit = lazyNamed(pg.fspBenefit, "FspBenefit");
 const FspPartners = lazyNamed(pg.fspBenefit, "FspPartners");
@@ -169,7 +173,9 @@ export default function App() {
       <Route path="/security" element={<Navigate to="/validation#red-button" replace />} />
       <Route path="/jury/go" element={<JuryGo />} />
       <Route path="/study" element={<StudyAbout />} />
-      <Route path="/tariffs" element={<TariffsPublic />} />
+      <Route path="/tariffs" element={<Monetization />} />
+      <Route path="/tariffs/live" element={<TariffsPublic />} />
+      <Route path="/pricing" element={<Monetization />} />
       <Route path="/jury/live" element={<LiveScreen />} />
       <Route path="/j/:code" element={<LiveGuest />} />
       <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={panelSections} />}>
@@ -204,6 +210,7 @@ export default function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="invitations" element={<Invitations />} />
         <Route path="messages" element={<Messages role="candidate" />} />
+        <Route path="trio" element={<TrioPage role="candidate" />} />
         <Route path="probes" element={<Probes />} />
         <Route path="fsp" element={<Fsp />} />
         <Route path="settings" element={<Settings />} />
@@ -232,6 +239,7 @@ export default function App() {
         <Route path="probes" element={<EmployerProbes />} />
         <Route path="invitations" element={<EmployerInvitations />} />
         <Route path="messages" element={<Messages role="employer" />} />
+        <Route path="trio" element={<TrioPage role="employer" />} />
         <Route path="vacancies" element={<EmployerVacancies />} />
         <Route path="ats" element={<EmployerAts />} />
         <Route path="app" element={<AppSection />} />
@@ -254,6 +262,7 @@ export default function App() {
         </Route>
         <Route path="benefit" element={<FspBenefit />} />
         <Route path="partners" element={<FspPartners />} />
+        <Route path="trio" element={<TrioPage role="fsp" />} />
         <Route path="security" element={<TwoFactorSettings />} />
       </Route>
       <Route path="*" element={<NotFound />} />

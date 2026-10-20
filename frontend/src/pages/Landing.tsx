@@ -10,6 +10,7 @@ import { useAuth } from "../lib/auth";
 import { juryLogin } from "../lib/jury";
 import { useJuryMode } from "../lib/juryMode";
 import { daysText, PRODUCT_TAGLINE, useRules } from "../lib/meta";
+import { InstallAppButton } from "../components/InstallAppButton";
 
 type Rules = NonNullable<ReturnType<typeof useRules>>;
 
@@ -97,6 +98,7 @@ export default function Landing() {
                 <Link to="/register?role=employer" data-tour="hero-employer-btn" className="np-btn-ghost px-7 py-3.5 text-base">Я нанимаю</Link>
               </>
             )}
+            <InstallAppButton variant="hero" premium />
           </div>
           <Link to="/warroom" data-testid="landing-warroom"
             className="group relative mt-5 flex items-center gap-4 overflow-hidden rounded-2xl border border-rose-400/50 bg-gradient-to-r from-[#1a0b2e] via-[#2a0d3a] to-[#0d1240] px-5 py-4 text-white shadow-[0_12px_40px_-12px_rgba(255,0,83,0.75)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_-12px_rgba(255,0,83,0.95)]">
@@ -209,6 +211,18 @@ export default function Landing() {
           cta={["/register?role=employer", "Регистрация компании"]}
           onDemo={jury ? tryInvite : undefined}
         />
+        <div className="mt-6 grid gap-3 md:grid-cols-2" data-testid="landing-pricing-trio">
+          <Link to="/pricing" className="np-glass block rounded-2xl p-5 transition-transform hover:-translate-y-0.5">
+            <p className="np-eyebrow">Тарифы и монетизация</p>
+            <p className="mt-1 text-lg font-bold np-text">Пакеты для работодателей и спонсоров ФСП</p>
+            <p className="mt-1 text-sm np-muted">«Старт» бесплатно, «Найм» — по запросу, «Партнёр ФСП» — в спонсорском пакете федерации.</p>
+          </Link>
+          <Link to="/login" className="np-glass block rounded-2xl p-5 transition-transform hover:-translate-y-0.5">
+            <p className="np-eyebrow">Трёхсторонняя связь</p>
+            <p className="mt-1 text-lg font-bold np-text">Работодатель ↔ Кандидат ↔ Представитель ФСП</p>
+            <p className="mt-1 text-sm np-muted">Один канал по приглашению: ФСП подтверждает результаты соревнований, помогает с оффером и спорами — с согласия кандидата.</p>
+          </Link>
+        </div>
       </section>
 
       <section className="relative mx-auto max-w-content px-4 pb-24 sm:px-6" aria-label="Начать работу">

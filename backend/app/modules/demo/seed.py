@@ -1,8 +1,9 @@
-"""Демо-данные: 860 кандидатов, 10 работодателей, 15 потребностей. Кандидаты: 500 базовых (1…500) + 360 модельных
-«рыночных» со связками навыков из спроса hh.ru — по 40 на каждое из 9 направлений (4 стажёра, 12 Junior, 12 Middle,
-12 Senior; номера 801…926 и 1001…1234; без CATALOG_EXT_ENABLED видны только 5 базовых направлений — 5 × 40 = 200,
-итого 700). С флагами расширения — ещё модельные кандидаты новых направлений 501–580 и Lead/Principal с номера 701
-(GRADES_EXT_ENABLED, только где эти уровни проверяет банк).
+"""Демо-данные: 2660 кандидатов, 10 работодателей, 15 потребностей. Кандидаты: 500 базовых (1…500) + 2 160 модельных
+«рыночных» со связками навыков из спроса hh.ru — по 240 на каждое из 9 направлений (24 стажёра, 72 Junior, 72 Middle,
+72 Senior; номера 801…926, 1001…1234 и 2001…3800; без CATALOG_EXT_ENABLED видны только 5 базовых направлений —
+5 × 240 = 1 200, итого 1 700). Модельные кандидаты — модель, не люди. С флагами расширения — ещё модельные
+кандидаты новых направлений 501–580 и Lead/Principal с номера 701 (GRADES_EXT_ENABLED, только где эти уровни
+проверяет банк).
 
 Исходные 150 кандидатов и их идентификаторы сохраняются; extend_candidates добавляет только 151..500.
 Обе аудитории: школьники/студенты ФСП и опытные специалисты. Все результаты — синтетическое демо,
@@ -603,7 +604,6 @@ MARKET_BUNDLES: dict[str, list[list[str]]] = {
 MARKET_TESTED_SHARE = 0.9
 MARKET_EXTRA_FIRST = 1001
 MARKET_EXTRA_GRADES = ["intern"] * 2 + ["junior"] * 8 + ["middle"] * 8 + ["senior"] * 8
-MARKET_PER_DIRECTION = len(MARKET_GRADES) + len(MARKET_EXTRA_GRADES)  # 40: по 12 Middle и 12 Senior на направление
 MARKET_BUNDLES_EXTRA: dict[str, list[list[str]]] = {
     "backend": [["python", "fastapi", "postgresql", "asyncio", "redis", "docker", "kafka", "git", "rest-api", "sql", "http",
                  "kubernetes", "pytest"],
@@ -718,10 +718,137 @@ MARKET_BUNDLES_EXTRA: dict[str, list[list[str]]] = {
                  "statistics"]],
 }
 
+# W1b (20.10): ещё по 200 модельных кандидатов на направление (номера 2001…3800) — 14 + 26 + 200 = 240 на направление,
+# 9 × 240 = 2 160 модельных «рыночных» кандидатов. Прежние номера 801…926 и 1001…1234 и их связки не меняются
+# (разметка блоков та же — засеянный стенд досоздаёт только новые номера). Связки — по грейду: «base» (стажёр, Junior) —
+# первые шаги в направлении, «adv» (Middle, Senior) — связки с инфраструктурой и данными из спроса hh.ru.
+MARKET_WIDE_FIRST = 2001
+MARKET_WIDE_GRADES = ["intern"] * 20 + ["junior"] * 60 + ["middle"] * 60 + ["senior"] * 60
+MARKET_BUNDLES_WIDE: dict[str, dict[str, list[list[str]]]] = {
+    "backend": {
+        "base": [["python", "sql", "git", "http", "rest-api", "postgresql", "linux", "docker", "pytest", "algorithms"],
+                 ["java", "sql", "git", "http", "rest-api", "postgresql", "algorithms", "linux", "docker"],
+                 ["go", "git", "http", "sql", "rest-api", "postgresql", "linux", "docker", "algorithms"],
+                 ["php", "sql", "git", "http", "rest-api", "postgresql", "docker", "linux", "redis"]],
+        "adv": [["python", "fastapi", "asyncio", "postgresql", "kafka", "kubernetes", "redis", "docker", "ci-cd", "git",
+                 "sql", "http", "rest-api"],
+                ["go", "grpc", "kafka", "postgresql", "kubernetes", "redis", "docker", "ci-cd", "linux", "git", "sql",
+                 "http"],
+                ["java", "kafka", "postgresql", "kubernetes", "redis", "rabbitmq", "docker", "ci-cd", "rest-api", "git",
+                 "sql", "linux"],
+                ["python", "django", "postgresql", "rabbitmq", "redis", "kubernetes", "docker", "ci-cd", "pytest", "git",
+                 "sql", "http"],
+                ["kotlin", "java", "kafka", "postgresql", "kubernetes", "docker", "redis", "ci-cd", "git", "sql",
+                 "rest-api"]],
+    },
+    "frontend": {
+        "base": [["javascript", "html-css", "git", "http", "react", "typescript", "rest-api", "vite-webpack", "a11y"],
+                 ["javascript", "html-css", "git", "vue", "http", "typescript", "rest-api", "vite-webpack"],
+                 ["html-css", "javascript", "git", "http", "a11y", "react", "tailwind", "typescript"]],
+        "adv": [["typescript", "react", "nextjs", "state-management", "frontend-testing", "vite-webpack", "ci-cd",
+                 "docker", "git", "rest-api", "a11y", "http"],
+                ["typescript", "vue", "state-management", "frontend-testing", "vite-webpack", "ci-cd", "git", "rest-api",
+                 "http", "docker", "html-css"],
+                ["typescript", "angular", "state-management", "frontend-testing", "ci-cd", "docker", "git", "rest-api",
+                 "http", "html-css"],
+                ["typescript", "react", "javascript", "a11y", "frontend-testing", "state-management", "vite-webpack",
+                 "kubernetes", "ci-cd", "git", "http"]],
+    },
+    "data_ml": {
+        "base": [["python", "sql", "statistics", "pandas", "numpy", "git", "scikit-learn", "algorithms", "linux"],
+                 ["python", "statistics", "numpy", "pandas", "sql", "algorithms", "git", "pytorch", "nlp"],
+                 ["python", "sql", "pandas", "statistics", "git", "scikit-learn", "airflow", "docker"]],
+        "adv": [["python", "pytorch", "nlp", "mlops", "docker", "kubernetes", "sql", "git", "statistics", "numpy",
+                 "ci-cd", "linux"],
+                ["python", "scikit-learn", "statistics", "sql", "airflow", "mlops", "pandas", "docker", "git",
+                 "postgresql", "linux"],
+                ["python", "cv", "pytorch", "numpy", "mlops", "docker", "kubernetes", "git", "algorithms", "linux",
+                 "statistics"],
+                ["python", "spark", "sql", "airflow", "statistics", "pandas", "mlops", "kubernetes", "git", "docker",
+                 "clickhouse"]],
+    },
+    "qa": {
+        "base": [["manual-testing", "test-design", "sql", "http", "api-testing", "git", "rest-api", "linux"],
+                 ["test-design", "sql", "http", "api-testing", "python", "pytest", "git", "rest-api", "postgresql"],
+                 ["manual-testing", "test-design", "http", "frontend-testing", "javascript", "sql", "git", "api-testing"]],
+        "adv": [["python", "pytest", "api-testing", "load-testing", "ci-cd", "docker", "kubernetes", "sql", "git",
+                 "test-design", "linux", "http"],
+                ["typescript", "playwright", "frontend-testing", "api-testing", "ci-cd", "docker", "git", "test-design",
+                 "sql", "http"],
+                ["java", "selenium", "api-testing", "ci-cd", "allure", "docker", "sql", "git", "test-design", "rest-api",
+                 "linux"],
+                ["load-testing", "python", "linux", "api-testing", "sql", "postgresql", "docker", "ci-cd", "git",
+                 "test-design", "http"]],
+    },
+    "security": {
+        "base": [["linux", "network-security", "http", "python", "git", "cryptography", "sql", "owasp"],
+                 ["owasp", "http", "javascript", "sql", "linux", "python", "git", "network-security"],
+                 ["linux", "siem-soc", "network-security", "http", "python", "sql", "git", "forensics"]],
+        "adv": [["siem-soc", "forensics", "network-security", "linux", "python", "kubernetes", "docker", "sql", "git",
+                 "http", "cryptography"],
+                ["owasp", "pentest", "burp-suite", "http", "javascript", "python", "linux", "sql", "docker", "git",
+                 "network-security"],
+                ["cryptography", "network-security", "linux", "python", "ci-cd", "docker", "kubernetes", "owasp", "git",
+                 "http", "algorithms"],
+                ["network-security", "linux", "siem-soc", "python", "ci-cd", "docker", "owasp", "sql", "git", "http"]],
+    },
+    "devops": {
+        "base": [["linux", "git", "docker", "ci-cd", "http", "networking", "nginx", "python", "sql"],
+                 ["linux", "docker", "git", "networking", "nginx", "monitoring", "ci-cd", "http", "postgresql"],
+                 ["linux", "git", "python", "docker", "ci-cd", "sql", "http", "cloud", "monitoring"]],
+        "adv": [["kubernetes", "helm", "terraform", "cloud", "monitoring", "sre", "ci-cd", "docker", "linux", "git",
+                 "networking", "python"],
+                ["kubernetes", "linux", "ansible", "monitoring", "sre", "docker", "ci-cd", "git", "postgresql", "kafka",
+                 "nginx"],
+                ["cloud", "kubernetes", "terraform", "go", "docker", "ci-cd", "git", "monitoring", "networking", "linux"],
+                ["linux", "sre", "monitoring", "kubernetes", "docker", "ci-cd", "python", "clickhouse", "postgresql", "git",
+                 "http"]],
+    },
+    "data_eng": {
+        "base": [["sql", "python", "postgresql", "etl", "git", "dwh", "airflow", "linux", "docker"],
+                 ["sql", "python", "etl", "dwh", "clickhouse", "git", "airflow", "data-quality"],
+                 ["sql", "postgresql", "python", "git", "etl", "data-quality", "dwh", "http", "docker"]],
+        "adv": [["sql", "python", "spark", "kafka", "streaming", "airflow", "kubernetes", "docker", "git", "etl",
+                 "dwh", "ci-cd"],
+                ["sql", "dbt", "clickhouse", "airflow", "dwh", "data-quality", "python", "git", "ci-cd", "etl",
+                 "postgresql"],
+                ["sql", "greenplum", "dwh", "etl", "airflow", "python", "spark", "git", "data-quality", "linux"],
+                ["python", "java", "spark", "kafka", "streaming", "sql", "kubernetes", "docker", "git", "airflow",
+                 "clickhouse"]],
+    },
+    "mobile": {
+        "base": [["kotlin", "android", "git", "http", "rest-api", "sql", "mobile-architecture", "java"],
+                 ["swift", "ios", "git", "http", "rest-api", "sql", "mobile-architecture", "swiftui"],
+                 ["javascript", "react-native", "typescript", "git", "http", "rest-api", "react", "mobile-architecture"]],
+        "adv": [["kotlin", "android", "jetpack-compose", "mobile-architecture", "ci-cd", "rest-api", "git", "http", "sql",
+                 "docker", "java"],
+                ["swift", "ios", "swiftui", "mobile-architecture", "ci-cd", "rest-api", "git", "http", "sql", "linux"],
+                ["flutter", "mobile-architecture", "ci-cd", "rest-api", "git", "http", "kotlin", "swift", "docker", "sql"],
+                ["typescript", "react-native", "react", "mobile-architecture", "frontend-testing", "ci-cd", "git", "rest-api",
+                 "http", "javascript"]],
+    },
+    "analyst": {
+        "base": [["sql", "requirements", "user-stories", "bpmn", "http", "uml", "er-modeling", "test-design"],
+                 ["requirements", "sql", "bpmn", "uml", "http", "integrations", "rest-api", "user-stories"],
+                 ["sql", "statistics", "python", "requirements", "er-modeling", "http", "git", "user-stories"]],
+        "adv": [["integrations", "rest-api", "kafka", "sql", "uml", "bpmn", "requirements", "er-modeling", "postgresql",
+                 "http", "api-testing", "git"],
+                ["requirements", "bpmn", "uml", "er-modeling", "sql", "integrations", "user-stories", "test-design",
+                 "rest-api", "http", "docker"],
+                ["sql", "python", "statistics", "er-modeling", "postgresql", "requirements", "integrations", "git", "http",
+                 "kafka"],
+                ["integrations", "sql", "rest-api", "http", "uml", "requirements", "bpmn", "kubernetes", "kafka", "git",
+                 "er-modeling"]],
+    },
+}
+MARKET_PER_DIRECTION = len(MARKET_GRADES) + len(MARKET_EXTRA_GRADES) + len(MARKET_WIDE_GRADES)  # 240: по 72 Junior, Middle и Senior
+
 
 def market_slots(d: str) -> list[tuple[int, str, list[str], bool]]:
-    """Все 40 мест направления d: (номер кандидата, грейд, связка, с ФСП). Первые 14 — прежние (801…), их связки
-    не меняются; 26 новых (1001…) берут связки по кругу из всех связок направления (MARKET_BUNDLES + EXTRA)."""
+    """Все 240 мест направления d: (номер кандидата, грейд, связка, с ФСП). Первые 14 — прежние (801…), их связки
+    не меняются; 26 следующих (1001…) берут связки по кругу из MARKET_BUNDLES + EXTRA; 200 последних (2001…) — из всех
+    связок направления плюс связок своего грейда (MARKET_BUNDLES_WIDE: base — стажёр/Junior, adv — Middle/Senior),
+    со сдвигом по номеру внутри грейда, чтобы у каждого грейда были все связки."""
     i = MARKET_DIRECTIONS.index(d)
     old = MARKET_BUNDLES[d]
     out = [(MARKET_FIRST + i * len(MARKET_GRADES) + k, g, old[k % len(old)], k % 4 == 0)
@@ -729,12 +856,19 @@ def market_slots(d: str) -> list[tuple[int, str, list[str], bool]]:
     pool = old + MARKET_BUNDLES_EXTRA.get(d, [])
     out += [(MARKET_EXTRA_FIRST + i * len(MARKET_EXTRA_GRADES) + k, g, pool[(k + len(old)) % len(pool)], k % 4 == 0)
             for k, g in enumerate(MARKET_EXTRA_GRADES)]
+    wide = MARKET_BUNDLES_WIDE.get(d, {})
+    seen: dict[str, int] = {}
+    for k, g in enumerate(MARKET_WIDE_GRADES):
+        j = seen[g] = seen.get(g, -1) + 1
+        gpool = pool + wide.get("base" if g in ("intern", "junior") else "adv", [])
+        out.append((MARKET_WIDE_FIRST + i * len(MARKET_WIDE_GRADES) + k, g, gpool[(j + i) % len(gpool)], k % 4 == 0))
     return out
 
 
 def extend_market_bundles(db: Session, rng_seed: int = 20261019) -> dict:
-    """Идемпотентно: по 40 модельных кандидатов на направление (по 12 Middle и 12 Senior) со связками навыков из спроса
-    hh.ru (W1; расширение 14 → 40 — 20.10). Уже засеянные номера не трогаются, досоздаются только недостающие."""
+    """Идемпотентно: по 240 модельных кандидатов на направление (24 стажёра, по 72 Junior, Middle и Senior) со связками
+    навыков из спроса hh.ru (W1; расширение 14 → 40 → 240 — 20.10). Уже засеянные номера не трогаются, досоздаются
+    только недостающие."""
     from app.modules.catalog import ext
     from app.modules.matching.coverage import bank_tags
 
