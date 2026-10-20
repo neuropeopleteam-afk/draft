@@ -1,4 +1,4 @@
-/* Service worker «Драфт»: оболочка приложения офлайн, API — только сеть, Web Push. MIT.
+/* Service worker «Драфт»: оболочка приложения офлайн, API с персональными данными — только сеть, уведомления. MIT.
  *
  * Выкладка без пустой страницы:
  * - VERSION подставляется при сборке (vite.config.ts, плагин sw-build-version): новый sw.js на каждую сборку,
@@ -13,7 +13,18 @@
 const VERSION = "__BUILD_ID__";
 const SHELL = `shell-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
-const STATIC = ["/manifest.webmanifest", "/favicon.svg", "/icons/icon-192.png", "/icons/badge-72.png"];
+const STATIC = [
+  "/manifest.webmanifest",
+  "/offline.html",
+  "/favicon.svg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/maskable-192.png",
+  "/icons/maskable-512.png",
+  "/icons/apple-touch-icon.png",
+  "/icons/badge-72.png",
+  "/app/qr.svg",
+];
 
 async function cacheShell(cache) {
   // index.html и файлы сборки, на которые он ссылается: офлайн откроется та же версия целиком
@@ -47,14 +58,20 @@ self.addEventListener("activate", (e) => {
 });
 
 const OFFLINE = `<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Нет связи</title><body style="font-family:Montserrat,system-ui,sans-serif;padding:2rem;color:#310F53">
-<h1 style="font-size:1.25rem">Нет связи с сервером</h1><p>Проверьте подключение и обновите страницу.</p>
-<button onclick="location.reload()" style="padding:.6rem 1rem;border-radius:.6rem;border:0;background:#FF0053;color:#fff">Обновить</button></body></html>`;
+<title>Нет связи — Драфт</title><body style="font-family:Montserrat,system-ui,sans-serif;padding:2rem;background:#FBF8FC;color:#310F53;text-align:center">
+<h1 style="font-size:1.25rem">Нет подключения к интернету</h1><p style="color:#4A4B52">Проверьте сеть или отключите VPN. При восстановлении связи страница обновится сама.</p>
+<button onclick="location.reload()" style="min-height:48px;padding:.7rem 1.25rem;border-radius:.75rem;border:0;background:#E0004C;color:#fff;font-weight:700">Повторить подключение</button>
+<script>window.addEventListener("online",function(){location.reload()});</script></body></html>`;
 
 const RELOGIN = `<!doctype html><meta charset="utf-8"><title>Вход на стенд</title>
 <script>location.reload()</script><p style="font-family:system-ui,sans-serif">Нужен вход на стенд, обновляем страницу…</p>`;
 
 async function navigate(req) {
+  const url = new URL(req.url);
+  if (url.pathname === "/offline.html") {
+    const off = await caches.match("/offline.html");
+    if (off) return off;
+  }
   try {
     const res = await fetch(req);
     if (res.status === 401) {
@@ -73,26 +90,29 @@ async function navigate(req) {
     }
     return res;
   } catch (_) {
-    return (await caches.match("/")) || new Response(OFFLINE, { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } });
+    return (await caches.match("/")) || (await caches.match("/offline.html")) || new Response(OFFLINE, { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } });
   }
 }
 
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
+  // Запросы с заголовком авторизации никогда не кэшируются (защита персональных данных)
+  if (req.headers.has("authorization")) return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  // API, вход через внешний ID (/auth/), документация и сам SW — никогда не из кэша
+  // API, вход через внешний ID (/auth/), документация, APK/метаданные пакета и сам SW — никогда не из кэша
   // /status — страница проверки связи (FIX7): всегда сеть и не «оболочка» (иначе её HTML попал бы в кэш как "/")
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/") || url.pathname.startsWith("/docs")
       || url.pathname === "/sw.js" || url.pathname === "/recover.js"
-      || url.pathname === "/status" || url.pathname === "/status.html") return;
-  if (req.mode === "navigate" || url.pathname === "/index.html") {
+      || url.pathname === "/status" || url.pathname === "/status.html"
+      || url.pathname === "/app/rustore.json" || url.pathname.endsWith(".apk")) return;
+  if (req.mode === "navigate" || url.pathname === "/index.html" || url.pathname === "/offline.html") {
     e.respondWith(navigate(req));
     return;
   }
-  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/icons/")) {
-    // Файлы с хэшем в имени не меняются: кэш, затем сеть; в кэш — только успешные ответы
+  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/icons/") || url.pathname === "/manifest.webmanifest" || url.pathname === "/favicon.svg" || url.pathname === "/app/qr.svg") {
+    // Файлы статики и иконки: кэш, затем сеть; в кэш — только успешные ответы
     e.respondWith(
       caches.match(req).then((hit) => hit || fetch(req).then((res) => {
         if (res.ok && res.type === "basic") { const copy = res.clone(); caches.open(ASSETS).then((c) => c.put(req, copy)); }
@@ -118,6 +138,7 @@ self.addEventListener("push", (e) => {
     badge: d.badge || "/icons/badge-72.png",
     tag: d.tag || undefined,
     renotify: !!d.tag,
+    vibrate: [120, 60, 120],
     lang: "ru",
     data: { url: d.url || "/" },
   }));

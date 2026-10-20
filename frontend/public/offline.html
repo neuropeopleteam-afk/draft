@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#310F53" />
+    <title>Нет связи с сервером — Драфт</title>
+    <style>
+      *{box-sizing:border-box}
+      body{margin:0;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#FBF8FC;color:#1C1D22}
+      main{width:100%;max-width:26rem;background:#fff;border:1px solid rgba(49,15,83,.12);border-radius:1.5rem;padding:1.75rem;box-shadow:0 16px 40px rgba(49,15,83,.08);text-align:center}
+      .logo{display:inline-flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.15rem;color:#310F53;margin-bottom:1rem}
+      h1{margin:0 0 .5rem;font-size:1.25rem;line-height:1.35;color:#310F53}
+      p{margin:0 0 1.25rem;font-size:.95rem;line-height:1.55;color:#4A4B52}
+      .actions{display:flex;flex-direction:column;gap:.65rem}
+      button,a.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.25rem;border:0;border-radius:.85rem;font:inherit;font-size:.95rem;font-weight:700;text-decoration:none;cursor:pointer}
+      .primary{background:#E0004C;color:#fff}
+      .primary:hover{background:#C20042}
+      .secondary{background:#F3EEF8;color:#310F53}
+      .note{margin-top:1rem;margin-bottom:0;font-size:.8rem;color:#6E6F78}
+    </style>
+  </head>
+  <body>
+    <main role="main" aria-labelledby="offline-title">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#310F53" />
+          <circle cx="12.5" cy="16" r="7" fill="none" stroke="#FFD6E4" stroke-width="2.5" />
+          <circle cx="19.5" cy="16" r="7" fill="none" stroke="#FF0053" stroke-width="2.5" />
+        </svg>
+        <span>Драфт</span>
+      </div>
+      <h1 id="offline-title">Нет подключения к интернету</h1>
+      <p>Проверьте сеть или отключите VPN. Как только связь восстановится, страница обновится автоматически.</p>
+      <div class="actions">
+        <button type="button" class="primary" onclick="location.reload()">Повторить подключение</button>
+        <a href="/" class="btn secondary">На главную</a>
+      </div>
+      <p class="note" id="net-status" role="status">Ожидаем восстановления сети…</p>
+    </main>
+    <script>
+      window.addEventListener("online", function () {
+        var el = document.getElementById("net-status");
+        if (el) el.textContent = "Связь восстановлена, загружаем…";
+        location.reload();
+      });
+    </script>
+  </body>
+</html>

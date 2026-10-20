@@ -1,4 +1,4 @@
-// «Приложение и уведомления»: установка PWA на главный экран (iPhone / Android / компьютер) и Web Push.
+// «Приложение и уведомления»: установка на главный экран (iPhone / Android / компьютер), пакет для RuStore и уведомления.
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../components/CabinetLayout";
@@ -6,38 +6,200 @@ import { Logo } from "../components/Logo";
 import { Alert, errText } from "../components/ui";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { canPromptInstall, currentSubscription, isStandalone, onInstallChange, platform, promptInstall, pushSupported, subscribePush, unsubscribePush } from "./pwa";
+import {
+  canPromptInstall,
+  currentSubscription,
+  isInAppBrowser,
+  isStandalone,
+  onInstallChange,
+  platform,
+  promptInstall,
+  pushSupported,
+  subscribePush,
+  unsubscribePush,
+} from "./pwa";
 
-function Steps({ items }: { items: string[] }) {
-  return <ol className="mt-3 space-y-2 text-sm">{items.map((s, i) => <li key={i} className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush text-xs font-bold text-brand-plum">{i + 1}</span><span className="pt-0.5 text-brand-ink/80">{s}</span></li>)}</ol>;
+interface RuStoreInfo {
+  apk: string;
+  package: string;
+  version: string;
+  size_mb: number;
+  sha256: string;
+  status: string;
+}
+
+function ShareIosIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="inline-block h-4 w-4 -translate-y-0.5 text-brand-plum" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M10 12.5V3m0 0L6.8 6.2M10 3l3.2 3.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5.5 8.5H4.8A1.3 1.3 0 003.5 9.8v6.4a1.3 1.3 0 001.3 1.3h10.4a1.3 1.3 0 001.3-1.3V9.8a1.3 1.3 0 00-1.3-1.3h-.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function AddHomeIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="inline-block h-4 w-4 -translate-y-0.5 text-brand-plum" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="3.5" y="3.5" width="13" height="13" rx="2.5" />
+      <path d="M10 6.8v6.4M6.8 10h6.4" strokeLinecap="round" />
+    </svg>
+  );
 }
 
 function InstallGuide() {
   const [, force] = useState(0);
+  const [installNote, setInstallNote] = useState<string | null>(null);
+  const [rs, setRs] = useState<RuStoreInfo | null>(null);
   useEffect(() => onInstallChange(() => force((x) => x + 1)), []);
+  useEffect(() => {
+    fetch("/app/rustore.json", { cache: "no-cache" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setRs)
+      .catch(() => setRs(null));
+  }, []);
+
   const p = platform();
   const installed = isStandalone();
+  const inApp = isInAppBrowser();
+
+  async function onOneClick() {
+    const res = await promptInstall();
+    setInstallNote(
+      res === "accepted"
+        ? "Готово — значок «Драфт» добавлен на главный экран."
+        : res === "dismissed"
+          ? "Установка отменена. Вы можете повторить её в любой момент."
+          : null,
+    );
+  }
+
   return (
-    <section className="card space-y-4">
+    <section className="card space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-bold text-brand-night">Установить на главный экран</h2>
-          <p className="text-sm text-brand-ink/65">Приложение открывается без адресной строки и присылает уведомления. Магазин приложений не нужен.</p>
+          <p className="text-sm text-brand-ink/65">
+            Приложение открывается на весь экран без адресной строки, поддерживает быстрые ярлыки («Подборка», «Мой грейд», «Приглашения») и мгновенные уведомления.
+          </p>
         </div>
-        {installed ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Установлено</span>
-          : canPromptInstall() ? <button className="btn-primary" onClick={() => promptInstall()}>Установить</button> : null}
+        {installed ? (
+          <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+            Установлено на устройстве
+          </span>
+        ) : canPromptInstall() ? (
+          <button type="button" className="btn-primary min-h-[44px]" onClick={onOneClick} data-testid="install-guide-one-click">
+            Установить в 1 клик
+          </button>
+        ) : null}
       </div>
+
+      {installNote && <Alert kind="ok">{installNote}</Alert>}
+
+      {inApp && (
+        <Alert kind="info">
+          Страница открыта во встроенном браузере мессенджера. Нажмите меню «⋯» в углу экрана и выберите «Открыть в Safari» (на iPhone) или «Открыть в браузере» (на Android), чтобы установить приложение.
+        </Alert>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
-        <div className={`rounded-xl border p-4 ${p === "ios" ? "border-brand/40 bg-brand-blush/20" : "border-brand-night/10"}`}>
-          <p className="font-semibold text-brand-night">iPhone и iPad (Safari)</p>
-          <Steps items={["Откройте fsp.neuropeople.pro в Safari.", "Нажмите «Поделиться» (квадрат со стрелкой вверх).", "Выберите «На экран „Домой“» и подтвердите «Добавить».", "Откройте приложение с главного экрана и включите уведомления ниже (iOS 16.4 и новее)."]} />
+        <div className={`rounded-2xl border p-4 ${p === "ios" ? "border-brand/40 bg-brand-blush/20" : "border-brand-night/10"}`} data-testid="ios-install-guide">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-bold text-brand-night">iPhone и iPad (Safari)</p>
+            <span className="rounded-full bg-brand-blush px-2.5 py-0.5 text-[11px] font-semibold text-brand-plum">3 касания</span>
+          </div>
+          <ol className="mt-3 space-y-2.5 text-sm text-brand-ink/85">
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush text-xs font-bold text-brand-plum">1</span>
+              <span className="pt-0.5">Откройте <strong>fsp-draft.ru</strong> в штатном браузере Safari.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush text-xs font-bold text-brand-plum">2</span>
+              <span className="pt-0.5">
+                Нажмите кнопку <strong>«Поделиться»</strong> <ShareIosIcon /> на нижней панели Safari (на iPad — в правом верхнем углу).
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush text-xs font-bold text-brand-plum">3</span>
+              <span className="pt-0.5">
+                Прокрутите список вниз, выберите <strong>«На экран „Домой“»</strong> <AddHomeIcon /> и нажмите <strong>«Добавить»</strong>.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush text-xs font-bold text-brand-plum">4</span>
+              <span className="pt-0.5">
+                Запустите «Драфт» со значка на экране «Домой» и включите уведомления ниже (доступно начиная с iOS 16.4).
+              </span>
+            </li>
+          </ol>
         </div>
-        <div className={`rounded-xl border p-4 ${p === "android" ? "border-brand/40 bg-brand-blush/20" : "border-brand-night/10"}`}>
-          <p className="font-semibold text-brand-night">Android (Chrome, Яндекс Браузер)</p>
-          <Steps items={["Откройте fsp.neuropeople.pro.", "Нажмите «Установить» на этой странице или в меню ⋮ → «Установить приложение» / «Добавить на главный экран».", "Подтвердите установку — значок появится среди приложений.", "Разрешите уведомления кнопкой ниже."]} />
+
+        <div className={`rounded-2xl border p-4 ${p === "android" ? "border-brand/40 bg-brand-blush/20" : "border-brand-night/10"}`} data-testid="android-install-guide">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-bold text-brand-night">Android (браузер или RuStore)</p>
+            <span className="rounded-full bg-brand-blush px-2.5 py-0.5 text-[11px] font-semibold text-brand-plum">в 1 клик / APK</span>
+          </div>
+          <ol className="mt-3 space-y-2.5 text-sm text-brand-ink/85">
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush text-xs font-bold text-brand-plum">1</span>
+              <span className="pt-0.5">Откройте <strong>fsp-draft.ru</strong> в Chrome или Яндекс Браузере.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush text-xs font-bold text-brand-plum">2</span>
+              <span className="pt-0.5">Нажмите <strong>«Установить в 1 клик»</strong> выше или в меню браузера <strong>⋮ → «Установить приложение»</strong>.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush text-xs font-bold text-brand-plum">3</span>
+              <span className="pt-0.5">Подтвердите установку — значок «Драфт» появится в списке приложений с быстрыми ярлыками по долгому нажатию.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blush text-xs font-bold text-brand-plum">4</span>
+              <span className="pt-0.5">Для телефонов без сервисов браузера используйте подписанный Android-пакет для RuStore ниже.</span>
+            </li>
+          </ol>
         </div>
       </div>
-      <p className="text-xs text-brand-ink/65">На компьютере (Chrome, Edge, Яндекс Браузер) — значок установки в адресной строке или кнопка «Установить» выше.</p>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="font-bold text-brand-night">Android-пакет для RuStore</p>
+              <p className="text-xs text-brand-ink/65">
+                {rs ? `Пакет ${rs.package} · версия ${rs.version} · ${rs.size_mb} МБ` : "Подписанный установочный пакет Android"}
+              </p>
+            </div>
+            {rs ? (
+              <a
+                href={rs.apk}
+                download
+                className="btn-primary inline-flex min-h-[44px] shrink-0 items-center !px-4 !py-2 text-sm"
+                data-testid="install-page-rustore-apk"
+              >
+                Скачать APK
+              </a>
+            ) : null}
+          </div>
+          {rs && (
+            <p className="mt-2 text-xs leading-relaxed text-brand-ink/65">
+              {rs.status} Контрольная сумма SHA-256: <code className="break-all text-[11px]">{rs.sha256.slice(0, 16)}…</code>
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4 rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+          <img src="/app/qr.svg" alt="QR-код для открытия «Драфт» на телефоне" className="h-24 w-24 shrink-0 rounded-xl bg-white p-1" />
+          <div className="space-y-1 text-sm">
+            <p className="font-bold text-brand-night">Открыть на телефоне</p>
+            <p className="text-xs leading-relaxed text-brand-ink/70">
+              Наведите камеру смартфона на QR-код, чтобы сразу открыть окно установки «Драфт» на телефоне.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <p className="text-xs text-brand-ink/65">
+        На компьютере (Chrome, Edge, Яндекс Браузер) приложение ставится через значок установки в правой части адресной строки или кнопку «Установить в 1 клик» выше.
+      </p>
     </section>
   );
 }
@@ -62,14 +224,36 @@ function PushCard() {
   return (
     <section className="card space-y-3">
       <h2 className="font-bold text-brand-night">Уведомления</h2>
-      <p className="text-sm text-brand-ink/65">{role === "candidate" ? "Новое приглашение с вилкой зарплаты и изменения статуса ваших откликов." : "Кандидат принял приглашение, новый отклик на вакансию."}</p>
-      {!pushSupported() && <Alert kind="info">Этот браузер не поддерживает Web Push. На iPhone сначала установите приложение на главный экран.</Alert>}
+      <p className="text-sm text-brand-ink/65">
+        {role === "candidate"
+          ? "Новое приглашение с вилкой зарплаты, сообщения от работодателя и изменения статуса ваших откликов."
+          : "Кандидат принял приглашение, ответил в диалоге или откликнулся на вакансию."}
+      </p>
+      {!pushSupported() && (
+        <Alert kind="info">
+          В текущем режиме браузера уведомления недоступны. На iPhone сначала добавьте «Драфт» на экран «Домой» в Safari (iOS 16.4 и новее) и откройте приложение со значка.
+        </Alert>
+      )}
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <div className="flex flex-wrap gap-3">
         {on ? <>
-          <button className="btn-primary" onClick={test}>Прислать тестовое</button>
-          <button className="btn-ghost" onClick={async () => { await unsubscribePush(); setOn(false); setMsg({ k: "info", t: "Уведомления на этом устройстве выключены." }); }}>Выключить</button>
-        </> : <button className="btn-primary" disabled={busy || !pushSupported() || !me} onClick={enable}>{busy ? "Включаем…" : "Включить уведомления"}</button>}
+          <button type="button" className="btn-primary min-h-[44px]" onClick={test}>Прислать тестовое</button>
+          <button
+            type="button"
+            className="btn-ghost min-h-[44px]"
+            onClick={async () => {
+              await unsubscribePush();
+              setOn(false);
+              setMsg({ k: "info", t: "Уведомления на этом устройстве выключены." });
+            }}
+          >
+            Выключить
+          </button>
+        </> : (
+          <button type="button" className="btn-primary min-h-[44px]" disabled={busy || !pushSupported() || !me} onClick={enable}>
+            {busy ? "Включаем…" : "Включить уведомления"}
+          </button>
+        )}
       </div>
     </section>
   );
@@ -79,7 +263,10 @@ function PushCard() {
 export function AppSection() {
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Приложение и уведомления" subtitle="Платформа работает как приложение (PWA): установка на главный экран и push-уведомления." />
+      <PageTitle
+        title="Приложение и уведомления"
+        subtitle="Установите «Драфт» на главный экран телефона и включите мгновенные уведомления о приглашениях и откликах."
+      />
       <PushCard />
       <InstallGuide />
     </div>
@@ -90,12 +277,30 @@ export function AppSection() {
 export function InstallPage() {
   const { me } = useAuth();
   return (
-    <main id="main" className="min-h-screen bg-[#FBF8FC] px-6 py-10">
+    <main id="main" className="min-h-screen bg-[#FBF8FC] px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-4xl space-y-6">
-        <Link to="/"><Logo /></Link>
-        <PageTitle title="Приложение «Драфт»" subtitle="Установите платформу на телефон как приложение — без магазина приложений." />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link to="/" className="inline-flex min-h-[44px] items-center"><Logo /></Link>
+          <Link to="/" className="inline-flex min-h-[44px] items-center text-sm font-semibold text-brand-plum hover:underline">
+            На главную
+          </Link>
+        </div>
+        <PageTitle
+          title="Приложение «Драфт»"
+          subtitle="Установите платформу на iPhone или Android — в один клик из браузера или через пакет для RuStore."
+        />
         <InstallGuide />
-        {me ? <PushCard /> : <Alert kind="info">Чтобы включить уведомления, <Link to="/login" className="font-semibold underline">войдите</Link>.</Alert>}
+        {me ? (
+          <PushCard />
+        ) : (
+          <Alert kind="info">
+            Чтобы включить уведомления о приглашениях и сообщениях,{" "}
+            <Link to="/login" className="font-semibold underline">
+              войдите в личный кабинет
+            </Link>
+            .
+          </Alert>
+        )}
       </div>
     </main>
   );
