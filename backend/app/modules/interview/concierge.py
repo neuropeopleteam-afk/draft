@@ -11,7 +11,8 @@
 Голос — потоковый синтез поставщика через ретранслятор (первый звук ≈ 0,7 с), постоянные фразы (приветствие, реплики
 шагов обзора, связки) — из дискового кэша без ожидания (прогрев при первом обращении к /concierge/script).
 Знакомство, выбор роли и команды («стоп», «дальше», «повтори», «назад», «покажи тест») — мгновенно, без модели;
-вопросы о платформе — быстрая модель через OpenRouter с базой знаний RAG (1–2 предложения, JSON).
+вопросы о платформе — сильная модель с базой знаний (concierge_kb.md, поиск — concierge_rag.py, память разговора,
+стенограммы и фоновый наставник — concierge_brain.py).
 Названия внешних сервисов в речи не звучат.
 """
 from __future__ import annotations
@@ -24,7 +25,6 @@ import os
 import re
 import threading
 import time
-from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterator, Literal
@@ -40,7 +40,7 @@ ROLES = ("all", "candidate", "employer", "fsp")
 
 TTS_HOST = "api.elevenlabs.io"
 TTS_MODEL = os.environ.get("CONCIERGE_TTS_MODEL", "eleven_turbo_v2_5")
-TTS_SPEED = float(os.environ.get("CONCIERGE_TTS_SPEED", "1.06"))
+TTS_SPEED = float(os.environ.get("CONCIERGE_TTS_SPEED", "1.0"))
 # fmt → (формат поставщика, MIME, частота)
 FORMATS: dict[str, tuple[str, str, int]] = {
     "pcm24": ("pcm_24000", "audio/pcm", 24000),
@@ -223,34 +223,50 @@ def cached_speak(text: str, fmt: Literal["mp3", "pcm_16000"]) -> tuple[bytes, st
 
 
 # ------------------------------------------------------------------ сценарий обзора
+#
+# Обзор — шаги (экраны), у каждого шага несколько коротких реплик («битов»). Каждая реплика — про один блок экрана:
+# фронт подсвечивает блок (или подводит курсор и нажимает кнопку) ровно на время этой реплики. Порядок реплик здесь
+# и порядок блоков в frontend/src/components/elena/steps.ts совпадают — меняются вместе.
 
-GREETING = ("Здравствуйте. Я Елена, проводник по Драфту. Как вас зовут и кем вы здесь: кандидатом или работодателем? "
-            "Могу показать и весь сайт.")
-NUDGE = "Тогда начну обзор всего сайта, а вы перебивайте меня в любой момент."
+GREETING = "Здравствуйте. Я Елена, ИИ-проводник по «Драфту». Как к вам обращаться?"
+GREETING_BACK = "{name}, здравствуйте. Рада снова вас видеть. Показать весь сайт или что-то конкретное?"
+NUDGE = "Познакомимся по ходу. Начну с обзора всего сайта, а вы перебивайте меня в любой момент — я остановлюсь."
+NUDGE_ROLE = "Тогда начну со всего сайта. Перебивайте меня в любой момент — я остановлюсь и отвечу."
 
-BRIDGES: dict[str, str] = {
-    "candidate": "Открываю кабинет кандидата.",
-    "employer": "Переходим в кабинет работодателя.",
-    "fsp": "Теперь кабинет Федерации спортивного программирования.",
-    "validation": "И напоследок — цифры проверки.",
+# Связки кабинетов: first — обзор начинается с этого кабинета, next — переход из другого кабинета;
+# first_named — с именем собеседника ({name})
+BRIDGES: dict[str, dict[str, str]] = {
+    "candidate": {"first": "Начнём со стороны кандидата.", "first_named": "{name}, начнём со стороны кандидата.",
+                  "next": "Теперь сторона кандидата."},
+    "employer": {"first": "", "next": "С кандидатом всё. Теперь посмотрим глазами работодателя."},
+    "fsp": {"first": "", "next": "Теперь кабинет Федерации спортивного программирования."},
+    "public": {"first": "", "next": "И напоследок две вещи для технического жюри."},
 }
 
 PHRASES: dict[str, str] = {
     "pause": "Хорошо, жду. Скажите «дальше», когда продолжим.",
-    "start": "Отлично, начинаем.",
     "goto": "Сейчас покажу.",
-    "bye": "Хорошо. Если понадоблюсь, я в правом нижнем углу.",
+    "bye": "Хорошо. Если понадоблюсь — я в правом нижнем углу.",
     "sorry": "Не расслышала. Повторите, пожалуйста.",
-    "done_all": "Это главное. Спрашивайте о чём угодно — я слушаю.",
+    "back_to_tour": "Возвращаюсь к обзору.",
+    "done_all": "Это главное о «Драфте». Спрашивайте о чём угодно или скажите, что показать подробнее.",
     "done_candidate": "Это главное для кандидата. Спросите о чём угодно или скажите «работодатель» — покажу вторую сторону.",
-    "done_employer": "Так работодатель находит подтверждённых специалистов. Спрашивайте или скажите «кандидат» — покажу его кабинет.",
-    "done_fsp": "Это кабинет федерации. Спрашивайте, если что-то интересно.",
-    "resume_q": "Продолжаю обзор.",
-    "hello": "Здравствуйте. Как вас зовут и кем вы здесь: кандидатом или работодателем?",
-    "nomic": "Здравствуйте. Я Елена, проводник по Драфту. Микрофон недоступен, поэтому просто проведу вас по сайту.",
+    "done_employer": "Так работодатель находит подтверждённых специалистов. Спрашивайте — или скажите «кандидат», покажу его путь.",
+    "done_fsp": "Это кабинет Федерации. Спрашивайте, если что-то интересно.",
+    "hello": "Здравствуйте. Как к вам обращаться?",
+    "ask_role": "Показать весь сайт или начнём с вашей роли: кандидат, работодатель или Федерация?",
+    "nomic": "Здравствуйте. Я Елена, ИИ-проводник по «Драфту». Микрофон недоступен, поэтому я просто проведу вас по сайту.",
 }
 
-FILLERS = ("Секунду.", "Так, сейчас.", "Хороший вопрос.", "Сейчас расскажу.")
+# Персональные варианты ({name}); без имени — обычная фраза из PHRASES
+PHRASES_NAMED: dict[str, str] = {
+    "done_all": "{name}, это главное о «Драфте». Спрашивайте о чём угодно или скажите, что показать подробнее.",
+    "done_candidate": "{name}, это главное для кандидата. Спросите о чём угодно или скажите «работодатель» — покажу вторую сторону.",
+    "done_employer": "{name}, так работодатель находит подтверждённых специалистов. Спрашивайте — или скажите «кандидат», покажу его путь.",
+}
+
+FILLERS = ("Секунду.", "Так, смотрю.", "Хороший вопрос.", "Сейчас расскажу.", "Сейчас подскажу.")
+
 
 
 _U = ["ноль", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"]
@@ -296,7 +312,7 @@ def plural(n: int, one: str, few: str, many: str) -> str:
     return one if n % 10 == 1 else few if 2 <= n % 10 <= 4 else many
 
 
-def _arena_speech() -> str:
+def _arena_lines() -> list[str]:
     n = live_numbers()
     pp = int(round(float(n.get("p5_vs_bm25", 0.31)) * 100))
     within = round(float(n.get("within1_one_session", 0.9936)) * 100, 1)
@@ -308,63 +324,118 @@ def _arena_speech() -> str:
     else:
         within_txt = f"{num_words(w_int)} {plural(w_int, 'процент', 'процента', 'процентов')}"
     tail = "ни одна не прошла" if passed == 0 else f"прошли {num_words(passed, fem=True)}"
-    return (
-        f"И главное — цифры. В первой пятёрке Драфта подходящих кандидатов на {num_words(pp)} "
+    return [
+        f"Арена ранжирования: в первой пятёрке Драфта подходящих кандидатов на {num_words(pp)} "
         f"{plural(pp, 'процентный пункт', 'процентных пункта', 'процентных пунктов')} больше, чем у поиска по резюме, "
-        f"а раздутые резюме почти не попадают в первую десятку. Грейд в пределах одной ступени — {within_txt}, "
-        f"а из {num_words(attacks, gen=True)} атак на оценщика {tail}."
-    )
+        f"а раздутые резюме почти не попадают в первую десятку.",
+        f"А здесь точность грейда: в пределах одной ступени — {within_txt}, и из {num_words(attacks, gen=True)} атак "
+        f"на оценщика {tail}.",
+    ]
 
 
-STEP_SPEECH: dict[str, str] = {
-    "cand-overview": (
-        "Это кабинет кандидата. Наверху — переключатель ролей, в центре — маршрут из четырёх шагов: стек, тест на грейд, "
-        "устная защита и приглашения. Нажимаю второй шаг."
-    ),
-    "cand-assessment": (
-        "Здесь выбирают грейд, который хотите подтвердить. Отмечаю Senior — прямо под карточками галочка согласия и кнопка "
-        "«Начать тест». Задания подстраиваются под ваши ответы, поэтому тест короче обычного."
-    ),
-    "cand-feedback": (
-        "Это карта навыков. Шкала показывает ваш уровень и точность оценки, ниже — маршрут роста с кнопками и сравнение "
-        "со спросом на рынке."
-    ),
-    "cand-passport": (
-        "Каждая попытка теста подписана платформой. Работодатель проверяет её по кью-ар коду за пару секунд — без звонков."
-    ),
-    "cand-defense": (
-        "А это устная защита: три минуты разговора с ИИ-интервьюером по вашим же решениям. Скопированный ответ так не защитить."
-    ),
-    "cand-invitations": (
-        "В приглашениях компания сразу называет зарплатную вилку, а контакты открываются, только когда вы примете предложение."
-    ),
-    "emp-needs": (
-        "Это кабинет работодателя. Опишите, кого ищете, своими словами — я подставлю пример. Кнопка «Разобрать требования» "
-        "выделит стек и уберёт дискриминационные формулировки."
-    ),
-    "emp-compare": (
-        "На сравнении кандидатов сверху — формула ранжирования: тест, обязательный стек, достижения ФСП и задания. "
-        "Ниже — таблица по каждому требованию и кнопка «Пригласить» с вилкой."
-    ),
-    "fsp-cabinet": (
-        "Кабинет Федерации спортивного программирования: спрос работодателей, влияние побед на приглашения и зарплаты, "
-        "отборочные кубки под вакансии. Открываю эффект соревнований."
-    ),
+def _arena_speech() -> str:  # совместимость: одной репликой
+    return " ".join(_arena_lines())
+
+
+STEP_BEATS: dict[str, list[str]] = {
+    "cand-overview": [
+        "Это кабинет кандидата. Здесь специалист один раз подтверждает уровень, а работодатели приходят к нему сами.",
+        "Весь путь — четыре шага: стек, тест на грейд, устная защита и приглашения с зарплатой.",
+        "Здесь видно интерес работодателей за неделю: сколько компаний открыли карточку и в скольких подборках вы есть.",
+        "А это ИИ-адвокат зарплаты: он готовит обоснование встречного оффера на ваших фактах.",
+        "Перейду ко второму шагу — тесту на грейд.",
+    ],
+    "cand-assessment": [
+        "Сначала выбирают грейд, который хотите подтвердить, — от стажёра до Principal.",
+        "Подсказка по стажу предлагает уровень, но выбор всегда за вами.",
+        "Режимов два: полный тест и экспресс на пять–семь заданий.",
+        "Тест адаптивный: каждое следующее задание подбирается по прошлым ответам, поэтому он короче обычного.",
+    ],
+    "cand-category": [
+        "После теста — категория и грейд. Шкала показывает уровень и погрешность оценки: это психометрия, а не процент правильных.",
+        "Ниже паспорт грейда с электронной подписью. Работодатель проверяет его по QR-коду за секунду, без звонков.",
+    ],
+    "cand-defense": [
+        "У каждой попытки есть паспорт честности из пяти контуров. Вердикт видит работодатель, автоматических наказаний нет.",
+        "А это устная защита: три минуты живого разговора с ИИ-интервьюером по вашим ответам. Скопированное из нейросети так не защитить.",
+    ],
+    "cand-feedback": [
+        "Карта навыков подсказывает, что делать дальше: что подтянуть и какие задачи пройти.",
+        "А здесь — что прямо сейчас просит рынок в вашей категории по открытым вакансиям.",
+    ],
+    "cand-invitations": [
+        "В приглашениях компания всегда сразу называет зарплатную вилку.",
+        "Приглашение можно принять, отклонить или предложить свою вилку. Контакты открываются только после вашего согласия.",
+    ],
+    "emp-home": [
+        "Это кабинет компании. Наверху тариф: сколько приглашений осталось.",
+        "А это новинка — Командный Драфт: сборка целой команды под проект в один клик.",
+    ],
+    "emp-needs": [
+        "Работодатель начинает с потребности: текст вакансии можно вставить, надиктовать или загрузить файлом.",
+        "Подставлю пример вакансии.",
+        "Кнопка «Разобрать требования» выделит стек с цитатами и уберёт дискриминационные формулировки. Подборка собирается меньше чем за минуту.",
+    ],
+    "emp-compare": [
+        "Это сравнение кандидатов. По каждому требованию видно, чем подтверждён навык: тестом, задачей или достижением ФСП.",
+        "ИИ-советник руководителя коротко докладывает, кого позвать первым и о чём спросить на финальном созвоне.",
+    ],
+    "emp-squad": [
+        "Командный Драфт собирает сбалансированную команду под проект и бюджет — от двух до десяти человек.",
+        "Всей команде можно сразу отправить пакетный оффер.",
+    ],
+    "emp-invitations": [
+        "Без зарплатной вилки приглашение отправить нельзя. Здесь видны встречные предложения кандидатов и переписка.",
+        "Принятого кандидата можно в один клик передать в ATS компании.",
+    ],
+    "emp-ats": [
+        "Интеграция с «Потоком» проверена на настоящем аккаунте: этапы найма возвращаются обратно, вплоть до выхода на работу.",
+    ],
+    "fsp-cabinet": [
+        "Это кабинет Федерации спортивного программирования: главное за период и как победители соревнований получают приглашения.",
+        "Конвертер разряда переводит спортивный разряд в понятный работодателю ИТ-грейд.",
+        "Открою эффект соревнований.",
+    ],
+    "fsp-effect": [
+        "Здесь видно, как соревнования влияют на приглашения и зарплаты — по направлениям, дисциплинам и разрядам. Всё выгружается в таблицу.",
+    ],
+    "warroom": [
+        "Боевой ИИ-Полигон — для технического жюри.",
+        "В первом режиме кандидат вживую чинит архитектуру высоконагруженной системы во время аварии.",
+        "Во втором — атаки на ИИ-оценщика в один клик, и радар их перехватывает.",
+    ],
+    "val-arena": [
+        "И как мы проверяем себя: пять чисел, у каждого указано, на каких данных оно получено.",
+        # + две реплики арены — _arena_lines()
+    ],
 }
 
-STEP_IDS = (*STEP_SPEECH.keys(), "val-arena")
+STEP_IDS = tuple(STEP_BEATS.keys())
 
 
-def script() -> dict:
-    steps = dict(STEP_SPEECH)
-    steps["val-arena"] = _arena_speech()
-    return {"greeting": GREETING, "nudge": NUDGE, "bridges": BRIDGES, "phrases": PHRASES, "fillers": list(FILLERS),
-            "steps": steps, "format": "pcm24", "rate": 24000}
+def beats() -> dict[str, list[str]]:
+    out = {k: list(v) for k, v in STEP_BEATS.items()}
+    out["val-arena"] = [*STEP_BEATS["val-arena"], *_arena_lines()]
+    return out
+
+
+def script(name: str | None = None) -> dict:
+    b = beats()
+    return {
+        "greeting": GREETING, "greeting_back": GREETING_BACK, "nudge": NUDGE, "nudge_role": NUDGE_ROLE,
+        "bridges": BRIDGES, "phrases": PHRASES, "phrases_named": PHRASES_NAMED, "fillers": list(FILLERS),
+        "beats": b, "steps": {k: " ".join(v) for k, v in b.items()},  # steps — для старого фронта в кэше браузера
+        "format": "pcm24", "rate": 24000, "version": 2,
+    }
 
 
 def script_texts() -> list[str]:
     sc = script()
-    return [sc["greeting"], sc["nudge"], *sc["bridges"].values(), *sc["phrases"].values(), *sc["fillers"], *sc["steps"].values()]
+    out = [sc["greeting"], sc["nudge"], sc["nudge_role"], *sc["phrases"].values(), *sc["fillers"]]
+    out += [b[k] for b in sc["bridges"].values() for k in ("first", "next") if b.get(k)]
+    for lines in sc["beats"].values():
+        out += lines
+    return list(dict.fromkeys(out))
 
 
 _warm_lock = threading.Lock()
@@ -391,7 +462,7 @@ def warm_async() -> None:
         # mp3 — постоянные фразы и реплики шагов для браузера (в 6 раз меньше PCM), PCM 24 кГц — для потока ответа;
         # плюс типовые ответы на выбор роли без имени (звучат сразу, без синтеза)
         texts = script_texts()
-        extra = [_start_reply(None, r, False) for r in ROLES]
+        extra = [_start_reply(None, r, False, ft) for r in ROLES for ft in (True, False)]
         try:
             for text in [*texts, *extra]:
                 for fmt in ("mp3", "pcm24"):
@@ -407,105 +478,6 @@ def warm_async() -> None:
 
     threading.Thread(target=run, name="concierge-warm", daemon=True).start()
 
-
-# ------------------------------------------------------------------ база знаний (RAG)
-
-RAG_CHUNKS: list[dict[str, str]] = [
-    {
-        "id": "landing",
-        "paths": "/",
-        "keywords": "главная витрина закон драфт почему резюме обратный найм старт вход регистрация",
-        "content": (
-            "Главная страница: обратный найм — работодатель сам находит подтверждённого специалиста и сразу называет "
-            "зарплатную вилку. Кандидат один раз подтверждает уровень адаптивным тестом и получает категорию "
-            "«направление · грейд». Блок «4 закона Драфта» — с вкладками для работодателя, кандидата и Федерации "
-            "спортивного программирования."
-        ),
-    },
-    {
-        "id": "candidate_overview",
-        "paths": "/candidate",
-        "keywords": "кабинет кандидата обзор дорожная карта шаг маршрут роль выйти",
-        "content": (
-            "Кабинет кандидата (/candidate): сверху переключатель ролей и кнопка «Выйти»; в центре маршрут из 4 шагов: "
-            "1 — направление и стек (опрос), 2 — адаптивный тест на грейд, 3 — устная защита кода с ИИ-интервьюером "
-            "(3 минуты голосом), 4 — карта роста и приглашения с зарплатой."
-        ),
-    },
-    {
-        "id": "candidate_assessment",
-        "paths": "/candidate/assessment /candidate/express",
-        "keywords": "тест грейд опрос стажёр junior middle senior lead principal согласие галочка начать экспресс полный античит адаптивный",
-        "content": (
-            "Опрос и тест (/candidate/assessment): 6 карточек грейда (Стажёр, Junior, Middle, Senior, Lead, Principal); "
-            "под ними галочка согласия на проверку самостоятельности и кнопка «Начать тест». Тест адаптивный (психометрия "
-            "IRT): каждое следующее задание выбирается под уровень по прошлым ответам, банк — 403 семейства и 8 060 "
-            "вариантов. Полный режим — до 80 минут, экспресс-калибровка — около 5 минут. Наказаний автоматически нет: "
-            "сигналы честности видит работодатель."
-        ),
-    },
-    {
-        "id": "candidate_feedback",
-        "paths": "/candidate/feedback /candidate/category",
-        "keywords": "карта навыков рост шкала irt тета психометрия пробелы рынок hh вакансии маршрут задачи погрешность",
-        "content": (
-            "Карта навыков и рост (/candidate/feedback): шкала уровня с погрешностью оценки и зонами грейдов, "
-            "«Маршрут роста» с кнопками действий (добавить навык в стек, задачи с автопроверкой, тест на грейд), "
-            "сравнение со спросом рынка по открытым вакансиям hh.ru."
-        ),
-    },
-    {
-        "id": "candidate_attempts",
-        "paths": "/candidate/attempts",
-        "keywords": "паспорт попытка подпись qr кью ар честность защита устная интервьюер",
-        "content": (
-            "Попытки и устная защита (/candidate/attempts): каждая попытка теста подписана электронной подписью "
-            "платформы; работодатель проверяет паспорт по QR-коду без входа. Устная защита — 3 минуты разговора с "
-            "ИИ-интервьюером по своим решениям: грейд не меняется, подтверждается самостоятельность."
-        ),
-    },
-    {
-        "id": "candidate_invitations",
-        "paths": "/candidate/invitations /candidate/fsp /candidate/assignments",
-        "keywords": "приглашения оффер вилка зарплата принять отклонить контакты паспорт фсп достижения кубок задания",
-        "content": (
-            "Приглашения (/candidate/invitations): компания обязана сразу указать вилку «от — до» в рублях; кандидат "
-            "принимает (только тогда открываются контакты), отклоняет или предлагает свою вилку. Паспорт ФСП — "
-            "подтверждённые спортивные достижения из реестра Федерации спортивного программирования."
-        ),
-    },
-    {
-        "id": "employer_needs",
-        "paths": "/employer/needs /employer",
-        "keywords": "работодатель компания потребность вакансия текст разобрать ст 64 тк рф подборка кандидаты формула ранжирование",
-        "content": (
-            "Кабинет работодателя (/employer/needs): описание вакансии своими словами, голосом или файлом, кнопка "
-            "«Подставить пример», затем «Разобрать требования» — выделяется обязательный и желательный стек с цитатами, "
-            "зарплата сверяется с рынком, дискриминационные формулировки (ст. 64 ТК РФ) убираются. Подборка ранжирует "
-            "кандидатов: 45 % — тест, 35 % — обязательный стек, 10 % — реестр ФСП, 5 % — задания, 5 % — желательный стек."
-        ),
-    },
-    {
-        "id": "employer_compare",
-        "paths": "/employer/compare /employer/needs",
-        "keywords": "сравнение сравнить советник руководителя таблица матрица лидер пригласить",
-        "content": (
-            "Сравнение кандидатов: полоса формулы ранжирования, ИИ-советник руководителя (доклад: кто лидер по тесту и "
-            "паспорту ФСП, о чём спросить на финальном созвоне), таблица по каждому требованию и кнопки «Пригласить» и "
-            "«Задание всем»."
-        ),
-    },
-    {
-        "id": "fsp_cabinet",
-        "paths": "/fsp",
-        "keywords": "фсп федерация спортивного программирования аналитика спрос регионы эффект соревнований зарплаты кубки",
-        "content": (
-            "Кабинет ФСП (/fsp): обезличенная аналитика — спрос работодателей по категориям и навыкам, эффект "
-            "соревнований (как достижения ФСП влияют на приглашения), зарплаты из офферов против рынка, воронки и "
-            "кубки работодателей."
-        ),
-    },
-]
 
 # ------------------------------------------------------------------ цифры (docs/NUMBERS.json → бенчмарк → снимок)
 
@@ -628,28 +600,10 @@ def numbers_chunk() -> dict[str, str]:
     }
 
 
-def retrieve_rag(query: str, current_path: str) -> str:
-    q_words = set(re.findall(r"[а-яёa-z0-9@]{3,}", (query or "").lower()))
-    scored: list[tuple[int, dict[str, str]]] = []
-    for ch in [*RAG_CHUNKS, numbers_chunk()]:
-        score = 0
-        paths = ch["paths"].split()
-        if any(current_path == p or (p != "/" and current_path.startswith(p)) for p in paths):
-            score += 30
-        kw = ch["keywords"] + " " + ch["content"].lower()
-        for w in q_words:
-            if w in kw:
-                score += 10
-        scored.append((score, ch))
-    scored.sort(key=lambda x: x[0], reverse=True)
-    picked = [ch["content"] for sc, ch in scored[:3] if sc > 0] or [RAG_CHUNKS[0]["content"]]
-    return "\n\n".join(picked)
-
-
 # ------------------------------------------------------------------ понимание реплики
 
 _NAME_RE = re.compile(
-    r"(?:меня\s+зовут|мо[её]\s+имя|зовите\s+меня|зови\s+меня|обращайтесь\s+ко\s+мне|я\s+[-—–])\s*([А-ЯЁа-яё]{2,20})", re.I)
+    r"(?:меня\s+зовут|мо[её]\s+имя|зовите\s+меня|зови\s+меня|обращайтесь\s+ко\s+мне|можно\s+просто|я\s+[-—–])\s*([А-ЯЁа-яё]{2,20})", re.I)
 _SIMPLE_NAME_RE = re.compile(
     r"^\s*(?:(?:привет|здравствуйте|здрасте|добрый\s+(?:день|вечер)|доброе\s+утро)[\s,.]*)?(?:это\s+|я\s+)?([А-ЯЁа-яё]{2,18})"
     r"(?:[\s,.]+(?:я\b|мне\b|кандидат|работодатель|покажи|хочу|интерес|из\b|компан).*)?[\s.!?]*$", re.I)
@@ -662,20 +616,31 @@ _STOP_NAMES = {
     "слушай", "слушаю", "можно", "интересно", "здорово", "отлично", "супер", "классно", "ясно", "так", "вот", "ну",
     "работаю", "ищу", "нанимаю", "эйчар", "рекрутер", "разработчик", "программист", "студент", "директор", "руководитель",
     "мы", "вы", "он", "она", "они", "мне", "нас", "наш", "наша", "это", "тут", "здесь", "сейчас", "сегодня", "покажешь",
-    "проведи", "проведите", "начни", "начните", "можешь", "можете", "умеешь", "слышишь", "слышите", "привет",
+    "проведи", "проведите", "начни", "начните", "можешь", "можете", "умеешь", "слышишь", "слышите", "привет", "неважно",
+    "никак", "любой", "любая", "пропустим", "потом", "хватит", "стой", "секунду", "минуту", "минутку", "извините",
+    "простите", "понял", "поняла", "отлично", "прекрасно", "аналитик", "тестировщик", "менеджер", "жюри", "судья",
 }
 
 
+def _cap(name: str) -> str:
+    return name[:1].upper() + name[1:].lower()
+
+
 def extract_name(text: str, current_name: str | None = None) -> str | None:
+    """Имя из реплики. Явное «меня зовут…», «зовите меня…» меняет и уже известное имя."""
+    t = (text or "").strip()
+    m = _NAME_RE.search(t)
+    if m:
+        cand = m.group(1).strip()
+        if cand.lower() not in _STOP_NAMES and not cand.lower().startswith(("кандидат", "работодат")):
+            return _cap(cand)
     if current_name:
         return current_name
-    t = (text or "").strip()
-    for rx in (_NAME_RE, _SIMPLE_NAME_RE):
-        m = rx.search(t) if rx is _NAME_RE else rx.match(t)
-        if m:
-            cand = m.group(1).strip()
-            if cand.lower() not in _STOP_NAMES and not cand.lower().startswith(("кандидат", "работодат")):
-                return cand[:1].upper() + cand[1:].lower()
+    m = _SIMPLE_NAME_RE.match(t)
+    if m:
+        cand = m.group(1).strip()
+        if cand.lower() not in _STOP_NAMES and not cand.lower().startswith(("кандидат", "работодат")):
+            return _cap(cand)
     return None
 
 
@@ -697,20 +662,30 @@ def detect_role(text: str) -> Role | None:
 
 _GOTO: list[tuple[str, str]] = [
     (r"арен|метрик|точност|бенчмарк|валидац|цифр", "val-arena"),
-    (r"паспорт(?! фсп)|\bqr\b|кью.?ар|подпис", "cand-passport"),
-    (r"защит|устн|интервьюер", "cand-defense"),
+    (r"полигон|war ?room|вор ?рум", "warroom"),
+    (r"командн\w* драфт|команд\w* под проект|собрать команд|сборн|звено", "emp-squad"),
+    (r"\bats\b|\bатс\b|поток|хантфлоу", "emp-ats"),
+    (r"паспорт\w* грейд|\bqr\b|кью.?ар|подпис|категори", "cand-category"),
+    (r"защит|устн|интервьюер|честност|античит", "cand-defense"),
     (r"тест|грейд|опрос", "cand-assessment"),
-    (r"карт\w* навык|навык|шкал|рост", "cand-feedback"),
-    (r"приглаш|оффер|вилк", "cand-invitations"),
+    (r"карт\w* навык|навык|маршрут рост|рост", "cand-feedback"),
     (r"сравн|советник", "emp-compare"),
-    (r"потребност|ваканси|разбор требован", "emp-needs"),
-    (r"кабинет фсп|кабинет федерац|аналитик", "fsp-cabinet"),
+    (r"потребност|ваканси|разбор требован|подборк", "emp-needs"),
+    (r"приглаш\w* (?:работодател|компани)|отправить приглаш", "emp-invitations"),
+    (r"приглаш|оффер|вилк", "cand-invitations"),
+    (r"эффект соревн", "fsp-effect"),
+    (r"кабинет фсп|кабинет федерац|федерац|\bфсп\b", "fsp-cabinet"),
+    (r"кабинет кандидат", "cand-overview"),
+    (r"кабинет работодател|кабинет компани", "emp-home"),
 ]
 
+_GOTO_VERB = re.compile(r"^(?:а\s+|ну\s+|давай(?:те)?\s+)?(?:покажи(?:те)?|открой(?:те)?|перейди(?:те)?|перейдём|перейдем|"
+                        r"давай(?:те)?\s+посмотрим|хочу\s+(?:посмотреть|увидеть))\b")
 
-def detect_goto(text: str) -> str | None:
-    t = (text or "").lower()
-    if not re.search(r"покажи|покажите|открой|откройте|перейди|перейдите|где|давай|хочу|можно|а как|расскажи", t):
+
+def detect_goto(text: str, *, strict: bool = True) -> str | None:
+    t = _norm(text)
+    if strict and not _GOTO_VERB.search(t):
         return None
     for rx, sid in _GOTO:
         if re.search(rx, t):
@@ -722,11 +697,11 @@ def _words(text: str) -> list[str]:
     return re.findall(r"[а-яёa-z0-9]+", (text or "").lower())
 
 
-CMD_PAUSE = re.compile(r"^(?:ой\s+)?(?:стоп|пауза|подожди(?:те)?|погоди(?:те)?|секунду|минуту|остановись|остановитесь|"
-                       r"замолчи|тише|хватит пока|не так быстро|постой(?:те)?)\b")
+CMD_PAUSE = re.compile(r"^(?:ой\s+)?(?:стоп|пауза|подожди(?:те)?|погоди(?:те)?|секунду|минуту|минутку|остановись|"
+                       r"остановитесь|замолчи|тише|хватит пока|не так быстро|постой(?:те)?|стой(?:те)?)\b")
 CMD_RESUME = re.compile(r"^(?:ну\s+|да\s+|давай(?:те)?\s+)?(?:дальше|продолжа\w*|продолжим|поехали|вперёд|вперед|следующ\w*|"
                         r"давай(?:те)? дальше|идём дальше|идем дальше|едем дальше)\b")
-CMD_REPEAT = re.compile(r"\b(?:повтори(?:те)?|ещё раз|еще раз|не понял\w*|не расслышал\w*|что ты сказала|что вы сказали)\b")
+CMD_REPEAT = re.compile(r"\b(?:повтори(?:те)?|ещё раз|еще раз|не расслышал\w*|что ты сказала|что вы сказали)\b")
 CMD_BACK = re.compile(r"^(?:назад|вернись|вернитесь|верни(?:те)?|предыдущ\w*|обратно)\b")
 CMD_BYE = re.compile(r"\b(?:до свидания|пока пока|закончим|заканчива\w*|заверш\w*|выключ\w*|закрой\w*|спасибо[, ]+всё|"
                      r"всё[, ]+спасибо|все[, ]+спасибо|больше не надо|на этом вс[её]|хватит на сегодня)\b")
@@ -766,139 +741,96 @@ def classify(message: str, *, touring: bool, paused: bool) -> dict | None:
     raw = (message or "").strip().lower()
     if (n <= 6 and CMD_BYE.search(t) and not QUESTION.search(raw)) or BYE_SHORT.search(t):
         return {"action": "end", "phrase": "bye"}
-    if n <= 5 and CMD_PAUSE.search(t):
+    if n <= 4 and CMD_PAUSE.search(t):
         return {"action": "pause", "phrase": "pause"}
-    if n <= 5 and CMD_BACK.search(t):
+    if n <= 4 and CMD_BACK.search(t) and (touring or paused):
         return {"action": "prev"}
-    if n <= 6 and CMD_REPEAT.search(t):
+    if n <= 5 and CMD_REPEAT.search(t):
         return {"action": "repeat"}
-    if n <= 5 and CMD_RESUME.search(t):
+    if n <= 4 and CMD_RESUME.search(t):
         return {"action": "resume"}
     if (paused or touring) and n <= 3 and YES.search(t):
         return {"action": "resume"}
     return None
 
 
-def _start_reply(name: str | None, role: Role, first_time: bool) -> str:
-    who = {"candidate": "кабинет кандидата", "employer": "кабинет работодателя",
+def _offered(last_said: str) -> bool:
+    """Последняя реплика Елены — предложение показать (тогда «да» значит «начинай»)."""
+    t = (last_said or "").lower()
+    return "?" in t and bool(re.search(r"показать|начн[её]м|весь сайт|обзор|провести", t))
+
+
+def _start_reply(name: str | None, role: Role, first_time: bool, first_tour: bool = False) -> str:
+    who = {"candidate": "путь кандидата", "employer": "кабинет работодателя",
            "fsp": "кабинет Федерации", "all": "весь сайт по шагам"}[role]
+    tail = " Перебивайте меня в любой момент." if first_tour else ""
     if name and first_time:
-        return f"Приятно познакомиться, {name}. Показываю {who}."
+        return f"Очень приятно, {name}. Показываю {who}.{tail}"
     if name:
-        return f"{name}, показываю {who}."
-    return f"Отлично, показываю {who}."
-
-
-SYSTEM_PROMPT = """Ты — Елена, живой голосовой проводник платформы обратного найма «Драфт». Твои слова звучат голосом
-видеоаватара, человек слышит тебя, текста на экране нет.
-
-Правила:
-1. Отвечай тепло, живо и очень кратко: 1–2 коротких предложения (до 200 знаков), только чистый русский текст для
-   произнесения вслух — без списков, звёздочек, кавычек-ёлочек, эмодзи и символов процента или @ (говори «процентов»).
-2. Отвечай строго по базе знаний ниже; если ответа там нет — честно скажи, что покажешь это на экране, и предложи шаг.
-3. Не называй внешние сервисы и технологии (ElevenLabs, Anam, Deepgram, OpenRouter, WebRTC и подобные).
-4. Если человек назвал имя — верни его в user_name. Если выбрал роль — action "start_tour" и role.
-   Если просит показать конкретный экран — action "goto" и step. На вопрос — action "answer".
-   Если хочет закончить — action "end". Если просит подождать — action "pause".
-
-Шаги для step: cand-overview (кабинет кандидата), cand-assessment (тест и грейд), cand-feedback (карта навыков),
-cand-passport (подписанный паспорт попытки, QR), cand-defense (устная защита), cand-invitations (приглашения с вилкой),
-emp-needs (вакансия и разбор требований), emp-compare (сравнение кандидатов и формула), fsp-cabinet (кабинет ФСП),
-val-arena (цифры точности).
-
-Ответ — строго JSON:
-{"reply": "...", "action": "answer"|"start_tour"|"goto"|"pause"|"end", "role": "all"|"candidate"|"employer"|"fsp"|null,
- "step": "<id шага>"|null, "user_name": "Имя"|null}"""
-
-LLM_HEDGE_S = float(os.environ.get("CONCIERGE_LLM_HEDGE_S", "1.8"))
-_LLM_POOL = ThreadPoolExecutor(max_workers=8, thread_name_prefix="concierge-llm")
-LLM_MODELS = [m.strip() for m in os.environ.get(
-    "CONCIERGE_LLM_MODELS", "openrouter=google/gemini-2.5-flash|openrouter=google/gemini-2.5-flash-lite").split("|") if m.strip()]
+        return f"{name}, показываю {who}.{tail}"
+    return f"Хорошо, показываю {who}.{tail}"
 
 
 def _clean_reply(text: str) -> str:
-    t = re.sub(r"[*#`_~«»\"]+", "", str(text or ""))
+    t = re.sub(r"[*#`_~\"]+", "", str(text or ""))
+    t = re.sub(r"\s*\([^)]{0,80}\)", "", t)          # скобки голосом не читаются
+    t = re.sub(r"\s*\[[^\]]{0,120}\]", "", t)        # служебные пометки истории — не для голоса
     t = t.replace("%", " процентов").replace("@", " ")
     t = re.sub(r"!", ".", t)
-    return " ".join(t.split()).strip()[:320]
+    t = re.sub(r"\b(?:ElevenLabs|Anam|Deepgram|OpenRouter|WebRTC|Claude|Anthropic|Gemini|GPT|OpenAI)\b", "", t, flags=re.I)
+    t = " ".join(t.split()).strip()
+    return _brief(t)
 
 
-def _llm(message: str, *, user_name: str | None, role: str | None, current_path: str, step_id: str | None,
-         history: list[dict] | None) -> dict | None:
-    from app.modules.llm import client as llm
-
-    rag = retrieve_rag(message, current_path)
-    state = (f"Состояние: имя собеседника — {user_name or 'неизвестно'}; роль — {role or 'не выбрана'}; экран — "
-             f"{current_path}; шаг обзора — {step_id or 'нет'}.\n\nБаза знаний:\n{rag}")
-    msgs: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT + "\n\n" + state}]
-    for h in (history or [])[-6:]:
-        w = "assistant" if h.get("who") == "elena" else "user"
-        c = str(h.get("text") or "").strip()
-        if c:
-            msgs.append({"role": w, "content": c[:400]})
-    msgs.append({"role": "user", "content": message.strip()[:600]})
-
-    def ask(model: str, timeout: float) -> dict | None:
-        try:
-            res = llm.chat(msgs, temperature=0.3, max_tokens=180, want_json=True, model=model, timeout_s=timeout)
-        except Exception as e:  # noqa: BLE001
-            log.warning("concierge llm %s: %s", model, type(e).__name__)
-            return None
-        if res.ok and isinstance(res.data, dict) and isinstance(res.data.get("reply"), str) and res.data["reply"].strip():
-            d = dict(res.data)
-            d["_model"] = res.model
-            return d
-        return None
-
-    # «страховочный» запрос: основная модель не ответила за LLM_HEDGE_S — параллельно спрашиваем следующую,
-    # берём первый годный ответ (хвост задержки 5–6 с → ~2,5 с, цена — лишний короткий запрос изредка)
-    deadline = time.monotonic() + 6.0
-    models = list(LLM_MODELS)
-    if not models:
-        return None
-    futs = [_LLM_POOL.submit(ask, models[0], 5.0)]
-    started = 1
-    hedge_at = time.monotonic() + LLM_HEDGE_S
-    while futs:
-        now = time.monotonic()
-        if now >= deadline:
+def _brief(t: str, limit: int = 250) -> str:
+    """Голосом — коротко: целые предложения в пределах limit знаков; вопрос-предложение в конце сохраняем."""
+    if len(t) <= limit:
+        return t
+    sents = [x.strip() for x in re.split(r"(?<=[.?…])\s+", t) if x.strip()]
+    if not sents:
+        return t[:limit]
+    out = [sents[0]]
+    for x in sents[1:]:
+        if len(" ".join([*out, x])) > limit:
             break
-        until = hedge_at if started < len(models) else deadline
-        done, _ = wait(futs, timeout=max(0.05, min(deadline, until) - now), return_when=FIRST_COMPLETED)
-        for f in done:
-            futs.remove(f)
-            d = f.result()
-            if d:
-                return d
-        if started < len(models) and (time.monotonic() >= hedge_at or not futs):
-            left = deadline - time.monotonic()
-            if left < 1.0:
-                break
-            futs.append(_LLM_POOL.submit(ask, models[started], left))
-            started += 1
-            hedge_at = time.monotonic() + LLM_HEDGE_S
-    return None
+        out.append(x)
+    last = sents[-1]
+    if last.endswith("?") and last not in out and len(" ".join([*out, last])) <= limit + 40:
+        out.append(last)
+    res = " ".join(out)
+    if len(res) > limit + 60:  # одно огромное предложение — по запятой
+        cut = res.rfind(", ", 0, limit)
+        res = (res[:cut] if cut > 60 else res[:limit].rsplit(" ", 1)[0]) + "."
+    return res
 
 
 def turn(message: str, *, user_name: str | None = None, role: str | None = None, current_path: str = "/",
          step_id: str | None = None, touring: bool = False, paused: bool = False, history: list[dict] | None = None,
-         on_ack=None) -> dict:
+         session_id: str | None = None, screen: dict | None = None, last_said: str = "", on_ack=None) -> dict:
     """Решение по законченному ходу собеседника.
 
-    Возвращает {reply, phrase, action, role, step, user_name, kind}. phrase — ключ постоянной фразы из кэша (если
-    reply пустой). action: ask_role | start_tour | goto | answer | pause | resume | repeat | prev | end | none.
+    Возвращает {reply, phrase, action, role, step, point, user_name, kind}. phrase — ключ постоянной фразы (если reply
+    пустой). action: ask_role | start_tour | goto | point | answer | pause | resume | repeat | prev | end.
+    Простые команды («стоп», «дальше», «повтори», выбор роли до обзора) — мгновенно, остальное — модель с базой знаний.
     """
+    from app.modules.interview import concierge_brain as brain
+
+    s = brain.session(session_id)
     msg = strip_interjection((message or "").strip())
-    name_now = extract_name(msg, None) if not user_name else None
-    name = user_name or name_now
-    first_time = bool(name_now)
-    cur_role = role if role in ROLES else None
+    known = user_name or (s.name if s else None)
+    name_now = extract_name(msg, known)
+    name = name_now or known
+    first_time = bool(name_now and name_now != known)
+    cur_role = role if role in ROLES else (s.role if s and s.role in ROLES else None)
+    words_n = len(_words(msg))
+    is_q = bool(QUESTION.search(msg.lower())) and words_n > 1
+    first_tour = bool(s is not None and not s.shown)
 
     def ack(kind: str) -> None:
         if on_ack:
             on_ack(kind)
 
-    base = {"user_name": name, "role": cur_role, "step": None, "reply": "", "phrase": None}
+    base = {"user_name": name, "role": cur_role, "step": None, "point": None, "reply": "", "phrase": None}
     quick = classify(msg, touring=touring, paused=paused)
     if quick:
         ack("instant")
@@ -907,65 +839,109 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             out["phrase"] = quick["phrase"]
         return out
 
-    det = detect_role(msg)
-    goto = detect_goto(msg)
-    is_q = bool(QUESTION.search(msg.lower())) and len(_words(msg)) > 2
-    if det and not is_q:
-        ack("instant")
-        return {**base, "kind": "instant", "action": "start_tour", "role": det, "reply": _start_reply(name, det, first_time)}
-    if goto and not is_q:
+    if not touring and not paused and not is_q and words_n <= 6:
+        det = detect_role(msg)
+        if det:
+            ack("instant")
+            return {**base, "kind": "instant", "action": "start_tour", "role": det,
+                    "reply": _start_reply(name, det, first_time, first_tour)}
+        if HELLO.search(_norm(msg)) and words_n <= 3 and not first_time:
+            ack("instant")
+            return {**base, "kind": "instant", "action": "ask_role",
+                    "reply": f"Здравствуйте, {name}. {PHRASES['ask_role']}" if name else "", "phrase": None if name else "hello"}
+        if YES.search(_norm(msg)) and _offered(last_said):
+            r = cur_role or "all"
+            ack("instant")
+            return {**base, "kind": "instant", "action": "start_tour", "role": r,
+                    "reply": _start_reply(name, r, False, first_tour)}
+        if first_time and words_n <= 4:
+            ack("instant")
+            return {**base, "kind": "instant", "action": "ask_role", "reply": f"Очень приятно, {name}. {PHRASES['ask_role']}"}
+    goto = detect_goto(msg) if not is_q and words_n <= 7 else None
+    if goto:
         ack("instant")
         return {**base, "kind": "instant", "action": "goto", "step": goto, "phrase": "goto"}
-    if not det and not name_now and not is_q and len(_words(msg)) <= 3 and HELLO.search(_norm(msg)):
-        ack("instant")
-        return {**base, "kind": "instant", "action": "ask_role", "phrase": "hello"}
-    if not det and not touring and not paused and len(_words(msg)) <= 3 and YES.search(_norm(msg)):
-        r = cur_role or "all"
-        ack("instant")
-        return {**base, "kind": "instant", "action": "start_tour", "role": r, "reply": _start_reply(name, r, False)}
-    if name_now and not is_q and len(_words(msg)) <= 5:
-        ack("instant")
-        return {**base, "kind": "instant", "action": "ask_role",
-                "reply": f"Очень приятно, {name}. Кем вы здесь — кандидатом или работодателем? Или показать весь сайт?"}
 
     ack("llm")
-    d = _llm(msg, user_name=name, role=cur_role, current_path=current_path, step_id=step_id, history=history)
+    d = brain.answer(msg, sid=session_id, name=name, role=cur_role, path=current_path, step=step_id, touring=touring,
+                     paused=paused, screen=screen, history=history,
+                     numbers=numbers_chunk() if re.search(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак",
+                                                          msg.lower()) or current_path.startswith("/validation") else None)
     if not d:
-        if goto:
-            return {**base, "kind": "fallback", "action": "goto", "step": goto, "phrase": "goto"}
+        g = detect_goto(msg, strict=False)
+        if g:
+            return {**base, "kind": "fallback", "action": "goto", "step": g, "phrase": "goto"}
         return {**base, "kind": "fallback", "action": "answer",
-                "reply": "Об этом лучше расскажу на экране. Давайте продолжим обзор, а вы перебивайте, если что-то интересно."}
+                "reply": "Не успела найти точный ответ. Давайте покажу на экране — спросите ещё раз чуть иначе."}
     reply = _clean_reply(d.get("reply", ""))
-    action = d.get("action") if d.get("action") in ("answer", "start_tour", "goto", "pause", "end") else "answer"
+    if name and reply.lower().startswith(name.lower() + ","):
+        # имя — не в каждой реплике: звучало в двух последних — убираем обращение
+        recent = [h["text"] for h in ((s.history if s else None) or history or []) if h.get("who") == "elena"][-2:]
+        if any(name.lower() in t.lower() for t in recent):
+            rest = reply[len(name) + 1:].lstrip()
+            reply = rest[:1].upper() + rest[1:] if rest else reply
+    action = d.get("action") if d.get("action") in ("answer", "start_tour", "goto", "point", "pause", "resume", "end") else "answer"
     llm_role = d.get("role") if d.get("role") in ROLES else None
     step = d.get("step") if d.get("step") in STEP_IDS else None
+    point = d.get("point") if isinstance(d.get("point"), str) and 1 <= len(d["point"].strip()) <= 80 else None
     llm_name = d.get("user_name") if isinstance(d.get("user_name"), str) and 2 <= len(d["user_name"].strip()) <= 20 else None
+    if llm_name and llm_name.strip().lower() in _STOP_NAMES:
+        llm_name = None
     if action == "goto" and not step:
         action = "answer"
-    if action == "start_tour" and not (llm_role or cur_role):
+    if action == "point" and not point:
         action = "answer"
+    if action == "start_tour" and not (llm_role or cur_role):
+        llm_role = "all"
+    new_name = name or (_cap(llm_name.strip()) if llm_name else None)
     return {
-        "user_name": name or (llm_name.strip().capitalize() if llm_name else None),
+        "user_name": new_name,
         "role": llm_role or cur_role,
         "step": step,
+        "point": point.strip() if point else None,
         "reply": reply,
         "phrase": None,
         "action": action,
         "kind": "llm",
         "model": d.get("_model"),
+        "llm_ms": d.get("_ms"),
     }
+
+
+_TURNS_HOUR: list[float] = []
+_TURNS_LOCK = threading.Lock()
+TURNS_PER_HOUR = int(os.environ.get("CONCIERGE_TURNS_PER_HOUR", "1500"))
+
+
+def _allow_turn() -> bool:
+    now = time.time()
+    with _TURNS_LOCK:
+        while _TURNS_HOUR and now - _TURNS_HOUR[0] > 3600:
+            _TURNS_HOUR.pop(0)
+        if len(_TURNS_HOUR) >= TURNS_PER_HOUR:
+            return False
+        _TURNS_HOUR.append(now)
+        return True
 
 
 def turn_stream(message: str, **kw) -> Iterator[bytes]:
     """NDJSON: ack → meta → pcm… → end. Любой сбой голоса — {"t": "voice_error"}, фронт скажет текст своим откатом."""
     import queue
 
+    from app.modules.interview import concierge_brain as brain
+
     t0 = time.monotonic()
     q: queue.Queue = queue.Queue()
     box: dict = {}
+    sid = kw.get("session_id")
 
     def work() -> None:
         try:
+            if not _allow_turn():
+                box["res"] = {"user_name": kw.get("user_name"), "role": kw.get("role"), "step": None, "kind": "fallback",
+                              "action": "answer", "phrase": None,
+                              "reply": "Сейчас со мной говорит очень много людей. Давайте я просто покажу сайт — скажите «дальше»."}
+                return
             box["res"] = turn(message, on_ack=lambda k: q.put(("ack", k)), **kw)
         except Exception as e:  # noqa: BLE001
             log.warning("concierge turn: %s", type(e).__name__)
@@ -986,16 +962,44 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
     if not acked:
         yield (json.dumps({"t": "ack", "kind": res.get("kind", "instant")}) + "\n").encode()
     text = res.get("reply") or (PHRASES.get(res["phrase"]) if res.get("phrase") else "")
-    meta = {"t": "meta", **{k: v for k, v in res.items() if k != "model"}, "text": text, "ms": int((time.monotonic() - t0) * 1000)}
+    decided_ms = int((time.monotonic() - t0) * 1000)
+    meta = {"t": "meta", **{k: v for k, v in res.items() if k not in ("model", "llm_ms")}, "text": text, "ms": decided_ms}
     yield (json.dumps(meta, ensure_ascii=False) + "\n").encode()
+    with brain.mutate(sid) as sess:
+        if sess is not None:
+            sess.turns += 1
+            if res.get("user_name"):
+                sess.name = res["user_name"]
+            sess.remember("user", message)
+            if text:
+                note = ""
+                if res.get("action") == "goto" and res.get("step"):
+                    note = f" [открываю экран: {brain.STEP_TITLES.get(res['step'], res['step'])}]"
+                elif res.get("action") == "start_tour":
+                    note = " [начинаю обзор]"
+                sess.remember("elena", text + note)
+            if res.get("role") and res.get("action") == "start_tour":
+                sess.role = res["role"]
+    if sess is not None:
+        brain.write(sess, "user", message, path=kw.get("current_path"), step=kw.get("step_id"),
+                    touring=kw.get("touring") or None, paused=kw.get("paused") or None)
+        brain.write(sess, "elena", text, kind=res.get("kind"), action=res.get("action"), step=res.get("step"),
+                    role=res.get("role") if res.get("action") == "start_tour" else None, point=res.get("point"),
+                    model=res.get("model"), ms=decided_ms)
+        if res.get("kind") in ("llm", "fallback") or sess.turns % 3 == 0:
+            brain.supervise_async(sid)
+    first_audio = None
     if text:
         try:
             for chunk in synth_stream(text, "pcm24"):
+                if first_audio is None:
+                    first_audio = int((time.monotonic() - t0) * 1000)
                 yield (json.dumps({"t": "pcm", "b64": base64.b64encode(chunk).decode()}) + "\n").encode()
         except TtsError as e:
             yield (json.dumps({"t": "voice_error", "v": str(e)}) + "\n").encode()
     yield (json.dumps({"t": "end", "ms": int((time.monotonic() - t0) * 1000)}) + "\n").encode()
-    log.info("concierge turn: %s/%s за %d мс", res.get("kind"), res.get("action"), int((time.monotonic() - t0) * 1000))
+    log.info("concierge turn: %s/%s решение %d мс, голос %s мс, модель %s", res.get("kind"), res.get("action"), decided_ms,
+             first_audio, res.get("model") or "—")
 
 
 # ------------------------------------------------------------------ совместимость: /concierge/chat (старый фронт)
@@ -1003,7 +1007,7 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
 def reply_chat(message: str, *, user_name: str | None = None, user_role: str | None = None, current_path: str = "/",
                step_index: int = 0, history: list[dict] | None = None) -> dict:
     res = turn(message, user_name=user_name, role=user_role, current_path=current_path, history=history)
-    text = res.get("reply") or (PHRASES.get(res["phrase"]) if res.get("phrase") else "") or PHRASES["start"]
+    text = res.get("reply") or (PHRASES.get(res["phrase"]) if res.get("phrase") else "") or PHRASES["goto"]
     return {
         "reply": text,
         "user_name": res.get("user_name"),

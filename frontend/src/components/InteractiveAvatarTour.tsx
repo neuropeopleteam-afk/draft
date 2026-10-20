@@ -1,12 +1,15 @@
-// Елена — живой видеопроводник по платформе. Плитка «как в видеосвязи»: крупное живое видео во всю ширину, имя,
-// микрофон и пауза; никакого текста под портретом. Микрофон включается один раз при открытии, дальше — обычный
-// разговор голосом: можно перебить, спросить, попросить «стоп», «дальше», «повтори», «назад», «покажи тест».
+// Елена — живой видеопроводник по платформе. Окно «как в видеосвязи»: сначала большое по центру (знакомство:
+// как к вам обращаться, что показать), с началом обзора плавно уезжает в угол (тот же видеопоток, без перезапуска)
+// и ведёт по сайту сама: подсвечивает блоки, нажимает кнопки, отвечает на вопросы. Никакого текста под портретом —
+// только понятная кнопка микрофона с подписью, пауза, «развернуть / в угол» и закрыть. Микрофон включается один
+// раз при открытии, дальше — обычный разговор голосом: можно перебить, спросить, попросить «стоп», «дальше»,
+// «повтори», «назад», «покажи тест».
 // Логика разговора и обзора — components/elena/engine.ts, экраны и подсветка — components/elena/steps.ts.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { juryLogin } from "../lib/jury";
-import { ElenaEngine, findTarget, type ElenaUi } from "./elena/engine";
+import { ElenaEngine, findTarget, type ElenaUi, type Stage } from "./elena/engine";
 import { TOUR_STEPS, type TourTrack } from "./elena/steps";
 import { AnamAvatar, type AnamHandle } from "./voice";
 
@@ -120,20 +123,58 @@ function MicIcon({ off }: { off: boolean }) {
   );
 }
 
+const MIC_LABEL: Record<string, { short: string; long: string }> = {
+  on: { short: "Слушаю", long: "Слушаю вас — просто говорите" },
+  muted: { short: "Микрофон выкл.", long: "Микрофон выключен — нажмите, чтобы говорить" },
+  connecting: { short: "Включаю…", long: "Включаю микрофон…" },
+  denied: { short: "Нет доступа", long: "Нет доступа к микрофону" },
+  nodevice: { short: "Нет микрофона", long: "Микрофон не найден" },
+  error: { short: "Недоступен", long: "Микрофон недоступен" },
+  off: { short: "Микрофон", long: "Включить микрофон" },
+};
+
 const MIC_TITLE: Record<string, string> = {
   on: "Микрофон включён — просто говорите. Нажмите, чтобы выключить",
   muted: "Микрофон выключен. Нажмите, чтобы включить",
   connecting: "Включаю микрофон",
-  denied: "Нет доступа к микрофону: разрешите его в настройках браузера",
+  denied: "Нет доступа к микрофону: разрешите его в настройках браузера (значок замка в адресной строке)",
   nodevice: "Микрофон не найден",
   error: "Микрофон недоступен",
   off: "Микрофон",
 };
 
+interface Frame { left: number; top: number; width: number; height: number; radius: number; small: boolean }
+
+function frameOf(stage: Stage, vw: number, vh: number): Frame {
+  const small = vw < 640;
+  if (stage === "large") {
+    let width = Math.min(760, vw - (small ? 20 : 48));
+    let height = Math.round(width * (small ? 1.12 : 0.66));
+    const maxH = vh - (small ? 120 : 140);
+    if (height > maxH) { height = maxH; width = Math.min(width, Math.round(height / (small ? 1.12 : 0.66))); }
+    return { left: Math.round((vw - width) / 2), top: Math.max(16, Math.round((vh - height) / 2) - (small ? 8 : 16)), width, height, radius: 28, small };
+  }
+  const width = small ? 200 : 336;
+  const height = small ? 250 : 336;
+  const gap = small ? 12 : 20;
+  return { left: vw - width - gap, top: vh - height - gap, width, height, radius: 24, small };
+}
+
+function useViewport() {
+  const [vp, setVp] = useState(() => ({ w: typeof window === "undefined" ? 1280 : window.innerWidth, h: typeof window === "undefined" ? 800 : window.innerHeight }));
+  useEffect(() => {
+    const on = () => setVp({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+  return vp;
+}
+
 export function InteractiveAvatarTour() {
   const { me, signIn } = useAuth();
   const navigate = useNavigate();
   const loc = useLocation();
+  const vp = useViewport();
   const [open, setOpen] = useState(false);
   const [ui, setUi] = useState<ElenaUi | null>(null);
   const engineRef = useRef<ElenaEngine | null>(null);
@@ -191,6 +232,13 @@ export function InteractiveAvatarTour() {
     if (open && loc.pathname.startsWith("/candidate/interview/")) close();
   }, [open, loc.pathname, close]);
 
+  // окно закрыли вкладкой — стенограмма получает «close»
+  useEffect(() => {
+    const on = () => engineRef.current?.close();
+    window.addEventListener("pagehide", on);
+    return () => window.removeEventListener("pagehide", on);
+  }, []);
+
   useEffect(() => () => { engineRef.current?.close(); }, []);
 
   // индикатор громкости микрофона — без перерисовок React
@@ -202,7 +250,7 @@ export function InteractiveAvatarTour() {
       const el = ringRef.current;
       if (eng && el) {
         const lvl = eng.isMuted() ? 0 : eng.micLevel();
-        el.style.transform = `scale(${1 + Math.min(0.45, lvl * 0.9)})`;
+        el.style.transform = `scale(${1 + Math.min(0.35, lvl * 0.8)})`;
         el.style.opacity = String(lvl > 0.04 ? 0.9 : 0);
       }
       raf = requestAnimationFrame(tick);
@@ -233,71 +281,103 @@ export function InteractiveAvatarTour() {
   }
 
   const eng = engineRef.current;
+  const large = ui.stage === "large";
+  const f = frameOf(ui.stage, vp.w, vp.h);
   const micOff = ui.mic === "muted" || ui.mic === "denied" || ui.mic === "nodevice" || ui.mic === "error";
   const micBroken = ui.mic === "denied" || ui.mic === "nodevice" || ui.mic === "error";
   const paused = ui.phase === "paused";
   const wave = ui.phase === "thinking" ? "thinking" : "listening";
+  const lbl = MIC_LABEL[ui.mic] ?? MIC_LABEL.off;
+  const micText = ui.mic === "on" && ui.userTalking ? "Слышу вас" : large || !f.small ? lbl.long : lbl.short;
+  const btn = large ? "h-12 w-12" : "h-10 w-10";
+  const ease = "cubic-bezier(.22,.8,.24,1)";
 
   return (
     <>
-      {ui.phase !== "connecting" && ui.phase !== "greeting" && ui.phase !== "idle" && <Spotlight selector={ui.target} />}
-      <TourCursor click={ui.click} />
+      {!large && ui.phase !== "connecting" && ui.phase !== "greeting" && ui.phase !== "idle" && <Spotlight selector={ui.target} />}
+      {!large && <TourCursor click={ui.click} />}
 
-      <aside aria-label="Елена — проводник по платформе" data-testid="interactive-avatar-tour" data-phase={ui.phase} data-mic={ui.mic}
-        className="fixed bottom-3 right-3 z-50 w-[13rem] overflow-hidden rounded-[1.6rem] bg-[#0E0B18] shadow-[0_16px_44px_rgba(10,8,22,0.42)] ring-1 ring-black/10 sm:bottom-5 sm:right-5 sm:w-[22rem] print:hidden">
-        <div className="relative aspect-[4/5] w-full sm:aspect-square">
+      {/* фон под большим окном: нажатие — окно в угол (сайт остаётся доступен) */}
+      <div aria-hidden="true" onClick={() => eng?.setStage("corner")}
+        className={`fixed inset-0 z-40 bg-[#0E0B18]/45 backdrop-blur-[2px] transition-opacity duration-500 print:hidden ${large ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        data-testid="elena-backdrop" />
+
+      <aside aria-label="Елена — проводник по платформе" data-testid="interactive-avatar-tour" data-phase={ui.phase} data-mic={ui.mic} data-stage={ui.stage}
+        className="fixed z-50 overflow-hidden bg-[#0E0B18] shadow-[0_18px_50px_rgba(10,8,22,0.45)] ring-1 ring-black/10 print:hidden"
+        style={{
+          left: f.left, top: f.top, width: f.width, height: f.height, borderRadius: f.radius,
+          transition: `left 700ms ${ease}, top 700ms ${ease}, width 700ms ${ease}, height 700ms ${ease}, border-radius 700ms ${ease}`,
+        }}>
+        <div className="relative h-full w-full">
           <AnamAvatar ref={anamRef} sessionId="concierge-elena" tokenPath="/interview/concierge/avatar-token"
             state={ui.speaking ? "speaking" : wave} level={() => engineRef.current?.voice.level() ?? 0} name="Елена" fill />
 
           {ui.stepTotal > 0 && (
-            <div className="pointer-events-none absolute inset-x-12 top-3.5 flex gap-1" aria-hidden="true" data-testid="elena-progress">
+            <div className="pointer-events-none absolute left-4 right-24 top-4 flex gap-1" aria-hidden="true" data-testid="elena-progress">
               {Array.from({ length: ui.stepTotal }, (_, i) => (
                 <span key={i} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i < ui.stepNo ? "bg-white/90" : "bg-white/30"}`} />
               ))}
             </div>
           )}
 
-          <button type="button" onClick={close} aria-label="Закрыть" title="Закрыть" data-testid="elena-close"
-            className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white/90 backdrop-blur transition hover:bg-black/55">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-          </button>
+          <div className="absolute right-2.5 top-2.5 flex gap-1.5">
+            <button type="button" onClick={() => eng?.setStage(large ? "corner" : "large")}
+              aria-label={large ? "Свернуть в угол" : "Развернуть"} title={large ? "Свернуть в угол" : "Развернуть"} data-testid="elena-stage"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white/90 backdrop-blur transition hover:bg-black/55">
+              {large
+                ? <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 7l10 10M17 9v8H9" /></svg>
+                : <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 17 7 7M7 15V7h8" /></svg>}
+            </button>
+            <button type="button" onClick={close} aria-label="Закрыть" title="Закрыть" data-testid="elena-close"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white/90 backdrop-blur transition hover:bg-black/55">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+            </button>
+          </div>
 
           {ui.phase === "thinking" && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-16 flex justify-center gap-1.5" aria-hidden="true" data-testid="elena-thinking">
+            <div className={`pointer-events-none absolute inset-x-0 flex justify-center gap-1.5 ${large ? "bottom-24" : "bottom-16"}`} aria-hidden="true" data-testid="elena-thinking">
               {[0, 1, 2].map((i) => <span key={i} className="h-2 w-2 animate-bounce rounded-full bg-white/85" style={{ animationDelay: `${i * 140}ms` }} />)}
             </div>
           )}
 
-          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/50 via-black/15 to-transparent px-2.5 pb-2.5 pt-8">
-            <span className="flex items-center gap-1.5 rounded-lg bg-black/40 px-2 py-1 text-xs font-semibold text-white backdrop-blur" data-testid="elena-name">
+          <div className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/60 via-black/20 to-transparent ${large ? "px-4 pb-4 pt-14" : "px-2.5 pb-2.5 pt-10"}`}>
+            <span className={`items-center gap-1.5 rounded-lg bg-black/40 px-2 py-1 font-semibold text-white backdrop-blur ${large ? "flex text-sm" : f.small ? "hidden" : "flex text-xs"}`} data-testid="elena-name">
               <span className={`flex h-3 items-end gap-[2px] ${ui.speaking ? "" : "opacity-50"}`} aria-hidden="true">
                 {[0, 1, 2].map((i) => (
                   <span key={i} className={`w-[3px] rounded-full bg-emerald-300 ${ui.speaking ? "animate-pulse" : ""}`}
                     style={{ height: ui.speaking ? `${[7, 12, 9][i]}px` : "4px", animationDelay: `${i * 120}ms` }} />
                 ))}
               </span>
-              Елена
+              {large ? "Елена · ИИ-проводник" : "Елена"}
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
+              <button type="button" onClick={() => { if (!micBroken) eng?.toggleMute(); }} aria-label={MIC_TITLE[ui.mic] ?? "Микрофон"} title={MIC_TITLE[ui.mic] ?? "Микрофон"}
+                data-testid="elena-mic" data-state={ui.mic} aria-pressed={ui.mic === "on"}
+                className={`relative flex min-w-0 items-center gap-2 rounded-full font-semibold text-white backdrop-blur transition ${large ? "h-12 pl-3 pr-4 text-sm" : "h-10 pl-2.5 pr-3 text-xs"} ${
+                  micOff ? (micBroken ? "bg-white/15 text-white/70" : "bg-rose-600 hover:bg-rose-500") : ui.mic === "on" ? "bg-emerald-600/90 hover:bg-emerald-500" : "bg-white/15 hover:bg-white/25"}`}>
+                <span className={`relative flex shrink-0 items-center justify-center rounded-full bg-white/15 ${large ? "h-8 w-8" : "h-6 w-6"}`}>
+                  <span ref={ringRef} className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-white/80 transition-transform duration-100" style={{ opacity: 0 }} aria-hidden="true" />
+                  {ui.mic === "connecting" && <span className="pointer-events-none absolute inset-0 animate-ping rounded-full ring-1 ring-white/50" aria-hidden="true" />}
+                  <MicIcon off={micOff} />
+                </span>
+                <span className="truncate" data-testid="elena-mic-label">{micText}</span>
+              </button>
               {ui.canPause && (
                 <button type="button" onClick={() => eng?.togglePause()} aria-label={paused ? "Продолжить обзор" : "Пауза"} title={paused ? "Продолжить обзор" : "Пауза"}
                   data-testid="elena-pause" data-paused={paused ? "1" : "0"}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25">
+                  className={`flex shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/25 ${btn}`}>
                   {paused
                     ? <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" /></svg>
                     : <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" /></svg>}
                 </button>
               )}
-              <button type="button" onClick={() => { if (!micBroken) eng?.toggleMute(); }} aria-label={MIC_TITLE[ui.mic] ?? "Микрофон"} title={MIC_TITLE[ui.mic] ?? "Микрофон"}
-                data-testid="elena-mic" data-state={ui.mic} aria-pressed={ui.mic === "on"}
-                className={`relative flex h-10 w-10 items-center justify-center rounded-full text-white backdrop-blur transition ${
-                  micOff ? (micBroken ? "bg-white/15 text-white/60" : "bg-rose-600 hover:bg-rose-500") : "bg-white/15 hover:bg-white/25"}`}>
-                <span ref={ringRef} className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-emerald-300 transition-transform duration-100" style={{ opacity: 0 }} aria-hidden="true" />
-                {ui.mic === "connecting" && <span className="pointer-events-none absolute inset-0 animate-ping rounded-full ring-1 ring-white/40" aria-hidden="true" />}
-                <MicIcon off={micOff} />
-              </button>
             </div>
           </div>
+          {large && ui.mic === "denied" && (
+            <div className="pointer-events-none absolute inset-x-4 bottom-20 text-center text-xs font-medium text-white/85" data-testid="elena-mic-hint">
+              Разрешите микрофон: значок замка в адресной строке → «Микрофон» → «Разрешить».
+            </div>
+          )}
         </div>
       </aside>
     </>

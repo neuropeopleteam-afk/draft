@@ -580,6 +580,20 @@ class ConciergeTurnIn(BaseModel):
     touring: bool = False
     paused: bool = False
     history: list[dict] = Field(default_factory=list, max_length=20)
+    session_id: str | None = Field(None, max_length=64)
+    # что сейчас на экране: заголовок и видимые кнопки/заголовки (Елена отвечает «по экрану» и может показать элемент)
+    screen: dict | None = None
+    last_said: str = Field("", max_length=600)
+
+
+class ConciergeEventIn(BaseModel):
+    session_id: str = Field(min_length=8, max_length=64)
+    type: Literal["open", "say", "step", "close", "mic", "point"]
+    text: str = Field("", max_length=1200)
+    step: str | None = Field(None, max_length=40)
+    path: str | None = Field(None, max_length=200)
+    name: str | None = Field(None, max_length=60)
+    role: str | None = Field(None, max_length=32)
 
 
 @router.post("/concierge/turn", summary="Ход живого разговора с Еленой: решение и голос ответа одним потоком (NDJSON)",
@@ -587,10 +601,25 @@ class ConciergeTurnIn(BaseModel):
 def concierge_turn(body: ConciergeTurnIn) -> StreamingResponse:
     from app.modules.interview import concierge as cg
 
+    screen = None
+    if isinstance(body.screen, dict):
+        items = body.screen.get("items")
+        screen = {"title": str(body.screen.get("title") or "")[:160],
+                  "items": [str(x)[:80] for x in (items if isinstance(items, list) else [])][:40]}
     gen = cg.turn_stream(body.message, user_name=(body.user_name or None), role=body.role, current_path=body.current_path,
-                         step_id=body.step_id, touring=body.touring, paused=body.paused, history=body.history)
+                         step_id=body.step_id, touring=body.touring, paused=body.paused, history=body.history,
+                         session_id=body.session_id, screen=screen, last_said=body.last_said)
     return StreamingResponse(gen, media_type="application/x-ndjson",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+
+
+@router.post("/concierge/event", status_code=204, response_class=Response,
+             summary="Событие разговора с Еленой для стенограммы: открытие, реплика обзора, шаг, закрытие")
+def concierge_event(body: ConciergeEventIn) -> Response:
+    from app.modules.interview import concierge_brain as brain
+
+    brain.event(body.session_id, body.type, text=body.text, step=body.step, path=body.path, name=body.name, role=body.role)
+    return Response(status_code=204)
 
 
 @router.get("/concierge/script", summary="Сценарий обзора Елены: приветствие, реплики шагов, связки (голос — из кэша)")

@@ -519,6 +519,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/interview/concierge/chat"): "open",
     ("POST", "/api/interview/concierge/turn"): "open",
     ("GET", "/api/interview/concierge/script"): "open",
+    ("POST", "/api/interview/concierge/event"): "open",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
 }
