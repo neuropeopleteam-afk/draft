@@ -1,4 +1,4 @@
-"""mobile.offline_sync_batch.junior_fwd_k3 — mcq_concept (Junior). Длительность фоновой синхронизации локальной БД устройства — прямой расчёт с учётом: схлопывание правок, повторы сети, запись в SQLite.
+"""mobile.offline_sync_batch.junior_fwd_k3 — mcq_concept (Junior). Длительность фоновой синхронизации локальной БД устройства — прямой расчёт с учётом: схлопывание правок, потери попыток сети, запись в SQLite.
 
 Модель предметной области (MODEL: answer, traps, fmt), ловушки и тексты — базовая модель
 «offline_sync_batch» в families/_w2010_scale_cat_mobile.py, ступень 3 из 5, прямой расчёт;

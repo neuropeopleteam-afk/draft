@@ -591,7 +591,12 @@ def make(fid: str, n_above: tuple[int, ...] | None = None):
             txt.append(f"\n\nX — {lab}; его перебирают от {unit_text(lo, unit)} до {unit_text(hi, unit)} с шагом "
                        f"{unit_text(st, unit)}. Каково {word} X из этого ряда, при котором {a.cond}?")
         else:
-            txt.append("\n\n" + a.q)
+            r_hint = (
+                " (Итог округлите вверх до целого.)"
+                if a.rnd == "ceil"
+                else (" (Итог округлите вниз до целого.)" if a.rnd == "floor" else "")
+            )
+            txt.append("\n\n" + a.q + r_hint)
         out = " ".join(t for t in txt if not t.startswith("\n\n")) + "".join(t for t in txt if t.startswith("\n\n"))
         return _DOTS.sub(".", out)
 
