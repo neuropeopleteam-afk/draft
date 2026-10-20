@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { juryLogin } from "../lib/jury";
-import { ElenaEngine, findTarget, topInset, type ElenaUi, type Stage } from "./elena/engine";
+import { ElenaEngine, findTarget, tabbarInset, topInset, type ElenaUi, type Stage } from "./elena/engine";
 import { TOUR_STEPS, type TourTrack } from "./elena/steps";
 import { AnamAvatar, type AnamHandle } from "./voice";
 
@@ -39,9 +39,9 @@ function rectOf(selector: string | null): Box | null {
   const r = el.getBoundingClientRect();
   if (r.bottom < 0 || r.top > window.innerHeight) return null;
   const pad = 6;
-  // высокий блок: рамка — в пределах видимой части экрана (не заезжает под закреплённую шапку)
+  // высокий блок: рамка — в пределах видимой части экрана (не заезжает под закреплённую шапку и нижнюю панель)
   const top = Math.max(r.top - pad, topInset() + 2);
-  const bottom = Math.min(r.bottom + pad, window.innerHeight - 6);
+  const bottom = Math.min(r.bottom + pad, window.innerHeight - tabbarInset() - 6);
   if (bottom - top < 24) return null;
   return { top, left: r.left - pad, width: r.width + pad * 2, height: bottom - top };
 }
@@ -148,27 +148,35 @@ const MIC_TITLE: Record<string, string> = {
 
 interface Frame { left: number; top: number; width: number; height: number; radius: number; small: boolean }
 
-function frameOf(stage: Stage, vw: number, vh: number): Frame {
+function frameOf(stage: Stage, vw: number, vh: number, tab = 0): Frame {
   const small = vw < 640;
+  const usable = vh - tab;   // над нижней панелью навигации на телефоне (если она есть)
   if (stage === "large") {
     let width = Math.min(760, vw - (small ? 20 : 48));
     let height = Math.round(width * (small ? 1.12 : 0.66));
-    const maxH = vh - (small ? 120 : 140);
+    const maxH = usable - (small ? 120 : 140);
     if (height > maxH) { height = maxH; width = Math.min(width, Math.round(height / (small ? 1.12 : 0.66))); }
-    return { left: Math.round((vw - width) / 2), top: Math.max(16, Math.round((vh - height) / 2) - (small ? 8 : 16)), width, height, radius: 28, small };
+    return { left: Math.round((vw - width) / 2), top: Math.max(16, Math.round((usable - height) / 2) - (small ? 8 : 16)), width, height, radius: 28, small };
   }
   const width = small ? 200 : 336;
   const height = small ? 250 : 336;
   const gap = small ? 12 : 20;
-  return { left: vw - width - gap, top: vh - height - gap, width, height, radius: 24, small };
+  return { left: vw - width - gap, top: usable - height - gap, width, height, radius: 24, small };
 }
 
 function useViewport() {
-  const [vp, setVp] = useState(() => ({ w: typeof window === "undefined" ? 1280 : window.innerWidth, h: typeof window === "undefined" ? 800 : window.innerHeight }));
+  const [vp, setVp] = useState(() => ({
+    w: typeof window === "undefined" ? 1280 : window.innerWidth, h: typeof window === "undefined" ? 800 : window.innerHeight,
+    tab: typeof window === "undefined" ? 0 : tabbarInset(),
+  }));
   useEffect(() => {
-    const on = () => setVp({ w: window.innerWidth, h: window.innerHeight });
+    const on = () => setVp({ w: window.innerWidth, h: window.innerHeight, tab: tabbarInset() });
     window.addEventListener("resize", on);
-    return () => window.removeEventListener("resize", on);
+    // панель выставляет --mobile-tabbar-h на documentElement (style или класс) — следим за атрибутами
+    const mo = typeof MutationObserver !== "undefined" ? new MutationObserver(on) : null;
+    mo?.observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class"] });
+    const iv = window.setInterval(() => { const t = tabbarInset(); setVp((p) => (p.tab === t ? p : { ...p, tab: t })); }, 1500);
+    return () => { window.removeEventListener("resize", on); mo?.disconnect(); window.clearInterval(iv); };
   }, []);
   return vp;
 }
@@ -286,7 +294,7 @@ export function InteractiveAvatarTour() {
 
   if (!open || !ui) {
     return (
-      <div className="fixed bottom-5 right-5 z-40 print:hidden">
+      <div className="fixed right-5 z-40 print:hidden" style={{ bottom: "calc(1.25rem + var(--mobile-tabbar-h, 0px))" }}>
         <button type="button" onClick={() => begin()} data-testid="floating-avatar-concierge"
           className="group flex items-center gap-3 rounded-full bg-[#120E24]/95 py-2 pl-2 pr-4 text-left text-white shadow-xl ring-1 ring-white/15 backdrop-blur transition hover:-translate-y-0.5 hover:ring-white/30">
           <span className="relative h-12 w-12 shrink-0">
@@ -304,7 +312,7 @@ export function InteractiveAvatarTour() {
 
   const eng = engineRef.current;
   const large = ui.stage === "large";
-  const f = frameOf(ui.stage, vp.w, vp.h);
+  const f = frameOf(ui.stage, vp.w, vp.h, vp.tab);
   const micOff = ui.mic === "muted" || ui.mic === "denied" || ui.mic === "nodevice" || ui.mic === "error";
   const micBroken = ui.mic === "denied" || ui.mic === "nodevice" || ui.mic === "error";
   const paused = ui.phase === "paused";

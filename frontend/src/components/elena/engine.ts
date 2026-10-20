@@ -191,6 +191,14 @@ export function topInset(): number {
   return Math.round(inset || 64);
 }
 
+/** Высота нижней панели навигации кабинетов на телефоне (--mobile-tabbar-h на documentElement; 0 — панели нет). */
+export function tabbarInset(): number {
+  try {
+    const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--mobile-tabbar-h").trim());
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+  } catch { return 0; }
+}
+
 /** Что сейчас на экране — заголовок и видимые надписи (Настя отвечает «по экрану» и может показать элемент). */
 function screenSnapshot(): { title: string; items: string[] } {
   const root = document.querySelector("main") ?? document.body;
@@ -1184,7 +1192,8 @@ export class ElenaEngine {
       if (!el || !live()) return;
       const inset = topInset();
       const r = el.getBoundingClientRect();
-      const fits = r.top >= inset + 8 && r.top <= window.innerHeight * 0.5 && r.bottom <= window.innerHeight - 24;
+      const floor = window.innerHeight - tabbarInset();   // над нижней панелью навигации на телефоне
+      const fits = r.top >= inset + 8 && r.top <= floor * 0.5 && r.bottom <= floor - 24;
       if (fits) return;
       const dy = r.top - (inset + 20);
       if (Math.abs(dy) < 4) return;
