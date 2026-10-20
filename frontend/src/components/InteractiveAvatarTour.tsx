@@ -1,10 +1,12 @@
-// Елена — живой видеопроводник по платформе. Окно «как в видеосвязи»: сначала большое по центру (знакомство:
+// Настя — живой видеопроводник по платформе. Окно «как в видеосвязи»: сначала большое по центру (знакомство:
 // как к вам обращаться, что показать), с началом обзора плавно уезжает в угол (тот же видеопоток, без перезапуска)
 // и ведёт по сайту сама: подсвечивает блоки, нажимает кнопки, отвечает на вопросы. Никакого текста под портретом —
 // только понятная кнопка микрофона с подписью, пауза, «развернуть / в угол» и закрыть. Микрофон включается один
-// раз при открытии, дальше — обычный разговор голосом: можно перебить, спросить, попросить «стоп», «дальше»,
-// «повтори», «назад», «покажи тест».
+// раз при открытии; разговор полудуплексный: пока Настя говорит или думает, микрофон закрыт (подпись «Говорю» /
+// «Думаю»), в паузах — открыт (подпись «Слушаю»): тогда можно спросить, сказать «стоп», «дальше», «повтори»,
+// «назад», «покажи тест». Остановить её в любой момент — кнопкой паузы.
 // Логика разговора и обзора — components/elena/engine.ts, экраны и подсветка — components/elena/steps.ts.
+// Проверки без микрофона и видеопотока: ?elena_debug=1 даёт window.__elena.say("текст"), ?elena_novideo=1 — без видео.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
@@ -18,7 +20,7 @@ export type { TourTrack };
 
 const TOUR_EVENT = "draft-avatar-tour";
 
-/** Открыть Елену: с приветствием (по умолчанию) или сразу с шага обзора (skipGreeting). */
+/** Открыть Настю: с приветствием (по умолчанию) или сразу с шага обзора (skipGreeting). */
 export function startAvatarTour(track: TourTrack = "all", stepIndex = 0, skipGreeting = false) {
   window.dispatchEvent(new CustomEvent(TOUR_EVENT, { detail: { open: true, track, stepIndex, skipGreeting } }));
 }
@@ -43,7 +45,7 @@ function rectOf(selector: string | null): Box | null {
   return { top, left: r.left - pad, width: r.width + pad * 2, height: bottom - top };
 }
 
-/** Подсветка блока, о котором говорит Елена: тонкая аккуратная рамка без свечения. */
+/** Подсветка блока, о котором говорит Настя: тонкая аккуратная рамка без свечения. */
 function Spotlight({ selector }: { selector: string | null }) {
   const [box, setBox] = useState<Box | null>(null);
   useEffect(() => {
@@ -76,7 +78,7 @@ function Spotlight({ selector }: { selector: string | null }) {
   );
 }
 
-/** Курсор Елены: подъезжает к кнопке и «нажимает» точно в момент, когда она об этом говорит. */
+/** Курсор Насти: подъезжает к кнопке и «нажимает» точно в момент, когда она об этом говорит. */
 function TourCursor({ click }: { click: ElenaUi["click"] }) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [pressed, setPressed] = useState(false);
@@ -124,7 +126,7 @@ function MicIcon({ off }: { off: boolean }) {
 }
 
 const MIC_LABEL: Record<string, { short: string; long: string }> = {
-  on: { short: "Слушаю", long: "Слушаю вас — просто говорите" },
+  on: { short: "Слушаю", long: "Слушаю вас — говорите" },
   muted: { short: "Микрофон выкл.", long: "Микрофон выключен — нажмите, чтобы говорить" },
   connecting: { short: "Включаю…", long: "Включаю микрофон…" },
   denied: { short: "Нет доступа", long: "Нет доступа к микрофону" },
@@ -170,6 +172,18 @@ function useViewport() {
   return vp;
 }
 
+/** Флаги проверок (адрес ?elena_debug=1 / ?elena_novideo=1 или localStorage draft.elena.debug / draft.elena.novideo). */
+function flag(name: string): boolean {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get(`elena_${name}`) === "1") { localStorage.setItem(`draft.elena.${name}`, "1"); return true; }
+    if (q.get(`elena_${name}`) === "0") { localStorage.removeItem(`draft.elena.${name}`); return false; }
+    return localStorage.getItem(`draft.elena.${name}`) === "1";
+  } catch { return false; }
+}
+const debugFlag = () => flag("debug");
+const noVideoFlag = () => flag("novideo");
+
 export function InteractiveAvatarTour() {
   const { me, signIn } = useAuth();
   const navigate = useNavigate();
@@ -190,6 +204,7 @@ export function InteractiveAvatarTour() {
   const begin = useCallback((track?: TourTrack, stepIndex = 0) => {
     engineRef.current?.close();
     const eng = new ElenaEngine({
+      noVideo: noVideoFlag(),
       avatar: () => anamRef.current,
       navigate: (to) => navRef.current(to),
       path: () => window.location.pathname,
@@ -206,6 +221,11 @@ export function InteractiveAvatarTour() {
     engineRef.current = eng;
     setUi(eng.getUi());
     setOpen(true);
+    if (debugFlag()) {
+      (window as unknown as { __elena?: unknown }).__elena = {
+        say: (t: string) => eng.injectUser(String(t ?? "")), ui: () => eng.getUi(), pause: () => eng.togglePause(), close: () => eng.close(),
+      };
+    }
     eng.start(track, stepIndex);   // синхронно в обработчике нажатия: звук и микрофон разрешаются этим жестом
   }, []);
 
@@ -260,7 +280,7 @@ export function InteractiveAvatarTour() {
   }, [open]);
 
   if (!open && loc.pathname.startsWith("/candidate/interview/")) return null;
-  if (typeof navigator !== "undefined" && navigator.webdriver === true && !open) return null;
+  if (typeof navigator !== "undefined" && navigator.webdriver === true && !open && !debugFlag()) return null;
 
   if (!open || !ui) {
     return (
@@ -272,7 +292,7 @@ export function InteractiveAvatarTour() {
             <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-[#120E24]" />
           </span>
           <span className="pr-1">
-            <span className="block text-sm font-bold text-white">Елена · ИИ-проводник</span>
+            <span className="block text-sm font-bold text-white">Настя · ИИ-проводник</span>
             <span className="block text-xs text-white/70">Поговорить и пройти обзор</span>
           </span>
         </button>
@@ -288,7 +308,10 @@ export function InteractiveAvatarTour() {
   const paused = ui.phase === "paused";
   const wave = ui.phase === "thinking" ? "thinking" : "listening";
   const lbl = MIC_LABEL[ui.mic] ?? MIC_LABEL.off;
-  const micText = ui.mic === "on" && ui.userTalking ? "Слышу вас" : large && !f.small ? lbl.long : lbl.short;
+  // полудуплекс: микрофон включён, но закрыт, пока Настя говорит или думает, — подпись честно говорит об этом
+  const busy = ui.mic === "on" && !ui.hearing;
+  const busyText = ui.phase === "thinking" ? "Думаю…" : ui.speaking || ui.phase === "answering" || ui.phase === "touring" ? "Говорю" : "Секунду…";
+  const micText = ui.mic === "on" && ui.userTalking ? "Слышу вас" : busy ? busyText : large && !f.small ? lbl.long : lbl.short;
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
 
@@ -302,16 +325,18 @@ export function InteractiveAvatarTour() {
         className={`fixed inset-0 z-40 bg-[#0E0B18]/45 backdrop-blur-[2px] transition-opacity duration-500 print:hidden ${large ? "opacity-100" : "pointer-events-none opacity-0"}`}
         data-testid="elena-backdrop" />
 
-      <aside aria-label="Елена — проводник по платформе" data-testid="interactive-avatar-tour" data-phase={ui.phase} data-mic={ui.mic} data-stage={ui.stage}
+      <aside aria-label="Настя — проводник по платформе" data-testid="interactive-avatar-tour" data-phase={ui.phase} data-mic={ui.mic} data-stage={ui.stage}
         className="fixed z-50 overflow-hidden bg-[#0E0B18] shadow-[0_18px_50px_rgba(10,8,22,0.45)] ring-1 ring-black/10 print:hidden"
         style={{
           left: f.left, top: f.top, width: f.width, height: f.height, borderRadius: f.radius,
           transition: `left 700ms ${ease}, top 700ms ${ease}, width 700ms ${ease}, height 700ms ${ease}, border-radius 700ms ${ease}`,
         }}>
         <div className="relative h-full w-full">
-          <AnamAvatar ref={anamRef} sessionId="concierge-elena" tokenPath="/interview/concierge/avatar-token"
-            state={ui.speaking ? "speaking" : wave} level={() => engineRef.current?.voice.level() ?? 0} name="Елена" fill
-            poster="/avatar/guide.webp" />
+          {noVideoFlag()
+            ? <img src="/avatar/guide.webp" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" data-testid="avatar-novideo" />
+            : <AnamAvatar ref={anamRef} sessionId="concierge-elena" tokenPath={`/interview/concierge/avatar-token?sid=${encodeURIComponent(eng?.sid ?? "")}`}
+              state={ui.speaking ? "speaking" : wave} level={() => engineRef.current?.voice.level() ?? 0} name="Настя" fill
+              poster="/avatar/guide.webp" />}
 
           {ui.stepTotal > 0 && (
             <div className="pointer-events-none absolute left-4 right-24 top-4 flex gap-1" aria-hidden="true" data-testid="elena-progress">
@@ -349,13 +374,16 @@ export function InteractiveAvatarTour() {
                     style={{ height: ui.speaking ? `${[7, 12, 9][i]}px` : "4px", animationDelay: `${i * 120}ms` }} />
                 ))}
               </span>
-              {large && !f.small ? "Елена · ИИ-проводник" : "Елена"}
+              {large && !f.small ? "Настя · ИИ-проводник" : "Настя"}
             </span>
             <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
               <button type="button" onClick={() => { if (!micBroken) eng?.toggleMute(); }} aria-label={MIC_TITLE[ui.mic] ?? "Микрофон"} title={MIC_TITLE[ui.mic] ?? "Микрофон"}
                 data-testid="elena-mic" data-state={ui.mic} aria-pressed={ui.mic === "on"}
+                data-hearing={ui.hearing ? "1" : "0"}
                 className={`relative flex min-w-0 items-center gap-2 rounded-full font-semibold text-white backdrop-blur transition ${large ? "h-12 pl-3 pr-4 text-sm" : "h-10 pl-2.5 pr-3 text-xs"} ${
-                  micOff ? (micBroken ? "bg-white/15 text-white/70" : "bg-rose-600 hover:bg-rose-500") : ui.mic === "on" ? "bg-emerald-600/90 hover:bg-emerald-500" : "bg-white/15 hover:bg-white/25"}`}>
+                  micOff ? (micBroken ? "bg-white/15 text-white/70" : "bg-rose-600 hover:bg-rose-500")
+                    : ui.mic === "on" && ui.hearing ? "bg-emerald-600/90 hover:bg-emerald-500"
+                    : ui.mic === "on" ? "bg-white/20 text-white/85 hover:bg-white/30" : "bg-white/15 hover:bg-white/25"}`}>
                 <span className={`relative flex shrink-0 items-center justify-center rounded-full bg-white/15 ${large ? "h-8 w-8" : "h-6 w-6"}`}>
                   <span ref={ringRef} className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-white/80 transition-transform duration-100" style={{ opacity: 0 }} aria-hidden="true" />
                   {ui.mic === "connecting" && <span className="pointer-events-none absolute inset-0 animate-ping rounded-full ring-1 ring-white/50" aria-hidden="true" />}
