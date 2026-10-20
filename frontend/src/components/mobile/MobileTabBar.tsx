@@ -1,7 +1,11 @@
 // Мобильная нижняя панель навигации кабинетов (телефоны < 768 px, PWA и Android-пакет RuStore).
 // Динамически читает разделы роли из sections.ts (или принимает их через пропсы из CabinetLayout),
 // выводит 4–5 главных разделов с крупными областями нажатия (≥ 48 px) и лист «Ещё» для остальных разделов.
-import { useEffect, useMemo, useState } from "react";
+// При монтировании на мобильном экране (< 768 px) выставляет на document.documentElement переменную
+// --mobile-tabbar-h = calc(4rem + env(safe-area-inset-bottom, 0px)) (иначе 0px), чтобы плавающие кнопки
+// (проводник Елена и др.) смещались выше панели и не перекрывали вкладки.
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import type { Section } from "../CabinetLayout";
 import { useAuth } from "../../lib/auth";
@@ -39,41 +43,92 @@ const ROLE_SECTIONS: Record<string, Section[]> = {
   admin: fspSections,
 };
 
-// Приоритетные пути для первых вкладок нижней панели (как для текущих sections.ts, так и после укрупнения меню А2).
+// Приоритетные пути первых 4 вкладок для каждой роли (поддерживает и текущие sections.ts, и новую структуру А2).
+// У кандидата «Приглашения» (invitations) всегда входят в первые 4 вкладки (главный сценарий обратного найма).
 const PRIMARY_PATHS: Record<string, string[]> = {
-  employer: ["", "needs", "candidates", "compare", "search", "invitations", "messages"],
-  candidate: ["", "assessment", "feedback", "category", "profile", "invitations", "messages"],
-  fsp_analyst: ["", "analytics", "demand", "partners", "trio", "method"],
+  employer: ["", "needs", "candidates", "compare", "invitations", "messages", "search", "ats", "company"],
+  candidate: ["", "invitations", "assessment", "feedback", "category", "messages", "profile"],
+  fsp_analyst: ["", "analytics", "demand", "effect", "partners", "trio", "method"],
+  admin: ["", "analytics", "demand", "effect", "partners", "trio", "method"],
   expert: ["pairs", "answers", "angoff", "review", "security"],
 };
 
-function shortLabel(section: Section, role: string): string {
-  const p = section.path;
-  if (p === "") return "Обзор";
-  if (p === "needs" || p === "vacancies") return "Вакансии";
-  if (p === "candidates" || p === "compare" || p === "search" || p === "squad") {
-    return role === "employer" ? "Кандидаты" : "Подборки";
-  }
-  if (p === "assessment" || p === "express") return "Тест";
-  if (p === "category" || p === "attempts") return "Грейд";
-  if (p === "feedback") return "Навыки";
-  if (p === "profile" || p === "fsp") return "Профиль";
-  if (p === "invitations") return "Диалоги";
-  if (p === "messages") return "Сообщения";
-  if (p === "trio") return role === "fsp_analyst" ? "Подтверждение" : "Связь с ФСП";
-  if (p === "analytics" || p === "demand" || p === "effect" || p === "salaries" || p === "funnel") return "Аналитика";
-  if (p === "partners") return "Партнёры";
-  if (p === "method" || p === "security") return "Методика";
-  if (p === "company" || p === "tariffs") return "Компания";
-  if (p === "ats" || p === "integrations") return "Интеграции";
-  if (p === "cups" || p === "assignments" || p === "probes") return "Задания";
-  if (p === "mydata" || p === "settings" || p === "notifications" || p === "app") return "Настройки";
-  if (p === "pairs") return "Пары";
-  if (p === "answers") return "Ответы";
-  if (p === "angoff") return "Пороги";
-  if (p === "review") return "Очередь";
-  const first = section.title.split(/[·—:()]/)[0].trim().split(/\s+/)[0] || section.title;
-  return first.length > 11 ? `${first.slice(0, 10)}…` : first;
+// Точные короткие подписи вкладок по ролям и путям без коллизий (employer.needs = «Подборки», vacancies = «Вакансии»,
+// invitations = «Приглашения», messages = «Сообщения», fsp.demand = «Спрос», fsp.effect = «Эффект», expert.security = «Безопасность»).
+const ROLE_LABELS: Record<string, Record<string, string>> = {
+  employer: {
+    "": "Обзор",
+    needs: "Подборки",
+    vacancies: "Вакансии",
+    candidates: "Кандидаты",
+    compare: "Сравнение",
+    search: "Поиск",
+    squad: "Команда",
+    invitations: "Приглашения",
+    messages: "Сообщения",
+    trio: "Связь с ФСП",
+    cups: "Кубки",
+    probes: "Задания",
+    assignments: "Автопроверка",
+    ats: "Интеграции",
+    integrations: "Интеграции",
+    company: "Компания",
+    tariffs: "Тарифы",
+    notifications: "Уведомления",
+    app: "Приложение",
+  },
+  candidate: {
+    "": "Обзор",
+    invitations: "Приглашения",
+    assessment: "Тест",
+    express: "Экспресс",
+    feedback: "Навыки",
+    category: "Грейд",
+    attempts: "Попытки",
+    profile: "Профиль",
+    fsp: "Паспорт ФСП",
+    messages: "Сообщения",
+    trio: "Связь с ФСП",
+    cups: "Кубки",
+    assignments: "Задания",
+    probes: "Вилки",
+    vacancies: "Вакансии",
+    mydata: "Мои данные",
+    settings: "Настройки",
+    notifications: "Уведомления",
+    app: "Приложение",
+  },
+  fsp_analyst: {
+    "": "Обзор",
+    analytics: "Аналитика",
+    demand: "Спрос",
+    effect: "Эффект",
+    salaries: "Зарплаты",
+    funnel: "Воронки",
+    cups: "Кубки",
+    benefit: "Польза",
+    partners: "Партнёры",
+    trio: "Подтверждение",
+    method: "Методика",
+    security: "Безопасность",
+  },
+  expert: {
+    pairs: "Пары",
+    answers: "Ответы",
+    angoff: "Пороги",
+    review: "Очередь",
+    security: "Безопасность",
+  },
+};
+
+export function shortLabel(section: Section & { short?: string }, role: string): string {
+  if (section.short && section.short.trim()) return section.short.trim();
+  const roleMap = ROLE_LABELS[role] || ROLE_LABELS[role === "admin" ? "fsp_analyst" : "candidate"] || {};
+  const mapped = roleMap[section.path];
+  if (mapped) return mapped;
+  const cleaned = section.title.replace(/^[A-ZА-Я]\s*·\s*/, "").trim();
+  const first = cleaned.split(/[·—:()]/)[0].trim().split(/\s+/)[0] || cleaned;
+  return first.length > 12 ? `${first.slice(0, 11)}…` : first;
 }
 
 function TabIcon({ path }: { path: string }) {
@@ -137,11 +192,24 @@ function TabIcon({ path }: { path: string }) {
         </svg>
       );
     case "invitations":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2.5" />
+          <path d="M4 7l8 6 8-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     case "messages":
     case "trio":
       return (
         <svg viewBox="0 0 24 24" className={cls} fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
           <path d="M4 6.5A2.5 2.5 0 016.5 4h11A2.5 2.5 0 0120 6.5v7A2.5 2.5 0 0117.5 16H9l-4.5 3.5V16A2.5 2.5 0 014 13.5v-7z" strokeLinejoin="round" />
+        </svg>
+      );
+    case "security":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="9" rx="2" />
+          <path d="M8 11V7a4 4 0 018 0v4" strokeLinecap="round" />
         </svg>
       );
     default:
@@ -170,6 +238,7 @@ export function MobileTabBar({
   const meta = useMeta();
   const loc = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   const effectiveRole: string = roleProp || me?.role || "candidate";
   const base = baseProp || ROLE_BASE[effectiveRole] || "/candidate";
@@ -186,52 +255,103 @@ export function MobileTabBar({
     [rawSections, meta, showJury],
   );
 
-  // Закрывать лист «Ещё» при смене маршрута или по Escape.
+  // Закрывать лист «Ещё» при смене маршрута.
   useEffect(() => {
     setSheetOpen(false);
   }, [loc.pathname, loc.search]);
 
+  // Управление фокусом, Escape и блокировкой прокрутки body при открытом листе «Ещё».
   useEffect(() => {
     if (!sheetOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    sheetRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSheetOpen(false);
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+    };
   }, [sheetOpen]);
 
-  // Выбираем 4–5 главных вкладок роли.
-  const { primaryTabs, extraTabs } = useMemo(() => {
-    if (visibleSections.length <= 5) {
-      return { primaryTabs: visibleSections, extraTabs: [] as Section[] };
-    }
-    const preferred = PRIMARY_PATHS[effectiveRole] || [];
-    const chosen: Section[] = [];
-    const used = new Set<string>();
+  // Выставляем CSS-переменную --mobile-tabbar-h на documentElement, когда панель видна (< 768 px),
+  // чтобы плавающие виджеты (проводник Елена и др.) не перекрывали нижнюю навигацию.
+  useEffect(() => {
+    if (typeof window === "undefined" || !visibleSections.length) return;
+    const root = document.documentElement;
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => {
+      root.style.setProperty(
+        "--mobile-tabbar-h",
+        mq.matches ? "calc(4rem + env(safe-area-inset-bottom, 0px))" : "0px",
+      );
+    };
+    sync();
+    mq.addEventListener?.("change", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      mq.removeEventListener?.("change", sync);
+      window.removeEventListener("resize", sync);
+      root.style.setProperty("--mobile-tabbar-h", "0px");
+    };
+  }, [visibleSections.length]);
 
-    for (const p of preferred) {
-      if (chosen.length >= 4) break;
-      const hit = visibleSections.find((s) => s.path === p);
-      if (hit && !used.has(hit.path)) {
-        // Не ставим рядом два однотипных экрана подбора, чтобы оставить место под «Диалоги/Приглашения».
-        const isCandGroup = ["candidates", "compare", "search", "squad"].includes(hit.path);
-        const alreadyHasCandGroup = chosen.some((c) => ["candidates", "compare", "search", "squad"].includes(c.path));
-        if (isCandGroup && alreadyHasCandGroup) continue;
-        chosen.push(hit);
-        used.add(hit.path);
+  // Выбираем 4–5 главных вкладок роли и гарантируем отсутствие дублей подписей.
+  const { primaryTabs, extraTabs, tabLabels } = useMemo(() => {
+    const pickTabs = (): { primary: Section[]; extra: Section[] } => {
+      if (visibleSections.length <= 5) {
+        return { primary: visibleSections, extra: [] };
       }
-    }
+      const preferred = PRIMARY_PATHS[effectiveRole] || PRIMARY_PATHS.candidate;
+      const chosen: Section[] = [];
+      const used = new Set<string>();
 
-    for (const s of visibleSections) {
-      if (chosen.length >= 4) break;
-      if (!used.has(s.path)) {
-        chosen.push(s);
-        used.add(s.path);
+      for (const p of preferred) {
+        if (chosen.length >= 4) break;
+        const hit = visibleSections.find((s) => s.path === p);
+        if (hit && !used.has(hit.path)) {
+          const isCandGroup = ["candidates", "compare", "search", "squad"].includes(hit.path);
+          const alreadyHasCandGroup = chosen.some((c) => ["candidates", "compare", "search", "squad"].includes(c.path));
+          if (isCandGroup && alreadyHasCandGroup) continue;
+          chosen.push(hit);
+          used.add(hit.path);
+        }
       }
-    }
 
-    const rest = visibleSections.filter((s) => !used.has(s.path));
-    return { primaryTabs: chosen, extraTabs: rest };
+      for (const s of visibleSections) {
+        if (chosen.length >= 4) break;
+        if (!used.has(s.path)) {
+          chosen.push(s);
+          used.add(s.path);
+        }
+      }
+
+      // Сортируем выбранные 4 вкладки в порядке их следования в sections.ts (кроме приоритета приглашений у кандидата),
+      // чтобы обзор (path === "") всегда стоял первым, если он есть.
+      chosen.sort((a, b) => {
+        if (a.path === "") return -1;
+        if (b.path === "") return 1;
+        return visibleSections.indexOf(a) - visibleSections.indexOf(b);
+      });
+
+      const rest = visibleSections.filter((s) => !used.has(s.path));
+      return { primary: chosen, extra: rest };
+    };
+
+    const { primary, extra } = pickTabs();
+    const seenLabels = new Set<string>();
+    const labels = new Map<string, string>();
+    for (const s of primary) {
+      let lbl = shortLabel(s, effectiveRole);
+      if (seenLabels.has(lbl)) {
+        lbl = s.title.length > 12 ? `${s.title.slice(0, 11)}…` : s.title;
+      }
+      seenLabels.add(lbl);
+      labels.set(s.path, lbl);
+    }
+    return { primaryTabs: primary, extraTabs: extra, tabLabels: labels };
   }, [visibleSections, effectiveRole]);
 
   const hasSeparateMessages = visibleSections.some((s) => s.path === "messages");
@@ -257,28 +377,23 @@ export function MobileTabBar({
 
   if (!visibleSections.length) return null;
 
-  return (
+  const fixedLayer = (
     <>
-      {/* Отступ в потоке документа на мобильном, чтобы фиксированная панель не перекрывала нижний контент */}
-      <div
-        className="h-16 md:hidden"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-        aria-hidden="true"
-      />
-
       {sheetOpen && extraTabs.length > 0 && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-brand-night/50 backdrop-blur-[1px] md:hidden"
-          onMouseDown={(e) => {
+          onClick={(e) => {
             if (e.target === e.currentTarget) setSheetOpen(false);
           }}
         >
           <div
+            ref={sheetRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label="Все разделы кабинета"
             data-testid="mobile-tab-sheet"
-            className="max-h-[82vh] w-full overflow-y-auto rounded-t-3xl bg-white p-4 pb-6 shadow-2xl"
+            className="max-h-[82vh] w-full overflow-y-auto rounded-t-3xl bg-white p-4 pb-6 shadow-2xl outline-none"
             style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
           >
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-brand-night/15" aria-hidden="true" />
@@ -350,7 +465,7 @@ export function MobileTabBar({
             const to = s.path ? `${base}/${s.path}` : base;
             const active = isSectionActive(s);
             const badge = badgeFor(s);
-            const label = shortLabel(s, effectiveRole);
+            const label = tabLabels.get(s.path) || shortLabel(s, effectiveRole);
             return (
               <Link
                 key={s.path}
@@ -423,6 +538,18 @@ export function MobileTabBar({
           )}
         </div>
       </nav>
+    </>
+  );
+
+  return (
+    <>
+      {/* Отступ в потоке документа на мобильном: calc(4rem + safe-area) не схлопывается при box-sizing: border-box */}
+      <div
+        className="w-full shrink-0 md:hidden"
+        style={{ height: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
+        aria-hidden="true"
+      />
+      {typeof document !== "undefined" ? createPortal(fixedLayer, document.body) : fixedLayer}
     </>
   );
 }
