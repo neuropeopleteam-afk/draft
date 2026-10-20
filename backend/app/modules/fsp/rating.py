@@ -40,6 +40,18 @@ RELEVANCE_POLICY = (" Результат по дисциплине, близко
                     "дальше — 0,8 (дисциплины между собой равны: у каждой есть близкие специализации).")
 
 
+def team_factor(a) -> float:
+    """Личный результат весит больше командного; внутри команды учитываются размер и роль участника."""
+    ts = getattr(a, "team_size", None)
+    if not ts or ts <= 1:
+        return 1.0
+    role = str(getattr(a, "team_role", "") or getattr(a, "role", "") or "").lower()
+    base = max(0.75, 1.0 / (1.0 + 0.06 * (int(ts) - 1)))
+    if role in ("captain", "lead", "капитан", "тимлид", "лидер"):
+        return min(0.95, round(base + 0.06, 4))
+    return round(base, 4)
+
+
 def details(achievements, *, today: date | None = None, direction: str | None = None,
             relevance: bool = False) -> dict:
     """Сила паспорта. relevance=True (флаг FSP_DISCIPLINE_RELEVANCE) — вклад результата умножается на коэффициент
@@ -54,7 +66,7 @@ def details(achievements, *, today: date | None = None, direction: str | None = 
         # Один турнир может иметь несколько дисциплин/записей; повтор импорта не даёт бонус.
         key = getattr(a, "event_id", None) or (a.event_name.strip().casefold(), a.event_date)
         kind = result_kind(a)
-        value = RESULT_WEIGHTS[kind] * recency(a.event_date, today)
+        value = RESULT_WEIGHTS[kind] * recency(a.event_date, today) * team_factor(a)
         c = rel.coef(getattr(a, "discipline", None), direction) if relevance else 1.0
         value *= c
         if key not in events or value > events[key]["value"]:

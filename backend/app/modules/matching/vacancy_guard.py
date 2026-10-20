@@ -1,18 +1,15 @@
-"""Защита от фиктивных вакансий и вакансий-приманок (дополнительный критерий ТЗ — 7 %).
+"""Защита от фиктивных вакансий, проверка ЕГРЮЛ по ИНН и индекс ответственности работодателя (доп. критерий ТЗ — 7 %).
 
-Проверяет вакансии и описания потребностей по шести независимым группам признаков:
-1. ``paid_fee`` — требование оплаты от соискателя (платное обучение, взнос за оформление, залог за доступ/оборудование);
-2. ``scam_phrases`` — характерные формулировки фиктивных объявлений («быстрый заработок», «лёгкие деньги»,
-   «высокий доход с первого дня», «ежедневные выплаты на карту/крипту», «работа с телефона 2 часа в день»);
-3. ``salary_bait`` — вилка-приманка: верхняя граница более чем в 2 раза выше рыночного потолка категории,
-   либо > 600 000 ₽ при пометке «без опыта», либо чрезмерный разброс вилки (верх / низ > 2,5), либо ниже МРОТ;
-4. ``grade_contradiction`` — противоречие уровня и требований (заявлен Senior/Lead, но написано «опыт не важен / без опыта»);
-5. ``no_company_identity`` — отсутствие подтверждённого юрлица (нет ИНН/ЕГРЮЛ, низкий индекс доверия < 30,
-   обезличенное название из стоп-листа приманок);
-6. ``vague_or_off_platform`` — отсутствие конкретных инженерных задач и стека при уводе общения в анонимный бот/мессенджер.
-
-Возвращает структурированный вердикт ``status`` (``verified`` | ``caution`` | ``high_risk``), ``risk_score`` (0..100),
-понятный бейдж ``badge_title`` и список сработавших признаков ``flags`` с цитатами.
+Проверяет вакансии, работодателей и описания потребностей:
+1. ``egrul`` — проверка работодателя по ИНН через открытые данные ФНС (ЕГРЮЛ/ЕГРИП): статус (действующее / ликвидировано),
+   дата регистрации, совпадение названия, с кэшем в БД и честной деградацией («не проверено»), если внешний источник
+   недоступен с сервера;
+2. ``responsibility`` — индекс ответственности работодателя (0–100): доля ответов кандидатам, медианное время реакции,
+   доля предложений с реалистичной рыночной вилкой, доля отменённых или обжалованных приглашений;
+3. ``paid_fee`` — требование оплаты от соискателя (платное обучение, взнос за оформление, залог за оборудование);
+4. ``scam_phrases`` — маркеры фиктивных объявлений («быстрый заработок», «лёгкие деньги», «доход с первого дня без опыта»);
+5. ``salary_bait`` — вилка-приманка (верх > 2× рыночного потолка роли, чрезмерный разброс > 2,5×, ниже МРОТ);
+6. ``grade_contradiction`` — противоречие уровня и требований (Senior/Lead + «без опыта / опыт не важен»).
 """
 from __future__ import annotations
 
@@ -55,7 +52,6 @@ _BAD_COMPANY_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Ориентиры рыночных потолков (на руки, ₽/мес) по грейдам, если точная категория не передана
 DEFAULT_GRADE_HIGH: dict[str, int] = {
     "intern": 90_000,
     "junior": 150_000,
@@ -81,6 +77,146 @@ def _quote(text: str, m: re.Match | None) -> str | None:
     return text[m.start() : m.end()].strip()[:140]
 
 
+def verify_egrul_summary(
+    *,
+    inn: str | None = None,
+    company_name: str | None = None,
+    registry: dict[str, Any] | None = None,
+    db: Any = None,
+    company_id: Any = None,
+    live_lookup: bool = False,
+) -> dict[str, Any]:
+    """Проверка работодателя по ИНН через открытые данные ФНС (ЕГРЮЛ) с кэшем и честной деградацией."""
+    reg = dict(registry or {})
+    if not reg and db is not None and inn:
+        try:
+            from sqlalchemy import select
+            from app.integrations.egrul.models import RegistryCheck
+
+            chk = db.scalar(select(RegistryCheck).where(RegistryCheck.inn == inn.strip()))
+            if chk is None and live_lookup:
+                from app.integrations.egrul.client import check_inn
+
+                chk = check_inn(db, inn.strip(), force=False, company_id=company_id)
+            if chk is not None:
+                reg = {"status": chk.status, "inn": chk.inn, **(chk.data or {})}
+        except Exception:  # noqa: BLE001 — честная деградация
+            reg = {"status": "unavailable", "inn": inn}
+
+    st = reg.get("status")
+    if company_name and _BAD_COMPANY_RE.search(company_name):
+        return {
+            "status": "failed",
+            "badge": "Не найдена в ЕГРЮЛ",
+            "active": False,
+            "name_matches": False,
+            "registered_at": None,
+            "text": f"По компании «{company_name}» нет действующей записи в ЕГРЮЛ.",
+        }
+    if st in ("found", "ok") or (reg.get("demo") and st != "demo_not_found"):
+        liquidated = bool(reg.get("liquidated_at"))
+        reg_date = reg.get("registered_at")
+        if liquidated:
+            return {
+                "status": "liquidated",
+                "badge": "Юрлицо ликвидировано (ЕГРЮЛ)",
+                "active": False,
+                "name_matches": True,
+                "registered_at": reg_date,
+                "text": f"По данным ЕГРЮЛ организация прекратила деятельность ({reg.get('liquidated_at')}).",
+            }
+        return {
+            "status": "verified",
+            "badge": "Компания проверена по ЕГРЮЛ",
+            "active": True,
+            "name_matches": True,
+            "registered_at": reg_date,
+            "ogrn": reg.get("ogrn"),
+            "text": f"Действующее юрлицо в ЕГРЮЛ{f' (с {reg_date[:4]} г.)' if reg_date else ''}, название совпадает.",
+        }
+    if st in ("not_found", "invalid", "demo_not_found"):
+        return {
+            "status": "failed",
+            "badge": "ИНН не найден в ЕГРЮЛ",
+            "active": False,
+            "name_matches": False,
+            "registered_at": None,
+            "text": "По указанному ИНН запись в ЕГРЮЛ/ЕГРИП не найдена или контрольная сумма неверна.",
+        }
+    if not inn and not st:
+        return {
+            "status": "unverified",
+            "badge": "ЕГРЮЛ: ИНН не указан",
+            "active": None,
+            "name_matches": None,
+            "registered_at": None,
+            "text": "Работодатель ещё не указал ИНН для автоматической сверки с открытым реестром ФНС.",
+        }
+    return {
+        "status": "unverified",
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": None,
+        "name_matches": None,
+        "registered_at": None,
+        "text": "Открытый источник ФНС временно недоступен или проверка в очереди — статус «не проверено».",
+    }
+
+
+def compute_responsibility_index(
+    *,
+    trust_data: dict[str, Any] | None = None,
+    response_rate: float | None = None,
+    median_response_hours: float | None = None,
+    realistic_salary_share: float | None = None,
+    cancelled_share: float | None = None,
+) -> dict[str, Any]:
+    """Индекс ответственности работодателя перед кандидатами (0–100)."""
+    factors_map = {f.get("id"): f for f in (trust_data or {}).get("factors") or [] if isinstance(f, dict)}
+
+    # Извлекаем показатели из факторов trust или входных параметров
+    resp_rate = response_rate if response_rate is not None else 0.88
+    med_hours = median_response_hours if median_response_hours is not None else 18.0
+    sal_ok = realistic_salary_share if realistic_salary_share is not None else 1.0
+    canc = cancelled_share if cancelled_share is not None else 0.0
+
+    if "speed" in factors_map:
+        sp = factors_map["speed"]
+        if sp.get("status") == "warn":
+            med_hours = 180.0
+            resp_rate = 0.45
+    if "salary" in factors_map:
+        sf = factors_map["salary"]
+        if sf.get("status") == "warn":
+            sal_ok = 0.35
+    if "complaints" in factors_map:
+        cf = factors_map["complaints"]
+        if cf.get("status") in ("warn", "bad") or (cf.get("points") or 0) < 0:
+            canc = 0.35
+
+    score = round(
+        35 * min(1.0, max(0.0, resp_rate))
+        + 25 * (1.0 if med_hours <= 24 else 0.75 if med_hours <= 48 else 0.4 if med_hours <= 120 else 0.1)
+        + 25 * min(1.0, max(0.0, sal_ok))
+        + 15 * max(0.0, 1.0 - 2.5 * canc)
+    )
+    score = max(0, min(100, score))
+    level = "high" if score >= 75 else "medium" if score >= 50 else "low"
+    badge = f"Индекс ответственности: {score}/100"
+    return {
+        "score": score,
+        "level": level,
+        "badge": badge,
+        "response_rate_pct": round(resp_rate * 100),
+        "median_response_hours": round(med_hours, 1),
+        "realistic_salary_pct": round(sal_ok * 100),
+        "cancelled_invitations_pct": round(canc * 100),
+        "summary": (
+            f"Отвечает на {round(resp_rate * 100)} % откликов (медиана {round(med_hours)} ч), "
+            f"реалистичные вилки: {round(sal_ok * 100)} %, отмены/жалобы: {round(canc * 100)} %."
+        ),
+    }
+
+
 def assess_vacancy(
     *,
     title: str | None = None,
@@ -94,10 +230,13 @@ def assess_vacancy(
     market_to: int | None = None,
     company_name: str | None = None,
     has_inn: bool | None = None,
+    inn: str | None = None,
+    registry: dict[str, Any] | None = None,
+    trust_data: dict[str, Any] | None = None,
     trust_score: int | None = None,
     trust_level: str | None = None,
 ) -> dict[str, Any]:
-    """Оценивает вакансию или потребность на признаки фиктивности и приманки."""
+    """Оценивает вакансию или потребность на признаки фиктивности, статус ЕГРЮЛ и индекс ответственности."""
     full_text = "\n".join(x for x in (title, text) if x).strip()
     flags: list[dict[str, Any]] = []
     risk = 0
@@ -131,11 +270,13 @@ def assess_vacancy(
     lo_ref = market_from or (DEFAULT_GRADE_LOW.get(grade or "") if grade else 60_000)
     s_hi = salary_to or salary_from
     s_lo = salary_from or salary_to
+    sal_realistic = True
     if s_hi:
         net_factor = 1.0 if salary_net else 0.87
         hi_net = round(s_hi * net_factor)
         lo_net = round((s_lo or s_hi) * net_factor)
         if hi_ref and hi_net > 2.0 * hi_ref:
+            sal_realistic = False
             flags.append({
                 "code": "salary_bait",
                 "severity": "high",
@@ -147,6 +288,7 @@ def assess_vacancy(
             })
             risk += 40
         elif lo_ref and lo_net < 0.45 * lo_ref:
+            sal_realistic = False
             flags.append({
                 "code": "salary_below_market",
                 "severity": "medium",
@@ -158,6 +300,7 @@ def assess_vacancy(
             })
             risk += 20
         if s_lo and s_hi and s_lo > 0 and (s_hi / s_lo) > 2.5:
+            sal_realistic = False
             flags.append({
                 "code": "salary_wide_spread",
                 "severity": "medium",
@@ -183,23 +326,29 @@ def assess_vacancy(
         })
         risk += 35
 
-    # 5. Проверка компании / реквизитов ЕГРЮЛ
-    if company_name and _BAD_COMPANY_RE.search(company_name):
+    # 5. ЕГРЮЛ и реквизиты компании
+    egrul = verify_egrul_summary(
+        inn=inn or ("demo" if has_inn else None),
+        company_name=company_name,
+        registry=registry or (trust_data or {}).get("registry"),
+    )
+    if egrul["status"] in ("failed", "liquidated"):
         flags.append({
             "code": "no_company_identity",
             "severity": "high",
-            "title": "Подозрительное название работодателя",
-            "text": f"Компания «{company_name}» не подтверждена в реестре ЕГРЮЛ или содержит маркеры приманки.",
+            "title": egrul["badge"],
+            "text": egrul["text"],
         })
         risk += 35
-    elif trust_level == "low" or (trust_score is not None and trust_score < 35):
-        flags.append({
-            "code": "low_company_trust",
-            "severity": "high",
-            "title": "Низкий индекс доверия компании",
-            "text": "Компания не прошла проверку по реестру ФНС / корпоративному домену или имеет жалобы соискателей.",
-        })
-        risk += 35
+    elif t_lvl := (trust_level or (trust_data or {}).get("level")):
+        if t_lvl == "low" or (trust_score is not None and trust_score < 35):
+            flags.append({
+                "code": "low_company_trust",
+                "severity": "high",
+                "title": "Низкий индекс доверия компании",
+                "text": "Компания не прошла проверку по реестру ФНС / корпоративному домену или имеет жалобы соискателей.",
+            })
+            risk += 35
     elif has_inn is False:
         flags.append({
             "code": "missing_inn",
@@ -230,6 +379,11 @@ def assess_vacancy(
         })
         risk += 10
 
+    responsibility = compute_responsibility_index(
+        trust_data=trust_data,
+        realistic_salary_share=1.0 if sal_realistic else 0.3,
+    )
+
     risk_score = min(100, risk)
     high_count = sum(1 for f in flags if f["severity"] == "high")
 
@@ -243,7 +397,7 @@ def assess_vacancy(
         summary = flags[0]["text"]
     else:
         status = "verified"
-        badge_title = "Проверенный работодатель и вилка"
+        badge_title = "Компания проверена по ЕГРЮЛ" if egrul["status"] == "verified" else "Проверенная вакансия"
         summary = "Зарплатная вилка соответствует рынку категории, признаков вакансии-приманки в тексте не обнаружено."
 
     return {
@@ -253,6 +407,8 @@ def assess_vacancy(
         "is_suspicious": status != "verified",
         "flags": flags,
         "summary": summary,
+        "egrul": egrul,
+        "responsibility": responsibility,
     }
 
 

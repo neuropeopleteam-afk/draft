@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Alert, DIRECTION_TITLES, GRADE_TITLE_ALL, Loading, useApi } from "./ui";
 import { ScrollX } from "./A11y";
 import { ProvenanceLine } from "./validation/Provenance";
+import { MatchingBenchUpload } from "./MatchingBenchUpload";
 
 /** Блок /validation: бенчмарк подбора со скрытой истиной (backend: app/modules/validation/matching_bench.py, make bench). */
 
@@ -26,6 +27,7 @@ export default function MatchingBench() {
           ? <Alert kind="info">Бенчмарк ещё не посчитан: запустите make bench.</Alert>
           : <Body r={r} />}
       </div>
+      <MatchingBenchUpload defaultOpen={false} className="mt-8" />
     </section>
   );
 }

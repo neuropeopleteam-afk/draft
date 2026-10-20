@@ -121,13 +121,15 @@ def _bank_tags(direction: str) -> frozenset[str]:
 
     from app.modules.assessment.skill_map import to_stack_tags
 
-    from app.modules.catalog.ext import in_active_pool
+    from app.modules.catalog.ext import enabled as ext_enabled, in_active_pool
 
     out: set[str] = set()
     for s in load_specs().values():
         if s.canary or s.direction not in (direction, "common") or not in_active_pool(s):
             continue
         out.update(to_stack_tags(s.direction, s.skills))
+    if not ext_enabled() and direction in ("backend", "frontend"):
+        out.discard("kubernetes")
     return frozenset(out)
 
 

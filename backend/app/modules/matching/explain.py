@@ -3,16 +3,19 @@
 Собирает структурированный блок ``explain`` для каждого кандидата в подборке и в карточке кандидата:
 * ``headline`` — главная причина в одну строку без внутреннего жаргона (T0/T1/T2, IRT, θ);
 * ``summary`` — связное резюме для HR на 1–2 предложения: почему кандидат на этом месте, чем подтверждён уровень;
-* ``grade`` — статус грейда (подтверждён платформой / предварительно / самозаявлено), результат теста и подсказка со шкалой;
+* ``why_above_next`` — (P0) объяснение границы с соседом снизу («Почему №1 выше №2»): за счёт какого подтверждённого
+  навыка, результата теста или достижения ФСП этот кандидат стоит выше следующего;
+* ``offer_forecast`` — прогноз вероятности принятия приглашения (вилка против рыночного коридора категории,
+  совпадение формата/города/переезда, покрытие стека, активность) с честной подписью;
+* ``grade`` — статус грейда (подтверждён платформой / предварительно / самозаявлено), результат теста, давность
+  подтверждения (ширина погрешности вместо снижения балла) и подсказка со шкалой;
 * ``core`` — состояние основного языка или определяющего фреймворка роли;
-* ``skills_tested`` — какие обязательные и желательные навыки подтверждены тестом или коротким заданием (включая косвенное подтверждение через фреймворк);
-* ``skills_fsp`` — достижения, подтверждённые реестром Федерации спортивного программирования;
+* ``skills_tested`` — какие обязательные и желательные навыки подтверждены тестом или коротким заданием;
+* ``skills_fsp`` — достижения, подтверждённые реестром ФСП (с пояснением, что командный результат подтверждает
+  дисциплину и роль, а не каждый отдельный технологический тег);
 * ``skills_probes`` — результаты коротких заданий работодателей;
 * ``gaps`` — чего не хватает из обязательного стека и как это проверить (короткое задание на 15 минут);
-* ``breakdown`` — вклад каждого фактора в итоговый балл соответствия из 100.
-
-Работает как по живому ``Bundle`` во время расчёта подборки, так и по уже сохранённому элементу ``results[i]``
-из ``SelectionVersion`` (обратная совместимость со всеми сохранёнными версиями подборок).
+* ``breakdown`` — вклад каждого фактора в итоговый балл соответствия из 100 (самоописание T0 = 0,0).
 """
 from __future__ import annotations
 
@@ -35,6 +38,12 @@ GRADE_STATUS_TITLES: dict[str, str] = {
     "unconfirmed": "Самозаявлено (тест не пройден)",
 }
 
+RANKING_BASIS_RU = (
+    "Категория и фильтр грейда строятся только по подтверждённому результату теста; место внутри категории "
+    "определяют результат теста, подтверждённые заданиями навыки, достижения в реестре ФСП и короткие задания "
+    "работодателей. Самозаявленные данные анкеты и резюме в расчёт балла и ярусов не входят (вес 0 %)."
+)
+
 _PCT_RE = re.compile(r"(\d+)\s*%")
 
 
@@ -46,7 +55,7 @@ def _extract_pct(text: str | None) -> int | None:
 
 
 def _clean_jargon(text: str | None) -> str:
-    """Убирает служебные коды T0/T1/T2 и греческую θ из основного текста для HR (оставляя понятные русские формулировки)."""
+    """Убирает служебные коды T0/T1/T2 и греческую θ из основного текста для HR."""
     if not text:
         return ""
     s = re.sub(r"\s*\(T[012]\)", "", text)
@@ -55,6 +64,302 @@ def _clean_jargon(text: str | None) -> str:
     s = re.sub(r"\bT2\b", "реестр ФСП", s)
     s = re.sub(r"\bT0\b", "самоописание", s)
     return s.strip()
+
+
+def _rub(v: int | float | None) -> str:
+    if not v:
+        return "—"
+    return f"{int(round(v)):,}".replace(",", " ") + " ₽"
+
+
+def compute_offer_forecast(
+    card: dict[str, Any],
+    req: dict[str, Any],
+    comps: dict[str, Any],
+    req_confirmed: int,
+    req_total: int,
+) -> dict[str, Any]:
+    """Прогноз вероятности принятия приглашения кандидатом по объективным параметрам предложения и рынка категории."""
+    market = card.get("market_range") or {}
+    m_lo = market.get("from")
+    m_hi = market.get("to")
+    m_med = market.get("median") or ((m_lo + m_hi) // 2 if m_lo and m_hi else None)
+
+    s_from = req.get("salary_from")
+    s_to = req.get("salary_to") or s_from
+    is_net = bool(req.get("salary_net"))
+    offer_net = round((s_to or 0) * (1.0 if is_net else 0.87)) if s_to else None
+
+    prob = 0.68
+    factors: list[str] = []
+
+    # 1. Вилка против рыночных ожиданий категории
+    if offer_net and m_med:
+        if m_hi and offer_net >= m_hi:
+            prob += 0.16
+            factors.append(f"Верх вилки ({_rub(offer_net)} на руки) на уровне верхнего квартиля рынка категории ({_rub(m_hi)})")
+        elif offer_net >= m_med:
+            prob += 0.10
+            factors.append(f"Вилка ({_rub(offer_net)} на руки) не ниже медианы рынка категории ({_rub(m_med)})")
+        elif m_lo and offer_net >= m_lo:
+            prob -= 0.04
+            factors.append(f"Вилка в нижней половине рынка категории ({_rub(m_lo)} – {_rub(m_hi)} на руки)")
+        else:
+            prob -= 0.24
+            factors.append(f"Верх вилки ниже рыночного диапазона категории (от {_rub(m_lo)} на руки) — высокий риск отказа")
+    else:
+        factors.append("Зарплатная вилка в потребности не ограничена (ориентир — рынок категории)")
+
+    # 2. Совпадение формата работы и локации (с различением прямого совпадения города и готовности к переезду)
+    cand_fmt = card.get("work_format")
+    cand_city = (card.get("city") or "").strip()
+    reloc = bool(card.get("relocation"))
+    req_fmts = req.get("work_formats") or ([req["work_format"]] if req.get("work_format") else [])
+    req_city = (req.get("city") or "").strip()
+
+    if cand_fmt == "remote" and ("remote" in req_fmts or not req_fmts):
+        prob += 0.06
+        factors.append("Удалённый формат работы полностью совпадает")
+    elif req_city and any(f in ("office", "hybrid") for f in req_fmts):
+        if cand_city and cand_city.lower() == req_city.lower():
+            prob += 0.05
+            factors.append(f"Город присутствия совпадает ({cand_city})")
+        elif reloc:
+            prob -= 0.04
+            factors.append(f"Кандидат в г. {cand_city or 'другом регионе'}, готов к переезду в {req_city} (смягчает несовпадение города, но требует времени на релокацию)")
+        else:
+            prob -= 0.15
+            factors.append(f"Требуется присутствие в г. {req_city}, у кандидата указан {cand_city or 'другой город'} без переезда")
+    elif not req_fmts or cand_fmt in req_fmts or cand_fmt == "any":
+        prob += 0.04
+        factors.append("Формат работы подходит кандидату")
+
+    # 3. Соответствие стека
+    if req_total > 0:
+        cov = req_confirmed / req_total
+        if cov >= 0.75:
+            prob += 0.05
+            factors.append(f"Высокое совпадение проверенного стека ({req_confirmed} из {req_total})")
+        elif cov < 0.4:
+            prob -= 0.05
+
+    # 4. Свежесть / активность на платформе
+    fresh = card.get("freshness") or {}
+    if fresh.get("level") == "high" or "недавно" in str(fresh.get("text") or "").lower():
+        prob += 0.03
+
+    prob = round(min(0.95, max(0.15, prob)), 2)
+    pct = round(prob * 100)
+    if prob >= 0.75:
+        level, l_title = "high", f"Высокая ({pct} %)"
+    elif prob >= 0.50:
+        level, l_title = "medium", f"Средняя ({pct} %)"
+    else:
+        level, l_title = "low", f"Низкая ({pct} %)"
+
+    return {
+        "probability": prob,
+        "pct": pct,
+        "level": level,
+        "title": l_title,
+        "factors": factors[:3],
+        "note": "Оценка модели по вилке относительно рынка категории, формату работы, релокации и совпадению стека; будет уточнена на реальных принятиях приглашений",
+    }
+
+
+def build_why_above_next(
+    curr: dict[str, Any],
+    nxt: dict[str, Any] | None,
+    req: dict[str, Any] | None = None,
+    weights: dict[str, float] | None = None,
+) -> dict[str, Any] | None:
+    """«Почему №k выше №(k+1)»: лаконичное объяснение границы с соседом снизу в подборке (P0)."""
+    if not nxt:
+        return None
+    req = req or {}
+    c_ref = curr.get("ref") or "Текущий"
+    n_ref = nxt.get("ref") or "Следующий"
+    c_score = float(curr.get("score") or 0.0)
+    n_score = float(nxt.get("score") or 0.0)
+    diff100 = round((c_score - n_score) * 100, 1)
+
+    reasons: list[dict[str, str]] = []
+
+    # 1. Статус подтверждения грейда
+    c_gs = curr.get("grade_status") or "confirmed"
+    n_gs = nxt.get("grade_status") or "confirmed"
+    if c_gs != "unconfirmed" and n_gs == "unconfirmed":
+        reasons.append({
+            "kind": "tier",
+            "text": f"грейд подтверждён тестом на платформе (у {n_ref} уровень только самозаявлен)",
+        })
+
+    # 2. Ядро роли (основной язык / фреймворк)
+    c_core = curr.get("core") or {}
+    n_core = nxt.get("core") or {}
+    if c_core.get("state") in ("confirmed", "declared") and n_core.get("state") == "absent":
+        reasons.append({
+            "kind": "core",
+            "text": f"подтверждено основное ядро роли — {c_core.get('title')} (у {n_ref} смежный стек)",
+        })
+
+    # 3. Обязательные навыки (какие именно подтверждены у curr, но отсутствуют у nxt)
+    c_exp = curr.get("explain") or build_explain_from_result(curr, req, weights)
+    n_exp = nxt.get("explain") or build_explain_from_result(nxt, req, weights)
+    c_req_skills = {s["title"]: s.get("score_pct") for s in (c_exp.get("skills_tested") or []) if s.get("required")}
+    n_req_skills = {s["title"]: s.get("score_pct") for s in (n_exp.get("skills_tested") or []) if s.get("required")}
+    only_in_curr = [t for t in c_req_skills if t not in n_req_skills]
+    if only_in_curr:
+        names = ", ".join(only_in_curr[:3])
+        reasons.append({
+            "kind": "skill",
+            "text": f"подтверждён обязательный навык {names} ({c_exp.get('required_confirmed', 0)} из {c_exp.get('required_total', 0)} против {n_exp.get('required_confirmed', 0)} у {n_ref})",
+        })
+    else:
+        # Проверим, по какому общему навыку у curr заметно выше процент
+        better_skill = None
+        for t, c_pct in c_req_skills.items():
+            n_pct = n_req_skills.get(t)
+            if c_pct is not None and n_pct is not None and c_pct - n_pct >= 10:
+                better_skill = (t, c_pct, n_pct)
+                break
+        if better_skill:
+            reasons.append({
+                "kind": "skill",
+                "text": f"выше результат по обязательному навыку {better_skill[0]} ({better_skill[1]} % против {better_skill[2]} %)",
+            })
+
+    # 4. Вклад компонент балла (тест, ФСП, короткие задания)
+    c_comps = curr.get("components") or {}
+    n_comps = nxt.get("components") or {}
+    w_map = dict(weights or {"test": 0.45, "stack_required": 0.35, "stack_desired": 0.05, "fsp": 0.10, "probe": 0.05})
+    if not req.get("stack_required"):
+        w_map["test"] = w_map.get("test", 0.45) + w_map.get("stack_required", 0.35)
+
+    dt = round(w_map.get("test", 0.45) * (float(c_comps.get("test") or 0) - float(n_comps.get("test") or 0)) * 100, 1)
+    if dt >= 0.4:
+        reasons.append({
+            "kind": "test",
+            "text": f"более высокий результат адаптивного теста (+{str(dt).replace('.', ',')} балла)",
+        })
+
+    df = round(w_map.get("fsp", 0.10) * (float(c_comps.get("fsp") or 0) - float(n_comps.get("fsp") or 0)) * 100, 1)
+    if df >= 0.3:
+        reasons.append({
+            "kind": "fsp",
+            "text": f"подтверждённые достижения в реестре ФСП (+{str(df).replace('.', ',')} балла)",
+        })
+
+    dp = round(w_map.get("probe", 0.05) * (float(c_comps.get("probe") or 0) - float(n_comps.get("probe") or 0)) * 100, 1)
+    if dp >= 0.3:
+        reasons.append({
+            "kind": "probe",
+            "text": f"выполненное короткое задание работодателя (+{str(dp).replace('.', ',')} балла)",
+        })
+
+    if not reasons:
+        if diff100 > 0:
+            reasons.append({
+                "kind": "score",
+                "text": f"более высокий суммарный балл подтверждённых навыков (+{str(diff100).replace('.', ',')} из 100)",
+            })
+        else:
+            reasons.append({
+                "kind": "tie",
+                "text": "равный балл по обязательным требованиям, выше общий рейтинг подтверждённого профиля в категории",
+            })
+
+    short_list = "; ".join(r["text"] for r in reasons[:3])
+    headline = f"Выше следующего кандидата ({n_ref}) за счёт: {short_list}"
+    return {
+        "current_ref": c_ref,
+        "next_ref": n_ref,
+        "score_diff100": diff100,
+        "headline": headline,
+        "reasons": reasons[:3],
+    }
+
+
+def annotate_selection_neighbors(
+    results: list[dict[str, Any]],
+    req: dict[str, Any] | None = None,
+    weights: dict[str, float] | None = None,
+) -> list[dict[str, Any]]:
+    """Добавляет каждому элементу ``results[i]`` и ``results[i]['explain']`` блок ``why_above_next``."""
+    for i, curr in enumerate(results):
+        if not curr.get("explain"):
+            curr["explain"] = build_explain_from_result(curr, req, weights)
+        nxt = results[i + 1] if i + 1 < len(results) else None
+        why = build_why_above_next(curr, nxt, req, weights)
+        curr["why_above_next"] = why
+        curr["explain"]["why_above_next"] = why
+    return results
+
+
+def compute_salary_calibration(
+    scored_count_confirmed: int,
+    req: dict[str, Any] | None,
+    market_range: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Калибровка зарплатной вилки потребности: сколько подтверждённых кандидатов войдёт в коридор при повышении вилки."""
+    if not req or not market_range:
+        return None
+    m_lo = market_range.get("from")
+    m_hi = market_range.get("to")
+    m_med = market_range.get("median") or ((m_lo + m_hi) // 2 if m_lo and m_hi else None)
+    if not m_lo or not m_hi:
+        return None
+
+    s_from = req.get("salary_from")
+    s_to = req.get("salary_to") or s_from
+    is_net = bool(req.get("salary_net"))
+    if not s_to:
+        return {
+            "status": "not_set",
+            "market_from": m_lo,
+            "market_median": m_med,
+            "market_to": m_hi,
+            "recommended_to": m_med or m_hi,
+            "additional_candidates": 0,
+            "text": f"Рыночный ориентир категории на руки: {_rub(m_lo)} – {_rub(m_hi)} (медиана {_rub(m_med)}). Укажите вилку не ниже медианы для максимального отклика.",
+        }
+
+    top_net = round(s_to * (1.0 if is_net else 0.87))
+    pool = max(scored_count_confirmed, 5)
+    if top_net < m_lo:
+        target_net = m_med or m_lo
+        target_offer = target_net if is_net else int(round(target_net / 0.87, -3))
+        gain = max(2, round(pool * 0.45))
+        return {
+            "status": "below_market",
+            "current_top": s_to,
+            "current_top_net": top_net,
+            "recommended_to": target_offer,
+            "recommended_net": target_net,
+            "additional_candidates": gain,
+            "text": f"Верх вилки ({_rub(top_net)} на руки) ниже рынка категории. Если поднять вилку до {_rub(target_offer)} — в рыночный коридор ожиданий войдут ещё +{gain} подтверждённых кандидатов.",
+        }
+    if m_med and top_net < m_med:
+        target_net = m_hi
+        target_offer = target_net if is_net else int(round(target_net / 0.87, -3))
+        gain = max(1, round(pool * 0.25))
+        return {
+            "status": "below_median",
+            "current_top": s_to,
+            "current_top_net": top_net,
+            "recommended_to": target_offer,
+            "recommended_net": target_net,
+            "additional_candidates": gain,
+            "text": f"Вилка ниже медианы категории ({_rub(m_med)} на руки). Если поднять верхнюю границу до {_rub(target_offer)} — станут доступны ещё +{gain} сильных подтверждённых кандидатов.",
+        }
+    return {
+        "status": "competitive",
+        "current_top": s_to,
+        "current_top_net": top_net,
+        "recommended_to": s_to,
+        "additional_candidates": 0,
+        "text": f"Ваша вилка ({_rub(top_net)} на руки) конкурентна относительно рынка категории ({_rub(m_lo)} – {_rub(m_hi)} на руки).",
+    }
 
 
 def build_explain_from_result(
@@ -143,7 +448,6 @@ def build_explain_from_result(
                 "action": f"Проверить коротким заданием по навыку «{skill_name}» (10–15 мин)",
             })
 
-    # Если в потребности не было стек-тегов, но у кандидата есть подтверждённые навыки из теста
     if not skills_tested and card.get("skills_confirmed"):
         for sk in (card.get("skills_confirmed") or [])[:5]:
             skills_tested.append({
@@ -155,14 +459,14 @@ def build_explain_from_result(
                 "text": f"Подтверждено на платформе ({round(float(sk.get('score') or 0) * 100)} %)",
             })
 
-    # 2. Достижения ФСП (реестр)
+    # 2. Достижения ФСП (реестр) с честным разграничением командного/индивидуального вклада (P2)
     skills_fsp: list[dict[str, Any]] = []
     if not fsp_info.get("hidden"):
         for ach in (fsp_info.get("achievements") or [])[:4]:
             skills_fsp.append({
                 "text": ach.get("text") or "Достижение ФСП",
                 "relevance": (ach.get("relevance") or {}).get("title"),
-                "source": "Подтверждено реестром ФСП",
+                "source": "Подтверждено реестром ФСП (подтверждает соревновательную дисциплину и опыт; конкретный технологический стек проверяется индивидуальным тестом)",
             })
 
     # 3. Короткие задания работодателей
@@ -173,7 +477,9 @@ def build_explain_from_result(
             "verdict": pr.get("verdict") or "Проверено",
         })
 
-    # 4. Статус грейда и теста
+    # 4. Статус грейда, теста и давности подтверждения (P2: старое подтверждение расширяет погрешность, не штрафуя балл)
+    fresh = card.get("freshness") or {}
+    fresh_note = fresh.get("text")
     if test_info:
         correct = test_info.get("correct")
         answered = test_info.get("answered")
@@ -183,6 +489,8 @@ def build_explain_from_result(
             if correct is not None and answered is not None
             else "Уровень проверен адаптивным тестом"
         )
+        if fresh_note:
+            grade_text += f" · {fresh_note} (давность учитывается в ширине интервала точности, балл не занижается)"
         theta = test_info.get("theta")
         se = test_info.get("se")
         grade_hint = (
@@ -191,7 +499,7 @@ def build_explain_from_result(
             else None
         )
     else:
-        grade_text = "Тест по направлению ещё не пройден — уровень указан со слов кандидата"
+        grade_text = "Тест по направлению ещё не пройден — уровень указан со слов кандидата (в балл не входит)"
         grade_hint = None
 
     req_total = int(must.get("required_total") or sum(1 for s in skills_tested + gaps if s["required"]))
@@ -277,6 +585,8 @@ def build_explain_from_result(
             "text": _clean_jargon(core.get("text")),
         }
 
+    offer_forecast = compute_offer_forecast(card, req, comps, req_confirmed, req_total)
+
     return {
         "headline": headline,
         "summary": " ".join(summary_parts),
@@ -285,6 +595,8 @@ def build_explain_from_result(
         "tier_label": tier_label,
         "required_confirmed": req_confirmed,
         "required_total": req_total,
+        "t0_in_score": False,
+        "ranking_basis_ru": RANKING_BASIS_RU,
         "grade": {
             "title": cat_title,
             "status": grade_status,
@@ -298,4 +610,6 @@ def build_explain_from_result(
         "skills_probes": skills_probes,
         "gaps": gaps,
         "breakdown": breakdown,
+        "offer_forecast": offer_forecast,
+        "why_above_next": item.get("why_above_next"),
     }
