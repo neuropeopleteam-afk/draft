@@ -24,7 +24,7 @@ export default function SquadDraft() {
   return (
     <div className="max-w-5xl space-y-6">
       <PageTitle title="Командный Драфт ФСП"
-        subtitle="Сыгранное звено из 4 проверенных специалистов под проект — в 1 клик. Рядом: экономика найма для HRD и рентген кода кандидата." />
+        subtitle="Сыгранный состав от 2 до 10 проверенных специалистов под проект — в 1 клик. Рядом: экономика найма для HRD и рентген кода кандидата." />
       <Seg label="Раздел Командного Драфта" value={tab} onChange={setTab} options={TABS} />
       {tab === "squad" && <SquadBuilder />}
       {tab === "roi" && <HireRoi />}
@@ -163,18 +163,45 @@ const PROJECTS: Project[] = [
   },
 ];
 
-const BUDGET_MIN = 750_000, BUDGET_MAX = 1_600_000;
+const EXTRA_ROLES: Role[] = [
+  { title: "Frontend Senior", options: [
+    P("C-5RT2LP", "Senior", 1.68, 280_000, "1 спортивный разряд", "4c9a…11e2", ["React / TypeScript", "Дизайн-система"]),
+    P("C-8MN4VX", "Senior", 1.54, 255_000, null, "7d2b…83f0", ["React / TypeScript"]),
+  ] },
+  { title: "System Analyst Senior", options: [
+    P("C-6KP9WA", "Senior", 1.58, 265_000, "КМС · продуктовое программирование", "2e8f…90c4", ["Требования и BPMN", "SLO и наблюдаемость"]),
+    P("C-3JH7QD", "Senior", 1.42, 240_000, null, "9a1c…44b8", ["Требования и BPMN"]),
+  ] },
+  { title: "Backend Middle+", options: [
+    P("C-2DF8SN", "Middle", 1.18, 230_000, "1 спортивный разряд", "8b3e…52a9", ["Go / Java", "PostgreSQL", "Python / FastAPI"]),
+    P("C-9WL3KC", "Middle", 1.05, 210_000, null, "1f4d…67e1", ["Go / Java", "PostgreSQL"]),
+  ] },
+  { title: "QA Automation Senior", options: [
+    P("C-7BV4ZM", "Senior", 1.51, 245_000, "2 спортивный разряд", "5c6a…39d7", ["Нагрузочные тесты", "CI/CD", "Регресс и приёмка"]),
+    P("C-1XY6TR", "Senior", 1.36, 220_000, null, "3d8b…72c5", ["Нагрузочные тесты", "CI/CD"]),
+  ] },
+  { title: "Data / ML Middle", options: [
+    P("C-4QN8HJ", "Middle", 1.12, 235_000, "КМС · спортивное программирование", "6a2f…18b3", ["PyTorch", "ClickHouse", "Метрики качества модели"]),
+    P("C-8PC2VE", "Middle", 0.98, 210_000, null, "0e7c…95a4", ["PyTorch", "ClickHouse"]),
+  ] },
+  { title: "DevSecOps Middle", options: [
+    P("C-3LS9GW", "Middle", 1.08, 225_000, "2 спортивный разряд", "7f1b…46d9", ["Kubernetes", "PCI DSS", "SOC и SIEM"]),
+    P("C-6ZR5KT", "Middle", 0.94, 200_000, null, "2b9d…81e6", ["Kubernetes", "PCI DSS"]),
+  ] },
+];
+
+const BUDGET_MIN = 450_000, BUDGET_MAX = 3_200_000;
 const AGENCY_FEE = 0.2;  // комиссия агентства: 20 % годового дохода специалиста
 const FSP_BONUS = 0.3;   // при приоритете ФСП разряд T2 весит как +0,3 θ
 
 /** Лучший по баллу кандидат в каждой роли; при нехватке бюджета — замена с наименьшей потерей балла на рубль. */
-function assemble(p: Project, budget: number, fspFirst: boolean): number[] {
+function assembleRoles(roles: Role[], budget: number, fspFirst: boolean): number[] {
   const score = (x: Pick) => x.theta + (fspFirst && x.fsp ? FSP_BONUS : 0) + x.skills.length * 0.05;
-  const pick: number[] = p.roles.map((r) => (score(r.options[0]) >= score(r.options[1]) ? 0 : 1));
-  const sum = () => pick.reduce((s, o, i) => s + p.roles[i].options[o].salary, 0);
+  const pick: number[] = roles.map((r) => (score(r.options[0]) >= score(r.options[1]) ? 0 : 1));
+  const sum = () => pick.reduce((s, o, i) => s + roles[i].options[o].salary, 0);
   while (sum() > budget) {
     let best = -1, bestCost = Infinity;
-    p.roles.forEach((r, i) => {
+    roles.forEach((r, i) => {
       const cur = r.options[pick[i]], alt = r.options[1 - pick[i]];
       const saved = cur.salary - alt.salary;
       if (saved <= 0) return;
@@ -202,25 +229,31 @@ function nextSlots(n: number): string[] {
 function SquadBuilder() {
   const navigate = useNavigate();
   const [pid, setPid] = useState(PROJECTS[0].id);
+  const [teamSize, setTeamSize] = useState<number>(4);
   const [budget, setBudget] = useState(1_200_000);
   const [fspFirst, setFspFirst] = useState(true);
-  const [manual, setManual] = useState<Record<string, number[]>>({});  // ручные замены: ключ — проект, бюджет и фильтр
+  const [manual, setManual] = useState<Record<string, number[]>>({});  // ручные замены: ключ — проект, размер, бюджет и фильтр
   const [sent, setSent] = useState(false);
   const p = PROJECTS.find((x) => x.id === pid)!;
-  const mkey = `${pid}|${budget}|${fspFirst}`;
-  const auto = useMemo(() => assemble(p, budget, fspFirst), [p, budget, fspFirst]);
+  const activeRoles = useMemo(() => [...p.roles, ...EXTRA_ROLES].slice(0, teamSize), [p, teamSize]);
+  const mkey = `${pid}|${teamSize}|${budget}|${fspFirst}`;
+  const auto = useMemo(() => assembleRoles(activeRoles, budget, fspFirst), [activeRoles, budget, fspFirst]);
   const pick = manual[mkey] ?? auto;
-  const team = p.roles.map((r, i) => ({ role: r.title, x: r.options[pick[i]], alt: r.options[1 - pick[i]], i }));
+  const team = activeRoles.map((r, i) => ({ role: r.title, x: r.options[pick[i] ?? 0], alt: r.options[1 - (pick[i] ?? 0)], i }));
   const total = team.reduce((s, t) => s + t.x.salary, 0);
   const covered = new Set(team.flatMap((t) => t.x.skills));
   const gaps = p.graph.filter((s) => !covered.has(s));
-  const coverage = Math.round(((p.graph.length - gaps.length) / p.graph.length) * 100);
+  const coverage = teamSize >= 4 ? Math.round(((p.graph.length - gaps.length) / p.graph.length) * 100) : Math.min(100, Math.round((covered.size / Math.max(1, Math.ceil(p.graph.length * 0.6))) * 100));
   const fspCount = team.filter((t) => t.x.fsp).length;
-  const synergy = Math.max(60, Math.min(96, 80 + 4 * fspCount - 3 * gaps.length));
+  const synergy = Math.max(60, Math.min(98, 80 + Math.round((16 * fspCount) / Math.max(1, teamSize)) - 3 * (teamSize >= 4 ? gaps.length : 0)));
   const savings = total * 12 * AGENCY_FEE;
   const over = total - budget;
-  const slots = useMemo(() => nextSlots(4), []);
+  const slots = useMemo(() => nextSlots(10), []);
   const swap = (i: number) => { const next = [...pick]; next[i] = 1 - next[i]; setManual({ ...manual, [mkey]: next }); };
+  const handleSizeChange = (sz: number) => {
+    setTeamSize(sz);
+    setBudget(sz * 300_000);
+  };
 
   return (
     <div className="space-y-5">
@@ -237,8 +270,22 @@ function SquadBuilder() {
             ))}
           </div>
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-night/10 pt-4">
+          <div>
+            <p className="text-sm font-semibold text-brand-night">2. Размер команды (от мини-звена до полного ИТ-отдела)</p>
+            <p className="text-xs text-brand-ink/65">Выберите от 2 до 10 специалистов — состав и бюджет масштабируются автоматически</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Размер команды">
+            {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((sz) => (
+              <button key={sz} type="button" role="radio" aria-checked={teamSize === sz} onClick={() => handleSizeChange(sz)}
+                className={`rounded-xl px-3.5 py-2 text-xs font-bold transition ${teamSize === sz ? "bg-brand text-white shadow-sm" : "bg-[#F3F2FB] text-brand-night hover:bg-brand-blush/60"}`}>
+                {sz} чел.
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="grid items-end gap-5 md:grid-cols-[1fr_auto]">
-          <Range id="squad-budget" label="2. Месячный бюджет ФОТ звена" value={budget} min={BUDGET_MIN} max={BUDGET_MAX} step={50_000}
+          <Range id="squad-budget" label="3. Месячный бюджет ФОТ команды" value={budget} min={BUDGET_MIN} max={BUDGET_MAX} step={50_000}
             onChange={setBudget} fmt={(v) => rub(v)} />
           <div className="md:w-72">
             <Toggle checked={fspFirst} onChange={setFspFirst} label="Приоритет призёрам и разрядникам ФСП (T2)"
@@ -248,16 +295,16 @@ function SquadBuilder() {
       </section>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Kpi label="Покрытие графа технологий" value={`${coverage}${NB}%`} tone={gaps.length ? "warn" : "ok"}
-          hint={gaps.length ? `Белые пятна: ${gaps.join(", ")}` : "Без белых пятен: каждый навык проекта закрыт"} />
+        <Kpi label="Покрытие графа технологий" value={`${coverage}${NB}%`} tone={coverage < 100 ? "warn" : "ok"}
+          hint={coverage < 100 && gaps.length ? `Белые пятна: ${gaps.join(", ")}` : "Без белых пятен: каждый навык проекта закрыт"} />
         <Kpi label="Индекс командной синергии" value={`${synergy}${NB}%`} tone={synergy >= 90 ? "ok" : "night"}
-          hint={`${fspCount} из 4 играли командные турниры ФСП`} />
-        <Kpi label="Экономия против агентства" value={mln(savings)} hint={`Комиссия 20${NB}% годового дохода звена не нужна`} />
+          hint={`${fspCount} из ${teamSize} играли командные турниры ФСП`} />
+        <Kpi label="Экономия против агентства" value={mln(savings)} hint={`Комиссия 20${NB}% годового дохода команды не нужна`} />
       </div>
 
       <section className="card space-y-4" aria-label="Собранное звено">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-lg font-bold text-brand-night">Звено «{p.short}» · 4 человека</h2>
+          <h2 className="text-lg font-bold text-brand-night">Команда «{p.short}» · {teamSize} чел.</h2>
           <p className={`text-sm font-semibold tabular-nums ${over > 0 ? "text-amber-700" : "text-brand-ink/70"}`}>
             ФОТ {rub(total)} из {rub(budget)}
           </p>
@@ -303,14 +350,14 @@ function SquadBuilder() {
           </table>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-night/10 pt-4">
-          <p className="text-xs text-brand-ink/65">Контакты откроются после принятия. Слоты интервью подобраны по календарям всех четверых.</p>
+          <p className="text-xs text-brand-ink/65">Контакты откроются после принятия. Слоты интервью подобраны по календарям всех {teamSize} участников.</p>
           <button type="button" className="btn-primary" onClick={() => setSent(true)} data-testid="squad-batch-offer">
-            Отправить пакетный оффер всей четвёрке в 1 клик (со слотами интервью)
+            Отправить пакетный оффер всей команде ({teamSize} чел.) в 1 клик
           </button>
         </div>
       </section>
 
-      <Modal open={sent} onClose={() => setSent(false)} title="Пакетный оффер отправлен · 4 из 4">
+      <Modal open={sent} onClose={() => setSent(false)} title={`Пакетный оффер отправлен · ${teamSize} из ${teamSize}`}>
         <div className="space-y-4">
           <Alert kind="ok">Приглашения с вилкой и слотом интервью ушли всем участникам звена «{p.short}». Ответы появятся в разделе «Приглашения».</Alert>
           <ul className="divide-y divide-brand-night/10 text-sm">
