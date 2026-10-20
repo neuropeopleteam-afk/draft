@@ -8,6 +8,7 @@ import { BarList, Donut, Funnel, Heatmap, Legend, PairBars, RangeChart, StackBar
 import { MODE_SHORT, Phase } from "../shared";
 import { CameraStats } from "../../proctor/CameraStats";
 import FspRankConverter from "../../components/FspRankConverter";
+import { TalentMap } from "./TalentMap";
 
 type Rep = any;
 interface Ctx { rep: Rep | null; loading: boolean; error: string | null; days: string; setDays: (d: string) => void }
@@ -155,6 +156,7 @@ export function FspOverview() {
                   }))} />
               </Card>
             </div>
+            <TalentMap data={rep.regions_map} />
             <FspRankConverter />
             <CameraStats days={days === "all" ? null : Number(days)} />
           </>
@@ -192,6 +194,7 @@ export function FspDemand() {
         return (
           <>
             <DemoNote rep={rep} />
+            <TalentMap data={rep.regions_map} />
             <Card title="Категории «направление · грейд»" sub="Выберите показатель. Пустая клетка с пунктиром — группа меньше 5 человек.">
               <Seg label="Показатель" value={metric} onChange={setMetric} options={METRICS.map(({ id, title }) => ({ id, title }))} />
               <Heatmap rows={DIRS} cols={GRS} cell={get} fmt={m.fmt} tone={metric === "needs" || metric === "invitations" ? "brand" : "night"} />
