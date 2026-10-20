@@ -97,8 +97,20 @@ def revoke_consent(kind: Literal["processing", "publication"], user: User = Depe
         c.revoked_at = utcnow()
     db.flush()
     _sync_visibility(db, db.get(CandidateProfile, user.id))
+    # А2 (P0): при отзыве согласия в «Моих данных» открытые контакты в принятых приглашениях тоже скрываются + событие в журнал ATS
+    from app.core.enums import InvitationStatus
+    from app.modules.contact import service as contact_svc
+    from app.modules.invitations.models import Invitation
+
+    open_invs = db.scalars(select(Invitation).where(
+        Invitation.candidate_user_id == user.id,
+        Invitation.status == InvitationStatus.accepted,
+        Invitation.contacts_revealed_at.is_not(None),
+    )).all()
+    for inv in open_invs:
+        contact_svc.revoke_contacts(db, inv, user.id)
     db.commit()
-    return {"kind": kind, "granted": False}
+    return {"kind": kind, "granted": False, "contacts_revoked": len(open_invs)}
 
 
 # ------------------------------------------------------------------ опрос после регистрации

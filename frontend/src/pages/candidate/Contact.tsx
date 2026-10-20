@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, dtEnd, errText, rub, ruText, useApi } from "../../components/ui";
+import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, cleanCompanyName, dt, dtEnd, errText, rub, ruText, useApi } from "../../components/ui";
 import { Thread } from "../../components/Chat";
 import { BasisSeg, SalaryLine, otherBasis, salaryText, type Basis } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { SusPrompt } from "../../integrations/Sus";
 import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrations/Trust";
+import { VacancyGuardBadge } from "../../components/MatchExplain";
 import { EmploymentTermsText } from "../../integrations/Youth";
 import { AtsStageBadge } from "../../integrations/Ats";
 import { CandidateHiring, HiringChip, HiringReminders } from "../../components/Hiring";
@@ -25,6 +26,8 @@ export function Invitations() {
   const [cComment, setCComment] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [slot, setSlot] = useState<number | null>(null);  // KF3: выбранный слот собеседования из приглашения
+  const ALL_CONTACTS = ["full_name", "email", "phone", "telegram", "github"] as const;
+  const [sharedContacts, setSharedContacts] = useState<string[]>([...ALL_CONTACTS]);
   const [trustV, setTrustV] = useState(0);  // ответ и жалоба меняют индекс доверия — перечитать в открытом окне
   const trust = useInvitationsTrust(trustV);
 
@@ -37,12 +40,18 @@ export function Invitations() {
   }
   async function view(i: any) {
     setErr(null); setDeclining(false); setComplaining(false); setReason(""); setCComment(""); setCReason("salary"); setSlot(null);
+    setSharedContacts(i.shared_contacts ?? [...ALL_CONTACTS]);
     try { setOpen(await api<any>(`/candidate/invitations/${i.id}`)); void reload(); } catch (e) { setErr(errText(e)); }
   }
   async function act(kind: "accept" | "decline", slotIndex: number | null = null) {
     setErr(null);
     try {
-      const body = kind === "decline" ? { reason: reason || null } : slotIndex != null ? { slot_index: slotIndex } : {};
+      const body = kind === "decline"
+        ? { reason: reason || null }
+        : {
+            ...(slotIndex != null ? { slot_index: slotIndex } : {}),
+            ...(sharedContacts.length < ALL_CONTACTS.length ? { shared_contacts: sharedContacts } : {}),
+          };
       const r = await api<any>(`/candidate/invitations/${open.id}/${kind}`, { body });
       setOpen(r); setTrustV((v) => v + 1); void reload();
     } catch (e) { setErr(errText(e)); }
@@ -61,10 +70,13 @@ export function Invitations() {
               <button onClick={() => view(i)} className="card flex w-full flex-wrap items-center justify-between gap-3 text-left transition-colors hover:border-brand/40">
                 <div>
                   <p className="font-bold text-brand-night">{i.position_title}</p>
-                  <p className="text-sm text-brand-ink/65">{i.company?.name} · {salaryText(i.salary_from, i.salary_to, i.salary_basis)} · {dt(i.created_at)}</p>
-                  {i.company?.fsp_partner && <PartnerBadge on className="mt-1" />}
+                  <p className="text-sm text-brand-ink/65">{cleanCompanyName(i.company?.name)} · {salaryText(i.salary_from, i.salary_to, i.salary_basis)} · {dt(i.created_at)}</p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    {i.company?.fsp_partner && <PartnerBadge on />}
+                    <VacancyGuardBadge vacancy={i} trust={i.trust ?? trust[i.id]} compact />
+                  </div>
                   {i.below_my_minimum && <p className="mt-1 text-xs font-semibold text-brand-plum">Верх вилки ниже вашего минимума</p>}
-                  {i.counter && <p className="mt-1 text-xs font-semibold text-amber-800">Встречное предложение ждёт ответа работодателя</p>}
+                  {i.counter && <p className="mt-1 text-xs font-semibold text-amber-800">Встречное условие («Да, если…») ждёт ответа работодателя</p>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {i.thread?.unread > 0 && <span className="rounded-full bg-brand-strong px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {i.thread.unread}</span>}
@@ -78,7 +90,13 @@ export function Invitations() {
       <Modal open={!!open} onClose={() => setOpen(null)} title={open?.position_title ?? ""}>
         {open && (
           <div className="space-y-4 text-sm">
-            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><AtsStageBadge s={open.ats_stage} /><span className="text-brand-ink/65">{open.company?.name}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span><PartnerBadge on={open.company?.fsp_partner} /></div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><AtsStageBadge s={open.ats_stage} /><span className="text-brand-ink/65">{cleanCompanyName(open.company?.name)}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span><PartnerBadge on={open.company?.fsp_partner} /></div>
+              <Link to={`/candidate/trio?invitation=${open.id}`} className="btn-ghost !px-3 !py-1.5 text-xs" data-testid="trio-from-invitation">
+                Подключить ФСП к диалогу
+              </Link>
+            </div>
+            <VacancyGuardBadge vacancy={open} trust={open.trust ?? trust[open.id]} />
             <SalaryLine big from={open.salary_from} to={open.salary_to} basis={open.salary_basis} />
             {open.below_my_minimum && <Alert kind="info">Верх вилки ниже вашего скрытого минимума. Работодатель этот минимум не видит.</Alert>}
             <p className="whitespace-pre-line text-brand-ink/80">{open.offer_description}</p>
@@ -110,6 +128,37 @@ export function Invitations() {
               ) : (
                 !complaining && <div className="space-y-3">
                   <SlotPicker slots={open.proposed_slots ?? []} value={slot} onChange={setSlot} />
+                  <fieldset className="rounded-xl border border-brand-night/10 bg-[#F7F6FB] p-3.5" data-testid="selective-contacts">
+                    <legend className="px-1 text-xs font-bold uppercase tracking-[0.08em] text-brand-night">Выборочное согласие на открытие контактов</legend>
+                    <p className="text-xs text-brand-ink/65">Отметьте, какие каналы связи открыть этому работодателю при принятии приглашения (в любой момент можно отозвать в «Моих данных»):</p>
+                    <div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-brand-night">
+                      {[
+                        ["full_name", "Имя и фамилия"],
+                        ["email", "Почта (Email)"],
+                        ["phone", "Телефон"],
+                        ["telegram", "Telegram"],
+                        ["github", "GitHub / портфолио"],
+                      ].map(([key, label]) => {
+                        const checked = sharedContacts.includes(key);
+                        return (
+                          <label key={key} className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 ring-1 ring-brand-night/10">
+                            <input
+                              type="checkbox"
+                              className="accent-brand"
+                              checked={checked}
+                              onChange={(e) => {
+                                const next = e.target.checked
+                                  ? [...sharedContacts, key]
+                                  : sharedContacts.filter((x) => x !== key);
+                                if (next.length > 0) setSharedContacts(next);
+                              }}
+                            />
+                            <span>{label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
                   <div className="flex flex-wrap gap-3">
                     {(open.proposed_slots ?? []).some((x: any) => !x.past) && (
                       <button className="btn-primary" disabled={slot == null} onClick={() => act("accept", slot)} data-testid="accept-with-slot">Принять и забронировать слот</button>
@@ -184,13 +233,15 @@ function CounterBlock({ inv, onDone }: { inv: any; onDone: (r: any) => void }) {
   const [from, setFrom] = useState(() => String(inv.salary_to));
   const [to, setTo] = useState(() => String(Math.min(Math.floor(inv.salary_to * MAX_RATIO / 1000) * 1000, r5k(inv.salary_to * 1.15))));
   const [basis, setBasis] = useState<Basis>(inv.salary_basis ?? "gross");
+  const [workFormat, setWorkFormat] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
   const [comment, setComment] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const c = inv.counter;
   if (c) return (
     <Alert kind="info">
-      Встречное предложение отправлено: <b>{salaryText(c.salary_from, c.salary_to, c.salary_basis)}</b>. Ждём ответа работодателя.
-      Если он согласится, приглашение будет принято и откроются ваши контакты. Пока можно принять исходную вилку или отклонить приглашение.
+      Встречное условие («Да, если…») отправлено: <b>{salaryText(c.salary_from, c.salary_to, c.salary_basis)}</b>{c.comment ? ` · ${c.comment}` : ""}. Ждём ответа работодателя.
+      Если он согласится, приглашение будет принято и откроются ваши контакты. До этого контакты скрыты.
     </Alert>
   );
   const last = inv.counters?.[inv.counters.length - 1];
@@ -204,32 +255,56 @@ function CounterBlock({ inv, onDone }: { inv: any; onDone: (r: any) => void }) {
     setErr(null);
     if (!f || !t || f > t) { setErr("Укажите вилку «от» и «до»: нижняя граница не больше верхней"); return; }
     if (wide) { setErr(`Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от» (не выше ${rub(Math.floor(f * MAX_RATIO / 1000) * 1000)})`); return; }
-    try { onDone(await api<any>(`/candidate/invitations/${inv.id}/counter`, { body: { salary_from: f, salary_to: t, salary_basis: basis, comment: comment || null } })); setOpen(false); }
-    catch (e) { setErr(errText(e)); }
+    try {
+      onDone(await api<any>(`/candidate/invitations/${inv.id}/counter`, {
+        body: {
+          salary_from: f,
+          salary_to: t,
+          salary_basis: basis,
+          work_format: workFormat || null,
+          start_date: startDate.trim() || null,
+          comment: comment || null,
+        },
+      }));
+      setOpen(false);
+    } catch (e) { setErr(errText(e)); }
   }
   if (!open) return (
     <div className="space-y-2">
       {declinedNote}
       <div className="flex flex-wrap items-center gap-3">
-        <button className="btn-ghost" onClick={() => setOpen(true)}>Предложить свою вилку</button>
-        <span className="text-xs text-brand-ink/65">Встречное предложение: работодатель примет или отклонит. Осталось попыток: {inv.counters_left}.</span>
+        <button className="btn-ghost" onClick={() => setOpen(true)} data-testid="counter-open-btn">Да, если… (предложить свою вилку или условия)</button>
+        <span className="text-xs text-brand-ink/65">Приглашение не отклоняется, контакты скрыты до согласия работодателя. Осталось попыток: {inv.counters_left}.</span>
       </div>
     </div>
   );
   return (
-    <div className="space-y-3 rounded-xl border border-brand-night/10 p-4">
-      <p className="font-semibold text-brand-night">Встречное предложение</p>
-      <p className="text-xs text-brand-ink/65">Предложено: {salaryText(inv.salary_from, inv.salary_to, inv.salary_basis)}. Ваша вилка должна быть выше хотя бы одной границей, «до» — не больше чем в 1,5 раза выше «от».</p>
+    <div className="space-y-3 rounded-xl border border-brand-night/10 p-4" data-testid="counter-form">
+      <p className="font-semibold text-brand-night">«Да, если…» — встречное условие работодателю</p>
+      <p className="text-xs text-brand-ink/65">Предложено: {salaryText(inv.salary_from, inv.salary_to, inv.salary_basis)}. Укажите желаемую вилку («до» — не больше чем в 1,5 раза выше «от») и при необходимости формат работы или срок выхода.</p>
       <div><p className="label">Сумма указана</p><BasisSeg value={basis} onChange={setBasis} /></div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Моя вилка от, ₽ в месяц" htmlFor="cf"><input id="cf" type="number" min={1} step={5000} className="input" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
         <Field label="Моя вилка до, ₽ в месяц" htmlFor="ct"><input id="ct" type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
       </div>
       <p className={`text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/65"}`}>{wide ? `Слишком широкая вилка: при «от» ${rub(f)} «до» — не выше ${rub(Math.floor(f * MAX_RATIO / 1000) * 1000)}.` : f && t ? otherBasis(f, t, basis) : ""}</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Условие по формату (необязательно)" htmlFor="cwf">
+          <select id="cwf" className="input" value={workFormat} onChange={(e) => setWorkFormat(e.target.value)}>
+            <option value="">как в приглашении</option>
+            <option value="remote">Удалённо</option>
+            <option value="hybrid">Гибрид</option>
+            <option value="office">Офис</option>
+          </select>
+        </Field>
+        <Field label="Срок выхода / график (необязательно)" htmlFor="csd">
+          <input id="csd" className="input" maxLength={120} value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="Например: выход через 2 недели" />
+        </Field>
+      </div>
       <Field label="Комментарий (необязательно)" htmlFor="cc">
-        <textarea id="cc" className="input min-h-[70px]" maxLength={1000} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Например, опыт с Kafka и выход через две недели" />
+        <textarea id="cc" className="input min-h-[70px]" maxLength={1000} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Например, опыт с Kafka и готовность вести архитектуру" />
       </Field>
-      <p className="text-xs text-brand-ink/65">Если работодатель примет встречное предложение, приглашение будет принято на ваших условиях и работодатель увидит ваши контакты.</p>
+      <p className="text-xs text-brand-ink/65">Если работодатель примет встречное условие, приглашение будет принято на ваших условиях и тогда откроются выбранные контакты.</p>
       <Alert>{err}</Alert>
       <div className="flex flex-wrap gap-3"><button className="btn-primary" onClick={send}>Отправить встречное</button><button className="btn-ghost" onClick={() => setOpen(false)}>Назад</button></div>
     </div>
@@ -291,7 +366,7 @@ export function Probes() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Задания с вилкой от работодателей" subtitle="Короткая задача с вилкой зарплаты. Ответ решением или подходом; оценка работодателя становится подтверждённым фактом (T1)." />
+      <PageTitle title="Задания с вилкой от работодателей" subtitle="Короткая задача с вилкой зарплаты. Ответ решением или подходом; оценка работодателя становится подтверждённым фактом платформы." />
       <p className="text-sm text-brand-ink/70">Задания с автопроверкой — лично, к откликам и по вашему стеку — в разделе <Link className="font-semibold text-brand hover:underline" to="/candidate/assignments">«Задания для вас»</Link>.</p>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Заданий пока нет" text="Работодатели могут прислать короткую задачу до приглашения. Контакты при этом не раскрываются." />
@@ -302,7 +377,7 @@ export function Probes() {
               <button onClick={() => view(p)} className="card flex w-full flex-wrap items-center justify-between gap-3 text-left hover:border-brand/40">
                 <div>
                   <p className="font-bold text-brand-night">{p.title}</p>
-                  <p className="text-sm text-brand-ink/65">{p.company?.name} · {salaryText(p.salary_from, p.salary_to, p.salary_basis)} · до {dt(p.deadline_at)}</p>
+                  <p className="text-sm text-brand-ink/65">{cleanCompanyName(p.company?.name)} · {salaryText(p.salary_from, p.salary_to, p.salary_basis)} · до {dt(p.deadline_at)}</p>
                 </div>
                 <Status s={p.status} />
               </button>
@@ -313,7 +388,7 @@ export function Probes() {
       <Modal open={!!open} onClose={() => setOpen(null)} title={open?.title ?? ""}>
         {open && (
           <div className="space-y-4 text-sm">
-            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><span className="text-brand-ink/65">{open.company?.name} · вилка {salaryText(open.salary_from, open.salary_to, open.salary_basis)} · ~{open.time_limit_min} мин</span></div>
+            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><span className="text-brand-ink/65">{cleanCompanyName(open.company?.name)} · вилка {salaryText(open.salary_from, open.salary_to, open.salary_basis)} · ~{open.time_limit_min} мин</span></div>
             <p className="whitespace-pre-line rounded-xl bg-[#F3F2FB] p-4 text-brand-ink/85">{open.task_text}</p>
             {["sent", "viewed"].includes(open.status) ? (
               <div className="space-y-3">

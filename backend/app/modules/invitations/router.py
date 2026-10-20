@@ -89,6 +89,9 @@ class InvitationIn(SalaryRange):
 class AcceptIn(BaseModel):
     slot_index: int | None = Field(None, ge=0, le=2, description="Номер слота из proposed_slots (с 0): принять "
                                    "приглашение и сразу забронировать собеседование на это время")
+    shared_contacts: list[Literal["full_name", "email", "phone", "telegram", "github"]] | None = Field(
+        None, description="Выборочное согласие на открытие контактов (по умолчанию открываются все указанные в профиле)"
+    )
 
 
 class ReviewIn(BaseModel):
@@ -168,10 +171,18 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
         out["candidate_category"] = cand.current_category_id
         out["candidate_deleted"] = cand.deleted_at is not None  # кандидат удалил учётную запись («Мои данные»)
         out["candidate_synthetic"] = bool(getattr(cand, "is_synthetic", False))
-        out["contacts"] = svc.candidate_contacts(db, i.candidate_user_id) if i.contacts_revealed_at else None
+        out["contacts"] = svc.candidate_contacts(db, i.candidate_user_id, i) if i.contacts_revealed_at else None
         out["ats_transfers"] = _ats_transfers(db, i)  # состояние по каждой ATS: передано / ошибка / не передавалось
     else:
         out["below_my_minimum"] = svc.below_minimum(cand, i.salary_to, i.salary_basis)
+        out["shared_contacts"] = (i.employment_terms or {}).get("shared_contacts") or ["full_name", "email", "phone", "telegram", "github"]
+        if comp is not None:
+            try:
+                from app.integrations.egrul.trust import company_trust
+
+                out["trust"] = company_trust(db, comp, short=True)
+            except Exception:  # noqa: BLE001
+                out["trust"] = None
     out.update(contact_svc.invitation_extras(db, i, side))  # НДФЛ, встречное, доступ к контактам, переписка
     from app.modules.hiring.service import summary as hiring_summary
 
@@ -340,6 +351,13 @@ def accept(inv_id: uuid.UUID, bg: BackgroundTasks, data: AcceptIn | None = None,
     slot_index = data.slot_index if data is not None else None
     if slot_index is not None and i.status in (InvitationStatus.sent, InvitationStatus.viewed):
         hiring_svc.check_invitation_slot(i, slot_index)  # до принятия: ошибка слота не принимает приглашение
+    if data is not None and data.shared_contacts is not None:
+        from sqlalchemy.orm.attributes import flag_modified
+
+        terms = dict(i.employment_terms or {})
+        terms["shared_contacts"] = list(dict.fromkeys(data.shared_contacts)) or ["email"]
+        i.employment_terms = terms
+        flag_modified(i, "employment_terms")
     svc.respond(db, i, user.id, True, None)
     ref = db.get(CandidateProfile, user.id).public_ref
     iv = None
