@@ -75,7 +75,8 @@ def test_main_part_lru_takes_oldest_after_all_new_ones(world):
     всего (возраст 2), а семейства последней попытки (возраст 0) не берутся, пока есть старшие."""
     _, pool, _ = world
     fams = [i.family_id for i in _scored(pool)]
-    new = set(fams[::12])  # ~6 новых семейств на ~70
+    step = max(1, len(fams) // 6)
+    new = set(fams[::step][:6])  # ровно 6 новых семейств (< min_items = 8) независимо от размера банка
     rest = [f for f in fams if f not in new]
     seen = {f: (2 if k % 2 == 0 else 0) for k, f in enumerate(rest)}
     sess, order = _session(world, subpool=0, seen=seen, seed=5)

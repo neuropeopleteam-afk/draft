@@ -67,6 +67,18 @@ class AppCATSession(CATSession):
         else:
             cnt = self.format_counts()
             out = [i for i in cands if cnt.get(i.format, 0) < self.max_per_format.get(i.format, 10**6)]
+            # В полном тесте (min_items >= 8) гарантируем выдачу хотя бы одного развёрнутого задания (open_answer / open_book_3step)
+            # к 5-му оцениваемому шагу, даже если тестовых семейств mcq_concept в банке в несколько раз больше
+            if (
+                self.cfg.min_items >= 8
+                and not self.seen
+                and self.n_scored >= 4
+                and cnt.get("open_answer", 0) + cnt.get("open_book_3step", 0) == 0
+                and (self.max_per_format.get("open_answer", 0) > 0 or self.max_per_format.get("open_book_3step", 0) > 0)
+            ):
+                open_cands = [i for i in out if i.format in ("open_answer", "open_book_3step")]
+                if open_cands:
+                    out = open_cands
         if self.code_open_share > 0.0 and out:
             from app.modules.assessment.sprt import CODE_OPEN_FORMATS, filter_code_open_pool
             cnt = self.format_counts()

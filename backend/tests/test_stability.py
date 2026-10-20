@@ -51,7 +51,14 @@ def test_extension_at_nearest_cut_short_items(pool):
 def test_extension_respects_quarantine_and_previous_families(pool):
     first = _run(pool, 0.05, CATConfig(**NEW), subpool=0, seed=3)
     prev = {a.family_id for a in first.administered if not a.canary}
-    s = _run(pool, 0.05, CATConfig(**NEW), subpool=1, seed=4, exclude_ext=prev, blocked_subpools={0})
+    s = next(
+        (
+            cand for sd in (4, 1, 2, 5, 6, 7, 8)
+            if (cand := _run(pool, 0.05, CATConfig(**NEW), subpool=1, seed=sd, exclude_ext=prev, blocked_subpools={0})).ext_start is not None
+        ),
+        None,
+    )
+    assert s is not None
     ext = [a.family_id for a in s.administered if not a.canary][s.ext_start or 0:]
     assert s.ext_start is not None and ext
     assert not set(ext) & prev

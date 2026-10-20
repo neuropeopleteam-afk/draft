@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { lastApiTimingMs } from "../lib/api";
 import { pct, useApi } from "./ui";
+import { NUMBERS } from "../lib/numbers";
 
 const SEGMENTS: { label: string; weight: number; color: string; desc: string }[] = [
   { label: "Тест 2PL IRT", weight: 45, color: "bg-brand-strong", desc: "Адаптивный психометрический тест и проверенные кодом навыки" },
@@ -39,7 +40,7 @@ export function DecisionProofStrip({ totalCandidates, version, className = "" }:
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="text-xs font-semibold text-brand hover:underline"
+          className="inline-flex min-h-[44px] items-center rounded-lg px-2.5 py-2 text-xs font-semibold text-brand hover:bg-brand/5 hover:underline"
           aria-expanded={open}
           data-testid="under-the-hood-toggle"
         >
@@ -73,7 +74,7 @@ export function DecisionProofStrip({ totalCandidates, version, className = "" }:
           <div>
             <p className="font-bold text-brand-night">2. Банк и античит</p>
             <p className="mt-1">
-              403 параметрических семейства (8 060 вариантов, 2 450 проверок исполнением в песочнице). Открытые ответы проверяются двухконтурным оценщиком с дословными цитатами и защитой от промпт-инъекций (0 из 116 измеренных атак).
+              {NUMBERS.bank.families.toLocaleString("ru-RU")} параметрических семейств ({NUMBERS.bank.variants_20seeds.toLocaleString("ru-RU")} проверенных вариантов на 20 зёрнах, {NUMBERS.bank.code_and_open_families} практических семейств с кодом и симулятором инцидента). Открытые ответы проверяются двухконтурным оценщиком с дословными цитатами и защитой от инъекций; подозрительные попытки переводятся на 3-минутную устную защиту.
             </p>
           </div>
           <div>

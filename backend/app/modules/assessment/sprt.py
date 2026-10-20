@@ -211,14 +211,11 @@ class ThreeValuedVerdict:
                 "incident_recommended": self.claimed_grade in SENIOR_PLUS_GRADES,
                 "oral_defense_required": self.oral_defense_required,
                 "kind": (self.integrity_followup or {}).get("followup_kind") or ("oral_defense" if self.oral_defense_required else ("stage2" if self.followup_needed else None)),
-                "triggered_factors": list((self.integrity_followup or {}).get("triggered_factors") or ()),
             },
             "explanation": self.explanation,
         }
         if self.incident_stage is not None:
             out["incident_stage"] = self.incident_stage
-        if self.integrity_followup is not None:
-            out["integrity_followup"] = self.integrity_followup
         return out
 
 
@@ -483,17 +480,18 @@ def compute_verdict(
             assigned_grade = claimed_grade
 
     # Разбор признака подозрительной попытки от античита (А6) и разрыва форм теста (А4/А6):
-    # единый механизм через evaluate_integrity_followup (не автоматический бан, а перевод в доп. этап / устную защиту)
-    from app.modules.assessment.integrity import FORMAT_GAP_TITLE
+    # единый механизм через evaluate_integrity_followup (не автоматический бан, а перевод в доп. этап / устную защиту).
+    # Важно (Р27): в поля вердикта, отдаваемые кандидату (suspicious_reasons, explanation), идут только общие категории
+    # candidate_view («Поведение во время теста», «Признаки использования подсказок»), без названий сигналов и порогов.
     integ_input = suspicious.get("integrity") if isinstance(suspicious, dict) and isinstance(suspicious.get("integrity"), dict) else (
         suspicious if isinstance(suspicious, dict) and "signals" in suspicious else {}
     )
     ifrel = evaluate_integrity_followup(integ_input, scored)
     susp_flagged = bool(ifrel.get("needs_followup_stage"))
     susp_reasons: list[str] = []
-    if ifrel.get("employer_reason_ru"):
-        for part_r in str(ifrel["employer_reason_ru"]).split("; "):
-            if part_r and part_r not in susp_reasons and "Сигналов нарушений нет" not in part_r:
+    if ifrel.get("candidate_reason_ru"):
+        for part_r in str(ifrel["candidate_reason_ru"]).split("; "):
+            if part_r and part_r not in susp_reasons and "Замечаний к самостоятельности" not in part_r:
                 susp_reasons.append(part_r)
     if isinstance(suspicious, dict):
         if suspicious.get("flagged") or suspicious.get("suspicious") or suspicious.get("level") in ("low",) or suspicious.get("format_gap_flag"):
@@ -501,32 +499,26 @@ def compute_verdict(
             ifrel["needs_followup_stage"] = True
             if not ifrel.get("followup_kind"):
                 ifrel["followup_kind"] = "oral_defense"
-        if suspicious.get("format_gap_flag") and not any(FORMAT_GAP_TITLE in r for r in susp_reasons):
-            susp_reasons.append(FORMAT_GAP_TITLE)
         if suspicious.get("preknowledge_flagged"):
             susp_flagged = True
             ifrel["needs_followup_stage"] = True
-            if "аномалия времени и точности на контрольных заданиях" not in susp_reasons:
-                susp_reasons.append("аномалия времени и точности на контрольных заданиях")
+            if "Признаки использования подсказок" not in susp_reasons:
+                susp_reasons.append("Признаки использования подсказок")
         lz_val = suspicious.get("lz")
         if isinstance(lz_val, (int, float)) and float(lz_val) < -2.0:
             susp_flagged = True
             ifrel["needs_followup_stage"] = True
-            lz_txt = f"несогласованный профиль ответов person-fit l_z = {float(lz_val):.2f}"
-            if lz_txt not in susp_reasons:
-                susp_reasons.append(lz_txt)
-        for r in suspicious.get("reasons") or ():
-            if str(r) not in susp_reasons and "Сигналов нарушений нет" not in str(r):
-                susp_reasons.append(str(r))
+            if "Признаки использования подсказок" not in susp_reasons:
+                susp_reasons.append("Признаки использования подсказок")
         if susp_flagged and not susp_reasons:
-            susp_reasons.append("сигналы прокторинга / потери фокуса или аномальной скорости")
+            susp_reasons.append("Признаки использования подсказок")
     elif bool(suspicious):
         susp_flagged = True
         ifrel["needs_followup_stage"] = True
         if not ifrel.get("followup_kind"):
             ifrel["followup_kind"] = "oral_defense"
         if not susp_reasons:
-            susp_reasons.append("сигналы проверки самостоятельности выполнения")
+            susp_reasons.append("Признаки использования подсказок")
 
     # Трёхзначный вердикт:
     # - если попытка помечена античитом как подозрительная и претендует на подтверждение (или в серой зоне),
