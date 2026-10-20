@@ -940,7 +940,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     s = brain.session(session_id)
     msg = strip_interjection((message or "").strip())
     user_name = valid_stored_name(user_name)
-    known = user_name or (s.name if s else None)
+    known = user_name or (valid_stored_name(s.name) if s else None)
     asked = bool(_NAME_ASK.search(last_said or "")) or bool(s and _NAME_ASK.search(s.last_elena or ""))
     name_now = extract_name(msg, known, asked)
     name = name_now or known

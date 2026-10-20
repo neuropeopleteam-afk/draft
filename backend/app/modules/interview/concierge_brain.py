@@ -270,7 +270,8 @@ def event(sid: str | None, kind: str, *, text: str = "", step: str | None = None
         if s is None:
             return
         if name and not s.name:
-            s.name = name[:40]
+            from app.modules.interview.concierge import valid_stored_name  # «Сразу» из браузера — не имя
+            s.name = valid_stored_name(name[:40]) or ""
         if role:
             s.role = role
         if kind == "step" and step and step not in s.shown:
