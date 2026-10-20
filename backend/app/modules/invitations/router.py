@@ -128,6 +128,7 @@ def _probe_out(db: Session, p: Probe, side: str) -> dict:
         out["candidate_ref"] = cand.public_ref
         out["candidate_category"] = cand.current_category_id
         out["candidate_deleted"] = cand.deleted_at is not None
+        out["candidate_synthetic"] = bool(getattr(cand, "is_synthetic", False))
         out["need_id"] = str(p.need_id) if p.need_id else None  # Я10: «зонды по этой потребности» из подборки
     else:
         out["below_my_minimum"] = svc.below_minimum(cand, p.salary_to, p.salary_basis)
@@ -166,6 +167,7 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
         out["candidate_ref"] = cand.public_ref
         out["candidate_category"] = cand.current_category_id
         out["candidate_deleted"] = cand.deleted_at is not None  # кандидат удалил учётную запись («Мои данные»)
+        out["candidate_synthetic"] = bool(getattr(cand, "is_synthetic", False))
         out["contacts"] = svc.candidate_contacts(db, i.candidate_user_id) if i.contacts_revealed_at else None
         out["ats_transfers"] = _ats_transfers(db, i)  # состояние по каждой ATS: передано / ошибка / не передавалось
     else:

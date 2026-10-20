@@ -4,7 +4,7 @@ import { CandidateCard } from "../../components/CandidateCard";
 import { InterviewEmployerDetails } from "../../components/Interview";  // Я15: устная защита и ИИ-интервью
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, StatusCounts } from "../../components/GradeStatus";
-import { Alert, Empty, Field, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi, years } from "../../components/ui";
+import { Alert, DemoProfileBadge, Empty, Field, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, isSyntheticProfile, useApi, years } from "../../components/ui";
 import { MarketNote } from "../../components/Salary";
 import { useGrades } from "../../lib/grades";
 import { apiDownload } from "../../lib/api";
@@ -42,6 +42,7 @@ function SearchCard({ c, stack, tags, market, actions }: { c: any; stack: string
       <div className="mt-1 flex flex-wrap items-center gap-2">
         <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
         <GradeBadge s={c.status} claimed={c.claimed} />
+        <DemoProfileBadge c={c} />
         {c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
       </div>
       <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[8rem_minmax(0,1fr)]" data-testid="search-brief">
@@ -74,6 +75,7 @@ export function Search() {
   const [level, setLevel] = useState<"any" | "t1">("any");
   const [fsp, setFsp] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [realOnly, setRealOnly] = useState(false);
   const [add, setAdd] = useState("");
   const [page, setPage] = useState(0);
   const qs = new URLSearchParams();
@@ -83,12 +85,14 @@ export function Search() {
   qs.set("stack_level", level);
   if (fsp) qs.set("fsp", "true");
   if (confirmed) qs.set("confirmed", "true");
+  if (realOnly) qs.set("real_only", "true");
   qs.set("limit", String(PAGE));
   if (page) qs.set("offset", String(page * PAGE));
   const { data, loading, error } = useApi<any>(`/employer/candidates?${qs.toString()}`);
-  const cats = useApi<any[]>("/employer/categories");
+  const cats = useApi<any[]>(realOnly ? "/employer/categories?real_only=true" : "/employer/categories");
   const levels = useGrades(direction || null);  // с флагом GRADES_EXT_ENABLED — и Lead/Principal направления
   const avail = Object.values(tags).filter((t: any) => !direction || !t.direction_id || t.direction_id === direction);
+  const items: any[] = (data?.items ?? []).filter((c: any) => !realOnly || !isSyntheticProfile(c));
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -100,7 +104,7 @@ export function Search() {
               <option value="">все</option>{dirEntries.map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </Field>
-          <Field label="Грейд" htmlFor="sg">
+          <Field label="Грейд (подтверждённый платформой)" htmlFor="sg" hint="Самооценка кандидата не смешивается с подтверждённым грейдом: грейд присваивается только по проверке платформы.">
             <select id="sg" className="input" value={grade} onChange={(e) => { setGrade(e.target.value); setPage(0); }}>
               <option value="">все</option>{Object.entries(levels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
@@ -113,8 +117,10 @@ export function Search() {
             <select aria-label="Добавить технологию" className="input mt-2" value={add} onChange={(e) => { if (e.target.value) { setStack([...stack, e.target.value]); setPage(0); } setAdd(""); }}>
               <option value="">добавить…</option>{avail.filter((t: any) => !stack.includes(t.id)).map((t: any) => <option key={t.id} value={t.id}>{t.title}</option>)}
             </select>
-            {stack.length > 0 && <div className="mt-2"><Seg label="Уровень навыка" value={level} onChange={setLevel} options={[{ id: "any", title: "Заявлен или подтверждён" }, { id: "t1", title: "Подтверждён (T1)" }]} /></div>}
+            {stack.length > 0 && <div className="mt-2"><Seg label="Уровень навыка" value={level} onChange={setLevel} options={[{ id: "any", title: "Самозаявлен или подтверждён" }, { id: "t1", title: "Подтверждён платформой" }]} /></div>}
           </div>
+          <Toggle checked={realOnly} onChange={(v) => { setRealOnly(v); setPage(0); }} label="Только реальные кандидаты"
+            hint="Скрыть модельные демо-профили стенда. По умолчанию показаны все кандидаты с бейджем «демо-профиль»." />
           <Toggle checked={fsp} onChange={(v) => { setFsp(v); setPage(0); }} label="Есть паспорт ФСП" />
           <Toggle checked={confirmed} onChange={(v) => { setConfirmed(v); setPage(0); }} label="Только подтверждённый грейд"
             hint="Без «Junior (предварительно)» и без кандидатов, чей грейд не подтверждён тестом. По умолчанию они показаны со статусом ниже подтверждённых." />
@@ -140,9 +146,9 @@ export function Search() {
             </div>
             <LevelLegend />
           </div>
-          {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.items.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры." /> :
+          {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !items.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры или отключите фильтр «Только реальные кандидаты»." /> :
             <>
-              {data.items.map((c: any) => <SearchCard key={c.ref} c={c} stack={stack} tags={tags} market={cats.data?.find((k) => k.id === c.category?.id)?.market_range}
+              {items.map((c: any) => <SearchCard key={c.ref} c={c} stack={stack} tags={tags} market={cats.data?.find((k) => k.id === c.category?.id)?.market_range}
                 actions={<Link className="btn-ghost !py-2" to={`/employer/candidates/${c.ref}?direction=${c.direction}`}>Открыть</Link>} />)}
               {data.total > PAGE && (
                 <nav className="flex flex-wrap items-center justify-between gap-3 pt-2" aria-label="Страницы результатов">
@@ -194,7 +200,7 @@ export function CandidateDetail() {
           <p className="mt-1 text-sm">{[c.contacts.full_name, c.contacts.email, c.contacts.phone, c.contacts.telegram].filter(Boolean).join(" · ")}</p>
         </section>
       )}
-      <CandidateCard c={c} score={c.match?.score} reasons={c.match?.reasons} must={c.match?.must} core={c.match?.core}
+      <CandidateCard c={c} score={c.match?.score} explain={c.match?.explain} reasons={c.match?.reasons} must={c.match?.must} core={c.match?.core}
         actions={
           <div className="flex flex-wrap items-center gap-3">
             <button className="btn-ghost" onClick={() => setModal("probe")}>Отправить задание</button>

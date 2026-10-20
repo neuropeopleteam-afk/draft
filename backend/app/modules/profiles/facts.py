@@ -558,6 +558,15 @@ def _is_model_candidate(p) -> bool:
     return (p.headline or "").endswith(f"({_model_label()})")
 
 
+def _is_synthetic_profile(p) -> bool:
+    """А2: синтетический (модельный) профиль демо-базы (не живой кандидат и не персона песочницы жюри)."""
+    if getattr(p, "is_synthetic", False):
+        return True
+    if getattr(p, "jury_mode", False):
+        return False
+    return _is_model_candidate(p) or (p.headline or "").endswith("(демо)") or bool((p.privacy or {}).get("demo_model") or (p.privacy or {}).get("demo_audience"))
+
+
 def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None, rank_total: int | None = None,
          include_hidden: bool = False) -> dict:
     """Обезличенная карточка для работодателя. ФИО, контакты и минимум зарплаты сюда не попадают никогда."""
@@ -637,7 +646,8 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
         "relocation": p.relocation if show("show_city") else None,
         "market_range": {"from": cat.market_salary_from, "to": cat.market_salary_to,
                          "median": cat.market_salary_median} if cat else None,
-        "is_demo": None,
+        "is_demo": _is_synthetic_profile(p),
+        "is_synthetic": _is_synthetic_profile(p),
         "employment_safety": employment_safety(p),
         "freshness": freshness_summary(b.skills_t1),  # К5: когда подтверждены навыки T1 (порядок подбора не меняет)
     }

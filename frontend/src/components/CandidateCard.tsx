@@ -1,10 +1,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { DefenseBadge, DefenseBriefLine } from "./Interview";  // Я15: значок устной защиты
 import { GradeBadge, GradeStatusNote } from "./GradeStatus";
-import { Level, num, pct, plainText as ruText, signed, years } from "./ui";
+import { DemoProfileBadge, Level, num, pct, plainText as ruText, signed, years } from "./ui";
 import { Specializations } from "./Specializations";
 import { MarketNote } from "./Salary";
 import { NO_FSP, OriginTag } from "./Origin";
+import { MatchExplain } from "./MatchExplain";
+import { WarRoomSlot } from "./WarRoomSlot";
 
 /** SIMPLIFY п.5: θ работодателю — только в подсказке (наведение), на виду — «N из M верно» и статус грейда. */
 export const thetaHint = (theta?: number | null, se?: number | null) => theta == null ? undefined : `Оценка уровня по шкале теста: ${signed(theta)} (точность ± ${num(se)})`;
@@ -87,8 +89,8 @@ function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
   );
 }
 
-export function CandidateCard({ c, score, reasons, actions, must, core, compact = false, badge, mutual, collapsible = false, expanded = false, bare = false }: {
-  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; core?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9); core — ядро роли (Я1)
+export function CandidateCard({ c, score, reasons, explain, actions, must, core, compact = false, badge, mutual, collapsible = false, expanded = false, bare = false }: {
+  c: any; score?: number; reasons?: any[]; explain?: any; actions?: ReactNode; must?: any; core?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9); core — ядро роли (Я1)
   collapsible?: boolean; expanded?: boolean;  // Ф6 (Н9): короткая карточка с раскрытием по клику
   bare?: boolean;  // Я10: только доказательства — без рамки и шапки (раскрытие компактной карточки подборки)
 }) {
@@ -110,6 +112,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
               <GradeBadge s={c.status} claimed={c.claimed} />
+              <DemoProfileBadge c={c} />
               {c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
               {badge}
             </div>
@@ -124,6 +127,11 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
           {score != null && <ScoreBox score={score} must={must} />}
         </div>
         <Brief c={c} reasons={reasons} />
+        {(explain || (reasons && reasons.length > 0)) && (
+          <div className="mt-2">
+            <MatchExplain explain={explain} candidate={c} score={score} reasons={reasons} must={must} core={core} compact />
+          </div>
+        )}
         {c.employment_safety?.minor && <p className="mt-2 text-xs font-semibold text-amber-900">Особые условия оффера · {c.employment_safety.age_group === "16-17" ? "16–17 лет" : "14–15 лет"} — подробнее в карточке</p>}
         {mutual}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -144,6 +152,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
             {/* мини-тест QR (3 задания): категория предварительная — не «Грейд подтверждён» (Ф3) */}
             {c.category?.preliminary ? <span className="chip" title="Мини-тест из 3 заданий: категория не выше Middle, полный тест уточнит грейд">по мини-тесту</span>
               : <GradeBadge s={c.status} claimed={c.claimed} />}
+            <DemoProfileBadge c={c} />
             {badge}
           </div>
           <MustLine m={must} core={core} />
@@ -224,8 +233,12 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
               </li>
             ))}
           </ul>
+          <div className="mt-3">
+            <MatchExplain explain={explain} candidate={c} score={score} reasons={reasons} must={must} core={core} />
+          </div>
         </details>
       )}
+      <WarRoomSlot mode="employer" candidateRef={c.ref} grade={c.grade ?? c.claimed?.grade} direction={c.direction} compact={compact} />
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         {c.market_range ? <MarketNote m={c.market_range} short /> : <span />}
