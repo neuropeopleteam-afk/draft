@@ -522,6 +522,12 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/interview/concierge/event"): "open",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
+    # А7: уведомления в Telegram (привязка по одноразовому коду, проверка и вебхук бота)
+    ("GET", "/api/telegram/status"): "auth",
+    ("POST", "/api/telegram/link"): "auth",
+    ("DELETE", "/api/telegram/link"): "auth",
+    ("POST", "/api/telegram/test"): "auth",
+    ("POST", "/api/telegram/webhook"): "open",
 }
 
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)
