@@ -1,0 +1,50 @@
+{
+  "packageId": "ru.fspdraft.app",
+  "host": "fsp-draft.ru",
+  "name": "Драфт — подтверждённый найм ИТ",
+  "launcherName": "Драфт",
+  "display": "standalone",
+  "themeColor": "#310F53",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FBF8FC",
+  "enableNotifications": true,
+  "startUrl": "/?source=twa",
+  "iconUrl": "http://localhost:8765/icons/icon-512.png",
+  "maskableIconUrl": "http://localhost:8765/icons/maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "/srv/work/apk/draft-upload.keystore",
+    "alias": "draft"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "unknown",
+  "webManifestUrl": "https://fsp-draft.ru/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "http://localhost:8765/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "appVersion": "1.0.0"
+}

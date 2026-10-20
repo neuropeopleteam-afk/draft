@@ -1,0 +1,14 @@
+[
+ {
+  "relation": [
+   "delegate_permission/common.handle_all_urls"
+  ],
+  "target": {
+   "namespace": "android_app",
+   "package_name": "ru.fspdraft.app",
+   "sha256_cert_fingerprints": [
+    "34:88:E3:44:72:DC:16:D1:1A:E4:9B:2C:00:D3:71:57:27:8F:E2:C4:5D:BF:E0:59:3B:43:01:47:A3:A2:40:A6"
+   ]
+  }
+ }
+]

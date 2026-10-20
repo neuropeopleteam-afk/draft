@@ -1,0 +1,9 @@
+{
+ "apk": "/app/draft-rustore.apk",
+ "package": "ru.fspdraft.app",
+ "version": "1.0.0 (1)",
+ "size_mb": 1.2,
+ "sha256": "946f2b94499b1950b510d790a685a657e708a62058aff6375203b9e847079d15",
+ "min_android": "7.0 (API 24)",
+ "status": "Подписанный пакет для RuStore. Пока идёт модерация, приложение можно поставить из этого файла (Android 7.0 и новее)."
+}
