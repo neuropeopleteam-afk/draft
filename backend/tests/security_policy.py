@@ -384,6 +384,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/messages/{kind}/{tid}"): "thread_party",
     # А2: трёхсторонняя связь работодатель ↔ кандидат ↔ представитель ФСП (tw01)
     ("GET", "/api/trio/meta"): "open",
+    ("GET", "/api/trio/unread"): ("auth", {"expert": 403, "jury_expert": 403}),
     ("GET", "/api/trio/threads"): ("auth", {"expert": 403, "jury_expert": 403}),
     ("GET", "/api/trio/eligible"): ("auth", {"admin": 403, "fsp_analyst": 403, "expert": 403, "jury_expert": 403, "jury_fsp": 403}),
     ("POST", "/api/trio/threads"): ("auth", {"admin": 403, "fsp_analyst": 403, "expert": 403, "jury_expert": 403, "jury_fsp": 403}),
