@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: mobile.lead_v2.zero_downtime_contract_mig_oa
+title: 'Мобильная разработка: План миграции схемы и контрактов под нагрузкой без окна простоя (Expand-Contract)'
+direction: mobile
+skills:
+- architecture
+- kotlin_coroutines
+- swift_concurrency
+- offline_first
+- ui_threading
+target_grades:
+- lead
+format: open_answer
+language: text
+invariants:
+  defect_type: expand_contract_migration
+  extra:
+    wave: LP-v2
+    slot: 29
+    direction_ru: Мобильная разработка
+time_limit_s: 600
+canary: false
+prior_difficulty:
+  b: 2.33
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Мобильная разработка: план миграции схемы и контрактов
+    под нагрузкой без окна простоя (expand-contract); формат open_answer, целевые грейды lead (b = 2,33 у порога
+    старшего грейда).'
+generator: assessment_bank.families.mobile.lp2_29_zero_downtime_contract_mig_oa
+version: 1
+description: 'Мобильная разработка (lead): План миграции схемы и контрактов под нагрузкой без окна простоя (Expand-Contract).
+  Проверка исполнением и рубрикой.'

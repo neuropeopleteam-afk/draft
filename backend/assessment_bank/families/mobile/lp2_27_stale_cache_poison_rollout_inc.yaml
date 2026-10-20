@@ -1,0 +1,38 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: mobile.principal_v2.stale_cache_poison_rollout_inc
+title: 'Мобильная разработка: Инцидент: отравление общего кэша несовместимой схемой при канарской выкладке'
+direction: mobile
+skills:
+- architecture
+- kotlin_coroutines
+- swift_concurrency
+- offline_first
+- ui_threading
+target_grades:
+- principal
+format: incident_sim
+language: python
+invariants:
+  defect_type: schema_rollout_cache_poison
+  extra:
+    wave: LP-v2
+    slot: 27
+    direction_ru: Мобильная разработка
+  n_options: 4
+time_limit_s: 780
+canary: false
+prior_difficulty:
+  b: 3.03
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Мобильная разработка: инцидент: отравление общего
+    кэша несовместимой схемой при канарской выкладке; формат incident_sim, целевые грейды principal (b = 3,03 у
+    порога старшего грейда).'
+  step_offsets:
+  - -0.35
+  - 0.0
+  - 0.35
+generator: assessment_bank.families.mobile.lp2_27_stale_cache_poison_rollout_inc
+version: 1
+description: 'Мобильная разработка (principal): Инцидент: отравление общего кэша несовместимой схемой при канарской
+  выкладке. Проверка исполнением и рубрикой.'

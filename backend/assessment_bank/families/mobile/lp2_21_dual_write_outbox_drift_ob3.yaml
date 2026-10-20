@@ -1,0 +1,38 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: mobile.lead_v2.dual_write_outbox_drift_ob3
+title: 'Мобильная разработка: Развал консистентности при двойной записи в БД и брокер без outbox (3 шага)'
+direction: mobile
+skills:
+- architecture
+- kotlin_coroutines
+- swift_concurrency
+- offline_first
+- ui_threading
+target_grades:
+- lead
+format: open_book_3step
+language: python
+invariants:
+  defect_type: dual_write_anomaly
+  extra:
+    wave: LP-v2
+    slot: 21
+    direction_ru: Мобильная разработка
+  n_options: 4
+time_limit_s: 600
+canary: false
+prior_difficulty:
+  b: 2.29
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Мобильная разработка: развал консистентности при
+    двойной записи в бд и брокер без outbox (3 шага); формат open_book_3step, целевые грейды lead (b = 2,29 у порога
+    старшего грейда).'
+  step_offsets:
+  - -0.35
+  - 0.0
+  - 0.35
+generator: assessment_bank.families.mobile.lp2_21_dual_write_outbox_drift_ob3
+version: 1
+description: 'Мобильная разработка (lead): Развал консистентности при двойной записи в БД и брокер без outbox (3
+  шага). Проверка исполнением и рубрикой.'
