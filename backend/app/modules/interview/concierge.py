@@ -1234,6 +1234,11 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         g = detect_goto(msg, path=current_path, step=step_id)   # «открой кабинет кандидата ещё раз» — переход, не «повтори»
         if g:
             ack("instant")
+            cab_role = {"cand-overview": "candidate", "emp-home": "employer", "fsp-cabinet": "fsp"}.get(g)
+            if cab_role and re.search(r"кабинет|путь|сторон|раздел", t_norm) and not (touring and cur_role == cab_role):
+                # «открой кабинет работодателя» — обзор этого кабинета (уже смотрели — браузер пройдёт коротко)
+                return {**base, "kind": "instant", "action": "start_tour", "role": cab_role,
+                        "reply": _start_reply(name, cab_role, False, first_tour)}
             return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto"}
     quick = classify(msg, touring=touring, paused=paused)
     if quick:

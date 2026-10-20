@@ -1376,7 +1376,8 @@ export class ElenaEngine {
       let bridge = prevCab !== step.cabinet ? this.bridgeText(step.cabinet, firstBridge, !!opts.named) : null;
       if (bridge) firstBridge = false;   // главная без связки — «Начнём со стороны кандидата» звучит на первом кабинете
       if (i === start.i) {
-        if (!bridge && !opts.single && this.pendingBridge) bridge = this.pendingBridge;   // «Продолжаю.» / «Возвращаюсь к обзору.»
+        // «Продолжаю.» / «Возвращаюсь к обзору.» — если связки раздела нет; «уже смотрели — пройду коротко» — вместо неё
+        if (!opts.single && this.pendingBridge && (!bridge || this.pendingBridge === this.phrase("again_brief"))) bridge = this.pendingBridge;
         this.pendingBridge = null;
       }
       const cabChanged = prevCab !== step.cabinet;
