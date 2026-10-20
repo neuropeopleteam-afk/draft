@@ -288,7 +288,7 @@ export function InteractiveAvatarTour() {
   const paused = ui.phase === "paused";
   const wave = ui.phase === "thinking" ? "thinking" : "listening";
   const lbl = MIC_LABEL[ui.mic] ?? MIC_LABEL.off;
-  const micText = ui.mic === "on" && ui.userTalking ? "Слышу вас" : large ? lbl.long : lbl.short;
+  const micText = ui.mic === "on" && ui.userTalking ? "Слышу вас" : large && !f.small ? lbl.long : lbl.short;
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
 
@@ -341,14 +341,14 @@ export function InteractiveAvatarTour() {
           )}
 
           <div className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/60 via-black/20 to-transparent ${large ? "px-4 pb-4 pt-14" : "px-2.5 pb-2.5 pt-10"}`}>
-            <span className={`items-center gap-1.5 rounded-lg bg-black/40 px-2 py-1 font-semibold text-white backdrop-blur ${large ? "flex text-sm" : f.small ? "hidden" : "flex text-xs"}`} data-testid="elena-name">
+            <span className={`items-center gap-1.5 rounded-lg bg-black/40 px-2 py-1 font-semibold text-white backdrop-blur ${large ? "flex shrink-0 text-sm" : f.small ? "hidden" : "flex shrink-0 text-xs"}`} data-testid="elena-name">
               <span className={`flex h-3 items-end gap-[2px] ${ui.speaking ? "" : "opacity-50"}`} aria-hidden="true">
                 {[0, 1, 2].map((i) => (
                   <span key={i} className={`w-[3px] rounded-full bg-emerald-300 ${ui.speaking ? "animate-pulse" : ""}`}
                     style={{ height: ui.speaking ? `${[7, 12, 9][i]}px` : "4px", animationDelay: `${i * 120}ms` }} />
                 ))}
               </span>
-              {large ? "Елена · ИИ-проводник" : "Елена"}
+              {large && !f.small ? "Елена · ИИ-проводник" : "Елена"}
             </span>
             <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
               <button type="button" onClick={() => { if (!micBroken) eng?.toggleMute(); }} aria-label={MIC_TITLE[ui.mic] ?? "Микрофон"} title={MIC_TITLE[ui.mic] ?? "Микрофон"}

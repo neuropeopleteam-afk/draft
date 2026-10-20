@@ -751,6 +751,7 @@ export class ElenaEngine {
 
   /** По решению сервера — сразу начать переход (вход в роль, открытие экрана), не дожидаясь конца ответа. */
   private prepare(meta: Meta, ep: number): Promise<boolean> | null {
+    if (meta.action === "point" && meta.point) { this.showPoint(meta.point, ep); return null; }  // рамка — сразу с ответом
     const step = meta.action === "start_tour" ? TRACKS[this.roleOf(meta)][0]
       : meta.action === "goto" && meta.step && STEPS[meta.step] ? meta.step : null;
     if (!step) return null;
@@ -814,7 +815,7 @@ export class ElenaEngine {
       return;
     }
     if (a === "point" && meta.point) {
-      this.showPoint(meta.point, ep);
+      this.holdPoint();
       if (this.resumePending && !this.paused) { this.scheduleResume(ep, 2600); return; }
       this.set({ phase: this.paused ? "paused" : "listening" });
       return;
@@ -879,6 +880,17 @@ export class ElenaEngine {
     this.set({ stage: "corner", target: sel, click: null });
     this.post("point", { text: label });
     void this.bringIntoView(sel, ep);
+    window.clearTimeout(this.pointTimer);
+    this.pointTimer = window.setTimeout(() => {
+      this.pointTimer = 0;
+      if (this.ui.target === sel && !this.touring) this.set({ target: null });
+    }, POINT_HOLD_MS);
+  }
+
+  /** Рамка вокруг показанного элемента держится ещё несколько секунд после ответа. */
+  private holdPoint() {
+    const sel = this.ui.target;
+    if (!sel || !sel.startsWith("text:")) return;
     window.clearTimeout(this.pointTimer);
     this.pointTimer = window.setTimeout(() => {
       this.pointTimer = 0;
@@ -1105,7 +1117,10 @@ export class ElenaEngine {
         return;
       }
       this.touring = false;
+      this.pos = null;
       this.set({ phase: "listening", click: null, stepNo: 0, stepTotal: 0 });
+      window.clearTimeout(this.pointTimer);
+      this.pointTimer = window.setTimeout(() => { this.pointTimer = 0; if (!this.touring) this.set({ target: null }); }, 2500);
       return;
     }
     if (track) await this.finishTour(track, ep);
