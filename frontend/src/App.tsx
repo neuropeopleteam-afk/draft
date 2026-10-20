@@ -226,6 +226,8 @@ export default function App() {
         <Route path="cups/:id" element={<CandidateCup />} />
         <Route path="assignments" element={<CandidateAssignments />} />
         <Route path="assignments/:id" element={<CandidateAssignment />} />
+        <Route path="contact" element={<Navigate to="/candidate/invitations" replace />} />
+        <Route path="mutual" element={<Navigate to="/candidate/settings" replace />} />
       </Route>
       <Route path="/employer" element={<CabinetLayout role="employer" title="Кабинет работодателя" sections={employerSections} />}>
         <Route index element={<EmployerOverview />} />
@@ -252,6 +254,8 @@ export default function App() {
         <Route path="assignments" element={<EmployerAssignments />} />
         <Route path="assignments/:id" element={<EmployerAssignment />} />
         <Route path="tariffs" element={<EmployerTariffs />} />
+        <Route path="subscriptions" element={<Navigate to="/employer/notifications" replace />} />
+        <Route path="applications" element={<Navigate to="/employer/vacancies" replace />} />
       </Route>
       <Route path="/fsp" element={<CabinetLayout role="fsp_analyst" alsoRoles={["admin"]} title="Кабинет ФСП" sections={fspSections} />}>
         <Route element={<FspReportLayout />}>
@@ -267,6 +271,8 @@ export default function App() {
         <Route path="partners" element={<FspPartners />} />
         <Route path="trio" element={<TrioPage role="fsp" />} />
         <Route path="security" element={<TwoFactorSettings />} />
+        <Route path="analytics" element={<Navigate to="/fsp/demand" replace />} />
+        <Route path="regions" element={<Navigate to="/fsp/demand" replace />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

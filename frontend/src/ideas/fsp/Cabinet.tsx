@@ -134,7 +134,7 @@ export function FspOverview() {
               </ul>
             </section>
             <div className="grid gap-5 lg:grid-cols-2">
-              <Card title="ФСП и приглашения" sub="Доля кандидатов, получивших приглашение" more={{ to: "effect", label: "Подробнее" }}>
+              <Card title="ФСП и приглашения" sub="Доля кандидатов, получивших приглашение" more={{ to: "/fsp/effect", label: "Подробнее" }}>
                 <div className="grid grid-cols-3 gap-2">
                   <Donut value={fsp.invite_rate} label="с достижениями ФСП" tone="night" />
                   <Donut value={nofsp.invite_rate} label="без истории ФСП (нейтрально)" tone="lavender" />

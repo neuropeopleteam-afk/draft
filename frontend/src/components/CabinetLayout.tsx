@@ -9,11 +9,12 @@ import { GuideSlot, whoAmI } from "./JuryGuide";
 import { isJury, juryLogin, type Persona } from "../lib/jury";
 import { RouteBoundary, RouteFallback, StartupError, StartupLoading } from "./Boot";  // Я16
 import { useMeta } from "../lib/meta";
-import { catTitle } from "./ui";
+import { catTitle, cleanCompanyName } from "./ui";
 
 // flag — раздел виден, только если функция включена на сервере (/api/meta → <flag>.enabled), например «Тарифы» (Я29)
 // also — другие разделы, на которых пункт тоже подсвечен (например, «Уведомления» на /…/app)
-export interface Section { path: string; title: string; description: string; day?: string; more?: boolean; flag?: "tariffs"; also?: string[] }
+export interface SubTab { path: string; title: string; flag?: "tariffs" }
+export interface Section { path: string; title: string; description: string; day?: string; more?: boolean; flag?: "tariffs"; also?: string[]; tabs?: SubTab[] }
 
 /** Короткая подпись роли для шапки на телефоне: «Кабинет работодателя» не помещается рядом с логотипом. */
 const SHORT: Partial<Record<Role, string>> = { candidate: "Кандидат", employer: "Работодатель", expert: "Эксперт", fsp_analyst: "ФСП", admin: "Администратор" };
@@ -26,6 +27,7 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
   const loc = useLocation();
   const navRef = useRef<HTMLElement>(null);
   const unread = useUnread(me && (me.role === "candidate" || me.role === "employer") && me.role === role);
+  const trioUnread = useTrioUnread(!!me && (me.role === role || alsoRoles.includes(me.role)));
   const hiringTodo = useHiringTodo(me && (me.role === "candidate" || me.role === "employer") && me.role === role);  // найм: что ждёт ответа
   const [moreOpen, setMoreOpen] = useState(false);  // Ф6 (В4): второстепенные разделы под «Ещё»
   const [switchingRole, setSwitchingRole] = useState<string | null>(null);
@@ -64,7 +66,18 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
   const back = () => { if (window.history.length > 2) navigate(-1); else navigate("/"); };
   const moreS = sections.filter((s) => s.more);
   const on = (p: string) => loc.pathname === `${base}/${p}` || loc.pathname.startsWith(`${base}/${p}/`);
-  const activeMore = moreS.some((s) => [s.path, ...(s.also ?? [])].some(on));
+  const secPaths = (s: Section) => [s.path, ...(s.also ?? []), ...(s.tabs?.map((t) => t.path) ?? [])];
+  const activeMore = moreS.some((s) => secPaths(s).some(on));
+  const activeSec = sections.find((s) => secPaths(s).some(on));
+  const activeTabs = (activeSec?.tabs ?? []).filter((t) => !t.flag || !!meta?.[t.flag]?.enabled);
+  const badgeFor = (s: Section) => {
+    const ps = secPaths(s);
+    let b = 0;
+    if (ps.includes("messages")) b += unread;
+    if (ps.includes("invitations")) b += hiringTodo;
+    if (ps.includes("trio")) b += trioUnread;
+    return b;
+  };
 
   return (
     <div className="min-h-screen bg-[#FBF8FC] md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
@@ -81,20 +94,20 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
         </div>
         <nav ref={navRef} className="nav-strip flex gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
           <NavItem to={base} end label="Обзор" />
-          {sections.filter((s) => !s.more).map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} badge={s.path === "messages" ? unread : s.path === "invitations" ? hiringTodo : 0} />)}
+          {sections.filter((s) => !s.more).map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} badge={badgeFor(s)} also={secPaths(s).some(on)} />)}
           {moreS.length > 0 && (activeMore
             ? <p className="block shrink-0 whitespace-nowrap px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Ещё</p>
             : <button type="button" aria-expanded={moreOpen} onClick={() => setMoreOpen((v) => !v)}
                 className="flex shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-lg border border-dashed border-brand/30 px-3 py-2 text-left text-sm font-semibold text-brand-plum hover:border-brand/50 hover:bg-brand-blush/40 md:mt-1 md:w-full">
                 {moreOpen ? "Свернуть" : `Ещё ${moreS.length}`}<span aria-hidden="true" className="text-xs">{moreOpen ? "▴" : "▾"}</span></button>)}
-          {(moreOpen || activeMore) && moreS.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} also={(s.also ?? []).some(on)} />)}
+          {(moreOpen || activeMore) && moreS.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} badge={badgeFor(s)} also={secPaths(s).some(on)} />)}
         </nav>
         <div className="hidden border-t border-brand-night/10 px-5 py-5 md:block">
           <GuideSlot where="sidebar" />
           <p className="truncate text-sm font-semibold text-brand-night" title={me.email}>
             {isJury(me.email)
               ? whoAmI(me.email).replace(/^демо-/, "Демо-")
-              : me.candidate?.full_name || me.employer?.company?.name || me.email}
+              : me.candidate?.full_name || cleanCompanyName(me.employer?.company?.name) || me.email}
           </p>
           {me.candidate?.current_category_id && (
             <p className="mt-0.5 truncate text-xs text-brand-ink/65">{catTitle(me.candidate.current_category_id)}</p>
@@ -191,6 +204,40 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
         </div>
         <CabinetRoute role={role} pathname={loc.pathname} />
         <main id="main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-6 outline-none sm:px-6 md:px-10 md:py-8">
+          {activeTabs.length > 1 && (
+            <nav
+              aria-label={`Разделы: ${activeSec?.title ?? ""}`}
+              data-testid="cabinet-subtabs"
+              className="nav-strip mb-6 flex gap-1.5 overflow-x-auto border-b border-brand-night/10 pb-3 print:hidden"
+            >
+              {activeTabs.map((t) => {
+                const tabActive = on(t.path);
+                return (
+                  <NavLink
+                    key={t.path}
+                    to={`${base}/${t.path}`}
+                    className={`shrink-0 whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+                      tabActive
+                        ? "bg-brand-night text-white shadow-sm"
+                        : "bg-white text-brand-ink/80 ring-1 ring-brand-night/10 hover:bg-brand-blush/40 hover:text-brand-night"
+                    }`}
+                  >
+                    {t.title}
+                    {t.path === "messages" && unread > 0 && (
+                      <span className="ml-1.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-brand-strong px-1 text-[10px] font-bold text-white">
+                        {unread}
+                      </span>
+                    )}
+                    {t.path === "trio" && trioUnread > 0 && (
+                      <span className="ml-1.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-brand-strong px-1 text-[10px] font-bold text-white">
+                        {trioUnread}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </nav>
+          )}
           {/* Я16: раздел грузится отдельным файлом — меню остаётся, ошибка загрузки раздела — экран повтора внутри */}
           <RouteBoundary inline><Suspense fallback={<RouteFallback inline />}><Outlet /></Suspense></RouteBoundary>
         </main>
@@ -293,6 +340,19 @@ function useUnread(on: boolean | null | undefined) {
     const t = window.setInterval(load, 30000);
     window.addEventListener(MESSAGES_CHANGED, load);
     return () => { alive = false; window.clearInterval(t); window.removeEventListener(MESSAGES_CHANGED, load); };
+  }, [on]);
+  return on ? n : 0;
+}
+
+function useTrioUnread(on: boolean | null | undefined) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!on) return;
+    let alive = true;
+    const load = () => { if (document.visibilityState === "visible") api<{ total: number }>("/trio/unread").then((r) => alive && setN(r.total)).catch(() => undefined); };
+    load();
+    const t = window.setInterval(load, 30000);
+    return () => { alive = false; window.clearInterval(t); };
   }, [on]);
   return on ? n : 0;
 }

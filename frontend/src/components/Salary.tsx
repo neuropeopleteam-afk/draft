@@ -63,7 +63,7 @@ export function MarketNote({ m, title = "Рынок категории", extra, 
   return (
     <p className="text-xs text-brand-ink/65">
       {title}: {range(m.from, m.to)} на руки{m.median ? `, медиана ${rub(m.median)}` : ""}{" "}
-      <span className="whitespace-nowrap">({otherBasis(m.from, m.to, "net")})</span>. Источник: {MARKET_SOURCE}.{extra ? ` ${extra}` : ""}
+      <span>({otherBasis(m.from, m.to, "net")})</span>. Источник: {MARKET_SOURCE}.{extra ? ` ${extra}` : ""}
     </p>
   );
 }
