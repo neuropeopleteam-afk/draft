@@ -247,7 +247,7 @@ export class ElenaEngine {
   private loading = 0;
   private ui: ElenaUi = {
     phase: "idle", mic: "off", speaking: false, userTalking: false, hearing: false, track: null, stepNo: 0, stepTotal: 0,
-    target: null, click: null, canPause: false, stage: "corner",
+    target: null, click: null, canPause: false, stage: "large",   // знакомство — большое окно по центру, обзор — в углу
   };
   private closed = false;
   private ep = 0;                       // текущая «линия» действий; новая линия (ход, пауза, закрытие) обрывает старую
@@ -455,6 +455,7 @@ export class ElenaEngine {
   start(track?: TourTrack, stepIndex = 0) {
     this.voice.unlock();
     this.watch();
+    if (track) this.set({ stage: "corner" });   // запуск сразу с обзора — без большого окна
     if (this.d.fakeMic) {
       this.set({ mic: "on" });
       this.micKnown = Promise.resolve<MicState>("on");

@@ -31,7 +31,7 @@ log = logging.getLogger("interview.concierge")
 MSK = timezone(timedelta(hours=3))
 # «провайдер=модель@усилие рассуждений» («@~N» — рассуждение с потолком N токенов). Отвечает Claude Sonnet 5
 # (минимальные рассуждения; замеры 20.10 на полной подсказке: 2,4–3,9 с). Gemini 2.5 Flash (~1,5 с) — страховка,
-# спрашивается одновременно: её ответ берём, только если Sonnet не ответила за LLM_PREFER_S. Один Sonnet вместо двух
+# спрашивается одновременно: её ответ берём, если Sonnet не ответила за LLM_PREFER_S. Один Sonnet вместо двух
 # параллельных — вдвое дешевле при той же задержке. Наставник в фоне — Sonnet 5.5.
 LLM_MODELS = [m.strip() for m in os.environ.get(
     "CONCIERGE_BRAIN_MODELS",
@@ -591,7 +591,9 @@ def _ask(msgs: list[dict], spec: str, timeout: float, max_tokens: int = 420, sch
         return None
 
 
-LLM_PREFER_S = float(os.environ.get("CONCIERGE_LLM_PREFER_S", "3.6"))
+# Замеры 20.10 на полной подсказке: Sonnet 5 — 2,9–4,6 с, Gemini 2.5 Flash — 1,4–1,5 с. Ждём Sonnet 2,4 с, дальше берём
+# готовый ответ страховки: живой разговор важнее лишних полутора секунд. Больше качества — поднять CONCIERGE_LLM_PREFER_S.
+LLM_PREFER_S = float(os.environ.get("CONCIERGE_LLM_PREFER_S", "2.4"))
 
 
 def answer(message: str, *, sid: str | None, name: str | None, role: str | None, path: str, step: str | None,

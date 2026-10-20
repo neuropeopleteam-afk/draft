@@ -253,7 +253,7 @@ export const STEPS: Record<string, TourStep> = {
   "fsp-trio": plain("fsp-trio", "fsp", "fsp", "/fsp/trio", [{ target: H1 }]),
   "fsp-method": plain("fsp-method", "fsp", "fsp", "/fsp/method", [{ target: H1 }, { target: "text:Доступ, main a[download], main h1" }]),
   "fsp-security": plain("fsp-security", "fsp", "fsp", "/fsp/security", [{ target: "[data-testid='twofa-state'], text:Состояние второго фактора, main h1" }]),
-  // есть по адресу, но в меню видны не всегда (зависят от включённых функций) — только по просьбе
+  // «Польза» и «Партнёры» видны в меню, когда на сервере включены тарифы (на стенде — включены)
   "fsp-benefit": plain("fsp-benefit", "fsp", "fsp", "/fsp/benefit", [{ target: "text:По регионам, main h1" }, { target: "text:По направлениям, text:Вклад партнёров ФСП, main h1" }]),
   "fsp-partners": plain("fsp-partners", "fsp", "fsp", "/fsp/partners", [{ target: "text:Заявки компаний, text:Партнёры, main h1" }]),
 
@@ -287,13 +287,15 @@ export const TRACKS: Record<TourTrack, string[]> = {
     "cand-probes", "cand-assignments", "cand-settings", "cand-vacancies", "cand-notifications"],
   employer: ["emp-home", "emp-needs", "emp-compare", "emp-squad", "emp-search", "emp-invitations", "emp-messages", "emp-trio", "emp-ats",
     "emp-cups", "emp-company", "emp-probes", "emp-assignments", "emp-vacancies", "emp-notifications", "emp-tariffs"],
-  fsp: ["fsp-cabinet", "fsp-demand", "fsp-effect", "fsp-salaries", "fsp-funnel", "fsp-cups", "fsp-trio", "fsp-method", "fsp-security"],
+  fsp: ["fsp-cabinet", "fsp-demand", "fsp-effect", "fsp-salaries", "fsp-funnel", "fsp-cups", "fsp-benefit", "fsp-partners", "fsp-trio",
+    "fsp-method", "fsp-security"],
   // весь сайт — основные пункты меню каждого кабинета (без «Ещё») и раздел для технического жюри
   all: ["home",
     "cand-overview", "cand-assessment", "cand-category", "cand-defense", "cand-feedback", "cand-profile", "cand-invitations",
     "cand-messages", "cand-trio", "cand-cups", "cand-fsp", "cand-mydata",
     "emp-home", "emp-needs", "emp-compare", "emp-squad", "emp-search", "emp-invitations", "emp-messages", "emp-trio", "emp-ats", "emp-cups",
-    "fsp-cabinet", "fsp-demand", "fsp-effect", "fsp-salaries", "fsp-funnel", "fsp-cups", "fsp-trio", "fsp-method", "fsp-security",
+    "fsp-cabinet", "fsp-demand", "fsp-effect", "fsp-salaries", "fsp-funnel", "fsp-cups", "fsp-benefit", "fsp-partners", "fsp-trio",
+    "fsp-method", "fsp-security",
     "warroom", "val-arena"],
 };
 
