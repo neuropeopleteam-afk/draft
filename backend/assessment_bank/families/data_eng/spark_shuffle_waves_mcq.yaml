@@ -1,0 +1,37 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: data_eng.spark.spark_shuffle_waves_mcq
+title: 'Spark: число партиций shuffle по целевому размеру и волны задач на кластере'
+direction: data_eng
+skills:
+- spark
+- partitioning
+- shuffles
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - default200
+    - execs_only
+    - cores_only
+    - half
+    - one
+    - x2
+    - gb_tasks
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.7
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (spark), которого не было среди проверяемых
+    навыков банка. Параллелизм Spark: партиций shuffle = объём / целевой размер партиции, одновременно выполняется executors
+    × cores задач, волны — округление вверх. Ключ — исполнением программы-модели. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта;
+    b 1,7 — по 2 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.data_eng.spark_shuffle_waves_mcq
+version: 1
+description: 'Senior/Lead, Spark: сколько волн задач понадобится стадии после shuffle.'

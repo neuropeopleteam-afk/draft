@@ -3,6 +3,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { AttemptsCompare, type Comparison } from "../../components/AttemptsCompare";
 import { Alert, DIRECTION_TITLES, Empty, GRADE_TITLE_ALL, Loading, dtt, num, signed, useApi } from "../../components/ui";
 import { DefensePanel } from "../../components/Interview";  // Я15: устная защита последней попытки (шаг проводника)
+import { IntegrityBadge } from "../../components/IntegrityBadge";  // KF2: паспорт честности попытки (5 контуров)
 
 /** Две попытки теста рядом (И26): θ ± погрешность, точность, грейд и статус, время, повторы заданий, что изменилось. */
 
@@ -51,6 +52,8 @@ export default function Attempts() {
   return (
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Две попытки рядом" subtitle={`${DIRECTION_TITLES[data.direction ?? ""] ?? "Тест"}: что изменилось между попытками и почему.`} />
+      {/* KF2: паспорт честности последней попытки; при двух попытках — у каждой в сравнении (AttemptsCompare) */}
+      {items.length > 0 && (items.length < 2 || !cmp) && <IntegrityBadge sessionId={items[items.length - 1].id} />}
       {items.length > 0 && <DefensePanel sessionId={items[items.length - 1].id} live="manual" />}
       {items.length < 2 ? (
         <Empty title={items.length ? "Пока одна попытка" : "Попыток ещё нет"}

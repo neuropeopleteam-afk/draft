@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: common.pg.pg_latest_per_key_fix
+title: 'PostgreSQL: последняя версия записи на ключ — ROW_NUMBER() с детерминированной сортировкой против RANK() и GROUP BY'
+direction: common
+skills:
+- postgresql
+- window_functions
+- sql
+target_grades:
+- senior
+- lead
+format: choose_fix
+language: sql
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - rank_ties
+    - wrong_partition
+    - group_by_status
+  defect_type: logic
+time_limit_s: 480
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (postgresql), которого не было среди
+    проверяемых навыков банка. Запрос «последняя версия на ключ» в PostgreSQL: окно по ключу, сортировка по убыванию времени
+    и id как второй ключ (две версии в одну секунду), RANK() даёт дубли, GROUP BY по ключу и статусу — строки на пару. Ключ
+    — исполнением запросов на данных варианта. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,8 — по 2 взаимодействующим
+    ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.common.pg_latest_per_key_fix
+version: 1
+description: 'Senior/Lead, PostgreSQL: выбрать верную замену запроса «последняя версия на ключ». Каждая замена исполняется
+  в SQLite (общий SQL с PostgreSQL) и сравнивается с эталоном.'

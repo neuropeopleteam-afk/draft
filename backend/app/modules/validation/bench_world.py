@@ -36,14 +36,20 @@ from app.core.enums import EvidenceLevel, FactSource, FspEventLevel, WorkFormat
 from app.modules.assessment.engine import GRADE_CUTS, grade_decision
 from app.modules.assessment.skill_map import to_stack_tags
 from app.modules.catalog.dictionary import STACK_ALIASES
-from app.modules.catalog.seed_data import GRADE_LEVEL, GRADE_ORDER, STACK
+from app.modules.catalog.seed_data import ALL_GRADE_LEVEL, BASE_GRADE_ORDER, STACK
 from app.modules.fsp.models import FspAchievement
 from app.modules.profiles.facts import Bundle, fsp_strength
 from app.modules.profiles.models import CandidateFact, CandidateProfile
 
 DIRS = ("backend", "frontend", "data_ml", "qa", "security")
-GRADES = GRADE_ORDER  # все грейды платформы снизу вверх (со Стажёром)
+# Бенчмарк подбора — мир из четырёх измеряемых грейдов (Стажёр … Senior). Не берём расширяемый GRADE_ORDER платформы:
+# с флагом GRADES_EXT_ENABLED в нём появляются Lead / Principal, и rng.choice(GRADES, p=NEED_GRADE_P) падал
+# («a and p must have same size»). Lead / Principal проверяются отдельной симуляцией (grades_ext_sim / grades_ext_need).
+BENCH_GRADES: tuple[str, ...] = tuple(BASE_GRADE_ORDER)  # ("intern", "junior", "middle", "senior")
+GRADES = BENCH_GRADES  # прежнее имя — для совместимости импортов
+GRADE_LEVEL = {g: ALL_GRADE_LEVEL[g] for g in BENCH_GRADES}
 NEED_GRADE_P = (0.08, 0.28, 0.42, 0.22)  # доля потребностей по грейдам: стажировок мало, Middle больше всего
+assert len(BENCH_GRADES) == len(NEED_GRADE_P), "NEED_GRADE_P должен задавать долю для каждого грейда BENCH_GRADES"
 FIXED_NOW = datetime(2026, 10, 1, 12, 0, tzinfo=timezone.utc)  # дата «теста» в синтетике: от неё не зависит ничего
 
 # Популярность навыка в направлении: базовая вероятность, что кандидат им реально владеет.
@@ -539,7 +545,10 @@ def _make_need(i: int, rng: np.random.Generator, cfg: BenchConfig | None = None)
     cfg = cfg or BenchConfig()
     dirs = cfg.dirs or DIRS
     d = dirs[i % len(dirs)]
-    g = str(rng.choice(GRADES, p=list(cfg.need_grade_p or NEED_GRADE_P)))
+    grade_p = list(cfg.need_grade_p or NEED_GRADE_P)
+    if len(grade_p) != len(GRADES):
+        raise ValueError(f"need_grade_p: {len(grade_p)} долей на {len(GRADES)} грейдов бенчмарка {GRADES}")
+    g = str(rng.choice(GRADES, p=grade_p))
     pop = POPULARITY[d]
     tags = list(pop)
     req = _weighted_sample(rng, tags, [pop[t] for t in tags], int(rng.integers(cfg.need_required[0], cfg.need_required[1] + 1)))

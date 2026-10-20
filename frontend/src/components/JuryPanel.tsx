@@ -1,9 +1,10 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { launchLiveAvatar } from "./Interview";
 import { errText, NB } from "./ui";
 import { useAuth } from "../lib/auth";
-import { guide, juryLogin, juryReset, quick, quickSteps, QUICK_MINUTES, startQuick, STEPS, type Persona } from "../lib/jury";
+import { guide, juryLogin, juryReset, juryToken, quick, quickSteps, QUICK_MINUTES, startQuick, STEPS, type Persona } from "../lib/jury";
+import { api } from "../lib/api";
 import { useMeta } from "../lib/meta";
 
 /** W2: вход жюри — один компонент для двух мест.
@@ -35,6 +36,7 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [qr, setQr] = useState(false);
   const meta = useMeta();
   const interview = !!meta?.interview?.enabled;  // Я15: шаг «по желанию» в «12 минутах»
   const avatar = interview && !!meta?.interview?.avatar;  // SIMPLIFY п.8: карточка «ИИ-интервьюер» — только при образе интервьюера
@@ -118,6 +120,12 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
     </div>
   );
 
+  const passportBtn = (  // KF1 «Паспорт-щит»: QR демо-кандидата на экран — эксперт сканирует телефоном и видит проверку подписи
+    <button type="button" className="np-btn-ghost px-4 py-2 text-sm disabled:opacity-60" disabled={off} onClick={() => setQr(true)} data-testid="jury-passport-qr">
+      Показать QR паспорта (Ed25519)
+    </button>
+  );
+
   const links = (
     <p className={`text-xs np-muted ${compact ? "mt-5" : "mt-8"}`} data-testid="jury-links">
       Для экспертов: <Link to="/criteria" className="font-semibold np-accent hover:underline">критерии ТЗ</Link>
@@ -144,9 +152,11 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
             {roles}
             {avatarCard}
           </div>
+          <div className="mt-4">{passportBtn}</div>
           {msg && <p className="mt-4 text-sm np-muted" role="status">{msg}</p>}
           {links}
         </div>
+        {qr && <PassportQrModal onClose={() => setQr(false)} />}
       </section>
     );
   }
@@ -196,9 +206,11 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
           {roles}
           {avatarCard}
         </div>
+        <div className="mt-4">{passportBtn}</div>
         {msg && <p className="mt-4 text-sm np-muted" role="status">{msg}</p>}
         {links}
       </div>
+      {qr && <PassportQrModal onClose={() => setQr(false)} />}
     </section>
   );
 }
@@ -210,6 +222,92 @@ function Scenario({ n, title, text, action }: { n: string; title: string; text: 
       <p className="mt-1 font-bold np-text">{title}</p>
       <p className="mt-1 text-sm leading-relaxed np-muted">{text}</p>
       <div className="mt-3 text-sm">{action}</div>
+    </div>
+  );
+}
+
+interface DemoPassport {
+  passport: null | { id: string; url: string; path: string; state: string; title: string; grade_status: string; valid_until: string; test_key: boolean; kid: string; qr_path: string };
+  opted_out: boolean; eligible: boolean; jwks_url: string; jwks_api_url: string;
+  history: { id: string; issued_at: string; revoked_at: string | null; reason_title: string | null }[];
+}
+
+/** KF1 «Паспорт-щит» для зала: QR демо-кандидата (своя песочница эксперта), kid ключа, ссылка на /verify/…,
+ *  и демонстрация «Отозвать паспорт» → страница проверки показывает «Отозван» / «Выпустить заново» → новая ссылка. */
+function PassportQrModal({ onClose }: { onClose: () => void }) {
+  const [token, setToken] = useState<string | null>(null);
+  const [d, setD] = useState<DemoPassport | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>("load");
+  useEffect(() => {
+    let on = true;
+    (async () => {
+      try {
+        const t = await juryToken("candidate");  // своя песочница: текущий вход эксперта не меняется
+        const r = await api<DemoPassport>(`/passport/demo?scenario=${encodeURIComponent(t.shared ? "" : t.scenario ?? "")}`, { auth: false });
+        if (on) { setToken(t.access_token); setD(r); }
+      } catch (e) { if (on) setErr(errText(e)); } finally { if (on) setBusy(null); }
+    })();
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", h);
+    return () => { on = false; window.removeEventListener("keydown", h); };
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  async function act(kind: "revoke" | "reissue") {
+    if (!token) return;
+    setBusy(kind); setErr(null);
+    try { setD(await api<DemoPassport>(`/passport/demo/${kind}`, { method: "POST", token })); }
+    catch (e) { setErr(errText(e)); } finally { setBusy(null); }
+  }
+  const p = d?.passport;
+  const href = p ? p.url || `${window.location.origin}${p.path}` : "";  // ровно та ссылка, что зашита в QR
+  const last = d?.history?.[0];
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-labelledby="jury-qr-title" onClick={(e) => e.stopPropagation()}
+        className="max-h-[94vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 text-[#1B1340] shadow-2xl sm:p-8" data-testid="jury-passport-modal">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Паспорт-щит · подпись Ed25519</p>
+            <h2 id="jury-qr-title" className="mt-1 text-2xl font-extrabold tracking-tight">Наведите камеру телефона на QR</h2>
+            <p className="mt-1 text-sm text-[#1B1340]/70">Паспорт грейда демо-кандидата «Мария Королёва»: страница проверки откроется без входа и пароля, подпись проверяется по открытому ключу JWKS.</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Закрыть" className="-mr-2 -mt-2 flex h-10 w-10 items-center justify-center rounded-xl text-[#1B1340]/60 hover:bg-[#F3F2FB]">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+        {busy === "load" && <p className="mt-6 text-sm" role="status">Готовим паспорт демо-кандидата…</p>}
+        {err && <p className="mt-4 rounded-xl bg-[#FDE7EF] px-3 py-2 text-sm font-semibold text-[#8A0F3C]" role="alert">{err}</p>}
+        {d && (
+          <div className="mt-6 grid items-start gap-6 sm:grid-cols-[minmax(0,320px)_1fr]">
+            <div className={`relative rounded-2xl border-4 bg-white p-3 ${p ? "border-emerald-500" : "border-[#E0004C]"}`}>
+              {p ? <img src={`${p.qr_path}?v=${encodeURIComponent(p.id)}`} alt="QR-код ссылки на проверку паспорта демо-кандидата" className="aspect-square w-full" />
+                : <div className="flex aspect-square w-full flex-col items-center justify-center text-center">
+                    <p className="text-3xl font-extrabold text-[#E0004C]">Отозван</p>
+                    <p className="mt-2 px-4 text-sm text-[#1B1340]/70">Старая ссылка показывает «Отозван». Выпустите паспорт заново — появится новый QR.</p>
+                  </div>}
+            </div>
+            <div className="min-w-0 space-y-3 text-sm">
+              {p ? <>
+                <p><span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold ${p.state === "valid" ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"}`}><span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />{p.title}</span></p>
+                <dl className="space-y-2">
+                  <div><dt className="text-xs text-[#1B1340]/60">Ключ подписи (kid)</dt><dd className="break-all font-mono text-sm font-semibold" data-testid="jury-passport-kid">{p.kid}</dd></div>
+                  <div><dt className="text-xs text-[#1B1340]/60">Страница проверки</dt><dd><a className="break-all font-mono text-sm font-semibold text-[#E0004C] hover:underline" href={p.path} target="_blank" rel="noreferrer">{href}</a></dd></div>
+                  <div><dt className="text-xs text-[#1B1340]/60">Действителен до</dt><dd className="font-semibold">{new Date(p.valid_until).toLocaleDateString("ru-RU")}{p.test_key ? " · тестовый ключ стенда" : ""}</dd></div>
+                </dl>
+              </> : <p className="font-semibold">{d.opted_out ? "Паспорт отозван (демонстрация)." : d.eligible ? "Паспорт ещё не выпущен." : "У демо-кандидата нет категории — паспорт не выпускается."}{last?.reason_title ? ` Причина: ${last.reason_title}.` : ""}</p>}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {p && <button type="button" className="rounded-xl bg-[#E0004C] px-4 py-2 text-sm font-bold text-white hover:bg-[#c00042] disabled:opacity-60" disabled={!!busy || !token} onClick={() => void act("revoke")} data-testid="jury-passport-revoke">{busy === "revoke" ? "Отзываем…" : "Отозвать паспорт"}</button>}
+                <button type="button" className="rounded-xl bg-[#1B1340] px-4 py-2 text-sm font-bold text-white hover:bg-[#2a1f5c] disabled:opacity-60" disabled={!!busy || !token || (!p && !d.eligible)} onClick={() => void act("reissue")} data-testid="jury-passport-reissue">{busy === "reissue" ? "Выпускаем…" : "Выпустить заново"}</button>
+                <a className="rounded-xl border border-[#1B1340]/20 px-4 py-2 text-sm font-semibold hover:bg-[#F3F2FB]" href="/api/.well-known/jwks.json" target="_blank" rel="noreferrer">Открытый ключ JWKS</a>
+              </div>
+              <p className="rounded-xl bg-[#F3F2FB] px-3 py-2 text-xs leading-relaxed text-[#1B1340]/80">
+                HMAC-токен может проверить только выдавший сервер; асимметричную подпись Ed25519 проверяет любой по открытому ключу JWKS.
+                Отзыв виден сразу: старая ссылка показывает «Отозван», новая ссылка — новый паспорт с той же подписью платформы.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

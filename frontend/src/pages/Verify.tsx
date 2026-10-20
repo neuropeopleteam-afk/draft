@@ -1,11 +1,43 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthShell, FormError } from "../components/AuthShell";
 import { api, ApiError, type TokenOut } from "../lib/api";
 import { cabinetPath, useAuth } from "../lib/auth";
 
+/** ID паспорта грейда из ссылки /verify/<id>, полного адреса или самого ID (token_urlsafe, 16 символов). */
+function passportIdFrom(v: string): string | null {
+  const t = v.trim();
+  const m = t.match(/\/verify\/([A-Za-z0-9_-]{8,64})/) ?? t.match(/^([A-Za-z0-9_-]{12,64})$/);
+  return m ? m[1] : null;
+}
+
 export default function Verify() {
   const [params] = useSearchParams();
+  // KF1: /verify?passport=<id> (старые QR, ссылки из писем) — сразу на публичную проверку паспорта /verify/<id>
+  const passportParam = passportIdFrom(params.get("passport") ?? params.get("pid") ?? "");
+  if (passportParam) return <Navigate to={`/verify/${passportParam}`} replace />;
+  return <EmailVerify params={params} />;
+}
+
+function PassportLookup() {
+  const navigate = useNavigate();
+  const [v, setV] = useState("");
+  const id = passportIdFrom(v);
+  return (
+    <form className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+      onSubmit={(e) => { e.preventDefault(); if (id) navigate(`/verify/${id}`); }} aria-label="Проверка паспорта грейда">
+      <p className="font-semibold">Проверяете паспорт грейда кандидата?</p>
+      <p className="mt-1 text-xs">Подпись Ed25519 проверяется по открытому ключу JWKS — без входа и регистрации.</p>
+      <div className="mt-2 flex gap-2">
+        <label className="sr-only" htmlFor="passport-id">Ссылка или ID паспорта</label>
+        <input id="passport-id" className="input flex-1" placeholder="Ссылка /verify/… или ID паспорта" value={v} onChange={(e) => setV(e.target.value)} />
+        <button type="submit" className="btn-ghost" disabled={!id}>Проверить</button>
+      </div>
+    </form>
+  );
+}
+
+function EmailVerify({ params }: { params: URLSearchParams }) {
   const [email, setEmail] = useState(params.get("email") ?? "");
   const [code, setCode] = useState("");
   const [devCode, setDevCode] = useState<string | null>(sessionStorage.getItem("fsp_dev_code"));
@@ -67,6 +99,7 @@ export default function Verify() {
         <button type="submit" className="btn-primary w-full" disabled={busy || code.length !== 6 || !email}>{busy ? "Проверяем…" : "Подтвердить"}</button>
         <button type="button" onClick={resend} className="w-full text-sm font-semibold text-brand-plum hover:text-brand" disabled={!email}>Отправить код ещё раз</button>
       </form>
+      {!params.get("email") && <PassportLookup />}
     </AuthShell>
   );
 }

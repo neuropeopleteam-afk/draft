@@ -1,0 +1,39 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: data_eng.pg.pg_partition_pruning_mcq
+title: 'PostgreSQL: отсечение секций для диапазона дат — строгая правая граница, неполный первый месяц, DEFAULT'
+direction: data_eng
+skills:
+- postgresql
+- partitioning
+- sql
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - inclusive
+    - diff
+    - all
+    - all_default
+    - one
+    - plus_default
+    - minus_one
+    - full_only
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.7
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (postgresql), которого не было среди
+    проверяемых навыков банка. Декларативное секционирование PostgreSQL: условие по ключу с константами отсекает секции при
+    планировании, полуоткрытый диапазон [a, b) не затрагивает секцию месяца b. Ключ — исполнением: формула и подневная проверка.
+    Граница Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,7 — по 2 взаимодействующим ограничениям, волна 20.10, без калибровки
+    панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.data_eng.pg_partition_pruning_mcq
+version: 1
+description: 'Senior/Lead, PostgreSQL: сколько секций останется в плане после partition pruning.'

@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: devops.k8s.principal_hpa_ramp_mcq
+title: minReplicas под линейный рост трафика — цикл HPA, запуск пода и readiness, текущие поды на 100 % CPU
+direction: devops
+skills:
+- autoscaling
+- kubernetes
+- capacity_planning
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_startup
+    - no_ready
+    - steady_only
+    - at_target
+    - double_t
+    - x2
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.0
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Автомасштабирование с запаздыванием: пока HPA реагирует (цикл, запуск, readiness),
+    рост трафика несут текущие поды; минимальное число реплик задаётся худшим моментом, а не целевой загрузкой. Lead обычно
+    считает по текущему трафику и целевому CPU — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 3,0 — по 3 взаимодействующим
+    ограничениям, волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.devops.principal_hpa_ramp_mcq
+version: 1
+description: 'Principal: какой наименьший minReplicas выдержит рост трафика до готовности новых подов. Ключ — исполнением:
+  формула и посекундная проверка.'

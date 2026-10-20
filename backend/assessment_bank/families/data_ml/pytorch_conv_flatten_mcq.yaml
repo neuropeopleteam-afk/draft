@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: data_ml.dl.pytorch_conv_flatten_mcq
+title: 'PyTorch: in_features для Linear после Conv2d/MaxPool2d — округление вниз, padding, stride'
+direction: data_ml
+skills:
+- pytorch
+- deep_learning
+- model_evaluation
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_pad
+    - ceil
+    - no_plus
+    - in_channels
+    - one_side
+    - no_pool
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (pytorch), которого не было среди проверяемых
+    навыков банка. Размеры тензоров в CNN: ⌊(n + 2p − k)/s⌋ + 1 по каждой стороне, MaxPool2d(2) делит вниз, Flatten умножает
+    каналы на высоту и ширину. Ключ — исполнением: формула и подсчёт позиций окна. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта;
+    b 1,8 — по 2 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.data_ml.pytorch_conv_flatten_mcq
+version: 1
+description: 'Senior/Lead, PyTorch: какой in_features нужен у Linear после свёрток.'

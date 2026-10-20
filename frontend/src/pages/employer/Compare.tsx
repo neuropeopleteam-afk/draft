@@ -3,10 +3,12 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, type GradeStatusInfo } from "../../components/GradeStatus";
 import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, plainText as ruText, useApi } from "../../components/ui";
-import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
+import { ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
 import { ReasonLevel } from "../../components/CandidateCard";  // Ф6 (Н5)
 import { ExecAdvisor } from "../../components/ExecAdvisor";  // Н1: ИИ-советник руководителя (живой диалог)
 import { DecisionProofStrip } from "../../components/UnderTheHood";
+import { InviteDialog } from "../../components/InviteDialog";  // KF3 «Оффер в один клик»: вилка, Mutual Draft Score, слоты
+import { PassportCryptoChip } from "../../passport/Share";  // KF1 «Паспорт-щит»: значок «Паспорт Ed25519: действует»
 
 interface Cell { level: string; status: string; text: string; value?: number; best?: boolean }
 interface Row { key: string; group: string; title: string; requirement?: string | null; quote?: string | null; weight?: number | null; hint?: string }
@@ -127,6 +129,7 @@ export function Compare() {
                 </div>
                 <p className="text-sm text-brand-ink/75">{c.category?.title ?? (c.claimed?.title ? `заявлено: ${c.claimed.title}` : "без категории")}</p>
                 <GradeBadge s={c.status} claimed={c.claimed} />
+                <div><PassportCryptoChip refId={c.ref} /></div>
                 <p className="text-2xl font-bold text-brand">{Math.round(c.score * 100)}<span className="text-sm font-semibold text-brand-ink/65"> из 100</span></p>
                 <div className="flex flex-wrap gap-1.5">
                   <button className="btn-ghost !px-3 !py-1.5 text-xs" disabled={c.probe_active} title={c.probe_active ? "Задание уже отправлено и ждёт ответа" : "Короткое проверочное задание от вас"} onClick={() => setProbe([c.ref])}>
@@ -177,8 +180,9 @@ export function Compare() {
       <Modal open={!!probe} onClose={() => setProbe(null)} title={`Проверочное задание: ${probe?.length ?? 0} канд.`}>
         {probe && <ProbeForm refs={probe} needId={id} market={market} needSalary={needSalary} onDone={(r) => { setProbe(null); setDone(probeSentText(r) ?? "Задание никому не отправлено."); reload(); }} />}
       </Modal>
-      <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение ${invite?.ref ?? ""}`}>
-        {invite && <InviteForm cref={invite.ref} needId={id} market={invite.market_range ?? market} needSalary={needSalary} onDone={(inv) => { setInvite(null); setDone(inviteSentText(inv, invite.ref)); reload(); }} />}
+      <Modal open={!!invite} onClose={() => setInvite(null)} title={`Оффер в один клик: ${invite?.ref ?? ""}`}>
+        {invite && <InviteDialog cref={invite.ref} needId={id} needTitle={data.need.title} market={invite.market_range ?? market} needSalary={needSalary}
+          onDone={(inv) => { setInvite(null); const n = inv?.proposed_slots?.length ?? 0; setDone(inviteSentText(inv, invite.ref) + (n ? ` Предложено слотов собеседования: ${n} — кандидат забронирует один при принятии.` : "")); reload(); }} />}
       </Modal>
     </div>
   );

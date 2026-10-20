@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: data_eng.storage.principal_tiering_cost_mcq
+title: Стоимость горячего и холодного хранения — репликация горячего слоя, сжатие холодного, установившийся режим
+direction: data_eng
+skills:
+- lakehouse
+- parquet
+- file_formats
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_rf
+    - no_comp
+    - all_hot
+    - cold_full
+    - hot_only
+    - hot_comp
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.0
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Модель стоимости многоуровневого хранения: объём слоя = поток × дни в слое, горячий
+    слой с репликацией без сжатия, холодный со сжатием; установившийся режим. Lead обычно забывает репликацию или считает
+    холодный слой на весь срок — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 3,0 — по 3 взаимодействующим ограничениям,
+    волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.data_eng.principal_tiering_cost_mcq
+version: 1
+description: 'Principal: сколько в месяц стоит горячее и холодное хранение. Ключ — исполнением: формула и суммирование по
+  возрасту данных.'

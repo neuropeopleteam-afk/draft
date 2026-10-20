@@ -395,7 +395,10 @@ def brief(db: Session, p: GradePassport) -> dict:
     ev = evaluate(db, p)
     return {"id": p.id, "url": verify_url(p.id), "path": f"/verify/{p.id}", "state": ev["state"],
             "title": ev["title"], "grade_status": p.grade_status, "issued_at": ev["issued_at"],
-            "valid_until": ev["valid_until"], "test_key": ev["test_key"]}
+            "valid_until": ev["valid_until"], "test_key": ev["test_key"],
+            # KF1 «Паспорт-щит»: ключ подписи и QR — для значка «Паспорт Ed25519: действует» и показа QR
+            "kid": p.kid, "alg": crypto.ALG, "signature_valid": ev["signature_valid"],
+            "qr_path": f"/api/passport/{p.id}/qr.svg"}
 
 
 def for_pdf(db: Session, user_id: uuid.UUID) -> dict | None:
@@ -408,3 +411,52 @@ def for_pdf(db: Session, user_id: uuid.UUID) -> dict | None:
         db.rollback()
         log.exception("passport: сводка для PDF не собралась")
         return None
+
+
+# ------------------------------------------------------------------ KF1 «Паспорт-щит»: офлайн-проверка и демо жюри
+
+def offline_bundle(db: Session, p: GradePassport) -> dict:
+    """Файл для офлайн-проверки: паспорт, подпись, открытый ключ JWKS и порядок проверки без обращения к серверу."""
+    view = public_view(db, p)
+    s = get_settings()
+    base = s.public_base_url.rstrip("/")
+    return {
+        "passport": view["passport"],
+        "document": view["document"],  # подписанная строка (канонический JSON паспорта) — проверяется как есть
+        "signature": view["signature"],
+        "jwks": {"keys": view["keys"]},
+        "jwks_url": f"{base}/.well-known/jwks.json",
+        "verify_url": view["verify_url"],
+        "status_at_download": view["status"],
+        "canonicalization": view["canonicalization"],
+        "how_to_verify": [
+            "1. Возьмите поле document (канонический JSON паспорта: ключи по алфавиту, без пробелов, UTF-8) — оно "
+            "совпадает с полем passport.",
+            "2. Возьмите ключ из jwks.keys с тем же kid, что в signature.kid "
+            "(поле x — открытый ключ Ed25519, base64url).",
+            "3. Проверьте signature.value (base64url) по алгоритму Ed25519 любой библиотекой: "
+            "обращение к серверу не нужно.",
+            "4. Статус отзыва — онлайн: verify_url или POST /api/passport/verify.",
+        ],
+        "why_ed25519": "HMAC-токен может проверить только выдавший сервер (секрет у него); асимметричную подпись "
+                       "Ed25519 проверяет любой по открытому ключу JWKS.",
+    }
+
+
+def demo_user_id(db: Session, sid: str = "") -> uuid.UUID | None:
+    """Демо-кандидат жюри (Мария Королёва) общего демо или песочницы sid."""
+    from app.modules.jury import scope
+
+    email = scope.emails(sid)["candidate"]
+    return db.scalar(select(User.id).where(User.email == email))
+
+
+def demo_view(db: Session, user_id: uuid.UUID) -> dict:
+    """Паспорт демо-кандидата для панели жюри: выпускается при первом запросе (если кандидат не отозвал ссылку)."""
+    p = ensure_current(db, user_id)
+    db.commit()
+    ov = owner_view(db, p, user_id)
+    return {"passport": brief(db, p) if p is not None else None,
+            "opted_out": ov["opted_out"], "eligible": ov["eligible"],
+            "jwks_url": "/.well-known/jwks.json", "jwks_api_url": "/api/.well-known/jwks.json",
+            "history": ov["history"][:5]}

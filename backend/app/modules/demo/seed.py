@@ -1,5 +1,8 @@
-"""Демо-данные: 500 кандидатов, 10 работодателей, 15 потребностей (с флагом GRADES_EXT_ENABLED — плюс модельные
-Lead/Principal с номера 701 в направлениях, где эти уровни проверяет банк).
+"""Демо-данные: 860 кандидатов, 10 работодателей, 15 потребностей. Кандидаты: 500 базовых (1…500) + 360 модельных
+«рыночных» со связками навыков из спроса hh.ru — по 40 на каждое из 9 направлений (4 стажёра, 12 Junior, 12 Middle,
+12 Senior; номера 801…926 и 1001…1234; без CATALOG_EXT_ENABLED видны только 5 базовых направлений — 5 × 40 = 200,
+итого 700). С флагами расширения — ещё модельные кандидаты новых направлений 501–580 и Lead/Principal с номера 701
+(GRADES_EXT_ENABLED, только где эти уровни проверяет банк).
 
 Исходные 150 кандидатов и их идентификаторы сохраняются; extend_candidates добавляет только 151..500.
 Обе аудитории: школьники/студенты ФСП и опытные специалисты. Все результаты — синтетическое демо,
@@ -551,9 +554,16 @@ def extend_catalog_ext(db: Session, rng_seed: int = 20261010) -> dict:
 # Модельные кандидаты (модель, не люди) с реалистичными связками подтверждённых навыков по 9 направлениям: связки —
 # частые сочетания «Ключевых навыков» вакансий hh.ru (backend/app/modules/hh/data/skills.json, корпус 414 вакансий
 # 10.10.2026). Подтверждение тестом (T1) — только у навыков, которые проверяют задания банка направления и общего блока
-# (matching.coverage.bank_tags); остальное — заявлено (T0). Номера 801…, по 14 на направление (2 стажёра, 4 Junior,
+# (matching.coverage.bank_tags); остальное — заявлено (T0). Номера 801…926, по 14 на направление (2 стажёра, 4 Junior,
 # 4 Middle, 4 Senior), закреплены за направлением — порядок включения направлений их не сдвигает; 500 исходных
 # демо-кандидатов, 501–580 и 701+ не меняются. Направления расширения — только видимые (CATALOG_EXT_ENABLED и банк).
+# Расширение пула (20.10, KF4/Boost): ещё 26 на направление с номера 1001 (2 стажёра, 8 Junior, 8 Middle, 8 Senior) —
+# итого 40 на направление, по 12 Middle и 12 Senior. Прежние 14 (801…926) и их связки не меняются (идемпотентно для
+# уже засеянных БД). Новые кандидаты берут связки по кругу из MARKET_BUNDLES + MARKET_BUNDLES_EXTRA: 8–10 разных
+# стековых связок на направление вместо 1–4 (частоты «Ключевых навыков» skills.json 10.10.2026: первые три тега связки —
+# якорь стека, остальное — частые сопутствующие навыки направления). Пятое место топ-5 для Middle/Senior больше не
+# вынуждено уходить к кандидату чужого стека. Связки заданы вручную по агрегатам skills.json, а не по отдельным вакансиям
+# корпуса hh_match: подгонки под конкретные вакансии, на которых считается покрытие, нет.
 MARKET_FIRST = 801
 MARKET_DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security", "devops", "data_eng", "mobile", "analyst")
 MARKET_GRADES = ["intern"] * 2 + ["junior"] * 4 + ["middle"] * 4 + ["senior"] * 4
@@ -591,10 +601,140 @@ MARKET_BUNDLES: dict[str, list[list[str]]] = {
                  "python", "git", "test-design", "statistics"]],
 }
 MARKET_TESTED_SHARE = 0.9
+MARKET_EXTRA_FIRST = 1001
+MARKET_EXTRA_GRADES = ["intern"] * 2 + ["junior"] * 8 + ["middle"] * 8 + ["senior"] * 8
+MARKET_PER_DIRECTION = len(MARKET_GRADES) + len(MARKET_EXTRA_GRADES)  # 40: по 12 Middle и 12 Senior на направление
+MARKET_BUNDLES_EXTRA: dict[str, list[list[str]]] = {
+    "backend": [["python", "fastapi", "postgresql", "asyncio", "redis", "docker", "kafka", "git", "rest-api", "sql", "http",
+                 "kubernetes", "pytest"],
+                ["python", "django", "postgresql", "redis", "rabbitmq", "docker", "rest-api", "git", "sql", "linux",
+                 "ci-cd", "http"],
+                ["go", "postgresql", "kafka", "grpc", "docker", "kubernetes", "redis", "git", "sql", "linux", "http",
+                 "rest-api"],
+                ["java", "postgresql", "kafka", "rest-api", "docker", "kubernetes", "sql", "git", "redis", "ci-cd", "http",
+                 "linux"],
+                ["postgresql", "docker", "git", "python", "rest-api", "sql", "redis", "rabbitmq", "http", "linux",
+                 "kubernetes", "ci-cd"],
+                ["python", "postgresql", "flask", "rabbitmq", "docker", "sql", "git", "http", "redis", "linux",
+                 "algorithms", "pytest"],
+                ["kotlin", "java", "postgresql", "kafka", "docker", "rest-api", "git", "sql", "redis", "kubernetes", "http"],
+                ["php", "postgresql", "redis", "docker", "rest-api", "git", "sql", "rabbitmq", "http", "linux", "ci-cd"]],
+    "frontend": [["javascript", "typescript", "react", "nextjs", "html-css", "state-management", "git", "vite-webpack",
+                  "rest-api", "http", "frontend-testing", "tailwind"],
+                 ["javascript", "typescript", "vue", "html-css", "git", "state-management", "vite-webpack", "http",
+                  "rest-api", "ci-cd", "frontend-testing"],
+                 ["typescript", "angular", "javascript", "html-css", "git", "rest-api", "http", "state-management", "ci-cd",
+                  "frontend-testing", "docker"],
+                 ["javascript", "html-css", "react", "git", "http", "state-management", "a11y", "vite-webpack",
+                  "typescript", "tailwind", "sql"],
+                 ["typescript", "react", "javascript", "state-management", "frontend-testing", "vite-webpack", "git",
+                  "ci-cd", "docker", "http", "a11y", "rest-api"],
+                 ["javascript", "typescript", "react", "html-css", "git", "rest-api", "sql", "docker", "ci-cd", "http",
+                  "python", "state-management"]],
+    "data_ml": [["python", "pytorch", "nlp", "sql", "statistics", "git", "docker", "numpy", "pandas", "algorithms", "mlops",
+                 "linux"],
+                ["python", "sql", "spark", "statistics", "pandas", "airflow", "git", "docker", "kubernetes", "mlops",
+                 "numpy", "scikit-learn"],
+                ["python", "cv", "pytorch", "numpy", "algorithms", "git", "docker", "linux", "statistics", "mlops", "sql"],
+                ["python", "statistics", "sql", "pandas", "scikit-learn", "numpy", "algorithms", "git", "airflow", "docker",
+                 "nlp", "linux"],
+                ["python", "mlops", "docker", "kubernetes", "airflow", "git", "sql", "linux", "ci-cd", "pytorch", "nlp",
+                 "statistics"],
+                ["python", "nlp", "pytorch", "sql", "algorithms", "statistics", "pandas", "git", "docker", "mlops",
+                 "clickhouse"]],
+    "qa": [["manual-testing", "test-design", "sql", "api-testing", "http", "git", "postgresql", "rest-api", "load-testing",
+            "python", "docker", "ci-cd"],
+           ["python", "pytest", "api-testing", "sql", "test-design", "git", "ci-cd", "docker", "http", "selenium", "allure",
+            "load-testing"],
+           ["java", "selenium", "api-testing", "sql", "test-design", "git", "allure", "ci-cd", "http", "rest-api", "docker",
+            "linux"],
+           ["javascript", "playwright", "typescript", "frontend-testing", "api-testing", "git", "ci-cd", "test-design", "sql",
+            "http", "docker"],
+           ["test-design", "load-testing", "sql", "api-testing", "http", "python", "linux", "git", "docker", "ci-cd",
+            "postgresql"],
+           ["csharp", "selenium", "api-testing", "sql", "test-design", "git", "ci-cd", "http", "allure", "rest-api"]],
+    "security": [["linux", "network-security", "siem-soc", "cryptography", "http", "git", "python", "docker", "sql",
+                  "forensics", "owasp"],
+                 ["owasp", "pentest", "burp-suite", "http", "linux", "python", "javascript", "sql", "network-security", "git",
+                  "docker", "cryptography"],
+                 ["siem-soc", "forensics", "linux", "network-security", "python", "sql", "http", "git", "cryptography",
+                  "docker"],
+                 ["cryptography", "python", "linux", "network-security", "algorithms", "git", "http", "docker", "sql",
+                  "owasp"],
+                 ["linux", "network-security", "ci-cd", "docker", "python", "git", "owasp", "http", "siem-soc", "kubernetes",
+                  "sql"],
+                 ["reverse-engineering", "ctf", "linux", "python", "cryptography", "forensics", "git", "network-security",
+                  "http", "algorithms"],
+                 ["siem-soc", "network-security", "linux", "http", "python", "owasp", "sql", "git", "forensics",
+                  "cryptography"]],
+    "devops": [["linux", "kubernetes", "docker", "ci-cd", "git", "helm", "terraform", "monitoring", "python", "networking",
+                "nginx", "cloud"],
+               ["linux", "docker", "ci-cd", "git", "ansible", "python", "sql", "postgresql", "monitoring", "nginx",
+                "networking", "http"],
+               ["kubernetes", "linux", "sre", "monitoring", "docker", "ci-cd", "go", "git", "cloud", "networking", "helm",
+                "kafka"],
+               ["linux", "ci-cd", "docker", "git", "python", "sql", "postgresql", "kubernetes", "clickhouse", "kafka",
+                "monitoring", "http"],
+               ["cloud", "terraform", "kubernetes", "linux", "docker", "ci-cd", "git", "python", "monitoring", "networking",
+                "sre"],
+               ["linux", "networking", "nginx", "docker", "ansible", "git", "monitoring", "ci-cd", "python", "sql", "http",
+                "sre"],
+               ["docker", "kubernetes", "ci-cd", "linux", "git", "helm", "python", "redis", "postgresql", "monitoring",
+                "nginx"]],
+    "data_eng": [["sql", "python", "spark", "airflow", "kafka", "git", "dwh", "etl", "clickhouse", "docker", "streaming",
+                  "data-quality"],
+                 ["sql", "python", "airflow", "clickhouse", "dbt", "dwh", "etl", "git", "postgresql", "docker",
+                  "data-quality", "ci-cd"],
+                 ["sql", "greenplum", "dwh", "etl", "python", "airflow", "postgresql", "git", "data-quality", "dbt", "linux"],
+                 ["python", "spark", "kafka", "streaming", "sql", "java", "docker", "kubernetes", "git", "etl", "airflow",
+                  "linux"],
+                 ["sql", "python", "postgresql", "etl", "dwh", "airflow", "git", "ci-cd", "docker", "statistics",
+                  "data-quality", "http"],
+                 ["sql", "python", "spark", "clickhouse", "airflow", "kubernetes", "git", "etl", "dwh", "ci-cd", "kafka",
+                  "docker"],
+                 ["sql", "dbt", "dwh", "python", "git", "data-quality", "etl", "airflow", "clickhouse", "greenplum",
+                  "postgresql"]],
+    "mobile": [["kotlin", "android", "jetpack-compose", "mobile-architecture", "git", "rest-api", "http", "ci-cd", "java",
+                "docker", "sql"],
+               ["swift", "ios", "swiftui", "mobile-architecture", "git", "rest-api", "http", "ci-cd", "sql", "linux"],
+               ["flutter", "git", "rest-api", "http", "mobile-architecture", "ci-cd", "kotlin", "swift", "docker", "sql"],
+               ["react-native", "javascript", "typescript", "react", "git", "rest-api", "http", "mobile-architecture",
+                "frontend-testing", "ci-cd"],
+               ["java", "android", "kotlin", "git", "rest-api", "http", "mobile-architecture", "sql", "ci-cd", "docker",
+                "linux"],
+               ["kotlin", "android", "git", "http", "rest-api", "ci-cd", "java", "mobile-architecture", "jetpack-compose",
+                "postgresql", "docker", "linux"]],
+    "analyst": [["sql", "requirements", "integrations", "rest-api", "http", "uml", "bpmn", "er-modeling", "user-stories",
+                 "postgresql", "kafka", "git"],
+                ["requirements", "bpmn", "user-stories", "uml", "sql", "integrations", "http", "test-design", "er-modeling",
+                 "statistics"],
+                ["sql", "python", "statistics", "requirements", "er-modeling", "postgresql", "http", "git", "integrations",
+                 "bpmn"],
+                ["integrations", "rest-api", "http", "sql", "uml", "requirements", "kafka", "api-testing", "er-modeling",
+                 "postgresql", "git", "bpmn"],
+                ["sql", "http", "requirements", "er-modeling", "uml", "user-stories", "bpmn", "integrations", "test-design",
+                 "python", "git", "docker"],
+                ["requirements", "user-stories", "bpmn", "sql", "http", "uml", "test-design", "integrations", "rest-api",
+                 "statistics"]],
+}
+
+
+def market_slots(d: str) -> list[tuple[int, str, list[str], bool]]:
+    """Все 40 мест направления d: (номер кандидата, грейд, связка, с ФСП). Первые 14 — прежние (801…), их связки
+    не меняются; 26 новых (1001…) берут связки по кругу из всех связок направления (MARKET_BUNDLES + EXTRA)."""
+    i = MARKET_DIRECTIONS.index(d)
+    old = MARKET_BUNDLES[d]
+    out = [(MARKET_FIRST + i * len(MARKET_GRADES) + k, g, old[k % len(old)], k % 4 == 0)
+           for k, g in enumerate(MARKET_GRADES)]
+    pool = old + MARKET_BUNDLES_EXTRA.get(d, [])
+    out += [(MARKET_EXTRA_FIRST + i * len(MARKET_EXTRA_GRADES) + k, g, pool[(k + len(old)) % len(pool)], k % 4 == 0)
+            for k, g in enumerate(MARKET_EXTRA_GRADES)]
+    return out
 
 
 def extend_market_bundles(db: Session, rng_seed: int = 20261019) -> dict:
-    """Идемпотентно: по 14 модельных кандидатов на направление со связками навыков из спроса hh.ru (W1)."""
+    """Идемпотентно: по 40 модельных кандидатов на направление (по 12 Middle и 12 Senior) со связками навыков из спроса
+    hh.ru (W1; расширение 14 → 40 — 20.10). Уже засеянные номера не трогаются, досоздаются только недостающие."""
     from app.modules.catalog import ext
     from app.modules.matching.coverage import bank_tags
 
@@ -603,16 +743,12 @@ def extend_market_bundles(db: Session, rng_seed: int = 20261019) -> dict:
     pwd_hash = hash_password(secrets.token_urlsafe(24))
     added = 0
     for d in dirs:
-        first = MARKET_FIRST + MARKET_DIRECTIONS.index(d) * len(MARKET_GRADES)
         testable = set(bank_tags(d))
-        for k, grade in enumerate(MARKET_GRADES):
-            idx = first + k
+        for idx, grade, core, with_fsp in market_slots(d):
             if f"demo-candidate-{idx:03d}@demo.invalid" in existing:
                 continue
             rnd = random.Random(rng_seed + idx)
-            bundles = MARKET_BUNDLES[d]
-            core = bundles[k % len(bundles)]
-            p = _candidate(db, rnd, idx, d, grade, pwd_hash, with_fsp=k % 4 == 0, core_override=core,
+            p = _candidate(db, rnd, idx, d, grade, pwd_hash, with_fsp=with_fsp, core_override=core,
                            k_override=min(MARKET_K[grade], len(core)), tested_share=MARKET_TESTED_SHARE,
                            t1_only=testable)
             if p is not None:
@@ -623,7 +759,7 @@ def extend_market_bundles(db: Session, rng_seed: int = 20261019) -> dict:
             added += 1
         db.flush()
     db.commit()
-    return {"added": added, "directions": dirs}
+    return {"added": added, "directions": dirs, "per_direction": MARKET_PER_DIRECTION}
 
 
 def demo_pool_size(db: Session) -> int:

@@ -5,14 +5,15 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Alert, Level, catTitle, errText, range, ruText } from "../../components/ui";
 import { api, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
-import { juryLogin, personaOf, scenario } from "../../lib/jury";
+import { juryLogin, personaOf, scenario, type Persona } from "../../lib/jury";
+import { launchLiveAvatar } from "../../components/Interview";
 import { usePageTitle } from "../../lib/meta";
 import { chime, type Feed, type Guest, num, plain, STAGE_TITLE, time, unlockAudio } from "./api";
 
 const sidOf = (email?: string | null) => (email && email.includes("+") ? email.split("+")[1].split("@")[0] : null);
 
 export default function LiveScreen() {
-  const { me, signIn, loading } = useAuth();
+  const { me, signIn, signOut, loading } = useAuth();
   const loc = useLocation();
   const navigate = useNavigate();
   const [feed, setFeed] = useState<Feed | null>(null);
@@ -23,6 +24,7 @@ export default function LiveScreen() {
   const [sound, setSound] = useState(false);
   const state = useRef<{ rev: number | null; since: string | null; invited: number }>({ rev: null, since: null, invited: -1 });
   const [ready, setReady] = useState(false);
+  const [going, setGoing] = useState<string | null>(null);  // переход в другую роль: «Вход…» на нажатой кнопке
 
   usePageTitle("Демонстрация для жюри");
 
@@ -88,6 +90,22 @@ export default function LiveScreen() {
     try { await api("/jury/live/room/clear", { method: "POST" }); state.current.rev = null; setFocus(null); }
     catch (e) { setError(errText(e)); }
   }
+  // Навигация экрана зала: назад, на главную, в кабинеты и выход — чтобы с большого экрана было куда уйти
+  function back() { if (window.history.length > 2) navigate(-1); else navigate("/expertise"); }
+  function exit() { signOut(); navigate("/"); }
+  async function enterAs(key: string, persona: Persona, path: string) {
+    setGoing(key); setError(null);
+    try { navigate(await juryLogin(persona, signIn, path)); }
+    catch (e) { setError(errText(e)); setGoing(null); }
+  }
+  async function liveAvatar() {
+    setGoing("avatar"); setError(null);
+    try {
+      if (typeof navigator !== "undefined" && navigator.webdriver) { navigate(await juryLogin("candidate", signIn, "/candidate/category?defense=open#defense")); return; }
+      await launchLiveAvatar(signIn, navigate, me?.role);
+    } catch (e) { setError(errText(e)); setGoing(null); }
+  }
+
   function fullscreen() {
     unlockAudio(); setSound(true);
     const el = document.documentElement;
@@ -97,6 +115,29 @@ export default function LiveScreen() {
   return (
     <div className="min-h-screen bg-[#FBF8FC] text-brand-ink">
       <header className="bg-brand-night text-white">
+        {/* Верхняя строка навигации: слева — «Назад» и «На главную», справа — кабинеты и «Выйти» */}
+        <nav aria-label="Навигация экрана зала" className="border-b border-white/10">
+          <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-2 px-6 py-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={back} className="btn bg-white px-3.5 py-2 text-sm font-bold text-brand-night hover:bg-brand-blush">
+                <span aria-hidden="true">←</span> Назад
+              </button>
+              <Link to="/" className="btn bg-white/10 px-3.5 py-2 text-sm text-white hover:bg-white/20">На главную</Link>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" disabled={!!going} onClick={() => void enterAs("candidate", "candidate", "/candidate")}
+                className="btn bg-white/10 px-3.5 py-2 text-sm text-white hover:bg-white/20">
+                {going === "candidate" ? "Вход…" : "Кабинет кандидата"}
+              </button>
+              <Link to="/employer/invitations" className="btn bg-white px-3.5 py-2 text-sm text-brand-night hover:bg-brand-blush">Кабинет работодателя</Link>
+              <Link to="/expertise" className="btn bg-white/10 px-3.5 py-2 text-sm text-white hover:bg-white/20">Экспертиза ФСП</Link>
+              <button type="button" onClick={exit}
+                className="btn border border-white/40 bg-transparent px-3.5 py-2 text-sm font-bold text-white hover:bg-white hover:text-brand-night">
+                Выйти
+              </button>
+            </div>
+          </div>
+        </nav>
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3 px-6 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Драфт · демонстрация для жюри</p>
@@ -112,7 +153,6 @@ export default function LiveScreen() {
               </button>
             )}
             <button className="btn bg-white/10 px-4 py-2.5 text-white hover:bg-white/20" onClick={clear} disabled={!guests.length}>Очистить зал</button>
-            <Link to="/employer/invitations" className="btn bg-white px-4 py-2.5 text-brand-night hover:bg-brand-blush">Кабинет работодателя</Link>
           </div>
         </div>
       </header>
@@ -147,9 +187,37 @@ export default function LiveScreen() {
             <section className="min-w-0 space-y-4">
               <GuestStrip guests={guests} focused={focused?.number ?? null} onPick={(n) => setFocus({ n, until: Date.now() + 60_000 })} />
               {focused ? <Focus g={focused} /> : (
-                <div className="card flex min-h-[320px] flex-col items-center justify-center text-center">
+                <div className="card flex min-h-[320px] flex-col items-center justify-center px-6 py-8 text-center">
                   <p className="text-lg font-bold text-brand-night">Зал ждёт первого участника</p>
-                  <p className="mt-2 max-w-md text-sm text-brand-ink/65">Здесь появится подборка работодателя «{feed.company}»: как результат мини-теста попадает в неё, почему кандидат на этом месте и момент отправки приглашения.</p>
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-brand-ink/70">
+                    Этот экран — «табло» работодателя «{feed.company}». Как только кто-то пройдёт мини-тест из {feed.items} заданий,
+                    здесь в реальном времени появится его экспресс-категория, место в подборке, объяснение «почему он здесь» и момент отправки приглашения с вилкой.
+                  </p>
+                  <ol className="mt-4 grid w-full max-w-xl gap-2 text-left text-xs text-brand-ink/75 sm:grid-cols-3">
+                    <li className="rounded-xl bg-[#F3F2FB] px-3 py-2"><b className="text-brand-night">1.</b> Отсканируйте QR слева телефоном — или нажмите кнопку ниже</li>
+                    <li className="rounded-xl bg-[#F3F2FB] px-3 py-2"><b className="text-brand-night">2.</b> Ответьте на {feed.items} задания (около 3 минут, без регистрации)</li>
+                    <li className="rounded-xl bg-[#F3F2FB] px-3 py-2"><b className="text-brand-night">3.</b> Смотрите сюда: вы появитесь в подборке и получите приглашение</li>
+                  </ol>
+                  <div className="mt-6 flex w-full max-w-xl flex-col gap-3">
+                    <a href={`/j/${feed.code}`} target="_blank" rel="noopener"
+                      className="btn-primary w-full px-5 py-4 text-base">
+                      Открыть этот мини-тест прямо здесь в браузере (без телефона)
+                    </a>
+                    <p className="-mt-1 text-xs text-brand-ink/65">
+                      Откроется в новой вкладке — этот экран останется открытым и покажет, как вы появляетесь в подборке.{" "}
+                      <Link to={`/j/${feed.code}`} className="font-semibold text-brand hover:underline">Открыть в этой вкладке</Link>
+                    </p>
+                    <button type="button" disabled={!!going} onClick={() => void enterAs("assessment", "candidate_new", "/candidate/assessment")}
+                      className="btn w-full border-2 border-brand-night bg-white px-5 py-4 text-base font-bold text-brand-night hover:bg-brand-blush/50">
+                      {going === "assessment" ? "Входим кандидатом…" : "К полному адаптивному тесту и живому ИИ-аватару →"}
+                    </button>
+                    <p className="-mt-1 text-xs text-brand-ink/65">
+                      Вход новым кандидатом своей песочницы: полный адаптивный тест 8–16 заданий, затем устная защита.{" "}
+                      <button type="button" disabled={!!going} onClick={() => void liveAvatar()} className="font-semibold text-brand hover:underline disabled:opacity-60">
+                        {going === "avatar" ? "Запускаем…" : "Сразу к живой защите с ИИ-аватаром"}
+                      </button>
+                    </p>
+                  </div>
                 </div>
               )}
             </section>

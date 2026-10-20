@@ -7,6 +7,7 @@ import { apiDownload } from "../../lib/api";
 import { BarList, Donut, Funnel, Heatmap, Legend, PairBars, RangeChart, StackBar, fk, fpct, ftr, fx, type Stage } from "../charts";
 import { MODE_SHORT, Phase } from "../shared";
 import { CameraStats } from "../../proctor/CameraStats";
+import FspRankConverter from "../../components/FspRankConverter";
 
 type Rep = any;
 interface Ctx { rep: Rep | null; loading: boolean; error: string | null; days: string; setDays: (d: string) => void }
@@ -154,6 +155,7 @@ export function FspOverview() {
                   }))} />
               </Card>
             </div>
+            <FspRankConverter />
             <CameraStats days={days === "all" ? null : Number(days)} />
           </>
         );

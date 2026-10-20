@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: data_ml.numpy.numpy_broadcast_size_mcq
+title: 'NumPy: форма результата broadcasting и свёртки по оси — выравнивание справа, единичные оси растягиваются'
+direction: data_ml
+skills:
+- numpy
+- data_processing
+- python
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - sum_sizes
+    - full
+    - a_only
+    - prod
+    - wrong_axis
+    - b_only
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.7
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (numpy), которого не было среди проверяемых
+    навыков банка. Правила broadcasting NumPy: формы выравниваются справа, оси размера 1 растягиваются, sum(axis) убирает
+    ось. Ключ — исполнением двух реализаций правила. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,7 — по 2 взаимодействующим
+    ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.data_ml.numpy_broadcast_size_mcq
+version: 1
+description: 'Senior/Lead, NumPy: сколько элементов в результате (A + B).sum(axis=…).'

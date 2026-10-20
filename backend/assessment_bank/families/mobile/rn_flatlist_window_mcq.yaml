@@ -1,0 +1,39 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: mobile.rn.rn_flatlist_window_mcq
+title: 'React Native FlatList: сколько элементов смонтировано при windowSize — окно в высотах экрана'
+direction: mobile
+skills:
+- react_native
+- react
+- ui_lists
+- typescript
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - visible
+    - half
+    - all
+    - initial
+    - w_items
+    - double
+    - plus_one
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (react), которого не было среди проверяемых
+    навыков банка. Виртуализация FlatList: windowSize задаётся в высотах экрана (видимый экран плюс поровну сверху и снизу),
+    initialNumToRender влияет только на первый рендер. Ключ — исполнением двух реализаций. Граница Senior/Lead (θ ≈ 2,0 по
+    шкале продукта; b 1,8 — по 2 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ
+    0,3'
+generator: assessment_bank.families.mobile.rn_flatlist_window_mcq
+version: 1
+description: 'Senior/Lead, React Native: сколько элементов FlatList смонтировано в середине списка.'

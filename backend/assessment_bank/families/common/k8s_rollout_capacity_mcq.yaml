@@ -1,0 +1,38 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: common.k8s.k8s_rollout_capacity_mcq
+title: 'Kubernetes RollingUpdate: мощность в худший момент выкладки — округление maxSurge вверх, maxUnavailable вниз'
+direction: common
+skills:
+- kubernetes
+- deployments
+- rolling_update
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - ceil_unavail
+    - exact_pct
+    - surge_total
+    - full
+    - minus_surge
+    - half
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (kubernetes), которого не было среди
+    проверяемых навыков банка. Стратегия RollingUpdate в Kubernetes: проценты maxSurge/maxUnavailable переводятся в поды с
+    разным округлением, готовых подов не меньше R − maxUnavailable, не готовые новые поды мощность не добавляют. Ключ — исполнением:
+    формула и пошаговая имитация контроллера. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,8 — по 2 взаимодействующим
+    ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.common.k8s_rollout_capacity_mcq
+version: 1
+description: 'Senior/Lead, Kubernetes: какой поток гарантированно выдержит Deployment в любой момент выкладки. Ключ — исполнением:
+  формула и имитация контроллера.'

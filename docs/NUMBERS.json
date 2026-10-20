@@ -1,27 +1,27 @@
 {
  "bank": {
-  "families": 403,
+  "families": 455,
   "by_direction": {
-   "analyst": 31,
-   "backend": 60,
-   "common": 54,
-   "data_eng": 35,
-   "data_ml": 40,
-   "devops": 36,
-   "frontend": 43,
-   "mobile": 34,
-   "qa": 35,
-   "security": 35
+   "analyst": 34,
+   "backend": 62,
+   "common": 72,
+   "data_eng": 43,
+   "data_ml": 45,
+   "devops": 39,
+   "frontend": 46,
+   "mobile": 37,
+   "qa": 40,
+   "security": 37
   },
-  "source_commit": "272a323",
-  "content_hash": "4d44ffb455f03520",
-  "pass": 383,
-  "warn": 20,
+  "source_commit": "58f9903",
+  "content_hash": "3be97c425f78ca15",
+  "pass": 425,
+  "warn": 30,
   "fail": 0,
-  "checks": 2450,
+  "checks": 2909,
   "checks_failed": 0,
-  "variants": 8060,
-  "unique_variants": 8036
+  "variants": 9100,
+  "unique_variants": 9076
  },
  "migrations": {
   "revisions": 35,
@@ -40,31 +40,59 @@
   "algorithm": "match-v1.3",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "25770a6",
-  "bank_hash": "f563cfcaebf63aef",
-  "generated_at": "2026-10-11T15:22:45+00:00",
+  "bench_commit": "7d2962f",
+  "bank_hash": "4d44ffb455f03520",
+  "generated_at": "2026-10-20T07:41:59+00:00",
   "p5": {
-   "mean": 0.762,
-   "lo": 0.73,
-   "hi": 0.793
+   "mean": 0.751,
+   "lo": 0.717,
+   "hi": 0.784
   },
   "ndcg10": {
-   "mean": 0.565,
-   "lo": 0.542,
-   "hi": 0.588
+   "mean": 0.566,
+   "lo": 0.54,
+   "hi": 0.592
   },
   "mrr": {
-   "mean": 0.921,
-   "lo": 0.89,
-   "hi": 0.947
+   "mean": 0.896,
+   "lo": 0.862,
+   "hi": 0.926
   },
   "p10": {
-   "mean": 0.738,
-   "lo": 0.711,
-   "hi": 0.765
+   "mean": 0.725,
+   "lo": 0.696,
+   "hi": 0.755
   },
   "protocol": "строгий (основной)",
-  "balanced": null
+  "balanced": {
+   "p5": {
+    "mean": 0.752,
+    "lo": 0.718,
+    "hi": 0.785
+   },
+   "p10": {
+    "mean": 0.731,
+    "lo": 0.703,
+    "hi": 0.76
+   },
+   "ndcg10": {
+    "mean": 0.567,
+    "lo": 0.541,
+    "hi": 0.592
+   },
+   "mrr": {
+    "mean": 0.899,
+    "lo": 0.866,
+    "hi": 0.929
+   },
+   "config_hash": "2a4b2ae4a4c0",
+   "relevant_in_category": {
+    "mean": 54.1,
+    "min": 10,
+    "max": 125,
+    "below_min": 0
+   }
+  }
  },
  "lead_principal": {
   "scenario": "g_real_v3_w12_m25|0.6|top",
@@ -335,7 +363,7 @@
   "report_bank_families": 403,
   "exposure_generated_at": "2026-10-06",
   "exposure_bank_families": 128,
-  "report_matches_bank": true
+  "report_matches_bank": false
  },
  "grade_accuracy": {
   "views": {
@@ -424,7 +452,7 @@
   "fix_errors_after": 0
  },
  "demo": {
-  "candidates": 500,
+  "candidates": 860,
   "employers": 10,
   "needs": 17,
   "vacancies": 11

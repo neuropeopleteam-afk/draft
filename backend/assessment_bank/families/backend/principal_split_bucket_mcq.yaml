@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: backend.ratelimit.principal_split_bucket_mcq
+title: Локальные token bucket на шлюзах — ёмкость и скорость, делённые на число шлюзов, неравномерная привязка клиента
+direction: backend
+skills:
+- rate_limiting
+- distributed_systems
+- reliability
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - global_bucket
+    - even_split
+    - no_burst
+    - x_nodes
+    - even_no_burst
+    - half
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.1
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Распределённый лимит: глобальный token bucket, поделённый на локальные, при неравномерной
+    привязке клиента к шлюзам режет клиента раньше глобального лимита; запас bucket и посекундное пополнение взаимодействуют.
+    Lead обычно считает как один глобальный bucket — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 3,1 — по 3 взаимодействующим
+    ограничениям, волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.backend.principal_split_bucket_mcq
+version: 1
+description: 'Principal: сколько запросов клиента отклонит самый загруженный шлюз при локальных token bucket. Ключ — исполнением
+  посекундной модели.'

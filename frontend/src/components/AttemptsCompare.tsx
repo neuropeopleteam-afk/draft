@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { DIRECTION_TITLES, GRADE_TITLE_ALL, NB, dtt, num, pct, ruText, signed, useApi } from "./ui";
+import { IntegrityBadge } from "./IntegrityBadge";  // KF2: паспорт честности попытки (5 контуров)
 
 /** Две попытки теста рядом (И26): кандидату — /candidate/attempts, работодателю — в карточке кандидата.
  *  Данные — GET /api/assessment/attempts и /api/employer/candidates/{ref}/attempts (app/modules/assessment/attempts.py). */
@@ -48,7 +49,9 @@ function Row({ label, a, b, d }: { label: string; a: ReactNode; b: ReactNode; d?
 }
 
 /** Таблица «Попытка 1 / Попытка 2 / разница» и список «что изменилось и почему». */
-export function AttemptsCompare({ cmp, audience = "candidate", level = 3 }: { cmp: Comparison; audience?: "candidate" | "employer"; level?: 2 | 3 }) {
+export function AttemptsCompare({ cmp, audience = "candidate", level = 3, refId, direction }: {
+  cmp: Comparison; audience?: "candidate" | "employer"; level?: 2 | 3; refId?: string; direction?: string | null;
+}) {
   const H = level === 2 ? "h2" : "h3";  // axe heading-order: на странице кандидата под h1 — h2, у работодателя под h2 — h3
   const { first: a, second: b, delta: d, overlap: o } = cmp;
   const head = (x: Attempt, n: number) => (
@@ -80,6 +83,18 @@ export function AttemptsCompare({ cmp, audience = "candidate", level = 3 }: { cm
           b={<>семейств {o.repeated_families} из {o.n_families_second}{o.share_families != null ? ` (${pct(o.share_families)})` : ""}; вариантов {o.repeated_variants} из {o.n_variants_second}</>}
           d={o.engine === "stub" ? "упрощённый режим теста" : o.repeated_families === 0 ? "параллельная форма" : "часть семейств повторилась"} />
       </div>
+      {/* KF2: паспорт честности — кандидату по каждой попытке, работодателю — по попытке из карточки */}
+      {audience === "candidate" && (a.id || b.id) && (
+        <div className="grid gap-3 sm:grid-cols-2" aria-label="Честность попыток">
+          {[a, b].map((x, n) => x.id ? (
+            <div key={x.id} className="min-w-0 space-y-1">
+              <p className="text-xs font-semibold text-brand-ink/70">Попытка {n + 1}</p>
+              <IntegrityBadge sessionId={x.id} compact />
+            </div>
+          ) : null)}
+        </div>
+      )}
+      {audience === "employer" && refId && <IntegrityBadge refId={refId} direction={direction} compact />}
       <section aria-label="Что изменилось и почему">
         <H className="font-bold text-brand-night">Что изменилось и почему</H>
         <ul className="mt-2 space-y-2 text-sm">
@@ -115,7 +130,7 @@ export function EmployerAttempts({ refId, direction }: { refId: string; directio
         <h2 className="font-bold text-brand-night">Две попытки теста рядом · {DIRECTION_TITLES[data.direction] ?? data.direction}</h2>
         <span className="text-xs text-brand-ink/65">Попыток в направлении: {data.n_attempts}; показаны две последние</span>
       </div>
-      <AttemptsCompare cmp={data.comparison} audience="employer" />
+      <AttemptsCompare cmp={data.comparison} audience="employer" refId={refId} direction={direction} />
     </section>
   );
 }

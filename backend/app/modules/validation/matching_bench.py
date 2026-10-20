@@ -10,7 +10,8 @@ need_parser, выдача — фильтр по категории из тест
 
 Методы: платформа; базовые линии — BM25 по тексту резюме, теги резюме + заявленный грейд, случайный порядок;
 абляции — без теста (только T0), только грейд, без ФСП, без защиты от раздувания (заявленное = подтверждённое).
-Метрики: p@5, p@10, nDCG@5, nDCG@10 (gain = 2^rel − 1), MRR; 95 % ДИ — бутстреп по потребностям (2000 выборок),
+Метрики: p@5, p@10, nDCG@5, nDCG@10 (gain = 2^rel − 1), MRR, Recall@30 (доля всех релевантных потребности,
+попавших в первые 30 мест; потолок при R > 30 — 30 / R, см. recall_ceiling@30); 95 % ДИ — бутстреп по потребностям (2000 выборок),
 для разниц — парный бутстреп. Веса: подбор по сетке на половине потребностей, отчёт на второй половине и на втором
 мире с другим seed (без утечки). Чувствительность: σθ, доля «раздутых», ФСП без связи с умением.
 
@@ -54,7 +55,9 @@ DOCS_MD = REPO / "docs" / "validation" / "MATCHING_BENCH.md"
 BENCH_VERSION = "bench-v2"  # v2 (07.10): решение по грейду — правилом банка (0,8), «Junior (предварительно)», раздел Junior
 COMP_KEYS = ("test", "stack_required", "stack_desired", "fsp", "probe")  # порядок = ranking.WEIGHTS
 PENALTIES = (0.0, 0.05, 0.10)  # чувствительность штрафа «предварительно» (в продукте 0,05 — решение владельца 06.10)
-METRICS = ("p@5", "p@10", "ndcg@5", "ndcg@10", "mrr")
+METRICS = ("p@5", "p@10", "ndcg@5", "ndcg@10", "mrr", "recall@30")
+PAIRED_METRICS = ("p@5", "p@10", "ndcg@10", "mrr", "recall@30")  # парные разницы «платформа − метод»
+RECALL_K = 30  # глубина Recall@K: «шорт-лист» рекрутера, сопоставимо с таблицами соперников (Recall@30)
 N_BOOT = 2000
 SENS_SIZE = (60, 600)  # размер мира в анализе чувствительности, 9 вариантов
 CAVEAT = ("Синтетика проверяет механику подбора — что ранжирование достаёт подходящих кандидатов из шумных данных "
@@ -298,7 +301,16 @@ def per_need(rel: np.ndarray, order: np.ndarray) -> dict[str, np.ndarray]:
     hit = ranked >= 2
     first = hit.argmax(1)
     out["mrr"] = np.where(hit.any(1), 1 / (first + 1), 0.0)
+    # Recall@30: сколько из ВСЕХ релевантных (метка ≥ 2) кандидатов потребности попало в первые 30 мест
+    n_rel = hit.sum(1)
+    out[f"recall@{RECALL_K}"] = np.where(n_rel > 0, hit[:, :RECALL_K].sum(1) / np.maximum(n_rel, 1), 0.0)
     return {k: out[k] for k in METRICS}
+
+
+def recall_ceiling(rel: np.ndarray, k: int = RECALL_K) -> float:
+    """Потолок Recall@k идеального ранжирования: min(R, k) / R в среднем по потребностям (R — число релевантных)."""
+    n_rel = (rel >= 2).sum(1)
+    return round(float(np.mean(np.where(n_rel > 0, np.minimum(n_rel, k) / np.maximum(n_rel, 1), 0.0))), 3)
 
 
 def mean_metrics(rel: np.ndarray, orders: list[np.ndarray]) -> dict[str, np.ndarray]:
@@ -420,7 +432,7 @@ def summarize(world: World, run: dict, seed: int) -> dict:
     metrics = {k: {mt: _ci(v[mt], idx) for mt in METRICS} for k, v in pn.items()}
     paired = {}
     for other in [k for k in pn if k != "platform"]:
-        paired[other] = {mt: _ci(pn["platform"][mt] - pn[other][mt], idx) for mt in ("p@5", "ndcg@10", "mrr")}
+        paired[other] = {mt: _ci(pn["platform"][mt] - pn[other][mt], idx) for mt in PAIRED_METRICS}
     return {"metrics": metrics, "paired_platform_minus": paired, "per_need": pn}
 
 
@@ -605,7 +617,8 @@ def sensitivity(base: BenchConfig, blocks: dict, n_needs: int, n_cands: int) -> 
         r = run_methods(w, _parsed(w), cfg.seed, SENS_METHODS)
         pn = {k: mean_metrics(w.rel, o) for k, o in r["orders"].items()}
         out.append({"id": vid, "title": title, "overrides": kw, "n_needs": n_needs, "n_candidates": n_cands,
-                    **{k: {mt: round(float(pn[k][mt].mean()), 3) for mt in ("p@5", "ndcg@10", "mrr")} for k in pn}})
+                    **{k: {mt: round(float(pn[k][mt].mean()), 3) for mt in ("p@5", "ndcg@10", "mrr", "recall@30")}
+                       for k in pn}})
         print(f"    {vid}: платформа nDCG@10 {out[-1]['platform']['ndcg@10']}, без защиты от раздувания "
               f"{out[-1]['no_guard']['ndcg@10']}, BM25 {out[-1]['bm25']['ndcg@10']}", flush=True)
     return out
@@ -658,7 +671,7 @@ def _junior_world_stats(world: World) -> dict:
 
 
 def _metrics_subset(pn: dict, mask: np.ndarray) -> dict:
-    return {m: round(float(pn[m][mask].mean()), 3) for m in ("p@5", "p@10", "ndcg@10", "mrr")}
+    return {m: round(float(pn[m][mask].mean()), 3) for m in ("p@5", "p@10", "ndcg@10", "mrr", "recall@30")}
 
 
 def junior_section(cfg: BenchConfig, blocks: dict, main_world: World | None = None, main_scored: dict | None = None) -> dict:
@@ -901,7 +914,8 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         "seeds": {"world": cfg.seed, "world2": cfg2.seed, "bootstrap": cfg.seed + 11, "split": cfg.seed + 23,
                   "tie_break": cfg.seed + 7},
         "caveat": CAVEAT, "truth_rules": TRUTH_RULES, "methods": METHODS,
-        "world": {**world_stats(world, reqs), "relevant_in_category": strict_category_density(world)},
+        "world": {**world_stats(world, reqs), "relevant_in_category": strict_category_density(world),
+                  f"recall_ceiling@{RECALL_K}": recall_ceiling(world.rel)},
         "balanced": balanced,
         "metrics": s["metrics"], "paired_platform_minus": s["paired_platform_minus"],
         "groups": groups(world, r["orders"]), "breakdown": breakdown(world, s["per_need"]),
@@ -1082,8 +1096,8 @@ def markdown(rep: dict) -> str:
         "",
         "## Результаты (95 % ДИ — бутстреп по потребностям)",
         "",
-        "| Метод | p@5 | p@10 | nDCG@5 | nDCG@10 | MRR |",
-        "|---|---|---|---|---|---|",
+        "| Метод | p@5 | p@10 | nDCG@5 | nDCG@10 | MRR | Recall@30 |",
+        "|---|---|---|---|---|---|---|",
     ]
     for k, meta in rep["methods"].items():
         if k in m:
@@ -1099,7 +1113,8 @@ def markdown(rep: dict) -> str:
               f"(от {bw['relevant_in_category']['min']} до {bw['relevant_in_category']['max']}; меньше 10 — у "
               f"{bw['relevant_in_category']['below_min']}), перегенерировано потребностей: {bw['needs_resampled']}. "
               f"Конфиг `{bal['config_hash']}`.", "",
-              "| Протокол | Метод | p@5 | p@10 | nDCG@5 | nDCG@10 | MRR |", "|---|---|---|---|---|---|---|"]
+              "| Протокол | Метод | p@5 | p@10 | nDCG@5 | nDCG@10 | MRR | Recall@30 |",
+              "|---|---|---|---|---|---|---|---|"]
         for k in BALANCED_METHODS:
             if k in m:
                 L.append(f"| Строгий | {rep['methods'][k]['title']} | " + " | ".join(_cell(m[k][mt]) for mt in METRICS) + " |")
@@ -1112,6 +1127,12 @@ def markdown(rep: dict) -> str:
               "«лучше/хуже»: меняется мир, а не подбор.", ""]
     L += ["", "Разница «платформа − метод», nDCG@10 (парный бутстреп): "
           + "; ".join(f"{rep['methods'][k]['title']} {_cell(v['ndcg@10'])}" for k, v in pm.items()) + ".", ""]
+    rc = rep["world"].get(f"recall_ceiling@{RECALL_K}")
+    if rc is not None and all("recall@30" in v for v in pm.values()):
+        L += [f"Recall@30 — доля всех релевантных кандидатов потребности (метка ≥ 2) в первых 30 местах. В строгом мире "
+              f"релевантных в среднем {str(w.get('relevant_per_need', {}).get('mean')).replace('.', ',')} на потребность, поэтому потолок "
+              f"идеального ранжирования — {_f(rc)} (30 / R). Разница «платформа − метод», Recall@30: "
+              + "; ".join(f"{rep['methods'][k]['title']} {_cell(v['recall@30'])}" for k, v in pm.items()) + ".", ""]
     if rep.get("ablations"):
         L += ["## Абляции: что даёт каждая часть формулы", "",
               "Одна и та же истина и тот же разбор потребностей; убирается одна компонента. Разница — «полная формула − "

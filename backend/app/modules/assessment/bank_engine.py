@@ -439,6 +439,9 @@ class BankEngine:
             d["correct"] = round(d["correct"], 2)
         ext = state.get("ext")
         pk = {"flagged": det.flagged, "combined": round(det.combined, 3), "excluded_answers": excluded}
+        # KF2: person-fit l_z по отвеченным (не канареечным) частям заданий при итоговом θ — «провалены лёгкие,
+        # решены трудные»; None, если дихотомических ответов меньше integrity.LZ_MIN_ITEMS
+        lz = integrity.person_fit_lz(self._lz_responses(done, lookup), theta)
         integ = integrity.assess([{
             "format": i["format"], "canary": i["canary"], "time_s": i.get("time_s"), "time_limit_s": i["time_limit_s"],
             "score": (float(np.mean([v for v in i["x"] if v is not None])) if any(v is not None for v in i["x"]) else None),
@@ -450,7 +453,8 @@ class BankEngine:
             **dict(zip(("text_chars", "code_chars"), integrity.text_size(i.get("public")))),
             "b": float(np.mean((i.get("pool") or {}).get("b") or [0.0]))}
             for i in done], pk, extra=state.get("integrity_extra") or {},  # extra — сигналы сессии внешних модулей
-            theta=theta, soft_fast=state.get("mode") == "express" or bool(state.get("sandbox")))
+            theta=theta, soft_fast=state.get("mode") == "express" or bool(state.get("sandbox")), lz=lz)
+        integ.setdefault("signals", {})["lz"] = lz  # индекс l_z — в сигналы достоверности (защита, IntegrityBadge)
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families, "mode": state.get("mode", "full"),
             "length": {"min_items": state["cfg"]["min_items"], "max_items": state["cfg"]["max_items"],
@@ -507,6 +511,27 @@ class BankEngine:
         )
 
     # ------------------------------------------------------------------ внутреннее
+    @staticmethod
+    def _lz_responses(done: list[dict], lookup: dict) -> list[tuple[float, float, float]]:
+        """(a_eff, b, x) отвеченных частей не канареечных заданий для person-fit l_z (KF2). Части с частичным баллом
+        (развёрнутые ответы, GPCM) — дихотомия по порогу 0,5; неоценённые части (ждут эксперта) пропускаются."""
+        out: list[tuple[float, float, float]] = []
+        for it in done:
+            pi = lookup.get(it.get("family_id"))
+            if pi is None or it.get("canary"):
+                continue
+            a_eff, bs = np.asarray(pi.a_eff, dtype=float), np.asarray(pi.b, dtype=float)
+            for j, v in enumerate(it.get("x") or []):
+                if v is None or j >= len(bs) or j >= len(a_eff):
+                    continue
+                try:
+                    fv = float(v)
+                except (TypeError, ValueError):
+                    continue
+                if math.isfinite(fv):
+                    out.append((float(a_eff[j]), float(bs[j]), 1.0 if fv >= 0.5 else 0.0))
+        return out
+
     @staticmethod
     def _current(state: dict) -> dict | None:
         tok = state.get("current")

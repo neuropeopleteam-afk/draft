@@ -1,0 +1,39 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: qa.principal.flaky_budget_mcq
+title: Допустимая нестабильность попытки теста — перезапуски возводят в степень, N тестов, цель по ложно-красным прогонам
+direction: qa
+skills:
+- flaky_tests
+- quality_metrics
+- ci
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_retries
+    - linear_no_retries
+    - retries_add
+    - per_run
+    - suite_level
+    - half
+    - extra_try
+    - x2
+    - sqrt_retries
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.0
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Бюджет нестабильности: ложно-красный прогон — хотя бы один тест упал во всех
+    попытках, перезапуски возводят вероятность попытки в степень r + 1, N тестов дают 1 − (1 − f^(r+1))^N; ответ — наибольшее
+    f. Lead обычно делит цель на N линейно или забывает перезапуски — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b
+    3,0 — по 3 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.qa.principal_flaky_budget_mcq
+version: 1
+description: 'Principal: какая наибольшая вероятность нестабильного падения попытки допустима при перезапусках и цели по ложно-красным
+  прогонам. Ключ — исполнением: формула и бинарный поиск.'

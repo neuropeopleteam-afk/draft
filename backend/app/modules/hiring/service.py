@@ -239,6 +239,91 @@ def slot_text(s: dict) -> str:
     return f"{msk(at)}, {s['duration_min']} мин · {FORMATS.get(s['format'], s['format']).lower()}"
 
 
+# ------------------------------------------------------------------ KF3 «Оффер в один клик»: слоты в приглашении
+# Работодатель сразу в приглашении предлагает до SLOTS_MAX слотов собеседования (employment_terms.proposed_slots,
+# те же правила, что у propose). Кандидат принимает приглашение и одним нажатием бронирует слот:
+# accept(slot_index) → собеседование «назначено» (scheduled) без отдельного шага propose → choose.
+# Принял без выбора слота — будущие слоты становятся обычным предложением (status «proposed»), выбрать можно позже.
+
+def validate_slots(slots: list[dict] | None, now: datetime | None = None) -> list[dict]:
+    """Проверка и нормализация слотов приглашения (0–SLOTS_MAX): время в UTC ISO, у каждого — id."""
+    slots = list(slots or [])
+    if len(slots) > SLOTS_MAX:
+        raise api_error(422, "slots_count", f"В приглашении — не больше {SLOTS_MAX} слотов собеседования")
+    if not slots:
+        return []
+    now = now or utcnow()
+    clean = [_slot_in(s, k, now) for k, s in enumerate(slots, 1)]
+    if len({s["starts_at"] for s in clean}) != len(clean):
+        raise api_error(422, "slots_duplicate", "Слоты повторяются — укажите разное время")
+    clean.sort(key=lambda s: s["starts_at"])
+    return clean
+
+
+def invitation_slots(inv: Invitation) -> list[dict]:
+    """Слоты из приглашения с признаком «прошёл» (для экрана кандидата)."""
+    now = utcnow()
+    out = []
+    for i, s in enumerate((inv.employment_terms or {}).get("proposed_slots") or []):
+        try:
+            past = datetime.fromisoformat(s["starts_at"]) <= now
+        except (KeyError, TypeError, ValueError):
+            continue
+        out.append({**s, "index": i, "past": past, "text": slot_text(s)})
+    return out
+
+
+def check_invitation_slot(inv: Invitation, slot_index: int) -> dict:
+    """Слот приглашения по номеру — до принятия приглашения (ошибка не должна принять приглашение наполовину)."""
+    slots = (inv.employment_terms or {}).get("proposed_slots") or []
+    if not slots:
+        raise api_error(422, "slot_unknown", "В приглашении нет предложенных слотов собеседования")
+    if not 0 <= slot_index < len(slots):
+        raise api_error(422, "slot_unknown", f"Такого слота нет: выберите от 1 до {len(slots)}")
+    s = slots[slot_index]
+    if datetime.fromisoformat(s["starts_at"]) <= utcnow():
+        raise api_error(409, "slot_past",
+                        "Это время уже прошло — выберите другой слот или примите приглашение без слота")
+    return s
+
+
+def book_from_invitation(db: Session, inv: Invitation, actor: uuid.UUID,
+                         slot_index: int | None) -> HiringInterview | None:
+    """После принятия приглашения: собеседование из слотов приглашения.
+
+    slot_index задан — сразу «назначено» на выбранный слот (событие interview_scheduled от кандидата);
+    не задан — будущие слоты становятся предложением работодателя (interview_proposed), как после propose.
+    Слотов нет (или все прошли) или собеседование уже есть — None.
+    """
+    guard(db, inv, "candidate")
+    raw = (inv.employment_terms or {}).get("proposed_slots") or []
+    if not raw or active_interview(db, inv) is not None:
+        return None
+    now = utcnow()
+    chosen = check_invitation_slot(inv, slot_index) if slot_index is not None else None
+    future = [dict(s) for s in raw if datetime.fromisoformat(s["starts_at"]) > now]
+    if not future:
+        return None
+    for s in future:
+        s.setdefault("id", secrets.token_hex(3))
+    rnd = len(interviews_of(db, inv)) + 1
+    iv = HiringInterview(invitation_id=inv.id, company_id=inv.company_id, candidate_user_id=inv.candidate_user_id,
+                         created_by=inv.employer_user_id, round=rnd,
+                         title="Собеседование" if rnd == 1 else f"Собеседование, этап {rnd}",
+                         status="proposed", slots=future)
+    db.add(iv)
+    _log(db, inv, "interview_proposed", inv.employer_user_id,
+         f"{iv.title} (слоты из приглашения): " + "; ".join(slot_text(s) for s in future))
+    if chosen is not None:
+        s = next(x for x in future if x["starts_at"] == chosen["starts_at"])
+        at = datetime.fromisoformat(s["starts_at"])
+        iv.status, iv.chosen_slot, iv.starts_at = "scheduled", s["id"], at
+        iv.duration_min, iv.format, iv.place = s["duration_min"], s["format"], s.get("place")
+        _log(db, inv, "interview_scheduled", actor, slot_text(s) + " · забронировано при принятии приглашения")
+    db.commit()
+    return iv
+
+
 def _own_interview(db: Session, inv: Invitation, iid: uuid.UUID) -> HiringInterview:
     iv = db.get(HiringInterview, iid)
     if iv is None or iv.invitation_id != inv.id:

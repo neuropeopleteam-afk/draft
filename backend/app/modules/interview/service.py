@@ -399,6 +399,140 @@ def jury_fallback(db: Session, ts: TestSession, example: InterviewSession | None
     return None
 
 
+# ------------------------------------------------------------------ KF2: мост «подозрение античита → устная защита»
+# При подозрении попытка не аннулируется и не уходит в «контрольную форму»: кандидату предлагается 3-минутная устная
+# защита по его же коду и решениям с ИИ-интервьюером (видеоаватар). Подсказанное решение человек объяснить не может —
+# это ловит то, чего не ловит l_z. Работодатель видит «Устная защита: рекомендована / пройдена: подтверждено / нет».
+LZ_RECOMMEND = -2.0
+CANDIDATE_WHY = ("К попытке есть пометка достоверности. Подтвердите самостоятельность решения в коротком разговоре "
+                 "с ИИ-интервьюером по вашему коду и ответам — грейд не меняется, итог увидит работодатель.")
+PASSPORT_VERDICTS = {"clean": "Чисто", "attention": "Внимание", "recommended": "Устная защита рекомендована",
+                     "confirmed": "Устная защита: подтверждено", "discrepancies": "Устная защита: не подтверждено"}
+
+
+def _num(v) -> float | None:
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return f if f == f and abs(f) != float("inf") else None
+
+
+def _ru(v: float, d: int = 2) -> str:
+    return f"{v:.{d}f}".replace(".", ",").replace("-", "−")
+
+
+def defense_recommendation(integ: dict | None) -> tuple[bool, str | None, list[str]]:
+    """(рекомендована, почему — для работодателя и жюри, сработавшие контуры). Чистая функция.
+
+    Рекомендована, если уровень достоверности «средняя»/«низкая», индекс person-fit l_z < −2, сработала ИИ-метка
+    в развёрнутом ответе или канарейки/детектор предзнания."""
+    if not isinstance(integ, dict):
+        return False, None, []
+    sig = integ.get("signals") or {}
+    why: list[str] = []
+    hit: list[str] = []
+    if integ.get("level") in ("medium", "low"):
+        title = integ.get("title") or {"medium": "средняя", "low": "низкая"}[integ["level"]]
+        why.append(f"достоверность попытки — {title}")
+        hit.append("level")
+    lz = _num(sig.get("lz"))
+    if lz is not None and lz < LZ_RECOMMEND:
+        why.append(f"индекс согласованности ответов l_z = {_ru(lz)} (< −2,0)")
+        hit.append("fit")
+    if (sig.get("ai_mark_items") or 0) > 0:
+        why.append("ИИ-метка из текста задания появилась в развёрнутом ответе")
+        hit.append("origin")
+    if sig.get("preknowledge_flagged") or (sig.get("canary_fast") or 0) > 0:
+        why.append("сработали канарейки или детектор предзнания")
+        hit.append("prior")
+    if not why:
+        return False, None, []
+    return True, "Рекомендована 3-минутная устная защита: " + "; ".join(why), hit
+
+
+def _status(warn: bool, na: bool = False) -> str:
+    return "na" if na else "warn" if warn else "ok"
+
+
+def integrity_passport(integ: dict | None, defense: dict | None = None, *, detailed: bool) -> dict | None:
+    """«Паспорт честности попытки» (IntegrityBadge, 5 контуров): статус каждого контура и итог.
+
+    detailed — работодатель и жюри: статусы и значения всех контуров. Кандидат вне демо-режима (Р27: механизмы
+    не раскрываем) — только итог и свой контур «камера / устная защита»; контуры 1–4 — «проверено» без значений.
+    defense — сводка последней завершённой защиты (summary) или None."""
+    if not isinstance(integ, dict):
+        return None
+    sig = integ.get("signals") or {}
+    rec, why, hit = defense_recommendation(integ)
+    lz = _num(sig.get("lz"))
+    screen_n = {"focus": int(sig.get("focus_lost_items") or 0), "paste": int(sig.get("paste_items") or 0),
+                "shots": int(sig.get("printscreen") or 0), "copy": int(sig.get("copy_items") or 0),
+                "typing": int(sig.get("not_typed_items") or 0) + int(sig.get("even_rhythm_items") or 0)
+                + int(sig.get("fast_text_items") or 0), "fs": int(sig.get("fs_exits") or 0)}
+    screen_warn = (screen_n["focus"] >= 2 or float(sig.get("hidden_s") or 0) >= 30 or screen_n["paste"] > 0
+                   or screen_n["shots"] > 0 or screen_n["copy"] > 0 or screen_n["typing"] > 0 or screen_n["fs"] >= 2
+                   or bool(sig.get("fs_never")))
+    cam = integ.get("camera") or {}
+    cam_on = cam.get("mode") == "on"
+    verdict = (defense or {}).get("verdict")
+    live_status = ("ok" if verdict in ("confirmed", "strong") else "warn" if verdict == "discrepancies"
+                   else "warn" if cam_on and cam.get("remarks") else "recommended" if rec
+                   else "ok" if cam_on else "na")
+    live_value = ((defense or {}).get("label") if verdict else None) or (cam.get("title") if cam else None)
+    contours = [
+        {"id": "prior", "status": _status("prior" in hit),
+         "value": f"предзнание: {'да' if sig.get('preknowledge_flagged') else 'нет'}; быстрых канареек: "
+                  f"{int(sig.get('canary_fast') or 0)}"},
+        {"id": "fit", "status": _status("fit" in hit, lz is None),
+         "value": f"l_z = {_ru(lz)}" if lz is not None else "мало заданий для индекса (нужно ≥ 6) или попытка до KF2"},
+        {"id": "origin", "status": _status("origin" in hit, "ai_mark_items" not in sig),
+         "value": f"метка в ответах: {int(sig.get('ai_mark_items') or 0)}" if "ai_mark_items" in sig else None},
+        {"id": "screen", "status": _status(screen_warn),
+         "value": f"уходы со вкладки: {screen_n['focus']}; вставки: {screen_n['paste']}; снимки экрана: "
+                  f"{screen_n['shots']}; копирование: {screen_n['copy']}; набор/ритм: {screen_n['typing']}"},
+        {"id": "live", "status": live_status, "value": live_value},
+    ]
+    if not detailed:
+        neutral = "ok" if integ.get("level") == "high" else "checked"
+        contours = [{"id": c["id"], "status": neutral, "value": None} for c in contours[:4]] + [contours[4]]
+    overall = ("confirmed" if verdict in ("confirmed", "strong") else "discrepancies" if verdict == "discrepancies"
+               else "recommended" if rec else "attention" if integ.get("level") != "high" else "clean")
+    return {"level": integ.get("level"), "title": integ.get("title"), "verdict": overall,
+            "verdict_title": PASSPORT_VERDICTS[overall], "recommended": rec,
+            "why": (why if detailed else CANDIDATE_WHY) if rec else None, "detailed": detailed, "contours": contours}
+
+
+def defense_status(rec: bool, defense: dict | None) -> dict:
+    """Строка карточки работодателя: «Устная защита: рекомендована / пройдена: подтверждено / не подтверждено»."""
+    v = (defense or {}).get("verdict")
+    if v in ("confirmed", "strong"):
+        return {"status": "confirmed", "title": "Устная защита пройдена: подтверждено"}
+    if v == "discrepancies":
+        return {"status": "discrepancies", "title": "Устная защита пройдена: не подтверждено"}
+    if v:
+        return {"status": "insufficient", "title": "Устная защита пройдена: мало данных"}
+    if rec:
+        return {"status": "recommended", "title": "Устная защита рекомендована"}
+    return {"status": "none", "title": "Устную защиту не проходил"}
+
+
+def _completed_summary(db: Session, ts_id: uuid.UUID) -> dict | None:
+    rows = [r for r in _defense_rows(db, ts_id) if r.status == "completed" and not r.is_example]
+    return summary(rows[0]) if rows else None
+
+
+def defense_info(db: Session, ts: TestSession, *, detailed: bool) -> dict:
+    """KF2: {recommended, why, integrity} попытки — рекомендация устной защиты по достоверности и паспорт честности.
+    why кандидату вне демо-режима — общая формулировка без названий механизмов (Р27)."""
+    integ = cx.integrity_of(ts)
+    rec, why, _ = defense_recommendation(integ)
+    d = _completed_summary(db, ts.id)
+    return {"recommended": rec, "why": (why if detailed else CANDIDATE_WHY) if rec else None,
+            "defense_status": defense_status(rec, d),
+            "integrity": integrity_passport(integ, d, detailed=detailed)}
+
+
 def defense_state(db: Session, user: User, ts: TestSession) -> dict:
     s = get_settings()
     good, reason = cx.eligible(ts)
@@ -424,7 +558,10 @@ def defense_state(db: Session, user: User, ts: TestSession) -> dict:
             "session": view(live, "candidate") if live else None,
             "example": view(example, "candidate") if example else None,
             # Д2: жюри без развёрнутых ответов — живой запуск по примеру или последнему заданию (title — о чём разговор)
-            "fallback": {"source": fb["source"], "title": fb["title"]} if fb else None}
+            "fallback": {"source": fb["source"], "title": fb["title"]} if fb else None,
+            # KF2: защита рекомендована по достоверности; basis — «code»: защищаются код и выбранные решения
+            **defense_info(db, ts, detailed=bool(jkey)),
+            "basis": "code" if (not reason and good and all(g.get("basis") == "code" for g in good)) else "answers"}
 
 
 def _resolve_name(user: User, name: str | None) -> str:
@@ -587,6 +724,11 @@ def view(row: InterviewSession, audience: str, *, transcript: bool = False) -> d
 def for_candidate_card(db: Session, user_id: uuid.UUID, ts_id: uuid.UUID | None, company_id: uuid.UUID | None) -> dict:
     """Защита (последняя завершённая по попытке из карточки) + ИИ-интервью этой компании с кандидатом."""
     out: dict = {"enabled": enabled(), "defense": None, "interviews": []}
+    ts = db.get(TestSession, ts_id) if ts_id else None
+    if ts is not None:  # KF2: рекомендация защиты и паспорт честности попытки — работодателю подробно (и без флага)
+        info = defense_info(db, ts, detailed=True)
+        out.update(recommended=info["recommended"], why=info["why"], defense_status=info["defense_status"],
+                   integrity=info["integrity"])
     if not enabled():
         return out
     if ts_id:

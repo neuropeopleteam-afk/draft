@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: data_eng.kafka.principal_lag_recovery_mcq
+title: Разбор лага Kafka — консьюмеров больше, чем партиций, лишние простаивают, запись продолжается
+direction: data_eng
+skills:
+- kafka_consumer_groups
+- kafka_partitions
+- streaming
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - use_k
+    - no_produce
+    - use_k_no_p
+    - group_c
+    - old_k
+    - x2
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.0
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Параллелизм consumer group ограничен числом партиций: консьюмеры сверх партиций
+    простаивают, а скорость разбора — работающие консьюмеры минус продолжающаяся запись. Lead обычно умножает на все консьюмеры
+    — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 3,0 — по 3 взаимодействующим ограничениям, волна 20.10, без калибровки
+    панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.data_eng.principal_lag_recovery_mcq
+version: 1
+description: 'Principal: через сколько минут уйдёт лаг после расширения consumer group. Ключ — исполнением: формула и поминутная
+  имитация.'

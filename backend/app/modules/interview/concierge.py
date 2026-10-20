@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -17,6 +18,7 @@ from typing import Literal
 
 from app.modules.interview import port as pt
 
+TOUR_STEPS_TOTAL = 13  # шагов в TOUR_STEPS (frontend/src/components/InteractiveAvatarTour.tsx)
 _TTS_CACHE_DIR = Path(os.environ.get("CONCIERGE_TTS_CACHE_DIR", "/tmp/concierge_tts_cache"))
 
 # Полная база знаний RAG по всем экранам, кнопкам, полям и алгоритмам платформы «Драфт»
@@ -120,11 +122,141 @@ RAG_CHUNKS: list[dict[str, str]] = [
 ]
 
 
+# --- Актуальные цифры платформы для ответов Елены (KF4) ---
+# Источник — docs/NUMBERS.json (собирает tools/publish/gen_numbers.py); дополнение и сверка по свежести — снимок бенчмарка
+# backend/app/modules/validation/data/matching_bench.json (make bench; есть и в образе backend). Нет файлов — fallback
+# на снимок 20.10.2026 ниже. Никаких захардкоженных цифр в тексте базы знаний: всё подставляется отсюда.
+_HERE = Path(__file__).resolve()
+_BENCH_JSON = _HERE.parents[1] / "validation" / "data" / "matching_bench.json"
+_ACCURACY_JSON = _HERE.parents[1] / "validation" / "data" / "accuracy_views.json"
+
+
+def _numbers_paths() -> list[Path]:
+    env = os.environ.get("CONCIERGE_NUMBERS_PATH")
+    out = [Path(env)] if env else []
+    for up in (4, 3):  # репозиторий: backend/app/modules/interview → корень; в образе backend — /app/docs (если смонтирован)
+        if len(_HERE.parents) > up:
+            out.append(_HERE.parents[up] / "docs" / "NUMBERS.json")
+    return out
+
+
+NUMBERS_FALLBACK: dict[str, float | int | str] = {  # снимок make bench 20.10.2026 (банк 4d44), accuracy_views 19.10.2026
+    "as_of": "2026-10-20", "p5": 0.751, "p10": 0.725, "mrr": 0.896, "ndcg10": 0.566, "recall30": 0.24,
+    "p5_vs_bm25": 0.31, "p10_vs_bm25": 0.294, "inflated_top10": 0.069, "inflated_top10_bm25": 0.32,
+    "within1_one_session": 0.9936, "within1_retest": 0.998, "far_from_cut": 0.8338, "no_under_claim": 0.8215,
+    "two_stage": 0.694, "attacks_n": 116, "attacks_passed": 0, "demo_candidates": 860,
+}
+
+
+def _read_json(p: Path) -> dict | None:
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else None
+    except Exception:
+        return None
+
+
+def _mtimes() -> tuple:
+    return tuple(p.stat().st_mtime if p.is_file() else 0.0 for p in (*_numbers_paths(), _BENCH_JSON, _ACCURACY_JSON))
+
+
+@lru_cache(maxsize=4)
+def _live_numbers_cached(_key: tuple) -> dict:
+    out: dict = dict(NUMBERS_FALLBACK)
+    out["source"] = "снимок по умолчанию"
+    nums = next((d for d in (_read_json(p) for p in _numbers_paths()) if d), None)
+    if nums:
+        m = nums.get("matching") or {}
+        for k in ("p5", "p10", "mrr", "ndcg10"):
+            if isinstance((m.get(k) or {}).get("mean"), (int, float)):
+                out[k] = m[k]["mean"]
+        rc = m.get("recall30") or m.get("recall@30")
+        if isinstance(rc, dict) and isinstance(rc.get("mean"), (int, float)):
+            out["recall30"] = rc["mean"]
+        v = (nums.get("grade_accuracy") or {}).get("views") or {}
+        for k, src, fld in (("far_from_cut", "far_from_cut", "exact"), ("no_under_claim", "no_under_claim", "exact"),
+                            ("within1_retest", "strict_pool", "within_1")):
+            if isinstance((v.get(src) or {}).get(fld), (int, float)):
+                out[k] = v[src][fld]
+        dc = (nums.get("demo") or {}).get("candidates")
+        if isinstance(dc, int) and dc > 0:
+            out["demo_candidates"] = dc
+        out["as_of"] = str(m.get("generated_at") or out["as_of"])[:10]
+        out["source"] = "docs/NUMBERS.json"
+        out["_numbers_at"] = str(m.get("generated_at") or "")
+    bench = _read_json(_BENCH_JSON)
+    if bench and not bench.get("missing"):
+        bm, pm = bench.get("metrics") or {}, bench.get("paired_platform_minus") or {}
+        pl = bm.get("platform") or {}
+        fresher = str(bench.get("generated_at") or "") > out.get("_numbers_at", "")
+        pairs = {"p5": "p@5", "p10": "p@10", "mrr": "mrr", "ndcg10": "ndcg@10", "recall30": "recall@30"}
+        for k, mk in pairs.items():
+            val = (pl.get(mk) or {}).get("mean")
+            if isinstance(val, (int, float)) and (fresher or k == "recall30" and "recall30" not in (nums or {}).get("matching", {})):
+                out[k] = val
+        for k, mk in (("p5_vs_bm25", "p@5"), ("p10_vs_bm25", "p@10")):
+            val = ((pm.get("bm25") or {}).get(mk) or {}).get("mean")
+            if isinstance(val, (int, float)):
+                out[k] = val
+        infl = (bench.get("groups") or {}).get("inflated") or {}
+        for k, src in (("inflated_top10", "platform"), ("inflated_top10_bm25", "bm25")):
+            val = (infl.get(src) or {}).get("irrelevant_inflated_top10")
+            if isinstance(val, (int, float)):
+                out[k] = val
+        if fresher:
+            out["as_of"] = str(bench.get("generated_at"))[:10]
+            out["source"] = (out["source"] + " + " if nums else "") + "бенчмарк make bench"
+    acc = _read_json(_ACCURACY_JSON)
+    if acc:
+        for k, path in (("within1_one_session", ("one_session_metrics", "within_1")), ("two_stage", ("two_stage_metrics", "exact"))):
+            val = (acc.get(path[0]) or {}).get(path[1])
+            if isinstance(val, (int, float)):
+                out[k] = val
+    out.pop("_numbers_at", None)
+    return out
+
+
+def live_numbers() -> dict:
+    """Актуальные цифры (доли 0…1): NUMBERS.json → бенчмарк → fallback. Кэш сбрасывается при изменении файлов."""
+    try:
+        return _live_numbers_cached(_mtimes())
+    except Exception:
+        return {**NUMBERS_FALLBACK, "source": "снимок по умолчанию"}
+
+
+def _pc(v: float) -> str:
+    return f"{v * 100:.1f}".replace(".", ",") + " процента"
+
+
+def numbers_chunk() -> dict[str, str]:
+    """Раздел базы знаний «Арена метрик и цифры» с подставленными актуальными числами."""
+    n = live_numbers()
+    return {
+        "id": "validation_numbers",
+        "paths": "/validation /expertise",
+        "keywords": "точность метрики арена бенчмарк цифры p@5 p@10 mrr recall ndcg bm25 резюме раздутые грейд ступень "
+                    "атаки оценщик слив проверка валидация доказательства сколько процент",
+        "content": (
+            f"Экран: Проверка механики (/validation), первый экран — «Арена метрик» (данные на {n['as_of']}, {n['source']}). "
+            f"Вкладка «Арена ранжирования»: Драфт против поиска по резюме на мире со скрытой истиной. "
+            f"Точность первой пятёрки P@5 — {_pc(n['p5'])}, первой десятки P@10 — {_pc(n['p10'])}, "
+            f"MRR — {_pc(n['mrr'])} (подходящий кандидат почти всегда первым), Recall@30 — {_pc(n['recall30'])}. "
+            f"Отрыв от полнотекстового поиска BM25 в процентных пунктах: плюс {n['p5_vs_bm25'] * 100:.0f} по P@5 и "
+            f"плюс {n['p10_vs_bm25'] * 100:.0f} по P@10. Раздутые резюме в первой десятке: {_pc(n['inflated_top10'])} у Драфта "
+            f"против {_pc(n['inflated_top10_bm25'])} у BM25. "
+            f"Вкладка «Точность грейда»: в пределах одной ступени — {_pc(n['within1_one_session'])} за одну сессию и "
+            f"{_pc(n['within1_retest'])} при повторе; точный грейд вдали от границы — {_pc(n['far_from_cut'])}, без занижения "
+            f"заявки — {_pc(n['no_under_claim'])}, при двухэтапном подтверждении — {_pc(n['two_stage'])}. "
+            f"Защита оценщика: прошло {n['attacks_passed']} из {n['attacks_n']} атак. "
+            f"Демо-пул — {n['demo_candidates']} кандидатов. Это синтетика: проверяется механика, а не люди."
+        ),
+    }
+
+
 def retrieve_rag(query: str, current_path: str) -> str:
     """Подбирает знания о текущем экране + наиболее близкие разделы по словам запроса."""
-    q_words = set(re.findall(r"[а-яёa-z0-9]{3,}", (query or "").lower()))
+    q_words = set(re.findall(r"[а-яёa-z0-9@]{3,}", (query or "").lower()))
     scored: list[tuple[int, dict[str, str]]] = []
-    for ch in RAG_CHUNKS:
+    for ch in [*RAG_CHUNKS, numbers_chunk()]:
         score = 0
         paths = ch["paths"].split()
         if any(current_path == p or (p != "/" and current_path.startswith(p)) for p in paths):
@@ -143,7 +275,7 @@ SYSTEM_PROMPT = """Ты — Елена, живой голосовой ИИ-пр�
 Ты общаешься с человеком живым голосом (твои слова озвучиваются голосом и синхронизируются с губами видеоаватара).
 
 Правила твоего поведения:
-1. Говори тепло, интеллигентно, энергично и кратко: строго 1–2 предложения за один раз (до 220 знаков), ТОЛЬКО чистым русским текстом для озвучки вслух (без списков, звёздочек, решёток и кавычек).
+1. Говори тепло, интеллигентно, энергично и кратко: строго 1–2 предложения за один раз (до 220 знаков), ТОЛЬКО чистым русским текстом для озвучки вслух (без списков, звёздочек, решёток и кавычек). Числа пиши словами по-русски, без символов процента и @ (например, «семьдесят пять и одна десятая процента», «P@5» — «точность первой пятёрки»). Цифры точности бери только из базы знаний ниже.
 2. Знакомство и диалог:
    - Если собеседник назвал имя — запомни его в поле "user_name" и обращайся по имени.
    - Если собеседник назвал только имя без роли — поставь "action": "ask_role" и вежливо спроси по имени, в какой роли показать платформу (кандидат, работодатель, ФСП или весь сайт целиком).
@@ -157,7 +289,7 @@ SYSTEM_PROMPT = """Ты — Елена, живой голосовой ИИ-пр�
   "user_name": "Имя собеседника с заглавной буквы или null",
   "detected_role": "all" | "candidate" | "employer" | "fsp" | null,
   "action": "ask_role" | "start_tour" | "continue_tour",
-  "jump_to_step": число от 0 до 9 или null
+  "jump_to_step": число от 0 до 12 или null (10 — криптопаспорт попытки с QR, 11 — устная защита кода, 12 — Арена метрик на /validation)
 }"""
 
 _NAME_RE = re.compile(
@@ -214,6 +346,13 @@ def detect_role(text: str) -> Literal["all", "candidate", "employer", "fsp"] | N
 
 def detect_step_jump(text: str) -> int | None:
     t = (text or "").lower()
+    # KF4: новые шаги тура (индексы TOUR_STEPS 10–12 — добавлены в конец, прежние номера не сдвинуты)
+    if "арен" in t or "метрик" in t or "валидац" in t or "точност" in t or "цифр" in t:
+        return 12
+    if "паспорт" in t and "фсп" not in t or "qr" in t or "кью ар" in t or "крипто" in t:
+        return 10
+    if "защит" in t or "устн" in t:
+        return 11
     if "тест" in t or "опрос" in t or "грейд" in t:
         return 4
     if "карт" in t or "навык" in t or "шкал" in t or "irt" in t:
@@ -324,7 +463,7 @@ def reply_chat(
     state_summary = (
         f"Текущее состояние: имя собеседника = {fallback_name or 'неизвестно'}, "
         f"выбранная роль = {fallback_role or 'не выбрана'}, "
-        f"текущий адрес экрана = {current_path}, шаг маршрута = {step_index + 1} из 10.\n\n"
+        f"текущий адрес экрана = {current_path}, шаг маршрута = {step_index + 1} из {TOUR_STEPS_TOTAL}.\n\n"
         f"База знаний RAG по текущему экрану и вопросу:\n{rag_context}"
     )
 
@@ -360,7 +499,7 @@ def reply_chat(
             action = d.get("action") if d.get("action") in ("ask_role", "start_tour", "continue_tour") else None
             if not action:
                 action = "start_tour" if final_role else "ask_role"
-            jmp = d.get("jump_to_step") if isinstance(d.get("jump_to_step"), int) and 0 <= d.get("jump_to_step") <= 9 else fallback_jump
+            jmp = d.get("jump_to_step") if isinstance(d.get("jump_to_step"), int) and 0 <= d.get("jump_to_step") < TOUR_STEPS_TOTAL else fallback_jump
             return {
                 "reply": clean_reply[:420],
                 "user_name": final_name,

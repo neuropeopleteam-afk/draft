@@ -28,7 +28,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/",
     selector: "[data-testid='demo-invite'], [data-tour='hero-candidate-btn']",
     clickSelector: "[data-testid='demo-invite']",
-    badge: "Главная · 1/10",
+    badge: "Главная · 1/13",
     speech: "Начнём с первого экрана главной страницы. Справа — интерактивная карточка обезличенного специалиста: я нажимаю кнопку Попробовать пригласить, чтобы показать, как работодатель сразу отправляет оффер с зарплатной вилкой в рублях.",
     pointerLabel: "Нажимаем «Попробовать пригласить» на карточке кандидата",
     clickLabel: "Тык по кнопке приглашения",
@@ -40,7 +40,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/",
     selector: "#laws-tab-candidate, #laws-tab-fsp, #laws",
     clickSelector: "#laws-tab-candidate",
-    badge: "Главная · 2/10",
+    badge: "Главная · 2/13",
     speech: "Ниже расположен блок Четыре закона Драфта. Я нажимаю на вкладку От лица кандидата, а затем на вкладку для Федерации спортивного программирования — карточки мгновенно перестраиваются под выбранную роль.",
     pointerLabel: "Нажимаем вкладки ролей: Работодатель · Кандидат · ФСП",
     clickLabel: "Тык по вкладке роли",
@@ -52,7 +52,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/",
     selector: "[data-tour='hero-candidate-btn'], [data-tour='hero-employer-btn'], #how",
     clickSelector: "[data-tour='hero-candidate-btn']",
-    badge: "Главная · 3/10",
+    badge: "Главная · 3/13",
     speech: "А теперь я нажимаю кнопку входа на главной странице и перевожу вас прямо внутрь личного кабинета, чтобы по шагам показать все рабочие кнопки.",
     pointerLabel: "Нажимаем кнопку входа в личный кабинет",
     clickLabel: "Тык — вход в кабинет",
@@ -64,7 +64,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/candidate",
     selector: "[data-tour='cand-step-2-btn'], [data-tour='cand-roadmap']",
     clickSelector: "[data-tour='cand-step-2-btn']",
-    badge: "Кандидат · 4/10",
+    badge: "Кандидат · 4/13",
     speech: "Мы в кабинете кандидата. Сверху закреплена панель переключения ролей и кнопка Выйти, а в центре — дорожная карта из четырёх шагов. Я нажимаю кнопку второго шага, чтобы открыть выбор грейда и адаптивный тест.",
     pointerLabel: "Дорожная карта: нажимаем переход к выбору грейда и тесту",
     clickLabel: "Тык — к выбору грейда",
@@ -76,7 +76,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/candidate/assessment",
     selector: "[data-testid='test-launch-box'], [data-testid='grade-cards']",
     clickSelector: "[data-testid='grade-cards'] button:nth-child(4)",
-    badge: "Кандидат · 5/10",
+    badge: "Кандидат · 5/13",
     speech: "На экране Опрос и тест сразу видны шесть карточек грейдов. Я нажимаю на карточку целевого уровня, а прямо под ней в розовом блоке находятся галочка согласия и кнопка Начать тест.",
     pointerLabel: "Выбираем карточку грейда и кнопку «Начать тест»",
     clickLabel: "Тык по карточке грейда",
@@ -88,7 +88,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/candidate/feedback",
     selector: "[data-testid='theta-scale'], [data-testid='route-source']",
     clickSelector: "[data-testid='theta-scale'] summary",
-    badge: "Кандидат · 6/10",
+    badge: "Кандидат · 6/13",
     speech: "В разделе Карта навыков и рост сверху показана шкала психометрии по итогам теста. Я нажимаю на математическую справку под шкалой, а ниже расположены Маршрут роста с кнопками действий и сравнение со спросом на рынке.",
     pointerLabel: "Шкала психометрии 2PL IRT и кнопки «Маршрута роста»",
     clickLabel: "Тык — формула расчёта",
@@ -99,7 +99,7 @@ export const TOUR_STEPS: TourStep[] = [
     persona: "candidate_nofsp",
     path: "/candidate/invitations",
     selector: "main .card button, main .card, main h1",
-    badge: "Кандидат · 7/10",
+    badge: "Кандидат · 7/13",
     speech: "В разделе Приглашения собраны офферы от компаний. В каждой карточке сразу открыта зарплатная вилка в рублях и расположены кнопки Принять, Отклонить или Предложить свою вилку.",
     pointerLabel: "Кнопки «Принять и открыть контакты» и «Предложить вилку»",
     clickLabel: "Выбор решения по офферу",
@@ -111,7 +111,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/employer/needs",
     selector: "#need, [data-tour='emp-roadmap']",
     clickSelector: "button[data-testid='sample-need'], main button.btn-ghost",
-    badge: "Работодатель · 8/10",
+    badge: "Работодатель · 8/13",
     speech: "Мы в кабинете работодателя. Здесь я нажимаю кнопку Подставить пример — поле автоматически заполняется текстом вакансии, после чего кнопка Разобрать требования выделяет стек и проверяет текст по Трудовому кодексу.",
     pointerLabel: "Поле вакансии: нажимаем «Подставить пример» и «Разобрать требования»",
     clickLabel: "Тык — подставить пример",
@@ -123,7 +123,7 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/employer/compare",
     selector: "[data-testid='decision-proof-strip'], [data-testid='exec-advisor'], main h1",
     clickSelector: "[data-testid='decision-proof-strip'] summary",
-    badge: "Работодатель · 9/10",
+    badge: "Работодатель · 9/13",
     speech: "На экране сравнения кандидатов сверху видна полоса формулы ранжирования и ИИ-советник руководителя, а ниже в таблице — подтверждённые навыки каждого специалиста и кнопка Пригласить с зарплатной вилкой.",
     pointerLabel: "Полоса формулы ранжирования, советник и кнопка «Пригласить»",
     clickLabel: "Тык — детали формулы",
@@ -135,10 +135,45 @@ export const TOUR_STEPS: TourStep[] = [
     path: "/fsp",
     selector: "main button[role='tab'], main .card, main h1",
     clickSelector: "main button[role='tab']:nth-child(2)",
-    badge: "Федерация ФСП · 10/10",
+    badge: "Федерация ФСП · 10/13",
     speech: "И третий кабинет — кабинет Федерации спортивного программирования. Я переключаю верхние вкладки аналитики: здесь видны спрос работодателей по регионам России, влияние спортивных достижений на вилки в офферах и отборочные кубки.",
     pointerLabel: "Переключаем вкладки аналитики спроса и соревнований ФСП",
     clickLabel: "Тык по вкладке аналитики",
+  },
+  // KF4: три новых шага — добавлены в конец, чтобы номера прежних шагов (jump_to_step в concierge.py) не сдвинулись
+  {
+    id: "cand-5-passport",
+    track: "candidate",
+    persona: "candidate",
+    path: "/candidate/attempts",
+    selector: "[data-testid='integrity-badge'], [data-testid='attempts-compare'], main h1",
+    clickSelector: "[data-testid='integrity-badge']",
+    badge: "Кандидат · 11/13",
+    speech: "Это криптопаспорт попытки. Каждая попытка теста подписана электронной подписью платформы, а пять контуров честности показывают, что ответы дал сам кандидат. Работодатель сканирует кью ар код и за пару секунд проверяет паспорт без входа и без звонков.",
+    pointerLabel: "Криптопаспорт попытки: подпись, пять контуров честности и QR для проверки",
+    clickLabel: "Тык по паспорту честности",
+  },
+  {
+    id: "cand-6-defense",
+    track: "candidate",
+    persona: "candidate",
+    path: "/candidate/attempts",
+    selector: "[data-testid='live-defense'], [data-testid='defense-panel'], [data-testid='integrity-defense-start'], main h1",
+    badge: "Кандидат · 12/13",
+    speech: "А здесь живая устная защита кода. За три минуты видеоаватар задаёт вопросы по вашим же решениям, и вы голосом объясняете, почему написали именно так. Скопированный ответ так не защитить, а честный кандидат получает отметку, что код он писал сам.",
+    pointerLabel: "Живая устная защита кода с видеоаватаром — три минуты голосом",
+  },
+  {
+    id: "val-1-arena",
+    track: "all",
+    persona: null,
+    path: "/validation",
+    selector: "[data-testid='matching-arena'], #headline, main h1",
+    clickSelector: "[data-testid='arena-tab-grade']",
+    badge: "Проверка · 13/13",
+    speech: "И главное — цифры. На странице проверки открыта Арена метрик: Драфт против поиска по резюме на одном и том же мире со скрытой истиной. Подходящий кандидат почти всегда стоит первым, в первой пятёрке подходящих на тридцать один процентный пункт больше, чем у полнотекстового поиска, а раздутые резюме почти не попадают в первую десятку. Я переключаю вкладку на точность грейда: девяносто девять и четыре десятых процента оценок попадают в пределы одной ступени, а оценщик выдержал все сто шестнадцать атак.",
+    pointerLabel: "Арена метрик: Драфт против поиска по резюме и точность грейда",
+    clickLabel: "Тык — вкладка точности грейда",
   },
 ];
 
@@ -272,12 +307,12 @@ export function InteractiveAvatarTour() {
     speakAbortRef.current = ac;
 
     try {
-      // Параллельно загружаем PCM-дорожку и ждём готовности живого видеопотока Anam (до 4.2 с),
+      // Параллельно загружаем PCM-дорожку и ждём готовности живого видеопотока Anam (до 7.5 с),
       // чтобы даже первая приветственная фраза гарантированно шла с синхронизацией губ
       if (anamRef.current) {
         const [pcm, isReady] = await Promise.all([
           fetchCachedAudio(clean, "pcm", ac.signal),
-          anamRef.current.waitReady ? anamRef.current.waitReady(4200) : Promise.resolve(anamRef.current.live()),
+          anamRef.current.waitReady ? anamRef.current.waitReady(7500) : Promise.resolve(anamRef.current.live()),
         ]);
         if (ac.signal.aborted) return;
         if (isReady && pcm && pcm.byteLength > 100 && anamRef.current?.live()) {
@@ -329,7 +364,7 @@ export function InteractiveAvatarTour() {
 
     if (!targetEl) return;
     // Выполняем безопасное интерактивное действие на странице (переключение вкладки, показ примера, пробный оффер)
-    if (currentStep.id === "land-1-hero" || currentStep.id === "land-2-laws" || currentStep.id === "cand-2-assessment" || currentStep.id === "cand-3-feedback" || currentStep.id === "emp-1-needs" || currentStep.id === "emp-2-compare" || currentStep.id === "fsp-1-cabinet") {
+    if (currentStep.id === "land-1-hero" || currentStep.id === "land-2-laws" || currentStep.id === "cand-2-assessment" || currentStep.id === "cand-3-feedback" || currentStep.id === "emp-1-needs" || currentStep.id === "emp-2-compare" || currentStep.id === "fsp-1-cabinet" || currentStep.id === "val-1-arena") {
       try {
         targetEl.click();
       } catch { /* ignore */ }
@@ -545,10 +580,10 @@ export function InteractiveAvatarTour() {
   useEffect(() => {
     if (!open || phase !== "tour" || paused || recording || transcribing || thinking || !step) return;
     if (spokenStepRef.current === step.id) return;
-    spokenStepRef.current = step.id;
     if (stepTimerRef.current) window.clearTimeout(stepTimerRef.current);
 
     let cancelled = false;
+    let startedSpeaking = false;
     (async () => {
       try {
         const needPersona = step.persona;
@@ -557,18 +592,28 @@ export function InteractiveAvatarTour() {
           (needPersona === "employer" && currentRole !== "employer") ||
           (needPersona === "fsp" && currentRole !== "fsp_analyst") ||
           (needPersona?.startsWith("candidate") && currentRole !== "candidate");
-        if (needPersona && (!me || roleMismatch || needPersona === "candidate_new")) {
+        const needNewCandidate = needPersona === "candidate_new" && !me?.email?.startsWith("candidate-new");
+        if (needPersona && (!me || roleMismatch || needNewCandidate)) {
           const dest = await juryLogin(needPersona, signIn, step.path);
           if (!cancelled && loc.pathname !== step.path) navigate(dest);
-        } else if (loc.pathname !== step.path) {
+          return;
+        }
+        if (loc.pathname !== step.path) {
           navigate(step.path);
+          return;
         }
       } catch {
-        if (!cancelled && loc.pathname !== step.path) navigate(step.path);
+        if (!cancelled && loc.pathname !== step.path) {
+          navigate(step.path);
+          return;
+        }
       }
 
-      await new Promise((r) => setTimeout(r, 450));
+      await new Promise((r) => setTimeout(r, 420));
       if (cancelled) return;
+
+      spokenStepRef.current = step.id;
+      startedSpeaking = true;
 
       // Предзагружаем аудио следующего шага, пока звучит текущий
       if (idx + 1 < steps.length) {
@@ -578,7 +623,7 @@ export function InteractiveAvatarTour() {
       // Наглядный «тык» по кнопке/вкладке текущего шага
       window.setTimeout(() => {
         if (!cancelled && !paused) triggerVisualClick(step);
-      }, 900);
+      }, 850);
 
       const prefix = userName && idx === 0 ? `${userName}, ` : "";
       await speakVoice(prefix + step.speech);
@@ -592,11 +637,14 @@ export function InteractiveAvatarTour() {
         } else {
           setPaused(true);
         }
-      }, 1400);
+      }, 1200);
     })();
 
     return () => {
       cancelled = true;
+      if (!startedSpeaking && spokenStepRef.current === step.id) {
+        spokenStepRef.current = null;
+      }
       if (stepTimerRef.current) window.clearTimeout(stepTimerRef.current);
     };
   }, [open, phase, paused, recording, transcribing, thinking, step, idx, steps, me, signIn, navigate, loc.pathname, userName, speakVoice, prefetchStepAudio, triggerVisualClick]);

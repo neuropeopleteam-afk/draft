@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: data_eng.spark.spark_skew_salting_mcq
+title: 'Spark: перекос ключа и salting — самая тяжёлая задача после соли против равномерного деления'
+direction: data_eng
+skills:
+- spark
+- shuffles
+- pyspark
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_salt
+    - even
+    - salt_all
+    - salt_x_p
+    - rest
+    - x2
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (spark), которого не было среди проверяемых
+    навыков банка. Перекос данных в Spark: горячий ключ попадает в одну задачу, соль делит только его на s задач; время стадии
+    задаёт самая тяжёлая задача. Ключ — исполнением программы-модели. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,8
+    — по 2 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.data_eng.spark_skew_salting_mcq
+version: 1
+description: 'Senior/Lead, Spark: сколько строк у самой тяжёлой задачи после salting горячего ключа.'

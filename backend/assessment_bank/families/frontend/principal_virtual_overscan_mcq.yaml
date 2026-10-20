@@ -1,0 +1,38 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: frontend.perf.principal_virtual_overscan_mcq
+title: Виртуальный список на 90/120 Гц — наибольший overscan с двух сторон при стоимости рендера и layout строки
+direction: frontend
+skills:
+- web_performance
+- core_web_vitals
+- javascript
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_overhead
+    - one_side
+    - hz60
+    - no_layout
+    - no_overhead_one_side
+    - half
+    - layout_twice
+    - overhead_twice
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.9
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Бюджет кадра виртуального списка: длительность кадра зависит от частоты экрана,
+    часть кадра занимает браузер, строка стоит рендер + layout, overscan с двух сторон; ответ — наибольший overscan без пропуска
+    кадров. Lead обычно считает кадр 60 Гц или overscan с одной стороны — граница Lead/Principal (θ ≈ 3,0 по шкале продукта;
+    b 2,9 — по 3 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.frontend.principal_virtual_overscan_mcq
+version: 1
+description: 'Principal: какой наибольший overscan держит прокрутку виртуального списка без пропуска кадров. Ключ — исполнением:
+  формула и перебор.'

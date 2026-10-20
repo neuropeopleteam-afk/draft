@@ -1,0 +1,202 @@
+import { useState } from "react";
+import { NB, num, pct, useApi } from "./ui";
+import { ScrollX } from "./A11y";
+
+/** KF4 «Арена метрик»: первый экран /validation — Драфт против поиска по резюме на одном мире со скрытой истиной
+ *  (backend: app/modules/validation/matching_bench.py → data/matching_bench.json, пересчёт make bench) и точность
+ *  грейда с защитой оценщика. Все числа ранжирования — из расчёта; нет расчёта — нет числа. */
+
+type M = { mean?: number; lo?: number; hi?: number };
+type Metrics = Record<string, M>;
+
+const ROWS: { key: string; title: string; hint: string }[] = [
+  { key: "platform", title: "Драфт — полная модель", hint: "тест + грейд + стек + ФСП + защита от раздутых резюме" },
+  { key: "no_fsp", title: "Без ФСП", hint: "та же модель без сигнала соревнований" },
+  { key: "no_test", title: "Без теста — только резюме", hint: "навыки только со слов кандидата (T0)" },
+  { key: "keywords_grade", title: "Теги резюме + заявленный грейд", hint: "как фильтр в типичном поиске по резюме" },
+  { key: "bm25", title: "BM25 по тексту резюме", hint: "классический полнотекстовый поиск" },
+  { key: "random", title: "Случайно", hint: "нижняя граница" },
+];
+const COLS: [string, string][] = [["p@5", "P@5"], ["p@10", "P@10"], ["ndcg@10", "nDCG@10"], ["mrr", "MRR"], ["recall@30", "Recall@30"]];
+
+/** Точность грейда: снимок docs/NUMBERS.json → grade_accuracy и validation/data/accuracy_views.json (банк 4d44, 19.10.2026);
+ *  карточки «вдали от границы» и «без занижения» берутся из /validation/headline, если расчёт доступен. */
+const GRADE_FALLBACK = {
+  one_session_within1: 0.9936, // accuracy_views.one_session_metrics.within_1
+  retest_within1: 0.998, // accuracy_views.views.strict_pool.within_1 — при повторе
+  far_from_cut: 0.8338, // accuracy_views.views.far_from_cut.exact
+  no_under_claim: 0.8215, // accuracy_views.views.no_under_claim.exact
+  two_stage: 0.694, // accuracy_views.two_stage_metrics.exact
+  attacks_n: 116, // llm_models.json: grader, атак на оценщика
+  attacks_passed: 0,
+};
+
+const pp = (v?: number | null) => {
+  if (v == null) return "—";
+  const r = Math.round(v * 100);
+  return r === 0 ? `≈${NB}0${NB}п.п.` : `${r > 0 ? "+" : "−"}${Math.abs(r)}${NB}п.п.`;
+};
+const p1 = (v?: number | null) => pct(v, 1);
+
+export default function MatchingArena() {
+  const [tab, setTab] = useState<"rank" | "grade">("rank");
+  const tabs: ["rank" | "grade", string][] = [["rank", "Арена ранжирования: Драфт против поиска по резюме"], ["grade", "Точность грейда и защита от сливов"]];
+  return (
+    <section id="arena" className="mt-8 scroll-mt-20 rounded-3xl bg-gradient-to-br from-brand-night to-brand-plum p-1" aria-labelledby="arena-t" data-testid="matching-arena">
+      <div className="rounded-[1.35rem] bg-white p-4 md:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Арена метрик</p>
+        <h2 id="arena-t" className="mt-1 text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Кого Драфт ставит наверх — и насколько это точнее поиска по резюме</h2>
+        <div role="tablist" aria-label="Вкладки арены метрик" className="mt-4 flex flex-wrap gap-2">
+          {tabs.map(([k, t]) => (
+            <button key={k} role="tab" id={`arena-tab-${k}`} aria-selected={tab === k} aria-controls={`arena-panel-${k}`} type="button"
+              onClick={() => setTab(k)} data-testid={`arena-tab-${k}`}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${tab === k ? "bg-brand-night text-white shadow" : "bg-brand-night/5 text-brand-night hover:bg-brand-night/10"}`}>
+              {t}
+            </button>
+          ))}
+        </div>
+        <div role="tabpanel" id={`arena-panel-${tab}`} aria-labelledby={`arena-tab-${tab}`} className="mt-4">
+          {tab === "rank" ? <RankingArena /> : <GradeArena />}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RankingArena() {
+  const { data, error, loading } = useApi<any>("/validation/matching-bench", []);
+  if (loading) return <p className="text-sm text-brand-ink/70">Загружаем расчёт бенчмарка…</p>;
+  if (error || !data || data.missing) return <p className="text-sm text-brand-ink/70">Бенчмарк подбора ещё не посчитан: make bench.</p>;
+  const m: Record<string, Metrics> = data.metrics || {};
+  const pm: Record<string, Metrics> = data.paired_platform_minus || {};
+  const infl: Record<string, any> = data.groups?.inflated || {};
+  const plat = m.platform || {};
+  const bm = m.bm25 || {};
+  const inflPlat = infl.platform?.irrelevant_inflated_top10;
+  const inflBm = infl.bm25?.irrelevant_inflated_top10;
+  const inflKw = infl.keywords_grade?.irrelevant_inflated_top10;
+  const ceil = data.world?.["recall_ceiling@30"];
+  const w = data.world || {};
+  return (
+    <div>
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4" data-testid="arena-lead">
+        <Lead big={pp(pm.bm25?.["p@5"]?.mean)} label={`P@5 против BM25`} sub={`P@10: ${pp(pm.bm25?.["p@10"]?.mean)} · ${p1(plat["p@10"]?.mean)} против ${p1(bm["p@10"]?.mean)}`} />
+        <Lead big={p1(plat.mrr?.mean)} label="MRR — первый подходящий почти всегда на 1-м месте" sub={`BM25: ${p1(bm.mrr?.mean)}`} />
+        <Lead big={p1(plat["recall@30"]?.mean)} label="Recall@30 — доля всех подходящих в первых 30" sub={`BM25: ${p1(bm["recall@30"]?.mean)}${ceil ? ` · потолок ${p1(ceil)}` : ""}`} />
+        <Lead big={inflPlat == null ? "—" : pct(1 - inflPlat, 0)} label="чистота топ-10 от раздутых резюме" sub={`раздутых в топ-10: ${p1(inflPlat)} у Драфта, ${p1(inflBm)} у BM25, ${p1(inflKw)} у фильтра по тегам`} />
+      </div>
+      <ScrollX label="Таблица методов арены ранжирования" className="mt-4 overflow-x-auto">
+        <table className="w-full min-w-[46rem] text-left text-sm" data-testid="arena-table">
+          <caption className="sr-only">Метрики ранжирования методов подбора на одном мире со скрытой истиной</caption>
+          <thead className="text-xs text-brand-ink/70">
+            <tr>
+              <th scope="col" className="px-2 py-1.5 font-semibold">Метод</th>
+              {COLS.map(([, h]) => <th key={h} scope="col" className="px-2 py-1.5 font-semibold">{h}</th>)}
+              <th scope="col" className="px-2 py-1.5 font-semibold">Раздутые резюме в топ-10</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ROWS.filter((r) => m[r.key]).map((r) => (
+              <tr key={r.key} className={`border-t border-brand-night/5 tabular-nums ${r.key === "platform" ? "bg-brand-lavender/10 font-semibold" : ""}`} data-testid={`arena-row-${r.key}`}>
+                <th scope="row" className="px-2 py-1.5 font-medium text-brand-night">
+                  {r.title}
+                  <span className="block text-[11px] font-normal text-brand-ink/60">{r.hint}</span>
+                </th>
+                {COLS.map(([k]) => (
+                  <td key={k} className="px-2 py-1.5">
+                    {p1(m[r.key][k]?.mean)}
+                    {r.key !== "platform" && pm[r.key]?.[k]?.mean != null && <span className="block text-[11px] font-normal text-brand-ink/55">Драфт {pp(pm[r.key][k].mean)}</span>}
+                  </td>
+                ))}
+                <td className="px-2 py-1.5">{infl[r.key]?.irrelevant_inflated_top10 == null ? "—" : p1(infl[r.key].irrelevant_inflated_top10)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ScrollX>
+      <p className="mt-2 text-xs leading-snug text-brand-ink/65">
+        Мир со скрытой истиной: {w.n_needs ?? data.config?.n_needs ?? "—"} потребностей × {w.n_candidates ?? data.config?.n_candidates ?? "—"} кандидатов; в среднем {num(w.relevant_per_need?.mean, 1)} подходящих на потребность,
+        поэтому Recall@30 не может превысить {ceil ? p1(ceil) : "30 / R"}. «Драфт +N п.п.» — парная разница по тем же потребностям. Синтетика: проверяется механика ранжирования, а не люди.
+        Пересчёт: <code>{data.command ?? "make bench"}</code>{data.generated_at ? ` · ${String(data.generated_at).slice(0, 10)}` : ""}.
+      </p>
+      <HhRadar />
+    </div>
+  );
+}
+
+function Lead({ big, label, sub }: { big: string; label: string; sub?: string }) {
+  return (
+    <div className="min-w-0 rounded-2xl bg-brand-night p-3 text-white sm:p-4">
+      <p className="text-2xl font-extrabold tabular-nums sm:text-3xl">{big}</p>
+      <p className="mt-1 text-xs font-semibold leading-snug sm:text-sm">{label}</p>
+      {sub && <p className="mt-1 text-xs leading-snug text-white/75">{sub}</p>}
+    </div>
+  );
+}
+
+/** Мини-радар рынка hh.ru: открытые вакансии по направлениям (снимок api.hh.ru на дату, /validation/hh-match → demand).
+ *  Нет снимка — блока нет. */
+function HhRadar() {
+  // Снимок спроса — агрегат на дату, отдаётся и без HH_ENABLED (живой токен нужен только для импорта вакансий)
+  const { data, error } = useApi<any>("/validation/hh-match", []);
+  const dem = data?.demand;
+  const rows: { title: string; n: number }[] = Object.entries<any>(dem?.directions || {})
+    .map(([key, d]) => ({ title: String(d?.title ?? key), n: Number(d?.russia ?? 0) }))
+    .filter((d: any) => d.n > 0)
+    .sort((a: any, b: any) => b.n - a.n)
+    .slice(0, 6);
+  if (error || !rows.length) return null;
+  const max = rows[0].n;
+  const k = data?.overall || {};
+  return (
+    <div className="mt-4 rounded-2xl bg-brand-night/5 p-4" data-testid="arena-hh-radar">
+      <p className="text-sm font-semibold text-brand-night">Живой радар рынка hh.ru: открытые вакансии по направлениям{dem?.as_of ? ` · снимок api.hh.ru от ${String(dem.as_of).slice(0, 10).split("-").reverse().join(".")}` : ""}</p>
+      <ul className="mt-2 grid gap-1.5">
+        {rows.map((r) => (
+          <li key={r.title} className="grid grid-cols-[8rem_1fr_auto] items-center gap-2 text-xs sm:grid-cols-[15rem_1fr_auto]">
+            <span className="truncate text-brand-ink/80" title={r.title}>{r.title}</span>
+            <span className="h-2 rounded-full bg-brand-plum/80" style={{ width: `${Math.max(4, (r.n / max) * 100)}%` }} aria-hidden="true" />
+            <span className="tabular-nums text-brand-ink/70">{r.n.toLocaleString("ru-RU")}</span>
+          </li>
+        ))}
+      </ul>
+      {k?.confirmed_right_direction?.share != null && (
+        <p className="mt-2 text-xs text-brand-ink/70">На реальных вакансиях hh.ru подтверждённый тестом кандидат нужного направления в пятёрке — {p1(k.confirmed_right_direction.share)}.</p>
+      )}
+    </div>
+  );
+}
+
+function GradeArena() {
+  const { data } = useApi<any>("/validation/headline", []);
+  const acc: any[] = data?.accuracy?.items || [];
+  const pick = (id: string): number | undefined => acc.find((x: any) => x?.id === id)?.value ?? undefined;
+  const g = GRADE_FALLBACK;
+  const far = pick("acc_far") ?? g.far_from_cut;
+  const noUnder = pick("acc_no_under") ?? g.no_under_claim;
+  const kpis: { v: string; t: string; s: string }[] = [
+    { v: p1(g.one_session_within1), t: "в пределах ±1 ступени за одну сессию", s: "грейд почти никогда не «улетает» на две ступени" },
+    { v: p1(g.retest_within1), t: "в пределах ±1 ступени при повторе", s: "повторная сессия подтверждает уровень" },
+    { v: p1(far), t: "точный грейд вдали от границы", s: "кандидат не на стыке двух уровней" },
+    { v: p1(noUnder), t: "точный грейд без занижения заявки", s: "кандидат не просит уровень ниже своего" },
+    { v: p1(g.two_stage), t: "точный грейд при двухэтапном подтверждении", s: "короткий добор заданий у границы" },
+    { v: g.attacks_n ? pct((g.attacks_n - g.attacks_passed) / g.attacks_n, 0) : "—", t: `защита оценщика — ${g.attacks_passed} из ${g.attacks_n} атак прошли`, s: "промпт-инъекции и «сливы» ответов в открытых заданиях" },
+  ];
+  return (
+    <div>
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="arena-grade-kpis">
+        {kpis.map((k) => (
+          <li key={k.t} className="rounded-2xl bg-brand-night/5 p-4">
+            <p className="text-3xl font-extrabold tabular-nums text-brand-night">{k.v}</p>
+            <p className="mt-1 text-sm font-semibold leading-snug text-brand-night">{k.t}</p>
+            <p className="mt-1 text-xs leading-snug text-brand-ink/65">{k.s}</p>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs leading-snug text-brand-ink/65">
+        Симуляция всего пути кандидата на банке заданий (модель ответов 2PL, истинный грейд известен): проверяется механика теста, а не люди.
+        Атаки на оценщика — замер двухконтурного оценщика открытых ответов. Подробности — в разделах ниже.
+      </p>
+    </div>
+  );
+}

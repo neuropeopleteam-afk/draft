@@ -61,6 +61,7 @@ export function PassportShare() {
               <a className="btn-ghost" href={`/verify/${a.id}`} target="_blank" rel="noreferrer">Открыть страницу проверки</a>
               <button className="btn-ghost" disabled={busy} onClick={() => void act("/me/passport/revoke", "Отозвать ссылку? Страница проверки по ней покажет «Отозван». Новую ссылку можно выпустить сразу.")}>Отозвать ссылку</button>
             </div>
+            <p className="text-xs text-brand-ink/65" data-testid="passport-kid">Подпись Ed25519 · ключ <span className="break-all font-mono">{a.signature.kid}</span> · проверяется любым по открытому ключу JWKS</p>
             {a.status.test_key && <p className="text-xs text-brand-ink/65">Стенд подписывает тестовым ключом — страница проверки честно это показывает.</p>}
           </div>
         </div>
@@ -98,5 +99,31 @@ export function PassportEmployerBadge({ refId }: { refId: string }) {
         <a className="btn-ghost" href={data.path} target="_blank" rel="noreferrer">Проверить паспорт</a>
       </div>
     </section>
+  );
+}
+
+export interface PassportBrief { id: string; path: string; state: PassportState; title: string; grade_status: string; valid_until: string; test_key: boolean; kid?: string }
+
+const CHIP_TEXT: Record<PassportState, string> = { valid: "действует", revoked: "отозван", expired: "истёк", invalid_signature: "подпись не сходится" };
+
+/** KF1: компактный значок криптопаспорта для таблиц работодателя (сравнение кандидатов): «Паспорт Ed25519: действует». */
+export function PassportCryptoChip({ refId }: { refId: string }) {
+  const [d, setD] = useState<PassportBrief | null | undefined>(undefined);
+  useEffect(() => {
+    let on = true;
+    api<PassportBrief>(`/employer/candidates/${encodeURIComponent(refId)}/passport`).then((v) => { if (on) setD(v); }).catch(() => { if (on) setD(null); });
+    return () => { on = false; };
+  }, [refId]);
+  if (d === undefined) return <span className="text-xs text-brand-ink/50">Паспорт: проверяем…</span>;
+  if (d === null) return <span className="text-xs text-brand-ink/55" title="Кандидат не выпустил подписанный паспорт или отозвал ссылку">Паспорт Ed25519: нет</span>;
+  const dot: Record<PassportState, string> = { valid: "bg-emerald-600", revoked: "bg-brand", expired: "bg-amber-500", invalid_signature: "bg-brand" };
+  return (
+    <a href={d.path} target="_blank" rel="noreferrer" data-testid="passport-crypto-chip"
+      title={`Открыть проверку подписи${d.kid ? ` · ключ ${d.kid}` : ""}${d.test_key ? " · тестовый ключ стенда" : ""}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold hover:underline ${d.state === "valid" ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-brand/30 bg-brand-blush/40 text-brand-plum"}`}>
+      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" /></svg>
+      <span className={`h-1.5 w-1.5 rounded-full ${dot[d.state]}`} aria-hidden="true" />
+      Паспорт Ed25519: {CHIP_TEXT[d.state] ?? d.title.toLowerCase()}
+    </a>
   );
 }

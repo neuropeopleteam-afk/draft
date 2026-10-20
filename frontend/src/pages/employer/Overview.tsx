@@ -37,6 +37,16 @@ export default function EmployerOverview() {
         <Stat label="Задания с вилкой" value={probes.data?.length ?? "…"} hint={probes.data ? `на оценке: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
         <Link to="needs" className="block"><Stat label="Новых подходящих" value={subs.data?.new_total ?? "…"} hint={subs.data ? `подписок: ${subs.data.items.filter((x: any) => x.enabled).length}` : undefined} /></Link>
       </div></div>
+      {/* Командный Драфт ФСП: сборка сыгранного звена из 4 человек под проект в 1 клик */}
+      <Link to="/employer/squad" data-testid="employer-squad-card"
+        className="group mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-night p-5 text-white transition-colors hover:bg-brand-plum sm:p-6">
+        <div className="min-w-0">
+          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand-blush">Новое · Командный Драфт ФСП</p>
+          <h2 className="mt-1 text-lg font-bold">Сборка звена под проект в 1 клик</h2>
+          <p className="mt-1 text-sm text-white/80">4 проверенных специалиста с паспортом Ed25519 и разрядом ФСП под ваш бюджет ФОТ, пакетный оффер всей четвёрке, экономика найма и рентген кода.</p>
+        </div>
+        <span className="btn shrink-0 bg-white text-brand-night group-hover:bg-brand-blush">Собрать звено →</span>
+      </Link>
       <section className="card mt-8">
         <h2 className="text-lg font-bold text-brand-night">С чего начать</h2>
         <ol className="mt-4 space-y-3">

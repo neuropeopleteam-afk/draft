@@ -2,7 +2,7 @@
 // Без регистрации и без входа на стенд. Push — если браузер позволяет (на iPhone — после «На экран Домой»);
 // запасной путь — живое обновление страницы со звуком, вибрацией и заголовком вкладки.
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Alert, Level, catTitle, errText, range, rub, ruText } from "../../components/ui";
 import { isStandalone, platform, pushSupported, subscribePush } from "../../integrations/pwa";
 import { usePageTitle } from "../../lib/meta";
@@ -109,7 +109,14 @@ export default function LiveGuest() {
 
   return (
     <div className="min-h-screen bg-[#FBF8FC] pb-10">
-      <header className="bg-brand-night px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] text-white">
+      <header className="bg-brand-night px-4 pb-4 pt-[max(0.75rem,env(safe-area-inset-top))] text-white">
+        {/* Полоска навигации: вернуться к большому экрану зала или на главную — без кнопки «назад» браузера */}
+        <nav aria-label="Навигация мини-теста" className="-mx-4 mb-3 flex items-center justify-between gap-2 border-b border-white/10 px-4 pb-2.5">
+          <Link to="/jury/live" className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-brand-night hover:bg-brand-blush">
+            <span aria-hidden="true">←</span> Назад в зал
+          </Link>
+          <Link to="/" className="inline-flex items-center rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/20">На главную</Link>
+        </nav>
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Драфт · живая демонстрация</p>
         <p className="mt-1 text-base font-bold">{room?.company ?? "Демо жюри"}</p>
       </header>

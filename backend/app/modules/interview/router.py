@@ -141,6 +141,31 @@ class DefenseFallbackOut(BaseModel):
     title: str
 
 
+class IntegrityContourOut(BaseModel):
+    """Контур паспорта честности (KF2): prior — канарейки и предзнание, fit — индекс l_z, origin — ИИ-метка,
+    screen — экран и клавиатура, live — камера / устная защита."""
+    id: str
+    status: str = Field(description="ok / warn / na / checked (кандидату вне демо-режима) / recommended (контур live)")
+    value: str | None = None
+
+
+class IntegrityPassportOut(BaseModel):
+    """Паспорт честности попытки (IntegrityBadge): итог по 5 контурам."""
+    level: str | None = None
+    title: str | None = None
+    verdict: str = Field(description="clean / attention / recommended / confirmed / discrepancies")
+    verdict_title: str
+    recommended: bool
+    why: str | None = None
+    detailed: bool
+    contours: list[IntegrityContourOut]
+
+
+class DefenseStatusOut(BaseModel):
+    status: str = Field(description="recommended / confirmed / discrepancies / insufficient / none")
+    title: str
+
+
 class DefenseStateOut(BaseModel):
     enabled: bool
     stub: bool
@@ -157,6 +182,12 @@ class DefenseStateOut(BaseModel):
     session: SessionOut | None = None
     example: SessionOut | None = None
     fallback: DefenseFallbackOut | None = None
+    # KF2: мост «подозрение античита → 3-минутная устная защита с видеоаватаром»
+    recommended: bool = False
+    why: str | None = None
+    basis: str = Field("answers", description="answers — развёрнутые ответы; code — код и выбранные решения (KF2)")
+    defense_status: DefenseStatusOut | None = None
+    integrity: IntegrityPassportOut | None = None
 
 
 class StageOut(BaseModel):
@@ -176,6 +207,11 @@ class CandidateInterviewOut(BaseModel):
     enabled: bool
     defense: SessionOut | None = None
     interviews: list[SessionOut] = []
+    # KF2: «Устная защита: рекомендована / пройдена: подтверждено / не подтверждено» и паспорт честности
+    recommended: bool = False
+    why: str | None = None
+    defense_status: DefenseStatusOut | None = None
+    integrity: IntegrityPassportOut | None = None
 
 
 class StartIn(BaseModel):

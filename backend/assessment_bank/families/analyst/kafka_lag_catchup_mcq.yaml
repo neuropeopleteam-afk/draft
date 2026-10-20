@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: analyst.integration.kafka_lag_catchup_mcq
+title: 'Интеграция через Kafka: время догона лага после пика для требований к задержке'
+direction: analyst
+skills:
+- kafka
+- async_integration
+- integrations
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_base
+    - lag_full
+    - x2
+    - half
+    - peak_len
+    - lag_full_no_base
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (kafka), которого не было среди проверяемых
+    навыков банка. Асинхронная интеграция: за пик копится разность записи и чтения, после пика лаг уходит со скоростью «чтение
+    минус продолжающаяся запись». Ключ — исполнением: формула и посекундная имитация. Граница Senior/Lead (θ ≈ 2,0 по шкале
+    продукта; b 1,8 — по 2 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.analyst.kafka_lag_catchup_mcq
+version: 1
+description: 'Senior/Lead, системный анализ, Kafka: через сколько минут после пика уйдёт лаг.'

@@ -30,6 +30,12 @@
   видит; если текст задания скопирован в нейросеть, слово появляется в ответе;
 * **оценщик**: утверждения кандидата об оценке собственного ответа (grader.strip_meta).
 
+Психометрический контур (KF2, 20.10): **индекс согласованности ответов person-fit l_z** (Drasgow, Levine, Williams,
+1985) — стандартизованное лог-правдоподобие ответов при итоговом θ. Сильно отрицательный l_z — паттерн «провалены
+лёгкие, решены трудные», типичный для подсказки на отдельных заданиях. l_z < −2 — +1 балл, l_z < −3 — +2 балла
+(person_fit_lz, bank_engine.finish → assess(lz=…)). При подозрении попытка не «аннулируется» и не уходит в повторный
+тест: работодателю и кандидату рекомендуется 3-минутная устная защита (interview.service.defense_recommendation).
+
 Баллы риска: ≥ 3 — низкая, 1–2 — средняя, 0 — высокая. Результат виден работодателю в карточке кандидата
 и в объяснении подборки; в ранжирование не входит (ложное срабатывание не должно наказывать честного
 кандидата — для этого флаг и причины, решение остаётся за человеком). Правила — чистые функции, покрыты
@@ -80,6 +86,11 @@ FAST_TEXT_MIN = 200  # короче — не проверяем
 TYPED_SHARE_MIN = 0.5  # меньше половины длинного ответа набрано с клавиатуры, и это не вставка — текст «появился»
 EVEN_RHYTHM_CV = 25  # коэффициент вариации интервалов между нажатиями, ×100: у человека обычно 60–150
 EVEN_RHYTHM_KEYS = 100
+# Person-fit l_z (KF2): минимум дихотомических ответов и пороги баллов риска
+LZ_MIN_ITEMS = 6
+LZ_WARN, LZ_ALARM = -2.0, -3.0
+LZ_TITLE = "Паттерн ответов не согласуется с уровнем"
+LZ_REASON = (f"{LZ_TITLE} (индекс l_z < −2,0): ошибки на базовых заданиях при верных ответах на сложных")
 
 
 
@@ -88,6 +99,51 @@ def _n(k: int, one: str, few: str, many: str) -> str:
     m10, m100 = k % 10, k % 100
     w = one if m10 == 1 and m100 != 11 else few if 2 <= m10 <= 4 and not 12 <= m100 <= 14 else many
     return f"{k} {w}"
+
+def person_fit_lz(responses: list[tuple[float, float, float]], theta: float) -> float | None:
+    """Индекс согласованности ответов person-fit l_z (Drasgow, Levine & Williams, 1985) для 2PL — чистая функция.
+
+    responses — [(a, b, x)], x — дихотомический ответ (0/1; дробный балл округляется по порогу 0,5), theta — оценка
+    уровня. l_0 = Σ [x·ln P + (1 − x)·ln(1 − P)], E[l_0] = Σ [P·ln P + (1 − P)·ln(1 − P)],
+    Var[l_0] = Σ P(1 − P)·ln²(P / (1 − P)), l_z = (l_0 − E[l_0]) / √Var[l_0]. Около 0 — паттерн согласован с уровнем,
+    сильно отрицательный — «провалены лёгкие, решены трудные». None — меньше LZ_MIN_ITEMS ответов или нет дисперсии.
+    """
+    try:
+        th = float(theta)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(th):
+        return None
+    rows = []
+    for r in responses or []:
+        try:
+            a, b, x = float(r[0]), float(r[1]), float(r[-1])
+        except (TypeError, ValueError, IndexError):
+            continue
+        if not (math.isfinite(a) and math.isfinite(b) and math.isfinite(x)):
+            continue
+        rows.append((a, b, 1.0 if x >= 0.5 else 0.0))
+    if len(rows) < LZ_MIN_ITEMS:
+        return None
+    l0 = e = var = 0.0
+    for a, b, x in rows:
+        p = 1.0 / (1.0 + math.exp(-max(-35.0, min(35.0, a * (th - b)))))
+        p = min(1.0 - 1e-9, max(1e-9, p))
+        lp, lq = math.log(p), math.log(1.0 - p)
+        l0 += x * lp + (1.0 - x) * lq
+        e += p * lp + (1.0 - p) * lq
+        var += p * (1.0 - p) * (lp - lq) ** 2
+    if var <= 1e-12:
+        return None
+    return round((l0 - e) / math.sqrt(var), 4)
+
+
+def lz_points(lz: float | None) -> int:
+    """Баллы риска по l_z: < −3 — 2, < −2 — 1, иначе 0."""
+    if lz is None:
+        return 0
+    return 2 if lz < LZ_ALARM else 1 if lz < LZ_WARN else 0
+
 
 def clean_signals(raw: Any) -> dict | None:
     """Сигналы клиента → безопасный словарь целых чисел (мусор и отрицательные значения отбрасываются)."""
@@ -192,12 +248,13 @@ def _instant(i: dict) -> bool:
 
 
 def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | None = None, *,
-           theta: float | None = None, soft_fast: bool = False) -> dict:
+           theta: float | None = None, soft_fast: bool = False, lz: float | None = None) -> dict:
     """items — завершённые задания сессии: {format, canary, time_s, time_limit_s, score (0..1|None), signals,
     injection, meta_claims, ai_mark_hit, fast_text, typing, text_chars, code_chars, b}; extra — сигналы сессии для
     внешних источников (SOURCES); theta — итоговая оценка уровня (для ожидаемого времени семейства); soft_fast —
     экспресс или демо-режим жюри: быстрые (не мгновенные) верные ответы без других сигналов — мягкая пометка без
-    понижения достоверности.
+    понижения достоверности; lz — индекс person-fit l_z по ответам сессии (person_fit_lz, KF2): < −2 — +1 балл,
+    < −3 — +2 балла.
 
     Возвращает {level, title, points, reasons[], signals{...}, sources[]}.
     """
@@ -224,6 +281,10 @@ def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | No
         if len(fast_wrong) / n >= 0.3 and len(fast_wrong) >= 3:
             reasons.append((1, f"Много мгновенных неверных ответов ({len(fast_wrong)} из {n}) — похоже на угадывание",
                             "behavior"))
+
+    lz_pts = lz_points(lz)
+    if lz_pts:  # KF2: person-fit l_z — ответы не согласуются с уровнем (подсказка на отдельных заданиях)
+        reasons.append((lz_pts, LZ_REASON, "assist"))
 
     with_sig = [i for i in done if i.get("signals") is not None]
     focus_items = [i for i in with_sig if (i["signals"].get("focus_lost") or 0) > 0]
@@ -278,7 +339,7 @@ def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | No
                     "canary_fast": len(canary_fast), "focus_lost_items": len(focus_items), "focus_lost_total": focus_total,
                     "hidden_s": round(hidden_s, 1), "paste_items": len(paste_items), "paste_chars": paste_chars,
                     "client_signals_items": len(with_sig), "preknowledge_flagged": bool(pk.get("flagged")),
-                    "injection_items": len(inj), **ext_signals},
+                    "injection_items": len(inj), "lz": lz, "lz_flag": bool(lz_pts), **ext_signals},
         "sources": [n for n, _ in SOURCES],
     }
 
@@ -336,7 +397,8 @@ _KIND_BY_PREFIX = (
     ("Мгновенные верные", "assist"), ("Быстрые верные", "none"),
     ("Вставка готового текста", "assist"), ("В развёрнутом ответе — невидимая метка", "assist"),
     ("Развёрнутый ответ появился быстрее", "assist"), ("Развёрнутый ответ в основном не набран", "assist"),
-    ("Слишком ровный ритм", "assist"), (PRINTSCREEN_TITLE, "behavior"), ("В развёрнутом ответе — инструкции", "answer"),
+    ("Слишком ровный ритм", "assist"), (PRINTSCREEN_TITLE, "behavior"), (LZ_TITLE, "assist"),
+    ("В развёрнутом ответе — инструкции", "answer"),
     ("В развёрнутом ответе — утверждения", "answer"), ("Сигналов нарушений нет", "none"), ("И ещё ", "none"),
     ("нет лица в кадре", "camera"), ("в кадре несколько лиц", "camera"), ("камера ", "camera"), ("Камера", "camera"),
 )

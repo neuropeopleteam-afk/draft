@@ -69,6 +69,8 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
   const [status, setStatus] = useState<AnamStatus>("connecting");
   const statusRef = useRef<AnamStatus>("connecting");
   const [speaking, setSpeaking] = useState(false);
+  const speakingRef = useRef<boolean>(false);
+  const lastInterruptAt = useRef<number>(0);
   const env = useRef<{ t0: number; e: Float32Array } | null>(null);
   const timer = useRef<number | null>(null);
   const speakSeq = useRef<number>(0);
@@ -126,7 +128,22 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
             v.muted = false;
             void v.play().catch(() => undefined);
           }
-          if (audioIn.current) {
+          if (audioIn.current && v && v.readyState >= 2) {
+            window.clearTimeout(watchdog);
+            set("live");
+          } else if (audioIn.current && v) {
+            const onReady = () => {
+              v.removeEventListener("playing", onReady);
+              v.removeEventListener("loadeddata", onReady);
+              if (!dead && audioIn.current) {
+                window.clearTimeout(watchdog);
+                set("live");
+              }
+            };
+            v.addEventListener("playing", onReady);
+            v.addEventListener("loadeddata", onReady);
+            window.setTimeout(onReady, 600);
+          } else if (audioIn.current) {
             window.clearTimeout(watchdog);
             set("live");
           }
@@ -152,6 +169,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
       void c?.stopStreaming().catch(() => undefined);
       if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
       if (speakReject.current) { const rej = speakReject.current; speakReject.current = null; rej(new Error("anam stream closed")); }
+      speakingRef.current = false;
       setSpeaking(false);
       if (statusRef.current !== "failed") { statusRef.current = "failed"; setStatus("failed"); onStatusRef.current?.("failed"); }
       notifyWaiters(false);
@@ -191,6 +209,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
       const mySeq = ++speakSeq.current;
       speakReject.current = reject;
       env.current = { t0: performance.now(), e: rms(pcm) };
+      speakingRef.current = true;
       setSpeaking(true);
 
       const cleanLen = pcm.byteLength - (pcm.byteLength % 2);
@@ -199,6 +218,10 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
 
       (async () => {
         try {
+          const sinceInt = performance.now() - lastInterruptAt.current;
+          if (sinceInt < 180) {
+            await new Promise((r) => window.setTimeout(r, 180 - sinceInt));
+          }
           // 80 мс тишины перед первым чанком пробуждают артикуляцию губ Anam без съедания первого слога
           a.sendAudioChunk(new ArrayBuffer(WARMUP_BYTES));
           await new Promise((r) => window.setTimeout(r, 45));
@@ -218,6 +241,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
         } catch (e) {
           if (speakSeq.current === mySeq) {
             speakReject.current = null;
+            speakingRef.current = false;
             setSpeaking(false);
             env.current = null;
             reject(e instanceof Error ? e : new Error(String(e)));
@@ -229,6 +253,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
         timer.current = window.setTimeout(() => {
           if (speakSeq.current !== mySeq) return;
           speakReject.current = null;
+          speakingRef.current = false;
           setSpeaking(false);
           env.current = null;
           timer.current = null;
@@ -237,11 +262,17 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
       })();
     }),
     stop: () => {
+      const wasSpeaking = speakingRef.current;
       speakSeq.current += 1;
       if (timer.current) { window.clearTimeout(timer.current); timer.current = null; }
       if (speakReject.current) { speakReject.current = null; }
-      env.current = null; setSpeaking(false);
-      try { client.current?.interruptPersona(); } catch { /* поток уже закрыт */ }
+      env.current = null;
+      speakingRef.current = false;
+      setSpeaking(false);
+      if (wasSpeaking) {
+        lastInterruptAt.current = performance.now();
+        try { client.current?.interruptPersona(); } catch { /* поток уже закрыт */ }
+      }
     },
   }), []);
 

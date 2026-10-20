@@ -64,6 +64,8 @@ const pg = {
   tariffs: () => import("./pages/employer/Tariffs"),  // Я29: тарифы работодателя (TARIFFS_ENABLED)
   fspBenefit: () => import("./ideas/fsp/Benefit"),  // Я29: «Польза для ФСП» и «Партнёры ФСП»
   expertise: () => import("./pages/public/Expertise"),  // W2: единый хаб «Экспертиза ФСП»
+  warroom: () => import("./pages/WarRoom"),  // Боевой ИИ-Полигон: живая архитектура + видеоаватар + радар античита
+  squad: () => import("./pages/employer/SquadDraft"),  // Командный Драфт ФСП (Squad Builder) + ROI + Рентген кода
 };
 
 // FIX7: файлы основных разделов маршрута жюри — заранее, когда браузер свободен (lib/preload.ts): переход в раздел
@@ -132,6 +134,7 @@ const CandidateCup = lazyNamed(pg.cupCand, "CandidateCup");
 const CandidateCups = lazyNamed(pg.cupCand, "CandidateCups");
 const EmployerCup = lazyNamed(pg.cupEmp, "EmployerCup");
 const EmployerCups = lazyNamed(pg.cupEmp, "EmployerCups");
+const SquadDraft = lazyNamed(pg.squad, "default");
 const FspCups = lazyNamed(pg.fsp, "FspCups");
 const FspDemand = lazyNamed(pg.fsp, "FspDemand");
 const FspEffect = lazyNamed(pg.fsp, "FspEffect");
@@ -146,6 +149,7 @@ const PassportVerify = lazyNamed(pg.passport, "default");
 const Criteria = lazyNamed(pg.criteria, "default");
 const JuryGo = lazyNamed(pg.criteria, "JuryGo");
 const Expertise = lazyNamed(pg.expertise, "default");
+const WarRoom = lazyNamed(pg.warroom, "default");
 
 export default function App() {
   useEffect(() => { preloadSections(PRELOAD); }, []);
@@ -160,6 +164,8 @@ export default function App() {
       <Route path="/criteria" element={<Criteria />} />
       {/* W2: «Экспертиза ФСП» — всё для экспертов жюри; /security — короткий адрес «Красной кнопки» */}
       <Route path="/expertise" element={<Expertise />} />
+      {/* Боевой ИИ-Полигон: режим А — архитектура под нагрузкой и IRT θ, режим Б — перехват ИИ-читера (#anticheat) */}
+      <Route path="/warroom" element={<WarRoom />} />
       <Route path="/security" element={<Navigate to="/validation#red-button" replace />} />
       <Route path="/jury/go" element={<JuryGo />} />
       <Route path="/study" element={<StudyAbout />} />
@@ -220,6 +226,7 @@ export default function App() {
         <Route path="mutual" element={<MutualEntry />} />
         <Route path="needs/:id/compare" element={<Compare />} />
         <Route path="compare" element={<CompareLanding />} />
+        <Route path="squad" element={<SquadDraft />} />
         <Route path="search" element={<Search />} />
         <Route path="candidates/:ref" element={<CandidateDetail />} />
         <Route path="probes" element={<EmployerProbes />} />

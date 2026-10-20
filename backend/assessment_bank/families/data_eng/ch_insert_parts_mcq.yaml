@@ -1,0 +1,37 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: data_eng.clickhouse.ch_insert_parts_mcq
+title: 'ClickHouse: сколько кусков создают вставки — кусок на каждую затронутую месячную партицию в каждом INSERT'
+direction: data_eng
+skills:
+- clickhouse
+- partitioning
+- columnar_storage
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - batches
+    - distinct_months
+    - days
+    - months_x_batches
+    - minus_one
+    - plus_batches
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.7
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (clickhouse), которого не было среди
+    проверяемых навыков банка. Устройство MergeTree: каждый INSERT создаёт по куску на каждую затронутую партицию, слишком
+    мелкое партиционирование и частые вставки дают Too many parts. Ключ — исполнением: формула и подневная имитация. Граница
+    Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,7 — по 2 взаимодействующим ограничениям, волна 20.10, без калибровки панелью).
+    Короткое задание. σ 0,3'
+generator: assessment_bank.families.data_eng.ch_insert_parts_mcq
+version: 1
+description: 'Senior/Lead, ClickHouse: сколько кусков создадут вставки до фоновых слияний.'

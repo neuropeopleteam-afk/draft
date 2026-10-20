@@ -1,0 +1,38 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: common.http.principal_replica_downtime_mcq
+title: Допустимый простой реплики зависимости — SLO цепочки, последовательные сервисы и n независимых реплик (корень n-й степени)
+direction: common
+skills:
+- http
+- api_design
+- databases
+- reliability
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_others
+    - divide_n
+    - linear_div
+    - chain_budget
+    - no_others_div
+    - chain_x_n
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.1
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Распределение бюджета ошибок по цепочке: последовательные сервисы перемножают
+    доступности, параллельные реплики — недоступности (u^n), поэтому бюджет реплики — корень n-й степени из остатка бюджета,
+    а не деление на n. Lead обычно делит бюджет на число реплик или забывает остальные сервисы цепочки — граница Lead/Principal
+    (θ ≈ 3,0 по шкале продукта; b 3,1 — по 3 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое
+    задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.common.principal_replica_downtime_mcq
+version: 1
+description: 'Principal: сколько минут в месяц может простаивать каждая реплика зависимости при SLO сценария. Ключ — исполнением
+  программы-модели.'

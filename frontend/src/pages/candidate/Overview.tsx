@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Stat, catTitle, errText, useApi } from "../../components/ui";
+import { Alert, Modal, Stat, catTitle, errText, useApi } from "../../components/ui";
 import { useAuth } from "../../lib/auth";
 import { Specializations } from "../../components/Specializations";
 import InterestCard from "../../components/InterestCard";
 import { launchLiveAvatar, minutes } from "../../components/Interview";
 import { useMeta } from "../../lib/meta";
+import SalaryAdvocate from "../../components/SalaryAdvocate";
+import FspRankConverter from "../../components/FspRankConverter";
 
 export default function CandidateOverview() {
   const { me, signIn } = useAuth();
   const navigate = useNavigate();
   const [busyAvatar, setBusyAvatar] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [tool, setTool] = useState<"salary" | "fsp" | null>(null);  // ИИ-Адвокат зарплаты и конвертер ФСП — в модалке по клику
   const c: any = me?.candidate;
   const rawName = c?.full_name?.split(" ")[0];
   const name = !(me as any)?.is_demo && rawName && !["мария", "илья", "артём", "артем", "антон"].includes(rawName.toLowerCase()) ? rawName : null;
@@ -156,6 +159,18 @@ export default function CandidateOverview() {
           </li>
         </ol>
       </section>
+      <section className="card mt-6 flex flex-wrap items-center justify-between gap-4" aria-label="Переговоры о зарплате" data-testid="candidate-salary-tools">
+        <div className="min-w-0">
+          <h2 className="font-bold text-brand-night">Переговоры о зарплате на фактах</h2>
+          <p className="mt-0.5 text-xs leading-relaxed text-brand-ink/75">Письмо-обоснование встречного оффера по θ, навыкам hh.ru и паспорту ФСП — и сколько стоит ваш разряд ФСП в ₽.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="btn-primary !px-3.5 !py-1.5 text-xs" onClick={() => setTool("salary")}>ИИ-Адвокат зарплаты</button>
+          <button type="button" className="btn-ghost !px-3.5 !py-1.5 text-xs" onClick={() => setTool("fsp")}>Конвертер разряда ФСП</button>
+        </div>
+      </section>
+      <Modal open={tool === "salary"} onClose={() => setTool(null)} title="ИИ-Адвокат зарплаты"><SalaryAdvocate embedded /></Modal>
+      <Modal open={tool === "fsp"} onClose={() => setTool(null)} title="Конвертер разряда ФСП"><FspRankConverter embedded /></Modal>
       <div className="mt-6"><InterestCard /></div>
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         <Stat label="Категория" value={catTitle(category)} hint="Только по результатам теста" />

@@ -2,6 +2,12 @@
 
 В сервис не уходят: рубрики, эталоны и ключи заданий, ФИО и контакты (ответы проходят resume.pii.redact), резюме,
 зарплата. Защищаются развёрнутые ответы (open_answer, шаг 3 open_book_3step) длиной от INTERVIEW_DEFENSE_MIN_CHARS.
+
+KF2 (20.10, мост «подозрение античита → устная защита»): если защита рекомендована по достоверности попытки
+(service.defense_recommendation — уровень «средняя»/«низкая», l_z < −2, ИИ-метка, канарейки/предзнание), а развёрнутых
+ответов нет или они короче порога, защищаются **код и выбранные решения** заданий сессии (choice_tasks): интервьюер
+просит устно объяснить ход решения. Человек, которому подсказывали, своё решение объяснить не сможет — это ловит то,
+чего не ловит l_z.
 """
 from __future__ import annotations
 
@@ -63,31 +69,66 @@ def open_answers(ts: TestSession) -> list[dict]:
     return out
 
 
+def integrity_of(ts: TestSession | None) -> dict | None:
+    """Сохранённая достоверность попытки (engine_result.details.integrity) или None."""
+    if ts is None:
+        return None
+    integ = (((ts.result or {}).get("engine_result") or {}).get("details") or {}).get("integrity")
+    return integ if isinstance(integ, dict) else None
+
+
 def eligible(ts: TestSession) -> tuple[list[dict], str | None]:
-    """(годные ответы, причина отказа). Годные — от min_chars знаков; защищать нечего — причина по-русски."""
+    """(годные ответы, причина отказа). Годные — от min_chars знаков; защищать нечего — причина по-русски.
+
+    KF2: защита рекомендована по достоверности (service.defense_recommendation), а развёрнутых ответов от min_chars
+    нет — годными считаются код и выбранные решения заданий сессии (choice_tasks, basis="code")."""
     from app.core.enums import TestSessionStatus
 
     if ts.status != TestSessionStatus.finished:
         return [], "Попытка ещё не завершена"
     ans = open_answers(ts)
-    if not ans:
-        return [], "В этой попытке нет развёрнутых ответов — устная защита не нужна"
     n = get_settings().interview_defense_min_chars
     good = [a for a in ans if len(a["answer"]) >= n]
-    if not good:
-        return [], f"Развёрнутые ответы короче {n} знаков — защищать нечего"
-    return good, None
+    if good:
+        return good, None
+    from app.modules.interview.service import defense_recommendation  # service импортирует context — здесь лениво
+
+    if defense_recommendation(integrity_of(ts))[0]:
+        tasks = choice_tasks(ts)
+        if tasks:
+            return tasks, None
+    if not ans:
+        return [], "В этой попытке нет развёрнутых ответов — устная защита не нужна"
+    return [], f"Развёрнутые ответы короче {n} знаков — защищать нечего"
+
+
+def _done_items(ts: TestSession) -> list[dict]:
+    st = (ts.result or {}).get("state") or {}
+    return [it for it in st.get("items") or [] if it.get("done") and not it.get("canary")]
+
+
+def choice_tasks(ts: TestSession, limit: int | None = None) -> list[dict]:
+    """KF2: задания сессии для устной защиты по коду и выбранным решениям — сначала задания с кодом, затем остальные,
+    свежие первыми; до interview_defense_max_tasks. Порядок результата — как в тесте."""
+    lim = limit or get_settings().interview_defense_max_tasks
+    done = _done_items(ts)
+    pick = sorted(done, key=lambda it: (not bool((it.get("public") or {}).get("code")), -(it.get("position") or 0)))[:lim]
+    out = [_choice_task(it) for it in sorted(pick, key=lambda it: it.get("position") or 0)]
+    return [{**t, "basis": "code"} for t in out]
 
 
 def last_task(ts: TestSession) -> dict | None:
     """Д2: последнее выполненное задание попытки без развёрнутого ответа (экспресс-тест жюри) — опора для живой устной
     защиты в песочнице жюри: условие и выбранный кандидатом ответ; интервьюер просит устно объяснить ход решения.
     Ответ — то, что кандидат выбрал или ввёл (вариант, строка, вывод), с пояснением, что развёрнутого ответа нет."""
-    st = (ts.result or {}).get("state") or {}
-    done = [it for it in st.get("items") or [] if it.get("done") and not it.get("canary")]
+    done = _done_items(ts)
     if not done:
         return None
-    it = max(done, key=lambda x: x.get("position") or 0)
+    return _choice_task(max(done, key=lambda x: x.get("position") or 0))
+
+
+def _choice_task(it: dict) -> dict:
+    """Задание без развёрнутого ответа → вход защиты: условие, код и то, что кандидат выбрал или ввёл."""
     pub = it.get("public") or {}
     opts = {str(o.get("id")): o for o in pub.get("options") or [] if isinstance(o, dict)}
     picked = []
@@ -132,7 +173,9 @@ def defense_context(ts: TestSession, good: list[dict]) -> tuple[dict, dict]:
     ctx = {"role": DIRECTIONS.get(ts.direction_id, ts.direction_id), "grade": ts.claimed_grade_id, "tasks": tasks}
     meta = {"tasks": [{"id": t["id"], "title": t["title"], "kind": t["kind"], "chars": len(t["answer"]),
                        "flags": t["integrity_flags"]} for t in tasks], "direction": ts.direction_id,
-            "grade": ts.claimed_grade_id}
+            "grade": ts.claimed_grade_id,
+            # KF2: защита по коду и выбранным решениям — мост «подозрение античита → устная защита»
+            **({"basis": "code", "reason": "integrity"} if any(a.get("basis") == "code" for a in pick) else {})}
     return ctx, meta
 
 

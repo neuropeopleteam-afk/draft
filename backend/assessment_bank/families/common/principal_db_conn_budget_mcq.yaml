@@ -1,0 +1,41 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: common.db.principal_db_conn_budget_mcq
+title: Бюджет соединений к БД на выкладку — закон Литтла, неравномерный балансировщик, целевая занятость пула, maxSurge и
+  резерв
+direction: common
+skills:
+- databases
+- concurrency
+- query_planning
+- capacity_planning
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - p99
+    - no_skew
+    - no_rho
+    - no_surge
+    - no_reserve
+    - naive
+    - reserve_each
+    - blue_green
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.0
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Расчёт бюджета соединений: закон Литтла по среднему времени удержания (p99 показан
+    как ловушка), неравномерность балансировщика, целевая занятость пула, экземпляры выкладки (maxSurge) с полным пулом и
+    резерв на БД; каждое пропущенное ограничение даёт правдоподобный ответ. Lead обычно считает пул по среднему и забывает
+    выкладку или неравномерность — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 3,0 — по 3–4 взаимодействующим ограничениям,
+    волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.common.principal_db_conn_budget_mcq
+version: 1
+description: 'Principal: наименьшее max_connections на БД, чтобы выкладка в пик не упёрлась в лимит. Ключ — исполнением: модель
+  (формула) и перебор размера пула дают одну букву, ловушка «без выкладки» — другую.'

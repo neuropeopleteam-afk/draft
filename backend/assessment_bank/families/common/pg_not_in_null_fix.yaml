@@ -1,0 +1,38 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: common.pg.pg_not_in_null_fix
+title: 'PostgreSQL: NOT IN с NULL в подзапросе возвращает пустой результат — NOT EXISTS против DISTINCT и LEFT JOIN с фильтром
+  в WHERE'
+direction: common
+skills:
+- postgresql
+- null_semantics
+- sql
+- joins
+target_grades:
+- senior
+- lead
+format: choose_fix
+language: sql
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - distinct
+    - left_join_status
+    - left_join_notnull
+  defect_type: null_semantics
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.7
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (postgresql), которого не было среди
+    проверяемых навыков банка. Трёхзначная логика SQL в PostgreSQL: NOT IN по подзапросу с NULL даёт NULL для каждой строки,
+    NOT EXISTS — нет; LEFT JOIN с условием по столбцу правой таблицы в WHERE отбрасывает строки без пары. Ключ — исполнением
+    запросов на данных варианта. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,7 — по 2 взаимодействующим ограничениям,
+    волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.common.pg_not_in_null_fix
+version: 1
+description: 'Senior/Lead, PostgreSQL: выбрать верную замену запроса «записи без связанных строк» при NULL в подзапросе. Каждая
+  замена исполняется в SQLite и сравнивается с эталоном.'

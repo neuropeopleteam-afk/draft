@@ -89,6 +89,20 @@ export default function Expertise() {
           <p className="np-eyebrow">Новые продуктовые решения · запуск в 1 клик без длинных путей</p>
           <h2 id="exp-knockout-t" className="mt-2 text-2xl font-extrabold tracking-tight np-text md:text-3xl">Проверьте главные фишки сразу в деле</h2>
           {err && <p className="mt-3 text-sm np-risk" role="alert">{err}</p>}
+          <Link to="/warroom" data-testid="exp-go-warroom"
+            className="group relative mt-5 block overflow-hidden rounded-3xl border border-rose-400/50 bg-gradient-to-br from-[#160a2a] via-[#2a0c38] to-[#0b1240] p-6 text-white shadow-[0_20px_60px_-20px_rgba(255,0,83,0.8)] transition hover:-translate-y-0.5 md:p-8">
+            <span className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-rose-500/25 blur-3xl" aria-hidden="true" />
+            <span className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-indigo-500/25 blur-3xl" aria-hidden="true" />
+            <span className="relative flex flex-wrap items-center gap-2 font-mono text-xs font-bold uppercase tracking-[0.2em] text-rose-300">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-rose-400" />Инновация 00 · супер-фишка · war room live
+            </span>
+            <span className="relative mt-3 block text-2xl font-black leading-tight md:text-3xl">Боевой ИИ-Полигон: Архитектура, Аватар и Античит вживую</span>
+            <span className="relative mt-3 grid gap-3 text-sm text-white/75 md:grid-cols-2">
+              <span><b className="text-white">Режим А.</b> Живая схема микросервисов в огне (Payment Storm, Kafka Lag, Kubernetes OOM, Prompt Injection): включаете паттерны, правите патч, жмёте «Применить хотфикс в продакшн» — p99 падает с 4 400 до 32 мс, а ИИ-архитектор голосом двигает шкалу IRT θ.</span>
+              <span><b className="text-white">Режим Б.</b> Split-screen «нечестный кандидат vs радар 21 сигнала»: канарейка U+2063, клавиатурная биометрия, индекс l_z = −3,42 и автоматический вызов на 3-минутную устную защиту с видеоаватаром.</span>
+            </span>
+            <span className="relative mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-[#1a1240] transition group-hover:bg-rose-50">Открыть Боевой ИИ-Полигон <span aria-hidden="true">→</span></span>
+          </Link>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <article className="np-glass p-6">
               <span className="font-mono text-xs np-accent">ИННОВАЦИЯ 01 · КАНДИДАТ</span>

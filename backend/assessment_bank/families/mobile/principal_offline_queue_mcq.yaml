@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: mobile.principal.offline_queue_mcq
+title: Синхронизация офлайн-очереди — пачки, RTT на запрос и передача тела по узкому каналу
+direction: mobile
+skills:
+- offline_first
+- mobile_networking
+- background_execution
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_rtt
+    - no_x8
+    - rtt_only
+    - per_event
+    - double_rtt
+    - x2
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.9
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Время синхронизации: число запросов (пачки), задержка на запрос и передача тела
+    в битах; на мобильных сетях RTT часто важнее полосы. Lead обычно забывает одну из составляющих или путает байты и биты
+    — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 2,9 — по 3 взаимодействующим ограничениям, волна 20.10, без калибровки
+    панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.mobile.principal_offline_queue_mcq
+version: 1
+description: 'Principal: за сколько секунд уйдёт офлайн-очередь после появления сети. Ключ — исполнением: формула и имитация
+  по пачкам.'

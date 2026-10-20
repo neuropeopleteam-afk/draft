@@ -35,6 +35,26 @@
       }
     },
     "schemas": {
+      "AcceptIn": {
+        "properties": {
+          "slot_index": {
+            "anyOf": [
+              {
+                "maximum": 2.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Номер слота из proposed_slots (с 0): принять приглашение и сразу забронировать собеседование на это время",
+            "title": "Slot Index"
+          }
+        },
+        "title": "AcceptIn",
+        "type": "object"
+      },
       "AdminTwoFactorResetIn": {
         "properties": {
           "email": {
@@ -5031,9 +5051,29 @@
               }
             ]
           },
+          "defense_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DefenseStatusOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "enabled": {
             "title": "Enabled",
             "type": "boolean"
+          },
+          "integrity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntegrityPassportOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "interviews": {
             "default": [],
@@ -5042,6 +5082,22 @@
             },
             "title": "Interviews",
             "type": "array"
+          },
+          "recommended": {
+            "default": false,
+            "title": "Recommended",
+            "type": "boolean"
+          },
+          "why": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Why"
           }
         },
         "required": [
@@ -8967,12 +9023,28 @@
             ],
             "title": "Attempts Left"
           },
+          "basis": {
+            "default": "answers",
+            "description": "answers — развёрнутые ответы; code — код и выбранные решения (KF2)",
+            "title": "Basis",
+            "type": "string"
+          },
           "can_start": {
             "title": "Can Start",
             "type": "boolean"
           },
           "consent": {
             "$ref": "#/components/schemas/InterviewConsentOut"
+          },
+          "defense_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DefenseStatusOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "eligible": {
             "title": "Eligible",
@@ -8996,6 +9068,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/DefenseFallbackOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "integrity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntegrityPassportOut"
               },
               {
                 "type": "null"
@@ -9035,6 +9117,11 @@
             ],
             "title": "Reason"
           },
+          "recommended": {
+            "default": false,
+            "title": "Recommended",
+            "type": "boolean"
+          },
           "session": {
             "anyOf": [
               {
@@ -9048,6 +9135,17 @@
           "stub": {
             "title": "Stub",
             "type": "boolean"
+          },
+          "why": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Why"
           }
         },
         "required": [
@@ -9062,6 +9160,25 @@
           "consent"
         ],
         "title": "DefenseStateOut",
+        "type": "object"
+      },
+      "DefenseStatusOut": {
+        "properties": {
+          "status": {
+            "description": "recommended / confirmed / discrepancies / insufficient / none",
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "title"
+        ],
+        "title": "DefenseStatusOut",
         "type": "object"
       },
       "DeleteIn": {
@@ -15154,6 +15271,108 @@
         "title": "ImportIn",
         "type": "object"
       },
+      "IntegrityContourOut": {
+        "description": "Контур паспорта честности (KF2): prior — канарейки и предзнание, fit — индекс l_z, origin — ИИ-метка,\nscreen — экран и клавиатура, live — камера / устная защита.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "description": "ok / warn / na / checked (кандидату вне демо-режима) / recommended (контур live)",
+            "title": "Status",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "IntegrityContourOut",
+        "type": "object"
+      },
+      "IntegrityPassportOut": {
+        "description": "Паспорт честности попытки (IntegrityBadge): итог по 5 контурам.",
+        "properties": {
+          "contours": {
+            "items": {
+              "$ref": "#/components/schemas/IntegrityContourOut"
+            },
+            "title": "Contours",
+            "type": "array"
+          },
+          "detailed": {
+            "title": "Detailed",
+            "type": "boolean"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "recommended": {
+            "title": "Recommended",
+            "type": "boolean"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "verdict": {
+            "description": "clean / attention / recommended / confirmed / discrepancies",
+            "title": "Verdict",
+            "type": "string"
+          },
+          "verdict_title": {
+            "title": "Verdict Title",
+            "type": "string"
+          },
+          "why": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Why"
+          }
+        },
+        "required": [
+          "verdict",
+          "verdict_title",
+          "recommended",
+          "detailed",
+          "contours"
+        ],
+        "title": "IntegrityPassportOut",
+        "type": "object"
+      },
       "InterestDayOut": {
         "additionalProperties": true,
         "properties": {
@@ -15461,6 +15680,15 @@
               }
             ],
             "title": "Probe Id"
+          },
+          "proposed_slots": {
+            "description": "До 3 слотов собеседования; кандидат бронирует слот при принятии (accept с slot_index)",
+            "items": {
+              "$ref": "#/components/schemas/ProposedSlot"
+            },
+            "maxItems": 3,
+            "title": "Proposed Slots",
+            "type": "array"
           },
           "salary_basis": {
             "default": "gross",
@@ -20458,6 +20686,51 @@
           "slots"
         ],
         "title": "ProposeIn",
+        "type": "object"
+      },
+      "ProposedSlot": {
+        "description": "Слот собеседования в приглашении — те же поля и правила, что у POST …/interviews (hiring.router.SlotIn).",
+        "properties": {
+          "duration_min": {
+            "default": 60,
+            "maximum": 240.0,
+            "minimum": 15.0,
+            "title": "Duration Min",
+            "type": "integer"
+          },
+          "format": {
+            "default": "video",
+            "enum": [
+              "video",
+              "phone",
+              "office"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Ссылка на видеозвонок (https) или адрес офиса",
+            "title": "Place"
+          },
+          "starts_at": {
+            "description": "Начало, ISO 8601; без часового пояса — московское время",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "starts_at"
+        ],
+        "title": "ProposedSlot",
         "type": "object"
       },
       "PublicShareOut": {
@@ -30159,6 +30432,26 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/.well-known/jwks.json": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "well_known_jwks_api__well_known_jwks_json_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Открытые ключи подписи паспортов (JWKS) — адрес за прокси /api",
+        "tags": [
+          "passport"
+        ]
+      }
+    },
     "/api/admin/2fa/reset": {
       "post": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
@@ -35396,7 +35689,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Данные не прошли проверку. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; `slot_time` — Слот …: не удалось разобрать дату и время; ещё 10."
           }
         },
         "security": [
@@ -35618,7 +35911,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; `slot_time` — Слот …: не удалось разобрать дату и время; ещё 10."
           }
         },
         "security": [
@@ -36660,7 +36953,7 @@
     },
     "/api/candidate/invitations/{inv_id}/accept": {
       "post": {
-        "description": "Принимает приглашение: работодатель получает доступ к контактам кандидата. Позже доступ можно отозвать — `POST /api/candidate/invitations/{inv_id}/contacts/revoke`.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Тело необязательно. slot_index — номер слота из proposed_slots приглашения: собеседование сразу назначается на это время (KF3 «Оффер в один клик»). Без slot_index будущие слоты приглашения становятся предложением — выбрать можно позже.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "accept_api_candidate_invitations__inv_id__accept_post",
         "parameters": [
           {
@@ -36674,6 +36967,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AcceptIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
@@ -36782,8 +37092,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "invitation_closed",
-                    "message": "На это приглашение уже нельзя ответить"
+                    "code": "slot_past",
+                    "message": "Это время уже прошло — выберите другой слот или примите приглашение без слота"
                   }
                 },
                 "schema": {
@@ -36791,30 +37101,23 @@
                 }
               }
             },
-            "description": "Приглашение уже закрыто. Коды `detail.code`: `invitation_closed` — На это приглашение уже нельзя ответить."
+            "description": "Приглашение уже закрыто или выбранный слот уже прошёл. Коды `detail.code`: `slot_past` — Это время уже прошло — выберите другой слот или примите приглашение без слота; `invitation_closed` — На это приглашение уже нельзя ответить; `hiring_not_accepted` — Собеседование и оффер — после того, как кандидат примет приглашение; `hiring_contacts_revoked`; `hiring_closed` — Найм по приглашению завершён: «…»."
           },
           "422": {
             "content": {
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "light_work_minor_only",
-                    "message": "Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»"
+                    "code": "slot_unknown",
+                    "message": "В приглашении нет предложенных слотов собеседования"
                   }
                 },
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ErrorResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HTTPValidationError"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата."
+            "description": "Нет такого слота. Коды `detail.code`: `slot_unknown` — В приглашении нет предложенных слотов собеседования; `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата."
           }
         },
         "security": [
@@ -44261,7 +44564,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Данные не прошли проверку. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; ещё 2."
           }
         },
         "security": [
@@ -44740,7 +45043,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; `slot_time` — Слот …: не удалось разобрать дату и время; ещё 10."
           }
         },
         "security": [
@@ -44939,7 +45242,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; `slot_time` — Слот …: не удалось разобрать дату и время; ещё 10."
           }
         },
         "security": [
@@ -45059,7 +45362,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `cup_criteria_missing` — Оцените все критерии рубрики; `cup_score_required` — Поставьте балл или оцените критерии; `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; ещё 2."
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `cup_criteria_missing` — Оцените все критерии рубрики; `cup_score_required` — Поставьте балл или оцените критерии; `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; ещё 4."
           }
         },
         "security": [
@@ -45248,7 +45551,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; `slot_time` — Слот …: не удалось разобрать дату и время; ещё 10."
           }
         },
         "security": [
@@ -45550,7 +45853,7 @@
                 }
               }
             },
-            "description": "Нет вилки «от–до» или она некорректна. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Нет вилки «от–до» или она некорректна. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; `slot_time` — Слот …: не удалось разобрать дату и время; ещё 10."
           }
         },
         "security": [
@@ -58357,7 +58660,7 @@
                 }
               }
             },
-            "description": "Ответ не принят. Коды `detail.code`: `bad_answer` — Ответ не принят: выберите вариант или строку текущего задания; `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; ещё 1."
+            "description": "Ответ не принят. Коды `detail.code`: `bad_answer` — Ответ не принят: выберите вариант или строку текущего задания; `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; ещё 11."
           }
         },
         "summary": "Ответ на текущее задание (правильность — только в итоге)",
@@ -59393,7 +59696,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; ещё 2."
           },
           "503": {
             "content": {
@@ -59657,7 +59960,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; `salary_range_invalid` — Нижняя граница вилки больше верхней; `salary_range_too_wide` — Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» … укажите «до» не выше … — так кандидат понимает, что ему предлагают."
+            "description": "Данные не прошли проверку. Коды `detail.code`: `light_work_minor_only` — Формат «лёгкий труд» — только для кандидатов 16–17 лет. Для взрослого выберите «Работа» или «Стажировка»; `youth_offer_not_supported` — Для 14–15 лет офферы пока недоступны: нужна отдельная проверка условий работодателем; `parental_consent_required` — Кандидат ещё не отметил согласие родителя или законного представителя; `youth_offer_restricted` — Для 16–17 лет укажите стажировку или лёгкий труд и сокращённое время; `youth_offer_ack_required` — Подтвердите проверку ограничений для несовершеннолетнего кандидата; `slots_count` — В приглашении — не больше … слотов собеседования; `slots_duplicate` — Слоты повторяются — укажите разное время; `salary_range_required` — Укажите вилку зарплаты «от» и «до» в рублях; ещё 2."
           },
           "429": {
             "content": {
@@ -63582,6 +63885,260 @@
         ]
       }
     },
+    "/api/passport/demo": {
+      "get": {
+        "description": "Паспорт кандидата «Мария Королёва» общего демо или песочницы scenario; выпускается при первом запросе. Только при включённом режиме жюри.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "demo_passport_api_passport_demo_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scenario",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scenario"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Demo Passport Api Passport Demo Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "jury_disabled",
+                    "message": "Режим жюри выключен"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Режим жюри выключен или демо-кандидат не создан. Коды `detail.code`: `jury_disabled` — Режим жюри выключен; `demo_not_ready` — Демо-кандидат ещё не создан: войдите в режим жюри на главной."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "scenario_invalid",
+                    "message": "Неверный идентификатор песочницы жюри"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Неверный идентификатор песочницы. Коды `detail.code`: `scenario_invalid` — Неверный идентификатор песочницы жюри."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "passport_demo_rate",
+                    "message": "Слишком много запросов демо-паспорта. Повторите через …"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `passport_demo_rate` — Слишком много запросов демо-паспорта. Повторите через …."
+          }
+        },
+        "summary": "Демо жюри: паспорт демо-кандидата (QR, kid, ссылка на проверку)",
+        "tags": [
+          "passport"
+        ]
+      }
+    },
+    "/api/passport/demo/reissue": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "demo_reissue_api_passport_demo_reissue_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Demo Reissue Api Passport Demo Reissue Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "jury_only",
+                    "message": "Только для демо-персон жюри"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для демо-персон жюри. Коды `detail.code`: `jury_only` — Только для демо-персон жюри."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "jury_disabled",
+                    "message": "Режим жюри выключен"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Режим жюри выключен или демо-кандидат не создан. Коды `detail.code`: `jury_disabled` — Режим жюри выключен; `demo_not_ready` — Демо-кандидат ещё не создан: войдите в режим жюри на главной."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "category_required",
+                    "message": "Паспорт выпускается после присвоения категории по тесту"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Категории ещё нет. Коды `detail.code`: `category_required` — Паспорт выпускается после присвоения категории по тесту."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Неверный идентификатор песочницы"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Демо жюри: выпустить паспорт демо-кандидата заново (новая ссылка)",
+        "tags": [
+          "passport"
+        ]
+      }
+    },
+    "/api/passport/demo/revoke": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "demo_revoke_api_passport_demo_revoke_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Demo Revoke Api Passport Demo Revoke Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "jury_only",
+                    "message": "Только для демо-персон жюри"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для демо-персон жюри. Коды `detail.code`: `jury_only` — Только для демо-персон жюри."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "jury_disabled",
+                    "message": "Режим жюри выключен"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Режим жюри выключен или демо-кандидат не создан. Коды `detail.code`: `jury_disabled` — Режим жюри выключен; `demo_not_ready` — Демо-кандидат ещё не создан: войдите в режим жюри на главной; `passport_not_found` — Действующего паспорта нет."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Неверный идентификатор песочницы"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Демо жюри: отозвать паспорт демо-кандидата своей песочницы",
+        "tags": [
+          "passport"
+        ]
+      }
+    },
     "/api/passport/keys": {
       "get": {
         "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
@@ -63744,6 +64301,63 @@
           }
         },
         "summary": "Паспорт грейда: подписанный документ, подпись и статус по реестру",
+        "tags": [
+          "passport"
+        ]
+      }
+    },
+    "/api/passport/{pid}/offline.json": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "passport_offline_api_passport__pid__offline_json_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pid",
+            "required": true,
+            "schema": {
+              "title": "Pid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "passport_not_found",
+                    "message": "Паспорт не найден: проверьте ссылку"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Паспорт не найден. Коды `detail.code`: `passport_not_found` — Паспорт не найден: проверьте ссылку."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "summary": "Файл для офлайн-проверки: паспорт, подпись и открытый ключ JWKS",
         "tags": [
           "passport"
         ]

@@ -1,0 +1,35 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: frontend.perf.principal_js_budget_mcq
+title: Бюджет JS по TTI — RTT, скачивание сжатого кода и разбор несжатого на слабом устройстве
+direction: frontend
+skills:
+- web_performance
+- core_web_vitals
+- bundlers
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_gzip
+    - no_parse
+    - no_rtt
+    - no_parse_no_rtt
+    - parse_on_gzip
+    - double
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.0
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Бюджет производительности: скачивание идёт по сжатому размеру, а разбор и исполнение
+    — по несжатому, плюс сетевые RTT; ответ — наибольший объём кода, укладывающийся в TTI. Lead обычно забывает стоимость
+    разбора или считает разбор по сжатому размеру — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 3,0 — по 3 взаимодействующим
+    ограничениям, волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.frontend.principal_js_budget_mcq
+version: 1
+description: 'Principal: какой наибольший объём JS укладывается в бюджет TTI. Ключ — исполнением: формула и перебор по КБ.'

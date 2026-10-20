@@ -410,6 +410,12 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/passport/verify"): "open",
     ("GET", "/api/passport/{pid}"): "open404",
     ("GET", "/api/passport/{pid}/qr.svg"): "open404",
+    ("GET", "/.well-known/jwks.json"): "open",
+    ("GET", "/api/.well-known/jwks.json"): "open",
+    ("GET", "/api/passport/{pid}/offline.json"): "open404",
+    ("GET", "/api/passport/demo"): "open404",
+    ("POST", "/api/passport/demo/revoke"): ("jury_demo", {r: OK404 for r in JURY_ROLES}),
+    ("POST", "/api/passport/demo/reissue"): ("jury_demo", {r: OK404 for r in JURY_ROLES}),
     # ---------------------------------------------------------------- валидация, SUS, push
     ("GET", "/api/validation/report"): "open",
     ("GET", "/api/validation/matching-bench"): "open",
@@ -506,6 +512,11 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/employer/invitations/{inv_id}/ai-interview"): "employer",
     ("GET", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate_own",
     ("POST", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate",
+    ("POST", "/api/interview/quick-defense"): "candidate",
+    ("POST", "/api/interview/concierge/avatar-token"): "open",
+    ("POST", "/api/interview/concierge/speech"): "open",
+    ("POST", "/api/interview/concierge/transcribe"): "open",
+    ("POST", "/api/interview/concierge/chat"): "open",
 }
 
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)

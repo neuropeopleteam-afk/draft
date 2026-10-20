@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: security.principal.revocation_window_mcq
+title: Окно использования отозванного токена — deny-list с интервалом перечитывания, кэш проверки и срок жизни JWT с leeway
+direction: security
+skills:
+- token_validation
+- session_lifecycle
+- secure_design
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - ttl_only
+    - ttl_skew
+    - no_cache
+    - no_prop
+    - sum_all
+    - no_cap
+    - no_skew
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.9
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Модель отзыва: отозванный токен перестаёт приниматься либо через deny-list (интервал
+    перечитывания + кэш проверки), либо по сроку жизни с leeway — худший случай меньшее из двух. Lead обычно отвечает сроком
+    жизни токена или складывает всё — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 2,9 — по 3 взаимодействующим ограничениям,
+    волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.security.principal_revocation_window_mcq
+version: 1
+description: 'Principal: сколько секунд в худшем случае принимается отозванный токен. Ключ — исполнением программы-модели.'

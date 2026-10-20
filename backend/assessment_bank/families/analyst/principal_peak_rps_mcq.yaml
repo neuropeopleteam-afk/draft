@@ -1,0 +1,35 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: analyst.principal.peak_rps_mcq
+title: Пиковый RPS для НФТ из бизнес-метрик — DAU, действия, запросы на действие, пиковый час и минутные пики
+direction: analyst
+skills:
+- non_functional_requirements
+- nfr
+- product_metrics
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - avg_day
+    - no_req
+    - no_factor
+    - mau
+    - x2
+    - per_minute
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.0
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Перевод бизнес-метрик в нагрузку: DAU × действия × запросы на действие, доля
+    пикового часа, деление на секунды часа и коэффициент минутных пиков. Lead обычно берёт среднее за сутки или MAU — граница
+    Lead/Principal (θ ≈ 3,0 по шкале продукта; b 3,0 — по 3 взаимодействующим ограничениям, волна 20.10, без калибровки панелью).
+    Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.analyst.principal_peak_rps_mcq
+version: 1
+description: 'Principal: какой пиковый RPS записать в нефункциональные требования. Ключ — исполнением программы-модели.'

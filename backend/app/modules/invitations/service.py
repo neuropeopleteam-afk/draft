@@ -134,11 +134,20 @@ def _event(db: Session, inv: Invitation, to: InvitationStatus, actor: uuid.UUID 
 def create_invitation(db: Session, employer: User, company: Company, candidate: CandidateProfile, *,
                       position_title: str, offer_description: str, salary_from: int, salary_to: int,
                       contact_method: str, need_id: uuid.UUID | None, probe_id: uuid.UUID | None,
-                      employment_terms: dict | None = None, salary_basis: str = "gross") -> Invitation:
+                      employment_terms: dict | None = None, salary_basis: str = "gross",
+                      proposed_slots: list[dict] | None = None) -> Invitation:
+    """proposed_slots (KF3 «Оффер в один клик»): до 3 слотов собеседования {starts_at, duration_min, format, place} —
+    проверяются по правилам найма (hiring.service.validate_slots) и хранятся в employment_terms["proposed_slots"];
+    кандидат бронирует слот одним нажатием при принятии (accept с slot_index)."""
     from app.modules.fsp.youth import check_offer
+    from app.modules.hiring.service import validate_slots
 
-    terms = employment_terms or {"format": "employment", "reduced_time": False, "employer_acknowledged": False}
+    terms = dict(employment_terms or {"format": "employment", "reduced_time": False, "employer_acknowledged": False})
     check_offer(candidate, terms)
+    slots = validate_slots(proposed_slots if proposed_slots is not None else terms.get("proposed_slots"))
+    terms.pop("proposed_slots", None)
+    if slots:
+        terms["proposed_slots"] = slots
     check_salary(salary_from, salary_to)
     until = cooldown_until(db, company.id, candidate.user_id)
     if until:

@@ -216,6 +216,15 @@ _BY_DIRECTION["qa"].update({"flaky_tests": "ci-cd", "release_management": "ci-cd
 _BY_DIRECTION["security"].update({"supply_chain_security": "owasp"})
 _BY_DIRECTION["mobile"].update({"mobile_release_management": "mobile-architecture"})
 _BY_DIRECTION["devops"].update({"disaster_recovery": "sre"})
+# Волна банка 20.10: навыки новых семейств → стек-теги ключевых навыков hh.ru
+_GLOBAL.update({"postgresql": "postgresql", "kubernetes": "kubernetes", "k8s": "kubernetes", "ci_cd": "ci-cd",
+                "cicd": "ci-cd", "rest": "rest-api"})
+_BY_DIRECTION["data_ml"].update({"pytorch": "pytorch", "numpy": "numpy", "spark": "spark"})
+_BY_DIRECTION["data_eng"].update({"statistics": "statistics", "anomaly_detection": "data-quality"})
+_BY_DIRECTION["qa"].update({"manual_testing": "manual-testing", "selenium": "selenium", "playwright": "playwright"})
+_BY_DIRECTION["analyst"].update({"kafka": "kafka"})
+_BY_DIRECTION["devops"].update({"kafka": "kafka"})
+_BY_DIRECTION["mobile"].update({"react": "react"})
 # Префиксы навыков у направлений расширения каталога: «k8s_qos» → kubernetes, «mobile_threading» → мобильная архитектура
 _PREFIX_BY_DIRECTION: dict[str, tuple[tuple[str, str], ...]] = {
     "devops": (("k8s_", "kubernetes"), ("kubernetes_", "kubernetes"), ("helm_", "helm"), ("terraform_", "terraform"),

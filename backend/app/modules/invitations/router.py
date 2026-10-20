@@ -64,6 +64,14 @@ class EmploymentTerms(BaseModel):
     employer_acknowledged: bool = False
 
 
+class ProposedSlot(BaseModel):
+    """Слот собеседования в приглашении — те же поля и правила, что у POST …/interviews (hiring.router.SlotIn)."""
+    starts_at: str = Field(description="Начало, ISO 8601; без часового пояса — московское время")
+    duration_min: int = Field(60, ge=15, le=240)
+    format: Literal["video", "phone", "office"] = "video"
+    place: str | None = Field(None, max_length=500, description="Ссылка на видеозвонок (https) или адрес офиса")
+
+
 class InvitationIn(SalaryRange):
     candidate_ref: str
     need_id: uuid.UUID | None = None
@@ -72,6 +80,15 @@ class InvitationIn(SalaryRange):
     offer_description: str = Field(min_length=20, max_length=5000)
     contact_method: str = Field(min_length=3, max_length=255, description="Как связаться с работодателем")
     employment_terms: EmploymentTerms = Field(default_factory=EmploymentTerms)
+    # KF3 «Оффер в один клик»: до 3 слотов собеседования прямо в приглашении → employment_terms["proposed_slots"]
+    proposed_slots: list[ProposedSlot] = Field(
+        default_factory=list, max_length=3,
+        description="До 3 слотов собеседования; кандидат бронирует слот при принятии (accept с slot_index)")
+
+
+class AcceptIn(BaseModel):
+    slot_index: int | None = Field(None, ge=0, le=2, description="Номер слота из proposed_slots (с 0): принять "
+                                   "приглашение и сразу забронировать собеседование на это время")
 
 
 class ReviewIn(BaseModel):
@@ -157,6 +174,9 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
     from app.modules.hiring.service import summary as hiring_summary
 
     out["hiring"] = hiring_summary(db, i, side)  # этап найма после принятия: собеседование, оффер, исход (Н8)
+    from app.modules.hiring.service import invitation_slots
+
+    out["proposed_slots"] = invitation_slots(i)  # KF3: слоты собеседования из приглашения (index, past, text)
     return out
 
 
@@ -240,7 +260,8 @@ def send_invitation(data: InvitationIn, bg: BackgroundTasks, user: User = Depend
                                 offer_description=data.offer_description, salary_from=data.salary_from,
                                 salary_to=data.salary_to, contact_method=data.contact_method, need_id=data.need_id,
                                 probe_id=data.probe_id, employment_terms=data.employment_terms.model_dump(),
-                                salary_basis=data.salary_basis)
+                                salary_basis=data.salary_basis,
+                                proposed_slots=[x.model_dump() for x in data.proposed_slots])
     cu = _candidate_user(db, p.user_id)
     bg.add_task(notify, cu.email, f"Приглашение от компании {c.name}",
                 [f"Компания {c.name} приглашает вас на позицию «{data.position_title}».",
@@ -302,16 +323,41 @@ def _notify_employer(bg: BackgroundTasks, db: Session, employer_id, subject: str
 
 
 @candidate_router.post("/invitations/{inv_id}/accept", summary="Принять приглашение — работодатель увидит контакты",
-                       responses={**C_AUTH, 404: err("Приглашение не найдено"), 409: err("Приглашение уже закрыто")})
-def accept(inv_id: uuid.UUID, bg: BackgroundTasks, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+                       description="Тело необязательно. slot_index — номер слота из proposed_slots приглашения: "
+                                   "собеседование сразу назначается на это время (KF3 «Оффер в один клик»). "
+                                   "Без slot_index будущие слоты приглашения становятся предложением — "
+                                   "выбрать можно позже.",
+                       responses={**C_AUTH, 404: err("Приглашение не найдено"),
+                                  409: err("Приглашение уже закрыто или выбранный слот уже прошёл"),
+                                  422: err("Нет такого слота")})
+def accept(inv_id: uuid.UUID, bg: BackgroundTasks, data: AcceptIn | None = None, user: User = Depends(candidate),
+           db: Session = Depends(get_db)) -> dict:
+    from app.modules.hiring import ats as hats, service as hiring_svc
+
     i = _own(db, Invitation, inv_id, user, "invitation_not_found", "Приглашение не найдено")
+    slot_index = data.slot_index if data is not None else None
+    if slot_index is not None and i.status in (InvitationStatus.sent, InvitationStatus.viewed):
+        hiring_svc.check_invitation_slot(i, slot_index)  # до принятия: ошибка слота не принимает приглашение
     svc.respond(db, i, user.id, True, None)
     ref = db.get(CandidateProfile, user.id).public_ref
-    _notify_employer(bg, db, i.employer_user_id, f"Кандидат {ref} принял приглашение",
-                     [f"Кандидат {ref} принял приглашение на позицию «{i.position_title}».",
-                      "Контакты кандидата доступны в карточке приглашения."], "/employer/invitations")
+    iv = None
+    try:
+        iv = hiring_svc.book_from_invitation(db, i, user.id, slot_index)
+    except Exception:  # noqa: BLE001 — приглашение уже принято; слот — вторым шагом в блоке «Найм»
+        db.rollback()
+        log.exception("invitation %s: собеседование из слотов приглашения не создано", i.id)
+    lines = [f"Кандидат {ref} принял приглашение на позицию «{i.position_title}».",
+             "Контакты кандидата доступны в карточке приглашения."]
+    if iv is not None and iv.status == "scheduled":
+        when = f"{hiring_svc.msk(iv.starts_at)} · {hiring_svc.FORMATS[iv.format].lower()}"
+        lines.append(f"Кандидат сразу забронировал собеседование: {when}.")
+        bg.add_task(hats.push_stage_bg, i.id, "interview", f"собеседование назначено, {when}")
+    _notify_employer(bg, db, i.employer_user_id, f"Кандидат {ref} принял приглашение", lines, "/employer/invitations")
     bg.add_task(integration_events.invitation_answered, i.id, True)
-    return _inv_out(db, i, "candidate")
+    out = _inv_out(db, i, "candidate")
+    # KF3: собеседование из слотов приглашения — «назначено» (slot_index) или «предложено» (выбрать позже)
+    out["booked_interview"] = hiring_svc.interview_out(iv) if iv is not None else None
+    return out
 
 
 @candidate_router.post("/invitations/{inv_id}/decline", summary="Отклонить приглашение (причина — по желанию)",

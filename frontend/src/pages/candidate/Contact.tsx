@@ -24,6 +24,7 @@ export function Invitations() {
   const [cReason, setCReason] = useState<"salary" | "role" | "spam" | "other">("salary");
   const [cComment, setCComment] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [slot, setSlot] = useState<number | null>(null);  // KF3: выбранный слот собеседования из приглашения
   const [trustV, setTrustV] = useState(0);  // ответ и жалоба меняют индекс доверия — перечитать в открытом окне
   const trust = useInvitationsTrust(trustV);
 
@@ -35,13 +36,14 @@ export function Invitations() {
     } catch (e) { setErr(errText(e)); }
   }
   async function view(i: any) {
-    setErr(null); setDeclining(false); setComplaining(false); setReason(""); setCComment(""); setCReason("salary");
+    setErr(null); setDeclining(false); setComplaining(false); setReason(""); setCComment(""); setCReason("salary"); setSlot(null);
     try { setOpen(await api<any>(`/candidate/invitations/${i.id}`)); void reload(); } catch (e) { setErr(errText(e)); }
   }
-  async function act(kind: "accept" | "decline") {
+  async function act(kind: "accept" | "decline", slotIndex: number | null = null) {
     setErr(null);
     try {
-      const r = await api<any>(`/candidate/invitations/${open.id}/${kind}`, { body: kind === "decline" ? { reason: reason || null } : {} });
+      const body = kind === "decline" ? { reason: reason || null } : slotIndex != null ? { slot_index: slotIndex } : {};
+      const r = await api<any>(`/candidate/invitations/${open.id}/${kind}`, { body });
       setOpen(r); setTrustV((v) => v + 1); void reload();
     } catch (e) { setErr(errText(e)); }
   }
@@ -106,9 +108,15 @@ export function Invitations() {
                   <div className="flex gap-3"><button className="btn-primary" onClick={() => act("decline")}>Отклонить</button><button className="btn-ghost" onClick={() => setDeclining(false)}>Назад</button></div>
                 </div>
               ) : (
-                !complaining && <div className="flex flex-wrap gap-3">
-                  <button className="btn-primary" onClick={() => act("accept")}>Принять и открыть контакты</button>
-                  <button className="btn-ghost" onClick={() => setDeclining(true)}>Отклонить</button>
+                !complaining && <div className="space-y-3">
+                  <SlotPicker slots={open.proposed_slots ?? []} value={slot} onChange={setSlot} />
+                  <div className="flex flex-wrap gap-3">
+                    {(open.proposed_slots ?? []).some((x: any) => !x.past) && (
+                      <button className="btn-primary" disabled={slot == null} onClick={() => act("accept", slot)} data-testid="accept-with-slot">Принять и забронировать слот</button>
+                    )}
+                    <button className={(open.proposed_slots ?? []).some((x: any) => !x.past) ? "btn-ghost" : "btn-primary"} onClick={() => act("accept")}>Принять и открыть контакты</button>
+                    <button className="btn-ghost" onClick={() => setDeclining(true)}>Отклонить</button>
+                  </div>
                 </div>
               )
             )}
@@ -145,6 +153,32 @@ const MAX_RATIO = 1.5;
 const r5k = (v: number) => Math.round(v / 5000) * 5000;
 
 /** Встречное предложение: своя вилка в ответ на приглашение. Правила — как на сервере (contact/service.py). */
+interface ProposedSlot { index: number; starts_at: string; duration_min: number; format: string; place?: string | null; past: boolean; text: string }
+const SLOT_FORMAT: Record<string, string> = { video: "видеозвонок", phone: "телефон", office: "офис" };
+
+/** KF3 «Оффер в один клик»: слоты собеседования из приглашения — выбрать один и принять с бронированием. */
+function SlotPicker({ slots, value, onChange }: { slots: ProposedSlot[]; value: number | null; onChange: (v: number | null) => void }) {
+  if (!slots.length) return null;
+  const fmt = (iso: string) => new Date(iso).toLocaleString("ru-RU", { timeZone: "Europe/Moscow", weekday: "short", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+  return (
+    <fieldset className="rounded-xl border border-brand-lavender/40 bg-[#F7F6FB] p-4" data-testid="invite-slots">
+      <legend className="px-1 font-semibold text-brand-night">Работодатель предложил время собеседования</legend>
+      <p className="text-xs text-brand-ink/65">Выберите удобный слот — собеседование назначится сразу при принятии. Время московское.</p>
+      <div className="mt-2 space-y-2">
+        {slots.map((s) => (
+          <label key={s.index} className={`flex cursor-pointer items-start gap-3 rounded-lg bg-white px-3 py-2 ring-1 ${value === s.index ? "ring-brand" : "ring-brand-night/10"} ${s.past ? "cursor-not-allowed opacity-50" : ""}`}>
+            <input type="radio" name="invite-slot" className="mt-1 accent-brand" disabled={s.past} checked={value === s.index} onChange={() => onChange(s.index)} />
+            <span className="min-w-0">
+              <span className="block font-semibold text-brand-night">{fmt(s.starts_at)} · {s.duration_min} мин</span>
+              <span className="block text-xs text-brand-ink/70">{SLOT_FORMAT[s.format] ?? s.format}{s.place ? ` · ${s.place}` : ""}{s.past ? " · время прошло" : ""}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 function CounterBlock({ inv, onDone }: { inv: any; onDone: (r: any) => void }) {
   const [open, setOpen] = useState(false);
   const [from, setFrom] = useState(() => String(inv.salary_to));

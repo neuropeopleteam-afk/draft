@@ -1,0 +1,38 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: common.cicd.cicd_pipeline_runners_mcq
+title: 'CI/CD: длительность конвейера с needs при ограниченном числе раннеров — не критический путь и не сумма задач'
+direction: common
+skills:
+- ci_cd
+- pipelines
+- github_actions
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - critical_path
+    - sum_all
+    - sum_div_k
+    - stages_serial
+    - one_more_runner
+    - one_runner_less
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.9
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (ci-cd), которого не было среди проверяемых
+    навыков банка. Планирование конвейера CI/CD: граф задач с needs исполняется на ограниченном числе раннеров — длительность
+    определяется и критическим путём, и очередью к раннерам. Ключ — исполнением: событийная и поминутная имитации. Граница
+    Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,9 — по 2 взаимодействующим ограничениям, волна 20.10, без калибровки панелью).
+    Короткое задание. σ 0,3'
+generator: assessment_bank.families.common.cicd_pipeline_runners_mcq
+version: 1
+description: 'Senior/Lead, CI/CD: через сколько минут завершится конвейер с зависимостями needs на k раннерах. Ключ — исполнением
+  двух имитаций.'

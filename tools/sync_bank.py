@@ -168,15 +168,59 @@ def main() -> int:
 
     excluded: list[dict] = []
     checked: list[dict] = []
-    for y in sorted((pkg / "families").glob("*/*.yaml")):
-        rel = str(y.relative_to(pkg))
-        r = run_py(["-c", CHECK_ONE, str(y)], cwd=stage, timeout=120)
-        try:
-            res = json.loads(r.stdout.strip().splitlines()[-1])
-        except (IndexError, json.JSONDecodeError):
-            res = {"path": str(y), "ok": False, "error": (r.stderr or "нет вывода")[-300:]}
-        res["path"] = rel
-        checked.append(res)
+    batch_code = r'''
+import importlib, json, sys, yaml
+from pathlib import Path
+from assessment_bank.schema import FamilySpec, Variant
+stage = Path(sys.argv[1])
+pkg = stage / "assessment_bank"
+results = []
+for y in sorted((pkg / "families").glob("*/*.yaml")):
+    path = str(y)
+    rel = str(y.relative_to(pkg))
+    out = {"path": rel}
+    try:
+        data = yaml.safe_load(open(path, encoding="utf-8"))
+        spec = FamilySpec(**data)
+        out["family_id"] = spec.family_id
+        out["direction"] = spec.direction
+        out["format"] = spec.format
+        out["generator"] = spec.generator
+        if path.split("/")[-2] != spec.direction:
+            raise ValueError(f"лежит в каталоге {path.split('/')[-2]}, а direction={spec.direction}")
+        mod = importlib.import_module(spec.generator)
+        if getattr(mod, "FAMILY_ID", None) != spec.family_id:
+            raise ValueError("FAMILY_ID модуля не совпадает с YAML")
+        seeds = [1, 2, 3] if spec.canary else [10_000_019, 123_456_791, 2_000_000_011]
+        for seed in seeds:
+            v = mod.generate(seed)
+            if not isinstance(v, Variant):
+                raise TypeError("generate вернул не Variant")
+            if v.variant_id != f"{spec.family_id}:{seed}" or v.meta.format != spec.format:
+                raise ValueError("variant_id/format не соответствуют YAML")
+            pv = json.dumps(v.public_view(), ensure_ascii=False)
+            if '"answer_key"' in pv or '"rubric"' in pv or '"checks"' in pv:
+                raise ValueError("public_view раскрывает ключ/рубрику")
+        out["ok"] = True
+    except Exception as e:
+        out["ok"] = False
+        out["error"] = f"{type(e).__name__}: {str(e)[:300]}"
+    results.append(out)
+print(json.dumps(results, ensure_ascii=False))
+'''
+    r_batch = run_py(["-c", batch_code, str(stage)], cwd=stage, timeout=180)
+    if r_batch.returncode == 0 and r_batch.stdout.strip():
+        checked = json.loads(r_batch.stdout.strip().splitlines()[-1])
+    else:
+        for y in sorted((pkg / "families").glob("*/*.yaml")):
+            rel = str(y.relative_to(pkg))
+            r = run_py(["-c", CHECK_ONE, str(y)], cwd=stage, timeout=120)
+            try:
+                res = json.loads(r.stdout.strip().splitlines()[-1])
+            except (IndexError, json.JSONDecodeError):
+                res = {"path": str(y), "ok": False, "error": (r.stderr or "нет вывода")[-300:]}
+            res["path"] = rel
+            checked.append(res)
     seen: dict[str, str] = {}
     for res in checked:
         fid = res.get("family_id")

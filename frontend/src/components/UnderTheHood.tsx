@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { lastApiTimingMs } from "../lib/api";
+import { pct, useApi } from "./ui";
 
 const SEGMENTS: { label: string; weight: number; color: string; desc: string }[] = [
   { label: "Тест 2PL IRT", weight: 45, color: "bg-brand-strong", desc: "Адаптивный психометрический тест и проверенные кодом навыки" },
@@ -13,6 +14,9 @@ const SEGMENTS: { label: string; weight: number; color: string; desc: string }[]
 export function DecisionProofStrip({ totalCandidates, version, className = "" }: { totalCandidates?: number; version?: number | null; className?: string }) {
   const [open, setOpen] = useState(false);
   const ms = lastApiTimingMs();
+  // Числа точности — из актуального расчёта бенчмарка (/validation/matching-bench, make bench), без захардкоженных значений
+  const bench = useApi<any>("/validation/matching-bench", []).data;
+  const pm = bench?.metrics?.platform;
 
   return (
     <div className={`rounded-2xl border border-brand-night/10 bg-[#F8F6FC] p-3.5 sm:p-4 ${className}`} data-testid="decision-proof-strip">
@@ -22,7 +26,9 @@ export function DecisionProofStrip({ totalCandidates, version, className = "" }:
             Формула ранжирования match-v1.3
           </span>
           <span className="text-xs font-semibold text-brand-night">
-            Точность на эталонном корпусе P@5 = <b>76,2 %</b> (MRR = <b>92,1 %</b>) · фильтр ст. 64 ТК РФ активен
+            {pm?.["p@5"]?.mean != null
+              ? <>Точность на бенчмарке со скрытой истиной P@5 = <b>{pct(pm["p@5"].mean, 1)}</b> (MRR = <b>{pct(pm.mrr?.mean, 1)}</b>{pm["recall@30"]?.mean != null ? <>, Recall@30 = <b>{pct(pm["recall@30"].mean, 1)}</b></> : null})</>
+              : <>Точность подбора — на бенчмарке со скрытой истиной (/validation)</>} · фильтр ст. 64 ТК РФ активен
           </span>
           {ms != null && (
             <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-800 ring-1 ring-emerald-200">

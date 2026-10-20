@@ -592,6 +592,17 @@ const EMPTY_SIG = { focus_lost: 0, hidden_ms: 0, paste: 0, paste_chars: 0, copy:
 /** D3 п. 3: клавиша PrintScreen (снимок экрана) — keydown или keyup (Windows часто присылает только keyup); одно
  *  нажатие считается один раз: повтор в пределах секунды — то же нажатие. */
 export const isPrintScreen = (e: { key?: string; code?: string }) => e.key === "PrintScreen" || e.code === "PrintScreen";
+/** KF2: любая комбинация снимка экрана — PrintScreen; Windows «Ножницы» Win+Shift+S (в Chromium Win даёт metaKey);
+ *  macOS Cmd+Shift+3 / 4 / 5. Тест не прерывается: сигнал printscreen задания + мягкое уведомление кандидату. */
+export type KeyLike = { key?: string; code?: string; shiftKey?: boolean; metaKey?: boolean };
+export const isScreenshotCombo = (e: KeyLike) => {
+  if (isPrintScreen(e)) return true;
+  if (!e.metaKey || !e.shiftKey) return false;
+  const k = (e.key ?? "").toLowerCase();
+  return k === "s" || e.code === "KeyS" || ["3", "4", "5"].includes(e.key ?? "") || ["Digit3", "Digit4", "Digit5"].includes(e.code ?? "");
+};
+export const SCREENSHOT_NOTICE = "Снимок экрана зафиксирован в журнале достоверности попытки";
+const SCREENSHOT_NOTICE_MS = 6000;
 const PRINTSCREEN_DEDUP_MS = 1000;
 const EMPTY_TYPING = { len: 0, typed: 0, inserted: 0, dropped: 0, deleted: 0, keys: 0, active_ms: 0, last: 0, n: 0, mean: 0, m2: 0 };
 
@@ -618,6 +629,7 @@ export function TestRun() {
   // Динамика набора развёрнутого ответа: только счётчики (символы с клавиатуры, вставка, ритм нажатий)
   const typing = useRef({ ...EMPTY_TYPING });
   const [away, setAway] = useState({ focus: 0, paste: 0, copy: 0 });
+  const [shotNotice, setShotNotice] = useState(false);  // KF2: мягкое уведомление о снимке экрана (тест не прерывается)
   const [fsOn, setFsOn] = useState(() => isFullscreen());
   const fsOk = fsSupported();
   const itemHead = useRef<HTMLHeadingElement>(null);  // А11: новое задание — фокус на его заголовок (экранный диктор)
@@ -641,18 +653,23 @@ export function TestRun() {
     return () => { document.removeEventListener("fullscreenchange", onFs); window.removeEventListener("resize", onFs); };
   }, []);
   useEffect(() => {
-    // D3 п. 3: PrintScreen — сигнал задания (printscreen) и событие в журнал камеры, если она включена
+    // D3 п. 3 + KF2: снимок экрана (PrintScreen, Win+Shift+S, Cmd+Shift+3/4/5) — сигнал задания (printscreen) и событие
+    // в журнал камеры, если она включена. Попытку не отнимаем: кандидат видит ненавязчивое уведомление.
     let last = 0;
+    let hide: ReturnType<typeof setTimeout> | undefined;
     const onKey = (e: KeyboardEvent) => {
-      if (!isPrintScreen(e)) return;
+      if (!isScreenshotCombo(e)) return;
       const now = Date.now();
       if (now - last < PRINTSCREEN_DEDUP_MS) return;
       last = now;
       sig.current.printscreen += 1;
       camera.mark("printscreen");
+      setShotNotice(true);
+      if (hide) clearTimeout(hide);
+      hide = setTimeout(() => setShotNotice(false), SCREENSHOT_NOTICE_MS);
     };
     window.addEventListener("keydown", onKey); window.addEventListener("keyup", onKey);
-    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("keyup", onKey); };
+    return () => { if (hide) clearTimeout(hide); window.removeEventListener("keydown", onKey); window.removeEventListener("keyup", onKey); };
   }, []);
   useEffect(() => {
     const leave = () => { if (!sig.current.awaySince) { sig.current.focus_lost += 1; sig.current.awaySince = Date.now(); setAway((a) => ({ ...a, focus: a.focus + 1 })); } };
@@ -860,6 +877,11 @@ export function TestRun() {
               value={(value as string) ?? ""} onChange={(e) => setValue(e.target.value)} onPaste={onPaste} onInput={onInput} onKeyDown={onKeyDown}
               spellCheck={it.format !== "predict_output"} />
           </Field></div>
+        )}
+        {shotNotice && (
+          <p className="mt-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status" aria-live="polite" data-testid="screenshot-notice">
+            {SCREENSHOT_NOTICE}. Тест продолжается.
+          </p>
         )}
         {s.is_sandbox && (away.focus > 0 || away.paste > 0 || away.copy > 0) && (
           <div className="mt-4"><Alert kind="info">

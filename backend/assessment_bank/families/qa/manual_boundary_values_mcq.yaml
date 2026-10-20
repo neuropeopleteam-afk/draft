@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: qa.manual.manual_boundary_values_mcq
+title: 'Ручное тестирование: трёхточечный анализ граничных значений — совпадение точек в узких диапазонах'
+direction: qa
+skills:
+- manual_testing
+- boundary_value_analysis
+- test_design
+target_grades:
+- senior
+- lead
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - six_each
+    - two_point
+    - eq_classes
+    - plus_nominal
+    - valid_only
+    - seven_each
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.7
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (manual-testing), которого не было среди
+    проверяемых навыков банка. Тест-дизайн: трёхточечный анализ граничных значений даёт до шести значений на поле, в узких
+    диапазонах точки совпадают. Ключ — исполнением двух реализаций подсчёта. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта;
+    b 1,7 — по 2 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.qa.manual_boundary_values_mcq
+version: 1
+description: 'Senior/Lead, ручное тестирование: сколько разных значений даст анализ граничных значений.'

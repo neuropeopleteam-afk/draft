@@ -1,0 +1,36 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: analyst.principal.kafka_partitions_mcq
+title: Число партиций топика в требованиях — рост, запас и узкое место консьюмера, партиции потом не меняют
+direction: analyst
+skills:
+- integrations
+- async_integration
+- message_contracts
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - no_growth
+    - no_head
+    - producer
+    - sum
+    - x2
+    - pow2
+    - no_growth_head
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.0
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Планирование партиций: число партиций не меняют без поломки порядка по ключу,
+    поэтому закладывают рост и запас; ограничивает самая медленная сторона (консьюмер на партицию). Lead обычно считает по
+    текущему потоку или по продюсеру — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 3,0 — по 3 взаимодействующим ограничениям,
+    волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.analyst.principal_kafka_partitions_mcq
+version: 1
+description: 'Principal: сколько партиций заложить в требования к топику. Ключ — исполнением: формула и перебор.'

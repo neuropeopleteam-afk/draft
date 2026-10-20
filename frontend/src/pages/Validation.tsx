@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import MatchingBench from "../components/MatchingBench";
+import MatchingArena from "../components/MatchingArena";
 import { FspRatingValidation } from "../components/validation/FspRating";
 import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
@@ -51,6 +52,8 @@ export default function Validation() {
           затем на {r?.experts?.model_panel ? "разметке модельной панели (не люди)" : "экспертной разметке"} и демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
         </p>
         <Headline />
+        {/* KF4: «Арена метрик» — Драфт против поиска по резюме и точность грейда, сразу под «5 числами», над «Красной кнопкой» */}
+        <MatchingArena />
         {loading ? <div className="mt-8"><Loading /></div> : error ? <div className="mt-8"><Alert>{error}</Alert></div> : r?.missing
           ? <div className="mt-8"><Alert kind="info">Отчёт ещё не построен: запустите make validate.</Alert></div> : null}
         {r && !r.missing && !loading && !error ? <Report r={r} before={<Before />} /> : <FoldGroup><Before /></FoldGroup>}
@@ -103,7 +106,7 @@ function Report({ r, before }: { r: any; before?: ReactNode }) {
       <p className="mt-4 text-xs text-brand-ink/65" data-testid="report-signature">Отчёт симуляции построен {dtt(r.generated_at)} · {r.n_per_direction} синтетических кандидатов на направление · {num(r.seconds, 0)} с · банк расчёта: {rp.bank_n_families ?? "—"} семейств, коммит {rp.bank_commit ?? "—"}{pv.code_commit && pv.code_commit !== "unknown" ? ` · код стенда ${pv.code_commit}` : ""}</p>
       {bn.n_families != null && !rp.same_bank && <div className="mt-3"><Alert kind="info" ><b>Числа отчёта — на банке от {rp.bank_synced_at ? d10(rp.bank_synced_at) : rdate}.</b> Сейчас в банке {bn.n_families} семейств (синхронизирован {bn.synced_at ? d10(bn.synced_at) : "—"}, коммит {bn.commit ?? "—"}); полная симуляция теста на нём не пересчитывалась (make validate), поэтому таблицы ниже подписаны датой отчёта. Блоки «5 чисел» и «Весь путь дважды» посчитаны отдельно — их мир указан в подписи.</Alert></div>}
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["headline", "5 чисел"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["grade-accuracy", "Точность уровня"], ...(gxOn ? [["grades-ext", "Lead и Principal"]] : []), ["two-stage", "Две сессии"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["other-conditions", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", r.experts?.model_panel ? "Модельная панель" : "Экспертная разметка"], ["grader", "Оценщик ответов"], ["evidence", "Цитаты оценщика"], ["partial-credit", "Частичный балл"], ...(hhOn ? [["hh-parse", "Разбор на hh.ru"], ["hh-match", "Подбор на hh.ru"]] : []), ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["headline", "5 чисел"], ["arena", "Арена метрик"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["grade-accuracy", "Точность уровня"], ...(gxOn ? [["grades-ext", "Lead и Principal"]] : []), ["two-stage", "Две сессии"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["other-conditions", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", r.experts?.model_panel ? "Модельная панель" : "Экспертная разметка"], ["grader", "Оценщик ответов"], ["evidence", "Цитаты оценщика"], ["partial-credit", "Частичный балл"], ...(hhOn ? [["hh-parse", "Разбор на hh.ru"], ["hh-match", "Подбор на hh.ru"]] : []), ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 

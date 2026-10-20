@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from "react";
-import { NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { cabinetPath, useAuth } from "../lib/auth";
 import { api, type Role } from "../lib/api";
 import { MESSAGES_CHANGED } from "./Chat";
@@ -60,6 +60,8 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
   if (me.role !== role && !alsoRoles.includes(me.role)) return <Navigate to={cabinetPath(me.role)} replace />;
   const base = cabinetPath(role);
   const exit = () => { signOut(); navigate("/"); };
+  // «← Назад»: шаг назад по истории, а если кабинет открыт первой страницей (прямая ссылка, новая вкладка) — на главную
+  const back = () => { if (window.history.length > 2) navigate(-1); else navigate("/"); };
   const moreS = sections.filter((s) => s.more);
   const on = (p: string) => loc.pathname === `${base}/${p}` || loc.pathname.startsWith(`${base}/${p}/`);
   const activeMore = moreS.some((s) => [s.path, ...(s.also ?? [])].some(on));
@@ -83,8 +85,8 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
           {moreS.length > 0 && (activeMore
             ? <p className="block shrink-0 whitespace-nowrap px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Ещё</p>
             : <button type="button" aria-expanded={moreOpen} onClick={() => setMoreOpen((v) => !v)}
-                className="block shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-semibold text-brand-plum hover:bg-brand-blush/40 md:w-full">
-                {moreOpen ? "Свернуть" : `Ещё ${moreS.length}`}</button>)}
+                className="flex shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-lg border border-dashed border-brand/30 px-3 py-2 text-left text-sm font-semibold text-brand-plum hover:border-brand/50 hover:bg-brand-blush/40 md:mt-1 md:w-full">
+                {moreOpen ? "Свернуть" : `Ещё ${moreS.length}`}<span aria-hidden="true" className="text-xs">{moreOpen ? "▴" : "▾"}</span></button>)}
           {(moreOpen || activeMore) && moreS.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} also={(s.also ?? []).some(on)} />)}
         </nav>
         <div className="hidden border-t border-brand-night/10 px-5 py-5 md:block">
@@ -114,6 +116,23 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
           className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2.5 border-b border-brand-night/10 bg-white/95 px-4 py-2.5 backdrop-blur sm:px-6 md:px-10 print:hidden"
         >
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={back}
+              data-testid="cabinet-back"
+              title="Вернуться на предыдущий экран"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-brand-night/15 bg-white px-3 py-1.5 text-sm font-bold text-brand-night shadow-sm transition hover:border-brand/40 hover:bg-brand-blush/40"
+            >
+              <span aria-hidden="true">←</span> Назад
+            </button>
+            <Link
+              to="/"
+              data-testid="cabinet-home"
+              className="inline-flex items-center rounded-lg border border-brand-night/15 bg-white px-3 py-1.5 text-sm font-semibold text-brand-night transition hover:border-brand/40 hover:bg-brand-blush/40"
+            >
+              На главную
+            </Link>
+            <span className="mx-0.5 hidden h-5 w-px bg-brand-night/15 sm:inline-block" aria-hidden="true" />
             <span className="inline-flex items-center gap-1.5 rounded-lg bg-brand-night px-2.5 py-1 text-xs font-bold text-white">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
               {SHORT[role] ?? title}
@@ -149,21 +168,107 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
                 </button>
               );
             })}
+            <Link
+              to="/warroom"
+              data-testid="cabinet-warroom"
+              title="Боевой ИИ-Полигон: живая проверка ИИ-аватара, подборки и паспорта на одном экране"
+              className="ml-1 inline-flex items-center gap-1.5 rounded-lg bg-brand-night px-2.5 py-1 text-xs font-bold text-white transition hover:bg-brand-plum"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-blush" aria-hidden="true" />
+              Боевой ИИ-Полигон
+            </Link>
             <button
               type="button"
               onClick={exit}
-              className="ml-1 rounded-lg border border-brand/30 bg-white px-3 py-1 text-xs font-bold text-brand transition hover:bg-brand hover:text-white"
+              data-testid="cabinet-exit"
+              title="Выйти из кабинета и вернуться на главную"
+              className="ml-1 inline-flex items-center gap-1.5 rounded-lg bg-brand-strong px-3.5 py-1.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-deep"
             >
               Выйти
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M6 3H3.5v10H6M10 5l3 3-3 3M13 8H6.5" /></svg>
             </button>
           </div>
         </div>
+        <CabinetRoute role={role} pathname={loc.pathname} />
         <main id="main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-6 outline-none sm:px-6 md:px-10 md:py-8">
           {/* Я16: раздел грузится отдельным файлом — меню остаётся, ошибка загрузки раздела — экран повтора внутри */}
           <RouteBoundary inline><Suspense fallback={<RouteFallback inline />}><Outlet /></Suspense></RouteBoundary>
         </main>
       </div>
     </div>
+  );
+}
+
+/** «Ваш маршрут (4 шага)» под верхней панелью: где я в основном сценарии и куда дальше — каждый шаг кликабелен. */
+interface RouteStep { to: string; title: string; match: (p: string) => boolean }
+const under = (p: string, ...bases: string[]) => bases.some((b) => p === b || p.startsWith(`${b}/`));
+const ROUTES: Partial<Record<Role, RouteStep[]>> = {
+  candidate: [
+    { to: "/candidate/profile", title: "Профиль и резюме", match: (p) => under(p, "/candidate/profile") },
+    { to: "/candidate/assessment", title: "Адаптивный тест / Экспресс", match: (p) => under(p, "/candidate/assessment", "/candidate/express", "/candidate/category") },
+    { to: "/candidate/attempts", title: "Устная защита с ИИ-аватаром", match: (p) => under(p, "/candidate/attempts", "/candidate/interview") },
+    { to: "/candidate/invitations", title: "Паспорт Ed25519 и офферы с вилкой", match: (p) => under(p, "/candidate/invitations", "/candidate/fsp", "/candidate/messages") },
+  ],
+  employer: [
+    { to: "/employer/needs", title: "Создать вакансию (текст/голос)", match: (p) => p === "/employer/needs" || under(p, "/employer/vacancies") },
+    { to: "/employer/compare", title: "Ранжированная подборка и сравнение", match: (p) => (p.startsWith("/employer/needs/")) || under(p, "/employer/compare", "/employer/search", "/employer/candidates", "/employer/mutual") },
+    { to: "/employer/invitations", title: "Оффер в 1 клик со слотами", match: (p) => under(p, "/employer/invitations", "/employer/messages") },
+    { to: "/employer/ats", title: "Экспорт в ATS Поток / Кубок ФСП", match: (p) => under(p, "/employer/ats", "/employer/cups") },
+  ],
+};
+
+function CabinetRoute({ role, pathname }: { role: Role; pathname: string }) {
+  const steps = ROUTES[role];
+  if (!steps) return null;
+  const p = pathname.replace(/\/+$/, "");
+  const active = steps.findIndex((s) => s.match(p));
+  return (
+    <section
+      data-testid="cabinet-route"
+      aria-label="Ваш маршрут (4 шага)"
+      className="border-b border-brand-night/10 bg-[#F6F3FA] px-4 py-2.5 sm:px-6 md:px-10 print:hidden"
+    >
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-brand-plum">
+          Ваш маршрут (4 шага)
+          {active < 0 && <span className="ml-2 font-semibold normal-case tracking-normal text-brand-ink/60">— начните с шага 1</span>}
+        </p>
+        <ol className="nav-strip -mx-1 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-1 pb-0.5">
+          {steps.map((s, i) => {
+            const on = i === active;
+            const passed = active >= 0 && i < active;
+            return (
+              <li key={s.to} className="flex shrink-0 items-center gap-1">
+                <Link
+                  to={s.to}
+                  aria-current={on ? "step" : undefined}
+                  title={on ? `Вы здесь: ${s.title}` : `Перейти: ${s.title}`}
+                  className={`group inline-flex items-center gap-2 whitespace-nowrap rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition ${
+                    on
+                      ? "border-brand-strong bg-brand-strong text-white shadow-sm"
+                      : passed
+                        ? "border-brand/25 bg-white text-brand-night hover:border-brand/50"
+                        : "border-brand-night/10 bg-white text-brand-ink/80 hover:border-brand/40 hover:text-brand-night"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-extrabold ${
+                      on ? "bg-white text-brand-strong" : passed ? "bg-brand/15 text-brand" : "bg-brand-night/10 text-brand-night"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  {s.title}
+                  {on && <span className="rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">вы здесь</span>}
+                </Link>
+                {i < steps.length - 1 && <span className="text-brand-ink/35" aria-hidden="true">→</span>}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </section>
   );
 }
 

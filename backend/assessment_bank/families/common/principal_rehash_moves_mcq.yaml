@@ -1,0 +1,37 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: common.alg.principal_rehash_moves_mcq
+title: Решардинг hash mod N в два шага — сколько переносов ключей (НОК и min(N, M)) против оценки согласованного хэширования
+direction: common
+skills:
+- algorithms
+- data_structures
+- caching
+- capacity_planning
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - consistent
+    - direct
+    - one_minus
+    - half
+    - new_only
+    - last_step
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.9
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Стоимость решардинга при схеме id mod N: доля оставшихся ключей определяется
+    НОК(N, M) и min(N, M), план в два шага переносит ключи дважды; правдоподобные ответы дают интуиция согласованного хэширования
+    (K·Δ/M) и прямой переход. Lead обычно оценивает перенос как K·Δ/M — граница Lead/Principal (θ ≈ 3,0 по шкале продукта;
+    b 2,9 — по 2–3 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.common.principal_rehash_moves_mcq
+version: 1
+description: 'Principal: сколько переносов ключей даст рост шардов в два шага при схеме id mod N. Ключ — исполнением: формула
+  по НОК и перебор всех id.'

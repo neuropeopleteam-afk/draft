@@ -333,6 +333,31 @@ def skills() -> None:
 
 
 # ------------------------------------------------------------------ разбор + подбор
+def testable_reach(direction: str | None) -> set[str]:
+    """Проверяемое ядро направления: теги, которые банк теста подтверждает напрямую (bank_tags) или через implied
+    (подтверждённый фреймворк → базовый язык). Обязательный навык вне ядра не может получить T1 ни у одного кандидата —
+    его покрытие ограничено потолком, а не качеством подбора."""
+    if not direction:
+        return set()
+    from app.modules.matching import implied
+    from app.modules.matching.coverage import bank_tags
+
+    reach = set(bank_tags(direction))
+    for src, tgts in implied.IMPLIES.items():
+        if src in reach:
+            reach.update(tgts)
+    return reach
+
+
+def t1_confirmed_tags(x: dict, tags: set[str]) -> set[str]:
+    """Обязательные навыки из tags, подтверждённые тестом (T1, в т. ч. через implied) у строки подборки x."""
+    from app.modules.catalog.seed_data import tag_title
+
+    by_title = {f"Обязательно: {tag_title(t)}": t for t in tags}
+    return {by_title[r["requirement"]] for r in x.get("reasons") or []
+            if r.get("requirement") in by_title and r.get("level") == "T1" and r.get("status") == "confirmed"}
+
+
 def match(limit: int) -> None:
     from sqlalchemy import select
 
@@ -352,6 +377,9 @@ def match(limit: int) -> None:
     parsed_dir = defaultdict(Counter)
     errors, missed_ks = [], defaultdict(Counter)
     cov_best, cov_mean = defaultdict(list), defaultdict(list)
+    # Честные нормированные метрики (20.10): покрытие обязательного только по проверяемому ядру направления (банк +
+    # implied) и потолок — какая доля обязательных навыков вакансии вообще может быть подтверждена тестом
+    cov_best_t, ceil_v = defaultdict(list), defaultdict(list)
     compare = os.environ.get("HH_MATCH_COMPARE", "1") != "0"
     with SessionLocal() as db:
         cat_ids = {c.id for c in db.scalars(select(Category)).all()}
@@ -422,6 +450,14 @@ def match(limit: int) -> None:
                     c[pre + "req_full_top5"] += any((x.get("must") or {}).get("missing_total", 1) == 0 for x in top5)
                     c[pre + "req_full_top5_conf"] += any((x.get("must") or {}).get("missing_total", 1) == 0
                                                          and x["grade_status"] == "confirmed" for x in top5)
+                    if pre == "":  # нормированные метрики — для продукта по умолчанию
+                        req_t = req & testable_reach(r.get("direction"))
+                        ceil_v[d].append(len(req_t) / len(req))
+                        if req_t:
+                            c["req_vac_t"] += 1
+                            got = [len(t1_confirmed_tags(x, req_t)) / len(req_t) for x in top5]
+                            cov_best_t[d].append(max(got, default=0.0))
+                            c["req_full_top5_t"] += any(g >= 1.0 for g in got)
             if i % 50 == 0:
                 print(f"… {i}/{len(items)}")
     dirs = {}
@@ -441,6 +477,7 @@ def match(limit: int) -> None:
                    "req_coverage_best_top5_off": _mean(cov_best["off_" + d]),
                    "req_full_top5": _share(c["req_full_top5"], c["req_vac"]),
                    "req_full_top5_confirmed": _share(c["req_full_top5_conf"], c["req_vac"]),
+                   **_testable(cov_best_t[d], ceil_v[d], c),
                    "missed_key_skills_top": [{"tag": t, "n": k} for t, k in missed_ks[d].most_common(5)]}
     tot = Counter()
     for c in per.values():
@@ -453,7 +490,8 @@ def match(limit: int) -> None:
 
     def covs(ds):
         return {k: [x for d in ds for x in src[pre + d]] for k, src, pre in (
-            ("mean5", cov_mean, ""), ("best5_off", cov_best, "off_"), ("mean5_off", cov_mean, "off_"))}
+            ("mean5", cov_mean, ""), ("best5_off", cov_best, "off_"), ("mean5_off", cov_mean, "off_"),
+            ("best5_t", cov_best_t, ""), ("ceil", ceil_v, ""))}
     out = {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "code_commit": code_commit(),
            "algorithm": algorithm(), "label_note": LABEL_NOTE, "corpus_collected_at": corpus["collected_at"],
            "n_corpus": len(items), "n": tot["n"], "n_missing": len(items) - tot["n"], "limit": limit,
@@ -466,7 +504,11 @@ def match(limit: int) -> None:
                      "потребности, подтверждённых тестом (T1), у лучшего из первых пяти; подтверждённый фреймворк "
                      "засчитывается как подтверждение базового языка (FastAPI/Django → Python, React/Vue → JavaScript, "
                      "Spring → Java, PostgreSQL → SQL, Docker/Kubernetes → Linux; балл × 0,9; флаг MATCH_IMPLIED, "
-                     "matching/implied.py).",
+                     "matching/implied.py). Нормированные метрики (поля *_testable и ceiling): проверяемое ядро — "
+                     "обязательные навыки, которые банк направления подтверждает тестом напрямую или через implied; "
+                     "ceiling — средняя по вакансиям доля таких навыков среди всех обязательных (максимум сырого "
+                     "покрытия при идеальном пуле); req_coverage_best_top5_testable — доля навыков ядра, подтверждённых "
+                     "у лучшего из пяти; req_full_top5_testable — в пятёрке есть кандидат со всем ядром.",
            "implied": os.environ.get("MATCH_IMPLIED", "1"),
            "overall": _summary(tot, allcv, covs(list(per))),
            "catalog_only": _summary(cat_tot, [x for d in catalog for x in cov_best[d]], covs(catalog)),
@@ -485,6 +527,16 @@ def match(limit: int) -> None:
 
 def _share(a: int, b: int) -> dict:
     return {"k": a, "n": b, "share": round(a / b, 3) if b else None}
+
+
+def _testable(best_t: list[float], ceil: list[float], c: Counter, raw: list[float] | None = None) -> dict:
+    """Нормированные метрики проверяемого ядра рядом с сырыми; raw_to_ceiling — сырое покрытие / потолок."""
+    out = {"req_coverage_best_top5_testable": _mean(best_t),
+           "req_full_top5_testable": _share(c["req_full_top5_t"], c["req_vac_t"]),
+           "ceiling": _mean(ceil)}
+    if raw and ceil and statistics.mean(ceil):
+        out["req_coverage_best_top5_raw_to_ceiling"] = round(statistics.mean(raw) / statistics.mean(ceil), 3)
+    return out
 
 
 def _mean(v: list[float]) -> dict:
@@ -513,7 +565,8 @@ def _summary(c: Counter, cv: list[float], extra: dict | None = None) -> dict:
             "req_coverage_best_top5": {"mean": round(statistics.mean(cv), 3) if cv else None, "n": len(cv)},
             "req_full_top5": _share(c["req_full_top5"], c["req_vac"]),
             "req_full_top5_confirmed": _share(c["req_full_top5_conf"], c["req_vac"]),
-            "required_mean": round(c["n_required"] / c["with_required"], 1) if c["with_required"] else None}
+            "required_mean": round(c["n_required"] / c["with_required"], 1) if c["with_required"] else None,
+            **_testable(extra.get("best5_t") or [], extra.get("ceil") or [], c, cv)}
 
 
 def _p(x: dict | None) -> str:
@@ -550,6 +603,13 @@ def render_match(r: dict) -> str:
     if k.get("req_coverage_mean_top5"):
         lines.append(f"| … в среднем по первой пятёрке (T1) | {_m(k['req_coverage_mean_top5'])} | "
                      f"{_m(o['req_coverage_mean_top5'])} |")
+    if k.get("req_coverage_best_top5_testable"):
+        lines += [f"| потолок: доля обязательных, которые тест в принципе может подтвердить (ceiling) | "
+                  f"{_m(k['ceiling'])} | {_m(o['ceiling'])} |",
+                  f"| покрытие проверяемого ядра у лучшего из пяти (T1, нормировано) | "
+                  f"{_m(k['req_coverage_best_top5_testable'])} | {_m(o['req_coverage_best_top5_testable'])} |",
+                  f"| в пятёрке есть кандидат со всем проверяемым ядром | {_p(k['req_full_top5_testable'])} | "
+                  f"{_p(o['req_full_top5_testable'])} |"]
     if k.get("required_mean") is not None:
         lines.append(f"| обязательных навыков в потребности (среднее, где они есть) | {str(k['required_mean']).replace('.', ',')} | "
                      f"{str(o['required_mean']).replace('.', ',')} |")

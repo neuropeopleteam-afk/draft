@@ -1,0 +1,38 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: common.api.rest_idempotent_retry_fix
+title: 'REST API: повтор POST при таймауте — один Idempotency-Key на операцию против нового ключа на попытку и отказа от повтора'
+direction: common
+skills:
+- rest_api
+- rest
+- idempotency
+- http
+- api_design
+target_grades:
+- senior
+- lead
+format: choose_fix
+language: python
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - only_5xx
+    - key_from_attempt
+    - no_key
+  defect_type: idempotency
+time_limit_s: 480
+canary: false
+prior_difficulty:
+  b: 1.9
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Навык из ключевых навыков вакансий hh.ru (rest-api), которого не было среди проверяемых
+    навыков банка. Повторы неидемпотентного POST в REST API: ключ идемпотентности относится к операции, а не к попытке; таймаут
+    после фактической обработки — типичный источник дублей. Ключ — исполнением клиента против тестового сервера, теряющего
+    ответы. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,9 — по 2 взаимодействующим ограничениям, волна 20.10, без
+    калибровки панелью). Короткое задание. σ 0,3'
+generator: assessment_bank.families.common.rest_idempotent_retry_fix
+version: 1
+description: 'Senior/Lead, REST API: выбрать верную реализацию повтора POST с ключом идемпотентности. Каждая замена исполняется
+  против тестового сервера, печатается число созданных объектов.'

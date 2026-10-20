@@ -1,0 +1,39 @@
+# Волна 20.10: файл собран tools/w2010_yaml.py из tools/w2010_meta — правьте таблицу, не YAML.
+family_id: common.db.principal_quorum_latency_mcq
+title: Кворумы записи и чтения без лидера — пересечение R + W > N, W ≥ 2 и бюджет задержки чтения; наименьшая задержка записи
+direction: common
+skills:
+- databases
+- concurrency
+- query_planning
+- latency
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps:
+    - w1
+    - no_read_budget
+    - off_by_one
+    - all
+    - majority
+    - sum
+    - next_w
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.0
+  a: 1.5
+  sigma_variant: 0.3
+  basis: 'Априорная трудность (не по людям). Выбор кворумов в хранилище без лидера: пересечение кворумов (R = N − W + 1),
+    долговечность подтверждённой записи (W ≥ 2) и бюджет задержки чтения взаимодействуют — уменьшение W увеличивает R и задержку
+    чтения; задержка — порядковая статистика RTT, а не среднее. Lead обычно берёт большинство или W = 1 без проверки бюджета
+    чтения — граница Lead/Principal (θ ≈ 3,0 по шкале продукта; b 3,0 — по 3 взаимодействующим ограничениям, волна 20.10,
+    без калибровки панелью). Короткое задание (≤ 7 мин). σ 0,3'
+generator: assessment_bank.families.common.principal_quorum_latency_mcq
+version: 1
+description: 'Principal: наименьшая задержка записи при пересекающихся кворумах, W ≥ 2 и бюджете чтения. Ключ — исполнением:
+  формула и перебор всех пар (W, R).'

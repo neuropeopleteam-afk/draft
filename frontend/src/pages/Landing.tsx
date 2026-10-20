@@ -98,6 +98,18 @@ export default function Landing() {
               </>
             )}
           </div>
+          <Link to="/warroom" data-testid="landing-warroom"
+            className="group relative mt-5 flex items-center gap-4 overflow-hidden rounded-2xl border border-rose-400/50 bg-gradient-to-r from-[#1a0b2e] via-[#2a0d3a] to-[#0d1240] px-5 py-4 text-white shadow-[0_12px_40px_-12px_rgba(255,0,83,0.75)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_-12px_rgba(255,0,83,0.95)]">
+            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-indigo-500 text-lg font-black" aria-hidden="true">
+              <span className="absolute inset-0 animate-ping rounded-xl bg-rose-500/40" />ИИ
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-rose-300">Новое · war room live</span>
+              <span className="block text-[0.98rem] font-extrabold leading-snug">Боевой ИИ-Полигон: Архитектура, Аватар и Античит вживую</span>
+              <span className="block text-xs text-white/65">Почините продакшн под нагрузкой или попробуйте обмануть радар из 21 сигнала</span>
+            </span>
+            <span className="text-xl text-rose-300 transition group-hover:translate-x-1" aria-hidden="true">→</span>
+          </Link>
           <ul className="mt-10 grid gap-3 text-[0.82rem] leading-snug sm:grid-cols-3" aria-label="Коротко о Драфте">
             <Fact k="IRT" t="Адаптивный тест вместо резюме" />
             <Fact k="₽" t="Вилка — в каждом приглашении" />
