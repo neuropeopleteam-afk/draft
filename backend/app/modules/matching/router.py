@@ -176,6 +176,9 @@ def _req_dict(r: Requirements | dict, text: str) -> dict:
         req["coverage"] = cov
     # И18: вне справочника, исключённое отрицанием, вилка не в рублях; И27: найденное моделью вне справочника
     req.update(text_notes(text, req, extra=d.get("unknown_terms")))
+    from app.modules.matching import vacancy_guard
+
+    req["vacancy_guard"] = vacancy_guard.assess_need_dict(req, text)
     return req
 
 
@@ -267,6 +270,12 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         v.filters = {**filters, META: meta}
         db.commit()
     st = [_result_status(r) for r in v.results]
+    from app.modules.matching import explain as explain_mod
+
+    enriched_results = [
+        r if r.get("explain") else {**r, "explain": explain_mod.build_explain_from_result(r, v.requirements, ranking.WEIGHTS)}
+        for r in v.results
+    ]
     return {
         "version": v.version, "parent_version": v.parent_version, "created_at": v.created_at.isoformat(),
         "filters": filters, "requirements": v.requirements, "algorithm": v.algorithm_version,
@@ -278,7 +287,7 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         "scope": _scope_out(db, v),  # Я10: что тест проверяет / НЕ проверяет и зонды по потребности (не меняет порядок)
         "weights": ranking.WEIGHTS, "levels": ranking.LEVELS, "provisional_penalty": ranking.PROVISIONAL_PENALTY,
         "categories": recs,
-        "total": len(v.results), "results": v.results,
+        "total": len(enriched_results), "results": enriched_results,
         # единая модель статуса: сколько в выдаче подтверждённых / предварительных / не подтверждённых
         "confirmed_matched": sum(1 for x in st if x == "confirmed"),
         "provisional_matched": sum(1 for x in st if x == "provisional"),
@@ -615,8 +624,12 @@ def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
         core = core_skill.describe(b, req)  # Я1: «Основной язык роли — Go: не заявлен»
         if core:
             reasons = core_skill.annotate(reasons[:1] + [core_skill.reason(core)] + reasons[1:], core)
-        out["match"] = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons, "must": must,
-                        "core": core, "version": sv.version if sv is not None else None}
+        from app.modules.matching import explain as explain_mod
+
+        match_obj = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons, "must": must,
+                     "core": core, "version": sv.version if sv is not None else None}
+        match_obj["explain"] = explain_mod.build_explain_from_result({"card": out, **match_obj}, req, ranking.WEIGHTS)
+        out["match"] = match_obj
     until = cooldown_until(db, c.id, p.user_id)
     inv = db.scalars(select(Invitation).where(Invitation.company_id == c.id, Invitation.candidate_user_id == p.user_id)
                      .order_by(Invitation.created_at.desc())).all()

@@ -41,7 +41,7 @@ from app.modules.profiles.facts import (
 )
 from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
-from app.modules.matching import core_skill, grade_above, implied, must_have
+from app.modules.matching import core_skill, explain as explain_mod, grade_above, implied, must_have
 from app.core.origin import NO_FSP
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
@@ -515,11 +515,12 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         if rank > limit and b.profile.public_ref not in include_refs:
             continue
         ci = core.get(b.profile.user_id)
-        results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
-                        "reasons": core_skill.annotate(reasons[:1] + [core_skill.reason(ci)] + reasons[1:], ci)
-                        if ci else reasons,
-                        "category_id": b.category_id, "must": must[b.profile.user_id], "core": ci,
-                        "grade_status": b.grade_status, "card": card(b, cats)})
+        rs = core_skill.annotate(reasons[:1] + [core_skill.reason(ci)] + reasons[1:], ci) if ci else reasons
+        item = {"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
+                "reasons": rs, "category_id": b.category_id, "must": must[b.profile.user_id], "core": ci,
+                "grade_status": b.grade_status, "card": card(b, cats)}
+        item["explain"] = explain_mod.build_explain_from_result(item, req, WEIGHTS)
+        results.append(item)
     unc = unconfirmed_counts(db)
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)

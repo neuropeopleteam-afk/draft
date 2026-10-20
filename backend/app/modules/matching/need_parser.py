@@ -1121,6 +1121,9 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
         merged["direction"] = own["direction"]  # расширение каталога: своё направление вместо ближайшего
         merged["evidence"]["direction"] = own["evidence"]
     merged["weight_rule"] = weight_rule()  # Я11 (С3-3): правило весов — рядом с весами в карточке
+    from app.modules.matching import vacancy_guard
+
+    merged["vacancy_guard"] = vacancy_guard.assess_need_dict(merged, text)
     return merged
 
 
