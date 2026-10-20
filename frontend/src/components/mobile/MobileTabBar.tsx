@@ -2,8 +2,8 @@
 // Динамически читает разделы роли из sections.ts (или принимает их через пропсы из CabinetLayout),
 // выводит 4–5 главных разделов с крупными областями нажатия (≥ 48 px) и лист «Ещё» для остальных разделов.
 // При монтировании на мобильном экране (< 768 px) выставляет на document.documentElement переменную
-// --mobile-tabbar-h = calc(4rem + env(safe-area-inset-bottom, 0px)) (иначе 0px), чтобы плавающие кнопки
-// (проводник Елена и др.) смещались выше панели и не перекрывали вкладки.
+// --mobile-tabbar-h = "<высота_nav_в_px>px" (через getBoundingClientRect + ResizeObserver, и "0px" на >= 768 px),
+// чтобы плавающие кнопки и окно проводника Елены смещались выше панели и не перекрывали вкладки.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
@@ -239,6 +239,7 @@ export function MobileTabBar({
   const loc = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   const effectiveRole: string = roleProp || me?.role || "candidate";
   const base = baseProp || ROLE_BASE[effectiveRole] || "/candidate";
@@ -276,24 +277,31 @@ export function MobileTabBar({
     };
   }, [sheetOpen]);
 
-  // Выставляем CSS-переменную --mobile-tabbar-h на documentElement, когда панель видна (< 768 px),
-  // чтобы плавающие виджеты (проводник Елена и др.) не перекрывали нижнюю навигацию.
+  // Выставляем CSS-переменную --mobile-tabbar-h на documentElement в пикселях (фактическая высота nav с учётом safe-area),
+  // когда панель видна (< 768 px), и "0px" на >= 768 px или при размонтировании.
   useEffect(() => {
     if (typeof window === "undefined" || !visibleSections.length) return;
     const root = document.documentElement;
     const mq = window.matchMedia("(max-width: 767px)");
     const sync = () => {
-      root.style.setProperty(
-        "--mobile-tabbar-h",
-        mq.matches ? "calc(4rem + env(safe-area-inset-bottom, 0px))" : "0px",
-      );
+      if (!mq.matches || !navRef.current) {
+        root.style.setProperty("--mobile-tabbar-h", "0px");
+        return;
+      }
+      const h = Math.round(navRef.current.getBoundingClientRect().height);
+      root.style.setProperty("--mobile-tabbar-h", h > 0 ? `${h}px` : "0px");
     };
     sync();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
+    if (ro && navRef.current) ro.observe(navRef.current);
     mq.addEventListener?.("change", sync);
     window.addEventListener("resize", sync);
+    window.addEventListener("orientationchange", sync);
     return () => {
+      ro?.disconnect();
       mq.removeEventListener?.("change", sync);
       window.removeEventListener("resize", sync);
+      window.removeEventListener("orientationchange", sync);
       root.style.setProperty("--mobile-tabbar-h", "0px");
     };
   }, [visibleSections.length]);
@@ -455,6 +463,7 @@ export function MobileTabBar({
       )}
 
       <nav
+        ref={navRef}
         aria-label="Нижняя навигация кабинета"
         data-testid="mobile-tab-bar"
         className={`fixed inset-x-0 bottom-0 z-40 border-t border-brand-night/10 bg-white/95 backdrop-blur-md md:hidden ${className}`}
