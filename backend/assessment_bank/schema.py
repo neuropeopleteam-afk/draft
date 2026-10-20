@@ -23,7 +23,8 @@ Direction = Literal["common", "backend", "frontend", "data_ml", "qa", "security"
 # intern — грейд «Стажёр» ниже Junior: информационная метка для лёгких семейств (b ≲ −1); CAT её не использует
 Grade = Literal["intern", "junior", "middle", "senior", "lead", "principal"]  # lead, principal — волна 7 (6 уровней, решение владельца 10.10)
 Format = Literal[
-    "find_bug", "predict_output", "choose_fix", "open_book_3step", "mcq_concept", "open_answer"
+    "find_bug", "predict_output", "choose_fix", "open_book_3step", "mcq_concept", "open_answer",
+    "incident_sim",
 ]
 Language = Literal[
     "python", "javascript", "typescript", "sql", "bash", "text", "go", "java", "dockerfile", "yaml",
@@ -34,9 +35,11 @@ Verification = Literal["execution", "reference_table", "rubric_only"]
 GRADES: tuple[str, ...] = ("intern", "junior", "middle", "senior", "lead", "principal")
 FORMATS: tuple[str, ...] = (
     "find_bug", "predict_output", "choose_fix", "open_book_3step", "mcq_concept", "open_answer",
+    "incident_sim",
 )
 OPTION_FORMATS = {"choose_fix", "mcq_concept"}
-RUBRIC_FORMATS = {"open_answer", "open_book_3step"}
+RUBRIC_FORMATS = {"open_answer", "open_book_3step", "incident_sim"}
+STEP_FORMATS = {"open_book_3step", "incident_sim"}
 AUTO_SCORED_FORMATS = {"find_bug", "predict_output", "choose_fix", "mcq_concept"}
 
 FAMILY_ID_RE = re.compile(
@@ -116,12 +119,12 @@ class FamilySpec(_Strict):
             raise ValueError("канарейке нужен canary_pool_size (число опубликованных вариантов)")
         if not self.canary and self.canary_pool_size:
             raise ValueError("canary_pool_size задаётся только для канареек")
-        if self.format == "open_book_3step":
+        if self.format in STEP_FORMATS:
             so = self.prior_difficulty.step_offsets
             if not so or len(so) != 3:
-                raise ValueError("open_book_3step: нужны step_offsets из трёх чисел")
+                raise ValueError(f"{self.format}: нужны step_offsets из трёх чисел")
         elif self.prior_difficulty.step_offsets:
-            raise ValueError("step_offsets допустимы только для open_book_3step")
+            raise ValueError("step_offsets допустимы только для open_book_3step и incident_sim")
         if self.format in OPTION_FORMATS and not self.invariants.n_options:
             raise ValueError(f"{self.format}: нужен invariants.n_options")
         if len(set(self.target_grades)) != len(self.target_grades):
@@ -135,8 +138,8 @@ class FamilySpec(_Strict):
 
     @property
     def n_parts(self) -> int:
-        """Число независимо оцениваемых частей (для open_book_3step — три шага)."""
-        return 3 if self.format == "open_book_3step" else 1
+        """Число независимо оцениваемых частей (для open_book_3step и incident_sim — три шага)."""
+        return 3 if self.format in STEP_FORMATS else 1
 
 
 # --------------------------------------------------------------------------- вариант
@@ -262,18 +265,18 @@ class Variant(_Strict):
             raise ValueError("predict_output: ключ — вывод программы")
         if fmt == "open_answer" and self.answer_key.kind != "rubric":
             raise ValueError("open_answer: ключ — рубрика")
-        if fmt == "open_book_3step":
+        if fmt in STEP_FORMATS:
             if self.answer_key.kind != "steps":
-                raise ValueError("open_book_3step: ключ — по шагам")
+                raise ValueError(f"{fmt}: ключ — по шагам")
             if not self.meta.steps or [s.kind for s in self.meta.steps] != [
                     "reproduce", "fix", "explain"]:
-                raise ValueError("open_book_3step: шаги reproduce → fix → explain")
+                raise ValueError(f"{fmt}: шаги reproduce → fix → explain")
             if not self.options:
-                raise ValueError("open_book_3step: нужны варианты для шагов 1 и 2")
+                raise ValueError(f"{fmt}: нужны варианты для шагов 1 и 2")
             for st in (1, 2):
                 st_ids = {o.id for o in self.options if o.step == st}
                 if self.answer_key.value.get(str(st)) not in st_ids:
-                    raise ValueError(f"open_book_3step: ключ шага {st} не найден")
+                    raise ValueError(f"{fmt}: ключ шага {st} не найден")
         return self
 
     # ---- представления
@@ -283,8 +286,14 @@ class Variant(_Strict):
         opts = None
         if self.options:
             opts = [o.model_dump(exclude_none=True) for o in self.options]
-        return {"variant_id": self.variant_id, "stem": self.stem, "code": self.code,
-                "options": opts, "meta": meta}
+        out: dict[str, Any] = {
+            "variant_id": self.variant_id, "stem": self.stem, "code": self.code,
+            "options": opts, "meta": meta,
+        }
+        inc = (self.meta.params or {}).get("incident")
+        if inc is not None:
+            out["incident"] = inc
+        return out
 
     def fingerprint(self) -> str:
         """Хэш видимого кандидату содержания (для уникальности вариантов)."""
