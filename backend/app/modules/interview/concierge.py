@@ -661,6 +661,7 @@ _NAMES = set("""
 ян яна ярослав ярослава айгуль айдар альберт амир асель багира булат вагиз диляра динара ильдар ильнур камила камиль
 ринат рустам тагир эльдар эльмира ахмед марат азат алсу гульнара лейла данияр нурлан ержан айжан асхат
 """.split())
+_NAME_RE2 = re.compile(r"(?:меня\s+([А-ЯЁа-яё]{2,20})\s+зовут|^\s*([А-ЯЁа-яё]{2,20})\s+меня\s+зовут)", re.I)
 _NAME_ASK = re.compile(r"обращаться|как вас зовут|ваше имя|познакомимся", re.I)
 
 
@@ -668,9 +669,9 @@ def extract_name(text: str, current_name: str | None = None, asked: bool = False
     """Имя из реплики. Явное «меня зовут…», «зовите меня…» меняет и уже известное имя; одно слово — имя, только если
     Елена только что спросила имя и слово есть в словаре имён."""
     t = (text or "").strip()
-    m = _NAME_RE.search(t)
+    m = _NAME_RE.search(t) or _NAME_RE2.search(t)
     if m:
-        cand = m.group(1).strip()
+        cand = next(g for g in m.groups() if g).strip()
         low = cand.lower()
         if low not in _STOP_NAMES and not low.startswith(("кандидат", "работодат")) and (low in _NAMES or len(low) >= 3):
             return _cap(cand)
@@ -694,7 +695,7 @@ def valid_llm_name(name: str | None, message: str) -> str | None:
         return None
     if low[:4] not in (message or "").lower():
         return None
-    if low.replace("ё", "е") not in {x.replace("ё", "е") for x in _NAMES} and not _NAME_RE.search(message or ""):
+    if low.replace("ё", "е") not in {x.replace("ё", "е") for x in _NAMES} and not (_NAME_RE.search(message or "") or _NAME_RE2.search(message or "")):
         return None
     return _cap(n)
 
@@ -981,6 +982,8 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         action = "answer"
     if action == "start_tour" and not (llm_role or cur_role):
         llm_role = "all"
+    if action == "start_tour" and (touring or paused) and (llm_role or "all") == (cur_role or "all"):
+        action = "resume"   # тот же обзор уже идёт — продолжаем, а не начинаем заново
     new_offer = None
     if action == "answer" and reply.rstrip().endswith("?") and (step or point):
         action = "point" if point and not step else "goto"   # «Показать …?» с шагом — это предложение показать
