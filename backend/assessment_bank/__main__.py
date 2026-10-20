@@ -22,6 +22,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--verify-seeds", type=int, default=None,
                    help="на скольких seed исполнять проверки ключа (по умолчанию на всех)")
     p.add_argument("--families", nargs="*")
+    p.add_argument("--jobs", type=int, default=None,
+                   help="рабочих процессов валидатора (по умолчанию — все доступные ядра; BANK_VALIDATE_JOBS)")
     p.add_argument("--out", default="reports")
     p = sub.add_parser("simulate", help="симуляция адаптивного теста")
     p.add_argument("--n", type=int, default=1000)
@@ -53,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if a.cmd == "validate":
         from .validator import report_markdown, validate_bank
-        res = validate_bank(a.seeds, a.verify_seeds, a.families, progress=True)
+        res = validate_bank(a.seeds, a.verify_seeds, a.families, progress=True, jobs=a.jobs)
         out = Path(a.out)
         out.mkdir(parents=True, exist_ok=True)
         (out / "validation_report.json").write_text(json.dumps(res, ensure_ascii=False, indent=2,

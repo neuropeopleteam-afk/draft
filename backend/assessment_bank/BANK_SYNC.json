@@ -1,16 +1,16 @@
 {
   "source": "../bank",
-  "commit": "58f9903",
-  "dirty_files": 20,
-  "content_hash": "3be97c425f78ca15",
-  "synced_at": "2026-10-20T08:31:17+00:00",
-  "n_families": 455,
+  "commit": "603474f",
+  "dirty_files": 0,
+  "content_hash": "82a05fdbacf00481",
+  "synced_at": "2026-10-20T11:19:30+00:00",
+  "n_families": 1504,
   "by_direction": {
     "analyst": {
-      "families": 34,
+      "families": 142,
       "canary": 0,
       "formats": {
-        "mcq_concept": 15,
+        "mcq_concept": 123,
         "predict_output": 5,
         "open_answer": 5,
         "find_bug": 5,
@@ -18,7 +18,7 @@
       }
     },
     "backend": {
-      "families": 62,
+      "families": 154,
       "canary": 2,
       "formats": {
         "choose_fix": 15,
@@ -26,15 +26,15 @@
         "find_bug": 11,
         "open_answer": 6,
         "open_book_3step": 5,
-        "mcq_concept": 13
+        "mcq_concept": 105
       }
     },
     "common": {
-      "families": 72,
+      "families": 173,
       "canary": 3,
       "formats": {
         "find_bug": 4,
-        "mcq_concept": 37,
+        "mcq_concept": 138,
         "predict_output": 11,
         "open_book_3step": 4,
         "open_answer": 8,
@@ -42,10 +42,10 @@
       }
     },
     "data_eng": {
-      "families": 43,
+      "families": 151,
       "canary": 1,
       "formats": {
-        "mcq_concept": 19,
+        "mcq_concept": 127,
         "open_answer": 5,
         "find_bug": 4,
         "choose_fix": 4,
@@ -54,10 +54,10 @@
       }
     },
     "data_ml": {
-      "families": 45,
+      "families": 153,
       "canary": 1,
       "formats": {
-        "mcq_concept": 15,
+        "mcq_concept": 123,
         "open_answer": 6,
         "find_bug": 9,
         "choose_fix": 7,
@@ -66,22 +66,22 @@
       }
     },
     "devops": {
-      "families": 39,
+      "families": 146,
       "canary": 1,
       "formats": {
         "predict_output": 6,
         "choose_fix": 1,
         "find_bug": 3,
         "open_book_3step": 2,
-        "mcq_concept": 22,
+        "mcq_concept": 129,
         "open_answer": 5
       }
     },
     "frontend": {
-      "families": 46,
+      "families": 154,
       "canary": 2,
       "formats": {
-        "mcq_concept": 15,
+        "mcq_concept": 123,
         "open_book_3step": 4,
         "open_answer": 8,
         "choose_fix": 7,
@@ -90,10 +90,10 @@
       }
     },
     "mobile": {
-      "families": 37,
+      "families": 138,
       "canary": 0,
       "formats": {
-        "mcq_concept": 19,
+        "mcq_concept": 120,
         "open_answer": 5,
         "find_bug": 7,
         "choose_fix": 5,
@@ -101,11 +101,11 @@
       }
     },
     "qa": {
-      "families": 40,
+      "families": 148,
       "canary": 1,
       "formats": {
         "open_book_3step": 2,
-        "mcq_concept": 18,
+        "mcq_concept": 126,
         "find_bug": 9,
         "choose_fix": 2,
         "open_answer": 4,
@@ -113,12 +113,12 @@
       }
     },
     "security": {
-      "families": 37,
+      "families": 145,
       "canary": 1,
       "formats": {
         "find_bug": 9,
         "predict_output": 3,
-        "mcq_concept": 12,
+        "mcq_concept": 120,
         "choose_fix": 6,
         "open_answer": 5,
         "open_book_3step": 2
@@ -127,9 +127,15 @@
   },
   "directions_verified": [
     "analyst",
+    "backend",
+    "common",
     "data_eng",
+    "data_ml",
     "devops",
-    "mobile"
+    "frontend",
+    "mobile",
+    "qa",
+    "security"
   ],
   "readiness": {
     "rule": {
@@ -138,93 +144,93 @@
     },
     "by_direction": {
       "analyst": {
-        "families": 20,
+        "families": 92,
         "per_grade": {
-          "intern": 6,
-          "junior": 10,
-          "middle": 10,
-          "senior": 8
+          "intern": 15,
+          "junior": 28,
+          "middle": 37,
+          "senior": 26
         }
       },
       "backend": {
-        "families": 43,
+        "families": 103,
         "per_grade": {
-          "intern": 2,
-          "junior": 17,
-          "middle": 34,
-          "senior": 17
+          "intern": 10,
+          "junior": 33,
+          "middle": 54,
+          "senior": 33
         }
       },
       "common": {
-        "families": 39,
+        "families": 105,
         "per_grade": {
-          "intern": 2,
-          "junior": 15,
-          "middle": 22,
-          "senior": 20
+          "intern": 10,
+          "junior": 31,
+          "middle": 47,
+          "senior": 37
         }
       },
       "data_eng": {
-        "families": 27,
+        "families": 99,
         "per_grade": {
-          "intern": 4,
-          "junior": 13,
-          "middle": 15,
-          "senior": 14
+          "intern": 13,
+          "junior": 31,
+          "middle": 42,
+          "senior": 32
         }
       },
       "data_ml": {
-        "families": 29,
+        "families": 101,
         "per_grade": {
-          "intern": 1,
-          "junior": 12,
-          "middle": 20,
-          "senior": 14
+          "intern": 10,
+          "junior": 30,
+          "middle": 47,
+          "senior": 32
         }
       },
       "devops": {
-        "families": 23,
+        "families": 94,
         "per_grade": {
-          "intern": 4,
-          "junior": 14,
-          "middle": 17,
-          "senior": 9
+          "intern": 13,
+          "junior": 32,
+          "middle": 43,
+          "senior": 27
         }
       },
       "frontend": {
-        "families": 27,
+        "families": 99,
         "per_grade": {
-          "intern": 1,
-          "junior": 9,
-          "middle": 16,
-          "senior": 13
+          "intern": 10,
+          "junior": 27,
+          "middle": 43,
+          "senior": 31
         }
       },
       "mobile": {
-        "families": 23,
+        "families": 90,
         "per_grade": {
-          "intern": 6,
-          "junior": 13,
-          "middle": 11,
-          "senior": 7
+          "intern": 15,
+          "junior": 31,
+          "middle": 34,
+          "senior": 24
         }
       },
       "qa": {
-        "families": 25,
+        "families": 97,
         "per_grade": {
-          "intern": 1,
-          "junior": 9,
-          "middle": 16,
-          "senior": 12
+          "intern": 10,
+          "junior": 27,
+          "middle": 43,
+          "senior": 30
         }
       },
       "security": {
-        "families": 23,
+        "families": 95,
         "per_grade": {
-          "intern": 1,
-          "junior": 8,
-          "middle": 11,
-          "senior": 9
+          "intern": 10,
+          "junior": 26,
+          "middle": 38,
+          "senior": 27
         }
       }
     }
@@ -232,38 +238,18 @@
   "excluded": [],
   "validation": {
     "summary": {
-      "n_families": 455,
-      "n_variants_generated": 9100,
-      "n_unique_variants": 9076,
-      "n_checks": 2909,
-      "n_checks_failed": 0,
+      "n_families": 1504,
       "status": {
-        "PASS": 425,
-        "WARN": 30
+        "PASS": 1474,
+        "WARN": 30,
+        "FAIL": 0
       },
       "n_fail": 0,
-      "n_warn": 30,
-      "by_direction": {
-        "analyst": 34,
-        "backend": 62,
-        "common": 72,
-        "data_eng": 43,
-        "data_ml": 45,
-        "devops": 39,
-        "frontend": 46,
-        "mobile": 37,
-        "qa": 40,
-        "security": 37
-      },
-      "by_format": {
-        "mcq_concept": 185,
-        "predict_output": 65,
-        "open_answer": 57,
-        "find_bug": 67,
-        "choose_fix": 59,
-        "open_book_3step": 22
-      },
-      "seconds": 1352.5
+      "n_seeds": 20,
+      "n_checks": 10702,
+      "n_checks_failed": 0,
+      "n_variants_generated": 30080,
+      "n_unique_variants": 30080
     },
     "seeds": 20,
     "verify_seeds": 3,

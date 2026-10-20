@@ -218,6 +218,29 @@ def subprocess_hashes(pairs: list[tuple[str, int]], hashseed: str = "4242") -> l
 
 def validate_family(family_id: str, n_seeds: int = 200, verify_seeds: int | None = None,
                     check_subprocess: bool = True) -> FamilyReport:
+    """Проверить одно семейство (детерминизм в отдельном процессе — своим подпроцессом)."""
+    rep, sample = _validate_core(family_id, n_seeds, verify_seeds)
+    if check_subprocess and sample is not None:
+        _apply_subprocess(rep, sample, subprocess_hashes([(family_id, s) for s, _h in sample]))
+    return _finalize(rep)
+
+
+def _apply_subprocess(rep: FamilyReport, sample: list[tuple[int, str]], hs: list[str] | None) -> None:
+    rep.determinism_subprocess = hs is not None and hs == [h for _s, h in sample]
+    if not rep.determinism_subprocess:
+        rep.errors.insert(0, "генерация в отдельном процессе даёт другой результат")
+
+
+def _finalize(rep: FamilyReport) -> FamilyReport:
+    if rep.status != "FAIL" or rep.errors:
+        rep.status = "FAIL" if rep.errors else ("WARN" if rep.warnings else "PASS")
+    return rep
+
+
+def _validate_core(family_id: str, n_seeds: int = 200,
+                   verify_seeds: int | None = None) -> tuple[FamilyReport, list[tuple[int, str]] | None]:
+    """Всё, кроме детерминизма в отдельном процессе; вторым значением — (seed, хэш) первых 20 вариантов
+    для этой проверки (None, если ни один вариант не сгенерирован)."""
     t0 = time.time()
     spec = registry.get_spec(family_id)
     rep = FamilyReport(family_id=family_id, title=spec.title, direction=spec.direction,
@@ -232,19 +255,14 @@ def validate_family(family_id: str, n_seeds: int = 200, verify_seeds: int | None
             rep.errors.append(f"seed {s}: ошибка генерации: {type(exc).__name__}: {exc}"[:300])
     if not variants:
         rep.status = "FAIL"
-        return rep
+        return rep, None
     # детерминизм
     for v in variants[: min(50, len(variants))]:
         if registry.generate(family_id, v.meta.seed).canonical_hash() != v.canonical_hash():
             rep.determinism_in_process = False
             rep.errors.append(f"seed {v.meta.seed}: недетерминированная генерация")
             break
-    if check_subprocess:
-        sample = variants[:20]
-        hs = subprocess_hashes([(family_id, v.meta.seed) for v in sample])
-        rep.determinism_subprocess = hs is not None and hs == [v.canonical_hash() for v in sample]
-        if not rep.determinism_subprocess:
-            rep.errors.append("генерация в отдельном процессе даёт другой результат")
+    sample = [(v.meta.seed, v.canonical_hash()) for v in variants[:20]]
     # уникальность и разнообразие
     fps = [v.fingerprint() for v in variants]
     rep.n_unique = len(set(fps))
@@ -333,20 +351,83 @@ def validate_family(family_id: str, n_seeds: int = 200, verify_seeds: int | None
         rep.warnings.append("ключ сверен со справочной таблицей, исполнение невозможно")
     rep.status = "FAIL" if rep.errors else ("WARN" if rep.warnings else "PASS")
     rep.seconds = round(time.time() - t0, 2)
-    return rep
+    return rep, sample
+
+
+def _validate_chunk(fids: list[str], n_seeds: int, verify_seeds: int | None,
+                    check_subprocess: bool = True) -> list[dict[str, Any]]:
+    """Пачка семейств в одном рабочем процессе. Детерминизм «в отдельном процессе» проверяется ОДНИМ подпроцессом
+    (другой PYTHONHASHSEED) на всю пачку — вместо подпроцесса на каждое семейство; если пачка в подпроцессе не
+    сгенерировалась целиком, каждое семейство пачки перепроверяется своим подпроцессом (как раньше)."""
+    done: list[tuple[FamilyReport, list[tuple[int, str]] | None]] = []
+    for fid in fids:
+        try:
+            done.append(_validate_core(fid, n_seeds, verify_seeds))
+        except Exception as exc:  # noqa: BLE001 — сломанное семейство не роняет пачку
+            spec = registry.load_specs().get(fid)
+            rep = FamilyReport(family_id=fid, title=getattr(spec, "title", fid),
+                               direction=getattr(spec, "direction", fid.split(".")[0]),
+                               format=getattr(spec, "format", "?"),
+                               target_grades=list(getattr(spec, "target_grades", []) or []),
+                               canary=bool(getattr(spec, "canary", False)), n_seeds=n_seeds, status="FAIL",
+                               errors=[f"валидатор: {type(exc).__name__}: {exc}"[:300]])
+            done.append((rep, None))
+    if check_subprocess:
+        todo = [(rep, sample) for rep, sample in done if sample is not None]
+        pairs = [(rep.family_id, s) for rep, sample in todo for s, _h in sample]
+        hs = subprocess_hashes(pairs) if pairs else []
+        if hs is not None and len(hs) == len(pairs):
+            i = 0
+            for rep, sample in todo:
+                _apply_subprocess(rep, sample, hs[i:i + len(sample)])
+                i += len(sample)
+        else:
+            for rep, sample in todo:
+                _apply_subprocess(rep, sample, subprocess_hashes([(rep.family_id, s) for s, _h in sample]))
+    return [asdict(_finalize(rep)) for rep, _sample in done]
+
+
+def default_jobs() -> int:
+    """Число рабочих процессов: BANK_VALIDATE_JOBS или доступные процессу ядра (не ядра хоста), не больше 32."""
+    env = os.environ.get("BANK_VALIDATE_JOBS")
+    if env:
+        return max(1, int(env))
+    try:
+        n = len(os.sched_getaffinity(0))
+    except AttributeError:  # не Linux
+        n = os.cpu_count() or 1
+    return max(1, min(32, n))
 
 
 def validate_bank(n_seeds: int = 200, verify_seeds: int | None = None,
-                  families: list[str] | None = None, progress: bool = False) -> dict[str, Any]:
+                  families: list[str] | None = None, progress: bool = False,
+                  jobs: int | None = None, chunk: int = 12) -> dict[str, Any]:
+    """Валидация банка на всех ядрах: семейства режутся на пачки по ``chunk`` и раздаются
+    ``concurrent.futures.ProcessPoolExecutor`` (``jobs`` процессов, по умолчанию — :func:`default_jobs`).
+    Результат не зависит от числа процессов: порядок отчётов — порядок ``families`` / ``load_specs()``."""
     t0 = time.time()
     fids = families or list(registry.load_specs())
-    reports = []
-    for fid in fids:
-        r = validate_family(fid, n_seeds=n_seeds, verify_seeds=verify_seeds)
-        if progress:
-            print(f"  {r.status:4} {fid:45} uniq={r.unique_ratio:.3f} checks={r.n_checks}"
-                  f" failed={r.n_checks_failed} {r.seconds:.1f}s", flush=True)
-        reports.append(r)
+    jobs = default_jobs() if jobs is None else max(1, int(jobs))
+    chunks = [fids[i:i + chunk] for i in range(0, len(fids), chunk)]
+    by_fid: dict[str, dict[str, Any]] = {}
+
+    def show(rows: list[dict[str, Any]]) -> None:
+        for r in rows:
+            by_fid[r["family_id"]] = r
+            if progress:
+                print(f"  {r['status']:4} {r['family_id']:45} uniq={r['unique_ratio']:.3f} checks={r['n_checks']}"
+                      f" failed={r['n_checks_failed']} {r['seconds']:.1f}s", flush=True)
+
+    if jobs == 1 or len(chunks) <= 1:
+        for c in chunks:
+            show(_validate_chunk(c, n_seeds, verify_seeds))
+    else:
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+        with ProcessPoolExecutor(max_workers=min(jobs, len(chunks))) as ex:
+            futs = [ex.submit(_validate_chunk, c, n_seeds, verify_seeds) for c in chunks]
+            for f in as_completed(futs):
+                show(f.result())
+    reports = [FamilyReport(**by_fid[fid]) for fid in fids]
     summary = {
         "n_families": len(reports),
         "n_variants_generated": sum(r.n_seeds for r in reports),
@@ -360,6 +441,7 @@ def validate_bank(n_seeds: int = 200, verify_seeds: int | None = None,
         "by_direction": Counter(r.direction for r in reports),
         "by_format": Counter(r.format for r in reports),
         "seconds": round(time.time() - t0, 1),
+        "jobs": jobs,
     }
     return {"summary": summary, "families": [asdict(r) for r in reports]}
 
