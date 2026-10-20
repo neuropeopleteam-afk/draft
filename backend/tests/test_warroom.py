@@ -181,6 +181,20 @@ def test_anticheat_live_mode_b():
     for sig_num in (1, 2, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 20):
         assert sig_num in attack["triggered_numbers"], f"ожидалось срабатывание сигнала #{sig_num}"
 
+    # Проверка «двойника при копировании» и назначения доп. этапа (integrity_followup) без блокировки
+    decoy_res = inspect_anticheat_live({
+        "answer_text": "Для кэша на 2 500 000 записей с TTL = 480 с делим на 64 сегмента блокировки.",
+        "canary_word": "Бергамот",
+        "telemetry": {"copy": 1, "paste": 1, "paste_chars": 95},
+    })
+    assert decoy_res["copy_decoy"]["triggered"] is True
+    assert len(decoy_res["copy_decoy"]["matched_markers"]) >= 2
+    assert 7 in decoy_res["triggered_numbers"]
+    assert 16 in decoy_res["triggered_numbers"]
+    assert decoy_res["integrity_followup"]["needs_followup_stage"] is True
+    assert decoy_res["integrity_followup"]["decoy_hits"] == 1
+    assert decoy_res["defense_recommended"] is True
+
 
 def test_warroom_api_endpoints_and_persistence(client):
     """Проверка маршрутов /api/warroom/*, сохранения попытки кандидата и видимости работодателю."""

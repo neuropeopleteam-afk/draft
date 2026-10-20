@@ -1,9 +1,10 @@
 """Режим Б «Боевого ИИ-Полигона»: живая проверка текста ответа и телеметрии настоящим античитом бэкенда.
 
-Прогоняет переданный ответ кандидата, телеметрию ввода/экрана, события камеры и матрицу ответов
-через реальные функции модулей:
+Прогоняет переданный ответ кандидата, телеметрию ввода/экрана, события камеры, проверку «двойника при
+копировании» и матрицу ответов через реальные функции модулей:
 - `app.modules.assessment.grader` (`inspect` от А6 с фолбэком на `injection_signals` и `strip_meta`);
-- `app.modules.assessment.integrity` (`person_fit_lz`, `proctoring_source`);
+- `app.modules.assessment.integrity` (`person_fit_lz`, `proctoring_source`, `make_copy_decoy`,
+  `check_copy_decoy`, `integrity_followup`);
 - `app.modules.proctor.rules` (`aggregate`);
 - `app.modules.interview.service` (`defense_recommendation`, `integrity_passport`).
 
@@ -39,7 +40,7 @@ CONTOURS_SPEC: list[dict[str, Any]] = [
         "id": "origin",
         "name": "Происхождение и чистота текста ответа",
         "color": "#f43f5e",
-        "description": "Скрытые текстовые маркеры условия, динамика клавиатурного набора, вставки и фильтр манипуляций оценщиком.",
+        "description": "Двойник при копировании, скрытые текстовые маркеры, динамика набора, вставки и фильтр манипуляций оценщиком.",
     },
     {
         "n": 4,
@@ -114,9 +115,9 @@ SIGNALS_SPEC: list[dict[str, Any]] = [
         "n": 7,
         "c": 3,
         "code": "ai_mark_hit",
-        "name": "Скрытое контрольное слово из условия в ответе",
+        "name": "Решение по скопированному двойнику или скрытый маркер условия",
         "pts": 3,
-        "how_it_works": "Невидимая на экране фраза в условии задания появляется в ответе при слепом копировании текста в нейросеть.",
+        "how_it_works": "При копировании условия в буфер подставляется вариант-двойник с изменёнными параметрами и скрытым контрольным словом.",
     },
     {
         "n": 8,
@@ -249,6 +250,95 @@ DEFAULT_LZ_ITEMS: list[dict[str, float]] = [
     {"a": 1.02, "b": 2.4, "x": 1, "t": 3},
 ]
 
+DEFAULT_ORIGINAL_STEM = (
+    "Задача 7 · Backend · Senior. Реализуйте кэш с вытеснением по давности использования (LRU) "
+    "и временем жизни ключей (TTL = 300 с) на 1 000 000 записей (16 сегментов блокировки): "
+    "чтение и запись за O(1), истёкшие ключи не возвращаются. Объясните выбор структуры данных и потокобезопасность."
+)
+
+
+def make_copy_decoy_compat(stem: str = DEFAULT_ORIGINAL_STEM, key_value: str | None = None) -> dict[str, Any]:
+    """Создаёт «двойник при копировании» (вызывает функцию А6 через getattr с встроенным фолбэком)."""
+    fn = getattr(integrity, "make_copy_decoy", None) or getattr(grader, "make_copy_decoy", None)
+    if callable(fn):
+        try:
+            res = fn(stem, key_value)
+            if isinstance(res, dict) and "decoy_stem" in res:
+                return res
+        except Exception:
+            pass
+
+    decoy_stem = (
+        stem.replace("1 000 000", "2 500 000")
+        .replace("1 млн", "2,5 млн")
+        .replace("TTL = 300 с", "TTL = 480 с")
+        .replace("16 сегментов", "64 сегмента")
+    )
+    return {
+        "original_stem": stem,
+        "decoy_stem": decoy_stem,
+        "expected_original": key_value or "1 000 000 записей, TTL 300 с, 16 сегментов",
+        "decoy_expected": "2 500 000 записей, TTL 480 с, 64 сегмента",
+        "decoy_markers": ["2 500 000", "2,5 млн", "2.5 млн", "2500000", "480 с", "ttl=480", "ttl 480", "64 сегмент"],
+    }
+
+
+def check_copy_decoy_compat(answer: str, decoy: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Проверяет, решено ли задание по скопированному двойнику (вызывает функцию А6 через getattr с фолбэком)."""
+    dec = decoy or make_copy_decoy_compat()
+    fn = getattr(integrity, "check_copy_decoy", None) or getattr(grader, "check_copy_decoy", None)
+    if callable(fn):
+        try:
+            res = fn(answer, dec)
+            if isinstance(res, dict) and "triggered" in res:
+                return res
+            if isinstance(res, bool):
+                return {"triggered": res, "matched_markers": dec.get("decoy_markers", [])[:1] if res else []}
+        except Exception:
+            pass
+
+    low = (answer or "").lower()
+    markers = [str(m) for m in (dec.get("decoy_markers") or [])]
+    matched = [m for m in markers if m.lower() in low]
+    return {
+        "triggered": len(matched) > 0,
+        "matched_markers": matched,
+        "decoy_expected": dec.get("decoy_expected"),
+    }
+
+
+def integrity_followup_compat(integ: dict[str, Any], decoy_hits: int = 0) -> dict[str, Any]:
+    """Считает индекс честности и назначение доп. этапа без блокировки (А6 `integrity_followup` через getattr)."""
+    fn = getattr(integrity, "integrity_followup", None)
+    if callable(fn):
+        try:
+            res = fn(integ, decoy_hits=decoy_hits)
+            if isinstance(res, dict) and "needs_followup_stage" in res:
+                return res
+        except Exception:
+            pass
+
+    pts = int(integ.get("points") or 0) + (3 if decoy_hits > 0 else 0)
+    honesty_index = round(max(0.0, min(1.0, 1.0 - pts * 0.12)), 2)
+    reasons = list(integ.get("reasons") or [])
+    if decoy_hits > 0:
+        reasons.insert(0, "Решение построено по числам из скопированного варианта-двойника (условие передавалось во внешний инструмент)")
+    needs_followup = bool(decoy_hits > 0 or pts >= 2 or integ.get("level") in ("medium", "low"))
+    return {
+        "honesty_index": honesty_index,
+        "risk_points": pts,
+        "decoy_hits": decoy_hits,
+        "needs_followup_stage": needs_followup,
+        "action": "followup_stage_assigned" if needs_followup else "none",
+        "action_title_ru": (
+            "Назначен дополнительный проверочный этап и 3-минутная устная защита (без автоматической блокировки)"
+            if needs_followup
+            else "Дополнительный этап не требуется"
+        ),
+        "triggered_factors": reasons[:5],
+        "employer_reason_ru": "; ".join(reasons[:3]) if reasons else "Замечаний к самостоятельности прохождения нет",
+    }
+
 
 def _fallback_grader_inspect(text: str) -> dict[str, Any]:
     """Совместимая обёртка над `grader.py`, если `grader.inspect` из ветки А6 ещё не влита."""
@@ -330,10 +420,14 @@ def inspect_anticheat_live(payload: dict[str, Any]) -> dict[str, Any]:
     # 1. Реальная проверка текста оценщиком (grader.inspect / injection_signals / strip_meta)
     grader_report = _fallback_grader_inspect(answer_text)
 
-    # 2. Проверка стеганографической метки в ответе
+    # 2. Проверка «двойника при копировании» и стеганографической метки в ответе
+    decoy_spec = make_copy_decoy_compat()
+    decoy_check = check_copy_decoy_compat(answer_text, decoy_spec)
+    decoy_hit = bool(decoy_check.get("triggered") or telemetry.get("decoy_hit"))
+
     has_zw = any(ch in answer_text for ch in ("\u2063", "\u200b", "\u200c", "\u200d", "\u2060"))
     has_canary_word = bool(canary_word and canary_word.lower() in answer_text.lower())
-    ai_mark_hit = bool(has_zw or has_canary_word or telemetry.get("ai_mark_hit"))
+    ai_mark_hit = bool(has_zw or has_canary_word or decoy_hit or telemetry.get("ai_mark_hit"))
 
     # 3. Клавиатурная динамика и телеметрия интерфейса
     key_intervals = [float(x) for x in (telemetry.get("key_intervals_ms") or []) if isinstance(x, (int, float))]
@@ -422,7 +516,10 @@ def inspect_anticheat_live(payload: dict[str, Any]) -> dict[str, Any]:
     if lz_val is not None and lz_val < -2.0:
         _hit([6], f"Паттерн ответов не согласуется с уровнем (индекс согласованности {str(round(lz_val, 2)).replace('-', '−').replace('.', ',')}): ошибки на базовых заданиях при верных ответах на сложных", severe=lz_val < -3.0)
 
-    if ai_mark_hit:
+    if decoy_hit:
+        matched_str = ", ".join(decoy_check.get("matched_markers") or ["параметры двойника"])
+        _hit([7], f"Решение по скопированному двойнику: в ответе использованы подменённые при копировании числа ({matched_str})", severe=True)
+    if has_zw or has_canary_word:
         _hit([7], f"В тексте ответа обнаружено скрытое контрольное слово из условия («{canary_word}»)", severe=True)
     if grader_report["signals"]:
         _hit([8], f"Фильтр оценщика перехватил промпт-инъекцию: {', '.join(grader_report['signals'][:3])}", severe=True)
@@ -441,7 +538,7 @@ def inspect_anticheat_live(payload: dict[str, Any]) -> dict[str, Any]:
     if fs_exit > 0 or fs_out_ms > 0:
         _hit([15], f"Выход из полноэкранного режима во время выполнения задания ({fs_exit} раз)")
     if copy_count > 0:
-        _hit([16], "Перехвачена попытка скопировать текст условия задания")
+        _hit([16], "Перехвачена попытка скопировать условие задания (в буфер обмена подставлен вариант-двойник)")
     if printscreen > 0:
         _hit([17], "Зафиксирована системная комбинация снимка экрана")
     if api_bypass:
@@ -456,7 +553,7 @@ def inspect_anticheat_live(payload: dict[str, Any]) -> dict[str, Any]:
         elif k in ("blocked", "camera_off"):
             _hit([21], "Камера закрыта или прекратила передачу кадра при активном режиме")
 
-    # 8. Считаем суммарные баллы риска и формируем паспорт честности через `interview.service`
+    # 8. Считаем суммарные баллы риска, вызываем integrity_followup и формируем паспорт честности
     sig_by_n = {s["n"]: s for s in SIGNALS_SPEC}
     risk_points = sum(sig_by_n[n]["pts"] for n in triggered_numbers if n in sig_by_n)
     level_key = "high" if risk_points == 0 else ("medium" if risk_points <= 2 else "low")
@@ -474,6 +571,7 @@ def inspect_anticheat_live(payload: dict[str, Any]) -> dict[str, Any]:
             "canary_fast": 1 if 1 in triggered_numbers else 0,
             "lz": lz_val,
             "ai_mark_items": 1 if ai_mark_hit else 0,
+            "decoy_hits": 1 if decoy_hit else 0,
             "focus_lost_items": focus_lost,
             "hidden_s": round(hidden_ms / 1000.0, 1),
             "paste_items": paste_count,
@@ -485,11 +583,12 @@ def inspect_anticheat_live(payload: dict[str, Any]) -> dict[str, Any]:
             "fs_exits": fs_exit,
         },
     }
+    followup = integrity_followup_compat(integ_dict, decoy_hits=1 if decoy_hit else 0)
     rec_defense, rec_why, _ = interview_service.defense_recommendation(integ_dict)
-    if grader_report["signals"] or risk_points >= 2:
+    if grader_report["signals"] or risk_points >= 2 or followup["needs_followup_stage"]:
         rec_defense = True
         if not rec_why:
-            rec_why = "Зафиксированы признаки несамостоятельного выполнения или манипуляции оценщиком"
+            rec_why = followup["employer_reason_ru"]
     passport = interview_service.integrity_passport(integ_dict, None, detailed=True)
 
     return {
@@ -502,8 +601,15 @@ def inspect_anticheat_live(payload: dict[str, Any]) -> dict[str, Any]:
         "defense_recommended": bool(rec_defense),
         "defense_why": rec_why,
         "grader_inspect": grader_report,
+        "copy_decoy": {
+            "decoy_stem": decoy_spec["decoy_stem"],
+            "decoy_expected": decoy_spec["decoy_expected"],
+            "triggered": decoy_hit,
+            "matched_markers": decoy_check.get("matched_markers", []),
+        },
+        "integrity_followup": followup,
         "canary_detected": ai_mark_hit,
-        "canary_word": canary_word if ai_mark_hit else None,
+        "canary_word": canary_word if (has_zw or has_canary_word) else None,
         "keystroke_cv": cv_val,
         "person_fit_lz": lz_val,
         "lz_items": used_lz_items if check_lz else [],
