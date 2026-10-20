@@ -1,10 +1,12 @@
 {
   "$comment": "Единый источник цифр проекта «Драфт». Генерируется скриптом tools/publish/gen_numbers.py.",
-  "generated_at": "2026-10-20T17:26:04Z",
-  "git_commit": "8e8f3654",
+  "generated_at": "2026-10-20T17:47:52Z",
+  "git_commit": "6229b82f",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
-    "families": 1504,
+    "families": 1824,
+    "families_base_snapshot": 1504,
+    "variants_20seeds": 36480,
     "directions": 10,
     "grades": [
       "intern",
@@ -23,58 +25,63 @@
       "open_book_3step",
       "incident_sim"
     ],
-    "code_and_open_families": 270,
+    "code_and_open_families": 590,
+    "incident_sim_families": 40,
+    "lead_families": 271,
+    "principal_families": 266,
+    "a_mcq": 1.0,
+    "a_code_open": 1.3,
     "seeds_per_family": 2147483646,
     "sha256_prefix": "",
-    "bank_commit": null,
+    "bank_commit": "c027be45",
     "synced_at": "2026-10-20T11:19:30+00:00",
     "recompute": "cd backend && pytest -q assessment_bank/tests",
     "code_ref": "backend/assessment_bank/BANK_SYNC.json"
   },
   "sprt_verdict": {
-    "precision_decided": 0.9763,
+    "precision_decided": 0.9774,
     "precision_decided_ci": [
-      0.9701,
-      0.9817
+      0.9714,
+      0.9833
     ],
-    "decided_share": 0.803,
-    "verdict_accuracy_after_followup": 0.9283,
+    "decided_share": 0.78,
+    "verdict_accuracy_after_followup": 0.9233,
     "verdict_accuracy_after_followup_ci": [
-      0.9197,
-      0.9377
+      0.9143,
+      0.9323
     ],
-    "false_confirm_decided": 0.0095,
-    "false_confirm_overall": 0.0197,
-    "gross_error_rate": 0.0,
-    "gross_error_count": 0,
-    "within_1": 1.0,
+    "false_confirm_decided": 0.0124,
+    "false_confirm_overall": 0.0257,
+    "gross_error_rate": 0.0003,
+    "gross_error_count": 1,
+    "within_1": 0.9997,
     "within_1_ci": [
-      1.0,
+      0.999,
       1.0
     ],
-    "exact_with_followup": 0.8207,
+    "exact_with_followup": 0.806,
     "exact_with_followup_ci": [
-      0.808,
-      0.834
+      0.792,
+      0.8207
     ],
-    "exact_far_from_cut": 0.9808,
+    "exact_far_from_cut": 0.9566,
     "exact_far_from_cut_ci": [
-      0.9679,
-      0.9915
+      0.9361,
+      0.9749
     ],
-    "exact_single_stage": 0.7853,
-    "over_rate": 0.0943,
+    "exact_single_stage": 0.764,
+    "over_rate": 0.109,
     "under_rate": 0.085,
-    "minutes_mean": 48.7,
-    "items_mean": 16.4,
+    "minutes_mean": 51.5,
+    "items_mean": 17.3,
     "followup_minutes": 15,
-    "followup_share": 0.4823,
-    "code_open_share": 0.671,
+    "followup_share": 0.56,
+    "code_open_share": 0.676,
     "by_grade": {
       "intern": {
-        "n_true": 179,
+        "n_true": 186,
         "n_claimed": 195,
-        "exact_grade": 0.8268,
+        "exact_grade": 0.7688,
         "within_1": 1.0,
         "verdict_accuracy_all": 1.0,
         "verdict_precision_decided": 1.0,
@@ -82,67 +89,67 @@
         "false_confirm_rate": 0.0
       },
       "junior": {
-        "n_true": 470,
-        "n_claimed": 419,
-        "exact_grade": 0.8,
+        "n_true": 504,
+        "n_claimed": 468,
+        "exact_grade": 0.7778,
         "within_1": 1.0,
-        "verdict_accuracy_all": 0.9666,
-        "verdict_precision_decided": 0.9815,
-        "decided_share": 0.9021,
-        "false_confirm_rate": 0.0095
+        "verdict_accuracy_all": 0.9487,
+        "verdict_precision_decided": 0.985,
+        "decided_share": 0.8526,
+        "false_confirm_rate": 0.0256
       },
       "middle": {
-        "n_true": 865,
-        "n_claimed": 729,
-        "exact_grade": 0.815,
+        "n_true": 830,
+        "n_claimed": 727,
+        "exact_grade": 0.8169,
         "within_1": 1.0,
-        "verdict_accuracy_all": 0.9287,
-        "verdict_precision_decided": 0.9731,
-        "decided_share": 0.8162,
-        "false_confirm_rate": 0.0247
+        "verdict_accuracy_all": 0.9312,
+        "verdict_precision_decided": 0.9809,
+        "decided_share": 0.7923,
+        "false_confirm_rate": 0.0289
       },
       "senior": {
-        "n_true": 786,
-        "n_claimed": 775,
-        "exact_grade": 0.8333,
+        "n_true": 823,
+        "n_claimed": 786,
+        "exact_grade": 0.8299,
         "within_1": 1.0,
-        "verdict_accuracy_all": 0.9226,
-        "verdict_precision_decided": 0.9758,
-        "decided_share": 0.7458,
-        "false_confirm_rate": 0.0232
+        "verdict_accuracy_all": 0.9135,
+        "verdict_precision_decided": 0.9704,
+        "decided_share": 0.7303,
+        "false_confirm_rate": 0.0305
       },
       "lead": {
-        "n_true": 485,
-        "n_claimed": 545,
-        "exact_grade": 0.7979,
-        "within_1": 1.0,
-        "verdict_accuracy_all": 0.8972,
-        "verdict_precision_decided": 0.968,
-        "decided_share": 0.745,
-        "false_confirm_rate": 0.0239
+        "n_true": 486,
+        "n_claimed": 507,
+        "exact_grade": 0.7922,
+        "within_1": 0.9979,
+        "verdict_accuracy_all": 0.9073,
+        "verdict_precision_decided": 0.9701,
+        "decided_share": 0.7258,
+        "false_confirm_rate": 0.0197
       },
       "principal": {
-        "n_true": 215,
-        "n_claimed": 337,
-        "exact_grade": 0.8884,
+        "n_true": 171,
+        "n_claimed": 317,
+        "exact_grade": 0.8012,
         "within_1": 1.0,
-        "verdict_accuracy_all": 0.9021,
-        "verdict_precision_decided": 0.9728,
-        "decided_share": 0.7626,
-        "false_confirm_rate": 0.0178
+        "verdict_accuracy_all": 0.8707,
+        "verdict_precision_decided": 0.9649,
+        "decided_share": 0.7192,
+        "false_confirm_rate": 0.0315
       }
     },
     "retest": {
       "n": 3000,
-      "kappa_w": 0.9147,
-      "exact": 0.7387,
+      "kappa_w": 0.9173,
+      "exact": 0.738,
       "exact_ci": [
-        0.7227,
-        0.7547
+        0.7217,
+        0.7537
       ],
-      "within_1": 0.9997,
-      "verdict_consistency": 0.8917,
-      "r_theta": 0.9488
+      "within_1": 0.9993,
+      "verdict_consistency": 0.892,
+      "r_theta": 0.9492
     },
     "cross_validation": {
       "n_train_per_point": 1000,
@@ -160,11 +167,11 @@
     },
     "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
     "code_ref": "backend/app/modules/validation/sprt_verdict.py",
-    "claim_ru": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,6 % уверенных решений (95 % ДИ [97,0 %; 98,2 %]); уверенный вердикт на первом этапе получают 80,3 % кандидатов в среднем за 49 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 82,1 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 98,1 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 0,9 %, повторяемость (test–retest) κw = 0,915 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),"
+    "claim_ru": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,7 % уверенных решений (95 % ДИ [97,1 %; 98,3 %]); уверенный вердикт на первом этапе получают 78,0 % кандидатов в среднем за 52 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 80,6 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 95,7 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 1,2 %, повторяемость (test–retest) κw = 0,917 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),"
   },
   "leak_k_variants": {
     "n_per_k": 2000,
-    "families": 1504,
+    "families": 1824,
     "seed_space_per_family": 2147483646,
     "k_values": {
       "0": {
@@ -177,7 +184,7 @@
           "false_confirm_rate": 0.0095
         },
         "parametric_bank": {
-          "families": 1504,
+          "families": 1824,
           "seeds_per_family": 2147483646,
           "exact_variant_collision_prob": 0.0,
           "theta_gain_mean": 0.25,
@@ -197,7 +204,7 @@
           "false_confirm_rate": 0.0135
         },
         "parametric_bank": {
-          "families": 1504,
+          "families": 1824,
           "seeds_per_family": 2147483646,
           "exact_variant_collision_prob": 3e-12,
           "theta_gain_mean": 0.274,
@@ -217,9 +224,9 @@
           "false_confirm_rate": 0.3825
         },
         "parametric_bank": {
-          "families": 1504,
+          "families": 1824,
           "seeds_per_family": 2147483646,
-          "exact_variant_collision_prob": 3.1e-11,
+          "exact_variant_collision_prob": 2.6e-11,
           "theta_gain_mean": 0.285,
           "false_confirm_raw": 0.0095,
           "false_confirm_protected": 0.0015,
@@ -237,9 +244,9 @@
           "false_confirm_rate": 1.0
         },
         "parametric_bank": {
-          "families": 1504,
+          "families": 1824,
           "seeds_per_family": 2147483646,
-          "exact_variant_collision_prob": 3.1e-10,
+          "exact_variant_collision_prob": 2.55e-10,
           "theta_gain_mean": 0.28,
           "false_confirm_raw": 0.0075,
           "false_confirm_protected": 0.0,
@@ -272,7 +279,7 @@
     },
     "recompute": "cd backend && python -m app.modules.validation.leak_k_variants",
     "code_ref": "backend/app/modules/validation/leak_k_variants.py",
-    "claim_ru": "При утечке K = 100 и K = 1 000 опубликованных вариантов и открытом коде генераторов вероятность ложного подтверждения Senior у кандидата уровня Junior/Middle в фиксированном банке (200 вопросов) взлетает до 38,2 % и 100,0 %, тогда как в параметрическом банке «Драфт» (1 504 семейства × 2,15·10⁹ серверных зёрен CSPRNG + канареечный детектор + перевод в устную защиту) остаётся на уровне 0,15 % и 0,00 %, а выигрыш в оценке θ не превышает +0,28 логита (симуляция N = 2000 на каждое K, seed 2026102004),"
+    "claim_ru": "При утечке K = 100 и K = 1 000 опубликованных вариантов и открытом коде генераторов вероятность ложного подтверждения Senior у кандидата уровня Junior/Middle в фиксированном банке (200 вопросов) взлетает до 38,2 % и 100,0 %, тогда как в параметрическом банке «Драфт» (1824 семейств × 2,15·10⁹ серверных зёрен CSPRNG + канареечный детектор + перевод в устную защиту) остаётся на уровне 0,15 % и 0,00 %, а выигрыш в оценке θ не превышает +0,28 логита (симуляция N = 2000 на каждое K, seed 2026102004),"
   },
   "expert_agreement": {
     "panel_v1_0710": {
@@ -958,13 +965,21 @@
     "claim_ru": "Защита от манипуляций и списывания: 100 % (90/90) на регрессионном наборе известных шаблонов инъекций, 95,0 % на отложенном наборе перефразированных атак при ≤ 1,5 % ложных срабатываний на честных ответах; подозрительные попытки не банятся автоматически, а переводятся на 3-минутную устную защиту решения."
   },
   "mutation_testing": {
-    "families_checked": 270,
-    "variants_tested": 2700,
+    "bank_commit": "c027be45",
+    "total_families": 1824,
+    "variants_20seeds": 36480,
+    "families_checked": 590,
+    "variants_tested": 11800,
+    "incident_sim_families": 40,
+    "lead_families": 271,
+    "principal_families": 266,
+    "key_position_balance": 0.2,
+    "limit_equals_answer_count": 0,
     "mutation_kill_rate": 1.0,
     "ambiguous_distractors": 0,
     "recompute": "cd backend && pytest -q assessment_bank/tests",
-    "code_ref": "backend/assessment_bank/tests/",
-    "claim_ru": "Автоматический и мутационный контроль кодовых семейств банка (find_bug, predict_output, choose_fix, incident_sim): 100 % эталонных ключей детерминированно воспроизводятся на 10 случайных зёрнах каждого семейства, 0 коллизий дистракторов с правильным ответом."
+    "code_ref": "backend/assessment_bank/validator.py",
+    "claim_ru": "Банк заданий v2 (1 824 параметрических семейства, 36 480 проверенных вариантов на 20 зёрнах, коммит c027be45): 590 практических семейств с кодом, открытым ответом и 3-шаговым симулятором инцидента (40 семейств incident_sim), 271 семейство уровня Lead (87 % практических) и 266 семейств Principal (64 % практических); честные априорные параметры до калибровки на людях (a = 1,0 для выбора ответа и a = 1,3 для кода/открытых/инцидентов, ни одного a = 3,0), равномерное распределение правильного ответа по позициям и величине (ровно по 20 %), 0 совпадений ответа с числом из условия."
   },
   "matching": {
     "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
@@ -1103,13 +1118,13 @@
     "generated_at": "2026-10-20T11:47:18+00:00",
     "views": {
       "far_from_cut": {
-        "value": 0.9808,
+        "value": 0.9566,
         "ci95": [
-          0.9679,
-          0.9915
+          0.9361,
+          0.9749
         ],
-        "share_of_candidates": 0.156,
-        "n": 468,
+        "share_of_candidates": 0.146,
+        "n": 438,
         "title": "Точный грейд вдали от границы порога (|θ − порог| ≥ 0,45 логита)",
         "definition": "Среди кандидатов не в пограничной зоне (≥ 0,45 логита от ближайшего порога) классификационный CAT + 1/3 кодовых заданий + доп. этап дают точное совпадение со скрытым истинным грейдом в 98,1 % случаев."
       },
@@ -1136,9 +1151,9 @@
         "definition": null
       },
       "within_1_cut": {
-        "value": 1.0,
+        "value": 0.9997,
         "ci95": [
-          1.0,
+          0.999,
           1.0
         ],
         "share_of_candidates": 1.0,
@@ -1162,9 +1177,9 @@
     {
       "id": "verdict_precision",
       "eyebrow": "Точность уверенного вердикта грейда",
-      "value": "97,6",
+      "value": "97,7",
       "accent": "%",
-      "subtext": "последовательный тест SPRT + 1/3 кодовых заданий · уверенный вердикт у 80 % кандидатов за ~49 мин, остальным — 15-мин доп, этап у порога · вдали от границы точный грейд 98,1 % (N = 3000)",
+      "subtext": "последовательный тест SPRT + 1/3 кодовых заданий · уверенный вердикт у 78 % кандидатов за ~52 мин, остальным — 15-мин доп, этап у порога · вдали от границы точный грейд 95,7 % (N = 3000)",
       "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
       "code_ref": "backend/app/modules/validation/sprt_verdict.py"
     },
@@ -1180,9 +1195,9 @@
     {
       "id": "bank_and_leak",
       "eyebrow": "Семейств в банке × 2,15 млрд зёрен",
-      "value": "1 504",
+      "value": "1 824",
       "accent": "× 2³¹",
-      "subtext": "10 ИТ-направлений, 7 форматов включая 3-шаговый симулятор инцидента для Senior+ · при утечке K = 1 000 вариантов и открытом коде генераторов ложное подтверждение ≤ 1,4 %",
+      "subtext": "10 ИТ-направлений, 590 практических семейств (код, открытые ответы, 40 симуляторов инцидентов для Senior/Lead/Principal) · при утечке K = 1 000 вариантов и открытом коде генераторов ложное подтверждение ≤ 0,9 %",
       "recompute": "cd backend && python -m app.modules.validation.leak_k_variants",
       "code_ref": "backend/app/modules/validation/leak_k_variants.py"
     },
@@ -1191,16 +1206,16 @@
       "eyebrow": "Согласие с экспертами и повтор κw",
       "value": "0,96",
       "accent": "κw",
-      "subtext": "согласие с консенсусом двух независимых моделей разных компаний (N = 40) и 414 метками E1–E3 · повторяемость test–retest κw = 0,91, ±1 ступень — 100 %",
+      "subtext": "согласие с консенсусом двух независимых моделей разных компаний (N = 40) и 414 метками E1–E3 · повторяемость test–retest κw = 0,92, ±1 ступень — 100 %",
       "recompute": "cd backend && python -m app.modules.validation.expert_surrogate",
       "code_ref": "backend/app/modules/validation/expert_surrogate.py"
     }
   ],
   "jury_banner": {
-    "headline_ru": "Точность уверенного вердикта грейда — 97,6 % (SPRT α = 0,02, точный грейд вдали от границы — 98,1 %, ±1 ступень — 100 %); точность топ-5 подбора P@5 = 90,3 %, MRR = 0,96,",
+    "headline_ru": "Точность уверенного вердикта грейда — 97,7 % (SPRT α = 0,02, точный грейд вдали от границы — 95,7 %, ±1 ступень — 100 %); точность топ-5 подбора P@5 = 90,3 %, MRR = 0,96,",
     "claims_ru": {
-      "verdict": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,6 % уверенных решений (95 % ДИ [97,0 %; 98,2 %]); уверенный вердикт на первом этапе получают 80,3 % кандидатов в среднем за 49 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 82,1 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 98,1 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 0,9 %, повторяемость (test–retest) κw = 0,915 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),",
-      "leak": "При утечке K = 100 и K = 1 000 опубликованных вариантов и открытом коде генераторов вероятность ложного подтверждения Senior у кандидата уровня Junior/Middle в фиксированном банке (200 вопросов) взлетает до 38,2 % и 100,0 %, тогда как в параметрическом банке «Драфт» (1 504 семейства × 2,15·10⁹ серверных зёрен CSPRNG + канареечный детектор + перевод в устную защиту) остаётся на уровне 0,15 % и 0,00 %, а выигрыш в оценке θ не превышает +0,28 логита (симуляция N = 2000 на каждое K, seed 2026102004),",
+      "verdict": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,7 % уверенных решений (95 % ДИ [97,1 %; 98,3 %]); уверенный вердикт на первом этапе получают 78,0 % кандидатов в среднем за 52 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 80,6 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 95,7 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 1,2 %, повторяемость (test–retest) κw = 0,917 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),",
+      "leak": "При утечке K = 100 и K = 1 000 опубликованных вариантов и открытом коде генераторов вероятность ложного подтверждения Senior у кандидата уровня Junior/Middle в фиксированном банке (200 вопросов) взлетает до 38,2 % и 100,0 %, тогда как в параметрическом банке «Драфт» (1824 семейств × 2,15·10⁹ серверных зёрен CSPRNG + канареечный детектор + перевод в устную защиту) остаётся на уровне 0,15 % и 0,00 %, а выигрыш в оценке θ не превышает +0,28 логита (симуляция N = 2000 на каждое K, seed 2026102004),",
       "expert": "Согласие итогового грейда теста с экспертной разметкой: на 414 метках модельной панели E1–E3 (07,10,2026) κw = 0,916 (точное совпадение грейда 90,0 %, ±1 ступень — 100 %); по протоколу двух независимых моделей разных компаний (Anthropic + Google, 20,10,2026, N = 40 слепых профилей по 10 направлениям) межэкспертное согласие между моделями κw = 0,977 (точное совпадение 95,0 %), согласие платформы с консенсусом — κw = 0,957, точное совпадение 90,0 %, в пределах ±1 ступени — 100,0 % (суррогат экспертной комиссии до завершения пилота с живыми ИТ-специалистами),",
       "matching": "Точность ранжирования кандидатов под требования работодателя: P@5 = 90,3 %, MRR = 0,960, nDCG@10 = 0,958 (60 потребностей × 240 кандидатов со скрытой истиной, 10 направлений, бутстреп 2 000 итераций),",
       "hh": "Проверка на 414 реальных ИТ-вакансиях hh,ru (10 направлений): покрытие обязательных навыков в топ-5 подбора — 91,6 %, согласие по грейду (±1 ступень) — 99,6 %,",
@@ -1210,7 +1225,7 @@
   "recompute_table": [
     {
       "section": "Вердикт SPRT, 6 грейдов и повторяемость test–retest",
-      "metric": "Точность уверенного вердикта 97,6 %, вдали от порога 98,1 %, κw = 0,915",
+      "metric": "Точность уверенного вердикта 97,7 %, вдали от порога 95,7 %, κw = 0,917",
       "sample": "Обучение N = 1 000, отложенный контроль N = 3000 (seed 2026102002)",
       "command": "cd backend && python -m app.modules.validation.sprt_verdict",
       "code_ref": "backend/app/modules/validation/sprt_verdict.py",

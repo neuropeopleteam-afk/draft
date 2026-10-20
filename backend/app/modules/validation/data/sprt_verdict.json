@@ -1,15 +1,28 @@
 {
  "signature": {
-  "world": "кросс-валидированная симуляция 6 грейдов (Стажёр…Principal): train N=1000, held-out test N=3000",
+  "world": "кросс-валидированная симуляция на банке А3 (1 824 семейства, c027be45, a=1,0/1,3): train N=1000, held-out test N=3000",
   "seed": 2026102002,
-  "config_hash": "7685436e20f6",
-  "commit": "8e8f365",
+  "config_hash": "5734fd71fa8c",
+  "commit": "6229b82",
   "bank": "82a05fdbacf00481",
   "n": 3000,
   "command": "python -m app.modules.validation.sprt_verdict",
-  "generated_at": "2026-10-20T17:08:20+00:00"
+  "generated_at": "2026-10-20T17:42:45+00:00"
  },
- "generated_at": "2026-10-20T17:08:20+00:00",
+ "bank_summary": {
+  "bank_branch": "ag/a3-bank",
+  "bank_commit": "c027be45",
+  "families": 1824,
+  "variants_20seeds": 36480,
+  "code_and_open_families": 590,
+  "incident_sim_families": 40,
+  "lead_families": 271,
+  "principal_families": 266,
+  "a_mcq": 1.0,
+  "a_code_open_incident": 1.3,
+  "basis": "априорная, до калибровки на людях (отвязана от потока истины)"
+ },
+ "generated_at": "2026-10-20T17:42:45+00:00",
  "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
  "code_ref": "backend/app/modules/validation/sprt_verdict.py",
  "cross_validation": {
@@ -30,139 +43,139 @@
    {
     "alpha": 0.05,
     "delta": 0.3,
-    "precision_decided": 0.9651,
-    "decided_share": 0.831,
-    "false_confirm_decided": 0.0072,
-    "exact_with_followup": 0.838,
-    "minutes_mean": 46.1
+    "precision_decided": 0.9698,
+    "decided_share": 0.828,
+    "false_confirm_decided": 0.0145,
+    "exact_with_followup": 0.806,
+    "minutes_mean": 48.3
    },
    {
     "alpha": 0.05,
     "delta": 0.35,
-    "precision_decided": 0.962,
-    "decided_share": 0.869,
-    "false_confirm_decided": 0.0173,
-    "exact_with_followup": 0.824,
-    "minutes_mean": 44.8
+    "precision_decided": 0.964,
+    "decided_share": 0.833,
+    "false_confirm_decided": 0.0144,
+    "exact_with_followup": 0.805,
+    "minutes_mean": 47.6
    },
    {
     "alpha": 0.05,
     "delta": 0.4,
-    "precision_decided": 0.9509,
-    "decided_share": 0.876,
-    "false_confirm_decided": 0.0285,
-    "exact_with_followup": 0.801,
-    "minutes_mean": 43.6
+    "precision_decided": 0.956,
+    "decided_share": 0.864,
+    "false_confirm_decided": 0.0116,
+    "exact_with_followup": 0.797,
+    "minutes_mean": 45.1
    },
    {
     "alpha": 0.03,
     "delta": 0.3,
-    "precision_decided": 0.9706,
-    "decided_share": 0.816,
-    "false_confirm_decided": 0.0123,
-    "exact_with_followup": 0.815,
-    "minutes_mean": 49.2
+    "precision_decided": 0.9793,
+    "decided_share": 0.772,
+    "false_confirm_decided": 0.0039,
+    "exact_with_followup": 0.8,
+    "minutes_mean": 52.5
    },
    {
     "alpha": 0.03,
     "delta": 0.35,
-    "precision_decided": 0.9667,
-    "decided_share": 0.841,
-    "false_confirm_decided": 0.0119,
-    "exact_with_followup": 0.845,
-    "minutes_mean": 46.5
+    "precision_decided": 0.9735,
+    "decided_share": 0.792,
+    "false_confirm_decided": 0.0114,
+    "exact_with_followup": 0.804,
+    "minutes_mean": 48.7
    },
    {
     "alpha": 0.03,
     "delta": 0.4,
-    "precision_decided": 0.9671,
-    "decided_share": 0.851,
-    "false_confirm_decided": 0.0129,
-    "exact_with_followup": 0.822,
-    "minutes_mean": 45.8
-   },
-   {
-    "alpha": 0.02,
-    "delta": 0.3,
-    "precision_decided": 0.9888,
-    "decided_share": 0.802,
-    "false_confirm_decided": 0.0075,
-    "exact_with_followup": 0.822,
-    "minutes_mean": 51.2
-   },
-   {
-    "alpha": 0.02,
-    "delta": 0.35,
-    "precision_decided": 0.9889,
-    "decided_share": 0.81,
-    "false_confirm_decided": 0.0025,
-    "exact_with_followup": 0.844,
+    "precision_decided": 0.9664,
+    "decided_share": 0.833,
+    "false_confirm_decided": 0.012,
+    "exact_with_followup": 0.791,
     "minutes_mean": 48.2
    },
    {
     "alpha": 0.02,
-    "delta": 0.4,
+    "delta": 0.3,
     "precision_decided": 0.9756,
-    "decided_share": 0.861,
-    "false_confirm_decided": 0.0081,
-    "exact_with_followup": 0.824,
-    "minutes_mean": 46.1
+    "decided_share": 0.779,
+    "false_confirm_decided": 0.0051,
+    "exact_with_followup": 0.808,
+    "minutes_mean": 53.3
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.35,
+    "precision_decided": 0.9753,
+    "decided_share": 0.809,
+    "false_confirm_decided": 0.0074,
+    "exact_with_followup": 0.811,
+    "minutes_mean": 50.9
+   },
+   {
+    "alpha": 0.02,
+    "delta": 0.4,
+    "precision_decided": 0.9635,
+    "decided_share": 0.823,
+    "false_confirm_decided": 0.0134,
+    "exact_with_followup": 0.819,
+    "minutes_mean": 48.9
    }
   ]
  },
  "main": {
   "n": 3000,
-  "precision_decided": 0.9763,
+  "precision_decided": 0.9774,
   "precision_decided_ci": [
-   0.9701,
-   0.9817
+   0.9714,
+   0.9833
   ],
-  "decided_share": 0.803,
-  "verdict_accuracy_after_followup": 0.9283,
+  "decided_share": 0.78,
+  "verdict_accuracy_after_followup": 0.9233,
   "verdict_accuracy_after_followup_ci": [
-   0.9197,
-   0.9377
+   0.9143,
+   0.9323
   ],
-  "false_confirm_decided": 0.0095,
-  "false_confirm_overall": 0.0197,
+  "false_confirm_decided": 0.0124,
+  "false_confirm_overall": 0.0257,
   "false_confirm_overall_ci": [
-   0.0143,
-   0.0243
+   0.02,
+   0.0313
   ],
-  "exact_single_stage": 0.7853,
+  "exact_single_stage": 0.764,
   "exact_single_stage_ci": [
-   0.7703,
-   0.8
+   0.7493,
+   0.7787
   ],
-  "exact_with_followup": 0.8207,
+  "exact_with_followup": 0.806,
   "exact_with_followup_ci": [
-   0.808,
-   0.834
+   0.792,
+   0.8207
   ],
-  "exact_far_from_cut": 0.9808,
+  "exact_far_from_cut": 0.9566,
   "exact_far_from_cut_ci": [
-   0.9679,
-   0.9915
+   0.9361,
+   0.9749
   ],
-  "far_from_cut_share": 0.156,
-  "within_1": 1.0,
+  "far_from_cut_share": 0.146,
+  "within_1": 0.9997,
   "within_1_ci": [
-   1.0,
+   0.999,
    1.0
   ],
-  "gross_error_rate": 0.0,
-  "gross_error_count": 0,
-  "over_rate": 0.0943,
+  "gross_error_rate": 0.0003,
+  "gross_error_count": 1,
+  "over_rate": 0.109,
   "under_rate": 0.085,
-  "followup_share": 0.4823,
-  "items_mean": 16.4,
-  "minutes_mean": 48.7,
-  "code_open_share": 0.671,
+  "followup_share": 0.56,
+  "items_mean": 17.3,
+  "minutes_mean": 51.5,
+  "code_open_share": 0.676,
   "by_grade": {
    "intern": {
-    "n_true": 179,
+    "n_true": 186,
     "n_claimed": 195,
-    "exact_grade": 0.8268,
+    "exact_grade": 0.7688,
     "within_1": 1.0,
     "verdict_accuracy_all": 1.0,
     "verdict_precision_decided": 1.0,
@@ -170,121 +183,121 @@
     "false_confirm_rate": 0.0
    },
    "junior": {
-    "n_true": 470,
-    "n_claimed": 419,
-    "exact_grade": 0.8,
+    "n_true": 504,
+    "n_claimed": 468,
+    "exact_grade": 0.7778,
     "within_1": 1.0,
-    "verdict_accuracy_all": 0.9666,
-    "verdict_precision_decided": 0.9815,
-    "decided_share": 0.9021,
-    "false_confirm_rate": 0.0095
+    "verdict_accuracy_all": 0.9487,
+    "verdict_precision_decided": 0.985,
+    "decided_share": 0.8526,
+    "false_confirm_rate": 0.0256
    },
    "middle": {
-    "n_true": 865,
-    "n_claimed": 729,
-    "exact_grade": 0.815,
+    "n_true": 830,
+    "n_claimed": 727,
+    "exact_grade": 0.8169,
     "within_1": 1.0,
-    "verdict_accuracy_all": 0.9287,
-    "verdict_precision_decided": 0.9731,
-    "decided_share": 0.8162,
-    "false_confirm_rate": 0.0247
+    "verdict_accuracy_all": 0.9312,
+    "verdict_precision_decided": 0.9809,
+    "decided_share": 0.7923,
+    "false_confirm_rate": 0.0289
    },
    "senior": {
-    "n_true": 786,
-    "n_claimed": 775,
-    "exact_grade": 0.8333,
+    "n_true": 823,
+    "n_claimed": 786,
+    "exact_grade": 0.8299,
     "within_1": 1.0,
-    "verdict_accuracy_all": 0.9226,
-    "verdict_precision_decided": 0.9758,
-    "decided_share": 0.7458,
-    "false_confirm_rate": 0.0232
+    "verdict_accuracy_all": 0.9135,
+    "verdict_precision_decided": 0.9704,
+    "decided_share": 0.7303,
+    "false_confirm_rate": 0.0305
    },
    "lead": {
-    "n_true": 485,
-    "n_claimed": 545,
-    "exact_grade": 0.7979,
-    "within_1": 1.0,
-    "verdict_accuracy_all": 0.8972,
-    "verdict_precision_decided": 0.968,
-    "decided_share": 0.745,
-    "false_confirm_rate": 0.0239
+    "n_true": 486,
+    "n_claimed": 507,
+    "exact_grade": 0.7922,
+    "within_1": 0.9979,
+    "verdict_accuracy_all": 0.9073,
+    "verdict_precision_decided": 0.9701,
+    "decided_share": 0.7258,
+    "false_confirm_rate": 0.0197
    },
    "principal": {
-    "n_true": 215,
-    "n_claimed": 337,
-    "exact_grade": 0.8884,
+    "n_true": 171,
+    "n_claimed": 317,
+    "exact_grade": 0.8012,
     "within_1": 1.0,
-    "verdict_accuracy_all": 0.9021,
-    "verdict_precision_decided": 0.9728,
-    "decided_share": 0.7626,
-    "false_confirm_rate": 0.0178
+    "verdict_accuracy_all": 0.8707,
+    "verdict_precision_decided": 0.9649,
+    "decided_share": 0.7192,
+    "false_confirm_rate": 0.0315
    }
   }
  },
  "retest": {
   "n": 3000,
-  "exact": 0.7387,
+  "exact": 0.738,
   "exact_ci": [
-   0.7227,
-   0.7547
+   0.7217,
+   0.7537
   ],
-  "within_1": 0.9997,
-  "two_or_more_steps": 0.0003,
-  "kappa_w": 0.9147,
-  "verdict_consistency": 0.8917,
+  "within_1": 0.9993,
+  "two_or_more_steps": 0.0007,
+  "kappa_w": 0.9173,
+  "verdict_consistency": 0.892,
   "verdict_consistency_ci": [
-   0.8807,
-   0.903
+   0.8817,
+   0.9033
   ],
-  "r_theta": 0.9488
+  "r_theta": 0.9492
  },
  "scenarios": {
   "baseline_mcq4": {
    "title": "1. Базовый CAT (16 MCQ с 4 вариантами, отбор в θ̂, 1 этап)",
    "metrics": {
     "n": 3000,
-    "precision_decided": 0.9642,
+    "precision_decided": 0.9658,
     "precision_decided_ci": [
-     0.9553,
-     0.9719
+     0.9579,
+     0.9737
     ],
-    "decided_share": 0.6417,
+    "decided_share": 0.6337,
     "verdict_accuracy_after_followup": 0.8543,
     "verdict_accuracy_after_followup_ci": [
-     0.8417,
-     0.867
+     0.842,
+     0.8667
     ],
-    "false_confirm_decided": 0.0145,
-    "false_confirm_overall": 0.036,
+    "false_confirm_decided": 0.0153,
+    "false_confirm_overall": 0.035,
     "false_confirm_overall_ci": [
-     0.0297,
-     0.043
+     0.0287,
+     0.042
     ],
-    "exact_single_stage": 0.6897,
+    "exact_single_stage": 0.6893,
     "exact_single_stage_ci": [
-     0.672,
-     0.7053
+     0.6717,
+     0.7063
     ],
-    "exact_with_followup": 0.6897,
+    "exact_with_followup": 0.6893,
     "exact_with_followup_ci": [
-     0.6723,
-     0.706
+     0.672,
+     0.705
     ],
-    "exact_far_from_cut": 0.8242,
+    "exact_far_from_cut": 0.8265,
     "exact_far_from_cut_ci": [
-     0.7854,
-     0.8562
+     0.79,
+     0.8607
     ],
     "far_from_cut_share": 0.146,
-    "within_1": 0.9957,
+    "within_1": 0.996,
     "within_1_ci": [
      0.9933,
-     0.9977
+     0.998
     ],
-    "gross_error_rate": 0.0043,
-    "gross_error_count": 13,
-    "over_rate": 0.1677,
-    "under_rate": 0.1427,
+    "gross_error_rate": 0.004,
+    "gross_error_count": 12,
+    "over_rate": 0.1697,
+    "under_rate": 0.141,
     "followup_share": 0.0,
     "items_mean": 16.0,
     "minutes_mean": 24.0,
@@ -293,8 +306,8 @@
      "intern": {
       "n_true": 194,
       "n_claimed": 206,
-      "exact_grade": 0.6546,
-      "within_1": 0.9742,
+      "exact_grade": 0.6753,
+      "within_1": 0.9845,
       "verdict_accuracy_all": 1.0,
       "verdict_precision_decided": 1.0,
       "decided_share": 1.0,
@@ -303,52 +316,52 @@
      "junior": {
       "n_true": 447,
       "n_claimed": 430,
-      "exact_grade": 0.5951,
-      "within_1": 0.9866,
-      "verdict_accuracy_all": 0.9116,
-      "verdict_precision_decided": 0.9823,
-      "decided_share": 0.7884,
-      "false_confirm_rate": 0.0488
+      "exact_grade": 0.6309,
+      "within_1": 0.9888,
+      "verdict_accuracy_all": 0.9093,
+      "verdict_precision_decided": 0.9792,
+      "decided_share": 0.7837,
+      "false_confirm_rate": 0.0442
      },
      "middle": {
       "n_true": 814,
       "n_claimed": 675,
-      "exact_grade": 0.7064,
-      "within_1": 0.9988,
-      "verdict_accuracy_all": 0.8548,
-      "verdict_precision_decided": 0.9698,
-      "decided_share": 0.637,
-      "false_confirm_rate": 0.0385
+      "exact_grade": 0.7101,
+      "within_1": 0.9963,
+      "verdict_accuracy_all": 0.8607,
+      "verdict_precision_decided": 0.9718,
+      "decided_share": 0.6311,
+      "false_confirm_rate": 0.0356
      },
      "senior": {
       "n_true": 872,
       "n_claimed": 826,
-      "exact_grade": 0.7397,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.8281,
-      "verdict_precision_decided": 0.9505,
-      "decided_share": 0.563,
-      "false_confirm_rate": 0.0387
+      "exact_grade": 0.7179,
+      "within_1": 0.9989,
+      "verdict_accuracy_all": 0.822,
+      "verdict_precision_decided": 0.9602,
+      "decided_share": 0.5472,
+      "false_confirm_rate": 0.04
      },
      "lead": {
       "n_true": 502,
       "n_claimed": 544,
-      "exact_grade": 0.6713,
-      "within_1": 0.998,
-      "verdict_accuracy_all": 0.8346,
-      "verdict_precision_decided": 0.9554,
-      "decided_share": 0.5772,
-      "false_confirm_rate": 0.0294
+      "exact_grade": 0.6534,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8254,
+      "verdict_precision_decided": 0.9487,
+      "decided_share": 0.5735,
+      "false_confirm_rate": 0.0331
      },
      "principal": {
       "n_true": 171,
       "n_claimed": 319,
-      "exact_grade": 0.6959,
+      "exact_grade": 0.7193,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.7837,
-      "verdict_precision_decided": 0.924,
-      "decided_share": 0.5361,
-      "false_confirm_rate": 0.0408
+      "verdict_accuracy_all": 0.8056,
+      "verdict_precision_decided": 0.9286,
+      "decided_share": 0.5266,
+      "false_confirm_rate": 0.0345
      }
     }
    }
@@ -357,48 +370,48 @@
    "title": "2. Честные MCQ (5 вариантов без перекоса ключа) + отбор у порогов грейдов",
    "metrics": {
     "n": 3000,
-    "precision_decided": 0.9562,
+    "precision_decided": 0.9541,
     "precision_decided_ci": [
-     0.9469,
-     0.9654
+     0.9447,
+     0.963
     ],
-    "decided_share": 0.6847,
-    "verdict_accuracy_after_followup": 0.859,
+    "decided_share": 0.675,
+    "verdict_accuracy_after_followup": 0.848,
     "verdict_accuracy_after_followup_ci": [
-     0.8473,
-     0.8713
+     0.836,
+     0.8607
     ],
-    "false_confirm_decided": 0.0175,
-    "false_confirm_overall": 0.0357,
+    "false_confirm_decided": 0.0183,
+    "false_confirm_overall": 0.0387,
     "false_confirm_overall_ci": [
-     0.0293,
-     0.0427
+     0.032,
+     0.0457
     ],
-    "exact_single_stage": 0.716,
+    "exact_single_stage": 0.6993,
     "exact_single_stage_ci": [
-     0.6997,
-     0.7313
+     0.681,
+     0.7153
     ],
-    "exact_with_followup": 0.716,
+    "exact_with_followup": 0.6993,
     "exact_with_followup_ci": [
-     0.6997,
-     0.7317
+     0.682,
+     0.715
     ],
-    "exact_far_from_cut": 0.8406,
+    "exact_far_from_cut": 0.8088,
     "exact_far_from_cut_ci": [
-     0.8108,
-     0.8705
+     0.7729,
+     0.8426
     ],
     "far_from_cut_share": 0.1673,
-    "within_1": 0.995,
+    "within_1": 0.9953,
     "within_1_ci": [
-     0.9927,
-     0.9973
+     0.993,
+     0.9977
     ],
-    "gross_error_rate": 0.005,
-    "gross_error_count": 15,
-    "over_rate": 0.149,
-    "under_rate": 0.135,
+    "gross_error_rate": 0.0047,
+    "gross_error_count": 14,
+    "over_rate": 0.1577,
+    "under_rate": 0.143,
     "followup_share": 0.0,
     "items_mean": 16.0,
     "minutes_mean": 24.0,
@@ -407,7 +420,7 @@
      "intern": {
       "n_true": 178,
       "n_claimed": 188,
-      "exact_grade": 0.6573,
+      "exact_grade": 0.6404,
       "within_1": 0.9438,
       "verdict_accuracy_all": 1.0,
       "verdict_precision_decided": 1.0,
@@ -417,51 +430,51 @@
      "junior": {
       "n_true": 484,
       "n_claimed": 467,
-      "exact_grade": 0.6756,
-      "within_1": 0.9938,
-      "verdict_accuracy_all": 0.8994,
-      "verdict_precision_decided": 0.9725,
-      "decided_share": 0.7773,
-      "false_confirm_rate": 0.0343
+      "exact_grade": 0.655,
+      "within_1": 0.9917,
+      "verdict_accuracy_all": 0.8844,
+      "verdict_precision_decided": 0.9676,
+      "decided_share": 0.7923,
+      "false_confirm_rate": 0.0385
      },
      "middle": {
       "n_true": 838,
       "n_claimed": 667,
-      "exact_grade": 0.7542,
-      "within_1": 0.9976,
-      "verdict_accuracy_all": 0.8756,
-      "verdict_precision_decided": 0.9676,
-      "decided_share": 0.6942,
-      "false_confirm_rate": 0.048
+      "exact_grade": 0.7411,
+      "within_1": 1.0,
+      "verdict_accuracy_all": 0.8801,
+      "verdict_precision_decided": 0.9623,
+      "decided_share": 0.6762,
+      "false_confirm_rate": 0.0525
      },
      "senior": {
       "n_true": 837,
       "n_claimed": 816,
-      "exact_grade": 0.7097,
+      "exact_grade": 0.7001,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.8272,
-      "verdict_precision_decided": 0.9412,
-      "decided_share": 0.625,
-      "false_confirm_rate": 0.049
+      "verdict_accuracy_all": 0.8174,
+      "verdict_precision_decided": 0.9545,
+      "decided_share": 0.5931,
+      "false_confirm_rate": 0.0551
      },
      "lead": {
       "n_true": 456,
       "n_claimed": 548,
-      "exact_grade": 0.7215,
+      "exact_grade": 0.6952,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.8449,
-      "verdict_precision_decided": 0.9493,
-      "decided_share": 0.6113,
-      "false_confirm_rate": 0.0292
+      "verdict_accuracy_all": 0.8248,
+      "verdict_precision_decided": 0.9351,
+      "decided_share": 0.6186,
+      "false_confirm_rate": 0.0274
      },
      "principal": {
       "n_true": 207,
       "n_claimed": 314,
-      "exact_grade": 0.7198,
+      "exact_grade": 0.6908,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.7866,
-      "verdict_precision_decided": 0.9077,
-      "decided_share": 0.621,
+      "verdict_accuracy_all": 0.7548,
+      "verdict_precision_decided": 0.8964,
+      "decided_share": 0.6146,
       "false_confirm_rate": 0.0096
      }
     }
@@ -471,37 +484,37 @@
    "title": "3. Классификационный CAT у порогов + 1/3 заданий с кодом и открытым ответом (1 этап, до 16 заданий)",
    "metrics": {
     "n": 3000,
-    "precision_decided": 0.9819,
+    "precision_decided": 0.9814,
     "precision_decided_ci": [
-     0.976,
-     0.9869
+     0.9757,
+     0.987
     ],
-    "decided_share": 0.7907,
-    "verdict_accuracy_after_followup": 0.922,
+    "decided_share": 0.7693,
+    "verdict_accuracy_after_followup": 0.9107,
     "verdict_accuracy_after_followup_ci": [
-     0.912,
-     0.9313
+     0.9003,
+     0.9203
     ],
-    "false_confirm_decided": 0.0072,
-    "false_confirm_overall": 0.023,
+    "false_confirm_decided": 0.0069,
+    "false_confirm_overall": 0.025,
     "false_confirm_overall_ci": [
-     0.018,
-     0.0283
+     0.02,
+     0.031
     ],
-    "exact_single_stage": 0.8197,
+    "exact_single_stage": 0.798,
     "exact_single_stage_ci": [
-     0.8057,
-     0.8337
+     0.7823,
+     0.812
     ],
-    "exact_with_followup": 0.8197,
+    "exact_with_followup": 0.798,
     "exact_with_followup_ci": [
-     0.806,
-     0.833
+     0.7843,
+     0.813
     ],
-    "exact_far_from_cut": 0.9702,
+    "exact_far_from_cut": 0.9511,
     "exact_far_from_cut_ci": [
-     0.9532,
-     0.9851
+     0.9298,
+     0.9681
     ],
     "far_from_cut_share": 0.1567,
     "within_1": 1.0,
@@ -511,8 +524,8 @@
     ],
     "gross_error_rate": 0.0,
     "gross_error_count": 0,
-    "over_rate": 0.0997,
-    "under_rate": 0.0807,
+    "over_rate": 0.1123,
+    "under_rate": 0.0897,
     "followup_share": 0.0,
     "items_mean": 16.0,
     "minutes_mean": 45.0,
@@ -521,7 +534,7 @@
      "intern": {
       "n_true": 194,
       "n_claimed": 206,
-      "exact_grade": 0.8557,
+      "exact_grade": 0.799,
       "within_1": 1.0,
       "verdict_accuracy_all": 1.0,
       "verdict_precision_decided": 1.0,
@@ -531,52 +544,52 @@
      "junior": {
       "n_true": 491,
       "n_claimed": 449,
-      "exact_grade": 0.7943,
+      "exact_grade": 0.7739,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.9532,
-      "verdict_precision_decided": 0.9822,
-      "decided_share": 0.8753,
-      "false_confirm_rate": 0.0178
+      "verdict_accuracy_all": 0.9332,
+      "verdict_precision_decided": 0.9869,
+      "decided_share": 0.8508,
+      "false_confirm_rate": 0.02
      },
      "middle": {
       "n_true": 868,
       "n_claimed": 768,
-      "exact_grade": 0.8065,
+      "exact_grade": 0.7961,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.918,
-      "verdict_precision_decided": 0.9848,
-      "decided_share": 0.7734,
-      "false_confirm_rate": 0.0312
+      "verdict_accuracy_all": 0.9219,
+      "verdict_precision_decided": 0.9846,
+      "decided_share": 0.7604,
+      "false_confirm_rate": 0.0286
      },
      "senior": {
       "n_true": 799,
       "n_claimed": 744,
-      "exact_grade": 0.8385,
+      "exact_grade": 0.8185,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.922,
-      "verdict_precision_decided": 0.9752,
-      "decided_share": 0.7581,
-      "false_confirm_rate": 0.0255
+      "verdict_accuracy_all": 0.9046,
+      "verdict_precision_decided": 0.9688,
+      "decided_share": 0.7325,
+      "false_confirm_rate": 0.0296
      },
      "lead": {
       "n_true": 466,
       "n_claimed": 526,
-      "exact_grade": 0.794,
+      "exact_grade": 0.7704,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.8783,
-      "verdict_precision_decided": 0.9791,
-      "decided_share": 0.7281,
-      "false_confirm_rate": 0.0247
+      "verdict_accuracy_all": 0.865,
+      "verdict_precision_decided": 0.9783,
+      "decided_share": 0.7015,
+      "false_confirm_rate": 0.0285
      },
      "principal": {
       "n_true": 182,
       "n_claimed": 307,
-      "exact_grade": 0.8956,
+      "exact_grade": 0.8516,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.9088,
-      "verdict_precision_decided": 0.9784,
-      "decided_share": 0.7557,
-      "false_confirm_rate": 0.0163
+      "verdict_accuracy_all": 0.8827,
+      "verdict_precision_decided": 0.982,
+      "decided_share": 0.7231,
+      "false_confirm_rate": 0.0228
      }
     }
    }
@@ -585,57 +598,57 @@
    "title": "4. Продуктовый стандарт: SPRT (α = 0,02, δ = 0,35) + 1/3 код/открытые + 3-значный вердикт + 15-мин доп. этап у границы и Боевой этап для Senior+",
    "metrics": {
     "n": 3000,
-    "precision_decided": 0.9763,
+    "precision_decided": 0.9774,
     "precision_decided_ci": [
-     0.9701,
-     0.9817
+     0.9714,
+     0.9833
     ],
-    "decided_share": 0.803,
-    "verdict_accuracy_after_followup": 0.9283,
+    "decided_share": 0.78,
+    "verdict_accuracy_after_followup": 0.9233,
     "verdict_accuracy_after_followup_ci": [
-     0.9197,
-     0.9377
+     0.9143,
+     0.9323
     ],
-    "false_confirm_decided": 0.0095,
-    "false_confirm_overall": 0.0197,
+    "false_confirm_decided": 0.0124,
+    "false_confirm_overall": 0.0257,
     "false_confirm_overall_ci": [
-     0.0143,
-     0.0243
+     0.02,
+     0.0313
     ],
-    "exact_single_stage": 0.7853,
+    "exact_single_stage": 0.764,
     "exact_single_stage_ci": [
-     0.7703,
-     0.8
+     0.7493,
+     0.7787
     ],
-    "exact_with_followup": 0.8207,
+    "exact_with_followup": 0.806,
     "exact_with_followup_ci": [
-     0.808,
-     0.834
+     0.792,
+     0.8207
     ],
-    "exact_far_from_cut": 0.9808,
+    "exact_far_from_cut": 0.9566,
     "exact_far_from_cut_ci": [
-     0.9679,
-     0.9915
+     0.9361,
+     0.9749
     ],
-    "far_from_cut_share": 0.156,
-    "within_1": 1.0,
+    "far_from_cut_share": 0.146,
+    "within_1": 0.9997,
     "within_1_ci": [
-     1.0,
+     0.999,
      1.0
     ],
-    "gross_error_rate": 0.0,
-    "gross_error_count": 0,
-    "over_rate": 0.0943,
+    "gross_error_rate": 0.0003,
+    "gross_error_count": 1,
+    "over_rate": 0.109,
     "under_rate": 0.085,
-    "followup_share": 0.4823,
-    "items_mean": 16.4,
-    "minutes_mean": 48.7,
-    "code_open_share": 0.671,
+    "followup_share": 0.56,
+    "items_mean": 17.3,
+    "minutes_mean": 51.5,
+    "code_open_share": 0.676,
     "by_grade": {
      "intern": {
-      "n_true": 179,
+      "n_true": 186,
       "n_claimed": 195,
-      "exact_grade": 0.8268,
+      "exact_grade": 0.7688,
       "within_1": 1.0,
       "verdict_accuracy_all": 1.0,
       "verdict_precision_decided": 1.0,
@@ -643,59 +656,59 @@
       "false_confirm_rate": 0.0
      },
      "junior": {
-      "n_true": 470,
-      "n_claimed": 419,
-      "exact_grade": 0.8,
+      "n_true": 504,
+      "n_claimed": 468,
+      "exact_grade": 0.7778,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.9666,
-      "verdict_precision_decided": 0.9815,
-      "decided_share": 0.9021,
-      "false_confirm_rate": 0.0095
+      "verdict_accuracy_all": 0.9487,
+      "verdict_precision_decided": 0.985,
+      "decided_share": 0.8526,
+      "false_confirm_rate": 0.0256
      },
      "middle": {
-      "n_true": 865,
-      "n_claimed": 729,
-      "exact_grade": 0.815,
+      "n_true": 830,
+      "n_claimed": 727,
+      "exact_grade": 0.8169,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.9287,
-      "verdict_precision_decided": 0.9731,
-      "decided_share": 0.8162,
-      "false_confirm_rate": 0.0247
+      "verdict_accuracy_all": 0.9312,
+      "verdict_precision_decided": 0.9809,
+      "decided_share": 0.7923,
+      "false_confirm_rate": 0.0289
      },
      "senior": {
-      "n_true": 786,
-      "n_claimed": 775,
-      "exact_grade": 0.8333,
+      "n_true": 823,
+      "n_claimed": 786,
+      "exact_grade": 0.8299,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.9226,
-      "verdict_precision_decided": 0.9758,
-      "decided_share": 0.7458,
-      "false_confirm_rate": 0.0232
+      "verdict_accuracy_all": 0.9135,
+      "verdict_precision_decided": 0.9704,
+      "decided_share": 0.7303,
+      "false_confirm_rate": 0.0305
      },
      "lead": {
-      "n_true": 485,
-      "n_claimed": 545,
-      "exact_grade": 0.7979,
-      "within_1": 1.0,
-      "verdict_accuracy_all": 0.8972,
-      "verdict_precision_decided": 0.968,
-      "decided_share": 0.745,
-      "false_confirm_rate": 0.0239
+      "n_true": 486,
+      "n_claimed": 507,
+      "exact_grade": 0.7922,
+      "within_1": 0.9979,
+      "verdict_accuracy_all": 0.9073,
+      "verdict_precision_decided": 0.9701,
+      "decided_share": 0.7258,
+      "false_confirm_rate": 0.0197
      },
      "principal": {
-      "n_true": 215,
-      "n_claimed": 337,
-      "exact_grade": 0.8884,
+      "n_true": 171,
+      "n_claimed": 317,
+      "exact_grade": 0.8012,
       "within_1": 1.0,
-      "verdict_accuracy_all": 0.9021,
-      "verdict_precision_decided": 0.9728,
-      "decided_share": 0.7626,
-      "false_confirm_rate": 0.0178
+      "verdict_accuracy_all": 0.8707,
+      "verdict_precision_decided": 0.9649,
+      "decided_share": 0.7192,
+      "false_confirm_rate": 0.0315
      }
     }
    }
   }
  },
- "claim_ru": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,6 % уверенных решений (95 % ДИ [97,0 %; 98,2 %]); уверенный вердикт на первом этапе получают 80,3 % кандидатов в среднем за 49 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 82,1 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 98,1 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 0,9 %, повторяемость (test–retest) κw = 0,915 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),",
- "seconds": 58.45
+ "claim_ru": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,7 % уверенных решений (95 % ДИ [97,1 %; 98,3 %]); уверенный вердикт на первом этапе получают 78,0 % кандидатов в среднем за 52 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 80,6 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 95,7 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 1,2 %, повторяемость (test–retest) κw = 0,917 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),",
+ "seconds": 119.01
 }

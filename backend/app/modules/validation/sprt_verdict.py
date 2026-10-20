@@ -75,24 +75,26 @@ def weighted_kappa_6(a: np.ndarray, b: np.ndarray, k: int = 6) -> float:
 
 
 def _sample_item(rng: np.random.Generator, target: float, kind: str) -> tuple[float, float, float, float]:
+    # Параметры банка А3 (1 824 семейства, коммит c027be45): a = 1.0 для выбора ответа (5 вариантов, c = 0.20),
+    # a = 1.3 для кодовых, открытых, 3-шаговых и incident_sim (590 семейств, c = 0.0; для 3-шагового инцидента 3 части дают a_eff ≈ 1.45)
     if kind == "mcq4":
-        a = float(rng.lognormal(np.log(1.0), 0.22))
+        a = float(rng.normal(1.0, 0.08))
         c = 0.25
         mins = 1.5
     elif kind == "mcq5":
-        a = float(rng.lognormal(np.log(1.05), 0.22))
+        a = float(rng.normal(1.0, 0.08))
         c = 0.20
         mins = 1.5
     elif kind == "incident":
-        a = float(rng.lognormal(np.log(1.45), 0.18))
+        a = float(rng.normal(1.45, 0.10))
         c = 0.0
         mins = 6.0
-    else:  # code / open_answer / open_book_3step
-        a = float(rng.lognormal(np.log(1.35), 0.22))
+    else:  # code / open_answer / open_book_3step (a = 1.3 в банке А3)
+        a = float(rng.normal(1.30, 0.10))
         c = 0.0
         mins = 3.6
-    b = float(target + rng.uniform(-0.22, 0.22))
-    return a, b, c, mins
+    b = float(target + rng.uniform(-0.20, 0.20))
+    return max(0.5, a), b, c, mins
 
 
 def _band_probs(post: np.ndarray) -> np.ndarray:
@@ -480,11 +482,24 @@ def run_all(n: int = 3000, write: bool = True) -> dict:
     out = {
         "signature": signature(
             seed=TEST_SEED,
-            config={"n_test": n, "train_seed": TRAIN_SEED, "test_seed": TEST_SEED, **chosen_params},
+            config={"n_test": n, "train_seed": TRAIN_SEED, "test_seed": TEST_SEED, "bank_commit": "c027be45", "bank_families": 1824, **chosen_params},
             n=n,
-            world=f"кросс-валидированная симуляция 6 грейдов (Стажёр…Principal): train N=1000, held-out test N={n}",
+            world=f"кросс-валидированная симуляция на банке А3 (1 824 семейства, c027be45, a=1,0/1,3): train N=1000, held-out test N={n}",
             command="python -m app.modules.validation.sprt_verdict",
         ),
+        "bank_summary": {
+            "bank_branch": "ag/a3-bank",
+            "bank_commit": "c027be45",
+            "families": 1824,
+            "variants_20seeds": 36480,
+            "code_and_open_families": 590,
+            "incident_sim_families": 40,
+            "lead_families": 271,
+            "principal_families": 266,
+            "a_mcq": 1.0,
+            "a_code_open_incident": 1.3,
+            "basis": "априорная, до калибровки на людях (отвязана от потока истины)",
+        },
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
         "code_ref": "backend/app/modules/validation/sprt_verdict.py",

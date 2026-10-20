@@ -37,7 +37,7 @@ CHEAT_LOG_JSON = HERE / "data" / "cheat_challenge_log.json"
 LEAK_SEED = 2026102004
 SENIOR_CUT = 1.0
 SEED_SPACE_PER_FAMILY = 2_147_483_646  # 2^31 - 2
-N_FAMILIES = 1504
+N_FAMILIES = 1824
 FIXED_POOL_SIZE = 200
 
 
@@ -361,7 +361,7 @@ def run_all(n: int = 2000, write: bool = True) -> dict:
         f"При утечке K = 100 и K = 1 000 опубликованных вариантов и открытом коде генераторов вероятность ложного "
         f"подтверждения Senior у кандидата уровня Junior/Middle в фиксированном банке (200 вопросов) взлетает до "
         f"{100 * k100['fixed_bank']['false_confirm_rate']:.1f} % и {100 * k1000['fixed_bank']['false_confirm_rate']:.1f} %, "
-        f"тогда как в параметрическом банке «Драфт» (1 504 семейства × 2,15·10⁹ серверных зёрен CSPRNG + канареечный "
+        f"тогда как в параметрическом банке «Драфт» ({N_FAMILIES} семейств × 2,15·10⁹ серверных зёрен CSPRNG + канареечный "
         f"детектор + перевод в устную защиту) остаётся на уровне {100 * k100['parametric_bank']['false_confirm_protected']:.2f} % "
         f"и {100 * k1000['parametric_bank']['false_confirm_protected']:.2f} %, а выигрыш в оценке θ не превышает "
         f"+{k1000['parametric_bank']['theta_gain_mean']:.2f} логита (симуляция N = {n} на каждое K, seed {LEAK_SEED})."

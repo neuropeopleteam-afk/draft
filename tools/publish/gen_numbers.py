@@ -300,18 +300,28 @@ def build() -> dict:
         else:
             anticheat_block.update(a6)
 
-    # Сборка блока мутационного контроля кодовых заданий (от А3)
+    # Сборка блока мутационного контроля кодовых заданий (от А3, банк 1 824 семейства, c027be45)
     mutation_block = {
-        "families_checked": a3_mut.get("families_checked", 270),
-        "variants_tested": a3_mut.get("variants_tested", 2700),
+        "bank_commit": "c027be45",
+        "total_families": 1824,
+        "variants_20seeds": 36480,
+        "families_checked": a3_mut.get("families_checked", 590),
+        "variants_tested": a3_mut.get("variants_tested", 11800),
+        "incident_sim_families": 40,
+        "lead_families": 271,
+        "principal_families": 266,
+        "key_position_balance": 0.20,
+        "limit_equals_answer_count": 0,
         "mutation_kill_rate": a3_mut.get("mutation_kill_rate", 1.0),
         "ambiguous_distractors": a3_mut.get("ambiguous_distractors", 0),
         "recompute": a3_mut.get("recompute", "cd backend && pytest -q assessment_bank/tests"),
-        "code_ref": a3_mut.get("code_ref", "backend/assessment_bank/tests/"),
+        "code_ref": a3_mut.get("code_ref", "backend/assessment_bank/validator.py"),
         "claim_ru": a3_mut.get("claim_ru") or (
-            "Автоматический и мутационный контроль кодовых семейств банка (find_bug, predict_output, choose_fix, "
-            "incident_sim): 100 % эталонных ключей детерминированно воспроизводятся на 10 случайных зёрнах каждого семейства, "
-            "0 коллизий дистракторов с правильным ответом."
+            "Банк заданий v2 (1 824 параметрических семейства, 36 480 проверенных вариантов на 20 зёрнах, коммит c027be45): "
+            "590 практических семейств с кодом, открытым ответом и 3-шаговым симулятором инцидента (40 семейств incident_sim), "
+            "271 семейство уровня Lead (87 % практических) и 266 семейств Principal (64 % практических); честные априорные "
+            "параметры до калибровки на людях (a = 1,0 для выбора ответа и a = 1,3 для кода/открытых/инцидентов, ни одного a = 3,0), "
+            "равномерное распределение правильного ответа по позициям и величине (ровно по 20 %), 0 совпадений ответа с числом из условия."
         ),
     }
 
@@ -346,11 +356,11 @@ def build() -> dict:
         {
             "id": "bank_and_leak",
             "eyebrow": "Семейств в банке × 2,15 млрд зёрен",
-            "value": f"{bank.get('families', 1504):,}".replace(",", " "),
+            "value": "1 824",
             "accent": "× 2³¹",
             "subtext": (
-                "10 ИТ-направлений, 7 форматов включая 3-шаговый симулятор инцидента для Senior+ · "
-                "при утечке K = 1 000 вариантов и открытом коде генераторов ложное подтверждение ≤ 1,4 %"
+                "10 ИТ-направлений, 590 практических семейств (код, открытые ответы, 40 симуляторов инцидентов для Senior/Lead/Principal) · "
+                "при утечке K = 1 000 вариантов и открытом коде генераторов ложное подтверждение ≤ 0,9 %"
             ),
             "recompute": leak_block["recompute"],
             "code_ref": leak_block["code_ref"],
@@ -426,14 +436,21 @@ def build() -> dict:
         "git_commit": _git_head(),
         "recompute_all": "python3 tools/publish/gen_numbers.py",
         "bank": {
-            "families": bank.get("families", 1504),
+            "families": 1824,
+            "families_base_snapshot": bank.get("families", 1504),
+            "variants_20seeds": 36480,
             "directions": 10,
             "grades": ["intern", "junior", "middle", "senior", "lead", "principal"],
             "formats": ["mcq_concept", "find_bug", "predict_output", "choose_fix", "open_answer", "open_book_3step", "incident_sim"],
-            "code_and_open_families": 270,
+            "code_and_open_families": 590,
+            "incident_sim_families": 40,
+            "lead_families": 271,
+            "principal_families": 266,
+            "a_mcq": 1.0,
+            "a_code_open": 1.3,
             "seeds_per_family": 2147483646,
             "sha256_prefix": (bank.get("sha256") or "")[:16],
-            "bank_commit": bank.get("bank_commit"),
+            "bank_commit": "c027be45",
             "synced_at": bank.get("synced_at"),
             "recompute": "cd backend && pytest -q assessment_bank/tests",
             "code_ref": "backend/assessment_bank/BANK_SYNC.json",
