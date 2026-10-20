@@ -47,7 +47,7 @@ def ice_servers() -> list[dict] | None:
     return out
 
 
-def avatar_token(persona_name: str | None = None) -> AvatarToken:
+def avatar_token(persona_name: str | None = None, director_notes: dict | None = None) -> AvatarToken:
     s = get_interview_settings()
     name = persona_name or s.interviewer_name
     if not s.interview_anam_enabled:
@@ -57,7 +57,7 @@ def avatar_token(persona_name: str | None = None) -> AvatarToken:
     # Режим передачи звука: Anam рисует только лицо; голос — наш синтез, поэтому voiceId и LLM здесь не нужны.
     # Выбор региона у организации недоступен — не шлём. avatarModel — cara-4 (единственная для собственных аватаров).
     body = {"personaConfig": {"name": name, "avatarId": s.anam_avatar_id, "avatarModel": "cara-4",
-                              "directorNotes": {"expressivity": 0.09},
+                              "directorNotes": director_notes or {"expressivity": 0.09},
                               "enableAudioPassthrough": True,
                               "maxSessionLengthSeconds": s.anam_max_session_s},
             # плашки поставщика на видео нет (решение владельца 11.10: под образом только «Интервьюер: говорит / слушает»);

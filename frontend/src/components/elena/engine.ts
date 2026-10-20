@@ -5,19 +5,20 @@
 //
 // Правила разговора:
 //  • знакомство: спрашивает, как обращаться, запоминает имя (и в следующий визит здоровается по имени);
-//  • человек говорит, когда хочет: явная реплика перебивает Елену сразу (эхо её голоса и «угу» — нет);
+//  • Елену не перебивают: сказанное поверх её фразы она слышит и отвечает, когда договорит фразу (эхо и «угу» —
+//    не реплики); обзор при этом дальше не идёт, пока человек не договорит и не получит ответ;
 //  • конец хода — пауза после фразы (короче для команд и вопросов, длиннее для незаконченной мысли);
 //  • модель думает дольше 0,45 с — короткая связка («Секунду.»), ответ встаёт сразу за ней;
 //  • обзор: шаг = экран, на каждую короткую реплику — свой блок (подсветка, прокрутка, «нажатие» в нужный момент);
 //    вопросов «продолжать?» нет — между кабинетами короткая связка, перебить можно в любой момент;
-//  • перебили — после ответа обзор продолжается сам с той же реплики (если прозвучало меньше 60 %) или со следующей;
-//  • «покажи …» посреди обзора — показывает нужный экран и возвращается к обзору;
+//  • после ответа обзор продолжается сам со следующей реплики;
+//  • «покажи …» посреди обзора — экран дальше по обзору: идём вперёд с него; другой экран — показать и вернуться;
 //  • каждая встреча пишется в стенограмму на сервере (реплики, шаги, решения).
 import { apiUrl, tokenStore, type MeOut } from "../../lib/api";
 import type { Persona } from "../../lib/jury";
 import type { AnamHandle } from "../voice/AnamAvatar";
 import { LiveListener, liveSttSupported, type MicState, type SttEvent } from "../voice/live/listener";
-import { SpeechBuffer, bargeIn, endDelay, isBackchannel, isEcho, words } from "../voice/live/turns";
+import { SpeechBuffer, endDelay, isBackchannel, isEcho, words } from "../voice/live/turns";
 import { Voice, type SayResult, type Utterance } from "../voice/live/voice";
 import { fetchPhrasePcm } from "../voice/live/decode";
 import { STEPS, TRACKS, type Beat, type Cabinet, type TourStep, type TourTrack } from "./steps";
@@ -206,7 +207,7 @@ export class ElenaEngine {
   private loading = 0;
   private ui: ElenaUi = {
     phase: "idle", mic: "off", speaking: false, userTalking: false, track: null, stepNo: 0, stepTotal: 0,
-    target: null, click: null, canPause: false, stage: "large",
+    target: null, click: null, canPause: false, stage: "corner",
   };
   private closed = false;
   private ep = 0;                       // текущая «линия» действий; новая линия (ход, пауза, закрытие) обрывает старую
@@ -219,7 +220,6 @@ export class ElenaEngine {
   private staleTimer = 0;
   private idleTimer = 0;
   private resumeTimer = 0;
-  private duckTimer = 0;
   private clickTimer = 0;
   private pointTimer = 0;
   private speakTick = 0;
@@ -240,8 +240,9 @@ export class ElenaEngine {
   private lastFiller = "";
   private micKnown: Promise<MicState> | null = null;
   private lastMicLogged: MicState | null = null;
-  private lastDuck = 0;
   private viewSeq = 0;
+  private submitWait = 0;               // реплика человека ждёт, пока Елена договорит фразу
+  private shownSteps = new Set<string>();
 
   constructor(private d: ElenaDeps) {
     this.voice = new Voice(d.avatar);
@@ -519,8 +520,9 @@ export class ElenaEngine {
   // ------------------------------------------------------------------ таймеры
 
   private clearAll() {
-    for (const t of [this.endTimer, this.staleTimer, this.idleTimer, this.resumeTimer, this.duckTimer, this.clickTimer, this.pointTimer]) window.clearTimeout(t);
-    this.endTimer = this.staleTimer = this.idleTimer = this.resumeTimer = this.duckTimer = this.clickTimer = this.pointTimer = 0;
+    for (const t of [this.endTimer, this.staleTimer, this.idleTimer, this.resumeTimer, this.clickTimer, this.pointTimer]) window.clearTimeout(t);
+    window.clearInterval(this.submitWait);
+    this.endTimer = this.staleTimer = this.idleTimer = this.resumeTimer = this.clickTimer = this.pointTimer = this.submitWait = 0;
   }
 
   private armIdle(ep: number, ms: number, fn: () => void) {
@@ -538,29 +540,14 @@ export class ElenaEngine {
 
   private onStt(e: SttEvent) {
     if (this.closed) return;
-    if (e.type === "ready") return;
-    if (e.type === "speech_started") {
-      // голос человека поверх её реплики — сразу чуть тише (как живой собеседник), стоп — когда станет ясно, что это реплика
-      const now = performance.now();
-      if (this.voice.speaking() && this.voice.sinceStart() > 1200 && now - this.lastDuck > 2500) { this.lastDuck = now; this.duckFor(1400); }
-      return;
-    }
+    if (e.type === "ready" || e.type === "speech_started") return;   // Елену не перебивают и не приглушают
     if (e.type === "error") { this.set({ mic: "error" }); return; }
     if (e.type === "interim" || e.type === "final") {
       const text = e.text.trim();
       if (!text) return;
       const her = this.voice.echoText();
-      if (this.voice.speaking()) {
-        const heard = (this.buf.read() + " " + text).trim();
-        if (!bargeIn(heard, her, this.voice.sinceStart(), 2)) {
-          // похоже на начало реплики — приглушаем голос, пока не станет ясно (эхо и «угу» не приглушают)
-          if (!isEcho(heard, her) && !isBackchannel(heard)) this.duckFor(1200);
-          return;
-        }
-        this.interruptForUser();
-      } else if (her && isEcho(text, her)) {
-        return;                                   // хвост её реплики из динамиков
-      }
+      if (her && isEcho(text, her)) return;       // её голос из динамиков
+      if (this.voice.speaking() && !this.buf.read() && isBackchannel(text)) return;   // «угу», «ага» поверх её фразы
       this.clearIdle();
       if (this.turnCtl && !this.replyStarted) {   // человек продолжил мысль, пока Елена ещё не ответила, — склеиваем
         this.turnCtl.abort();
@@ -582,30 +569,16 @@ export class ElenaEngine {
     }
   }
 
-  private duckFor(ms: number) {
-    this.voice.duck(true);
-    window.clearTimeout(this.duckTimer);
-    this.duckTimer = window.setTimeout(() => this.voice.duck(false), ms);
+  /** Человек что-то сказал или ждёт ответа — обзор дальше не идёт. */
+  private userBusy(): boolean {
+    return !!this.buf.read() || this.ui.userTalking || !!this.submitWait || !!this.turnCtl || !!this.carry;
   }
 
-  /** Человек перебил: голос — сразу стоп, обзор встаёт на паузу до конца его реплики и ответа. */
-  private interruptForUser() {
-    if (this.touring) {
-      this.heard = this.stepUtter ? this.stepUtter.progress() : 1;
-      this.resumePending = true;
-      this.touring = false;
-    }
-    window.clearTimeout(this.duckTimer);
-    this.voice.duck(false);
-    this.voice.stop();
-    this.ep++;
-    window.clearTimeout(this.clickTimer);
-    if (this.turnCtl && !this.replyStarted) {
-      this.turnCtl.abort();
-      this.turnCtl = null;
-      this.carry = (this.carry + " " + this.pendingText).trim();
-      this.pendingText = "";
-    }
+  /** Обзор встаёт и ждёт: реплика человека будет обработана, потом обзор продолжится со следующей реплики. */
+  private holdForUser() {
+    this.touring = false;
+    this.resumePending = true;
+    this.heard = 1;
     this.set({ phase: "listening", click: null });
   }
 
@@ -630,6 +603,19 @@ export class ElenaEngine {
   }
 
   private submit() {
+    // Елена договаривает фразу — реплика ждёт её конца (её не перебивают), потом сразу ответ
+    if (this.voice.speaking()) {
+      if (!this.submitWait) {
+        this.submitWait = window.setInterval(() => {
+          if (this.closed || this.voice.speaking()) return;
+          window.clearInterval(this.submitWait);
+          this.submitWait = 0;
+          if (this.touring) this.holdForUser();
+          this.submit();
+        }, 120);
+      }
+      return;
+    }
     window.clearTimeout(this.staleTimer);
     const said = this.buf.take();
     const text = (this.carry + " " + said).trim();
@@ -805,13 +791,15 @@ export class ElenaEngine {
           void this.runSteps({ ...p, i: k, b: 0 }, ep, { bridge: true });
           return;
         }
-        this.detour = this.resumePos();
+        if (p.track) this.detour = this.resumePos();   // идёт обзор — вернёмся к нему; показ одного экрана — нет
       }
       if (nav) await nav;
       if (!this.alive(ep)) return;
       this.paused = false;
       this.resumePending = false;
-      void this.runSteps({ ids: [meta.step], track: null, i: 0, b: 0 }, ep, { bridge: false, single: true });
+      // этот экран уже показывали — без вступительной реплики
+      const b0 = this.shownSteps.has(meta.step) && this.linesOf(meta.step).length > 1 ? 1 : 0;
+      void this.runSteps({ ids: [meta.step], track: null, i: 0, b: b0 }, ep, { bridge: false, single: true });
       return;
     }
     if (a === "point" && meta.point) {
@@ -1084,12 +1072,16 @@ export class ElenaEngine {
       firstBridge = false;
       const ok = await this.enter(step, ep, bridge, false);
       if (!this.alive(ep) || !ok) return;
+      if (this.userBusy()) { this.holdForUser(); return; }
       prevCab = step.cabinet;
       this.lastCabinet = step.cabinet;
       if (b0 === 0) this.post("step", { step: step.id });
+      this.shownSteps.add(step.id);
       for (let b = b0; b < lines.length; b++) {
         if (!this.alive(ep)) return;
         const beat = step.beats[b] ?? step.beats[step.beats.length - 1] ?? { target: step.selector };
+        // реплика-переход («Открою …» с нажатием) — только если следующий шаг обзора именно туда
+        if (beat.lead && (opts.single || ids[i + 1] !== beat.lead)) continue;
         const target = beat.target ?? step.selector;
         this.pos = { ids, track, i, b };
         this.heard = 0;
@@ -1102,6 +1094,8 @@ export class ElenaEngine {
         if (res === "aborted" || !this.alive(ep)) return;
         this.heard = 1;
         await sleep(b < lines.length - 1 ? BEAT_GAP_MS : 260);
+        if (!this.alive(ep)) return;
+        if (this.userBusy()) { this.holdForUser(); return; }
       }
       if (opts.single) break;
     }

@@ -41,6 +41,20 @@ ROLES = ("all", "candidate", "employer", "fsp")
 TTS_HOST = "api.elevenlabs.io"
 TTS_MODEL = os.environ.get("CONCIERGE_TTS_MODEL", "eleven_turbo_v2_5")
 TTS_SPEED = float(os.environ.get("CONCIERGE_TTS_SPEED", "1.0"))
+# Лицо Елены (живой аватар): спокойная манера без улыбки, как в живых встречах «Ноэмы», но без запрета на движение
+# губ — Елена много говорит, артикуляция должна оставаться полной (по замерам «Ноэмы» запрет рта вдвое гасит губы).
+ANAM_STYLE = os.environ.get(
+    "CONCIERGE_ANAM_STYLE",
+    "Calm, composed and attentive guide. Relaxed neutral face, no smiling, no grinning. Minimal head movement. "
+    "Clear, natural lip articulation that follows every syllable of speech.").strip()
+ANAM_EXPRESSIVITY = float(os.environ.get("CONCIERGE_ANAM_EXPRESSIVITY", "0.3"))
+
+
+def anam_director_notes() -> dict:
+    d: dict = {"expressivity": max(0.0, min(1.0, ANAM_EXPRESSIVITY))}
+    if ANAM_STYLE:
+        d["customStylePrompt"] = ANAM_STYLE[:400]
+    return d
 # fmt → (формат поставщика, MIME, частота)
 FORMATS: dict[str, tuple[str, str, int]] = {
     "pcm24": ("pcm_24000", "audio/pcm", 24000),
@@ -230,8 +244,8 @@ def cached_speak(text: str, fmt: Literal["mp3", "pcm_16000"]) -> tuple[bytes, st
 
 GREETING = "Здравствуйте. Я Елена, ИИ-проводник по «Драфту». Как к вам обращаться?"
 GREETING_BACK = "{name}, здравствуйте. Рада снова вас видеть. Показать весь сайт или что-то конкретное?"
-NUDGE = "Познакомимся по ходу. Начну с обзора всего сайта, а вы перебивайте меня в любой момент — я остановлюсь."
-NUDGE_ROLE = "Тогда начну со всего сайта. Перебивайте меня в любой момент — я остановлюсь и отвечу."
+NUDGE = "Познакомимся по ходу. Начну с обзора всего сайта, а вопросы задавайте в любой момент — отвечу, как договорю фразу."
+NUDGE_ROLE = "Тогда начну со всего сайта. Вопросы задавайте в любой момент — отвечу, как договорю фразу."
 
 # Связки кабинетов: first — обзор начинается с этого кабинета, next — переход из другого кабинета;
 # first_named — с именем собеседника ({name})
@@ -265,7 +279,7 @@ PHRASES_NAMED: dict[str, str] = {
     "done_employer": "{name}, так работодатель находит подтверждённых специалистов. Спрашивайте — или скажите «кандидат», покажу его путь.",
 }
 
-FILLERS = ("Секунду.", "Так, смотрю.", "Хороший вопрос.", "Сейчас расскажу.", "Сейчас подскажу.")
+FILLERS = ("Секунду.", "Так, смотрю.", "Сейчас.", "Одну секунду.")
 
 
 
@@ -392,7 +406,9 @@ STEP_BEATS: dict[str, list[str]] = {
         "Интеграция с «Потоком» проверена на настоящем аккаунте: этапы найма возвращаются обратно, вплоть до выхода на работу.",
     ],
     "fsp-cabinet": [
-        "Это кабинет Федерации спортивного программирования: главное за период и как победители соревнований получают приглашения.",
+        "Это кабинет Федерации спортивного программирования. Наверху — главное за выбранный период.",
+        "Этот блок показывает, как победители соревнований получают приглашения от компаний.",
+        "Ниже — воронка кандидатов и офферы в сравнении с рынком: видно, где люди отсеиваются и сколько им платят.",
         "Конвертер разряда переводит спортивный разряд в понятный работодателю ИТ-грейд.",
         "Открою эффект соревнований.",
     ],
@@ -619,6 +635,9 @@ _STOP_NAMES = {
     "проведи", "проведите", "начни", "начните", "можешь", "можете", "умеешь", "слышишь", "слышите", "привет", "неважно",
     "никак", "любой", "любая", "пропустим", "потом", "хватит", "стой", "секунду", "минуту", "минутку", "извините",
     "простите", "понял", "поняла", "отлично", "прекрасно", "аналитик", "тестировщик", "менеджер", "жюри", "судья",
+    "сразу", "быстро", "медленно", "коротко", "подробно", "показывай", "показывайте", "рассказывай", "рассказывайте",
+    "нормально", "сначала", "дальше", "кабинет", "главная", "главную", "обзор", "тесты", "какой", "какая", "такое",
+    "такой", "тоже", "вообще", "короче", "типа", "блин", "ой", "эм", "хм", "ага", "угу", "нету", "никто",
 }
 
 
@@ -626,22 +645,58 @@ def _cap(name: str) -> str:
     return name[:1].upper() + name[1:].lower()
 
 
-def extract_name(text: str, current_name: str | None = None) -> str | None:
-    """Имя из реплики. Явное «меня зовут…», «зовите меня…» меняет и уже известное имя."""
+# Частые русские имена (полные и короткие формы): одно слово в ответ на «Как к вам обращаться?» — имя, только если оно
+# здесь; «меня зовут …» / «зовите меня …» — любое слово, кроме служебных («сразу», «давай» и т. п. — не имена).
+_NAMES = set("""
+александр александра саша шура алексей лёша леша алёна алена алина алиса алла анастасия настя анатолий андрей
+анжелика анна аня анечка антон арина арсений артём артем артур богдан борис вадим валентин валентина валерий валерия
+варвара варя василий вася вера вероника виктор виктория вика виталий влад владимир вова володя владислав всеволод
+вячеслав слава галина галя геннадий гена георгий гоша герман глеб григорий гриша давид дана данил даниил даня дарина
+дарья даша денис диана дина дмитрий дима евгений евгения женя егор екатерина катя елена лена елизавета лиза эльвира
+жанна захар зарина злата зоя иван ваня игорь илья инна ирина ира карина кира кирилл константин костя кристина ксения
+ксюша лариса лев леонид лидия любовь люба людмила люда майя макар максим макс маргарита рита марина мария маша марк
+матвей милана мирослава михаил миша надежда надя наталья наталия наташа никита николай коля нина оксана олег ольга оля
+павел паша полина роман рома руслан сабина светлана света семён семен сергей серёжа сережа софия софья соня станислав
+стас степан тамара тарас тимофей тимур татьяна таня ульяна фёдор федор филипп эдуард эмилия эрик юлия юля юрий юра
+ян яна ярослав ярослава айгуль айдар альберт амир асель багира булат вагиз диляра динара ильдар ильнур камила камиль
+ринат рустам тагир эльдар эльмира ахмед марат азат алсу гульнара лейла данияр нурлан ержан айжан асхат
+""".split())
+_NAME_ASK = re.compile(r"обращаться|как вас зовут|ваше имя|познакомимся", re.I)
+
+
+def extract_name(text: str, current_name: str | None = None, asked: bool = False) -> str | None:
+    """Имя из реплики. Явное «меня зовут…», «зовите меня…» меняет и уже известное имя; одно слово — имя, только если
+    Елена только что спросила имя и слово есть в словаре имён."""
     t = (text or "").strip()
     m = _NAME_RE.search(t)
     if m:
         cand = m.group(1).strip()
-        if cand.lower() not in _STOP_NAMES and not cand.lower().startswith(("кандидат", "работодат")):
+        low = cand.lower()
+        if low not in _STOP_NAMES and not low.startswith(("кандидат", "работодат")) and (low in _NAMES or len(low) >= 3):
             return _cap(cand)
     if current_name:
         return current_name
     m = _SIMPLE_NAME_RE.match(t)
     if m:
         cand = m.group(1).strip()
-        if cand.lower() not in _STOP_NAMES and not cand.lower().startswith(("кандидат", "работодат")):
+        if cand.lower().replace("ё", "е") in {n.replace("ё", "е") for n in _NAMES} and (asked or len(_words(t)) == 1):
             return _cap(cand)
     return None
+
+
+def valid_llm_name(name: str | None, message: str) -> str | None:
+    """Имя от модели — только если оно прозвучало в реплике и похоже на имя."""
+    if not name:
+        return None
+    n = name.strip().strip(".,!?").split()[0] if name.strip() else ""
+    low = n.lower()
+    if not n or low in _STOP_NAMES or len(low) < 2 or len(low) > 20:
+        return None
+    if low[:4] not in (message or "").lower():
+        return None
+    if low.replace("ё", "е") not in {x.replace("ё", "е") for x in _NAMES} and not _NAME_RE.search(message or ""):
+        return None
+    return _cap(n)
 
 
 def detect_role(text: str) -> Role | None:
@@ -675,7 +730,7 @@ _GOTO: list[tuple[str, str]] = [
     (r"приглаш|оффер|вилк", "cand-invitations"),
     (r"эффект соревн", "fsp-effect"),
     (r"кабинет фсп|кабинет федерац|федерац|\bфсп\b", "fsp-cabinet"),
-    (r"кабинет кандидат", "cand-overview"),
+    (r"кабинет кандидат|путь кандидат|сторон\w* кандидат", "cand-overview"),
     (r"кабинет работодател|кабинет компани", "emp-home"),
 ]
 
@@ -707,8 +762,8 @@ CMD_BYE = re.compile(r"\b(?:до свидания|пока пока|законч
                      r"всё[, ]+спасибо|все[, ]+спасибо|больше не надо|на этом вс[её]|хватит на сегодня)\b")
 HELLO = re.compile(r"^(?:привет\w*|здравствуй\w*|здрасте|добрый\s+(?:день|вечер)|доброе\s+утро|доброго\s+дня|"
                    r"хай|алло|ал[её]|салют|приветствую)\b")
-YES = re.compile(r"^(?:да|ага|угу|конечно|давай(?:те)?|хорошо|окей|ок|ладно|можно)"
-                 r"(?:\s+(?:да|давай(?:те)?|конечно|покажи(?:те)?|можно|пожалуйста|хорошо|интересно))*[\s,.!]*$")
+YES = re.compile(r"^(?:ну\s+)?(?:да|ага|угу|конечно|давай(?:те)?|хорошо|окей|ок|ладно|можно|показывай(?:те)?|покажи(?:те)?|хочу)"
+                 r"(?:\s+(?:да|давай(?:те)?|конечно|покажи(?:те)?|показывай(?:те)?|можно|пожалуйста|хорошо|интересно|хочу))*[\s,.!]*$")
 BYE_SHORT = re.compile(r"^(?:ну\s+)?(?:пока|до встречи|всего доброго|всего хорошего)(?:\s+пока)?$")
 QUESTION = re.compile(r"\?|^(?:а\s+)?(?:почему|зачем|сколько|откуда|какой|какая|какие|каким|как|что|чем|кто|где|когда|"
                       r"можно ли|правда|расскажи|расскажите|объясни|объясните)\b")
@@ -755,15 +810,20 @@ def classify(message: str, *, touring: bool, paused: bool) -> dict | None:
 
 
 def _offered(last_said: str) -> bool:
-    """Последняя реплика Елены — предложение показать (тогда «да» значит «начинай»)."""
+    """Последняя реплика Елены — предложение обзора (тогда «да» значит «начинай обзор»). «Показать, как это
+    выглядит?» без экрана — не обзор: такое «да» решает модель по ходу разговора."""
     t = (last_said or "").lower()
-    return "?" in t and bool(re.search(r"показать|начн[её]м|весь сайт|обзор|провести", t))
+    return "?" in t and bool(re.search(r"весь сайт|обзор|по шагам|с вашей роли|кандидат, работодатель|начн[её]м\?", t))
+
+
+GO_BARE = re.compile(r"^(?:(?:ну|сразу|просто|давай(?:те)?|тогда|уже)\s+)*(?:покажи(?:те)?|показывай(?:те)?|начинай(?:те)?|"
+                     r"поехали|веди(?:те)?|проведи(?:те)?|рассказывай(?:те)?)(?:\s+(?:всё|все|сразу|уже|пожалуйста))*$")
 
 
 def _start_reply(name: str | None, role: Role, first_time: bool, first_tour: bool = False) -> str:
     who = {"candidate": "путь кандидата", "employer": "кабинет работодателя",
            "fsp": "кабинет Федерации", "all": "весь сайт по шагам"}[role]
-    tail = " Перебивайте меня в любой момент." if first_tour else ""
+    tail = " Спрашивайте в любой момент." if first_tour else ""
     if name and first_time:
         return f"Очень приятно, {name}. Показываю {who}.{tail}"
     if name:
@@ -780,6 +840,16 @@ def _clean_reply(text: str) -> str:
     t = re.sub(r"\b(?:ElevenLabs|Anam|Deepgram|OpenRouter|WebRTC|Claude|Anthropic|Gemini|GPT|OpenAI)\b", "", t, flags=re.I)
     t = " ".join(t.split()).strip()
     return _brief(t)
+
+
+_SELF_TALK = re.compile(r"^[^.?]*\b(?:я|меня)\b[^.?]*\b(?:торопил|поторопил|сбил|запутал|перебил|ошиблас|увлеклас|спешил)\w*[^.?]*\.\s*",
+                        re.I)
+
+
+def _drop_self_talk(t: str) -> str:
+    """«Понимаю, я немного торопилась.» в начале ответа — убираем: Елена не оправдывается, а отвечает по делу."""
+    rest = _SELF_TALK.sub("", t, count=1).strip()
+    return rest[:1].upper() + rest[1:] if len(rest) >= 12 else t
 
 
 def _brief(t: str, limit: int = 250) -> str:
@@ -818,7 +888,8 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     s = brain.session(session_id)
     msg = strip_interjection((message or "").strip())
     known = user_name or (s.name if s else None)
-    name_now = extract_name(msg, known)
+    asked = bool(_NAME_ASK.search(last_said or "")) or bool(s and _NAME_ASK.search(s.last_elena or ""))
+    name_now = extract_name(msg, known, asked)
     name = name_now or known
     first_time = bool(name_now and name_now != known)
     cur_role = role if role in ROLES else (s.role if s and s.role in ROLES else None)
@@ -831,6 +902,18 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             on_ack(kind)
 
     base = {"user_name": name, "role": cur_role, "step": None, "point": None, "reply": "", "phrase": None}
+    # «да», «показывай» в ответ на предложение Елены («Показать …?») — сразу делаем предложенное
+    offer = s.offer if s and isinstance(s.offer, dict) and time.time() - float(s.offer.get("at", 0)) < 120 else None
+    if offer and words_n <= 4 and YES.search(_norm(msg)):
+        ack("instant")
+        act = offer.get("action")
+        if act == "start_tour":
+            r = offer.get("role") if offer.get("role") in ROLES else (cur_role or "all")
+            return {**base, "kind": "instant", "action": "start_tour", "role": r, "reply": _start_reply(name, r, False, first_tour)}
+        if act == "goto" and offer.get("step") in STEP_IDS:
+            return {**base, "kind": "instant", "action": "goto", "step": offer["step"], "phrase": "goto"}
+        if act == "point" and offer.get("point"):
+            return {**base, "kind": "instant", "action": "point", "point": offer["point"], "reply": "Вот здесь."}
     quick = classify(msg, touring=touring, paused=paused)
     if quick:
         ack("instant")
@@ -839,6 +922,10 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             out["phrase"] = quick["phrase"]
         return out
 
+    if not touring and not paused and not is_q and words_n <= 5 and GO_BARE.search(_norm(msg)):
+        r = cur_role or "all"   # «сразу покажи», «поехали» без уточнения — обзор (своей роли или всего сайта)
+        ack("instant")
+        return {**base, "kind": "instant", "action": "start_tour", "role": r, "reply": _start_reply(name, r, first_time, first_tour)}
     if not touring and not paused and not is_q and words_n <= 6:
         det = detect_role(msg)
         if det:
@@ -873,7 +960,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             return {**base, "kind": "fallback", "action": "goto", "step": g, "phrase": "goto"}
         return {**base, "kind": "fallback", "action": "answer",
                 "reply": "Не успела найти точный ответ. Давайте покажу на экране — спросите ещё раз чуть иначе."}
-    reply = _clean_reply(d.get("reply", ""))
+    reply = _drop_self_talk(_clean_reply(d.get("reply", "")))
     if name and reply.lower().startswith(name.lower() + ","):
         # имя — не в каждой реплике: звучало в двух последних — убираем обращение
         recent = [h["text"] for h in ((s.history if s else None) or history or []) if h.get("who") == "elena"][-2:]
@@ -884,17 +971,31 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     llm_role = d.get("role") if d.get("role") in ROLES else None
     step = d.get("step") if d.get("step") in STEP_IDS else None
     point = d.get("point") if isinstance(d.get("point"), str) and 1 <= len(d["point"].strip()) <= 80 else None
-    llm_name = d.get("user_name") if isinstance(d.get("user_name"), str) and 2 <= len(d["user_name"].strip()) <= 20 else None
-    if llm_name and llm_name.strip().lower() in _STOP_NAMES:
-        llm_name = None
+    llm_name = valid_llm_name(d.get("user_name") if isinstance(d.get("user_name"), str) else None, msg)
     if action == "goto" and not step:
         action = "answer"
     if action == "point" and not point:
         action = "answer"
     if action == "start_tour" and not (llm_role or cur_role):
         llm_role = "all"
-    new_name = name or (_cap(llm_name.strip()) if llm_name else None)
+    new_offer = None
+    if action == "answer" and reply.rstrip().endswith("?") and (step or point):
+        action = "point" if point and not step else "goto"   # «Показать …?» с шагом — это предложение показать
+    if action == "answer" and reply.rstrip().endswith("?") and not step and not point:
+        last_q = re.split(r"(?<=[.!…])\s+", reply.strip())[-1].lower()
+        if re.search(r"показать|покажу|открыть|открою|посмотр|провести|провед", last_q):
+            g = detect_goto(last_q, strict=False)
+            if g:
+                step, action = g, "goto"
+            elif re.search(r"весь сайт|обзор|по шагам|всю платформ", last_q):
+                action, llm_role = "start_tour", llm_role or cur_role or "all"
+    if action in ("goto", "start_tour", "point") and reply.rstrip().endswith("?"):
+        # предложила («Показать …?») — не делаем сами, ждём согласия; «да» выполнит предложенное
+        new_offer = {"action": action, "step": step, "role": llm_role, "point": point, "at": time.time()}
+        action = "answer"
+    new_name = name or llm_name
     return {
+        "offer": new_offer,
         "user_name": new_name,
         "role": llm_role or cur_role,
         "step": step,
@@ -963,11 +1064,12 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
         yield (json.dumps({"t": "ack", "kind": res.get("kind", "instant")}) + "\n").encode()
     text = res.get("reply") or (PHRASES.get(res["phrase"]) if res.get("phrase") else "")
     decided_ms = int((time.monotonic() - t0) * 1000)
-    meta = {"t": "meta", **{k: v for k, v in res.items() if k not in ("model", "llm_ms")}, "text": text, "ms": decided_ms}
+    meta = {"t": "meta", **{k: v for k, v in res.items() if k not in ("model", "llm_ms", "offer")}, "text": text, "ms": decided_ms}
     yield (json.dumps(meta, ensure_ascii=False) + "\n").encode()
     with brain.mutate(sid) as sess:
         if sess is not None:
             sess.turns += 1
+            sess.offer = res.get("offer")
             if res.get("user_name"):
                 sess.name = res["user_name"]
             sess.remember("user", message)

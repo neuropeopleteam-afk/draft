@@ -530,6 +530,18 @@ class ConciergeChatOut(BaseModel):
 @router.post("/concierge/avatar-token", response_model=AvatarTokenOut,
              summary="Живой аватар ИИ-проводника Елены: токен сессии видеопотока с движением губ")
 def concierge_avatar_token() -> dict:
+    # У Елены — своя «манера» лица: спокойная, без улыбки, с чёткой артикуляцией (у интервьюера защиты — прежняя)
+    from app.modules.interview import concierge as cg
+
+    try:
+        from app.modules.interview.engine.providers import avatar as av
+
+        t = av.avatar_token(persona_name="Елена", director_notes=cg.anam_director_notes())
+        return t.model_dump(mode="json") if hasattr(t, "model_dump") else dict(t)
+    except ImportError:
+        pass
+    except Exception:  # noqa: BLE001 — недоступен поставщик/ключ: тот же ответ, что и у порта
+        raise api_error(503, "avatar_unavailable", "Живой видеопоток временно недоступен — включён голосовой режим") from None
     try:
         return pt.get_port().avatar_token()
     except pt.EngineUnavailable:

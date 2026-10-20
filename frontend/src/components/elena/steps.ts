@@ -13,6 +13,9 @@ export interface Beat {
   /** Что «нажать» во время реплики и когда (доля реплики 0…1). */
   click?: string;
   clickAt?: number;
+  /** Реплика-переход: «нажатие» открывает этот шаг. Звучит, только если он следующий в обзоре
+   *  (при показе одного экрана — пропускается, иначе Елена «открыла и замолчала»). */
+  lead?: string;
 }
 
 export interface TourStep {
@@ -54,7 +57,7 @@ export const STEPS: Record<string, TourStep> = {
       { target: "[data-tour='cand-roadmap']" },
       { target: "[data-testid='interest-card'], [data-tour='cand-roadmap']" },
       { target: "[data-testid='candidate-salary-tools'], [data-tour='cand-roadmap']" },
-      { target: "[data-tour='cand-step-2-btn']", click: "[data-tour='cand-step-2-btn']", clickAt: 0.8 },
+      { target: "[data-tour='cand-step-2-btn']", click: "[data-tour='cand-step-2-btn']", clickAt: 0.8, lead: "cand-assessment" },
     ],
   },
   "cand-assessment": {
@@ -151,8 +154,10 @@ export const STEPS: Record<string, TourStep> = {
     selector: "main h1",
     beats: [
       { target: H1 },
+      { target: "text:ФСП и приглашения, main h1" },
+      { target: "text:Воронка кандидатов, text:Офферы против рынка, main h1" },
       { target: "[data-testid='fsp-rank-converter'], main h1" },
-      { target: "a[href='/fsp/effect']", click: "a[href='/fsp/effect']", clickAt: 0.8 },
+      { target: "a[href='/fsp/effect']", click: "a[href='/fsp/effect']", clickAt: 0.8, lead: "fsp-effect" },
     ],
   },
   "fsp-effect": {
