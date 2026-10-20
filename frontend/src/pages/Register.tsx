@@ -10,6 +10,7 @@ export default function Register() {
   const [role, setRole] = useState<Role>(params.get("role") === "employer" ? "employer" : "candidate");
   const [form, setForm] = useState({ email: "", password: "", full_name: "", company_name: "" });
   const [consent, setConsent] = useState(false);
+  const [terms, setTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [legal, setLegal] = useState<{ title: string; text: string } | null>(null);
@@ -24,6 +25,7 @@ export default function Register() {
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!terms) { setError("Нужно принять Пользовательское соглашение"); return; }
     if (!consent) { setError("Нужно согласие на обработку персональных данных"); return; }
     setBusy(true);
     try {
@@ -88,6 +90,10 @@ export default function Register() {
             </div>
           </details>
         )}
+        <label className="flex items-start gap-3 text-sm text-brand-ink/75">
+          <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 h-4 w-4 rounded accent-brand" data-testid="terms-checkbox" />
+          <span>Принимаю <a href="/terms" target="_blank" rel="noopener" className="font-semibold text-brand hover:underline">Пользовательское соглашение</a> и ознакомлен с <a href="/privacy" target="_blank" rel="noopener" className="font-semibold text-brand hover:underline">Политикой обработки персональных данных</a>.</span>
+        </label>
         <label className="flex items-start gap-3 text-sm text-brand-ink/75">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 rounded accent-brand" />
           <span>Согласен на обработку персональных данных по 152-ФЗ (<button type="button" className="font-semibold text-brand hover:underline" onClick={toggleLegal}>текст согласия</button>).{role === "candidate" && " Контакты — работодателю только после моего согласия."}</span>

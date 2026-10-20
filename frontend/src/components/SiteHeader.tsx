@@ -136,6 +136,16 @@ export function SiteFooter({ premium = false }: { premium?: boolean }) {
           <a className={a} href="/api/health">Статус сервиса</a>
         </p>
       </div>
+      <div className={`mx-auto max-w-content border-t px-6 py-4 text-xs leading-relaxed ${premium ? "border-white/10" : "border-brand-night/10 text-brand-ink/60"}`} data-testid="footer-legal">
+        <p className="flex flex-wrap gap-x-4 gap-y-1">
+          <a className={a} href="/privacy">Политика обработки персональных данных</a>
+          <a className={a} href="/consent">Согласие на обработку данных</a>
+          <a className={a} href="/terms">Пользовательское соглашение</a>
+          <a className={a} href="/cookies">Cookie</a>
+          <a className={a} href="/recommendations">На платформе применяются рекомендательные технологии</a>
+        </p>
+        <p className="mt-2">© 2026 команда Neuropeople · ИНН <реквизит> · ОГРН <реквизит> · <адрес> · Реестр операторов персональных данных Роскомнадзора, рег. № <реквизит> · <a className={a} href="mailto:<форма обратной связи>"><форма обратной связи></a></p>
+      </div>
     </footer>
   );
 }

@@ -62,7 +62,8 @@ const pg = {
   criteria: () => import("./pages/Criteria"),  // К1: проверка по критериям ТЗ
   interview: () => import("./components/Interview"),  // Я15: разговор устной защиты и ИИ-интервью
   tariffs: () => import("./pages/employer/Tariffs"),
-  monetization: () => import("./pages/public/Monetization"),  // «Тарифы и монетизация»: работодатели и спонсоры ФСП
+  monetization: () => import("./pages/public/Monetization"),
+  legal: () => import("./pages/public/Legal"),  // юридические документы: политика ПД, согласие, соглашение, cookie, рекомендательные технологии  // «Тарифы и монетизация»: работодатели и спонсоры ФСП
   trio: () => import("./pages/trio/Trio"),  // трёхсторонняя связь работодатель ↔ кандидат ↔ ФСП  // Я29: тарифы работодателя (TARIFFS_ENABLED)
   fspBenefit: () => import("./ideas/fsp/Benefit"),  // Я29: «Польза для ФСП» и «Партнёры ФСП»
   expertise: () => import("./pages/public/Expertise"),  // W2: единый хаб «Экспертиза ФСП»
@@ -78,6 +79,7 @@ const CabinetLayout = lazyNamed(pg.cabinet, "CabinetLayout");
 const InterviewRoom = lazyNamed(pg.interview, "InterviewRoom");
 const TariffsPublic = lazyNamed(pg.tariffs, "default");
 const Monetization = lazyNamed(pg.monetization, "default");
+const LegalPage = lazyNamed(pg.legal, "default");
 const TrioPage = lazyNamed(pg.trio, "TrioPage");
 const EmployerTariffs = lazyNamed(pg.tariffs, "EmployerTariffs");
 const FspBenefit = lazyNamed(pg.fspBenefit, "FspBenefit");
@@ -176,6 +178,7 @@ export default function App() {
       <Route path="/tariffs" element={<Monetization />} />
       <Route path="/tariffs/live" element={<TariffsPublic />} />
       <Route path="/pricing" element={<Monetization />} />
+      {["/privacy", "/consent", "/terms", "/cookies", "/recommendations"].map((p) => <Route key={p} path={p} element={<LegalPage />} />)}
       <Route path="/jury/live" element={<LiveScreen />} />
       <Route path="/j/:code" element={<LiveGuest />} />
       <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={panelSections} />}>
