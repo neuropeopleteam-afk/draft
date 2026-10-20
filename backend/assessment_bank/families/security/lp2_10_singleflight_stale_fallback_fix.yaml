@@ -1,0 +1,35 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: security.principal_v2.singleflight_stale_fallback_fix
+title: 'Информационная безопасность: Подавление шторма пересчёта кэша с возвратом устаревшего значения при сбое'
+direction: security
+skills:
+- secure_code_review
+- authorization
+- aead
+- token_validation
+- incident_response
+target_grades:
+- lead
+- principal
+format: choose_fix
+language: python
+invariants:
+  defect_type: cache_stampede_fallback
+  extra:
+    wave: LP-v2
+    slot: 10
+    direction_ru: Информационная безопасность
+  n_options: 4
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.56
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Информационная безопасность: подавление шторма
+    пересчёта кэша с возвратом устаревшего значения при сбое; формат choose_fix, целевые грейды lead, principal
+    (b = 2,56 у порога старшего грейда).'
+generator: assessment_bank.families.security.lp2_10_singleflight_stale_fallback_fix
+version: 1
+description: 'Информационная безопасность (lead, principal): Подавление шторма пересчёта кэша с возвратом устаревшего
+  значения при сбое. Проверка исполнением и рубрикой.'

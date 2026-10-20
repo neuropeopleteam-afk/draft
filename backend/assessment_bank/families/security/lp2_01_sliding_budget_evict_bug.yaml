@@ -1,0 +1,34 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: security.lead_v2.sliding_budget_evict_bug
+title: 'Информационная безопасность: Утечка веса при вытеснении устаревших событий из скользящего окна'
+direction: security
+skills:
+- secure_code_review
+- authorization
+- aead
+- token_validation
+- incident_response
+target_grades:
+- senior
+- lead
+format: find_bug
+language: python
+invariants:
+  defect_type: window_eviction_leak
+  extra:
+    wave: LP-v2
+    slot: 1
+    direction_ru: Информационная безопасность
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 1.88
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Информационная безопасность: утечка веса при вытеснении
+    устаревших событий из скользящего окна; формат find_bug, целевые грейды senior, lead (b = 1,88 у порога старшего
+    грейда).'
+generator: assessment_bank.families.security.lp2_01_sliding_budget_evict_bug
+version: 1
+description: 'Информационная безопасность (senior, lead): Утечка веса при вытеснении устаревших событий из скользящего
+  окна. Проверка исполнением и рубрикой.'

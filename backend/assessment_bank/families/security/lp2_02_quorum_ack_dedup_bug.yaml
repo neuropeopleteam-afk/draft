@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: security.lead_v2.quorum_ack_dedup_bug
+title: 'Информационная безопасность: Ложный кворум из-за подсчёта повторных подтверждений от одного узла'
+direction: security
+skills:
+- secure_code_review
+- authorization
+- aead
+- token_validation
+- incident_response
+target_grades:
+- lead
+format: find_bug
+language: python
+invariants:
+  defect_type: duplicate_quorum_ack
+  extra:
+    wave: LP-v2
+    slot: 2
+    direction_ru: Информационная безопасность
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.02
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Информационная безопасность: ложный кворум из-за
+    подсчёта повторных подтверждений от одного узла; формат find_bug, целевые грейды lead (b = 2,02 у порога старшего
+    грейда).'
+generator: assessment_bank.families.security.lp2_02_quorum_ack_dedup_bug
+version: 1
+description: 'Информационная безопасность (lead): Ложный кворум из-за подсчёта повторных подтверждений от одного
+  узла. Проверка исполнением и рубрикой.'

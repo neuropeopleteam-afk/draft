@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: security.principal_v2.p2c_latency_ewma_dispatch_out
+title: 'Информационная безопасность: Балансировка по эффективной цене узла (активные запросы × штраф латентности)'
+direction: security
+skills:
+- secure_code_review
+- authorization
+- aead
+- token_validation
+- incident_response
+target_grades:
+- principal
+format: predict_output
+language: python
+invariants:
+  defect_type: load_balancing_ewma
+  extra:
+    wave: LP-v2
+    slot: 18
+    direction_ru: Информационная безопасность
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.92
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Информационная безопасность: балансировка по эффективной
+    цене узла (активные запросы × штраф латентности); формат predict_output, целевые грейды principal (b = 2,92
+    у порога старшего грейда).'
+generator: assessment_bank.families.security.lp2_18_p2c_latency_ewma_dispatch_out
+version: 1
+description: 'Информационная безопасность (principal): Балансировка по эффективной цене узла (активные запросы ×
+  штраф латентности). Проверка исполнением и рубрикой.'
