@@ -52,7 +52,7 @@ ANAM_EXPRESSIVITY = float(os.environ.get("CONCIERGE_ANAM_EXPRESSIVITY", "0.2"))
 # происхождение — frontend/public/avatar/PROVENANCE.md. Пусто — общий аватар интервьюера (ANAM_AVATAR_ID).
 ANAM_AVATAR_ID = os.environ.get("CONCIERGE_ANAM_AVATAR_ID", "d7d4dd15-e996-4595-ad73-7b77b22e53ec").strip()
 # Потолок одного разговора в минутах: по его истечении Настя прощается и закрывается (стенд открыт всем, минуты платные)
-MAX_MINUTES = float(os.environ.get("CONCIERGE_MAX_MINUTES", "9"))
+MAX_MINUTES = float(os.environ.get("CONCIERGE_MAX_MINUTES", "0"))   # 0 — без потолка (владелец: можно просто нажать снова)
 
 
 def anam_director_notes() -> dict:
@@ -248,7 +248,8 @@ def cached_speak(text: str, fmt: Literal["mp3", "pcm_16000"]) -> tuple[bytes, st
 # и порядок блоков в frontend/src/components/elena/steps.ts совпадают — меняются вместе.
 
 GREETING = "Здравствуйте. Я Настя, ИИ-проводник по «Драфту». Как к вам обращаться?"
-GREETING_BACK = "{name}, здравствуйте. Рада снова вас видеть. Показать весь сайт или что-то конкретное?"
+GREETING_BACK = ("{name}, здравствуйте. Рада снова вас видеть. С чего начнём: кандидат, работодатель, Федерация или весь сайт? "
+                 "Могу открыть и любой конкретный раздел — просто скажите.")
 NUDGE = "Познакомимся по ходу. Начну с обзора всего сайта. Между экранами я делаю паузу — в ней можно спросить или сказать «стоп»."
 NUDGE_ROLE = "Тогда начну со всего сайта. Между экранами я делаю паузу — в ней можно спросить или сказать «стоп»."
 
@@ -286,7 +287,12 @@ PHRASES: dict[str, str] = {
     "no_more": "Хорошо. Скажите, что показать, или «дальше» — продолжим обзор.",
     "remind": "Я здесь. Скажите, когда продолжим.",
     "remind_checkin": "Если вопросов нет, скажите «дальше».",
-    "remind_start": "Скажите, что показать: весь сайт или ваш раздел — кандидат, работодатель или Федерация.",
+    "remind_start": "Скажите, что показать: кандидат, работодатель, Федерация, весь сайт — или назовите конкретный раздел.",
+    # короткий вопрос каждые несколько экранов — напоминает, что с Настей можно разговаривать и просить открыть любой раздел
+    "ask_soft_1": "Продолжаем, или показать что-то конкретное?",
+    "ask_soft_2": "Всё понятно? Идём дальше?",
+    "ask_soft_3": "Идём дальше, или открыть другой раздел?",
+    "again_brief": "Этот раздел мы уже смотрели — пройду коротко.",
     "skip_candidate": "Хорошо, тогда сторона кандидата.",
     "skip_employer": "Хорошо, тогда дальше — сторона работодателя.",
     "skip_fsp": "Хорошо, тогда дальше — кабинет Федерации.",
@@ -297,7 +303,8 @@ PHRASES: dict[str, str] = {
     "done_employer": "Так работодатель находит подтверждённых специалистов. Спрашивайте — или скажите «кандидат», покажу его путь.",
     "done_fsp": "Это кабинет Федерации. Спрашивайте, если что-то интересно.",
     "hello": "Здравствуйте. Как к вам обращаться?",
-    "ask_role": "Показать весь сайт или начнём с вашей роли: кандидат, работодатель или Федерация?",
+    "ask_role": "Я могу открыть любой раздел сайта — просто скажите, например «покажи тест» или «открой кабинет работодателя». "
+                "С чего начнём: кандидат, работодатель, Федерация — или весь сайт по порядку?",
     "nomic": "Здравствуйте. Я Настя, ИИ-проводник по «Драфту». Микрофон недоступен, поэтому я просто проведу вас по сайту.",
 }
 
@@ -780,7 +787,7 @@ _NAME_RE = re.compile(
     r"(?:меня\s+зовут|мо[её]\s+имя|зовите\s+меня|зови\s+меня|обращайтесь\s+ко\s+мне|можно\s+просто|я\s+[-—–])\s*([А-ЯЁа-яё]{2,20})", re.I)
 _SIMPLE_NAME_RE = re.compile(
     r"^\s*(?:(?:привет|здравствуйте|здрасте|добрый\s+(?:день|вечер)|доброе\s+утро)[\s,.]*)?(?:это\s+|я\s+)?([А-ЯЁа-яё]{2,18})"
-    r"(?:[\s,.]+(?:я\b|мне\b|кандидат|работодатель|покажи|хочу|интерес|из\b|компан).*)?[\s.!?]*$", re.I)
+    r"(?:[\s,.]+(?:я\b|мне\b|кандидат|работодатель|покажи|хочу|интерес|из\b|компан).*)?[\s.!?,]*$", re.I)
 _STOP_NAMES = {
     "привет", "здравствуйте", "здрасте", "добрый", "пока", "покажи", "покажите", "расскажи", "расскажите", "кандидат", "работодатель",
     "компания", "федерация", "эксперт", "жюри", "давай", "давайте", "хочу", "кто", "что", "как", "где", "зачем", "почему",
@@ -941,7 +948,7 @@ _GOTO: list[tuple[str, str]] = [
     (r"приглаш|оффер|вилк|торг", "cand-invitations"),
     # кабинеты целиком
     (r"кабинет фсп|кабинет федерац|федерац|\bфсп\b", "fsp-cabinet"),
-    (r"кабинет кандидат|путь кандидат|сторон\w* кандидат|кандидат", "cand-overview"),
+    (r"кабинет кандидат|путь кандидат|сторон\w* кандидат|кандидат|соискател", "cand-overview"),
     (r"кабинет работодател|кабинет компани|работодател|компани", "emp-home"),
 ]
 
@@ -1195,6 +1202,8 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             return {**base, "kind": "instant", "action": "goto", "step": offer["step"], "phrase": "goto"}
         if act == "point" and offer.get("point"):
             return {**base, "kind": "instant", "action": "point", "point": offer["point"], "reply": "Вот здесь."}
+        if act in ("prev", "repeat"):
+            return {**base, "kind": "instant", "action": act}
     t_norm = _norm(msg)
     if awaiting == "checkin" and words_n <= 6:
         if CHECKIN_NO.search(t_norm):
@@ -1214,6 +1223,11 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         # назвался посреди обзора — знакомимся и продолжаем с того же места
         ack("instant")
         return {**base, "kind": "instant", "action": "resume", "reply": f"Очень приятно, {name}."}
+    if words_n <= 8 and _GOTO_VERB.search(t_norm) and not is_q:
+        g = detect_goto(msg, path=current_path, step=step_id)   # «открой кабинет кандидата ещё раз» — переход, не «повтори»
+        if g:
+            ack("instant")
+            return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto"}
     quick = classify(msg, touring=touring, paused=paused)
     if quick:
         ack("instant")
@@ -1277,6 +1291,9 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
                                                      "resume", "end") else "answer"
     if action == "next_section" and not (touring or paused):
         action = "answer"
+    if action == "answer" and re.match(r"^(?:да[,.]?\s*)?(?:конечно[,.]?\s*)?(?:слушаю|спрашивайте|задавайте|говорите|я слушаю)\b", reply.lower().strip()) \
+            and len(_words(reply)) <= 8:
+        action = "listen"   # «Слушаю вас, Алексей.» — человек хочет спросить: ждём вопрос, не торопим
     llm_role = d.get("role") if d.get("role") in ROLES else None
     step = d.get("step") if d.get("step") in STEP_IDS else None
     point = d.get("point") if isinstance(d.get("point"), str) and 1 <= len(d["point"].strip()) <= 80 else None
@@ -1300,6 +1317,11 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
                 step, action = g, "goto"
             elif re.search(r"весь сайт|обзор|по шагам|всю платформ", last_q):
                 action, llm_role = "start_tour", llm_role or cur_role or "all"
+            elif re.search(r"предыдущ|прошл\w* (?:раздел|экран)", reply.lower()):
+                action = "prev"   # «Предыдущий раздел был про зарплаты. Показать его ещё раз?» → по «да» — назад
+    if action in ("prev", "repeat") and reply.rstrip().endswith("?"):
+        new_offer = {"action": action, "step": None, "role": None, "point": None, "at": time.time(), "text": reply}
+        action = "answer"
     if action in ("goto", "start_tour", "point") and reply.rstrip().endswith("?"):
         # предложила («Показать …?») — не делаем сами, ждём согласия; «да» выполнит предложенное
         new_offer = {"action": action, "step": step, "role": llm_role, "point": point, "at": time.time(), "text": reply}

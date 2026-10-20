@@ -26,14 +26,14 @@ log = logging.getLogger("interview.concierge")
 
 MSK = timezone(timedelta(hours=3))
 
-DAILY_SESSIONS = int(os.environ.get("CONCIERGE_DAILY_SESSIONS", "12"))
-IP_SESSIONS = int(os.environ.get("CONCIERGE_IP_SESSIONS", "3"))
-CONV_TOKENS = int(os.environ.get("CONCIERGE_CONV_TOKENS", "2"))
-DAILY_TURNS = int(os.environ.get("CONCIERGE_DAILY_TURNS", "600"))
-IP_TURNS = int(os.environ.get("CONCIERGE_IP_TURNS", "120"))
-DAILY_TTS_CHARS = int(os.environ.get("CONCIERGE_DAILY_TTS_CHARS", "25000"))
-IP_TTS_CHARS = int(os.environ.get("CONCIERGE_IP_TTS_CHARS", "6000"))
-BURST_PER_MIN = int(os.environ.get("CONCIERGE_BURST_PER_MIN", "40"))
+DAILY_SESSIONS = int(os.environ.get("CONCIERGE_DAILY_SESSIONS", "100"))
+IP_SESSIONS = int(os.environ.get("CONCIERGE_IP_SESSIONS", "30"))
+CONV_TOKENS = int(os.environ.get("CONCIERGE_CONV_TOKENS", "6"))
+DAILY_TURNS = int(os.environ.get("CONCIERGE_DAILY_TURNS", "2000"))
+IP_TURNS = int(os.environ.get("CONCIERGE_IP_TURNS", "500"))
+DAILY_TTS_CHARS = int(os.environ.get("CONCIERGE_DAILY_TTS_CHARS", "80000"))
+IP_TTS_CHARS = int(os.environ.get("CONCIERGE_IP_TTS_CHARS", "30000"))
+BURST_PER_MIN = int(os.environ.get("CONCIERGE_BURST_PER_MIN", "80"))
 # Адреса без лимитов (владелец, жюри на защите): через запятую, точные адреса или префиксы вида «10.0.»
 TRUSTED = tuple(x.strip() for x in os.environ.get("CONCIERGE_TRUSTED_IPS", "").split(",") if x.strip())
 

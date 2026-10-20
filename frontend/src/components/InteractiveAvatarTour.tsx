@@ -158,8 +158,8 @@ function frameOf(stage: Stage, vw: number, vh: number, tab = 0): Frame {
     if (height > maxH) { height = maxH; width = Math.min(width, Math.round(height / (small ? 1.12 : 0.66))); }
     return { left: Math.round((vw - width) / 2), top: Math.max(16, Math.round((usable - height) / 2) - (small ? 8 : 16)), width, height, radius: 28, small };
   }
-  const width = small ? 200 : 336;
-  const height = small ? 250 : 336;
+  const width = small ? 188 : 296;    // в углу — скромнее: сайт главнее, Настя рядом
+  const height = small ? 236 : 296;
   const gap = small ? 12 : 20;
   return { left: vw - width - gap, top: usable - height - gap, width, height, radius: 24, small };
 }
@@ -318,10 +318,18 @@ export function InteractiveAvatarTour() {
   const paused = ui.phase === "paused";
   const wave = ui.phase === "thinking" ? "thinking" : "listening";
   const lbl = MIC_LABEL[ui.mic] ?? MIC_LABEL.off;
-  // полудуплекс: микрофон включён, но закрыт, пока Настя говорит или думает, — подпись честно говорит об этом
-  const busy = ui.mic === "on" && !ui.hearing;
-  const busyText = ui.phase === "thinking" ? "Думаю…" : ui.speaking || ui.phase === "answering" || ui.phase === "touring" ? "Говорю" : "Секунду…";
-  const micText = ui.mic === "on" && ui.userTalking ? "Слышу вас" : busy ? busyText : large && !f.small ? lbl.long : lbl.short;
+  // подпись кнопки — честно о том, что происходит: думает, говорит (перебить можно), слушает
+  const micOn = ui.mic === "on";
+  const listening = micOn && ui.hearing && !ui.speaking && ui.phase !== "thinking";
+  const micText = micOn && ui.userTalking ? "Слышу вас"
+    : micOn && ui.phase === "thinking" ? "Думаю…"
+    : micOn && ui.speaking ? "Говорю"
+    : listening ? (large && !f.small ? lbl.long : lbl.short)
+    : micOn ? "Секунду…" : lbl.short;
+  // подсказка «ваша очередь»: в паузах обзора и когда Настя спросила — чтобы было видно, что можно говорить
+  const turnHint = listening && (ui.phase === "listening" || ui.phase === "paused")
+    ? (ui.phase === "paused" ? "Пауза. Скажите «дальше» или спросите" : f.small ? "Говорите" : "Можно говорить: вопрос, «дальше» или «покажи …»")
+    : null;
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
 
@@ -370,6 +378,17 @@ export function InteractiveAvatarTour() {
             </button>
           </div>
 
+          {turnHint && !ui.userTalking && (
+            <div className={`pointer-events-none absolute inset-x-0 flex justify-center ${large ? "bottom-[4.6rem]" : f.small ? "bottom-[3.1rem]" : "bottom-[3.4rem]"}`} aria-live="polite" data-testid="elena-turn-hint">
+              <span className={`flex items-center gap-2 rounded-full bg-emerald-600/85 px-3 py-1 font-medium text-white shadow-lg backdrop-blur ${large ? "text-sm" : "text-[11px]"}`}>
+                <span className="relative flex h-2 w-2" aria-hidden="true">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                </span>
+                {turnHint}
+              </span>
+            </div>
+          )}
           {ui.phase === "thinking" && (
             <div className={`pointer-events-none absolute inset-x-0 flex justify-center gap-1.5 ${large ? "bottom-24" : "bottom-16"}`} aria-hidden="true" data-testid="elena-thinking">
               {[0, 1, 2].map((i) => <span key={i} className="h-2 w-2 animate-bounce rounded-full bg-white/85" style={{ animationDelay: `${i * 140}ms` }} />)}
@@ -392,7 +411,7 @@ export function InteractiveAvatarTour() {
                 data-hearing={ui.hearing ? "1" : "0"}
                 className={`relative flex min-w-0 items-center gap-2 rounded-full font-semibold text-white backdrop-blur transition ${large ? "h-12 pl-3 pr-4 text-sm" : "h-10 pl-2.5 pr-3 text-xs"} ${
                   micOff ? (micBroken ? "bg-white/15 text-white/70" : "bg-rose-600 hover:bg-rose-500")
-                    : ui.mic === "on" && ui.hearing ? "bg-emerald-600/90 hover:bg-emerald-500"
+                    : listening ? "bg-emerald-600/90 hover:bg-emerald-500"
                     : ui.mic === "on" ? "bg-white/20 text-white/85 hover:bg-white/30" : "bg-white/15 hover:bg-white/25"}`}>
                 <span className={`relative flex shrink-0 items-center justify-center rounded-full bg-white/15 ${large ? "h-8 w-8" : "h-6 w-6"}`}>
                   <span ref={ringRef} className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-white/80 transition-transform duration-100" style={{ opacity: 0 }} aria-hidden="true" />
