@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
-import { launchLiveAvatar } from "../components/Interview";
-import { JuryPanel } from "../components/JuryPanel";
 import { DraftLaws } from "../components/landing/DraftLaws";
 import { ReverseDraftDemo } from "../components/landing/ReverseDraftDemo";
 import { errText } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { juryLogin } from "../lib/jury";
 import { useDemoUi, useJuryTab } from "../lib/juryMode";
+import { lazyNamed } from "../lib/lazyPage";
 import { daysText, getLandingCards, PRODUCT_TAGLINE, usePageTitle, useRules } from "../lib/meta";
+
+const LazyJuryPanel = lazyNamed(() => import("../components/JuryPanel"), "JuryPanel");
 
 type Rules = NonNullable<ReturnType<typeof useRules>>;
 
@@ -72,7 +73,10 @@ export default function Landing() {
   }
   async function tryLiveAvatar() {
     setMsg(null); setBusyRole("avatar");
-    try { await launchLiveAvatar(signIn, navigate, me?.role); } catch (e) { setMsg(errText(e)); } finally { setBusyRole(null); }
+    try {
+      const { launchLiveAvatar } = await import("../components/Interview");
+      await launchLiveAvatar(signIn, navigate, me?.role);
+    } catch (e) { setMsg(errText(e)); } finally { setBusyRole(null); }
   }
 
   return (
@@ -134,7 +138,11 @@ export default function Landing() {
         </div>
       </section>
 
-      {showInlineJury && <JuryPanel compact />}
+      {showInlineJury && (
+        <Suspense fallback={null}>
+          <LazyJuryPanel compact />
+        </Suspense>
+      )}
 
       <DraftLaws />
 

@@ -21,25 +21,31 @@
     "path": "./draft-upload.keystore",
     "alias": "draft"
   },
-  "appVersionName": "1.1.0",
-  "appVersionCode": 2,
+  "appVersionName": "1.2.0",
+  "appVersionCode": 3,
   "shortcuts": [
     {
-      "name": "Подборка кандидатов",
+      "name": "Потребности и подборки",
       "shortName": "Подборка",
       "url": "https://fsp-draft.ru/employer/needs?source=twa-shortcut",
       "chosenIconUrl": "https://fsp-draft.ru/icons/icon-192.png"
     },
     {
-      "name": "Мой грейд и тест",
+      "name": "Тест и грейд",
       "shortName": "Мой грейд",
       "url": "https://fsp-draft.ru/candidate/assessment?source=twa-shortcut",
       "chosenIconUrl": "https://fsp-draft.ru/icons/icon-192.png"
     },
     {
-      "name": "Приглашения и диалоги",
+      "name": "Приглашения и вакансии",
       "shortName": "Приглашения",
       "url": "https://fsp-draft.ru/candidate/invitations?source=twa-shortcut",
+      "chosenIconUrl": "https://fsp-draft.ru/icons/icon-192.png"
+    },
+    {
+      "name": "Аналитика и спрос ФСП",
+      "shortName": "Спрос ФСП",
+      "url": "https://fsp-draft.ru/fsp/demand?source=twa-shortcut",
       "chosenIconUrl": "https://fsp-draft.ru/icons/icon-192.png"
     }
   ],
@@ -71,5 +77,5 @@
     "standalone",
     "minimal-ui"
   ],
-  "appVersion": "1.1.0"
+  "appVersion": "1.2.0"
 }

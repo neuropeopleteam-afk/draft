@@ -1,13 +1,13 @@
 // Мобильная нижняя панель навигации кабинетов (телефоны < 768 px, PWA и Android-пакет RuStore).
-// Динамически читает разделы роли из sections.ts (или принимает их через пропсы из CabinetLayout),
-// выводит 4–5 главных разделов с крупными областями нажатия (≥ 48 px) и лист «Ещё» для остальных разделов.
+// Поддерживает обновлённое меню кабинетов волны 1 (7 разделов у работодателя, 6 у кандидата, 5 у ФСП):
+// выводит 4 главные вкладки роли с короткими подписями без дублей и кнопку «Ещё» для остальных разделов и вложенных вкладок.
 // При монтировании на мобильном экране (< 768 px) выставляет на document.documentElement переменную
 // --mobile-tabbar-h = "<высота_nav_в_px>px" (через getBoundingClientRect + ResizeObserver, и "0px" на >= 768 px),
-// чтобы плавающие кнопки и окно проводника Елены смещались выше панели и не перекрывали вкладки.
+// чтобы плавающая кнопка и окно ИИ-проводника Насти смещались выше панели и не перекрывали вкладки.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
-import type { Section } from "../CabinetLayout";
+import type { Section, SubTab } from "../CabinetLayout";
 import { useAuth } from "../../lib/auth";
 import { type Role } from "../../lib/api";
 import { useMeta } from "../../lib/meta";
@@ -43,18 +43,27 @@ const ROLE_SECTIONS: Record<string, Section[]> = {
   admin: fspSections,
 };
 
-// Приоритетные пути первых 4 вкладок для каждой роли (поддерживает и текущие sections.ts, и новую структуру А2).
-// У кандидата «Приглашения» (invitations) всегда входят в первые 4 вкладки (главный сценарий обратного найма).
-const PRIMARY_PATHS: Record<string, string[]> = {
-  employer: ["", "needs", "candidates", "compare", "invitations", "messages", "search", "ats", "company"],
-  candidate: ["", "invitations", "assessment", "feedback", "category", "messages", "profile"],
-  fsp_analyst: ["", "analytics", "demand", "effect", "partners", "trio", "method"],
-  admin: ["", "analytics", "demand", "effect", "partners", "trio", "method"],
-  expert: ["pairs", "answers", "angoff", "review", "security"],
+const OVERVIEW_SECTION: Section = {
+  path: "",
+  title: "Обзор",
+  description: "Сводка кабинета, ключевые показатели и быстрые действия.",
 };
 
-// Точные короткие подписи вкладок по ролям и путям без коллизий (employer.needs = «Подборки», vacancies = «Вакансии»,
-// invitations = «Приглашения», messages = «Сообщения», fsp.demand = «Спрос», fsp.effect = «Эффект», expert.security = «Безопасность»).
+// Приоритетные пути первых 4 вкладок для каждой роли под структуру меню 7 / 6 / 5:
+// - работодатель (7 пунктов): Обзор | Подборки | Подбор | Приглашения + Ещё (Задания и кубки, Связь с ФСП, Компания/ATS/тариф)
+// - кандидат (6 пунктов): Обзор | Профиль | Тест | Приглашения + Ещё (Задания и кубки, Настройки и данные)
+// - ФСП (5 пунктов): Обзор | Спрос | Кубки | Связь + Ещё (Безопасность и профиль)
+// - эксперт (6 пунктов): Обзор | Очередь | Пары | Ответы + Ещё (Пороги грейдов, Безопасность входа)
+const PRIMARY_PATHS: Record<string, string[]> = {
+  employer: ["", "needs", "search", "invitations", "candidates", "compare", "messages", "probes", "trio", "company"],
+  candidate: ["", "profile", "assessment", "invitations", "feedback", "category", "messages", "probes", "settings"],
+  fsp_analyst: ["", "demand", "cups", "trio", "analytics", "effect", "partners", "method", "security"],
+  admin: ["", "demand", "cups", "trio", "analytics", "effect", "partners", "method", "security"],
+  expert: ["", "review", "pairs", "answers", "angoff", "security"],
+};
+
+// Точные короткие подписи вкладок по ролям и путям без коллизий:
+// все подписи <= 11 символов, чтобы на экране 360 px 5 кнопок (4 вкладки + «Ещё») помещались без усечения.
 const ROLE_LABELS: Record<string, Record<string, string>> = {
   employer: {
     "": "Обзор",
@@ -62,14 +71,14 @@ const ROLE_LABELS: Record<string, Record<string, string>> = {
     vacancies: "Вакансии",
     candidates: "Кандидаты",
     compare: "Сравнение",
-    search: "Поиск",
+    search: "Подбор",
     squad: "Команда",
     invitations: "Приглашения",
     messages: "Сообщения",
     trio: "Связь с ФСП",
     cups: "Кубки",
     probes: "Задания",
-    assignments: "Автопроверка",
+    assignments: "Практика",
     ats: "Интеграции",
     integrations: "Интеграции",
     company: "Компания",
@@ -90,8 +99,8 @@ const ROLE_LABELS: Record<string, Record<string, string>> = {
     messages: "Сообщения",
     trio: "Связь с ФСП",
     cups: "Кубки",
-    assignments: "Задания",
-    probes: "Вилки",
+    assignments: "Практика",
+    probes: "Задания",
     vacancies: "Вакансии",
     mydata: "Мои данные",
     settings: "Настройки",
@@ -108,11 +117,12 @@ const ROLE_LABELS: Record<string, Record<string, string>> = {
     cups: "Кубки",
     benefit: "Польза",
     partners: "Партнёры",
-    trio: "Подтверждение",
+    trio: "Связь",
     method: "Методика",
     security: "Безопасность",
   },
   expert: {
+    "": "Обзор",
     pairs: "Пары",
     answers: "Ответы",
     angoff: "Пороги",
@@ -129,6 +139,11 @@ export function shortLabel(section: Section & { short?: string }, role: string):
   const cleaned = section.title.replace(/^[A-ZА-Я]\s*·\s*/, "").trim();
   const first = cleaned.split(/[·—:()]/)[0].trim().split(/\s+/)[0] || cleaned;
   return first.length > 12 ? `${first.slice(0, 11)}…` : first;
+}
+
+function sectionPaths(section: Section): string[] {
+  const paths = [section.path, ...(section.also ?? []), ...(section.tabs?.map((t) => t.path) ?? [])];
+  return Array.from(new Set(paths));
 }
 
 function TabIcon({ path }: { path: string }) {
@@ -198,11 +213,35 @@ function TabIcon({ path }: { path: string }) {
           <path d="M4 7l8 6 8-6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
+    case "probes":
+    case "assignments":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+          <path d="M9 5H6a2 2 0 00-2 2v11a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-3" strokeLinecap="round" />
+          <rect x="9" y="3.5" width="6" height="3.5" rx="1" />
+          <path d="M8.5 12.5l2.2 2.2 4.8-4.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "cups":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+          <path d="M7 4h10v5a5 5 0 01-10 0V4z" strokeLinejoin="round" />
+          <path d="M7 6H4.5a2 2 0 000 4c1 0 2 .6 2.5 1.5M17 6h2.5a2 2 0 010 4c-1 0-2 .6-2.5 1.5M12 14v4M8.5 20h7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
     case "messages":
     case "trio":
       return (
         <svg viewBox="0 0 24 24" className={cls} fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
           <path d="M4 6.5A2.5 2.5 0 016.5 4h11A2.5 2.5 0 0120 6.5v7A2.5 2.5 0 0117.5 16H9l-4.5 3.5V16A2.5 2.5 0 014 13.5v-7z" strokeLinejoin="round" />
+        </svg>
+      );
+    case "settings":
+    case "mydata":
+      return (
+        <svg viewBox="0 0 24 24" className={cls} fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4L18 18M18 6l-1.6 1.6M7.6 16.4L6 18" strokeLinecap="round" />
         </svg>
       );
     case "security":
@@ -245,16 +284,19 @@ export function MobileTabBar({
   const base = baseProp || ROLE_BASE[effectiveRole] || "/candidate";
   const rawSections = sectionsProp || ROLE_SECTIONS[effectiveRole] || candidateSections;
 
-  const visibleSections = useMemo(
-    () =>
-      rawSections.filter((s) => {
-        if (s.flag && !meta?.[s.flag]?.enabled) return false;
-        const juryOnly = (s as Section & { juryOnly?: boolean }).juryOnly;
-        if (juryOnly && !showJury) return false;
-        return true;
-      }),
-    [rawSections, meta, showJury],
-  );
+  // В CabinetLayout пункт «Обзор» (base) рендерится отдельно перед массивом sections.
+  // Для полной навигации 7/6/5 на телефоне гарантируем наличие стартового пункта «Обзор» (path === "").
+  const visibleSections = useMemo(() => {
+    const filtered = rawSections.filter((s) => {
+      if (s.flag && !meta?.[s.flag]?.enabled) return false;
+      const juryOnly = (s as Section & { juryOnly?: boolean }).juryOnly;
+      if (juryOnly && !showJury) return false;
+      return true;
+    });
+    if (!filtered.length) return [];
+    const hasOverview = filtered.some((s) => s.path === "");
+    return hasOverview ? filtered : [OVERVIEW_SECTION, ...filtered];
+  }, [rawSections, meta, showJury]);
 
   // Закрывать лист «Ещё» при смене маршрута.
   useEffect(() => {
@@ -306,10 +348,11 @@ export function MobileTabBar({
     };
   }, [visibleSections.length]);
 
-  // Выбираем 4–5 главных вкладок роли и гарантируем отсутствие дублей подписей.
+  // Выбираем 4 главные вкладки роли, а остальные разделы (из меню 7/6/5) отправляем в кнопку «Ещё».
+  // Гарантируем отсутствие дублей подписей.
   const { primaryTabs, extraTabs, tabLabels } = useMemo(() => {
     const pickTabs = (): { primary: Section[]; extra: Section[] } => {
-      if (visibleSections.length <= 5) {
+      if (visibleSections.length <= 4) {
         return { primary: visibleSections, extra: [] };
       }
       const preferred = PRIMARY_PATHS[effectiveRole] || PRIMARY_PATHS.candidate;
@@ -336,8 +379,6 @@ export function MobileTabBar({
         }
       }
 
-      // Сортируем выбранные 4 вкладки в порядке их следования в sections.ts (кроме приоритета приглашений у кандидата),
-      // чтобы обзор (path === "") всегда стоял первым, если он есть.
       chosen.sort((a, b) => {
         if (a.path === "") return -1;
         if (b.path === "") return 1;
@@ -365,23 +406,29 @@ export function MobileTabBar({
   const hasSeparateMessages = visibleSections.some((s) => s.path === "messages");
 
   function badgeFor(section: Section): number {
-    if (section.path === "messages") return unread;
-    if (section.path === "invitations") return hasSeparateMessages ? hiringTodo : hiringTodo + unread;
-    return 0;
+    const ps = sectionPaths(section);
+    let b = 0;
+    if (ps.includes("invitations")) b += hiringTodo;
+    if (ps.includes("messages") && (!hasSeparateMessages || section.path === "messages")) b += unread;
+    return b;
   }
 
   function isSectionActive(section: Section): boolean {
-    const to = section.path ? `${base}/${section.path}` : base;
-    if (section.path === "") return loc.pathname === base || loc.pathname === `${base}/`;
-    if (loc.pathname === to || loc.pathname.startsWith(`${to}/`)) return true;
-    if (section.also?.some((a) => loc.pathname === `${base}/${a}` || loc.pathname.startsWith(`${base}/${a}/`))) {
-      return true;
+    if (section.path === "") {
+      return loc.pathname === base || loc.pathname === `${base}/`;
     }
-    return false;
+    return sectionPaths(section).some(
+      (p) => p !== "" && (loc.pathname === `${base}/${p}` || loc.pathname.startsWith(`${base}/${p}/`)),
+    );
+  }
+
+  function visibleSubTabs(section: Section): SubTab[] {
+    return (section.tabs ?? []).filter((t) => !t.flag || !!meta?.[t.flag]?.enabled);
   }
 
   const activeInExtra = extraTabs.some((s) => isSectionActive(s));
   const extraBadge = extraTabs.reduce((acc, s) => acc + badgeFor(s), 0);
+  const appLink = effectiveRole === "candidate" || effectiveRole === "employer" ? `${base}/app` : "/install";
 
   if (!visibleSections.length) return null;
 
@@ -401,12 +448,15 @@ export function MobileTabBar({
             aria-modal="true"
             aria-label="Все разделы кабинета"
             data-testid="mobile-tab-sheet"
-            className="max-h-[82vh] w-full overflow-y-auto rounded-t-3xl bg-white p-4 pb-6 shadow-2xl outline-none"
+            className="max-h-[84vh] w-full overflow-y-auto rounded-t-3xl bg-white p-4 pb-6 shadow-2xl outline-none"
             style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
           >
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-brand-night/15" aria-hidden="true" />
             <div className="mb-3 flex items-center justify-between px-1">
-              <p className="text-sm font-extrabold text-brand-night">Разделы кабинета</p>
+              <div>
+                <p className="text-sm font-extrabold text-brand-night">Разделы кабинета ({visibleSections.length})</p>
+                <p className="text-xs text-brand-ink/60">Быстрый переход к разделам и внутренним вкладкам</p>
+              </div>
               <button
                 type="button"
                 onClick={() => setSheetOpen(false)}
@@ -418,45 +468,181 @@ export function MobileTabBar({
                 </svg>
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-              {visibleSections.map((s) => {
-                const to = s.path ? `${base}/${s.path}` : base;
-                const active = isSectionActive(s);
-                const badge = badgeFor(s);
-                return (
-                  <Link
-                    key={s.path}
-                    to={to}
-                    onClick={() => setSheetOpen(false)}
-                    className={`flex min-h-[48px] items-center justify-between gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition-colors ${
-                      active
-                        ? "bg-brand-night font-semibold text-white"
-                        : "bg-[#FBF8FC] text-brand-ink hover:bg-brand-blush/30"
-                    }`}
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <TabIcon path={s.path} />
-                      <div className="min-w-0">
-                        <div className="truncate font-semibold">{s.title}</div>
-                        {s.description && (
-                          <div className={`truncate text-xs ${active ? "text-white/75" : "text-brand-ink/60"}`}>
-                            {s.description}
+
+            {extraTabs.length > 0 && (
+              <div className="mb-3">
+                <p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-[0.12em] text-brand-plum">
+                  Остальные разделы ({extraTabs.length})
+                </p>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {extraTabs.map((s) => {
+                    const to = s.path ? `${base}/${s.path}` : base;
+                    const active = isSectionActive(s);
+                    const badge = badgeFor(s);
+                    const subTabs = visibleSubTabs(s);
+                    return (
+                      <div
+                        key={`extra-${s.path}`}
+                        className={`rounded-2xl border p-2.5 transition-colors ${
+                          active
+                            ? "border-brand-night bg-brand-night text-white"
+                            : "border-brand-night/10 bg-[#FBF8FC] text-brand-ink"
+                        }`}
+                      >
+                        <Link
+                          to={to}
+                          data-testid={`mobile-sheet-section-${s.path || "overview"}`}
+                          onClick={() => setSheetOpen(false)}
+                          className="flex min-h-[44px] items-center justify-between gap-3 px-1"
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <TabIcon path={s.path} />
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-semibold">{s.title}</div>
+                              {s.description && (
+                                <div className={`truncate text-xs ${active ? "text-white/75" : "text-brand-ink/60"}`}>
+                                  {s.description}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {badge > 0 && (
+                            <span
+                              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${
+                                active ? "bg-white text-brand-night" : "bg-brand text-white"
+                              }`}
+                            >
+                              {badge}
+                            </span>
+                          )}
+                        </Link>
+                        {subTabs.length > 1 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5 border-t border-current/10 pt-2">
+                            {subTabs.map((t) => {
+                              const subTo = `${base}/${t.path}`;
+                              const subOn = loc.pathname === subTo || loc.pathname.startsWith(`${subTo}/`);
+                              return (
+                                <Link
+                                  key={t.path}
+                                  to={subTo}
+                                  onClick={() => setSheetOpen(false)}
+                                  className={`inline-flex min-h-[36px] items-center rounded-xl px-2.5 py-1 text-xs font-semibold transition ${
+                                    subOn
+                                      ? active
+                                        ? "bg-white text-brand-night"
+                                        : "bg-brand text-white"
+                                      : active
+                                        ? "bg-white/15 text-white hover:bg-white/25"
+                                        : "bg-white text-brand-night ring-1 ring-brand-night/10 hover:bg-brand-blush/40"
+                                  }`}
+                                >
+                                  {t.title}
+                                </Link>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
-                    </div>
-                    {badge > 0 && (
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${
-                          active ? "bg-white text-brand-night" : "bg-brand text-white"
-                        }`}
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-[0.12em] text-brand-ink/55">
+                Главные разделы ({primaryTabs.length})
+              </p>
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {primaryTabs.map((s) => {
+                  const to = s.path ? `${base}/${s.path}` : base;
+                  const active = isSectionActive(s);
+                  const badge = badgeFor(s);
+                  const subTabs = visibleSubTabs(s);
+                  return (
+                    <div
+                      key={`all-${s.path || "overview"}`}
+                      className={`rounded-2xl border p-2.5 transition-colors ${
+                        active
+                          ? "border-brand-night bg-brand-night text-white"
+                          : "border-brand-night/10 bg-[#FBF8FC] text-brand-ink"
+                      }`}
+                    >
+                      <Link
+                        to={to}
+                        data-testid={`mobile-sheet-section-${s.path || "overview"}`}
+                        onClick={() => setSheetOpen(false)}
+                        className="flex min-h-[44px] items-center justify-between gap-3 px-1"
                       >
-                        {badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
+                        <div className="flex min-w-0 items-center gap-3">
+                          <TabIcon path={s.path} />
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-semibold">{s.title}</div>
+                            {s.description && (
+                              <div className={`truncate text-xs ${active ? "text-white/75" : "text-brand-ink/60"}`}>
+                                {s.description}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {badge > 0 && (
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${
+                              active ? "bg-white text-brand-night" : "bg-brand text-white"
+                            }`}
+                          >
+                            {badge}
+                          </span>
+                        )}
+                      </Link>
+                      {subTabs.length > 1 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5 border-t border-current/10 pt-2">
+                          {subTabs.map((t) => {
+                            const subTo = `${base}/${t.path}`;
+                            const subOn = loc.pathname === subTo || loc.pathname.startsWith(`${subTo}/`);
+                            return (
+                              <Link
+                                key={t.path}
+                                to={subTo}
+                                onClick={() => setSheetOpen(false)}
+                                className={`inline-flex min-h-[36px] items-center rounded-xl px-2.5 py-1 text-xs font-semibold transition ${
+                                  subOn
+                                    ? active
+                                      ? "bg-white text-brand-night"
+                                      : "bg-brand text-white"
+                                    : active
+                                      ? "bg-white/15 text-white hover:bg-white/25"
+                                      : "bg-white text-brand-night ring-1 ring-brand-night/10 hover:bg-brand-blush/40"
+                                }`}
+                              >
+                                {t.title}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-brand-night/10 pt-3">
+              <Link
+                to={appLink}
+                onClick={() => setSheetOpen(false)}
+                data-testid="mobile-sheet-install-app"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-brand-blush/50 px-3.5 py-2 text-xs font-bold text-brand-plum hover:bg-brand-blush"
+              >
+                Приложение и уведомления
+              </Link>
+              <Link
+                to="/support"
+                onClick={() => setSheetOpen(false)}
+                className="inline-flex min-h-[44px] items-center px-3 py-2 text-xs font-semibold text-brand-ink/70 hover:text-brand-night"
+              >
+                Помощь и поддержка
+              </Link>
             </div>
           </div>
         </div>
@@ -477,7 +663,7 @@ export function MobileTabBar({
             const label = tabLabels.get(s.path) || shortLabel(s, effectiveRole);
             return (
               <Link
-                key={s.path}
+                key={s.path || "overview"}
                 to={to}
                 data-testid={`mobile-tab-${s.path || "overview"}`}
                 aria-current={active ? "page" : undefined}

@@ -148,7 +148,7 @@ const MIC_TITLE: Record<string, string> = {
 
 interface Frame { left: number; top: number; width: number; height: number; radius: number; small: boolean }
 
-function frameOf(stage: Stage, vw: number, vh: number, tab = 0): Frame {
+function frameOf(stage: Stage, vw: number, vh: number, tab = 0, side: "right" | "left" = "right"): Frame {
   const small = vw < 640;
   const usable = vh - tab;   // над нижней панелью навигации на телефоне (если она есть)
   if (stage === "large") {
@@ -158,10 +158,10 @@ function frameOf(stage: Stage, vw: number, vh: number, tab = 0): Frame {
     if (height > maxH) { height = maxH; width = Math.min(width, Math.round(height / (small ? 1.12 : 0.66))); }
     return { left: Math.round((vw - width) / 2), top: Math.max(16, Math.round((usable - height) / 2) - (small ? 8 : 16)), width, height, radius: 28, small };
   }
-  const width = small ? 188 : 296;    // в углу — скромнее: сайт главнее, Настя рядом
-  const height = small ? 236 : 296;
+  const width = small ? 176 : 232;    // в углу — скромнее: сайт главнее, Настя рядом (меньше перекрывает экран)
+  const height = small ? 220 : 232;
   const gap = small ? 12 : 20;
-  return { left: vw - width - gap, top: usable - height - gap, width, height, radius: 24, small };
+  return { left: side === "left" ? gap : vw - width - gap, top: usable - height - gap, width, height, radius: 22, small };
 }
 
 function useViewport() {
@@ -192,6 +192,21 @@ function flag(name: string): boolean {
 }
 const debugFlag = () => flag("debug");
 const noVideoFlag = () => flag("novideo");
+/** Числовой параметр проверок: ?elena_expr=0.35 (запоминается), ?elena_expr=0 снимает. */
+function param(name: string): number | null {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    const raw = q.get(`elena_${name}`);
+    if (raw !== null) {
+      const n = Number(raw);
+      if (!Number.isFinite(n) || n <= 0) { localStorage.removeItem(`draft.elena.${name}`); return null; }
+      localStorage.setItem(`draft.elena.${name}`, String(n));
+      return n;
+    }
+    const st = Number(localStorage.getItem(`draft.elena.${name}`));
+    return Number.isFinite(st) && st > 0 ? st : null;
+  } catch { return null; }
+}
 
 export function InteractiveAvatarTour() {
   const { me, signIn } = useAuth();
@@ -200,6 +215,35 @@ export function InteractiveAvatarTour() {
   const vp = useViewport();
   const [open, setOpen] = useState(false);
   const [ui, setUi] = useState<ElenaUi | null>(null);
+  // окно в углу уходит в другой угол, когда подсвеченный блок оказывается под ним
+  const [dodge, setDodge] = useState(false);
+  const freeSince = useRef(0);
+  useEffect(() => {
+    if (!open || !ui || ui.stage !== "corner") { setDodge(false); return; }
+    const check = () => {
+      const sel = ui.target;
+      if (!sel) return;
+      const el = findTarget(sel);
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width <= 0 || r.height <= 0) return;
+      const pad = 10;
+      const hit = (fr: Frame) => r.right > fr.left - pad && r.left < fr.left + fr.width + pad && r.bottom > fr.top - pad && r.top < fr.top + fr.height + pad;
+      const right = hit(frameOf("corner", vp.w, vp.h, vp.tab, "right"));
+      const left = hit(frameOf("corner", vp.w, vp.h, vp.tab, "left"));
+      if (right && !left) { freeSince.current = 0; setDodge(true); return; }
+      if (left && !right) { freeSince.current = 0; setDodge(false); return; }
+      // блок ни под одним углом — возвращаемся в правый (свой) угол, но не раньше чем через секунду, чтобы не дёргаться
+      if (!right && !left) {
+        if (!freeSince.current) freeSince.current = Date.now();
+        else if (Date.now() - freeSince.current > 1000) setDodge(false);
+      }
+    };
+    check();
+    const iv = window.setInterval(check, 400);
+    window.addEventListener("scroll", check, { passive: true });
+    return () => { window.clearInterval(iv); window.removeEventListener("scroll", check); };
+  }, [open, ui?.target, ui?.stage, vp]);
   const engineRef = useRef<ElenaEngine | null>(null);
   const anamRef = useRef<AnamHandle | null>(null);
   const meRef = useRef(me);
@@ -215,6 +259,7 @@ export function InteractiveAvatarTour() {
     const eng = new ElenaEngine({
       noVideo: noVideoFlag(),
       fakeMic: flag("fakemic"),
+      lips: flag("lips"),
       avatar: () => anamRef.current,
       navigate: (to) => navRef.current(to),
       path: () => window.location.pathname,
@@ -236,6 +281,7 @@ export function InteractiveAvatarTour() {
         say: (t: string) => eng.injectUser(String(t ?? "")), hear: (t: string) => eng.hear(String(t ?? "")),
         stt: (e: Parameters<ElenaEngine["injectStt"]>[0]) => eng.injectStt(e),
         ui: () => eng.getUi(), pause: () => eng.togglePause(), close: () => eng.close(),
+        hand: () => eng.raiseHand(), nav: (p: string) => eng.onPathChange(String(p ?? "")),
       };
     }
     eng.start(track, stepIndex);   // синхронно в обработчике нажатия: звук и микрофон разрешаются этим жестом
@@ -263,6 +309,26 @@ export function InteractiveAvatarTour() {
   useEffect(() => {
     if (open && loc.pathname.startsWith("/candidate/interview/")) close();
   }, [open, loc.pathname, close]);
+
+  // человек сам перешёл по сайту — режим «ведёте вы»: Настя коротко комментирует экран и не ведёт, пока не попросят
+  useEffect(() => {
+    if (open) engineRef.current?.onPathChange(loc.pathname);
+  }, [open, loc.pathname]);
+
+  // пробел — «поднять руку»: Настя договаривает предложение и слушает (не в полях ввода)
+  useEffect(() => {
+    if (!open) return;
+    const on = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || tag === "button" || el?.isContentEditable) return;
+      e.preventDefault();
+      engineRef.current?.raiseHand();
+    };
+    window.addEventListener("keydown", on);
+    return () => window.removeEventListener("keydown", on);
+  }, [open]);
 
   // окно закрыли вкладкой — стенограмма получает «close»
   useEffect(() => {
@@ -314,7 +380,7 @@ export function InteractiveAvatarTour() {
 
   const eng = engineRef.current;
   const large = ui.stage === "large";
-  const f = frameOf(ui.stage, vp.w, vp.h, vp.tab);
+  const f = frameOf(ui.stage, vp.w, vp.h, vp.tab, dodge ? "left" : "right");
   const micOff = ui.mic === "muted" || ui.mic === "denied" || ui.mic === "nodevice" || ui.mic === "error";
   const micBroken = ui.mic === "denied" || ui.mic === "nodevice" || ui.mic === "error";
   const paused = ui.phase === "paused";
@@ -327,12 +393,13 @@ export function InteractiveAvatarTour() {
     : micOn && ui.phase === "thinking" ? "Думаю…"
     : micOn && ui.speaking ? "Говорю"
     : listening ? (large && !f.small ? lbl.long : lbl.short)
-    : micOn ? "Секунду…" : lbl.short;
+    : micOn ? "Думаю…" : lbl.short;
   // подсказка «ваша очередь»: в паузах обзора и когда Настя спросила — чтобы было видно, что можно говорить
   const turnHint = listening && (ui.phase === "listening" || ui.phase === "paused")
     ? (ui.phase === "paused" ? (large ? "Пауза. Скажите «дальше» или спросите" : "Пауза — скажите «дальше»")
       : !large ? "Можно говорить"
-      : ui.track ? "Можно говорить: вопрос, «дальше» или «покажи …»" : "Говорите: назовите раздел или задайте вопрос")
+      : ui.awaiting === "start" ? "Скажите или нажмите: кандидат, работодатель, Федерация"
+      : ui.track ? "Можно говорить: вопрос, «дальше», «ниже» или «покажи …»" : "Говорите: назовите раздел или задайте вопрос")
     : null;
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
@@ -356,7 +423,7 @@ export function InteractiveAvatarTour() {
         <div className="relative h-full w-full">
           {noVideoFlag()
             ? <img src="/avatar/guide.webp" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" data-testid="avatar-novideo" />
-            : <AnamAvatar ref={anamRef} sessionId="concierge-elena" tokenPath={`/interview/concierge/avatar-token?sid=${encodeURIComponent(eng?.sid ?? "")}`}
+            : <AnamAvatar ref={anamRef} sessionId="concierge-elena" tokenPath={`/interview/concierge/avatar-token?sid=${encodeURIComponent(eng?.sid ?? "")}${param("expr") ? `&expr=${param("expr")}` : ""}`}
               state={ui.speaking ? "speaking" : wave} level={() => engineRef.current?.voice.level() ?? 0} name="Настя" fill
               poster="/avatar/guide.webp" />}
 
