@@ -43,3 +43,4 @@
 | `guide.webp` | 480×480, портрет nastya_v2 (сгенерированный, правка gpt_image_2_5_flare: белая майка, премиальный пиджак) из elena_work/avatar_after_final/nastya_portrait_v1_1254.png | Anam one-shot аватар eeabad62-299c-4409-a230-c559bf7ea1b7 ("Nastya Draft v2") | 2026-10-21 |
 
 Откат: прежний guide.webp и id d7d4dd15-e996-4595-ad73-7b77b22e53ec — /opt/spectrek_fsp/elena_work/avatar_rollback_20261021/.
+| `guide.webp` (v3, 21.10 23:15) | тот же портрет на тёмно-синем фоне (правка gpt_image_2_5_flare) | Anam one-shot 78dbf4dc-e850-47a9-873f-e49f2c56f05e ("Nastya Draft v3 navy") | 2026-10-21 |

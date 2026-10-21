@@ -390,7 +390,7 @@ export function InteractiveAvatarTour() {
         <button type="button" onClick={() => begin(pitchFlag() ? "pitch" : undefined)} data-testid="floating-avatar-concierge"
           className="group flex items-center gap-3 rounded-full bg-[#120E24]/95 py-2 pl-2 pr-4 text-left text-white shadow-xl ring-1 ring-white/15 backdrop-blur transition hover:-translate-y-0.5 hover:ring-white/30">
           <span className="relative h-12 w-12 shrink-0">
-            <img src="/avatar/guide.webp" alt="" aria-hidden="true" className="h-12 w-12 rounded-full object-cover" />
+            <img src="/avatar/guide.webp?v=3" alt="" aria-hidden="true" className="h-12 w-12 rounded-full object-cover" />
             <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-[#120E24]" />
           </span>
           <span className="pr-1">
@@ -454,10 +454,10 @@ export function InteractiveAvatarTour() {
         }}>
         <div className="relative h-full w-full">
           {noVideoFlag()
-            ? <img src="/avatar/guide.webp" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" data-testid="avatar-novideo" />
+            ? <img src="/avatar/guide.webp?v=3" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" data-testid="avatar-novideo" />
             : <AnamAvatar ref={anamRef} sessionId="concierge-elena" tokenPath={`/interview/concierge/avatar-token?sid=${encodeURIComponent(eng?.sid ?? "")}${param("expr") ? `&expr=${param("expr")}` : ""}`}
               state={ui.speaking ? "speaking" : wave} level={() => engineRef.current?.voice.level() ?? 0} name="Настя" fill
-              poster="/avatar/guide.webp" />}
+              poster="/avatar/guide.webp?v=3" />}
 
           {ui.stepTotal > 0 && (
             <div className="pointer-events-none absolute left-4 right-24 top-4 flex gap-1" aria-hidden="true" data-testid="elena-progress">

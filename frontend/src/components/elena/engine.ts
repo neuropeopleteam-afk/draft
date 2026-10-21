@@ -356,6 +356,7 @@ export class ElenaEngine {
   private gateUntil = 0;                // микрофон закрыт до этого момента после конца её фразы
   private gateOpenedAt = 0;
   private gated = true;
+  private duckAt = 0;   // когда приглушили её голос под реплику человека
   private wasSpeaking = false;
   private lastSpeechStart = 0;          // человек начал говорить (событие поставщика) при открытом микрофоне
   // обзор
@@ -460,7 +461,7 @@ export class ElenaEngine {
       if (hearing !== this.ui.hearing) this.set({ hearing });
       const listen = !s && !this.thinking && this.listenOpen() ? "open" : "wake";
       if (listen !== this.ui.listen) this.set({ listen });
-      if (this.ducked && (!s || !this.buf.read())) { this.ducked = false; this.voice.duck(false); }
+      if (this.ducked && (!s || (!this.buf.read() && performance.now() - this.duckAt > 2500))) { this.ducked = false; this.voice.duck(false); }
     }, 100);
   }
 
@@ -948,7 +949,11 @@ export class ElenaEngine {
         if (busy || !this.listenOpen()) {
           const wake = !(busy && hers && /наст/i.test(hers)) && WAKE.test(text);
           const quiet = !busy && words(text).length <= 4 && QUIET_COMMAND.test(words(text).join(" "));
-          if (!wake && !quiet) return;
+          if (!wake && !quiet) {
+            // человек заговорил под её речь (не эхо, не «угу») — приглушаем её, чтобы «Настя» услышалась без крика (22:08)
+            if (this.voice.speaking() && !this.ducked) { this.ducked = true; this.duckAt = performance.now(); this.voice.duck(true); }
+            return;
+          }
           if (wake) this.onWake(text);
         }
       }

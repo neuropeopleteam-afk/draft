@@ -54,7 +54,7 @@ ANAM_EXPRESSIVITY = float(os.environ.get("CONCIERGE_ANAM_EXPRESSIVITY", "0.2"))
 # улыбка исходного кадра манерой не гасится). Создан 20.10.2026 через POST /v1/avatars (one-shot, cara-4);
 # происхождение — frontend/public/avatar/PROVENANCE.md. Пусто — общий аватар интервьюера (ANAM_AVATAR_ID).
 # 21.10 23:00 владелец: новое лицо (белая майка, премиальный пиджак) eeabad62…; откат — прежнее d7d4dd15-e996-4595-ad73-7b77b22e53ec
-ANAM_AVATAR_ID = os.environ.get("CONCIERGE_ANAM_AVATAR_ID", "eeabad62-299c-4409-a230-c559bf7ea1b7").strip()
+ANAM_AVATAR_ID = os.environ.get("CONCIERGE_ANAM_AVATAR_ID", "78dbf4dc-e850-47a9-873f-e49f2c56f05e").strip()  # 23:15: тот же портрет на тёмно-синем фоне (v3); v2 белый фон — eeabad62-299c-4409-a230-c559bf7ea1b7
 # Потолок одного разговора в минутах: по его истечении Настя прощается и закрывается (стенд открыт всем, минуты платные)
 MAX_MINUTES = float(os.environ.get("CONCIERGE_MAX_MINUTES", "0"))   # 0 — без потолка (владелец: можно просто нажать снова)
 
