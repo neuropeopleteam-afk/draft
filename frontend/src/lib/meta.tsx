@@ -31,7 +31,21 @@ export interface Meta {
   proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
   voice_need?: { enabled: boolean; stub?: boolean; max_seconds: number; consent_version: string; consent_text: string };  // «Надиктовать»
   // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
-  rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number; confirm_pct?: number };
+  rules?: {
+    grade_change_interval_days: number;
+    retake_same_grade_days: number;
+    invitation_cooldown_days: number;
+    confirm_pct?: number;
+    test_len?: {
+      min_items: number;
+      max_items: number;
+      max_minutes: number;
+      contested_max_items: number;
+      contested_max_minutes: number;
+      two_stage_items: number;
+      two_stage_minutes: number;
+    };
+  };
   // видимые направления каталога: 5 базовых и направления расширения с проверенным банком (CATALOG_EXT_ENABLED)
   catalog?: { directions: string[]; ext: string[]; ext_enabled: boolean; ext_titles?: Record<string, string>; model_label?: string };
   interview?: { enabled: boolean; stub: boolean; defense_minutes: number; avatar?: boolean }; // Я15: устная защита и ИИ-интервью (по умолчанию выкл.); avatar — свой образ интервьюера (В1)

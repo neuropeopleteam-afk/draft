@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
+import { useMeta } from "../lib/meta";
 import { Alert, GRADE_TITLE_ALL, errText, ruText } from "./ui";
 
 /** Единая модель статуса грейда (та же в подборке, поиске, карточке, сравнении, PDF и у кандидата):
@@ -94,6 +95,10 @@ function SecondStage({ t, grade, direction, generic = false }: { t: TwoStageStat
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const meta = useMeta();
+  const L = meta?.rules?.test_len;
+  const stItems = t.items ?? L?.two_stage_items ?? 12;
+  const stMin = t.minutes ?? L?.two_stage_minutes ?? 20;
   async function start() {
     setBusy(true); setErr(null);
     try {
@@ -110,10 +115,10 @@ function SecondStage({ t, grade, direction, generic = false }: { t: TwoStageStat
       {done ? (
         <p>{generic ? (o.passed ? "Уточнение пройдено" : "Уточнение не подтвердило уровень") : (o.passed ? "Второй этап пройден" : "Второй этап не подтвердил уровень")}: по двум сессиям теста — <b>{GRADE_TITLE_ALL[o.final_grade] ?? "без категории"}</b> (новых коротких заданий: {o.new_items}).{generic ? "" : " Пометка «предварительно» у Lead/Principal остаётся, пока банк заданий этих уровней мал."}</p>
       ) : (
-        <p>{generic ? "Уточнение" : "Второй этап"} — до {t.items ?? 8} коротких заданий у границы {border} из новых семейств, 10–{t.minutes ?? 15} минут. Итог считается по ответам обеих сессий вместе и может оказаться как выше, так и ниже нынешнего; действует согласие на проверку самостоятельности, данное перед основным тестом.</p>
+        <p>{generic ? "Уточнение" : "Второй этап"} — до {stItems} коротких заданий у границы {border} из новых семейств, 10–{stMin} минут. Итог считается по ответам обеих сессий вместе и может оказаться как выше, так и ниже нынешнего; действует согласие на проверку самостоятельности, данное перед основным тестом.</p>
       )}
       <div className="mt-2 flex flex-wrap gap-3">
-        {t.status === "offered" && t.available && <button className="btn-primary" onClick={start} disabled={busy} data-testid="ext-second-stage-start">{busy ? "Готовим задания…" : generic ? `Уточнить уровень за 10–${t.minutes ?? 15} минут` : `Пройти второй этап за 10–${t.minutes ?? 15} минут`}</button>}
+        {t.status === "offered" && t.available && <button className="btn-primary" onClick={start} disabled={busy} data-testid="ext-second-stage-start">{busy ? "Готовим задания…" : generic ? `Уточнить уровень за 10–${stMin} минут` : `Пройти второй этап за 10–${stMin} минут`}</button>}
         {t.status === "offered" && !t.available && <span className="text-xs">{generic ? "Уточнение" : "Второй этап"} — по последнему полному тесту направления: после нового теста предлагается заново.</span>}
         {t.status === "in_progress" && t.refine_session_id && <button className="btn-primary" onClick={() => navigate(`/candidate/assessment/test/${t.refine_session_id}`)}>{generic ? "Продолжить уточнение" : "Продолжить второй этап"}</button>}
         {done && t.refine_session_id && <button className="btn-ghost" onClick={() => navigate(`/candidate/assessment/test/${t.refine_session_id}`)}>{generic ? "Итог уточнения" : "Итог второго этапа"}</button>}
