@@ -231,6 +231,23 @@ class VariantMeta(_Strict):
 
 SECRET_META_FIELDS = {"checks", "params", "defect_type", "verification", "display_code_note"}
 
+# Поля сюжета инцидента, которые описывают последствия действий или их оценку: на сервере — да, в браузер — нет.
+# Проверка 20.10: поле ``sim_effect: "recovered"`` стояло ровно у верного патча, и ключ шага читался из публичного вида.
+INCIDENT_SECRET_KEYS = frozenset({
+    "sim_effect", "effect", "effects", "outcome", "result", "required", "helpful", "harmful", "trap", "traps",
+    "correct", "is_correct", "answer", "key", "score", "weight", "good", "bad", "expected", "rubric",
+})
+
+
+def public_incident(obj: Any) -> Any:
+    """Копия сюжета инцидента без служебных полей (рекурсивно; ключи ``opt_*`` — тоже служебные)."""
+    if isinstance(obj, dict):
+        return {k: public_incident(v) for k, v in obj.items()
+                if str(k).lower() not in INCIDENT_SECRET_KEYS and not str(k).lower().startswith("opt_")}
+    if isinstance(obj, list):
+        return [public_incident(v) for v in obj]
+    return obj
+
 
 class Variant(_Strict):
     variant_id: str
@@ -292,7 +309,7 @@ class Variant(_Strict):
         }
         inc = (self.meta.params or {}).get("incident")
         if inc is not None:
-            out["incident"] = inc
+            out["incident"] = public_incident(inc)
         return out
 
     def fingerprint(self) -> str:
