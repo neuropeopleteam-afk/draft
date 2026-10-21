@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { lastApiTimingMs } from "../lib/api";
 import { NUMBERS } from "../lib/numbers";
-import { pct, useApi } from "./ui";
+import { pct } from "./ui";
+import { getMatchingMetrics } from "../lib/numbers";
 
 const SEGMENTS: { label: string; weight: number; color: string; desc: string }[] = [
   { label: "Результат теста на грейд", weight: 45, color: "bg-brand-strong", desc: "Сила результата адаптивного теста относительно порога грейда и проверенные кодом навыки" },
@@ -40,9 +41,10 @@ export function DecisionProofStrip({
 }) {
   const [open, setOpen] = useState(false);
   const ms = lastApiTimingMs();
-  // Числа точности — из актуального расчёта бенчмарка (/validation/matching-bench, make bench), без захардкоженных значений
-  const bench = useApi<any>("/validation/matching-bench", []).data;
-  const pm = bench?.metrics?.platform;
+  // Число точности — из единого источника (docs/NUMBERS.json → matching: отложенная проверка подбора), без захардкоженных
+  // значений; простыми словами, без MRR и кода версии (А19 №7)
+  const mm = getMatchingMetrics();
+  const p5 = mm?.p5?.mean ?? null;
   const isV2 = Boolean((algorithm && algorithm.startsWith("match-v2")) || formula?.plus?.length);
   const segments = isV2 && formula?.plus?.length
     ? formula.plus.map((p) => ({
@@ -58,12 +60,12 @@ export function DecisionProofStrip({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-night px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
-            Формула ранжирования {algorithm || (isV2 ? "match-v2" : "match-v1.3")}
+            Как строится порядок кандидатов
           </span>
           <span className="text-xs font-semibold text-brand-night">
-            {pm?.["p@5"]?.mean != null
-              ? <>Точность на бенчмарке со скрытой истиной P@5 = <b>{pct(pm["p@5"].mean, 1)}</b> (MRR = <b>{pct(pm.mrr?.mean, 1)}</b>{pm["recall@30"]?.mean != null ? <>, Recall@30 = <b>{pct(pm["recall@30"].mean, 1)}</b></> : null})</>
-              : <>Точность подбора — на бенчмарке со скрытой истиной (/validation)</>} · фильтр ст. 64 ТК РФ активен
+            {p5 != null
+              ? <>Из первых пяти кандидатов подходят в среднем <b>{pct(p5, 1)}</b> (проверка на отложенных модельных данных, точность топ-5)</>
+              : <>Точность подбора — на странице проверки (/validation)</>} · фильтр ст. 64 ТК РФ активен
           </span>
           {ms != null && (
             <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-800 ring-1 ring-emerald-200">
