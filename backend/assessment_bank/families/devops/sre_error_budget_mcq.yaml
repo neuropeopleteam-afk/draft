@@ -1,12 +1,20 @@
 family_id: devops.sre.error_budget_mcq
 title: SRE — остаток бюджета ошибок после полного, частичного отказа и замедления
 direction: devops
-skills: [sre, slo, error_budget, incident_response]
-target_grades: [junior, middle]
+skills:
+- sre
+- slo
+- error_budget
+- incident_response
+target_grades:
+- junior
+- middle
 format: mcq_concept
 language: text
 invariants:
-  code_lines: [4, 4]
+  code_lines:
+  - 4
+  - 4
   n_options: 4
   extra:
     subtype: request_availability_budget
@@ -14,11 +22,15 @@ time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.3
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.3
-  basis: "SLO 99,5–99,95 % за 28/30 дней и три инцидента; нужно перевести SLO в минуты, взвесить частичный отказ долей ошибок и не считать замедление без ошибок; дистракторы — три из четырёх типовых ошибок (частичный не учтён, без взвешивания, забыт полный отказ, замедление как отказ); все варианты положительны. Граница Junior/Middle"
+  basis: Априорная, до калибровки на людях (a = 1,0). SLO 99,5–99,95 % за 28/30 дней и три инцидента; нужно перевести
+    SLO в минуты, взвесить частичный отказ долей ошибок и не считать замедление без ошибок; дистракторы — три из
+    четырёх типовых ошибок (частичный не учтён, без взвешивания, забыт полный отказ, замедление как отказ); все
+    варианты положительны. Граница Junior/Middle
 generator: assessment_bank.families.devops.sre_error_budget_mcq
 version: 1
-description: >
-  Посчитать остаток бюджета ошибок SLO доступности после трёх инцидентов разного рода. Ключ — точный расчёт
-  в песочнице Python.
+description: 'Посчитать остаток бюджета ошибок SLO доступности после трёх инцидентов разного рода. Ключ — точный
+  расчёт в песочнице Python.
+
+  '

@@ -1,29 +1,49 @@
 family_id: data_ml.repro.rng_split_fix
 title: Воспроизводимое разбиение train/test — локальный генератор вместо глобального random
 direction: data_ml
-skills: [python, reproducibility, random_seed, train_test_split, experiment_tracking]
-target_grades: [middle, senior]
+skills:
+- python
+- reproducibility
+- random_seed
+- train_test_split
+- experiment_tracking
+target_grades:
+- middle
+- senior
 format: choose_fix
 language: python
 invariants:
-  code_lines: [9, 9]
-  operations: [7, 7]
+  code_lines:
+  - 9
+  - 9
+  operations:
+  - 7
+  - 7
   defect_type: global_rng_state
   n_options: 4
   extra:
-    distractors: [global_seed, global_sort, shuffle_input, module_rng]
+    distractors:
+    - global_seed
+    - global_sort
+    - shuffle_input
+    - module_rng
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.3
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.3
-  basis: "9 строк исходного кода и четыре версии по 4–8 строк; требования перечислены явно, но нужно понимать разницу между глобальным и локальным генератором, побочные эффекты random.seed и мутацию входного списка; дистракторы с random.seed внутри функции правдоподобны и встречаются в реальных пайплайнах (Middle/Senior). Версия 2 (калибровка 05.10: решалась малыми моделями — ключ узнавался по random.Random(seed)): всегда есть почти верный дистрактор на один токен от ключа (локальный генератор создан, но вызывается random.shuffle; или Random() без seed)"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). 9 строк исходного кода и четыре версии по 4–8 строк; требования
+    перечислены явно, но нужно понимать разницу между глобальным и локальным генератором, побочные эффекты random.seed
+    и мутацию входного списка; дистракторы с random.seed внутри функции правдоподобны и встречаются в реальных пайплайнах
+    (Middle/Senior). Версия 2 (калибровка 05.10: решалась малыми моделями — ключ узнавался по random.Random(seed)):
+    всегда есть почти верный дистрактор на один токен от ключа (локальный генератор создан, но вызывается random.shuffle;
+    или Random() без seed)'
 generator: assessment_bank.families.data_ml.repro_rng_split_fix
 version: 2
-description: >
-  Разбиение train/test зависит от глобального состояния random: новый потребитель
-  случайности меняет тестовую выборку. Ровно одна из четырёх версий (локальный
-  random.Random(seed)) воспроизводима, не трогает глобальный генератор и вход; проверка —
-  исполнением с промежуточными вызовами random и сравнением getstate().
-  Версия 2: один из дистракторов — почти верный (отличается от ключа одним токеном).
+description: 'Разбиение train/test зависит от глобального состояния random: новый потребитель случайности меняет
+  тестовую выборку. Ровно одна из четырёх версий (локальный random.Random(seed)) воспроизводима, не трогает глобальный
+  генератор и вход; проверка — исполнением с промежуточными вызовами random и сравнением getstate(). Версия 2: один
+  из дистракторов — почти верный (отличается от ключа одним токеном).
+
+  '

@@ -1,0 +1,29 @@
+family_id: frontend.ui.t21_badge_concat_output
+title: Подписи счётчика — оператор + со строками и числами слева направо
+direction: frontend
+skills:
+- javascript
+target_grades:
+- intern
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 5
+  - 5
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Три строки вывода: строка
+    + число + число склеивает цифры, число + число + строка сначала складывает, в части вариантов строка − число
+    даёт NaN. Уровень Стажёра: конкатенация строк и порядок вычисления +. Набор t21 (21.10) у порога Стажёра
+    (b = −1,6)'
+generator: assessment_bank.families.frontend.t21_badge_concat_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Два счётчика интерфейса склеиваются в подписи
+  разными выражениями с +; предсказать три строки вывода. Ключ — независимая модель в генераторе, проверка —
+  исполнение показанного кода в Node.js.'

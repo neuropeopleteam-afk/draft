@@ -1,0 +1,34 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: analyst.principal_v2.raft_election_quorum_out
+title: 'Системный и бизнес-анализ: Отбор лидера по актуальности журнала (term, длина) и подсчёт кворума голосов'
+direction: analyst
+skills:
+- requirements
+- api_contracts
+- bpmn
+- er_modeling
+- state_machines
+target_grades:
+- lead
+- principal
+format: predict_output
+language: python
+invariants:
+  defect_type: raft_log_completeness
+  extra:
+    wave: LP-v2
+    slot: 17
+    direction_ru: Системный и бизнес-анализ
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.63
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Системный и бизнес-анализ: отбор лидера по актуальности
+    журнала (term, длина) и подсчёт кворума голосов; формат predict_output, целевые грейды lead, principal (b =
+    2,63 у порога старшего грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.analyst.lp2_17_raft_election_quorum_out
+version: 1
+description: 'Системный и бизнес-анализ (lead, principal): Отбор лидера по актуальности журнала (term, длина) и
+  подсчёт кворума голосов. Проверка исполнением и рубрикой.'

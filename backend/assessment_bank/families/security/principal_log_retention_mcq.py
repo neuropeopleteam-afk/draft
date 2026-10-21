@@ -53,7 +53,7 @@ def _min_r(D, L, X):
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx = rng.choice(CONTEXTS)
-    n_below = rng.choice([1, 2, 3])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный; недостающие — контрольные значения
     fmt, fmt_src = formatter("int", "дн.")
     for _ in range(4000):
         D = rng.choice([20, 25, 30, 35, 40, 45, 50, 60, 70, 75, 80, 90, 100, 120])

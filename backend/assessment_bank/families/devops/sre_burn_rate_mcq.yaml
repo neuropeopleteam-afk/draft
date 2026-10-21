@@ -1,12 +1,21 @@
 family_id: devops.sre.burn_rate_mcq
 title: SRE — многооконные алерты по скорости расхода бюджета ошибок
 direction: devops
-skills: [sre, slo, error_budget, alerting, monitoring]
-target_grades: [middle, senior]
+skills:
+- sre
+- slo
+- error_budget
+- alerting
+- monitoring
+target_grades:
+- middle
+- senior
 format: mcq_concept
 language: yaml
 invariants:
-  code_lines: [11, 11]
+  code_lines:
+  - 11
+  - 11
   n_options: 4
   extra:
     subtype: multiwindow_burn_rate
@@ -14,11 +23,15 @@ time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 1.0
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Два правила (14,4 по 1h и 5m; 6 по 6h и 30m), SLO 99–99,95 %, доли ошибок по четырём окнам; нужно перевести доли в burn rate делением на 1 − SLO и применить and; в большинстве вариантов ловушка — длинное окно выше порога, короткое ниже. Четыре постоянных исхода, целевой — равномерно. Граница Middle/Senior"
+  basis: Априорная, до калибровки на людях (a = 1,0). Два правила (14,4 по 1h и 5m; 6 по 6h и 30m), SLO 99–99,95
+    %, доли ошибок по четырём окнам; нужно перевести доли в burn rate делением на 1 − SLO и применить and; в большинстве
+    вариантов ловушка — длинное окно выше порога, короткое ниже. Четыре постоянных исхода, целевой — равномерно.
+    Граница Middle/Senior
 generator: assessment_bank.families.devops.sre_burn_rate_mcq
 version: 1
-description: >
-  Определить, какие из двух многооконных алертов по burn rate сработают при данных долях ошибок и SLO.
+description: 'Определить, какие из двух многооконных алертов по burn rate сработают при данных долях ошибок и SLO.
   Ключ — исполнение модели правил в песочнице Python.
+
+  '

@@ -1,24 +1,44 @@
 family_id: frontend.strategy.principal_rendering_mix_mcq
 title: Способ отрисовки страниц по годовой цене — обслуживание, LCP и устаревание данных
 direction: frontend
-skills: [rendering, web_performance, core_web_vitals, caching, technical_strategy]
-target_grades: [principal]
+skills:
+- rendering
+- web_performance
+- core_web_vitals
+- caching
+- technical_strategy
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    plans: [csr, ssr, isr, edge]
-    traps: [fastest_lcp, cheapest_serving, isr_without_staleness]
+    plans:
+    - csr
+    - ssr
+    - isr
+    - edge
+    traps:
+    - fastest_lcp
+    - cheapest_serving
+    - isr_without_staleness
 time_limit_s: 420
 canary: false
 prior_difficulty:
   b: 2.6
-  a: 1.4
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: способ отрисовки (CSR, SSR, ISR, edge SSR) выбирается по сумме трёх цен — обслуживание, потеря выручки от LCP (по эксперименту, % за 100 мс) и устаревшие просмотры у ISR (доля T / 2U при обновлении раз в T минут и изменении данных раз в U минут). Верный способ распределён поровну; ловушки — самый быстрый LCP, самое дешёвое обслуживание и ISR без цены устаревания — отличаются от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном). Lead обычно выбирает по LCP или «статика дешевле»; Principal переводит скорость и свежесть в деньги — граница Lead/Principal (θ ≈ 2,9); σ 0,3"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Короткое расчётное задание у границы Lead/Principal: способ
+    отрисовки (CSR, SSR, ISR, edge SSR) выбирается по сумме трёх цен — обслуживание, потеря выручки от LCP (по эксперименту,
+    % за 100 мс) и устаревшие просмотры у ISR (доля T / 2U при обновлении раз в T минут и изменении данных раз в
+    U минут). Верный способ распределён поровну; ловушки — самый быстрый LCP, самое дешёвое обслуживание и ISR без
+    цены устаревания — отличаются от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном).
+    Lead обычно выбирает по LCP или «статика дешевле»; Principal переводит скорость и свежесть в деньги — граница
+    Lead/Principal (θ ≈ 2,9); σ 0,3'
 generator: assessment_bank.families.frontend.principal_rendering_mix_mcq
 version: 1
-description: >
-  Principal (короткое, 7 мин): какой способ отрисовки страниц даёт минимальную годовую цену. Ключ — исполнением:
-  поминутный проигрыш устаревания при всех сдвигах фазы обновления.
+description: 'Principal (короткое, 7 мин): какой способ отрисовки страниц даёт минимальную годовую цену. Ключ —
+  исполнением: поминутный проигрыш устаревания при всех сдвигах фазы обновления.
+
+  '

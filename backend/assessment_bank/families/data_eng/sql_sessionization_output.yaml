@@ -1,23 +1,36 @@
 family_id: data_eng.sql.sessionization_output
 title: SQL — сессионизация событий через LAG и порог паузы
 direction: data_eng
-skills: [sql, window_functions, reporting]
-target_grades: [middle, senior]
+skills:
+- sql
+- window_functions
+- reporting
+target_grades:
+- middle
+- senior
 format: predict_output
 language: sql
 invariants:
-  code_lines: [15, 15]
-  operations: [10, 10]
+  code_lines:
+  - 15
+  - 15
+  operations:
+  - 10
+  - 10
   extra:
     subtype: gap_threshold_strict
 time_limit_s: 420
 canary: false
 prior_difficulty:
   b: 0.8
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Запрос 15 строк с двумя CTE (LAG по пользователю, флаг новой сессии), 7–16 событий 2–3 пользователей в перемешанном порядке; в каждом варианте пауза ровно на пороге (строгое >) и паузы на минуту больше/меньше. Нужно мысленно выполнить оконную функцию по группам. Граница Middle/Senior"
+  basis: Априорная, до калибровки на людях (a = 1,3). Запрос 15 строк с двумя CTE (LAG по пользователю, флаг новой
+    сессии), 7–16 событий 2–3 пользователей в перемешанном порядке; в каждом варианте пауза ровно на пороге (строгое
+    >) и паузы на минуту больше/меньше. Нужно мысленно выполнить оконную функцию по группам. Граница Middle/Senior
 generator: assessment_bank.families.data_eng.sql_sessionization_output
 version: 1
-description: >
-  Предсказать число сессий и событий по пользователям для запроса сессионизации. Ключ — исполнение запроса в sqlite.
+description: 'Предсказать число сессий и событий по пользователям для запроса сессионизации. Ключ — исполнение запроса
+  в sqlite.
+
+  '

@@ -1,8 +1,12 @@
 family_id: backend.kafka.consumer_group_mcq
 title: Kafka — партиции и consumer groups, простаивающие потребители
 direction: backend
-skills: [kafka, kafka_consumer_groups, kafka_partitions]
-target_grades: [junior]
+skills:
+- kafka
+- kafka_consumer_groups
+- kafka_partitions
+target_grades:
+- junior
 format: mcq_concept
 language: text
 invariants:
@@ -15,9 +19,12 @@ prior_difficulty:
   b: -0.7
   a: 1.0
   sigma_variant: 0.2
-  basis: "Сценарий с числами (P партиций, C > P экземпляров, 2–4 группы); нужно знать, что партиция в группе читается одним потребителем, а каждая группа получает все сообщения; дистракторы — «простаивающих нет» и «сообщение обрабатывается один раз»; состав фиксирован; Junior"
+  basis: Априорная, до калибровки на людях (a = 1,0). Сценарий с числами (P партиций, C > P экземпляров, 2–4 группы);
+    нужно знать, что партиция в группе читается одним потребителем, а каждая группа получает все сообщения; дистракторы
+    — «простаивающих нет» и «сообщение обрабатывается один раз»; состав фиксирован; Junior
 generator: assessment_bank.families.backend.kafka_consumer_group_mcq
 version: 1
-description: >
-  Концептуальный вопрос о consumer groups Kafka с числовым ответом. Ключ проверяется исполнением
-  модели назначения партиций (RangeAssignor) и доставки сообщения по группам.
+description: 'Концептуальный вопрос о consumer groups Kafka с числовым ответом. Ключ проверяется исполнением модели
+  назначения партиций (RangeAssignor) и доставки сообщения по группам.
+
+  '

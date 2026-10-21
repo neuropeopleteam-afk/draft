@@ -1,0 +1,30 @@
+family_id: backend.queue.t21_batcher_gen_send_output
+title: Накопитель пачек на генераторе — next, send и return
+direction: backend
+skills:
+- python
+- queues
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 18
+  - 18
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо проследить протокол
+    генератора: первый next() до первого yield, send возвращает значение следующего yield, побочный print внутри
+    генератора раньше print результата, return приходит в StopIteration.value. Уровень Senior: send / return
+    генератора. Набор t21 (21.10) у порога Senior (b = +1,1)'
+generator: assessment_bank.families.backend.t21_batcher_gen_send_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Накопитель пачек для очереди написан как генератор
+  с send и return; предсказать вывод next, каждого send и остаток в StopIteration. Ключ — независимая модель
+  накопителя в генераторе, проверка — исполнение показанного кода в песочнице Python.'

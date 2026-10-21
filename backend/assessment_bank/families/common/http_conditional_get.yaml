@@ -1,24 +1,37 @@
 family_id: common.http.conditional_get
 title: Условные запросы HTTP — ETag, If-None-Match, If-Match
 direction: common
-skills: [http, caching, concurrency_control, python]
-target_grades: [middle]
+skills:
+- http
+- caching
+- concurrency_control
+- python
+target_grades:
+- middle
 format: predict_output
 language: python
 invariants:
-  code_lines: [25, 35]
-  operations: [20, 32]
+  code_lines:
+  - 25
+  - 35
+  operations:
+  - 20
+  - 32
   extra:
-    requests: [5, 7]
+    requests:
+    - 5
+    - 7
 time_limit_s: 360
 canary: false
 prior_difficulty:
   b: 0.3
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.35
-  basis: "25–35 строк, 5–7 запросов с состоянием; ловушки — PUT с тем же телом (тег не меняется), устаревший тег, DELETE без поддержки"
+  basis: Априорная, до калибровки на людях (a = 1,3). 25–35 строк, 5–7 запросов с состоянием; ловушки — PUT с тем
+    же телом (тег не меняется), устаревший тег, DELETE без поддержки
 generator: assessment_bank.families.common.http_conditional_get
 version: 1
-description: >
-  Обработчик с сильным ETag и последовательность запросов; кандидат предсказывает коды
-  ответов. Ключ проверяется исполнением кода в песочнице и сверяется с независимой моделью.
+description: 'Обработчик с сильным ETag и последовательность запросов; кандидат предсказывает коды ответов. Ключ
+  проверяется исполнением кода в песочнице и сверяется с независимой моделью.
+
+  '

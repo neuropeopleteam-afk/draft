@@ -1,23 +1,39 @@
 family_id: analyst.principal.analyst_strategy_open
-title: Стратегия анализа — замена унаследованной системы, конфликт заказчиков, модель событий, система метрик, регуляторное изменение (Principal)
+title: Стратегия анализа — замена унаследованной системы, конфликт заказчиков, модель событий, система метрик, регуляторное
+  изменение (Principal)
 direction: analyst
-skills: [requirements_analysis, stakeholders, traceability, api_contracts, message_contracts]
-target_grades: [principal]
+skills:
+- requirements_analysis
+- stakeholders
+- traceability
+- api_contracts
+- message_contracts
+target_grades:
+- principal
 format: open_answer
 language: text
 invariants:
   extra:
-    topics: [events, legacy, metrics, regulation, stakeholders]
+    topics:
+    - events
+    - legacy
+    - metrics
+    - regulation
+    - stakeholders
 time_limit_s: 1500
 canary: false
 prior_difficulty:
   b: 2.6
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Ситуация уровня организации с числами (интеграции, правила, подразделения, системы, инциденты); рубрика из 3 критериев — постановка по данным, артефакты и подход с компромиссами, управление и план. Перечень техник (интервью, каталог, дашборд) — средний эталон (Senior/Lead); сильный требует сверки на данных, порядка принятия решений и критериев: у порога Lead/Principal (2,75)"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Ситуация уровня организации с числами (интеграции, правила,
+    подразделения, системы, инциденты); рубрика из 3 критериев — постановка по данным, артефакты и подход с компромиссами,
+    управление и план. Перечень техник (интервью, каталог, дашборд) — средний эталон (Senior/Lead); сильный требует
+    сверки на данных, порядка принятия решений и критериев: у порога Lead/Principal (2,75)'
 generator: assessment_bank.families.analyst.principal_analyst_strategy_open
 version: 1
-description: >
-  Открытые вопросы уровня Principal для системного и бизнес-аналитика: замена унаследованной системы, конфликт
-  заказчиков, модель событий и контракты, система метрик, анализ влияния регуляторного изменения. Оценка по рубрике
-  с цитатами из ответа.
+description: 'Открытые вопросы уровня Principal для системного и бизнес-аналитика: замена унаследованной системы,
+  конфликт заказчиков, модель событий и контракты, система метрик, анализ влияния регуляторного изменения. Оценка
+  по рубрике с цитатами из ответа.
+
+  '

@@ -1,0 +1,32 @@
+family_id: frontend.ui.t21_toast_default_output
+title: Текст уведомления — функция с параметром по умолчанию и явный undefined или 0
+direction: frontend
+skills:
+- javascript
+target_grades:
+- intern
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra:
+    calls:
+    - 3
+    - 3
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Простая функция с
+    параметром по умолчанию и три вызова: без аргумента, с числом и с явным undefined (подставляется значение по
+    умолчанию) или с нулём (передаётся как есть). Уровень Стажёра: простая функция и конкатенация. Набор t21
+    (21.10) у порога Стажёра (b = −1,6)'
+generator: assessment_bank.families.frontend.t21_toast_default_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Функция собирает текст всплывающего уведомления
+  с длительностью показа по умолчанию; предсказать вывод трёх вызовов. Ключ — независимая модель в генераторе,
+  проверка — исполнение показанного кода в Node.js.'

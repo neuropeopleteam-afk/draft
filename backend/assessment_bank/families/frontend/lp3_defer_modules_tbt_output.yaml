@@ -1,0 +1,33 @@
+# Волна LP-3 (tools/bank_lp3_yaml.py): расчётная задача старшего грейда с вводом ответа.
+family_id: frontend.perf.lp3_defer_modules_tbt_output
+title: Минимум отложенных модулей ради бюджета TBT
+direction: frontend
+skills:
+- web_performance
+- core_web_vitals
+- javascript
+- webpack
+- performance
+target_grades:
+- lead
+- principal
+format: predict_output
+language: text
+invariants:
+  extra:
+    wave: LP-3
+    answer: typed
+    key_varies: true
+time_limit_s: 720
+canary: false
+prior_difficulty:
+  b: 2.3
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3: ввод ответа, угадывание исключено). Уровень lead, principal:
+    TBT как сумма превышений над 50 мс, неделимые модули первого экрана, перебор вместо жадного выбора; наивный
+    подход даёт другой ответ, формула в условии не названа.'
+generator: assessment_bank.families.frontend.lp3_defer_modules_tbt_output
+version: 1
+description: 'Волна LP-3: минимум отложенных модулей ради бюджета tbt. Ответ вводится; программа-модель разбирает
+  показанные данные и считает ключ, ключ меняется от варианта к варианту.'

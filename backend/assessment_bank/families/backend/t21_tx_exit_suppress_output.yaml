@@ -1,0 +1,30 @@
+family_id: backend.db.t21_tx_exit_suppress_output
+title: Транзакция-контекстный менеджер — __exit__ подавляет исключение, try / except / finally
+direction: backend
+skills:
+- python
+- transactions
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 18
+  - 18
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.05
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо проследить два вызова:
+    истинный результат __exit__ подавляет исключение и выполнение идёт после with (функция возвращает «ok»), другое
+    исключение уходит в except, finally печатает до вывода результата. Уровень Senior: __exit__ с подавлением
+    исключения. Набор t21 (21.10) у порога Senior (b = +1,05)'
+generator: assessment_bank.families.backend.t21_tx_exit_suppress_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Обработчик пересчитывает показатель внутри
+  «транзакции» — контекстного менеджера, который подавляет один класс исключений; предсказать вывод двух вызовов.
+  Ключ — независимая модель по ветвям в генераторе, проверка — исполнение показанного кода в песочнице Python.'

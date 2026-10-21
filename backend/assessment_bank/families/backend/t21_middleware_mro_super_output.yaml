@@ -1,0 +1,30 @@
+family_id: backend.http.t21_middleware_mro_super_output
+title: Прослойки обработчика API — MRO и super() в ромбовидном наследовании
+direction: backend
+skills:
+- python
+- http
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 16
+  - 17
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо построить MRO (C3)
+    для класса с несколькими базами и проследить super() по MRO экземпляра, а не по объявлению класса; прослойка без
+    super обрывает цепочку, у другого экземпляра — другая цепочка. Уровень Senior: MRO и super в ромбе. Набор t21 (21.10)
+    у порога Senior (b = +1,0)'
+generator: assessment_bank.families.backend.t21_middleware_mro_super_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Обработчик API собран из классов-прослоек с
+  множественным наследованием; предсказать, через какие прослойки пройдёт запрос у двух экземпляров. Ключ —
+  независимая линеаризация C3 в генераторе, проверка — исполнение показанного кода в песочнице Python.'

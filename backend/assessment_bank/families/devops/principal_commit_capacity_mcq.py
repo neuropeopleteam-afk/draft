@@ -6,10 +6,9 @@ r = o·(1 − скидка) за час оплачиваются все часы
 цену года?
 
 Ключ — решение «газетчика» по году: резервировать, пока доля часов года с нагрузкой ≥ N больше 1 − скидка; ответ —
-одно из значений уровней с учётом роста. Ловушки одной формы (число ВМ), больше ключа 0, 1 или 2 равновероятно,
-из пула: текущий пик, пик через год, средняя текущая нагрузка, оптимум без роста (по текущему профилю), только
-постоянная база (минимальный уровень), перевёрнутое правило (доля часов ≥ скидки). Ключ проверяется исполнением:
-программа считает цену года для каждого N от 0 до пика через год по поквартальным профилям и печатает минимум.
+одно из значений уровней с учётом роста. Ловушки одной формы (число ВМ), ранг ключа задаётся по seed до подбора
+чисел (0–3 выше ключа) и выбирается через spread_pick. Ключ проверяется исполнением: программа считает цену года для
+каждого N от 0 до пика через год по поквартальным профилям и печатает минимум.
 """
 from __future__ import annotations
 
@@ -65,38 +64,49 @@ def _year_cost(profiles, n, o, disc):
 
 
 def _sample(rng):
-    base = rng.choice([20, 30, 40, 60, 80])
-    steps = [rng.choice([0.3, 0.5, 0.8]), rng.choice([0.3, 0.5, 0.8]), rng.choice([0.4, 0.7, 1.0])]
+    base = rng.choice([12, 15, 18, 20, 24, 30])
+    steps = [rng.choice([0.2, 0.3, 0.4]), rng.choice([0.2, 0.3, 0.45]), rng.choice([0.25, 0.4, 0.6])]
     levels = [base]
     for s in steps:
         levels.append(round(levels[-1] * (1 + s)))
-    return {"levels": levels, "hours": list(rng.choice(HOURS)), "g": rng.choice([0.0, 0.05, 0.1, 0.15, 0.2]),
-            "o": rng.choice([8, 10, 12, 15]), "disc": rng.choice([0.3, 0.4, 0.5, 0.6])}
+    return {"levels": levels, "hours": list(rng.choice(HOURS)), "g": rng.choice([0.05, 0.1, 0.15, 0.2]),
+            "o": rng.choice([8, 10, 12, 15]), "disc": rng.choice([0.25, 0.3, 0.4, 0.5, 0.6])}
 
 
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx = rng.choice(CONTEXTS)
-    n_above = rng.choice([0, 1, 2])
+    n_above = make_rng(FAMILY_ID, seed // 4, "rank").sample(range(4), 4)[seed % 4]
 
     def accept(p):
         prof = _profiles(p["levels"], p["hours"], p["g"])
         good = _opt(prof, p["disc"])
+        if not (15 <= good <= 82):
+            return None
         costs = {n: _year_cost(prof, n, p["o"], p["disc"]) for n in range(0, prof[-1][-1][0] + 1)}
         srt = sorted(costs.values())
         if min(costs, key=costs.get) != good or srt[1] - srt[0] < 1e-3 * srt[0] * 0.01:
             return None
         now = prof[:1]
         avg_now = round(sum(L * h for L, h in now[0]) / 168)
-        cand = {"peak_now": p["levels"][-1], "peak_year": prof[-1][-1][0], "avg_now": avg_now,
-                "no_growth": _opt(now, p["disc"]), "base_only": p["levels"][0],
-                "inverted": _opt(prof, p["disc"], invert=True)}
-        cand = {k: v for k, v in cand.items() if v != good}
-        traps = pick_traps(rng, good, cand, n_above, rel=0.08, abs_min=3)
+        avg_year = round(sum(L * h for qprof in prof for L, h in qprof) / (4 * 168))
+        cand_raw = {
+            "peak_now": p["levels"][-1],
+            "peak_year": prof[-1][-1][0],
+            "peak_q2": prof[1][-1][0],
+            "subpeak_q4": prof[-1][-2][0],
+            "avg_now": avg_now,
+            "avg_year": avg_year,
+            "no_growth": _opt(now, p["disc"]),
+            "base_only": p["levels"][0],
+            "base_q4": prof[-1][0][0],
+            "inverted": _opt(prof, p["disc"], invert=True),
+        }
+        cand = {k: v for k, v in cand_raw.items() if v != good and 10 <= v <= 99}
+        traps = pick_traps(rng, good, cand, n_above, rel=0.08, abs_min=2)
         if traps is None:
             return None
-        # ловушки не дешевле ключа «почти»: разница цены года ≥ 2 %
-        if any(costs[cand[t]] < costs[good] * 1.02 for t in traps if cand[t] in costs):
+        if any(costs.get(cand[t], float("inf")) < costs[good] * 1.01 for t in traps):
             return None
         return good, cand, traps, costs
 
@@ -112,9 +122,18 @@ def generate(seed: int):
             f"требованию ({p['o']} ₽ за ВМ-час), оплачиваются все часы года независимо от загрузки; всё, что сверх N, — "
             f"по требованию. Сколько ВМ зарезервировать, чтобы цена года была минимальной?")
     pts = sorted({load for prof in _profiles(p["levels"], p["hours"], p["g"]) for load, _h in prof})
-    why = {"peak_now": "по текущему пику", "peak_year": "по пику через год", "avg_now": "по средней текущей нагрузке",
-           "no_growth": "оптимум без учёта роста", "base_only": "только постоянная база",
-           "inverted": "перевёрнутое правило (доля часов ≥ скидки)"}
+    why = {
+        "peak_now": "по текущему пику",
+        "peak_year": "по пику через год",
+        "peak_q2": "по пику второго квартала",
+        "subpeak_q4": "по предпиковому уровню четвёртого квартала",
+        "avg_now": "по средней текущей нагрузке",
+        "avg_year": "по среднегодовой нагрузке",
+        "no_growth": "оптимум без учёта роста",
+        "base_only": "только постоянная база первого квартала",
+        "base_q4": "постоянная база четвёртого квартала",
+        "inverted": "перевёрнутое правило (доля часов ≥ скидки)",
+    }
     expl = (f"Резервировать N выгодно, пока ВМ номер N занята больше чем в (1 − скидка) = "
             f"{fmt_num(100 * (1 - p['disc']), 0)} % часов года (иначе её дешевле брать по требованию). Уровни года: "
             f"{', '.join(str(x) for x in pts)} ВМ; ответ — {vm(good)}, цена года ≈ {fmt_num(costs[good] / 1e6, 2)} "
@@ -122,5 +141,5 @@ def generate(seed: int):
     program = PROGRAM.format(levels=p["levels"], hours=p["hours"], g=p["g"], o=p["o"], disc=p["disc"], weeks=WEEKS)
     return numeric_mcq(FAMILY_ID, seed, rng, ctx=ctx, stem=stem, good=vm(good),
                        distractors=[vm(cand[t]) for t in traps], program=program, explanation=expl,
-                       params={**p, "good": good, "traps": {t: cand[t] for t in traps}},
+                       params={**p, "good": good, "n_above": n_above, "traps": {t: cand[t] for t in traps}},
                        note="Ответ проверяется программой: цена года для каждого N по поквартальным профилям.")

@@ -1,22 +1,37 @@
 family_id: security.access.owner_check_bug
 title: Вход в систему не заменяет право на конкретный объект
 direction: security
-skills: [secure_code_review, authorization, ownership, access_control]
-target_grades: [middle]
+skills:
+- secure_code_review
+- authorization
+- ownership
+- access_control
+target_grades:
+- middle
 format: find_bug
 language: python
 invariants:
-  code_lines: [7, 9]
-  operations: [5, 9]
+  code_lines:
+  - 7
+  - 9
+  operations:
+  - 5
+  - 9
   defect_type: missing_object_authorization
-  extra: {policy: owner_only, session: authenticated}
+  extra:
+    policy: owner_only
+    session: authenticated
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: 0.0
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.2
-  basis: "7–9 строк, один дефект авторизации; нужно различить проверенную сессию и владельца объекта, учесть собственный/чужой/отсутствующий объект. b не меняли: панель LLM (b = 2,9) мерила в основном спорную строку версии 1 (65 % ответов ≥ 7B — строка действия), формулировка и код исправлены."
+  basis: 'Априорная, до калибровки на людях (a = 1,3). 7–9 строк, один дефект авторизации; нужно различить проверенную
+    сессию и владельца объекта, учесть собственный/чужой/отсутствующий объект. b не меняли: панель LLM (b = 2,9)
+    мерила в основном спорную строку версии 1 (65 % ответов ≥ 7B — строка действия), формулировка и код исправлены.'
 generator: assessment_bank.families.security.owner_check_bug
 version: 2
-description: "Изменяется ровно одна строка (условие доступа). Версия 2: две формы функции (None / исключения), разные объекты и поля, три формы проверки «только вход», необязательная корректная проверка-приманка — номер строки дефекта меняется; в вопросе явно сказано, что ищется условие."
+description: 'Изменяется ровно одна строка (условие доступа). Версия 2: две формы функции (None / исключения), разные
+  объекты и поля, три формы проверки «только вход», необязательная корректная проверка-приманка — номер строки дефекта
+  меняется; в вопросе явно сказано, что ищется условие.'

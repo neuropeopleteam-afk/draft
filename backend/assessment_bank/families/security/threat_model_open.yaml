@@ -1,19 +1,30 @@
 family_id: security.design.threat_model_open
 title: Модель угроз простого сервиса документов
 direction: security
-skills: [threat_modeling, trust_boundaries, authorization, secure_design, risk_prioritization]
-target_grades: [senior]
+skills:
+- threat_modeling
+- trust_boundaries
+- authorization
+- secure_design
+- risk_prioritization
+target_grades:
+- senior
 format: open_answer
 language: text
 invariants:
-  extra: {criteria: 3, minimum_boundaries: 3, minimum_control_test_pairs: 4}
+  extra:
+    criteria: 3
+    minimum_boundaries: 3
+    minimum_control_test_pairs: 4
 time_limit_s: 1200
 canary: false
 prior_difficulty:
   b: 1.4
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.25
-  basis: "Небольшая архитектура с tenant-изоляцией, вложениями и асинхронным экспортом; требуются потоки, четыре пары угроза–мера–тест и приоритеты с остаточным риском."
+  basis: Априорная, до калибровки на людях (a = 1,3). Небольшая архитектура с tenant-изоляцией, вложениями и асинхронным
+    экспортом; требуются потоки, четыре пары угроза–мера–тест и приоритеты с остаточным риском.
 generator: assessment_bank.families.security.threat_model_open
 version: 1
-description: "Только защитное моделирование собственного учебного сервиса; рубрика не зависит от терминологической многословности."
+description: Только защитное моделирование собственного учебного сервиса; рубрика не зависит от терминологической
+  многословности.

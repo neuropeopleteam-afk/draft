@@ -1,25 +1,50 @@
 family_id: backend.strategy.sharding_plan_open
 title: Стратегия масштабирования базы — сроки упора по диску и записи, путь с ценой, ключ шардирования, онлайн-миграция
 direction: backend
-skills: [databases, postgresql, sharding, migrations, capacity_planning, technical_strategy, system_design]
-target_grades: [principal]
+skills:
+- databases
+- postgresql
+- sharding
+- migrations
+- capacity_planning
+- technical_strategy
+- system_design
+target_grades:
+- principal
 format: open_answer
 language: text
 invariants:
   extra:
-    twists: [hot_tenant, reports, peak]
-    criteria: [numbers, path, key, migration, twist, phases]
-    anchors: [months_to_disk, months_to_write_cap]
-    scale: "0–4"
+    twists:
+    - hot_tenant
+    - reports
+    - peak
+    criteria:
+    - numbers
+    - path
+    - key
+    - migration
+    - twist
+    - phases
+    anchors:
+    - months_to_disk
+    - months_to_write_cap
+    scale: 0–4
 time_limit_s: 1800
 canary: false
 prior_difficulty:
   b: 2.7
-  a: 1.4
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Стратегия на полтора-два года: два срока упора по числам варианта (линейный рост диска и сложный процент записи против порогов эксплуатации), выбор пути с ценой против альтернатив (реплики и секционирование не снимают предел записи), ключ шардирования с каталогом, онлайн-миграция по арендаторам с откатом, этапы под размер команды и особенность варианта (горячий арендатор, межарендаторные отчёты, сезонный пик раньше упора). Lead обычно даёт верную архитектуру без сроков и этапов под команду — граница Lead/Principal (θ ≈ 2,75); рубрика 0–4 по шести критериям, σ 0,3"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Стратегия на полтора-два года: два срока упора по числам
+    варианта (линейный рост диска и сложный процент записи против порогов эксплуатации), выбор пути с ценой против
+    альтернатив (реплики и секционирование не снимают предел записи), ключ шардирования с каталогом, онлайн-миграция
+    по арендаторам с откатом, этапы под размер команды и особенность варианта (горячий арендатор, межарендаторные
+    отчёты, сезонный пик раньше упора). Lead обычно даёт верную архитектуру без сроков и этапов под команду — граница
+    Lead/Principal (θ ≈ 2,75); рубрика 0–4 по шести критериям, σ 0,3'
 generator: assessment_bank.families.backend.strategy_sharding_plan_open
 version: 1
-description: >
-  Principal: план масштабирования основной базы до упора по диску и записи — сроки, путь, ключ, миграция без
-  остановки и этапы под команду. Рубрика 0–4; оценка с цитатами-доказательствами.
+description: 'Principal: план масштабирования основной базы до упора по диску и записи — сроки, путь, ключ, миграция
+  без остановки и этапы под команду. Рубрика 0–4; оценка с цитатами-доказательствами.
+
+  '

@@ -1,0 +1,32 @@
+family_id: security.authz.t21_path_prefix_output
+title: Доступ по префиксу пути — startswith против normpath, lower и границы «/»
+direction: security
+skills:
+- python
+- security
+- path_normalization
+- access_control
+target_grades:
+- middle
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 7
+  - 7
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: -0.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Для 4–5 путей сравнить наивную
+    проверку path.startswith("/admin") с исправленной (posixpath.normpath, lower, граница «/»): «/administrator-guide» ловится
+    наивной, «/Admin/…» и «/public/../admin» проходят мимо неё. Уровень Middle: одна неочевидная семантика — префикс строки
+    не равен префиксу пути. Набор t21 (21.10) у порога Middle (b = −0,1)'
+generator: assessment_bank.families.security.t21_path_prefix_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Проверка доступа по префиксу пути двумя способами — наивным
+  и с нормализацией; предсказать allow/deny по каждому пути. Ключ — независимая модель по видам путей в генераторе, проверка
+  — исполнение показанного кода в песочнице Python.

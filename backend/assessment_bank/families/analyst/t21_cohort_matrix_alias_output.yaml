@@ -1,0 +1,34 @@
+family_id: analyst.python.t21_cohort_matrix_alias_output
+title: Матрица когорт из списков — общий объект-строка и независимые строки
+direction: analyst
+skills:
+- python
+- metrics
+target_grades:
+- middle
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 9
+  extra:
+    events:
+    - 4
+    - 6
+    alias_share: 0.67
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Разложить 4–6 событий в
+    матрицу 3–4 × 3–5 и напечатать строку и общую сумму; одна неочевидная семантика — псевдонимы: при [[0] * w] * n
+    или [row for _ in …] все строки — один список (сумма = n × число событий), при [[0] * w for _ in …] и row[:] —
+    независимые. Уровень Middle: псевдонимы и копии. Набор t21 (21.10) у порога Middle (b = +0,1)'
+generator: assessment_bank.families.analyst.t21_cohort_matrix_alias_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Матрица когорт (удержание, повторные покупки,
+  активность, возвраты) собирается из списков четырьмя способами и заполняется событиями; предсказать строку матрицы
+  и общую сумму. Ключ — независимая модель в генераторе, проверка — исполнение показанного кода в песочнице Python.'

@@ -92,4 +92,4 @@ TRAP_DESC = {"no_delay": "без delaycompress (свежий архив тоже
 def generate(seed: int):
     return numeric_variant(FAMILY_ID, seed, contexts=CONTEXTS, sample=_sample, model=MODEL, stem=_stem,
                            explain=_explain, accept=_accept, rel=0.05, abs_min=2, trap_first="no_delay",
-                           trap_desc=TRAP_DESC, n_above_choices=(1, 2, 3))
+                           trap_desc=TRAP_DESC, n_above_choices=(0, 1, 2, 3))

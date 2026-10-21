@@ -1,0 +1,31 @@
+family_id: devops.net.t21_port_func_defaults_output
+title: 'Python — функция выдачи порта: параметры по умолчанию, позиционные и именованные аргументы'
+direction: devops
+skills:
+- python
+- networking
+- devops
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 5
+  - 5
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.65
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Простая функция base
+    + step * index и три вызова: только индекс, второй позиционный (попадает в base), именованный step; ловушки
+    — какой параметр заменяет аргумент и приоритет умножения. Уровень Стажёра: простая функция и арифметика. Набор
+    t21 (21.10) у порога Стажёра (b = −1,65)'
+generator: assessment_bank.families.devops.t21_port_func_defaults_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Функция выдаёт порт экземпляру сервиса, её вызывают
+  с разными аргументами; предсказать вывод print. Ключ — независимый расчёт в генераторе, проверка — исполнение
+  показанного кода в песочнице Python.

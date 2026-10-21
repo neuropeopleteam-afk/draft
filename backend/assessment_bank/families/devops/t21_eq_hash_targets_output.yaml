@@ -1,0 +1,31 @@
+family_id: devops.net.t21_eq_hash_targets_output
+title: Python — несогласованные __eq__ и __hash__ у ключей словаря целей
+direction: devops
+skills:
+- python
+- networking
+- sre
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 14
+  - 14
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.2
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Ключи словаря с __eq__
+    по хосту без регистра и __hash__ по порту: совпадение требует и хеша, и равенства, остаётся первый вставленный
+    ключ, in для списка и для словаря отвечают по-разному. Уровень Senior: __eq__ / __hash__ в dict и set. Набор
+    t21 (21.10) у порога Senior (b = +1,2)'
+generator: assessment_bank.families.devops.t21_eq_hash_targets_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Скрипт считает повторы целей балансировщика словарём
+  с объектами Target в качестве ключей; предсказать вывод. Ключ — независимая модель словаря в генераторе, проверка
+  — исполнение показанного кода в песочнице Python.

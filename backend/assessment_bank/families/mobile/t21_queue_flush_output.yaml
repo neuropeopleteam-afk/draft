@@ -1,0 +1,32 @@
+family_id: mobile.offline.t21_queue_flush_output
+title: Отправка офлайн-очереди for…of с await — живой итератор и очистка length = 0
+direction: mobile
+skills:
+- javascript
+- async_await
+- offline_first
+target_grades:
+- senior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 13
+  - 14
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.95
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл for…of с await по массиву,
+    в который таймеры добавляют элементы во время и после отправки, затем queue.length = 0. Нужно проследить время (отправка
+    200 мс, события посередине между отправками), то, что итератор массива видит добавленные до конца обхода элементы, и
+    что добавленный после выхода из цикла переживает очистку. Уровень Senior: async/await и таймеры. Набор t21 (21.10) у
+    порога Senior (b = +0,95)'
+generator: assessment_bank.families.mobile.t21_queue_flush_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). React Native-приложение отправляет офлайн-очередь по одному
+  действию, пока пользователь добавляет новые; предсказать строки flushed / left. Ключ — независимая модель в генераторе
+  на Python, проверка — исполнение показанного кода в песочнице Node.js.

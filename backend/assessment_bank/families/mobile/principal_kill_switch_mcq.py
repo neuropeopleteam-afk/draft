@@ -75,7 +75,7 @@ def _share(H, TTL, lam):
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, feature = rng.choice(CONTEXTS)
-    n_below = rng.choice([1, 2, 3])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный (аудит 21.10: без крайнего ранга ключ угадывался)
     fmt, fmt_src = formatter("d1", "ч")
     for _ in range(6000):
         TTL = rng.choice([4, 6, 8, 12, 24])

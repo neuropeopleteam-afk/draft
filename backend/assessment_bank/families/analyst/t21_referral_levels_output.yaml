@@ -1,0 +1,37 @@
+family_id: analyst.sql.t21_referral_levels_output
+title: Рекурсивный CTE по дереву приглашений — сколько записей на каждом уровне
+direction: analyst
+skills:
+- sql
+- recursive_cte
+target_grades:
+- senior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 13
+  - 14
+  extra:
+    nodes:
+    - 8
+    - 10
+    depth_limit:
+    - null
+    - 1
+    - 2
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Мысленно выполнить
+    рекурсивный CTE по дереву из 8–10 записей: старт с корней, спуск по JOIN, иногда ограничение глубины; ловушки —
+    ветка с несуществующим родителем недостижима, при WHERE t.lvl < L уровни глубже L не попадают. Уровень Senior:
+    рекурсивный CTE и порядок его вычисления. Набор t21 (21.10) у порога Senior (b = +1,0)'
+generator: assessment_bank.families.analyst.t21_referral_levels_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Дерево рефералов / оргструктуры / категорий / задач
+  (родитель NULL у корня, у одной ветки — удалённый родитель) и рекурсивный CTE с подсчётом по уровням; предсказать
+  строки «уровень|число». Ключ — независимый обход в генераторе, проверка — исполнение запроса в песочнице sqlite.'

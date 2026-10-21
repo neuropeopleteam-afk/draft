@@ -56,7 +56,7 @@ print(fmt(float(before - after - COST)))
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, existing, ma, mb = rng.choice(CONTEXTS)
-    n_below = rng.choice([0, 1, 2])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный (аудит 21.10: без крайнего ранга ключ угадывался)
     fmt, fmt_src = formatter("d1", "млн ₽")
     for _ in range(5000):
         lam10 = rng.choice([3, 4, 5, 6, 8, 10, 12, 15])      # частота × 10

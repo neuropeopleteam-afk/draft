@@ -1,24 +1,41 @@
 family_id: data_eng.etl.cdc_apply_output
 title: CDC — итоговое состояние таблицы после применения событий не по порядку (повторы, устаревшие, удаление)
 direction: data_eng
-skills: [cdc, etl, idempotency, deduplication, python]
-target_grades: [middle, senior]
+skills:
+- cdc
+- etl
+- idempotency
+- deduplication
+- python
+target_grades:
+- middle
+- senior
 format: predict_output
 language: python
 invariants:
-  code_lines: [23, 28]
+  code_lines:
+  - 23
+  - 28
   extra:
-    subtypes: [tombstone_dropped, tombstone_kept]
-    events: [9, 14]
+    subtypes:
+    - tombstone_dropped
+    - tombstone_kept
+    events:
+    - 9
+    - 14
 time_limit_s: 420
 canary: false
 prior_difficulty:
   b: 0.6
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Применение 9–14 событий CDC (c/u/d с LSN) в порядке поступления с защитой «пропусти, если LSN не новее»; в каждом варианте повтор или устаревшее обновление и позднее обновление после удаления; два подтипа — защита после удаления сбрасывается (строка «воскресает») или сохраняется (tombstone). Граница Middle/Senior"
+  basis: Априорная, до калибровки на людях (a = 1,3). Применение 9–14 событий CDC (c/u/d с LSN) в порядке поступления
+    с защитой «пропусти, если LSN не новее»; в каждом варианте повтор или устаревшее обновление и позднее обновление
+    после удаления; два подтипа — защита после удаления сбрасывается (строка «воскресает») или сохраняется (tombstone).
+    Граница Middle/Senior
 generator: assessment_bank.families.data_eng.etl_cdc_apply_output
 version: 1
-description: >
-  Предсказать итоговое содержимое таблицы после применения событий CDC в порядке поступления с защитой по LSN.
-  Ключ — независимая модель; проверка — исполнение показанного кода.
+description: 'Предсказать итоговое содержимое таблицы после применения событий CDC в порядке поступления с защитой
+  по LSN. Ключ — независимая модель; проверка — исполнение показанного кода.
+
+  '

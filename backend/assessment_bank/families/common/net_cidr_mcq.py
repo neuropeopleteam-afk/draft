@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 
-from assessment_bank.gen_utils import build_variant, make_options, make_rng, plural
+from assessment_bank.gen_utils import build_variant, make_options, make_rng, pick_ranked, plural
 from assessment_bank.schema import AnswerKey, Check
 
 FAMILY_ID = "common.net.cidr_mcq"
@@ -96,7 +96,11 @@ def q_hosts(rng):
     stem = ("Сколько адресов в этой подсети можно назначить узлам (включая шлюз), если адрес "
             "сети и широковещательный адрес не назначаются?")
     correct = str(n - 2)
-    others = [str(n), str(n - 1), str(2 * n - 2) if rng.random() < 0.5 else str(n // 2 - 2)]
+    # ранг ключа равномерный (аудит 21.10: ключ почти всегда был «ближайшим к среднему»)
+    pool = {"no_minus": n, "minus_one": n - 1, "bit_more": 2 * n - 2,
+            "minus_gw": n - 3, "bit_less": n // 2 - 2, "bit_less_raw": n // 2}
+    traps = pick_ranked(rng, n - 2, pool, rng.randrange(4))
+    others = [str(pool[t]) for t in traps]
     expl = (f"При /{p} на номер узла остаётся {32 - p} {plural(32 - p, 'бит', 'бита', 'бит')}: "
             f"2^{32 - p} = {n} {plural(n, 'адрес', 'адреса', 'адресов')}, "
             f"минус адрес сети и широковещательный")
