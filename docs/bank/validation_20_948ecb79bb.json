@@ -1,21 +1,21 @@
 {
-"source": "python -m assessment_bank validate --seeds 20 --jobs 12 (под RunPod, голова a526dc3ee; полный отчёт — «Москва» /opt/spectrek_fsp/work/ag_a3/final_a526dc3ee/)",
+"source": "python -m assessment_bank validate --seeds 20 --jobs 12 (под RunPod main, голова 948ecb79bb; полный отчёт — «Москва» /opt/spectrek_fsp/work/ag_a3/p0_948ecb79bb/)",
 "summary": {
-"n_families": 1644,
-"n_variants_generated": 32880,
-"n_unique_variants": 32856,
-"n_checks": 38031,
+"n_families": 1646,
+"n_variants_generated": 32920,
+"n_unique_variants": 32896,
+"n_checks": 38131,
 "n_checks_failed": 0,
 "status": {
-"PASS": 1616,
-"WARN": 28
+"PASS": 1617,
+"WARN": 29
 },
 "n_fail": 0,
-"n_warn": 28,
+"n_warn": 29,
 "by_direction": {
 "analyst": 158,
-"backend": 168,
-"common": 174,
+"backend": 169,
+"common": 175,
 "data_eng": 170,
 "data_ml": 164,
 "devops": 170,
@@ -25,14 +25,14 @@
 "security": 159
 },
 "by_format": {
-"mcq_concept": 1218,
+"mcq_concept": 1219,
 "predict_output": 262,
 "open_answer": 57,
 "find_bug": 67,
-"choose_fix": 18,
+"choose_fix": 19,
 "open_book_3step": 22
 },
-"seconds": 161.5,
+"seconds": 82.0,
 "jobs": 12
 },
 "families": [
@@ -3875,6 +3875,28 @@
 "key_position_p": null
 },
 {
+"family_id": "backend.py.concurrency_mcq",
+"direction": "backend",
+"format": "mcq_concept",
+"target_grades": [
+"middle",
+"senior"
+],
+"status": "WARN",
+"errors": [],
+"warnings": [
+"ключ сверен со справочной таблицей, исполнение невозможно"
+],
+"n_unique": 20,
+"unique_ratio": 1.0,
+"n_distinct_keys": 4,
+"verification": "reference_table",
+"n_checks": 0,
+"n_checks_failed": 0,
+"n_checks_unavailable": 0,
+"key_position_p": 0.9402
+},
+{
 "family_id": "backend.py.design_open",
 "direction": "backend",
 "format": "open_answer",
@@ -7386,6 +7408,26 @@
 "n_checks_failed": 0,
 "n_checks_unavailable": 0,
 "key_position_p": null
+},
+{
+"family_id": "common.api.rest_idempotent_retry_fix",
+"direction": "common",
+"format": "choose_fix",
+"target_grades": [
+"senior",
+"lead"
+],
+"status": "PASS",
+"errors": [],
+"warnings": [],
+"n_unique": 20,
+"unique_ratio": 1.0,
+"n_distinct_keys": 4,
+"verification": "execution",
+"n_checks": 100,
+"n_checks_failed": 0,
+"n_checks_unavailable": 0,
+"key_position_p": 0.9402
 },
 {
 "family_id": "common.amdahl.intern_fwd_k2",
