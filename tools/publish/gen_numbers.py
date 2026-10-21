@@ -42,6 +42,19 @@ PS = {  # артефакты симуляции продукта (А4): отчё
     "selection": DATA / "product_sim_train_selection.json",
 }
 CHEAT = DATA / "cheat_bots.json"
+# Поправка №2 (21.10 вечер): итоговые прогоны на замороженном банке — жёсткие условия и стандартные условия (S-T)
+PS_FINAL = {"hard": DATA / "product_sim_final_calibrated.json", "misspec": DATA / "product_sim_final_misspec.json",
+            "rater": DATA / "product_sim_final_rater_noise.json", "amult07": DATA / "product_sim_final_amult07.json",
+            "amult14": DATA / "product_sim_final_amult14.json", "testlet": DATA / "product_sim_final_testlet.json",
+            "fatigue": DATA / "product_sim_final_fatigue.json"}
+PS_ST = {"st_b": DATA / "product_sim_st_b.json", "st_a": DATA / "product_sim_st_a.json",
+         "st_b_a10": DATA / "product_sim_st_b_a10.json", "st_b_a17": DATA / "product_sim_st_b_a17.json",
+         "st_b_a25": DATA / "product_sim_st_b_a25.json"}
+TOP5 = (("confident_accuracy", "Точность уверенного вердикта", "confident_accuracy_final"),
+        ("false_confirm_all", "Ложное подтверждение (от всех)", "false_confirm_all"),
+        ("exact_grade", "Точный грейд", "exact_grade_final_not_underclaim"),
+        ("within_one", "Грейд ±1 ступень", "within_one_final"),
+        ("retest_kappa_w", "Повтор теста (κw)", None))
 GRADE_RU = {"none": "ниже Intern", "intern": "Intern", "junior": "Junior", "middle": "Middle", "senior": "Senior",
             "lead": "Lead", "principal": "Principal"}
 
@@ -109,7 +122,8 @@ def static_numbers() -> dict:
         m = re.match(r"^  ([a-z0-9_-]+):\s*$", line)
         if m:
             svc = m.group(1)
-        m = re.search(r"mem_limit:\s*\"?(\d+)([mMgG])", line) or re.search(r"memory:\s*\"?(\d+)([mMgG])", line)
+        m = (re.search(r"mem_limit:\s*\"?(?:\$\{[A-Z_]+:-)?(\d+)([mMgG])", line)
+             or re.search(r"memory:\s*\"?(?:\$\{[A-Z_]+:-)?(\d+)([mMgG])", line))
         if m and svc:
             limits[svc] = int(m.group(1)) * (1024 if m.group(2).lower() == "g" else 1)
     revs, downs = set(), set()
@@ -282,6 +296,99 @@ def grade_verdict_block() -> dict | None:
     return out
 
 
+def _cond_ru(d: dict) -> str:
+    """Условие прогона одной строкой (для подписи цифры)."""
+    m = d.get("meta") or {}
+    s = d.get("summary") or {}
+    man = (m.get("bank") or {}).get("manifest") or {}
+    pop = m.get("population_kind") or "hard"
+    ba = m.get("bank_a_override") or {}
+    if m.get("world") == "st":
+        cond = (f"стандартные условия: модель 2PL без угадывания, a вопросов с выбором {ba.get('mcq')}, практических "
+                f"{ba.get('code')}, ступень равновероятна Intern…Lead, заявки — "
+                + ("честные" if pop == "st-a" else "треть завышает на ступень"))
+    else:
+        cond = ("жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, "
+                f"консервативные параметры банка (a = 1,0 / 1,3)" + ("" if m.get("world") in ("calibrated", None) else
+                                                                    f", мир «{m.get('world')}»"))
+    mt = s.get("minutes_total") or {}
+    return (f"{cond}; модельные кандидаты, не люди; N = {int_ru(s.get('n'))}, зёрна {', '.join(str(x) for x in (m.get('seeds') or [])[:1])}…"
+            f"{(m.get('seeds') or [''])[-1]}; время — в среднем {num(mt.get('mean'), 0)} мин (p90 {num(mt.get('p90'), 0)}); "
+            f"банк {man.get('commit') or '—'} ({man.get('content_hash') or '—'}), {_date(m.get('date'))}")
+
+
+def top5_from(d: dict) -> list[dict]:
+    """Пять чисел первого экрана из артефакта симуляции продукта (порядок и id фиксированы)."""
+    if not d:
+        return []
+    s = d.get("summary") or {}
+    rt = d.get("retest") or {}
+    mt = s.get("minutes_total") or {}
+    cond = _cond_ru(d)
+    out = []
+    for iid, label, key in TOP5:
+        if key is None:
+            kw = rt.get("kappa_w_quadratic")
+            if kw is None:
+                continue
+            ex = rt.get("exact_agreement") or {}
+            out.append({"id": iid, "label_ru": label, "value": kw, "display_ru": num(kw, 2), "ci95": None,
+                        "k": ex.get("k"), "n": rt.get("n_pairs"), "condition_ru": cond + f"; пар повтора {int_ru(rt.get('n_pairs'))}",
+                        "minutes": mt, "recompute": (d.get("meta") or {}).get("command")})
+            continue
+        f = s.get(key) or {}
+        if f.get("value") is None:
+            continue
+        out.append({"id": iid, "label_ru": label, "value": f["value"], "display_ru": pct(f["value"]) + " %",
+                    "ci95": f.get("ci95"), "k": f.get("k"), "n": f.get("n"), "condition_ru": cond, "minutes": mt,
+                    "recompute": (d.get("meta") or {}).get("command")})
+    return out
+
+
+def _extra(d: dict) -> dict | None:
+    if not d:
+        return None
+    s = d.get("summary") or {}
+    near = [(k, v) for k, v in (s.get("by_distance_claim_cut") or {}).items() if k.startswith("0–0.25")]
+    far_rows = [v for k, v in (s.get("by_distance_claim_cut") or {}).items() if not k.startswith("0–0.25")]
+    far_k = sum((v.get("verdict_accuracy_final") or {}).get("k") or 0 for v in far_rows)
+    far_n = sum((v.get("verdict_accuracy_final") or {}).get("n") or 0 for v in far_rows)
+    return {"exact_grade_all": frac(s.get("exact_grade_final")),
+            "overclaim_passed": frac(s.get("false_confirm_among_overclaim")),
+            "accuracy_near_cut": frac((near[0][1].get("verdict_accuracy_final") if near else None)),
+            "accuracy_far_cut": ({"value": round(far_k / far_n, 4), "k": far_k, "n": far_n, "ci95": wilson(far_k, far_n)}
+                                 if far_n else None),
+            "outside_0_25": s.get("outside_0_25"), "outside_0_4": s.get("outside_0_4"),
+            "fixed_vs_adaptive": s.get("fixed_vs_adaptive"), "minutes_total": s.get("minutes_total"),
+            "minutes_main": s.get("minutes_main"), "extended_share": frac(s.get("extended_share")),
+            "confident_share_main": frac(s.get("confident_share_main")),
+            "confident_accuracy_main": frac(s.get("confident_accuracy_main")),
+            "confident_share_final": frac(s.get("confident_share_final")),
+            "false_confirm_main_all": frac(s.get("false_confirm_main_all")),
+            "exact_grade_main": frac(s.get("exact_grade_main")), "gross_error_2plus": frac(s.get("gross_error_2plus")),
+            "followup_share": frac(s.get("followup_share")), "oral_share": frac(s.get("oral_share")),
+            "undecided_final": frac(s.get("undecided_final")), "oc_curve": s.get("oc_curve"),
+            "by_distance_nearest_cut": s.get("by_distance_nearest_cut"), "condition_ru": _cond_ru(d),
+            "recompute": (d.get("meta") or {}).get("command")}
+
+
+def top5_meta(hard: dict, st: dict) -> dict:
+    def one(d):
+        if not d:
+            return None
+        m = d.get("meta") or {}
+        man = (m.get("bank") or {}).get("manifest") or {}
+        ba = m.get("bank_a_override") or {}
+        return {"seeds": m.get("seeds"), "n": (d.get("summary") or {}).get("n"),
+                "bank_content_hash": man.get("content_hash"), "bank_commit": man.get("commit"),
+                "a_mcq": ba.get("mcq"), "a_code": ba.get("code"), "world": m.get("world"),
+                "population": m.get("population"), "date": _date(m.get("date")), "command": m.get("command"),
+                "git_commit": m.get("git_commit"), "condition_ru": _cond_ru(d)}
+    return {"st": one(st), "hard": one(hard),
+            "rule_ru": "Заголовок — стандартные условия (как в аналогичных решениях), рядом — те же метрики в жёстких "
+                       "условиях; обе строки всегда вместе (решение владельца 21.10, записано до прогонов)."}
+
+
 def cheat_block() -> dict | None:
     d = _load(CHEAT)
     if not d:
@@ -299,7 +406,16 @@ def cheat_block() -> dict | None:
                  f"заявленного грейда в {pct(w.get('value'))} % попыток (95 % ДИ {pct((w.get('ci95') or [None, None])[0])}–"
                  f"{pct((w.get('ci95') or [None, None])[1])} %); контроль — честный кандидат на 0,75 логита ниже порога — "
                  f"{pct(ctrl.get('value'))} %.")
-    return {"table": t, "meta": m, "worst_strategy": worst[0], "claim_ru": claim,
+    lf = {}
+    for key, strat in (("weak_no_leak", "control"), ("weak_leak_10", "leak_10"), ("weak_leak_100", "leak_100"),
+                       ("weak_leak_1000", "leak_1000")):
+        r = t.get(strat)
+        if r:
+            f = r.get("false_confirmed") or {}
+            lf[key] = {"value": f.get("value"), "k": f.get("k"), "n": r.get("n"), "ci95": f.get("ci95")}
+    return {"table": t, "meta": m, "worst_strategy": worst[0], "claim_ru": claim, "leak_form": lf or None,
+            "leak_form_ru": ("Доля слабых кандидатов (уровень на 0,75 логита ниже порога заявленного грейда), получивших "
+                             "подтверждение: без утечки и с утечкой K вариантов каждого семейства с ключами") if lf else None,
             "recompute": m.get("command"), "code_ref": "backend/app/modules/validation/cheat_bots.py"}
 
 
@@ -326,8 +442,10 @@ def matching_block() -> dict | None:
 
 def hh_block() -> dict | None:
     a5 = _load(A5_MATCHING)
-    if a5.get("hh_match"):
-        return a5["hh_match"]
+    if a5.get("hh_match"):  # для сайта — блок site (отложенный набор А5), не набор разработки dev
+        h = a5["hh_match"]
+        site = h.get("site") if isinstance(h.get("site"), dict) else {k: v for k, v in h.items() if k != "dev"}
+        return site
     h = _load(DATA / "hh_match.json")
     if not h:
         return None
@@ -477,8 +595,24 @@ def recompute_table(bank, gv, cheat, matching, hh, anticheat, fsp, load) -> list
     return rows
 
 
+def final_blocks() -> tuple[dict, dict, dict]:
+    """Итоговые прогоны поправки №2: (жёсткий основной, S-T заголовок, все артефакты по ключам)."""
+    arts = {k: _load(p) for k, p in {**PS_FINAL, **PS_ST}.items()}
+    arts = {k: v for k, v in arts.items() if v}
+    hard = arts.get("hard") or {}
+    st = arts.get("st_b") or {}
+    return hard, st, arts
+
+
 def build() -> dict:
     bank, gv, cheat = bank_block(), grade_verdict_block(), cheat_block()
+    hard, st, arts = final_blocks()
+    if hard or st:
+        gv = dict(gv or {})
+        gv["hard"] = {"extra": _extra(hard), "view": _ps_view(hard)} if hard else None
+        gv["st"] = {"extra": _extra(st), "view": _ps_view(st)} if st else None
+        gv["sensitivity"] = {k: {"view": _ps_view(v), "condition_ru": _cond_ru(v)} for k, v in arts.items()
+                             if k not in ("hard", "st_b")}
     matching, hh, anticheat = matching_block(), hh_block(), anticheat_block()
     fsp, mutation, load = fsp_block(), mutation_block(), load_block()
     cards = landing_cards(bank, gv, matching, hh, fsp)
@@ -506,6 +640,9 @@ def build() -> dict:
         "load": load,
         "demo": demo_block(),
         "landing_cards": cards,
+        "top5": top5_from(st),
+        "top5_hard": top5_from(hard),
+        "top5_meta": top5_meta(hard, st),
         "jury_banner": {"headline_ru": headline, "claims_ru": claims},
         "recompute_table": recompute_table(bank, gv, cheat, matching, hh, anticheat, fsp, load),
     }
