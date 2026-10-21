@@ -1,7 +1,7 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T17:45:29Z",
-  "git_commit": "22712a14",
+  "generated_at": "2026-10-21T17:46:14Z",
+  "git_commit": "72e9d124d",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
     "code_and_open_families": 416,
