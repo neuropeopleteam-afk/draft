@@ -18,6 +18,8 @@ export interface Beat {
   /** Реплика-переход: «нажатие» открывает этот шаг. Звучит, только если он следующий в обзоре
    *  (при показе одного экрана — пропускается, иначе Настя «открыла и замолчала»). */
   lead?: string;
+  /** Набрать текст в поле (показ регистрации): печатает по буквам во время реплики, форму не отправляет. */
+  type?: { selector: string; text: string };
 }
 
 export interface TourStep {
@@ -61,6 +63,32 @@ export const STEPS: Record<string, TourStep> = {
     id: "home", cabinet: "home", persona: null, path: "/", match: /^\/$/,
     selector: "main h1, h1",
     beats: [{ target: "main h1, h1" }, { target: "text:Работодателям, text:Как это работает, main h1, h1" }],
+  },
+
+  // ---------------------------------------------------------------- регистрация (первый акт обзора роли; форму не отправляем)
+  "cand-register": {
+    id: "cand-register", cabinet: "candidate", persona: null, path: "/register", match: /^\/register/,
+    selector: "[role='tablist'], main h1, h1",
+    beats: [
+      { target: "form", click: "[role='tablist'] button:nth-child(1)", clickAt: 0.12, type: { selector: "#email", text: "anna.smirnova@example.ru" } },
+      { target: "[data-testid='button-fsp-login']" },
+      { target: "button[type='submit']" },
+    ],
+  },
+  "emp-register": {
+    id: "emp-register", cabinet: "employer", persona: null, path: "/register", match: /^\/register/,
+    selector: "[role='tablist'], main h1, h1",
+    beats: [
+      { target: "form", click: "[role='tablist'] button:nth-child(2)", clickAt: 0.1, type: { selector: "#email", text: "hr@severny-code.ru" } },
+      { target: "button[type='submit']" },
+    ],
+  },
+  "fsp-register": {
+    id: "fsp-register", cabinet: "fsp", persona: null, path: "/register", match: /^\/register/,
+    selector: "[data-testid='button-fsp-login'], main h1, h1",
+    beats: [
+      { target: "[data-testid='button-fsp-login'], main h1, h1" },
+    ],
   },
 
   // ---------------------------------------------------------------- кандидат
@@ -146,8 +174,11 @@ export const STEPS: Record<string, TourStep> = {
     { target: "text:Свежесть профиля, text:Как часто предлагать, main h1" },
   ]),
   "cand-settings": plain("cand-settings", "candidate", "candidate", "/candidate/settings", [
+    { target: "main h1" },
     { target: "text:Поля обезличенной карточки, main h1" },
-    { target: "text:Скрытый минимум зарплаты, text:Согласия, main h1" },
+    { target: "text:Скрытый минимум зарплаты, main h1" },
+    { target: "text:Что вам интересно, text:Интересные задачи, main h1" },
+    { target: "text:Согласия, main h1" },
   ]),
   "cand-vacancies": plain("cand-vacancies", "candidate", "candidate", "/candidate/vacancies"),
   "cand-notifications": plain("cand-notifications", "candidate", "candidate", "/candidate/notifications", [
@@ -282,12 +313,12 @@ export const STEPS: Record<string, TourStep> = {
 
 /** Пункты меню кабинетов по порядку (основные, затем «Ещё»). */
 export const TRACKS: Record<TourTrack, string[]> = {
-  candidate: ["cand-overview", "cand-assessment", "cand-category", "cand-defense", "cand-feedback", "cand-profile", "cand-invitations",
+  candidate: ["cand-register", "cand-overview", "cand-assessment", "cand-category", "cand-defense", "cand-feedback", "cand-profile", "cand-invitations",
     "cand-messages", "cand-trio", "cand-cups", "cand-fsp", "cand-mydata",
     "cand-probes", "cand-assignments", "cand-settings", "cand-vacancies", "cand-notifications"],
-  employer: ["emp-home", "emp-needs", "emp-compare", "emp-squad", "emp-search", "emp-invitations", "emp-messages", "emp-trio", "emp-ats",
+  employer: ["emp-register", "emp-home", "emp-needs", "emp-compare", "emp-squad", "emp-search", "emp-invitations", "emp-messages", "emp-trio", "emp-ats",
     "emp-cups", "emp-company", "emp-probes", "emp-assignments", "emp-vacancies", "emp-notifications", "emp-tariffs"],
-  fsp: ["fsp-cabinet", "fsp-demand", "fsp-effect", "fsp-salaries", "fsp-funnel", "fsp-cups", "fsp-benefit", "fsp-partners", "fsp-trio",
+  fsp: ["fsp-register", "fsp-cabinet", "fsp-demand", "fsp-effect", "fsp-salaries", "fsp-funnel", "fsp-cups", "fsp-benefit", "fsp-partners", "fsp-trio",
     "fsp-method", "fsp-security"],
   // весь сайт — основные пункты меню каждого кабинета (без «Ещё») и раздел для технического жюри
   all: ["home",

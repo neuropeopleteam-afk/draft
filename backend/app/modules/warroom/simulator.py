@@ -310,7 +310,7 @@ def simulate_incident(
             "actions_score": round(req_ratio, 4),
             "code_score": code_res["score"],
             "cost_efficiency": cost_eff,
-            "trap_count": trap_count,
+            "penalty_count": trap_count,
         },
         "code_checks": code_res["checks"],
         "node_tones": node_tones,
@@ -405,9 +405,12 @@ def evaluate_justification_rubric(
         cleaned_text, meta_removed = grader.strip_meta(raw)
 
     # Для сценария ИИ-безопасности ("ai") инженер по делу пишет про «системные инструкции» и «оценщик»:
-    # не блокируем одиночный тематический сигнал model_address без императивных директив.
+    # не блокируем одиночный тематический сигнал model_address без императивных директив
+    # и не вырезаем тематическое описание первопричины про системные инструкции оценщика.
     if scn.get("id") == "ai":
         blocking_signals = [s for s in inj_signals if s not in _NON_IMPERATIVE_AI_SIGNALS]
+        if not blocking_signals:
+            cleaned_text = raw
     else:
         blocking_signals = inj_signals
 
@@ -608,8 +611,15 @@ def evaluate_solution(
         f"итоговый балл {round(total_score * 100)} % ({level_note})."
     )
 
+    measures_ok = bool(slo_met and sim["scores"]["actions_score"] >= 0.70)
+    code_ok = bool(sim["scores"]["code_score"] >= 0.75)
+    justification_ok = bool(rub["rubric_score"] >= 0.65 and not rub["injection_blocked"])
+    minutes_spent = max(1, round(max(1, int(elapsed_s)) / 60))
+
     incident_stage = {
+        "incident_id": scn["id"],
         "scenario_id": scn["id"],
+        "title": scn["title"],
         "direction": scn["direction"],
         "target_grade": scn["target_grade"],
         "status": "completed",
@@ -618,6 +628,10 @@ def evaluate_solution(
         "actions_score": sim["scores"]["actions_score"],
         "code_score": sim["scores"]["code_score"],
         "rubric_score": rub["rubric_score"],
+        "measures_ok": measures_ok,
+        "code_ok": code_ok,
+        "justification_ok": justification_ok,
+        "minutes": minutes_spent,
         "criteria": crit_map,
         "slo_met": slo_met,
         "cost_rub_month": sim["metrics"]["cost_rub_month"],
@@ -627,6 +641,11 @@ def evaluate_solution(
         "passed": passed,
         "confirmed_grade": confirmed_grade,
         "summary_ru": summary_ru,
+        "integrity": {
+            "level": "low" if rub["injection_blocked"] else "high",
+            "title": "низкая" if rub["injection_blocked"] else "высокая",
+            "reasons": ["Признаки использования подсказок"] if rub["injection_blocked"] else [],
+        },
     }
 
     sig_payload = {

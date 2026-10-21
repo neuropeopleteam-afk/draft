@@ -28,21 +28,6 @@ interface RuStoreInfo {
   status: string;
 }
 
-interface TelegramStatus {
-  configured: boolean;
-  bot_username: string;
-  linked: boolean;
-  enabled: boolean;
-  tg_username: string | null;
-  tg_first_name: string | null;
-  linked_at: string | null;
-  last_sent_at: string | null;
-  code: string | null;
-  deep_link: string | null;
-  code_expires_at: string | null;
-  status_text: string;
-}
-
 function ShareIosIcon() {
   return (
     <svg viewBox="0 0 20 20" className="inline-block h-4 w-4 -translate-y-0.5 text-brand-plum" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -290,166 +275,6 @@ function PushCard() {
   );
 }
 
-/** Карточка привязки уведомлений в Telegram (по одноразовому коду deep-link, с кнопками «Открыть / Принять / Отклонить»). */
-function TelegramCard() {
-  const { me } = useAuth();
-  const [st, setSt] = useState<TelegramStatus | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [msg, setMsg] = useState<{ k: "ok" | "error" | "info"; t: string } | null>(null);
-
-  useEffect(() => {
-    if (!me) return;
-    api<TelegramStatus>("/telegram/status")
-      .then(setSt)
-      .catch(() => setSt(null));
-  }, [me]);
-
-  async function onLink() {
-    setBusy(true);
-    setMsg(null);
-    try {
-      const next = await api<TelegramStatus>("/telegram/link", { method: "POST" });
-      setSt(next);
-      setMsg({
-        k: "info",
-        t: next.configured
-          ? "Одноразовый код создан. Нажмите «Открыть бота в Telegram» и запустите бота кнопкой «Старт»."
-          : "Одноразовый код привязки создан. Отправка заработает сразу после подключения токена бота на сервере.",
-      });
-    } catch (e) {
-      setMsg({ k: "error", t: errText(e) });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onUnlink() {
-    setBusy(true);
-    setMsg(null);
-    try {
-      const next = await api<TelegramStatus>("/telegram/link", { method: "DELETE" });
-      setSt(next);
-      setMsg({ k: "info", t: "Уведомления в Telegram отключены." });
-    } catch (e) {
-      setMsg({ k: "error", t: errText(e) });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onTest() {
-    setBusy(true);
-    setMsg(null);
-    try {
-      await api("/telegram/test", { method: "POST" });
-      setMsg({ k: "ok", t: "Проверочное уведомление отправлено в Telegram." });
-    } catch (e) {
-      setMsg({ k: "error", t: errText(e) });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <section className="card space-y-3" data-testid="telegram-notify-card">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="font-bold text-brand-night">Уведомления в Telegram</h2>
-          <p className="text-sm text-brand-ink/65">
-            Приглашения с вилкой зарплаты и новые сообщения в диалогах приходят в Telegram с кнопками быстрого ответа («Открыть», «Принять», «Отклонить»).
-          </p>
-        </div>
-        {st?.linked ? (
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-            Привязан {st.tg_username ? `@${st.tg_username}` : st.tg_first_name || "чат"}
-          </span>
-        ) : st && !st.configured ? (
-          <span className="rounded-full bg-brand-blush/50 px-3 py-1 text-xs font-semibold text-brand-plum">
-            Токен бота не задан на сервере
-          </span>
-        ) : null}
-      </div>
-
-      {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
-
-      {st?.deep_link && st?.code && !st.linked && (
-        <div className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="text-sm">
-              <p className="font-bold text-brand-night">Одноразовый код привязки (действует 30 минут)</p>
-              <p className="text-xs text-brand-ink/70">
-                Перейдите в бота <strong>@{st.bot_username}</strong> по кнопке или отправьте ему команду ниже:
-              </p>
-            </div>
-            <a
-              href={st.deep_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary inline-flex min-h-[44px] items-center !px-4 !py-2 text-sm"
-              data-testid="telegram-open-bot"
-            >
-              Открыть бота в Telegram
-            </a>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <code className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-brand-night ring-1 ring-brand-night/10">
-              /start {st.code}
-            </code>
-            <button
-              type="button"
-              className="btn-ghost min-h-[44px] !px-3 !py-1.5 text-xs"
-              onClick={() => {
-                navigator.clipboard?.writeText(`/start ${st.code}`).then(() => {
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                });
-              }}
-            >
-              {copied ? "Скопировано" : "Скопировать команду"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-3">
-        {st?.linked ? (
-          <>
-            <button
-              type="button"
-              className="btn-primary min-h-[44px]"
-              disabled={busy || !st.configured}
-              onClick={onTest}
-              data-testid="telegram-test-btn"
-            >
-              Прислать проверочное в Telegram
-            </button>
-            <button
-              type="button"
-              className="btn-ghost min-h-[44px]"
-              disabled={busy}
-              onClick={onUnlink}
-              data-testid="telegram-unlink-btn"
-            >
-              Отключить Telegram
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            className="btn-primary min-h-[44px]"
-            disabled={busy || !me}
-            onClick={onLink}
-            data-testid="telegram-link-btn"
-          >
-            {busy ? "Создаём код…" : st?.code ? "Обновить код привязки" : "Получать в Telegram"}
-          </button>
-        )}
-      </div>
-    </section>
-  );
-}
-
 /** Раздел кабинета (кандидат и работодатель). */
 export function AppSection() {
   return (
@@ -459,7 +284,6 @@ export function AppSection() {
         subtitle="Установите «Драфт» на главный экран телефона и включите мгновенные уведомления о приглашениях и откликах."
       />
       <PushCard />
-      <TelegramCard />
       <InstallGuide />
     </div>
   );
@@ -483,13 +307,10 @@ export function InstallPage() {
         />
         <InstallGuide />
         {me ? (
-          <>
-            <PushCard />
-            <TelegramCard />
-          </>
+          <PushCard />
         ) : (
           <Alert kind="info">
-            Чтобы включить уведомления в браузере или в Telegram,{" "}
+            Чтобы включить мгновенные уведомления на устройстве,{" "}
             <Link to="/login" className="font-semibold underline">
               войдите в личный кабинет
             </Link>

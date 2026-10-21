@@ -11,9 +11,9 @@ const NODES: Record<NodeId, { x: number; y: number; w?: number; title: string; s
   gw: { x: 318, y: 200, title: "API-шлюз", sub: "аутентификация · квоты" },
   core: { x: 470, y: 200, title: "Ядро сервиса", sub: "" },
   pgb: { x: 610, y: 70, title: "Пул транзакций", sub: "мультиплексор БД" },
-  pg: { x: 745, y: 70, title: "PostgreSQL", sub: "основной узел" },
-  replica: { x: 885, y: 70, title: "PostgreSQL", sub: "реплика чтения" },
-  redis: { x: 640, y: 200, title: "Кластер Redis", sub: "кэш · ключи" },
+  pg: { x: 745, y: 70, title: "Основная БД", sub: "основной узел" },
+  replica: { x: 885, y: 70, title: "Реплика БД", sub: "чтение" },
+  redis: { x: 640, y: 200, title: "Быстрый кэш", sub: "кэш · ключи" },
   ext: { x: 885, y: 200, title: "Внешний контур", sub: "" },
   kafka: { x: 745, y: 330, title: "Брокер очередей", sub: "" },
   consumers: { x: 885, y: 330, title: "Обработчики", sub: "" },
@@ -65,7 +65,7 @@ function edgesFor(s: ScenarioPublic, activeIds: Set<string>): Edge[] {
     e.push({ id: "core-pg", from: "core", to: "pg", d: "M 526 188 C 600 188, 640 70, 689 70" });
   }
   if (activeIds.has("outbox")) {
-    e.push({ id: "pg-kafka", from: "pg", to: "kafka", d: curve("pg", "kafka"), label: "таблица outbox" });
+    e.push({ id: "pg-kafka", from: "pg", to: "kafka", d: curve("pg", "kafka"), label: "очередь в БД" });
   } else {
     e.push({
       id: "core-kafka",
@@ -117,17 +117,17 @@ export function ArchDiagram({
   const showPgb = activeSet.has("pgb");
   const visible = (Object.keys(NODES) as NodeId[]).filter((n) => n !== "pgb" || showPgb);
 
-  const badges: Record<string, { label: string; on: boolean; trap: boolean }[]> = {};
+  const badges: Record<string, { label: string; on: boolean }[]> = {};
   measuresCatalog.forEach((p) => {
     const isLive = applied && liveIds.has(p.id);
     const isStaged = stagedIds.has(p.id);
     if (!isLive && !isStaged) return;
     if (p.id === "pgb" && !showPgb) {
-      (badges.pg ??= []).push({ label: p.badge, on: false, trap: false });
+      (badges.pg ??= []).push({ label: p.badge, on: false });
       return;
     }
     if (p.id === "pgb") return;
-    (badges[p.at] ??= []).push({ label: p.badge, on: isLive, trap: Boolean(p.trap) });
+    (badges[p.at] ??= []).push({ label: p.badge, on: isLive });
   });
 
   const fast = applied && sloMet;
@@ -184,10 +184,11 @@ export function ArchDiagram({
                 const m = e.d.match(/(-?\d+(?:\.\d+)?)/g)?.map(Number) ?? [0, 0];
                 const lx = (m[0] + m[m.length - 2]) / 2;
                 const ly = (m[1] + m[m.length - 1]) / 2;
+                const labelY = ly <= 90 ? ly - 32 : ly - 8;
                 return (
                   <text
                     x={lx}
-                    y={ly - 6}
+                    y={labelY}
                     textAnchor="middle"
                     fontSize="10"
                     fontWeight={700}
@@ -246,7 +247,7 @@ export function ArchDiagram({
             {(badges[id] ?? []).map((b, i) => {
               const by = n.y + NH / 2 + 6 + i * 17;
               const bw = Math.max(58, b.label.length * 6.4 + 14);
-              const col = b.trap ? "#fbbf24" : b.on ? "#34d399" : "rgba(255,255,255,0.65)";
+              const col = b.on ? "#34d399" : "rgba(255,255,255,0.65)";
               return (
                 <g key={b.label}>
                   <rect
@@ -255,7 +256,7 @@ export function ArchDiagram({
                     width={bw}
                     height={14}
                     rx={7}
-                    fill={b.on ? (b.trap ? "rgba(251,191,36,0.18)" : "rgba(52,211,153,0.18)") : "rgba(255,255,255,0.05)"}
+                    fill={b.on ? "rgba(52,211,153,0.18)" : "rgba(255,255,255,0.05)"}
                     stroke={col}
                     strokeDasharray={b.on ? undefined : "3 3"}
                   />
@@ -377,12 +378,12 @@ export function EngineeringLevelMeter({
       </div>
       <details className="mt-2 text-[11px] text-white/50">
         <summary className="cursor-pointer font-semibold text-indigo-300/80 hover:text-indigo-200">
-          Как считается вклад боевого этапа в грейд
+          Как считается вклад практического этапа в уровень
         </summary>
         <p className="mt-1 leading-relaxed text-white/60">
-          Итоговый балл складывается из объективного выполнения показателей надёжности (SLO) в рамках бюджета (45 %),
+          Итоговый балл складывается из восстановления целевых показателей работы сервиса в рамках бюджета (45 %),
           корректности патча кода (25 %) и проверки письменного обоснования по рубрике с дословными цитатами (30 %).
-          Результат учитывается как задание высокой информативности без угадывания для подтверждения уровней Senior, Lead и Principal.
+          Вклад практического этапа учитывается по заранее записанному правилу (на людях ещё не откалиброван).
         </p>
       </details>
     </div>
