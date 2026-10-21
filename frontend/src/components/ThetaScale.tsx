@@ -17,6 +17,16 @@ const ZONES: { id: string; title: string; shortTitle: string; from: number; to: 
   { id: "principal", title: "Principal", shortTitle: "Prin", from: 3.0, to: 4.0, color: "bg-amber-100 text-amber-950" },
 ];
 
+/** Уровень по ответам словами (решение А21/А19: на лицевой стороне — без чисел шкалы; числа — в «Как считается»). */
+export function levelWords(theta: number | null | undefined): string {
+  if (theta == null || Number.isNaN(Number(theta))) return "—";
+  const th = Number(theta);
+  if (th < -1.75) return "ниже уровня Стажёр";
+  if (th >= 4.0) return "выше уровня Principal";
+  const z = ZONES.find((x) => th >= (x.id === "intern" ? -1.75 : x.from) && th < x.to);
+  return z ? `в зоне ${z.title}` : "—";
+}
+
 const clampPct = (val: number) => Math.max(1.5, Math.min(98.5, ((val - SCALE_MIN) / SCALE_SPAN) * 100));
 
 export interface ThetaScaleProps {
@@ -48,7 +58,7 @@ export function ThetaScale({ theta, se, grade, confirmed, compact = false, class
             Шкала уровня
           </span>
           <span className="text-xs font-semibold text-brand-night">
-            Оценка уровня по ответам: <b>{signed(th)}</b> (погрешность ±{num(s, 2)})
+            Уровень по ответам: <b>{levelWords(th)}</b>
           </span>
         </div>
         {!compact && (
@@ -95,14 +105,6 @@ export function ThetaScale({ theta, se, grade, confirmed, compact = false, class
             />
           </div>
 
-          <div className="mt-1 flex justify-between font-mono text-[10px] text-brand-ink/60">
-            <span>−1,75</span>
-            <span>−1,0 (Jun)</span>
-            <span>0,0 (Mid)</span>
-            <span>+1,0 (Sen)</span>
-            <span>+2,0 (Lead)</span>
-            <span>+3,0 (Prin)</span>
-          </div>
         </div>
       </div>
 
@@ -120,6 +122,10 @@ export function ThetaScale({ theta, se, grade, confirmed, compact = false, class
       {openMath && !compact && (
         <div className="mt-3 rounded-xl bg-white p-3 text-xs leading-relaxed text-brand-ink/80 ring-1 ring-brand-night/10">
           <p className="font-semibold text-brand-night">Классификационный адаптивный тест у порогов и решение по заявленному уровню</p>
+          <p className="mt-1">
+            Оценка по шкале теста: <b>{signed(th)}</b> (погрешность ±{num(s, 2)}). Пороги грейдов на шкале: Стажёр — от −1,75, Junior — от −1,0,
+            Middle — от 0,0, Senior — от +1,0, Lead — от +2,0, Principal — от +3,0.
+          </p>
           <p className="mt-1">
             После каждого ответа движок пересчитывает апостериорную оценку уровня методом EAP (Expected A Posteriori) по модели 2PL/GPCM и выбирает из банка ({NUMBERS.bank.families.toLocaleString("ru-RU")} семейств × 2,15 млрд зёрен, {NUMBERS.bank.code_and_open_families} практических семейств с кодом и симулятором инцидента) следующее задание с максимумом информации Фишера у ближайшего порога грейда. Решение «подтверждён / не подтверждён» принимается, когда вероятность уровня не ниже заявленного выходит за 80 % или 20 %; между ними — короткий второй этап у порога.{gv ? ` На симуляции продукта (модельные кандидаты, не люди) итоговый вердикт верен в ${fmtPct(gv.main.verdict_accuracy?.value, 1)}, ложное подтверждение у завысивших заявку — ${fmtPct(gv.main.false_confirm?.value, 1)}.` : ""}
           </p>
