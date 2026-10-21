@@ -117,6 +117,11 @@ export default function Landing() {
             Это платформа обратного найма без чтения сотен резюме: выберите свою роль ниже, чтобы получить готовую подборку проверенных инженеров, подтвердить свой уровень или открыть аналитику Федерации.
           </p>
 
+          {/* На мобильных экранах (< lg) 3D-ядро верификации ФСП показывается сразу под подзаголовком первого экрана */}
+          <div className="mt-5 lg:hidden">
+            <FspHeroMonolithStage mobile />
+          </div>
+
           {/* Для кого и что сделать — 3 карточки ролей с одной главной кнопкой на роль в строгой палитре ФСП */}
           <div
             className="mt-6 grid gap-3 sm:grid-cols-3"
@@ -211,7 +216,9 @@ export default function Landing() {
           </ul>
         </div>
         <div className="min-w-0 space-y-4 lg:sticky lg:top-20">
-          <FspHeroMonolithStage />
+          <div className="hidden lg:block">
+            <FspHeroMonolithStage />
+          </div>
           <ReverseDraftDemo onTry={tryInvite} onLiveAvatar={tryLiveAvatar} busyLive={busyRole === "avatar"} />
           {msg && <p className="mt-2 text-sm np-risk" role="status">{msg}</p>}
         </div>

@@ -1,7 +1,7 @@
 // Индекс доверия работодателя: бейдж (кратко) и панель с причинами (ЕГРЮЛ, почта, вилка, поведение).
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Alert, dateOnly, dt, errText, useApi } from "../components/ui";
+import { Alert, dateOnly, dt, errText, fmtHoursText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 import { OriginTag, type Origin } from "../components/Origin";
 
@@ -46,7 +46,7 @@ export function TrustBadge({ t, compact }: { t?: TrustShort | null; compact?: bo
           title={`Медиана времени ответа компании по ${t.response_badge.sample_size} реальным приглашениям и откликам`}
           data-testid="company-response-badge"
         >
-          ⏱ {t.response_badge.label}
+          ⏱ {fmtHoursText(t.response_badge.label)}
         </span>
       )}
     </span>
@@ -58,7 +58,7 @@ function FactorRow({ f }: { f: TrustFactor }) {
   return (
     <li className="flex items-start gap-3 text-sm">
       <span className={`mt-0.5 w-4 shrink-0 text-center font-bold ${c}`} aria-label={f.status}>{ic}</span>
-      <span className="flex-1"><span className="font-semibold text-brand-night">{f.title}.</span> <span className="text-brand-ink/75">{f.text}</span></span>
+      <span className="flex-1"><span className="font-semibold text-brand-night">{f.title}.</span> <span className="text-brand-ink/75">{fmtHoursText(f.text)}</span></span>
       <span className="shrink-0 tabular-nums text-xs text-brand-ink/65">{f.max ? `${Math.round(f.points)}/${f.max}` : f.points < 0 ? `−${Math.abs(Math.round(f.points))}` : "0"}</span>
     </li>
   );

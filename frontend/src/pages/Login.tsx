@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { AuthShell, FormError } from "../components/AuthShell";
+import { AuthShell, FormError, PasswordInput } from "../components/AuthShell";
 import { FspIdLogin } from "../integrations/FspId";
 import { api, ApiError, isChallenge, type AuthResult } from "../lib/api";
 import { cabinetPath, useAuth } from "../lib/auth";
@@ -81,7 +81,9 @@ export default function Login() {
               Забыли пароль?
             </Link>
           </div>
-          <input id="password" type="password" className="input mt-1.5" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+          <div className="mt-1.5">
+            <PasswordInput id="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+          </div>
         </div>
         <FormError message={error} />
         {unverified && (

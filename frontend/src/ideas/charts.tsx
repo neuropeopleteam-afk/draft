@@ -4,10 +4,15 @@ import type { ReactNode } from "react";
 
 export type Tone = "brand" | "night" | "lavender" | "plum" | "soft" | "blush";
 const BG: Record<Tone, string> = {
-  brand: "bg-brand", night: "bg-brand-night", lavender: "bg-brand-lavender", plum: "bg-brand-plum", soft: "bg-brand-soft", blush: "bg-brand-blush",
+  brand: "bg-gradient-to-r from-[#2D1CE8] via-[#402FFF] to-[#6557FF]",
+  night: "bg-gradient-to-r from-[#1E245C] via-[#3124C9] to-[#4F40FF]",
+  lavender: "bg-brand-lavender",
+  plum: "bg-gradient-to-r from-[#2E356E] to-[#4A5399]",
+  soft: "bg-gradient-to-r from-[#5243FF] to-[#7D70FF]",
+  blush: "bg-brand-blush",
 };
 const FILL: Record<Tone, string> = {
-  brand: "#402FFF", night: "#0E1126", lavender: "#5E6494", plum: "#1E244D", soft: "#5B4BFF", blush: "#DCE2FF",
+  brand: "#402FFF", night: "#3124C9", lavender: "#5E6494", plum: "#2E356E", soft: "#5B4BFF", blush: "#DCE2FF",
 };
 
 const ru = (v: number, d = 0) => v.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -111,25 +116,25 @@ export function StackBar({ parts, max }: { parts: { value: number; tone: Tone; l
 export interface Stage { key: string; title: string; count: number | null; conversion: number | null }
 
 /** Воронка: ширина этапа пропорциональна числу, между этапами — конверсия. Подписи — над полосой, целиком. */
-export function Funnel({ stages, tone = "night" }: { stages: Stage[]; tone?: Tone }) {
+export function Funnel({ stages, tone = "brand" }: { stages: Stage[]; tone?: Tone }) {
   const first = stages[0]?.count || Math.max(1, ...stages.map((s) => s.count ?? 0));
   return (
-    <ol className="space-y-1">
+    <ol className="space-y-1.5">
       {stages.map((s, i) => {
-        const w = s.count != null ? Math.max(6, (100 * s.count) / Math.max(1, first)) : 100;
+        const w = s.count != null ? Math.max(8, (100 * s.count) / Math.max(1, first)) : 100;
         return (
           <li key={s.key}>
             {i > 0 && (
-              <p className="py-0.5 text-center text-xs font-semibold text-brand-ink/65">
-                {s.conversion != null ? `↓ ${fpct(s.conversion)}` : "↓ скрыто (< 5)"}
+              <p className="py-0.5 text-center text-xs font-semibold text-brand-plum">
+                {s.conversion != null ? `конверсия ${fpct(s.conversion)}` : "конверсия скрыта (< 5)"}
               </p>
             )}
             <div className="flex items-baseline justify-between gap-3 text-sm">
-              <span className="text-brand-ink/80">{s.title}</span>
-              <span className={`font-bold tabular-nums ${s.count == null ? "text-brand-ink/65" : "text-brand-night"}`}>{fk(s.count)}</span>
+              <span className="font-medium text-brand-ink/85">{s.title}</span>
+              <span className={`font-mono font-bold tabular-nums ${s.count == null ? "text-brand-ink/65" : "text-brand-night"}`}>{fk(s.count)}</span>
             </div>
-            <div className="mt-1 flex justify-center">
-              <div className={`h-4 rounded-md ${s.count == null ? "border border-dashed border-brand-night/25 bg-white" : BG[tone]}`} style={{ width: `${w}%` }} />
+            <div className="mt-1 flex justify-center rounded-lg bg-[#EEF1FC] p-0.5">
+              <div className={`h-4 rounded-md shadow-sm transition-all ${s.count == null ? "border border-dashed border-brand-night/25 bg-white" : BG[tone]}`} style={{ width: `${w}%` }} />
             </div>
           </li>
         );

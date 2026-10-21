@@ -3,7 +3,7 @@
 // пакета). Данные — backend/app/fsp_cabinet/benefit.py и backend/app/modules/tariffs; за флагом TARIFFS_ENABLED.
 import { useState } from "react";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Field, Loading, Seg, Stat, cleanCompanyName, dateOnly, errText, useApi } from "../../components/ui";
+import { Alert, Field, Loading, Seg, Stat, cleanCompanyName, dateOnly, errText, plainText, useApi } from "../../components/ui";
 import { api, apiDownload } from "../../lib/api";
 import { usePageTitle } from "../../lib/meta";
 import { useDemoUi } from "../../lib/juryMode";
@@ -140,7 +140,7 @@ export function FspBenefit() {
           <section className="card">
             <h2 className="text-lg font-bold text-brand-night">Методика</h2>
             <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-brand-ink/85">
-              {rep.methodology.map((m: string, i: number) => <li key={i}>{m}</li>)}
+              {rep.methodology.map((m: string, i: number) => <li key={i} title="Как устроено: расчёт по подтверждённым записям реестра ФСП">{plainText(m)}</li>)}
             </ol>
           </section>
         </>
