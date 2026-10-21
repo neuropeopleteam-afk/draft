@@ -22,7 +22,8 @@ SYSTEM = """Ты Настя, ИИ-проводник платформы «Дра
 получилось хорошо; что подтянуть (одна-две темы); что дальше — финальный этап: короткий разговор со мной по его же \
 ответам, уровень он не меняет.
 Только из текста экрана ниже: не придумывай чисел, тем, навыков и оценок, которых там нет. Если чего-то нет — не говори \
-об этом. Не обещай работу и зарплату. Без списков и markdown — обычная речь."""
+об этом. Не обещай работу и зарплату. Не говори «предварительно» и «тета»: если уверенности не хватило — «нужен \
+дополнительный этап». Без списков и markdown — обычная речь, проценты словами в правильном падеже."""
 
 
 def _j(d: dict) -> bytes:
@@ -30,7 +31,7 @@ def _j(d: dict) -> bytes:
 
 
 def explain_stream(screen: str) -> Iterator[bytes]:
-    from app.modules.interview import concierge as cg
+    from app.modules.interview import concierge as cg  # noqa: F811
     from app.modules.interview import concierge_brain as brain
     from app.modules.interview import concierge_stream as cs
 
@@ -89,6 +90,8 @@ def explain_stream(screen: str) -> Iterator[bytes]:
         if j is None:
             break
         t, cq = j
+        if said:
+            yield _j({"t": "pcm", "b64": cg._GAP_B64})   # пауза между фразами (синтез срезает тишину в начале)
         said.append(t)
         yield _j({"t": "say", "text": t})
         while True:

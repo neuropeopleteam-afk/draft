@@ -1733,6 +1733,9 @@ def _j(d: dict) -> bytes:
     return (json.dumps(d, ensure_ascii=False) + "\n").encode()
 
 
+_GAP_B64 = base64.b64encode(b"\0" * int(24000 * 2 * 0.22)).decode()   # пауза между фразами живого ответа, 24 кГц
+
+
 def turn_stream(message: str, **kw) -> Iterator[bytes]:
     """NDJSON: ack → meta (решение) → [say (фраза) → pcm…]… → end. Быстрые команды — мгновенно, без модели. Ход модели —
     потоком: решение первой строкой ответа (meta через ≈1,8 с — экран начинает открываться), затем каждая фраза сразу
@@ -1837,6 +1840,9 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
                 if j is None:
                     break
                 t, cq = j
+                if spoken:
+                    # синтез срезает тишину в начале каждой фразы — без паузы фразы слипаются; 220 мс — как вдох
+                    yield _j({"t": "pcm", "b64": _GAP_B64})
                 spoken.append(t)
                 yield _j({"t": "say", "text": t})
                 while True:
