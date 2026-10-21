@@ -655,13 +655,15 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
         # итоговый прогон: точность уверенного вердикта — всегда парой с долей уверенных; S-T и жёсткие рядом
         a, sh, fc = stx["confident_accuracy_final"], stx.get("confident_share_final") or {}, stx.get("false_confirm_all") or {}
         ha, hsh, hfc = hx["confident_accuracy_final"], hx.get("confident_share_final") or {}, hx.get("false_confirm_all") or {}
-        n_st = (stx.get("far_from_cut_0_25") or {}).get("n")
+        va = ((gv.get("st") or {}).get("view") or {}).get("verdict_accuracy") or {}
+        hva = (gv.get("main") or {}).get("verdict_accuracy") or {}
         cards.append({
             "id": "grade_verdict", "eyebrow": "Точность уверенного вердикта по грейду", "value": pct(a["value"]), "accent": "%",
-            "subtext": (f"уверенных — {pct(sh.get('value'))} %, ложное подтверждение — {pct(fc.get('value'))} % всех "
-                        f"кандидатов (стандартные условия); в жёстких — {pct(ha['value'])} %, уверенных "
-                        f"{pct(hsh.get('value'))} %, ложных подтверждений {pct(hfc.get('value'))} % · симуляция продукта, "
-                        f"модельные кандидаты, не люди"),
+            "subtext": (f"уверенных — {pct(sh.get('value'))} %; верный вердикт по всем, включая «нужен доп. этап», — "
+                        f"{pct(va.get('value'))} %; ложное подтверждение — {pct(fc.get('value'))} % всех кандидатов "
+                        f"(стандартные условия). В жёстких: {pct(ha['value'])} %, уверенных {pct(hsh.get('value'))} %, "
+                        f"по всем {pct(hva.get('value'))} %, ложных подтверждений {pct(hfc.get('value'))} % · симуляция "
+                        f"продукта, модельные кандидаты, не люди"),
             "provenance": f"итоговый прогон симуляции продукта, {(gv['main'] or {}).get('date')}",
             "recompute": gv["recompute"], "code_ref": gv["code_ref"]})
     elif gv and gv["main"].get("verdict_accuracy"):
@@ -778,8 +780,10 @@ def final_claim(st: dict | None, hard: dict | None) -> str | None:
         e = x["extra"]
         g = lambda k: (e.get(k) or {}).get("value")
         mt = e.get("minutes_total") or {}
+        va = ((x.get("view") or {}).get("verdict_accuracy") or {}).get("value")
         return (f"точность уверенного вердикта {pct(g('confident_accuracy_final'))} % при доле уверенных "
-                f"{pct(g('confident_share_final'))} %, ложное подтверждение {pct(g('false_confirm_all'))} % всех кандидатов, "
+                f"{pct(g('confident_share_final'))} % (верный вердикт по всем, включая «нужен доп. этап», — {pct(va)} %), "
+                f"ложное подтверждение {pct(g('false_confirm_all'))} % всех кандидатов, "
                 f"точный грейд {pct(g('exact_grade_all'))} % по 6 ступеням ({pct(g('exact_grade_final_4'))} % по 4), "
                 f"±1 ступень — {pct(g('within_one_final'))} %; время — в среднем {num(mt.get('mean'), 0)} мин "
                 f"(p90 {num(mt.get('p90'), 0)})")

@@ -172,8 +172,10 @@ export default function Headline() {
       </p>
       <FinalRun />
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Big testid="v-hl-verdict" label="Верный вердикт по заявке" f={sv?.verdict_accuracy} hard={m.verdict_accuracy}
-          sub="итог «подтверждён / не подтверждён» совпал с истиной (после второго этапа, если он нужен)" />
+        {/* Один заголовок на главной, здесь и в claim_ru (замечание «Аватара» 21.10): точность уверенного вердикта;
+            верный вердикт по всем — рядом одной строкой */}
+        <Big testid="v-hl-verdict" label="Точность уверенного вердикта" f={sv?.confident_accuracy_final} hard={m.confident_accuracy_final}
+          sub={`уверенных — ${sv?.confident_share_final ? pc(sv.confident_share_final.value) : "—"} %; верный вердикт по всем, включая «нужен доп. этап», — ${(sv ?? m).verdict_accuracy ? pc((sv ?? m).verdict_accuracy.value) : "—"} % (после второго этапа)`} />
         <Big testid="v-hl-false-confirm" label="Ложное подтверждение" f={sv?.false_confirm} hard={m.false_confirm}
           sub="у тех, кто завысил заявку: тест подтвердил уровень, которого нет" />
         <Big testid="v-hl-confident" label="Решено после основной части" f={sv?.confident_share} hard={m.confident_share}
