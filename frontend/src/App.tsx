@@ -322,6 +322,7 @@ export default function App() {
         <Route path="security" element={<TwoFactorSettings />} />
         <Route path="analytics" element={<Navigate to="/fsp/demand" replace />} />
         <Route path="regions" element={<Navigate to="/fsp/demand" replace />} />
+        <Route path="map" element={<Navigate to="/fsp/demand" replace />} />
       </Route>
       <Route path="/500" element={<ServerErrorPage />} />
       <Route path="*" element={<NotFound />} />
