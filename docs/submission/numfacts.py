@@ -141,34 +141,38 @@ def build(numbers: dict) -> dict:
 
     # ---------- вердикт по грейду (симуляция продукта) ----------
     gv = n.get("grade_verdict") or {}
-    m = gv.get("main") or {}
+    # Главная строка теста — стандартные условия (как в заголовке пар), а не отдельный «калиброванный» прогон main:
+    # иначе в README рядом оказались бы цифры разных прогонов без пометки.
+    _stv = ((gv.get("st") or {}).get("view") or {})
+    MP = "grade_verdict.st.view" if _stv.get("verdict_accuracy") else "grade_verdict.main"
+    m = _stv if _stv.get("verdict_accuracy") else (gv.get("main") or {})
     if m.get("verdict_accuracy"):
-        cond_s = (f"симуляция продукта: модельные кандидаты, не люди; N{NBSP}={NBSP}{fint(m.get('n', 0))}; тот же движок "
+        cond_s = ((f"стандартные условия (как в аналогичных решениях), зёрна {m['seeds'][0]}–{m['seeds'][-1]}; " if MP.endswith("st.view") and m.get("seeds") else "") + f"симуляция продукта: модельные кандидаты, не люди; N{NBSP}={NBSP}{fint(m.get('n', 0))}; тот же движок "
                   f"теста, что на сайте; банк {m.get('bank_commit') or b.get('bank_commit', '')} "
                   f"({fint(m.get('bank_families') or b.get('families') or 0)} семейств заданий); {date_ru(m.get('date') or n.get('generated_at'))}")
         rc = m.get("command") or gv.get("recompute")
         g = "grade"
         bs = "симуляция, модельные кандидаты"
-        F.share("verdict_accuracy", "grade_verdict.main.verdict_accuracy", cond=cond_s, recompute=rc,
+        F.share("verdict_accuracy", f"{MP}.verdict_accuracy", cond=cond_s, recompute=rc,
                 label="верный итог проверки заявленного грейда", group=g, basis=bs)
-        F.share("confident_share", "grade_verdict.main.confident_share", cond=cond_s, recompute=rc,
+        F.share("confident_share", f"{MP}.confident_share", cond=cond_s, recompute=rc,
                 label="кандидатов получают уверенный ответ уже по основному тесту", group=g, basis=bs)
-        F.share("confident_accuracy", "grade_verdict.main.confident_accuracy", cond=cond_s, recompute=rc,
+        F.share("confident_accuracy", f"{MP}.confident_accuracy", cond=cond_s, recompute=rc,
                 label="точность уверенного ответа", group=g, basis=bs)
-        F.share("followup_share", "grade_verdict.main.followup_share", cond=cond_s, recompute=rc,
+        F.share("followup_share", f"{MP}.followup_share", cond=cond_s, recompute=rc,
                 label="кандидатов направляется на короткий дополнительный этап", group=g, basis=bs)
-        F.share("exact_grade", "grade_verdict.main.exact_grade", cond=cond_s, recompute=rc,
+        F.share("exact_grade", f"{MP}.exact_grade", cond=cond_s, recompute=rc,
                 label="грейд определён точно", group=g, basis=bs)
-        F.share("false_confirm_all", "grade_verdict.main.false_confirm_all", cond=cond_s, recompute=rc,
+        F.share("false_confirm_all", f"{MP}.false_confirm_all", cond=cond_s, recompute=rc,
                 label="ложных подтверждений от всех кандидатов", group=g, basis=bs)
-        F.share("gross_error", "grade_verdict.main.gross_error", cond=cond_s, recompute=rc,
+        F.share("gross_error", f"{MP}.gross_error", cond=cond_s, recompute=rc,
                 label="ошибок больше чем на одну ступень", group=g, basis=bs)
         mt = m.get("minutes_total") or {}
         if mt.get("mean") is not None:
-            F.add("minutes_mean", text=fmin(mt["mean"]), value=mt["mean"], key="grade_verdict.main.minutes_total.mean",
+            F.add("minutes_mean", text=fmin(mt["mean"]), value=mt["mean"], key=f"{MP}.minutes_total.mean",
                   cond=cond_s, recompute=rc, label="среднее время теста", group=g, basis=bs)
         if mt.get("p90") is not None:
-            F.add("minutes_p90", text=fmin(mt["p90"]), value=mt["p90"], key="grade_verdict.main.minutes_total.p90",
+            F.add("minutes_p90", text=fmin(mt["p90"]), value=mt["p90"], key=f"{MP}.minutes_total.p90",
                   cond=cond_s, recompute=rc, label="время теста у 90 % кандидатов не больше", group=g, basis=bs)
         rt = m.get("retest") or {}
         if rt:
@@ -373,6 +377,80 @@ def build(numbers: dict) -> dict:
     else:
         F.miss("mutation")
 
+    # ---------- «один в один» на открытом генераторе другого решения ----------
+    # Обе строки рядом (решение владельца 21.10): по умолчанию и «строго запрошенный грейд» с ценой. Название
+    # другого решения не публикуем: в NUMBERS.json условие уже обезличено (condition_ru).
+    ext = (n.get("external_benchmarks") or {}).get("devdev_1to1") or {}
+    if ext.get("main") and ext.get("condition_ru"):
+        cond_x = ext["condition_ru"] + (f"; проверка: {ext['checked_by']}" if ext.get("checked_by") else "")
+        rc_x = ext.get("recompute")
+        base_k = "external_benchmarks.devdev_1to1"
+
+        def dec3(v):
+            return fdec(v, 3)
+
+        def pp(v):
+            return f"{'+' if v > 0 else '−' if v < 0 else ''}{fdec(abs(v) * 100, 1)}{NBSP}п.{NBSP}п."
+
+        def sgn3(v):
+            return f"{'+' if v > 0 else '−' if v < 0 else ''}{fdec(abs(v), 3)}"
+
+        labels = {"ndcg10": ("nDCG@10", dec3, sgn3), "p5": ("точность в топ-5", fpct, pp),
+                  "p10": ("точность в топ-10", fpct, pp), "rr": ("первый подходящий — насколько высоко (MRR)", fpct, pp),
+                  "overrated10": ("переоценённых в топ-10 (меньше — лучше)", fpct, pp)}
+        for mode, tag in (("main", "по умолчанию"), ("exact_option_api", "«строго запрошенный грейд»")):
+            for m, (lab, f1, f2) in labels.items():
+                v = (ext.get(mode) or {}).get(m)
+                if not v:
+                    continue
+                short = "ext_" + ("main" if mode == "main" else "exact") + "_" + m
+                ci = ""
+                if v.get("ours_ci95"):
+                    lo, hi = v["ours_ci95"]
+                    ci = f"95{NBSP}% ДИ {f1(lo)}–{f1(hi)}"
+                F.add(short, text=f1(v["ours"]), value=v["ours"], key=f"{base_k}.{mode}.{m}.ours", cond=cond_x,
+                      recompute=rc_x, ci=ci, label=f"{lab}, наш подбор, режим {tag}", group="ext", basis="открытый генератор")
+                dci = ""
+                if v.get("diff_ci95"):
+                    lo, hi = v["diff_ci95"]
+                    dci = f"95{NBSP}% ДИ {f2(lo)}…{f2(hi)}"
+                F.add(short + "_diff", text=f2(v["diff"]), value=v["diff"], key=f"{base_k}.{mode}.{m}.diff",
+                      cond=cond_x, recompute=rc_x, ci=dci, label=f"{lab}: разность с другим решением, режим {tag}",
+                      group="ext", basis="открытый генератор")
+                if mode == "main":
+                    F.add("ext_other_" + m, text=f1(v["other"]), value=v["other"], key=f"{base_k}.main.{m}.other",
+                          cond=cond_x, recompute=rc_x, label=f"{lab}, ранжирование другого решения его же кодом",
+                          group="ext", basis="открытый генератор")
+    else:
+        F.miss("ext_main_ndcg10")
+
+    # ---------- журнал отчётных прогонов: что заморожено до прогона и чем проверено ----------
+    journal = []
+
+    def jr(what, key, value, extra="", kind=""):
+        if value:
+            journal.append({"what": what, "key": key, "kind": kind, "hash": str(value)[:12], "extra": extra})
+
+    gvm = (n.get("grade_verdict") or {}).get("main") or {}
+    jr("Тест на грейд — итоговый прогон, отложенные зёрна", "grade_verdict.main.bank_content_hash",
+       gvm.get("bank_content_hash"), kind="банк заданий", extra=f"N{NBSP}={NBSP}{fint(gvm['n'])}" if gvm.get("n") else "")
+    mt_ = n.get("matching") or {}
+    jr("Подбор — отложенные миры, один прогон", "matching.freeze_sha256", mt_.get("freeze_sha256"), kind="FREEZE")
+    jr("Реальные вакансии hh.ru — второй отложенный набор", "hh_match.manifest_sha256",
+       (n.get("hh_match") or {}).get("manifest_sha256"), kind="список вакансий")
+    jr("Открытый генератор другого решения — один в один", "external_benchmarks.devdev_1to1.condition_ru",
+       "515460d3" if "FREEZE 515460d3" in (ext.get("condition_ru") or "") else None,
+       kind="FREEZE", extra="пересчёт в чистой копии — 0 расхождений" if "0 расхождений" in (ext.get("checked_by") or "") else "")
+    dj = ((n.get("external_benchmarks") or {}).get("djinni") or {}).get("freeze") or {}
+    jr("Открытый набор вакансий и резюме — отложенная часть", "external_benchmarks.djinni.freeze.bench_sha256",
+       dj.get("bench_sha256"), kind="набор")
+    ah = (n.get("anticheat") or {}).get("holdout_offline") or {}
+    jr("Защита проверки ответов — отложенный набор атак", "anticheat.holdout_offline.dataset_sha256",
+       ah.get("dataset_sha256") if ah.get("single_pass") else None, kind="набор атак", extra="один проход")
+    oa = (n.get("fsp_protocols") or {}).get("ocr_audit") or {}
+    jr("Протоколы ФСП — ручная сверка распознавания", "fsp_protocols.ocr_audit.sample_sha256", oa.get("sample_sha256"), kind="выборка",
+       extra=f"{fint(oa['pages_checked'])} страниц" if oa.get("pages_checked") else "")
+
     # ---------- пары «стандартные условия / проверка на прочность» ----------
     pairs = build_pairs(n, F.facts)
 
@@ -386,6 +464,7 @@ def build(numbers: dict) -> dict:
         "facts": F.facts,
         "missing": F.missing,
         "pairs": pairs,
+        "journal": journal,
         "repo": desc,
     }
 
@@ -402,7 +481,10 @@ def _fmt_val(v, fmt: str):
                 ci = (f"95{NBSP}% ДИ {fdec(lo * 100, 1)}–{fpct(hi)}" if fmt == "pct" else f"95{NBSP}% ДИ {fdec(lo)}–{fdec(hi)}")
         elif v.get("mean") is not None:
             num, kn = v["mean"], ""
-            ci = f"95{NBSP}% ДИ {fdec(v['lo'])}–{fdec(v['hi'])}" if v.get("lo") is not None else ""
+            ci = ""
+            if v.get("lo") is not None:
+                ci = (f"95{NBSP}% ДИ {fdec(v['lo'] * 100, 1)}–{fpct(v['hi'])}" if fmt == "pct"
+                      else f"95{NBSP}% ДИ {fdec(v['lo'])}–{fdec(v['hi'])}")
         else:
             return None
     elif isinstance(v, (int, float)):
@@ -417,7 +499,7 @@ def _meta_cond(m: dict) -> str:
     if not isinstance(m, dict):
         return ""
     parts = []
-    if m.get("population"):
+    if isinstance(m.get("population"), str):
         parts.append(str(m["population"]))
     if m.get("n"):
         parts.append(f"N{NBSP}={NBSP}{fint(m['n'])}")
@@ -442,14 +524,16 @@ def _side(n: dict, facts: dict, spec: dict | None, fmt: str):
         cond = ""
         if isinstance(v, dict) and v.get("condition_ru"):
             cond = str(v["condition_ru"])
-        if spec.get("meta"):
-            cond = _meta_cond(get(n, spec["meta"])) or cond
         for cp in ([spec["cond"]] if isinstance(spec.get("cond"), str) else spec.get("cond") or []):
             c = get(n, cp)
             if c and not cond:
                 cond = str(c)
+        if spec.get("meta") and not cond:  # условие самой строки (condition_ru) точнее сводки прогона
+            cond = _meta_cond(get(n, spec["meta"])) or cond
         rc = (v.get("recompute") if isinstance(v, dict) else None) or (get(n, spec["meta"] + ".command") if spec.get("meta") else None)
         out.update(key=pth, cond=cond, recompute=rc or "")
+        if spec.get("no_kn"):
+            out["kn"] = ""  # для каппы «k из n» — не доля, не показываем
         return out
     if spec.get("fact") and spec["fact"] in facts:
         f = facts[spec["fact"]]
@@ -465,9 +549,10 @@ def build_pairs(n: dict, facts: dict) -> dict:
     cfg = json.loads(cfg_p.read_text(encoding="utf-8"))
     out = {"pairs": [], "real": []}
     for p in cfg.get("pairs", []):
+        nk = {"no_kn": True} if p.get("no_kn") else {}
         out["pairs"].append({"id": p["id"], "label": p["label"], "hint": p.get("hint", ""),
-                             "standard": _side(n, facts, p.get("standard"), p.get("fmt", "pct")),
-                             "hard": _side(n, facts, p.get("hard"), p.get("fmt", "pct"))})
+                             "standard": _side(n, facts, {**(p.get("standard") or {}), **nk} if p.get("standard") else None, p.get("fmt", "pct")),
+                             "hard": _side(n, facts, {**(p.get("hard") or {}), **nk} if p.get("hard") else None, p.get("fmt", "pct"))})
     for r in cfg.get("real", []):
         out["real"].append({"id": r["id"], "label": r["label"], "value": _side(n, facts, r, r.get("fmt", "pct"))})
     return out
