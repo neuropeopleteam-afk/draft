@@ -1,7 +1,7 @@
 {
  "source": "docs/NUMBERS.json",
- "numbers_generated_at": "2026-10-21T15:38:58Z",
- "numbers_git_commit": "464d57655",
+ "numbers_generated_at": "2026-10-21T17:09:47Z",
+ "numbers_git_commit": "unknown",
  "recompute_all": "python3 tools/publish/gen_numbers.py",
  "facts": {
   "bank_families": {
@@ -257,23 +257,23 @@
    "basis": "симуляция, боты"
   },
   "match_p5": {
-   "text": "0,76",
+   "text": "0,77",
    "key": "matching.p5.mean",
    "cond": "модель: 210 потребностей × 900 модельных кандидатов на отложенных мирах (истина известна, не люди); миры заморожены до прогона, веса подбирались на других мирах; 21.10.2026",
-   "recompute": "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
-   "value": 0.76,
+   "recompute": "python3 tools/realdata/bench_holdout4.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
+   "value": 0.7714,
    "kn": "",
-   "ci": "95 % ДИ 0,73–0,79",
+   "ci": "95 % ДИ 0,74–0,80",
    "label": "доля подходящих в первой пятёрке подборки (P@5)",
    "group": "match",
    "basis": "модель"
   },
   "match_mrr": {
-   "text": "0,89",
+   "text": "0,86",
    "key": "matching.mrr.mean",
    "cond": "модель: 210 потребностей × 900 модельных кандидатов на отложенных мирах (истина известна, не люди); миры заморожены до прогона, веса подбирались на других мирах; 21.10.2026",
-   "recompute": "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
-   "value": 0.8946,
+   "recompute": "python3 tools/realdata/bench_holdout4.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
+   "value": 0.8636,
    "kn": "",
    "ci": "",
    "label": "MRR — насколько высоко первый подходящий кандидат",
@@ -368,7 +368,7 @@
    "text": "18",
    "key": "fsp_protocols.index.documents",
    "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
-   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
    "value": 18,
    "kn": "",
    "ci": "",
@@ -380,7 +380,7 @@
    "text": "27",
    "key": "fsp_protocols.index.events",
    "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
-   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
    "value": 27,
    "kn": "",
    "ci": "",
@@ -392,7 +392,7 @@
    "text": "2 908",
    "key": "fsp_protocols.index.results",
    "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
-   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
    "value": 2908,
    "kn": "",
    "ci": "",
@@ -404,7 +404,7 @@
    "text": "2 232",
    "key": "fsp_protocols.index.athletes",
    "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
-   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
    "value": 2232,
    "kn": "",
    "ci": "",
@@ -416,7 +416,7 @@
    "text": "69",
    "key": "fsp_protocols.index.regions",
    "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
-   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
    "value": 69,
    "kn": "",
    "ci": "",
@@ -428,7 +428,7 @@
    "text": "130",
    "key": "fsp_protocols.index.athletes_with_evsk_norm",
    "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
-   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
    "value": 130,
    "kn": "",
    "ci": "",
@@ -440,7 +440,7 @@
    "text": "2025–2026",
    "key": "fsp_protocols.index.years",
    "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
-   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
    "value": "2025–2026",
    "kn": "",
    "ci": "",
@@ -598,19 +598,19 @@
     "label": "Подбор: точность первой пятёрки (P@5)",
     "hint": "",
     "standard": {
-     "text": "76,0 %",
-     "value": 0.76,
+     "text": "77,1 %",
+     "value": 0.7714,
      "kn": "",
-     "ci": "95 % ДИ 72,8–79,3 %",
+     "ci": "95 % ДИ 74,0–80,3 %",
      "key": "matching.p5",
      "cond": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, 9 направлений; тест у всех (погрешность 0,363 — средняя SE нашего теста), в 35 % резюме по 4 ложных навыка; метка 0–3 (точный грейд и ≥ 75 % обязательных навыков — 3); модели, не люди",
      "recompute": ""
     },
     "hard": {
-     "text": "76,6 %",
-     "value": 0.7665,
+     "text": "75,9 %",
+     "value": 0.7595,
      "kn": "",
-     "ci": "95 % ДИ 74,2–79,0 %",
+     "ci": "95 % ДИ 73,8–78,2 %",
      "key": "matching.hard.p5",
      "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
      "recompute": ""
@@ -622,7 +622,7 @@
     "hint": "",
     "standard": {
      "text": "0,66",
-     "value": 0.6575,
+     "value": 0.6595,
      "kn": "",
      "ci": "95 % ДИ 0,64–0,68",
      "key": "matching.ndcg10",
@@ -630,10 +630,10 @@
      "recompute": ""
     },
     "hard": {
-     "text": "0,59",
-     "value": 0.5923,
+     "text": "0,57",
+     "value": 0.5714,
      "kn": "",
-     "ci": "95 % ДИ 0,57–0,61",
+     "ci": "95 % ДИ 0,56–0,59",
      "key": "matching.hard.ndcg10",
      "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
      "recompute": ""
@@ -644,19 +644,19 @@
     "label": "Подбор: MRR",
     "hint": "",
     "standard": {
-     "text": "0,89",
-     "value": 0.8946,
+     "text": "0,86",
+     "value": 0.8636,
      "kn": "",
-     "ci": "95 % ДИ 0,87–0,93",
+     "ci": "95 % ДИ 0,83–0,90",
      "key": "matching.mrr",
      "cond": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, 9 направлений; тест у всех (погрешность 0,363 — средняя SE нашего теста), в 35 % резюме по 4 ложных навыка; метка 0–3 (точный грейд и ≥ 75 % обязательных навыков — 3); модели, не люди",
      "recompute": ""
     },
     "hard": {
-     "text": "0,87",
-     "value": 0.8689,
+     "text": "0,88",
+     "value": 0.8791,
      "kn": "",
-     "ci": "95 % ДИ 0,84–0,89",
+     "ci": "95 % ДИ 0,85–0,90",
      "key": "matching.hard.mrr",
      "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
      "recompute": ""
@@ -676,10 +676,10 @@
      "recompute": ""
     },
     "hard": {
-     "text": "98,0 %",
-     "value": 0.98,
+     "text": "98,5 %",
+     "value": 0.985,
      "kn": "",
-     "ci": "95 % ДИ 96,5–99,2 %",
+     "ci": "95 % ДИ 97,2–99,5 %",
      "key": "matching.hard.top5_any",
      "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
      "recompute": ""
@@ -690,19 +690,19 @@
     "label": "Подбор: переоценённых в первой десятке",
     "hint": "",
     "standard": {
-     "text": "2,5 %",
-     "value": 0.0248,
+     "text": "2,8 %",
+     "value": 0.0281,
      "kn": "",
-     "ci": "95 % ДИ 1,6–3,4 %",
+     "ci": "95 % ДИ 1,9–3,8 %",
      "key": "matching.over10",
      "cond": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, 9 направлений; тест у всех (погрешность 0,363 — средняя SE нашего теста), в 35 % резюме по 4 ложных навыка; метка 0–3 (точный грейд и ≥ 75 % обязательных навыков — 3); модели, не люди",
      "recompute": ""
     },
     "hard": {
-     "text": "1,4 %",
-     "value": 0.0143,
+     "text": "4,0 %",
+     "value": 0.0398,
      "kn": "",
-     "ci": "95 % ДИ 1,0–1,9 %",
+     "ci": "95 % ДИ 3,3–4,7 %",
      "key": "matching.hard.over10",
      "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
      "recompute": ""
@@ -746,7 +746,7 @@
      "ci": "",
      "key": "fsp_protocols.index.documents",
      "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
-     "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp"
+     "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp"
     }
    },
    {
@@ -759,7 +759,7 @@
      "ci": "",
      "key": "fsp_protocols.index.results",
      "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
-     "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp"
+     "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp"
     }
    }
   ]
@@ -776,7 +776,7 @@
    "what": "Подбор — отложенные миры",
    "key": "matching.freeze_sha256",
    "kind": "FREEZE",
-   "hash": "991271d5dc87",
+   "hash": "dcfffef39515",
    "extra": ""
   },
   {
@@ -827,18 +827,18 @@
   "w_fsp": 10,
   "w_probe": 5,
   "sprt_alpha_pct": "2 %",
-  "api_paths": 406,
-  "api_operations": 435,
+  "api_paths": 409,
+  "api_operations": 438,
   "api_tags": [
+   {
+    "tag": "interview",
+    "ops": 32,
+    "description": "Устная защита развёрнутых ответов теста и ИИ-интервью этапом найма (флаг INTERVIEW_ENABLED). Оценивает модель; грейд не меняется"
+   },
    {
     "tag": "validation",
     "ops": 30,
     "description": "Публичные метрики качества: валидация теста и подбора, критерии ТЗ, проверка своих данных"
-   },
-   {
-    "tag": "interview",
-    "ops": 29,
-    "description": "Устная защита развёрнутых ответов теста и ИИ-интервью этапом найма (флаг INTERVIEW_ENABLED). Оценивает модель; грейд не меняется"
    },
    {
     "tag": "ats",
