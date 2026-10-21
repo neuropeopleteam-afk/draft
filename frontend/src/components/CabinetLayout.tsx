@@ -204,9 +204,9 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
                   to="/demo/warroom"
                   data-testid="cabinet-warroom"
                   title="Боевой ИИ-Полигон: живая проверка ИИ-аватара, подборки и паспорта на одном экране"
-                  className="ml-1 inline-flex items-center gap-1.5 rounded-lg bg-brand-night px-2.5 py-1 text-xs font-bold text-white transition hover:bg-brand-plum"
+                  className="ml-1 inline-flex items-center gap-2 rounded-xl border border-[#FF6B88]/60 bg-gradient-to-r from-[#D91B38] via-[#9E1B66] to-[#402FFF] px-3.5 py-1.5 text-xs font-extrabold text-white shadow-[0_6px_18px_-4px_rgba(217,27,56,0.75)] ring-2 ring-[#FF4D6D]/30 transition hover:brightness-110"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-blush" aria-hidden="true" />
+                  <span className="h-2 w-2 rounded-full bg-white shadow-[0_0_8px_#fff] animate-pulse" aria-hidden="true" />
                   Боевой ИИ-Полигон
                 </Link>
               </div>
