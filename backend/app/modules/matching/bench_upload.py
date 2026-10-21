@@ -130,6 +130,12 @@ def _normalize_declared_stack(raw_decl: Any, resume_text: str | None = None) -> 
     return tags[:80]
 
 
+# Подсказка к ошибкам формата: какие поля ждём и где взять образец (эксперт приносит файл своей формы)
+FORMAT_HINT = (" Ожидаемые поля: needs — id, text, direction, grade; candidates — id, direction, grade, skills, theta;"
+               " labels — need_id, candidate_id, relevance (0–3 или 0/1). Скачайте образец:"
+               " /api/employer/benchmark/sample?format=json (или format=csv).")
+
+
 def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
     """Разбирает JSON или CSV (многострочный kind=need|candidate|label либо плоскую таблицу пар) в единую структуру."""
     if not content or not content.strip():
@@ -145,7 +151,7 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
         except Exception as exc:  # noqa: BLE001
             raise api_error(422, "invalid_json", f"Ошибка разбора JSON: проверьте синтаксис файла ({exc}).") from None
         if not isinstance(raw, dict):
-            raise api_error(422, "invalid_json_root", "Корнем JSON должен быть объект с полями needs (или vacancies) и candidates.")
+            raise api_error(422, "invalid_json_root", "Корнем JSON должен быть объект с полями needs (или vacancies) и candidates." + FORMAT_HINT)
         needs_raw = raw.get("needs") or raw.get("vacancies") or []
         cands_raw = raw.get("candidates") or raw.get("profiles") or []
         labels_raw = raw.get("labels") or raw.get("pairs") or raw.get("qrels") or []
@@ -197,7 +203,8 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
                 raise api_error(
                     422,
                     "invalid_csv_row",
-                    f"Строка {idx}: укажите столбец kind (need / candidate / label) или плоские столбцы need_id и candidate_id.",
+                    f"Строка {idx}: укажите столбец kind (need / candidate / label) или плоские столбцы need_id и candidate_id."
+                    " Образец: /api/employer/benchmark/sample?format=csv.",
                 )
         if needs_by_id:
             needs_raw.extend(needs_by_id.values())
@@ -205,9 +212,9 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
             cands_raw.extend(cands_by_id.values())
 
     if not needs_raw:
-        raise api_error(422, "no_needs", "В наборе должна быть хотя бы одна вакансия (поле needs или vacancies).")
+        raise api_error(422, "no_needs", "В наборе должна быть хотя бы одна вакансия (поле needs или vacancies)." + FORMAT_HINT)
     if not cands_raw:
-        raise api_error(422, "no_candidates", "В наборе должен быть хотя бы один кандидат (поле candidates).")
+        raise api_error(422, "no_candidates", "В наборе должен быть хотя бы один кандидат (поле candidates)." + FORMAT_HINT)
     if len(needs_raw) > MAX_NEEDS:
         raise api_error(422, "too_many_needs", f"Не более {MAX_NEEDS} вакансий за один запрос.")
     if len(cands_raw) > MAX_CANDIDATES:

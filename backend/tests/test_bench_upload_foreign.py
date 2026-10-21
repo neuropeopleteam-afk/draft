@@ -45,11 +45,15 @@ def test_flat_pairs_with_skill_strings_are_evaluated():
     assert r["summary"]["mrr"] > 0
 
 
-def _code(fn) -> str:
+def _err(fn) -> dict:
     with pytest.raises(HTTPException) as e:
         fn()
     assert e.value.status_code == 422
-    return e.value.detail["code"]
+    return e.value.detail
+
+
+def _code(fn) -> str:
+    return _err(fn)["code"]
 
 
 def test_foreign_json_shape_gives_clear_422():
@@ -63,3 +67,15 @@ def test_foreign_qrels_csv_gives_clear_422():
     body = _csv([("q1", "Middle Python backend", "d1", "Python FastAPI", 3)],
                 head=["query_id", "query_text", "doc_id", "doc_text", "label"])
     assert _code(lambda: ev(body, "csv", 5)) == "invalid_csv_row"
+
+
+def test_format_errors_point_to_sample_and_fields():
+    """Ошибка формата объясняет, что ждём, и даёт адрес образца (п. 4 замечаний «свой набор пар»)."""
+    d = _err(lambda: ev(json.dumps({"jobs": [], "resumes": []}), "json", 5))
+    assert d["code"] == "no_needs"
+    for word in ("/api/employer/benchmark/sample", "needs", "candidates", "labels", "relevance"):
+        assert word in d["message"]
+    d = _err(lambda: ev(json.dumps([1, 2]), "json", 5))
+    assert d["code"] == "invalid_json_root" and "/api/employer/benchmark/sample" in d["message"]
+    d = _err(lambda: ev(_csv([("q1", "x", "d1", "y", 1)], head=["query_id", "query_text", "doc_id", "doc_text", "label"]), "csv", 5))
+    assert "/api/employer/benchmark/sample?format=csv" in d["message"]
