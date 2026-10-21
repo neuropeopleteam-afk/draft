@@ -16,6 +16,7 @@ language: python
 invariants:
   n_options: 4
   extra:
+    leak_resistance: low
     traps:
     - only_5xx
     - key_from_attempt
@@ -32,7 +33,7 @@ prior_difficulty:
     к операции, а не к попытке; таймаут после фактической обработки — типичный источник дублей. Ключ — исполнением
     клиента против тестового сервера, теряющего ответы. Граница Senior/Lead (θ ≈ 2,0 по шкале продукта; b 1,9 —
     по 2 взаимодействующим ограничениям, волна 20.10, без калибровки панелью). Короткое задание. σ 0,3'
-generator: assessment_bank.families_retired.form_leak_2110.common.rest_idempotent_retry_fix
+generator: assessment_bank.families.common.rest_idempotent_retry_fix
 version: 1
 description: 'Senior/Lead, REST API: выбрать верную реализацию повтора POST с ключом идемпотентности. Каждая замена
   исполняется против тестового сервера, печатается число созданных объектов.'

@@ -8,7 +8,7 @@
 - Раунд 1: `python3 tools/bank_retire_form_leak.py --attack <json> --threshold 0.9` (прогон атаки: `/tmp/pos_after_rp.json`) — выведено 48.
 - Раунд 2: `python3 tools/bank_retire_form_leak.py --attack <json> --threshold 0.75` (прогон атаки: `docs/bank/position_attack_2110f_1413.json`) — выведено 9.
 
-Всего выведено: 57.
+Всего выведено: 55 (выведено 57, возвращено 2 — см. ниже).
 
 | Семейство | Формат | Атака | Угадывание | Шанс | Раунд |
 |---|---|---|---|---|---|
@@ -48,7 +48,6 @@
 | `security.supply.dependency_patch_fix` | choose_fix | текст варианта | 100 % | 25 % | 1 |
 | `security.web.html_escape_fix` | choose_fix | длина варианта | 100 % | 25 % | 1 |
 | `security.web.ssrf_allowlist_fix` | choose_fix | длина варианта | 100 % | 25 % | 1 |
-| `backend.py.concurrency_mcq` | mcq_concept | текст варианта | 100 % | 25 % | 1 |
 | `common.git.move_commits_mcq` | mcq_concept | текст варианта | 100 % | 25 % | 1 |
 | `common.git.undo_mcq` | mcq_concept | текст × буква | 90 % | 25 % | 1 |
 | `data_ml.metrics.invariance_mcq` | mcq_concept | текст варианта | 100 % | 25 % | 1 |
@@ -61,7 +60,6 @@
 | `security.web.cookie_policy_mcq` | mcq_concept | длина варианта | 100 % | 25 % | 1 |
 | `security.web.cors_csrf_mcq` | mcq_concept | текст варианта | 100 % | 25 % | 1 |
 | `backend.arch.principal_retry_policy_fix` | choose_fix | текст варианта | 84 % | 25 % | 2 |
-| `common.api.rest_idempotent_retry_fix` | choose_fix | буква × длина | 77 % | 25 % | 2 |
 | `common.docker.cache_order_fix` | choose_fix | текст варианта | 82 % | 25 % | 2 |
 | `data_ml.fe.onehot_serving_fix` | choose_fix | длина варианта | 77 % | 25 % | 2 |
 | `qa.sql.reconciliation_fix` | choose_fix | текст варианта | 86 % | 25 % | 2 |
@@ -69,3 +67,12 @@
 | `analyst.req.acceptance_scenario_mcq` | mcq_concept | текст варианта | 81 % | 25 % | 2 |
 | `mobile.kotlin.flow_lifecycle_mcq` | mcq_concept | текст варианта | 83 % | 25 % | 2 |
 | `mobile.principal.rollout_segments_mcq` | mcq_concept | текст варианта | 83 % | 25 % | 2 |
+
+## Возвращены в выдачу 21.10 (до итоговых прогонов)
+
+Решение штаба (P0 подбора): эти семейства — единственные в банке источники стек-тегов, по которым подбор решает, проверяет ли тест навык из потребности работодателя (`matching.coverage.bank_tags`). После вывода нужда «Python, FastAPI, PostgreSQL» уходила в «вне теста». Содержание заданий не менялось; в YAML добавлена пометка `leak_resistance: low` (утечкоустойчивость ниже: ключ узнаётся по форме для того, кто изучил генератор). Переделка формы ключа — в плане, как у остальных выведенных.
+
+| Семейство | Формат | Атака | Угадывание | Шанс | Почему возвращено |
+|---|---|---|---|---|---|
+| `backend.py.concurrency_mcq` | mcq_concept | text | 100 % | 25 % | единственный источник тега «fastapi» направления backend |
+| `common.api.rest_idempotent_retry_fix` | choose_fix | letter_x_len_rank | 77 % | 25 % | единственный источник тега «rest-api» общего блока (все направления, кроме backend/frontend/mobile) |
