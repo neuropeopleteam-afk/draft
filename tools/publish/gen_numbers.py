@@ -774,7 +774,13 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
                  if ix.get("athletes_with_evsk_norm") is not None else None)]
         er = ((fsp.get("ocr_audit") or {}).get("errors") or {}) if isinstance(fsp.get("ocr_audit"), dict) else {}
         if all(isinstance(er.get(k), dict) for k in ("fio", "place", "birth_date")):
-            bits.append(f"проверка распознавания: ошибок в ФИО — {er['fio'].get('errors')} из {er['fio'].get('checked')}, "
+            # условие подписи (А15 P2): аудит распознавания делался на более ранней версии индекса, чем показанная
+            aud_ix, cur_ix = str((fsp.get("ocr_audit") or {}).get("index") or ""), str(ix.get("index") or "")
+            v_aud, v_cur = re.search(r"v(\d+)", aud_ix), re.search(r"v(\d+)", cur_ix)
+            older = bool(v_aud and v_cur and int(v_aud.group(1)) < int(v_cur.group(1)))
+            bits.append(f"проверка распознавания (аудит индекса v{v_aud.group(1)}, найденные ошибки исправлены в следующих "
+                        f"версиях): " if older else "проверка распознавания: ")
+            bits[-1] += (f"ошибок в ФИО — {er['fio'].get('errors')} из {er['fio'].get('checked')}, "
                         f"в местах — {er['place'].get('errors')} из {er['place'].get('checked')}, в датах рождения — "
                         f"{er['birth_date'].get('errors')} из {er['birth_date'].get('checked')}")
         cards.append({

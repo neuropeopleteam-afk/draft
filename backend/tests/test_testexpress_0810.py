@@ -386,8 +386,17 @@ def test_meta_rules_from_settings(client, monkeypatch):
     assert m == {"grade_change_interval_days": s.grade_change_interval_days,
                  "retake_same_grade_days": s.retake_same_grade_days,
                  "invitation_cooldown_days": s.invitation_cooldown_days,
-                 "confirm_pct": round(100 * s.assessment_confirm_level)}
+                 "confirm_pct": round(100 * s.assessment_confirm_level),
+                 # А4 8679f847 (А19 №2): длина теста на экранах — из тех же настроек движка; ожидание дополнено, не ослаблено
+                 "test_len": {"min_items": s.assessment_min_items, "max_items": s.assessment_max_items,
+                              "max_minutes": s.assessment_max_minutes,
+                              "contested_max_items": s.assessment_contested_max_items,
+                              "contested_max_minutes": s.assessment_contested_max_minutes,
+                              "two_stage_items": s.assessment_two_stage_items,
+                              "two_stage_minutes": s.assessment_two_stage_minutes}}
     monkeypatch.setattr(s, "retake_same_grade_days", 21)
+    monkeypatch.setattr(s, "assessment_max_items", 20)
+    assert client.get("/api/meta").json()["rules"]["test_len"]["max_items"] == 20  # читается на запросе, не при старте
     assert client.get("/api/meta").json()["rules"]["retake_same_grade_days"] == 21
 
 

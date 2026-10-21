@@ -276,6 +276,8 @@ const dist = (d?: Record<string, number>) => d ? Object.entries(d).sort((a, b) =
 function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string; text: string }[]; max_n: number; directions: string[] } }) {
   const { me, signIn } = useAuth();
   const meta = useMeta();
+  // длина полного теста — из настроек движка (/api/meta → rules.test_len), как на экране теста; проверка идёт тем же BankEngine
+  const testLen = (meta as any)?.rules?.test_len as { min_items: number; max_items: number; contested_max_items: number } | undefined;
   const [f, setF] = useState({ strategy: "level_middle", theta: 0.5, direction: "backend", claimed_grade: "middle", n: 10, repeat: true, mode: "full" });
   const [res, setRes] = useState<any>(null);
   const [busy, setBusy] = useState(false);
@@ -310,7 +312,7 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
           <label><span className={lab}>Кандидатов (до {maxN})</span>
             <input className={sel} type="number" min={1} max={maxN} value={f.n} onChange={(e) => setF({ ...f, n: Number(e.target.value) })} /></label>
           <label><span className={lab}>Режим теста</span>
-            <select className={sel} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })}><option value="full">Полный · 8–16 заданий</option><option value="express">Экспресс · 5–7 заданий (Senior: 8–12)</option></select></label>
+            <select className={sel} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })}><option value="full">{testLen ? `Полный · ${testLen.min_items}–${testLen.max_items} заданий (у спорного порога до ${testLen.contested_max_items})` : "Полный · адаптивный"}</option><option value="express">Экспресс · 5–7 заданий (Senior: 8–12)</option></select></label>
           <label className="flex items-center gap-2 self-end pb-2 text-sm text-brand-ink/80"><input type="checkbox" className="h-4 w-4 accent-brand" checked={f.repeat} onChange={(e) => setF({ ...f, repeat: e.target.checked })} />Повторить каждого (согласие попыток)</label>
         </div>
         {oneClick && <p className="mt-3 text-xs text-brand-ink/65">Запуск доступен после входа: по нажатию кнопки вы войдёте как демо-работодатель жюри (своя копия демо) и проверка сразу запустится.</p>}

@@ -33,7 +33,7 @@ SOURCES = {  # источник → файл расчёта и команда п
     "product_st": (DATA / "product_sim_st.json", "make product-sim"),
     "cheat": (DATA / "cheat_bots.json", "make cheat-bots"),
     # единый источник цифр сайта (копия docs/NUMBERS.json): подбор — отложенная проверка, тот же заголовок, что на главной
-    "numbers": (DATA / "numbers.json", "python3 tools/publish/gen_numbers.py"),
+    "numbers": (DATA / "numbers.json", "make numbers"),
 }
 PERSONAS = {"candidate", "candidate_nofsp", "candidate_junior", "candidate_new", "employer", "expert", "fsp"}
 PERSONA_TITLE = {"candidate": "кандидат с ФСП", "candidate_nofsp": "кандидат без ФСП", "candidate_new": "кандидат без категории",

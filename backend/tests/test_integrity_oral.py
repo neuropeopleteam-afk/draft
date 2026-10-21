@@ -147,7 +147,7 @@ def test_api_end_to_end_integrity_oral(client, monkeypatch, stand, flag):  # noq
     assert client.put("/api/me/onboarding", json=ONBOARDING, headers=H(t)).status_code == 200
     out = _api_run_signals(client, t)
     res = out["finish"]
-    integ = res["details"]["integrity"]
+    integ = res["integrity"]  # вид для кандидата: уровень и общая причина
     v = res["details"]["verdict"]
     assert integ["level"] == "low", integ  # предпосылка сценария: достоверность действительно низкая
     if not flag:

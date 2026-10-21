@@ -59,7 +59,9 @@ def test_api_strongest(client):
     for f, r in d["recommendation"].items():
         assert r["main"] in d["cells"][f] and r["then"] == "правила"
         assert r["best_open"] is None or d["models"][r["best_open"]]["open_weights"]
-    assert any(x["model"].startswith("YandexGPT") for x in d["not_measured"])  # честно: не мерили и почему
+    # честно: не мерили и почему — список не пуст; имена моделей на экранном API нейтральные (no_vendor)
+    assert d["not_measured"] and all(x.get("model") for x in d["not_measured"])
+    assert not any("yandex" in str(x["model"]).lower() for x in d["not_measured"])
     text = " ".join(d["conditions"])
     assert "модели, не люди" in text
     raw = json.dumps(d, ensure_ascii=False)
