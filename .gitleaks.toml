@@ -60,3 +60,12 @@ condition = "AND"
 paths = ['''e2e/tests/20-market-mode\.spec\.ts$''']
 regexTarget = "line"
 regexes = ['''password: "Market-pass-123"''']
+
+# Ключи NUMBERS в материалах подачи (docs/submission: key="matching.p5.mean", "key": "bank.families"): имя показателя
+# в docs/NUMBERS.json (строчные слова через точку/подчёркивание), не ключ доступа.
+[[allowlists]]
+description = "Ключи показателей NUMBERS в docs/submission"
+condition = "AND"
+paths = ['''docs/submission/(numfacts\.py|out/facts\.json)$''']
+regexTarget = "line"
+regexes = ['''key"?\s*[:=]\s*"[a-z0-9_]+(\.[a-z0-9_@]+)*"''']
