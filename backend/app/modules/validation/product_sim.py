@@ -18,8 +18,10 @@
 Миры («истина» относительно движка): calibrated — истинные параметры = параметры банка; misspec — трудность семейств
 сдвинута N(0; 0,5), наклоны × lognormal(0; 0,25); amult — истинный наклон = наклон движка × m (чувствительность к
 допущению об a, m = 0,7 / 1,4); testlet — части многошаговых заданий зависимы (общий сдвиг N(0; 0,5) на задание);
-fatigue — усталость: θ к концу 30 заданий ниже на 0,3. «Стандартные условия» (--bank-a): наклоны банка заменены
-допущением аналогичных решений и в движке, и в «истине» (строка рядом с консервативной, не вместо неё).
+fatigue — усталость: θ к концу 30 заданий ниже на 0,3; st — «стандартные условия» S-T (поправка №3, параметры А15):
+движок с a = 1,5 у всех частей (--bank-a mcq=1.5,code=1.5), истина семейства — a × U(0,825; 1,175), b + N(0; 0,3),
+угадывание c = 0,25 в частях с выбором и 0,02 в остальных (код, строка, вывод, текст). Строка рядом с жёсткими
+условиями, не вместо них.
 
 Популяция — как в независимой модели аудита (docs/audit_2010/scripts/sim.py): θ ~ N(0; 1,3), заявленный грейд =
 истинный + {0, 0, 0, +1, +1, −1}; направление — равновероятно; стек — 1–3 тега направления (∝ числу семейств).
@@ -72,7 +74,14 @@ TEST_SEEDS = tuple(range(2201, 2211))    # отчёт прежней механ�
 FINAL_SEEDS = tuple(range(4401, 4411))
 # «Стандартные условия» (S-T, протокол А15, решение штаба 21.10): свои зёрна, один прогон, публикуется при любом исходе
 ST_SEEDS = tuple(range(5501, 5511))
-ST_THETA_SD = 0.25  # θ ~ N(центр ступени; 0,25), истинный грейд равновероятен Intern…Lead
+# S-T (поправка №3, приложение А рецензии А15 — окончательные параметры): θ ~ N(0,5; 1,0), ниже порога Стажёра (−1,75)
+# — перевыбор; заявки: 65 % точные, 25 % на ступень выше, 10 % на ступень ниже (на краях шкалы — точные)
+ST_MEAN, ST_SD = 0.5, 1.0
+ST_CLAIM_P = (0.65, 0.25, 0.10)  # точная, +1, −1
+ST_A = 1.5
+ST_A_RANGE = (0.825, 1.175)
+ST_B_SD = 0.3
+ST_C_CHOICE, ST_C_OTHER = 0.25, 0.02
 THETA_SD = 1.3
 CLAIM_SHIFT = (0, 0, 0, 1, 1, -1)
 ORDER_ALL = ("none", "intern", "junior", "middle", "senior", "lead", "principal")
@@ -91,6 +100,16 @@ DIST_BINS = (0.0, 0.25, 0.5, 1.0, 99.0)
 
 def _rank(g: str | None) -> int:
     return ORDER_ALL.index(g) if g in ORDER_ALL else 0
+
+
+def _merge5(g: str | None) -> int:
+    """Шкала из 5 ступеней: Lead и Principal — одна ступень."""
+    return min(_rank(g), _rank("lead"))
+
+
+def _merge4(g: str | None) -> int:
+    """Шкала из 4 ступеней: ещё и Intern с Junior — одна ступень."""
+    return max(min(_rank(g), _rank("lead")), _rank("junior")) if _rank(g) >= _rank("intern") else 0
 
 
 def wilson(k: int, n: int, z: float = 1.959964) -> list[float] | None:
@@ -123,6 +142,9 @@ class World:
         """(множитель наклона, сдвиг трудности) семейства — постоянны в пределах мира."""
         if self.kind == "amult":
             return float(self.a_mult), 0.0
+        if self.kind == "st":
+            r = np.random.default_rng([self.seed, 2, zlib.crc32(fid.encode())])
+            return float(r.uniform(*ST_A_RANGE)), float(r.normal(0.0, ST_B_SD))
         if self.kind != "misspec":
             return 1.0, 0.0
         r = np.random.default_rng([self.seed, 2, zlib.crc32(fid.encode())])
@@ -165,15 +187,18 @@ class Sim:
         self.be, self.sp, self.two_stage, self.levels = be, sp, two_stage, levels
         self.world = world
         self.rater_noise = float(rater_noise)
-        self.guessing = bool(guessing) and world.kind != "st"  # S-T: 2PL без угадывания
+        self.guessing = bool(guessing)
         self.population = population
         if not getattr(be, "_SIM_CACHE_PATCHED", False):  # генерация варианта на оценку не влияет — кэш по семейству
             orig = be.generate
             cache: dict[str, object] = {}
 
+            # Поправка №3: вариант семейства — всегда по зерну 1 (как family_guess в движке), а не по первому
+            # встреченному: так результат шарда зависит только от зерна мира и конфигурации, а не от порядка зёрен
+            # в процессе (раньше LLR и θ̂ слегка различались между одиночным и многозерновым прогоном)
             def cached(fid, seed):
                 if fid not in cache:
-                    cache[fid] = orig(fid, seed)
+                    cache[fid] = orig(fid, 1)
                 return cache[fid]
 
             be.generate = cached
@@ -201,14 +226,12 @@ class Sim:
         order = ("none",) + tuple(self.levels.available_grades(d))
         from app.modules.catalog.seed_data import ALL_GRADE_CUTS
 
-        if self.population.startswith("st"):
-            # S-T: истинная ступень равновероятна Intern…Lead, θ ~ N(центр ступени; 0,25); заявки: st-a — честные,
-            # st-b — треть завышает на ступень
-            ladder = [g for g in order[1:] if g != "principal"]
-            g0 = ladder[int(self.r_pop.integers(len(ladder)))]
-            i0 = order.index(g0)
-            hi = ALL_GRADE_CUTS[order[i0 + 1]] if i0 + 1 < len(order) else ALL_GRADE_CUTS[g0] + 1.0
-            theta = float(self.r_pop.normal((ALL_GRADE_CUTS[g0] + hi) / 2.0, ST_THETA_SD))
+        if self.population == "st":
+            # S-T: θ ~ N(0,5; 1,0), ниже нижнего порога направления — перевыбор (в S-T нет класса «ниже Стажёра»)
+            lo = ALL_GRADE_CUTS[order[1]]
+            theta = float(self.r_pop.normal(ST_MEAN, ST_SD))
+            while theta < lo:
+                theta = float(self.r_pop.normal(ST_MEAN, ST_SD))
         else:
             theta = float(self.r_pop.normal(0.0, THETA_SD))
         g = "none"
@@ -216,10 +239,11 @@ class Sim:
             if theta >= ALL_GRADE_CUTS[gr]:
                 g = gr
         gi = order.index(g)
-        if self.population == "st-a":
-            shift = 0
-        elif self.population == "st-b":
-            shift = 1 if self.r_pop.random() < 1.0 / 3.0 else 0
+        if self.population == "st":
+            u = float(self.r_pop.random())
+            shift = 0 if u < ST_CLAIM_P[0] else (1 if u < ST_CLAIM_P[0] + ST_CLAIM_P[1] else -1)
+            if not 1 <= gi + shift <= len(order) - 1:  # на краях шкалы — точная заявка
+                shift = 0
         else:
             shift = CLAIM_SHIFT[int(self.r_pop.integers(len(CLAIM_SHIFT)))]
         ci = int(np.clip(gi + shift, 1, len(order) - 1))
@@ -245,7 +269,11 @@ class Sim:
         if self.world.kind == "testlet" and len(b) > 1:
             z = z + a * self.r_resp.normal(0.0, TESTLET_SD)  # общий сдвиг на все части задания
         pr = 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
-        if self.guessing:  # люди угадывают: в части с выбором варианта c = 1/K (K — число вариантов этого шага)
+        if self.guessing and self.world.kind == "st":  # S-T: c = 0,25 в частях с выбором, 0,02 в остальных
+            c = np.array([ST_C_CHOICE if self.be.BankEngine._answer_kind(cur, j + 1) == "option" else ST_C_OTHER
+                          for j in range(len(pr))])
+            pr = c + (1.0 - c) * pr
+        elif self.guessing:  # люди угадывают: в части с выбором варианта c = 1/K (K — число вариантов этого шага)
             c = np.zeros(len(pr))
             for j in range(len(pr)):
                 kind = self.be.BankEngine._answer_kind(cur, j + 1)
@@ -523,11 +551,23 @@ def summarize(rows: list[dict]) -> dict:
         "false_confirm_all": frac(fc, n),
         "false_confirm_among_overclaim": frac(fc, len(over)),
         "false_reject_among_true": frac(fr, len(ok)),
+        "false_reject_all": frac(fr, n),  # критерий выбора на TRAIN: L = 3 · FC + FR (обе доли — от всех кандидатов)
         "undecided_final": frac(sum(1 for r in rows if r["verdict_final"] == "undecided"), n),
         "exact_grade_final": frac(ex("grade_final", rows), n),
         "exact_grade_final_not_underclaim": frac(ex("grade_final", not_under), len(not_under)),
         "within_one_final": frac(w1("grade_final", rows), n),
+        # поправка №3 (сопоставимость со шкалами 4–5 грейдов): 5 — Lead ∪ Principal, 4 — ещё Intern ∪ Junior
+        "exact_grade_final_5": frac(sum(1 for r in rows if _merge5(r["grade_final"]) == _merge5(r["true_grade"])), n),
+        "exact_grade_final_4": frac(sum(1 for r in rows if _merge4(r["grade_final"]) == _merge4(r["true_grade"])), n),
+        "exact_grade_main_5": frac(sum(1 for r in rows if _merge5(r["grade_main"]) == _merge5(r["true_grade"])), n),
+        "exact_grade_main_4": frac(sum(1 for r in rows if _merge4(r["grade_main"]) == _merge4(r["true_grade"])), n),
         "gross_error_2plus": frac(sum(1 for r in rows if abs(_rank(r["grade_final"]) - _rank(r["true_grade"])) >= 2), n),
+        "grade_above_true_final": frac(sum(1 for r in rows if _rank(r["grade_final"]) > _rank(r["true_grade"])), n),
+        "grade_below_true_final": frac(sum(1 for r in rows if _rank(r["grade_final"]) < _rank(r["true_grade"])), n),
+        "kappa_w_with_truth_final": kappa_ci([_rank(r["grade_final"]) for r in rows], [_rank(r["true_grade"]) for r in rows],
+                                             len(ORDER_ALL)),
+        "kappa_w_with_truth_main": kappa_ci([_rank(r["grade_main"]) for r in rows], [_rank(r["true_grade"]) for r in rows],
+                                            len(ORDER_ALL)),
         "followup_share": frac(len(refined), n),
         "oral_share": frac(sum(1 for r in rows if r.get("oral")), n),
         "extended_share": frac(sum(1 for r in rows if r.get("extended")), n),
@@ -540,6 +580,11 @@ def summarize(rows: list[dict]) -> dict:
         "code_open_share_main": {"mean": round(float(co.mean()), 3),
                                  "share_sessions_ge_one_third": round(float(np.mean(co >= 1 / 3 - 1e-9)), 4)},
     }
+    # «вдали от порога» (поправка №3): точный грейд у кандидатов, чей θ дальше 0,25 от ближайшего порога
+    far = [r for r in rows if r["dist_nearest"] > 0.25]
+    out["far_from_cut_0_25"] = {"n": len(far), "exact_grade_final": frac(ex("grade_final", far), len(far)),
+                                "within_one_final": frac(w1("grade_final", far), len(far)),
+                                "exact_grade_main": frac(ex("grade_main", far), len(far))}
     # вне зоны безразличия ±0,25 / ±0,4 у заявленного порога — рядом с полной популяцией
     for z in (0.25, 0.4):
         rs = [r for r in rows if abs(r["theta_true"] - r["cut_claim"]) >= z]
@@ -582,9 +627,13 @@ def summarize(rows: list[dict]) -> dict:
                     "те же кандидаты, то же правило решения и оценка уровня, без адаптивности, продления и второго этапа",
             "n": len(fx),
             "adaptive_main": {"exact_grade": frac(ex("grade_main", fx), len(fx)), "within_one": frac(w1("grade_main", fx), len(fx)),
+                              "exact_grade_5": frac(sum(1 for r in fx if _merge5(r["grade_main"]) == _merge5(r["true_grade"])), len(fx)),
+                              "exact_grade_4": frac(sum(1 for r in fx if _merge4(r["grade_main"]) == _merge4(r["true_grade"])), len(fx)),
                               "confident_share": frac(sum(1 for r in fx if r["verdict_main"] in ("confirmed", "not_confirmed")), len(fx)),
                               "false_confirm_all": frac(sum(1 for r in fx if r["verdict_main"] == "confirmed" and not _truth_ok(r)), len(fx))},
             "fixed": {"exact_grade": frac(ex("fixed_grade", fx), len(fx)), "within_one": frac(w1("fixed_grade", fx), len(fx)),
+                      "exact_grade_5": frac(sum(1 for r in fx if _merge5(r["fixed_grade"]) == _merge5(r["true_grade"])), len(fx)),
+                      "exact_grade_4": frac(sum(1 for r in fx if _merge4(r["fixed_grade"]) == _merge4(r["true_grade"])), len(fx)),
                       "confident_share": frac(len(fdec), len(fx)),
                       "false_confirm_all": frac(sum(1 for r in fx if r["fixed_verdict"] == "confirmed" and not _truth_ok(r)), len(fx))},
         }
@@ -600,18 +649,38 @@ def by_claim(rows: list[dict]) -> dict:
     return {k: {kk: summarize(g[k])[kk] for kk in keys} for k in ORDER_ALL[1:] if g.get(k)}
 
 
-def kappa_w(a: list[int], b: list[int], k: int) -> float | None:
-    """Взвешенная каппа Коэна (квадратичные веса)."""
+def kappa_w(a: list[int], b: list[int], k: int, weights: str = "quadratic") -> float | None:
+    """Каппа Коэна: weights="quadratic" — взвешенная (квадратичные веса), "none" — без весов."""
     if not a:
         return None
     o = np.zeros((k, k))
     for i, j in zip(a, b):
         o[i, j] += 1
     o /= o.sum()
-    w = np.array([[(i - j) ** 2 for j in range(k)] for i in range(k)], dtype=float) / (k - 1) ** 2
+    if weights == "none":
+        w = 1.0 - np.eye(k)
+    else:
+        w = np.array([[(i - j) ** 2 for j in range(k)] for i in range(k)], dtype=float) / (k - 1) ** 2
     e = np.outer(o.sum(1), o.sum(0))
     den = (w * e).sum()
     return None if den == 0 else round(float(1 - (w * o).sum() / den), 4)
+
+
+def kappa_ci(a: list[int], b: list[int], k: int, weights: str = "quadratic", n_boot: int = 1000) -> dict:
+    """Каппа с 95 % ДИ бутстрепа по парам (зерно бутстрепа фиксировано — отчёт воспроизводим)."""
+    v = kappa_w(a, b, k, weights)
+    if not a or v is None:
+        return {"value": v, "ci95": None, "n": len(a)}
+    r = np.random.default_rng(20261021)
+    aa, bb = np.asarray(a), np.asarray(b)
+    bs = []
+    for _ in range(n_boot):
+        ix = r.integers(0, len(aa), len(aa))
+        x = kappa_w(list(aa[ix]), list(bb[ix]), k, weights)
+        if x is not None:
+            bs.append(x)
+    ci = [round(float(np.percentile(bs, 2.5)), 4), round(float(np.percentile(bs, 97.5)), 4)] if bs else None
+    return {"value": v, "ci95": ci, "n": len(a), "weights": weights}
 
 
 def retest_summary(pairs: list[dict]) -> dict:
@@ -620,9 +689,15 @@ def retest_summary(pairs: list[dict]) -> dict:
     same = sum(1 for i, j in zip(a, b) if i == j)
     w1 = sum(1 for i, j in zip(a, b) if abs(i - j) <= 1)
     vsame = sum(1 for x in pairs if x["v1"] == x["v2"])
+    # поправка №3: «совпадение решения» — подтверждён / не подтверждён (без решения = не подтверждён, как в продукте)
+    csame = sum(1 for x in pairs if "c1" in x and bool(x["c1"]) == bool(x["c2"]))
+    n_c = sum(1 for x in pairs if "c1" in x)
     return {"n_pairs": len(pairs), "kappa_w_quadratic": kappa_w(a, b, len(ORDER_ALL)),
+            "kappa_w_quadratic_ci": kappa_ci(a, b, len(ORDER_ALL)),
+            "kappa_cohen_unweighted": kappa_ci(a, b, len(ORDER_ALL), weights="none"),
             "exact_agreement": frac(same, len(a)), "within_one_agreement": frac(w1, len(a)),
             "verdict_agreement": frac(vsame, len(a)),
+            "decision_agreement": frac(csame, n_c),
             "shared_families_mean": round(float(np.mean([x["shared"] for x in pairs])), 2) if pairs else None,
             "what": "тот же модельный кандидат проходит продукт второй раз: новые зёрна сессии, семейства первой попытки "
                     "исключены (как у повторной попытки в продукте); сравнивается итоговый уровень продукта"}
@@ -664,7 +739,7 @@ def run(phase: str, world: World, n: int, seeds: tuple[int, ...], rater_noise: f
                     o2 = sim.flow(p, previous_subpools=[o["subpool"]] if o["subpool"] is not None else [],
                                   seen=seen, seen_seeds=seeds_, two_stage_on=two_stage_on, oral_on=oral_on)
                     pairs.append({"g1": o["grade_final"], "g2": o2["grade_final"], "v1": o["verdict_final"],
-                                  "v2": o2["verdict_final"], "shared": len(set(o["families"]) & set(o2["families"]))})
+                                  "v2": o2["verdict_final"], "c1": o["confirmed_final"], "c2": o2["confirmed_final"], "shared": len(set(o["families"]) & set(o2["families"]))})
                 except Exception as ex:
                     errors.append(f"retest {type(ex).__name__}: {ex}"[:200])
             if progress and (len(rows) % 50 == 0):
@@ -714,13 +789,15 @@ def _meta(a, seeds, world: World, bank_a: dict | None) -> dict:
         "n_requested": a.n, "rater_noise_text_parts": a.rater_noise, "two_stage": not a.no_two_stage,
         "oral_model": None if a.no_oral else {"questions": ORAL_K, "a": ORAL_A, "guessing": 0.0,
                                               "what": "консервативная модель устной защиты после второго этапа"},
-        "responses": "3PL с истинными параметрами: угадывание c = 1/K по фактическому числу вариантов шага, 1/строк для "
-                     "выбора строки; разброс вариантов N(0; σ) по трудности",
+        "responses": ("S-T: 3PL, истина семейства a × U(0,825; 1,175), b + N(0; 0,3); угадывание c = 0,25 в частях с "
+                      "выбором и 0,02 в остальных; разброс вариантов N(0; σ) по трудности" if world.kind == "st" else
+                      "3PL с истинными параметрами: угадывание c = 1/K по фактическому числу вариантов шага, 1/строк "
+                      "для выбора строки; разброс вариантов N(0; σ) по трудности"),
         "population": ({"theta": f"N(0; {THETA_SD})", "claim_shift": list(CLAIM_SHIFT),
                         "stack": "1–3 тега направления, вероятность ∝ числу семейств банка с этим тегом"}
                        if a.population == "hard" else
-                       {"theta": f"N(центр ступени; {ST_THETA_SD}), ступень равновероятна Intern…Lead",
-                        "claims": "честные" if a.population == "st-a" else "треть завышает на ступень",
+                       {"theta": f"N({ST_MEAN}; {ST_SD}), ниже нижнего порога направления — перевыбор",
+                        "claims": "65 % точные, 25 % на ступень выше, 10 % на ступень ниже; на краях шкалы — точные",
                         "stack": "1–3 тега направления, вероятность ∝ числу семейств банка с этим тегом"}),
         "bank": {"n_families": e.n_families, "manifest": getattr(e, "manifest", None)},
         "settings": settings_snapshot(), "git_commit": _git_commit(),
@@ -767,7 +844,7 @@ def main(argv=None) -> int:
         return merge(a.files, a.out)
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--phase", choices=("train", "test", "final", "st"), required=True)
-    ap.add_argument("--population", choices=("hard", "st-a", "st-b"), default="hard")
+    ap.add_argument("--population", choices=("hard", "st"), default="hard")
     ap.add_argument("--expect-bank-hash", type=str, default="",
                     help="для --phase final: content_hash банка из BANK_SYNC.json, зафиксированный в коммите до прогона")
     ap.add_argument("--world", choices=("calibrated", "misspec", "amult", "testlet", "fatigue", "st"), default="calibrated")
@@ -791,6 +868,9 @@ def main(argv=None) -> int:
     if a.phase == "st":
         if not set(seeds) <= set(ST_SEEDS):
             raise SystemExit("стандартные условия — только на ST_SEEDS")
+        # поправка №3: S-T — ровно условия А15 (не подбираются)
+        if a.population != "st" or a.world != "st" or a.bank_a.replace(" ", "") != f"mcq={ST_A},code={ST_A}":
+            raise SystemExit(f"S-T: нужны --population st --world st --bank-a mcq={ST_A},code={ST_A}")
         check_final_bank(FINAL_SEEDS, a.expect_bank_hash)
     bank_a = apply_bank_a(a.bank_a) if a.bank_a else None
     world = World(0, a.world, a.a_mult)
