@@ -15,6 +15,7 @@ language: text
 invariants:
   n_options: 4
   extra:
+    leak_resistance: low
     scenarios: 8
 time_limit_s: 120
 canary: false
@@ -24,7 +25,7 @@ prior_difficulty:
   sigma_variant: 0.45
   basis: Априорная, до калибровки на людях (a = 1,0). Сценарий из практики, 4 варианта; восемь сценариев разной
     трудности (time.sleep в async проще, gather/create_task труднее) → σ высокая
-generator: assessment_bank.families_retired.form_leak_2110.backend.py_concurrency_mcq
+generator: assessment_bank.families.backend.py_concurrency_mcq
 version: 1
 description: 'Концептуальные вопросы о поведении асинхронного и многопоточного кода в продакшене. Ключ сверяется
   со справочной таблицей (документация Python/asyncio, Starlette/anyio).

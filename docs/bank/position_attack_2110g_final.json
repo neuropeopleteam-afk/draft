@@ -1,16 +1,16 @@
 {
- "command": "../tools/bank_position_attack.py --train 100 --test 300 --key 2110g --jobs 12 --out /w/a3f/pos_2110g.json",
+ "command": "../tools/bank_position_attack.py --train 100 --test 300 --key 2110g --jobs 14 --out /w/a3q/pos_2110g.json",
  "train_seeds": 100,
  "test_seeds": 300,
  "key": "2110g",
- "n_families": 1236,
+ "n_families": 1238,
  "summary": {
   "chance": 0.2076,
   "letter": {
-   "acc": 0.2072,
+   "acc": 0.2073,
    "chance": 0.2076,
-   "n_families": 1236,
-   "n_test_variants": 370799
+   "n_families": 1238,
+   "n_test_variants": 371399
   },
   "value_rank": {
    "acc": 0.2048,
@@ -19,10 +19,10 @@
    "n_test_variants": 339000
   },
   "len_rank": {
-   "acc": 0.2427,
+   "acc": 0.2432,
    "chance": 0.2076,
-   "n_families": 1236,
-   "n_test_variants": 370799
+   "n_families": 1238,
+   "n_test_variants": 371399
   },
   "letter_x_value_rank": {
    "acc": 0.2032,
@@ -31,28 +31,28 @@
    "n_test_variants": 339000
   },
   "letter_x_len_rank": {
-   "acc": 0.239,
+   "acc": 0.2395,
    "chance": 0.2076,
-   "n_families": 1236,
-   "n_test_variants": 370799
+   "n_families": 1238,
+   "n_test_variants": 371399
   },
   "text": {
-   "acc": 0.2292,
+   "acc": 0.2299,
    "chance": 0.2076,
-   "n_families": 1236,
-   "n_test_variants": 370799
+   "n_families": 1238,
+   "n_test_variants": 371399
   },
   "text_x_letter": {
-   "acc": 0.2259,
+   "acc": 0.2266,
    "chance": 0.2076,
-   "n_families": 1236,
-   "n_test_variants": 370799
+   "n_families": 1238,
+   "n_test_variants": 371399
   },
   "ctx_x_letter": {
-   "acc": 0.2079,
+   "acc": 0.208,
    "chance": 0.2076,
-   "n_families": 1236,
-   "n_test_variants": 370799
+   "n_families": 1238,
+   "n_test_variants": 371399
   },
   "ctx_x_value_rank": {
    "acc": 0.2041,
@@ -61,19 +61,21 @@
    "n_test_variants": 339000
   },
   "ctx_x_text": {
-   "acc": 0.225,
+   "acc": 0.2255,
    "chance": 0.2076,
-   "n_families": 1236,
-   "n_test_variants": 370799
+   "n_families": 1238,
+   "n_test_variants": 371399
   }
  },
  "flag_threshold": 0.1,
- "n_flagged": 117,
+ "n_flagged": 119,
  "flagged": [
+  "backend.py.concurrency_mcq",
   "backend.api.idempotency_key_fix",
   "devops.docker.entrypoint_cmd_mcq",
   "backend.cache.stampede_fix",
   "common.strategy.migration_plan_mcq",
+  "common.api.rest_idempotent_retry_fix",
   "qa.lead.retry_tradeoff_mcq",
   "backend.kafka.offset_commit_mcq",
   "data_ml.llm.chunking_fix",
@@ -190,6 +192,26 @@
  ],
  "families": [
   {
+   "family_id": "backend.py.concurrency_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.24,
+    "len_rank": 0.42,
+    "letter_x_len_rank": 0.3867,
+    "text": 1.0,
+    "text_x_letter": 0.9814,
+    "ctx_x_letter": 0.2717,
+    "ctx_x_text": 0.835
+   },
+   "best": "text",
+   "best_acc": 1.0,
+   "excess": 0.75
+  },
+  {
    "family_id": "backend.api.idempotency_key_fix",
    "n_test": 300,
    "n_options": {
@@ -268,6 +290,26 @@
    "best": "text",
    "best_acc": 0.6942,
    "excess": 0.4442
+  },
+  {
+   "family_id": "common.api.rest_idempotent_retry_fix",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2933,
+    "len_rank": 0.6917,
+    "letter_x_len_rank": 0.6933,
+    "text": 0.2639,
+    "text_x_letter": 0.2569,
+    "ctx_x_letter": 0.2233,
+    "ctx_x_text": 0.2639
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.6933,
+   "excess": 0.4433
   },
   {
    "family_id": "qa.lead.retry_tradeoff_mcq",
@@ -2761,29 +2803,6 @@
    "excess": 0.1001
   },
   {
-   "family_id": "backend.api_bandwidth.middle_solve_s_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.21,
-    "value_rank": 0.1933,
-    "len_rank": 0.2831,
-    "letter_x_value_rank": 0.1617,
-    "letter_x_len_rank": 0.3,
-    "text": 0.2027,
-    "text_x_letter": 0.21,
-    "ctx_x_letter": 0.2183,
-    "ctx_x_value_rank": 0.215,
-    "ctx_x_text": 0.2011
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.3,
-   "excess": 0.1
-  },
-  {
    "family_id": "backend.export_pages.intern_fwd_k2",
    "n_test": 300,
    "n_options": {
@@ -2801,6 +2820,29 @@
     "ctx_x_letter": 0.2025,
     "ctx_x_value_rank": 0.2417,
     "ctx_x_text": 0.2304
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.3,
+   "excess": 0.1
+  },
+  {
+   "family_id": "backend.api_bandwidth.middle_solve_s_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.21,
+    "value_rank": 0.1933,
+    "len_rank": 0.2831,
+    "letter_x_value_rank": 0.1617,
+    "letter_x_len_rank": 0.3,
+    "text": 0.2027,
+    "text_x_letter": 0.21,
+    "ctx_x_letter": 0.2183,
+    "ctx_x_value_rank": 0.215,
+    "ctx_x_text": 0.2011
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.3,
@@ -4664,29 +4706,6 @@
    "excess": 0.0833
   },
   {
-   "family_id": "security.aead_backup.senior_fwd_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1767,
-    "value_rank": 0.2067,
-    "len_rank": 0.2216,
-    "letter_x_value_rank": 0.1683,
-    "letter_x_len_rank": 0.2033,
-    "text": 0.275,
-    "text_x_letter": 0.2833,
-    "ctx_x_letter": 0.2111,
-    "ctx_x_value_rank": 0.1967,
-    "ctx_x_text": 0.275
-   },
-   "best": "text_x_letter",
-   "best_acc": 0.2833,
-   "excess": 0.0833
-  },
-  {
    "family_id": "security.aead_backup.lead_solve_tb_k5",
    "n_test": 300,
    "n_options": {
@@ -4706,6 +4725,29 @@
     "ctx_x_text": 0.2002
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.2833,
+   "excess": 0.0833
+  },
+  {
+   "family_id": "security.aead_backup.senior_fwd_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1767,
+    "value_rank": 0.2067,
+    "len_rank": 0.2216,
+    "letter_x_value_rank": 0.1683,
+    "letter_x_len_rank": 0.2033,
+    "text": 0.275,
+    "text_x_letter": 0.2833,
+    "ctx_x_letter": 0.2111,
+    "ctx_x_value_rank": 0.1967,
+    "ctx_x_text": 0.275
+   },
+   "best": "text_x_letter",
    "best_acc": 0.2833,
    "excess": 0.0833
   },
@@ -5052,29 +5094,6 @@
    "excess": 0.08
   },
   {
-   "family_id": "common.id_exhaust.senior_solve_lam_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2067,
-    "value_rank": 0.2167,
-    "len_rank": 0.2367,
-    "letter_x_value_rank": 0.2083,
-    "letter_x_len_rank": 0.28,
-    "text": 0.2286,
-    "text_x_letter": 0.25,
-    "ctx_x_letter": 0.1733,
-    "ctx_x_value_rank": 0.2217,
-    "ctx_x_text": 0.2258
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.28,
-   "excess": 0.08
-  },
-  {
    "family_id": "common.net.cidr_mcq",
    "n_test": 300,
    "n_options": {
@@ -5115,6 +5134,29 @@
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.33,
+   "excess": 0.08
+  },
+  {
+   "family_id": "common.id_exhaust.senior_solve_lam_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2067,
+    "value_rank": 0.2167,
+    "len_rank": 0.2367,
+    "letter_x_value_rank": 0.2083,
+    "letter_x_len_rank": 0.28,
+    "text": 0.2286,
+    "text_x_letter": 0.25,
+    "ctx_x_letter": 0.1733,
+    "ctx_x_value_rank": 0.2217,
+    "ctx_x_text": 0.2258
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.28,
    "excess": 0.08
   },
   {
@@ -5417,6 +5459,29 @@
    "excess": 0.0768
   },
   {
+   "family_id": "analyst.support_escalation_cap.senior_solve_dau_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2033,
+    "value_rank": 0.2233,
+    "len_rank": 0.2467,
+    "letter_x_value_rank": 0.225,
+    "letter_x_len_rank": 0.2767,
+    "text": 0.2461,
+    "text_x_letter": 0.2333,
+    "ctx_x_letter": 0.2156,
+    "ctx_x_value_rank": 0.1867,
+    "ctx_x_text": 0.2461
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.2767,
+   "excess": 0.0767
+  },
+  {
    "family_id": "analyst.gateway_retry_sla.senior_fwd_k5",
    "n_test": 300,
    "n_options": {
@@ -5480,29 +5545,6 @@
     "ctx_x_letter": 0.2083,
     "ctx_x_value_rank": 0.23,
     "ctx_x_text": 0.2026
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2767,
-   "excess": 0.0767
-  },
-  {
-   "family_id": "analyst.support_escalation_cap.senior_solve_dau_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2033,
-    "value_rank": 0.2233,
-    "len_rank": 0.2467,
-    "letter_x_value_rank": 0.225,
-    "letter_x_len_rank": 0.2767,
-    "text": 0.2461,
-    "text_x_letter": 0.2333,
-    "ctx_x_letter": 0.2156,
-    "ctx_x_value_rank": 0.1867,
-    "ctx_x_text": 0.2461
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.2767,
@@ -5963,29 +6005,6 @@
    "excess": 0.0733
   },
   {
-   "family_id": "data_eng.etl_window.junior_solve_g_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.15,
-    "value_rank": 0.2233,
-    "len_rank": 0.2478,
-    "letter_x_value_rank": 0.2033,
-    "letter_x_len_rank": 0.21,
-    "text": 0.2733,
-    "text_x_letter": 0.2733,
-    "ctx_x_letter": 0.2022,
-    "ctx_x_value_rank": 0.2022,
-    "ctx_x_text": 0.2733
-   },
-   "best": "text_x_letter",
-   "best_acc": 0.2733,
-   "excess": 0.0733
-  },
-  {
    "family_id": "data_eng.etl_window.middle_solve_v_k2",
    "n_test": 300,
    "n_options": {
@@ -6009,25 +6028,25 @@
    "excess": 0.0733
   },
   {
-   "family_id": "data_ml.feature_store.principal_solve_f_k5",
+   "family_id": "data_eng.etl_window.junior_solve_g_k2",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.19,
-    "value_rank": 0.23,
-    "len_rank": 0.2299,
-    "letter_x_value_rank": 0.1933,
-    "letter_x_len_rank": 0.23,
-    "text": 0.1986,
-    "text_x_letter": 0.2367,
-    "ctx_x_letter": 0.15,
-    "ctx_x_value_rank": 0.2733,
-    "ctx_x_text": 0.203
+    "letter": 0.15,
+    "value_rank": 0.2233,
+    "len_rank": 0.2478,
+    "letter_x_value_rank": 0.2033,
+    "letter_x_len_rank": 0.21,
+    "text": 0.2733,
+    "text_x_letter": 0.2733,
+    "ctx_x_letter": 0.2022,
+    "ctx_x_value_rank": 0.2022,
+    "ctx_x_text": 0.2733
    },
-   "best": "ctx_x_value_rank",
+   "best": "text_x_letter",
    "best_acc": 0.2733,
    "excess": 0.0733
   },
@@ -6051,6 +6070,29 @@
     "ctx_x_text": 0.2639
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.2733,
+   "excess": 0.0733
+  },
+  {
+   "family_id": "data_ml.feature_store.principal_solve_f_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.19,
+    "value_rank": 0.23,
+    "len_rank": 0.2299,
+    "letter_x_value_rank": 0.1933,
+    "letter_x_len_rank": 0.23,
+    "text": 0.1986,
+    "text_x_letter": 0.2367,
+    "ctx_x_letter": 0.15,
+    "ctx_x_value_rank": 0.2733,
+    "ctx_x_text": 0.203
+   },
+   "best": "ctx_x_value_rank",
    "best_acc": 0.2733,
    "excess": 0.0733
   },
@@ -6469,6 +6511,29 @@
    "excess": 0.0701
   },
   {
+   "family_id": "analyst.async_queue_lag.senior_fwd_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2167,
+    "value_rank": 0.18,
+    "len_rank": 0.26,
+    "letter_x_value_rank": 0.2433,
+    "letter_x_len_rank": 0.27,
+    "text": 0.2123,
+    "text_x_letter": 0.2367,
+    "ctx_x_letter": 0.1967,
+    "ctx_x_value_rank": 0.1933,
+    "ctx_x_text": 0.2078
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.27,
+   "excess": 0.07
+  },
+  {
    "family_id": "analyst.principal.pilot_value_mcq",
    "n_test": 300,
    "n_options": {
@@ -6508,29 +6573,6 @@
     "ctx_x_text": 0.2
    },
    "best": "value_rank",
-   "best_acc": 0.27,
-   "excess": 0.07
-  },
-  {
-   "family_id": "analyst.async_queue_lag.senior_fwd_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2167,
-    "value_rank": 0.18,
-    "len_rank": 0.26,
-    "letter_x_value_rank": 0.2433,
-    "letter_x_len_rank": 0.27,
-    "text": 0.2123,
-    "text_x_letter": 0.2367,
-    "ctx_x_letter": 0.1967,
-    "ctx_x_value_rank": 0.1933,
-    "ctx_x_text": 0.2078
-   },
-   "best": "letter_x_len_rank",
    "best_acc": 0.27,
    "excess": 0.07
   },
@@ -6581,29 +6623,6 @@
    "excess": 0.07
   },
   {
-   "family_id": "backend.webhook_drain.lead_solve_mu_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.21,
-    "value_rank": 0.18,
-    "len_rank": 0.2451,
-    "letter_x_value_rank": 0.2133,
-    "letter_x_len_rank": 0.27,
-    "text": 0.2336,
-    "text_x_letter": 0.2233,
-    "ctx_x_letter": 0.2333,
-    "ctx_x_value_rank": 0.2222,
-    "ctx_x_text": 0.1846
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.27,
-   "excess": 0.07
-  },
-  {
    "family_id": "common.linux.umask_chmod",
    "n_test": 300,
    "n_options": {
@@ -6624,6 +6643,29 @@
    },
    "best": "value_rank",
    "best_acc": 0.32,
+   "excess": 0.07
+  },
+  {
+   "family_id": "backend.webhook_drain.lead_solve_mu_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.21,
+    "value_rank": 0.18,
+    "len_rank": 0.2451,
+    "letter_x_value_rank": 0.2133,
+    "letter_x_len_rank": 0.27,
+    "text": 0.2336,
+    "text_x_letter": 0.2233,
+    "ctx_x_letter": 0.2333,
+    "ctx_x_value_rank": 0.2222,
+    "ctx_x_text": 0.1846
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.27,
    "excess": 0.07
   },
   {
@@ -6650,29 +6692,6 @@
    "excess": 0.07
   },
   {
-   "family_id": "devops.egress_cost.senior_solve_h_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.27,
-    "value_rank": 0.2367,
-    "len_rank": 0.2279,
-    "letter_x_value_rank": 0.25,
-    "letter_x_len_rank": 0.2633,
-    "text": 0.2,
-    "text_x_letter": 0.27,
-    "ctx_x_letter": 0.2217,
-    "ctx_x_value_rank": 0.1933,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter",
-   "best_acc": 0.27,
-   "excess": 0.07
-  },
-  {
    "family_id": "devops.egress_cost.middle_fwd_k4",
    "n_test": 300,
    "n_options": {
@@ -6692,6 +6711,29 @@
     "ctx_x_text": 0.2637
    },
    "best": "text_x_letter",
+   "best_acc": 0.27,
+   "excess": 0.07
+  },
+  {
+   "family_id": "devops.egress_cost.senior_solve_h_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.27,
+    "value_rank": 0.2367,
+    "len_rank": 0.2279,
+    "letter_x_value_rank": 0.25,
+    "letter_x_len_rank": 0.2633,
+    "text": 0.2,
+    "text_x_letter": 0.27,
+    "ctx_x_letter": 0.2217,
+    "ctx_x_value_rank": 0.1933,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter",
    "best_acc": 0.27,
    "excess": 0.07
   },
@@ -6742,29 +6784,6 @@
    "excess": 0.07
   },
   {
-   "family_id": "frontend.image_weight.principal_solve_w_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.24,
-    "value_rank": 0.215,
-    "len_rank": 0.2098,
-    "letter_x_value_rank": 0.2333,
-    "letter_x_len_rank": 0.2367,
-    "text": 0.2191,
-    "text_x_letter": 0.27,
-    "ctx_x_letter": 0.1817,
-    "ctx_x_value_rank": 0.2189,
-    "ctx_x_text": 0.217
-   },
-   "best": "text_x_letter",
-   "best_acc": 0.27,
-   "excess": 0.07
-  },
-  {
    "family_id": "frontend.polling_load.lead_solve_users_k5",
    "n_test": 300,
    "n_options": {
@@ -6784,6 +6803,29 @@
     "ctx_x_text": 0.2
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.27,
+   "excess": 0.07
+  },
+  {
+   "family_id": "frontend.image_weight.principal_solve_w_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.24,
+    "value_rank": 0.215,
+    "len_rank": 0.2098,
+    "letter_x_value_rank": 0.2333,
+    "letter_x_len_rank": 0.2367,
+    "text": 0.2191,
+    "text_x_letter": 0.27,
+    "ctx_x_letter": 0.1817,
+    "ctx_x_value_rank": 0.2189,
+    "ctx_x_text": 0.217
+   },
+   "best": "text_x_letter",
    "best_acc": 0.27,
    "excess": 0.07
   },
@@ -7225,29 +7267,6 @@
    "excess": 0.0667
   },
   {
-   "family_id": "backend.export_pages.principal_solve_t_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.25,
-    "value_rank": 0.2133,
-    "len_rank": 0.2221,
-    "letter_x_value_rank": 0.2133,
-    "letter_x_len_rank": 0.2567,
-    "text": 0.2258,
-    "text_x_letter": 0.2667,
-    "ctx_x_letter": 0.2217,
-    "ctx_x_value_rank": 0.1961,
-    "ctx_x_text": 0.2216
-   },
-   "best": "text_x_letter",
-   "best_acc": 0.2667,
-   "excess": 0.0667
-  },
-  {
    "family_id": "analyst.report_aggregation_io.middle_solve_mln_k3",
    "n_test": 300,
    "n_options": {
@@ -7267,6 +7286,29 @@
     "ctx_x_text": 0.2059
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.2667,
+   "excess": 0.0667
+  },
+  {
+   "family_id": "backend.export_pages.principal_solve_t_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.25,
+    "value_rank": 0.2133,
+    "len_rank": 0.2221,
+    "letter_x_value_rank": 0.2133,
+    "letter_x_len_rank": 0.2567,
+    "text": 0.2258,
+    "text_x_letter": 0.2667,
+    "ctx_x_letter": 0.2217,
+    "ctx_x_value_rank": 0.1961,
+    "ctx_x_text": 0.2216
+   },
+   "best": "text_x_letter",
    "best_acc": 0.2667,
    "excess": 0.0667
   },
@@ -7340,6 +7382,29 @@
    "excess": 0.0667
   },
   {
+   "family_id": "devops.k8s_nodes.middle_solve_nc_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.24,
+    "value_rank": 0.2667,
+    "len_rank": 0.2093,
+    "letter_x_value_rank": 0.225,
+    "letter_x_len_rank": 0.2233,
+    "text": 0.2,
+    "text_x_letter": 0.24,
+    "ctx_x_letter": 0.1839,
+    "ctx_x_value_rank": 0.2,
+    "ctx_x_text": 0.2
+   },
+   "best": "value_rank",
+   "best_acc": 0.2667,
+   "excess": 0.0667
+  },
+  {
    "family_id": "frontend.a11y.accessible_name_mcq",
    "n_test": 300,
    "n_options": {
@@ -7383,23 +7448,23 @@
    "excess": 0.0667
   },
   {
-   "family_id": "devops.k8s_nodes.middle_solve_nc_k2",
+   "family_id": "frontend.polling_load.intern_fwd_k2",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.24,
+    "letter": 0.2,
     "value_rank": 0.2667,
-    "len_rank": 0.2093,
-    "letter_x_value_rank": 0.225,
-    "letter_x_len_rank": 0.2233,
-    "text": 0.2,
-    "text_x_letter": 0.24,
-    "ctx_x_letter": 0.1839,
-    "ctx_x_value_rank": 0.2,
-    "ctx_x_text": 0.2
+    "len_rank": 0.1761,
+    "letter_x_value_rank": 0.2133,
+    "letter_x_len_rank": 0.21,
+    "text": 0.2185,
+    "text_x_letter": 0.2267,
+    "ctx_x_letter": 0.2169,
+    "ctx_x_value_rank": 0.2383,
+    "ctx_x_text": 0.2185
    },
    "best": "value_rank",
    "best_acc": 0.2667,
@@ -7425,29 +7490,6 @@
     "ctx_x_text": 0.201
    },
    "best": "letter_x_len_rank",
-   "best_acc": 0.2667,
-   "excess": 0.0667
-  },
-  {
-   "family_id": "frontend.polling_load.intern_fwd_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2,
-    "value_rank": 0.2667,
-    "len_rank": 0.1761,
-    "letter_x_value_rank": 0.2133,
-    "letter_x_len_rank": 0.21,
-    "text": 0.2185,
-    "text_x_letter": 0.2267,
-    "ctx_x_letter": 0.2169,
-    "ctx_x_value_rank": 0.2383,
-    "ctx_x_text": 0.2185
-   },
-   "best": "value_rank",
    "best_acc": 0.2667,
    "excess": 0.0667
   },
@@ -8073,6 +8115,26 @@
    "excess": 0.0633
   },
   {
+   "family_id": "frontend.js.microtask_order",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2533,
+    "len_rank": 0.25,
+    "letter_x_len_rank": 0.2533,
+    "text": 0.25,
+    "text_x_letter": 0.25,
+    "ctx_x_letter": 0.3133,
+    "ctx_x_text": 0.25
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.3133,
+   "excess": 0.0633
+  },
+  {
    "family_id": "frontend.frame_budget.senior_fwd_k5",
    "n_test": 300,
    "n_options": {
@@ -8093,26 +8155,6 @@
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.2633,
-   "excess": 0.0633
-  },
-  {
-   "family_id": "frontend.js.microtask_order",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2533,
-    "len_rank": 0.25,
-    "letter_x_len_rank": 0.2533,
-    "text": 0.25,
-    "text_x_letter": 0.25,
-    "ctx_x_letter": 0.3133,
-    "ctx_x_text": 0.25
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.3133,
    "excess": 0.0633
   },
   {
@@ -8162,6 +8204,29 @@
    "excess": 0.0633
   },
   {
+   "family_id": "qa.device_matrix.intern_fwd_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.26,
+    "value_rank": 0.1967,
+    "len_rank": 0.2203,
+    "letter_x_value_rank": 0.21,
+    "letter_x_len_rank": 0.22,
+    "text": 0.2064,
+    "text_x_letter": 0.2633,
+    "ctx_x_letter": 0.195,
+    "ctx_x_value_rank": 0.1878,
+    "ctx_x_text": 0.2034
+   },
+   "best": "text_x_letter",
+   "best_acc": 0.2633,
+   "excess": 0.0633
+  },
+  {
    "family_id": "qa.bug_backlog.senior_solve_inc_k3",
    "n_test": 300,
    "n_options": {
@@ -8204,29 +8269,6 @@
     "ctx_x_text": 0.2312
    },
    "best": "letter_x_len_rank",
-   "best_acc": 0.2633,
-   "excess": 0.0633
-  },
-  {
-   "family_id": "qa.device_matrix.intern_fwd_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.26,
-    "value_rank": 0.1967,
-    "len_rank": 0.2203,
-    "letter_x_value_rank": 0.21,
-    "letter_x_len_rank": 0.22,
-    "text": 0.2064,
-    "text_x_letter": 0.2633,
-    "ctx_x_letter": 0.195,
-    "ctx_x_value_rank": 0.1878,
-    "ctx_x_text": 0.2034
-   },
-   "best": "text_x_letter",
    "best_acc": 0.2633,
    "excess": 0.0633
   },
@@ -8734,29 +8776,6 @@
    "excess": 0.0601
   },
   {
-   "family_id": "backend.pgpool.principal_solve_t_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2333,
-    "value_rank": 0.1867,
-    "len_rank": 0.26,
-    "letter_x_value_rank": 0.2233,
-    "letter_x_len_rank": 0.24,
-    "text": 0.2045,
-    "text_x_letter": 0.25,
-    "ctx_x_letter": 0.2411,
-    "ctx_x_value_rank": 0.21,
-    "ctx_x_text": 0.2028
-   },
-   "best": "len_rank",
-   "best_acc": 0.26,
-   "excess": 0.06
-  },
-  {
    "family_id": "backend.threadpool.lead_solve_c_k4",
    "n_test": 300,
    "n_options": {
@@ -8776,6 +8795,29 @@
     "ctx_x_text": 0.1948
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.26,
+   "excess": 0.06
+  },
+  {
+   "family_id": "backend.pgpool.principal_solve_t_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2333,
+    "value_rank": 0.1867,
+    "len_rank": 0.26,
+    "letter_x_value_rank": 0.2233,
+    "letter_x_len_rank": 0.24,
+    "text": 0.2045,
+    "text_x_letter": 0.25,
+    "ctx_x_letter": 0.2411,
+    "ctx_x_value_rank": 0.21,
+    "ctx_x_text": 0.2028
+   },
+   "best": "len_rank",
    "best_acc": 0.26,
    "excess": 0.06
   },
@@ -8941,29 +8983,6 @@
    "excess": 0.06
   },
   {
-   "family_id": "frontend.ws_fanout.senior_solve_m_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2,
-    "value_rank": 0.17,
-    "len_rank": 0.2335,
-    "letter_x_value_rank": 0.2367,
-    "letter_x_len_rank": 0.26,
-    "text": 0.2,
-    "text_x_letter": 0.2,
-    "ctx_x_letter": 0.2267,
-    "ctx_x_value_rank": 0.2236,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.26,
-   "excess": 0.06
-  },
-  {
    "family_id": "frontend.virtual_list.senior_fwd_k5",
    "n_test": 300,
    "n_options": {
@@ -8981,6 +9000,29 @@
     "ctx_x_letter": 0.1883,
     "ctx_x_value_rank": 0.2078,
     "ctx_x_text": 0.1832
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.26,
+   "excess": 0.06
+  },
+  {
+   "family_id": "frontend.ws_fanout.senior_solve_m_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2,
+    "value_rank": 0.17,
+    "len_rank": 0.2335,
+    "letter_x_value_rank": 0.2367,
+    "letter_x_len_rank": 0.26,
+    "text": 0.2,
+    "text_x_letter": 0.2,
+    "ctx_x_letter": 0.2267,
+    "ctx_x_value_rank": 0.2236,
+    "ctx_x_text": 0.2
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.26,
@@ -9010,29 +9052,6 @@
    "excess": 0.06
   },
   {
-   "family_id": "qa.bench_runs.middle_solve_dl_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2367,
-    "value_rank": 0.2067,
-    "len_rank": 0.2079,
-    "letter_x_value_rank": 0.1933,
-    "letter_x_len_rank": 0.26,
-    "text": 0.2,
-    "text_x_letter": 0.2367,
-    "ctx_x_letter": 0.185,
-    "ctx_x_value_rank": 0.16,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.26,
-   "excess": 0.06
-  },
-  {
    "family_id": "qa.bench_runs.senior_fwd_k5",
    "n_test": 300,
    "n_options": {
@@ -9052,6 +9071,29 @@
     "ctx_x_text": 0.1853
    },
    "best": "letter_x_value_rank",
+   "best_acc": 0.26,
+   "excess": 0.06
+  },
+  {
+   "family_id": "qa.bench_runs.middle_solve_dl_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2367,
+    "value_rank": 0.2067,
+    "len_rank": 0.2079,
+    "letter_x_value_rank": 0.1933,
+    "letter_x_len_rank": 0.26,
+    "text": 0.2,
+    "text_x_letter": 0.2367,
+    "ctx_x_letter": 0.185,
+    "ctx_x_value_rank": 0.16,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
    "best_acc": 0.26,
    "excess": 0.06
   },
@@ -9539,29 +9581,6 @@
    "excess": 0.0568
   },
   {
-   "family_id": "analyst.er_table_growth.senior_fwd_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.24,
-    "value_rank": 0.2067,
-    "len_rank": 0.2105,
-    "letter_x_value_rank": 0.2,
-    "letter_x_len_rank": 0.22,
-    "text": 0.2092,
-    "text_x_letter": 0.2567,
-    "ctx_x_letter": 0.2233,
-    "ctx_x_value_rank": 0.1733,
-    "ctx_x_text": 0.209
-   },
-   "best": "text_x_letter",
-   "best_acc": 0.2567,
-   "excess": 0.0567
-  },
-  {
    "family_id": "analyst.principal.kafka_partitions_mcq",
    "n_test": 300,
    "n_options": {
@@ -9582,6 +9601,29 @@
    },
    "best": "letter",
    "best_acc": 0.3067,
+   "excess": 0.0567
+  },
+  {
+   "family_id": "analyst.er_table_growth.senior_fwd_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.24,
+    "value_rank": 0.2067,
+    "len_rank": 0.2105,
+    "letter_x_value_rank": 0.2,
+    "letter_x_len_rank": 0.22,
+    "text": 0.2092,
+    "text_x_letter": 0.2567,
+    "ctx_x_letter": 0.2233,
+    "ctx_x_value_rank": 0.1733,
+    "ctx_x_text": 0.209
+   },
+   "best": "text_x_letter",
+   "best_acc": 0.2567,
    "excess": 0.0567
   },
   {
@@ -9631,29 +9673,6 @@
    "excess": 0.0567
   },
   {
-   "family_id": "common.amdahl.middle_solve_n_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.21,
-    "value_rank": 0.2,
-    "len_rank": 0.225,
-    "letter_x_value_rank": 0.2567,
-    "letter_x_len_rank": 0.2267,
-    "text": 0.1792,
-    "text_x_letter": 0.1683,
-    "ctx_x_letter": 0.2056,
-    "ctx_x_value_rank": 0.1725,
-    "ctx_x_text": 0.1687
-   },
-   "best": "letter_x_value_rank",
-   "best_acc": 0.2567,
-   "excess": 0.0567
-  },
-  {
    "family_id": "common.amdahl.intern_fwd_k2",
    "n_test": 300,
    "n_options": {
@@ -9674,6 +9693,29 @@
    },
    "best": "value_rank",
    "best_acc": 0.2567,
+   "excess": 0.0567
+  },
+  {
+   "family_id": "common.k8s.k8s_rollout_capacity_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2767,
+    "value_rank": 0.3067,
+    "len_rank": 0.265,
+    "letter_x_value_rank": 0.2767,
+    "letter_x_len_rank": 0.2117,
+    "text": 0.2722,
+    "text_x_letter": 0.2433,
+    "ctx_x_letter": 0.2311,
+    "ctx_x_value_rank": 0.2578,
+    "ctx_x_text": 0.2528
+   },
+   "best": "value_rank",
+   "best_acc": 0.3067,
    "excess": 0.0567
   },
   {
@@ -9700,26 +9742,26 @@
    "excess": 0.0567
   },
   {
-   "family_id": "common.k8s.k8s_rollout_capacity_mcq",
+   "family_id": "common.amdahl.middle_solve_n_k3",
    "n_test": 300,
    "n_options": {
-    "4": 400
+    "5": 400
    },
-   "chance": 0.25,
+   "chance": 0.2,
    "by_attack": {
-    "letter": 0.2767,
-    "value_rank": 0.3067,
-    "len_rank": 0.265,
-    "letter_x_value_rank": 0.2767,
-    "letter_x_len_rank": 0.2117,
-    "text": 0.2722,
-    "text_x_letter": 0.2433,
-    "ctx_x_letter": 0.2311,
-    "ctx_x_value_rank": 0.2578,
-    "ctx_x_text": 0.2528
+    "letter": 0.21,
+    "value_rank": 0.2,
+    "len_rank": 0.225,
+    "letter_x_value_rank": 0.2567,
+    "letter_x_len_rank": 0.2267,
+    "text": 0.1792,
+    "text_x_letter": 0.1683,
+    "ctx_x_letter": 0.2056,
+    "ctx_x_value_rank": 0.1725,
+    "ctx_x_text": 0.1687
    },
-   "best": "value_rank",
-   "best_acc": 0.3067,
+   "best": "letter_x_value_rank",
+   "best_acc": 0.2567,
    "excess": 0.0567
   },
   {
@@ -9815,29 +9857,6 @@
    "excess": 0.0567
   },
   {
-   "family_id": "data_ml.llm_gpus.middle_solve_tok_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.21,
-    "value_rank": 0.21,
-    "len_rank": 0.2242,
-    "letter_x_value_rank": 0.2267,
-    "letter_x_len_rank": 0.2567,
-    "text": 0.2219,
-    "text_x_letter": 0.24,
-    "ctx_x_letter": 0.2133,
-    "ctx_x_value_rank": 0.225,
-    "ctx_x_text": 0.2219
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2567,
-   "excess": 0.0567
-  },
-  {
    "family_id": "data_ml.llm_gpus.middle_solve_lam_k3",
    "n_test": 300,
    "n_options": {
@@ -9855,6 +9874,29 @@
     "ctx_x_letter": 0.2089,
     "ctx_x_value_rank": 0.2067,
     "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.2567,
+   "excess": 0.0567
+  },
+  {
+   "family_id": "data_ml.llm_gpus.middle_solve_tok_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.21,
+    "value_rank": 0.21,
+    "len_rank": 0.2242,
+    "letter_x_value_rank": 0.2267,
+    "letter_x_len_rank": 0.2567,
+    "text": 0.2219,
+    "text_x_letter": 0.24,
+    "ctx_x_letter": 0.2133,
+    "ctx_x_value_rank": 0.225,
+    "ctx_x_text": 0.2219
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.2567,
@@ -9880,29 +9922,6 @@
     "ctx_x_text": 0.2014
    },
    "best": "value_rank",
-   "best_acc": 0.2567,
-   "excess": 0.0567
-  },
-  {
-   "family_id": "devops.egress_cost.lead_solve_mau_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1833,
-    "value_rank": 0.2133,
-    "len_rank": 0.2235,
-    "letter_x_value_rank": 0.2567,
-    "letter_x_len_rank": 0.2183,
-    "text": 0.208,
-    "text_x_letter": 0.19,
-    "ctx_x_letter": 0.1739,
-    "ctx_x_value_rank": 0.185,
-    "ctx_x_text": 0.2058
-   },
-   "best": "letter_x_value_rank",
    "best_acc": 0.2567,
    "excess": 0.0567
   },
@@ -9947,6 +9966,29 @@
     "ctx_x_letter": 0.1933,
     "ctx_x_value_rank": 0.2011,
     "ctx_x_text": 0.2368
+   },
+   "best": "letter_x_value_rank",
+   "best_acc": 0.2567,
+   "excess": 0.0567
+  },
+  {
+   "family_id": "devops.egress_cost.lead_solve_mau_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1833,
+    "value_rank": 0.2133,
+    "len_rank": 0.2235,
+    "letter_x_value_rank": 0.2567,
+    "letter_x_len_rank": 0.2183,
+    "text": 0.208,
+    "text_x_letter": 0.19,
+    "ctx_x_letter": 0.1739,
+    "ctx_x_value_rank": 0.185,
+    "ctx_x_text": 0.2058
    },
    "best": "letter_x_value_rank",
    "best_acc": 0.2567,
@@ -10039,75 +10081,6 @@
    "excess": 0.0567
   },
   {
-   "family_id": "frontend.offline_quota.junior_solve_n_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2167,
-    "value_rank": 0.19,
-    "len_rank": 0.2352,
-    "letter_x_value_rank": 0.2433,
-    "letter_x_len_rank": 0.2567,
-    "text": 0.2064,
-    "text_x_letter": 0.2167,
-    "ctx_x_letter": 0.2117,
-    "ctx_x_value_rank": 0.2283,
-    "ctx_x_text": 0.2035
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2567,
-   "excess": 0.0567
-  },
-  {
-   "family_id": "frontend.ssr_pods.intern_fwd_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2533,
-    "value_rank": 0.195,
-    "len_rank": 0.2115,
-    "letter_x_value_rank": 0.2367,
-    "letter_x_len_rank": 0.25,
-    "text": 0.2302,
-    "text_x_letter": 0.2467,
-    "ctx_x_letter": 0.2567,
-    "ctx_x_value_rank": 0.2078,
-    "ctx_x_text": 0.2111
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.2567,
-   "excess": 0.0567
-  },
-  {
-   "family_id": "frontend.offline_quota.middle_solve_n_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.22,
-    "value_rank": 0.19,
-    "len_rank": 0.2519,
-    "letter_x_value_rank": 0.215,
-    "letter_x_len_rank": 0.2567,
-    "text": 0.2071,
-    "text_x_letter": 0.21,
-    "ctx_x_letter": 0.1933,
-    "ctx_x_value_rank": 0.22,
-    "ctx_x_text": 0.2064
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2567,
-   "excess": 0.0567
-  },
-  {
    "family_id": "frontend.strategy.principal_microfrontends_mcq",
    "n_test": 300,
    "n_options": {
@@ -10147,6 +10120,75 @@
     "ctx_x_text": 0.2037
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.2567,
+   "excess": 0.0567
+  },
+  {
+   "family_id": "frontend.offline_quota.junior_solve_n_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2167,
+    "value_rank": 0.19,
+    "len_rank": 0.2352,
+    "letter_x_value_rank": 0.2433,
+    "letter_x_len_rank": 0.2567,
+    "text": 0.2064,
+    "text_x_letter": 0.2167,
+    "ctx_x_letter": 0.2117,
+    "ctx_x_value_rank": 0.2283,
+    "ctx_x_text": 0.2035
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.2567,
+   "excess": 0.0567
+  },
+  {
+   "family_id": "frontend.offline_quota.middle_solve_n_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.22,
+    "value_rank": 0.19,
+    "len_rank": 0.2519,
+    "letter_x_value_rank": 0.215,
+    "letter_x_len_rank": 0.2567,
+    "text": 0.2071,
+    "text_x_letter": 0.21,
+    "ctx_x_letter": 0.1933,
+    "ctx_x_value_rank": 0.22,
+    "ctx_x_text": 0.2064
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.2567,
+   "excess": 0.0567
+  },
+  {
+   "family_id": "frontend.ssr_pods.intern_fwd_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2533,
+    "value_rank": 0.195,
+    "len_rank": 0.2115,
+    "letter_x_value_rank": 0.2367,
+    "letter_x_len_rank": 0.25,
+    "text": 0.2302,
+    "text_x_letter": 0.2467,
+    "ctx_x_letter": 0.2567,
+    "ctx_x_value_rank": 0.2078,
+    "ctx_x_text": 0.2111
+   },
+   "best": "ctx_x_letter",
    "best_acc": 0.2567,
    "excess": 0.0567
   },
@@ -10703,29 +10745,6 @@
    "excess": 0.0533
   },
   {
-   "family_id": "data_eng.cdc_catchup.middle_solve_bl_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.16,
-    "value_rank": 0.1467,
-    "len_rank": 0.2394,
-    "letter_x_value_rank": 0.1633,
-    "letter_x_len_rank": 0.245,
-    "text": 0.2206,
-    "text_x_letter": 0.2533,
-    "ctx_x_letter": 0.1639,
-    "ctx_x_value_rank": 0.1844,
-    "ctx_x_text": 0.2195
-   },
-   "best": "text_x_letter",
-   "best_acc": 0.2533,
-   "excess": 0.0533
-  },
-  {
    "family_id": "data_eng.ch_storage.senior_solve_r_k4",
    "n_test": 300,
    "n_options": {
@@ -10749,23 +10768,23 @@
    "excess": 0.0533
   },
   {
-   "family_id": "data_eng.pg_index.junior_solve_n_k2",
+   "family_id": "data_eng.cdc_catchup.middle_solve_bl_k3",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.1633,
-    "value_rank": 0.18,
-    "len_rank": 0.2435,
-    "letter_x_value_rank": 0.1683,
-    "letter_x_len_rank": 0.2333,
-    "text": 0.2323,
+    "letter": 0.16,
+    "value_rank": 0.1467,
+    "len_rank": 0.2394,
+    "letter_x_value_rank": 0.1633,
+    "letter_x_len_rank": 0.245,
+    "text": 0.2206,
     "text_x_letter": 0.2533,
-    "ctx_x_letter": 0.19,
-    "ctx_x_value_rank": 0.1956,
-    "ctx_x_text": 0.204
+    "ctx_x_letter": 0.1639,
+    "ctx_x_value_rank": 0.1844,
+    "ctx_x_text": 0.2195
    },
    "best": "text_x_letter",
    "best_acc": 0.2533,
@@ -10791,6 +10810,29 @@
     "ctx_x_text": 0.1923
    },
    "best": "letter_x_value_rank",
+   "best_acc": 0.2533,
+   "excess": 0.0533
+  },
+  {
+   "family_id": "data_eng.pg_index.junior_solve_n_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1633,
+    "value_rank": 0.18,
+    "len_rank": 0.2435,
+    "letter_x_value_rank": 0.1683,
+    "letter_x_len_rank": 0.2333,
+    "text": 0.2323,
+    "text_x_letter": 0.2533,
+    "ctx_x_letter": 0.19,
+    "ctx_x_value_rank": 0.1956,
+    "ctx_x_text": 0.204
+   },
+   "best": "text_x_letter",
    "best_acc": 0.2533,
    "excess": 0.0533
   },
@@ -10841,6 +10883,29 @@
    "excess": 0.0533
   },
   {
+   "family_id": "data_ml.label_budget.principal_solve_t_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2167,
+    "value_rank": 0.2533,
+    "len_rank": 0.1901,
+    "letter_x_value_rank": 0.1867,
+    "letter_x_len_rank": 0.23,
+    "text": 0.2,
+    "text_x_letter": 0.2175,
+    "ctx_x_letter": 0.1797,
+    "ctx_x_value_rank": 0.1961,
+    "ctx_x_text": 0.2
+   },
+   "best": "value_rank",
+   "best_acc": 0.2533,
+   "excess": 0.0533
+  },
+  {
    "family_id": "data_ml.llm_gpus.senior_solve_lam_k4",
    "n_test": 300,
    "n_options": {
@@ -10883,29 +10948,6 @@
     "ctx_x_text": 0.2217
    },
    "best": "text_x_letter",
-   "best_acc": 0.2533,
-   "excess": 0.0533
-  },
-  {
-   "family_id": "data_ml.label_budget.principal_solve_t_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2167,
-    "value_rank": 0.2533,
-    "len_rank": 0.1901,
-    "letter_x_value_rank": 0.1867,
-    "letter_x_len_rank": 0.23,
-    "text": 0.2,
-    "text_x_letter": 0.2175,
-    "ctx_x_letter": 0.1797,
-    "ctx_x_value_rank": 0.1961,
-    "ctx_x_text": 0.2
-   },
-   "best": "value_rank",
    "best_acc": 0.2533,
    "excess": 0.0533
   },
@@ -11071,6 +11113,29 @@
    "excess": 0.0533
   },
   {
+   "family_id": "mobile.location_battery.senior_solve_f_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.19,
+    "value_rank": 0.1867,
+    "len_rank": 0.1911,
+    "letter_x_value_rank": 0.2167,
+    "letter_x_len_rank": 0.2533,
+    "text": 0.2,
+    "text_x_letter": 0.1911,
+    "ctx_x_letter": 0.1683,
+    "ctx_x_value_rank": 0.1683,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.2533,
+   "excess": 0.0533
+  },
+  {
    "family_id": "mobile.location_battery.middle_solve_f_k3",
    "n_test": 300,
    "n_options": {
@@ -11110,29 +11175,6 @@
     "text_x_letter": 0.1533,
     "ctx_x_letter": 0.1592,
     "ctx_x_value_rank": 0.2133,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2533,
-   "excess": 0.0533
-  },
-  {
-   "family_id": "mobile.location_battery.senior_solve_f_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.19,
-    "value_rank": 0.1867,
-    "len_rank": 0.1911,
-    "letter_x_value_rank": 0.2167,
-    "letter_x_len_rank": 0.2533,
-    "text": 0.2,
-    "text_x_letter": 0.1911,
-    "ctx_x_letter": 0.1683,
-    "ctx_x_value_rank": 0.1683,
     "ctx_x_text": 0.2
    },
    "best": "letter_x_len_rank",
@@ -12169,25 +12211,25 @@
    "excess": 0.05
   },
   {
-   "family_id": "data_ml.feature_store.senior_fwd_k5",
+   "family_id": "data_eng.spark_executors.senior_solve_v_k3",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.22,
-    "value_rank": 0.1933,
-    "len_rank": 0.2349,
-    "letter_x_value_rank": 0.2133,
-    "letter_x_len_rank": 0.24,
-    "text": 0.2252,
-    "text_x_letter": 0.25,
-    "ctx_x_letter": 0.155,
-    "ctx_x_value_rank": 0.2167,
-    "ctx_x_text": 0.2239
+    "letter": 0.1933,
+    "value_rank": 0.24,
+    "len_rank": 0.1876,
+    "letter_x_value_rank": 0.215,
+    "letter_x_len_rank": 0.25,
+    "text": 0.2,
+    "text_x_letter": 0.1967,
+    "ctx_x_letter": 0.2107,
+    "ctx_x_value_rank": 0.225,
+    "ctx_x_text": 0.2
    },
-   "best": "text_x_letter",
+   "best": "letter_x_len_rank",
    "best_acc": 0.25,
    "excess": 0.05
   },
@@ -12238,6 +12280,29 @@
    "excess": 0.05
   },
   {
+   "family_id": "data_ml.feature_store.senior_fwd_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.22,
+    "value_rank": 0.1933,
+    "len_rank": 0.2349,
+    "letter_x_value_rank": 0.2133,
+    "letter_x_len_rank": 0.24,
+    "text": 0.2252,
+    "text_x_letter": 0.25,
+    "ctx_x_letter": 0.155,
+    "ctx_x_value_rank": 0.2167,
+    "ctx_x_text": 0.2239
+   },
+   "best": "text_x_letter",
+   "best_acc": 0.25,
+   "excess": 0.05
+  },
+  {
    "family_id": "data_ml.label_budget.middle_fwd_k4",
    "n_test": 300,
    "n_options": {
@@ -12255,29 +12320,6 @@
     "ctx_x_letter": 0.2061,
     "ctx_x_value_rank": 0.2017,
     "ctx_x_text": 0.2156
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.25,
-   "excess": 0.05
-  },
-  {
-   "family_id": "data_eng.spark_executors.senior_solve_v_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1933,
-    "value_rank": 0.24,
-    "len_rank": 0.1876,
-    "letter_x_value_rank": 0.215,
-    "letter_x_len_rank": 0.25,
-    "text": 0.2,
-    "text_x_letter": 0.1967,
-    "ctx_x_letter": 0.2107,
-    "ctx_x_value_rank": 0.225,
-    "ctx_x_text": 0.2
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.25,
@@ -13158,25 +13200,25 @@
    "excess": 0.0467
   },
   {
-   "family_id": "backend.cache_replicas.senior_fwd_k5",
+   "family_id": "analyst.support_escalation_cap.middle_solve_dau_k3",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.2267,
-    "value_rank": 0.1667,
-    "len_rank": 0.2091,
-    "letter_x_value_rank": 0.22,
-    "letter_x_len_rank": 0.2067,
-    "text": 0.2355,
-    "text_x_letter": 0.2467,
-    "ctx_x_letter": 0.2044,
-    "ctx_x_value_rank": 0.1917,
-    "ctx_x_text": 0.2108
+    "letter": 0.1833,
+    "value_rank": 0.1933,
+    "len_rank": 0.2304,
+    "letter_x_value_rank": 0.1961,
+    "letter_x_len_rank": 0.2467,
+    "text": 0.2451,
+    "text_x_letter": 0.1833,
+    "ctx_x_letter": 0.1992,
+    "ctx_x_value_rank": 0.195,
+    "ctx_x_text": 0.2135
    },
-   "best": "text_x_letter",
+   "best": "letter_x_len_rank",
    "best_acc": 0.2467,
    "excess": 0.0467
   },
@@ -13204,46 +13246,23 @@
    "excess": 0.0467
   },
   {
-   "family_id": "analyst.support_escalation_cap.middle_solve_dau_k3",
+   "family_id": "backend.cache_replicas.senior_fwd_k5",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.1833,
-    "value_rank": 0.1933,
-    "len_rank": 0.2304,
-    "letter_x_value_rank": 0.1961,
-    "letter_x_len_rank": 0.2467,
-    "text": 0.2451,
-    "text_x_letter": 0.1833,
-    "ctx_x_letter": 0.1992,
-    "ctx_x_value_rank": 0.195,
-    "ctx_x_text": 0.2135
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2467,
-   "excess": 0.0467
-  },
-  {
-   "family_id": "backend.idem_redis.middle_fwd_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.21,
-    "value_rank": 0.1933,
-    "len_rank": 0.234,
-    "letter_x_value_rank": 0.18,
-    "letter_x_len_rank": 0.2333,
-    "text": 0.2348,
+    "letter": 0.2267,
+    "value_rank": 0.1667,
+    "len_rank": 0.2091,
+    "letter_x_value_rank": 0.22,
+    "letter_x_len_rank": 0.2067,
+    "text": 0.2355,
     "text_x_letter": 0.2467,
-    "ctx_x_letter": 0.2056,
-    "ctx_x_value_rank": 0.2056,
-    "ctx_x_text": 0.2127
+    "ctx_x_letter": 0.2044,
+    "ctx_x_value_rank": 0.1917,
+    "ctx_x_text": 0.2108
    },
    "best": "text_x_letter",
    "best_acc": 0.2467,
@@ -13269,6 +13288,29 @@
     "ctx_x_text": 0.2043
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.2467,
+   "excess": 0.0467
+  },
+  {
+   "family_id": "backend.idem_redis.middle_fwd_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.21,
+    "value_rank": 0.1933,
+    "len_rank": 0.234,
+    "letter_x_value_rank": 0.18,
+    "letter_x_len_rank": 0.2333,
+    "text": 0.2348,
+    "text_x_letter": 0.2467,
+    "ctx_x_letter": 0.2056,
+    "ctx_x_value_rank": 0.2056,
+    "ctx_x_text": 0.2127
+   },
+   "best": "text_x_letter",
    "best_acc": 0.2467,
    "excess": 0.0467
   },
@@ -13342,29 +13384,6 @@
    "excess": 0.0467
   },
   {
-   "family_id": "data_ml.label_budget.lead_solve_t_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1933,
-    "value_rank": 0.1867,
-    "len_rank": 0.2164,
-    "letter_x_value_rank": 0.2183,
-    "letter_x_len_rank": 0.2467,
-    "text": 0.2032,
-    "text_x_letter": 0.2,
-    "ctx_x_letter": 0.2167,
-    "ctx_x_value_rank": 0.215,
-    "ctx_x_text": 0.201
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2467,
-   "excess": 0.0467
-  },
-  {
    "family_id": "data_ml.llm_gpus.senior_solve_tok_k3",
    "n_test": 300,
    "n_options": {
@@ -13384,6 +13403,29 @@
     "ctx_x_text": 0.2398
    },
    "best": "text_x_letter",
+   "best_acc": 0.2467,
+   "excess": 0.0467
+  },
+  {
+   "family_id": "data_ml.label_budget.lead_solve_t_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1933,
+    "value_rank": 0.1867,
+    "len_rank": 0.2164,
+    "letter_x_value_rank": 0.2183,
+    "letter_x_len_rank": 0.2467,
+    "text": 0.2032,
+    "text_x_letter": 0.2,
+    "ctx_x_letter": 0.2167,
+    "ctx_x_value_rank": 0.215,
+    "ctx_x_text": 0.201
+   },
+   "best": "letter_x_len_rank",
    "best_acc": 0.2467,
    "excess": 0.0467
   },
@@ -13434,6 +13476,29 @@
    "excess": 0.0467
   },
   {
+   "family_id": "frontend.api_waterfall.middle_solve_n_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1733,
+    "value_rank": 0.19,
+    "len_rank": 0.2296,
+    "letter_x_value_rank": 0.18,
+    "letter_x_len_rank": 0.1883,
+    "text": 0.2334,
+    "text_x_letter": 0.2167,
+    "ctx_x_letter": 0.2467,
+    "ctx_x_value_rank": 0.1983,
+    "ctx_x_text": 0.2048
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.2467,
+   "excess": 0.0467
+  },
+  {
    "family_id": "frontend.api_waterfall.junior_fwd_k3",
    "n_test": 300,
    "n_options": {
@@ -13476,29 +13541,6 @@
     "ctx_x_text": 0.2
    },
    "best": "letter_x_len_rank",
-   "best_acc": 0.2467,
-   "excess": 0.0467
-  },
-  {
-   "family_id": "frontend.api_waterfall.middle_solve_n_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1733,
-    "value_rank": 0.19,
-    "len_rank": 0.2296,
-    "letter_x_value_rank": 0.18,
-    "letter_x_len_rank": 0.1883,
-    "text": 0.2334,
-    "text_x_letter": 0.2167,
-    "ctx_x_letter": 0.2467,
-    "ctx_x_value_rank": 0.1983,
-    "ctx_x_text": 0.2048
-   },
-   "best": "ctx_x_letter",
    "best_acc": 0.2467,
    "excess": 0.0467
   },
@@ -13549,29 +13591,6 @@
    "excess": 0.0467
   },
   {
-   "family_id": "qa.defect_escape.junior_fwd_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2167,
-    "value_rank": 0.2233,
-    "len_rank": 0.2043,
-    "letter_x_value_rank": 0.1933,
-    "letter_x_len_rank": 0.2467,
-    "text": 0.2,
-    "text_x_letter": 0.2167,
-    "ctx_x_letter": 0.2117,
-    "ctx_x_value_rank": 0.2133,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2467,
-   "excess": 0.0467
-  },
-  {
    "family_id": "qa.load.slo_capacity_mcq",
    "n_test": 300,
    "n_options": {
@@ -13595,25 +13614,25 @@
    "excess": 0.0467
   },
   {
-   "family_id": "security.cors_waf_rps.junior_fwd_k3",
+   "family_id": "qa.defect_escape.junior_fwd_k3",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.2467,
-    "value_rank": 0.2267,
-    "len_rank": 0.2196,
-    "letter_x_value_rank": 0.2067,
-    "letter_x_len_rank": 0.225,
-    "text": 0.1948,
-    "text_x_letter": 0.2,
-    "ctx_x_letter": 0.215,
-    "ctx_x_value_rank": 0.21,
-    "ctx_x_text": 0.1954
+    "letter": 0.2167,
+    "value_rank": 0.2233,
+    "len_rank": 0.2043,
+    "letter_x_value_rank": 0.1933,
+    "letter_x_len_rank": 0.2467,
+    "text": 0.2,
+    "text_x_letter": 0.2167,
+    "ctx_x_letter": 0.2117,
+    "ctx_x_value_rank": 0.2133,
+    "ctx_x_text": 0.2
    },
-   "best": "letter",
+   "best": "letter_x_len_rank",
    "best_acc": 0.2467,
    "excess": 0.0467
   },
@@ -13637,6 +13656,29 @@
     "ctx_x_text": 0.2121
    },
    "best": "text_x_letter",
+   "best_acc": 0.2467,
+   "excess": 0.0467
+  },
+  {
+   "family_id": "security.cors_waf_rps.junior_fwd_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2467,
+    "value_rank": 0.2267,
+    "len_rank": 0.2196,
+    "letter_x_value_rank": 0.2067,
+    "letter_x_len_rank": 0.225,
+    "text": 0.1948,
+    "text_x_letter": 0.2,
+    "ctx_x_letter": 0.215,
+    "ctx_x_value_rank": 0.21,
+    "ctx_x_text": 0.1954
+   },
+   "best": "letter",
    "best_acc": 0.2467,
    "excess": 0.0467
   },
@@ -14236,29 +14278,6 @@
    "excess": 0.0433
   },
   {
-   "family_id": "data_eng.cdc_catchup.senior_solve_bl_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2033,
-    "value_rank": 0.2433,
-    "len_rank": 0.2245,
-    "letter_x_value_rank": 0.2333,
-    "letter_x_len_rank": 0.2167,
-    "text": 0.2212,
-    "text_x_letter": 0.21,
-    "ctx_x_letter": 0.205,
-    "ctx_x_value_rank": 0.22,
-    "ctx_x_text": 0.2082
-   },
-   "best": "value_rank",
-   "best_acc": 0.2433,
-   "excess": 0.0433
-  },
-  {
    "family_id": "data_eng.ch_storage.lead_solve_c_k4",
    "n_test": 300,
    "n_options": {
@@ -14278,6 +14297,29 @@
     "ctx_x_text": 0.2
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.2433,
+   "excess": 0.0433
+  },
+  {
+   "family_id": "data_eng.cdc_catchup.senior_solve_bl_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2033,
+    "value_rank": 0.2433,
+    "len_rank": 0.2245,
+    "letter_x_value_rank": 0.2333,
+    "letter_x_len_rank": 0.2167,
+    "text": 0.2212,
+    "text_x_letter": 0.21,
+    "ctx_x_letter": 0.205,
+    "ctx_x_value_rank": 0.22,
+    "ctx_x_text": 0.2082
+   },
+   "best": "value_rank",
    "best_acc": 0.2433,
    "excess": 0.0433
   },
@@ -14305,26 +14347,6 @@
    "excess": 0.0433
   },
   {
-   "family_id": "data_eng.strategy.principal_freshness_arch_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2933,
-    "len_rank": 0.2233,
-    "letter_x_len_rank": 0.26,
-    "text": 0.2233,
-    "text_x_letter": 0.26,
-    "ctx_x_letter": 0.2656,
-    "ctx_x_text": 0.2467
-   },
-   "best": "letter",
-   "best_acc": 0.2933,
-   "excess": 0.0433
-  },
-  {
    "family_id": "data_ml.rag_cost.middle_fwd_k4",
    "n_test": 300,
    "n_options": {
@@ -14348,49 +14370,23 @@
    "excess": 0.0433
   },
   {
-   "family_id": "devops.release.principal_canary_plan_mcq",
+   "family_id": "data_eng.strategy.principal_freshness_arch_mcq",
    "n_test": 300,
    "n_options": {
     "4": 400
    },
    "chance": 0.25,
    "by_attack": {
-    "letter": 0.2333,
-    "value_rank": 0.27,
-    "len_rank": 0.2917,
-    "letter_x_value_rank": 0.2533,
-    "letter_x_len_rank": 0.27,
-    "text": 0.25,
-    "text_x_letter": 0.2333,
-    "ctx_x_letter": 0.2933,
-    "ctx_x_value_rank": 0.2567,
-    "ctx_x_text": 0.25
+    "letter": 0.2933,
+    "len_rank": 0.2233,
+    "letter_x_len_rank": 0.26,
+    "text": 0.2233,
+    "text_x_letter": 0.26,
+    "ctx_x_letter": 0.2656,
+    "ctx_x_text": 0.2467
    },
-   "best": "ctx_x_letter",
+   "best": "letter",
    "best_acc": 0.2933,
-   "excess": 0.0433
-  },
-  {
-   "family_id": "devops.prom_tsdb.middle_fwd_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.19,
-    "value_rank": 0.2333,
-    "len_rank": 0.2382,
-    "letter_x_value_rank": 0.21,
-    "letter_x_len_rank": 0.2433,
-    "text": 0.2256,
-    "text_x_letter": 0.2022,
-    "ctx_x_letter": 0.1833,
-    "ctx_x_value_rank": 0.2067,
-    "ctx_x_text": 0.222
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2433,
    "excess": 0.0433
   },
   {
@@ -14440,6 +14436,52 @@
    "excess": 0.0433
   },
   {
+   "family_id": "devops.release.principal_canary_plan_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2333,
+    "value_rank": 0.27,
+    "len_rank": 0.2917,
+    "letter_x_value_rank": 0.2533,
+    "letter_x_len_rank": 0.27,
+    "text": 0.25,
+    "text_x_letter": 0.2333,
+    "ctx_x_letter": 0.2933,
+    "ctx_x_value_rank": 0.2567,
+    "ctx_x_text": 0.25
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.2933,
+   "excess": 0.0433
+  },
+  {
+   "family_id": "devops.prom_tsdb.middle_fwd_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.19,
+    "value_rank": 0.2333,
+    "len_rank": 0.2382,
+    "letter_x_value_rank": 0.21,
+    "letter_x_len_rank": 0.2433,
+    "text": 0.2256,
+    "text_x_letter": 0.2022,
+    "ctx_x_letter": 0.1833,
+    "ctx_x_value_rank": 0.2067,
+    "ctx_x_text": 0.222
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.2433,
+   "excess": 0.0433
+  },
+  {
    "family_id": "devops.prom_tsdb.principal_solve_d_k5",
    "n_test": 300,
    "n_options": {
@@ -14486,29 +14528,6 @@
    "excess": 0.0433
   },
   {
-   "family_id": "frontend.image_weight.middle_solve_n_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1567,
-    "value_rank": 0.1933,
-    "len_rank": 0.2072,
-    "letter_x_value_rank": 0.1733,
-    "letter_x_len_rank": 0.1867,
-    "text": 0.1774,
-    "text_x_letter": 0.1533,
-    "ctx_x_letter": 0.19,
-    "ctx_x_value_rank": 0.2433,
-    "ctx_x_text": 0.2052
-   },
-   "best": "ctx_x_value_rank",
-   "best_acc": 0.2433,
-   "excess": 0.0433
-  },
-  {
    "family_id": "frontend.strategy.principal_rendering_mix_mcq",
    "n_test": 300,
    "n_options": {
@@ -14529,7 +14548,7 @@
    "excess": 0.0433
   },
   {
-   "family_id": "frontend.polling_load.middle_solve_users_k3",
+   "family_id": "frontend.offline_quota.senior_solve_s_k3",
    "n_test": 300,
    "n_options": {
     "5": 400
@@ -14537,17 +14556,40 @@
    "chance": 0.2,
    "by_attack": {
     "letter": 0.24,
-    "value_rank": 0.2067,
-    "len_rank": 0.2099,
-    "letter_x_value_rank": 0.2133,
-    "letter_x_len_rank": 0.24,
-    "text": 0.2019,
+    "value_rank": 0.2267,
+    "len_rank": 0.2206,
+    "letter_x_value_rank": 0.2,
+    "letter_x_len_rank": 0.2333,
+    "text": 0.2,
     "text_x_letter": 0.2433,
-    "ctx_x_letter": 0.195,
-    "ctx_x_value_rank": 0.2233,
-    "ctx_x_text": 0.2002
+    "ctx_x_letter": 0.2056,
+    "ctx_x_value_rank": 0.2011,
+    "ctx_x_text": 0.2
    },
    "best": "text_x_letter",
+   "best_acc": 0.2433,
+   "excess": 0.0433
+  },
+  {
+   "family_id": "frontend.image_weight.middle_solve_n_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1567,
+    "value_rank": 0.1933,
+    "len_rank": 0.2072,
+    "letter_x_value_rank": 0.1733,
+    "letter_x_len_rank": 0.1867,
+    "text": 0.1774,
+    "text_x_letter": 0.1533,
+    "ctx_x_letter": 0.19,
+    "ctx_x_value_rank": 0.2433,
+    "ctx_x_text": 0.2052
+   },
+   "best": "ctx_x_value_rank",
    "best_acc": 0.2433,
    "excess": 0.0433
   },
@@ -14575,7 +14617,7 @@
    "excess": 0.0433
   },
   {
-   "family_id": "frontend.offline_quota.senior_solve_s_k3",
+   "family_id": "frontend.polling_load.middle_solve_users_k3",
    "n_test": 300,
    "n_options": {
     "5": 400
@@ -14583,15 +14625,15 @@
    "chance": 0.2,
    "by_attack": {
     "letter": 0.24,
-    "value_rank": 0.2267,
-    "len_rank": 0.2206,
-    "letter_x_value_rank": 0.2,
-    "letter_x_len_rank": 0.2333,
-    "text": 0.2,
+    "value_rank": 0.2067,
+    "len_rank": 0.2099,
+    "letter_x_value_rank": 0.2133,
+    "letter_x_len_rank": 0.24,
+    "text": 0.2019,
     "text_x_letter": 0.2433,
-    "ctx_x_letter": 0.2056,
-    "ctx_x_value_rank": 0.2011,
-    "ctx_x_text": 0.2
+    "ctx_x_letter": 0.195,
+    "ctx_x_value_rank": 0.2233,
+    "ctx_x_text": 0.2002
    },
    "best": "text_x_letter",
    "best_acc": 0.2433,
@@ -14667,29 +14709,6 @@
    "excess": 0.0433
   },
   {
-   "family_id": "qa.api_test_suite.middle_solve_cs_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1967,
-    "value_rank": 0.18,
-    "len_rank": 0.2352,
-    "letter_x_value_rank": 0.2317,
-    "letter_x_len_rank": 0.2433,
-    "text": 0.2,
-    "text_x_letter": 0.1967,
-    "ctx_x_letter": 0.2267,
-    "ctx_x_value_rank": 0.1967,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2433,
-   "excess": 0.0433
-  },
-  {
    "family_id": "mobile.offline_sync_batch.middle_solve_bs_k2",
    "n_test": 300,
    "n_options": {
@@ -14709,6 +14728,29 @@
     "ctx_x_text": 0.2
    },
    "best": "value_rank",
+   "best_acc": 0.2433,
+   "excess": 0.0433
+  },
+  {
+   "family_id": "qa.api_test_suite.middle_solve_cs_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1967,
+    "value_rank": 0.18,
+    "len_rank": 0.2352,
+    "letter_x_value_rank": 0.2317,
+    "letter_x_len_rank": 0.2433,
+    "text": 0.2,
+    "text_x_letter": 0.1967,
+    "ctx_x_letter": 0.2267,
+    "ctx_x_value_rank": 0.1967,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
    "best_acc": 0.2433,
    "excess": 0.0433
   },
@@ -15101,29 +15143,6 @@
    "excess": 0.0425
   },
   {
-   "family_id": "backend.kafka_consumers.middle_fwd_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1867,
-    "value_rank": 0.2,
-    "len_rank": 0.2424,
-    "letter_x_value_rank": 0.19,
-    "letter_x_len_rank": 0.2,
-    "text": 0.1982,
-    "text_x_letter": 0.1967,
-    "ctx_x_letter": 0.1733,
-    "ctx_x_value_rank": 0.1867,
-    "ctx_x_text": 0.2116
-   },
-   "best": "len_rank",
-   "best_acc": 0.2424,
-   "excess": 0.0424
-  },
-  {
    "family_id": "backend.retry_storm.intern_fwd_k2",
    "n_test": 300,
    "n_options": {
@@ -15141,6 +15160,29 @@
     "ctx_x_letter": 0.2167,
     "ctx_x_value_rank": 0.2028,
     "ctx_x_text": 0.1985
+   },
+   "best": "len_rank",
+   "best_acc": 0.2424,
+   "excess": 0.0424
+  },
+  {
+   "family_id": "backend.kafka_consumers.middle_fwd_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1867,
+    "value_rank": 0.2,
+    "len_rank": 0.2424,
+    "letter_x_value_rank": 0.19,
+    "letter_x_len_rank": 0.2,
+    "text": 0.1982,
+    "text_x_letter": 0.1967,
+    "ctx_x_letter": 0.1733,
+    "ctx_x_value_rank": 0.1867,
+    "ctx_x_text": 0.2116
    },
    "best": "len_rank",
    "best_acc": 0.2424,
@@ -15811,29 +15853,6 @@
    "excess": 0.04
   },
   {
-   "family_id": "backend.threadpool.middle_solve_c_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1967,
-    "value_rank": 0.1767,
-    "len_rank": 0.2162,
-    "letter_x_value_rank": 0.175,
-    "letter_x_len_rank": 0.24,
-    "text": 0.2339,
-    "text_x_letter": 0.2067,
-    "ctx_x_letter": 0.1733,
-    "ctx_x_value_rank": 0.2,
-    "ctx_x_text": 0.2358
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.24,
-   "excess": 0.04
-  },
-  {
    "family_id": "common.db.principal_db_conn_budget_mcq",
    "n_test": 300,
    "n_options": {
@@ -15854,6 +15873,29 @@
    },
    "best": "ctx_x_value_rank",
    "best_acc": 0.29,
+   "excess": 0.04
+  },
+  {
+   "family_id": "backend.threadpool.middle_solve_c_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1967,
+    "value_rank": 0.1767,
+    "len_rank": 0.2162,
+    "letter_x_value_rank": 0.175,
+    "letter_x_len_rank": 0.24,
+    "text": 0.2339,
+    "text_x_letter": 0.2067,
+    "ctx_x_letter": 0.1733,
+    "ctx_x_value_rank": 0.2,
+    "ctx_x_text": 0.2358
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.24,
    "excess": 0.04
   },
   {
@@ -15969,25 +16011,25 @@
    "excess": 0.04
   },
   {
-   "family_id": "data_eng.pg_index.junior_fwd_k3",
+   "family_id": "data_eng.etl_window.principal_solve_v_k5",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.19,
-    "value_rank": 0.23,
-    "len_rank": 0.2384,
-    "letter_x_value_rank": 0.21,
-    "letter_x_len_rank": 0.24,
-    "text": 0.2255,
-    "text_x_letter": 0.2,
-    "ctx_x_letter": 0.1933,
-    "ctx_x_value_rank": 0.2267,
-    "ctx_x_text": 0.2255
+    "letter": 0.2,
+    "value_rank": 0.2167,
+    "len_rank": 0.1989,
+    "letter_x_value_rank": 0.2,
+    "letter_x_len_rank": 0.2167,
+    "text": 0.2,
+    "text_x_letter": 0.2067,
+    "ctx_x_letter": 0.24,
+    "ctx_x_value_rank": 0.1983,
+    "ctx_x_text": 0.2
    },
-   "best": "letter_x_len_rank",
+   "best": "ctx_x_letter",
    "best_acc": 0.24,
    "excess": 0.04
   },
@@ -16015,25 +16057,25 @@
    "excess": 0.04
   },
   {
-   "family_id": "data_eng.etl_window.principal_solve_v_k5",
+   "family_id": "data_eng.pg_index.junior_fwd_k3",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.2,
-    "value_rank": 0.2167,
-    "len_rank": 0.1989,
-    "letter_x_value_rank": 0.2,
-    "letter_x_len_rank": 0.2167,
-    "text": 0.2,
-    "text_x_letter": 0.2067,
-    "ctx_x_letter": 0.24,
-    "ctx_x_value_rank": 0.1983,
-    "ctx_x_text": 0.2
+    "letter": 0.19,
+    "value_rank": 0.23,
+    "len_rank": 0.2384,
+    "letter_x_value_rank": 0.21,
+    "letter_x_len_rank": 0.24,
+    "text": 0.2255,
+    "text_x_letter": 0.2,
+    "ctx_x_letter": 0.1933,
+    "ctx_x_value_rank": 0.2267,
+    "ctx_x_text": 0.2255
    },
-   "best": "ctx_x_letter",
+   "best": "letter_x_len_rank",
    "best_acc": 0.24,
    "excess": 0.04
   },
@@ -16084,6 +16126,29 @@
    "excess": 0.04
   },
   {
+   "family_id": "data_ml.rag_cost.senior_solve_nq_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1167,
+    "value_rank": 0.24,
+    "len_rank": 0.2144,
+    "letter_x_value_rank": 0.21,
+    "letter_x_len_rank": 0.1567,
+    "text": 0.2209,
+    "text_x_letter": 0.14,
+    "ctx_x_letter": 0.1783,
+    "ctx_x_value_rank": 0.2389,
+    "ctx_x_text": 0.2209
+   },
+   "best": "value_rank",
+   "best_acc": 0.24,
+   "excess": 0.04
+  },
+  {
    "family_id": "data_ml.rag_cost.lead_solve_ch_k4",
    "n_test": 300,
    "n_options": {
@@ -16126,29 +16191,6 @@
     "ctx_x_text": 0.2001
    },
    "best": "letter_x_len_rank",
-   "best_acc": 0.24,
-   "excess": 0.04
-  },
-  {
-   "family_id": "data_ml.rag_cost.senior_solve_nq_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1167,
-    "value_rank": 0.24,
-    "len_rank": 0.2144,
-    "letter_x_value_rank": 0.21,
-    "letter_x_len_rank": 0.1567,
-    "text": 0.2209,
-    "text_x_letter": 0.14,
-    "ctx_x_letter": 0.1783,
-    "ctx_x_value_rank": 0.2389,
-    "ctx_x_text": 0.2209
-   },
-   "best": "value_rank",
    "best_acc": 0.24,
    "excess": 0.04
   },
@@ -16242,25 +16284,25 @@
    "excess": 0.04
   },
   {
-   "family_id": "frontend.image_weight.lead_solve_n_k5",
+   "family_id": "frontend.image_weight.senior_fwd_k5",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.1933,
-    "value_rank": 0.1967,
-    "len_rank": 0.2141,
-    "letter_x_value_rank": 0.2233,
-    "letter_x_len_rank": 0.2133,
-    "text": 0.1826,
-    "text_x_letter": 0.1867,
-    "ctx_x_letter": 0.1911,
-    "ctx_x_value_rank": 0.24,
-    "ctx_x_text": 0.197
+    "letter": 0.2067,
+    "value_rank": 0.22,
+    "len_rank": 0.2376,
+    "letter_x_value_rank": 0.1817,
+    "letter_x_len_rank": 0.24,
+    "text": 0.1882,
+    "text_x_letter": 0.19,
+    "ctx_x_letter": 0.2067,
+    "ctx_x_value_rank": 0.1989,
+    "ctx_x_text": 0.1972
    },
-   "best": "ctx_x_value_rank",
+   "best": "letter_x_len_rank",
    "best_acc": 0.24,
    "excess": 0.04
   },
@@ -16285,25 +16327,25 @@
    "excess": 0.04
   },
   {
-   "family_id": "frontend.image_weight.senior_fwd_k5",
+   "family_id": "frontend.image_weight.lead_solve_n_k5",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.2067,
-    "value_rank": 0.22,
-    "len_rank": 0.2376,
-    "letter_x_value_rank": 0.1817,
-    "letter_x_len_rank": 0.24,
-    "text": 0.1882,
-    "text_x_letter": 0.19,
-    "ctx_x_letter": 0.2067,
-    "ctx_x_value_rank": 0.1989,
-    "ctx_x_text": 0.1972
+    "letter": 0.1933,
+    "value_rank": 0.1967,
+    "len_rank": 0.2141,
+    "letter_x_value_rank": 0.2233,
+    "letter_x_len_rank": 0.2133,
+    "text": 0.1826,
+    "text_x_letter": 0.1867,
+    "ctx_x_letter": 0.1911,
+    "ctx_x_value_rank": 0.24,
+    "ctx_x_text": 0.197
    },
-   "best": "letter_x_len_rank",
+   "best": "ctx_x_value_rank",
    "best_acc": 0.24,
    "excess": 0.04
   },
@@ -16791,29 +16833,6 @@
    "excess": 0.0383
   },
   {
-   "family_id": "qa.manual_regress.senior_solve_au_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2067,
-    "value_rank": 0.2133,
-    "len_rank": 0.2091,
-    "letter_x_value_rank": 0.2383,
-    "letter_x_len_rank": 0.1933,
-    "text": 0.2,
-    "text_x_letter": 0.2067,
-    "ctx_x_letter": 0.2133,
-    "ctx_x_value_rank": 0.1633,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_value_rank",
-   "best_acc": 0.2383,
-   "excess": 0.0383
-  },
-  {
    "family_id": "security.principal.attack_path_shift_mcq",
    "n_test": 300,
    "n_options": {
@@ -16834,6 +16853,29 @@
    },
    "best": "ctx_x_letter",
    "best_acc": 0.2883,
+   "excess": 0.0383
+  },
+  {
+   "family_id": "qa.manual_regress.senior_solve_au_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2067,
+    "value_rank": 0.2133,
+    "len_rank": 0.2091,
+    "letter_x_value_rank": 0.2383,
+    "letter_x_len_rank": 0.1933,
+    "text": 0.2,
+    "text_x_letter": 0.2067,
+    "ctx_x_letter": 0.2133,
+    "ctx_x_value_rank": 0.1633,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_value_rank",
+   "best_acc": 0.2383,
    "excess": 0.0383
   },
   {
@@ -16860,29 +16902,6 @@
    "excess": 0.0383
   },
   {
-   "family_id": "security.rbac_cache.principal_solve_pr_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.22,
-    "value_rank": 0.1867,
-    "len_rank": 0.2101,
-    "letter_x_value_rank": 0.2,
-    "letter_x_len_rank": 0.2239,
-    "text": 0.2,
-    "text_x_letter": 0.22,
-    "ctx_x_letter": 0.2383,
-    "ctx_x_value_rank": 0.185,
-    "ctx_x_text": 0.2
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.2383,
-   "excess": 0.0383
-  },
-  {
    "family_id": "security.hmac_webhook.senior_solve_wh_k4",
    "n_test": 300,
    "n_options": {
@@ -16902,6 +16921,29 @@
     "ctx_x_text": 0.201
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.2383,
+   "excess": 0.0383
+  },
+  {
+   "family_id": "security.rbac_cache.principal_solve_pr_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.22,
+    "value_rank": 0.1867,
+    "len_rank": 0.2101,
+    "letter_x_value_rank": 0.2,
+    "letter_x_len_rank": 0.2239,
+    "text": 0.2,
+    "text_x_letter": 0.22,
+    "ctx_x_letter": 0.2383,
+    "ctx_x_value_rank": 0.185,
+    "ctx_x_text": 0.2
+   },
+   "best": "ctx_x_letter",
    "best_acc": 0.2383,
    "excess": 0.0383
   },
@@ -17251,26 +17293,6 @@
    "excess": 0.0367
   },
   {
-   "family_id": "backend.strategy.principal_data_freshness_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2333,
-    "len_rank": 0.2567,
-    "letter_x_len_rank": 0.2633,
-    "text": 0.2567,
-    "text_x_letter": 0.2633,
-    "ctx_x_letter": 0.2867,
-    "ctx_x_text": 0.28
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.2867,
-   "excess": 0.0367
-  },
-  {
    "family_id": "backend.idem_redis.senior_fwd_k5",
    "n_test": 300,
    "n_options": {
@@ -17294,26 +17316,23 @@
    "excess": 0.0367
   },
   {
-   "family_id": "common.log_storage.junior_fwd_k3",
+   "family_id": "backend.strategy.principal_data_freshness_mcq",
    "n_test": 300,
    "n_options": {
-    "5": 400
+    "4": 400
    },
-   "chance": 0.2,
+   "chance": 0.25,
    "by_attack": {
-    "letter": 0.23,
-    "value_rank": 0.1367,
-    "len_rank": 0.1658,
-    "letter_x_value_rank": 0.1867,
-    "letter_x_len_rank": 0.2167,
-    "text": 0.2211,
-    "text_x_letter": 0.2367,
-    "ctx_x_letter": 0.21,
-    "ctx_x_value_rank": 0.2017,
-    "ctx_x_text": 0.2053
+    "letter": 0.2333,
+    "len_rank": 0.2567,
+    "letter_x_len_rank": 0.2633,
+    "text": 0.2567,
+    "text_x_letter": 0.2633,
+    "ctx_x_letter": 0.2867,
+    "ctx_x_text": 0.28
    },
-   "best": "text_x_letter",
-   "best_acc": 0.2367,
+   "best": "ctx_x_letter",
+   "best_acc": 0.2867,
    "excess": 0.0367
   },
   {
@@ -17386,29 +17405,6 @@
    "excess": 0.0367
   },
   {
-   "family_id": "common.sprint_capacity.senior_solve_n_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1867,
-    "value_rank": 0.1833,
-    "len_rank": 0.2105,
-    "letter_x_value_rank": 0.155,
-    "letter_x_len_rank": 0.2067,
-    "text": 0.2043,
-    "text_x_letter": 0.1933,
-    "ctx_x_letter": 0.1717,
-    "ctx_x_value_rank": 0.2367,
-    "ctx_x_text": 0.2054
-   },
-   "best": "ctx_x_value_rank",
-   "best_acc": 0.2367,
-   "excess": 0.0367
-  },
-  {
    "family_id": "common.retry_backoff.junior_solve_t_k2",
    "n_test": 300,
    "n_options": {
@@ -17428,6 +17424,52 @@
     "ctx_x_text": 0.2017
    },
    "best": "ctx_x_letter",
+   "best_acc": 0.2367,
+   "excess": 0.0367
+  },
+  {
+   "family_id": "common.log_storage.junior_fwd_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.23,
+    "value_rank": 0.1367,
+    "len_rank": 0.1658,
+    "letter_x_value_rank": 0.1867,
+    "letter_x_len_rank": 0.2167,
+    "text": 0.2211,
+    "text_x_letter": 0.2367,
+    "ctx_x_letter": 0.21,
+    "ctx_x_value_rank": 0.2017,
+    "ctx_x_text": 0.2053
+   },
+   "best": "text_x_letter",
+   "best_acc": 0.2367,
+   "excess": 0.0367
+  },
+  {
+   "family_id": "common.sprint_capacity.senior_solve_n_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1867,
+    "value_rank": 0.1833,
+    "len_rank": 0.2105,
+    "letter_x_value_rank": 0.155,
+    "letter_x_len_rank": 0.2067,
+    "text": 0.2043,
+    "text_x_letter": 0.1933,
+    "ctx_x_letter": 0.1717,
+    "ctx_x_value_rank": 0.2367,
+    "ctx_x_text": 0.2054
+   },
+   "best": "ctx_x_value_rank",
    "best_acc": 0.2367,
    "excess": 0.0367
   },
@@ -17478,29 +17520,6 @@
    "excess": 0.0367
   },
   {
-   "family_id": "data_ml.serving.principal_gpu_fleet_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.23,
-    "value_rank": 0.2867,
-    "len_rank": 0.25,
-    "letter_x_value_rank": 0.22,
-    "letter_x_len_rank": 0.23,
-    "text": 0.25,
-    "text_x_letter": 0.23,
-    "ctx_x_letter": 0.2383,
-    "ctx_x_value_rank": 0.2617,
-    "ctx_x_text": 0.25
-   },
-   "best": "value_rank",
-   "best_acc": 0.2867,
-   "excess": 0.0367
-  },
-  {
    "family_id": "data_ml.label_budget.senior_solve_t_k3",
    "n_test": 300,
    "n_options": {
@@ -17524,6 +17543,29 @@
    "excess": 0.0367
   },
   {
+   "family_id": "data_ml.serving.principal_gpu_fleet_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.23,
+    "value_rank": 0.2867,
+    "len_rank": 0.25,
+    "letter_x_value_rank": 0.22,
+    "letter_x_len_rank": 0.23,
+    "text": 0.25,
+    "text_x_letter": 0.23,
+    "ctx_x_letter": 0.2383,
+    "ctx_x_value_rank": 0.2617,
+    "ctx_x_text": 0.25
+   },
+   "best": "value_rank",
+   "best_acc": 0.2867,
+   "excess": 0.0367
+  },
+  {
    "family_id": "data_ml.train_time.middle_solve_g_k2",
    "n_test": 300,
    "n_options": {
@@ -17543,29 +17585,6 @@
     "ctx_x_text": 0.2
    },
    "best": "letter",
-   "best_acc": 0.2367,
-   "excess": 0.0367
-  },
-  {
-   "family_id": "devops.db_iops.junior_fwd_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1733,
-    "value_rank": 0.2367,
-    "len_rank": 0.2215,
-    "letter_x_value_rank": 0.2,
-    "letter_x_len_rank": 0.1883,
-    "text": 0.2031,
-    "text_x_letter": 0.1733,
-    "ctx_x_letter": 0.19,
-    "ctx_x_value_rank": 0.2017,
-    "ctx_x_text": 0.2026
-   },
-   "best": "value_rank",
    "best_acc": 0.2367,
    "excess": 0.0367
   },
@@ -17612,6 +17631,29 @@
     "ctx_x_text": 0.2043
    },
    "best": "letter_x_value_rank",
+   "best_acc": 0.2367,
+   "excess": 0.0367
+  },
+  {
+   "family_id": "devops.db_iops.junior_fwd_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1733,
+    "value_rank": 0.2367,
+    "len_rank": 0.2215,
+    "letter_x_value_rank": 0.2,
+    "letter_x_len_rank": 0.1883,
+    "text": 0.2031,
+    "text_x_letter": 0.1733,
+    "ctx_x_letter": 0.19,
+    "ctx_x_value_rank": 0.2017,
+    "ctx_x_text": 0.2026
+   },
+   "best": "value_rank",
    "best_acc": 0.2367,
    "excess": 0.0367
   },
@@ -17728,29 +17770,6 @@
    "excess": 0.0367
   },
   {
-   "family_id": "frontend.image_weight.senior_solve_w_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2067,
-    "value_rank": 0.16,
-    "len_rank": 0.2075,
-    "letter_x_value_rank": 0.1733,
-    "letter_x_len_rank": 0.1833,
-    "text": 0.2065,
-    "text_x_letter": 0.2067,
-    "ctx_x_letter": 0.2367,
-    "ctx_x_value_rank": 0.1911,
-    "ctx_x_text": 0.1998
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.2367,
-   "excess": 0.0367
-  },
-  {
    "family_id": "frontend.image_weight.senior_solve_n_k4",
    "n_test": 300,
    "n_options": {
@@ -17770,6 +17789,29 @@
     "ctx_x_text": 0.1957
    },
    "best": "ctx_x_value_rank",
+   "best_acc": 0.2367,
+   "excess": 0.0367
+  },
+  {
+   "family_id": "frontend.image_weight.senior_solve_w_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2067,
+    "value_rank": 0.16,
+    "len_rank": 0.2075,
+    "letter_x_value_rank": 0.1733,
+    "letter_x_len_rank": 0.1833,
+    "text": 0.2065,
+    "text_x_letter": 0.2067,
+    "ctx_x_letter": 0.2367,
+    "ctx_x_value_rank": 0.1911,
+    "ctx_x_text": 0.1998
+   },
+   "best": "ctx_x_letter",
    "best_acc": 0.2367,
    "excess": 0.0367
   },
@@ -17935,29 +17977,6 @@
    "excess": 0.0367
   },
   {
-   "family_id": "qa.api_test_suite.middle_fwd_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2,
-    "value_rank": 0.2033,
-    "len_rank": 0.2134,
-    "letter_x_value_rank": 0.2133,
-    "letter_x_len_rank": 0.2367,
-    "text": 0.2132,
-    "text_x_letter": 0.2033,
-    "ctx_x_letter": 0.2258,
-    "ctx_x_value_rank": 0.1961,
-    "ctx_x_text": 0.2132
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2367,
-   "excess": 0.0367
-  },
-  {
    "family_id": "qa.api_test_suite.lead_solve_cs_k4",
    "n_test": 300,
    "n_options": {
@@ -17981,25 +18000,25 @@
    "excess": 0.0367
   },
   {
-   "family_id": "qa.coverage_effort.lead_solve_cov_k4",
+   "family_id": "qa.api_test_suite.middle_fwd_k4",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.1767,
-    "value_rank": 0.2067,
-    "len_rank": 0.1838,
-    "letter_x_value_rank": 0.175,
-    "letter_x_len_rank": 0.1933,
-    "text": 0.2,
-    "text_x_letter": 0.1767,
-    "ctx_x_letter": 0.1989,
-    "ctx_x_value_rank": 0.2367,
-    "ctx_x_text": 0.2
+    "letter": 0.2,
+    "value_rank": 0.2033,
+    "len_rank": 0.2134,
+    "letter_x_value_rank": 0.2133,
+    "letter_x_len_rank": 0.2367,
+    "text": 0.2132,
+    "text_x_letter": 0.2033,
+    "ctx_x_letter": 0.2258,
+    "ctx_x_value_rank": 0.1961,
+    "ctx_x_text": 0.2132
    },
-   "best": "ctx_x_value_rank",
+   "best": "letter_x_len_rank",
    "best_acc": 0.2367,
    "excess": 0.0367
   },
@@ -18023,6 +18042,29 @@
     "ctx_x_text": 0.1894
    },
    "best": "letter_x_value_rank",
+   "best_acc": 0.2367,
+   "excess": 0.0367
+  },
+  {
+   "family_id": "qa.coverage_effort.lead_solve_cov_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1767,
+    "value_rank": 0.2067,
+    "len_rank": 0.1838,
+    "letter_x_value_rank": 0.175,
+    "letter_x_len_rank": 0.1933,
+    "text": 0.2,
+    "text_x_letter": 0.1767,
+    "ctx_x_letter": 0.1989,
+    "ctx_x_value_rank": 0.2367,
+    "ctx_x_text": 0.2
+   },
+   "best": "ctx_x_value_rank",
    "best_acc": 0.2367,
    "excess": 0.0367
   },
@@ -18073,29 +18115,6 @@
    "excess": 0.0367
   },
   {
-   "family_id": "qa.manual_regress.principal_solve_au_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2367,
-    "value_rank": 0.14,
-    "len_rank": 0.2028,
-    "letter_x_value_rank": 0.2,
-    "letter_x_len_rank": 0.23,
-    "text": 0.2,
-    "text_x_letter": 0.2367,
-    "ctx_x_letter": 0.18,
-    "ctx_x_value_rank": 0.1883,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter",
-   "best_acc": 0.2367,
-   "excess": 0.0367
-  },
-  {
    "family_id": "security.cors_waf_rps.senior_solve_ncap_k3",
    "n_test": 300,
    "n_options": {
@@ -18115,6 +18134,29 @@
     "ctx_x_text": 0.2
    },
    "best": "letter_x_len_rank",
+   "best_acc": 0.2367,
+   "excess": 0.0367
+  },
+  {
+   "family_id": "qa.manual_regress.principal_solve_au_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2367,
+    "value_rank": 0.14,
+    "len_rank": 0.2028,
+    "letter_x_value_rank": 0.2,
+    "letter_x_len_rank": 0.23,
+    "text": 0.2,
+    "text_x_letter": 0.2367,
+    "ctx_x_letter": 0.18,
+    "ctx_x_value_rank": 0.1883,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter",
    "best_acc": 0.2367,
    "excess": 0.0367
   },
@@ -18553,29 +18595,6 @@
    "excess": 0.035
   },
   {
-   "family_id": "frontend.ssr_pods.senior_fwd_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.22,
-    "value_rank": 0.2333,
-    "len_rank": 0.2233,
-    "letter_x_value_rank": 0.2033,
-    "letter_x_len_rank": 0.19,
-    "text": 0.2298,
-    "text_x_letter": 0.205,
-    "ctx_x_letter": 0.235,
-    "ctx_x_value_rank": 0.1567,
-    "ctx_x_text": 0.2076
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.235,
-   "excess": 0.035
-  },
-  {
    "family_id": "frontend.virtual_list.lead_solve_vh_k5",
    "n_test": 300,
    "n_options": {
@@ -18593,6 +18612,29 @@
     "ctx_x_letter": 0.235,
     "ctx_x_value_rank": 0.1733,
     "ctx_x_text": 0.1959
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.235,
+   "excess": 0.035
+  },
+  {
+   "family_id": "frontend.ssr_pods.senior_fwd_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.22,
+    "value_rank": 0.2333,
+    "len_rank": 0.2233,
+    "letter_x_value_rank": 0.2033,
+    "letter_x_len_rank": 0.19,
+    "text": 0.2298,
+    "text_x_letter": 0.205,
+    "ctx_x_letter": 0.235,
+    "ctx_x_value_rank": 0.1567,
+    "ctx_x_text": 0.2076
    },
    "best": "ctx_x_letter",
    "best_acc": 0.235,
@@ -18622,6 +18664,26 @@
    "excess": 0.035
   },
   {
+   "family_id": "qa.design.boundary_values_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2433,
+    "len_rank": 0.285,
+    "letter_x_len_rank": 0.2733,
+    "text": 0.25,
+    "text_x_letter": 0.2422,
+    "ctx_x_letter": 0.1967,
+    "ctx_x_text": 0.25
+   },
+   "best": "len_rank",
+   "best_acc": 0.285,
+   "excess": 0.035
+  },
+  {
    "family_id": "qa.defect_escape.principal_solve_ut_k5",
    "n_test": 300,
    "n_options": {
@@ -18642,26 +18704,6 @@
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.235,
-   "excess": 0.035
-  },
-  {
-   "family_id": "qa.design.boundary_values_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2433,
-    "len_rank": 0.285,
-    "letter_x_len_rank": 0.2733,
-    "text": 0.25,
-    "text_x_letter": 0.2422,
-    "ctx_x_letter": 0.1967,
-    "ctx_x_text": 0.25
-   },
-   "best": "len_rank",
-   "best_acc": 0.285,
    "excess": 0.035
   },
   {
@@ -19079,29 +19121,6 @@
    "excess": 0.0333
   },
   {
-   "family_id": "analyst.funnel_conversion.lead_solve_vis_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1889,
-    "value_rank": 0.1867,
-    "len_rank": 0.2053,
-    "letter_x_value_rank": 0.1933,
-    "letter_x_len_rank": 0.2333,
-    "text": 0.2078,
-    "text_x_letter": 0.2067,
-    "ctx_x_letter": 0.2133,
-    "ctx_x_value_rank": 0.1622,
-    "ctx_x_text": 0.1976
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2333,
-   "excess": 0.0333
-  },
-  {
    "family_id": "analyst.er_table_growth.middle_fwd_k4",
    "n_test": 300,
    "n_options": {
@@ -19121,6 +19140,29 @@
     "ctx_x_text": 0.2023
    },
    "best": "ctx_x_letter",
+   "best_acc": 0.2333,
+   "excess": 0.0333
+  },
+  {
+   "family_id": "analyst.funnel_conversion.lead_solve_vis_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1889,
+    "value_rank": 0.1867,
+    "len_rank": 0.2053,
+    "letter_x_value_rank": 0.1933,
+    "letter_x_len_rank": 0.2333,
+    "text": 0.2078,
+    "text_x_letter": 0.2067,
+    "ctx_x_letter": 0.2133,
+    "ctx_x_value_rank": 0.1622,
+    "ctx_x_text": 0.1976
+   },
+   "best": "letter_x_len_rank",
    "best_acc": 0.2333,
    "excess": 0.0333
   },
@@ -19145,29 +19187,6 @@
    },
    "best": "letter",
    "best_acc": 0.2833,
-   "excess": 0.0333
-  },
-  {
-   "family_id": "backend.idem_redis.senior_solve_t_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1967,
-    "value_rank": 0.22,
-    "len_rank": 0.2308,
-    "letter_x_value_rank": 0.2117,
-    "letter_x_len_rank": 0.2333,
-    "text": 0.2018,
-    "text_x_letter": 0.1967,
-    "ctx_x_letter": 0.2117,
-    "ctx_x_value_rank": 0.2017,
-    "ctx_x_text": 0.2004
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2333,
    "excess": 0.0333
   },
   {
@@ -19211,6 +19230,29 @@
     "ctx_x_letter": 0.1767,
     "ctx_x_value_rank": 0.1767,
     "ctx_x_text": 0.2099
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.2333,
+   "excess": 0.0333
+  },
+  {
+   "family_id": "backend.idem_redis.senior_solve_t_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1967,
+    "value_rank": 0.22,
+    "len_rank": 0.2308,
+    "letter_x_value_rank": 0.2117,
+    "letter_x_len_rank": 0.2333,
+    "text": 0.2018,
+    "text_x_letter": 0.1967,
+    "ctx_x_letter": 0.2117,
+    "ctx_x_value_rank": 0.2017,
+    "ctx_x_text": 0.2004
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.2333,
@@ -19309,6 +19351,52 @@
    "excess": 0.0333
   },
   {
+   "family_id": "data_eng.kafka.principal_lag_recovery_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2833,
+    "value_rank": 0.21,
+    "len_rank": 0.2433,
+    "letter_x_value_rank": 0.235,
+    "letter_x_len_rank": 0.2633,
+    "text": 0.25,
+    "text_x_letter": 0.2833,
+    "ctx_x_letter": 0.25,
+    "ctx_x_value_rank": 0.255,
+    "ctx_x_text": 0.25
+   },
+   "best": "letter",
+   "best_acc": 0.2833,
+   "excess": 0.0333
+  },
+  {
+   "family_id": "data_eng.etl_window.senior_solve_v_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.19,
+    "value_rank": 0.2333,
+    "len_rank": 0.2024,
+    "letter_x_value_rank": 0.2067,
+    "letter_x_len_rank": 0.15,
+    "text": 0.2,
+    "text_x_letter": 0.19,
+    "ctx_x_letter": 0.2017,
+    "ctx_x_value_rank": 0.2333,
+    "ctx_x_text": 0.2
+   },
+   "best": "value_rank",
+   "best_acc": 0.2333,
+   "excess": 0.0333
+  },
+  {
    "family_id": "data_eng.dwh_scan.lead_solve_cl_k4",
    "n_test": 300,
    "n_options": {
@@ -19352,52 +19440,6 @@
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.2333,
-   "excess": 0.0333
-  },
-  {
-   "family_id": "data_eng.etl_window.senior_solve_v_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.19,
-    "value_rank": 0.2333,
-    "len_rank": 0.2024,
-    "letter_x_value_rank": 0.2067,
-    "letter_x_len_rank": 0.15,
-    "text": 0.2,
-    "text_x_letter": 0.19,
-    "ctx_x_letter": 0.2017,
-    "ctx_x_value_rank": 0.2333,
-    "ctx_x_text": 0.2
-   },
-   "best": "value_rank",
-   "best_acc": 0.2333,
-   "excess": 0.0333
-  },
-  {
-   "family_id": "data_eng.kafka.principal_lag_recovery_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2833,
-    "value_rank": 0.21,
-    "len_rank": 0.2433,
-    "letter_x_value_rank": 0.235,
-    "letter_x_len_rank": 0.2633,
-    "text": 0.25,
-    "text_x_letter": 0.2833,
-    "ctx_x_letter": 0.25,
-    "ctx_x_value_rank": 0.255,
-    "ctx_x_text": 0.25
-   },
-   "best": "letter",
-   "best_acc": 0.2833,
    "excess": 0.0333
   },
   {
@@ -20433,29 +20475,6 @@
    "excess": 0.0302
   },
   {
-   "family_id": "analyst.api_contract_payload.senior_solve_ord_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2067,
-    "value_rank": 0.1833,
-    "len_rank": 0.2233,
-    "letter_x_value_rank": 0.2067,
-    "letter_x_len_rank": 0.23,
-    "text": 0.201,
-    "text_x_letter": 0.1633,
-    "ctx_x_letter": 0.2117,
-    "ctx_x_value_rank": 0.1944,
-    "ctx_x_text": 0.1895
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.23,
-   "excess": 0.03
-  },
-  {
    "family_id": "analyst.bpmn_sla_cycle.lead_solve_doc_k5",
    "n_test": 300,
    "n_options": {
@@ -20473,6 +20492,29 @@
     "ctx_x_letter": 0.2133,
     "ctx_x_value_rank": 0.1839,
     "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.23,
+   "excess": 0.03
+  },
+  {
+   "family_id": "analyst.api_contract_payload.senior_solve_ord_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2067,
+    "value_rank": 0.1833,
+    "len_rank": 0.2233,
+    "letter_x_value_rank": 0.2067,
+    "letter_x_len_rank": 0.23,
+    "text": 0.201,
+    "text_x_letter": 0.1633,
+    "ctx_x_letter": 0.2117,
+    "ctx_x_value_rank": 0.1944,
+    "ctx_x_text": 0.1895
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.23,
@@ -20640,69 +20682,6 @@
    "excess": 0.03
   },
   {
-   "family_id": "data_ml.fraud_alerts.senior_solve_prec_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1933,
-    "value_rank": 0.1767,
-    "len_rank": 0.2166,
-    "letter_x_value_rank": 0.1433,
-    "letter_x_len_rank": 0.23,
-    "text": 0.2006,
-    "text_x_letter": 0.1933,
-    "ctx_x_letter": 0.1683,
-    "ctx_x_value_rank": 0.1967,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.23,
-   "excess": 0.03
-  },
-  {
-   "family_id": "data_ml.llm.principal_rag_fix_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2733,
-    "len_rank": 0.23,
-    "letter_x_len_rank": 0.2467,
-    "text": 0.21,
-    "text_x_letter": 0.2467,
-    "ctx_x_letter": 0.28,
-    "ctx_x_text": 0.245
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.28,
-   "excess": 0.03
-  },
-  {
-   "family_id": "data_ml.strategy.principal_data_vs_model_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.28,
-    "len_rank": 0.2567,
-    "letter_x_len_rank": 0.2767,
-    "text": 0.2567,
-    "text_x_letter": 0.2767,
-    "ctx_x_letter": 0.27,
-    "ctx_x_text": 0.27
-   },
-   "best": "letter",
-   "best_acc": 0.28,
-   "excess": 0.03
-  },
-  {
    "family_id": "data_ml.batch_scoring.principal_solve_w_k5",
    "n_test": 300,
    "n_options": {
@@ -20722,29 +20701,6 @@
     "ctx_x_text": 0.2097
    },
    "best": "value_rank",
-   "best_acc": 0.23,
-   "excess": 0.03
-  },
-  {
-   "family_id": "data_ml.rag_cost.senior_solve_ch_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.22,
-    "value_rank": 0.2067,
-    "len_rank": 0.209,
-    "letter_x_value_rank": 0.23,
-    "letter_x_len_rank": 0.2133,
-    "text": 0.2201,
-    "text_x_letter": 0.18,
-    "ctx_x_letter": 0.1683,
-    "ctx_x_value_rank": 0.185,
-    "ctx_x_text": 0.2009
-   },
-   "best": "letter_x_value_rank",
    "best_acc": 0.23,
    "excess": 0.03
   },
@@ -20772,26 +20728,89 @@
    "excess": 0.03
   },
   {
-   "family_id": "devops.ci_runners.senior_solve_t_k3",
+   "family_id": "data_ml.llm.principal_rag_fix_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2733,
+    "len_rank": 0.23,
+    "letter_x_len_rank": 0.2467,
+    "text": 0.21,
+    "text_x_letter": 0.2467,
+    "ctx_x_letter": 0.28,
+    "ctx_x_text": 0.245
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.28,
+   "excess": 0.03
+  },
+  {
+   "family_id": "data_ml.fraud_alerts.senior_solve_prec_k3",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.2133,
-    "value_rank": 0.19,
-    "len_rank": 0.2059,
-    "letter_x_value_rank": 0.2283,
+    "letter": 0.1933,
+    "value_rank": 0.1767,
+    "len_rank": 0.2166,
+    "letter_x_value_rank": 0.1433,
     "letter_x_len_rank": 0.23,
-    "text": 0.2004,
-    "text_x_letter": 0.2133,
-    "ctx_x_letter": 0.23,
-    "ctx_x_value_rank": 0.2067,
+    "text": 0.2006,
+    "text_x_letter": 0.1933,
+    "ctx_x_letter": 0.1683,
+    "ctx_x_value_rank": 0.1967,
     "ctx_x_text": 0.2
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.23,
+   "excess": 0.03
+  },
+  {
+   "family_id": "data_ml.rag_cost.senior_solve_ch_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.22,
+    "value_rank": 0.2067,
+    "len_rank": 0.209,
+    "letter_x_value_rank": 0.23,
+    "letter_x_len_rank": 0.2133,
+    "text": 0.2201,
+    "text_x_letter": 0.18,
+    "ctx_x_letter": 0.1683,
+    "ctx_x_value_rank": 0.185,
+    "ctx_x_text": 0.2009
+   },
+   "best": "letter_x_value_rank",
+   "best_acc": 0.23,
+   "excess": 0.03
+  },
+  {
+   "family_id": "data_ml.strategy.principal_data_vs_model_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.28,
+    "len_rank": 0.2567,
+    "letter_x_len_rank": 0.2767,
+    "text": 0.2567,
+    "text_x_letter": 0.2767,
+    "ctx_x_letter": 0.27,
+    "ctx_x_text": 0.27
+   },
+   "best": "letter",
+   "best_acc": 0.28,
    "excess": 0.03
   },
   {
@@ -20818,6 +20837,29 @@
    "excess": 0.03
   },
   {
+   "family_id": "devops.ci_runners.senior_solve_t_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2133,
+    "value_rank": 0.19,
+    "len_rank": 0.2059,
+    "letter_x_value_rank": 0.2283,
+    "letter_x_len_rank": 0.23,
+    "text": 0.2004,
+    "text_x_letter": 0.2133,
+    "ctx_x_letter": 0.23,
+    "ctx_x_value_rank": 0.2067,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.23,
+   "excess": 0.03
+  },
+  {
    "family_id": "devops.k8s.qos_class_mcq",
    "n_test": 300,
    "n_options": {
@@ -20835,29 +20877,6 @@
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.28,
-   "excess": 0.03
-  },
-  {
-   "family_id": "frontend.frame_budget.senior_solve_br_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.22,
-    "value_rank": 0.1767,
-    "len_rank": 0.2157,
-    "letter_x_value_rank": 0.1967,
-    "letter_x_len_rank": 0.23,
-    "text": 0.2,
-    "text_x_letter": 0.22,
-    "ctx_x_letter": 0.165,
-    "ctx_x_value_rank": 0.2,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.23,
    "excess": 0.03
   },
   {
@@ -20880,6 +20899,29 @@
     "ctx_x_text": 0.1933
    },
    "best": "letter_x_value_rank",
+   "best_acc": 0.23,
+   "excess": 0.03
+  },
+  {
+   "family_id": "frontend.frame_budget.senior_solve_br_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.22,
+    "value_rank": 0.1767,
+    "len_rank": 0.2157,
+    "letter_x_value_rank": 0.1967,
+    "letter_x_len_rank": 0.23,
+    "text": 0.2,
+    "text_x_letter": 0.22,
+    "ctx_x_letter": 0.165,
+    "ctx_x_value_rank": 0.2,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
    "best_acc": 0.23,
    "excess": 0.03
   },
@@ -21410,29 +21452,6 @@
    "excess": 0.0283
   },
   {
-   "family_id": "data_eng.cdc_catchup.senior_solve_inc_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.21,
-    "value_rank": 0.1833,
-    "len_rank": 0.2073,
-    "letter_x_value_rank": 0.165,
-    "letter_x_len_rank": 0.2283,
-    "text": 0.2,
-    "text_x_letter": 0.21,
-    "ctx_x_letter": 0.215,
-    "ctx_x_value_rank": 0.185,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2283,
-   "excess": 0.0283
-  },
-  {
    "family_id": "data_eng.ch_storage.middle_solve_c_k2",
    "n_test": 300,
    "n_options": {
@@ -21449,6 +21468,29 @@
     "text_x_letter": 0.1967,
     "ctx_x_letter": 0.1985,
     "ctx_x_value_rank": 0.1783,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.2283,
+   "excess": 0.0283
+  },
+  {
+   "family_id": "data_eng.cdc_catchup.senior_solve_inc_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.21,
+    "value_rank": 0.1833,
+    "len_rank": 0.2073,
+    "letter_x_value_rank": 0.165,
+    "letter_x_len_rank": 0.2283,
+    "text": 0.2,
+    "text_x_letter": 0.21,
+    "ctx_x_letter": 0.215,
+    "ctx_x_value_rank": 0.185,
     "ctx_x_text": 0.2
    },
    "best": "letter_x_len_rank",
@@ -21663,29 +21705,6 @@
    "excess": 0.0278
   },
   {
-   "family_id": "mobile.image_disk_cache.middle_solve_kb_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.18,
-    "value_rank": 0.2067,
-    "len_rank": 0.2029,
-    "letter_x_value_rank": 0.2167,
-    "letter_x_len_rank": 0.1767,
-    "text": 0.2058,
-    "text_x_letter": 0.19,
-    "ctx_x_letter": 0.2278,
-    "ctx_x_value_rank": 0.2078,
-    "ctx_x_text": 0.2036
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.2278,
-   "excess": 0.0278
-  },
-  {
    "family_id": "mobile.image_disk_cache.lead_solve_kb_k4",
    "n_test": 300,
    "n_options": {
@@ -21703,6 +21722,29 @@
     "ctx_x_letter": 0.2278,
     "ctx_x_value_rank": 0.1933,
     "ctx_x_text": 0.2003
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.2278,
+   "excess": 0.0278
+  },
+  {
+   "family_id": "mobile.image_disk_cache.middle_solve_kb_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.18,
+    "value_rank": 0.2067,
+    "len_rank": 0.2029,
+    "letter_x_value_rank": 0.2167,
+    "letter_x_len_rank": 0.1767,
+    "text": 0.2058,
+    "text_x_letter": 0.19,
+    "ctx_x_letter": 0.2278,
+    "ctx_x_value_rank": 0.2078,
+    "ctx_x_text": 0.2036
    },
    "best": "ctx_x_letter",
    "best_acc": 0.2278,
@@ -21893,6 +21935,29 @@
    "excess": 0.0268
   },
   {
+   "family_id": "analyst.async_queue_lag.senior_solve_m_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2,
+    "value_rank": 0.2267,
+    "len_rank": 0.2163,
+    "letter_x_value_rank": 0.1983,
+    "letter_x_len_rank": 0.2167,
+    "text": 0.2,
+    "text_x_letter": 0.2,
+    "ctx_x_letter": 0.1944,
+    "ctx_x_value_rank": 0.1967,
+    "ctx_x_text": 0.2
+   },
+   "best": "value_rank",
+   "best_acc": 0.2267,
+   "excess": 0.0267
+  },
+  {
    "family_id": "analyst.bpmn_sla_cycle.principal_solve_au_k5",
    "n_test": 300,
    "n_options": {
@@ -21916,23 +21981,23 @@
    "excess": 0.0267
   },
   {
-   "family_id": "analyst.async_queue_lag.senior_solve_m_k3",
+   "family_id": "analyst.async_queue_lag.middle_solve_inp_k3",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.2,
+    "letter": 0.22,
     "value_rank": 0.2267,
-    "len_rank": 0.2163,
-    "letter_x_value_rank": 0.1983,
-    "letter_x_len_rank": 0.2167,
-    "text": 0.2,
-    "text_x_letter": 0.2,
-    "ctx_x_letter": 0.1944,
-    "ctx_x_value_rank": 0.1967,
-    "ctx_x_text": 0.2
+    "len_rank": 0.2094,
+    "letter_x_value_rank": 0.2033,
+    "letter_x_len_rank": 0.2117,
+    "text": 0.199,
+    "text_x_letter": 0.22,
+    "ctx_x_letter": 0.175,
+    "ctx_x_value_rank": 0.2142,
+    "ctx_x_text": 0.1993
    },
    "best": "value_rank",
    "best_acc": 0.2267,
@@ -21958,29 +22023,6 @@
     "ctx_x_text": 0.2039
    },
    "best": "letter_x_value_rank",
-   "best_acc": 0.2267,
-   "excess": 0.0267
-  },
-  {
-   "family_id": "analyst.async_queue_lag.middle_solve_inp_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.22,
-    "value_rank": 0.2267,
-    "len_rank": 0.2094,
-    "letter_x_value_rank": 0.2033,
-    "letter_x_len_rank": 0.2117,
-    "text": 0.199,
-    "text_x_letter": 0.22,
-    "ctx_x_letter": 0.175,
-    "ctx_x_value_rank": 0.2142,
-    "ctx_x_text": 0.1993
-   },
-   "best": "value_rank",
    "best_acc": 0.2267,
    "excess": 0.0267
   },
@@ -22028,29 +22070,6 @@
    },
    "best": "value_rank",
    "best_acc": 0.2267,
-   "excess": 0.0267
-  },
-  {
-   "family_id": "common.alg.principal_rehash_moves_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2433,
-    "value_rank": 0.26,
-    "len_rank": 0.2508,
-    "letter_x_value_rank": 0.2333,
-    "letter_x_len_rank": 0.2667,
-    "text": 0.25,
-    "text_x_letter": 0.2433,
-    "ctx_x_letter": 0.2767,
-    "ctx_x_value_rank": 0.2283,
-    "ctx_x_text": 0.25
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.2767,
    "excess": 0.0267
   },
   {
@@ -22123,6 +22142,29 @@
    "excess": 0.0267
   },
   {
+   "family_id": "common.alg.principal_rehash_moves_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2433,
+    "value_rank": 0.26,
+    "len_rank": 0.2508,
+    "letter_x_value_rank": 0.2333,
+    "letter_x_len_rank": 0.2667,
+    "text": 0.25,
+    "text_x_letter": 0.2433,
+    "ctx_x_letter": 0.2767,
+    "ctx_x_value_rank": 0.2283,
+    "ctx_x_text": 0.25
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.2767,
+   "excess": 0.0267
+  },
+  {
    "family_id": "common.cloud_cost.senior_solve_p_k3",
    "n_test": 300,
    "n_options": {
@@ -22142,6 +22184,29 @@
     "ctx_x_text": 0.2
    },
    "best": "letter",
+   "best_acc": 0.2267,
+   "excess": 0.0267
+  },
+  {
+   "family_id": "common.cloud_cost.lead_solve_n_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1867,
+    "value_rank": 0.1767,
+    "len_rank": 0.2221,
+    "letter_x_value_rank": 0.19,
+    "letter_x_len_rank": 0.1933,
+    "text": 0.2032,
+    "text_x_letter": 0.19,
+    "ctx_x_letter": 0.2267,
+    "ctx_x_value_rank": 0.21,
+    "ctx_x_text": 0.2018
+   },
+   "best": "ctx_x_letter",
    "best_acc": 0.2267,
    "excess": 0.0267
   },
@@ -22186,29 +22251,6 @@
    },
    "best": "ctx_x_value_rank",
    "best_acc": 0.2767,
-   "excess": 0.0267
-  },
-  {
-   "family_id": "common.cloud_cost.lead_solve_n_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1867,
-    "value_rank": 0.1767,
-    "len_rank": 0.2221,
-    "letter_x_value_rank": 0.19,
-    "letter_x_len_rank": 0.1933,
-    "text": 0.2032,
-    "text_x_letter": 0.19,
-    "ctx_x_letter": 0.2267,
-    "ctx_x_value_rank": 0.21,
-    "ctx_x_text": 0.2018
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.2267,
    "excess": 0.0267
   },
   {
@@ -22390,26 +22432,6 @@
    "excess": 0.0267
   },
   {
-   "family_id": "frontend.perf.principal_third_party_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2767,
-    "len_rank": 0.2533,
-    "letter_x_len_rank": 0.2567,
-    "text": 0.2533,
-    "text_x_letter": 0.2567,
-    "ctx_x_letter": 0.2742,
-    "ctx_x_text": 0.2367
-   },
-   "best": "letter",
-   "best_acc": 0.2767,
-   "excess": 0.0267
-  },
-  {
    "family_id": "frontend.api_waterfall.principal_solve_n_k5",
    "n_test": 300,
    "n_options": {
@@ -22430,6 +22452,26 @@
    },
    "best": "letter_x_value_rank",
    "best_acc": 0.2267,
+   "excess": 0.0267
+  },
+  {
+   "family_id": "frontend.perf.principal_third_party_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2767,
+    "len_rank": 0.2533,
+    "letter_x_len_rank": 0.2567,
+    "text": 0.2533,
+    "text_x_letter": 0.2567,
+    "ctx_x_letter": 0.2742,
+    "ctx_x_text": 0.2367
+   },
+   "best": "letter",
+   "best_acc": 0.2767,
    "excess": 0.0267
   },
   {
@@ -22479,6 +22521,49 @@
    "excess": 0.0267
   },
   {
+   "family_id": "mobile.principal.min_os_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2433,
+    "len_rank": 0.2542,
+    "letter_x_len_rank": 0.25,
+    "text": 0.25,
+    "text_x_letter": 0.2467,
+    "ctx_x_letter": 0.2767,
+    "ctx_x_text": 0.25
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.2767,
+   "excess": 0.0267
+  },
+  {
+   "family_id": "qa.api_test_suite.senior_solve_cs_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1633,
+    "value_rank": 0.1733,
+    "len_rank": 0.2084,
+    "letter_x_value_rank": 0.195,
+    "letter_x_len_rank": 0.1783,
+    "text": 0.2,
+    "text_x_letter": 0.1633,
+    "ctx_x_letter": 0.2267,
+    "ctx_x_value_rank": 0.215,
+    "ctx_x_text": 0.2
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.2267,
+   "excess": 0.0267
+  },
+  {
    "family_id": "qa.api_test_suite.intern_fwd_k2",
    "n_test": 300,
    "n_options": {
@@ -22502,26 +22587,6 @@
    "excess": 0.0267
   },
   {
-   "family_id": "mobile.principal.min_os_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2433,
-    "len_rank": 0.2542,
-    "letter_x_len_rank": 0.25,
-    "text": 0.25,
-    "text_x_letter": 0.2467,
-    "ctx_x_letter": 0.2767,
-    "ctx_x_text": 0.25
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.2767,
-   "excess": 0.0267
-  },
-  {
    "family_id": "qa.api_test_suite.junior_solve_ep_k2",
    "n_test": 300,
    "n_options": {
@@ -22541,29 +22606,6 @@
     "ctx_x_text": 0.1783
    },
    "best": "letter",
-   "best_acc": 0.2267,
-   "excess": 0.0267
-  },
-  {
-   "family_id": "qa.api_test_suite.senior_solve_cs_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1633,
-    "value_rank": 0.1733,
-    "len_rank": 0.2084,
-    "letter_x_value_rank": 0.195,
-    "letter_x_len_rank": 0.1783,
-    "text": 0.2,
-    "text_x_letter": 0.1633,
-    "ctx_x_letter": 0.2267,
-    "ctx_x_value_rank": 0.215,
-    "ctx_x_text": 0.2
-   },
-   "best": "ctx_x_letter",
    "best_acc": 0.2267,
    "excess": 0.0267
   },
@@ -22660,29 +22702,6 @@
    "excess": 0.0267
   },
   {
-   "family_id": "security.token_introspect.lead_solve_qps_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2,
-    "value_rank": 0.21,
-    "len_rank": 0.1993,
-    "letter_x_value_rank": 0.2133,
-    "letter_x_len_rank": 0.2267,
-    "text": 0.2032,
-    "text_x_letter": 0.2,
-    "ctx_x_letter": 0.195,
-    "ctx_x_value_rank": 0.175,
-    "ctx_x_text": 0.2011
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2267,
-   "excess": 0.0267
-  },
-  {
    "family_id": "security.tls_gateway.junior_fwd_k3",
    "n_test": 300,
    "n_options": {
@@ -22702,6 +22721,29 @@
     "ctx_x_text": 0.2038
    },
    "best": "letter",
+   "best_acc": 0.2267,
+   "excess": 0.0267
+  },
+  {
+   "family_id": "security.token_introspect.lead_solve_qps_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2,
+    "value_rank": 0.21,
+    "len_rank": 0.1993,
+    "letter_x_value_rank": 0.2133,
+    "letter_x_len_rank": 0.2267,
+    "text": 0.2032,
+    "text_x_letter": 0.2,
+    "ctx_x_letter": 0.195,
+    "ctx_x_value_rank": 0.175,
+    "ctx_x_text": 0.2011
+   },
+   "best": "letter_x_len_rank",
    "best_acc": 0.2267,
    "excess": 0.0267
   },
@@ -23143,29 +23185,6 @@
    "excess": 0.0246
   },
   {
-   "family_id": "security.aead_backup.middle_solve_th_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.19,
-    "value_rank": 0.2233,
-    "len_rank": 0.2127,
-    "letter_x_value_rank": 0.2,
-    "letter_x_len_rank": 0.1567,
-    "text": 0.2245,
-    "text_x_letter": 0.2,
-    "ctx_x_letter": 0.1875,
-    "ctx_x_value_rank": 0.1967,
-    "ctx_x_text": 0.1628
-   },
-   "best": "text",
-   "best_acc": 0.2245,
-   "excess": 0.0245
-  },
-  {
    "family_id": "security.cors_waf_rps.senior_fwd_k5",
    "n_test": 300,
    "n_options": {
@@ -23185,6 +23204,29 @@
     "ctx_x_text": 0.2245
    },
    "best": "ctx_x_text",
+   "best_acc": 0.2245,
+   "excess": 0.0245
+  },
+  {
+   "family_id": "security.aead_backup.middle_solve_th_k2",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.19,
+    "value_rank": 0.2233,
+    "len_rank": 0.2127,
+    "letter_x_value_rank": 0.2,
+    "letter_x_len_rank": 0.1567,
+    "text": 0.2245,
+    "text_x_letter": 0.2,
+    "ctx_x_letter": 0.1875,
+    "ctx_x_value_rank": 0.1967,
+    "ctx_x_text": 0.1628
+   },
+   "best": "text",
    "best_acc": 0.2245,
    "excess": 0.0245
   },
@@ -23396,6 +23438,29 @@
    "excess": 0.0233
   },
   {
+   "family_id": "common.cloud_cost.lead_solve_p_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.21,
+    "value_rank": 0.1767,
+    "len_rank": 0.2136,
+    "letter_x_value_rank": 0.17,
+    "letter_x_len_rank": 0.2167,
+    "text": 0.2003,
+    "text_x_letter": 0.21,
+    "ctx_x_letter": 0.1883,
+    "ctx_x_value_rank": 0.2233,
+    "ctx_x_text": 0.2
+   },
+   "best": "ctx_x_value_rank",
+   "best_acc": 0.2233,
+   "excess": 0.0233
+  },
+  {
    "family_id": "common.amdahl.middle_solve_t_k2",
    "n_test": 300,
    "n_options": {
@@ -23438,29 +23503,6 @@
     "ctx_x_text": 0.1922
    },
    "best": "ctx_x_letter",
-   "best_acc": 0.2233,
-   "excess": 0.0233
-  },
-  {
-   "family_id": "common.cloud_cost.lead_solve_p_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.21,
-    "value_rank": 0.1767,
-    "len_rank": 0.2136,
-    "letter_x_value_rank": 0.17,
-    "letter_x_len_rank": 0.2167,
-    "text": 0.2003,
-    "text_x_letter": 0.21,
-    "ctx_x_letter": 0.1883,
-    "ctx_x_value_rank": 0.2233,
-    "ctx_x_text": 0.2
-   },
-   "best": "ctx_x_value_rank",
    "best_acc": 0.2233,
    "excess": 0.0233
   },
@@ -23508,29 +23550,6 @@
    "excess": 0.0233
   },
   {
-   "family_id": "data_eng.pg_index.senior_solve_kb_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1867,
-    "value_rank": 0.2,
-    "len_rank": 0.1998,
-    "letter_x_value_rank": 0.2233,
-    "letter_x_len_rank": 0.1717,
-    "text": 0.2,
-    "text_x_letter": 0.19,
-    "ctx_x_letter": 0.2017,
-    "ctx_x_value_rank": 0.2233,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_value_rank",
-   "best_acc": 0.2233,
-   "excess": 0.0233
-  },
-  {
    "family_id": "data_eng.pg_index.lead_solve_kb_k4",
    "n_test": 300,
    "n_options": {
@@ -23550,6 +23569,29 @@
     "ctx_x_text": 0.2
    },
    "best": "value_rank",
+   "best_acc": 0.2233,
+   "excess": 0.0233
+  },
+  {
+   "family_id": "data_eng.pg_index.senior_solve_kb_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1867,
+    "value_rank": 0.2,
+    "len_rank": 0.1998,
+    "letter_x_value_rank": 0.2233,
+    "letter_x_len_rank": 0.1717,
+    "text": 0.2,
+    "text_x_letter": 0.19,
+    "ctx_x_letter": 0.2017,
+    "ctx_x_value_rank": 0.2233,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_value_rank",
    "best_acc": 0.2233,
    "excess": 0.0233
   },
@@ -23623,6 +23665,29 @@
    "excess": 0.0233
   },
   {
+   "family_id": "mobile.bundle_ota_size.principal_solve_r8_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.21,
+    "value_rank": 0.22,
+    "len_rank": 0.2025,
+    "letter_x_value_rank": 0.2233,
+    "letter_x_len_rank": 0.21,
+    "text": 0.2,
+    "text_x_letter": 0.21,
+    "ctx_x_letter": 0.2167,
+    "ctx_x_value_rank": 0.2083,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_value_rank",
+   "best_acc": 0.2233,
+   "excess": 0.0233
+  },
+  {
    "family_id": "mobile.bundle_ota_size.senior_solve_r8_k3",
    "n_test": 300,
    "n_options": {
@@ -23665,29 +23730,6 @@
     "ctx_x_text": 0.2017
    },
    "best": "value_rank",
-   "best_acc": 0.2233,
-   "excess": 0.0233
-  },
-  {
-   "family_id": "mobile.bundle_ota_size.principal_solve_r8_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.21,
-    "value_rank": 0.22,
-    "len_rank": 0.2025,
-    "letter_x_value_rank": 0.2233,
-    "letter_x_len_rank": 0.21,
-    "text": 0.2,
-    "text_x_letter": 0.21,
-    "ctx_x_letter": 0.2167,
-    "ctx_x_value_rank": 0.2083,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_value_rank",
    "best_acc": 0.2233,
    "excess": 0.0233
   },
@@ -24057,29 +24099,6 @@
    "excess": 0.0217
   },
   {
-   "family_id": "qa.device_matrix.senior_solve_pw_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.1933,
-    "value_rank": 0.1867,
-    "len_rank": 0.2163,
-    "letter_x_value_rank": 0.2067,
-    "letter_x_len_rank": 0.2217,
-    "text": 0.2,
-    "text_x_letter": 0.1933,
-    "ctx_x_letter": 0.2017,
-    "ctx_x_value_rank": 0.16,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.2217,
-   "excess": 0.0217
-  },
-  {
    "family_id": "qa.principal.release_evidence_mcq",
    "n_test": 300,
    "n_options": {
@@ -24100,6 +24119,29 @@
    },
    "best": "ctx_x_value_rank",
    "best_acc": 0.2717,
+   "excess": 0.0217
+  },
+  {
+   "family_id": "qa.device_matrix.senior_solve_pw_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1933,
+    "value_rank": 0.1867,
+    "len_rank": 0.2163,
+    "letter_x_value_rank": 0.2067,
+    "letter_x_len_rank": 0.2217,
+    "text": 0.2,
+    "text_x_letter": 0.1933,
+    "ctx_x_letter": 0.2017,
+    "ctx_x_value_rank": 0.16,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.2217,
    "excess": 0.0217
   },
   {
@@ -24583,29 +24625,6 @@
    "excess": 0.02
   },
   {
-   "family_id": "analyst.funnel_conversion.junior_solve_vis_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.22,
-    "value_rank": 0.1933,
-    "len_rank": 0.2051,
-    "letter_x_value_rank": 0.2106,
-    "letter_x_len_rank": 0.1967,
-    "text": 0.1831,
-    "text_x_letter": 0.22,
-    "ctx_x_letter": 0.22,
-    "ctx_x_value_rank": 0.1989,
-    "ctx_x_text": 0.1862
-   },
-   "best": "letter",
-   "best_acc": 0.22,
-   "excess": 0.02
-  },
-  {
    "family_id": "analyst.er_table_growth.lead_solve_ev_k4",
    "n_test": 300,
    "n_options": {
@@ -24629,25 +24648,25 @@
    "excess": 0.02
   },
   {
-   "family_id": "analyst.funnel_conversion.senior_solve_vis_k4",
+   "family_id": "analyst.funnel_conversion.junior_solve_vis_k2",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.2083,
+    "letter": 0.22,
     "value_rank": 0.1933,
-    "len_rank": 0.2085,
-    "letter_x_value_rank": 0.2067,
-    "letter_x_len_rank": 0.22,
-    "text": 0.1987,
-    "text_x_letter": 0.1867,
-    "ctx_x_letter": 0.1933,
-    "ctx_x_value_rank": 0.2139,
-    "ctx_x_text": 0.1978
+    "len_rank": 0.2051,
+    "letter_x_value_rank": 0.2106,
+    "letter_x_len_rank": 0.1967,
+    "text": 0.1831,
+    "text_x_letter": 0.22,
+    "ctx_x_letter": 0.22,
+    "ctx_x_value_rank": 0.1989,
+    "ctx_x_text": 0.1862
    },
-   "best": "letter_x_len_rank",
+   "best": "letter",
    "best_acc": 0.22,
    "excess": 0.02
   },
@@ -24669,6 +24688,29 @@
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.27,
+   "excess": 0.02
+  },
+  {
+   "family_id": "analyst.funnel_conversion.senior_solve_vis_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2083,
+    "value_rank": 0.1933,
+    "len_rank": 0.2085,
+    "letter_x_value_rank": 0.2067,
+    "letter_x_len_rank": 0.22,
+    "text": 0.1987,
+    "text_x_letter": 0.1867,
+    "ctx_x_letter": 0.1933,
+    "ctx_x_value_rank": 0.2139,
+    "ctx_x_text": 0.1978
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.22,
    "excess": 0.02
   },
   {
@@ -24718,29 +24760,6 @@
    "excess": 0.02
   },
   {
-   "family_id": "common.backup_window.senior_fwd_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2133,
-    "value_rank": 0.2033,
-    "len_rank": 0.2161,
-    "letter_x_value_rank": 0.2,
-    "letter_x_len_rank": 0.22,
-    "text": 0.2,
-    "text_x_letter": 0.2133,
-    "ctx_x_letter": 0.2089,
-    "ctx_x_value_rank": 0.2,
-    "ctx_x_text": 0.2
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.22,
-   "excess": 0.02
-  },
-  {
    "family_id": "common.perf.fanout_tail_mcq",
    "n_test": 300,
    "n_options": {
@@ -24761,6 +24780,29 @@
    },
    "best": "letter",
    "best_acc": 0.27,
+   "excess": 0.02
+  },
+  {
+   "family_id": "common.backup_window.senior_fwd_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2133,
+    "value_rank": 0.2033,
+    "len_rank": 0.2161,
+    "letter_x_value_rank": 0.2,
+    "letter_x_len_rank": 0.22,
+    "text": 0.2,
+    "text_x_letter": 0.2133,
+    "ctx_x_letter": 0.2089,
+    "ctx_x_value_rank": 0.2,
+    "ctx_x_text": 0.2
+   },
+   "best": "letter_x_len_rank",
+   "best_acc": 0.22,
    "excess": 0.02
   },
   {
@@ -24830,6 +24872,29 @@
    "excess": 0.02
   },
   {
+   "family_id": "data_ml.feature_store.middle_fwd_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2167,
+    "value_rank": 0.2133,
+    "len_rank": 0.2085,
+    "letter_x_value_rank": 0.2117,
+    "letter_x_len_rank": 0.2017,
+    "text": 0.2176,
+    "text_x_letter": 0.2167,
+    "ctx_x_letter": 0.22,
+    "ctx_x_value_rank": 0.2117,
+    "ctx_x_text": 0.1923
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.22,
+   "excess": 0.02
+  },
+  {
    "family_id": "data_ml.feature_store.middle_solve_n_k3",
    "n_test": 300,
    "n_options": {
@@ -24872,29 +24937,6 @@
     "ctx_x_text": 0.2
    },
    "best": "value_rank",
-   "best_acc": 0.22,
-   "excess": 0.02
-  },
-  {
-   "family_id": "data_ml.feature_store.middle_fwd_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2167,
-    "value_rank": 0.2133,
-    "len_rank": 0.2085,
-    "letter_x_value_rank": 0.2117,
-    "letter_x_len_rank": 0.2017,
-    "text": 0.2176,
-    "text_x_letter": 0.2167,
-    "ctx_x_letter": 0.22,
-    "ctx_x_value_rank": 0.2117,
-    "ctx_x_text": 0.1923
-   },
-   "best": "ctx_x_letter",
    "best_acc": 0.22,
    "excess": 0.02
   },
@@ -25126,29 +25168,6 @@
    "excess": 0.02
   },
   {
-   "family_id": "qa.bug_backlog.senior_fwd_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2,
-    "value_rank": 0.1867,
-    "len_rank": 0.2172,
-    "letter_x_value_rank": 0.1967,
-    "letter_x_len_rank": 0.22,
-    "text": 0.1958,
-    "text_x_letter": 0.1967,
-    "ctx_x_letter": 0.1967,
-    "ctx_x_value_rank": 0.195,
-    "ctx_x_text": 0.1977
-   },
-   "best": "letter_x_len_rank",
-   "best_acc": 0.22,
-   "excess": 0.02
-  },
-  {
    "family_id": "qa.bug_backlog.lead_solve_bl_k5",
    "n_test": 300,
    "n_options": {
@@ -25168,6 +25187,29 @@
     "ctx_x_text": 0.1961
    },
    "best": "value_rank",
+   "best_acc": 0.22,
+   "excess": 0.02
+  },
+  {
+   "family_id": "qa.bug_backlog.senior_fwd_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2,
+    "value_rank": 0.1867,
+    "len_rank": 0.2172,
+    "letter_x_value_rank": 0.1967,
+    "letter_x_len_rank": 0.22,
+    "text": 0.1958,
+    "text_x_letter": 0.1967,
+    "ctx_x_letter": 0.1967,
+    "ctx_x_value_rank": 0.195,
+    "ctx_x_text": 0.1977
+   },
+   "best": "letter_x_len_rank",
    "best_acc": 0.22,
    "excess": 0.02
   },
@@ -25491,29 +25533,6 @@
    "excess": 0.0183
   },
   {
-   "family_id": "qa.coverage_effort.middle_solve_cov_k2",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2067,
-    "value_rank": 0.2133,
-    "len_rank": 0.2182,
-    "letter_x_value_rank": 0.1728,
-    "letter_x_len_rank": 0.1767,
-    "text": 0.2,
-    "text_x_letter": 0.2067,
-    "ctx_x_letter": 0.18,
-    "ctx_x_value_rank": 0.2183,
-    "ctx_x_text": 0.2
-   },
-   "best": "ctx_x_value_rank",
-   "best_acc": 0.2183,
-   "excess": 0.0183
-  },
-  {
    "family_id": "qa.defect_escape.senior_solve_ut_k3",
    "n_test": 300,
    "n_options": {
@@ -25537,23 +25556,23 @@
    "excess": 0.0183
   },
   {
-   "family_id": "qa.flaky_pipeline.senior_solve_sh_k3",
+   "family_id": "qa.coverage_effort.middle_solve_cov_k2",
    "n_test": 300,
    "n_options": {
     "5": 400
    },
    "chance": 0.2,
    "by_attack": {
-    "letter": 0.19,
-    "value_rank": 0.1867,
-    "len_rank": 0.2067,
-    "letter_x_value_rank": 0.1967,
-    "letter_x_len_rank": 0.1817,
-    "text": 0.1882,
-    "text_x_letter": 0.1967,
-    "ctx_x_letter": 0.2017,
+    "letter": 0.2067,
+    "value_rank": 0.2133,
+    "len_rank": 0.2182,
+    "letter_x_value_rank": 0.1728,
+    "letter_x_len_rank": 0.1767,
+    "text": 0.2,
+    "text_x_letter": 0.2067,
+    "ctx_x_letter": 0.18,
     "ctx_x_value_rank": 0.2183,
-    "ctx_x_text": 0.1852
+    "ctx_x_text": 0.2
    },
    "best": "ctx_x_value_rank",
    "best_acc": 0.2183,
@@ -25579,6 +25598,29 @@
     "ctx_x_text": 0.2063
    },
    "best": "letter_x_value_rank",
+   "best_acc": 0.2183,
+   "excess": 0.0183
+  },
+  {
+   "family_id": "qa.flaky_pipeline.senior_solve_sh_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.19,
+    "value_rank": 0.1867,
+    "len_rank": 0.2067,
+    "letter_x_value_rank": 0.1967,
+    "letter_x_len_rank": 0.1817,
+    "text": 0.1882,
+    "text_x_letter": 0.1967,
+    "ctx_x_letter": 0.2017,
+    "ctx_x_value_rank": 0.2183,
+    "ctx_x_text": 0.1852
+   },
+   "best": "ctx_x_value_rank",
    "best_acc": 0.2183,
    "excess": 0.0183
   },
@@ -25698,26 +25740,6 @@
    "excess": 0.0181
   },
   {
-   "family_id": "backend.strategy.principal_read_consistency_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2383,
-    "len_rank": 0.25,
-    "letter_x_len_rank": 0.2433,
-    "text": 0.25,
-    "text_x_letter": 0.2433,
-    "ctx_x_letter": 0.26,
-    "ctx_x_text": 0.2678
-   },
-   "best": "ctx_x_text",
-   "best_acc": 0.2678,
-   "excess": 0.0178
-  },
-  {
    "family_id": "backend.retry_storm.junior_fwd_k3",
    "n_test": 300,
    "n_options": {
@@ -25738,6 +25760,26 @@
    },
    "best": "letter_x_len_rank",
    "best_acc": 0.2178,
+   "excess": 0.0178
+  },
+  {
+   "family_id": "backend.strategy.principal_read_consistency_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2383,
+    "len_rank": 0.25,
+    "letter_x_len_rank": 0.2433,
+    "text": 0.25,
+    "text_x_letter": 0.2433,
+    "ctx_x_letter": 0.26,
+    "ctx_x_text": 0.2678
+   },
+   "best": "ctx_x_text",
+   "best_acc": 0.2678,
    "excess": 0.0178
   },
   {
@@ -25922,26 +25964,6 @@
    "excess": 0.0167
   },
   {
-   "family_id": "data_ml.strategy.principal_llm_cascade_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2033,
-    "len_rank": 0.2567,
-    "letter_x_len_rank": 0.25,
-    "text": 0.2567,
-    "text_x_letter": 0.25,
-    "ctx_x_letter": 0.1933,
-    "ctx_x_text": 0.2667
-   },
-   "best": "ctx_x_text",
-   "best_acc": 0.2667,
-   "excess": 0.0167
-  },
-  {
    "family_id": "data_ml.batch_scoring.middle_solve_w_k2",
    "n_test": 300,
    "n_options": {
@@ -25962,6 +25984,26 @@
    },
    "best": "ctx_x_value_rank",
    "best_acc": 0.2167,
+   "excess": 0.0167
+  },
+  {
+   "family_id": "data_ml.strategy.principal_llm_cascade_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2033,
+    "len_rank": 0.2567,
+    "letter_x_len_rank": 0.25,
+    "text": 0.2567,
+    "text_x_letter": 0.25,
+    "ctx_x_letter": 0.1933,
+    "ctx_x_text": 0.2667
+   },
+   "best": "ctx_x_text",
+   "best_acc": 0.2667,
    "excess": 0.0167
   },
   {
@@ -26054,6 +26096,26 @@
    "excess": 0.0167
   },
   {
+   "family_id": "qa.principal.gate_threshold_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2667,
+    "len_rank": 0.25,
+    "letter_x_len_rank": 0.2667,
+    "text": 0.25,
+    "text_x_letter": 0.2667,
+    "ctx_x_letter": 0.245,
+    "ctx_x_text": 0.25
+   },
+   "best": "letter",
+   "best_acc": 0.2667,
+   "excess": 0.0167
+  },
+  {
    "family_id": "qa.device_matrix.lead_solve_dv_k5",
    "n_test": 300,
    "n_options": {
@@ -26096,26 +26158,6 @@
     "ctx_x_text": 0.25
    },
    "best": "letter_x_value_rank",
-   "best_acc": 0.2667,
-   "excess": 0.0167
-  },
-  {
-   "family_id": "qa.principal.gate_threshold_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2667,
-    "len_rank": 0.25,
-    "letter_x_len_rank": 0.2667,
-    "text": 0.25,
-    "text_x_letter": 0.2667,
-    "ctx_x_letter": 0.245,
-    "ctx_x_text": 0.25
-   },
-   "best": "letter",
    "best_acc": 0.2667,
    "excess": 0.0167
   },
@@ -26189,29 +26231,6 @@
    "excess": 0.0167
   },
   {
-   "family_id": "security.token_introspect.senior_solve_qps_k4",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.21,
-    "value_rank": 0.2133,
-    "len_rank": 0.2104,
-    "letter_x_value_rank": 0.1833,
-    "letter_x_len_rank": 0.2067,
-    "text": 0.2037,
-    "text_x_letter": 0.2167,
-    "ctx_x_letter": 0.1811,
-    "ctx_x_value_rank": 0.1917,
-    "ctx_x_text": 0.2016
-   },
-   "best": "text_x_letter",
-   "best_acc": 0.2167,
-   "excess": 0.0167
-  },
-  {
    "family_id": "security.token_introspect.lead_solve_ch_k4",
    "n_test": 300,
    "n_options": {
@@ -26231,6 +26250,29 @@
     "ctx_x_text": 0.2
    },
    "best": "value_rank",
+   "best_acc": 0.2167,
+   "excess": 0.0167
+  },
+  {
+   "family_id": "security.token_introspect.senior_solve_qps_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.21,
+    "value_rank": 0.2133,
+    "len_rank": 0.2104,
+    "letter_x_value_rank": 0.1833,
+    "letter_x_len_rank": 0.2067,
+    "text": 0.2037,
+    "text_x_letter": 0.2167,
+    "ctx_x_letter": 0.1811,
+    "ctx_x_value_rank": 0.1917,
+    "ctx_x_text": 0.2016
+   },
+   "best": "text_x_letter",
    "best_acc": 0.2167,
    "excess": 0.0167
   },
@@ -26623,29 +26665,6 @@
    "excess": 0.0135
   },
   {
-   "family_id": "analyst.bpmn_sla_cycle.middle_solve_doc_k3",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2067,
-    "value_rank": 0.1833,
-    "len_rank": 0.2072,
-    "letter_x_value_rank": 0.1367,
-    "letter_x_len_rank": 0.21,
-    "text": 0.2,
-    "text_x_letter": 0.2067,
-    "ctx_x_letter": 0.2133,
-    "ctx_x_value_rank": 0.1914,
-    "ctx_x_text": 0.2
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.2133,
-   "excess": 0.0133
-  },
-  {
    "family_id": "analyst.api_contract_payload.principal_solve_it_k5",
    "n_test": 300,
    "n_options": {
@@ -26688,6 +26707,29 @@
     "ctx_x_text": 0.1962
    },
    "best": "ctx_x_value_rank",
+   "best_acc": 0.2133,
+   "excess": 0.0133
+  },
+  {
+   "family_id": "analyst.bpmn_sla_cycle.middle_solve_doc_k3",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2067,
+    "value_rank": 0.1833,
+    "len_rank": 0.2072,
+    "letter_x_value_rank": 0.1367,
+    "letter_x_len_rank": 0.21,
+    "text": 0.2,
+    "text_x_letter": 0.2067,
+    "ctx_x_letter": 0.2133,
+    "ctx_x_value_rank": 0.1914,
+    "ctx_x_text": 0.2
+   },
+   "best": "ctx_x_letter",
    "best_acc": 0.2133,
    "excess": 0.0133
   },
@@ -27157,29 +27199,6 @@
    "excess": 0.0117
   },
   {
-   "family_id": "mobile.image_disk_cache.principal_solve_kb_k5",
-   "n_test": 300,
-   "n_options": {
-    "5": 400
-   },
-   "chance": 0.2,
-   "by_attack": {
-    "letter": 0.2117,
-    "value_rank": 0.1967,
-    "len_rank": 0.2092,
-    "letter_x_value_rank": 0.19,
-    "letter_x_len_rank": 0.2067,
-    "text": 0.2077,
-    "text_x_letter": 0.2067,
-    "ctx_x_letter": 0.1706,
-    "ctx_x_value_rank": 0.1958,
-    "ctx_x_text": 0.2043
-   },
-   "best": "letter",
-   "best_acc": 0.2117,
-   "excess": 0.0117
-  },
-  {
    "family_id": "mobile.frame_jank_budget.principal_solve_us_k5",
    "n_test": 300,
    "n_options": {
@@ -27199,6 +27218,29 @@
     "ctx_x_text": 0.1989
    },
    "best": "ctx_x_letter",
+   "best_acc": 0.2117,
+   "excess": 0.0117
+  },
+  {
+   "family_id": "mobile.image_disk_cache.principal_solve_kb_k5",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.2117,
+    "value_rank": 0.1967,
+    "len_rank": 0.2092,
+    "letter_x_value_rank": 0.19,
+    "letter_x_len_rank": 0.2067,
+    "text": 0.2077,
+    "text_x_letter": 0.2067,
+    "ctx_x_letter": 0.1706,
+    "ctx_x_value_rank": 0.1958,
+    "ctx_x_text": 0.2043
+   },
+   "best": "letter",
    "best_acc": 0.2117,
    "excess": 0.0117
   },
@@ -27315,6 +27357,26 @@
    "excess": 0.01
   },
   {
+   "family_id": "common.process.principal_team_split_mcq",
+   "n_test": 300,
+   "n_options": {
+    "4": 400
+   },
+   "chance": 0.25,
+   "by_attack": {
+    "letter": 0.2533,
+    "len_rank": 0.25,
+    "letter_x_len_rank": 0.2533,
+    "text": 0.25,
+    "text_x_letter": 0.25,
+    "ctx_x_letter": 0.26,
+    "ctx_x_text": 0.25
+   },
+   "best": "ctx_x_letter",
+   "best_acc": 0.26,
+   "excess": 0.01
+  },
+  {
    "family_id": "common.id_exhaust.lead_solve_used_k4",
    "n_test": 300,
    "n_options": {
@@ -27335,26 +27397,6 @@
    },
    "best": "ctx_x_value_rank",
    "best_acc": 0.21,
-   "excess": 0.01
-  },
-  {
-   "family_id": "common.process.principal_team_split_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.2533,
-    "len_rank": 0.25,
-    "letter_x_len_rank": 0.2533,
-    "text": 0.25,
-    "text_x_letter": 0.25,
-    "ctx_x_letter": 0.26,
-    "ctx_x_text": 0.25
-   },
-   "best": "ctx_x_letter",
-   "best_acc": 0.26,
    "excess": 0.01
   },
   {
@@ -28148,29 +28190,6 @@
    "excess": 0.0002
   },
   {
-   "family_id": "common.stats.principal_ab_duration_mcq",
-   "n_test": 300,
-   "n_options": {
-    "4": 400
-   },
-   "chance": 0.25,
-   "by_attack": {
-    "letter": 0.24,
-    "value_rank": 0.23,
-    "len_rank": 0.2383,
-    "letter_x_value_rank": 0.23,
-    "letter_x_len_rank": 0.2433,
-    "text": 0.25,
-    "text_x_letter": 0.24,
-    "ctx_x_letter": 0.21,
-    "ctx_x_value_rank": 0.2467,
-    "ctx_x_text": 0.25
-   },
-   "best": "text",
-   "best_acc": 0.25,
-   "excess": 0.0
-  },
-  {
    "family_id": "common.strategy.principal_debt_share_mcq",
    "n_test": 300,
    "n_options": {
@@ -28194,26 +28213,26 @@
    "excess": 0.0
   },
   {
-   "family_id": "common.slo_errors.lead_solve_sp_k4",
+   "family_id": "common.stats.principal_ab_duration_mcq",
    "n_test": 300,
    "n_options": {
-    "5": 400
+    "4": 400
    },
-   "chance": 0.2,
+   "chance": 0.25,
    "by_attack": {
-    "letter": 0.1867,
-    "value_rank": 0.1833,
-    "len_rank": 0.1921,
-    "letter_x_value_rank": 0.1767,
-    "letter_x_len_rank": 0.1817,
-    "text": 0.2,
-    "text_x_letter": 0.1867,
-    "ctx_x_letter": 0.1889,
-    "ctx_x_value_rank": 0.17,
-    "ctx_x_text": 0.2
+    "letter": 0.24,
+    "value_rank": 0.23,
+    "len_rank": 0.2383,
+    "letter_x_value_rank": 0.23,
+    "letter_x_len_rank": 0.2433,
+    "text": 0.25,
+    "text_x_letter": 0.24,
+    "ctx_x_letter": 0.21,
+    "ctx_x_value_rank": 0.2467,
+    "ctx_x_text": 0.25
    },
    "best": "text",
-   "best_acc": 0.2,
+   "best_acc": 0.25,
    "excess": 0.0
   },
   {
@@ -28236,6 +28255,29 @@
     "ctx_x_text": 0.1923
    },
    "best": "ctx_x_letter",
+   "best_acc": 0.2,
+   "excess": 0.0
+  },
+  {
+   "family_id": "common.slo_errors.lead_solve_sp_k4",
+   "n_test": 300,
+   "n_options": {
+    "5": 400
+   },
+   "chance": 0.2,
+   "by_attack": {
+    "letter": 0.1867,
+    "value_rank": 0.1833,
+    "len_rank": 0.1921,
+    "letter_x_value_rank": 0.1767,
+    "letter_x_len_rank": 0.1817,
+    "text": 0.2,
+    "text_x_letter": 0.1867,
+    "ctx_x_letter": 0.1889,
+    "ctx_x_value_rank": 0.17,
+    "ctx_x_text": 0.2
+   },
+   "best": "text",
    "best_acc": 0.2,
    "excess": 0.0
   },
