@@ -532,7 +532,7 @@ export class ElenaEngine {
     this.lastSaid = text;
     if (log) this.post("say", { text, step: this.pos ? this.pos.ids[this.pos.i] : this.curStep });
     if (!pcm) {
-      onStart?.({ text, startedAt: performance.now(), durationMs: 0, push: () => undefined, end: async () => "done", progress: () => 1 } as Utterance, 0);
+      onStart?.({ text, append: () => undefined, startedAt: performance.now(), durationMs: 0, push: () => undefined, end: async () => "done", progress: () => 1 } as Utterance, 0);
       await sleep(Math.min(6000, 900 + text.length * 45));
       return this.alive(ep) ? "done" : "aborted";
     }
