@@ -687,7 +687,7 @@ export function Selection() {
                         }} />
                       <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{relText(c.relation)} · рынок {range(c.market_range?.from, c.market_range?.to)} на руки</span></span>
                     </label>
-                    <span className="chip" title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, предварительно ${c.provisional}` : ""}${c.unconfirmed ? `, заявили без подтверждения ${c.unconfirmed}` : ""}`}>{c.count}{c.unconfirmed ? <span className="text-brand-ink/65"> +{c.unconfirmed}</span> : null}</span>
+                    <span className="chip" title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, нужен доп. этап ${c.provisional}` : ""}${c.unconfirmed ? `, заявили без подтверждения ${c.unconfirmed}` : ""}`}>{c.count}{c.unconfirmed ? <span className="text-brand-ink/65"> +{c.unconfirmed}</span> : null}</span>
                   </li>
                 ))}
               </ul>
@@ -703,7 +703,7 @@ export function Selection() {
               <Toggle checked={!!filters.fsp_protocol_only} onChange={(x) => setFilters({ ...filters, fsp_protocol_only: x || undefined })} label="Подтверждено протоколом ФСП"
                 hint="Оставить только кандидатов с достижениями, подтверждёнными официальным протоколом ФСП (ЕКП, ЕВСК, ссылка на PDF)." />
               <Toggle checked={!!filters.confirmed_only} onChange={(x) => setFilters({ ...filters, confirmed_only: x || undefined })} label="Только подтверждённый грейд"
-                hint="Убрать «Junior (предварительно)» и кандидатов без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждёным грейдом." />
+                hint="Убрать кандидатов со статусом «нужен доп. этап» и без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждённым грейдом." />
               <Toggle checked={!!filters.learn_from_company} onChange={(x) => setFilters({ ...filters, learn_from_company: x || undefined })} label="Учитывать решения компании"
                 hint="Скорректировать веса навыков по истории приглашений, собеседований и офферов вашей компании (по умолчанию выключено)." />
               {reqTags.length > 0 && (
