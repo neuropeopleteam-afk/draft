@@ -55,6 +55,9 @@ export interface ElenaUi {
   awaiting: Awaiting;
   /** Как слушает: wake — только «Настя …» (и короткие команды, когда молчит); open — любой ответ (она спросила). */
   listen: "wake" | "open";
+  /** Ждёт и продолжит сама по таймеру (ответ посреди своего обзора) — подсказка окна честно говорит «продолжу сама».
+   *  false — сама не уйдёт: экран, который попросили, ждёт «дальше» или вопрос (замечание владельца 21.10 17:33). */
+  autoNext: boolean;
 }
 
 export interface ElenaDeps {
@@ -105,6 +108,8 @@ interface Meta {
   skip_reg?: boolean | null;
   /** resume со стоящей регистрации — к следующему шагу (кабинет). */
   skip_now?: boolean | null;
+  /** goto: показать экран целиком («подробнее», «полностью», недовольство коротким показом) — вариант «<шаг>-full». */
+  full?: boolean | null;
 }
 
 interface Pos { ids: string[]; track: TourTrack | null; i: number; b: number }
@@ -133,6 +138,7 @@ const WAKE = /(?:^|[^а-яё])(?:наст(?:я|ь|енька|юша|ен|ю)|а�
 const QUIET_COMMAND = /^(?:(?:ну|так|давай|давайте|хорошо|ок)\s+)?(?:дальше|продолж[а-яё]*|поехали|идем дальше|стоп|стой|пауза|подожди[а-яё]*|назад|повтори[а-яё]*|пропусти[а-яё]*|вернись[а-яё]*)$/u;
 const WAKE_OPEN_MS = 8000;         // после «Настя» столько слушает просьбу без имени
 const WAKE_ONLY_END_MS = 1800;     // сказали только «Настя» — ждём продолжения фразы чуть дольше
+const DETOUR_NUDGE_MS = 20000;     // экран по просьбе: тишина — один вопрос «подробнее или дальше?», сама не уходит
 const RESUME_AFTER_MS = 15000;     // после ответа или экрана по просьбе: тишина столько — продолжает показ сама
 
 /** Текст после обращения «Настя» (обращение и знаки после него убраны); без обращения — как есть. */
@@ -325,7 +331,7 @@ export class ElenaEngine {
   private ui: ElenaUi = {
     phase: "idle", mic: "off", speaking: false, userTalking: false, hearing: false, track: null, stepNo: 0, stepTotal: 0,
     target: null, click: null, canPause: false, stage: "large",   // знакомство — большое окно по центру, обзор — в углу
-    awaiting: null, listen: "open",
+    awaiting: null, listen: "open", autoNext: false,
   };
   private closed = false;
   private ep = 0;                       // текущая «линия» действий; новая линия (ход, пауза, закрытие) обрывает старую
@@ -360,6 +366,9 @@ export class ElenaEngine {
   private doneSteps = new Set<string>();     // экраны, рассказанные до конца: при повторном обзоре — коротко, одной репликой
   private ducked = false;
   private lastSaid = "";
+  private pitchT0 = 0;          // показ для жюри: начало (таймер в заголовке вкладки — видит только владелец)
+  private pitchTimer = 0;
+  private pitchTitle = "";
   private lastAsked = false;            // ответ закончился вопросом — Настя ждёт ответа
   private lastFiller = "";
   private stepUtter: Utterance | null = null;
@@ -683,7 +692,8 @@ export class ElenaEngine {
     if (!this.alive(ep)) return;
     if (track) {
       this.tourTrack = track;
-      void this.runTour({ ids: TRACKS[track], track, i: stepIndex, b: 0 }, ep, { bridge: true, named: true });
+      if (track === "pitch") this.pitchStart();
+      void this.runTour({ ids: TRACKS[track], track, i: stepIndex, b: 0 }, ep, { bridge: track !== "pitch", named: true });
       return;
     }
     const mic: MicState = this.d.fakeMic ? "on" : this.listener?.getState() ?? "error";
@@ -737,6 +747,7 @@ export class ElenaEngine {
 
   close() {
     if (this.closed) return;
+    this.pitchStop(false);
     this.clearTyped();
     this.post("close");
     this.ep++;
@@ -870,7 +881,7 @@ export class ElenaEngine {
   private waitFor(kind: Awaiting, ep: number, remindKey: string | null, opts: { remindMs?: number; auto?: { ms: number; run: () => void } } = {}) {
     this.awaiting = kind;
     this.clearWait();
-    this.set({ phase: this.paused ? "paused" : "listening", click: null });
+    this.set({ phase: this.paused ? "paused" : "listening", click: null, autoNext: !!opts.auto });
     if (this.noMic) return;
     if (remindKey) {
       this.remindTimer = window.setTimeout(() => {
@@ -1099,6 +1110,7 @@ export class ElenaEngine {
   }
 
   private async runTurn(text: string) {
+    if (this.pitchTurn(text)) return;
     const ep = ++this.ep;
     this.clearTimers();
     this.thinking = true;
@@ -1227,6 +1239,12 @@ export class ElenaEngine {
     return j < ids.length ? { ids, track, i: j, b: 0 } : null;
   }
 
+  /** Полный показ экрана («warroom» → «warroom-full»), если он есть и для него есть реплики. */
+  private fullOf(step: string): string | null {
+    const id = `${step}-full`;
+    return STEPS[id] && this.linesOf(id).length ? id : null;
+  }
+
   /** Куда ведёт «goto» посреди обзора: вперёд по обзору (продолжаем с этого экрана) или в сторону (показать и вернуться). */
   private forwardPos(step: string): Pos | null {
     const r = this.resumeAt;
@@ -1245,7 +1263,7 @@ export class ElenaEngine {
       : ns ? ns.ids[ns.i] : null;
     if (!step) return null;
     this.set({ stage: "corner" });
-    this.prefetch(this.linesOf(step));
+    this.prefetch(this.linesOf(meta.action === "goto" ? this.fullOf(step) ?? step : step));
     return this.enter(STEPS[step], ep, null);
   }
 
@@ -1276,6 +1294,20 @@ export class ElenaEngine {
       if (nav) await nav;
       if (!this.alive(ep)) return;
       this.paused = false;
+      // экран целиком: просили «подробнее / полностью» или открыли не по порядку обзора, а у экрана есть полный показ
+      const fullId = this.fullOf(meta.step);
+      if (fullId && (meta.full || !fwd)) {
+        this.pendingBridge = null;
+        if (fwd) this.resumeAt = fwd.i + 1 < fwd.ids.length ? { ...fwd, i: fwd.i + 1, b: 0 } : null;
+        void this.runTour({ ids: [fullId], track: null, i: 0, b: 0 }, ep, { bridge: false, single: true, detailed: true });
+        return;
+      }
+      if (meta.full && this.shownSteps.has(meta.step)) {
+        // «расскажи полностью» про уже показанный экран без полного варианта — все реплики экрана заново, не молча
+        if (fwd) { this.pendingBridge = null; this.resumeAt = fwd.i + 1 < fwd.ids.length ? { ...fwd, i: fwd.i + 1, b: 0 } : null; }
+        void this.runTour({ ids: [meta.step], track: null, i: 0, b: 0 }, ep, { bridge: false, single: true, detailed: true });
+        return;
+      }
       if (fwd) {
         // экран дальше по маршруту: показать его и ждать «дальше» (продолжит со следующего за ним) — человек ведёт
         this.pendingBridge = null;
@@ -1450,7 +1482,8 @@ export class ElenaEngine {
     await sleep(0);
     if (!this.alive(ep)) return;
     this.lastAsked = false;
-    this.waitFor("continue", ep, null, { auto: { ms: RESUME_AFTER_MS, run: () => this.autoResume(ep) } });
+    // экран попросили — сама дальше не идёт: ждёт «дальше» или вопрос; тишина — один раз «подробнее или дальше?»
+    this.waitFor("continue", ep, "detour_nudge", { remindMs: DETOUR_NUDGE_MS });
   }
 
   /** Обзор какой роли продолжать после этого экрана. */
@@ -1467,11 +1500,13 @@ export class ElenaEngine {
     this.lastAsked = false;
     this.set({ phase: "listening", click: null });
     if (this.resumeAt) {
+      // человек сам попросил этот экран — к обзору возвращаемся только по «дальше» (21.10 17:33: ушла с Полигона сама
+      // через 15 с, хотя на плашке было «Скажите «дальше»»); тишина — один раз «подробнее или дальше?»
       this.pendingBridge = this.phrase("back_tour") || null;
-      this.waitFor("detour", ep, null, { auto: { ms: RESUME_AFTER_MS, run: () => this.autoResume(ep) } });
+      this.waitFor("detour", ep, "detour_nudge", { remindMs: DETOUR_NUDGE_MS });
       return;
     }
-    this.waitFor(null, ep, null);
+    this.waitFor(null, ep, "detour_nudge", { remindMs: DETOUR_NUDGE_MS });
   }
 
   /** Экран обзора ли сейчас на виду (тогда после ответа можно скоро продолжить), или человек в стороне. */
@@ -1639,12 +1674,16 @@ export class ElenaEngine {
     const at = performance.now() + lead + Math.max(1200, totalMs) * (beat.clickAt ?? 0.5);
     this.set({ click: { selector: beat.click, at } });
     const sel = beat.click;
-    this.clickTimer = window.setTimeout(() => {
+    // блок может ещё грузиться (атаки на «Проверке» — несколько секунд): повторяем, пока звучит эта реплика, до 6 с
+    const until = at + 6000;
+    const tryClick = () => {
       this.clickTimer = 0;
       if (!this.alive(ep) || this.stepUtter !== u) return;
       const el = findTarget(sel);
-      if (el) { this.lastNavAt = performance.now(); try { el.click(); } catch { /* блок пропал */ } }
-    }, Math.max(0, at - performance.now()));
+      if (el) { this.lastNavAt = performance.now(); try { el.click(); } catch { /* блок пропал */ } return; }
+      if (performance.now() < until) this.clickTimer = window.setTimeout(tryClick, 250);
+    };
+    this.clickTimer = window.setTimeout(tryClick, Math.max(0, at - performance.now()));
   }
 
   /** Какие реплики экрана звучат: реплика-переход — только если следующий шаг именно туда; на уже рассказанном экране
@@ -1693,7 +1732,7 @@ export class ElenaEngine {
       this.curStep = step.id;
       this.prefetchFrom(ids, i + 1);
       this.set({ phase: "touring", track, stepNo: track ? i + 1 : 0, stepTotal: track ? ids.length : 0, target: null, click: null });
-      let bridge = prevCab !== step.cabinet ? this.bridgeText(step.cabinet, firstBridge, !!opts.named) : null;
+      let bridge = track === "pitch" ? null : prevCab !== step.cabinet ? this.bridgeText(step.cabinet, firstBridge, !!opts.named) : null;
       if (bridge) firstBridge = false;   // главная без связки — «Начнём со стороны кандидата» звучит на первом кабинете
       if (i === start.i) {
         // «Продолжаю.» / «Возвращаюсь к обзору.» — если связки раздела нет; «уже смотрели — пройду коротко» — вместо неё
@@ -1708,6 +1747,7 @@ export class ElenaEngine {
       if (!this.alive(ep) || !ok) return;
       if (b0 === 0) this.post("step", { step: step.id });
       this.shownSteps.add(step.id);
+      if (step.id.endsWith("-full")) this.shownSteps.add(step.id.slice(0, -5));   // полный показ — и обычный экран показан
       for (let k = 0; k < plan.length; k++) {
         const b = plan[k];
         if (!this.alive(ep)) return;
@@ -1730,7 +1770,7 @@ export class ElenaEngine {
         if (!this.alive(ep)) return;
         await sleep(k < plan.length - 1 ? BEAT_GAP_MS : 200);
       }
-      if (!opts.single && !brief && !(await this.walkRest(step, ep))) return;
+      if (track !== "pitch" && !opts.single && !brief && !(await this.walkRest(step, ep))) return;
       this.doneSteps.add(step.id);
       if (opts.single) break;
       // между экранами одного раздела: каждые несколько экранов — короткий вопрос и ожидание ответа, иначе — окно для реплики
@@ -1758,7 +1798,60 @@ export class ElenaEngine {
       this.waitFor(null, ep, null);
       return;
     }
+    if (track === "pitch") { this.pitchStop(true); this.tourTrack = null; this.waitFor(null, ep, null); return; }
     if (track) await this.finishTour(track, ep);
+  }
+
+  /** Показ для жюри: таймер в заголовке вкладки (при показе вкладки в Телемосте его видит только владелец). */
+  private pitchStart() {
+    this.pitchStop(false);
+    this.pitchT0 = performance.now();
+    this.pitchTitle = document.title;
+    const tick = () => {
+      const s = Math.floor((performance.now() - this.pitchT0) / 1000);
+      document.title = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} · ${this.pitchTitle}`;
+    };
+    tick();
+    this.pitchTimer = window.setInterval(tick, 500);
+    // все реплики показа — в память сразу (на сервере они уже в кэше голоса)
+    this.prefetch(TRACKS.pitch.flatMap((id) => this.linesOf(id)));
+  }
+
+  private pitchStop(keepTime: boolean) {
+    if (!this.pitchTimer) return;
+    window.clearInterval(this.pitchTimer);
+    this.pitchTimer = 0;
+    const s = Math.floor((performance.now() - this.pitchT0) / 1000);
+    document.title = keepTime ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} ✓ · ${this.pitchTitle}` : this.pitchTitle;
+    if (keepTime) window.setTimeout(() => { if (!this.pitchTimer) document.title = this.pitchTitle; }, 15000);
+  }
+
+  /** Показ для жюри: реплика владельца — сразу следующий экран («Настя, кого позвать первым?», «Дальше»),
+   *  «назад» — предыдущий, «стоп»/«пауза» — остановиться. Без сервера и модели: мгновенно и предсказуемо. */
+  private pitchTurn(text: string): boolean {
+    if (this.tourTrack !== "pitch") return false;
+    const ids = TRACKS.pitch;
+    const cur = this.pos?.track === "pitch" ? this.pos.i : this.resumeAt?.track === "pitch" ? this.resumeAt.i - 1
+      : Math.max(0, ids.indexOf(this.curStep ?? ""));
+    const t = text.toLowerCase();
+    const ep = ++this.ep;
+    this.clearTimers();
+    this.turnCtl?.abort();
+    this.stepUtter = null;
+    this.pos = null;
+    this.resumeAt = null;
+    this.stopVoice(Math.min(350, this.softStopDelay()));
+    if (/(^|\s)(стоп|пауза|подожди|остановись|хватит)/.test(t)) {
+      this.paused = true;
+      this.resumeAt = { ids, track: "pitch", i: Math.max(0, cur), b: 0 };
+      this.set({ phase: "paused" });
+      return true;
+    }
+    const back = /(^|\s)(назад|верни|предыдущ)/.test(t);
+    const i = back ? Math.max(0, cur - 1) : cur + 1;
+    if (i >= ids.length) { this.pitchStop(true); this.tourTrack = null; this.waitFor(null, ep, null); return true; }
+    void this.runTour({ ids, track: "pitch", i, b: 0 }, ep, { bridge: false });
+    return true;
   }
 
   /** Открыть уже показанный экран ещё раз: переход, подсветка главного блока — без повтора реплик сценария. */

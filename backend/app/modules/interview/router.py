@@ -684,6 +684,86 @@ def concierge_script(name: str | None = Query(None, max_length=40)) -> dict:
     return cg.script(name)
 
 
+
+# ------------------------------------------------------------------ бриф работодателя голосом (Настя, 21.10)
+class BriefAnswerIn(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+
+
+@router.post("/concierge/brief", summary="Бриф работодателя голосом с Настей: начать")
+def concierge_brief_start(request: Request, user: User = Depends(employer)) -> dict:
+    from app.modules.interview import concierge_brief as cb
+    from app.modules.interview import concierge_budget as budget
+
+    if not budget.burst_ok(budget.client_ip(request), 2):
+        raise api_error(429, "rate_limited", "Слишком много запросов — подождите минуту")
+    return cb.start(str(user.id))
+
+
+@router.get("/concierge/brief/{sid}/speech", summary="Бриф голосом: голос текущего вопроса Насти (PCM 24 кГц потоком)")
+def concierge_brief_speech(sid: str, request: Request, user: User = Depends(employer)):
+    from app.modules.interview import concierge as cg
+    from app.modules.interview import concierge_brief as cb
+    from app.modules.interview import concierge_budget as budget
+
+    s = cb.get(sid, str(user.id))
+    if s is None:
+        raise api_error(404, "not_found", "Бриф не найден — начните заново")
+    text = s["question"]
+    ok, _why = budget.take("tts", budget.client_ip(request), len(text))
+    if not ok:
+        raise api_error(429, "tts_budget", "Голос на сегодня исчерпан — продолжите текстом")
+    gen = cg.synth_stream(text, "pcm24", live=bool(s.get("live")))
+    try:
+        first = next(gen)
+    except StopIteration:
+        first = b""
+    except cg.TtsError as e:
+        raise api_error(503, "tts_unavailable", str(e))
+
+    def body():
+        if first:
+            yield first
+        try:
+            yield from gen
+        except cg.TtsError:
+            return
+
+    return StreamingResponse(body(), media_type="application/octet-stream", headers={"Cache-Control": "no-store"})
+
+
+class ExplainIn(BaseModel):
+    text: str = Field(min_length=20, max_length=6000)
+
+
+@router.post("/concierge/explain-result", summary="Настя голосом объясняет итог теста по тексту экрана результата (NDJSON)")
+def concierge_explain_result(body: ExplainIn, request: Request, user: User = Depends(candidate)):
+    from app.modules.interview import concierge_budget as budget
+    from app.modules.interview import concierge_explain as ce
+
+    ip = budget.client_ip(request)
+    if not budget.burst_ok(ip, 2):
+        raise api_error(429, "rate_limited", "Слишком много запросов — подождите минуту")
+    ok, _why = budget.take("turns", ip, 1)
+    if not ok:
+        raise api_error(429, "rate_limited", "Лимит на сегодня исчерпан")
+    return StreamingResponse(ce.explain_stream(body.text), media_type="application/x-ndjson",
+                             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+
+
+@router.post("/concierge/brief/{sid}/answer", summary="Бриф голосом: ответ работодателя → следующий вопрос или текст вакансии")
+def concierge_brief_answer(sid: str, body: BriefAnswerIn, request: Request, user: User = Depends(employer)) -> dict:
+    from app.modules.interview import concierge_brief as cb
+    from app.modules.interview import concierge_budget as budget
+
+    ok, _why = budget.take("turns", budget.client_ip(request), 1)
+    if not ok:
+        raise api_error(429, "rate_limited", "Лимит ответов на сегодня исчерпан")
+    r = cb.answer(sid, str(user.id), body.text)
+    if r.get("error"):
+        raise api_error(404, "not_found", "Бриф не найден — начните заново")
+    return r
+
 @router.get("/concierge/budget", summary="Сегодняшние расходы проводника Насти и лимиты (только администратор)")
 def concierge_budget_usage(_: User = Depends(require_role(UserRole.admin))) -> dict:
     from app.modules.interview import concierge_budget as budget

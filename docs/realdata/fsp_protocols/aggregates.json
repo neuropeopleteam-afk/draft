@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-21T10:09:12+00:00",
+ "generated_at": "2026-10-21T11:39:46+00:00",
  "k_min": 3,
  "totals": {
-  "records": 2911,
-  "person_results": 2834,
-  "athletes": 2236,
+  "records": 2908,
+  "person_results": 2831,
+  "athletes": 2232,
   "events": 27,
   "regions": 69,
   "athletes_with_evsk_norm": 130,
@@ -51,8 +51,8 @@
    "key": {
     "discipline": "все дисциплины"
    },
-   "athletes": 115,
-   "results": 115,
+   "athletes": 112,
+   "results": 112,
    "podiums": 0,
    "evsk_norm": 0,
    "kms_plus": 0
@@ -139,8 +139,8 @@
     "year": "2026",
     "discipline": "все дисциплины"
    },
-   "athletes": 115,
-   "results": 115,
+   "athletes": 112,
+   "results": 112,
    "podiums": 0,
    "evsk_norm": 0,
    "kms_plus": 0
@@ -184,8 +184,8 @@
    "key": {
     "event_status": null
    },
-   "athletes": 1363,
-   "results": 1390,
+   "athletes": 1360,
+   "results": 1387,
    "podiums": 15,
    "evsk_norm": 0,
    "kms_plus": 0
@@ -256,8 +256,8 @@
    "key": {
     "fo": "ЦФО"
    },
-   "athletes": 746,
-   "results": 931,
+   "athletes": 743,
+   "results": 928,
    "podiums": 60,
    "evsk_norm": 41,
    "kms_plus": 16
@@ -276,7 +276,7 @@
    "key": {
     "fo": "ЮФО"
    },
-   "athletes": 328,
+   "athletes": 327,
    "results": 469,
    "podiums": 39,
    "evsk_norm": 14,
@@ -347,13 +347,13 @@
   {
    "region": "г. Москва",
    "fo": "ЦФО",
-   "athletes": 349,
+   "athletes": 346,
    "podiums": 15,
    "evsk_norm": 25,
    "kms_plus": 9,
    "by_discipline": {
     "программирование систем информационной безопасности": 327,
-    "все дисциплины": 19,
+    "все дисциплины": 16,
     "программирование алгоритмическое": 15,
     "программирование продуктовое": 3
    }
@@ -376,7 +376,7 @@
   {
    "region": "Донецкая Народная Республика",
    "fo": "ЮФО",
-   "athletes": 140,
+   "athletes": 139,
    "podiums": 36,
    "evsk_norm": 14,
    "kms_plus": 5,
@@ -1047,9 +1047,9 @@
   }
  ],
  "source": {
-  "index": "index_v5.json",
+  "index": "index_v6.json",
   "schema_version": "2.0",
-  "generated_at": "2026-10-21T10:08:34+00:00",
-  "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v5.json docs/realdata/fsp_protocols backend/app/modules/fsp"
+  "generated_at": "2026-10-21T11:39:26+00:00",
+  "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp"
  }
 }

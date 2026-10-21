@@ -276,6 +276,8 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
         minutes = st_.assessment_two_stage_minutes + 10
     elif mode == "express":
         minutes = express_params(st_, claimed_grade)["max_minutes"]
+    elif (state.get("cfg") or {}).get("sprt"):  # поправка №2: продление у спорного порога до 90 минут + запас
+        minutes = int(st_.assessment_contested_max_minutes) + 15
     else:
         minutes = st_.assessment_max_minutes + max(30, st_.assessment_extension_minutes + 10)
     ts = TestSession(
@@ -440,6 +442,13 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
         from app.modules.assessment import two_stage
 
         res = two_stage.as_result(ts, res)
+    elif isinstance(res.details, dict) and isinstance(res.details.get("verdict"), dict):
+        # А4/А9 (21.10): спорный порог Senior+ при наличии инцидента направления → доп. этап — инцидент «Полигона»
+        from app.modules.assessment import sprt as _sprt
+
+        res.details["verdict"] = _sprt.attach_incident_followup(res.details["verdict"], attempt_id=str(ts.id),
+                                                                direction=ts.direction_id)
+        res.details["sprt"] = res.details["verdict"]
     from app.modules.proctor.service import apply_to_result  # камера по согласию (И16): итог — в достоверность
 
     apply_to_result(db, ts, res.details)
@@ -469,7 +478,13 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
         # Кандидату — только ход теста; показатели детектора утечек и контрольные задания видны в данных сессии,
         # не в ответе. Достоверность — уровень и общая причина (Р27), подробности — работодателю
         "details": {k: res.details.get(k) for k in ("stop_reason", "n_scored", "time_used_s",
-                                                     "extension", "pending_review", "n_families_in_bank", "mode")},
+                                                     "extension", "pending_review", "n_families_in_bank", "mode",
+                                                     "verdict", "sprt")},
+        "verdict": (res.details or {}).get("verdict"),
+        # поправка №2: «уровень по ответам», согласованный с вердиктом (без внутренних оценок)
+        "grade_by_answers": {k: ((res.details or {}).get("grade_by_answers") or {}).get(k)
+                             for k in ("rule", "product_grade", "point_grade", "preliminary")}
+        if (res.details or {}).get("grade_by_answers") else None,
         "integrity": candidate_view((res.details or {}).get("integrity")),
     }
     _ext_preliminary(result, specialization)
@@ -633,6 +648,8 @@ def result(db: Session, ts: TestSession) -> dict:
         out.pop("two_stage", None)
     out["second_opinions"] = second_op.summary(ts.result.get("state") or {})  # И27: текущее состояние фона
     _add_level_position(out, ts)
+    if "verdict" not in out and (er.get("details") or {}).get("verdict"):
+        out["verdict"] = er["details"]["verdict"]
     out.update({"current_grade": specialization.grade_id, "category_id": specialization.category_id,
                 "category_status": specialization.status, "mode": _mode(ts),
                 "sandbox": is_sandbox(profile), "retake_same_grade_days": get_settings().retake_same_grade_days,
@@ -883,6 +900,8 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
             "theta": s.theta, "se": s.theta_se, "confirmed": (s.result or {}).get("engine_result", {}).get("confirmed"),
             "provisional": (s.result or {}).get("engine_result", {}).get("provisional"), "mode": _mode(s),
             "accepted_lower": ((s.result or {}).get("outcome") or {}).get("accepted_lower"),
+            "verdict": (((s.result or {}).get("engine_result") or {}).get("details") or {}).get("verdict")
+                       or ((s.result or {}).get("outcome") or {}).get("verdict"),
             "message": (s.result or {}).get("outcome", {}).get("message"), "is_sandbox": s.is_sandbox,
             "started_at": s.started_at.isoformat() if s.started_at else None,
             "finished_at": s.finished_at.isoformat() if s.finished_at else None,
@@ -894,3 +913,80 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         "surveys": [{"id": str(s.id), "direction": s.direction_id, "claimed_grade": s.claimed_grade_id,
                      "at": s.created_at.isoformat()} for s in surveys],
     }
+
+
+def list_session_appeals(db: Session, ts: TestSession) -> dict:
+    """Список апелляций по заданиям сессии."""
+    st = dict((ts.result or {}).get("state") or {})
+    eng = get_engine(st.get("engine"))
+    fn = getattr(eng, "list_appeals", None)
+    appeals = fn(st) if callable(fn) else []
+    return {"session_id": str(ts.id), "appeals": appeals}
+
+
+def submit_item_appeal(db: Session, ts: TestSession, item_id: str, reason: str, actor: str = "candidate") -> dict:
+    """Подать апелляцию по заданию: задание помечается `under_review`, вердикт пересчитывается без него."""
+    res_obj = dict(ts.result or {})
+    st = dict(res_obj.get("state") or {})
+    eng = get_engine(st.get("engine"))
+    fn = getattr(eng, "submit_appeal", None)
+    if not callable(fn):
+        raise api_error(409, "appeals_unsupported", "Движок сессии не поддерживает апелляции по заданиям")
+    rec = fn(st, item_id=item_id, reason=reason, actor=actor)
+    if rec is None:
+        raise api_error(404, "item_not_found", "Задание в этой сессии не найдено")
+    res_obj["state"] = st
+    recomp = rec.get("recomputed_without_item") or {}
+    if recomp.get("verdict") and isinstance(res_obj.get("engine_result"), dict):
+        er = dict(res_obj["engine_result"])
+        det = dict(er.get("details") or {})
+        det["verdict"] = recomp["verdict"]
+        det["sprt"] = recomp["verdict"]
+        er["details"] = det
+        res_obj["engine_result"] = er
+    ts.result = res_obj
+    flag_modified(ts, "result")
+    db.commit()
+    return {"session_id": str(ts.id), "appeal": rec, "appeals": list_session_appeals(db, ts)["appeals"]}
+
+
+
+def apply_followup_stage(db: Session, attempt_id, stage: dict) -> dict:
+    """Итог доп. этапа-инцидента «Полигона» (А9 → А4, интерфейс 21.10): вердикт попытки теста «нужен доп. этап» у
+    порога Senior+ → confirmed / not_confirmed (или «нужна устная защита» при признаках обмана) по правилу
+    sprt.incorporate_incident_stage. Одна попытка доп. этапа на тест. При «подтверждён» грейд присваивается тем же
+    путём, что у обычного итога (apply_engine_result: история, специализация, паспорт)."""
+    import uuid as _uuid
+
+    from app.modules.assessment import sprt as _sprt
+    from app.modules.assessment.engine import EngineResult
+
+    ts = db.get(TestSession, _uuid.UUID(str(attempt_id)))
+    if ts is None:
+        raise api_error(404, "attempt_not_found", "Попытка теста не найдена")
+    if ts.status != TestSessionStatus.finished:
+        raise api_error(409, "test_not_finished", "Тест ещё не завершён")
+    res_obj = dict(ts.result or {})
+    er = dict(res_obj.get("engine_result") or {})
+    det = dict(er.get("details") or {})
+    v = det.get("verdict") or {}
+    if v.get("followup_applied"):
+        raise api_error(409, "followup_already_applied", "Доп. этап по этой попытке уже учтён")
+    if v.get("status") != "needs_followup" or v.get("followup_kind") != "incident":
+        raise api_error(409, "followup_not_available", "Для этой попытки доп. этап-инцидент не назначен")
+    nv = _sprt.incorporate_incident_stage(v, dict(stage or {}))
+    det["verdict"] = nv
+    det["sprt"] = nv
+    det["incident_followup"] = {"applied_at": utcnow().isoformat(), "stage": nv.get("incident_stage")}
+    confirmed = nv.get("status") == "confirmed"
+    fields = {k: er[k] for k in EngineResult.__dataclass_fields__ if k in er}
+    fields.update(details=det, confirmed=confirmed, theta=float(nv.get("theta_after", er.get("theta", 0.0))),
+                  se=float(nv.get("se_after", er.get("se", 0.5))), p_claimed=nv.get("p_claimed"),
+                  provisional=False if confirmed else bool(er.get("provisional")))
+    res = EngineResult(**fields)
+    profile = db.get(CandidateProfile, ts.user_id)
+    outcome = apply_engine_result(db, ts, res, profile, utcnow(), after_review=True)
+    ts.result = {**ts.result, "followup_stage": {"kind": "incident", "status": nv.get("status")}}
+    flag_modified(ts, "result")
+    db.commit()
+    return {"attempt_id": str(ts.id), "verdict": nv, "grade": outcome.new_grade, "changed": outcome.changed}

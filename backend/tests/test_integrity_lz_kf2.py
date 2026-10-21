@@ -199,9 +199,13 @@ def _fake_ts(items, integ):
                            result={"state": {"items": items}, "engine_result": {"details": {"integrity": integ}}})
 
 
-def test_eligible_by_code_when_recommended():
+def test_eligible_by_code_when_recommended(monkeypatch):
     items = [_choice_item(1, code=False), _choice_item(2), _choice_item(3), {**_choice_item(4), "canary": True}]
-    # без рекомендации — как раньше: развёрнутых ответов нет, защищать нечего
+    # обязательная устная часть (21.10): защищаются код и решения у всех
+    good, reason = cx.eligible(_fake_ts(items, _integ()))
+    assert reason is None and [g["position"] for g in good] == [1, 2, 3]
+    # выключена — как раньше: без рекомендации развёрнутых ответов нет, защищать нечего
+    monkeypatch.setattr(cx, "ORAL_REQUIRED", False)
     good, reason = cx.eligible(_fake_ts(items, _integ()))
     assert not good and "нет развёрнутых ответов" in reason
     # рекомендована (l_z < −2) — защищаются код и выбранные решения, канарейки — нет

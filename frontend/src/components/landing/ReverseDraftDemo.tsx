@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { NUMBERS } from "../../lib/numbers";
 import { NB } from "../ui";
 import { DEMO, type DemoCandidate } from "./demoData";
 
@@ -22,7 +23,7 @@ export function ReverseDraftDemo({ onTry, onLiveAvatar, busyLive }: { onTry: () 
   return (
     <div className="np-glass np-glass-accent relative p-4 sm:p-5" role="region" aria-label="Обратный драфт в действии: пример интерфейса" data-testid="reverse-draft-demo">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="np-eyebrow">Обратный драфт в действии · 9 направлений</p>
+        <p className="np-eyebrow">Обратный драфт в действии · {NUMBERS.bank.directions} ИТ-направлений (6 примеров)</p>
         <span className="np-chip">Интерактивный пример</span>
       </div>
       <div role="tablist" aria-label="Направление" onKeyDown={onKey} className="np-tabs mt-3">
@@ -35,7 +36,7 @@ export function ReverseDraftDemo({ onTry, onLiveAvatar, busyLive }: { onTry: () 
       <div id="dir-panel" role="tabpanel" aria-labelledby={`dir-tab-${c.key}`} className="mt-3">
         <CandidateCard key={c.key} c={c} onTry={onTry} onLiveAvatar={onLiveAvatar} busyLive={busyLive} />
       </div>
-      <p className="mt-3 text-[11px] np-faint">Профиль специалиста обезличен до согласия · в каталоге также Аналитика, QA и Data Engineering</p>
+      <p className="mt-3 text-[11px] np-faint">Профиль специалиста обезличен до согласия · в банке заданий {NUMBERS.bank.directions} ИТ-направлений (включая Аналитику, QA, Data Engineering и Архитектуру ПО)</p>
     </div>
   );
 }

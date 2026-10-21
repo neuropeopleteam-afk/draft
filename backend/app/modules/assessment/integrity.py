@@ -91,6 +91,14 @@ LZ_MIN_ITEMS = 6
 LZ_WARN, LZ_ALARM = -2.0, -3.0
 LZ_TITLE = "Паттерн ответов не согласуется с уровнем"
 LZ_REASON = (f"{LZ_TITLE} (индекс l_z < −2,0): ошибки на базовых заданиях при верных ответах на сложных")
+# Разрыв форм теста (А4/А6/А8): оценка по заданиям с выбором ответа заметно выше, чем по коду и развёрнутым ответам
+FORMAT_GAP_MIN_MCQ = 3
+FORMAT_GAP_MIN_CODE = 2
+FORMAT_GAP_WARN, FORMAT_GAP_ALARM = 0.80, 1.30
+FORMAT_GAP_TITLE = "Оценка по вопросам с выбором ответа заметно выше результата на коде и практических заданиях"
+CODE_PRACTICAL_FORMATS = frozenset({
+    "find_bug", "predict_output", "choose_fix", "open_answer", "open_book_3step", "incident_sim",
+})
 
 
 
@@ -143,6 +151,79 @@ def lz_points(lz: float | None) -> int:
     if lz is None:
         return 0
     return 2 if lz < LZ_ALARM else 1 if lz < LZ_WARN else 0
+
+
+def _sub_eap_theta(rows: list[tuple[float, float, float]]) -> float:
+    """Байесовская EAP-оценка θ по подмножеству заданий [(a, b, score)] на сетке [−3,5; +3,5] с априором N(0, 1,5²)."""
+    grid = [k * 0.1 for k in range(-35, 36)]
+    post = []
+    for t in grid:
+        log_w = -(t * t) / (2.0 * 1.5 * 1.5)
+        for a, b, x in rows:
+            p = 1.0 / (1.0 + math.exp(-max(-30.0, min(30.0, a * (t - b)))))
+            p = min(1.0 - 1e-6, max(1e-6, p))
+            log_w += x * math.log(p) + (1.0 - x) * math.log(1.0 - p)
+        post.append(math.exp(max(-60.0, min(60.0, log_w))))
+    z = sum(post) or 1.0
+    return sum(t * w for t, w in zip(grid, post, strict=True)) / z
+
+
+def format_gap_logits(items: list[dict]) -> dict | None:
+    """Разрыв между оценкой уровня по тестовым вопросам с выбором ответа (mcq_concept) и по кодовым/практическим заданиям.
+
+    Если в сессии ≥ FORMAT_GAP_MIN_MCQ вопросов с выбором ответа и ≥ FORMAT_GAP_MIN_CODE кодовых/развёрнутых заданий,
+    возвращает словарь ``{theta_mcq, theta_code, gap_logits, n_mcq, n_code, flagged, points, employer_reason}``.
+    Порог срабатывания ``FORMAT_GAP_WARN = 0.80`` логита единый для ``integrity`` и ``sprt.compute_verdict`` (согласован с А6).
+    """
+    mcq_rows: list[tuple[float, float, float]] = []
+    code_rows: list[tuple[float, float, float]] = []
+    for it in items or []:
+        if it.get("canary"):
+            continue
+        sc = it.get("score")
+        if sc is None:
+            xs = [float(v) for v in (it.get("x") or []) if v is not None]
+            sc = (sum(xs) / len(xs)) if xs else None
+        if sc is None:
+            continue
+        try:
+            x_val = float(sc)
+            b_val = float(it.get("b") if it.get("b") is not None else ((it.get("pool") or {}).get("b") or [0.0])[0])
+            a_val = float(it.get("a") if it.get("a") is not None else ((it.get("pool") or {}).get("a") or [1.1])[0])
+        except (TypeError, ValueError, IndexError):
+            continue
+        if not (math.isfinite(x_val) and math.isfinite(b_val) and math.isfinite(a_val)):
+            continue
+        a_clip = max(0.3, min(1.6, a_val))
+        fmt = str(it.get("format") or "mcq_concept")
+        if fmt in CODE_PRACTICAL_FORMATS:
+            code_rows.append((a_clip, b_val, max(0.0, min(1.0, x_val))))
+        elif fmt == "mcq_concept":
+            mcq_rows.append((a_clip, b_val, max(0.0, min(1.0, x_val))))
+    if len(mcq_rows) < FORMAT_GAP_MIN_MCQ or len(code_rows) < FORMAT_GAP_MIN_CODE:
+        return None
+    th_mcq = _sub_eap_theta(mcq_rows)
+    th_code = _sub_eap_theta(code_rows)
+    gap = round(th_mcq - th_code, 3)
+    flagged = gap > FORMAT_GAP_WARN
+    pts = 2 if gap > FORMAT_GAP_ALARM else 1 if flagged else 0
+    reason_ru = (
+        # простыми словами, без θ и логитов (правило владельца: без θ/IRT в основном интерфейсе); числа — в полях
+        # theta_mcq / theta_code / gap для подсказки «как считается»
+        (f"{FORMAT_GAP_TITLE}: результаты разных форм заданий расходятся сильнее, чем бывает при одном уровне знаний"
+         + (" (расхождение большое)" if gap > FORMAT_GAP_ALARM else ""))
+        if flagged else ""
+    )
+    return {
+        "theta_mcq": round(th_mcq, 3),
+        "theta_code": round(th_code, 3),
+        "gap_logits": gap,
+        "n_mcq": len(mcq_rows),
+        "n_code": len(code_rows),
+        "flagged": flagged,
+        "points": pts,
+        "employer_reason": reason_ru,
+    }
 
 
 def clean_signals(raw: Any) -> dict | None:
@@ -286,6 +367,10 @@ def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | No
     if lz_pts:  # KF2: person-fit l_z — ответы не согласуются с уровнем (подсказка на отдельных заданиях)
         reasons.append((lz_pts, LZ_REASON, "assist"))
 
+    fg = format_gap_logits(scored)
+    if fg and fg["flagged"]:
+        reasons.append((fg["points"], fg["employer_reason"], "assist"))
+
     with_sig = [i for i in done if i.get("signals") is not None]
     focus_items = [i for i in with_sig if (i["signals"].get("focus_lost") or 0) > 0]
     hidden_s = sum((i["signals"].get("hidden_ms") or 0) for i in with_sig) / 1000.0
@@ -339,7 +424,12 @@ def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | No
                     "canary_fast": len(canary_fast), "focus_lost_items": len(focus_items), "focus_lost_total": focus_total,
                     "hidden_s": round(hidden_s, 1), "paste_items": len(paste_items), "paste_chars": paste_chars,
                     "client_signals_items": len(with_sig), "preknowledge_flagged": bool(pk.get("flagged")),
-                    "injection_items": len(inj), "lz": lz, "lz_flag": bool(lz_pts), **ext_signals},
+                    "injection_items": len(inj), "lz": lz, "lz_flag": bool(lz_pts),
+                    "format_gap": fg["gap_logits"] if fg else None,
+                    "format_gap_flag": bool(fg and fg["flagged"]),
+                    "theta_mcq": fg["theta_mcq"] if fg else None,
+                    "theta_code": fg["theta_code"] if fg else None,
+                    **ext_signals},
         "sources": [n for n, _ in SOURCES],
     }
 
@@ -398,6 +488,7 @@ _KIND_BY_PREFIX = (
     ("Вставка готового текста", "assist"), ("В развёрнутом ответе — невидимая метка", "assist"),
     ("Развёрнутый ответ появился быстрее", "assist"), ("Развёрнутый ответ в основном не набран", "assist"),
     ("Слишком ровный ритм", "assist"), (PRINTSCREEN_TITLE, "behavior"), (LZ_TITLE, "assist"),
+    (FORMAT_GAP_TITLE, "assist"),
     ("В развёрнутом ответе — инструкции", "answer"),
     ("В развёрнутом ответе — утверждения", "answer"), ("Сигналов нарушений нет", "none"), ("И ещё ", "none"),
     ("нет лица в кадре", "camera"), ("в кадре несколько лиц", "camera"), ("камера ", "camera"), ("Камера", "camera"),

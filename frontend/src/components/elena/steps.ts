@@ -6,7 +6,7 @@
 import { api } from "../../lib/api";
 import type { Persona } from "../../lib/jury";
 
-export type TourTrack = "all" | "candidate" | "employer" | "fsp";
+export type TourTrack = "all" | "candidate" | "employer" | "fsp" | "pitch";
 export type Cabinet = "home" | "candidate" | "employer" | "fsp" | "public";
 
 export interface Beat {
@@ -298,6 +298,24 @@ export const STEPS: Record<string, TourStep> = {
       { target: "[data-testid='wr-tab-cheat'], main h1", click: "[data-testid='wr-tab-cheat']", clickAt: 0.25 },
     ],
   },
+  // Полигон целиком — когда его просят показать (не по порядку обзора) или «подробнее / полностью»: Настя сама
+  // запускает инцидент и атаку (замечание владельца 21.10 17:33: «покажи Полигон» — три фразы и ушла дальше).
+  // В обзор не входит; реплики — FULL_BEATS["warroom-full"] на сервере.
+  "warroom-full": {
+    id: "warroom-full", cabinet: "public", persona: null, path: "/warroom",
+    selector: "main h1",
+    beats: [
+      { target: H1 },
+      { target: "[data-testid='wr-quickstart'], [data-testid='wr-tab-arch'], main h1", click: "[data-testid='wr-tab-arch']", clickAt: 0.05 },
+      { target: "[data-testid='wr-quick-run'], [data-testid='wr-quickstart'], main h1", click: "[data-testid='wr-quick-run']", clickAt: 0.45 },
+      { target: "[data-testid='wr-metrics'], main h1" },
+      { target: "[data-testid='wr-verdict'], [data-testid='wr-metrics'], main h1" },
+      { target: "[data-testid='wr-anticheat-steps'], [data-testid='wr-tab-cheat'], main h1", click: "[data-testid='wr-tab-cheat']", clickAt: 0.15 },
+      { target: "[data-testid='wr-anticheat-main-btn'], [data-testid='wr-anticheat-steps'], main h1", click: "[data-testid='wr-anticheat-main-btn']", clickAt: 0.4 },
+      { target: "[data-testid='wr-grader-layers'], [data-testid='wr-radar'], main h1" },
+      { target: "[data-testid='wr-anticheat-steps'], main h1" },
+    ],
+  },
   "val-arena": {
     id: "val-arena", cabinet: "public", persona: null, path: "/validation",
     selector: "[data-testid='validation-headline'], main h1",
@@ -312,21 +330,75 @@ export const STEPS: Record<string, TourStep> = {
 };
 
 /** Пункты меню кабинетов по порядку (основные, затем «Ещё»). */
+// Показ для жюри на 2 минуты (питч 24.10): скрытый запуск Ctrl+Alt+P или ?pitch=1, реплики заранее озвучены, любая
+// реплика владельца («Настя, кого позвать первым?», «Дальше») — сразу следующий экран, «назад» — предыдущий, «стоп» — пауза.
+const PITCH: Record<string, TourStep> = {
+  "pitch-qr": {
+    id: "pitch-qr", cabinet: "public", persona: null, path: "/demo/live", match: /^\/(?:demo|jury)\/live/,
+    selector: "h1",
+    beats: [{ target: "h1" }, { target: "img[alt^='QR'], [data-testid='live-counters'], h1" }],
+  },
+  "pitch-needs": {
+    id: "pitch-needs", cabinet: "employer", persona: "employer", path: "/employer/needs", match: /^\/employer\/needs\/?$/,
+    selector: "#need, main h1",
+    beats: [{ target: "#need, main h1", click: "[data-testid='sample-need']", clickAt: 0.25 }],
+  },
+  "pitch-need": {
+    id: "pitch-need", cabinet: "employer", persona: "employer", path: "/employer/needs",
+    resolve: () => latestNeedPath(""), match: /^\/employer\/needs\/[^/]+\/?$/,
+    selector: "[data-testid='top-picks'], main h1",
+    beats: [
+      { target: "[data-testid='refine-panel'], [data-testid='need-text'], main h1" },
+      { target: "[data-testid='top-picks'], main h1" },
+    ],
+  },
+  "pitch-compare": {
+    id: "pitch-compare", cabinet: "employer", persona: "employer", path: "/employer/needs",
+    resolve: () => latestNeedPath("/compare"), match: /^\/employer\/needs\/[^/]+\/compare/,
+    selector: "[data-testid='exec-advisor'], main h1",
+    beats: [{ target: "[data-testid='exec-advisor'], main h1" }, { target: "[data-testid='exec-advisor'], main h1" }],
+  },
+  "pitch-red": {
+    id: "pitch-red", cabinet: "public", persona: null, path: "/validation", match: /^\/validation/,
+    selector: "#red-button article, #red-button, main h1",
+    beats: [
+      { target: "#red-button article:nth-of-type(3), #red-button", click: "#red-button article:nth-of-type(3) button", clickAt: 0.45 },
+      { target: "#red-button article:nth-of-type(3), #red-button" },
+    ],
+  },
+  "pitch-defense": {
+    id: "pitch-defense", cabinet: "candidate", persona: "candidate", path: "/candidate/attempts", match: /^\/candidate\/attempts/,
+    selector: "[data-testid='integrity-badge'], main h1",
+    beats: [
+      { target: "[data-testid='integrity-badge'], main h1" },
+      { target: "[data-testid='live-defense'], [data-testid='defense-panel'], main h1" },
+    ],
+  },
+  "pitch-fsp": {
+    id: "pitch-fsp", cabinet: "fsp", persona: "fsp", path: "/fsp", match: /^\/fsp\/?$/,
+    selector: "main h1",
+    beats: [{ target: "text:Главное за период, main h1" }, { target: "[data-testid='fsp-rank-converter'], main h1" }],
+  },
+  "pitch-final": {
+    id: "pitch-final", cabinet: "public", persona: null, path: "/demo/live", match: /^\/(?:demo|jury)\/live/,
+    selector: "h1",
+    beats: [{ target: "[data-testid='live-counters'], [data-testid='live-distribution-anticheat'], h1" }, { target: "[data-testid='live-distribution-anticheat'], h1" }],
+  },
+};
+Object.assign(STEPS, PITCH);
+
 export const TRACKS: Record<TourTrack, string[]> = {
-  candidate: ["cand-register", "cand-overview", "cand-assessment", "cand-category", "cand-defense", "cand-feedback", "cand-profile", "cand-invitations",
-    "cand-messages", "cand-trio", "cand-cups", "cand-fsp", "cand-mydata",
-    "cand-probes", "cand-assignments", "cand-settings", "cand-vacancies", "cand-notifications"],
-  employer: ["emp-register", "emp-home", "emp-needs", "emp-compare", "emp-squad", "emp-search", "emp-invitations", "emp-messages", "emp-trio", "emp-ats",
-    "emp-cups", "emp-company", "emp-probes", "emp-assignments", "emp-vacancies", "emp-notifications", "emp-tariffs"],
-  fsp: ["fsp-register", "fsp-cabinet", "fsp-demand", "fsp-effect", "fsp-salaries", "fsp-funnel", "fsp-cups", "fsp-benefit", "fsp-partners", "fsp-trio",
-    "fsp-method", "fsp-security"],
-  // весь сайт — основные пункты меню каждого кабинета (без «Ещё») и раздел для технического жюри
+  pitch: ["pitch-qr", "pitch-needs", "pitch-need", "pitch-compare", "pitch-red", "pitch-defense", "pitch-fsp", "pitch-final"],
+  // короткий маршрут (разбор 21.10, решение владельца «делай всю перестройку»): главное за 3–4 минуты на роль, остальные
+  // экраны — по просьбе («покажи кубки», «открой сообщения») и в «весь сайт» нет
+  candidate: ["cand-register", "cand-overview", "cand-assessment", "cand-defense", "cand-profile", "cand-invitations", "cand-fsp"],
+  employer: ["emp-register", "emp-home", "emp-needs", "emp-compare", "emp-search", "emp-invitations", "emp-tariffs"],
+  fsp: ["fsp-register", "fsp-cabinet", "fsp-demand", "fsp-effect", "fsp-salaries", "fsp-partners"],
+  // весь сайт — главное каждого кабинета и раздел для технического жюри
   all: ["home",
-    "cand-overview", "cand-assessment", "cand-category", "cand-defense", "cand-feedback", "cand-profile", "cand-invitations",
-    "cand-messages", "cand-trio", "cand-cups", "cand-fsp", "cand-mydata",
-    "emp-home", "emp-needs", "emp-compare", "emp-squad", "emp-search", "emp-invitations", "emp-messages", "emp-trio", "emp-ats", "emp-cups",
-    "fsp-cabinet", "fsp-demand", "fsp-effect", "fsp-salaries", "fsp-funnel", "fsp-cups", "fsp-benefit", "fsp-partners", "fsp-trio",
-    "fsp-method", "fsp-security",
+    "cand-overview", "cand-assessment", "cand-defense", "cand-profile",
+    "emp-home", "emp-needs", "emp-compare", "emp-search",
+    "fsp-cabinet", "fsp-demand", "fsp-effect",
     "warroom", "val-arena"],
 };
 

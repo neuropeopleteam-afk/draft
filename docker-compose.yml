@@ -42,7 +42,10 @@ services:
     mem_limit: 320m
 
   api:
-    build: ./backend
+    build:
+      context: ./backend
+      additional_contexts:
+        docs: ./docs   # docs/NUMBERS.json → /srv/docs/NUMBERS.json (Настя)
     restart: unless-stopped
     env_file:
       - path: .env

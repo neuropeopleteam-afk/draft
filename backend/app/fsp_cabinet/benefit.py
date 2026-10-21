@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import as_aware
 from app.core.enums import InvitationStatus
-from app.fsp_cabinet.analytics import K, Data, kc, kr, load
+from app.fsp_cabinet.analytics import K, Data, cache_get, cache_set, kc, kr, load_cached
 from app.modules.catalog.seed_data import DIRECTIONS
 from app.modules.hiring.models import HiringOutcome
 from app.modules.profiles.models import CandidateProfile, Company
@@ -93,17 +93,26 @@ def _suppress(rows: list[dict], total: dict) -> None:
             return
 
 
-def compute(db: Session, days: int | None = None, d: Data | None = None, include_demo: bool = True) -> dict:
+def compute(
+    db: Session,
+    days: int | None = None,
+    d: Data | None = None,
+    include_demo: bool = True,
+    jury_key: str | None = None,
+) -> dict:
     from app.modules.tariffs import plans as P
     from app.modules.tariffs import service as tariffs
 
-    d = d or load(db, days, include_demo=include_demo)
+    if d is None:
+        cached = cache_get("benefit", db, days, include_demo, jury_key=jury_key)
+        if isinstance(cached, dict):
+            return cached
+        d = load_cached(db, days, include_demo=include_demo, jury_key=jury_key)
     fsp_inv = {i.id for i in d.invs if (c := d.cands.get(i.candidate_user_id)) is not None and c.has_fsp}
     inv_ids = [i.id for i in d.invs]
     hired = set(db.scalars(select(HiringOutcome.invitation_id).where(HiringOutcome.invitation_id.in_(inv_ids),
                                                                     HiringOutcome.outcome == "hired")).all()) if inv_ids else set()
-    cities = dict(db.execute(select(CandidateProfile.user_id, CandidateProfile.city).where(
-        CandidateProfile.user_id.in_(list(d.cands)))).all()) if d.cands else {}
+    cities = {uid: c.city for uid, c in d.cands.items()}
     cands = list(d.cands.values())
     invs_by_cand: dict = defaultdict(list)
     for i in d.invs:
@@ -140,12 +149,13 @@ def compute(db: Session, days: int | None = None, d: Data | None = None, include
     from app.fsp_cabinet.analytics import _jury
     from app.modules.tariffs.models import CompanyTariff
 
-    _, allowed = _jury(db, include_demo=include_demo)  # без песочниц жюри; партнёры без активности за период — тоже в списке (нули)
+    allowed = d.allowed_companies or _jury(db, include_demo=include_demo)[1]  # без песочниц жюри; партнёры без активности за период — тоже в списке (нули)
     partner_ids = {cid for cid in companies if tariffs.is_partner(db, cid)} | (
         set(db.scalars(select(CompanyTariff.company_id).where(CompanyTariff.fsp_partner.is_(True))).all()) & allowed)
     partners = []
-    for cid in sorted(partner_ids, key=lambda x: (db.get(Company, x).name if db.get(Company, x) else "")):
-        comp = db.get(Company, cid)
+    comps_map = d.companies_by_id or {}
+    for cid in sorted(partner_ids, key=lambda x: ((comps_map.get(x) or db.get(Company, x)).name if (comps_map.get(x) or db.get(Company, x)) else "")):
+        comp = comps_map.get(cid) or db.get(Company, cid)
         r = tariffs.row_of(db, cid)
         pinvs = [i for i in d.invs if i.company_id == cid]
         p_fsp = [i for i in pinvs if i.id in fsp_inv]
@@ -175,13 +185,15 @@ def compute(db: Session, days: int | None = None, d: Data | None = None, include
                                                          if n_all - len(p_invs) >= K and o_ok else None),
                       "hired_fsp": kc(len({i.candidate_user_id for i in p_fsp if i.id in hired}))}
     plans_dist = tariffs.plans_distribution(db, companies)
-    return {"k": K, "period_days": days, "total": total,
+    out = {"k": K, "period_days": days, "total": total,
             "invitations": n_all, "invitations_with_fsp_bonus": n_fsp if share is not None else None,
             "fsp_bonus_share": share, "hired_total": kc(len({i.candidate_user_id for i in d.invs if i.id in hired})),
             "regions": regions, "directions": dirs, "partners": partners, "partners_total": partners_total,
             "plans": [{"id": p["id"], "title": p["title"], "companies": plans_dist.get(p["id"], 0)} for p in P.PLANS],
             "demo_share": round(sum(1 for i in d.invs if i.company_id in d.demo_companies) / n_all, 3) if n_all else None,
             "methodology": METHODOLOGY}
+    cache_set("benefit", db, days, include_demo, out, jury_key=jury_key)
+    return out
 
 
 METHODOLOGY = [

@@ -58,6 +58,7 @@ class ItemPublic:
     max_items: int | None = None
     answered: int = 0
     extension: bool = False
+    incident: dict | None = None
 
 
 @dataclass

@@ -1,0 +1,448 @@
+{
+ "phase": "train",
+ "n_per_seed": 150,
+ "seeds": [
+  1101,
+  1102,
+  1103,
+  1104,
+  1105,
+  1106,
+  1107,
+  1108,
+  1109,
+  1110
+ ],
+ "common_args": [
+  "--retest"
+ ],
+ "note": "TRAIN-раунд 3 (поправка №3а): T* — жёсткие условия, выбор по L = 3·FC + FR в точке «после второго этапа»; S* — S-T-мир на TRAIN-зёрнах (разведка); Z* — S-T без расхождения параметров (средняя SE для А5)",
+ "configs": {
+  "T0": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1"
+   },
+   "n_per_seed": 150
+  },
+  "T1": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.45"
+   },
+   "n_per_seed": 150
+  },
+  "T2": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.5"
+   },
+   "n_per_seed": 150
+  },
+  "T3": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20"
+   },
+   "n_per_seed": 150
+  },
+  "T4": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.4"
+   },
+   "n_per_seed": 150
+  },
+  "T5": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45"
+   },
+   "n_per_seed": 150
+  },
+  "T6": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.5"
+   },
+   "n_per_seed": 150
+  },
+  "T7": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_ALPHA": "0.1"
+   },
+   "n_per_seed": 150
+  },
+  "T8": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45",
+    "ASSESSMENT_UPGRADE_RULE": "none"
+   },
+   "n_per_seed": 150
+  },
+  "T9": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45",
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "36",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "105"
+   },
+   "n_per_seed": 150
+  },
+  "S0": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "S1": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.45"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "S2": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.5"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "S3": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "S4": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.4"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "S5": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "S6": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.5"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "S7": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_ALPHA": "0.1"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "S8": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45",
+    "ASSESSMENT_UPGRADE_RULE": "none"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "S9": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45",
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "36",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "105"
+   },
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z0": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z1": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.45"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z2": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.5"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z3": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z4": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.4"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z5": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z6": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.5"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z7": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_ALPHA": "0.1"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z8": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45",
+    "ASSESSMENT_UPGRADE_RULE": "none"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  },
+  "Z9": {
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45",
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "36",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "105"
+   },
+   "n_per_seed": 50,
+   "common_args": [],
+   "args": [
+    "--world",
+    "st0",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5"
+   ]
+  }
+ }
+}

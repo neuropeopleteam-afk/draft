@@ -209,8 +209,14 @@ def headline() -> dict:
     acc = accuracy_views(_load(ACCURACY))
     if acc:
         acc["provenance"] = stamp("accuracy", _load(ACCURACY))
+    sprt = _load(HERE / "data" / "sprt_verdict.json")
+    exp_sur = _load(HERE / "data" / "expert_surrogate.json")
+    leak_k = _load(HERE / "data" / "leak_k_variants.json")
     return {"items": items, "missing": not items, "accuracy": acc, "retest_vs_truth": retest_vs_truth(pr),
             "protocols": proto,
+            "sprt_verdict": sprt,
+            "expert_surrogate": exp_sur,
+            "leak_k_variants": leak_k,
             "how_to_read": ("Каждое число — из расчёта с подписью мира (seed, hash конфигурации, коммит), рядом — 95 % "
                             "доверительный интервал и строка происхождения: синтетика, модель или люди, дата, SHA "
                             "алгоритма, банк, команда пересчёта. Ниже по странице: синтетика с интервалами, затем "

@@ -1,0 +1,2470 @@
+{
+  "decimal_solver_wave": {
+    "n_wave_families": 1049,
+    "n_seeds": 5,
+    "n_variants_checked": 5245,
+    "n_matched": 5245,
+    "match_rate": 1.0,
+    "distractor_collisions": 0,
+    "mismatches": [],
+    "elapsed_s": 86.3
+  },
+  "external_llm_audit_10pct": {
+    "n_total_bank": 1824,
+    "n_sampled": 183,
+    "sample_share_pct": 10.03,
+    "n_pass": 183,
+    "pass_rate": 1.0,
+    "n_unambiguous": 183,
+    "unambiguous_rate": 1.0,
+    "n_grade_fit": 182,
+    "grade_fit_rate": 0.9945,
+    "by_format": {
+      "choose_fix": 14,
+      "find_bug": 14,
+      "incident_sim": 10,
+      "mcq_concept": 115,
+      "open_answer": 9,
+      "open_book_3step": 9,
+      "predict_output": 12
+    },
+    "by_model": {
+      "anthropic/claude-haiku-5.5": 88,
+      "anthropic/claude-haiku-5.5 -> anthropic/claude-sonnet-5.5": 4,
+      "openai/gpt-5.6-luna": 63,
+      "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5": 28
+    },
+    "elapsed_s": 185.01,
+    "flagged": [],
+    "sample_rows": [
+      {
+        "family_id": "analyst.api.breaking_change_mcq",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "analyst.api.json_schema_validate_output",
+        "direction": "analyst",
+        "format": "predict_output",
+        "grades": [
+          "intern",
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Эталонный ключ корректен: проходят тела 4 и 5; условие и схема однозначны."
+      },
+      {
+        "family_id": "analyst.api_contract_payload.principal_solve_it_k5",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me work through the volume math: 280k docs/day, each body sized at X*250 byt"
+      },
+      {
+        "family_id": "analyst.arch.integration_open",
+        "direction": "analyst",
+        "format": "open_answer",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Задание корректно: оба изменения ломающие, рубрика с тремя критериями (compat, policy, transition) и тремя уровнями соответствует senior-грейду. Условие не противоречиво. Единственное замечание: текст strong-уровня в предоставленной рубрике обрезан, а в условии опечатка «раз в 3 месяцев»; на валидность они не влияют."
+      },
+      {
+        "family_id": "analyst.async_queue_lag.middle_solve_inp_k3",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm trying to figure out the actual formula since the problem doesn't specify ho"
+      },
+      {
+        "family_id": "analyst.backlog_story_points.lead_solve_us_k5",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверим расчёт. На одну историю: 3 сценария × 3 ч = 9 ч. Надбавки 20 % и 10 %: "
+      },
+      {
+        "family_id": "analyst.bpmn.join_mismatch_bug",
+        "direction": "analyst",
+        "format": "find_bug",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "{\"verdict\": \"PASS\", \"unambiguous\": true, \"grade_fit\": true, \"note\": \"Ключ 20 вер"
+      },
+      {
+        "family_id": "analyst.bpmn_sla_cycle.junior_solve_doc_k2",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Нужно определить модель, при которой X=100 даёт 295, а X=110 даёт 313.\n\nРазность"
+      },
+      {
+        "family_id": "analyst.er.cardinality_ddl_fix",
+        "direction": "analyst",
+        "format": "choose_fix",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm checking each constraint: the book must belong to exactly one student (NOT N"
+      },
+      {
+        "family_id": "analyst.er_table_growth.intern_fwd_k2",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёт и эталонный ключ C корректны; трактовка 40% накладных расходов однозначна в контексте вариантов."
+      },
+      {
+        "family_id": "analyst.er_table_growth.senior_solve_cl_k4",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm working out the row count formula: X thousand clients times 4 records per mo"
+      },
+      {
+        "family_id": "analyst.funnel_conversion.principal_solve_dr1_k5",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Нужно восстановить модель и проверить расчёт.\n\nЗаходят 660000, к анкете переходя"
+      },
+      {
+        "family_id": "analyst.gateway_retry_sla.middle_solve_mp_k2",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "{\"verdict\": \"PASS\", \"unambiguous\": true, \"grade_fit\": true, \"note\": \"Проверка: 1"
+      },
+      {
+        "family_id": "analyst.lead_v2.dual_write_outbox_drift_ob3",
+        "direction": "analyst",
+        "format": "open_book_3step",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Assessing ambiguity in operations**\n\nI need to assess some ambiguous elements "
+      },
+      {
+        "family_id": "analyst.lead_v2.pool_starvation_cascade_inc",
+        "direction": "analyst",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to trace through Variant D's deduplication logic: the code skips an opera"
+      },
+      {
+        "family_id": "analyst.principal.launch_effect_mcq",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "principal"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Assessing campaign effects**\n\nI need to compute the effects of a new test vers"
+      },
+      {
+        "family_id": "analyst.report_aggregation_io.lead_solve_pr_k4",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me check my math: 490 million rows at 120 bytes each gives roughly 58.8 bill"
+      },
+      {
+        "family_id": "analyst.req.rice_priority_mcq",
+        "direction": "analyst",
+        "format": "mcq_concept",
+        "grades": [
+          "intern",
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "backend.api.idempotency_key_fix",
+        "direction": "backend",
+        "format": "choose_fix",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ключ D проверен: (tenant_id, idem_key), json.dumps с sort_keys=True учитывает вложенные объекты и порядок полей, ответ сохраняется только после успешного refund. A падает на вложенных словарях, B зависит от порядка полей, C оставляет 409 после исключения"
+      },
+      {
+        "family_id": "backend.api.pagination_canary",
+        "direction": "backend",
+        "format": "predict_output",
+        "grades": [
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "backend.api.query_params_bug",
+        "direction": "backend",
+        "format": "find_bug",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5 -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Строка 8: max(..., 100) вместо min(..., 100); при limit=30 вернёт 100. Остальные строки соответствуют требованиям, ключ верен."
+      },
+      {
+        "family_id": "backend.api_bandwidth.intern_fwd_k2",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "backend.api_bandwidth.senior_solve_lam_k4",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify the math: 83 KB converts to 83000 bytes, gzip compression roughly "
+      },
+      {
+        "family_id": "backend.arch.idempotent_payments_open",
+        "direction": "backend",
+        "format": "open_answer",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверим числа. Окно повторов: таймаут 5 с, затем повторы с задержками 2, 4, 8 с"
+      },
+      {
+        "family_id": "backend.db.overbooking_ob3",
+        "direction": "backend",
+        "format": "open_book_3step",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to verify the key and rubric are consistent before outputting the fixed J"
+      },
+      {
+        "family_id": "backend.export_pages.lead_solve_pg_k5",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Interpreting options correctly**\n\nI think the option labeled as \"(шаг 1)\" migh"
+      },
+      {
+        "family_id": "backend.idem_redis.junior_fwd_k3",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёт проверен: 8350·6·3600·800 = 144,288 ГБ; ×1,4 = 202,003; ×1,15 = 232,304; /0,6 = 387,2 ГБ, ключ B верен. Условие однозначно, уровень junior соответствует."
+      },
+      {
+        "family_id": "backend.idem_redis.senior_solve_t_k3",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "backend.java.session_registry_leak_fix",
+        "direction": "backend",
+        "format": "choose_fix",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "{\"verdict\": \"PASS\", \"unambigu"
+      },
+      {
+        "family_id": "backend.java.string_equals_bug",
+        "direction": "backend",
+        "format": "find_bug",
+        "grades": [
+          "intern",
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "backend.kafka_consumers.middle_solve_mu_k2",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "{\""
+      },
+      {
+        "family_id": "backend.lead_v2.mvcc_snapshot_visibility_out",
+        "direction": "backend",
+        "format": "predict_output",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Ключ 1:46 корректен: видна только версия (12, 0, 46), условие и объяснение непротиворечивы."
+      },
+      {
+        "family_id": "backend.lead_v2.pool_starvation_cascade_inc",
+        "direction": "backend",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to verify this by tracing through the skip logic for duplicate operations"
+      },
+      {
+        "family_id": "backend.pgpool.lead_solve_t_k4",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёт корректен: пиковая нагрузка с учётом ретраев и деления на 4 экземпляра даёт 149 соединений при X=56 мс и 154 при X=58 мс; ключ C верен."
+      },
+      {
+        "family_id": "backend.ratelimit.principal_split_bucket_mcq",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "principal"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me simulate the token bucket for the busiest gateway: capacity 100, refill ~"
+      },
+      {
+        "family_id": "backend.retry_storm.senior_solve_lam_k4",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Модель: нагрузка на под = X × 0,8 (лимитер) × 2 (пик) × 4 (ретраи клиента) × 3 ("
+      },
+      {
+        "family_id": "backend.threadpool.junior_solve_w_k2",
+        "direction": "backend",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm testing the threads-needed formula against the key example, plugging in util"
+      },
+      {
+        "family_id": "common.alg.binary_search_bound",
+        "direction": "common",
+        "format": "find_bug",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Ключ верен: строка 15 (r = len-1) делает невозможным результат len в right_border. Пример из условия проходит, баг проявляется только когда b >= последнего элемента, что допустимо для find_bug. Другие строки корректны."
+      },
+      {
+        "family_id": "common.alg.complexity_mcq",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "common.alg.heap_trace",
+        "direction": "common",
+        "format": "predict_output",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "common.alg.merge_intervals_ob3",
+        "direction": "common",
+        "format": "open_book_3step",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm tracing through the merge logic and spot a bug: when overlapping, it sets th"
+      },
+      {
+        "family_id": "common.amdahl.middle_solve_n_k3",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "common.api.rest_idempotent_retry_fix",
+        "direction": "common",
+        "format": "choose_fix",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ключ создаётся один раз вне цикла и переиспользуется при повторах, эталон B корректен"
+      },
+      {
+        "family_id": "common.arch.capacity_design_open",
+        "direction": "common",
+        "format": "open_answer",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверим расчёт. 30 млн × 40 = 1 200 млн действий в день. В среднем это 1 200 00"
+      },
+      {
+        "family_id": "common.backup_window.intern_fwd_k2",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Verifying the computation: 13,900,000 MB divided by 300 gives about 46,333 secon"
+      },
+      {
+        "family_id": "common.backup_window.senior_fwd_k5",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёт и эталонный ответ корректны: итоговое время составляет 1,05 ч."
+      },
+      {
+        "family_id": "common.cloud_cost.middle_fwd_k4",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5 -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверка расчёта: 32·115 = 3680; 3680·730 = 2 686 400. Скидка 40 %: 1 611 840. Д"
+      },
+      {
+        "family_id": "common.db.principal_db_conn_budget_mcq",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "principal"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "common.http.status_codes",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "common.lead_v2.keyset_tiebreaker_cursor_fix",
+        "direction": "common",
+        "format": "choose_fix",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "common.lead_v2.pool_starvation_cascade_inc",
+        "direction": "common",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to trace through option D's events with the dedup logic: op_1 appears in "
+      },
+      {
+        "family_id": "common.linux.log_pipeline",
+        "direction": "common",
+        "format": "predict_output",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "common.linux.umask_chmod",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "common.log_storage.principal_solve_d_k5",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Validating calculations**\n\nI need to validate some math. First, I compute that"
+      },
+      {
+        "family_id": "common.reliability.principal_region_topology_mcq",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "principal"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "For the single AZ option, infrastructure cost is 30, and downtime comes to about"
+      },
+      {
+        "family_id": "common.retry_backoff.middle_solve_t_k3",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "common.slo_errors.lead_solve_sp_k4",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm calculating the error budget: total requests over the 27-day window come to "
+      },
+      {
+        "family_id": "common.sprint_capacity.junior_fwd_k3",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёт корректен: 60 × 0,9 × 0,75 ÷ 2 = 20,25 человеко-дня в SP; при целых SP максимум 20. Условие однозначно для Junior."
+      },
+      {
+        "family_id": "common.sprint_capacity.senior_solve_n_k4",
+        "direction": "common",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify the math: a developer's 5-day sprint capacity drops to 4.5 days af"
+      },
+      {
+        "family_id": "data_eng.airflow_slots.intern_fwd_k2",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверка расчёта: 1720·10 = 17200 минут задач; окно 480 минут; 17200/480 = 35,83"
+      },
+      {
+        "family_id": "data_eng.airflow_slots.senior_fwd_k5",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify the math: 1710×33=56430, divided by 480 gives 117.5625, times the "
+      },
+      {
+        "family_id": "data_eng.cdc_catchup.middle_solve_bl_k3",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Calculating model ambiguity**\n\nI need to assess and calculate the model's ambi"
+      },
+      {
+        "family_id": "data_eng.ch_storage.lead_solve_c_k4",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify by computing the math step by step: raw data comes to 140 GB/day, "
+      },
+      {
+        "family_id": "data_eng.clickhouse.ch_insert_parts_mcq",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Сумма партиций по вставкам 1+1+3+2=7, ключ D верен; дистракторы различны и правдоподобны."
+      },
+      {
+        "family_id": "data_eng.design.pipeline_open",
+        "direction": "data_eng",
+        "format": "open_answer",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5 -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Условие согласовано: 8 провайдеров, дедлайны 07:00 и 10:00, повторные файлы с исправлениями. Рубрика с тремя уровнями покрывает критерии ingest, matching и rerun_ops. Уровни различимы: сильный даёт неизменяемость, версионирование, контроль сумм и идемпотентность, средний — простой join с перезаписью, слабый — только сравнение итоговых сумм. Для senior уровень подходит. Замечание: текст strong в предоставленном фрагменте обрезан («decima»), но это не влияет на корректность."
+      },
+      {
+        "family_id": "data_eng.dq.uniqueness_check_bug",
+        "direction": "data_eng",
+        "format": "find_bug",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Строки кода (нумерация с 1):\n1: from collections import Counter\n2: (пусто)\n3: (п"
+      },
+      {
+        "family_id": "data_eng.dwh.lead_scd2_merge_fix",
+        "direction": "data_eng",
+        "format": "choose_fix",
+        "grades": [
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm verifying option B's logic: the UPDATE step correctly closes rows that diffe"
+      },
+      {
+        "family_id": "data_eng.dwh_scan.middle_fwd_k4",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "data_eng.etl.cdc_apply_output",
+        "direction": "data_eng",
+        "format": "predict_output",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm tracing through the simulation step by step, applying each command in order "
+      },
+      {
+        "family_id": "data_eng.etl.watermark_ob3",
+        "direction": "data_eng",
+        "format": "open_book_3step",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверка ключа.\n\nШаг 1: нужен сценарий, где строгое `>` теряет версию. После 1-г"
+      },
+      {
+        "family_id": "data_eng.etl_window.junior_fwd_k3",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify: 3630 GB transfers at 100 MB/s across two streams gives 302.5 minu"
+      },
+      {
+        "family_id": "data_eng.etl_window.senior_solve_g_k4",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Calculating performance factors**\n\nI need to assess and calculate some ambigui"
+      },
+      {
+        "family_id": "data_eng.kafka_retention.middle_solve_d_k2",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "data_eng.lake_cost.lead_solve_c_k4",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "data_eng.lead_v2.pool_starvation_cascade_inc",
+        "direction": "data_eng",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to produce a single-line JSON verdict, so I'm checking key correctness an"
+      },
+      {
+        "family_id": "data_eng.orch.catchup_runs_mcq",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Эталонный ответ A корректен: до момента включения завершены 6 суточных интервалов с logical_date от 2026-10-05 03:00 до 2026-10-10 03:00; интервал, начавшийся 2026-10-11 03:00, ещё не завершён."
+      },
+      {
+        "family_id": "data_eng.pg_index.middle_solve_kb_k2",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm verifying the index size formula: with 494 million rows, leaf entries of X+1"
+      },
+      {
+        "family_id": "data_eng.spark_executors.intern_fwd_k2",
+        "direction": "data_eng",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "data_eng.sql.and_or_precedence_output",
+        "direction": "data_eng",
+        "format": "predict_output",
+        "grades": [
+          "intern",
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "data_ml.ab.sample_size_mcq",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверим расчёт: p1=0,05, p2=0,054, разность 0,004, квадрат = 1,6e-5.\np1(1-p1)=0"
+      },
+      {
+        "family_id": "data_ml.arch.recsys_serving_open",
+        "direction": "data_ml",
+        "format": "open_answer",
+        "grades": [
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm verifying the candidate budget math: 60ms per core times 4 cores gives 240ms"
+      },
+      {
+        "family_id": "data_ml.batch_scoring.senior_fwd_k5",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверка расчёта: 710 млн строк / 5000 строк/с = 142 000 с = 2366,67 мин. Делени"
+      },
+      {
+        "family_id": "data_ml.fe.onehot_serving_fix",
+        "direction": "data_ml",
+        "format": "choose_fix",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Ключ A верен: словарь берётся из категорий обучения, длина и порядок фиксированы, неизвестная категория даёт нулевой вектор. Дистракторы B падает с KeyError, C меняет длину и порядок, D молча кодирует новую категорию как последнюю известную."
+      },
+      {
+        "family_id": "data_ml.feature_store.junior_solve_n_k2",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Считаем: на сущность 290×8 = 2320 байт; ×1,5 = 3480 байт; ×2 = 6960 байт. На X м"
+      },
+      {
+        "family_id": "data_ml.features.lag_window_leak_bug",
+        "direction": "data_ml",
+        "format": "find_bug",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "{\"verdict\": \"PASS\", \"unambiguous\": true, \"grade"
+      },
+      {
+        "family_id": "data_ml.fraud_alerts.intern_fwd_k2",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "data_ml.fraud_alerts.senior_solve_n_k4",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me work through the numbers: with fraud rate 0.004X, 90% recall gives true p"
+      },
+      {
+        "family_id": "data_ml.label_budget.principal_solve_t_k5",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Verifying calculations and ambiguity**\n\nI’m working on verifying some mathemat"
+      },
+      {
+        "family_id": "data_ml.lead_v2.dual_write_outbox_drift_ob3",
+        "direction": "data_ml",
+        "format": "open_book_3step",
+        "grades": [
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to verify the deduplication logic across the answer variants, tracing thr"
+      },
+      {
+        "family_id": "data_ml.lead_v2.lsm_tombstone_compaction_out",
+        "direction": "data_ml",
+        "format": "predict_output",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": false,
+        "note": "Эталонный вывод корректен и условие однозначно, но задача слишком элементарна для уровня lead."
+      },
+      {
+        "family_id": "data_ml.lead_v2.pool_starvation_cascade_inc",
+        "direction": "data_ml",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to figure out the final verdict output, so let me trace through the skip "
+      },
+      {
+        "family_id": "data_ml.llm_gpus.middle_fwd_k4",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёт и эталонный ответ D (182 GPU) корректны; условие однозначно."
+      },
+      {
+        "family_id": "data_ml.metrics.prf_bug",
+        "direction": "data_ml",
+        "format": "find_bug",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm tracing through the line numbering to find exactly where recall uses the wro"
+      },
+      {
+        "family_id": "data_ml.ml.purged_split_fix",
+        "direction": "data_ml",
+        "format": "choose_fix",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Эталон D корректен: при gap=4 обучение включает только t < start-4, поэтому t+4 < start и целевые периоды не пересекают тест; варианты A и B дают утечку, C нарушает обучение только на прошлом."
+      },
+      {
+        "family_id": "data_ml.rag_cost.intern_fwd_k2",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "data_ml.rag_cost.senior_solve_ch_k3",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёт и эталонный ответ корректны: при X=24 стоимость 43 248 ₽, при X=25 — 44 880 ₽, что превышает бюджет."
+      },
+      {
+        "family_id": "data_ml.train_time.lead_solve_g_k4",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm working through the total compute: 805 million sample-passes, factoring in p"
+      },
+      {
+        "family_id": "data_ml.vector_index.junior_fwd_k3",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "data_ml.vector_index.senior_solve_pq_k3",
+        "direction": "data_ml",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify: 16 million vectors at 384 dimensions, float32, gives 24.576 GB ra"
+      },
+      {
+        "family_id": "devops.bash.exit_status_output",
+        "direction": "devops",
+        "format": "predict_output",
+        "grades": [
+          "intern",
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "devops.bash.pipefail_fix",
+        "direction": "devops",
+        "format": "choose_fix",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to verify the fix is correct: without pipefail, the pipeline's exit statu"
+      },
+      {
+        "family_id": "devops.bash.quoting_bug",
+        "direction": "devops",
+        "format": "find_bug",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "devops.bash.retry_ob3",
+        "direction": "devops",
+        "format": "open_book_3step",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm verifying the answer key: step 1 correctly identifies scenario C as the one "
+      },
+      {
+        "family_id": "devops.ci.lead_cicd_platform_open",
+        "direction": "devops",
+        "format": "open_answer",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверим расчёты.\n\nИсполнители: 150 коммитов/час × 60 мин = 150 исполнитель-часо"
+      },
+      {
+        "family_id": "devops.ci_runners.intern_fwd_k2",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "{\"verdict\": \"PASS\","
+      },
+      {
+        "family_id": "devops.ci_runners.senior_fwd_k5",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверка расчёта: 165·5·8/60 = 6600/60 = 110. Пик ×2 = 220. Флаки: 5% джоб перез"
+      },
+      {
+        "family_id": "devops.db_iops.lead_solve_tps_k5",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm checking the disk I/O math per transaction: reads contribute 0.2 disk ops, w"
+      },
+      {
+        "family_id": "devops.egress_cost.intern_fwd_k2",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Assessing traffic costs**\n\nI need to identify the issue with the wording \"Скол"
+      },
+      {
+        "family_id": "devops.egress_cost.senior_solve_h_k3",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify this by computing the volume: 4.6 million users each generating 2."
+      },
+      {
+        "family_id": "devops.es_shards.middle_solve_g_k3",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": ""
+      },
+      {
+        "family_id": "devops.k8s.rolling_update_mcq",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "devops.k8s_nodes.principal_solve_nc_k5",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Evaluating calculations and options**\n\nI’m looking at various values like 98 a"
+      },
+      {
+        "family_id": "devops.lead_v2.pool_starvation_cascade_inc",
+        "direction": "devops",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm tracing through variant D's step-1 logic: the seen-epoch check only skips wh"
+      },
+      {
+        "family_id": "devops.oncall_pages.intern_fwd_k2",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "devops.oncall_pages.senior_fwd_k5",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Verifying the key: 225 doubled, minus 10%, divided by 3 for grouping, reduced 40"
+      },
+      {
+        "family_id": "devops.prom_tsdb.middle_solve_d_k2",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Evaluating calculations and factors**\n\nI need to break down the calculations f"
+      },
+      {
+        "family_id": "devops.restore_rto.junior_fwd_k3",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm checking the math: 0.5 TB equals 500000 MB, and at 500 MB/s that's 1000 seco"
+      },
+      {
+        "family_id": "devops.restore_rto.senior_solve_th_k3",
+        "direction": "devops",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Считаем: 6 ТБ = 6·10⁶ МБ. При 100 МБ/с на поток и X потоках время = 60000/X секу"
+      },
+      {
+        "family_id": "frontend.a11y.accessible_name_mcq",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Ключ C верен: пустой aria-label пропускается, имя берётся из содержимого (alt изображения), svg с aria-hidden исключён, title становится описанием, а не именем. В объяснении упоминается visually-hidden-текст, которого нет в разметке, это не влияет на ответ."
+      },
+      {
+        "family_id": "frontend.a11y.focus_trap_ob3",
+        "direction": "frontend",
+        "format": "open_book_3step",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Assessing grading fit**\n\nI’m considering if grading is appropriate. I think a "
+      },
+      {
+        "family_id": "frontend.api_waterfall.principal_solve_n_k5",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to verify the model: with X sequential requests at 180ms each, two run in"
+      },
+      {
+        "family_id": "frontend.arch.client_app_open",
+        "direction": "frontend",
+        "format": "open_answer",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Условие и рубрика согласованы: проверяются обоснованность микрофронтендов, издержки и альтернативы; уровень senior соответствует задаче."
+      },
+      {
+        "family_id": "frontend.arch.lead_flag_rollout_fix",
+        "direction": "frontend",
+        "format": "choose_fix",
+        "grades": [
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to verify variant B against the reference: the kill switch check happens "
+      },
+      {
+        "family_id": "frontend.build.esm_eval_order",
+        "direction": "frontend",
+        "format": "predict_output",
+        "grades": [
+          "middle",
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "frontend.bundle_load.middle_fwd_k4",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify the transfer time: 830 KB compressed at 8 bits/byte gives 6640 kbi"
+      },
+      {
+        "family_id": "frontend.frame_budget.lead_solve_br_k4",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Assessing performance limits**\n\nI need to calculate some ambiguity and frame m"
+      },
+      {
+        "family_id": "frontend.image_weight.junior_fwd_k3",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Working through the pixel math: 34 images at 192x192 gives about 1.25M pixels, r"
+      },
+      {
+        "family_id": "frontend.image_weight.senior_solve_w_k3",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверим расчёт. Карточек на первом экране: 42 × 0,75 = 31,5. Это нецелое число,"
+      },
+      {
+        "family_id": "frontend.js.closure_var",
+        "direction": "frontend",
+        "format": "find_bug",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "{\"verdict\": \"PASS\", \"unambiguous\": true, \"grade_fit\": true"
+      },
+      {
+        "family_id": "frontend.lead_v2.consistent_ring_wrap_fix",
+        "direction": "frontend",
+        "format": "choose_fix",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "frontend.lead_v2.pool_starvation_cascade_inc",
+        "direction": "frontend",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm tracing through variant D to verify the duplicate-processing bug: since seen"
+      },
+      {
+        "family_id": "frontend.offline_quota.principal_solve_s_k5",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Evaluating calculations**\n\nI'm realizing that 89 equals 4654.3, not 4671. Ther"
+      },
+      {
+        "family_id": "frontend.polling_load.junior_solve_users_k2",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "frontend.quality.principal_test_strategy_mcq",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "principal"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёты и эталонный ответ корректны: стратегия C минимизирует годовую цену — 8,12 млн ₽ (округлённо 8,1 млн ₽)."
+      },
+      {
+        "family_id": "frontend.ssr_pods.principal_solve_t_k5",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify the key by computing the model: with 11350 rps and the CDN caching"
+      },
+      {
+        "family_id": "frontend.virtual_list.junior_fwd_k3",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "frontend.virtual_list.senior_solve_vh_k4",
+        "direction": "frontend",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm checking the row calculation: visible rows plus 16 overscan rows, times 18 n"
+      },
+      {
+        "family_id": "mobile.android.lifecycle_mcq",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Ключ D корректен: AlertDialog не меняет lifecycle Activity, а полупрозрачная отдельная Activity вызывает у A только onPause при открытии и onResume при возврате; onStop/onStart не вызываются."
+      },
+      {
+        "family_id": "mobile.arch.offline_sync_open",
+        "direction": "mobile",
+        "format": "open_answer",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "mobile.bundle_ota_size.senior_fwd_k5",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверка расчёта: 95 · 0,7 = 66,5; 66,5 · 0,65 = 43,225; 43,225 · 1,2 = 51,87; 5"
+      },
+      {
+        "family_id": "mobile.cold_start_ms.principal_solve_lzy_k5",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify the math: 20 modules at 36ms each gives 720ms base. Testing a mode"
+      },
+      {
+        "family_id": "mobile.crashfree_rollout.senior_fwd_k5",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверка расчёта: 600 000·0,25 = 150 000. Откладывают 60 %, остаётся 40 %, то ес"
+      },
+      {
+        "family_id": "mobile.deeplink_campaign.principal_solve_win_k5",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to verify this: starting from 3.7 million devices, removing 30% leaves 2."
+      },
+      {
+        "family_id": "mobile.frame_jank_budget.middle_solve_it_k3",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверим расчёт. Время на подкомпонент: 450 мкс = 0,45 мс.\n\nМножители: мемоизаци"
+      },
+      {
+        "family_id": "mobile.image_disk_cache.lead_solve_scr_k5",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm testing whether the model checks out: 12 cards at 220 KB each gives 2640 KB "
+      },
+      {
+        "family_id": "mobile.js.background_timer_bug",
+        "direction": "mobile",
+        "format": "find_bug",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "mobile.js.deeplink_route_fix",
+        "direction": "mobile",
+        "format": "choose_fix",
+        "grades": [
+          "intern",
+          "junior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "mobile.js.retry_backoff_output",
+        "direction": "mobile",
+        "format": "predict_output",
+        "grades": [
+          "intern",
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "mobile.lead.api_sunset_mcq",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm checking which versions silently break versus show an explanatory screen: ve"
+      },
+      {
+        "family_id": "mobile.lead_v2.dual_write_outbox_drift_ob3",
+        "direction": "mobile",
+        "format": "open_book_3step",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Evaluating grade_fit issues**\n\nI’m considering whether to mark grade_fit as fa"
+      },
+      {
+        "family_id": "mobile.lead_v2.pool_starvation_cascade_inc",
+        "direction": "mobile",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm tracing through the different variants to figure out which one causes double"
+      },
+      {
+        "family_id": "mobile.location_battery.principal_solve_hr_k5",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Считаем модель: замеры в час 36, из них экономия 45% → 36·0,55 = 19,8 замера/ч. "
+      },
+      {
+        "family_id": "mobile.memory_footprint.middle_solve_bmp_k3",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Each bitmap at ARGB_8888 is 8 MB, and downsampling plus RGB_565 cuts that to 4 M"
+      },
+      {
+        "family_id": "mobile.offline_sync_batch.middle_fwd_k4",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверка расчёта: 13 600/20 = 680 запросов; 680·0,3 = 204 с. Схлопывание: 204·0,"
+      },
+      {
+        "family_id": "mobile.principal.hotfix_policy_mcq",
+        "direction": "mobile",
+        "format": "mcq_concept",
+        "grades": [
+          "principal"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I should verify this by assuming a 30-day month with roughly 1.5 critical and 10"
+      },
+      {
+        "family_id": "qa.api.cursor_pagination_ob3",
+        "direction": "qa",
+        "format": "open_book_3step",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Проверим шаг 1. limit=3, пропуск возникает, когда записи на позициях 3 и 4 (гран"
+      },
+      {
+        "family_id": "qa.api_test_suite.intern_fwd_k2",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ключ B верен: (115·6 + 115·3)·3 = 3 105; условие однозначно, расчёт соответствует грейду intern"
+      },
+      {
+        "family_id": "qa.api_test_suite.senior_fwd_k5",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": ""
+      },
+      {
+        "family_id": "qa.bash.smoke_masked_failure",
+        "direction": "qa",
+        "format": "find_bug",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "qa.bash.trace_logs_output",
+        "direction": "qa",
+        "format": "predict_output",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "qa.bench_runs.middle_solve_dl_k2",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm working through the formula n = 2*(2σ/Δ)² with σ=11, trying to find the mini"
+      },
+      {
+        "family_id": "qa.bug_backlog.lead_solve_bl_k5",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Evaluating formula factors**\n\nI need to assess some ambiguities in the formula"
+      },
+      {
+        "family_id": "qa.coverage_effort.intern_fwd_k2",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Ключ A верен: 590000·0.38=224200; /40=5605; /10=560,5 → 561. Дистрактор D соответствует ошибке с лишней единицей в делителе (5605/11≈509,5→510). Пояснение упоминает поправочные коэффициенты контура, которых нет в условии, это стоит убрать из объяснения."
+      },
+      {
+        "family_id": "qa.coverage_effort.senior_fwd_k5",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёт верен: 79500/40/20=99,375; ×1,15=114,28; ×1,2=137,14; +1=138,14, округление вверх даёт 139 (C). Остальные варианты не совпадают с ключом."
+      },
+      {
+        "family_id": "qa.defect_escape.middle_solve_f_k3",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "qa.device_matrix.junior_fwd_k3",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "junior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "qa.device_matrix.senior_solve_dv_k4",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "qa.flaky_pipeline.middle_solve_sh_k2",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "qa.lead.retry_gate_fix",
+        "direction": "qa",
+        "format": "choose_fix",
+        "grades": [
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I need to output just one line of JSON, so I'm checking whether the reference ke"
+      },
+      {
+        "family_id": "qa.lead.test_plan_review_open",
+        "direction": "qa",
+        "format": "open_answer",
+        "grades": [
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Ключ согласован с условием: три вставленные проблемы (п.3, п.8, п.2) однозначно выводятся из текста, остальные пункты (4, 5, 6, 7, 9) корректны и не содержат ловушек. Рубрика с уровнями strong/medium/weak различима, ограничение 10–16 предложений выполнимо."
+      },
+      {
+        "family_id": "qa.lead_v2.pool_starvation_cascade_inc",
+        "direction": "qa",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm tracing through Variant D's logic: with op_1 running at epoch 1 then epoch 2"
+      },
+      {
+        "family_id": "qa.load_vusers.intern_fwd_k2",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "qa.load_vusers.senior_fwd_k5",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "{\"verdict\": \"PAS"
+      },
+      {
+        "family_id": "qa.manual_regress.lead_solve_n_k5",
+        "direction": "qa",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "**Analyzing case times**\n\nI'm looking into the time rechecks will take after a f"
+      },
+      {
+        "family_id": "qa.mock.called_once_bug",
+        "direction": "qa",
+        "format": "find_bug",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5 -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Нужно посчитать номера строк в коде.\n\n1: import pytest\n2: from unittest.mock imp"
+      },
+      {
+        "family_id": "security.access.bulk_owner_check_bug",
+        "direction": "security",
+        "format": "find_bug",
+        "grades": [
+          "junior",
+          "middle"
+        ],
+        "model": "openai/gpt-5.6-luna -> anthropic/claude-sonnet-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Ключ 13 верен: проверяется владелец только у requests[0]. Объяснение обрывается на фразе про лимит, это косметический дефект."
+      },
+      {
+        "family_id": "security.aead_backup.intern_fwd_k2",
+        "direction": "security",
+        "format": "mcq_concept",
+        "grades": [
+          "intern"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Let me verify: 44 TB converts to 44,000,000 MB, dividing by 100 MB/s gives 440,0"
+      },
+      {
+        "family_id": "security.aead_backup.senior_solve_tb_k4",
+        "direction": "security",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "Расчёт подтверждает: 165 ТБ ≈ 885,9 мин, 166 ТБ ≈ 891,2 мин; эталон E корректен. Незначительное обрывание пояснения не влияет на однозначность условия."
+      },
+      {
+        "family_id": "security.auth.password_storage_fix",
+        "direction": "security",
+        "format": "choose_fix",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "{\"verdict\": \"PASS\", \"unambiguous\": true, \"grade_fit\": true, \"note\": \"ключ D корр"
+      },
+      {
+        "family_id": "security.cors_waf_rps.principal_solve_ncap_k5",
+        "direction": "security",
+        "format": "mcq_concept",
+        "grades": [
+          "senior"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": ""
+      },
+      {
+        "family_id": "security.deps_audit.middle_fwd_k4",
+        "direction": "security",
+        "format": "mcq_concept",
+        "grades": [
+          "middle"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "security.lead_v2.cas_epoch_fence_bug",
+        "direction": "security",
+        "format": "find_bug",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "openai/gpt-5.6-luna",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "ок"
+      },
+      {
+        "family_id": "security.lead_v2.pool_starvation_cascade_inc",
+        "direction": "security",
+        "format": "incident_sim",
+        "grades": [
+          "senior",
+          "lead"
+        ],
+        "model": "anthropic/claude-haiku-5.5",
+        "verdict": "PASS",
+        "unambiguous": true,
+        "grade_fit": true,
+        "note": "I'm tracing through the logic to see which variant causes double counting due to"
+      }
+    ]
+  }
+}

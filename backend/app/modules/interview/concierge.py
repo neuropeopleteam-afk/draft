@@ -41,6 +41,9 @@ ROLES = ("all", "candidate", "employer", "fsp")
 
 TTS_HOST = "api.elevenlabs.io"
 TTS_MODEL = os.environ.get("CONCIERGE_TTS_MODEL", "eleven_turbo_v2_5")
+# Живые ответы модели (каждый раз новый текст, в кэш не идут): быстрая модель того же голоса — первый звук 0,6 с вместо
+# 1,3 с (замер 21.10 через ретранслятор). Реплики обзора и фразы сценария — прежней моделью из кэша (без пересинтеза).
+TTS_LIVE_MODEL = os.environ.get("CONCIERGE_TTS_LIVE_MODEL", "eleven_flash_v2_5")
 TTS_SPEED = float(os.environ.get("CONCIERGE_TTS_SPEED", "1.0"))
 # Лицо Насти (живой аватар). Экспериментальная «манера» (customStylePrompt) по опыту соседних живых стендов портит
 # движение губ, поэтому по умолчанию выключена; выразительность низкая, как у работающих стендов (0,09–0,35):
@@ -152,12 +155,32 @@ class TtsError(RuntimeError):
     pass
 
 
-def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
-    """Голос фразы кусками по мере синтеза; постоянные фразы — из кэша. Куски PCM всегда чётной длины."""
+_TTS_POOL: dict = {}
+_TTS_LOCK = threading.Lock()
+
+
+def _tts_client(verify):
+    """Один клиент на процесс (на каждый способ проверки сертификата): соединение с ретранслятором переиспользуется —
+    без рукопожатия TLS на каждой фразе (≈0,15–0,3 с на фразу)."""
+    import httpx
+
+    key = verify if isinstance(verify, (str, bool)) else "ctx"
+    with _TTS_LOCK:
+        c = _TTS_POOL.get(key)
+        if c is None:
+            c = httpx.Client(timeout=httpx.Timeout(25.0, connect=6.0), verify=verify,
+                             limits=httpx.Limits(max_connections=16, max_keepalive_connections=8, keepalive_expiry=90))
+            _TTS_POOL[key] = c
+        return c
+
+
+def synth_stream(text: str, fmt: str = "pcm24", live: bool = False) -> Iterator[bytes]:
+    """Голос фразы кусками по мере синтеза; постоянные фразы — из кэша. Куски PCM всегда чётной длины.
+    live — живой ответ модели: быстрая модель синтеза, без кэша (текст не повторится, диск не засоряем)."""
     clean = _clean(text)
     if not clean:
         return
-    hit = cached(clean, fmt)
+    hit = None if live else cached(clean, fmt)
     if hit:
         step = 19200
         for i in range(0, len(hit), step):
@@ -175,7 +198,7 @@ def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
     r = relay.route(TTS_HOST, path, {"xi-api-key": key, "Content-Type": "application/json", "Accept": "*/*"})
     body = {
         "text": clean,
-        "model_id": TTS_MODEL,
+        "model_id": TTS_LIVE_MODEL if live else TTS_MODEL,
         "language_code": "ru",
         "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "style": 0.0, "use_speaker_boost": True,
                            "speed": TTS_SPEED},
@@ -186,7 +209,8 @@ def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
     tail = b""
     t0 = time.monotonic()
     try:
-        with httpx.Client(timeout=httpx.Timeout(25.0, connect=6.0), verify=r.verify) as c:
+        c = _tts_client(r.verify)
+        if True:
             with c.stream("POST", r.url, headers=r.headers, json=body) as resp:
                 if resp.status_code >= 400:
                     raise TtsError(f"tts_http_{resp.status_code}")
@@ -218,8 +242,10 @@ def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
         raise
     except Exception as e:  # noqa: BLE001 — сеть, ретранслятор
         raise TtsError(type(e).__name__) from e
-    log.info("concierge tts %s: %d байт за %d мс", fmt, len(whole), int((time.monotonic() - t0) * 1000))
-    _store(clean, fmt, bytes(whole))
+    log.info("concierge tts %s%s: %d байт за %d мс", fmt, " live" if live else "", len(whole),
+             int((time.monotonic() - t0) * 1000))
+    if not live:
+        _store(clean, fmt, bytes(whole))
 
 
 def synth_bytes(text: str, fmt: str = "pcm24") -> bytes:
@@ -277,6 +303,8 @@ PHRASES: dict[str, str] = {
     "time_up": "На этом моё время с вами заканчивается. Спасибо за разговор. Если понадоблюсь — нажмите на меня снова.",
     "resume_tour": "Продолжаю.",
     "back_tour": "Возвращаюсь к обзору.",
+    # экран, который попросили: Настя сама не уходит; тишина 20 с — один такой вопрос (замечание владельца 21.10 17:33)
+    "detour_nudge": "Рассказать про этот экран подробнее — или идём дальше?",
     "sorry": "Не расслышала. Повторите, пожалуйста.",
     "back_to_tour": "Вернёмся к обзору?",
     # между разделами обзора — спросить, есть ли вопросы, и ждать ответа
@@ -313,14 +341,15 @@ PHRASES: dict[str, str] = {
     "skip_public": "Хорошо, тогда дальше — раздел для технического жюри.",
     "skip_end": "Хорошо. Это был последний раздел. Спрашивайте или скажите, что показать.",
     "done_all": "Это главное о «Драфте». Спрашивайте о чём угодно или скажите, что показать подробнее.",
-    "done_candidate": "Это весь кабинет кандидата — от регистрации до приглашений. Могу показать любой экран подробнее, "
-                      "рассказать про сторону работодателя или ответить на вопросы.",
-    "done_employer": "Это весь кабинет работодателя. Могу показать любой экран подробнее, рассказать путь кандидата "
-                     "или ответить на вопросы.",
-    "done_fsp": "Это весь кабинет Федерации. Могу показать подробнее любой экран, сторону кандидата или работодателя — или ответить на вопросы.",
+    "done_candidate": "Это главное в кабинете кандидата. Кубки, сообщения, тройки, мои данные и настройки покажу по "
+                      "просьбе — просто назовите. Или расскажу про сторону работодателя.",
+    "done_employer": "Это главное в кабинете работодателя. Команду, сообщения, тройки, кубки и ATS покажу по просьбе — "
+                     "просто назовите. Или расскажу путь кандидата.",
+    "done_fsp": "Это главное в кабинете Федерации. Воронку, кубки, выгоду и методику покажу по просьбе — просто назовите. "
+                "Или покажу сторону кандидата или работодателя.",
     "hello": "Здравствуйте. Как к вам обращаться?",
     "ask_role": "Подскажите, кто вы: кандидат, работодатель или Федерация? Покажу именно ваш кабинет — "
-                "начнём с регистрации и пройдём по всем разделам.",
+                "главное за несколько минут.",
     "nomic": "Здравствуйте. Я Настя, ИИ-проводник по «Драфту». Микрофон недоступен, поэтому я просто проведу вас по сайту.",
 }
 
@@ -437,7 +466,7 @@ STEP_BEATS: dict[str, list[str]] = {
     "cand-assessment": [
         "Сначала выбирают грейд, который хотите подтвердить, — от стажёра до Principal.",
         "Подсказка по стажу предлагает уровень, но выбор всегда за вами.",
-        "Режимов два: полный тест, который подтверждает грейд, и экспресс на пять–семь заданий — предварительная оценка.",
+        "Режимов два: полный тест и экспресс — до семи коротких заданий; правило подтверждения у них одно.",
         "Тест адаптивный: каждое следующее задание подбирается по прошлым ответам, поэтому он короче обычного.",
     ],
     "cand-category": [
@@ -630,10 +659,75 @@ STEP_BEATS: dict[str, list[str]] = {
 
 STEP_IDS = tuple(STEP_BEATS.keys())
 
+# Полный показ экрана — когда его просят («покажи Полигон», «подробнее», «полностью») не по порядку обзора: Настя сама
+# нажимает главные кнопки экрана. В STEP_IDS не входит (модель выбирает обычный шаг, браузер берёт «<шаг>-full»).
+# Замечание владельца 21.10 17:33: «покажи ИИ-Полигон» — три фразы, через 15 с ушла дальше сама.
+FULL_BEATS: dict[str, list[str]] = {
+    "warroom-full": [
+        "Боевой ИИ-Полигон — практический этап для старших уровней и витрина для технического жюри. Покажу оба "
+        "режима в работе.",
+        "Первый режим — живой архитектурный полигон: в высоконагруженной системе идёт авария, и кандидат её чинит — "
+        "выбирает меры, правит код и объясняет решение.",
+        "Запускаю инцидент: сама выберу меры в пределах бюджета, поправлю код и опишу, почему так.",
+        "Вот метрики под нагрузкой: успешный поток, время ответа, доля ошибок и потери бизнеса — видно, что "
+        "изменилось после исправления.",
+        "А это разбор: устранён ли инцидент, итоговый балл и уровень, который подтверждает решение. Он учитывается в "
+        "итоге проверки кандидата.",
+        "Второй режим — полигон перехвата ИИ-читера: слева приёмы нечестного кандидата, справа — что видит проверка.",
+        "Нажимаю «Показать перехват обмана»: кандидат копирует задание в нейросеть, но в буфер уходит вариант-двойник "
+        "с другими числами и невидимой меткой.",
+        "Ответ нейросети приходит с числами двойника — и проверка показывает, какие сигналы сработали и почему.",
+        "При этом попытку не аннулируют: назначается дополнительный этап или устная защита. Можно нажать любой "
+        "другой приём слева — разберу и его.",
+    ],
+}
+
+# Показ для жюри на 2 минуты (питч 24.10, текст — «Аватар — показ для жюри 2 минуты, текст по экранам»). Отдельный
+# маршрут «pitch»: в STEP_IDS не входит (модель туда не ведёт), реплики заранее озвучиваются и кэшируются.
+# Цифры — без точных чисел, которые меняет волна 2б (спортсменов — «больше двух тысяч»).
+PITCH_BEATS: dict[str, list[str]] = {
+    "pitch-qr": [
+        "Здравствуйте. Я Настя, ИИ-проводник «Драфта».",
+        "Наведите камеру телефона на QR-код: пока я показываю платформу, вы пройдёте мини-тест из трёх заданий, "
+        "а в конце увидим вас в подборке работодателя.",
+    ],
+    "pitch-needs": ["Компания просто вставляет текст вакансии."],
+    "pitch-need": [
+        "Разбираю требования: стек выделен с цитатами из текста, дискриминационные формулировки убраны.",
+        "И сразу — подборка: у каждого видно, почему он подходит и чем подтверждён навык — тестом, задачей или "
+        "протоколом ФСП.",
+    ],
+    "pitch-compare": [
+        "ИИ-советник руководителя: первым — тот, у кого все обязательные навыки подтверждены тестом.",
+        "И подсказывает, о чём спросить на финальном созвоне.",
+    ],
+    "pitch-red": [
+        "Проверим честность подбора: меняю у всех кандидатов имя, пол и возраст.",
+        "Выдача не изменилась — подбор смотрит только на подтверждённые навыки.",
+    ],
+    "pitch-defense": [
+        "Теперь сторона кандидата. Грейд подтверждает адаптивный тест: каждое задание подбирается по прошлым ответам.",
+        "А после теста — финальный этап: три минуты разговора со мной по ответам самого кандидата: дополнительная "
+        "проверка, что он сам понимает свои решения.",
+    ],
+    "pitch-fsp": [
+        "Для Федерации спортивного программирования — таланты по официальным протоколам соревнований: больше двух "
+        "тысяч спортсменов.",
+        "А спортивный разряд переводится в понятный работодателю ИТ-грейд.",
+    ],
+    "pitch-final": [
+        "А вот и зал: результаты мини-теста сразу попадают в подборку работодателя, а участникам приходит "
+        "приглашение с зарплатной вилкой.",
+        "Грейд подтверждён — компании приходят сами.",
+    ],
+}
+
 
 def beats() -> dict[str, list[str]]:
     out = {k: list(v) for k, v in STEP_BEATS.items()}
     out["val-arena"] = [*STEP_BEATS["val-arena"], *_arena_lines()]
+    out.update({k: list(v) for k, v in PITCH_BEATS.items()})
+    out.update({k: list(v) for k, v in FULL_BEATS.items()})
     return out
 
 
@@ -759,6 +853,10 @@ def _live_numbers_cached(_key: tuple) -> dict:
         ac = nums.get("anticheat") or {}
         if isinstance(ac.get("claim_ru"), str) and ac["claim_ru"].strip():
             out["anticheat_claim"] = ac["claim_ru"].strip()
+        bk = nums.get("bank") or {}
+        for k in ("families", "variants_20seeds", "checks", "checks_failed", "directions"):
+            if isinstance(bk.get(k), int) and not isinstance(bk.get(k), bool):
+                out["bank_" + k] = bk[k]
         dc = (nums.get("demo") or {}).get("candidates")
         if isinstance(dc, int) and dc > 0:
             out["demo_candidates"] = dc
@@ -819,10 +917,38 @@ def _grade_sentence(n: dict) -> str:
     return ("Точность грейда: " + "; ".join(parts) + ".") if parts else ""
 
 
+def _spoken_claim(t: str) -> str:
+    """Заявление из NUMBERS.json — для речи: без скобок с латиницей (поставщики моделей на сайте не называются, хеши,
+    формулы) и без технических параметров симуляции."""
+    t = re.sub(r"\s*\([^()]*[A-Za-zθ][^()]*\)", "", t or "")
+    t = re.sub(r"\s*θ\s*~\s*N\([^)]*\)[,;]?", "", t)
+    return re.sub(r"\s{2,}", " ", t).strip()
+
+
+def _bank_sentence(n: dict) -> str:
+    if not isinstance(n.get("bank_families"), int):
+        return ""
+    sp = lambda v: f"{v:,}".replace(",", "\u00a0")  # noqa: E731
+    parts = [f"Банк заданий — {sp(n['bank_families'])} параметрических семейств"]
+    if isinstance(n.get("bank_variants_20seeds"), int):
+        parts.append(f"{sp(n['bank_variants_20seeds'])} проверенных вариантов на 20 зёрнах")
+    if isinstance(n.get("bank_checks"), int):
+        parts.append(f"{sp(n['bank_checks'])} проверок ключей исполнением кода, ошибок — {n.get('bank_checks_failed', 0)}")
+    if isinstance(n.get("bank_directions"), int):
+        parts.append(f"{n['bank_directions']} ИТ-направлений")
+    return ", ".join(parts) + ". "
+
+
+# Когда в контекст модели нужен блок цифр: вопрос про цифры/проверку/банк — или уточнение к ответу с процентами
+# («а в жёстких условиях?»): без блока модель додумывала («точность падает»), хотя в жёстких она выше.
+_NUMBERS_Q = re.compile(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак|банк|семейств|вариант|сколько задан|"
+                        r"жёстк|жестк|стандартн|услови|вердикт|грейд|оценщик|интервал|ложн|списыв|утечк|симуляц")
+
+
 def numbers_chunk() -> dict[str, str]:
     n = live_numbers()
-    grade = _grade_sentence(n)
-    anti = str(n.get("anticheat_claim") or "")
+    grade = _spoken_claim(_grade_sentence(n))
+    anti = _spoken_claim(str(n.get("anticheat_claim") or ""))
     body = (
         f"Проверка механики (/validation), «Арена метрик» (данные на {n['as_of']}). Драфт против поиска по резюме на "
         f"мире со скрытой истиной: точность первой пятёрки — {_pc(n['p5'])}, первой десятки — {_pc(n['p10'])}; "
@@ -835,6 +961,7 @@ def numbers_chunk() -> dict[str, str]:
         body += anti.rstrip(".") + ". "
     else:
         body += "Цифры по защите от списывания — на экране «Проверка» (/validation). "
+    body += _bank_sentence(n)
     body += "Это синтетика: проверяется механика, а не люди."
     return {
         "id": "validation_numbers",
@@ -1431,7 +1558,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
                     # «открой кабинет работодателя» — обзор этого кабинета (уже смотрели — браузер пройдёт коротко)
                     return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": cab_role,
                             "reply": _start_reply(name, cab_role, False, first_tour, skip_reg=_skip_reg(msg, s))}
-                return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto"}
+                return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto", "full": bool(FULL_ASK.search(_norm(msg)))}
         quick = classify(msg, touring=touring, paused=paused)
         if quick:
             ack("instant")
@@ -1465,7 +1592,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         goto = detect_goto(msg, path=current_path, step=step_id) if not is_q and words_n <= 7 and not (clause and words_n > 3) else None
         if goto:
             ack("instant")
-            return {**base, "kind": "instant", "action": "goto", "step": goto, "phrase": "goto"}
+            return {**base, "kind": "instant", "action": "goto", "step": goto, "phrase": "goto", "full": bool(FULL_ASK.search(_norm(msg)))}
 
     if no_llm:
         # дневной лимит ходов модели исчерпан — без модели: экран по словам реплики или ответ из базы знаний
@@ -1478,8 +1605,8 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     msgs = brain.build_messages(msg, sid=session_id, name=name, role=cur_role, path=current_path, step=step_id,
                                 touring=touring, paused=paused, screen=screen, history=history, awaiting=awaiting,
                                 last_said=last_said, accepted=accepted,
-                                numbers=numbers_chunk() if re.search(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак",
-                                                                     msg.lower()) or current_path.startswith("/validation") else None)
+                                numbers=numbers_chunk() if _NUMBERS_Q.search(msg.lower()) or current_path.startswith("/validation")
+                                or "процент" in (last_said or "").lower() else None)
     ctx = {"msg": msg, "name": name, "cur_role": cur_role, "touring": touring, "paused": paused, "step_id": step_id,
            "current_path": current_path, "first_tour": first_tour, "sid": session_id}
     if defer_llm:
@@ -1569,7 +1696,14 @@ def _decide(d: dict, ctx: dict, base: dict) -> dict:
            "point": point.strip() if point and action == "point" else None, "phrase": None, "reply": ""}
     if action == "scroll":
         out["dir"] = scroll_dir
+    if action == "goto" and (d.get("full") is True or FULL_ASK.search(_norm(msg))):
+        out["full"] = True   # «подробнее», «полностью», «почему не рассказала» — экран целиком, а не молча
     return out
+
+
+# Просят экран целиком или недовольны коротким показом (стенограмма 21.10 17:33: «Почему ты дальше про него не
+# рассказала? Я хотел полностью»).
+FULL_ASK = re.compile(r"подробн|полност|целиком|до конца|детальн|всё про|все про|не рассказал|не показал|не дорассказ")
 
 
 LEAD_ROLE = "Подскажите, кто вы: кандидат, работодатель или из Федерации? Покажу именно ваш кабинет."
@@ -1665,6 +1799,9 @@ def _j(d: dict) -> bytes:
     return (json.dumps(d, ensure_ascii=False) + "\n").encode()
 
 
+_GAP_B64 = base64.b64encode(b"\0" * int(24000 * 2 * 0.22)).decode()   # пауза между фразами живого ответа, 24 кГц
+
+
 def turn_stream(message: str, **kw) -> Iterator[bytes]:
     """NDJSON: ack → meta (решение) → [say (фраза) → pcm…]… → end. Быстрые команды — мгновенно, без модели. Ход модели —
     потоком: решение первой строкой ответа (meta через ≈1,8 с — экран начинает открываться), затем каждая фраза сразу
@@ -1723,7 +1860,7 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
 
             def tts_job(text: str, cq: queue.Queue) -> None:
                 try:
-                    for chunk in synth_stream(text, "pcm24"):
+                    for chunk in synth_stream(text, "pcm24", live=True):
                         cq.put(("pcm", chunk))
                 except TtsError as e:
                     cq.put(("err", str(e)))
@@ -1769,6 +1906,9 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
                 if j is None:
                     break
                 t, cq = j
+                if spoken:
+                    # синтез срезает тишину в начале каждой фразы — без паузы фразы слипаются; 220 мс — как вдох
+                    yield _j({"t": "pcm", "b64": _GAP_B64})
                 spoken.append(t)
                 yield _j({"t": "say", "text": t})
                 while True:
