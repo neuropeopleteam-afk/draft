@@ -9,6 +9,8 @@ import { MODE_SHORT, Phase } from "../shared";
 import { CameraStats } from "../../proctor/CameraStats";
 import { useDemoUi } from "../../lib/juryMode";
 import FspRankConverter from "../../components/FspRankConverter";
+import { FspCabinet3DStage } from "../../components/Fsp3DShowcase";
+import { NUMBERS } from "../../lib/numbers";
 import { TalentMap } from "./TalentMap";
 
 type Rep = any;
@@ -182,23 +184,20 @@ function Head({ title, subtitle, csv }: { title: string; subtitle: string; csv?:
     setErr(null);
     try { await apiDownload(`/fsp-cabinet/export/${id}.csv${q(days)}`, `fsp_${id}.csv`); } catch (e) { setErr(errText(e)); }
   }
+  const fspRegions = (NUMBERS as any)?.fsp_facts?.regions ?? 89;
+  const fspClaim = (NUMBERS as any)?.fsp_facts?.claim_ru ?? "89 действующих региональных представительств ФСП в России";
   return (
     <div className="space-y-4">
-      <div className="fsp-hero-banner p-5 sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="fsp-stage-card overflow-hidden rounded-3xl p-5 sm:p-6">
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="min-w-0 flex-1 [&_h1]:text-white [&_p]:text-white/80">
-            <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#A59DFF]">
-              Федерация спортивного программирования России · 89 регионов
+            <p className="mb-1.5 inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#B8B4FF]" title={fspClaim}>
+              <i className="fsp-pulse-dot" aria-hidden="true" />
+              Федерация спортивного программирования России · {fspRegions} регионов
             </p>
             <PageTitle title={title} subtitle={subtitle} />
           </div>
-          <svg viewBox="0 0 120 56" className="hidden h-14 w-28 shrink-0 opacity-85 sm:block" fill="none" aria-hidden="true">
-            <path d="M12 44 V24 Q12 14 22 14 H62 Q72 14 72 24 V34 Q72 44 82 44 H108" stroke="#7C70FF" strokeWidth="1.8" />
-            <circle cx="12" cy="44" r="4" fill="#402FFF" />
-            <circle cx="44" cy="14" r="4" fill="#EDEDED" />
-            <circle cx="72" cy="29" r="4" fill="#402FFF" />
-            <circle cx="108" cy="44" r="4.5" fill="#EC1D35" />
-          </svg>
+          <FspCabinet3DStage kind="medallion" badge={`${fspRegions} регионов ФСП`} sub="Аналитика и кубки" />
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">

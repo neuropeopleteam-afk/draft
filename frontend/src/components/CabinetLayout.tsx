@@ -83,57 +83,58 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F3F5FC] via-[#F7F8FE] to-[#EEF1FB] md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
-      <aside aria-label="Меню кабинета" className="sticky top-0 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-gradient-to-b md:from-white md:via-[#FAFbff] md:to-[#F2F5FE] md:backdrop-blur-none">
+    <div className="min-h-screen bg-gradient-to-b from-[#EEF1FB] via-[#F5F7FE] to-[#E8ECFA] md:grid md:grid-cols-[17.5rem_minmax(0,1fr)]">
+      <aside aria-label="Меню кабинета" className="fsp-cabinet-sidebar sticky top-0 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:flex md:h-screen md:flex-col md:border-b-0 md:backdrop-blur-none">
         <div className="flex h-12 items-center justify-between gap-2 px-4 md:block md:h-auto md:px-5 md:py-5">
-          <NavLink to="/" aria-label="На главную"><Logo /></NavLink>
+          <NavLink to="/" aria-label="На главную" className="md:[&_span]:text-white"><Logo /></NavLink>
           {demoUi && <GuideSlot where="header" />}
-          <p className="ml-auto min-w-0 truncate peer-[:not(:empty)]:hidden text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-5 md:text-left md:text-xs md:uppercase md:tracking-[0.14em] md:text-brand-lavender">
+          <p className="ml-auto min-w-0 truncate peer-[:not(:empty)]:hidden text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-5 md:flex md:items-center md:gap-2 md:text-left md:font-mono md:text-[11px] md:font-bold md:uppercase md:tracking-[0.14em] md:text-[#A59DFF]">
+            <span className="hidden h-1.5 w-1.5 rounded-full bg-[#4BE3A3] shadow-[0_0_8px_#4BE3A3] md:inline-block" aria-hidden="true" />
             <span className="md:hidden">{SHORT[role] ?? title}</span><span className="hidden md:inline">{title}</span>
           </p>
           <button type="button" onClick={exit} className="shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold text-brand-plum hover:bg-brand-blush/50 hover:text-brand md:hidden">
             Выйти
           </button>
         </div>
-        <nav ref={navRef} className="nav-strip hidden gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
+        <nav ref={navRef} className="nav-strip hidden gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-1 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
           <NavItem to={base} end label="Обзор" />
           {sections.filter((s) => !s.more).map((s) => (
             <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} badge={badgeFor(s)} also={secPaths(s).some(on)} />
           ))}
           {moreS.length > 0 && (activeMore
-            ? <p className="block shrink-0 whitespace-nowrap px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Ещё</p>
+            ? <p className="block shrink-0 whitespace-nowrap px-3 pb-1 pt-3 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-brand-lavender md:text-[#9DA5E8]">Ещё</p>
             : <button type="button" aria-expanded={moreOpen} onClick={() => setMoreOpen((v) => !v)}
-                className="flex shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-lg border border-dashed border-brand/30 px-3 py-2 text-left text-sm font-semibold text-brand-plum hover:border-brand/50 hover:bg-brand-blush/40 md:mt-1 md:w-full">
+                className="flex shrink-0 items-center justify-between gap-2 whitespace-nowrap rounded-xl border border-dashed border-brand/30 px-3 py-2 text-left text-sm font-semibold text-brand-plum hover:border-brand/50 hover:bg-brand-blush/40 md:mt-1 md:w-full md:border-white/20 md:text-[#DCE2FF] md:hover:border-[#A59DFF] md:hover:bg-white/10">
                 {moreOpen ? "Свернуть" : `Ещё ${moreS.length}`}<span aria-hidden="true" className="text-xs">{moreOpen ? "▴" : "▾"}</span></button>)}
           {(moreOpen || activeMore) && moreS.map((s) => (
             <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} badge={badgeFor(s)} also={secPaths(s).some(on)} />
           ))}
         </nav>
-        <div className="hidden border-t border-brand-night/10 px-5 py-4 md:block">
+        <div className="hidden border-t border-white/12 bg-white/[0.03] px-5 py-4 md:block">
           {demoUi && <GuideSlot where="sidebar" />}
-          <p className="truncate text-sm font-semibold text-brand-night" title={me.email}>
+          <p className="truncate text-sm font-bold text-white" title={me.email}>
             {demoUi && isJury(me.email)
               ? whoAmI(me.email).replace(/^демо-/, "Демо-")
               : me.candidate?.full_name || cleanCompanyName(me.employer?.company?.name) || me.email}
           </p>
           {me.candidate?.current_category_id && (
-            <p className="mt-0.5 truncate text-xs text-brand-ink/65">{catTitle(me.candidate.current_category_id)}</p>
+            <p className="mt-0.5 truncate font-mono text-xs text-[#A59DFF]">{catTitle(me.candidate.current_category_id)}</p>
           )}
           <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1">
             {demoUi && (
-              <NavLink to="/demo" className="text-xs font-semibold text-brand hover:underline">
+              <NavLink to="/demo" className="text-xs font-semibold text-[#A59DFF] hover:text-white hover:underline">
                 Сменить роль
               </NavLink>
             )}
-            <NavLink to="/support" className="text-xs font-semibold text-brand-ink/70 hover:text-brand-night">
+            <NavLink to="/support" className="text-xs font-semibold text-white/70 hover:text-white">
               Помощь
             </NavLink>
             {me.role === "admin" && (
-              <NavLink to="/admin" className="text-xs font-semibold text-brand-plum hover:underline">
+              <NavLink to="/admin" className="text-xs font-semibold text-[#A59DFF] hover:underline">
                 Админ-панель
               </NavLink>
             )}
-            <button type="button" onClick={exit} className="ml-auto rounded text-sm font-semibold text-brand-plum hover:text-brand">
+            <button type="button" onClick={exit} className="ml-auto rounded text-sm font-semibold text-[#FF6B7D] hover:text-white">
               Выйти
             </button>
           </div>
@@ -362,10 +363,10 @@ function NavItem({ to, label, end, hint, badge = 0, badgeLabel = "непрочи
     <NavLink to={to} end={end} title={hint}
       className={({ isActive: a }) => {
         const isActive = a || also;
-        return `block shrink-0 whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-medium transition-all md:py-2 md:whitespace-normal ${
+        return `block shrink-0 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-medium transition-all md:whitespace-normal ${
           isActive
-            ? "border-l-[3px] border-brand bg-gradient-to-r from-brand/15 via-brand/8 to-transparent text-brand-night font-bold shadow-[0_2px_10px_-4px_rgba(64,47,255,0.25)]"
-            : "text-brand-ink/75 hover:bg-brand-blush/50 hover:text-brand-night"
+            ? "border-l-[3px] border-[#6C5EFF] bg-gradient-to-r from-[#402FFF]/35 via-[#402FFF]/15 to-transparent text-brand-night font-bold shadow-[0_4px_18px_-4px_rgba(64,47,255,0.45)] md:text-white"
+            : "text-brand-ink/75 hover:bg-brand-blush/50 hover:text-brand-night md:text-[#C8CEFF]/80 md:hover:bg-white/[0.07] md:hover:text-white"
         }`;
       }}>
       {label}
