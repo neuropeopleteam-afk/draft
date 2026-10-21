@@ -174,7 +174,7 @@ def _v2_factors(a: dict, b: dict) -> list[dict]:
 
     def val(x, k):
         c = x["comps"]
-        if k in ("test", "margin", "over", "p_below"):
+        if k in ("test", "margin", "in_band", "level_ok"):
             return th(x)
         if k == "fsp":
             return f"сила паспорта {_n(c.get('fsp') or 0)}" if c.get("fsp") else "нет подтверждённых"

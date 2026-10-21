@@ -450,12 +450,12 @@ def score_candidate(b: Bundle, req: dict, weights: dict | None = None) -> tuple[
              # проваленное задание не должно поднимать над тем, кто его не получал)
              "probe": round(2.0 * probe - 1.0, 4) if b.probes_t1 else 0.0,
              "failed": round(failed_w["Обязательно"], 3), "provisional": 1.0 if b.provisional else 0.0,
-             "over": ltr.over_of(th, GRADE_CUTS.get(nxt) if nxt else None),
-             "p_below": ltr.p_below_of(th, t.get("se"), GRADE_CUTS.get(g)) if has_test else 0.0}
+             "in_band": ltr.in_band_of(th, GRADE_CUTS.get(nxt) if nxt else None) if has_test else 0.0,
+             "level_ok": ltr.level_ok_of(th, t.get("se"), GRADE_CUTS.get(g)) if has_test else 0.0}
         W2 = weights if (weights and "margin" in weights) else ltr.weights()
         comps.update({"margin": x["margin"], "required": x["required"], "desired": x["desired"],
-                      "failed": x["failed"], "provisional_flag": x["provisional"], "over": x["over"],
-                      "p_below": x["p_below"], "probe_v2": x["probe"],
+                      "failed": x["failed"], "provisional_flag": x["provisional"], "in_band": x["in_band"],
+                      "level_ok": x["level_ok"], "probe_v2": x["probe"],
                       "contrib": ltr.contributions(x, W2)})
         return ltr.score(x, W2), comps, reasons
     W = weights or WEIGHTS  # learn-v1 («учитывать решения компании», по умолчанию выкл.) — matching/learn.py

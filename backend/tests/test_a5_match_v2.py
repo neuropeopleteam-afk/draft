@@ -75,12 +75,12 @@ def test_declared_stack_and_claimed_grade_never_change_score(world):
         assert s0 == s1 and c0.get("contrib") == c1.get("contrib")
 
 
-def test_over_and_p_below_features():
-    assert ltr.over_of(1.6, 1.0) > 0.7 and ltr.over_of(0.2, 1.0) < 0.25 and ltr.over_of(None, 1.0) == 0.0
-    assert ltr.over_of(1.2, None) == 0.0  # у Senior следующего грейда нет
-    assert ltr.p_below_of(-0.3, 0.4, 0.0) > 0.7 and ltr.p_below_of(0.6, 0.4, 0.0) < 0.1
-    assert abs(ltr.p_below_of(0.0, 0.4, 0.0) - 0.5) < 1e-6
-    assert "over" in ltr.FEATURES and "p_below" in ltr.NEGATIVE and "over" in ltr.FREE
+def test_band_and_level_features():
+    assert ltr.in_band_of(1.6, 1.0) < 0.3 and ltr.in_band_of(0.2, 1.0) > 0.75 and ltr.in_band_of(None, 1.0) == 0.0
+    assert ltr.in_band_of(1.2, None) == 1.0  # у Senior следующего грейда нет — «сильнее запроса» не бывает
+    assert ltr.level_ok_of(-0.3, 0.4, 0.0) < 0.3 and ltr.level_ok_of(0.6, 0.4, 0.0) > 0.9
+    assert abs(ltr.level_ok_of(0.0, 0.4, 0.0) - 0.5) < 1e-6 and ltr.level_ok_of(None, 0.4, 0.0) == 0.0
+    assert "in_band" in ltr.FREE and "level_ok" in ltr.POSITIVE and set(ltr.NEGATIVE) == {"failed", "provisional"}
 
 
 def test_weights_file_trained_on_dev_only_with_sign_constraints():

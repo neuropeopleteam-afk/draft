@@ -27,7 +27,7 @@ FALLBACK = {"test": 0.45, "margin": 0.20, "fsp": 0.15, "required": 0.0, "desired
             "failed": -0.45, "provisional": -0.05}
 LIN_FEATS = ("test", "margin", "fsp", "required", "desired", "probe", "failed", "provisional", "over")
 SIGNS = {"test": 1, "margin": 1, "fsp": 1, "required": 1, "desired": 1, "probe": 1, "failed": -1, "provisional": -1,
-         "over": 0, "p_below": -1, "p_over": 0}
+         "over": 0, "p_below": -1, "p_over": 0, "in_band": 0, "level_ok": 1}
 GBM_ALLOWED = ("test", "margin", "fsp", "required", "desired", "probe", "failed", "provisional", "theta_cut",
                "theta_next", "se", "above", "n_req")
 GBM_ALL = GBM_ALLOWED + ("stack_cov", "n_declared", "decl_grade_diff", "years", "bm25", "decl_cov_raw")
@@ -50,6 +50,9 @@ def load(path: str, label: str = "rel") -> dict:
         d["p_below"][d["theta_cut"] <= -2.999] = 0.0
         d["p_over"] = norm.cdf(d["theta_next"] / se)  # P(θ выше порога следующего грейда | θ̂, SE)
         d["p_over"][d["theta_next"] <= -2.999] = 0.0
+        has = d["theta_cut"] > -2.999  # есть тест и грейд подтверждён (как has_test в продукте)
+        d["in_band"] = np.where(has, 1.0 - d["over"], 0.0)  # ltr.in_band_of
+        d["level_ok"] = np.where(has, 1.0 - d["p_below"], 0.0)  # ltr.level_ok_of
         if label == "l2":  # шкала 0–2 (сверка определений с соперником): релевантен = 2
             W[s] = {"F": d, "y": z[f"{s}_y2"], "qid": z[f"{s}_qid"], "idcg": z[f"{s}_idcg2"], "nrel": z[f"{s}_nrel2"]}
         else:
