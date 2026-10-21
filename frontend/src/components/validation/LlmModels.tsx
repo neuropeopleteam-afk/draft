@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { num, pct, useApi } from "../ui";
 import { ScrollX } from "../A11y";
+import { makeModelAlias, noVendor } from "./noVendor";
 
-/** /validation#experts: какая модель где — облачные модели, открытая Qwen на CPU и правила на одних и тех же наборах
+/** /validation#experts: какая модель где — облачные модели, открытая модель на CPU и правила на одних и тех же наборах
+ * Названия моделей на экран — через noVendor/makeModelAlias (поставщики на сайте не называются).
  * (backend: app/modules/validation/data/llm_models.json ← tools/llm/llm_models_table.py, подробно — docs/LLM.md). */
 
 type Needs = { ok?: number | null; n: number; p: number; r: number; f1: number; median_s?: number | null; date: string; note?: string };
@@ -21,20 +23,21 @@ export default function LlmModels() {
   const { data: d } = useApi<Data>("/validation/llm-models", []);
   if (!d || d.missing || !d.rows?.length) return null;
   const c = d.cpu;
+  const alias = makeModelAlias();
   return (
     <div className="mt-6" data-testid="llm-models">
       <h3 className="text-base font-bold text-brand-night">Какая модель где: облако, открытая модель на CPU, правила</h3>
       <div className="mt-3"><Table head={["Модель", "Где работает", "Разбор 50 вакансий: стек P / R", "Оценщик: MAE A / B, атаки, эксперту из честных"]}
-        rows={d.rows.map((x) => [x.model, x.where, needsCell(x.needs), graderCell(x.grader, x.grader_none)])} /></div>
+        rows={d.rows.map((x) => [alias(x.model), noVendor(x.where), needsCell(x.needs), graderCell(x.grader, x.grader_none)])} /></div>
       {c && (
         <p className="mt-2 text-sm text-brand-ink/75" data-testid="llm-models-cpu">
-          <b className="text-brand-night">{c.model} на CPU</b> ({c.machine}): разбор вакансии — медиана {num(c.median_s, 0)} с, p90 {num(c.p90_s, 0)} с,
+          <b className="text-brand-night">Открытая модель на нашем сервере (CPU)</b> ({c.machine}): разбор вакансии — медиана {num(c.median_s, 0)} с, p90 {num(c.p90_s, 0)} с,
           генерация {num(c.tok_s, 0)} токенов в секунду, память {num(c.ram_gib, 1)} ГиБ. На тех же {c.n} вакансиях квантованная версия
           дала стек {num(c.same_n_p, 3)} / {num(c.same_n_r, 3)}, полные веса через облако — {num(c.cloud_n_p, 3)} / {num(c.cloud_n_r, 3)}
           {c.cloud2_n_p != null && <> и {num(c.cloud2_n_p, 3)} / {num(c.cloud2_n_r, 3)} (два прогона)</>}: квантование заметно не меняет разбор.
         </p>
       )}
-      <p className="mt-1 text-xs text-brand-ink/65">{d.caveat} Включить открытую модель на своей машине: <code>{d.how}</code>.</p>
+      <p className="mt-1 text-xs text-brand-ink/65">{noVendor(d.caveat)} Как включить открытую модель на своей машине — docs/LLM.md.</p>
     </div>
   );
 }
