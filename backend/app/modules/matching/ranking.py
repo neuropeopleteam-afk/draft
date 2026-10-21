@@ -612,9 +612,10 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         before_conditions = len(apply_filters(bundles, {k: v for k, v in filters.items() if k != "conditions_off"}))
         bundles = apply_filters(bundles, effective)
         scored = []
-        W = filters.get("_weights") or WEIGHTS  # подстроенные по решениям компании (router: learn_from_company)
-        for b in bundles:
-            s, comps, reasons = score_candidate(b, req, W)
+        tuned = filters.get("_weights")  # подстроенные по решениям компании (router: learn_from_company)
+        W = tuned or WEIGHTS
+        for b in bundles:  # без подстройки — вызов без весов (тот же WEIGHTS внутри; подмена функции в тестах — (b, req))
+            s, comps, reasons = score_candidate(b, req, tuned) if tuned else score_candidate(b, req)
             if filters.get("min_score") and s < float(filters["min_score"]):
                 continue
             scored.append((s, b, comps, reasons))
