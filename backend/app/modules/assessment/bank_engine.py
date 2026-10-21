@@ -1101,9 +1101,10 @@ class BankEngine:
             GRADES.index(k) if k in GRADES else -1))
         ps = "более 99 %" if p > 0.99 else ("менее 1 %" if p < 0.01 else f"{p * 100:.0f} %")
         if vd and vd.get("explanation"):
-            s = vd["explanation"]
-            if vd.get("status") == "not_confirmed":
-                s += " Принудительного понижения нет: можно пройти полный тест."
+            # решение и вероятность уже в карточке вердикта (vd.explanation) — здесь только то, чего там нет (А19 №5:
+            # одна строка «Уровень … не подтверждён: вероятность …» выводилась дважды)
+            s = ("Принудительного понижения нет: можно пройти полный тест." if vd.get("status") == "not_confirmed"
+                 else "Решение — в карточке выше.")
         elif dec.confirmed:
             s = f"Грейд {g} подтверждён экспресс-тестом: вероятность уровня не ниже {g} — {ps}."
         else:
@@ -1130,11 +1131,10 @@ class BankEngine:
         p = sum(v for k, v in dec.probabilities.items() if GRADES.index(claimed) <= (
             GRADES.index(k) if k in GRADES else -1))
         ps = "более 99 %" if p > 0.99 else ("менее 1 %" if p < 0.01 else f"{p * 100:.0f} %")
-        if vd and vd.get("explanation"):  # одна формулировка и один порог — из трёхзначного вердикта (А19 №5), без θ
-            s = vd["explanation"]
-            if vd.get("status") == "not_confirmed":
-                s += (f" Принудительного понижения нет: можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower
-                      else " Принудительного понижения нет: можно повторить после подготовки.")
+        if vd and vd.get("explanation"):  # решение и вероятность — только в карточке вердикта (А19 №5), без θ и без повтора
+            s = ((f"Принудительного понижения нет: можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower
+                  else "Принудительного понижения нет: можно повторить после подготовки.")
+                 if vd.get("status") == "not_confirmed" else "Решение — в карточке выше.")
         elif dec.confirmed:
             s = f"Грейд {g} подтверждён: θ = {theta_se(theta, se)}, вероятность уровня не ниже {g} — {ps}."
             if dec.upgrade_available:

@@ -21,9 +21,10 @@ def test_express_explanation_single_threshold_from_verdict():
     """№5: при трёхзначном вердикте пояснение экспресса не повторяет вероятность со вторым порогом (≥ 65 %)."""
     vd = {"status": "not_confirmed", "explanation": "Уровень Middle не подтверждён: вероятность 0 % (уверенное решение «нет» — до 20 %)."}
     s = BankEngine._explain_express(_dec(0.004, False), "middle", {"n_scored": 8}, vd)
-    assert s.startswith(vd["explanation"])
+    # решение и вероятность — только в карточке вердикта: здесь их нет совсем (иначе строка выводилась дважды, А19 №5)
+    assert vd["explanation"] not in s and "вероятност" not in s
     assert "нужно ≥" not in s and "менее 1 %" not in s
-    assert len(re.findall(r"\d+ %", s)) == 2  # только 0 % и 20 % из вердикта
+    assert not re.findall(r"\d+ %", s)
 
 
 def test_express_explanation_without_verdict_keeps_rule():
