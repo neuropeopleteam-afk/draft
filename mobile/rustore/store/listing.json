@@ -12,16 +12,12 @@
   "privacy_policy_url": "https://fsp-draft.ru/privacy",
   "terms_url": "https://fsp-draft.ru/terms",
   "website_url": "https://fsp-draft.ru",
-  "support_email": "<форма обратной связи>",
-  "legal_email": "<форма обратной связи>",
+  "support_email": "",
+  "legal_email": "",
   "operator": {
-    "name": "команда Neuropeople",
-    "inn": "<реквизит>",
-    "kpp": "770101001",
-    "ogrn": "<реквизит>",
-    "rkn_registry_number": "<реквизит>",
-    "rkn_order": "приказ № 493 от 07.09.2026",
-    "address": "<адрес>"
+    "name": "команда Neuropeople (конкурсный прототип)",
+    "contact": "форма обратной связи на сайте (https://fsp-draft.ru/support)",
+    "note": "конкурсный прототип: юридического лица нет, публикация в магазине не планируется"
   },
   "assets": {
     "apk": "frontend/public/app/draft-rustore.apk",
