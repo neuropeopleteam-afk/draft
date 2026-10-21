@@ -13,7 +13,7 @@ import math
 import uuid
 
 from sqlalchemy import delete, event, select
-from sqlalchemy.orm import Session, defer
+from sqlalchemy.orm import Session
 
 from app.core.db import as_aware
 from app.core.enums import EvidenceLevel, FactSource
@@ -417,7 +417,6 @@ def _load_base_bundles(db: Session, user_ids: list[uuid.UUID]) -> dict[uuid.UUID
                 .order_by(FspAchievement.event_date.desc())
             ).all():
                 by_pid[a.passport_id].achievements.append(a)
-        _load_claims(db, fresh)
         cache.update(fresh)
     return {uid: cache[uid] for uid in user_ids if uid in cache}
 
@@ -441,28 +440,37 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | Non
             if eligible:
                 selected = sorted(eligible, key=lambda r: (not r.is_primary, -(r.rating_score or 0), r.direction_id))[0].direction_id
         out[uid] = b.for_direction(selected)
+    _load_claims(db, out, base)
     return out
 
 
-def _load_claims(db: Session, out: dict) -> None:
+def _load_claims(db: Session, out: dict[uuid.UUID, Bundle], base: dict[uuid.UUID, Bundle] | None = None) -> None:
     """Последний опрос и последняя завершённая попытка теста — только кандидатам без категории (статус
     «не подтверждён (заявлен …)»); остальным они не нужны."""
     from app.core.enums import TestSessionStatus
     from app.modules.assessment.models import SurveyResponse, TestSession
 
-    ids = [uid for uid, b in out.items() if not any(r.category_id for r in b.specializations.values()) and not b.profile.current_category_id]
+    ids = [uid for uid, b in out.items() if not b.category_id and not getattr(b, "_claims_loaded", False)]
     if not ids:
         return
     for sv in db.scalars(select(SurveyResponse).where(SurveyResponse.user_id.in_(ids))
                          .order_by(SurveyResponse.created_at.desc())).all():
         if out[sv.user_id].survey is None:
             out[sv.user_id].survey = sv
-    for ts in db.scalars(select(TestSession).options(defer(TestSession.state)).where(
+            if base and sv.user_id in base:
+                base[sv.user_id].survey = sv
+    for ts in db.scalars(select(TestSession).where(
         TestSession.user_id.in_(ids),
         TestSession.status == TestSessionStatus.finished,
     ).order_by(TestSession.created_at.desc())).all():
         if out[ts.user_id].last_attempt is None:
             out[ts.user_id].last_attempt = ts
+            if base and ts.user_id in base:
+                base[ts.user_id].last_attempt = ts
+    for uid in ids:
+        setattr(out[uid], "_claims_loaded", True)
+        if base and uid in base:
+            setattr(base[uid], "_claims_loaded", True)
 
 
 def _position(out: dict, t: dict, grade: str | None) -> None:
