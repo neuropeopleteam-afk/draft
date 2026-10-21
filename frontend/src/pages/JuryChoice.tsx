@@ -5,12 +5,14 @@ import { Alert, errText, NB } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { useQuickSteps } from "../components/JuryQuick";
 import { guide, quick, QUICK_MINUTES, startQuick, STEPS } from "../lib/jury";
-import { usePageTitle } from "../lib/meta";
+import { useMeta, usePageTitle } from "../lib/meta";
 
 /** Я9: /jury/go без роли и экрана — выбор режима проводника жюри. «Проверка за 12 минут» (QUICK) или полный
  *  справочник (STEPS). /jury/go?tour=12 и ?tour=full — сразу нужный режим (ссылка для материалов сдачи). */
 export default function JuryChoice({ tour }: { tour: string | null }) {
   usePageTitle("Проверка для жюри: 12 минут или справочник");
+  const meta = useMeta();
+  const L = meta?.rules?.test_len;
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
@@ -61,7 +63,9 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{STEPS.length} шагов · справочник</p>
             <h2 id="full-t" className="mt-1 text-xl font-extrabold text-brand-night">Полный справочник</h2>
             <p className="mt-1.5 text-sm leading-relaxed text-brand-ink/75">Все функции по порядку с подробными объяснениями: регистрация, полный тест, паспорт грейда, статусы грейда, «Что если», подписки, кубки, переписка, передача в кадровую систему, кабинет ФСП, двухэтапный вход, живая демонстрация по QR.</p>
-            <p className="mt-2 text-xs leading-relaxed text-brand-ink/65">Полный тест на грейд — 8–16 заданий и дотестирование у порога, планируйте до 80 минут; в проверке за 12 минут вместо него — экспресс-тест краткого режима жюри.</p>
+            <p className="mt-2 text-xs leading-relaxed text-brand-ink/65">
+              Полный тест на грейд — {L ? `${L.min_items}–${L.max_items} заданий, у спорного порога до ${L.contested_max_items} (до ${L.contested_max_minutes} минут), при необходимости второй этап до ${L.two_stage_items} заданий (до ${L.two_stage_minutes} минут)` : "8–20 заданий, у спорного порога до 36 (до 105 минут), при необходимости второй этап до 12 заданий (до 20 минут)"}; в проверке за 12 минут вместо него — экспресс-тест краткого режима жюри.
+            </p>
             <div className="mt-auto flex flex-wrap gap-2 pt-5">
               <button type="button" className="btn-ghost" disabled={busy} onClick={startFull}>Начать справочник с регистрации</button>
               <Link to="/expertise#jury-roles-anchor" className="btn-ghost" onClick={() => quick.setMode("full")}>Выбрать роль</Link>

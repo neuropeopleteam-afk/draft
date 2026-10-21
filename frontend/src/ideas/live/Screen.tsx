@@ -7,13 +7,15 @@ import { api, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { juryLogin, personaOf, scenario, type Persona } from "../../lib/jury";
 import { launchLiveAvatar } from "../../components/Interview";
-import { usePageTitle } from "../../lib/meta";
+import { useMeta, usePageTitle } from "../../lib/meta";
 import { chime, type Feed, type Guest, num, plain, STAGE_TITLE, time, unlockAudio } from "./api";
 
 const sidOf = (email?: string | null) => (email && email.includes("+") ? email.split("+")[1].split("@")[0] : null);
 
 export default function LiveScreen() {
   const { me, signIn, signOut, loading } = useAuth();
+  const meta = useMeta();
+  const L = meta?.rules?.test_len;
   const loc = useLocation();
   const navigate = useNavigate();
   const [feed, setFeed] = useState<Feed | null>(null);
@@ -212,7 +214,7 @@ export default function LiveScreen() {
                       {going === "assessment" ? "Входим кандидатом…" : "К полному адаптивному тесту и живому ИИ-аватару →"}
                     </button>
                     <p className="-mt-1 text-xs text-brand-ink/65">
-                      Вход новым кандидатом своей песочницы: полный адаптивный тест 8–16 заданий, затем устная защита.{" "}
+                      Вход новым кандидатом своей песочницы: полный адаптивный тест {L ? `${L.min_items}–${L.max_items} заданий (у спорного порога до ${L.contested_max_items})` : "8–20 заданий (у спорного порога до 36)"}, затем устная защита.{" "}
                       <button type="button" disabled={!!going} onClick={() => void liveAvatar()} className="font-semibold text-brand hover:underline disabled:opacity-60">
                         {going === "avatar" ? "Запускаем…" : "Сразу к живой защите с ИИ-аватаром"}
                       </button>

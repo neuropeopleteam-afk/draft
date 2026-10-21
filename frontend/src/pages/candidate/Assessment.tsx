@@ -95,15 +95,18 @@ interface TestLength { missing?: boolean; min_items: number; max_items: number; 
   sim_mean_items?: number; sim_extension_share?: number; generated_at?: string }
 /** brief — первый экран (Ф6 Н8 + Ф4 «до 600–900 знаков»): «планируйте до 80 минут» и доля дотестирования в модели;
  *  short — одна фраза о симуляции; полный текст (условия симуляции) — под «Подробнее». */
-function FullLength({ len, short = false, brief = false }: { len?: TestLength | null; short?: boolean; brief?: boolean }) {
+function FullLength({ len, meta, short = false, brief = false }: { len?: TestLength | null; meta?: any; short?: boolean; brief?: boolean }) {
   const ok = len && !len.missing && len.sim_extension_share != null && len.sim_mean_items != null;
   const sim = ok
     ? `в модельной симуляции (синтетические кандидаты, отчёт ${len.generated_at ? new Date(len.generated_at).toLocaleDateString("ru-RU") : "—"}) дотестирование было в ${Math.round(len.sim_extension_share! * 100)} % сессий, в среднем ${num(len.sim_mean_items, 0)} заданий; время реальных людей не измерялось.`
     : "как часто оно нужно реальным кандидатам, пока не измерено.";
   if (short) return <>{sim[0].toUpperCase() + sim.slice(1)}</>;
-  const c = len && !len.missing ? len : { min_items: 8, max_items: 16, max_minutes: 60, ext_items: 6, ext_minutes: 20 };
-  if (brief) return <>Планируйте до {c.max_minutes + c.ext_minutes} минут{ok ? `: в модельной симуляции дотестирование — в ${Math.round(len.sim_extension_share! * 100)} % сессий, в среднем ${num(len.sim_mean_items, 0)} заданий` : ""}.</>;
-  return <>Полный адаптивный тест: основной блок {c.min_items}–{c.max_items} заданий (до {c.max_minutes} минут), у порога грейда — ещё до {c.ext_items} коротких (до {c.ext_minutes} минут); планируйте до {c.max_minutes + c.ext_minutes} минут. {sim[0].toUpperCase() + sim.slice(1)} Именно этот тест присваивает категорию живым кандидатам.</>;
+  const L = meta?.rules?.test_len;
+  const c = L
+    ? { min_items: L.min_items, max_items: L.max_items, max_minutes: L.max_minutes, ext_items: L.two_stage_items, ext_minutes: L.two_stage_minutes, total_minutes: L.contested_max_minutes || (L.max_minutes + L.two_stage_minutes) }
+    : (len && !len.missing ? { ...len, total_minutes: len.max_minutes + len.ext_minutes } : { min_items: 8, max_items: 20, max_minutes: 60, ext_items: 12, ext_minutes: 20, total_minutes: 105 });
+  if (brief) return <>Планируйте до {c.total_minutes} минут{ok ? `: в модельной симуляции дотестирование — в ${Math.round(len.sim_extension_share! * 100)} % сессий, в среднем ${num(len.sim_mean_items, 0)} заданий` : ""}.</>;
+  return <>Полный адаптивный тест: {L ? testLenText(meta) : `основной блок ${c.min_items}–${c.max_items} заданий (до ${c.max_minutes} минут), у порога грейда — ещё до ${c.ext_items} коротких (до ${c.ext_minutes} минут); планируйте до ${c.total_minutes} минут.`} {sim[0].toUpperCase() + sim.slice(1)} Именно этот тест присваивает категорию живым кандидатам.</>;
 }
 
 interface Hint {
@@ -563,17 +566,17 @@ function GradeChoice({ status, onb, onEditSurvey, express = false }: { status: a
           {/* Ф6 (В7, Н8) + Ф4: на первом экране — коротко; правило остановки и погрешность — под «Подробнее» */}
           <p className="mt-2 text-brand-ink/75">
             {mode === "express"
-              ? <><span className="chip mr-1.5" data-testid="jury-brief">Экспресс-калибровка · 5 минут</span>{`Быстрая проверка уровня (5–7 адаптивных задач банка без дотестирования${grade === "senior" ? ", за Senior — до 12" : ""}) вместо полного 80-минутного теста.`}</>
-              : <FullLength len={len.data} brief />}
+              ? <><span className="chip mr-1.5" data-testid="jury-brief">Экспресс-калибровка · 5 минут</span>{`Быстрая проверка уровня (5–7 адаптивных задач банка без дотестирования${grade === "senior" ? ", за Senior — до 12" : ""}) вместо полного теста (до ${meta?.rules?.test_len?.contested_max_minutes ?? 105} мин).`}</>
+              : <FullLength len={len.data} meta={meta} brief />}
           </p>
           <details className="mt-2 text-xs text-brand-ink/70">
             <summary className="cursor-pointer font-semibold text-brand-plum">Подробнее</summary>
-            {mode !== "express" && <p className="mt-2 leading-relaxed"><FullLength len={len.data} /></p>}
+            {mode !== "express" && <p className="mt-2 leading-relaxed"><FullLength len={len.data} meta={meta} /></p>}
             <p className="mt-2 leading-relaxed"><b>Как считается.</b>{" "}
             {mode === "express"
               ? (grade === "senior"
-                ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ 80 %), оценка менее точная, чем у полного (± 0,6 против ± 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
-                : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но оценка заметно менее точная (± 0,65 против ± 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
+                ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ ${meta?.rules?.confirm_pct ?? 80} %), оценка менее точная, чем у полного (± 0,6 против ± 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
+                : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ ${meta?.rules?.confirm_pct ?? 80} %), но оценка заметно менее точная (± 0,65 против ± 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
               : `Полный тест: решение по заявленному грейду принимается последовательной проверкой у его порога — тест останавливается, как только решение надёжно; ${testLenText(meta)} Итог — «подтверждён», «не подтверждён» или «нужен доп. этап»; принудительного понижения нет.`}
             </p>
           </details>
@@ -650,6 +653,7 @@ const INCIDENT_KEY = "draft.incident.sandbox";
 
 export function TestRun() {
   const llmOff = useLlmOff();
+  const meta = useMeta();
   const { id } = useParams();
   const navigate = useNavigate();
   const { refresh } = useAuth();
@@ -848,7 +852,7 @@ export function TestRun() {
         {it.steps_total && <span className="chip">Шаг {it.step} из {it.steps_total}</span>}
         <span className="ml-auto text-brand-ink/65" role="timer" aria-live="off" data-testid="task-time-guide">
           {`Ориентир ≈ ${Math.max(1, Math.round((it.time_limit_s || 120) / 60))} мин · это не ограничение`}
-          {it.adaptive ? ` · весь блок до ${s.mode === "express" ? (s.claimed_grade === "senior" ? 45 : 20) : 60} мин` : ""}
+          {it.adaptive ? ` · весь блок до ${s.mode === "express" ? (s.claimed_grade === "senior" ? 45 : 20) : s.mode === "refine" ? (meta?.rules?.test_len?.two_stage_minutes ?? 20) : (meta?.rules?.test_len?.max_minutes ?? 60)} мин` : ""}
         </span>
         <span className="sr-only" aria-live="polite">{left < 0 ? `Рекомендуемое время задания вышло (${fmtTime(-left)}). Это ориентир: ответить можно и позже.` : ""}</span>
       </div>
@@ -1052,7 +1056,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · оценка менее точная, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
         <div className="mt-4"><Alert kind="info">
-          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от {meta?.rules?.confirm_pct ?? 60} %, «не доказанно ниже» — от 10 %).
+          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от {meta?.rules?.confirm_pct ?? 80} %, «не доказанно ниже» — от 10 %).
           {r.mode === "confirm" ? " Принудительного понижения нет; работодатели видят актуальную оценку. Подтвердить можно повторным тестом, заданием работодателя или кубком." : " Работодатели видят категорию с пометкой «предварительно» и ставят её чуть ниже подтверждённых. Подтвердить можно коротким дотестированием у порога, заданием работодателя или кубком."}
         </Alert></div>
       )}
