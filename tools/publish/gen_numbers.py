@@ -51,6 +51,8 @@ PS_FINAL = {"hard": DATA / "product_sim_final_calibrated.json", "misspec": DATA 
 # θ ~ N(0,5; 1,0); заявки 65/25/10)
 PS_ST = {"st": DATA / "product_sim_st.json"}
 DJINNI = ROOT / "docs" / "realdata" / "djinni" / "external_djinni.json"  # А17: внешний открытый набор (подбор)
+FSP_FACTS = ROOT / "docs" / "validation" / "fsp_facts.json"  # внешние факты ФСП с источником (плашка А18)
+DEVDEV = ROOT / "docs" / "realdata" / "numbers_devdev.json"  # А5: «один в один» на открытом генераторе другого решения
 TRAIN_CHOICE = ROOT / "docs" / "validation" / "TRAIN_CHOICE_2110b.json"  # выбор конфигурации на TRAIN (поправка №3)
 # Пятёрка первого экрана (поправка №3): точность уверенного — всегда парой с долей уверенных; точный грейд — по всем
 # кандидатам и 6 ступеням, рядом строки 5 и 4 ступеней (сопоставимость) и «среди тех, кому продукт его определяет»;
@@ -840,11 +842,63 @@ def final_claim(st: dict | None, hard: dict | None) -> str | None:
             f"заданий, N = {int_ru(n_h)}): {one(hard)}.")
 
 
+def _anon_other(s):
+    """Названия других команд хакатона и их решений на сайте не называются (общие правила)."""
+    if not isinstance(s, str):
+        return s
+    for a, b in (("открытый генератор Dev_dev", "открытый генератор другого решения"), ("Dev_dev", "другого решения"),
+                 ("IT Match", "ранжировщик другого решения")):
+        s = s.replace(a, b)
+    return s
+
+
+def fsp_facts_block() -> dict | None:
+    """Внешние факты о ФСП (не наши измерения): значение, цитата и источник — из docs/validation/fsp_facts.json."""
+    f = _load(FSP_FACTS) or {}
+    r = f.get("regions") or {}
+    if r.get("value") is None:
+        return None
+    return {"regions": r.get("value"), "claim_ru": r.get("quote_ru"), "source_url": r.get("source_url"),
+            "source_section_ru": r.get("source_section_ru"), "checked_at": r.get("checked_at"),
+            "what": "внешний факт (сайт ФСП), не измерение платформы", "artifact": str(FSP_FACTS.relative_to(ROOT))}
+
+
+def devdev_block() -> dict | None:
+    """«Один в один» (А5, проверено А15): их генератор, их тест, их метки, их ранжировщик — и наш подбор четвёртой выдачей.
+    Заголовок — main (настройка по умолчанию), рядом — опция API «строго запрошенный грейд» и её цена."""
+    x = (_load(DEVDEV) or {}).get("devdev_1to1")
+    if not x or not x.get("main"):
+        return None
+
+    def view(v: dict) -> dict:
+        return {m: {"ours": (v.get(m) or {}).get("ours"), "ours_ci95": (v.get(m) or {}).get("ours_ci"),
+                    "other": (v.get(m) or {}).get("it_match"), "diff": (v.get(m) or {}).get("diff"),
+                    "diff_ci95": (v.get(m) or {}).get("diff_ci")} for m in ("ndcg10", "p5", "p10", "rr", "overrated10") if v.get(m)}
+
+    mv, ev = view(x["main"]), view(x.get("exact_option_api") or {})
+    m, e = mv.get("ndcg10") or {}, ev.get("ndcg10") or {}
+    eo = ev.get("overrated10") or {}
+    ci = lambda c, d=3: f"[{num(c[0], d).replace('-', '−')}; {num(c[1], d).replace('-', '−')}]" if c else ""
+    sg = lambda v, d=3: ("+" if (v or 0) > 0 else "") + num(v, d).replace("-", "−")
+    claim = (f"На открытом генераторе другого решения (MIT; его тест, его метки, синтетика — модели, не люди; отложенные "
+             f"зёрна, один прогон после FREEZE): наш подбор по умолчанию — nDCG@10 {num(m.get('ours'), 3)} "
+             f"{ci(m.get('ours_ci95'))} против {num(m.get('other'), 3)} у его ранжировщика (разность {sg(m.get('diff'))} "
+             f"{ci(m.get('diff_ci95'))}) — ниже." + (
+             f" В режиме «строго запрошенный грейд» (опция API, выбрана на зёрнах разработки этого генератора) — "
+             f"{num(e.get('ours'), 3)} ({sg(e.get('diff'))} {ci(e.get('diff_ci95'))}); цена — переоценённых в топ-10 "
+             f"{pct(eo.get('ours'))} % против {pct(eo.get('other'))} %." if e else ""))
+    return {"condition_ru": _anon_other(x.get("condition")), "note_ru": _anon_other(x.get("note")),
+            "main": mv, "exact_option_api": ev, "exact_is_api_option": True,
+            "recompute": x.get("recompute"), "source": "docs/realdata/numbers_devdev.json ← " + str(x.get("source")),
+            "checked_by": "А15, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений", "claim_ru": claim}
+
+
 def external_block() -> dict | None:
     """Внешний бенчмарк подбора (А17): открытый набор Djinni, один прогон после FREEZE — как есть из артефакта."""
     d = _load(DJINNI)
+    dd = devdev_block()
     if not d:
-        return None
+        return {"devdev_1to1": dd} if dd else None
     mc = d.get("main_config") or "B_grade_from_text"
     c = (d.get("configs") or {}).get(mc) or {}
     sm = c.get("summary") or {}
@@ -863,7 +917,8 @@ def external_block() -> dict | None:
                      f"{num(nd.get('mean'), 3)} [{num((nd.get('ci95') or [None])[0], 3)}; "
                      f"{num((nd.get('ci95') or [None, None])[1], 3)}], выше BM25 на "
                      f"{num((diff.get('ndcg@10') or {}).get('diff'), 3)} — один прогон после фиксации протокола")
-                    if nd.get("mean") is not None else None}}
+                    if nd.get("mean") is not None else None},
+        **({"devdev_1to1": dd} if dd else {})}
 
 
 def build() -> dict:
@@ -899,6 +954,7 @@ def build() -> dict:
         "cheat_bots": cheat,
         "matching": matching,
         "external_benchmarks": external_block(),
+        "fsp_facts": fsp_facts_block(),
         "hh_match": hh,
         "anticheat": anticheat,
         "fsp_protocols": fsp,
@@ -1006,6 +1062,11 @@ def final_md(n: dict) -> list[str]:
     if ext:
         L += ["### Подбор на внешнем открытом наборе (агент А17)", "", ext.get("claim_ru") or "", "",
               f"Условие: {ext.get('condition_ru')}. Пересчёт: `{ext.get('recompute')}`.", ""]
+    dd = (n.get("external_benchmarks") or {}).get("devdev_1to1")
+    if dd:
+        L += ["### Подбор «один в один» на открытом генераторе другого решения (агент А5, проверено А15)", "",
+              dd.get("claim_ru") or "", "", f"Условие: {dd.get('condition_ru')}. {dd.get('note_ru') or ''}",
+              f"Пересчёт: `{dd.get('recompute')}`.", ""]
     return L
 
 
