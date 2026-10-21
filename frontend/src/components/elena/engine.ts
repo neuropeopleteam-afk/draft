@@ -110,6 +110,10 @@ interface Meta {
   skip_now?: boolean | null;
   /** goto: показать экран целиком («подробнее», «полностью», недовольство коротким показом) — вариант «<шаг>-full». */
   full?: boolean | null;
+  /** resume: явно попросили вернуться к обзору («продолжай обзор») — не долистывать текущий экран. */
+  tour?: boolean | null;
+  /** point: «нажми / запусти / включи» — нажать подсвеченное. */
+  click?: boolean | null;
 }
 
 interface Pos { ids: string[]; track: TourTrack | null; i: number; b: number }
@@ -130,7 +134,6 @@ const BARGE_FINAL_WORDS = 2;       // законченный сегмент ра
 const ALL_TRACK_MAX_BEATS = 3;     // обзор всего сайта — не больше стольких реплик на экран (подробно — обзор роли)
 // Экскурсовод не стоит молча: каждый её вопрос по ходу показа ждёт ответа ограниченно и сам продолжается.
 const HAND_WAIT_MS = 9000;         // «подняли руку» (пробел) и молчат — продолжает показ
-const LLM_Q_WAIT_MS = 20000;       // Настя сама задала вопрос (модель) — ждёт ответа дольше
 // Перебивание — только по имени (решение владельца 21.10): пока Настя говорит или ждёт, она реагирует на «Настя …»;
 // без имени, когда молчит, — только короткие команды («дальше», «стоп», «назад»); спросила сама — любой ответ.
 // Пауз между экранами и вопросов «Продолжаем?» нет: показ идёт подряд, после перебивания ждёт «дальше».
@@ -138,8 +141,6 @@ const WAKE = /(?:^|[^а-яё])(?:наст(?:я|ь|енька|юша|ен|ю)|а�
 const QUIET_COMMAND = /^(?:(?:ну|так|давай|давайте|хорошо|ок)\s+)?(?:дальше|продолж[а-яё]*|поехали|идем дальше|стоп|стой|пауза|подожди[а-яё]*|назад|повтори[а-яё]*|пропусти[а-яё]*|вернись[а-яё]*)$/u;
 const WAKE_OPEN_MS = 8000;         // после «Настя» столько слушает просьбу без имени
 const WAKE_ONLY_END_MS = 1800;     // сказали только «Настя» — ждём продолжения фразы чуть дольше
-const DETOUR_NUDGE_MS = 20000;     // экран по просьбе: тишина — один вопрос «подробнее или дальше?», сама не уходит
-const RESUME_AFTER_MS = 15000;     // после ответа или экрана по просьбе: тишина столько — продолжает показ сама
 
 /** Текст после обращения «Настя» (обращение и знаки после него убраны); без обращения — как есть. */
 export function stripWake(text: string): string {
@@ -366,6 +367,7 @@ export class ElenaEngine {
   private doneSteps = new Set<string>();     // экраны, рассказанные до конца: при повторном обзоре — коротко, одной репликой
   private ducked = false;
   private lastSaid = "";
+  private detourEnd = false;            // экран по просьбе пролистан до конца — следующее «дальше» ведёт к обзору
   private pitchT0 = 0;          // показ для жюри: начало (таймер в заголовке вкладки — видит только владелец)
   private pitchTimer = 0;
   private pitchTitle = "";
@@ -922,8 +924,11 @@ export class ElenaEngine {
       const text = e.text.trim();
       if (!text) return;
       if (!this.voice.speaking()) this.lastHeardAt = performance.now();
-      if (performance.now() - this.gateOpenedAt < GATE_TAIL_IGNORE_MS && !this.buf.read()) return;
       const hers = this.voice.echoText();
+      // сразу после открытия микрофона отбрасываем только эхо её голоса, а не любые слова: человек отвечает сразу, и
+      // первое слово терялось («Геннадий Иванович» → «Иванович», 19:03)
+      if (performance.now() - this.gateOpenedAt < GATE_TAIL_IGNORE_MS && !this.buf.read()
+          && (!hers ? !this.lastSaid || isEcho(text, this.lastSaid) : isEcho(text, hers))) return;
       if (hers && !this.buf.read()) {
         // под её речь (и сразу после): её же слова из динамиков — эхо; «угу», «ага» — поддакивание, не реплика
         if (isEcho(text, hers)) return;
@@ -992,8 +997,7 @@ export class ElenaEngine {
     this.wakeOpenUntil = performance.now() + HAND_WAIT_MS;
     this.post("hand");
     this.lastAsked = true;
-    this.waitFor(this.resumeAt ? "continue" : "answer", ep, null, this.resumeAt
-      ? { auto: { ms: HAND_WAIT_MS, run: () => this.autoResume(ep) } } : {});
+    this.waitFor(this.resumeAt ? "continue" : "answer", ep, "remind");
   }
 
   /** Человек сам перешёл по сайту (меню, ссылка): режим «ведёте вы» — Настя доводит предложение, коротко говорит,
@@ -1039,23 +1043,8 @@ export class ElenaEngine {
       if ((await this.sayText(hint, ep)) !== "done" || !this.alive(ep)) return;
       this.remember("elena", hint);
     }
-    this.lastAsked = false;
     this.paused = !!this.tourTrack;      // обзор не продолжается сам, пока человек ходит по сайту
-    this.waitFor(null, ep, null);
-  }
-
-  /** Молчание после её вопроса по ходу показа — продолжает с того же места (короткая связка «Идём дальше.»). */
-  private autoResume(ep: number) {
-    if (!this.alive(ep)) return;
-    this.lastAsked = false;
-    this.paused = false;
-    if (this.resumeAt) {
-      this.pendingBridge = this.pendingBridge || this.phrase("go_on") || this.phrase("resume_tour") || null;
-      void this.runTour(this.resumeAt, ep, { bridge: true });
-      return;
-    }
-    if (this.tourTrack) { void this.finishTour(this.tourTrack, ep); return; }
-    this.waitFor(null, ep, null);
+    void this.askThenWait(null, ep, "detour_nudge");   // и не молчит: короткий вопрос про этот экран
   }
 
   private armStale() {
@@ -1088,8 +1077,7 @@ export class ElenaEngine {
       // сказали только «Настя» — замолчала и слушает; просьбы нет — продолжит показ сама
       const ep = this.ep;
       this.lastAsked = false;
-      this.waitFor(this.resumeAt ? "continue" : null, ep, null,
-        this.resumeAt ? { auto: { ms: RESUME_AFTER_MS, run: () => this.autoResume(ep) } } : {});
+      this.waitFor(this.resumeAt ? "continue" : null, ep, this.resumeAt ? "remind" : null);   // слушает; сама не уходит
       return;
     }
     // «угу» в окне между экранами, когда Настя ни о чём не спрашивала, — не реплика
@@ -1324,6 +1312,12 @@ export class ElenaEngine {
     }
     if (a === "point" && meta.point) {
       this.holdPoint();
+      if (meta.click) {
+        // «включи / запусти / нажми …» — не только подсветить, но и нажать (19:12: «запускаю проверку» и не нажала)
+        const el = findTarget(`text:${meta.point}`);
+        const btn = el ? (el.closest("button, a, [role='button']") as HTMLElement | null) ?? (el as HTMLElement) : null;
+        if (btn) { await sleep(700); if (!this.alive(ep)) return; btn.click(); this.post("nav", { text: `click → ${meta.point}` }); return; }
+      }
       this.afterAnswer(ep);
       return;
     }
@@ -1375,8 +1369,17 @@ export class ElenaEngine {
       this.resumeAt = { ...this.resumeAt, i: this.resumeAt.i + 1, b: 0 };
       this.pendingBridge = null;
     }
+    if (a === "resume" && !meta.tour && !this.paused && this.resumeAt && !this.onTourScreen() && !this.detourEnd) {
+      // экран, который попросили, ещё не кончился: «дальше» — то, что ниже на нём, а не прыжок в обзор (19:11:
+      // «ты сказала "пройдём по каждой" и замолчала» → ушла в кабинет Федерации; «не перескакивай, куда не просят»)
+      if (nav) await nav;
+      if (!this.alive(ep)) return;
+      void this.scrollScreen("down", ep, "");
+      return;
+    }
     if (a === "resume") {
       this.paused = false;
+      this.detourEnd = false;
       if (this.resumeAt) {
         if (meta.text) await sleep(150);
         else this.pendingBridge = this.phrase("resume_tour") || null;   // «дальше» без ответа — короткое «Продолжаю.»
@@ -1453,37 +1456,35 @@ export class ElenaEngine {
     if (this.paused) { this.waitFor(null, ep, null); return; }
     if (this.lastAsked) {
       // спросила посреди показа — ждёт ответа, но не вечно: молчат — продолжает показ
-      this.waitFor("answer", ep, null, this.resumeAt ? { auto: { ms: LLM_Q_WAIT_MS, run: () => this.autoResume(ep) } } : {});
+      this.waitFor("answer", ep, "remind");   // спросила — ждёт ответа; сама к обзору не уходит
       return;
     }
     if (this.resumeAt) { void this.askContinue(ep); return; }
     if (this.tourTrack) { void this.finishTour(this.tourTrack, ep); return; }
-    this.waitFor(null, ep, null);
+    void this.askThenWait(null, ep, "free_nudge");
   }
 
   /** Ответила посреди показа: короткая пауза для уточнения — и сама продолжает («Продолжаю.»). Перед другим разделом —
    *  вопрос «Переходим к работодателю?», но тоже без вечного ожидания. */
   private async askContinue(ep: number) {
     if (!this.onTourScreen()) { this.afterDetour(ep); return; }   // человек разбирается с экраном в стороне — не уводим
-    // ответила посреди показа — ждёт «дальше» (без вопроса «Продолжаем?»); тишина — продолжает сама
-    this.set({ phase: "listening", click: null });
-    this.lastAsked = false;
-    this.waitFor("continue", ep, null, { auto: { ms: RESUME_AFTER_MS, run: () => this.autoResume(ep) } });
+    // ответила посреди показа — сама не продолжает (19:12: «Сейчас продолжу» и ушла к обзору): вопрос и ждёт
+    void this.askThenWait("continue", ep, "tour_nudge");
   }
 
   /** Показала один экран по просьбе вне обзора — дальше ведёт по этому кабинету сама (короткий вопрос, молчат — идёт). */
   private async askAfterGoto(step: TourStep, ep: number) {
     const track = this.trackOf(step);
     const k = track ? TRACKS[track].indexOf(step.id) : -1;
-    if (!track || k < 0 || k + 1 >= TRACKS[track].length) { this.waitFor(null, ep, null); return; }
+    if (!track || k < 0 || k + 1 >= TRACKS[track].length) { void this.askThenWait(null, ep, "free_nudge"); return; }
     this.tourTrack = track;
     this.lastCabinet = step.cabinet;
     this.resumeAt = { ids: TRACKS[track], track, i: k + 1, b: 0 };
     await sleep(0);
     if (!this.alive(ep)) return;
-    this.lastAsked = false;
-    // экран попросили — сама дальше не идёт: ждёт «дальше» или вопрос; тишина — один раз «подробнее или дальше?»
-    this.waitFor("continue", ep, "detour_nudge", { remindMs: DETOUR_NUDGE_MS });
+    // экран попросили — сама дальше не идёт и не молчит: сразу короткий вопрос, потом ждёт (замечание владельца 19:11)
+    this.detourEnd = false;
+    void this.askThenWait("detour", ep, "detour_nudge");
   }
 
   /** Обзор какой роли продолжать после этого экрана. */
@@ -1496,17 +1497,33 @@ export class ElenaEngine {
 
   /** Человек ушёл в сторону от обзора (спросил, попросил экран, пролистал): остаёмся с ним. Молчим и слушаем 12 с,
    *  потом один раз «Продолжить показ?», и только после ещё 12 с тишины идём дальше («Возвращаюсь к обзору»). */
-  private afterDetour(ep: number) {
-    this.lastAsked = false;
+  private afterDetour(ep: number, key = "detour_nudge") {
     this.set({ phase: "listening", click: null });
     if (this.resumeAt) {
-      // человек сам попросил этот экран — к обзору возвращаемся только по «дальше» (21.10 17:33: ушла с Полигона сама
-      // через 15 с, хотя на плашке было «Скажите «дальше»»); тишина — один раз «подробнее или дальше?»
+      // человек сам попросил этот экран — сама не уходит (17:33) и не молчит (19:11): сразу короткий вопрос, потом ждёт;
+      // «дальше» — сначала то, что ниже на этом экране, к обзору — когда экран кончился или попросили обзор
       this.pendingBridge = this.phrase("back_tour") || null;
-      this.waitFor("detour", ep, "detour_nudge", { remindMs: DETOUR_NUDGE_MS });
+      void this.askThenWait("detour", ep, this.detourEnd ? "back_q" : key);
       return;
     }
-    this.waitFor(null, ep, "detour_nudge", { remindMs: DETOUR_NUDGE_MS });
+    void this.askThenWait(null, ep, this.detourEnd ? "free_nudge" : key);
+  }
+
+  /** Не молчит после своей реплики: последняя фраза не вопрос — сразу короткий вопрос; дальше ждёт, сама не уходит.
+   *  (Владелец 21.10 19:11: «она не должна останавливаться — всегда должен быть вопрос, не просто тишина».) */
+  private async askThenWait(kind: Awaiting, ep: number, key: string) {
+    this.set({ phase: "listening", click: null });
+    if (!this.noMic && !/\?\s*$/.test(this.lastSaid.trim())) {
+      const t = this.phrase(key);
+      if (t) {
+        this.set({ phase: "answering" });
+        if ((await this.sayText(t, ep)) !== "done" || !this.alive(ep)) return;
+        this.remember("elena", t);
+      }
+    }
+    if (!this.alive(ep)) return;
+    this.lastAsked = true;
+    this.waitFor(kind, ep, kind ? "remind" : null);
   }
 
   /** Экран обзора ли сейчас на виду (тогда после ответа можно скоро продолжить), или человек в стороне. */
@@ -1901,9 +1918,9 @@ export class ElenaEngine {
       this.remember("elena", text);
     }
     this.holdPoint();
-    if (this.tourTrack && this.resumeAt) { this.afterDetour(ep); return; }
-    this.lastAsked = false;
-    this.waitFor(null, ep, null);
+    if (!moved && (dir === "down" || dir === "bottom")) this.detourEnd = true;
+    if (this.tourTrack && this.resumeAt) { this.afterDetour(ep, "scroll_nudge"); return; }
+    void this.askThenWait(null, ep, this.detourEnd ? "free_nudge" : "scroll_nudge");
   }
 
   /** После реплик сценария — долистать экран: назвать блоки ниже, о которых сценарий не сказал («Ещё на этом экране — …»).

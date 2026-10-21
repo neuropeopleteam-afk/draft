@@ -59,7 +59,10 @@ def short_title(title: str, max_words: int = 5) -> str:
         t = t.rsplit(None, 1)[0] if len(t.split()) > 1 else t
     parts = [x for x in re.split(r"[:.;!?—]", t) if x.strip()]
     t = parts[0] if parts else ""
-    if len(parts) > 1 and t.strip().lower() in _GENERIC:  # «Контекст: сервис уведомлений…» → «сервис уведомлений»
+    first = t.strip().lower().split()
+    if len(parts) > 1 and (t.strip().lower() in _GENERIC or len(first) <= 1
+                           or first[0] in ("вы", "ты", "вам", "вас", "представьте", "допустим")):
+        # «Контекст: сервис уведомлений…» → «сервис уведомлений»; «Вы — тимлид платёжного шлюза…» → не «Вы» (А19 21.10)
         t = parts[1]
     w = [x for x in t.split() if any(ch.isalnum() for ch in x)]
     if not w:

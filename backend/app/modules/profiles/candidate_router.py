@@ -28,6 +28,7 @@ from app.modules.catalog.seed_data import DIRECTIONS, grade_by_experience, known
 from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, achievement_text, card, load_bundles, refresh_rating, set_t0_facts
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 from app.modules.profiles.models import CandidateSpecialization
+from app.modules.profiles.schemas import validate_experience_years
 from app.modules.profiles.specializations import ensure_specialization
 from app.modules.catalog.ext import DirectionId
 from app.core.origin import NO_FSP, fsp_origin
@@ -136,6 +137,23 @@ class OnboardingIn(BaseModel):
     consent_publication: bool = Field(description="Согласие на показ обезличенного профиля работодателям")
     fsp_id: str | None = Field(None, max_length=64, description="ФСП ID — заглушка до подключения ФСП ID (Keycloak)")
 
+    @model_validator(mode="before")
+    @classmethod
+    def _check_exp_with_age(cls, data):
+        if isinstance(data, dict) and data.get("experience_years") is not None:
+            validate_experience_years(
+                data.get("experience_years"),
+                age=data.get("age"),
+                age_group=data.get("age_group"),
+            )
+        return data
+
+    @field_validator("experience_years")
+    @classmethod
+    def _check_exp_bounds(cls, v: float) -> float:
+        validate_experience_years(v)
+        return v
+
     @model_validator(mode="after")
     def _distinct_directions(self):
         if self.additional_direction == self.direction:
@@ -218,6 +236,10 @@ def get_onboarding(user: User = Depends(candidate), db: Session = Depends(get_db
             responses={**AUTH, 422: err("Ошибка валидации: неизвестные стек-теги или роли")})
 def save_onboarding(data: OnboardingIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     p = db.get(CandidateProfile, user.id)
+    try:
+        validate_experience_years(data.experience_years, age_group=p.age_group if p else None)
+    except ValueError as e:
+        raise api_error(422, "invalid_experience_years", str(e)) from None
     ensure_specialization(db, p, data.direction)
     if data.additional_direction:
         ensure_specialization(db, p, data.additional_direction)

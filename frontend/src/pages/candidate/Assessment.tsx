@@ -129,7 +129,10 @@ function GradeHint({ hint, grade, onPick }: { hint: Hint | null; grade: string; 
 }
 
 function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
+  const { me } = useAuth();
   const a = data.answers;
+  const ageGroup = me?.candidate?.age_group ?? "18+";
+  const maxExpByAge = ageGroup === "14-15" ? 1 : ageGroup === "16-17" ? 3 : 45;
   const dirEntries = useDirectionEntries();  // 5 базовых + направления расширения каталога с проверенным банком
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(a.direction ?? "");
@@ -166,8 +169,14 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
 
   const hasFullstack = dirEntries.some(([id]) => id === "backend") && dirEntries.some(([id]) => id === "frontend");
   const fullstack = direction === "backend" && additionalDirection === "frontend";
-  // UX-2: пределы сервера (OnboardingIn) — проверяем на своём шаге, до отправки: стаж 0–50 лет, минимум зарплаты ≤ 10 млн
-  const expBad = exp !== "" && !(Number(exp) >= 0 && Number(exp) <= 50);
+  // UX-2: пределы сервера (OnboardingIn) — проверяем на своём шаге, до отправки: стаж 0–45 лет и не больше возраста − 14, минимум зарплаты ≤ 10 млн
+  const expNum = Number(exp);
+  const expOutOfRange = exp !== "" && !(expNum >= 0 && expNum <= 45);
+  const expExceedsAge = exp !== "" && !expOutOfRange && expNum > maxExpByAge;
+  const expBad = expOutOfRange || expExceedsAge;
+  const expErrMsg = expExceedsAge
+    ? `Стаж не может быть больше возраста минус 14 лет (для возрастной группы ${ageGroup} — максимум ${maxExpByAge} г.)`
+    : "Стаж — от 0 до 45 лет (и не больше, чем возраст минус 14 лет)";
   const salaryBad = salary !== "" && !(Number(salary) > 0 && Number(salary) <= 10_000_000);
   const canNext = [!!direction, Object.keys(stack).length > 0, exp !== "" && !expBad, !salaryBad][step];
 
@@ -277,9 +286,9 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         )}
         {step === 2 && (
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Коммерческий стаж, лет" htmlFor="exp" hint={expBad ? undefined : "От 0 до 50"}>
-              <input id="exp" className="input" type="number" min={0} max={50} step={0.5} value={exp} onChange={(e) => setExp(e.target.value)} aria-invalid={expBad} aria-describedby={expBad ? "exp-err" : undefined} />
-              {expBad && <p id="exp-err" role="alert" className="mt-1 text-xs font-semibold text-brand-plum">Стаж — от 0 до 50 лет</p>}
+            <Field label="Коммерческий стаж, лет" htmlFor="exp" hint={expBad ? undefined : maxExpByAge < 45 ? `От 0 до ${maxExpByAge} лет (не больше, чем возраст − 14)` : "От 0 до 45 лет (не больше, чем возраст − 14)"}>
+              <input id="exp" className="input" type="number" min={0} max={maxExpByAge} step={0.5} value={exp} onChange={(e) => setExp(e.target.value)} aria-invalid={expBad} aria-describedby={expBad ? "exp-err" : undefined} />
+              {expBad && <p id="exp-err" role="alert" className="mt-1 text-xs font-semibold text-brand-plum">{expErrMsg}</p>}
             </Field>
             <Field label="Город" htmlFor="city">
               <input id="city" className="input" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Например, Казань" />
@@ -988,6 +997,12 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   const v = r.verdict ?? r.details?.verdict;
+  // А19 №5: решение и вероятность — один раз, в карточке вердикта; в пояснении ниже — только остальное
+  const explRest: string = (() => {
+    const e = String(r.explanation ?? "").trim();
+    const ve = String(v?.explanation ?? "").trim();
+    return ve && e.startsWith(ve) ? e.slice(ve.length).trim() : e;
+  })();
   const title = r.mode === "refine" && r.two_stage?.refine ? (r.two_stage.status === "passed" ? "Уточнение уровня пройдено" : "Уточнение не подтвердило уровень у границы")
     : r.accepted_lower ? `Принят уровень ${GRADE_TITLE_ALL[r.accepted_lower] ?? r.accepted_lower}`
     : r.confirmed && r.grade_preliminary ? `${GRADE_TITLE_ALL[r.grade_preliminary.grade] ?? r.grade_preliminary.grade} по тесту — предварительно`
@@ -1058,7 +1073,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       <DefensePanel sessionId={sessionId} live="auto" />
       {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}
       {r.two_stage && r.mode !== "refine" && r.two_stage.boundary && !extStage && <TwoStageOffer t={r.two_stage} claimed={r.claimed_grade} direction={r.direction} />}
-      <div className="card mt-4 text-sm text-brand-ink/75">{plainText(r.explanation)}</div>
+      {explRest && <div className="card mt-4 text-sm text-brand-ink/75">{plainText(explRest)}</div>}
       {r.level_position && <p className="mt-2 text-sm text-brand-ink/80" data-testid="level-position">Позиция внутри уровня {r.level_position.grade_title}: <b>{r.level_position.text}</b>{r.level_position.known ? " — по точности этого теста" : " (точнее этот тест пока сказать не может)"}</p>}
       {(r.confirmed || r.accepted_lower) && <p className="mt-3 text-xs text-brand-ink/65">Грейд — уровень навыков, подтверждённый этим тестом. Стаж в годах остаётся справкой в профиле и на грейд не влияет.</p>}
       {r.details?.n_scored != null && (

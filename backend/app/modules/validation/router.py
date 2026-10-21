@@ -32,6 +32,7 @@ from app.modules.matching.models import EmployerNeed
 from app.modules.profiles.models import EmployerProfile
 from app.modules.validation import attacks, selfcheck
 
+from app.modules.validation.no_vendor import scrub  # noqa: E402 — ответы для экрана без названий моделей
 router = APIRouter(prefix="/api/validation", tags=["validation"])
 from app.modules.validation.closed_set import router as closed_set_router
 
@@ -126,6 +127,11 @@ def report(db: Session = Depends(get_db)):
     body, at = _rep_cache.get("body"), _rep_cache.get("at", 0.0)
     if body is not None and time.monotonic() - at < ttl:
         return Response(body, media_type="application/json")
+    if body is not None:
+        # А19 №6 (/validation 16 с): прошлый ответ — сразу, пересчёт — в фоне (живые счётчики отстают на один TTL)
+        if _rep_lock.acquire(blocking=False):
+            threading.Thread(target=_report_refresh, daemon=True).start()
+        return Response(body, media_type="application/json", headers={"X-Report-Stale": "1"})
     if not _rep_lock.acquire(blocking=body is None):  # пересчёт уже идёт — прошлый ответ
         return Response(body, media_type="application/json", headers={"X-Report-Stale": "1"})
     try:
@@ -135,6 +141,20 @@ def report(db: Session = Depends(get_db)):
             _rep_cache.update(body=body, at=time.monotonic())
         return Response(body, media_type="application/json")
     finally:
+        _rep_lock.release()
+
+
+def _report_refresh() -> None:
+    """Фоновый пересчёт /report своей сессией БД; блокировка уже взята вызывающим."""
+    from app.core.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        _rep_cache.update(body=_report_bytes(db), at=time.monotonic())
+    except Exception:  # noqa: BLE001 — фон не должен ронять воркер; следующий запрос попробует снова
+        pass
+    finally:
+        db.close()
         _rep_lock.release()
 
 
@@ -313,7 +333,7 @@ def validation_provenance():
 @router.get("/headline", summary="Первый экран /validation: 5 чисел с ДИ и подписью мира")
 def validation_headline():
     from app.modules.validation.headline import headline
-    return headline()
+    return scrub(headline())  # без названий моделей и поставщиков на экране (no_vendor.py)
 
 
 @router.get("/criteria", summary="Страница /criteria: критерии ТЗ → что сделать → что увидите → чем доказано",
@@ -321,7 +341,7 @@ def validation_headline():
                         "(seed, конфигурация, коммит). Источник docs/CRITERIA.md (make criteria-doc).")
 def validation_criteria(db: Session = Depends(get_db)):
     from app.modules.validation.criteria import build
-    return build(db)
+    return scrub(build(db))
 
 
 @router.get("/fsp-rating", summary="Парный регрессионный бенчмарк формулы ФСП v1/v2")
@@ -360,7 +380,7 @@ def _grader() -> dict:
 
 @router.get("/grader-check", summary="Оценщик открытых ответов на наборе панели 06.10: инъекции и завышение, до и после")
 def grader_check():
-    return _grader()
+    return scrub(_grader())
 
 
 LLM_MODELS = Path(__file__).resolve().parent / "data" / "llm_models.json"
@@ -370,7 +390,7 @@ LLM_MODELS = Path(__file__).resolve().parent / "data" / "llm_models.json"
 def llm_models():
     if not LLM_MODELS.exists():
         return {"missing": True}
-    return json.loads(LLM_MODELS.read_text(encoding="utf-8"))
+    return scrub(json.loads(LLM_MODELS.read_text(encoding="utf-8")))
 
 
 # --- режим «только российская модель» — все LLM-функции на YandexGPT против Sonnet и правил (tools/llm/ru_llm_bench.py) ---
@@ -381,7 +401,7 @@ RU_LLM = Path(__file__).resolve().parent / "data" / "ru_llm.json"
 def ru_llm():
     if not RU_LLM.exists():
         return {"missing": True}
-    return json.loads(RU_LLM.read_text(encoding="utf-8"))
+    return scrub(json.loads(RU_LLM.read_text(encoding="utf-8")))
 
 
 # --- сильнейшие модели по функциям — качество, надёжность, задержка, цена (tools/llm/strongest_summary.py) ---
@@ -392,7 +412,7 @@ STRONGEST = Path(__file__).resolve().parent / "data" / "strongest.json"
 def strongest():
     if not STRONGEST.exists():
         return {"missing": True}
-    return json.loads(STRONGEST.read_text(encoding="utf-8"))
+    return scrub(json.loads(STRONGEST.read_text(encoding="utf-8")))
 
 
 # --- И26: доля повторов заданий между попытками (живая по базе + синтетика; пересчёт: attempts_repeat.py) ---

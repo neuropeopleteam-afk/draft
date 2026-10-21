@@ -682,5 +682,51 @@ def test_ats_webhook_no_contacts_before_consent_and_contacts_after_consent(clien
         ats_clients._send = orig_send
 
 
+def test_candidate_experience_years_bounds_and_age_minus_14(client):
+    """А2 (21.10): коммерческий стаж в профиле и опросе ограничен 0..45 лет и не больше (возраст − 14) -> 422 в API."""
+    from tests.conftest import register_and_verify
+    from tests.test_day2_rules import ONBOARDING
+
+    tc = register_and_verify(client, "exp_bounds_cand@example.com")
+
+    # 1. В опросе и профиле стаж 50 лет (и < 0) отклоняется с 422 и понятным сообщением
+    r_50_onb = client.put("/api/me/onboarding", json={**ONBOARDING, "experience_years": 50}, headers=H(tc))
+    assert r_50_onb.status_code == 422, r_50_onb.text
+    assert "45" in r_50_onb.text
+
+    r_50_prof = client.patch("/api/me/candidate-profile", json={"experience_years": 50}, headers=H(tc))
+    assert r_50_prof.status_code == 422, r_50_prof.text
+    assert "45" in r_50_prof.text
+
+    r_neg = client.patch("/api/me/candidate-profile", json={"experience_years": -1}, headers=H(tc))
+    assert r_neg.status_code == 422
+
+    # 2. Допустимый стаж 45 лет для 18+ сохраняется
+    r_45 = client.put("/api/me/onboarding", json={**ONBOARDING, "experience_years": 45}, headers=H(tc))
+    assert r_45.status_code == 200, r_45.text
+
+    # 3. Если передан числовой возраст (например, age=20), стаж > (20 - 14 = 6) отклоняется с 422
+    r_age_num = client.patch("/api/me/candidate-profile", json={"age": 20, "experience_years": 8}, headers=H(tc))
+    assert r_age_num.status_code == 422, r_age_num.text
+    assert "возраста минус 14" in r_age_num.text
+
+    r_age_ok = client.patch("/api/me/candidate-profile", json={"age": 20, "experience_years": 6}, headers=H(tc))
+    assert r_age_ok.status_code == 200, r_age_ok.text
+
+    # 4. Если у кандидата установлена возрастная группа 16-17 (макс. стаж 17 - 14 = 3 г.) или 14-15 (макс. 1 г.):
+    assert client.patch("/api/me/candidate-profile", json={"age_group": "16-17", "parental_consent": True}, headers=H(tc)).status_code == 200
+    r_youth_bad = client.patch("/api/me/candidate-profile", json={"experience_years": 5}, headers=H(tc))
+    assert r_youth_bad.status_code == 422, r_youth_bad.text
+    assert "возраста минус 14" in r_youth_bad.text
+
+    r_youth_onb_bad = client.put("/api/me/onboarding", json={**ONBOARDING, "experience_years": 4}, headers=H(tc))
+    assert r_youth_onb_bad.status_code == 422, r_youth_onb_bad.text
+    assert "возраста минус 14" in r_youth_onb_bad.text
+
+    r_youth_ok = client.patch("/api/me/candidate-profile", json={"experience_years": 3}, headers=H(tc))
+    assert r_youth_ok.status_code == 200, r_youth_ok.text
+
+
+
 
 
