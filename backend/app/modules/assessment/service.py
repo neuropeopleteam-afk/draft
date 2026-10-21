@@ -16,6 +16,7 @@ from app.core.config import get_settings
 from app.core.db import as_aware, utcnow
 from app.core.enums import EvidenceLevel, FactSource, GradeChangeReason, TestSessionStatus
 from app.core.errors import api_error
+from app.modules.assessment.display import display_stem
 from app.modules.assessment import second_opinion as second_op
 from app.modules.assessment.bank_engine import express_params
 from app.modules.assessment.engine import get_engine
@@ -360,7 +361,7 @@ def _drain_outbox(db: Session, ts: TestSession) -> None:
             var = db.get(TaskVariant, it["variant_id"])
             if var is None:
                 pub = it["public"]
-                var = TaskVariant(id=it["variant_id"], family_id=it["family_id"], seed=it["seed"], stem=pub["stem"],
+                var = TaskVariant(id=it["variant_id"], family_id=it["family_id"], seed=it["seed"], stem=display_stem(pub["stem"]),
                                   code=pub["code"], code_language=it.get("language"), options=pub["options"],
                                   answer_key=it["key"], rubric=it["rubric"],
                                   meta={"steps": pub.get("steps"), "format": it["format"], "bank": st.get("engine")},
