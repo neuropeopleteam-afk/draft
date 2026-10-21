@@ -4,6 +4,8 @@
          файл выборки (с ПДн) остаётся на сервере; печатается хэш выборки (фиксируется в git ДО проверки).
   check  <sample.json> <images_dir> <out.json>              — в песочнице: независимая сверка каждой записи со
          страницей скана моделью другого поставщика (по умолчанию anthropic/claude-sonnet-5.5).
+  recheck <sample.json> <check.json> <index.json> <ocr_audit.json> — контроль исправлений: те же записи выборки в новой
+         версии индекса против прочитанного по скану (не независимая оценка — выборка уже использована для поиска ошибок).
   report <sample.json> <check.json> <adjudication.json|-> <ocr_audit.json> — доля ошибок ФИО, места, даты
          рождения (с 95 % интервалом Уилсона); расхождения разбираются глазами (adjudication), итог — по разбору.
 """
@@ -168,6 +170,45 @@ def report(sample_path: Path, check_path: Path, adj_path: str, out: Path) -> Non
     print(json.dumps(doc, ensure_ascii=False, indent=1))
 
 
+def recheck(sample_path: Path, check_path: Path, index_path: Path, out: Path) -> None:
+    s = json.loads(sample_path.read_text(encoding="utf-8"))
+    c = {r["i"]: r for r in json.loads(check_path.read_text(encoding="utf-8"))["results"]}
+    by: dict[tuple, list] = {}
+    for r in json.loads(index_path.read_text(encoding="utf-8"))["records"]:
+        by.setdefault((r.get("event_id"), r.get("page")), []).append(r)
+    res = {"place_ok": 0, "place_wrong": 0, "place_wrong_flagged_uncertain": 0, "place_missing": 0, "record_not_found": 0,
+           "fio_changed_matched_by_birth_date": 0}
+    for x in s["rows"]:
+        pg = by.get((x["event_id"], x["page"]), [])
+        cand = [r for r in pg if r.get("fio_norm") == x["fio_norm"]]
+        if not cand and x.get("birth_date"):
+            cand = [r for r in pg if r.get("birth_date") == x["birth_date"]]
+            res["fio_changed_matched_by_birth_date"] += bool(cand)
+        if not cand:
+            res["record_not_found"] += 1
+            continue
+        r, cp = cand[0], (c.get(x["i"]) or {}).get("place")
+        if cp is None:
+            continue
+        nums = [int(n) for n in re.findall(r"\d+", str(cp))]
+        if r.get("place") is None or not nums:
+            res["place_missing"] += 1
+        elif nums[0] <= int(r["place"]) <= nums[-1]:
+            res["place_ok"] += 1
+        else:
+            res["place_wrong"] += 1
+            res["place_wrong_flagged_uncertain"] += bool(r.get("place_uncertain"))
+    n = res["place_ok"] + res["place_wrong"]
+    res["error_rate_place"] = {"value": round(res["place_wrong"] / n, 4) if n else None, "k": res["place_wrong"], "n": n,
+                               "ci95": wilson(res["place_wrong"], n)}
+    res.update({"index": index_path.name, "note": "контроль исправлений на той же выборке — не независимая оценка",
+                "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+    doc = json.loads(out.read_text(encoding="utf-8")) if out.exists() else {}
+    doc.setdefault("control_after_fixes", {})[index_path.name] = res
+    out.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    print(json.dumps(res, ensure_ascii=False))
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "plan":
@@ -177,5 +218,7 @@ if __name__ == "__main__":
         plan(Path(a[2]), Path(a[3]), n, seed)
     elif cmd == "check":
         check(Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4]))
+    elif cmd == "recheck":
+        recheck(Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4]), Path(sys.argv[5]))
     elif cmd == "report":
         report(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4], Path(sys.argv[5]))

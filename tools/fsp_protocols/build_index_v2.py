@@ -206,11 +206,15 @@ for r in v1["records"]:
     if e:
         out.append(e)
 
-# командные протоколы: записи повторного разбора (места по блокам команд). Если место совпало с первичным
-# построчным распознаванием (две независимые разметки), пометка «место требует сверки» снимается.
+# командные протоколы: записи повторного разбора (места по блокам команд). Место надёжно, только если число
+# участников в блоках подтверждено линиями таблицы (geometry); иначе place_uncertain=true.
 v1_place: dict[tuple[str, int, str], object] = {}
+v1_region: dict[tuple[str, int, str], str] = {}
 for r in v1["records"]:
-    v1_place[(r["pdf_url"].rsplit("/", 1)[-1], r.get("page"), r.get("fio_norm"))] = r.get("place")
+    k = (r["pdf_url"].rsplit("/", 1)[-1], r.get("page"), r.get("fio_norm"))
+    v1_place[k] = r.get("place")
+    if r.get("region"):
+        v1_region[k] = r["region"]
 for fn, (doc_id, pages) in sorted(REBUILT.items()):
     src = DOC_BY_FILE[fn]
     for p in sorted(pages):
@@ -226,11 +230,13 @@ for fn, (doc_id, pages) in sorted(REBUILT.items()):
                 continue
             bdate, byear = norm.extract_birth_date(row.get("birth_date"))
             uncertain = bool(row.get("place_uncertain", not geometry)) or row.get("place") is None
-            if uncertain and row.get("place") is not None and v1_place.get((fn, p, fio_norm)) == row.get("place"):
-                uncertain = False
-                fixes["место повторного разбора подтверждено первичным распознаванием"] += 1
+            # совпадение с первичным построчным распознаванием сверкой не считаем: аудит (стр. 73 КФ-2026) показал,
+            # что обе разметки ошибаются одинаково — относят первого участника команды к предыдущему месту
             rec = {"fio_norm": fio_norm, "birth_date": bdate or byear, "discipline": d.get("discipline"),
-                   "place": row.get("place"), "rank": row.get("rank"), "team": row.get("team"), "region": row.get("region"),
+                   "place": row.get("place"), "rank": row.get("rank"), "team": row.get("team"),
+                   # субъект РФ — по строке участника (первичное построчное распознавание): в сборных командах субъекты
+                   # участников разные, а блоковый разбор возвращает субъект команды
+                   "region": v1_region.get((fn, p, fio_norm)) or row.get("region"),
                    "pdf_url": src["pdf_url"], "page": p,
                    "recognized": "v2_team_blocks_geometry" if geometry else "v2_team_blocks_model",
                    "place_uncertain": uncertain}

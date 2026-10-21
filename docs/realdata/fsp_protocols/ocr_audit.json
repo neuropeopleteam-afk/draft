@@ -49,5 +49,47 @@
   "глазами: то же — число решённых задач вместо места; исправлено в index_v3"
  ],
  "generated_at": "2026-10-21T07:10:11+00:00",
- "recompute": "python3 tools/fsp_protocols/ocr_audit.py plan|check|report (см. docs/realdata/fsp_protocols/README.md, раздел «Аудит распознавания»)"
+ "recompute": "python3 tools/fsp_protocols/ocr_audit.py plan|check|report (см. docs/realdata/fsp_protocols/README.md, раздел «Аудит распознавания»)",
+ "control_after_fixes": {
+  "index_v3.json": {
+   "place_ok": 74,
+   "place_wrong": 3,
+   "place_wrong_flagged_uncertain": 0,
+   "place_missing": 20,
+   "record_not_found": 0,
+   "fio_changed_matched_by_birth_date": 0,
+   "error_rate_place": {
+    "value": 0.039,
+    "k": 3,
+    "n": 77,
+    "ci95": [
+     0.0133,
+     0.1084
+    ]
+   },
+   "index": "index_v3.json",
+   "note": "контроль исправлений на той же выборке — не независимая оценка",
+   "generated_at": "2026-10-21T07:29:03+00:00"
+  },
+  "index_v4.json": {
+   "place_ok": 91,
+   "place_wrong": 2,
+   "place_wrong_flagged_uncertain": 2,
+   "place_missing": 3,
+   "record_not_found": 1,
+   "fio_changed_matched_by_birth_date": 1,
+   "error_rate_place": {
+    "value": 0.0215,
+    "k": 2,
+    "n": 93,
+    "ci95": [
+     0.0059,
+     0.0751
+    ]
+   },
+   "index": "index_v4.json",
+   "note": "контроль исправлений на той же выборке — не независимая оценка",
+   "generated_at": "2026-10-21T07:29:04+00:00"
+  }
+ }
 }
