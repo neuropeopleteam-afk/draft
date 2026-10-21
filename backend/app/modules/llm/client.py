@@ -70,7 +70,7 @@ class LLMResult:
 
     @property
     def label(self) -> str | None:
-        return route_label(self.provider, self.model) if self.model else None
+        return route_label(self.provider, self.model, second=self.func == "grade_second") if self.model else None
 
     def info(self) -> dict:
         """Сводка для сохранения рядом с результатом (без текста ответа)."""
@@ -100,8 +100,8 @@ _LABELS = {"yandexgpt": "YandexGPT", "yandexgpt-lite": "YandexGPT Lite", "yandex
            "gpt-oss-120b": "gpt-oss-120b", "gpt-oss-20b": "gpt-oss-20b"}  # «YandexGPT 5.1» на чипах режима LLM_CHAIN=yandex
 
 
-def model_label(model: str | None) -> str:
-    """Человекочитаемое имя для интерфейса: anthropic/claude-sonnet-5.5 → Claude Sonnet 5.5; yandexgpt/latest → YandexGPT;
+def model_name(model: str | None) -> str:
+    """Человекочитаемое имя модели для служебных мест (журналы, /api/meta, документы валидации): anthropic/claude-sonnet-5.5 → Claude Sonnet 5.5; yandexgpt/latest → YandexGPT;
     qwen/qwen3.5-9b и qwen3.5-9b → Qwen3.5 9B."""
     m = short_model(model)
     if not m:
@@ -125,9 +125,27 @@ def model_label(model: str | None) -> str:
     return m.split("/", 1)[-1]
 
 
-def route_label(provider: str | None, model: str | None) -> str:
-    """Подпись модели с местом запуска: у провайдера local — «Qwen3.5 9B (локально)» (открытые веса на этой машине)."""
-    label = model_label(model)
+def route_name(provider: str | None, model: str | None) -> str:
+    """Служебное имя с местом запуска: у провайдера local — «Qwen3.5 9B (локально)» (открытые веса на этой машине)."""
+    label = model_name(model)
+    return f"{label} (локально)" if label and provider == "local" else label
+
+
+MODEL_UI = "языковая модель"  # подпись в интерфейсе: поставщиков и имена моделей на экранах не называем (правило владельца)
+SECOND_UI = "вторая модель"  # вторая независимая оценка спорных ответов (grade_second)
+
+
+def model_label(model: str | None, second: bool = False) -> str:
+    """Подпись для интерфейса (ответы API, которые рисует экран): нейтральная, без имени модели и поставщика.
+    Имя модели для журналов и служебных мест — model_name()."""
+    if not short_model(model):
+        return ""
+    return SECOND_UI if second else MODEL_UI
+
+
+def route_label(provider: str | None, model: str | None, second: bool = False) -> str:
+    """Подпись для интерфейса с местом запуска: у провайдера local — «языковая модель (локально)»."""
+    label = model_label(model, second)
     return f"{label} (локально)" if label and provider == "local" else label
 
 
@@ -509,7 +527,8 @@ def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 12
             res.func, res.attempts, res.latency_ms = func, attempts, total
             if func:
                 with _last_lock:
-                    _last[func] = {"provider": res.provider, "model": res.model, "model_label": res.label,
+                    _last[func] = {"provider": res.provider, "model": res.model,
+                                   "model_label": route_name(res.provider, res.model),
                                    "at": time.time(), "latency_ms": total, "fallback": len(attempts) > 1}
             return res
         breaker.failure(r.key, res.error)
@@ -550,7 +569,7 @@ def status() -> dict:
     for f in FUNCTIONS:
         rs = routes(f)
         funcs[f] = {"models": [{"provider": r.provider, "model": short_model(r.model),
-                                "label": route_label(r.provider, r.model)} for r in rs],
+                                "label": route_name(r.provider, r.model)} for r in rs],
                     "timeout_s": timeout_for(f, s)}
         if any(r.provider == "local" for r in rs):
             funcs[f]["local_timeout_s"] = next(r.timeout_s for r in rs if r.provider == "local")
