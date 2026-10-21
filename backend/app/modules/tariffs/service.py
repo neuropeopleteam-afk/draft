@@ -290,7 +290,13 @@ def company_brief(db: Session, c: Company, actor: User | None = None) -> dict:
 
 def _visible(db: Session, actor: User, c: Company) -> bool:
     """Аналитик видит компании платформы без песочниц жюри; жюри — ещё и компании своей песочницы."""
+    from app.modules.jury import scope as jury_scope
+
+    if not jury_scope.demo_visible(c, actor):
+        return False
     owner = db.get(User, c.created_by) if c.created_by else None
+    if owner is not None and not jury_scope.sees_demo(actor) and owner.is_demo:
+        return False
     o_sid = _jury_sid(owner.email if owner else None)
     return o_sid is None or o_sid == _jury_sid(actor.email)
 

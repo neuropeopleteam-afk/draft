@@ -443,3 +443,52 @@ def test_company_response_speed_badge(client):
     assert badge["sample_size"] == 3
     assert badge["label"] == "Отвечает в среднем за 4 ч"
 
+
+def test_expert_checklist_7_salary_before_consent_contacts_hidden_and_revoke(client):
+    """Чек-лист экспертов п. 7 (20.10): POST /api/employer/invitations без вилки → 422;
+    кандидат видит компанию и вилку до согласия; контакты скрыты до согласия; отзыв контактов работает."""
+    te = employer(client)
+    tc = candidate_with_category(client, "c_expert7@example.com")
+    client.patch(
+        "/api/me/candidate-profile",
+        json={"full_name": "Алексей Смирнов", "phone": "+79991112233", "telegram": "@alex_s"},
+        headers=H(tc),
+    )
+    ref = my_ref(client, tc)
+
+    # 1. Без вилки → 422
+    no_sal = {k: v for k, v in INVITE.items() if k not in ("salary_from", "salary_to")}
+    r_bad = client.post("/api/employer/invitations", json={**no_sal, "candidate_ref": ref}, headers=H(te))
+    assert r_bad.status_code == 422
+
+    # 2. До согласия контакты кандидата скрыты от работодателя
+    card_before = client.get(f"/api/employer/candidates/{ref}", headers=H(te)).json()
+    assert card_before["contacts"] is None
+
+    # 3. Работодатель отправляет приглашение с вилкой; кандидат видит компанию и вилку до согласия
+    r_inv = client.post("/api/employer/invitations", json={**INVITE, "candidate_ref": ref}, headers=H(te))
+    assert r_inv.status_code == 201, r_inv.text
+    inv_id = r_inv.json()["id"]
+    assert r_inv.json()["contacts"] is None
+
+    cand_invs = client.get("/api/candidate/invitations", headers=H(tc)).json()
+    assert len(cand_invs) == 1
+    assert cand_invs[0]["company"]["name"]
+    assert cand_invs[0]["salary_from"] == INVITE["salary_from"]
+    assert cand_invs[0]["salary_to"] == INVITE["salary_to"]
+
+    # 4. После принятия контакты открываются, а после отзыва — снова закрыты
+    r_acc = client.post(f"/api/candidate/invitations/{inv_id}/accept", json={}, headers=H(tc))
+    assert r_acc.status_code == 200
+    card_acc = client.get(f"/api/employer/candidates/{ref}", headers=H(te)).json()
+    assert card_acc["contacts"] is not None
+    assert card_acc["contacts"]["phone"] == "+79991112233"
+
+    r_rev = client.post(f"/api/candidate/invitations/{inv_id}/contacts/revoke", headers=H(tc))
+    assert r_rev.status_code == 200
+    assert r_rev.json()["contacts_revoked"] is True
+    card_rev = client.get(f"/api/employer/candidates/{ref}", headers=H(te)).json()
+    assert card_rev["contacts"] is None
+    assert card_rev["contacts_revoked"] is True
+
+

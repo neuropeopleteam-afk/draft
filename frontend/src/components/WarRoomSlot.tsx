@@ -1,6 +1,7 @@
 import { useEffect, useState, type ComponentType } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
+import { useAuth } from "../lib/auth";
 
 // А2 → слот для А9 («Боевой ИИ-Полигон», components/warroom/WarRoomBadge.tsx).
 // Подгружает компонент А9 через import.meta.glob без жёсткой сборочной зависимости до слияния веток.
@@ -27,6 +28,8 @@ export function WarRoomSlot({
   direction?: string | null;
   compact?: boolean;
 }) {
+  const { me } = useAuth();
+  const effMode: "candidate" | "employer" = me?.role === "candidate" ? "candidate" : mode;
   const [BadgeComp, setBadgeComp] = useState<ComponentType<any> | null>(null);
   const [data, setData] = useState<any>(null);
 
@@ -44,21 +47,21 @@ export function WarRoomSlot({
 
   useEffect(() => {
     if (BadgeComp) return;
-    if (mode === "employer" && !candidateRef) return;
-    if (mode === "candidate" && grade && !isSeniorPlusGrade(grade)) return;
-    const path = mode === "employer" ? `/warroom/candidates/${candidateRef}` : "/warroom/attempts/my";
+    if (effMode === "employer" && !candidateRef) return;
+    if (effMode === "candidate" && !isSeniorPlusGrade(grade)) return;
+    const path = effMode === "employer" ? `/warroom/candidates/${candidateRef}` : "/warroom/attempts/my";
     api<any>(path)
       .then((res) => setData(res))
       .catch(() => setData(null));
-  }, [BadgeComp, mode, candidateRef, grade]);
+  }, [BadgeComp, effMode, candidateRef, grade]);
 
-  if (mode === "candidate" && !isSeniorPlusGrade(grade)) return null;
-  if (mode === "employer" && !candidateRef) return null;
+  if (effMode === "candidate" && !isSeniorPlusGrade(grade)) return null;
+  if (effMode === "employer" && !candidateRef) return null;
 
   if (BadgeComp) {
     return (
       <div data-testid="warroom-badge-slot">
-        <BadgeComp role={mode} mode={mode} candidateRef={candidateRef} refId={candidateRef} claimedGrade={grade} grade={grade} direction={direction} compact={compact} />
+        <BadgeComp role={effMode} mode={effMode} candidateRef={candidateRef} refId={candidateRef} claimedGrade={grade} grade={grade} direction={direction} compact={compact} />
       </div>
     );
   }
@@ -69,7 +72,7 @@ export function WarRoomSlot({
   const items: any[] = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : data?.attempt ? [data.attempt] : [];
   const latest = items[0] ?? (data && typeof data === "object" && "verdict" in data ? data : null);
 
-  if (mode === "employer") {
+  if (effMode === "employer") {
     if (!latest && !isSeniorPlusGrade(grade)) return null;
     return (
       <div className="mt-3 rounded-xl border border-brand-night/10 bg-[#F7F6FB] p-3 text-xs" data-testid="warroom-badge-slot">

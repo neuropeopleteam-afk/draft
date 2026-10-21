@@ -5,6 +5,7 @@ import { DemoProfileBadge, Level, num, pct, plainText as ruText, signed, years }
 import { Specializations } from "./Specializations";
 import { MarketNote } from "./Salary";
 import { NO_FSP, OriginTag } from "./Origin";
+import { useDemoUi } from "../lib/juryMode";
 import { MatchExplain } from "./MatchExplain";
 import { WarRoomSlot } from "./WarRoomSlot";
 
@@ -50,8 +51,8 @@ export function ReasonLevel({ r }: { r: { level?: string | null; status?: string
   return <Level level={r.level} />;
 }
 
-/** Ф6 (Н3): рядом с баллом — покрытие обязательного тестом; подсказка — что балл значит и какие условия жёсткие. */
-export const SCORE_HINT = "Соответствие из 100 — взвешенная доля требований потребности, подтверждённых тестом; обязательные весят больше желательных, достижения ФСП и ваши задания добавляют немного. Сказанное кандидатом о себе в балл не входит. Обязательные навыки — мягкое условие: без подтверждения кандидат не исключается, но помечен и идёт ниже. Формат и город — жёсткое условие: не прошедшие скрыты (можно показать всех).";
+/** Ф6 (Н3): рядом с баллом — покрытие навыков вакансии, подтверждённых тестом; подсказка — что балл значит и какие условия жёсткие. */
+export const SCORE_HINT = "Категория и фильтр грейда строятся только по результату теста; место внутри категории определяют результат теста и достижения ФСП (отдельной осью, без штрафа при отсутствии истории ФСП). Навыки вакансии, подтверждённые тестом, формируют ярус покрытия и строку объяснения. Сказанное кандидатом о себе в балл не входит. Формат и город — фильтр условий потребности.";
 
 export function ScoreBox({ score, must }: { score: number; must?: any }) {
   const req = must?.required_total ?? 0, miss = must?.missing_total ?? 0;
@@ -59,7 +60,7 @@ export function ScoreBox({ score, must }: { score: number; must?: any }) {
     <div className="text-right" title={SCORE_HINT}>
       <p className="text-2xl font-extrabold text-brand">{Math.round(score * 100)}</p>
       <p className="text-xs text-brand-ink/65">соответствие из 100</p>
-      {req > 0 && <p data-testid="must-coverage" className={`mt-0.5 text-xs font-semibold ${miss ? "text-amber-900" : "text-emerald-800"}`}>обязательное: {req - miss} из {req}</p>}
+      {req > 0 && <p data-testid="must-coverage" className={`mt-0.5 text-xs font-semibold ${miss ? "text-amber-900" : "text-emerald-800"}`}>навыки вакансии (тест): {req - miss} из {req}</p>}
     </div>
   );
 }
@@ -89,13 +90,15 @@ function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
   );
 }
 
-export function CandidateCard({ c, score, reasons, explain, actions, must, core, compact = false, badge, mutual, collapsible = false, expanded = false, bare = false }: {
+export function CandidateCard({ c, score, reasons, explain, actions, must, core, compact = false, badge, mutual, collapsible = false, expanded = false, bare = false, viewerRole = "employer" }: {
   c: any; score?: number; reasons?: any[]; explain?: any; actions?: ReactNode; must?: any; core?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9); core — ядро роли (Я1)
   collapsible?: boolean; expanded?: boolean;  // Ф6 (Н9): короткая карточка с раскрытием по клику
   bare?: boolean;  // Я10: только доказательства — без рамки и шапки (раскрытие компактной карточки подборки)
+  viewerRole?: "employer" | "candidate";
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
+  const demoUi = useDemoUi();
   const [open, setOpen] = useState(!collapsible || expanded);
   useEffect(() => { setOpen(!collapsible || expanded); }, [collapsible, expanded]);
   const toggle = collapsible ? (
@@ -113,7 +116,7 @@ export function CandidateCard({ c, score, reasons, explain, actions, must, core,
               <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
               <GradeBadge s={c.status} claimed={c.claimed} />
               <DemoProfileBadge c={c} />
-              {c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
+              {demoUi && c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
               {badge}
             </div>
             <MustLine m={must} core={core} />
@@ -265,7 +268,7 @@ export function CandidateCard({ c, score, reasons, explain, actions, must, core,
               })}</ul>
             ) : <p className="mt-1 text-brand-ink/65">{NO_FSP}</p>}
           {fsp.unverified_count > 0 && <p className="mt-1 text-xs text-brand-ink/65">Заявлено без подтверждения реестром: {fsp.unverified_count} — не учитывается</p>}
-          {fsp.origin && !fsp.hidden && <p className="mt-1"><OriginTag o={fsp.origin} /></p>}
+          {demoUi && fsp.origin && !fsp.hidden && <p className="mt-1"><OriginTag o={fsp.origin} /></p>}
           {fsp.rating && !fsp.hidden && fsp.rating.competitions > 0 && <details className="mt-2 text-xs text-brand-ink/70">
             <summary className="cursor-pointer font-semibold text-brand-plum">Как считается ФСП: {num(fsp.rating.strength, 3)} · соревнований {num(fsp.rating.competitions, 0)}</summary>
             <p className="mt-2 leading-relaxed">{fsp.rating.policy}</p>
@@ -300,7 +303,7 @@ export function CandidateCard({ c, score, reasons, explain, actions, must, core,
         </details>
       )}
       <div id={`warroom-${c.ref ?? ""}`}>
-        <WarRoomSlot mode="employer" candidateRef={c.ref} grade={c.grade ?? c.claimed?.grade} direction={c.direction} compact={compact} />
+        <WarRoomSlot mode={viewerRole} candidateRef={c.ref} grade={c.grade ?? c.claimed?.grade} direction={c.direction} compact={compact} />
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">

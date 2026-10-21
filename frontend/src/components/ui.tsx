@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { ApiError, api } from "../lib/api";
+import { useDemoUi } from "../lib/juryMode";
 
 /** Неразрывный пробел: между числом и «₽»/«%», внутри «220 000». */
 export const NB = "\u00A0";
@@ -215,13 +216,18 @@ export function Loading({ text = "Загрузка…" }: { text?: string }) {
 
 export function Empty({ title, text, action }: { title: string; text?: string; action?: ReactNode }) {
   return (
-    <div className="card border-dashed px-6 py-10 text-center">
+    <div className="card border-dashed px-6 py-10 text-center" data-testid="empty-state">
       <svg viewBox="0 0 24 24" className="mx-auto mb-3 h-8 w-8 text-brand-lavender" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
         <rect x="3.5" y="5" width="17" height="14" rx="3" /><path d="M3.5 13h5l1.5 2h4l1.5-2h5" />
       </svg>
       <p className="font-semibold text-brand-night">{title}</p>
       {text && <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-brand-ink/70">{text}</p>}
       {action && <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div>}
+      <p className="mt-4 text-xs text-brand-ink/55">
+        <a href="/demo" className="font-medium text-brand-plum hover:underline" data-testid="empty-demo-link">
+          Посмотреть, как это работает на демо-данных → /demo
+        </a>
+      </p>
     </div>
   );
 }
@@ -366,9 +372,10 @@ export function isSyntheticProfile(c: any): boolean {
   );
 }
 
-/** А2: бейдж «демо-профиль» у синтетического кандидата в карточке, подборке, поиске, сравнении и приглашении. */
+/** А2: бейдж «демо-профиль» у синтетического кандидата — показывается только в режиме демо жюри. */
 export function DemoProfileBadge({ c, className = "" }: { c: any; className?: string }) {
-  if (!isSyntheticProfile(c)) return null;
+  const demoUi = useDemoUi();
+  if (!demoUi || !isSyntheticProfile(c)) return null;
   return (
     <span
       data-testid="demo-profile-badge"

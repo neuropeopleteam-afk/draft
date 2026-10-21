@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DemoProfileBadge, DIRECTION_TITLES, GRADE_TITLE_ALL, Toggle } from "../../components/ui";
+import { useDemoUi } from "../../lib/juryMode";
 import { fk } from "../charts";
 
 interface RegionRow {
@@ -151,10 +152,11 @@ const SVG_POLYGONS: Record<string, { path: string; cx: number; cy: number }> = {
 };
 
 export function TalentMap({ data }: { data?: RegionsMapData | null }) {
+  const demoUi = useDemoUi();
   const [selectedId, setSelectedId] = useState<string>("cfo");
   const [dirFilter, setDirFilter] = useState<string>("all");
   const [gradeFilter, setGradeFilter] = useState<string>("all");
-  const [realOnly, setRealOnly] = useState<boolean>(false);
+  const [realOnly, setRealOnly] = useState<boolean>(!demoUi);
 
   if (!data?.districts?.length) return null;
 
@@ -191,7 +193,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
             Подтверждённые кандидаты по федеральным округам и регионам, спрос работодателей и рекомендация, где провести отборочное соревнование ФСП.
           </p>
         </div>
-        {data.has_synthetic && (
+        {demoUi && data.has_synthetic && (
           <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50/80 px-3 py-2 text-xs text-amber-950 ring-1 ring-amber-300/60">
             <DemoProfileBadge c={{ is_synthetic: true }} />
             <span>
@@ -238,13 +240,15 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
             </select>
           </label>
         </div>
-        <div>
-          <Toggle
-            checked={realOnly}
-            onChange={setRealOnly}
-            label="Только реальные кандидаты (без модельных)"
-          />
-        </div>
+        {demoUi && (
+          <div>
+            <Toggle
+              checked={realOnly}
+              onChange={setRealOnly}
+              label="Только реальные кандидаты (без модельных)"
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
@@ -384,7 +388,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
                     <li key={r.title} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
                       <span className="font-medium text-brand-night">
                         {r.title}{" "}
-                        {r.has_synthetic && !realOnly && (
+                        {demoUi && r.has_synthetic && !realOnly && (
                           <span className="text-[10px] text-amber-800">(вкл. демо-профили)</span>
                         )}
                       </span>
@@ -397,7 +401,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
               </div>
             )}
           </div>
-          <p className="mt-3 text-[11px] text-brand-ink/60">{data.synthetic_note}</p>
+          {demoUi && <p className="mt-3 text-[11px] text-brand-ink/60">{data.synthetic_note}</p>}
         </div>
       </div>
 

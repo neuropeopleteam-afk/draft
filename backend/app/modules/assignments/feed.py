@@ -84,6 +84,8 @@ def visible_open(db: Session, user: User, p: CandidateProfile) -> list[Assignmen
         q = q.where(Assignment.direction_id == p.current_direction_id)
     q = q.where(Assignment.jury_scope.is_(None)) if key is None else \
         q.where((Assignment.jury_scope.is_(None)) | (Assignment.jury_scope == key))
+    if not jury_scope.sees_demo(user):
+        q = q.where(Assignment.is_demo.is_(False))
     return list(db.scalars(q.order_by(Assignment.created_at.desc())).all())
 
 

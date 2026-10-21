@@ -12,6 +12,8 @@ import { MutualPrefs } from "../mutual/Candidate";  // интересы для �
 
 export function Fsp() {
   const { data, loading, error, reload } = useApi<any>("/me/fsp");
+  const { me } = useAuth();
+  const isDemoStand = Boolean((me as any)?.is_demo || data?.registry?.demo || data?.origin?.kind === "model" || data?.origin?.kind === "stub");
   const [id, setId] = useState("");
   const [msg, setMsg] = useState<{ k: "ok" | "error"; t: string } | null>(null);
   const [fio, setFio] = useState("");
@@ -64,7 +66,15 @@ export function Fsp() {
         <div className="flex flex-wrap items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p>{data.origin && <OriginTag o={data.origin} />}</div>
         <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром ФСП.` : data.note}</p>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl bg-[#F3F2FB] p-4 text-center text-sm" data-testid="fsp-identity-link">
-          <div className="min-w-0"><p className="font-bold text-brand-night">ФСП ID</p><p className="mt-1 break-all text-xs text-brand-ink/70">{data.fsp_id_claimed || "Не указан"}</p></div>
+          <div className="min-w-0">
+            <p className="font-bold text-brand-night">ФСП ID</p>
+            <p className="mt-1 break-all text-xs text-brand-ink/70">{data.fsp_id_claimed || "Не указан"}</p>
+            {data.fsp_id_claimed && isDemoStand && (
+              <p className="mt-1 text-[11px] font-medium text-amber-900" data-testid="fsp-demo-code-note">
+                Демо-стенд: код показан здесь вместо письма
+              </p>
+            )}
+          </div>
           <span className="text-brand-plum" aria-label="Связь">↔</span>
           <div><p className="font-bold text-brand-night">Ваш профиль</p><p className="mt-1 text-xs text-brand-ink/70">{data.identity_linked ? "Вход подтверждён OIDC" : data.linked ? "Реестр ФСП подключается по договору с федерацией" : "Ожидает связи"}</p></div>
         </div>

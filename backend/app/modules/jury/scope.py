@@ -84,6 +84,48 @@ def visible(email: str | None) -> bool:
     return not is_jury or e.endswith(f"+{sid}@{DOMAIN}")
 
 
+def sees_demo(user) -> bool:
+    """Демо-объекты и синтетические профили видны только демо-персонам и жюри."""
+    if user is None:
+        return False
+    return bool(getattr(user, "is_demo", False) or key_of(getattr(user, "email", None)) is not None)
+
+
+def real_default(user, explicit: bool | None = None, db=None) -> bool:
+    """Значение real_only по умолчанию: True для настоящих учёток, False для демо/жюри."""
+    if explicit is not None:
+        return bool(explicit)
+    if sees_demo(user):
+        return False
+    if db is not None:
+        from sqlalchemy import select
+        from app.modules.auth.models import User as UserModel
+
+        has_jury = db.scalar(select(UserModel.id).where(UserModel.email.like(f"%@{DOMAIN}")).limit(1)) is not None
+        if not has_jury:
+            from app.modules.profiles.models import CandidateProfile
+
+            has_synth = (
+                db.scalar(select(CandidateProfile.user_id).where(CandidateProfile.is_synthetic.is_(True)).limit(1))
+                is not None
+            )
+            if has_synth:
+                return False
+    return True
+
+
+def demo_visible(obj, user) -> bool:
+    """Единый фильтр видимости объекта (Cup, Vacancy, Assignment, Company) для пользователя."""
+    scope_val = getattr(obj, "jury_scope", None)
+    if scope_val is not None and scope_val != key_of(getattr(user, "email", None) if user else None):
+        return False
+    if not sees_demo(user):
+        if getattr(obj, "is_demo", False) or getattr(obj, "is_synthetic", False):
+            return False
+    return True
+
+
+
 def _sid_from_header(value: str) -> str | None:
     if not value.lower().startswith("bearer "):
         return None

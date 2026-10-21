@@ -496,17 +496,20 @@ def real_protocols_vs_hh_demand(k_min: int = 3) -> dict:
     }
 
 
-def build_regions_map(db: Session, days: int | None = None, d: Data | None = None) -> dict:
+def build_regions_map(db: Session, days: int | None = None, d: Data | None = None, include_demo: bool = True) -> dict:
     if d is None:
-        d = load(db, days)
-    profiles = db.scalars(
+        d = load(db, days, include_demo=include_demo)
+    pq = (
         select(CandidateProfile)
         .join(User, User.id == CandidateProfile.user_id)
         .where(
             CandidateProfile.current_category_id.is_not(None),
             User.email.not_like(f"%@{jury_scope.DOMAIN}"),
         )
-    ).all()
+    )
+    if not include_demo:
+        pq = pq.where(User.is_demo.is_(False), CandidateProfile.is_synthetic.is_(False))
+    profiles = db.scalars(pq).all()
     companies = {c.id: c for c in db.scalars(select(Company)).all()}
 
     dist_stats: dict[str, dict] = {
