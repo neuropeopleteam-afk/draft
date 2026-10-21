@@ -74,8 +74,13 @@ def main(argv=None) -> int:
         pick = ("confident_accuracy_main", "confident_share_main", "confident_accuracy_final", "confident_share_final",
                 "false_confirm_all", "false_confirm_among_overclaim", "false_reject_among_true", "exact_grade_final",
                 "exact_grade_final_not_underclaim", "within_one_final", "gross_error_2plus", "undecided_final",
-                "followup_share", "oral_share", "extended_share")
+                "followup_share", "oral_share", "extended_share", "false_reject_all", "exact_grade_final_5",
+                "exact_grade_final_4", "exact_grade_main")
+        fc, fr = ((s.get(k) or {}).get("value") for k in ("false_confirm_all", "false_reject_all"))
         summary[c] = {"n": s.get("n"), **{k: (s.get(k) or {}).get("value") for k in pick},
+                      # критерий выбора конфигурации на TRAIN (протокол, 2.2б): L = 3 · FC + FR, FC ≤ 2,5 %
+                      "loss_3fc_fr": round(3 * fc + fr, 4) if fc is not None and fr is not None else None,
+                      "far_exact_grade_final": ((s.get("far_from_cut_0_25") or {}).get("exact_grade_final") or {}).get("value"),
                       "minutes_main": s.get("minutes_main"), "minutes_total": s.get("minutes_total"),
                       "items_main": s.get("items_main"), "retest_kappa_w": (d.get("retest") or {}).get("kappa_w_quadratic"),
                       "retest_exact": ((d.get("retest") or {}).get("exact_agreement") or {}).get("value"),
