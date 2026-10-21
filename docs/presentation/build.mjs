@@ -17,7 +17,7 @@ const F = FACTS.facts;
 const R = FACTS.repo;
 const PAIRS = FACTS.pairs || { pairs: [], real: [] };
 const SITE = 'fsp-draft.ru';
-const PENDING = 'пересчитывается';
+const PENDING = 'после итогового прогона';
 
 // ---------- палитра и шрифты (как на сайте: Montserrat, индиго и красный) ----------
 const C = { white: 'FFFFFF', text: 'F3F4FF', muted: 'C9CCF2', faint: '9EA3D9', red: 'EC1D35', indigo: '402FFF',
@@ -68,7 +68,7 @@ function cardText(s, x, y, w, h, head, body, { headSize = 15, bodySize = 12, acc
   s.addText(body, { x: x + 0.22, y: y + top + 0.5, w: w - 0.44, h: h - top - 0.65, fontFace: FONT, fontSize: bodySize, color: C.text, valign: 'top', margin: 0, paraSpaceAfter: 3 });
 }
 function bigNum(s, x, y, w, value, label, { size = 30, color = C.white } = {}) {
-  s.addText(value ?? PENDING, { x, y, w, h: 0.6, fontFace: FONT, fontSize: value ? size : 14, bold: true, color: value ? color : C.faint, valign: 'bottom', margin: 0 });
+  s.addText(value ?? PENDING, { x, y, w, h: 0.6, fontFace: FONT, fontSize: value ? size : 11, bold: !!value, color: value ? color : C.faint, valign: 'bottom', margin: 0 });
   s.addText(label, { x, y: y + 0.62, w, h: 0.62, fontFace: FONT, fontSize: 11, color: C.muted, valign: 'top', margin: 0 });
 }
 function note(s, text, { x = 0.45, y = 6.42, w = 12.4 } = {}) {
@@ -76,32 +76,177 @@ function note(s, text, { x = 0.45, y = 6.42, w = 12.4 } = {}) {
 }
 const bullets = (arr, opt = {}) => arr.map((t) => ({ text: t, options: { bullet: { indent: 14 }, paraSpaceAfter: 5, ...opt } }));
 
-// ---------- 1. Титул ----------
+// ===================== ВЫСТУПЛЕНИЕ: 7 слайдов на ≈2,5 мин (текст — docs/presentation/PITCH.md) =====================
+// Дальше — приложение для вопросов жюри (прежние слайды 2–12). Цифры — те же facts.json; нет цифры — «после итогового прогона».
+const pair = (id) => PAIRS.pairs.find((p) => p.id === id) || { label: id };
+const realv = (id) => PAIRS.real.find((r) => r.id === id) || { label: id };
+function numCell(s, x, y, w, v, { size = 26, color = C.white } = {}) {
+  s.addText(v ? v.text : PENDING, { x, y, w, h: 0.55, fontFace: FONT, fontSize: v ? size : 11, bold: !!v, color: v ? color : C.faint, valign: 'middle', margin: 0 });
+}
+
+// ---------- В1. Титул: капитан ----------
 {
   const s = pptx.addSlide();
   N += 1;
   s.background = { path: A('bg_title.jpg') };
   s.addImage({ path: A('logo_fsp.png'), x: 0.45, y: 0.62, w: 4.4, h: 0.556 });
-  s.addImage({ path: A('logo_draft.png'), x: 0.75, y: 2.75, w: 3.6, h: 1.148 });
-  s.addText('Компании выбирают подтверждённых', { x: 0.45, y: 4.15, w: 9.6, h: 0.65, fontFace: FONT, fontSize: 28, bold: true, color: C.white, margin: 0, fit: 'shrink' });
-  s.addText('Платформа найма IT-специалистов: кандидат один раз подтверждает грейд тестом, достижения ФСП — официальными протоколами, а работодатель сам выходит на него с зарплатой в приглашении.',
-    { x: 0.45, y: 4.95, w: 7.4, h: 1.0, fontFace: FONT, fontSize: 14, color: C.text, margin: 0, valign: 'top' });
-  s.addText([{ text: 'Команда Neuropeople', options: { bold: true } }, { text: '  ·  оператор команда Neuropeople  ·  ' }, { text: SITE, options: { bold: true, hyperlink: { url: `https://${SITE}` } } }],
-    { x: 0.45, y: 6.25, w: 9.5, h: 0.45, fontFace: FONT, fontSize: 13, color: C.white, margin: 0 });
-  s.addText('Специальный трек ФСП · Лидеры цифровой трансформации 2026', { x: 0.45, y: 6.7, w: 9.5, h: 0.4, fontFace: FONT, fontSize: 11, color: C.muted, margin: 0 });
+  s.addImage({ path: A('logo_draft.png'), x: 0.75, y: 2.55, w: 3.6, h: 1.148 });
+  s.addText('Компании выбирают подтверждённых', { x: 0.45, y: 3.95, w: 9.6, h: 0.65, fontFace: FONT, fontSize: 30, bold: true, color: C.white, margin: 0, fit: 'shrink' });
+  s.addText('Найм IT-специалистов наоборот: уровень ставит тест, а компания сама приходит к кандидату — с зарплатой в приглашении.',
+    { x: 0.45, y: 4.75, w: 7.6, h: 0.9, fontFace: FONT, fontSize: 15, color: C.text, margin: 0, valign: 'top' });
+  s.addText([{ text: 'Денис Михеев', options: { bold: true } }, { text: ', капитан команды Neuropeople  ·  ' }, { text: SITE, options: { bold: true, hyperlink: { url: `https://${SITE}` } } }],
+    { x: 0.45, y: 6.2, w: 9.5, h: 0.45, fontFace: FONT, fontSize: 14, color: C.white, margin: 0 });
+  s.addText('Специальный трек ФСП · Лидеры цифровой трансформации 2026', { x: 0.45, y: 6.65, w: 9.5, h: 0.4, fontFace: FONT, fontSize: 11, color: C.muted, margin: 0 });
 }
 
-// ---------- 2. Проблема ----------
+// ---------- В2. Проблема ----------
 {
   const s = base('Проблема');
-  title(s, 'Резюме пишут все.\nДоказательств в нём нет');
-  sub(s, 'IT-подбор сводится к совпадению ключевых слов. Работодатель читает отклики и верит на слово, кандидат откликается вслепую, а объективные результаты соревнований ФСП до работодателя не доходят.', { y: 2.2, w: 7.6, h: 1.0, size: 14 });
-  s.addImage({ path: A('deco_cube.png'), x: 9.75, y: 0.95, w: 2.55, h: 2.55 });
-  const y = 3.55, h = 2.2, w = 3.95;
-  cardText(s, 0.45, y, w, h, 'Работодатель', 'Сотни откликов разбираются вручную. Навыки в резюме ничем не подтверждены, ошибка найма обходится дорого.', { accent: C.red });
-  cardText(s, 0.45 + w + 0.22, y, w, h, 'Кандидат', 'Откликается вслепую: не видит зарплату и условия до разговора, а сильный результат на соревнованиях — просто строка в резюме.', { accent: C.lav });
-  cardText(s, 0.45 + 2 * (w + 0.22), y, w, h, 'Федерация ФСП', 'У федерации есть объективные результаты спортсменов, но нет канала к работодателям: соревнования не становятся источником найма.', { accent: C.ok });
+  title(s, 'Резюме пишут все.\nДоказательств в нём нет', { size: 34 });
+  s.addImage({ path: A('deco_cube.png'), x: 9.9, y: 0.95, w: 2.4, h: 2.4 });
+  const y = 3.0, h = 2.9, w = 3.95;
+  cardText(s, 0.45, y, w, h, 'Компания', 'Сотни откликов вручную, навыки ничем не подтверждены. Ошибка найма стоит месяцы.', { accent: C.red, headSize: 18, bodySize: 15 });
+  cardText(s, 0.45 + w + 0.22, y, w, h, 'Кандидат', 'Откликается вслепую: зарплату и условия узнаёт только на собеседовании.', { accent: C.lav, headSize: 18, bodySize: 15 });
+  cardText(s, 0.45 + 2 * (w + 0.22), y, w, h, 'Федерация ФСП', 'Объективные результаты спортсменов есть — канала к работодателям нет.', { accent: C.ok, headSize: 18, bodySize: 15 });
 }
+
+// ---------- В3. Решение: обратный драфт ----------
+{
+  const s = base('Решение');
+  title(s, 'Обратный драфт: уровень ставит\nтолько тест, компания приходит сама', { size: 30 });
+  const steps = [
+    ['Тест вместо резюме', 'кандидат один раз подтверждает уровень', C.red],
+    ['Категория', '«направление · грейд» — только по тесту', C.red],
+    ['Задача своими словами', 'компания пишет или надиктовывает потребность', C.indigo],
+    ['Подборка с объяснением', 'почему кандидат здесь и чем это подтверждено', C.indigo],
+    ['Приглашение с вилкой', 'зарплата обязательна, контакты — после согласия', C.indigo],
+  ];
+  const w = 2.3, gap = 0.225;
+  steps.forEach(([h, b, col], i) => {
+    const x = 0.45 + i * (w + gap), y = 2.6;
+    card(s, x, y, w, 3.0);
+    s.addShape(pptx.ShapeType.ellipse, { x: x + 0.22, y: y + 0.25, w: 0.55, h: 0.55, fill: { color: col }, line: { color: C.white, transparency: 60 } });
+    s.addText(String(i + 1), { x: x + 0.22, y: y + 0.25, w: 0.55, h: 0.55, fontFace: FONT, fontSize: 16, bold: true, color: C.white, align: 'center', valign: 'middle', margin: 0 });
+    s.addText(h, { x: x + 0.22, y: y + 0.95, w: w - 0.4, h: 0.8, fontFace: FONT, fontSize: 16, bold: true, color: C.white, valign: 'top', margin: 0 });
+    s.addText(b, { x: x + 0.22, y: y + 1.8, w: w - 0.4, h: 1.1, fontFace: FONT, fontSize: 13, color: C.text, valign: 'top', margin: 0 });
+    if (i < steps.length - 1) s.addShape(pptx.ShapeType.line, { x: x + w, y: y + 0.52, w: gap, h: 0, line: { color: C.lav, width: 1.5, endArrowType: 'triangle' } });
+  });
+  s.addText('КАНДИДАТ', { x: 0.45, y: 5.72, w: 4.8, h: 0.35, fontFace: FONT, fontSize: 11, bold: true, color: 'FF8A98', margin: 0, align: 'center' });
+  s.addText('РАБОТОДАТЕЛЬ', { x: 0.45 + 2 * (w + gap), y: 5.72, w: 3 * w + 2 * gap, h: 0.35, fontFace: FONT, fontSize: 11, bold: true, color: C.lav, margin: 0, align: 'center' });
+  note(s, 'Резюме и заявленные навыки на место в подборке не влияют. Кандидат без истории ФСП ничего не теряет.', { y: 6.3 });
+}
+
+// ---------- В4. Тест ----------
+{
+  const s = base('Тестирование');
+  title(s, 'Тест: свой вариант у каждого,\nв финале — разговор с ИИ-аватаром', { size: 30 });
+  s.addImage({ path: A('deco_medal.png'), x: 10.3, y: 0.9, w: 2.3, h: 2.3 });
+  bigNum(s, 0.45, 2.2, 3.1, fv('bank_families'), 'семейств заданий: генераторы, а не готовые вопросы', { size: 34 });
+  bigNum(s, 3.7, 2.2, 3.1, fv('bank_variants'), 'уникальных вариантов на проверке банка', { size: 34 });
+  bigNum(s, 6.95, 2.2, 3.1, fv('bank_checks_failed'), 'ошибок в ключах: варианты с кодом проверены исполнением', { size: 34 });
+  const items = [
+    ['Адаптивный', 'Следующее задание — по прошлым ответам; тест останавливается, когда уверенности достаточно.', C.red],
+    ['Свои задания', 'Вариант собирается для кандидата; слив почти не помогает, ключи — только на сервере.', C.lav],
+    ['Три исхода', 'Подтверждён · не подтверждён · у самой границы — короткий второй этап вместо угадывания.', C.ok],
+    ['Финальный разговор', 'ИИ-аватар голосом спрашивает кандидата о его же решениях — дополнительная проверка.', C.indigo],
+  ];
+  items.forEach(([h, b, col], i) => cardText(s, 0.45 + i * 3.13, 3.85, 2.95, 2.35, h, b, { headSize: 15, bodySize: 12, accent: col }));
+  note(s, 'Метод — байесовская последовательная классификация с остановкой по SPRT.', { y: 6.35 });
+}
+
+// ---------- В5. Подбор ----------
+{
+  const s = base('Подбор');
+  title(s, 'Подборка — только из проверенного,\nи объяснение у каждого кандидата', { size: 30 });
+  const rules = [
+    ['Грейд — только подтверждённый тестом', 'заявленный в резюме уровень не фильтрует и не даёт баллов'],
+    ['Навык без теста — ноль', 'место задают тест по навыкам этой вакансии и достижения ФСП'],
+    ['ФСП — по официальным протоколам', 'бонус за подтверждённое, без штрафа тем, у кого истории нет'],
+    ['«Почему он выше следующего»', 'объяснение полными фразами в каждой карточке'],
+  ];
+  rules.forEach(([h, b], i) => {
+    const y = 2.35 + i * 0.98;
+    card(s, 0.45, y, 7.3, 0.86);
+    s.addText(h, { x: 0.7, y: y + 0.08, w: 6.9, h: 0.38, fontFace: FONT, fontSize: 15, bold: true, color: C.white, margin: 0 });
+    s.addText(b, { x: 0.7, y: y + 0.45, w: 6.9, h: 0.35, fontFace: FONT, fontSize: 12, color: C.text, margin: 0 });
+  });
+  const p5 = pair('p5'), ext = realv('external');
+  card(s, 8.0, 2.35, 4.85, 3.82);
+  s.addText(p5.label || 'Подбор', { x: 8.25, y: 2.5, w: 4.4, h: 0.4, fontFace: FONT, fontSize: 13, bold: true, color: C.white, margin: 0 });
+  s.addText('стандартные условия', { x: 8.25, y: 2.95, w: 2.2, h: 0.3, fontFace: FONT, fontSize: 10, color: C.muted, margin: 0 });
+  s.addText('проверка на прочность', { x: 10.5, y: 2.95, w: 2.3, h: 0.3, fontFace: FONT, fontSize: 10, color: 'FF8A98', margin: 0 });
+  numCell(s, 8.25, 3.25, 2.2, p5.standard);
+  numCell(s, 10.5, 3.25, 2.2, p5.hard);
+  s.addShape(pptx.ShapeType.line, { x: 8.25, y: 4.05, w: 4.35, h: 0, line: { color: C.white, transparency: 75, width: 0.75 } });
+  s.addText(ext.label || 'Внешний набор', { x: 8.25, y: 4.2, w: 4.4, h: 0.4, fontFace: FONT, fontSize: 13, bold: true, color: C.ok, margin: 0 });
+  numCell(s, 8.25, 4.6, 4.4, ext.value);
+  s.addText('данные, которых при настройке не было', { x: 8.25, y: 5.2, w: 4.4, h: 0.5, fontFace: FONT, fontSize: 10, color: C.muted, margin: 0, valign: 'top' });
+}
+
+// ---------- В6. Честная проверка ----------
+{
+  const s = base('Валидация');
+  title(s, 'Каждая цифра — дважды: в стандартных\nусловиях и в проверке на прочность', { size: 28 });
+  const rows = ['exact_grade', 'false_confirm_all', 'ndcg10'].map(pair);
+  const X = [0.45, 5.6, 8.1], TW = 10.6;
+  card(s, 0.45, 2.2, TW, 0.62, { transparency: 85 });
+  s.addText('Метрика', { x: X[0] + 0.25, y: 2.25, w: 4.8, h: 0.52, fontFace: FONT, fontSize: 13, bold: true, color: C.white, valign: 'middle', margin: 0 });
+  s.addText('Стандартные условия', { x: X[1], y: 2.25, w: 2.4, h: 0.52, fontFace: FONT, fontSize: 12, bold: true, color: C.white, valign: 'middle', margin: 0 });
+  s.addText('Проверка на прочность', { x: X[2], y: 2.25, w: 2.8, h: 0.52, fontFace: FONT, fontSize: 12, bold: true, color: 'FF8A98', valign: 'middle', margin: 0 });
+  rows.forEach((p, i) => {
+    const y = 2.92 + i * 0.66;
+    if (i % 2 === 0) s.addShape(pptx.ShapeType.rect, { x: 0.45, y, w: TW, h: 0.62, fill: { color: C.white, transparency: 94 }, line: { color: C.white, transparency: 100 } });
+    s.addText(p.label, { x: X[0] + 0.25, y, w: 5.0, h: 0.62, fontFace: FONT, fontSize: 14, color: C.text, valign: 'middle', margin: 0 });
+    numCell(s, X[1], y + 0.03, 2.4, p.standard, { size: 20 });
+    numCell(s, X[2], y + 0.03, 2.8, p.hard, { size: 20 });
+  });
+  const steps = ['Протокол и хэш данных — до прогона', 'Настройка — только на обучающих данных', 'Один прогон на отложенных', 'Все цифры — из одного файла'];
+  steps.forEach((t, i) => {
+    const x = 0.45 + i * 3.13;
+    card(s, x, 5.05, 2.95, 1.0, { transparency: 88 });
+    s.addText(String(i + 1), { x: x + 0.2, y: 5.12, w: 0.4, h: 0.85, fontFace: FONT, fontSize: 22, bold: true, color: C.red, valign: 'middle', margin: 0 });
+    s.addText(t, { x: x + 0.65, y: 5.12, w: 2.2, h: 0.85, fontFace: FONT, fontSize: 12, bold: true, color: C.white, valign: 'middle', margin: 0 });
+  });
+  note(s, 'Модельные кандидаты, не люди: где кандидаты модельные — это написано рядом с цифрой. Условия, N и команда пересчёта — на сайте, раздел «Как мы проверяем себя».', { y: 6.3 });
+}
+
+// ---------- В7. ФСП и команда ----------
+{
+  const s = base('ФСП и команда');
+  title(s, 'Для Федерации — канал к работодателям.\nКоманда Neuropeople', { size: 28 });
+  card(s, 0.45, 2.25, 5.5, 3.95);
+  s.addText('Официальные протоколы ФСП', { x: 0.7, y: 2.4, w: 5.0, h: 0.4, fontFace: FONT, fontSize: 14, bold: true, color: C.ok, margin: 0 });
+  const fd = realv('fsp'), fr = realv('fsp_results');
+  numCell(s, 0.7, 2.85, 2.4, fd.value, { size: 30 });
+  s.addText('протоколов в индексе', { x: 0.7, y: 3.4, w: 2.4, h: 0.35, fontFace: FONT, fontSize: 10.5, color: C.muted, margin: 0 });
+  numCell(s, 3.2, 2.85, 2.6, fr.value, { size: 30 });
+  s.addText('результатов спортсменов', { x: 3.2, y: 3.4, w: 2.6, h: 0.35, fontFace: FONT, fontSize: 10.5, color: C.muted, margin: 0 });
+  s.addText(bullets(['достижение в карточке — со ссылкой на строку протокола', 'спортивный разряд — понятным работодателю языком', 'кабинет ФСП: спрос компаний по регионам и направлениям']),
+    { x: 0.7, y: 3.95, w: 5.05, h: 2.1, fontFace: FONT, fontSize: 12.5, color: C.text, margin: 0, valign: 'top' });
+  s.addImage({ path: A('team_photo.jpg'), x: 6.2, y: 2.25, w: 6.65, h: 6.65 * 1000 / 2170 });
+  const ty = 2.25 + 6.65 * 1000 / 2170 + 0.12;
+  s.addText([{ text: 'Дмитрий Кузнецов', options: { bold: true, color: C.white } }, { text: '\nинженер по качеству и внедрению', options: { color: C.muted, fontSize: 10.5 } }],
+    { x: 6.2, y: ty, w: 3.3, h: 0.7, fontFace: FONT, fontSize: 13, margin: 0, align: 'center', valign: 'top' });
+  s.addText([{ text: 'Денис Михеев', options: { bold: true, color: C.white } }, { text: '\nкапитан, «Neuropeople»', options: { color: C.muted, fontSize: 10.5 } }],
+    { x: 9.55, y: ty, w: 3.3, h: 0.7, fontFace: FONT, fontSize: 13, margin: 0, align: 'center', valign: 'top' });
+  s.addText([{ text: 'Проверьте сами: ', options: { color: C.muted } }, { text: `${SITE}/demo`, options: { bold: true, color: C.white, hyperlink: { url: `https://${SITE}/demo` } } }],
+    { x: 6.2, y: 6.05, w: 6.65, h: 0.4, fontFace: FONT, fontSize: 14, margin: 0, align: 'center' });
+}
+
+// ===================== ПРИЛОЖЕНИЕ: для вопросов жюри =====================
+
+// ---------- Приложение: разделитель ----------
+{
+  const s = pptx.addSlide();
+  N += 1;
+  s.background = { path: A('bg_title.jpg') };
+  s.addImage({ path: A('logo_draft.png'), x: 0.75, y: 2.4, w: 3.0, h: 0.957 });
+  s.addText('Приложение', { x: 0.45, y: 3.6, w: 9.6, h: 0.8, fontFace: FONT, fontSize: 36, bold: true, color: C.white, margin: 0 });
+  s.addText('Подробности для вопросов жюри: механика подбора, тест, валидация, документы ФСП, интеграции, архитектура, монетизация, ссылки.',
+    { x: 0.45, y: 4.45, w: 8.6, h: 0.9, fontFace: FONT, fontSize: 15, color: C.text, margin: 0, valign: 'top' });
+}
+
+// (прежний слайд «Проблема» — в выступлении, слайд 2)
 
 // ---------- 3. Решение ----------
 {
