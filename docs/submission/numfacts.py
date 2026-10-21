@@ -380,12 +380,19 @@ def build(numbers: dict) -> dict:
     # ---------- «один в один» на открытом генераторе другого решения ----------
     # Обе строки рядом (решение владельца 21.10): по умолчанию и «строго запрошенный грейд» с ценой. Название
     # другого решения не публикуем: в NUMBERS.json условие уже обезличено (condition_ru).
-    ext = (n.get("external_benchmarks") or {}).get("devdev_1to1") or {}
-    if ext.get("main") and ext.get("condition_ru"):
+    # последняя версия «один в один» (devdev_1to1, devdev_1to1_4, …): при новом подборе — новый FREEZE и новый ключ
+    _eb = n.get("external_benchmarks") or {}
+    _ek = sorted((k for k in _eb if re.fullmatch(r"devdev_1to1(_\d+)?", k)),
+                 key=lambda k: int(k.rsplit("_", 1)[1]) if re.search(r"_\d+$", k) and not k.endswith("1to1") else 0)
+    ext_key = _ek[-1] if _ek else "devdev_1to1"
+    ext = _eb.get(ext_key) or {}
+    # Решение владельца 21.10 (вечер): сравнение «один в один» в материалах не показываем — факты не создаём.
+    SHOW_EXT = False
+    if SHOW_EXT and ext.get("main") and ext.get("condition_ru"):
         chk = re.sub(r"^[АA]\d+,\s*", "независимый рецензент, ", ext.get("checked_by") or "")  # без внутренних кодов агентов
         cond_x = ext["condition_ru"] + (f"; проверка: {chk}" if chk else "")
         rc_x = ext.get("recompute")
-        base_k = "external_benchmarks.devdev_1to1"
+        base_k = f"external_benchmarks.{ext_key}"
 
         def dec3(v):
             return fdec(v, 3)
@@ -422,8 +429,6 @@ def build(numbers: dict) -> dict:
                     F.add("ext_other_" + m, text=f1(v["other"]), value=v["other"], key=f"{base_k}.main.{m}.other",
                           cond=cond_x, recompute=rc_x, label=f"{lab}, ранжирование другого решения его же кодом",
                           group="ext", basis="открытый генератор")
-    else:
-        F.miss("ext_main_ndcg10")
 
     # ---------- журнал отчётных прогонов: что заморожено до прогона и чем проверено ----------
     journal = []
@@ -439,9 +444,7 @@ def build(numbers: dict) -> dict:
     jr("Подбор — отложенные миры", "matching.freeze_sha256", mt_.get("freeze_sha256"), kind="FREEZE")
     jr("Вакансии hh.ru — второй отложенный набор", "hh_match.manifest_sha256",
        (n.get("hh_match") or {}).get("manifest_sha256"), kind="список вакансий")
-    jr("Чужой открытый генератор — один в один", "external_benchmarks.devdev_1to1.condition_ru",
-       "515460d3" if "FREEZE 515460d3" in (ext.get("condition_ru") or "") else None,
-       kind="FREEZE", extra="пересчёт в чистой копии — 0 расхождений" if "0 расхождений" in (ext.get("checked_by") or "") else "")
+    # «один в один» на чужом генераторе в журнал не выносим: решение владельца 21.10 — не показывать в материалах
     dj = ((n.get("external_benchmarks") or {}).get("djinni") or {}).get("freeze") or {}
     jr("Открытый набор вакансий и резюме", "external_benchmarks.djinni.freeze.bench_sha256",
        dj.get("bench_sha256"), kind="набор")

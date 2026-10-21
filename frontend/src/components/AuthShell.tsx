@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "./Logo";
 
@@ -32,4 +32,42 @@ export function AuthShell({ title, subtitle, lead, children, footer }: { title: 
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
   return <p role="alert" className="rounded-xl bg-brand-blush/60 px-4 py-3 text-sm font-medium text-brand-plum">{message}</p>;
+}
+
+/** Поле пароля с кнопкой «Показать / Скрыть пароль» (глаз). */
+export function PasswordInput({
+  className = "input",
+  toggleTestId,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & { toggleTestId?: string }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        {...props}
+        type={visible ? "text" : "password"}
+        className={`${className} pr-11`}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
+        aria-pressed={visible}
+        title={visible ? "Скрыть пароль" : "Показать пароль"}
+        data-testid={toggleTestId ?? (props.id ? `${props.id}-toggle-visibility` : "password-toggle-visibility")}
+        className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-brand-ink/55 transition hover:bg-brand-blush/50 hover:text-brand-night"
+      >
+        {visible ? (
+          <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+            <path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.1A10.4 10.4 0 0112 5c5.2 0 9.3 3.9 10.5 7-.5 1.4-1.5 3-2.9 4.3M6.5 6.5C4.5 7.9 3.1 9.8 2.5 12c1.2 3.1 5.3 7 10.5 7 1.8 0 3.5-.5 5-1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden="true">
+            <path d="M2.5 12C3.7 8.9 7.8 5 13 5s9.3 3.9 10.5 7c-1.2 3.1-5.3 7-10.5 7S3.7 15.1 2.5 12z" strokeLinejoin="round" />
+            <circle cx="13" cy="12" r="3" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
 }

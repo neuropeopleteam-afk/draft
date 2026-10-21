@@ -282,7 +282,7 @@ def test_parse_need_through_local_without_pii(monkeypatch, net):
 
     net.on("llm-local.test", answer)
     req = NP.parse_need(text)
-    assert req["llm"]["used"] is True and req["llm"]["provider"] == "local"
+    assert req["llm"]["used"] is True and "provider" not in req["llm"]  # провайдер и id модели в ответе API не отдаются (обход А19 №10) — кто ответил, видно по сети
     assert req["llm"]["model_label"] == "языковая модель (локально)" and req["method"] == "llm+rules"
     assert "petr.sidorov@example.com" not in seen["user"] and "123-45-67" not in seen["user"]
     assert "Сидоров" not in seen["user"]

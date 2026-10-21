@@ -79,7 +79,7 @@ header#title-block-header .author, header#title-block-header .date { font-size: 
 nav#TOC { break-after: page; }
 nav#TOC::before { content: "Содержание"; display: block; font-size: 17pt; font-weight: 700; border-bottom: 2pt solid #402FFF; margin-bottom: 8pt; padding-bottom: 4pt; }
 nav#TOC ul { list-style: none; padding-left: 12pt; } nav#TOC > ul { padding-left: 0; }
-nav#TOC li { margin: 2pt 0; } nav#TOC > ul > li > a { font-weight: 600; }
+nav#TOC { font-size: 9.5pt; line-height: 1.3; } nav#TOC li { margin: 0.5pt 0; } nav#TOC > ul > li > a { font-weight: 600; }
 """
 
 

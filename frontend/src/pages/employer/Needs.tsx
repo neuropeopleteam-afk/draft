@@ -602,10 +602,8 @@ export function Selection() {
 
   const allOrdered: any[] = s ? mutual.sorted<any>(s.results) : [];
   const ordered: any[] = realOnly ? allOrdered.filter((r) => !isSyntheticProfile(r)) : allOrdered;
-  const upperBoundaryCount = useMemo(
-    () => ordered.filter((r) => isUpperBoundaryCandidate(r, reqOf)).length,
-    [ordered, reqOf],
-  );
+  // Без useMemo: хук после ранних return (Loading/Alert) менял число хуков между рендерами — React #310 при открытии подборки.
+  const upperBoundaryCount = ordered.filter((r) => isUpperBoundaryCandidate(r, reqOf)).length;
   const syntheticCount = allOrdered.filter((r) => isSyntheticProfile(r)).length;
   const visible = ordered.slice(0, Math.max(TOP, shown));
   const rest = ordered.length - visible.length;

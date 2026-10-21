@@ -4,7 +4,7 @@ import { DefensePanel } from "../../components/Interview";
 import { IncidentSandbox, isIncidentTask } from "../../components/IncidentSandbox";  // Н2: пульт инцидента к архитектурным заданиям  // Я15: устная защита ответа, по желанию
 import { ThetaScale } from "../../components/ThetaScale";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, signed, useApi, plainText } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, fmtHoursText, num, pct, signed, useApi, plainText } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
@@ -54,7 +54,7 @@ export default function Assessment({ express = false }: { express?: boolean }) {
       {showSurvey ? (
         <Survey data={onb.data} onDone={() => { setEditing(false); setQ({}); void onb.reload(); void status.reload(); }} />
       ) : (
-        <GradeChoice status={status.data} onEditSurvey={() => setEditing(true)} express={express} />
+        <GradeChoice status={status.data} onb={onb.data} onEditSurvey={() => setEditing(true)} express={express} />
       )}
     </div>
   );
@@ -180,6 +180,10 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
     return () => { active = false; };
   }, [additionalDirection]);
   const groups = useMemo(() => ({ own: tags.filter((t) => t.direction_id), common: tags.filter((t) => !t.direction_id) }), [tags]);
+  const additionalOwnTags = useMemo(() => {
+    const commonIds = new Set(groups.common.map((c) => c.id));
+    return additionalTags.filter((t) => !!t.direction_id && !commonIds.has(t.id));
+  }, [additionalTags, groups.common]);
 
   const hasFullstack = dirEntries.some(([id]) => id === "backend") && dirEntries.some(([id]) => id === "frontend");
   const fullstack = direction === "backend" && additionalDirection === "frontend";
@@ -213,7 +217,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
 
   return (
     <>
-      <PageTitle title="Опрос" subtitle="Около трёх минут. Ответы — это самоописание (уровень T0): категорию присваивает только тест." />
+      <PageTitle title="Опрос" subtitle="Около трёх минут. Ответы — это самоописание: категорию присваивает только тест." />
       <ol className="mt-6 flex flex-wrap gap-2" aria-label="Шаги опроса">
         {STEPS.map((s, i) => (
           <li key={s}>
@@ -257,7 +261,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         )}
         {step === 1 && (
           <div className="space-y-5">
-            <p className="text-sm text-brand-ink/70">Отметьте технологии и оцените уровень. Навыки из вашего стека попадут в тест и станут подтверждёнными (T1).</p>
+            <p className="text-sm text-brand-ink/70">Отметьте технологии и оцените уровень. Навыки из вашего стека попадут в тест и станут подтверждёнными.</p>
             {[{ t: DIRECTION_TITLES[direction], list: groups.own }, { t: "Общий блок", list: groups.common }].map((g) => (
               <div key={g.t}>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{g.t}</p>
@@ -286,7 +290,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
               <div className="border-t border-brand-night/10 pt-4">
                 <p className="mb-2 text-sm font-semibold text-brand-night">Стек дополнительного направления · {DIRECTION_TITLES[additionalDirection]}</p>
                 <div className="flex flex-wrap gap-2">
-                  {additionalTags.map((tag) => (
+                  {additionalOwnTags.map((tag) => (
                     <button key={tag.id} type="button" aria-pressed={!!additionalStack[tag.id]}
                       className={`rounded-full border px-3 py-1.5 text-sm ${additionalStack[tag.id] ? "border-brand bg-brand-blush/40 font-semibold" : "border-brand-night/15"}`}
                       onClick={() => { const n = { ...additionalStack }; if (n[tag.id]) delete n[tag.id]; else n[tag.id] = 2; setAdditionalStack(n); }}>
@@ -416,7 +420,7 @@ function expText(id: string, levels: Record<string, string>): string {
   return GRADE_EXPERIENCE[id] ?? "";
 }
 
-function GradeChoice({ status, onEditSurvey, express = false }: { status: any; onEditSurvey: () => void; express?: boolean }) {
+function GradeChoice({ status, onb, onEditSurvey, express = false }: { status: any; onb?: Onb | null; onEditSurvey: () => void; express?: boolean }) {
   const navigate = useNavigate();
   const [q] = useSearchParams();
   const qGrade = q.get("grade");
@@ -449,6 +453,11 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
   // И16: экран камеры (по согласию) — до создания сессии, т. к. первое задание выдаётся при её создании; при выключенном флаге экрана нет
   const meta = useMeta();
   const [cam, setCam] = useState(false);
+  const allStackTags = [
+    ...(onb?.answers?.stack ?? []),
+    ...(onb?.answers?.additional_stack ?? []),
+  ].map((s) => String(s.tag || "").toLowerCase());
+  const hasPython = allStackTags.some((t) => t === "python" || t.includes("python"));
 
   async function start(camMode?: CamMode, reason?: string | null) {
     if (!camMode && !resume && meta?.proctor_camera) { setCam(true); return; }
@@ -503,6 +512,11 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           <div className="mb-3"><Alert kind="info">Повторить тест на {GRADE_TITLE_ALL[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
         )}
         {error && <div className="mb-3"><Alert>{error}</Alert></div>}
+        {!hasPython && (
+          <p className="mb-3 rounded-xl border border-brand/20 bg-white/85 px-3.5 py-2.5 text-xs leading-relaxed text-brand-night" data-testid="python-code-notice">
+            Задания с кодом — на Python: достаточно уметь читать код. Задания на Java, Kotlin и Go появятся в следующей версии банка.
+          </p>
+        )}
         {!resume && (
           <label className="flex cursor-pointer items-start gap-3 text-sm text-brand-ink/85">
             <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={ack} onChange={(e) => setAck(e.target.checked)} />
@@ -603,10 +617,10 @@ export function Rich({ text }: { text: string }) {
       : <Rich key={i} text={p} />))}</>;
   }
   const parts = text.split("`");
-  if (parts.length < 3) return <>{text}</>;
+  if (parts.length < 3) return <>{fmtHoursText(text)}</>;
   return <>{parts.map((p, i) => (i % 2 === 1 && i < parts.length - 1
     ? <code key={i} className="rounded bg-brand-blush/50 px-1 font-mono text-[0.88em] font-medium">{p}</code>
-    : <span key={i}>{i % 2 === 1 ? "`" + p : p}</span>))}</>;
+    : <span key={i}>{fmtHoursText(i % 2 === 1 ? "`" + p : p)}</span>))}</>;
 }
 
 function fmtTime(sec: number) {
@@ -832,10 +846,11 @@ export function TestRun() {
         {it.adaptive && <span className="chip">{it.block === "common" ? "Общий блок" : `Блок «${DIRECTION_TITLES[s.direction]}»`}</span>}
         {it.extension && <span className="chip">Дотестирование у порога грейда</span>}
         {it.steps_total && <span className="chip">Шаг {it.step} из {it.steps_total}</span>}
-        <span className={`ml-auto font-mono ${left < 0 ? "text-brand-plum" : "text-brand-ink/65"}`} role="timer" aria-live="off">
-          {left >= 0 ? `Рекомендуемое время: ${fmtTime(left)}` : `Сверх рекомендуемого: ${fmtTime(-left)}`}
+        <span className="ml-auto text-brand-ink/65" role="timer" aria-live="off" data-testid="task-time-guide">
+          {`Ориентир ≈ ${Math.max(1, Math.round((it.time_limit_s || 120) / 60))} мин · это не ограничение`}
+          {it.adaptive ? ` · весь блок до ${s.mode === "express" ? (s.claimed_grade === "senior" ? 45 : 20) : 60} мин` : ""}
         </span>
-        <span className="sr-only" aria-live="polite">{left < 0 ? "Рекомендуемое время задания вышло. Это ориентир: ответить можно и позже." : ""}</span>
+        <span className="sr-only" aria-live="polite">{left < 0 ? `Рекомендуемое время задания вышло (${fmtTime(-left)}). Это ориентир: ответить можно и позже.` : ""}</span>
       </div>
       <CameraIndicator sessionId={id!} />
       {fsOk && !fsOn && (
@@ -889,7 +904,7 @@ export function TestRun() {
                 <input type="radio" name="opt" className="mt-0.5 accent-brand" checked={value === o.id} onChange={() => setValue(o.id)} />
                 <span className="min-w-0 flex-1">
                   {it.adaptive && <b className="mr-2 text-brand-lavender">{o.id}</b>}
-                  <span className={o.code ? "" : "font-mono text-[13px]"}>{o.code ? <Rich text={o.text} /> : o.text}</span>
+                  <span className={o.code ? "" : "font-mono text-[13px]"}><Rich text={o.text} /></span>
                   {o.code && <pre className="mt-2 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{o.code}</code></pre>}
                 </span>
               </label>

@@ -2,7 +2,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { Link, Outlet, useOutletContext } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, DIRECTION_TITLES, GRADES, Seg, Stat, cleanCompanyName, dt, errText, range } from "../../components/ui";
+import { Alert, DIRECTIONS, DIRECTION_TITLES, GRADES, Seg, Stat, cleanCompanyName, dt, errText, plainText, range } from "../../components/ui";
 import { api, apiDownload, tokenStore } from "../../lib/api";
 import { BarList, Donut, Funnel, Heatmap, Legend, PairBars, RangeChart, StackBar, fk, fpct, ftr, fx, type Stage } from "../charts";
 import { MODE_SHORT, Phase } from "../shared";
@@ -488,7 +488,7 @@ export function FspDemand() {
 
 function groupRows(rows: any[]) {
   return rows.map((g) => ({
-    key: g.key, label: g.title, value: g.invite_rate, muted: g.candidates === 0,
+    key: g.key, label: plainText(g.title), value: g.invite_rate, muted: g.candidates === 0,
     display: g.invite_rate != null ? fpct(g.invite_rate) : g.candidates === 0 ? "нет" : "скрыто",
     sub: g.secondary_suppressed ? "скрыто, чтобы малую соседнюю группу нельзя было восстановить вычитанием"
       : g.candidates === 0 ? "нет кандидатов" : g.candidates == null ? "кандидатов меньше 5 — группу не раскрываем"
@@ -634,15 +634,15 @@ export function FspFunnel() {
               <Funnel stages={f.cups} tone="brand" />
             </Card>
             <div className="grid gap-5 lg:grid-cols-2">
-              <Card title="С достижениями ФСП"><Funnel stages={f.fsp} tone="night" /></Card>
+              <Card title="С достижениями ФСП"><Funnel stages={f.fsp} tone="brand" /></Card>
               <Card title="Без истории ФСП"><Funnel stages={f.no_fsp} tone="lavender" /></Card>
             </div>
             <Card title="Конверсии рядом" sub="Доля перешедших на следующий этап">
-              <PairBars a={{ label: "с ФСП", tone: "night" }} b={{ label: "без ФСП", tone: "lavender" }}
-                rows={[1, 2, 3].map((i) => ({ key: String(i), label: f.all[i].title, a: conv(f.fsp, i), b: conv(f.no_fsp, i) }))} />
+              <PairBars a={{ label: "с ФСП", tone: "brand" }} b={{ label: "без ФСП", tone: "lavender" }}
+                rows={[1, 2, 3].map((i) => ({ key: String(i), label: plainText(f.all[i].title), a: conv(f.fsp, i), b: conv(f.no_fsp, i) }))} />
             </Card>
             <Card title="Все кандидаты"><Funnel stages={f.all} tone="plum" /></Card>
-            <p className="text-xs text-brand-ink/65">{f.note}</p>
+            <p className="text-xs text-brand-ink/65" title="Как устроено: сравниваются верифицированные участники реестра ФСП, кандидаты без истории ФСП и участники кубков платформы">{plainText(f.note)}</p>
           </>
         );
       }}</Body>
@@ -750,7 +750,7 @@ export function FspMethod() {
         <>
           <section className="card">
             <ol className="list-decimal space-y-3 pl-5 text-sm leading-relaxed text-brand-ink/85">
-              {rep.methodology.map((m: string, i: number) => <li key={i}>{m}</li>)}
+              {rep.methodology.map((m: string, i: number) => <li key={i} title="Как устроено: агрегация подтверждённых записей реестра ФСП и мероприятий платформы">{plainText(m)}</li>)}
             </ol>
           </section>
           <section className="card space-y-2 text-sm text-brand-ink/80">
