@@ -1,7 +1,7 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T17:57:42Z",
-  "git_commit": "3143f52bb",
+  "generated_at": "2026-10-21T18:43:28Z",
+  "git_commit": "8bb1fc0c",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
     "code_and_open_families": 416,
@@ -12853,7 +12853,280 @@
     "generated_at": "2026-10-21 13:04:09",
     "recompute": "python3 tools/bank_mutation_check.py --seeds 1 --limit 8"
   },
-  "load": null,
+  "load": {
+    "what": "нагрузка по сценариям жюри (Locust, tools/loadtest/jury_load.py)",
+    "cond": "RunPod cpu5c (AMD EPYC 4564P), выделенная машина без других стендов; PostgreSQL 16 (2 ядра), API uvicorn 2 воркера на 2 ядрах (как API_WORKERS=2 и --cpus 2 боевого стенда), nginx с frontend/nginx.conf и сборкой vite; генератор Locust 2.46.0 на отдельных 8 ядрах; LLM_DISABLED=true (модели не вызываются), DEV_MODE=true, сид demo.seed; ветка ag/a12-quality 49d2de032 = integ/w2 025c8dfd5 + тесты; 21.10.2026 17:44–17:56 UTC; 20 польз. 3 мин (разгон 2/с), 50 — 3 мин (3/с), 100 — 4 мин (5/с)",
+    "recompute": "/opt/spectrek_fsp/work/rp_src/a12lt/pod_load.sh (rp run a12lt 'bash pod_load.sh'), затем python3 tools/perf/load_json.py --dir <out> --tags pod_20,pod_50,pod_100 --out docs/perf/load.json",
+    "runs": [
+      {
+        "tag": "pod_20",
+        "users": 20,
+        "users_max": 20,
+        "ramp_per_s": 2.0,
+        "duration": "3m",
+        "start": "2026-10-21T17:44:04+0000",
+        "end": "2026-10-21T17:47:39+0000",
+        "total": {
+          "requests": 1643,
+          "failures": 0,
+          "error_rate": 0.0,
+          "p50_ms": 11.0,
+          "p95_ms": 300.0,
+          "p99_ms": 480.0,
+          "max_ms": 15305.59678375721,
+          "rps": 7.851
+        },
+        "scenarios": {
+          "формирование подборки": {
+            "потребность: создать + подборка v1": {
+              "requests": 20,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 150.0,
+              "p95_ms": 400.0,
+              "p99_ms": 400.0,
+              "max_ms": 399.06121976673603,
+              "rps": 0.096
+            },
+            "подборка: версия": {
+              "requests": 70,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 11.0,
+              "p95_ms": 29.0,
+              "p99_ms": 230.0,
+              "max_ms": 234.90137234330177,
+              "rps": 0.334
+            },
+            "подборка: сравнение 2–3": {
+              "requests": 31,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 23.0,
+              "p95_ms": 59.0,
+              "p99_ms": 60.0,
+              "max_ms": 60.20183302462101,
+              "rps": 0.148
+            }
+          },
+          "открытие профиля": {
+            "подборка: карточка кандидата": {
+              "requests": 41,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 46.0,
+              "p95_ms": 290.0,
+              "p99_ms": 310.0,
+              "max_ms": 306.87204375863075,
+              "rps": 0.196
+            }
+          },
+          "поиск": {
+            "поиск по базе": {
+              "requests": 39,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 370.0,
+              "p95_ms": 730.0,
+              "p99_ms": 810.0,
+              "max_ms": 814.3900986760855,
+              "rps": 0.186
+            }
+          },
+          "вход": {
+            "вход жюри (песочница)": {
+              "requests": 15,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 10.0,
+              "p95_ms": 57.0,
+              "p99_ms": 57.0,
+              "max_ms": 56.83227814733982,
+              "rps": 0.072
+            }
+          }
+        }
+      },
+      {
+        "tag": "pod_50",
+        "users": 50,
+        "users_max": 50,
+        "ramp_per_s": 3.0,
+        "duration": "3m",
+        "start": "2026-10-21T17:48:00+0000",
+        "end": "2026-10-21T17:51:30+0000",
+        "total": {
+          "requests": 4524,
+          "failures": 0,
+          "error_rate": 0.0,
+          "p50_ms": 11.0,
+          "p95_ms": 330.0,
+          "p99_ms": 480.0,
+          "max_ms": 1385.6056425720453,
+          "rps": 22.449
+        },
+        "scenarios": {
+          "формирование подборки": {
+            "потребность: создать + подборка v1": {
+              "requests": 20,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 250.0,
+              "p95_ms": 580.0,
+              "p99_ms": 580.0,
+              "max_ms": 578.8607243448496,
+              "rps": 0.099
+            },
+            "подборка: версия": {
+              "requests": 263,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 11.0,
+              "p95_ms": 250.0,
+              "p99_ms": 360.0,
+              "max_ms": 519.8191683739424,
+              "rps": 1.305
+            },
+            "подборка: сравнение 2–3": {
+              "requests": 118,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 26.0,
+              "p95_ms": 350.0,
+              "p99_ms": 410.0,
+              "max_ms": 531.723590567708,
+              "rps": 0.586
+            }
+          },
+          "открытие профиля": {
+            "подборка: карточка кандидата": {
+              "requests": 112,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 53.0,
+              "p95_ms": 330.0,
+              "p99_ms": 440.0,
+              "max_ms": 683.7227158248425,
+              "rps": 0.556
+            }
+          },
+          "поиск": {
+            "поиск по базе": {
+              "requests": 128,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 310.0,
+              "p95_ms": 530.0,
+              "p99_ms": 960.0,
+              "max_ms": 1228.478331118822,
+              "rps": 0.635
+            }
+          },
+          "вход": {
+            "вход жюри (песочница)": {
+              "requests": 33,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 7.0,
+              "p95_ms": 15.0,
+              "p99_ms": 260.0,
+              "max_ms": 258.4254238754511,
+              "rps": 0.164
+            }
+          }
+        }
+      },
+      {
+        "tag": "pod_100",
+        "users": 100,
+        "users_max": 100,
+        "ramp_per_s": 5.0,
+        "duration": "4m",
+        "start": "2026-10-21T17:51:50+0000",
+        "end": "2026-10-21T17:56:20+0000",
+        "total": {
+          "requests": 11929,
+          "failures": 0,
+          "error_rate": 0.0,
+          "p50_ms": 30.0,
+          "p95_ms": 720.0,
+          "p99_ms": 1400.0,
+          "max_ms": 5710.129387676716,
+          "rps": 45.804
+        },
+        "scenarios": {
+          "формирование подборки": {
+            "потребность: создать + подборка v1": {
+              "requests": 20,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 530.0,
+              "p95_ms": 1400.0,
+              "p99_ms": 1400.0,
+              "max_ms": 1388.9977168291807,
+              "rps": 0.077
+            },
+            "подборка: версия": {
+              "requests": 651,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 35.0,
+              "p95_ms": 430.0,
+              "p99_ms": 610.0,
+              "max_ms": 822.3492912948132,
+              "rps": 2.5
+            },
+            "подборка: сравнение 2–3": {
+              "requests": 348,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 120.0,
+              "p95_ms": 900.0,
+              "p99_ms": 1300.0,
+              "max_ms": 1741.6604664176702,
+              "rps": 1.336
+            }
+          },
+          "открытие профиля": {
+            "подборка: карточка кандидата": {
+              "requests": 300,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 300.0,
+              "p95_ms": 920.0,
+              "p99_ms": 1300.0,
+              "max_ms": 2255.8140102773905,
+              "rps": 1.152
+            }
+          },
+          "поиск": {
+            "поиск по базе": {
+              "requests": 321,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 570.0,
+              "p95_ms": 1500.0,
+              "p99_ms": 2000.0,
+              "max_ms": 2395.328054204583,
+              "rps": 1.233
+            }
+          },
+          "вход": {
+            "вход жюри (песочница)": {
+              "requests": 63,
+              "failures": 0,
+              "error_rate": 0.0,
+              "p50_ms": 11.0,
+              "p95_ms": 81.0,
+              "p99_ms": 340.0,
+              "max_ms": 336.97146363556385,
+              "rps": 0.242
+            }
+          }
+        }
+      }
+    ]
+  },
   "demo": null,
   "landing_cards": [
     {
@@ -13602,6 +13875,14 @@
       "command": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/",
       "artifact": "docs/realdata/fsp_protocols/index_stats.json"
+    },
+    {
+      "section": "Нагрузка",
+      "metric": "см. docs/perf/LOAD.md",
+      "sample": "",
+      "command": "/opt/spectrek_fsp/work/rp_src/a12lt/pod_load.sh (rp run a12lt 'bash pod_load.sh'), затем python3 tools/perf/load_json.py --dir <out> --tags pod_20,pod_50,pod_100 --out docs/perf/load.json",
+      "code_ref": "tools/perf/",
+      "artifact": "docs/perf/load.json"
     }
   ]
 }

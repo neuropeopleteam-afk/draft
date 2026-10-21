@@ -1,6 +1,6 @@
 # Отчёт валидации «Драфт» (генерируется tools/publish/gen_numbers.py из docs/NUMBERS.json)
 
-Коммит 3143f52bb, 2026-10-21T17:57:42Z. Чисел, введённых руками, здесь нет.
+Коммит 8bb1fc0c, 2026-10-21T18:43:28Z. Чисел, введённых руками, здесь нет.
 
 ## Итоговый прогон симуляции продукта (один прогон на отложенных зёрнах)
 
@@ -187,3 +187,4 @@
 | Реальные вакансии hh.ru | направление 85,1 % | N = 336; второй отложенный набор: 336 свежих вакансий hh.ru (SHA-256 2bb77a1cd8d7…, заморожен 2026-10-21, прогон один); метки — поля hh.ru (роль и слова названия), разбор текста правилами без LLM; прогон 2026-10-21, код 249443367 | `cd backend && python ../tools/realdata/hh_holdout.py --tag 2 run (один раз; новый прогон — новый отложенный набор: collect → freeze → run)` |
 | Античит оценщика развёрнутых ответов | слепой набор: фильтр 137/176, ложные 2/176, полная цепочка с моделью — пробитий 0/176 | атаки от моделей других поставщиков, хэш набора до прогона | `python3 tools/grader_check/run_holdout_eval.py --offline` |
 | Протоколы ФСП | 18 документов, 2 908 результатов | официальные протоколы с сайта ФСП | `python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp` |
+| Нагрузка | см. docs/perf/LOAD.md |  | `/opt/spectrek_fsp/work/rp_src/a12lt/pod_load.sh (rp run a12lt 'bash pod_load.sh'), затем python3 tools/perf/load_json.py --dir <out> --tags pod_20,pod_50,pod_100 --out docs/perf/load.json` |
