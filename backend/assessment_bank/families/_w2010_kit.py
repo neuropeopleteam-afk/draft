@@ -288,9 +288,14 @@ def numeric_variant(
     except Exception:
         expl = explain(P, ans, trap_names)
     if trap_desc:
-        td = "; ".join(f"{n} — {trap_desc[n]}" for n in trap_names if n in trap_desc)
-        if td:
-            expl = f"{expl} Дистракторы (типичные ошибки): {td}."
+        val_of = {n: s for n, s in picked}
+        real = [f"«{val_of[n]}» — {trap_desc[n]}" for n in trap_names if n in trap_desc and not n.startswith("_fb_")]
+        ctrl = [f"«{val_of[n]}»" for n in trap_names if n.startswith("_fb_")]
+        if real:
+            expl = f"{expl} Дистракторы — типичные ошибки: {'; '.join(real)}."
+        if ctrl:
+            expl = (f"{expl} Контрольные значения рядом с ответом (не связаны с конкретной ошибкой): "
+                    f"{', '.join(ctrl)}.")
     return build_variant(
         family_id, seed,
         stem=stem(P, ctx),
