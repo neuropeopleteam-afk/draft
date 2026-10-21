@@ -1,0 +1,99 @@
+{
+ "what": "Повторный разбор командных протоколов (retable.py) и сверка вторым поставщиком (crosscheck_blocks.py): по документам — страниц, подтверждённых линиями таблицы (geometry), без подтверждения (model_only), строк; совпадений мест у второго поставщика. Без ПДн.",
+ "retable": {
+  "kr_2025_prod_final": {
+   "geometry": 3,
+   "model_only": 2,
+   "pages": 5,
+   "rows": 97
+  },
+  "kr_2025_ib_final": {
+   "geometry": 1,
+   "model_only": 4,
+   "pages": 5,
+   "rows": 87
+  },
+  "chr_2025_prod_final": {
+   "geometry": 0,
+   "model_only": 3,
+   "pages": 3,
+   "rows": 65
+  },
+  "kr_2026_prod_otbor": {
+   "geometry": 4,
+   "model_only": 3,
+   "pages": 7,
+   "rows": 142
+  },
+  "kr_2026_robo_otbor": {
+   "geometry": 0,
+   "model_only": 4,
+   "pages": 4,
+   "rows": 81
+  },
+  "kf_2026_final": {
+   "geometry": 65,
+   "model_only": 6,
+   "pages": 71,
+   "rows": 1357
+  },
+  "cfo_2026_prod": {
+   "geometry": 8,
+   "model_only": 10,
+   "pages": 18,
+   "rows": 216
+  },
+  "pfo_2026_prod": {
+   "geometry": 3,
+   "model_only": 5,
+   "pages": 8,
+   "rows": 59
+  }
+ },
+ "crosscheck": {
+  "model": "anthropic/claude-sonnet-5.5",
+  "docs": {
+   "cfo_2026_prod": {
+    "pages": 10,
+    "rows": 84,
+    "agree": 76
+   },
+   "chr_2025_prod_final": {
+    "pages": 3,
+    "rows": 65,
+    "agree": 43
+   },
+   "kf_2026_final": {
+    "pages": 6,
+    "rows": 105,
+    "agree": 39
+   },
+   "kr_2025_ib_final": {
+    "pages": 4,
+    "rows": 65,
+    "agree": 65
+   },
+   "kr_2025_prod_final": {
+    "pages": 2,
+    "rows": 28,
+    "agree": 26
+   },
+   "kr_2026_prod_otbor": {
+    "pages": 3,
+    "rows": 50,
+    "agree": 39
+   },
+   "kr_2026_robo_otbor": {
+    "pages": 4,
+    "rows": 81,
+    "agree": 41
+   },
+   "pfo_2026_prod": {
+    "pages": 5,
+    "rows": 31,
+    "agree": 25
+   }
+  }
+ },
+ "recompute": "python3 tools/fsp_protocols/retable.py …; python3 tools/fsp_protocols/crosscheck_blocks.py …"
+}
