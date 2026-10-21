@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-"""Полная валидация банка заданий на 20 зёрнах (36 480 вариантов) и 100 зёрнах (182 400 вариантов),
-обновление BANK_SYNC.json и генерация сводки для А4 и docs/NUMBERS.json.
+"""УСТАРЕЛО (21.10.2026): не использовать для цифр.
+
+Скрипт проверял только структуру и инварианты вариантов, без проверки ключей исполнением, и при этом называл
+итог «валидация, 0 ошибок»; BANK_SYNC.json он писал в формате, который не читают provenance, catalog/ext и
+gen_numbers. Замена: настоящий валидатор `python -m assessment_bank validate --seeds 20` (проверки исполнением)
++ `tools/bank_manifest.py` (BANK_SYNC.json и docs/bank/bank_metrics_for_a4.json) + `tools/bank_audit.py`.
 """
 from __future__ import annotations
 
@@ -88,6 +92,7 @@ def _worker_family(arg: tuple[int, str]) -> dict:
 
 
 def main() -> None:
+    raise SystemExit("устарело: см. докстринг (tools/bank_manifest.py + python -m assessment_bank validate)")
     t0 = time.time()
     specs = load_specs()
     total_fams = len(specs)
