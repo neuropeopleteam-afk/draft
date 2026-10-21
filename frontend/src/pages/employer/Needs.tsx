@@ -788,7 +788,7 @@ export function Selection() {
                   hint="По умолчанию в подборке есть и кандидаты, чей подтверждённый уровень у верхней границы запрошенного; строгий режим оставляет только точное совпадение."
                 />
                 <p className="text-xs font-medium text-brand-plum" data-testid="grade-exact-count">
-                  В этой подборке сильнее запроса (у верхней границы грейда): {upperBoundaryCount}
+                  В этой подборке у верхней границы грейда (сильнее запроса): {upperBoundaryCount}
                 </p>
               </div>
               <Toggle checked={!!filters.learn_from_company} onChange={(x) => setFilters({ ...filters, learn_from_company: x || undefined })} label="Учитывать решения компании"

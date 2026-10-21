@@ -12,7 +12,7 @@ import { juryLogin } from "../lib/jury";
 import { useDemoUi } from "../lib/juryMode";
 import { lazyNamed } from "../lib/lazyPage";
 import { daysText, getLandingCards, usePageTitle, useRules } from "../lib/meta";
-import { getTop5, getTop5Hard, getTop5Meta } from "../lib/numbers";
+import { getFspFacts, getTop5, getTop5Hard, getTop5Meta, NUMBERS } from "../lib/numbers";
 
 const LazyJuryPanel = lazyNamed(() => import("../components/JuryPanel"), "JuryPanel");
 
@@ -31,10 +31,10 @@ const employerSteps = [
 ];
 
 const candidateSteps = (r: Rules | null) => [
-  ["Регистрация за минуту", "Почта с подтверждением и согласие 152-ФЗ — без обязательного резюме на старте."],
+  ["Регистрация за минуту", "Почта с кодом подтверждения и согласие на обработку персональных данных — без резюме на старте."],
   ["Профиль и стек", "Укажите специализацию и ключевые технологии. При наличии — привяжите достижения через ФСП ID."],
   ["Адаптивный тест на грейд", "Индивидуальный вариант задач с кодом и архитектурой: система подтверждает заявленный уровень без стресса."],
-  ["Подписанный паспорт грейда", `Категория «направление · грейд» с защищённой цифровой подписью. ${gradeRule(r)}`],
+  ["Подписанный паспорт грейда", `Категория «направление · грейд» с защищённой электронной подписью. ${gradeRule(r)}`],
   ["Прямые офферы с зарплатой", "Компании сами выходят на контакт и сразу указывают вилку. Ваши контакты скрыты до вашего согласия."],
 ];
 
@@ -109,33 +109,40 @@ export default function Landing() {
       {/* Первый экран: что это, для кого (кандидат / работодатель / ФСП) и одна главная кнопка на роль */}
       <section className="relative mx-auto grid max-w-content items-start gap-8 px-4 pb-14 pt-8 sm:px-6 md:pt-12 lg:grid-cols-[1.04fr_0.96fr] lg:gap-10 lg:pb-16">
         <div className="min-w-0 lg:pt-1">
-          <p className="np-eyebrow">Платформа обратного ИТ-найма · Работодателям · Кандидатам · ФСП</p>
-          <h1 className="mt-3 text-[1.95rem] font-extrabold leading-[1.08] tracking-tight np-text sm:text-[2.45rem] xl:text-[2.75rem]">
-            Найм IT-специалистов с <span className="fsp-serif-italic">подтверждённым грейдом</span>: компания сама приглашает проверенных кандидатов
-          </h1>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed np-muted md:text-lg" data-testid="hero-subtitle">
-            Это платформа обратного найма без чтения сотен резюме: выберите свою роль ниже, чтобы получить готовую подборку проверенных инженеров, подтвердить свой уровень или открыть аналитику Федерации.
-          </p>
+          <div className="fsp-laser-spine">
+            <span className="fsp-laser-node -top-1" aria-hidden="true" />
+            <span className="fsp-laser-spine-photon" aria-hidden="true" />
+            <span className="fsp-laser-node -bottom-1 !bg-[#FF4D6D]" aria-hidden="true" />
+            <p className="np-eyebrow">Платформа обратного ИТ-найма · Работодателям · Кандидатам · ФСП</p>
+            <h1 className="mt-3 text-[1.95rem] font-extrabold leading-[1.08] tracking-tight np-text sm:text-[2.45rem] xl:text-[2.75rem]">
+              <span className="np-hero-shimmer">Найм IT-специалистов с </span>
+              <span className="fsp-serif-italic">подтверждённым грейдом</span>
+              <span className="np-hero-shimmer">: компания сама приглашает проверенных кандидатов</span>
+            </h1>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed np-muted md:text-lg" data-testid="hero-subtitle">
+              Это платформа обратного найма без чтения сотен резюме: выберите свою роль ниже, чтобы получить готовую подборку проверенных инженеров, подтвердить свой уровень или открыть аналитику Федерации.
+            </p>
+          </div>
 
           {/* На мобильных экранах (< lg) 3D-ядро верификации ФСП показывается сразу под подзаголовком первого экрана */}
           <div className="mt-5 lg:hidden">
             <FspHeroMonolithStage mobile />
           </div>
 
-          {/* Для кого и что сделать — 3 карточки ролей с одной главной кнопкой на роль в строгой палитре ФСП */}
+          {/* Для кого и что сделать — 3 карточки ролей с разноцветными градиентными кнопками в палитре сайта */}
           <div
             className="mt-6 grid gap-3 sm:grid-cols-3"
             data-testid="hero-roles-grid"
             aria-label="Для кого платформа и главное действие по роли"
           >
-            <div className="np-card flex min-w-0 flex-col justify-between overflow-hidden p-4">
+            <div className="np-card flex min-w-0 flex-col justify-between overflow-hidden border-indigo-400/30 p-4">
               <div className="min-w-0">
-                <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.1em] np-accent">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#402FFF]" aria-hidden="true" />
+                <p className="flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.1em] text-indigo-300">
+                  <span className="h-2 w-2 rounded-full bg-[#402FFF] shadow-[0_0_8px_#402FFF]" aria-hidden="true" />
                   Работодателю
                 </p>
                 <p className="mt-1.5 text-sm font-bold leading-snug np-text">Найти проверенного инженера</p>
-                <p className="mt-1 text-xs leading-relaxed np-muted">
+                <p className="mt-1 text-[13px] leading-relaxed np-muted">
                   Опишите задачу — получите готовую подборку с доказанным грейдом и отправьте оффер с вилкой.
                 </p>
               </div>
@@ -149,14 +156,14 @@ export default function Landing() {
               </Link>
             </div>
 
-            <div className="np-card flex min-w-0 flex-col justify-between overflow-hidden p-4">
+            <div className="np-card flex min-w-0 flex-col justify-between overflow-hidden border-purple-400/30 p-4">
               <div className="min-w-0">
-                <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.1em] np-accent">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#685AFF]" aria-hidden="true" />
+                <p className="flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.1em] text-purple-300">
+                  <span className="h-2 w-2 rounded-full bg-[#9D4EDD] shadow-[0_0_8px_#9D4EDD]" aria-hidden="true" />
                   Кандидату · 0 ₽
                 </p>
                 <p className="mt-1.5 text-sm font-bold leading-snug np-text">Получать офферы с вилкой</p>
-                <p className="mt-1 text-xs leading-relaxed np-muted">
+                <p className="mt-1 text-[13px] leading-relaxed np-muted">
                   Один раз подтвердите уровень на задачах и турнирах ФСП — компании сами напишут вам.
                 </p>
               </div>
@@ -164,20 +171,20 @@ export default function Landing() {
                 to="/register?role=candidate"
                 data-tour="hero-candidate-btn"
                 data-testid="hero-cta-candidate"
-                className="np-btn-ghost mt-3.5 w-full justify-center whitespace-normal px-3 py-2.5 text-center text-xs font-bold leading-tight"
+                className="np-btn-grad-violet mt-3.5 w-full justify-center whitespace-normal px-3 py-2.5 text-center text-xs font-bold leading-tight"
               >
                 Подтвердить свой грейд (0 ₽)
               </Link>
             </div>
 
-            <div className="np-card flex min-w-0 flex-col justify-between overflow-hidden p-4">
+            <div className="np-card flex min-w-0 flex-col justify-between overflow-hidden border-rose-400/30 p-4">
               <div className="min-w-0">
-                <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.1em] np-accent">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#EC1D35]" aria-hidden="true" />
+                <p className="flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.1em] text-rose-300">
+                  <span className="h-2 w-2 rounded-full bg-[#EC1D35] shadow-[0_0_8px_#EC1D35]" aria-hidden="true" />
                   Федерации ФСП
                 </p>
                 <p className="mt-1.5 text-sm font-bold leading-snug np-text">Связать турниры и карьеру</p>
-                <p className="mt-1 text-xs leading-relaxed np-muted">
+                <p className="mt-1 text-[13px] leading-relaxed np-muted">
                   Смотрите спрос компаний по регионам, запускайте кубки и подтверждайте разряды.
                 </p>
               </div>
@@ -185,7 +192,7 @@ export default function Landing() {
                 href="#fsp-ecosystem"
                 data-tour="hero-fsp-btn"
                 data-testid="hero-cta-fsp"
-                className="np-btn-ghost mt-3.5 w-full justify-center whitespace-normal px-3 py-2.5 text-center text-xs font-bold leading-tight"
+                className="np-btn-grad-crimson mt-3.5 w-full justify-center whitespace-normal px-3 py-2.5 text-center text-xs font-bold leading-tight"
               >
                 Кабинет и кубки ФСП
               </a>
@@ -209,11 +216,14 @@ export default function Landing() {
               На iPhone — добавьте сайт на экран «Домой» →
             </Link>
           </div>
-          <ul className="mt-5 grid gap-3 text-[0.82rem] leading-snug sm:grid-cols-3" aria-label="Ключевые преимущества">
+          <ul className="mt-5 grid gap-3 text-xs leading-snug sm:grid-cols-3" aria-label="Ключевые преимущества">
             <Fact k="Навык" t="Подборка по доказанным задачам вместо откликов" />
             <Fact k="₽" t="Прозрачная вилка в каждом приглашении" />
             <Fact k="ФСП" t="Верификация достижений и кубки работодателей" />
           </ul>
+
+          {/* Интерактивный голографический радар контура верификации (заполняет левую колонку вровень с правой витриной) */}
+          <FspHeroLiveRadar onTryInvite={tryInvite} onLiveAvatar={tryLiveAvatar} busyRole={busyRole} />
         </div>
         <div className="min-w-0 space-y-4 lg:sticky lg:top-20">
           <div className="hidden lg:block">
@@ -330,9 +340,9 @@ export default function Landing() {
             </p>
           </div>
         </div>
-        <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Цифры математического ядра под капотом" data-testid="landing-numbers-grid">
+        <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-label="Цифры математического ядра под капотом" data-testid="landing-numbers-grid">
           {cards.map((c) => (
-            <div key={c.id} className="np-glass flex flex-col justify-between px-5 py-4" data-testid={`landing-number-${c.id}`}>
+            <div key={c.id} className="np-glass flex flex-col justify-between px-4 py-4" data-testid={`landing-number-${c.id}`}>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider np-faint">{plainMetricText(c.eyebrow)}</dt>
                 <dd className="mt-1 tabular-nums np-text">
@@ -344,13 +354,13 @@ export default function Landing() {
                     </span>
                   )}
                 </dd>
-                <p className="mt-1.5 text-xs leading-relaxed np-muted">{plainMetricText(c.subtext)}</p>
+                <p className="mt-2 text-[13px] leading-relaxed np-muted">{plainMetricText(c.subtext)}</p>
               </div>
               <p
-                className="mt-3 border-t border-white/10 pt-2 text-[11px] leading-snug np-faint cursor-help"
+                className="mt-3 border-t border-white/10 pt-2 text-xs leading-snug np-faint cursor-help"
                 title={`Как считается: ${c.eyebrow}. Воспроизводимая проверка: ${c.recompute} · ${c.code_ref}`}
               >
-                Как считается: наведите для формулы и источника ⓘ
+                Как считается: формула и источник ⓘ
               </p>
             </div>
           ))}
@@ -366,7 +376,7 @@ export default function Landing() {
               </h3>
             </div>
             <Link to="/validation#headline" className="text-xs font-semibold np-accent hover:underline">
-              Все протоколы на /validation →
+              Все протоколы проверки →
             </Link>
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -429,13 +439,168 @@ export default function Landing() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Link to="/register?role=employer" className="np-btn-primary px-6 py-3">Создать вакансию</Link>
-            <Link to="/register?role=candidate" className="np-btn-ghost px-6 py-3">Пройти тест как кандидат</Link>
+            <Link to="/register?role=candidate" className="np-btn-grad-violet px-6 py-3">Пройти тест как кандидат</Link>
           </div>
         </div>
       </section>
 
       </main>
       <SiteFooter premium />
+    </div>
+  );
+}
+
+function getRadarStages() {
+  const lc = getLandingCards();
+  const gv = lc.find((x) => x.id === "grade_verdict");
+  const mp = lc.find((x) => x.id === "matching_p5");
+  const fp = lc.find((x) => x.id === "fsp_protocols");
+  const gvMetric = gv?.pair ? `${gv.pair.st.value} % | ${gv.pair.hard.value} %` : `${gv?.value ?? "88,1"} %`;
+  const mpMetric = mp?.pair ? `${mp.pair.st.value} % | ${mp.pair.hard.value} %` : `${mp?.value ?? "77,1"} %`;
+  return [
+    {
+      id: "test",
+      code: "01",
+      badge: "Калибровка",
+      title: "Адаптивный тест + ИИ-защита",
+      desc: "Индивидуальная траектория задач с кодом и архитектурой, 6-слойный античит и живая устная защита с ИИ-аватаром.",
+      metric: gvMetric,
+      metricSub: "точность уверенного вердикта (стандарт | строже)",
+      tone: "from-[#402FFF]/30 via-[#685AFF]/15 to-transparent border-indigo-400/40",
+    },
+    {
+      id: "passport",
+      code: "02",
+      badge: "Крипто-щит",
+      title: "Паспорт грейда + реестр ФСП",
+      desc: "Категория «направление · грейд» и достижения официальных протоколов ФСП закрепляются электронной подписью платформы.",
+      metric: `${getFspFacts()?.regions ?? 89} регионов · ${fp?.value ?? 18} протоколов`,
+      metricSub: "охват Федерации и сверка разрядов ЕВСК",
+      tone: "from-[#7C2AE8]/30 via-[#A855F7]/15 to-transparent border-purple-400/40",
+    },
+    {
+      id: "match",
+      code: "03",
+      badge: "Обратный найм",
+      title: "Подборка по фактам и оффер с ₽",
+      desc: "Работодатель видит только доказанные компетенции обезличенных инженеров и отправляет приглашение с обязательной вилкой.",
+      metric: mpMetric,
+      metricSub: "точность топ-5 подборки (стандарт | строже)",
+      tone: "from-[#EC1D35]/30 via-[#402FFF]/20 to-transparent border-rose-400/40",
+    },
+  ] as const;
+}
+
+function FspHeroLiveRadar({
+  onTryInvite,
+  onLiveAvatar,
+  busyRole,
+}: {
+  onTryInvite: () => void;
+  onLiveAvatar: () => void;
+  busyRole: string | null;
+}) {
+  const [active, setActive] = useState<number>(0);
+  const stages = getRadarStages();
+  const st = stages[active] ?? stages[0];
+  return (
+    <div
+      className="mt-5 relative overflow-hidden rounded-3xl border border-indigo-400/35 bg-gradient-to-br from-[#0B0E24]/95 via-[#12163A]/92 to-[#1B102E]/95 p-4 sm:p-5 shadow-[0_24px_60px_-24px_rgba(64,47,255,0.75)]"
+      data-testid="hero-live-contour"
+      aria-label="Живой контур верификации и обратного найма"
+    >
+      {/* Верхний лазерный сканер */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[2px]"
+        style={{
+          background: "linear-gradient(90deg, transparent 0%, #38BDF8 25%, #685AFF 55%, #EC1D35 85%, transparent 100%)",
+          boxShadow: "0 0 18px rgba(56, 189, 248, 0.9)",
+        }}
+        aria-hidden="true"
+      />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-[#38BDF8] shadow-[0_0_10px_#38BDF8]" aria-hidden="true" />
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-300">
+            Живой контур «Драфт × ФСП» · Сквозная верификация
+          </p>
+        </div>
+        <span className="rounded-full border border-indigo-400/35 bg-indigo-500/15 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-indigo-200">
+          {NUMBERS.bank.families.toLocaleString("ru-RU")} семейств · {NUMBERS.bank.directions} направлений
+        </span>
+      </div>
+
+      {/* Интерактивные переключатели контуров */}
+      <div className="mt-3.5 grid grid-cols-3 gap-2" role="tablist" aria-label="Этапы живого контура">
+        {stages.map((item, idx) => {
+          const isOn = idx === active;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={isOn}
+              onClick={() => setActive(idx)}
+              className={`group relative overflow-hidden rounded-xl border px-3 py-2 text-left transition-all ${
+                isOn
+                  ? "border-cyan-300/70 bg-gradient-to-br from-[#402FFF]/55 via-[#5E4BFF]/35 to-[#EC1D35]/30 text-white shadow-[0_10px_24px_-10px_rgba(64,47,255,0.9)]"
+                  : "border-white/10 bg-white/[0.03] text-[#C8CEFF]/80 hover:border-indigo-400/40 hover:bg-white/[0.07] hover:text-white"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                  Этап {item.code}
+                </span>
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    isOn ? "bg-cyan-300 shadow-[0_0_8px_#67e8f9]" : "bg-white/25"
+                  }`}
+                  aria-hidden="true"
+                />
+              </div>
+              <p className="mt-0.5 truncate text-xs font-bold">{item.badge}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Активная карточка этапа с проверенной цифрой */}
+      <div className={`mt-3 rounded-2xl border bg-gradient-to-r p-3.5 ${st.tone}`}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 basis-48">
+            <p className="text-sm font-extrabold text-white">{st.title}</p>
+            <p className="mt-1 text-xs leading-relaxed text-[#E2E5FF]/85">{st.desc}</p>
+          </div>
+          <div className="shrink-0 rounded-xl border border-white/15 bg-[#080B1C]/80 px-3 py-2 text-right">
+            <p className="font-mono text-base font-extrabold tabular-nums text-cyan-300">{st.metric}</p>
+            <p className="text-[10.5px] text-[#C8CEFF]/80">{st.metricSub}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Быстрые градиентные действия */}
+      <div className="mt-3.5 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={onLiveAvatar}
+          disabled={busyRole === "avatar"}
+          className="np-btn-grad-violet px-3.5 py-2 text-xs"
+        >
+          <span className="h-2 w-2 rounded-full bg-rose-300 shadow-[0_0_8px_#fda4af]" aria-hidden="true" />
+          {busyRole === "avatar" ? "Запускаем…" : "Живой ИИ-аватар"}
+        </button>
+        <button
+          type="button"
+          onClick={onTryInvite}
+          disabled={busyRole === "employer"}
+          className="np-btn-grad-cyan px-3.5 py-2 text-xs"
+        >
+          Подборка работодателя
+        </button>
+        <Link to="/validation" className="np-btn-grad-emerald px-3.5 py-2 text-xs">
+          Протоколы и метрики →
+        </Link>
+      </div>
     </div>
   );
 }
@@ -449,37 +614,76 @@ function Fact({ k, t }: { k: string; t: string }) {
   );
 }
 
-/** Фирменные маршрутные линии брендбука ФСП (скруглённые повороты 90° и узловые точки) на фоне первого экрана. */
+/** Лазерные маршрутные трассы ФСП с неоновым свечением и бегущими фотонными импульсами на фоне первого экрана. */
 function FspBackdropCircuit() {
   return (
     <svg
       viewBox="0 0 1440 900"
       fill="none"
-      className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[900px] w-full max-w-[1440px] opacity-40"
+      className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[900px] w-full max-w-[1440px] opacity-85"
       aria-hidden="true"
     >
       <defs>
         <linearGradient id="fsp-circuit-grad" x1="0" y1="0" x2="1440" y2="900" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#402FFF" stopOpacity="0.55" />
-          <stop offset="65%" stopColor="#7C70FF" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="#EC1D35" stopOpacity="0.35" />
+          <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.85" />
+          <stop offset="45%" stopColor="#402FFF" stopOpacity="0.7" />
+          <stop offset="78%" stopColor="#A855F7" stopOpacity="0.65" />
+          <stop offset="100%" stopColor="#EC1D35" stopOpacity="0.8" />
         </linearGradient>
+        <linearGradient id="fsp-laser-hot" x1="0" y1="0" x2="1440" y2="900" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#67E8F9" stopOpacity="1" />
+          <stop offset="50%" stopColor="#FFFFFF" stopOpacity="1" />
+          <stop offset="100%" stopColor="#FF4D6D" stopOpacity="1" />
+        </linearGradient>
+        <filter id="fsp-laser-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="4" result="blur1" />
+          <feGaussianBlur stdDeviation="10" result="blur2" />
+          <feMerge>
+            <feMergeNode in="blur2" />
+            <feMergeNode in="blur1" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
+      {/* Базовые лазерные направляющие */}
       <path
-        d="M84 180 V320 Q84 368 132 368 H380 Q428 368 428 416 V560 Q428 608 476 608 H760"
+        d="M84 140 V320 Q84 368 132 368 H380 Q428 368 428 416 V560 Q428 608 476 608 H760"
         stroke="url(#fsp-circuit-grad)"
-        strokeWidth="1.4"
+        strokeWidth="1.8"
+        filter="url(#fsp-laser-glow)"
       />
       <path
-        d="M1356 120 V290 Q1356 338 1308 338 H1080 Q1032 338 1032 386 V540"
+        d="M1356 110 V290 Q1356 338 1308 338 H1080 Q1032 338 1032 386 V540"
         stroke="url(#fsp-circuit-grad)"
-        strokeWidth="1.4"
+        strokeWidth="1.8"
+        filter="url(#fsp-laser-glow)"
       />
-      <circle cx="84" cy="180" r="4.5" fill="#402FFF" />
-      <circle cx="428" cy="416" r="4" fill="#7C70FF" />
-      <circle cx="760" cy="608" r="4.5" fill="#402FFF" />
-      <circle cx="1356" cy="120" r="4.5" fill="#402FFF" />
-      <circle cx="1032" cy="540" r="4.5" fill="#EC1D35" />
+      {/* Бегущие фотонные лазерные импульсы */}
+      <path
+        d="M84 140 V320 Q84 368 132 368 H380 Q428 368 428 416 V560 Q428 608 476 608 H760"
+        stroke="url(#fsp-laser-hot)"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray="160 1040"
+        filter="url(#fsp-laser-glow)"
+        style={{ animation: "fspLaserBeam 6s linear infinite" }}
+      />
+      <path
+        d="M1356 110 V290 Q1356 338 1308 338 H1080 Q1032 338 1032 386 V540"
+        stroke="url(#fsp-laser-hot)"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray="140 960"
+        filter="url(#fsp-laser-glow)"
+        style={{ animation: "fspLaserBeam 5.2s linear infinite reverse" }}
+      />
+      {/* Светящиеся лазерные узлы */}
+      <circle cx="84" cy="140" r="6" fill="#67E8F9" filter="url(#fsp-laser-glow)" />
+      <circle cx="84" cy="140" r="2.5" fill="#FFFFFF" />
+      <circle cx="428" cy="416" r="5.5" fill="#A855F7" filter="url(#fsp-laser-glow)" />
+      <circle cx="760" cy="608" r="6" fill="#38BDF8" filter="url(#fsp-laser-glow)" />
+      <circle cx="1356" cy="110" r="6" fill="#67E8F9" filter="url(#fsp-laser-glow)" />
+      <circle cx="1032" cy="540" r="6" fill="#FF4D6D" filter="url(#fsp-laser-glow)" />
     </svg>
   );
 }
@@ -488,7 +692,7 @@ function StepList({
   id,
   title,
   steps,
-  tone: _tone,
+  tone,
   cta,
   secondaryCta,
   onDemo,
@@ -507,16 +711,27 @@ function StepList({
       <ol className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {steps.map(([t, d], i) => (
           <li key={t} className="flex flex-col gap-2 rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-4">
-            <span className="np-num np-num-indigo" style={{ background: "linear-gradient(135deg, #2717D1 0%, #402FFF 65%, #5B4BFF 100%)", boxShadow: "0 6px 16px -6px rgba(64, 47, 255, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.3)" }}>{i + 1}</span>
+            <span
+              className="np-num np-num-indigo"
+              style={{
+                background:
+                  tone === "red"
+                    ? "linear-gradient(135deg, #9F1239 0%, #E11D48 52%, #685AFF 100%)"
+                    : "linear-gradient(135deg, #2717D1 0%, #402FFF 55%, #06B6D4 100%)",
+                boxShadow: "0 6px 16px -6px rgba(64, 47, 255, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.35)",
+              }}
+            >
+              {i + 1}
+            </span>
             <p className="font-semibold np-text">{t}</p>
-            <p className="text-xs leading-relaxed np-muted">{d}</p>
+            <p className="text-[13px] leading-relaxed np-muted">{d}</p>
           </li>
         ))}
       </ol>
       <div className="mt-6 flex flex-wrap gap-3">
-        <Link to={cta[0]} className="np-btn-primary px-5 py-2.5 text-sm">{cta[1]}</Link>
-        {secondaryCta && <Link to={secondaryCta[0]} className="np-btn-ghost px-5 py-2.5 text-sm">{secondaryCta[1]}</Link>}
-        {onDemo && <button type="button" onClick={onDemo} className="np-btn-ghost px-5 py-2.5 text-sm">Открыть демо-кабинет</button>}
+        <Link to={cta[0]} className={tone === "red" ? "np-btn-primary px-5 py-2.5 text-sm" : "np-btn-grad-violet px-5 py-2.5 text-sm"}>{cta[1]}</Link>
+        {secondaryCta && <Link to={secondaryCta[0]} className="np-btn-grad-cyan px-5 py-2.5 text-sm">{secondaryCta[1]}</Link>}
+        {onDemo && <button type="button" onClick={onDemo} className="np-btn-grad-emerald px-5 py-2.5 text-sm">Открыть демо-кабинет</button>}
       </div>
     </div>
   );

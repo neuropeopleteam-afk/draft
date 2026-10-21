@@ -220,14 +220,96 @@ html[data-theme="light"] .np {
 
 /* кнопки с благородным переливом в тон палитры ФСП */
 .np-btn-primary { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 0.85rem; padding: 0.75rem 1.25rem;
-  font-size: 0.875rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #2717D1 0%, #402FFF 46%, #5B4BFF 78%, #2E1EE0 100%); background-size: 180% 180%;
-  box-shadow: 0 10px 30px -10px rgba(64, 47, 255, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.34); transition: transform .18s, box-shadow .18s, background-position .25s, filter .18s; }
+  font-size: 0.875rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #2717D1 0%, #402FFF 42%, #685AFF 76%, #2E1EE0 100%); background-size: 200% 200%;
+  border: 1px solid rgba(180, 174, 255, 0.42);
+  box-shadow: 0 10px 32px -8px rgba(64, 47, 255, 0.9), 0 0 18px -4px rgba(104, 90, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.42); transition: transform .18s, box-shadow .18s, background-position .25s, filter .18s; }
 .np-btn-primary::after { content: ""; position: absolute; inset: 0 auto 0 -30%; width: 45%; pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent); transform: translateX(-140%) skewX(-22deg); animation: btnSheen 6s ease-in-out infinite; }
-.np-btn-primary:hover { background-position: 100% 50%; filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 16px 38px -10px rgba(64, 47, 255, 0.96), inset 0 1px 0 rgba(255, 255, 255, 0.44); }
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent); transform: translateX(-140%) skewX(-22deg); animation: btnSheen 5.2s ease-in-out infinite; }
+.np-btn-primary:hover { background-position: 100% 50%; filter: brightness(1.08); transform: translateY(-1.5px); box-shadow: 0 16px 40px -8px rgba(64, 47, 255, 0.98), 0 0 24px -2px rgba(124, 112, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.52); }
 .np-btn-primary:active { transform: translateY(1px); }
 .np-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; filter: none; }
 .np-btn-primary:disabled::after { display: none; }
+
+/* Палитра разноцветных градиентных кнопок в фирменных тонах сайта (сапфир, аметист, лазурь, рубин ФСП, изумрудно-бирюзовый) */
+.np-btn-grad-sapphire,
+.np-btn-grad-violet,
+.np-btn-grad-cyan,
+.np-btn-grad-crimson,
+.np-btn-grad-emerald {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.85rem;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-size: 200% 200%;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, filter 0.2s, background-position 0.3s;
+}
+.np-btn-grad-sapphire::after,
+.np-btn-grad-violet::after,
+.np-btn-grad-cyan::after,
+.np-btn-grad-crimson::after,
+.np-btn-grad-emerald::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -35%;
+  width: 42%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: translateX(-140%) skewX(-22deg);
+  animation: btnSheen 6.2s ease-in-out infinite;
+}
+.np-btn-grad-sapphire:hover,
+.np-btn-grad-violet:hover,
+.np-btn-grad-cyan:hover,
+.np-btn-grad-crimson:hover,
+.np-btn-grad-emerald:hover {
+  background-position: 100% 50%;
+  filter: brightness(1.09);
+  transform: translateY(-1.5px);
+}
+.np-btn-grad-sapphire:disabled,
+.np-btn-grad-violet:disabled,
+.np-btn-grad-cyan:disabled,
+.np-btn-grad-crimson:disabled,
+.np-btn-grad-emerald:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+.np-btn-grad-sapphire {
+  background-image: linear-gradient(135deg, #2617C8 0%, #402FFF 50%, #6C5CE7 100%);
+  border: 1px solid rgba(165, 157, 255, 0.5);
+  box-shadow: 0 10px 26px -10px rgba(64, 47, 255, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.np-btn-grad-violet {
+  background-image: linear-gradient(135deg, #5319E8 0%, #7C2AE8 50%, #B05CFF 100%);
+  border: 1px solid rgba(210, 170, 255, 0.5);
+  box-shadow: 0 10px 26px -10px rgba(138, 58, 252, 0.82), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.np-btn-grad-violet::after { animation-delay: -1.5s; }
+.np-btn-grad-cyan {
+  background-image: linear-gradient(135deg, #1E3A8A 0%, #2563EB 48%, #06B6D4 100%);
+  border: 1px solid rgba(125, 211, 252, 0.5);
+  box-shadow: 0 10px 26px -10px rgba(37, 99, 235, 0.82), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.np-btn-grad-cyan::after { animation-delay: -3s; }
+.np-btn-grad-crimson {
+  background-image: linear-gradient(135deg, #9F1239 0%, #E11D48 48%, #7C2AE8 100%);
+  border: 1px solid rgba(255, 140, 168, 0.5);
+  box-shadow: 0 10px 26px -10px rgba(225, 29, 72, 0.82), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.np-btn-grad-crimson::after { animation-delay: -4.2s; }
+.np-btn-grad-emerald {
+  background-image: linear-gradient(135deg, #0F766E 0%, #0284C7 52%, #4F46E5 100%);
+  border: 1px solid rgba(110, 231, 183, 0.48);
+  box-shadow: 0 10px 26px -10px rgba(14, 165, 233, 0.78), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
 .np-btn-ghost { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 0.85rem; padding: 0.75rem 1.25rem;
   font-size: 0.875rem; font-weight: 600; color: var(--np-text); background: linear-gradient(180deg, var(--np-surface-2), var(--np-surface)); border: 1px solid var(--np-line-2);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); transition: background .18s, border-color .18s, box-shadow .18s, transform .18s; }
@@ -252,12 +334,43 @@ html[data-theme="light"] .np .np-card { background: linear-gradient(180deg, #FFF
 .np-linkcard .np-arrow { color: var(--np-indigo-t); transition: transform .2s; }
 .np-linkcard:hover .np-arrow { transform: translateX(4px); }
 
-/* типографика */
+/* типографика и голографический перелив заголовков */
+@keyframes npTextIridescence {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 .np-eyebrow { display: inline-flex; align-items: center; gap: 0.75rem; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--np-indigo-t); }
-.np-eyebrow::before { content: ""; width: 1.75rem; height: 1px; flex-shrink: 0; background: linear-gradient(90deg, var(--np-indigo-t), var(--np-red-t)); }
-.np-grad { background: linear-gradient(95deg, #CBC6FF 0%, #8375FF 48%, #5848FF 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg, #2415BA 0%, #402FFF 55%, #6557FF 100%); }
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  background: linear-gradient(90deg, #A59DFF 0%, #70E1FF 35%, #FF7588 70%, #A59DFF 100%);
+  background-size: 240% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: npTextIridescence 6s ease-in-out infinite; }
+.np-eyebrow::before { content: ""; width: 2.1rem; height: 2px; flex-shrink: 0; border-radius: 9999px;
+  background: linear-gradient(90deg, #402FFF, #38BDF8, #EC1D35);
+  box-shadow: 0 0 12px rgba(64, 47, 255, 0.95), 0 0 6px rgba(56, 189, 248, 0.8); }
+.np-grad {
+  background: linear-gradient(95deg, #FFFFFF 0%, #B8B0FF 24%, #67E8F9 48%, #FF7588 74%, #E0DCFF 100%);
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: npTextIridescence 5.5s ease-in-out infinite;
+}
+html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg, #2415BA 0%, #402FFF 38%, #0284C7 68%, #D41430 100%); }
+.np-hero-shimmer {
+  background: linear-gradient(105deg, #FFFFFF 0%, #F0EEFF 28%, #C4D4FF 48%, #FFFFFF 66%, #E4DFFF 85%, #FFFFFF 100%);
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: npTextIridescence 7s ease-in-out infinite;
+  filter: drop-shadow(0 6px 28px rgba(64, 47, 255, 0.28));
+}
+html[data-theme="light"] .np .np-hero-shimmer {
+  background: none;
+  color: var(--np-text);
+  filter: none;
+}
 .np-chip { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.2rem 0.6rem; font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   font-size: 0.7rem; font-weight: 600; color: var(--np-muted); border: 1px solid var(--np-line-2); background: var(--np-surface); white-space: nowrap; }
 .np-chip-sm { font-size: 0.68rem; padding: 0.12rem 0.5rem; }
@@ -334,8 +447,26 @@ html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg,
 }
 
 @keyframes fspSheen {
-  0% { background-position: 100% 0; }
-  55%, 100% { background-position: 0% 0; }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fspLaserBeam {
+  0% { stroke-dashoffset: 1200; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes fspLaserSweep {
+  0% { transform: translateX(-100%); opacity: 0.35; }
+  50% { opacity: 1; }
+  100% { transform: translateX(220%); opacity: 0.35; }
+}
+
+@keyframes fspLaserVert {
+  0% { top: -22%; opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { top: 102%; opacity: 0.2; }
 }
 
 .fsp-serif-italic {
@@ -343,23 +474,77 @@ html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg,
   font-style: italic;
   font-weight: 700;
   letter-spacing: -0.01em;
-  background: linear-gradient(100deg, #8B80FF 0%, #C8C3FF 24%, #FFFFFF 44%, #FF7588 64%, #8B80FF 100%);
-  background-size: 220% 100%;
+  background: linear-gradient(100deg, #9B90FF 0%, #67E8F9 22%, #FFFFFF 44%, #FF6B88 68%, #C4B5FD 86%, #9B90FF 100%);
+  background-size: 280% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: fspSheen 7s ease-in-out infinite;
+  animation: fspSheen 4.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(103, 232, 249, 0.32)) drop-shadow(0 0 28px rgba(64, 47, 255, 0.45));
 }
 html[data-theme="light"] .np .fsp-serif-italic {
-  background-image: linear-gradient(100deg, #1F12A6 0%, #402FFF 32%, #7A6BFF 52%, #D41430 76%, #1F12A6 100%);
+  background-image: linear-gradient(100deg, #1F12A6 0%, #402FFF 28%, #0284C7 52%, #D41430 78%, #1F12A6 100%);
+  filter: none;
+}
+
+/* Вертикальный лазерный луч слева от главного заголовка (image-4) */
+.fsp-laser-spine {
+  position: relative;
+  padding-left: 1.35rem;
+}
+.fsp-laser-spine::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  width: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #38BDF8 0%, #402FFF 42%, #A855F7 74%, #EC1D35 100%);
+  box-shadow: 0 0 12px rgba(64, 47, 255, 0.9), 0 0 22px rgba(56, 189, 248, 0.65);
+}
+.fsp-laser-spine-photon {
+  position: absolute;
+  left: -2px;
+  width: 6px;
+  height: 54px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, #67E8F9 40%, #FFFFFF 55%, #FF5C72 85%, transparent 100%);
+  box-shadow: 0 0 16px 2px rgba(103, 232, 249, 0.95), 0 0 28px 4px rgba(64, 47, 255, 0.85);
+  animation: fspLaserVert 3.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.fsp-laser-node {
+  position: absolute;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: #67E8F9;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 14px 3px rgba(103, 232, 249, 0.95), 0 0 24px 6px rgba(64, 47, 255, 0.85);
 }
 
 .fsp-pulse-bar {
   position: relative;
   z-index: 35;
-  background: linear-gradient(90deg, #070814 0%, #101432 50%, #070814 100%);
-  border-bottom: 1px solid rgba(165, 157, 255, 0.2);
+  overflow: hidden;
+  background: linear-gradient(90deg, #060814 0%, #11163A 35%, #19123E 65%, #060814 100%);
+  border-bottom: 1px solid rgba(125, 211, 252, 0.28);
+  box-shadow: 0 8px 28px -12px rgba(64, 47, 255, 0.7);
   color: #E2E5FF;
+}
+.fsp-pulse-bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 45%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, #38BDF8 28%, #FFFFFF 50%, #EC1D35 78%, transparent 100%);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.95), 0 0 22px rgba(236, 29, 53, 0.8);
+  animation: fspLaserSweep 4.8s ease-in-out infinite;
 }
 
 .fsp-pulse-dot {
