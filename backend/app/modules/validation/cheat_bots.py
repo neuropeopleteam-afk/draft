@@ -32,6 +32,7 @@ import re
 import sys
 import time
 from types import SimpleNamespace
+import zlib
 
 import numpy as np
 
@@ -228,6 +229,11 @@ class Bots:
             cur["time_s"], cur["log_t"], cur["overtime"] = t, math.log(t), False
         return st, e.finish(st)
 
+    def use_stream(self, strat: str) -> None:
+        """Свой поток случайных чисел у каждой стратегии (зерно бота + имя стратегии): результат стратегии не зависит
+        от порядка и от того, считаются ли стратегии в одном процессе или параллельно (шарды пода)."""
+        self.rng = np.random.default_rng([self.seed, 1, zlib.crc32(strat.encode())])
+
     def attempt(self, strat: str, k: int = 0) -> dict:
         from app.modules.assessment import two_stage as ts_mod
 
@@ -239,6 +245,7 @@ class Bots:
                              result={"engine": self.e.name, "engine_result": er, "state": st, "mode": "full"})
         g = ts_mod.session_grade(ts)
         v = (res.details or {}).get("verdict") or {}
+        status_now, llr_now = v.get("status"), float(v.get("llr") or 0.0)
         out = {"strategy": strat, "k": k, "direction": d, "claim": claim, "verdict_main": v.get("status"),
                "oral": bool(v.get("oral_defense_required")),
                "integrity": ((res.details or {}).get("integrity") or {}).get("level"),
@@ -257,9 +264,29 @@ class Bots:
                                              "confirm_up": p2["confirm_up"], "floor": p2["floor"],
                                              "source_session_id": "bot"}, seen=fams, seen_seeds=seeds)
             g = ((res2.details or {}).get("two_stage") or {}).get("final_grade") or "none"
+            v2 = (res2.details or {}).get("verdict") or {}
+            status_now, llr_now = v2.get("status"), float(v2.get("llr") or 0.0)
             out.update(refined=True, items=out["items"] + sum(1 for i in st2["items"] if i.get("done") and not i.get("canary")))
         out["grade_final"] = g
         out["provisional"] = bool(res.provisional) and not out["refined"]
+        from app.modules.assessment import sprt as sp
+
+        if sp.sprt_on():
+            # поправка №2: итог — тот же путь, что у кандидата: SPRT после основной части → второй этап → устная
+            # защита (консервативная модель product_sim: бот отвечает на ней своими знаниями, θ = порог − 0,75)
+            if status_now == "needs_followup":
+                from app.modules.validation.product_sim import ORAL_A, ORAL_K
+
+                cut = float(self.cuts[claim])
+                theta = cut - 0.75
+                xo = (self.rng.random(ORAL_K) < 1.0 / (1.0 + np.exp(-ORAL_A * (theta - cut)))).astype(float)
+                vp = sp.verdict_params()
+                status_now = sp.sprt_status(llr_now + sp.llr3(xo, [ORAL_A] * ORAL_K, [cut] * ORAL_K, [0.0] * ORAL_K,
+                                                              cut, vp["delta"]), vp["alpha"], vp["beta"])
+                out["oral_model"] = True
+            out["verdict_final"] = status_now
+            out["false_confirmed"] = status_now == "confirmed"
+            return out
         # строгое подтверждение: категория по основной части или итог второго этапа не ниже заявки;
         # «Junior (предварительно)» — не подтверждение (считается отдельно: provisional)
         out["false_confirmed"] = (_rank(g) >= _rank(claim)) if out["refined"] else bool(res.confirmed)
@@ -282,7 +309,35 @@ def _correct(key: dict, step: int, kind: str):
     return v
 
 
+def merge(files: list[str], out: str) -> int:
+    """Сведение шардов по стратегиям (у каждой стратегии свой поток случайных чисел — результат от разбиения не
+    зависит): таблицы объединяются, meta — первого шарда + список шардов."""
+    parts = [json.loads(Path(f).read_text(encoding="utf-8")) for f in files]
+    table: dict = {}
+    for d in parts:
+        table.update(d.get("table") or {})
+    meta = dict(parts[0]["meta"])
+    meta["shards"] = [{"file": Path(f).name, "strategies": sorted((d.get("table") or {}).keys()),
+                       "elapsed_s": (d.get("meta") or {}).get("elapsed_s"), "git_commit": (d.get("meta") or {}).get("git_commit"),
+                       "engine_errors": (d.get("meta") or {}).get("engine_errors")} for f, d in zip(files, parts)]
+    meta["engine_errors"] = {"n": sum(((d.get("meta") or {}).get("engine_errors") or {}).get("n", 0) for d in parts)}
+    meta["command_merge"] = "cd backend && python -m app.modules.validation.cheat_bots merge --out " + out + " " + \
+        " ".join(Path(f).name for f in files)
+    order = ["control"] + sorted(k for k in table if k != "control" and not k.startswith("leak_")) + \
+        sorted((k for k in table if k.startswith("leak_")), key=lambda k: int(k.split("_")[1]))
+    Path(out).write_text(json.dumps({"meta": meta, "table": {k: table[k] for k in order}}, ensure_ascii=False,
+                                    indent=1, default=str) + "\n", encoding="utf-8")
+    return 0
+
+
 def main(argv=None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "merge":
+        mp = argparse.ArgumentParser()
+        mp.add_argument("--out", required=True)
+        mp.add_argument("files", nargs="+")
+        m = mp.parse_args(argv[1:])
+        return merge(m.files, m.out)
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=150, help="попыток на стратегию")
     ap.add_argument("--k", type=str, default="10,100", help="K утёкших вариантов на семейство")
@@ -302,6 +357,7 @@ def main(argv=None) -> int:
     rows, t0 = [], time.time()
     errors: list[str] = []
     for strat, k in plan:
+        bots.use_stream(strat)
         for i in range(a.n):
             try:
                 rows.append(bots.attempt(strat, k))
@@ -331,7 +387,7 @@ def main(argv=None) -> int:
             "text_answers": "без модели не засчитываются (в пользу бота — оценка сверху)",
             "settings": settings_snapshot(), "bank_families": bots.e.n_families, "git_commit": _git_commit(),
             "date": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
-            "command": "cd backend && python -m app.modules.validation.cheat_bots " + " ".join(argv or sys.argv[1:]),
+            "command": "cd backend && python -m app.modules.validation.cheat_bots " + " ".join(argv),
             "engine_errors": {"n": len(errors), "examples": Counter(errors).most_common(5)},
             "elapsed_s": round(time.time() - t0, 1)}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
