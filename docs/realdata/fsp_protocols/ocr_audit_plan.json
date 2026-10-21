@@ -1,0 +1,12 @@
+{
+ "registered_at": "2026-10-21",
+ "note": "Зафиксировано ДО сверки: выборка не меняется, прогон один. Состав выборки (с ПДн) — только на сервере: /opt/spectrek_fsp/data_local/fsp_protocols/work/ocr_audit/sample.json",
+ "index": "index_v2.json",
+ "population": "записи спортсменов из сканированных PDF (13 документов), 2712",
+ "n": 120,
+ "seed": 20261021,
+ "sample_sha256": "54798d7315e1968d13182aab77f96f0c1c440f5c4a3bf345dca0c659925c300c",
+ "verifier_model": "anthropic/claude-sonnet-5.5 (другой поставщик, чем распознавание google/gemini-2.5)",
+ "metrics": ["error_rate_fio", "error_rate_place", "error_rate_birth_date", "not_found"],
+ "adjudication": "каждое расхождение модели-проверяющего с индексом разбирается глазами по изображению страницы; в итог идёт результат разбора"
+}

@@ -148,7 +148,8 @@ def test_conditions_applied_by_default_and_show_all_in_one_click(client):
     assert v2.status_code in (200, 201), v2.text
     v2 = v2.json()
     assert {r["ref"] for r in v2["results"]} == {x, y, z, w} and v2["conditions"]["off"] and not v2["conditions"]["hidden"]
-    assert v2["filters"] == {"conditions_off": True}
+    # рыночный режим (spec 20, А1): у настоящего работодателя real_only=True добавляется по умолчанию
+    assert v2["filters"] == {"conditions_off": True, "real_only": True}
     # повторное открытие — снимок версии без пересчёта
     again = client.get(f"/api/employer/needs/{n['id']}/selections/1", headers=H(e)).json()
     assert again["conditions"] == c and again["categories"] == v1["categories"]

@@ -80,14 +80,14 @@ def _normalize_skill_list(raw_skills: Any, declared_out: list[str] | None = None
             tag = item.strip().lower()
             if not known_tag(tag) and tag not in st:
                 found = find_stack(item)
-                tag = found[0] if found else ""
+                tag = min(found, key=found.get) if found else ""  # find_stack → {тег: позиция}: первый упомянутый
             if tag and tag not in seen and declared_out is not None:
                 declared_out.append(tag)
         elif isinstance(item, dict):
             tag = str(item.get("tag") or item.get("skill") or "").strip().lower()
             if not known_tag(tag) and tag not in st:
                 found = find_stack(tag)
-                tag = found[0] if found else ""
+                tag = min(found, key=found.get) if found else ""  # find_stack → {тег: позиция}: первый упомянутый
             if not tag or tag in seen:
                 continue
             if item.get("score") is None and item.get("correct") is None:
@@ -135,6 +135,12 @@ def _normalize_declared_stack(raw_decl: Any, resume_text: str | None = None) -> 
     return tags[:80]
 
 
+# Подсказка к ошибкам формата: какие поля ждём и где взять образец (эксперт приносит файл своей формы)
+FORMAT_HINT = (" Ожидаемые поля: needs — id, text, direction, grade; candidates — id, direction, grade, skills, theta;"
+               " labels — need_id, candidate_id, relevance (0–3 или 0/1). Скачайте образец:"
+               " /api/employer/benchmark/sample?format=json (или format=csv).")
+
+
 def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
     """Разбирает JSON или CSV (многострочный kind=need|candidate|label либо плоскую таблицу пар) в единую структуру."""
     if not content or not content.strip():
@@ -151,7 +157,7 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
         except Exception as exc:  # noqa: BLE001
             raise api_error(422, "invalid_json", f"Ошибка разбора JSON: проверьте синтаксис файла ({exc}).") from None
         if not isinstance(raw, dict):
-            raise api_error(422, "invalid_json_root", "Корнем JSON должен быть объект с полями needs (или vacancies) и candidates.")
+            raise api_error(422, "invalid_json_root", "Корнем JSON должен быть объект с полями needs (или vacancies) и candidates." + FORMAT_HINT)
         needs_raw = raw.get("needs") or raw.get("vacancies") or []
         cands_raw = raw.get("candidates") or raw.get("profiles") or []
         labels_raw = raw.get("labels") or raw.get("pairs") or raw.get("qrels") or []
@@ -203,7 +209,8 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
                 raise api_error(
                     422,
                     "invalid_csv_row",
-                    f"Строка {idx}: укажите столбец kind (need / candidate / label) или плоские столбцы need_id и candidate_id.",
+                    f"Строка {idx}: укажите столбец kind (need / candidate / label) или плоские столбцы need_id и candidate_id."
+                    " Образец: /api/employer/benchmark/sample?format=csv.",
                 )
         if needs_by_id:
             needs_raw.extend(needs_by_id.values())
@@ -211,9 +218,9 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
             cands_raw.extend(cands_by_id.values())
 
     if not needs_raw:
-        raise api_error(422, "no_needs", "В наборе должна быть хотя бы одна вакансия (поле needs или vacancies).")
+        raise api_error(422, "no_needs", "В наборе должна быть хотя бы одна вакансия (поле needs или vacancies)." + FORMAT_HINT)
     if not cands_raw:
-        raise api_error(422, "no_candidates", "В наборе должен быть хотя бы один кандидат (поле candidates).")
+        raise api_error(422, "no_candidates", "В наборе должен быть хотя бы один кандидат (поле candidates)." + FORMAT_HINT)
     if len(needs_raw) > MAX_NEEDS:
         raise api_error(422, "too_many_needs", f"Не более {MAX_NEEDS} вакансий за один запрос.")
     if len(cands_raw) > MAX_CANDIDATES:
@@ -415,6 +422,22 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
     cands_by_id = {c["id"]: c for c in parsed["candidates"]}
     labels: dict[tuple[str, str], int] = parsed["labels"]
 
+    # Шкала релевантности — одна на весь файл: если во всём наборе оценки только 0/1, релевантен тот, у кого 1;
+    # иначе шкала 0–3 и релевантен тот, у кого ≥ 2. Раньше порог выбирался по каждой вакансии отдельно, и вакансия,
+    # где эксперт поставил только 0 и 1 при общей шкале 0–3, считалась по другой планке.
+    file_rels = list(labels.values())
+    scale_max = max(file_rels) if file_rels else 3
+    rel_threshold = 1 if scale_max <= 1 else 2
+    label_scale = {
+        "max": 1 if scale_max <= 1 else 3,
+        "threshold": rel_threshold,
+        "text": (
+            "Оценки 0/1 по всему файлу: релевантен кандидат с оценкой 1."
+            if scale_max <= 1
+            else "Шкала 0–3 по всему файлу: релевантен кандидат с оценкой не ниже 2."
+        ),
+    }
+
     per_need: list[dict[str, Any]] = []
     plat_metrics_list: list[dict[str, float]] = []
     base_metrics_list: list[dict[str, float]] = []
@@ -487,7 +510,6 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         if need_labels:
             rels_ordered = [need_labels.get(r["candidate_id"], 0) for r in rows]
             all_rels = list(need_labels.values())
-            rel_threshold = 1 if (all_rels and max(all_rels) <= 1) else 2
             k5 = min(5, max(1, len(eligible)))
             k10 = min(10, max(1, len(eligible)))
             k_eff = min(k, max(1, len(eligible)))
@@ -522,6 +544,7 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
                 "stack_desired": req.get("stack_desired") or [],
             },
             "eligible": len(eligible),
+            "_eligible_ids": [cid for cid, _ in eligible],
             "returned": len(top_k_rows),
             "labeled_pairs": len(need_labels),
             "label_coverage": round(len(need_labels) / max(len(bundles), 1), 3),
@@ -544,30 +567,35 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
             for key in ("p@5", "p@10", "ndcg@5", "ndcg@10", "mrr")
         }
 
-    # Оценка правила справедливости 4/5 для кандидатов без истории ФСП на загруженном наборе
-    with_fsp_hits, with_fsp_tot = 0, 0
-    no_fsp_hits, no_fsp_tot = 0, 0
+    # Правило справедливости 4/5 для кандидатов без истории ФСП — считаем ЛЮДЕЙ, а не пары вакансия × кандидат.
+    # В расчёт входит подтверждённый тестом кандидат, который подходил хотя бы под одну вакансию набора; «отобран» —
+    # если попал в первые 5 хотя бы одной вакансии. Раньше каждый кандидат считался столько раз, сколько вакансий в
+    # файле (в том числе чужих направлений), и доли смещались к тем, кого больше.
+    considered: set[str] = set()
+    selected: set[str] = set()
     for n in per_need:
-        top_ids = {r["candidate_id"] for r in (n.get("results") or [])[:5]}
-        for cid, b in bundles.items():
-            if b.unconfirmed:
-                continue
-            has_fsp = bool(b.achievements)
-            in_top = cid in top_ids
-            if has_fsp:
-                with_fsp_tot += 1
-                with_fsp_hits += int(in_top)
-            else:
-                no_fsp_tot += 1
-                no_fsp_hits += int(in_top)
-    rate_no_fsp = no_fsp_hits / max(no_fsp_tot, 1) if no_fsp_tot else 1.0
-    rate_with_fsp = with_fsp_hits / max(with_fsp_tot, 1) if with_fsp_tot else rate_no_fsp
+        considered.update(n.pop("_eligible_ids"))
+        selected.update(r["candidate_id"] for r in (n.get("results") or [])[:5])
+    with_fsp_hits = with_fsp_tot = no_fsp_hits = no_fsp_tot = 0
+    for cid in considered:
+        b = bundles[cid]
+        if b.unconfirmed:
+            continue
+        if b.achievements:
+            with_fsp_tot += 1
+            with_fsp_hits += int(cid in selected)
+        else:
+            no_fsp_tot += 1
+            no_fsp_hits += int(cid in selected)
+    rate_no_fsp = no_fsp_hits / no_fsp_tot if no_fsp_tot else 1.0
+    rate_with_fsp = with_fsp_hits / with_fsp_tot if with_fsp_tot else rate_no_fsp
     fairness = bias_mod.fairness_four_fifths(
         rate_no_fsp,
         rate_with_fsp,
         n_without_fsp=no_fsp_tot,
         n_with_fsp=with_fsp_tot,
     )
+    fairness["unit"] = "people"
 
     # Генерация CSV для мгновенного скачивания
     csv_buf = io.StringIO()
@@ -615,6 +643,7 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         "n_candidates": len(parsed["candidates"]),
         "n_labels": len(labels),
         "k": k,
+        "label_scale": label_scale,
         "evaluated_needs": len(plat_metrics_list),
         "summary": summary,
         "baseline_t0": baseline_summary,
@@ -625,10 +654,11 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         "warnings": parsed.get("warnings") or [],
         "note": (
             "Набор обработан изолированно в памяти запроса (общая база кандидатов не изменяется). "
-            "Категория и фильтр грейда — только по подтверждённому тесту (T1): кандидат без результата теста (θ) "
-            "идёт отдельным ярусом ниже только по направлению, его заявленный грейд не фильтрует и не даёт баллов. "
-            "Внутри категории — тест (T1), подтверждённый стек (T1), достижения ФСП (T2) и короткие задания (T1). "
-            "Самоописание (T0) в балл не входит; навык без результата теста считается заявленным."
+            "Категория и фильтр грейда — только по пройденному тесту: кандидат без результата теста идёт отдельным "
+            "ярусом ниже («не подтверждён») только по направлению, его заявленный грейд не фильтрует и не даёт баллов. "
+            "Внутри категории порядок задают результат теста, навыки, подтверждённые тестом, достижения на соревнованиях "
+            "ФСП и короткие задания работодателя. То, что кандидат написал о себе в резюме, в балл не входит; навык без "
+            "результата теста считается заявленным."
         ),
     }
 

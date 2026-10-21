@@ -394,13 +394,18 @@ export function InteractiveAvatarTour() {
     : micOn && ui.speaking ? "Говорю"
     : listening ? (large && !f.small ? lbl.long : lbl.short)
     : micOn ? "Думаю…" : lbl.short;
-  // подсказка «ваша очередь»: в паузах обзора и когда Настя спросила — чтобы было видно, что можно говорить
-  const turnHint = listening && (ui.phase === "listening" || ui.phase === "paused")
-    ? (ui.phase === "paused" ? (large ? "Пауза. Скажите «дальше» или спросите" : "Пауза — скажите «дальше»")
-      : !large ? "Можно говорить"
-      : ui.awaiting === "start" ? "Скажите или нажмите: кандидат, работодатель, Федерация"
-      : ui.track ? "Можно говорить: вопрос, «дальше», «ниже» или «покажи …»" : "Говорите: назовите раздел или задайте вопрос")
-    : null;
+  // подсказка: перебивают по имени («Настя, покажи …»), когда она спросила — отвечают как обычно, после перебивания —
+  // «дальше» продолжает показ (решение владельца 21.10)
+  const wakeMode = ui.listen === "wake";
+  const turnHint = !micOn || ui.userTalking || ui.phase === "connecting" || ui.phase === "idle" || ui.phase === "thinking" ? null
+    : ui.speaking || ui.phase === "touring" ? (large ? "Скажите «Настя», чтобы перебить" : "Скажите «Настя»")
+    : !listening ? null
+    : ui.phase === "paused" ? (large ? "Пауза. Скажите «дальше» или «Настя» и вопрос" : "Пауза — «дальше»")
+    : !wakeMode ? (ui.awaiting === "start" && large ? "Скажите или нажмите: кандидат, работодатель, Федерация" : "Слушаю")
+    : ui.awaiting === "continue" || ui.awaiting === "detour" ? (large ? "Скажите «дальше» — продолжу, или «Настя» и вопрос" : "Скажите «дальше»")
+    : (large ? "Скажите «Настя» и вопрос или раздел" : "Скажите «Настя»");
+  // пока говорит — подсказка тихая (тёмная, без пульса); слушает — зелёная
+  const quietHint = !!turnHint && (ui.speaking || ui.phase === "touring");
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
 
@@ -451,10 +456,11 @@ export function InteractiveAvatarTour() {
 
           {turnHint && !ui.userTalking && (
             <div className={`pointer-events-none absolute inset-x-0 flex justify-center ${large ? "bottom-[4.6rem]" : f.small ? "bottom-[3.1rem]" : "bottom-[3.4rem]"}`} aria-live="polite" data-testid="elena-turn-hint">
-              <span className={`flex items-center gap-2 whitespace-nowrap rounded-full bg-emerald-600/85 px-3 py-1 font-medium text-white shadow-lg backdrop-blur ${large ? "text-sm" : "text-[11px]"}`}>
+              <span className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1 font-medium text-white shadow-lg backdrop-blur ${quietHint ? "bg-black/55" : "bg-emerald-600/85"} ${large ? "text-sm" : "text-[11px]"}`}
+                data-mode={quietHint ? "wake" : "open"}>
                 <span className="relative flex h-2 w-2" aria-hidden="true">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                  {!quietHint && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />}
+                  <span className={`relative inline-flex h-2 w-2 rounded-full ${quietHint ? "bg-white/70" : "bg-white"}`} />
                 </span>
                 {turnHint}
               </span>

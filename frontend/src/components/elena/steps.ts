@@ -70,7 +70,7 @@ export const STEPS: Record<string, TourStep> = {
     id: "cand-register", cabinet: "candidate", persona: null, path: "/register", match: /^\/register/,
     selector: "[role='tablist'], main h1, h1",
     beats: [
-      { target: "form", click: "[role='tablist'] button:nth-child(1)", clickAt: 0.12, type: { selector: "#email", text: "anna.smirnova@example.ru" } },
+      { target: "form", click: "[role='tablist'] button:nth-child(1)", clickAt: 0.12, type: { selector: "#email", text: "candidate.tour@draft-demo.ru" } },
       { target: "[data-testid='button-fsp-login']" },
       { target: "button[type='submit']" },
     ],
@@ -79,7 +79,7 @@ export const STEPS: Record<string, TourStep> = {
     id: "emp-register", cabinet: "employer", persona: null, path: "/register", match: /^\/register/,
     selector: "[role='tablist'], main h1, h1",
     beats: [
-      { target: "form", click: "[role='tablist'] button:nth-child(2)", clickAt: 0.1, type: { selector: "#email", text: "hr@severny-code.ru" } },
+      { target: "form", click: "[role='tablist'] button:nth-child(2)", clickAt: 0.1, type: { selector: "#email", text: "hr.tour@draft-demo.ru" } },
       { target: "button[type='submit']" },
     ],
   },

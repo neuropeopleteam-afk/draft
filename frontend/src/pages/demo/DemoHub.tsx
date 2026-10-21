@@ -483,12 +483,12 @@ export default function DemoHub() {
           <div className="np-glass np-glass-accent p-5 sm:p-7">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="np-eyebrow">Быстрый старт для жюри · 3 роли по 1 минуте</p>
+                <p className="np-eyebrow">Быстрый обзор своими руками · 3 ключевых экрана</p>
                 <h2 id="demo-3steps-t" className="mt-1 text-2xl font-extrabold tracking-tight np-text md:text-3xl">
-                  Как проверить нас за 3 минуты
+                  Экспресс-знакомство за 3 минуты (3 роли без проводника)
                 </h2>
               </div>
-              <span className="np-chip">Вход в 1 клик без пароля</span>
+              <span className="np-chip">Вход в 1 клик · ниже — пошаговый проводник на 12 минут</span>
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               {STEPS_3MIN.map((s) => (
@@ -520,17 +520,17 @@ export default function DemoHub() {
           </div>
         </section>
 
-        {/* P0: Все 7 критериев ТЗ (у каждой карточки — одна строка «что увидите» и одна кнопка) */}
+        {/* P0: Все 7 критериев ТЗ (у каждой карточки — что посмотреть по критерию и где, без самооценки) */}
         <section id="demo-3min" className="mt-10" aria-labelledby="demo-3min-t" data-testid="demo-3min">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="np-eyebrow">Раздел 6 ТЗ · 100 % весов оценки</p>
+              <p className="np-eyebrow">Навигатор по разделу 6 ТЗ · 7 критериев экспертизы</p>
               <h2 id="demo-3min-t" className="mt-1 text-2xl font-extrabold tracking-tight np-text md:text-3xl">
-                Все 7 критериев оценки: что увидите и проверка в 1 клик
+                Что посмотреть по каждому критерию ТЗ и где это открыть
               </h2>
             </div>
             <div className="flex flex-wrap gap-2">
-              <a href="#demo-tz-map" className="np-btn-ghost px-4 py-2 text-xs">Карта соответствия ТЗ</a>
+              <a href="#demo-tz-map" className="np-btn-ghost px-4 py-2 text-xs">Карта разделов ТЗ</a>
               <a href="#demo-beat-test" className="np-btn-ghost px-4 py-2 text-xs">Вызов: Обмани тест</a>
               <a href="#demo-custom-bench" className="np-btn-ghost px-4 py-2 text-xs">Свой набор пар</a>
             </div>
@@ -542,18 +542,19 @@ export default function DemoHub() {
                 <article key={c.id} className="np-glass flex flex-col justify-between p-5" data-testid={`crit-card-${c.id}`}>
                   <div>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="rounded-full bg-rose-500/20 px-2.5 py-0.5 font-mono text-xs font-extrabold text-rose-300">
-                        Вес в оценке: {c.weight}
+                      <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 font-mono text-xs font-extrabold text-indigo-200">
+                        Критерий ТЗ · вес {c.weight}
                       </span>
                       <span
-                        className="cursor-help text-xs text-emerald-300"
+                        className="cursor-help text-xs np-muted"
                         title={c.hint}
                       >
-                        ✓ Как устроено ⓘ
+                        Как устроено ⓘ
                       </span>
                     </div>
                     <h3 className="mt-3 text-base font-bold leading-snug np-text">{c.title}</h3>
                     <p className="mt-2 text-xs leading-relaxed np-muted">{c.summary}</p>
+                    <p className="mt-1.5 font-mono text-[11px] np-faint">Где открыть: {primaryAction.to ?? "/demo"}</p>
                   </div>
                   <div className="mt-4 pt-2">
                     <button
@@ -620,8 +621,11 @@ export default function DemoHub() {
           )}
         </section>
 
-        {/* Панель ролей и проверки за 12 минут */}
-        <div className="mt-10"><JuryPanel /></div>
+        {/* Панель ролей и пошагового проводника на 12 минут */}
+        <div className="mt-12" id="demo-guided-12min">
+          <p className="np-eyebrow mb-3">Полный управляемый обход с подсказками проводника · все роли и сценарии</p>
+          <JuryPanel />
+        </div>
 
         {/* Инновации и Боевой ИИ-Полигон */}
         <section className="mt-12" aria-labelledby="exp-knockout-t" data-testid="exp-knockout">
@@ -801,11 +805,11 @@ export default function DemoHub() {
           </div>
         </section>
 
-        {/* Полная карта соответствия ТЗ */}
+        {/* Полная карта разделов ТЗ */}
         <section id="demo-tz-map" className="mt-14 scroll-mt-24" aria-labelledby="tz-map-title" data-testid="demo-tz-map">
-          <p className="np-eyebrow">Полнота реализации · Все требования технического задания</p>
+          <p className="np-eyebrow">Справочник по пунктам технического задания · где что посмотреть</p>
           <h2 id="tz-map-title" className="mt-2 text-2xl font-extrabold tracking-tight np-text md:text-3xl">
-            Карта соответствия ТЗ: каждое требование — в 1 клик
+            Карта разделов ТЗ: что посмотреть по каждому пункту и где открыть
           </h2>
           <div className="mt-6 space-y-6">
             {TZ_MAP.map((block) => (
@@ -818,10 +822,10 @@ export default function DemoHub() {
                       <div key={row.req} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold np-text">
-                            <span className="mr-2 text-emerald-400" aria-hidden="true">✓</span>
+                            <span className="mr-2 text-indigo-300" aria-hidden="true">•</span>
                             {row.req}
                           </p>
-                          <p className="mt-0.5 text-xs np-muted">{row.impl}</p>
+                          <p className="mt-0.5 text-xs np-muted">Что посмотреть: {row.impl} · экран: <code className="text-[11px]">{row.to}</code></p>
                         </div>
                         <button
                           type="button"

@@ -102,6 +102,19 @@ class DemoRespondentEngine(BankEngine):
         self.rng, self.theta, self.pending_left = rng, theta, pending_left
         self._pending_tokens: set[str] = set()
 
+    def _select(self, state: dict, sess):
+        nxt = super()._select(state, sess)
+        if nxt is not None and self.pending_left > 0 and nxt.format not in ("open_answer", "open_book_3step") and not nxt.canary:
+            open_cands = [
+                p for p in sess.items.values()
+                if p.family_id not in sess.used
+                and not p.canary
+                and p.format in ("open_answer", "open_book_3step")
+            ]
+            if open_cands:
+                return max(open_cands, key=lambda p: float(np.mean(p.a_eff)))
+        return nxt
+
     def _grade_text(self, it: dict, part: int, text_: str, step_prompt: str | None) -> None:
         if it["token"] in self._pending_tokens or self.pending_left > 0:
             if it["token"] not in self._pending_tokens:

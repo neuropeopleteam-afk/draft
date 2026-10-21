@@ -9,6 +9,7 @@ import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, isSyntheticProfile, plural, range, useApi } from "../../components/ui";
 import { useGrades } from "../../lib/grades";
+import { useDemoUi } from "../../lib/juryMode";
 import { api } from "../../lib/api";
 import { useDirectionEntries } from "../../lib/meta";
 import { LlmOff } from "../../components/LlmOff";
@@ -448,6 +449,7 @@ const TOP = 5, MORE = 10, WIDE_PX = 1000;  // Я10: первый экран по
 export function Selection() {
   const { id, version } = useParams();
   const navigate = useNavigate();
+  const demoUi = useDemoUi();
   const need = useApi<any>(`/employer/needs/${id}`);
   const last = need.data?.versions?.at(-1)?.version;
   const v = version ? Number(version) : last;
@@ -553,7 +555,7 @@ export function Selection() {
         {/* Я10: подзаголовок мельче на телефоне — первая карточка выше (PageTitle — та же разметка h1) */}
         <div>
           <h1 className="text-xl font-extrabold tracking-tight text-brand-night sm:text-2xl">{need.data.title}</h1>
-          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-brand-ink/70 sm:mt-2 sm:text-base">Балл — только по проверенным фактам: тест, задания работодателя, достижения ФСП. Сказанное кандидатом о себе в балл не входит.</p>
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-brand-ink/70 sm:mt-2 sm:text-base">Категория и фильтр грейда — только по результату теста; место внутри категории определяют результат теста и достижения ФСП (отдельной осью). Навыки вакансии, подтверждённые тестом, показаны строкой совпадения; сказанное кандидатом о себе в балл не входит.</p>
         </div>
         <Link to="/employer/needs" className="btn-ghost hidden sm:inline-flex">Все потребности</Link>
       </div>
@@ -579,7 +581,7 @@ export function Selection() {
                   <p className="text-sm text-brand-ink/70">версия {s.version}{s.parent_version ? ` (из версии ${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}{ordered.length > 0 && !wide && <> · {expandBtn}</>}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  {syntheticCount > 0 && (
+                  {demoUi && syntheticCount > 0 && (
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-brand-night/15 bg-white px-3 py-1.5 text-xs font-semibold text-brand-night shadow-sm" data-testid="real-only-toggle">
                       <input
                         type="checkbox"
@@ -602,9 +604,14 @@ export function Selection() {
                   {ordered.length > 0 && wide && expandBtn}
                 </div>
               </div>
-              {ordered.length > 0 && <DecisionProofStrip totalCandidates={s.total} version={s.version} />}
+              {ordered.length > 0 && <DecisionProofStrip totalCandidates={s.total} version={s.version} algorithm={s.algorithm} formula={s.formula ?? s.meta?.formula} rankingBasisRu={s.ranking_basis_ru ?? s.meta?.ranking_basis_ru} stackFilter={s.stack_filter ?? s.meta?.stack_filter} />}
+              {(s.stack_filter ?? s.meta?.stack_filter)?.text && (
+                <p className="rounded-xl border border-brand-night/10 bg-white px-3 py-2 text-xs font-medium text-brand-night" data-testid="stack-filter-note">
+                  <b className="font-semibold text-brand-plum">Фильтр стека вакансии:</b> {(s.stack_filter ?? s.meta?.stack_filter).text}
+                </p>
+              )}
               {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
-                <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Балл — доля требований, подтверждённых тестом; порядок подборки не меняется. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
+                <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Место внутри категории определяют результат теста и достижения ФСП (отдельной осью); навыки вакансии, подтверждённые тестом, показаны строкой совпадения и фильтром стека. Самоописание (заявленный стек, грейд, формат, город, вилка) в балл не входит. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
               </div>}
               {invited && <Alert kind="ok">{invited}</Alert>}
               {!ordered.length ? (
@@ -686,11 +693,17 @@ export function Selection() {
             </section>
             <section className="card space-y-3">
               <h2 className="text-sm font-bold text-brand-night">Уточнить</h2>
-              <Toggle checked={realOnly} onChange={(x) => { setRealOnly(x); setFilters({ ...filters, real_only: x || undefined }); }} label="Только реальные кандидаты"
-                hint="Скрыть модельные демо-профили стенда. По умолчанию показаны все кандидаты с пометкой «демо-профиль»." />
+              {demoUi && (
+                <Toggle checked={realOnly} onChange={(x) => { setRealOnly(x); setFilters({ ...filters, real_only: x || undefined }); }} label="Только реальные кандидаты"
+                  hint="Скрыть тренировочные профили песочницы и оставить только живых кандидатов." />
+              )}
               <Toggle checked={!!filters.fsp_only} onChange={(x) => setFilters({ ...filters, fsp_only: x })} label="Только с паспортом ФСП" />
+              <Toggle checked={!!filters.fsp_protocol_only} onChange={(x) => setFilters({ ...filters, fsp_protocol_only: x || undefined })} label="Подтверждено протоколом ФСП"
+                hint="Оставить только кандидатов с достижениями, подтверждёнными официальным протоколом ФСП (ЕКП, ЕВСК, ссылка на PDF)." />
               <Toggle checked={!!filters.confirmed_only} onChange={(x) => setFilters({ ...filters, confirmed_only: x || undefined })} label="Только подтверждённый грейд"
-                hint="Убрать «Junior (предварительно)» и кандидатов без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждённым грейдом." />
+                hint="Убрать «Junior (предварительно)» и кандидатов без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждёным грейдом." />
+              <Toggle checked={!!filters.learn_from_company} onChange={(x) => setFilters({ ...filters, learn_from_company: x || undefined })} label="Учитывать решения компании"
+                hint="Скорректировать веса навыков по истории приглашений, собеседований и офферов вашей компании (по умолчанию выключено)." />
               {reqTags.length > 0 && (
                 <div>
                   <p className="label">Навык подтверждён платформой</p>
@@ -729,6 +742,9 @@ export function Selection() {
             <Alert>{wErr}</Alert>
             {s.must_first && (s.requirements?.stack_required?.length ?? 0) > 0 && <p className="text-xs leading-relaxed text-brand-ink/70">
               Порядок: {s.core?.on && s.core?.active ? `сначала кандидаты, у которых ${s.core.label.toLowerCase()} (${s.core.title}) заявлен или подтверждён, затем — остальные. Внутри групп — сначала те, у кого` : "сначала кандидаты, у которых"} всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и задания поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
+            </p>}
+            {s.learning?.text && <p className="rounded-xl border border-brand-night/10 bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/80" data-testid="company-learning-note">
+              <b className="font-semibold text-brand-night">Обучение на решениях компании:</b> {s.learning.text}
             </p>}
             {s.grade_above?.applied && <p className="text-xs leading-relaxed text-brand-ink/70" data-testid="grade-above-note">
               <b className="font-semibold text-brand-night">Добор уровнем выше.</b> {s.grade_above.text}

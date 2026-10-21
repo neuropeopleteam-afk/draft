@@ -248,6 +248,7 @@ def _anonymize_bilateral(db: Session, uid: uuid.UUID) -> dict[str, int]:
         i.evidence, i.decline_reason = [], None
         if i.contacts_revealed_at is not None:  # контакты закрыты: у работодателя не должно «светиться» обезличенное
             i.contacts_revealed_at, i.contacts_revoked_at = None, now
+            db.add(InvitationEvent(invitation_id=i.id, from_status=i.status, to_status=i.status, actor_user_id=uid, kind="contacts_revoked", note=None))
     out["Приглашения работодателей"] = len(invs)
     db.execute(update(InvitationEvent).where(InvitationEvent.invitation_id.in_(inv_ids),
                                              InvitationEvent.actor_user_id == uid).values(note=None))
@@ -305,6 +306,19 @@ def erase(db: Session, user: User, *, reason: str = "user_request") -> Result:
     counts: dict[str, int] = {}
     # 1. переписка (в обеих сторонах) — до обезличивания приглашений, пока видны связи
     counts["contact_messages"] = _delete_messages(db, uid)
+    # 1а. фиксируем приглашения с открытыми контактами, чтобы после очистки персональных данных записать событие contacts_revoked в журнал ATS
+    from app.integrations.ats.models import AtsDelivery
+    from app.modules.invitations.models import Invitation
+
+    open_contact_invs = [
+        (i.id, i.company_id)
+        for i in db.scalars(
+            select(Invitation).where(
+                Invitation.candidate_user_id == uid,
+                Invitation.contacts_revealed_at.is_not(None),
+            )
+        ).all()
+    ]
     # 2. двусторонние записи работодателя — обезличиваем
     anonymized = _anonymize_bilateral(db, uid)
     # 3. паспорт грейда: отзыв и обнуление ссылки на учётку
@@ -342,6 +356,27 @@ def erase(db: Session, user: User, *, reason: str = "user_request") -> Result:
         if t.name in owned:
             tt, cond = owned[t.name]
             counts[t.name] = db.execute(delete(tt).where(cond)).rowcount or 0
+    # 5а. А2 (P1-7): пишем обезличенное событие contacts_revoked в журнал ATS для приглашений, где контакты были открыты
+    for inv_id, comp_id in open_contact_invs:
+        db.add(
+            AtsDelivery(
+                company_id=comp_id,
+                candidate_user_id=uid,
+                invitation_id=inv_id,
+                target="webhook",
+                status="ok",
+                attempts=1,
+                http_status=200,
+                trigger="contacts_revoked",
+                result={
+                    "event": "candidate.contacts_revoked",
+                    "reason": "account_deleted",
+                    "note": "Кандидат удалил учётную запись (152-ФЗ) — доступ к контактам закрыт",
+                },
+            )
+        )
+    if open_contact_invs:
+        anonymized["События закрытия контактов в журнале ATS"] = len(open_contact_invs)
     # 6. счётчик песочницы жюри хранится по почте демо-учётки — у живых кандидатов его нет
     if not demo:
         from app.modules.assessment.models import SandboxTestStart

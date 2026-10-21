@@ -7,6 +7,7 @@ import { GradeBadge, StatusCounts } from "../../components/GradeStatus";
 import { Alert, DemoProfileBadge, Empty, Field, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, isSyntheticProfile, useApi, years } from "../../components/ui";
 import { MarketNote } from "../../components/Salary";
 import { useGrades } from "../../lib/grades";
+import { useDemoUi } from "../../lib/juryMode";
 import { apiDownload } from "../../lib/api";
 import { useDirectionEntries } from "../../lib/meta";
 import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
@@ -32,6 +33,7 @@ function riskLine(c: any): { t: string; warn: boolean } | null {
 
 function SearchCard({ c, stack, tags, market, actions }: { c: any; stack: string[]; tags: any; market?: { from: number; to: number } | null; actions: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const demoUi = useDemoUi();
   const conf = new Set((c.skills_confirmed ?? []).filter((s: any) => s.confirmed !== false).map((s: any) => s.tag));
   const hit = stack.filter((x) => conf.has(x));
   const risk = riskLine(c);
@@ -43,7 +45,7 @@ function SearchCard({ c, stack, tags, market, actions }: { c: any; stack: string
         <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
         <GradeBadge s={c.status} claimed={c.claimed} />
         <DemoProfileBadge c={c} />
-        {c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
+        {demoUi && c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
       </div>
       <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[8rem_minmax(0,1fr)]" data-testid="search-brief">
         <dt className="font-semibold text-brand-night">Совпадение</dt>
@@ -69,11 +71,13 @@ function SearchCard({ c, stack, tags, market, actions }: { c: any; stack: string
 export function Search() {
   const tags = useTags();
   const dirEntries = useDirectionEntries();
+  const demoUi = useDemoUi();
   const [direction, setDirection] = useState("");
   const [grade, setGrade] = useState("");
   const [stack, setStack] = useState<string[]>([]);
   const [level, setLevel] = useState<"any" | "t1">("any");
   const [fsp, setFsp] = useState(false);
+  const [fspProtocolOnly, setFspProtocolOnly] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [realOnly, setRealOnly] = useState(false);
   const [add, setAdd] = useState("");
@@ -84,6 +88,7 @@ export function Search() {
   stack.forEach((s) => qs.append("stack", s));
   qs.set("stack_level", level);
   if (fsp) qs.set("fsp", "true");
+  if (fspProtocolOnly) qs.set("fsp_protocol_only", "true");
   if (confirmed) qs.set("confirmed", "true");
   if (realOnly) qs.set("real_only", "true");
   qs.set("limit", String(PAGE));
@@ -92,7 +97,14 @@ export function Search() {
   const cats = useApi<any[]>(realOnly ? "/employer/categories?real_only=true" : "/employer/categories");
   const levels = useGrades(direction || null);  // с флагом GRADES_EXT_ENABLED — и Lead/Principal направления
   const avail = Object.values(tags).filter((t: any) => !direction || !t.direction_id || t.direction_id === direction);
-  const items: any[] = (data?.items ?? []).filter((c: any) => !realOnly || !isSyntheticProfile(c));
+  const items: any[] = (data?.items ?? []).filter((c: any) => {
+    if (realOnly && isSyntheticProfile(c)) return false;
+    if (fspProtocolOnly) {
+      const hasVer = Boolean(c.fsp?.has_protocol_verified || (c.fsp?.achievements ?? []).some((a: any) => a.protocol_status === "verified" || a.protocol_verified));
+      if (!hasVer) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -119,9 +131,15 @@ export function Search() {
             </select>
             {stack.length > 0 && <div className="mt-2"><Seg label="Уровень навыка" value={level} onChange={setLevel} options={[{ id: "any", title: "Самозаявлен или подтверждён" }, { id: "t1", title: "Подтверждён платформой" }]} /></div>}
           </div>
-          <Toggle checked={realOnly} onChange={(v) => { setRealOnly(v); setPage(0); }} label="Только реальные кандидаты"
-            hint="Скрыть модельные демо-профили стенда. По умолчанию показаны все кандидаты с бейджем «демо-профиль»." />
+          {demoUi && (
+            <Toggle checked={realOnly} onChange={(v) => { setRealOnly(v); setPage(0); }} label="Только реальные кандидаты"
+              hint="Скрыть тренировочные профили песочницы и оставить только живых кандидатов." />
+          )}
           <Toggle checked={fsp} onChange={(v) => { setFsp(v); setPage(0); }} label="Есть паспорт ФСП" />
+          <div data-testid="search-filter-fsp-protocol">
+            <Toggle checked={fspProtocolOnly} onChange={(v) => { setFspProtocolOnly(v); setPage(0); }} label="Подтверждено протоколом ФСП"
+              hint="Только кандидаты с достижением из официального итогового протокола ФСП (ЕКП Минспорта РФ / ЕВСК), подтверждённым ФСП ID или представителем ФСП." />
+          </div>
           <Toggle checked={confirmed} onChange={(v) => { setConfirmed(v); setPage(0); }} label="Только подтверждённый грейд"
             hint="Без «Junior (предварительно)» и без кандидатов, чей грейд не подтверждён тестом. По умолчанию они показаны со статусом ниже подтверждённых." />
           {cats.data && (

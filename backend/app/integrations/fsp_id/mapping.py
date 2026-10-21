@@ -132,10 +132,12 @@ def apply_claims(db: Session, user_id, claims: dict) -> FspPassport:
               "has_history": prev["has_history"], "registry": claims.get("_registry"),
               "registry_warning": claims.get("_registry_warning")}
     db.flush()
-    # Факты T1 кубков работодателей — другой источник; синхронизация ФСП их не удаляет.
-    db.execute(delete(FspAchievement).where(FspAchievement.passport_id == pp.id,
-                                           ~FspAchievement.source_ref.like("cup:%") |
-                                           FspAchievement.source_ref.is_(None)))
+    # Факты T1 кубков работодателей и записи официальных протоколов ФСП — не удаляются при входе через ФСП ID
+    db.execute(delete(FspAchievement).where(
+        FspAchievement.passport_id == pp.id,
+        (~FspAchievement.source_ref.like("cup:%") & ~FspAchievement.source_ref.like("protocol:%"))
+        | FspAchievement.source_ref.is_(None),
+    ))
     for a in parse_achievements(claims.get("fsp_achievements")):
         db.add(FspAchievement(passport_id=pp.id, discipline=a["discipline"], event_name=a["event"],
                               event_level=FspEventLevel(a["level"]), event_date=a["date"], place=a["place"],
@@ -146,6 +148,10 @@ def apply_claims(db: Session, user_id, claims: dict) -> FspPassport:
     cp = db.get(CandidateProfile, user_id)
     if cp is not None and claims.get("fsp_id"):
         cp.fsp_id_claimed = str(claims["fsp_id"])[:64]
+    from app.modules.fsp.protocols import sync_fsp_id_protocol_verifications
+
+    claim_name = claims.get("name") or (cp.full_name if cp else None)
+    sync_fsp_id_protocol_verifications(db, user_id, claim_name)
     db.flush()
     refresh_rating(db, user_id)
     return pp

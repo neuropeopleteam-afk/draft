@@ -145,7 +145,7 @@ export default function Profile() {
 
       <section>
         <h2 className="mb-3 font-bold text-brand-night">Как вас видит работодатель</h2>
-        {card.data ? <CandidateCard c={card.data} /> : <Loading />}
+        {card.data ? <CandidateCard c={card.data} viewerRole="candidate" /> : <Loading />}
       </section>
     </div>
   );
