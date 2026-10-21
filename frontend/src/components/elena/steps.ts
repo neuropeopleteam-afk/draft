@@ -70,11 +70,7 @@ export const STEPS: Record<string, TourStep> = {
     id: "cand-register", cabinet: "candidate", persona: null, path: "/register", match: /^\/register/,
     selector: "[role='tablist'], main h1, h1",
     beats: [
-      { target: "[role='tablist'] button:nth-child(1), [role='tablist']", click: "[role='tablist'] button:nth-child(1)", clickAt: 0.25 },
-      { target: "#full_name, #email", type: { selector: "#full_name", text: "Анна Смирнова" } },
-      { target: "#email", type: { selector: "#email", text: "anna.smirnova@example.ru" } },
-      { target: "#password", type: { selector: "#password", text: "Draft-2026!" } },
-      { target: "[data-testid='terms-checkbox'], form label" },
+      { target: "form", click: "[role='tablist'] button:nth-child(1)", clickAt: 0.12, type: { selector: "#email", text: "anna.smirnova@example.ru" } },
       { target: "[data-testid='button-fsp-login']" },
       { target: "button[type='submit']" },
     ],
@@ -83,11 +79,7 @@ export const STEPS: Record<string, TourStep> = {
     id: "emp-register", cabinet: "employer", persona: null, path: "/register", match: /^\/register/,
     selector: "[role='tablist'], main h1, h1",
     beats: [
-      { target: "[role='tablist'] button:nth-child(2), [role='tablist']", click: "[role='tablist'] button:nth-child(2)", clickAt: 0.25 },
-      { target: "#company, #email", type: { selector: "#company", text: "ООО «Северный код»" } },
-      { target: "#email", type: { selector: "#email", text: "hr@severny-code.ru" } },
-      { target: "#password", type: { selector: "#password", text: "Draft-2026!" } },
-      { target: "[data-testid='terms-checkbox'], form label" },
+      { target: "form", click: "[role='tablist'] button:nth-child(2)", clickAt: 0.1, type: { selector: "#email", text: "hr@severny-code.ru" } },
       { target: "button[type='submit']" },
     ],
   },
@@ -96,7 +88,6 @@ export const STEPS: Record<string, TourStep> = {
     selector: "[data-testid='button-fsp-login'], main h1, h1",
     beats: [
       { target: "[data-testid='button-fsp-login'], main h1, h1" },
-      { target: "[role='tablist'], main h1, h1" },
     ],
   },
 
@@ -183,8 +174,11 @@ export const STEPS: Record<string, TourStep> = {
     { target: "text:Свежесть профиля, text:Как часто предлагать, main h1" },
   ]),
   "cand-settings": plain("cand-settings", "candidate", "candidate", "/candidate/settings", [
+    { target: "main h1" },
     { target: "text:Поля обезличенной карточки, main h1" },
-    { target: "text:Скрытый минимум зарплаты, text:Согласия, main h1" },
+    { target: "text:Скрытый минимум зарплаты, main h1" },
+    { target: "text:Что вам интересно, text:Интересные задачи, main h1" },
+    { target: "text:Согласия, main h1" },
   ]),
   "cand-vacancies": plain("cand-vacancies", "candidate", "candidate", "/candidate/vacancies"),
   "cand-notifications": plain("cand-notifications", "candidate", "candidate", "/candidate/notifications", [

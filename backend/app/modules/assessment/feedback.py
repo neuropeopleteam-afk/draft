@@ -63,7 +63,13 @@ _EXTRA_TOPICS = [({"networking", "cidr", "ipv4", "routing"}, "networking", "Се
                  ({"web_security", "xss", "csp"}, "web-security", "Безопасность веб-клиента"),
                  ({"performance", "latency", "capacity_planning"}, "system-performance", "Производительность систем"),
                  # уровни Lead/Principal (банк feat/bank-ext; выдаются только с GRADES_EXT_ENABLED)
-                 ({"incident_analysis", "postmortem", "reliability", "slo"}, "reliability", "Надёжность и разбор инцидентов"),
+                 ({"incident_analysis", "postmortem", "reliability", "slo", "resilience"}, "reliability",
+                  "Надёжность и разбор инцидентов"),
+                 # семейства банка по направлениям (20.10) без стек-тега: облака, процесс, данные, QA
+                 ({"cloud", "finops", "cost_optimization"}, "cloud-cost", "Облака и стоимость инфраструктуры"),
+                 ({"agile", "scrum", "planning"}, "dev-process", "Процесс разработки и планирование"),
+                 ({"data_labeling", "data_quality"}, "data-quality", "Качество и разметка данных"),
+                 ({"qa_process", "bug_tracking"}, "qa-process", "Процесс тестирования и работа с дефектами"),
                  ({"technical_strategy", "engineering_metrics", "system_design"}, "tech-strategy",
                   "Техническая стратегия и проектирование")]
 

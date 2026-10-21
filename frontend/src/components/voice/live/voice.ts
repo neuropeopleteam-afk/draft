@@ -31,10 +31,12 @@ export class Voice {
   private tail = { text: "", until: 0 };
 
   private lookahead: number;
+  private chunk = 9600;            // кусок звука в поток (24 кГц, 16 бит: 9600 байт = 200 мс)
 
   /** lookaheadMs — на сколько вперёд отправлять звук в видеопоток (по умолчанию ~2 с). */
-  constructor(private avatar: () => AnamHandle | null, opts: { lookaheadMs?: number } = {}) {
+  constructor(private avatar: () => AnamHandle | null, opts: { lookaheadMs?: number; chunkBytes?: number } = {}) {
     this.lookahead = opts.lookaheadMs ?? LOOKAHEAD_MS;
+    this.chunk = Math.max(960, (opts.chunkBytes ?? 9600) & ~1);
   }
 
   /** Звучит ли сейчас её голос (с запасом на задержку потока). */
@@ -103,7 +105,7 @@ export class Voice {
       get durationMs() { return sentMs; },
       push(bytes: Uint8Array) {
         if (self.aborted(my) || finished) return;
-        for (let i = 0; i < bytes.byteLength; i += 9600) queue.push(bytes.subarray(i, Math.min(bytes.byteLength, i + 9600)));
+        for (let i = 0; i < bytes.byteLength; i += self.chunk) queue.push(bytes.subarray(i, Math.min(bytes.byteLength, i + self.chunk)));
         void pump();
       },
       end() {

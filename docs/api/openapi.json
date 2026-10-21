@@ -384,7 +384,9 @@
             "type": "number"
           },
           "telemetry": {
-            "$ref": "#/components/schemas/TelemetryIn"
+            "additionalProperties": true,
+            "title": "Telemetry",
+            "type": "object"
           }
         },
         "title": "AntiCheatInspectIn",
@@ -7326,7 +7328,11 @@
               "step",
               "close",
               "mic",
-              "point"
+              "point",
+              "barge",
+              "hand",
+              "nav",
+              "auto"
             ],
             "title": "Type",
             "type": "string"
@@ -11263,6 +11269,30 @@
             "minimum": 1.0,
             "title": "Elapsed S",
             "type": "integer"
+          },
+          "followup_attempt_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Followup Attempt Id"
+          },
+          "integrity": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Integrity"
           },
           "justification": {
             "default": "",
@@ -25614,167 +25644,6 @@
           "id"
         ],
         "title": "TaskRef",
-        "type": "object"
-      },
-      "TelemetryIn": {
-        "properties": {
-          "active_ms": {
-            "default": 25000,
-            "maximum": 86400000.0,
-            "minimum": 1.0,
-            "title": "Active Ms",
-            "type": "integer"
-          },
-          "ai_mark_hit": {
-            "default": false,
-            "title": "Ai Mark Hit",
-            "type": "boolean"
-          },
-          "api_bypass": {
-            "default": false,
-            "title": "Api Bypass",
-            "type": "boolean"
-          },
-          "canary_fast": {
-            "default": false,
-            "title": "Canary Fast",
-            "type": "boolean"
-          },
-          "copy": {
-            "default": 0,
-            "maximum": 10000.0,
-            "minimum": 0.0,
-            "title": "Copy",
-            "type": "integer"
-          },
-          "decoy_hit": {
-            "default": false,
-            "title": "Decoy Hit",
-            "type": "boolean"
-          },
-          "even_rhythm": {
-            "default": false,
-            "title": "Even Rhythm",
-            "type": "boolean"
-          },
-          "fast_text": {
-            "default": false,
-            "title": "Fast Text",
-            "type": "boolean"
-          },
-          "fast_wrong": {
-            "default": false,
-            "title": "Fast Wrong",
-            "type": "boolean"
-          },
-          "focus_lost": {
-            "default": 0,
-            "maximum": 10000.0,
-            "minimum": 0.0,
-            "title": "Focus Lost",
-            "type": "integer"
-          },
-          "fs_exit": {
-            "default": 0,
-            "maximum": 10000.0,
-            "minimum": 0.0,
-            "title": "Fs Exit",
-            "type": "integer"
-          },
-          "fs_out_ms": {
-            "default": 0,
-            "maximum": 86400000.0,
-            "minimum": 0.0,
-            "title": "Fs Out Ms",
-            "type": "integer"
-          },
-          "hidden_ms": {
-            "default": 0,
-            "maximum": 86400000.0,
-            "minimum": 0.0,
-            "title": "Hidden Ms",
-            "type": "integer"
-          },
-          "ik_cv": {
-            "anyOf": [
-              {
-                "maximum": 1000.0,
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ik Cv"
-          },
-          "ik_cv_float": {
-            "anyOf": [
-              {
-                "maximum": 10.0,
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ik Cv Float"
-          },
-          "key_intervals_ms": {
-            "items": {
-              "type": "number"
-            },
-            "maxItems": 300,
-            "title": "Key Intervals Ms",
-            "type": "array"
-          },
-          "not_typed": {
-            "default": false,
-            "title": "Not Typed",
-            "type": "boolean"
-          },
-          "paste": {
-            "default": 0,
-            "maximum": 10000.0,
-            "minimum": 0.0,
-            "title": "Paste",
-            "type": "integer"
-          },
-          "paste_chars": {
-            "default": 0,
-            "maximum": 500000.0,
-            "minimum": 0.0,
-            "title": "Paste Chars",
-            "type": "integer"
-          },
-          "preknowledge_flagged": {
-            "default": false,
-            "title": "Preknowledge Flagged",
-            "type": "boolean"
-          },
-          "printscreen": {
-            "default": 0,
-            "maximum": 10000.0,
-            "minimum": 0.0,
-            "title": "Printscreen",
-            "type": "integer"
-          },
-          "typed": {
-            "anyOf": [
-              {
-                "maximum": 500000.0,
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Typed"
-          }
-        },
-        "title": "TelemetryIn",
         "type": "object"
       },
       "ThreadBriefOut": {
@@ -59429,6 +59298,26 @@
               ],
               "title": "Sid"
             }
+          },
+          {
+            "description": "Выразительность лица 0…1 (сравнение губ)",
+            "in": "query",
+            "name": "expr",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 1.0,
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Выразительность лица 0…1 (сравнение губ)",
+              "title": "Expr"
+            }
           }
         ],
         "responses": {
@@ -59493,7 +59382,7 @@
     },
     "/api/interview/concierge/budget": {
       "get": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
         "operationId": "concierge_budget_usage_api_interview_concierge_budget_get",
         "responses": {
           "200": {
@@ -59507,9 +59396,20 @@
               }
             },
             "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           }
         },
-        "summary": "Сегодняшние расходы проводника Насти и лимиты (для владельца)",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Сегодняшние расходы проводника Насти и лимиты (только администратор)",
         "tags": [
           "interview"
         ]
@@ -73740,6 +73640,9 @@
             },
             "description": "Успешный ответ."
           },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -73754,7 +73657,7 @@
                 }
               }
             },
-            "description": "Сценарий не найден. Коды `detail.code`: `scenario_not_found` — Боевой сценарий не найден."
+            "description": "Сценарий не найден. Коды `detail.code`: `scenario_not_found` — Боевой сценарий не найден; `attempt_not_found` — Попытка теста не найдена."
           },
           "422": {
             "content": {
@@ -73825,6 +73728,23 @@
               "default": false,
               "title": "Demo",
               "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "followup",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Followup"
             }
           }
         ],

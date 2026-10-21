@@ -323,7 +323,8 @@ def path_stats(runs: list[dict]) -> dict:
     tests = [t for r in runs for t in r["tests"]]
     st = Counter(r["status"] for r in runs)
     n = max(len(runs), 1)
-    return {"status_share": {k: round(st.get(k, 0) / n, 3) for k in ("confirmed", "provisional", "accepted_lower", "none")},
+    return {"status_share": {k: round(st.get(k, 0) / n, 3) for k in ("confirmed", "confirmed_above", "provisional", "accepted_lower",
+                                                                    "point", "none")},
             "sessions_per_path": round(len(tests) / n, 2),
             "mean_items_per_session": round(float(np.mean([t["n_items"] for t in tests])), 2),
             "mean_items_per_path": round(float(np.mean([sum(t["n_items"] for t in r["tests"]) for r in runs])), 2),
