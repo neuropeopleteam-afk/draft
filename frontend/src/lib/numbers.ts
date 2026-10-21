@@ -162,7 +162,8 @@ export interface Top5Item {
   with?: Record<string, Frac | { value: number; ci95?: [number, number] | null; n?: number }>;
 }
 
-export function getTop5(): { st: Top5Item[]; hard: Top5Item[]; meta: any } {
+/** Форма А4 (итоговый прогон {st, hard, meta}); getTop5() выше — массив для лендинга (А1). */
+export function getTop5Run(): { st: Top5Item[]; hard: Top5Item[]; meta: any } {
   return { st: (ANY.top5 ?? []) as Top5Item[], hard: (ANY.top5_hard ?? []) as Top5Item[], meta: ANY.top5_meta ?? null };
 }
 
