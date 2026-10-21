@@ -45,10 +45,10 @@ export function ThetaScale({ theta, se, grade, confirmed, compact = false, class
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-night px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
-            Психометрия 2PL IRT
+            Шкала уровня
           </span>
           <span className="text-xs font-semibold text-brand-night">
-            Индекс способности: <b>{signed(th)}</b> (погрешность ±{num(s, 2)})
+            Оценка уровня по ответам: <b>{signed(th)}</b> (погрешность ±{num(s, 2)})
           </span>
         </div>
         {!compact && (
@@ -58,7 +58,7 @@ export function ThetaScale({ theta, se, grade, confirmed, compact = false, class
             className="inline-flex min-h-[44px] items-center rounded-lg px-2.5 py-2 text-xs font-semibold text-brand hover:bg-brand/5 hover:underline"
             aria-expanded={openMath}
           >
-            {openMath ? "Скрыть формулу IRT" : "Как работает алгоритм под капотом"}
+            {openMath ? "Скрыть, как считается" : "Как считается"}
           </button>
         )}
       </div>
@@ -106,6 +106,17 @@ export function ThetaScale({ theta, se, grade, confirmed, compact = false, class
         </div>
       </div>
 
+      {(() => {
+        // А19 №6: грейд по тесту — заявленный и подтверждённый; оценка может быть выше следующего порога — объясняем рядом
+        const gi = ZONES.findIndex((z) => z.id === grade);
+        const above = gi >= 0 && gi < ZONES.length - 1 && th >= ZONES[gi + 1].from ? ZONES[gi + 1] : null;
+        return above ? (
+          <p className="mt-2 text-xs leading-snug text-brand-ink/75" data-testid="theta-above-next">
+            Оценка выше порога {above.title}: грейд {ZONES[gi].title} подтверждён по заявке, уровень {above.title} подтверждается
+            отдельным тестом на этот грейд.
+          </p>
+        ) : null;
+      })()}
       {openMath && !compact && (
         <div className="mt-3 rounded-xl bg-white p-3 text-xs leading-relaxed text-brand-ink/80 ring-1 ring-brand-night/10">
           <p className="font-semibold text-brand-night">Классификационный адаптивный тест у порогов и решение по заявленному уровню</p>
