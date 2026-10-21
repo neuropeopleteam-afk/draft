@@ -436,15 +436,22 @@ def score_candidate(b: Bundle, req: dict, weights: dict | None = None) -> tuple[
              "grade_status": b.grade_status}
     if ltr.enabled():
         # match-v2: признаки только из теста, заданий и ФСП; балл — линейная модель (ltr_weights.json)
+        from app.modules.catalog.seed_data import GRADE_ORDER
         from app.modules.profiles.facts import GRADE_CUTS
 
         g = req.get("grade") or b.grade
-        x = {"test": test, "margin": 0.0 if b.unconfirmed or not b.test else ltr.margin_of(t.get("theta"), GRADE_CUTS.get(g)),
+        has_test = bool(b.test) and not b.unconfirmed
+        th = t.get("theta") if has_test else None
+        nxt = GRADE_ORDER[GRADE_ORDER.index(g) + 1] if g in GRADE_ORDER and GRADE_ORDER.index(g) + 1 < len(GRADE_ORDER) else None
+        x = {"test": test, "margin": ltr.margin_of(th, GRADE_CUTS.get(g)) if has_test else 0.0,
              "fsp": fsp, "required": round(sreq, 3), "desired": round(sdes, 3), "probe": probe,
-             "failed": round(failed_w["Обязательно"], 3), "provisional": 1.0 if b.provisional else 0.0}
+             "failed": round(failed_w["Обязательно"], 3), "provisional": 1.0 if b.provisional else 0.0,
+             "over": ltr.over_of(th, GRADE_CUTS.get(nxt) if nxt else None),
+             "p_below": ltr.p_below_of(th, t.get("se"), GRADE_CUTS.get(g)) if has_test else 0.0}
         W2 = weights if (weights and "margin" in weights) else ltr.weights()
         comps.update({"margin": x["margin"], "required": x["required"], "desired": x["desired"],
-                      "failed": x["failed"], "provisional_flag": x["provisional"],
+                      "failed": x["failed"], "provisional_flag": x["provisional"], "over": x["over"],
+                      "p_below": x["p_below"],
                       "contrib": ltr.contributions(x, W2)})
         return ltr.score(x, W2), comps, reasons
     W = weights or WEIGHTS  # learn-v1 («учитывать решения компании», по умолчанию выкл.) — matching/learn.py
@@ -684,10 +691,11 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
     """match-v2: порядок подборки — ОДИН код для продукта (build_selection) и бенчмарка (tools/realdata/bench_holdout2).
 
     1) условия потребности (формат, город) и фильтры работодателя — только сужают выдачу (Ф2);
-    2) стек вакансии — фильтр (ltr.stack_filter): обязательные навыки заявлены или подтверждены тестом, порог мягче,
-       если в первом ярусе осталось < 10;
-    3) порядок: ярус статуса грейда (подтверждён/предварительно → не подтверждён) → [добор ступенью выше: первые 2 места
-       — лучшие точного уровня, дальше точный уровень раньше] → балл match-v2 (тест и ФСП) → рейтинг → ref.
+    2) стек вакансии — фильтр каскадом (ltr.stack_filter): сначала все обязательные навыки заявлены или подтверждены,
+       затем часть; никто не скрыт;
+    3) порядок: ярус статуса грейда (подтверждён/предварительно → не подтверждён) → ступень фильтра стека → [добор
+       ступенью выше: первые 2 места — лучшие точного уровня, дальше точный уровень раньше] → балл match-v2 (тест,
+       задания, ФСП) → рейтинг → ref.
     Возвращает ([(балл, Bundle, comps, reasons)], info)."""
     W = weights or filters.get("_weights") or ltr.weights()
     effective = condition_filters(req, filters)
@@ -700,11 +708,12 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
             continue
         scored.append((s, b, comps, reasons))
     scored, sf = ltr.stack_filter(scored, req, filters, first_tier=lambda b: tier(b) == 0)
+    steps = sf.get("steps") or {}
 
-    def key(x):
+    def key(x):  # ярус статуса грейда → ступень фильтра стека → [добор выше] → балл → рейтинг → ref
         b = x[1]
-        return (tier(b), int(bool(above_id) and b.category_id == above_id), -x[0], -(b.rating or 0),
-                b.profile.public_ref or "")
+        return (tier(b), steps.get(id(b), 0), int(bool(above_id) and b.category_id == above_id), -x[0],
+                -(b.rating or 0), b.profile.public_ref or "")
 
     if above_id:
         exact = [x for x in scored if x[1].category_id != above_id]
@@ -713,7 +722,7 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
     else:
         scored = sorted(scored, key=key)
     return scored, {"effective": effective, "before_conditions": before_conditions, "after_conditions": len(kept),
-                    "stack_filter": sf, "weights": W}
+                    "stack_filter": ltr.public_meta(sf), "weights": W}
 
 
 def selection_order(scored: list, must: dict, core: dict, policy: str | None = None, above_id: str | None = None) -> list:
