@@ -112,9 +112,9 @@ export function DraftLaws() {
       <div id="laws-panel" role="tabpanel" aria-labelledby={`laws-tab-${who}`} className="mt-6 grid gap-4 md:grid-cols-2">
         {LAWS.map((l) => (
           <article key={l.n} className="np-glass np-law p-6">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-mono text-sm np-accent">{l.n}</span>
-              <span className="np-old" aria-label={`Было: ${l.old[who]}`}><s>{l.old[who]}</s></span>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 font-mono text-xs font-bold text-indigo-300 ring-1 ring-indigo-400/30">{l.n}</span>
+              <span className="rounded-full bg-white/[0.04] px-2.5 py-0.5 text-xs text-[#C8CEFF]/75" aria-label={`Было: ${l.old[who]}`}><s>{l.old[who]}</s></span>
             </div>
             <h3 className="mt-4 text-xl font-bold tracking-tight np-text">{l.title[who]}</h3>
             <p key={who} className="np-fade mt-2 text-sm leading-relaxed np-muted md:text-[0.95rem]">{l.text[who]}</p>

@@ -129,7 +129,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
             <GradeBadge s={c.status} claimed={c.claimed} />
             {upperBoundary && (
               <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="upper-boundary-badge" title="Подтверждённый результат теста у верхней границы запрошенного грейда">
-                сильнее запроса
+                у верхней границы {gradeTitle}
               </span>
             )}
             <DemoProfileBadge c={c} />
