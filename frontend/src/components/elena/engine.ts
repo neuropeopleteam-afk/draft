@@ -1269,7 +1269,14 @@ export class ElenaEngine {
       if (nav) await nav;
       if (!this.alive(ep)) return;
       this.paused = false;
-      if (fwd) { this.pendingBridge = null; void this.runTour(fwd, ep, { bridge: true }); return; }
+      if (fwd) {
+        // экран дальше по маршруту: показать его и ждать «дальше» (продолжит со следующего за ним) — человек ведёт
+        this.pendingBridge = null;
+        this.resumeAt = fwd.i + 1 < fwd.ids.length ? { ...fwd, i: fwd.i + 1, b: 0 } : null;
+        if (this.shownSteps.has(meta.step)) { void this.showOnly(STEPS[meta.step], ep); return; }
+        void this.runTour({ ids: [meta.step], track: null, i: 0, b: 0 }, ep, { bridge: false, single: true });
+        return;
+      }
       // экран не по порядку обзора (или обзора нет) — показать его одного; уже показывали — открыть и подсветить,
       // реплики сценария второй раз не звучат (ответ по существу уже прозвучал)
       if (this.shownSteps.has(meta.step)) { void this.showOnly(STEPS[meta.step], ep); return; }
