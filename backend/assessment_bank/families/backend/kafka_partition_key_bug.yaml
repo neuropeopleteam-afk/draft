@@ -19,6 +19,7 @@ invariants:
   - 3
   defect_type: wrong_partition_key
   extra:
+    leak_resistance: low
     subtype: key_by_status
 time_limit_s: 240
 canary: false

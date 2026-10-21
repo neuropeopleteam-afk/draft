@@ -20,6 +20,7 @@ invariants:
   - 17
   defect_type: fencing_token_reuse
   extra:
+    leak_resistance: low
     subtypes:
     - token_reused_on_takeover
     class_order:

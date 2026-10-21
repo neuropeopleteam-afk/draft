@@ -13,6 +13,7 @@ language: text
 invariants:
   n_options: 4
   extra:
+    leak_resistance: low
     origins: explicit_single_origin
     mutation: csrf_token_and_origin
 time_limit_s: 240

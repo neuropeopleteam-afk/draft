@@ -14,6 +14,7 @@ language: text
 invariants:
   n_options: 4
   extra:
+    leak_resistance: low
     nodes:
     - 3
     - 4

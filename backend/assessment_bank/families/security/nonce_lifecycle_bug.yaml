@@ -19,6 +19,7 @@ invariants:
   - 6
   defect_type: nonce_reuse_at_import
   extra:
+    leak_resistance: low
     nonce_bytes: 12
     fixed_lines: 1
     encryption: not_implemented

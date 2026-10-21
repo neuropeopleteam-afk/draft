@@ -20,6 +20,7 @@ invariants:
   - 15
   defect_type: mass_assignment
   extra:
+    leak_resistance: low
     subtype: fields_all
 time_limit_s: 240
 canary: false

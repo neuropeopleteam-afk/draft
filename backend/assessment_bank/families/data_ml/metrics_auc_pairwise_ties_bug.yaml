@@ -21,6 +21,7 @@ invariants:
   - 14
   defect_type: tie_handling
   extra:
+    leak_resistance: low
     implementations:
     - pairwise
     subtypes:

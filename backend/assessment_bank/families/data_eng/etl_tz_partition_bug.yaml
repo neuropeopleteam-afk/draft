@@ -20,6 +20,7 @@ invariants:
   - 8
   defect_type: utc_date_partition
   extra:
+    leak_resistance: low
     subtype: utc_vs_local_date
 time_limit_s: 240
 canary: false

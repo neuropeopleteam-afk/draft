@@ -15,6 +15,7 @@ language: text
 invariants:
   n_options: 4
   extra:
+    leak_resistance: low
     actions:
     - push
     - full_screen

@@ -19,6 +19,7 @@ invariants:
   - 14
   defect_type: naive_csv_split
   extra:
+    leak_resistance: low
     subtype: quoted_comma
 time_limit_s: 240
 canary: false

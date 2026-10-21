@@ -19,6 +19,7 @@ invariants:
   - 10
   defect_type: unsound_type_guard
   extra:
+    leak_resistance: low
     subtypes:
     - null_check
 time_limit_s: 240
