@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
-"""Генератор единого источника цифр проекта (docs/NUMBERS.json и frontend/src/data/numbers.json).
+"""Генератор единого источника цифр проекта «Драфт»: docs/NUMBERS.json и его копия frontend/src/data/numbers.json.
 
-Собирает все ключевые метрики платформы с полными условиями измерения (метод, выборка N, длина теста в минутах,
-дата, коммит, команда пересчёта `recompute` и ссылка на код `code_ref`), сохраняя 100 % обратную совместимость
-с прежними ключами (для ИИ-консьержа Елены и существующих автотестов) и добавляя блоки:
-- `sprt_verdict` — кросс-валидированная точность трёхзначного вердикта SPRT, точный грейд с 15-мин доп. этапом,
-  повторяемость test–retest κw;
-- `leak_k_variants` и `cheat_challenge` — устойчивость к утечке K = 10, 100, 1 000 вариантов и вызов жюри «Обмани тест»;
-- `expert_agreement` — ревизия 414 меток модельной панели E1–E3 (07.10) и кросс-вендорный протокол двух независимых
-  моделей разных компаний;
-- `mutation_testing` — мутационный контроль кодовых заданий банка (от А3);
-- `matching` и `hh_match` — метрики подбора (обновляются из `docs/realdata/numbers_matching.json` от А5 при наличии);
-- `anticheat` — метрики античита и оценщика открытых ответов (обновляются из `grader_numbers.json` от А6 при наличии);
-- `landing_cards`, `jury_banner`, `recompute_table` — готовые витринные структуры для главной страницы (А1), `/demo` и `/validation`.
+Правило (А4, 21.10.2026): в этом файле НЕТ ни одного числа-константы. Каждая цифра берётся из JSON-артефакта,
+созданного командой пересчёта, и публикуется вместе с условием (что измерено, на ком — модель или люди, N, дата,
+команда пересчёта, ссылка на код). Нет артефакта — нет блока (null), а не «значение по умолчанию».
 
-Запуск:
-    python3 tools/publish/gen_numbers.py [--check]
+Источники:
+- банк заданий — backend/assessment_bank/BANK_SYNC.json (отчёт валидатора на 20 зёрнах);
+- вердикт по грейду — backend/app/modules/validation/data/product_sim_*.json (симуляция ПРОДУКТА, А4);
+- «Обмани тест» — backend/app/modules/validation/data/cheat_bots.json (боты через движок, А4);
+- подбор — docs/realdata/numbers_matching.json (А5), иначе validation/data/matching_bench.json и hh_match.json;
+- античит — backend/app/modules/validation/data/grader_numbers.json (А6);
+- протоколы ФСП — docs/realdata/fsp_protocols/index_stats.json, ocr_audit.json (А8);
+- нагрузка — docs/perf/load.json (А12); мутационный контроль банка — docs/bank/mutation_report.json (А3).
+
+Запуск:  python3 tools/publish/gen_numbers.py [--check]
 """
 from __future__ import annotations
 
 import datetime as dt
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -33,7 +33,20 @@ FRONTEND_OUT = ROOT / "frontend" / "src" / "data" / "numbers.json"
 A5_MATCHING = ROOT / "docs" / "realdata" / "numbers_matching.json"
 A6_ANTICHEAT = DATA / "grader_numbers.json"
 A3_MUTATION = ROOT / "docs" / "bank" / "mutation_report.json"
+A8_DIR = ROOT / "docs" / "realdata" / "fsp_protocols"
+A12_LOAD = ROOT / "docs" / "perf" / "load.json"
+PS = {  # артефакты симуляции продукта (А4): отчётные — только на TEST_SEEDS
+    "main": DATA / "product_sim_test_calibrated.json",
+    "misspec": DATA / "product_sim_test_misspec.json",
+    "rater": DATA / "product_sim_test_rater_noise.json",
+    "selection": DATA / "product_sim_train_selection.json",
+}
+CHEAT = DATA / "cheat_bots.json"
+GRADE_RU = {"none": "ниже Intern", "intern": "Intern", "junior": "Junior", "middle": "Middle", "senior": "Senior",
+            "lead": "Lead", "principal": "Principal"}
 
+
+# ---------------------------------------------------------------- утилиты
 
 def _load(p: Path) -> dict:
     if not p.exists():
@@ -51,460 +64,415 @@ def _git_head() -> str:
         return "unknown"
 
 
-def build() -> dict:
-    bench = _load(DATA / "matching_bench.json")
-    hh = _load(DATA / "hh_match.json")
-    acc = _load(DATA / "accuracy_views.json")
-    pr = _load(DATA / "path_retest.json")
-    sprt = _load(DATA / "sprt_verdict.json")
-    leak = _load(DATA / "leak_k_variants.json")
-    cheat = _load(DATA / "cheat_challenge_log.json")
-    exp_sur = _load(DATA / "expert_surrogate.json")
-    grader_chk = _load(DATA / "grader_check.json")
-    bank = _load(BANK_SYNC)
+def pct(v: float | None, d: int = 1) -> str:
+    return "—" if v is None else f"{100 * float(v):.{d}f}".replace(".", ",")
+
+
+def num(v: float | None, d: int = 2) -> str:
+    return "—" if v is None else f"{float(v):.{d}f}".replace(".", ",")
+
+
+def int_ru(v: int | None) -> str:
+    return "—" if v is None else f"{int(v):,}".replace(",", "\u202f")
+
+
+def _date(s: str | None) -> str | None:
+    return str(s)[:10] if s else None
+
+
+def replace_block(text: str, name: str, body: str) -> tuple[str, bool]:
+    """Заменяет содержимое между <!-- name:begin --> и <!-- name:end --> (для README); идемпотентно."""
+    rx = re.compile(rf"(<!-- {re.escape(name)}:begin -->\n)(.*?)(<!-- {re.escape(name)}:end -->)", re.S)
+    if not rx.search(text):
+        return text, False
+    return rx.sub(lambda m: m.group(1) + body.rstrip("\n") + "\n" + m.group(3), text), True
+
+
+def parse_log(p: Path) -> dict:
+    """Итог pytest из лога: passed/skipped/failed, покрытие, код выхода."""
+    t = p.read_text(encoding="utf-8", errors="replace") if p.exists() else ""
+
+    def g(rx, cast=int):
+        m = re.search(rx, t)
+        return cast(m.group(1)) if m else None
+
+    cov = g(r"Total coverage: ([\d.]+)%", float)
+    return {"passed": g(r"(\d+) passed") or 0, "skipped": g(r"(\d+) skipped") or 0, "failed": g(r"(\d+) failed") or 0,
+            "coverage_pct": round(cov, 1) if cov is not None else None, "exit": g(r"EXIT=(\d+)")}
+
+
+def static_numbers() -> dict:
+    """Числа из конфигурации репозитория: лимиты памяти контейнеров (docker-compose.yml) и головы миграций."""
+    comp = (ROOT / "docker-compose.yml").read_text(encoding="utf-8") if (ROOT / "docker-compose.yml").exists() else ""
+    limits, svc = {}, None
+    for line in comp.splitlines():
+        m = re.match(r"^  ([a-z0-9_-]+):\s*$", line)
+        if m:
+            svc = m.group(1)
+        m = re.search(r"mem_limit:\s*\"?(\d+)([mMgG])", line) or re.search(r"memory:\s*\"?(\d+)([mMgG])", line)
+        if m and svc:
+            limits[svc] = int(m.group(1)) * (1024 if m.group(2).lower() == "g" else 1)
+    revs, downs = set(), set()
+    for f in (ROOT / "backend" / "migrations" / "versions").glob("*.py"):
+        s = f.read_text(encoding="utf-8", errors="replace")
+        r = re.search(r"^revision\s*[:=][^\n]*?['\"]([^'\"]+)['\"]", s, re.M)
+        if r:
+            revs.add(r.group(1))
+        d = re.search(r"^down_revision\s*[:=]\s*(.+)$", s, re.M)
+        if d:
+            downs.update(re.findall(r"['\"]([^'\"]+)['\"]", d.group(1)))
+    return {"memory_limits_mib": limits, "migrations": {"heads": sorted(revs - downs)}}
+
+
+def frac(d: dict | None) -> dict | None:
+    if not isinstance(d, dict) or d.get("value") is None:
+        return None
+    return {"value": d["value"], "k": d.get("k"), "n": d.get("n"), "ci95": d.get("ci95")}
+
+
+# ---------------------------------------------------------------- блоки
+
+def _bank_formats() -> dict:
+    """Число семейств с кодом и развёрнутыми ответами — по самим спецификациям банка (не константа)."""
+    try:
+        sys.path.insert(0, str(ROOT / "backend"))
+        from assessment_bank import load_specs
+
+        specs = [s for s in load_specs().values() if not s.canary]
+        code = {"find_bug", "predict_output", "choose_fix", "open_answer", "open_book_3step", "incident_sim"}
+        return {"code_and_open_families": sum(1 for s in specs if s.format in code), "families_live": len(specs)}
+    except Exception:
+        return {}
+
+
+def bank_block() -> dict | None:
+    b = _load(BANK_SYNC)
+    if not b:
+        return None
+    s = (b.get("validation") or {}).get("summary") or {}
+    return {**_bank_formats(),
+        "families": b.get("n_families"),
+        "directions": len(b.get("directions_verified") or []),
+        "variants_20seeds": s.get("n_variants_generated"),
+        "unique_variants_20seeds": s.get("n_unique_variants"),
+        "seeds": s.get("n_seeds"),
+        "fail": s.get("n_fail"),
+        "checks": s.get("n_checks"),
+        "checks_failed": s.get("n_checks_failed"),
+        "status": s.get("status"),
+        "bank_commit": b.get("commit"),
+        "content_hash": b.get("content_hash"),
+        "synced_at": b.get("synced_at"),
+        "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+        "code_ref": "backend/assessment_bank/BANK_SYNC.json",
+    }
+
+
+def _ps_view(d: dict) -> dict:
+    s = d.get("summary") or {}
+    m = d.get("meta") or {}
+    out = {
+        "n": s.get("n"),
+        "verdict_accuracy": frac(s.get("verdict_accuracy_final")),
+        "false_confirm": frac(s.get("false_confirm_among_overclaim")),
+        "false_reject": frac(s.get("false_reject_among_true")),
+        "confident_share": frac(s.get("confident_share_main")),
+        "confident_accuracy": frac(s.get("confident_accuracy_main")),
+        "followup_share": frac(s.get("followup_share")),
+        "exact_grade": frac(s.get("exact_grade_final")),
+        "exact_grade_not_above_claim": frac(s.get("exact_grade_final_not_above_claim")),
+        "gross_error": frac(s.get("gross_error_2plus")),
+        "minutes_main": s.get("minutes_main"),
+        "minutes_total": s.get("minutes_total"),
+        "items_main": s.get("items_main"),
+        "code_open_share": s.get("code_open_share_main"),
+        "integrity_low_share_honest": frac(s.get("integrity_low_share_honest")),
+        "engine_errors": (d.get("engine_errors") or {}).get("n"),
+        "by_claim": d.get("by_claim"),
+        "world": m.get("world"),
+        "seeds": m.get("seeds"),
+        "bank_families": (m.get("bank") or {}).get("n_families"),
+        "settings": m.get("settings"),
+        "git_commit": m.get("git_commit"),
+        "date": _date(m.get("date")),
+        "command": m.get("command"),
+    }
+    if d.get("retest"):
+        r = d["retest"]
+        out["retest"] = {"n_pairs": r.get("n_pairs"), "kappa_w": r.get("kappa_w_quadratic"),
+                         "exact_agreement": frac(r.get("exact_agreement")),
+                         "verdict_agreement": frac(r.get("verdict_agreement")),
+                         "shared_families_mean": r.get("shared_families_mean")}
+    return out
+
+
+def grade_verdict_block() -> dict | None:
+    main = _load(PS["main"])
+    if not main:
+        return None
+    v = _ps_view(main)
+    mis = _load(PS["misspec"])
+    rater = _load(PS["rater"])
+    sel = _load(PS["selection"])
+    va, fc, cs, ca = v["verdict_accuracy"], v["false_confirm"], v["confident_share"], v["confident_accuracy"]
+    ex = v["exact_grade"]
+    mm, mt = v["minutes_main"] or {}, v["minutes_total"] or {}
+    claim = (
+        f"Симуляция продукта (движок стенда на банке из {int_ru(v['bank_families'])} семейств; модельные кандидаты, "
+        f"не люди; N = {int_ru(v['n'])}, отложенные зёрна): итоговый вердикт «соответствует заявленному грейду» верен в "
+        f"{pct(va and va['value'])} % (95 % ДИ {pct(va and va['ci95'][0])}–{pct(va and va['ci95'][1])} %), ложное "
+        f"подтверждение у завысивших заявку — {pct(fc and fc['value'])} %; после основной части уверенное решение у "
+        f"{pct(cs and cs['value'])} % кандидатов, из них верных {pct(ca and ca['value'])} %; остальным предлагается "
+        f"короткий второй этап у порога. Точный грейд — {pct(ex and ex['value'])} %. Время основной части — в среднем "
+        f"{num(mm.get('mean'), 0)} мин (p90 {num(mm.get('p90'), 0)}), всего — {num(mt.get('mean'), 0)} мин."
+    )
+    out = {
+        "what": "Симуляция продукта: тот же движок, что на стенде (выбор заданий, остановка, дотестирование, вердикт, "
+                "второй этап), на реальном банке; кандидаты — модельные, не люди.",
+        "main": v,
+        "misspec": _ps_view(mis) if mis else None,
+        "rater_noise": _ps_view(rater) | {"noise": (rater.get("meta") or {}).get("rater_noise_text_parts")} if rater else None,
+        "selection": sel or None,
+        "claim_ru": claim,
+        "recompute": v["command"],
+        "code_ref": "backend/app/modules/validation/product_sim.py",
+        "protocol": "docs/validation/PRODUCT_SIM_PROTOCOL.md",
+    }
+    return out
+
+
+def cheat_block() -> dict | None:
+    d = _load(CHEAT)
+    if not d:
+        return None
+    t = d.get("table") or {}
+    m = d.get("meta") or {}
+    worst = max(((k, v) for k, v in t.items() if k != "control"),
+                key=lambda kv: (kv[1].get("false_confirmed") or {}).get("value") or 0, default=(None, None))
+    ctrl = (t.get("control") or {}).get("false_confirmed") or {}
+    claim = None
+    if worst[0]:
+        w = worst[1]["false_confirmed"]
+        claim = (f"Боты-стратегии через движок продукта ({len(t)} стратегий × {m.get('n_per_strategy')} попыток, "
+                 f"реальные варианты и проверка ответа): самая успешная стратегия «{worst[0]}» получила подтверждение "
+                 f"заявленного грейда в {pct(w.get('value'))} % попыток (95 % ДИ {pct((w.get('ci95') or [None, None])[0])}–"
+                 f"{pct((w.get('ci95') or [None, None])[1])} %); контроль — честный кандидат на 0,75 логита ниже порога — "
+                 f"{pct(ctrl.get('value'))} %.")
+    return {"table": t, "meta": m, "worst_strategy": worst[0], "claim_ru": claim,
+            "recompute": m.get("command"), "code_ref": "backend/app/modules/validation/cheat_bots.py"}
+
+
+def matching_block() -> dict | None:
     a5 = _load(A5_MATCHING)
-    a6 = _load(A6_ANTICHEAT)
-    a3_mut = _load(A3_MUTATION)
-
-    bm = bench.get("methods", {}).get("full", {})
-    bmeta = bench.get("meta", {})
-    bsig = bench.get("signature", {})
-
-    views_in = acc.get("views", {})
-    views = {}
-    for k in ("far_from_cut", "no_under_claim", "strict_pool", "strict_claimed", "within_1_cut", "raw_6grade"):
-        v = views_in.get(k)
-        if v:
-            views[k] = {
-                "value": v.get("headline") if v.get("headline") is not None else v.get("exact"),
-                "ci95": v.get("headline_ci") or v.get("exact_ci"),
-                "share_of_candidates": v.get("share"),
-                "n": v.get("n"),
-                "title": v.get("title"),
-                "definition": v.get("definition"),
-            }
-
-    # Если есть свежий кросс-валидированный прогон sprt_verdict, обновляем витринное значение far_from_cut и within_1_cut
-    sm = sprt.get("main", {})
-    srt = sprt.get("retest", {})
-    scv = sprt.get("cross_validation", {})
-    if sm:
-        views["far_from_cut"] = {
-            "value": sm.get("exact_far_from_cut", 0.9808),
-            "ci95": sm.get("exact_far_from_cut_ci", [0.974, 0.987]),
-            "share_of_candidates": sm.get("far_from_cut_share", 0.556),
-            "n": int(round(sm.get("n", 3000) * sm.get("far_from_cut_share", 0.556))),
-            "title": "Точный грейд вдали от границы порога (|θ − порог| ≥ 0,45 логита)",
-            "definition": "Среди кандидатов не в пограничной зоне (≥ 0,45 логита от ближайшего порога) классификационный CAT + 1/3 кодовых заданий + доп. этап дают точное совпадение со скрытым истинным грейдом в 98,1 % случаев.",
-        }
-        views["within_1_cut"] = {
-            "value": sm.get("within_1", 1.0),
-            "ci95": sm.get("within_1_ci", [0.999, 1.0]),
-            "share_of_candidates": 1.0,
-            "n": sm.get("n", 3000),
-            "title": "В пределах ±1 ступени грейда (0 грубых ошибок)",
-            "definition": "Доля кандидатов, чей итоговый грейд отличается от истинного не более чем на одну соседнюю ступень.",
-        }
-
-    # Сборка блока matching (с подхватом данных А5 при наличии)
-    matching_block = {
-        "world": bsig.get("world") or "60 потребностей × 240 кандидатов",
-        "seed": bmeta.get("seed", 20260602),
-        "bench_commit": bsig.get("commit"),
-        "generated_at": bmeta.get("generated_at"),
-        "p5": bm.get("p5"),
-        "p10": bm.get("p10"),
-        "mrr": bm.get("mrr"),
-        "ndcg10": bm.get("ndcg10"),
+    if a5.get("matching"):
+        return a5["matching"]
+    b = _load(DATA / "matching_bench.json")
+    if not b:
+        return None
+    pl = (b.get("metrics") or {}).get("platform") or {}
+    sig = b.get("signature") or {}
+    w = b.get("world") or {}
+    return {
+        "world": sig.get("world"), "n_needs": w.get("n_needs"), "n_candidates": w.get("n_candidates"),
+        "seed": sig.get("seed"), "bench_commit": sig.get("commit"), "generated_at": b.get("generated_at"),
+        "p5": pl.get("p@5"), "p10": pl.get("p@10"), "mrr": pl.get("mrr"), "ndcg10": pl.get("ndcg@10"),
+        "recall30": pl.get("recall@30"),
+        "what": "бенчмарк подбора: синтетический мир со скрытой истиной (модельные кандидаты, не люди)",
         "recompute": "cd backend && python -m app.modules.validation.matching_bench",
         "code_ref": "backend/app/modules/validation/matching_bench.py",
-        "claim_ru": (
-            f"Точность ранжирования кандидатов под требования работодателя: P@5 = {100 * (bm.get('p5', {}).get('mean', 0.903)):.1f} %, "
-            f"MRR = {bm.get('mrr', {}).get('mean', 0.960):.3f}, nDCG@10 = {bm.get('ndcg10', {}).get('mean', 0.958):.3f} "
-            f"(60 потребностей × 240 кандидатов со скрытой истиной, 10 направлений, бутстреп 2 000 итераций)."
-        ).replace(".", ","),
     }
-    if a5.get("matching"):
-        matching_block.update(a5["matching"])
 
-    hh_block = {
-        "n": hh.get("n", 495),
-        "overall": hh.get("overall"),
-        "catalog_only": hh.get("by_map_source", {}).get("catalog"),
-        "recompute": "cd backend && python -m app.modules.validation.hh_Vacancy_eval",
-        "code_ref": "backend/app/modules/validation/hh_vacancy_eval.py",
-        "claim_ru": (
-            f"Проверка на {hh.get('n', 495)} реальных ИТ-вакансиях hh.ru (10 направлений): "
-            f"покрытие обязательных навыков в топ-5 подбора — {100 * (hh.get('overall', {}).get('skill_cov_top5', {}).get('mean', 0.916)):.1f} %, "
-            f"согласие по грейду (±1 ступень) — {100 * (hh.get('overall', {}).get('grade_within1_top5', {}).get('mean', 0.996)):.1f} %."
-        ).replace(".", ","),
-    }
+
+def hh_block() -> dict | None:
+    a5 = _load(A5_MATCHING)
     if a5.get("hh_match"):
-        hh_block.update(a5["hh_match"])
-
-    # Сборка блока sprt_verdict
-    sprt_block = {
-        "precision_decided": sm.get("precision_decided", 0.9763),
-        "precision_decided_ci": sm.get("precision_decided_ci", [0.9701, 0.9822]),
-        "decided_share": sm.get("decided_share", 0.803),
-        "verdict_accuracy_after_followup": sm.get("verdict_accuracy_after_followup", 0.928),
-        "verdict_accuracy_after_followup_ci": sm.get("verdict_accuracy_after_followup_ci", [0.918, 0.937]),
-        "false_confirm_decided": sm.get("false_confirm_decided", 0.0095),
-        "false_confirm_overall": sm.get("false_confirm_overall", 0.021),
-        "gross_error_rate": sm.get("gross_error_rate", 0.0),
-        "gross_error_count": sm.get("gross_error_count", 0),
-        "within_1": sm.get("within_1", 1.0),
-        "within_1_ci": sm.get("within_1_ci", [0.999, 1.0]),
-        "exact_with_followup": sm.get("exact_with_followup", 0.8207),
-        "exact_with_followup_ci": sm.get("exact_with_followup_ci", [0.807, 0.834]),
-        "exact_far_from_cut": sm.get("exact_far_from_cut", 0.9808),
-        "exact_far_from_cut_ci": sm.get("exact_far_from_cut_ci", [0.974, 0.987]),
-        "exact_single_stage": sm.get("exact_single_stage", 0.728),
-        "over_rate": sm.get("over_rate", 0.091),
-        "under_rate": sm.get("under_rate", 0.088),
-        "minutes_mean": sm.get("minutes_mean", 38.4),
-        "items_mean": sm.get("items_mean", 16.2),
-        "followup_minutes": 15,
-        "followup_share": sm.get("followup_share", 0.197),
-        "code_open_share": sm.get("code_open_share", 0.65),
-        "by_grade": sm.get("by_grade", {}),
-        "retest": {
-            "n": srt.get("n", 3000),
-            "kappa_w": srt.get("kappa_w", 0.9147),
-            "exact": srt.get("exact", 0.768),
-            "exact_ci": srt.get("exact_ci", [0.753, 0.783]),
-            "within_1": srt.get("within_1", 0.998),
-            "verdict_consistency": srt.get("verdict_consistency", 0.934),
-            "r_theta": srt.get("r_theta", 0.948),
-        },
-        "cross_validation": {
-            "n_train_per_point": scv.get("n_train_per_point", 1000),
-            "n_test": scv.get("n_test", 3000),
-            "train_seed": scv.get("train_seed", 2026102001),
-            "test_seed": scv.get("test_seed", 2026102002),
-            "retest_seed": scv.get("retest_seed", 2026102003),
-            "chosen_params": scv.get("chosen_params", {"alpha": 0.02, "delta": 0.35}),
-        },
-        "recompute": sprt.get("recompute", "cd backend && python -m app.modules.validation.sprt_verdict"),
-        "code_ref": sprt.get("code_ref", "backend/app/modules/validation/sprt_verdict.py"),
-        "claim_ru": sprt.get("claim_ru", ""),
-    }
-
-    # Сборка блока leak_k_variants и cheat_challenge
-    leak_block = {
-        "n_per_k": leak.get("n_per_k", 2000),
-        "families": leak.get("families", bank.get("families", 1504)),
-        "seed_space_per_family": leak.get("seed_space_per_family", 2147483646),
-        "k_values": leak.get("k_values", {}),
-        "why_code_does_not_help": leak.get("why_code_does_not_help", []),
-        "cheat_challenge": {
-            "demo_attempts_total": cheat.get("demo_attempts_total", 3),
-            "demo_false_confirmations": cheat.get("demo_false_confirmations", 0),
-            "demo_caught_or_rejected": cheat.get("demo_caught_or_rejected", 3),
-        },
-        "recompute": leak.get("recompute", "cd backend && python -m app.modules.validation.leak_k_variants"),
-        "code_ref": leak.get("code_ref", "backend/app/modules/validation/leak_k_variants.py"),
-        "claim_ru": leak.get("claim_ru", ""),
-    }
-
-    # Сборка блока expert_agreement (ревизия 414 меток E1–E3 от 07.10 + двухвендорный протокол экспертов)
-    expert_block = {
-        "panel_v1_0710": {
-            "labels_total": 414,
-            "date": "2026-10-07",
-            "labeled_by_ru": "Модельная панель v1 (Claude Fable 5.1 в трёх независимых ролях E1, E2, E3; суррогат до пилота с живыми ИТ-специалистами)",
-            "section_a_candidates": {
-                "n_items": 40,
-                "n_labels": 120,
-                "inter_rater_kappa_w": 0.896,
-                "inter_rater_exact": 0.900,
-                "platform_vs_consensus_kappa_w": 0.916,
-                "platform_vs_consensus_exact": 0.900,
-                "platform_vs_consensus_within_1": 1.000,
-            },
-            "section_b_pairs": {
-                "n_items": 78,
-                "n_labels": 234,
-                "inter_rater_kappa_w": 0.840,
-                "inter_rater_exact": 0.782,
-                "platform_vs_consensus_kappa_w": 0.787,
-                "platform_vs_consensus_exact": 0.692,
-                "platform_vs_consensus_within_1": 0.987,
-            },
-            "section_c_tasks": {
-                "n_items": 20,
-                "n_labels": 60,
-                "inter_rater_kappa_w": 0.506,
-                "inter_rater_exact": 0.800,
-                "mean_quality": 2.93,
-            },
-        },
-        "cross_vendor_surrogate": exp_sur.get("cross_vendor_surrogate") or {
-            "status": "ready",
-            "protocol_ru": "Независимая разметка двумя языковыми моделями разных производителей (Anthropic Claude + Google Gemini) без обмена ответами; арбитраж расхождений по рубрике.",
-            "vendors": ["Anthropic", "Google"],
-            "models": ["anthropic/claude-sonnet-4.5", "google/gemini-2.5-flash"],
-            "n_items": 40,
-            "inter_model_kappa_w": 0.912,
-            "inter_model_exact": 0.875,
-            "inter_model_within_1": 1.000,
-            "platform_vs_consensus_kappa_w": 0.924,
-            "platform_vs_consensus_exact": 0.900,
-            "platform_vs_consensus_within_1": 1.000,
-            "date": "2026-10-20",
-        },
-        "recompute": "cd backend && python -m app.modules.validation.expert_surrogate",
-        "code_ref": "backend/app/modules/validation/expert_surrogate.py",
-        "claim_ru": exp_sur.get("claim_ru") or (
-            "Согласие вердикта платформы с консенсусом экспертной разметки (414 оценок E1–E3 от 07.10.2026 и "
-            "кросс-вендорная панель двух независимых моделей разных производителей Anthropic + Google от 20.10.2026, N = 40 "
-            "профилей кандидатов): квадратично взвешенная каппа κw = 0,924, точное совпадение грейда — 90,0 %, "
-            "в пределах ±1 ступени — 100 % (суррогат экспертной комиссии до завершения пилота с живыми экспертами)."
-        ),
-    }
-
-    # Сборка блока anticheat (с подхватом файла А6 при наличии)
-    ac_atk = grader_chk.get("attacks", {})
-    anticheat_block = {
-        "known_patterns": {
-            "caught": int(ac_atk.get("caught", 90)),
-            "total": int(ac_atk.get("total", 90)),
-            "rate": float(ac_atk.get("rate", 1.0)),
-            "note_ru": "Базовый регрессионный набор известных шаблонов инъекций и манипуляций (90 из 90).",
-        },
-        "holdout_offline": {
-            "caught": 114,
-            "total": 120,
-            "rate": 0.950,
-            "false_positive_rate": 0.015,
-            "honest_n": 200,
-            "note_ru": "Отложенный набор перефразированных и косвенных атак (не использовавшийся при написании правил).",
-        },
-        "llm_chain": {
-            "defend_rate": 0.967,
-            "pierce_rate": 0.033,
-            "total": 90,
-            "note_ru": "Двухшаговая цепочка с живой языковой моделью, выделением цитат-доказательств и ИИ-скептиком.",
-        },
-        "recompute": "cd backend && python -m app.modules.validation.grader_check",
-        "code_ref": "backend/app/modules/validation/grader_check.py",
-        "claim_ru": (
-            "Защита от манипуляций и списывания: 100 % (90/90) на регрессионном наборе известных шаблонов инъекций, "
-            "95,0 % на отложенном наборе перефразированных атак при ≤ 1,5 % ложных срабатываний на честных ответах; "
-            "подозрительные попытки не банятся автоматически, а переводятся на 3-минутную устную защиту решения."
-        ),
-    }
-    if a6:
-        if a6.get("anticheat"):
-            anticheat_block.update(a6["anticheat"])
-        else:
-            anticheat_block.update(a6)
-
-    # Сборка блока мутационного контроля кодовых заданий (от А3, банк 1 824 семейства, c027be45)
-    mutation_block = {
-        "bank_commit": "c027be45",
-        "total_families": 1824,
-        "variants_20seeds": 36480,
-        "families_checked": a3_mut.get("families_checked", 590),
-        "variants_tested": a3_mut.get("variants_tested", 11800),
-        "incident_sim_families": 40,
-        "lead_families": 271,
-        "principal_families": 266,
-        "key_position_balance": 0.20,
-        "limit_equals_answer_count": 0,
-        "mutation_kill_rate": a3_mut.get("mutation_kill_rate", 1.0),
-        "ambiguous_distractors": a3_mut.get("ambiguous_distractors", 0),
-        "recompute": a3_mut.get("recompute", "cd backend && pytest -q assessment_bank/tests"),
-        "code_ref": a3_mut.get("code_ref", "backend/assessment_bank/validator.py"),
-        "claim_ru": a3_mut.get("claim_ru") or (
-            "Банк заданий v2 (1 824 параметрических семейства, 36 480 проверенных вариантов на 20 зёрнах, коммит c027be45): "
-            "590 практических семейств с кодом, открытым ответом и 3-шаговым симулятором инцидента (40 семейств incident_sim), "
-            "271 семейство уровня Lead (87 % практических) и 266 семейств Principal (64 % практических); честные априорные "
-            "параметры до калибровки на людях (a = 1,0 для выбора ответа и a = 1,3 для кода/открытых/инцидентов, ни одного a = 3,0), "
-            "равномерное распределение правильного ответа по позициям и величине (ровно по 20 %), 0 совпадений ответа с числом из условия."
-        ),
-    }
-
-    # Карточки для главной страницы (Landing.tsx, А1) и баннер для жюри (/demo)
-    landing_cards = [
-        {
-            "id": "verdict_precision",
-            "eyebrow": "Точность уверенного вердикта грейда",
-            "value": f"{100 * sprt_block['precision_decided']:.1f}".replace(".", ","),
-            "accent": "%",
-            "subtext": (
-                f"последовательный тест SPRT + 1/3 кодовых заданий · уверенный вердикт у {100 * sprt_block['decided_share']:.0f} % "
-                f"кандидатов за ~{sprt_block['minutes_mean']:.0f} мин, остальным — 15-мин доп. этап у порога · "
-                f"вдали от границы точный грейд {100 * sprt_block['exact_far_from_cut']:.1f} % (N = {sprt_block['cross_validation']['n_test']})"
-            ).replace(".", ","),
-            "recompute": sprt_block["recompute"],
-            "code_ref": sprt_block["code_ref"],
-        },
-        {
-            "id": "matching_p5",
-            "eyebrow": "Точность топ-5 подбора (P@5)",
-            "value": f"{100 * (matching_block['p5']['mean'] if isinstance(matching_block.get('p5'), dict) else 0.903):.1f}".replace(".", ","),
-            "accent": "%",
-            "subtext": (
-                f"MRR = {(matching_block['mrr']['mean'] if isinstance(matching_block.get('mrr'), dict) else 0.960):.2f} · "
-                f"nDCG@10 = {(matching_block['ndcg10']['mean'] if isinstance(matching_block.get('ndcg10'), dict) else 0.958):.2f} · "
-                f"проверено на {hh_block['n']} реальных ИТ-вакансиях hh.ru (покрытие навыков 91,6 %)"
-            ).replace(".", ","),
-            "recompute": matching_block["recompute"],
-            "code_ref": matching_block["code_ref"],
-        },
-        {
-            "id": "bank_and_leak",
-            "eyebrow": "Семейств в банке × 2,15 млрд зёрен",
-            "value": "1 824",
-            "accent": "× 2³¹",
-            "subtext": (
-                "10 ИТ-направлений, 590 практических семейств (код, открытые ответы, 40 симуляторов инцидентов для Senior/Lead/Principal) · "
-                "при утечке K = 1 000 вариантов и открытом коде генераторов ложное подтверждение ≤ 0,9 %"
-            ),
-            "recompute": leak_block["recompute"],
-            "code_ref": leak_block["code_ref"],
-        },
-        {
-            "id": "expert_and_retest",
-            "eyebrow": "Согласие с экспертами и повтор κw",
-            "value": f"{expert_block['cross_vendor_surrogate']['platform_vs_consensus_kappa_w']:.2f}".replace(".", ","),
-            "accent": "κw",
-            "subtext": (
-                f"согласие с консенсусом двух независимых моделей разных компаний (N = 40) и 414 метками E1–E3 · "
-                f"повторяемость test–retest κw = {sprt_block['retest']['kappa_w']:.2f}, ±1 ступень — 100 %"
-            ).replace(".", ","),
-            "recompute": expert_block["recompute"],
-            "code_ref": expert_block["code_ref"],
-        },
-    ]
-
-    recompute_table = [
-        {
-            "section": "Вердикт SPRT, 6 грейдов и повторяемость test–retest",
-            "metric": f"Точность уверенного вердикта {100 * sprt_block['precision_decided']:.1f} %, вдали от порога {100 * sprt_block['exact_far_from_cut']:.1f} %, κw = {sprt_block['retest']['kappa_w']:.3f}".replace(".", ","),
-            "sample": f"Обучение N = 1 000, отложенный контроль N = {sprt_block['cross_validation']['n_test']} (seed {sprt_block['cross_validation']['test_seed']})",
-            "command": sprt_block["recompute"],
-            "code_ref": sprt_block["code_ref"],
-            "artifact": "backend/app/modules/validation/data/sprt_verdict.json",
-        },
-        {
-            "section": "Устойчивость к утечке K = 10, 100, 1 000 вариантов («Обмани тест»)",
-            "metric": "Ложное подтверждение Senior при K = 1 000: 0,0–1,4 % против 100 % у фиксированного банка",
-            "sample": f"N = {leak_block['n_per_k']} кандидатов на каждое K ∈ {{0, 10, 100, 1000}} (seed 2026102004)",
-            "command": leak_block["recompute"],
-            "code_ref": leak_block["code_ref"],
-            "artifact": "backend/app/modules/validation/data/leak_k_variants.json",
-        },
-        {
-            "section": "Согласие с экспертной разметкой (E1–E3 + 2 независимые модели)",
-            "metric": f"κw = {expert_block['cross_vendor_surrogate']['platform_vs_consensus_kappa_w']:.3f}, совпадение ±1 ступень 100 %".replace(".", ","),
-            "sample": "414 меток E1–E3 (07.10.2026) + кросс-вендорная панель Anthropic + Google (N = 40)",
-            "command": expert_block["recompute"],
-            "code_ref": expert_block["code_ref"],
-            "artifact": "backend/app/modules/validation/data/expert_surrogate.json",
-        },
-        {
-            "section": "Качество подбора под потребность (P@5, MRR, nDCG@10)",
-            "metric": f"P@5 = {100 * (matching_block['p5']['mean'] if isinstance(matching_block.get('p5'), dict) else 0.903):.1f} %, MRR = {(matching_block['mrr']['mean'] if isinstance(matching_block.get('mrr'), dict) else 0.960):.3f}".replace(".", ","),
-            "sample": matching_block["world"],
-            "command": matching_block["recompute"],
-            "code_ref": matching_block["code_ref"],
-            "artifact": "backend/app/modules/validation/data/matching_bench.json",
-        },
-        {
-            "section": "Подбор на реальных вакансиях hh.ru",
-            "metric": f"Покрытие навыков топ-5 — 91,6 %, согласие по грейду ±1 — 99,6 %",
-            "sample": f"N = {hh_block['n']} реальных вакансий hh.ru по 10 ИТ-направлениям",
-            "command": hh_block["recompute"],
-            "code_ref": hh_block["code_ref"],
-            "artifact": "backend/app/modules/validation/data/hh_match.json",
-        },
-        {
-            "section": "Защита оценщика открытых ответов и античит",
-            "metric": "100 % (90/90) известных шаблонов, 95,0 % отложенных атак, перевод сомнительных в устную защиту",
-            "sample": "90 базовых + 120 отложенных атак + 200 честных ответов",
-            "command": anticheat_block["recompute"],
-            "code_ref": anticheat_block["code_ref"],
-            "artifact": "backend/app/modules/validation/data/grader_check.json",
-        },
-    ]
-
+        return a5["hh_match"]
+    h = _load(DATA / "hh_match.json")
+    if not h:
+        return None
+    o = h.get("overall") or {}
+    d, g = o.get("direction_ok") or {}, o.get("grade_ok") or {}
     return {
-        "$comment": "Единый источник цифр проекта «Драфт». Генерируется скриптом tools/publish/gen_numbers.py.",
+        "n": h.get("n") or o.get("n"),
+        "direction_ok": {"value": d.get("share"), "k": d.get("k"), "n": d.get("n")},
+        "grade_ok": {"value": g.get("share"), "k": g.get("k"), "n": g.get("n")},
+        "set": "набор разработки (по этим вакансиям настраивался словарь); отложенный набор — после пересчёта А5",
+        "what": "разбор реальных вакансий hh.ru: направление и грейд вакансии определены верно",
+        "recompute": "python tools/realdata/hh_plus.py match",
+        "code_ref": "docs/realdata/HH_MATCH_2660.md",
+    }
+
+
+def anticheat_block() -> dict | None:
+    a6 = _load(A6_ANTICHEAT)
+    return a6.get("anticheat") or None
+
+
+def fsp_block() -> dict | None:
+    st = _load(A8_DIR / "index_stats.json")
+    oc = _load(A8_DIR / "ocr_audit.json")
+    agg = _load(A8_DIR / "aggregates.json")
+    if not (st or oc or agg):
+        return None
+    return {"index": st or None, "ocr_audit": oc or None,
+            "aggregates_totals": (agg.get("totals") if isinstance(agg, dict) else None),
+            "recompute": (st or {}).get("recompute") or "python -m tools.fsp_protocols build",
+            "code_ref": "tools/fsp_protocols/"}
+
+
+def mutation_block() -> dict | None:
+    return _load(A3_MUTATION) or None
+
+
+def load_block() -> dict | None:
+    return _load(A12_LOAD) or None
+
+
+def demo_block() -> dict | None:
+    return _load(ROOT / "backend" / "app" / "modules" / "demo" / "seed_stats.json") or None
+
+
+# ---------------------------------------------------------------- витрина
+
+def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
+    cards = []
+    if bank and bank.get("families"):
+        cards.append({
+            "id": "bank", "eyebrow": "Банк заданий", "value": int_ru(bank["families"]), "accent": "семейств",
+            "subtext": (f"{int_ru(bank.get('variants_20seeds'))} вариантов на {bank.get('seeds')} зёрнах, уникальных — "
+                        f"{int_ru(bank.get('unique_variants_20seeds'))} · ошибок генерации — {bank.get('fail')} · "
+                        f"{int_ru(bank.get('checks'))} проверок ключей исполнением кода, ошибок — {bank.get('checks_failed')} · "
+                        f"{bank.get('directions')} ИТ-направлений"),
+            "provenance": f"валидатор банка, {_date(bank.get('synced_at'))}",
+            "recompute": bank["recompute"], "code_ref": bank["code_ref"]})
+    if gv and gv["main"].get("verdict_accuracy"):
+        m = gv["main"]
+        va, fc, cs = m["verdict_accuracy"], m["false_confirm"] or {}, m["confident_share"] or {}
+        cards.append({
+            "id": "grade_verdict", "eyebrow": "Вердикт по заявленному грейду", "value": pct(va["value"]), "accent": "%",
+            "subtext": (f"верных решений «подтверждён / не подтверждён» · ложное подтверждение у завысивших — "
+                        f"{pct(fc.get('value'))} % · уверенно после основной части — {pct(cs.get('value'))} %, остальным — "
+                        f"короткий второй этап · симуляция продукта, N = {int_ru(m['n'])}, модельные кандидаты"),
+            "provenance": f"симуляция продукта, {m.get('date')}",
+            "recompute": gv["recompute"], "code_ref": gv["code_ref"]})
+    if matching and isinstance(matching.get("p5"), dict):
+        p5, mrr = matching["p5"], matching.get("mrr") or {}
+        cards.append({
+            "id": "matching_p5", "eyebrow": "Точность топ-5 подбора (P@5)", "value": pct(p5.get("mean")), "accent": "%",
+            "subtext": (f"MRR {num(mrr.get('mean'))} · 95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} % · бенчмарк: "
+                        f"{matching.get('n_needs')} потребностей × {int_ru(matching.get('n_candidates'))} кандидатов "
+                        f"(синтетический мир, seed {matching.get('seed')})"),
+            "provenance": f"бенчмарк подбора, {_date(matching.get('generated_at'))}",
+            "recompute": matching["recompute"], "code_ref": matching["code_ref"]})
+    if fsp and (fsp.get("index") or {}).get("documents"):
+        ix = fsp["index"]
+        cards.append({
+            "id": "fsp_protocols", "eyebrow": "Официальные протоколы ФСП", "value": str(ix["documents"]),
+            "accent": "документов",
+            "subtext": (f"{int_ru(ix.get('results'))} результатов соревнований ФСП {ix.get('years') or ''} — кандидат "
+                        "находит своё достижение в официальном протоколе, подтверждение — через ФСП"),
+            "provenance": f"индекс протоколов, {_date(ix.get('generated_at'))}",
+            "recompute": fsp["recompute"], "code_ref": fsp["code_ref"]})
+    if hh and (hh.get("direction_ok") or {}).get("value") is not None:
+        d, g = hh["direction_ok"], hh.get("grade_ok") or {}
+        cards.append({
+            "id": "hh_real", "eyebrow": "Реальные вакансии hh.ru", "value": int_ru(hh.get("n")), "accent": "вакансий",
+            "subtext": (f"направление вакансии определено верно в {pct(d.get('value'))} % ({d.get('k')} из {d.get('n')}), "
+                        f"грейд — в {pct(g.get('value'))} % ({g.get('k')} из {g.get('n')}); {hh.get('set') or ''}").rstrip("; "),
+            "provenance": "разбор вакансий hh.ru",
+            "recompute": hh["recompute"], "code_ref": hh["code_ref"]})
+    return cards
+
+
+def recompute_table(bank, gv, cheat, matching, hh, anticheat, fsp, load) -> list[dict]:
+    rows = []
+    if bank:
+        rows.append({"section": "Банк заданий", "metric": f"{int_ru(bank.get('families'))} семейств, ошибок генерации "
+                     f"{bank.get('fail')}, проверок ключей {int_ru(bank.get('checks'))}", "sample": f"{bank.get('seeds')} зёрен",
+                     "command": bank["recompute"], "code_ref": bank["code_ref"], "artifact": "backend/assessment_bank/BANK_SYNC.json"})
+    if gv:
+        m = gv["main"]
+        rows.append({"section": "Вердикт по грейду (симуляция продукта)",
+                     "metric": f"верный вердикт {pct((m['verdict_accuracy'] or {}).get('value'))} %, ложное подтверждение "
+                               f"{pct((m['false_confirm'] or {}).get('value'))} %, точный грейд {pct((m['exact_grade'] or {}).get('value'))} %",
+                     "sample": f"N = {int_ru(m['n'])}, отложенные зёрна {m.get('seeds')}, модельные кандидаты",
+                     "command": gv["recompute"], "code_ref": gv["code_ref"],
+                     "artifact": "backend/app/modules/validation/data/product_sim_test_calibrated.json"})
+    if cheat and cheat.get("claim_ru"):
+        rows.append({"section": "«Обмани тест»: боты через движок", "metric": cheat["claim_ru"],
+                     "sample": f"{(cheat.get('meta') or {}).get('n_per_strategy')} попыток на стратегию",
+                     "command": cheat["recompute"], "code_ref": cheat["code_ref"],
+                     "artifact": "backend/app/modules/validation/data/cheat_bots.json"})
+    if matching and isinstance(matching.get("p5"), dict):
+        rows.append({"section": "Подбор под потребность (бенчмарк)",
+                     "metric": f"P@5 {pct(matching['p5'].get('mean'))} %, MRR {num((matching.get('mrr') or {}).get('mean'))}",
+                     "sample": f"{matching.get('n_needs')} × {int_ru(matching.get('n_candidates'))}, синтетический мир",
+                     "command": matching["recompute"], "code_ref": matching["code_ref"],
+                     "artifact": "backend/app/modules/validation/data/matching_bench.json"})
+    if hh:
+        rows.append({"section": "Реальные вакансии hh.ru",
+                     "metric": f"направление {pct((hh.get('direction_ok') or {}).get('value'))} %, грейд {pct((hh.get('grade_ok') or {}).get('value'))} %",
+                     "sample": f"N = {hh.get('n')}; {hh.get('set') or ''}", "command": hh["recompute"],
+                     "code_ref": hh["code_ref"], "artifact": "docs/realdata/numbers_matching.json или validation/data/hh_match.json"})
+    if anticheat and isinstance(anticheat.get("holdout_offline"), dict):
+        ho, lc = anticheat["holdout_offline"], anticheat.get("llm_chain") or {}
+        rows.append({"section": "Античит оценщика развёрнутых ответов",
+                     "metric": f"слепой набор: фильтр {ho.get('caught')}/{ho.get('total')}, ложные {ho.get('false_positives')}/"
+                               f"{ho.get('honest_n')}, полная цепочка с моделью — пробитий {lc.get('pierced')}/{lc.get('total')}",
+                     "sample": "атаки от моделей других поставщиков, хэш набора до прогона", "command": anticheat.get("recompute"),
+                     "code_ref": anticheat.get("code_ref"), "artifact": "backend/app/modules/validation/data/grader_numbers.json"})
+    if fsp and fsp.get("index"):
+        rows.append({"section": "Протоколы ФСП", "metric": f"{fsp['index'].get('documents')} документов, "
+                     f"{int_ru(fsp['index'].get('results'))} результатов", "sample": "официальные протоколы с сайта ФСП",
+                     "command": fsp["recompute"], "code_ref": fsp["code_ref"], "artifact": "docs/realdata/fsp_protocols/index_stats.json"})
+    if load:
+        rows.append({"section": "Нагрузка", "metric": load.get("claim_ru") or "см. docs/perf/LOAD.md", "sample": load.get("sample") or "",
+                     "command": load.get("recompute") or "", "code_ref": "tools/perf/", "artifact": "docs/perf/load.json"})
+    return rows
+
+
+def build() -> dict:
+    bank, gv, cheat = bank_block(), grade_verdict_block(), cheat_block()
+    matching, hh, anticheat = matching_block(), hh_block(), anticheat_block()
+    fsp, mutation, load = fsp_block(), mutation_block(), load_block()
+    cards = landing_cards(bank, gv, matching, hh, fsp)
+    headline = " · ".join(f"{c['eyebrow']}: {c['value']}{(' ' + c['accent']) if c['accent'] != '%' else ' %'}" for c in cards)
+    claims = {k: v for k, v in {
+        "provenance": "Каждая цифра на сайте — из JSON-артефакта с командой пересчёта и ссылкой на код (docs/NUMBERS.json).",
+        "grade": gv and gv.get("claim_ru"),
+        "cheat": cheat and cheat.get("claim_ru"),
+        "anticheat": anticheat and anticheat.get("claim_ru"),
+    }.items() if v}
+    return {
+        "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; "
+                    "констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
         "generated_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "git_commit": _git_head(),
         "recompute_all": "python3 tools/publish/gen_numbers.py",
-        "bank": {
-            "families": 1824,
-            "families_base_snapshot": bank.get("families", 1504),
-            "variants_20seeds": 36480,
-            "directions": 10,
-            "grades": ["intern", "junior", "middle", "senior", "lead", "principal"],
-            "formats": ["mcq_concept", "find_bug", "predict_output", "choose_fix", "open_answer", "open_book_3step", "incident_sim"],
-            "code_and_open_families": 590,
-            "incident_sim_families": 40,
-            "lead_families": 271,
-            "principal_families": 266,
-            "a_mcq": 1.0,
-            "a_code_open": 1.3,
-            "seeds_per_family": 2147483646,
-            "sha256_prefix": (bank.get("sha256") or "")[:16],
-            "bank_commit": "c027be45",
-            "synced_at": bank.get("synced_at"),
-            "recompute": "cd backend && pytest -q assessment_bank/tests",
-            "code_ref": "backend/assessment_bank/BANK_SYNC.json",
-        },
-        "sprt_verdict": sprt_block,
-        "leak_k_variants": leak_block,
-        "expert_agreement": expert_block,
-        "anticheat": anticheat_block,
-        "mutation_testing": mutation_block,
-        "matching": matching_block,
-        "hh_match": hh_block,
-        "grade_accuracy": {
-            "source_commit": (acc.get("signature") or {}).get("commit"),
-            "generated_at": acc.get("generated_at"),
-            "views": views,
-            "path_retest_n": pr.get("n_candidates"),
-            "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
-            "code_ref": "backend/app/modules/validation/sprt_verdict.py",
-        },
-        "demo": {
-            "candidates": 240,
-            "companies": 12,
-            "needs": 18,
-            "cups": 10,
-            "vacancies": 18,
-        },
-        "landing_cards": landing_cards,
-        "jury_banner": {
-            "headline_ru": (
-                f"Точность уверенного вердикта грейда — {100 * sprt_block['precision_decided']:.1f} % (SPRT α = 0,02, "
-                f"точный грейд вдали от границы — {100 * sprt_block['exact_far_from_cut']:.1f} %, ±1 ступень — 100 %); "
-                f"точность топ-5 подбора P@5 = {100 * (matching_block['p5']['mean'] if isinstance(matching_block.get('p5'), dict) else 0.903):.1f} %, "
-                f"MRR = {(matching_block['mrr']['mean'] if isinstance(matching_block.get('mrr'), dict) else 0.960):.2f}."
-            ).replace(".", ","),
-            "claims_ru": {
-                "verdict": sprt_block["claim_ru"],
-                "leak": leak_block["claim_ru"],
-                "expert": expert_block["claim_ru"],
-                "matching": matching_block["claim_ru"],
-                "hh": hh_block["claim_ru"],
-                "anticheat": anticheat_block["claim_ru"],
-            },
-        },
-        "recompute_table": recompute_table,
+        "bank": bank,
+        "grade_verdict": gv,
+        "cheat_bots": cheat,
+        "matching": matching,
+        "hh_match": hh,
+        "anticheat": anticheat,
+        "fsp_protocols": fsp,
+        "mutation_testing": mutation,
+        "load": load,
+        "demo": demo_block(),
+        "landing_cards": cards,
+        "jury_banner": {"headline_ru": headline, "claims_ru": claims},
+        "recompute_table": recompute_table(bank, gv, cheat, matching, hh, anticheat, fsp, load),
     }
+
+
+def _strip(d: dict) -> dict:
+    return {k: v for k, v in d.items() if k not in ("generated_at", "git_commit")}
 
 
 def main() -> int:
     new = build()
     if "--check" in sys.argv:
-        cur = _load(OUT)
-        a = {k: v for k, v in cur.items() if k not in ("generated_at", "git_commit")}
-        b = {k: v for k, v in new.items() if k not in ("generated_at", "git_commit")}
-        if a != b:
+        if _strip(_load(OUT)) != _strip(json.loads(json.dumps(new, ensure_ascii=False))):
             print("NUMBERS.json устарел — запустите tools/publish/gen_numbers.py", file=sys.stderr)
             return 1
         print("NUMBERS.json актуален")
@@ -513,7 +481,7 @@ def main() -> int:
     OUT.write_text(txt, encoding="utf-8")
     FRONTEND_OUT.parent.mkdir(parents=True, exist_ok=True)
     FRONTEND_OUT.write_text(txt, encoding="utf-8")
-    print(f"Записано {OUT} и {FRONTEND_OUT}")
+    print(f"Записано {OUT.relative_to(ROOT)} и {FRONTEND_OUT.relative_to(ROOT)}")
     return 0
 
 

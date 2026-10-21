@@ -1009,7 +1009,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="font-bold text-brand-night">
-              Трёхзначный вердикт теста: <span data-testid="sprt-verdict-title">{v.title}</span>
+              Решение по заявленному уровню: <span data-testid="sprt-verdict-title">{v.title}</span>
             </p>
             <span className="chip tabular-nums">
               Вероятность соответствия {Math.round((v.p_claimed ?? r.p_claimed ?? 0) * 100)} % · практических заданий {v.code_open_count ?? 0} из {v.n_scored ?? r.answered}

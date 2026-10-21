@@ -1,268 +1,144 @@
 import { useEffect, useState } from "react";
 import { api } from "../../lib/api";
-import { fmtPct, getLeakKVariants } from "../../lib/numbers";
+import { getCheatBots, type CheatRow } from "../../lib/numbers";
 
-interface CheatAttemptEntry {
-  attempt_id: string;
+/** «Обмани тест» (А4, 21.10): боты-стратегии проходят НАСТОЯЩИЙ тест — тот же движок, реальные варианты заданий,
+ *  реальная проверка ответа, второй этап у границы. Таблица — отчётный прогон (docs/NUMBERS.json → cheat_bots),
+ *  кнопка — живая попытка бота прямо сейчас на сервере (/api/validation/cheat-challenge/attempt). Чисел в коде нет. */
+
+const LABELS: Record<string, { title: string; desc: string }> = {
+  control: { title: "Контроль: честный, но слабее заявки", desc: "отвечает по своим знаниям, уровень на 0,75 логита ниже порога заявленного грейда" },
+  random: { title: "Случайные ответы", desc: "случайный вариант, случайная строка кода, пустой вывод" },
+  position_A: { title: "Всегда первый вариант", desc: "проверка, нет ли перекоса в позиции правильного ответа" },
+  position_B: { title: "Всегда второй вариант", desc: "то же для позиции B" },
+  position_C: { title: "Всегда третий вариант", desc: "то же для позиции C" },
+  position_D: { title: "Всегда четвёртый вариант", desc: "то же для позиции D" },
+  longest: { title: "Самый длинный вариант", desc: "«решатель без знаний»: правильный ответ часто подробнее" },
+  median_number: { title: "Середина числового ряда", desc: "«решатель без знаний»: в задачах с числами берёт средний вариант" },
+  overlap: { title: "Больше всего общих слов с условием", desc: "«решатель без знаний»: ищет вариант, похожий на текст задачи" },
+  leak_10: { title: "Утечка: 10 вариантов каждого задания", desc: "знает ключи 10 вариантов каждого семейства, остальное — своими силами (как контроль)" },
+  leak_100: { title: "Утечка: 100 вариантов каждого задания", desc: "знает ключи 100 вариантов каждого семейства, остальное — своими силами" },
+};
+
+const LIVE = ["random", "longest", "median_number", "overlap", "position_A", "leak_10", "control"];
+
+interface LiveAttempt {
   at: string;
-  actor: string;
-  claimed_grade: string;
   strategy: string;
-  theta_est: number;
-  verdict: string;
-  verdict_title: string;
-  canary_flagged: boolean;
+  claim: string;
+  direction: string;
+  verdict_main: string | null;
+  grade_final: string;
+  refined: boolean;
   false_confirmed: boolean;
-  note: string;
+  items: number;
+  elapsed_s: number;
 }
 
-interface CheatChallengeData {
-  demo_attempts_total: number;
-  demo_false_confirmations: number;
-  demo_caught_or_rejected: number;
-  why_code_does_not_help: { id: string; title: string; detail: string }[];
-  attempts: CheatAttemptEntry[];
-  k_values?: Record<
-    string,
-    {
-      k_published: number;
-      n: number;
-      fixed_bank: { leaked_share_of_test: number; theta_gain_mean: number; false_confirm_rate: number };
-      parametric_bank: {
-        theta_gain_mean: number;
-        false_confirm_raw: number;
-        false_confirm_protected: number;
-        canary_caught_rate: number;
-      };
-    }
-  >;
-  claim_ru?: string;
-  recompute?: string;
-  code_ref?: string;
-}
-
-const STRATEGIES = [
-  {
-    id: "dump_lookup_1000",
-    label: "Дамп K = 1 000 слитых вариантов + автопоиск",
-    desc: "Скрипт мгновенно отвечает на варианты из опубликованной базы и угадывает остальные",
-  },
-  {
-    id: "generator_source_analysis",
-    label: "Анализ открытого Python/YAML-кода генераторов",
-    desc: "Попытка восстановить ключ ответа по исходному коду шаблонов без знания серверного seed",
-  },
-  {
-    id: "external_llm_copy",
-    label: "Копирование текста заданий во внешнюю нейросеть",
-    desc: "Передача условия задачи и кода во внешнюю LLM в обход блокировки буфера обмена",
-  },
-];
+const pc = (v: number | null | undefined) => (v == null ? "—" : `${(Number(v) * 100).toFixed(1).replace(".", ",")} %`);
+const GRADE: Record<string, string> = { none: "ниже Intern", intern: "Intern", junior: "Junior", middle: "Middle", senior: "Senior", lead: "Lead", principal: "Principal" };
 
 export default function CheatChallenge({ compact = false }: { compact?: boolean }) {
-  const staticLeak = getLeakKVariants();
-  const [data, setData] = useState<CheatChallengeData | null>(null);
-  const [strategy, setStrategy] = useState<string>("dump_lookup_1000");
+  const cb = getCheatBots();
+  const [live, setLive] = useState<LiveAttempt[]>([]);
+  const [strategy, setStrategy] = useState("longest");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    api<CheatChallengeData>("/validation/cheat-challenge")
-      .then(setData)
-      .catch(() => {
-        setData({
-          demo_attempts_total: staticLeak.cheat_challenge?.demo_attempts_total ?? 3,
-          demo_false_confirmations: staticLeak.cheat_challenge?.demo_false_confirmations ?? 0,
-          demo_caught_or_rejected: staticLeak.cheat_challenge?.demo_caught_or_rejected ?? 3,
-          why_code_does_not_help: staticLeak.why_code_does_not_help ?? [],
-          attempts: [],
-          k_values: staticLeak.k_values,
-          claim_ru: staticLeak.claim_ru,
-          recompute: staticLeak.recompute,
-          code_ref: staticLeak.code_ref,
-        });
-      });
-  }, [staticLeak]);
+    api<{ attempts: LiveAttempt[] }>("/validation/cheat-challenge").then((r) => setLive(r?.attempts ?? [])).catch(() => setLive([]));
+  }, []);
 
-  const runAttempt = async () => {
+  const run = async () => {
     setBusy(true);
+    setErr(null);
     try {
-      const res = await api<{ latest: CheatAttemptEntry; summary: CheatChallengeData }>(
-        "/validation/cheat-challenge/attempt",
-        { method: "POST", body: { strategy, claimed_grade: "senior" } },
-      );
-      if (res?.summary) {
-        setData((prev) => ({
-          ...(prev ?? res.summary),
-          ...res.summary,
-          k_values: prev?.k_values ?? staticLeak.k_values,
-        }));
-      }
+      const r = await api<{ latest: LiveAttempt; attempts: LiveAttempt[] }>("/validation/cheat-challenge/attempt", {
+        method: "POST",
+        body: { strategy },
+      });
+      setLive(r?.attempts ?? []);
+    } catch (e: any) {
+      setErr(e?.message || "Не удалось запустить попытку — попробуйте позже");
     } finally {
       setBusy(false);
     }
   };
 
-  const kMap = (data?.k_values ?? staticLeak.k_values ?? {}) as NonNullable<CheatChallengeData["k_values"]>;
-  const whyList = data?.why_code_does_not_help?.length
-    ? data.why_code_does_not_help
-    : staticLeak.why_code_does_not_help ?? [];
-  const totalAttempts = data?.demo_attempts_total ?? staticLeak.cheat_challenge?.demo_attempts_total ?? 3;
-  const falseConf = data?.demo_false_confirmations ?? staticLeak.cheat_challenge?.demo_false_confirmations ?? 0;
-
+  const rows: [string, CheatRow][] = cb ? Object.entries(cb.table) : [];
   return (
-    <section
-      id="cheat-challenge"
-      data-testid="cheat-challenge-box"
-      className="card border-brand-night/15 bg-gradient-to-br from-white via-brand-cream/35 to-white"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <span className="chip-lime">Вызов жюри · «Обмани тест»</span>
-          <h2 className="mt-2 font-display text-lg font-extrabold text-brand-night">
-            Код генераторов банка открыт в репозитории — можно ли получить Senior, зная шаблоны и K слитых вариантов?
-          </h2>
-          <p className="mt-1 max-w-3xl text-xs text-brand-ink/75">
-            Мы честно измерили выигрыш в баллах и вероятность ложного подтверждения Senior для кандидата уровня
-            Junior/Middle (N = {staticLeak.n_per_k ?? 2000} попыток на каждое K ∈ {"{0, 10, 100, 1 000}"}) при знании
-            исходного кода генераторов и базы опубликованных заданий.
-          </p>
-        </div>
-
-        <div
-          className="flex items-center gap-4 rounded-xl border border-brand-night/15 bg-brand-night px-4 py-3 text-white"
-          data-testid="cheat-challenge-counters"
-        >
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-white/65">Попыток взлома в демо</div>
-            <div className="font-display text-2xl font-extrabold tabular-nums text-brand-lime">{totalAttempts}</div>
-          </div>
-          <div className="h-8 w-px bg-white/15" />
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-white/65">Ложных подтверждений Senior</div>
-            <div className="font-display text-2xl font-extrabold tabular-nums text-white">{falseConf}</div>
-          </div>
-        </div>
+    <section id="v-cheat-challenge" className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10" data-testid="v-cheat-challenge">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-lg font-extrabold text-brand-night">«Обмани тест»: боты проходят настоящий тест</h2>
+        <span className="chip-lime">боты, не люди</span>
       </div>
-
-      {/* Сравнительная таблица K = 0, 10, 100, 1000 */}
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-brand-night/10 text-[11px] uppercase tracking-wider text-brand-ink/60">
-              <th className="py-2 pr-3">Известно вариантов K</th>
-              <th className="py-2 pr-3">Фикс. банк (200 вопр.): доля слитых</th>
-              <th className="py-2 pr-3">Фикс. банк: ложный Senior</th>
-              <th className="py-2 pr-3">«Драфт» (1 504 сем. × 2,15·10⁹ зёрен): выигрыш Δθ</th>
-              <th className="py-2 pr-3">«Драфт»: поймано канарейкой</th>
-              <th className="py-2">«Драфт»: ложный Senior (с защитой)</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-brand-night/5 tabular-nums">
-            {(["0", "10", "100", "1000"] as const).map((k) => {
-              const row = kMap[k];
-              if (!row) return null;
-              return (
-                <tr key={k}>
-                  <td className="py-2 pr-3 font-bold text-brand-night">
-                    K = {k === "0" ? "0 (честный проход)" : k}
+      <p className="mt-2 text-sm text-brand-ink/70">
+        Каждый бот проходит тот же тест, что и кандидат: реальные варианты заданий, реальная проверка ответа, второй этап у
+        границы. Считаем, как часто продукт подтвердил боту заявленный грейд (Junior, Middle или Senior). Время ответа бот
+        держит «как у человека», чтобы детектор скорости не помогал.
+      </p>
+      {rows.length > 0 ? (
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-xs" data-testid="v-cheat-table">
+            <thead>
+              <tr className="text-left text-brand-ink/70">
+                <th className="py-1 pr-3">Стратегия</th>
+                <th className="pr-3">Попыток</th>
+                <th className="pr-3">Грейд подтверждён</th>
+                <th>95 % ДИ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(([k, r]) => (
+                <tr key={k} className="border-t border-black/5  align-top">
+                  <td className="py-1 pr-3">
+                    <div className="font-semibold text-brand-night">{LABELS[k]?.title || k}</div>
+                    {!compact && <div className="text-brand-ink/70">{LABELS[k]?.desc}</div>}
                   </td>
-                  <td className="py-2 pr-3 text-brand-ink/75">{fmtPct(row.fixed_bank.leaked_share_of_test, 0)}</td>
-                  <td className="py-2 pr-3 font-semibold text-rose-700">
-                    {fmtPct(row.fixed_bank.false_confirm_rate, 1)}
-                  </td>
-                  <td className="py-2 pr-3 text-brand-ink/75">
-                    +{row.parametric_bank.theta_gain_mean.toFixed(2).replace(".", ",")} лог.
-                  </td>
-                  <td className="py-2 pr-3 text-brand-ink/75">
-                    {k === "0" ? "—" : fmtPct(row.parametric_bank.canary_caught_rate, 1)}
-                  </td>
-                  <td className="py-2 font-bold text-emerald-700">
-                    {fmtPct(row.parametric_bank.false_confirm_protected, 2)}
-                  </td>
+                  <td className="pr-3">{r.n}</td>
+                  <td className="pr-3 font-semibold text-brand-night">{pc(r.false_confirmed.value)} ({r.false_confirmed.k})</td>
+                  <td>{r.false_confirmed.ci95 ? `${pc(r.false_confirmed.ci95[0])}–${pc(r.false_confirmed.ci95[1])}` : "—"}</td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Интерактивный запуск демонстрационной попытки взлома */}
-      <div className="mt-4 rounded-xl border border-brand-night/10 bg-white p-3.5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-brand-night">Испытать стратегию на уровне Senior:</span>
-            <select
-              value={strategy}
-              onChange={(e) => setStrategy(e.target.value)}
-              className="rounded-lg border border-brand-night/15 bg-brand-cream/40 px-2.5 py-1.5 text-xs font-medium text-brand-night"
-              data-testid="cheat-strategy-select"
-            >
-              {STRATEGIES.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
+              ))}
+            </tbody>
+          </table>
+          {cb?.claim_ru && <p className="mt-2 text-xs text-brand-ink/70">{cb.claim_ru}</p>}
+          <details className="mt-2 text-xs text-brand-ink/70">
+            <summary className="cursor-pointer font-semibold text-brand-night">Условия и пересчёт</summary>
+            <p className="mt-1">{cb?.meta?.text_answers}. Уровень бота с утечкой и контроля: {cb?.meta?.bot_theta}.</p>
+            <p className="mt-1">Пересчёт: <code className="break-all">{cb?.recompute}</code>; код — <code>{cb?.code_ref}</code>.</p>
+          </details>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-brand-ink/70">Отчётный прогон ботов ещё не опубликован.</p>
+      )}
+      {!compact && (
+        <div className="mt-4 rounded-xl border border-black/10 p-3 " data-testid="v-cheat-live">
+          <div className="text-sm font-semibold text-brand-night">Запустить бота сейчас</div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <select className="input text-sm" value={strategy} onChange={(e) => setStrategy(e.target.value)} aria-label="Стратегия бота">
+              {LIVE.map((s) => (
+                <option key={s} value={s}>{LABELS[s]?.title || s}</option>
               ))}
             </select>
+            <button className="btn-primary" onClick={run} disabled={busy} data-testid="v-cheat-run">
+              {busy ? "Бот проходит тест…" : "Запустить попытку"}
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={runAttempt}
-            disabled={busy}
-            className="btn-primary px-3.5 py-1.5 text-xs"
-            data-testid="cheat-run-btn"
-          >
-            {busy ? "Проверяем попытку…" : "Проверить попытку обмана"}
-          </button>
-        </div>
-
-        {data?.attempts && data.attempts.length > 0 && (
-          <div className="mt-3 space-y-1.5 border-t border-brand-night/10 pt-2.5 text-xs">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-brand-ink/55">
-              Последние попытки в журнале демо:
-            </div>
-            {data.attempts.slice(0, compact ? 2 : 4).map((a) => (
-              <div
-                key={a.attempt_id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-brand-cream/40 px-3 py-1.5"
-              >
-                <div>
-                  <span className="font-semibold text-brand-night">{a.actor}</span>
-                  <span className="ml-2 text-brand-ink/70">{a.note}</span>
-                </div>
-                <span
-                  className={`chip text-[11px] font-bold ${
-                    a.verdict === "needs_followup"
-                      ? "bg-amber-100 text-amber-900"
-                      : "bg-brand-night/10 text-brand-night"
-                  }`}
-                >
-                  Вердикт: {a.verdict_title} (θ = {a.theta_est.toFixed(2).replace(".", ",")})
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Короткое объяснение 3 причин, почему знание кода не помогает */}
-      {!compact && whyList.length > 0 && (
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {whyList.map((w) => (
-            <div key={w.id} className="rounded-xl border border-brand-night/10 bg-white p-3 text-xs">
-              <div className="font-bold text-brand-night">{w.title}</div>
-              <p className="mt-1 text-brand-ink/75">{w.detail}</p>
-            </div>
-          ))}
+          {err && <p className="mt-2 text-xs text-red-600">{err}</p>}
+          {live.length > 0 && (
+            <ul className="mt-3 space-y-1 text-xs text-brand-ink/70">
+              {live.slice(0, 8).map((a, i) => (
+                <li key={i}>
+                  <b className="text-brand-night">{LABELS[a.strategy]?.title || a.strategy}</b>, заявка {GRADE[a.claim] || a.claim}:{" "}
+                  {a.false_confirmed ? "грейд подтверждён" : `не подтверждён (итог — ${GRADE[a.grade_final] || a.grade_final})`}
+                  {a.refined ? ", был второй этап" : ""} · заданий {a.items} · {Math.round(a.elapsed_s)} с
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
-
-      <p className="mt-3 text-[11px] text-brand-ink/55">
-        Воспроизведение расчёта:{" "}
-        <code className="rounded bg-brand-night/5 px-1.5 py-0.5">
-          {data?.recompute ?? staticLeak.recompute ?? "cd backend && python -m app.modules.validation.leak_k_variants"}
-        </code>{" "}
-        · Код: <code>{data?.code_ref ?? staticLeak.code_ref}</code>
-      </p>
     </section>
   );
 }
