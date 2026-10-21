@@ -348,17 +348,16 @@ export function InteractiveAvatarTour() {
     : micOn && ui.phase === "thinking" ? "Думаю…"
     : micOn && ui.speaking ? "Говорю"
     : listening ? (large && !f.small ? lbl.long : lbl.short)
-    : micOn ? "Секунду…" : lbl.short;
+    : micOn ? "Думаю…" : lbl.short;
   // подсказка «ваша очередь»: в паузах обзора и когда Настя спросила — чтобы было видно, что можно говорить
   const turnHint = listening && (ui.phase === "listening" || ui.phase === "paused")
     ? (ui.phase === "paused" ? (large ? "Пауза. Скажите «дальше» или спросите" : "Пауза — скажите «дальше»")
       : !large ? "Можно говорить"
-      : ui.track ? "Можно говорить: вопрос, «дальше» или «покажи …»" : "Говорите: назовите раздел или задайте вопрос")
+      : ui.awaiting === "start" ? "Скажите или нажмите: кандидат, работодатель, Федерация"
+      : ui.track ? "Можно говорить: вопрос, «дальше», «ниже» или «покажи …»" : "Говорите: назовите раздел или задайте вопрос")
     : null;
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
-  // «поднять руку» — пока Настя говорит или думает: договорит предложение и будет слушать
-  const canHand = micOn && !listening && ui.phase !== "paused" && ui.phase !== "connecting" && ui.phase !== "idle";
   // знакомство: кто пришёл — можно не говорить, а нажать
   const roleChips = large && ui.awaiting === "start" && ui.phase === "listening" && !ui.speaking;
 
@@ -459,16 +458,6 @@ export function InteractiveAvatarTour() {
                 </span>
                 <span className="truncate" data-testid="elena-mic-label">{micText}</span>
               </button>
-              {canHand && (
-                <button type="button" onClick={() => eng?.raiseHand()} aria-label="Сказать — Настя договорит и выслушает" title="Сказать (пробел)"
-                  data-testid="elena-hand"
-                  className={`flex shrink-0 items-center gap-1.5 rounded-full bg-amber-400/95 font-semibold text-[#120E24] backdrop-blur transition hover:bg-amber-300 ${large ? "h-12 px-3.5 text-sm" : "h-10 px-2.5 text-xs"}`}>
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M8 12V5.5a1.5 1.5 0 0 1 3 0V11M11 5a1.5 1.5 0 0 1 3 0v6M14 6.5a1.5 1.5 0 0 1 3 0V12M17 9.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-4.9-2.5L4 13.8a1.6 1.6 0 0 1 2.6-1.9L8 13.5" />
-                  </svg>
-                  {large && !f.small ? "Сказать" : null}
-                </button>
-              )}
               {ui.canPause && (
                 <button type="button" onClick={() => eng?.togglePause()} aria-label={paused ? "Продолжить обзор" : "Пауза"} title={paused ? "Продолжить обзор" : "Пауза"}
                   data-testid="elena-pause" data-paused={paused ? "1" : "0"}

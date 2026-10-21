@@ -683,8 +683,8 @@ def concierge_script(name: str | None = Query(None, max_length=40)) -> dict:
     return cg.script(name)
 
 
-@router.get("/concierge/budget", summary="Сегодняшние расходы проводника Насти и лимиты (для владельца)")
-def concierge_budget_usage() -> dict:
+@router.get("/concierge/budget", summary="Сегодняшние расходы проводника Насти и лимиты (только администратор)")
+def concierge_budget_usage(_: User = Depends(require_role(UserRole.admin))) -> dict:
     from app.modules.interview import concierge_budget as budget
 
     return budget.usage()
