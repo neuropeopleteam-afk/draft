@@ -233,6 +233,7 @@ else
   echo "  git push <remote> $BRANCH:refs/heads/main      # без --force, без тегов, SHA и даты коммитов не меняются"
   echo "  затем: ops/publish_repo.sh --remote <remote> --verify-only ${VALUES:+--values $VALUES}"
 fi
+[ -z "${PUBLISH_FILTERED:-}" ] || echo "  вариант В: SHA — уже очищенной копии ($(pwd)); --execute и --verify-only запускать отсюда же: cd $(pwd) && PUBLISH_FILTERED=1 ops/publish_repo.sh …"
 echo "  (создание репозитория, переключение на публичный, ссылка в личный кабинет — по чек-листу владельца)"
 
 if [ "$FAIL" != 0 ]; then echo; echo "Есть замечания — отправка не выполняется." >&2; exit 1; fi
