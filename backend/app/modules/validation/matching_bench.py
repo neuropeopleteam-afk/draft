@@ -40,6 +40,10 @@ from app.modules.catalog.seed_data import GRADE_ORDER
 from app.modules.matching.need_parser import parse_need
 from app.modules.matching import core_skill, grade_above, must_have
 from app.modules.matching.ranking import WEIGHTS, algorithm, requirement_priority, score_candidate
+import inspect as _inspect
+
+# match-v2 (А5) переключает ranking.score_candidate флагом MATCH_V2, если веса не переданы явно; исторический бенч — v1
+_V1_KW = {"weights": WEIGHTS} if "weights" in _inspect.signature(score_candidate).parameters else {}
 from app.modules.profiles.facts import PROVISIONAL_PENALTY
 from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate, true_grade)
 from app.modules.validation.matching_eval import _tokens, keyword_score, selection_categories
@@ -128,7 +132,7 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
     prod = np.zeros((n, m))
     for i, r in enumerate(reqs):
         for j, b in enumerate(bundles):
-            s, c, _ = score_candidate(b, r)
+            s, c, _ = score_candidate(b, r, **_V1_KW)  # явные веса v1: исторический бенч не переключается флагом MATCH_V2 (А5)
             prod[i, j] = s
             comps[i, j] = [c[k] for k in COMP_KEYS]
     has_req = np.array([bool(r.get("stack_required")) for r in reqs])

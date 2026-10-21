@@ -97,6 +97,18 @@ export const catTitle = (id?: string | null) => {
 };
 
 /** Загрузка данных с повтором. */
+// А4 (/validation, замечание А19 №10): отчёты валидации статичны — один запрос на путь за 5 минут вместо 2–3 одинаковых
+// от разных блоков страницы (matching-bench ×3, headline ×2, hh-match ×2, provenance ×2). Ошибка из кэша не залипает.
+const VALIDATION_CACHE = new Map<string, { at: number; p: Promise<unknown> }>();
+function apiShared<T>(path: string): Promise<T> {
+  if (!path.startsWith("/validation/")) return api<T>(path);
+  const hit = VALIDATION_CACHE.get(path);
+  if (hit && Date.now() - hit.at < 300_000) return hit.p as Promise<T>;
+  const p = api<T>(path).catch((e) => { VALIDATION_CACHE.delete(path); throw e; });
+  VALIDATION_CACHE.set(path, { at: Date.now(), p });
+  return p;
+}
+
 export function useApi<T>(path: string | null, deps: unknown[] = []) {
   // Быстрая смена направления/грейда: запоздавший ответ старого запроса не заменяет новую выдачу.
   const requestSeq = useRef(0);
@@ -108,7 +120,7 @@ export function useApi<T>(path: string | null, deps: unknown[] = []) {
     const seq = ++requestSeq.current;
     setLoading(true);
     try {
-      const result = await api<T>(path);
+      const result = await apiShared<T>(path);
       if (seq === requestSeq.current) { setData(result); setError(null); }
     }
     catch (e) { if (seq === requestSeq.current) setError(errText(e)); }

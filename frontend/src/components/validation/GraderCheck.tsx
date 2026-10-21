@@ -1,5 +1,6 @@
 import { Alert, Loading, num, signed, useApi } from "../ui";
 import { ScrollX } from "../A11y";
+import { makeModelAlias, noVendor } from "./noVendor";
 
 /** Блок /validation: оценщик открытых ответов на наборе панели 06.10 — инъекции и завышение, до и после
  * (backend: app/modules/validation/grader_check.py → data/grader_check.json). */
@@ -45,17 +46,17 @@ function Body({ r }: { r: any }) {
   return (
     <>
       <p className="max-w-4xl text-sm leading-relaxed text-brand-ink/70">
-        Набор панели 06.10: {r.dataset?.items} развёрнутых заданий банка, {r.dataset?.answers} ответов — эталоны сильного, среднего и слабого ответа, ответы gpt-oss-120b и открытых моделей, инъекция панели и три перефразированные атаки, которые фильтр инструкций не ловит. Модель — {r.model}; ориентир для завышения — {r.reference} (не истина: строже и устойчив к инъекции).
+        Набор панели 06.10: {r.dataset?.items} развёрнутых заданий банка, {r.dataset?.answers} ответов — эталоны сильного, среднего и слабого ответа, ответы открытой модели-эталона и других открытых моделей, инъекция панели и три перефразированные атаки, которые фильтр инструкций не ловит. Модель — {makeModelAlias()(r.model)}; ориентир для завышения — {noVendor(r.reference)} (не истина: строже и устойчив к инъекции).
       </p>
       <div className="mt-4 grid gap-4 md:grid-cols-4">
         <Kpi label="Инъекция панели прошла" value={`${before?.attacks?.pass ?? "—"} → ${filt?.attacks?.pass ?? "—"} из 29`} hint="балл ≥ 0,5 без фильтра → с фильтром injection_signals (ответ уходит эксперту)" />
         <Kpi label="Ложные срабатывания" value={`${r.filter_false_positives?.honest ?? "—"} из ${r.filter_false_positives?.honest_n ?? "—"}`} hint={`фильтр на честных ответах; вырезание утверждений об оценке — ${r.strip_meta_false_positives?.honest ?? "—"}`} />
         <Kpi label="Перефразы ловит фильтр" value={`${para.caught} из 87`} hint={`после вырезания утверждений об оценке балл ≥ 0,5 у ${para.pass} из ${para.scored}, которые измеримы без модели; ещё ${para.wait} ждут прогона LLM`} />
-        <Kpi label="Завышение к gpt-oss-120b" value={`${sgn(before?.vs_gptoss_B?.bias)}${after?.vs_gptoss_B?.bias != null ? ` → ${sgn(after.vs_gptoss_B.bias)}` : ""}`} hint={after ? `ответы открытых моделей, r ${n2(before?.vs_gptoss_B?.r)} → ${n2(after.vs_gptoss_B?.r)}` : "ответы открытых моделей; «после» — после прогона промпта v2 на YandexGPT"} />
+        <Kpi label="Завышение к открытой модели-эталону" value={`${sgn(before?.vs_gptoss_B?.bias)}${after?.vs_gptoss_B?.bias != null ? ` → ${sgn(after.vs_gptoss_B.bias)}` : ""}`} hint={after ? `ответы открытых моделей, r ${n2(before?.vs_gptoss_B?.r)} → ${n2(after.vs_gptoss_B?.r)}` : "ответы открытых моделей; «после» — после прогона промпта v2 на российской модели"} />
       </div>
       {r.llm_pending && (
         <div className="mt-4"><Alert kind="info">
-          Цифры «после» для самой модели (промпт v2 с цитатами-доказательствами и второй оценкой) появятся после прогона на YandexGPT: ключ есть только на сервере стенда, запросы и разбор готовы. Сейчас показано то, что считается без модели: фильтр, вырезание утверждений об оценке и тексты, которые доходят до модели.
+          Цифры «после» для самой модели (промпт v2 с цитатами-доказательствами и второй оценкой) появятся после прогона на российской модели: ключ есть только на сервере стенда, запросы и разбор готовы. Сейчас показано то, что считается без модели: фильтр, вырезание утверждений об оценке и тексты, которые доходят до модели.
         </Alert></div>
       )}
       <ScrollX label="Проверка оценщика" className="mt-4 overflow-x-auto">

@@ -56,6 +56,15 @@ export default function Category() {
       <div className="mt-6"><Empty title="Категория пока не присвоена" text="Пройдите опрос и тест — категорию присваивает только тест." action={<Link to="/candidate/assessment" className="btn-primary">Пройти опрос</Link>} /></div></div>
   );
 
+  // А19 №6: шкала — по последней завершённой попытке ЭТОГО направления (а не по самой свежей попытке любого направления:
+  // у Backend · Middle показывался индекс попытки Frontend · Junior)
+  const catSession = (() => {
+    const all: any[] = (s.sessions ?? []).filter((x: any) => !x.is_sandbox);
+    const dir = c.direction ?? (c.category_id ? String(c.category_id).split(".")[0] : null);
+    if (!dir) return all[0] ?? null;
+    return all.find((x) => x.direction === dir && x.status === "finished") ?? all.find((x) => x.direction === dir) ?? null;
+  })();
+
   return (
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Категория и грейд" subtitle="Категорию «направление · грейд» видят работодатели; присваивает её только тест." />
@@ -72,7 +81,7 @@ export default function Category() {
               <MarketNote m={c.market_range} />
             </div>
           ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTION_TITLES[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADE_TITLE_ALL[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
-          <ThetaScale theta={s.sessions?.[0]?.theta} se={s.sessions?.[0]?.se} grade={c.grade} confirmed={gs?.status === "confirmed"} compact className="mt-4" />
+          <ThetaScale theta={catSession?.theta} se={catSession?.se} grade={c.grade} confirmed={gs?.status === "confirmed"} compact className="mt-4" />
           {(gs?.verdict || s.verdict) && (() => {
             const vd = gs?.verdict || s.verdict;
             const fUrl = vd.followup_url || (vd.followup_kind === "incident" ? `/warroom?direction=${encodeURIComponent(c.direction ?? "backend")}` : null);
