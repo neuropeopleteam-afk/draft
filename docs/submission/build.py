@@ -185,6 +185,18 @@ def libs_table() -> str:
 TOKEN = re.compile(r"\{\{\s*([#^/]?)([a-zA-Z0-9_.:,]+)\s*\}\}")  # noqa
 
 
+def _pair(repo: dict, pid: str) -> dict | None:
+    return next((p for p in (repo.get("_pairs") or {}).get("pairs", []) if p["id"] == pid), None)
+
+
+def _pair_present(repo: dict, fid: str) -> bool:
+    """{{#pair_<id>}} — обе строки пары («стандарт» и «прочность») есть в NUMBERS.json."""
+    if not fid.startswith("pair_"):
+        return False
+    p = _pair(repo, fid[5:])
+    return bool(p and p.get("standard") and p.get("hard"))
+
+
 def render(tpl: str, facts: dict, repo: dict, *, src: str) -> str:
     # условные блоки (вложенность не нужна; обрабатываем изнутри наружу)
     blk = re.compile(r"\{\{([#^])([a-zA-Z0-9_]+)\}\}(.*?)\{\{/\2\}\}", re.S)
@@ -193,7 +205,7 @@ def render(tpl: str, facts: dict, repo: dict, *, src: str) -> str:
         if not m:
             break
         kind, fid, body = m.group(1), m.group(2), m.group(3)
-        present = fid in facts or (fid.startswith("repo_") and fid[5:] in repo)
+        present = fid in facts or (fid.startswith("repo_") and fid[5:] in repo) or _pair_present(repo, fid)
         keep = present if kind == "#" else not present
         tpl = tpl[:m.start()] + (body if keep else "") + tpl[m.end():]
 
@@ -219,6 +231,13 @@ def render(tpl: str, facts: dict, repo: dict, *, src: str) -> str:
                 d = re.split(r"(?<=[.!?])\s", t["description"].strip())[0] if t["description"] else ""
                 rows.append(f"| `{t['tag']}` | {md_cell(d)} | {_n.fint(t['ops'])} |")
             return "\n".join(rows)
+        if name.startswith("pair."):
+            _, pid, side, *attr = name.split(".")
+            p = _pair(repo, pid)
+            v = (p or {}).get(side)
+            if not v:
+                raise BuildError(f"{src}: нет пары {pid}.{side} в NUMBERS.json — оберните в {{{{#pair_{pid}}}}}…{{{{/pair_{pid}}}}}")
+            return str(v[attr[0]] if attr else v["text"])
         if name.startswith("repo."):
             k = name[5:]
             if k not in repo or isinstance(repo[k], (dict, list)):

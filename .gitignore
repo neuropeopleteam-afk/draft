@@ -29,3 +29,4 @@ cache/
 # материалы сдачи: временные файлы сборки
 docs/submission/__pycache__/
 docs/submission/_*
+docs/video/out/
