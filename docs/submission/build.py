@@ -197,7 +197,17 @@ def _pair_present(repo: dict, fid: str) -> bool:
     return bool(p and p.get("standard") and p.get("hard"))
 
 
+INCLUDE = re.compile(r"\{\{include:([a-z0-9_]+)\}\}")
+
+
 def render(tpl: str, facts: dict, repo: dict, *, src: str) -> str:
+    # вставки общих фрагментов (одна таблица «пункт ТЗ → где проверить» для README и документации)
+    def inc(m: re.Match) -> str:
+        f = HERE / "src/partials" / f"{m.group(1)}.md"
+        if not f.exists():
+            raise BuildError(f"{src}: нет фрагмента {f.relative_to(ROOT)}")
+        return f.read_text(encoding="utf-8").rstrip("\n")
+    tpl = INCLUDE.sub(inc, tpl)
     # условные блоки (вложенность не нужна; обрабатываем изнутри наружу)
     blk = re.compile(r"\{\{([#^])([a-zA-Z0-9_]+)\}\}(.*?)\{\{/\2\}\}", re.S)
     while True:
@@ -352,6 +362,50 @@ def check_api(path: Path) -> list[str]:
     return bad
 
 
+BARE_API = re.compile(r"`(/api/[^`\s]+)`")
+FILE_REF = re.compile(r"`((?:\.?[\w.-]+/)*[\w.-]+(?:\.(?:py|ts|tsx|mjs|cjs|js|md|json|yml|yaml|toml|sh|pdf|docx|pptx|example)|/))`")
+TEST_FN = re.compile(r"`(test_\w+)`")
+
+
+def check_refs(path: Path) -> list[str]:
+    """Файлы, папки, тесты и методы API, на которые ссылается текст, должны существовать в репозитории.
+
+    Эксперт проверяет каждую строку таблицы «пункт ТЗ → где проверить»; ссылка в никуда — ошибка сборки."""
+    spec = json.loads((ROOT / "docs/api/openapi.json").read_text(encoding="utf-8")).get("paths", {})
+    tests = ROOT / "backend/tests"
+    test_src = "\n".join(f.read_text(encoding="utf-8", errors="ignore") for f in tests.glob("test_*.py"))
+    e2e = "\n".join(f.read_text(encoding="utf-8", errors="ignore") for f in (ROOT / "e2e/tests").glob("*.ts"))
+    names = set(subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True).stdout.split())
+    basenames = {n.rsplit("/", 1)[-1] for n in names}
+    served = {"/api/docs", "/api/openapi.json", "/api/redoc"}  # отдаёт сам FastAPI, в схеме их нет
+    bad, in_code = [], False
+    for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if line.startswith("```"):
+            in_code = not in_code
+        if in_code or "<!-- lint:off -->" in line:
+            continue
+        where = f"{path.relative_to(ROOT)}:{i}"
+        for m in BARE_API.finditer(line):
+            if m.group(1) not in spec and m.group(1) not in served:
+                bad.append(f"{where}: нет в OpenAPI «{m.group(1)}»")
+        for m in FILE_REF.finditer(line):
+            ref = m.group(1)
+            if ref.startswith(("http", "/")) or "<" in ref:
+                continue
+            cands = [ROOT / ref, path.parent / ref, HERE / ref, tests / ref]
+            if "/" not in ref.rstrip("/") and ref in basenames:  # имя файла модуля: models.py, router.py …
+                continue
+            if not any(c.exists() for c in cands):
+                bad.append(f"{where}: нет файла «{ref}»")
+        for m in TEST_FN.finditer(line):
+            fn = m.group(1)
+            if fn.endswith("_py") or (ROOT / "backend/tests" / f"{fn}.py").exists():
+                continue
+            if not re.search(rf"def {fn}\b", test_src) and fn not in e2e:
+                bad.append(f"{where}: нет теста «{fn}»")
+    return bad
+
+
 def run(cmd: list[str], **kw) -> None:
     print("  $", " ".join(cmd))
     subprocess.run(cmd, check=True, **kw)
@@ -361,6 +415,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--numbers", default=str(ROOT / "docs/NUMBERS.json"))
     ap.add_argument("--text", action="store_true", help="только тексты, без PDF/DOCX/PPTX")
+    ap.add_argument("--allow-missing-refs", action="store_true",
+                    help="ссылки на ещё не слитые файлы/тесты — предупреждение, а не ошибка (только предпросмотр)")
     a = ap.parse_args()
 
     numbers = json.loads(Path(a.numbers).read_text(encoding="utf-8"))
@@ -369,10 +425,15 @@ def main() -> int:
     (OUT / "facts.json").write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"цифр из NUMBERS.json: {len(res['facts'])}; нет в NUMBERS.json: {', '.join(res['missing']) or '—'}")
     try:
-        bad = []
+        bad, refs = [], []
         for p in build_texts(res):
             print("  записано", p.relative_to(ROOT))
             bad += lint(p) + check_api(p)
+            refs += check_refs(p)
+        if refs and a.allow_missing_refs:
+            print("ПРЕДУПРЕЖДЕНИЕ: ссылки в никуда:\n  " + "\n  ".join(refs), file=sys.stderr)
+        else:
+            bad += refs
         bad += lint(HERE / "CHANGELOG.md")  # не шаблон, но тоже для жюри
         if bad:
             raise BuildError("проверка текста не пройдена (поставщики/соперники, методы API):\n  " + "\n  ".join(bad))
