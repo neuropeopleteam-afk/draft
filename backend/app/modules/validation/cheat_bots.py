@@ -9,8 +9,12 @@
   вариант с наибольшим пересечением слов с условием и кодом;
 - leak_K — у бота K утёкших вариантов КАЖДОГО семейства (реально сгенерированы из банка случайными зёрнами) с ключами:
   точное совпадение варианта → ключ; иначе — вариант, текст которого чаще всего был ключом в утёкших (эксплуатация
-  постоянства ключа); иначе — собственные знания (θ на 0,75 логита ниже порога заявленного грейда);
-- control — тот же «слабый» кандидат (θ на 0,75 ниже порога) без утечки и без хитростей.
+  постоянства ключа); иначе — собственные знания (θ на BOT_GAP логита ниже порога заявленного грейда);
+- single_form — контрфакт «единая форма на всех» (как у статичных тестов): каждое семейство выдаётся одним и тем же
+  вариантом (зерно 1), у бота — ключи этого варианта (одна утечка); показывает, что дала бы утечка без вариантов;
+- control — тот же «слабый» кандидат (θ на BOT_GAP ниже порога) без утечки и без хитростей.
+Поправка №3 (21.10): BOT_GAP = 0,5 логита (было 0,75 — как у аналогичных решений), заявки Стажёр…Senior (Стажёр
+включён), n ≥ 400 на стратегию в итоговом прогоне, сдвиг θ̂ при утечке относительно control — с 95 % ДИ.
 Развёрнутые ответы ботов в прогоне без модели не засчитываются (x = None, «на проверке») — это в пользу бота
 (у него меньше неверных ответов), т.е. оценка false_confirmed сверху. Время ответа бот подбирает «как у честного»
 (модель времени банка) — худший для нас случай: детектор предзнания по скорости не помогает.
@@ -38,7 +42,8 @@ import numpy as np
 
 from app.modules.validation.product_sim import STAND_ENV, _finished, _git_commit, _rank, settings_snapshot, wilson
 
-CLAIMS = ("junior", "middle", "senior")
+CLAIMS = ("intern", "junior", "middle", "senior")
+BOT_GAP = 0.5  # поправка №3: «слабый» — на 0,5 логита ниже порога заявленного грейда
 SEED = 3301  # зерно ботов (не пересекается с TRAIN_SEEDS/TEST_SEEDS симуляции)
 FINAL_SEED = 4501  # итоговый прогон на замороженном банке стенда (один, хэш банка — в коммите до прогона)
 NUM_RE = re.compile(r"-?\d+(?:[.,]\d+)?")
@@ -64,6 +69,8 @@ class Bots:
         self.rng = np.random.default_rng([seed, 1])
         self.leak: dict[str, list[tuple[str, str]]] = {}  # семейство → [(хэш условия, текст ключа)] на K_MAX вариантов
         self.k_max = 0
+        self.gap = BOT_GAP
+        self.single_form = False  # контрфакт «единая форма»: вариант семейства всегда по зерну 1
 
     # ---------------------------------------------------------------- утечка
     @staticmethod
@@ -93,6 +100,17 @@ class Bots:
         return None
 
     def leaked(self, fid: str, k: int) -> list[tuple[str, str]]:
+        if self.single_form:  # одна форма на всех: утёк ровно тот вариант, который выдаётся всем
+            got = self.leak.setdefault("\x00single:" + fid, [])
+            if not got:
+                try:
+                    v = self.generate(fid, 1)
+                    pub = v.public_view()
+                    key = v.answer_key.model_dump(include={"kind", "value", "accept"})
+                    got.append((_h(pub.get("stem"), pub.get("code")), self._key_text(pub, key, None) or ""))
+                except Exception:
+                    got.append(("", ""))
+            return got
         have = self.leak.setdefault(fid, [])
         r = np.random.default_rng([self.seed, 9, int(_h(fid), 16) % (2**31)])
         while len(have) < k:
@@ -118,8 +136,8 @@ class Bots:
         opts = self._option_ids(pub, step, fmt)
         lines = (pub.get("code") or "").split("\n")
         # «знает» — для leak/control: верно с вероятностью p(θ) по параметрам задания банка (истина = банк)
-        if strat in ("control",) or strat.startswith("leak_"):
-            if strat.startswith("leak_"):
+        if strat in ("control", "single_form") or strat.startswith("leak_"):
+            if strat.startswith("leak_") or strat == "single_form":
                 got = self._leak_answer(cur, step, kind, opts, lines, k)
                 if got is not None:
                     return got
@@ -201,7 +219,7 @@ class Bots:
     def session(self, strat: str, direction: str, claim: str, k: int, *, refine_from=None, refine=None,
                 seen=None, seen_seeds=None) -> tuple[dict, object]:
         e = self.e
-        theta = self.cuts[claim] - 0.75
+        theta = self.cuts[claim] - self.gap
         st = e.start(direction=direction, claimed_grade=claim, stack_tags=[], seed=int(self.rng.integers(1, 2**31 - 1)),
                      refine_from=refine_from, refine=refine, seen=seen or {}, seen_seeds=seen_seeds or {})
         guard = 0
@@ -237,8 +255,11 @@ class Bots:
     def attempt(self, strat: str, k: int = 0) -> dict:
         from app.modules.assessment import two_stage as ts_mod
 
+        from app.modules.catalog import levels
+
         d = self.directions[int(self.rng.integers(len(self.directions)))]
-        claim = CLAIMS[int(self.rng.integers(len(CLAIMS)))]
+        claims = [c for c in CLAIMS if c in levels.available_grades(d)] or list(CLAIMS[1:])
+        claim = claims[int(self.rng.integers(len(claims)))]
         st, res = self.session(strat, d, claim, k)
         er = {"confirmed": res.confirmed, "provisional": res.provisional, "theta": res.theta, "se": res.se}
         ts = SimpleNamespace(status=_finished(), claimed_grade_id=claim, direction_id=d,
@@ -250,7 +271,8 @@ class Bots:
                "oral": bool(v.get("oral_defense_required")),
                "integrity": ((res.details or {}).get("integrity") or {}).get("level"),
                "preknowledge": bool(((res.details or {}).get("preknowledge") or {}).get("flagged")),
-               "grade_main": g, "refined": False,
+               "grade_main": g, "refined": False, "theta_hat": float(res.theta),
+               "theta_wle": ((res.details or {}).get("grade_by_answers") or {}).get("theta_wle"),
                "items": sum(1 for i in st["items"] if i.get("done") and not i.get("canary"))}
         tp = ts_mod.params()
         b = ts_mod.session_boundary(ts, tp) if tp["enabled"] else None
@@ -278,7 +300,7 @@ class Bots:
                 from app.modules.validation.product_sim import ORAL_A, ORAL_K
 
                 cut = float(self.cuts[claim])
-                theta = cut - 0.75
+                theta = cut - self.gap
                 xo = (self.rng.random(ORAL_K) < 1.0 / (1.0 + np.exp(-ORAL_A * (theta - cut)))).astype(float)
                 vp = sp.verdict_params()
                 status_now = sp.sprt_status(llr_now + sp.llr3(xo, [ORAL_A] * ORAL_K, [cut] * ORAL_K, [0.0] * ORAL_K,
@@ -309,6 +331,20 @@ def _correct(key: dict, step: int, kind: str):
     return v
 
 
+def _theta_shift(table: dict) -> None:
+    """Сдвиг θ̂ относительно control (тот же «слабый» без утечки): разность средних с 95 % ДИ (Уэлч, норм. прибл.)."""
+    c = (table.get("control") or {}).get("theta_hat") or {}
+    if not c.get("sd") or (c.get("n") or 0) < 2:
+        return
+    for k, v in table.items():
+        t = v.get("theta_hat") or {}
+        if k == "control" or not t.get("sd") or (t.get("n") or 0) < 2:
+            continue
+        dlt = float(t["mean"] - c["mean"])
+        se = math.sqrt(t["sd"] ** 2 / t["n"] + c["sd"] ** 2 / c["n"])
+        v["theta_shift_vs_control"] = {"value": round(dlt, 4), "ci95": [round(dlt - 1.96 * se, 4), round(dlt + 1.96 * se, 4)]}
+
+
 def merge(files: list[str], out: str) -> int:
     """Сведение шардов по стратегиям (у каждой стратегии свой поток случайных чисел — результат от разбиения не
     зависит): таблицы объединяются, meta — первого шарда + список шардов."""
@@ -316,6 +352,7 @@ def merge(files: list[str], out: str) -> int:
     table: dict = {}
     for d in parts:
         table.update(d.get("table") or {})
+    _theta_shift(table)
     meta = dict(parts[0]["meta"])
     meta["shards"] = [{"file": Path(f).name, "strategies": sorted((d.get("table") or {}).keys()),
                        "elapsed_s": (d.get("meta") or {}).get("elapsed_s"), "git_commit": (d.get("meta") or {}).get("git_commit"),
@@ -345,6 +382,7 @@ def main(argv=None) -> int:
     ap.add_argument("--out", type=str, required=True)
     ap.add_argument("--final", action="store_true", help="итоговый прогон: FINAL_SEED и проверка хэша банка")
     ap.add_argument("--expect-bank-hash", type=str, default="")
+    ap.add_argument("--gap", type=float, default=BOT_GAP, help="«слабый»: на сколько логитов ниже порога заявки")
     a = ap.parse_args(argv)
     seed = SEED
     if a.final:
@@ -353,16 +391,24 @@ def main(argv=None) -> int:
         check_final_bank(FINAL_SEEDS, a.expect_bank_hash)
         seed = FINAL_SEED
     bots = Bots(seed)
+    bots.gap = float(a.gap)
     plan = [(s, 0) for s in a.strategies.split(",") if s] + [(f"leak_{k}", int(k)) for k in a.k.split(",") if k]
     rows, t0 = [], time.time()
     errors: list[str] = []
+    from app.modules.assessment import bank_engine as be
+
+    gen0 = be.generate
     for strat, k in plan:
         bots.use_stream(strat)
+        bots.single_form = strat == "single_form"
+        # контрфакт «единая форма»: на время этой стратегии движок выдаёт каждое семейство одним вариантом (зерно 1)
+        be.generate = (lambda fid, _seed, _g=gen0: _g(fid, 1)) if bots.single_form else gen0
         for i in range(a.n):
             try:
                 rows.append(bots.attempt(strat, k))
             except Exception as ex:
                 errors.append(f"{strat}: {type(ex).__name__}: {ex}"[:200])
+        be.generate = gen0
         print(f"{strat}: {time.time() - t0:.0f} с", file=sys.stderr, flush=True)
     by = defaultdict(list)
     for r in rows:
@@ -381,9 +427,15 @@ def main(argv=None) -> int:
                     "by_claim": {c: {"n": sum(1 for r in rs if r["claim"] == c),
                                      "false_confirmed": sum(1 for r in rs if r["claim"] == c and r["false_confirmed"])}
                                  for c in CLAIMS}}
+        th = np.array([r["theta_hat"] for r in rs], dtype=float)
+        table[s]["theta_hat"] = {"mean": round(float(th.mean()), 4), "sd": round(float(th.std(ddof=1)), 4) if n > 1 else None,
+                                 "n": n,
+                                 "ci95": [round(float(th.mean() - 1.96 * th.std(ddof=1) / math.sqrt(n)), 4),
+                                          round(float(th.mean() + 1.96 * th.std(ddof=1) / math.sqrt(n)), 4)] if n > 1 else None}
+    _theta_shift(table)
     meta = {"what": "боты-стратегии через движок продукта (реальные варианты и проверка ответа), не люди",
             "n_per_strategy": a.n, "k_values": a.k, "seed": seed, "final": a.final, "claims": CLAIMS,
-            "bot_theta": "порог заявленного грейда − 0,75 логита (для control и leak_K)",
+            "bot_theta": f"порог заявленного грейда − {a.gap} логита (для control, leak_K и single_form)",
             "text_answers": "без модели не засчитываются (в пользу бота — оценка сверху)",
             "settings": settings_snapshot(), "bank_families": bots.e.n_families, "git_commit": _git_commit(),
             "date": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
