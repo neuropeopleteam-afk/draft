@@ -438,18 +438,18 @@
   }
  },
  "final": {
-  "tree": "банк заморозки a526dc3ee (после вывода 57 семейств по форме и набора t21 — 177); отчёт docs/bank/position_attack_2110g_final.json",
-  "n_families": 1236,
+  "tree": "банк перезаморозки 948ecb79bb (вывод по форме — 55 семейств, 2 возвращены как источники тегов подбора; набор t21 — 177); отчёт docs/bank/position_attack_2110g_final.json",
+  "n_families": 1238,
   "train_seeds": 100,
   "test_seeds": 300,
   "key": "2110g",
   "by_attack": {
    "chance": 0.2076,
    "letter": {
-    "acc": 0.2072,
+    "acc": 0.2073,
     "chance": 0.2076,
-    "n_families": 1236,
-    "n_test_variants": 370799
+    "n_families": 1238,
+    "n_test_variants": 371399
    },
    "value_rank": {
     "acc": 0.2048,
@@ -458,10 +458,10 @@
     "n_test_variants": 339000
    },
    "len_rank": {
-    "acc": 0.2427,
+    "acc": 0.2432,
     "chance": 0.2076,
-    "n_families": 1236,
-    "n_test_variants": 370799
+    "n_families": 1238,
+    "n_test_variants": 371399
    },
    "letter_x_value_rank": {
     "acc": 0.2032,
@@ -470,28 +470,28 @@
     "n_test_variants": 339000
    },
    "letter_x_len_rank": {
-    "acc": 0.239,
+    "acc": 0.2395,
     "chance": 0.2076,
-    "n_families": 1236,
-    "n_test_variants": 370799
+    "n_families": 1238,
+    "n_test_variants": 371399
    },
    "text": {
-    "acc": 0.2292,
+    "acc": 0.2299,
     "chance": 0.2076,
-    "n_families": 1236,
-    "n_test_variants": 370799
+    "n_families": 1238,
+    "n_test_variants": 371399
    },
    "text_x_letter": {
-    "acc": 0.2259,
+    "acc": 0.2266,
     "chance": 0.2076,
-    "n_families": 1236,
-    "n_test_variants": 370799
+    "n_families": 1238,
+    "n_test_variants": 371399
    },
    "ctx_x_letter": {
-    "acc": 0.2079,
+    "acc": 0.208,
     "chance": 0.2076,
-    "n_families": 1236,
-    "n_test_variants": 370799
+    "n_families": 1238,
+    "n_test_variants": 371399
    },
    "ctx_x_value_rank": {
     "acc": 0.2041,
@@ -500,10 +500,10 @@
     "n_test_variants": 339000
    },
    "ctx_x_text": {
-    "acc": 0.225,
+    "acc": 0.2255,
     "chance": 0.2076,
-    "n_families": 1236,
-    "n_test_variants": 370799
+    "n_families": 1238,
+    "n_test_variants": 371399
    }
   },
   "positional": {
@@ -588,10 +588,14 @@
     "text_x_letter",
     "ctx_x_text"
    ],
-   "n_families_excess_gt_0_10": 116,
-   "n_families_excess_gt_0_25": 21,
-   "n_families_acc_ge_0_90": 0,
+   "n_families_excess_gt_0_10": 118,
+   "n_families_excess_gt_0_25": 23,
+   "n_families_acc_ge_0_90": 1,
    "top": [
+    {
+     "family_id": "backend.py.concurrency_mcq",
+     "excess": 0.75
+    },
     {
      "family_id": "backend.api.idempotency_key_fix",
      "excess": 0.487
@@ -607,6 +611,10 @@
     {
      "family_id": "common.strategy.migration_plan_mcq",
      "excess": 0.444
+    },
+    {
+     "family_id": "common.api.rest_idempotent_retry_fix",
+     "excess": 0.443
     },
     {
      "family_id": "qa.lead.retry_tradeoff_mcq",
@@ -643,14 +651,6 @@
     {
      "family_id": "mobile.perf.cold_start_mcq",
      "excess": 0.32
-    },
-    {
-     "family_id": "security.crypto.aead_mcq",
-     "excess": 0.316
-    },
-    {
-     "family_id": "qa.principal.test_budget_mcq",
-     "excess": 0.303
     }
    ]
   }
