@@ -146,7 +146,11 @@ const WAKE_ONLY_END_MS = 1800;     // сказали только «Настя»
 export function stripWake(text: string): string {
   const m = WAKE.exec(text);
   if (!m) return text.trim();
-  return text.slice(m.index + m[0].length).replace(/^[\s,.!?:;—-]+/u, "").trim();
+  const after = text.slice(m.index + m[0].length).replace(/^[\s,.!?:;—-]+/u, "").trim();
+  if (after) return after;
+  // просьба ДО имени («Открой кабинет сотрудника, Настя») — раньше терялась, Настя только замолкала (владелец 21.10 22:41)
+  const before = text.slice(0, m.index).replace(/[\s,.!?:;—-]+$/u, "").trim();
+  return words(before).length >= 2 ? before : "";
 }
 const SCROLL_STEP = 0.75;          // «ниже» — на столько высоты окна
 const START_REMIND_MS = 12000;     // знакомство: ждём ответа столько, потом короткое напоминание
@@ -931,6 +935,8 @@ export class ElenaEngine {
       // первое слово терялось («Геннадий Иванович» → «Иванович», 19:03)
       if (performance.now() - this.gateOpenedAt < GATE_TAIL_IGNORE_MS && !this.buf.read()
           && (!hers ? !this.lastSaid || isEcho(text, this.lastSaid) : isEcho(text, hers))) return;
+      // её же фраза из динамиков посреди реплики человека — не его слова (22:41: «Простите, не поняла…» попало в ход)
+      if (hers && this.buf.read() && words(text).length >= 3 && isEcho(text, hers)) return;
       if (hers && !this.buf.read()) {
         // под её речь (и сразу после): её же слова из динамиков — эхо; «угу», «ага» — поддакивание, не реплика
         if (isEcho(text, hers)) return;
