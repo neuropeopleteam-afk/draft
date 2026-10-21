@@ -136,9 +136,18 @@ def test_format_gap_and_integrity_followup_unified():
         {"canary": False, "done": True, "format": it["format"], "x": [it["score"]], "pool": {"a": [it["a"]], "b": [it["b"]]}}
         for it in items
     ]
-    v = sprt.compute_verdict(
+    # Правило А6 (21.10): один сигнал (только разрыв форм) — фактор фиксируется, но доп. этап не назначается
+    v1 = sprt.compute_verdict(
         done_for_v, {}, "middle", theta=0.65, se=0.30, confirmed=True, assigned_grade="middle",
         suspicious={"integrity": integ},
+    )
+    assert "form_gap" in (v1.integrity_followup or {}).get("triggered_factors", [])
+    assert v1.oral_defense_required is False
+    # Разрыв форм + второй независимый сигнал (вставка из буфера) → доп. этап / устная защита, без бана
+    integ2 = {**integ, "signals": {**integ["signals"], "paste_items": 2, "not_typed_items": 1}}
+    v = sprt.compute_verdict(
+        done_for_v, {}, "middle", theta=0.65, se=0.30, confirmed=True, assigned_grade="middle",
+        suspicious={"integrity": integ2},
     )
     assert v.status == "needs_followup"
     assert v.oral_defense_required is True

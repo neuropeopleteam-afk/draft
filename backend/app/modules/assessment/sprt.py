@@ -504,22 +504,14 @@ def compute_verdict(
             if part_r and part_r not in susp_reasons and "Замечаний к самостоятельности" not in part_r:
                 susp_reasons.append(part_r)
     if isinstance(suspicious, dict):
-        if suspicious.get("flagged") or suspicious.get("suspicious") or suspicious.get("level") in ("low",) or suspicious.get("format_gap_flag"):
+        # Решение «доп. этап» — только правило А6 (2+ сигнала или ловушка → доп. этап, без бана): одиночный
+        # level == "low", preknowledge_flagged или lz < −2 сами по себе попытку не помечают (решение 21.10).
+        # Явный флаг вызывающего (flagged/suspicious) — это уже итог правила, его уважаем.
+        if suspicious.get("flagged") is True or suspicious.get("suspicious") is True:
             susp_flagged = True
             ifrel["needs_followup_stage"] = True
             if not ifrel.get("followup_kind"):
                 ifrel["followup_kind"] = "oral_defense"
-        if suspicious.get("preknowledge_flagged"):
-            susp_flagged = True
-            ifrel["needs_followup_stage"] = True
-            if "Признаки использования подсказок" not in susp_reasons:
-                susp_reasons.append("Признаки использования подсказок")
-        lz_val = suspicious.get("lz")
-        if isinstance(lz_val, (int, float)) and float(lz_val) < -2.0:
-            susp_flagged = True
-            ifrel["needs_followup_stage"] = True
-            if "Признаки использования подсказок" not in susp_reasons:
-                susp_reasons.append("Признаки использования подсказок")
         if susp_flagged and not susp_reasons:
             susp_reasons.append("Признаки использования подсказок")
     elif bool(suspicious):

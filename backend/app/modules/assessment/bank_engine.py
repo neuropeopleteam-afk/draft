@@ -477,8 +477,8 @@ class BankEngine:
             followup_minutes=int(_tp["minutes"]),
             incident_stage=state.get("incident_stage"),
             suspicious=state.get("suspicious") if state.get("suspicious") is not None else {
+                # решение «доп. этап» — только правило А6 (2+ сигнала / ловушка) внутри compute_verdict
                 "integrity": integ,
-                "flagged": integ.get("level") == "low" or det.flagged or bool((integ.get("signals") or {}).get("format_gap_flag")),
                 "level": integ.get("level"),
                 "preknowledge_flagged": det.flagged,
                 "format_gap_flag": bool((integ.get("signals") or {}).get("format_gap_flag")),
