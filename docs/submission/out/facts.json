@@ -76,6 +76,102 @@
   "fsp_documents",
   "load_p95"
  ],
+ "pairs": {
+  "pairs": [
+   {
+    "id": "confident_accuracy",
+    "label": "Точность уверенного ответа",
+    "hint": "",
+    "standard": null,
+    "hard": null
+   },
+   {
+    "id": "exact_grade",
+    "label": "Точный грейд",
+    "hint": "среди тех, кому продукт определяет грейд",
+    "standard": null,
+    "hard": null
+   },
+   {
+    "id": "exact_grade_all",
+    "label": "Точный грейд — по всем кандидатам",
+    "hint": "",
+    "standard": null,
+    "hard": null
+   },
+   {
+    "id": "within_one",
+    "label": "Грейд с точностью ±1 ступень",
+    "hint": "",
+    "standard": null,
+    "hard": null
+   },
+   {
+    "id": "retest_kappa_w",
+    "label": "Повтор на других заданиях (взвешенная каппа)",
+    "hint": "",
+    "standard": null,
+    "hard": null
+   },
+   {
+    "id": "false_confirm_all",
+    "label": "Ложное подтверждение грейда (от всех)",
+    "hint": "",
+    "standard": null,
+    "hard": null
+   },
+   {
+    "id": "overclaim_passed",
+    "label": "Завышенная заявка прошла",
+    "hint": "",
+    "standard": null,
+    "hard": null
+   },
+   {
+    "id": "p5",
+    "label": "Подбор: P@5",
+    "hint": "",
+    "standard": null,
+    "hard": null
+   },
+   {
+    "id": "ndcg10",
+    "label": "Подбор: nDCG@10",
+    "hint": "",
+    "standard": null,
+    "hard": null
+   },
+   {
+    "id": "mrr",
+    "label": "Подбор: MRR",
+    "hint": "",
+    "standard": null,
+    "hard": null
+   }
+  ],
+  "real": [
+   {
+    "id": "hh",
+    "label": "Вакансии hh.ru: направление определено верно",
+    "value": null
+   },
+   {
+    "id": "external",
+    "label": "Внешний открытый набор вакансий",
+    "value": null
+   },
+   {
+    "id": "fsp",
+    "label": "Официальных протоколов ФСП в индексе",
+    "value": null
+   },
+   {
+    "id": "fsp_results",
+    "label": "Результатов спортсменов в индексе",
+    "value": null
+   }
+  ]
+ },
  "repo": {
   "grade_change_interval_days": 90,
   "retake_same_grade_days": 30,
