@@ -1,58 +1,70 @@
 {
- "generated_at": "2026-10-20T18:14:07Z",
- "anticheat": {
-  "known_patterns": {
-   "caught": 1160,
-   "total": 1160,
-   "distinct_texts": 320,
-   "rate": 1.0
-  },
-  "dev_benchmark": {
-   "caught": 290,
-   "total": 320,
-   "rate": 0.9062,
-   "false_positives": 2,
-   "false_positive_rate": 0.0063,
-   "honest_n": 320,
-   "dataset_sha256": "57f9bb306c1f4f8e1fbb8bc77b24824ee0f7871b6c8e025bab95e9e5e2743322",
-   "author_models": [
-    "openai/gpt-6.1-sol",
-    "anthropic/claude-haiku-5.5",
-    "anthropic/claude-sonnet-5.5"
-   ]
-  },
-  "holdout_offline": {
-   "caught": 137,
-   "total": 176,
-   "rate": 0.7784,
-   "false_positives": 2,
-   "false_positive_rate": 0.0114,
-   "honest_n": 176,
-   "panel_false_positives": 0,
-   "panel_honest_n": 261,
-   "dataset_sha256": "71c375aebb94ea5c756666c52be4f00026e49a4bf0fd5f7092b1ac3f5a9072ee",
-   "author_models": [
-    "deepseek/deepseek-v4-flash",
-    "x-ai/grok-4.7",
-    "moonshotai/kimi-k2.5"
-   ],
-   "frozen_after_filter_commit": "6b7c710c",
-   "single_pass": true
-  },
-  "llm_chain": {
-   "pierced": 0,
-   "total": 176,
-   "pierce_rate": 0.0,
-   "defend_rate": 1.0,
-   "model": "anthropic/claude-sonnet-5.5 + anthropic/claude-fable-5.1",
-   "cost_usd": 1.1418,
-   "date": "2026-10-20"
-  },
-  "proctoring_contours": 5,
-  "proctoring_signals_total": 21,
-  "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
-  "recompute_llm": "python3 tools/grader_check/run_holdout_eval.py --llm --max-cost-usd 3.0",
-  "code_ref": "backend/app/modules/assessment/grader.py",
-  "claim_ru": "На слепом отложенном наборе из 176 атак в 16 семействах, составленном независимыми моделями (DeepSeek V4 Flash, xAI Grok 4.7, Moonshot Kimi K2.5; SHA-256 71c375aebb94…) после фиксации кода фильтра и проверенном одним прогоном без донастройки, детерминированный фильтр перехватывает 137 из 176 (77.8 %) атак до вызова LLM при 2 из 176 (1.14 %) ложных срабатываний на новых честных ответах (0 из 261 на ответах панели); пробитие полной цепочки (фильтр + изоляция маркерами + проверка дословных цитат + вторая оценка Claude Sonnet 5.5 / Fable 5.1) составило 0 из 176 (0.00 %, устойчивость цепочки 100.00 %). На наборе разработки (Claude + GPT, 320 атак) перехват фильтра — 290 из 320 (90.6 %), на известных шаблонах панели — 1160 из 1160 (100 %)."
- }
+  "generated_at": "2026-10-20T18:14:07Z",
+  "anticheat": {
+    "known_patterns": {
+      "caught": 1160,
+      "total": 1160,
+      "distinct_texts": 320,
+      "rate": 1.0
+    },
+    "dev_benchmark": {
+      "caught": 290,
+      "total": 320,
+      "rate": 0.9062,
+      "false_positives": 2,
+      "false_positive_rate": 0.0063,
+      "honest_n": 320,
+      "dataset_sha256": "57f9bb306c1f4f8e1fbb8bc77b24824ee0f7871b6c8e025bab95e9e5e2743322",
+      "author_models": [
+        "openai/gpt-6.1-sol",
+        "anthropic/claude-haiku-5.5",
+        "anthropic/claude-sonnet-5.5"
+      ]
+    },
+    "holdout_offline": {
+      "caught": 137,
+      "total": 176,
+      "rate": 0.7784,
+      "false_positives": 2,
+      "false_positive_rate": 0.0114,
+      "honest_n": 176,
+      "panel_false_positives": 0,
+      "panel_honest_n": 261,
+      "dataset_sha256": "71c375aebb94ea5c756666c52be4f00026e49a4bf0fd5f7092b1ac3f5a9072ee",
+      "author_models": [
+        "deepseek/deepseek-v4-flash",
+        "x-ai/grok-4.7",
+        "moonshotai/kimi-k2.5"
+      ],
+      "frozen_after_filter_commit": "6b7c710c",
+      "single_pass": true
+    },
+    "llm_chain": {
+      "pierced": 0,
+      "total": 176,
+      "pierce_rate": 0.0,
+      "defend_rate": 1.0,
+      "model": "anthropic/claude-sonnet-5.5 + anthropic/claude-fable-5.1",
+      "cost_usd": 1.1418,
+      "date": "2026-10-20"
+    },
+    "proctoring_contours": 5,
+    "proctoring_signals_total": 21,
+    "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+    "recompute_llm": "python3 tools/grader_check/run_holdout_eval.py --llm --max-cost-usd 3.0",
+    "code_ref": "backend/app/modules/assessment/grader.py",
+    "claim_ru": "На слепом отложенном наборе из 176 атак в 16 семействах, составленном независимыми моделями (DeepSeek V4 Flash, xAI Grok 4.7, Moonshot Kimi K2.5; SHA-256 71c375aebb94…) после фиксации кода фильтра и проверенном одним прогоном без донастройки, детерминированный фильтр перехватывает 137 из 176 (77.8 %) атак до вызова LLM при 2 из 176 (1.14 %) ложных срабатываний на новых честных ответах (0 из 261 на ответах панели); пробитие полной цепочки (фильтр + изоляция маркерами + проверка дословных цитат + вторая оценка Claude Sonnet 5.5 / Fable 5.1) составило 0 из 176 (0.00 %, устойчивость цепочки 100.00 %). На наборе разработки (Claude + GPT, 320 атак) перехват фильтра — 290 из 320 (90.6 %), на известных шаблонах панели — 1160 из 1160 (100 %).",
+    "behavioral_followup": {
+      "rule": "2_or_more_signals_or_direct_evidence",
+      "auto_ban": false,
+      "honest_simulated_total": 1000,
+      "honest_single_time_noise_cases": 96,
+      "honest_false_followup": 0,
+      "honest_false_followup_rate": 0.0,
+      "bot_simulated_total": 500,
+      "bot_flagged_followup": 500,
+      "bot_detection_rate": 1.0,
+      "seed": 20261021
+    }
+  }
 }
