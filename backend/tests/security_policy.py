@@ -527,7 +527,9 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate_own",
     ("POST", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate",
     ("POST", "/api/interview/quick-defense"): "candidate",
-    ("POST", "/api/interview/concierge/avatar-token"): "open",
+    # доступ открыт всем; в тестах ключа видеопотока нет → 503 avatar_unavailable (браузер переходит на голос),
+    # как у advisor/avatar-token выше
+    ("POST", "/api/interview/concierge/avatar-token"): ("open", {r: 503 for r in ROLES}),
     ("POST", "/api/interview/concierge/speech"): "open",
     ("POST", "/api/interview/concierge/transcribe"): "open",
     ("POST", "/api/interview/concierge/chat"): "open",
