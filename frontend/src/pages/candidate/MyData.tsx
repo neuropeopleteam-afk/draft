@@ -151,7 +151,7 @@ export default function MyData() {
       </Block>
 
       <p className="text-xs text-brand-ink/65" data-testid="mydata-storage">Где и как обрабатываются данные: {d.operator.storage}.</p>
-      <p className="text-xs text-brand-ink/65">Оператор: {d.operator.name} · обращения по данным: {d.operator.email} · редакция согласия {d.consent_version}. Подробнее: <Link className="font-semibold text-brand hover:underline" to="/candidate/settings">Настройки и приватность</Link>.</p>
+      <p className="text-xs text-brand-ink/65">Оператор платформы — команда Neuropeople (конкурсный прототип) · контакт — <Link className="font-semibold text-brand hover:underline" to="/support">форма обратной связи</Link> · редакция согласия {d.consent_version}. Подробнее: <Link className="font-semibold text-brand hover:underline" to="/candidate/settings">Настройки и приватность</Link>.</p>
       <DeleteModal open={del} onClose={() => setDel(false)} conf={d.delete} />
     </div>
   );

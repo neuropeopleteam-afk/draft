@@ -31,7 +31,7 @@ export function ConsentBody({ t, compact = false }: { t: ConsentText; compact?: 
       <p><b className="text-brand-night">Как влияет на результат.</b> {t.effect}</p>
       <p><b className="text-brand-night">Срок хранения.</b> {t.how_long}</p>
       <p><b className="text-brand-night">Отзыв согласия.</b> {t.revoke}</p>
-      <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия от {verDateEnd(t.version)}.</p>
+      <p className="text-xs text-brand-ink/65">Оператор платформы — команда Neuropeople (конкурсный прототип). Редакция согласия от {verDateEnd(t.version)}.</p>
     </div>
   );
 }
@@ -45,7 +45,7 @@ function ConsentBrief({ t }: { t: ConsentText }) {
       {line("Что сохраняется", t.stored[0])}
       {line("Кто это видит", t.who_sees[1] ?? t.who_sees[0])}
       {line("Как влияет на результат", t.effect.split(" Без камеры")[0])}
-      <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия от {verDateEnd(t.version)}.</p>
+      <p className="text-xs text-brand-ink/65">Оператор платформы — команда Neuropeople (конкурсный прототип). Редакция согласия от {verDateEnd(t.version)}.</p>
     </div>
   );
 }

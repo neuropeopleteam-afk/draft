@@ -84,8 +84,7 @@ export default function Support() {
     }
   }
 
-  const rawSupportEmail = meta?.support_email;
-  const supportEmail = rawSupportEmail && !rawSupportEmail.includes(".shop") ? rawSupportEmail : "support@fsp-draft.ru";
+  const _ = meta;
 
   return (
     <div className="min-h-screen bg-[#F4F6FC]">
@@ -107,9 +106,6 @@ export default function Support() {
                 ← В личный кабинет
               </Link>
             )}
-            <a href={`mailto:${supportEmail}`} className="btn-ghost">
-              {supportEmail}
-            </a>
           </div>
         </header>
 
@@ -118,7 +114,7 @@ export default function Support() {
             <div>
               <h2 id="sup-form-h" className="text-xl font-bold text-brand-night">Написать в поддержку</h2>
               <p className="mt-1 text-xs text-brand-ink/65">
-                Обращение сохраняется в системе и направляется дежурному специалисту ({supportEmail}).
+                Обращение сохраняется в системе и направляется дежурному специалисту через форму обратной связи.
               </p>
             </div>
             {statusMsg && <Alert kind={statusMsg.k}>{statusMsg.t}</Alert>}
@@ -204,11 +200,11 @@ export default function Support() {
 
           <aside className="space-y-4">
             <section className="card space-y-3" aria-labelledby="sup-contacts-h">
-              <h2 id="sup-contacts-h" className="text-lg font-bold text-brand-night">Прямые контакты</h2>
+              <h2 id="sup-contacts-h" className="text-lg font-bold text-brand-night">Каналы обратной связи</h2>
               <dl className="space-y-2 text-sm">
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wider text-brand-lavender">Поддержка пользователей и B2B</dt>
-                  <dd className="font-semibold text-brand-night"><a href={`mailto:${supportEmail}`} className="text-brand hover:underline">{supportEmail}</a></dd>
+                  <dd className="font-semibold text-brand-night">Форма обратной связи на этой странице</dd>
                 </div>
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wider text-brand-lavender">Вопросы по персональным данным (152-ФЗ)</dt>
