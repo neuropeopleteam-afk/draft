@@ -107,6 +107,25 @@ export interface CheatBots {
   code_ref: string;
 }
 
+/** Пятёрка итогового прогона (поправка №3): S-T — заголовок, жёсткие условия — рядом, всегда вместе. */
+export interface Top5Item {
+  id: "confident_accuracy" | "false_confirm_all" | "exact_grade" | "within_one" | "retest_kappa_w" | string;
+  label_ru: string;
+  value: number;
+  display_ru: string;
+  ci95?: [number, number] | null;
+  k?: number | null;
+  n?: number | null;
+  condition_ru: string;
+  minutes?: { mean?: number; p90?: number } | null;
+  recompute?: string | null;
+  with?: Record<string, Frac | { value: number; ci95?: [number, number] | null; n?: number }>;
+}
+
+export function getTop5(): { st: Top5Item[]; hard: Top5Item[]; meta: any } {
+  return { st: (ANY.top5 ?? []) as Top5Item[], hard: (ANY.top5_hard ?? []) as Top5Item[], meta: ANY.top5_meta ?? null };
+}
+
 export function getGradeVerdict(): GradeVerdict | null {
   return (ANY.grade_verdict ?? null) as GradeVerdict | null;
 }

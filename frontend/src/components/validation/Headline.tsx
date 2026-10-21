@@ -1,7 +1,8 @@
+import { Fragment } from "react";
 import { NB, num, pct } from "../ui";
 import { ProvenanceLine } from "./Provenance";
 import { ScrollX } from "../A11y";
-import { fmtNum, getGradeVerdict, type Frac } from "../../lib/numbers";
+import { fmtNum, getGradeVerdict, getTop5, type Frac, type Top5Item } from "../../lib/numbers";
 
 /** Первый экран /validation: точность решения по грейду — симуляция продукта (docs/NUMBERS.json → grade_verdict).
  *  Каждое число — из расчёта с подписью мира; нет расчёта — нет числа. */
@@ -39,6 +40,95 @@ function Big({ label, f, sub, testid }: { label: string; f?: Frac | null; sub: s
   );
 }
 
+const WITH_RU: Record<string, string> = {
+  confident_share: "доля уверенных вердиктов",
+  among_overclaim: "среди завысивших заявку",
+  grades_5: "по 5 ступеням (Lead и Principal вместе)",
+  grades_4: "по 4 ступеням (ещё Стажёр и Junior вместе)",
+  not_underclaim: "без занизивших заявку",
+  main_part: "только основная часть",
+  above_true: "выше истинного",
+  gross_error_2plus: "ошибка на 2+ ступени",
+  exact_agreement: "тот же грейд при повторе",
+  decision_agreement: "то же решение при повторе",
+};
+const WITH_SHOW = ["confident_share", "among_overclaim", "grades_5", "grades_4", "not_underclaim", "main_part", "gross_error_2plus", "exact_agreement", "decision_agreement"];
+
+function cell(it?: Top5Item) {
+  if (!it) return "—";
+  if (it.id === "retest_kappa_w") return fmtNum(it.value, 2);
+  return `${pc(it.value)} %`;
+}
+
+function ciTxt(c?: [number, number] | null, kappa = false) {
+  if (!c) return "";
+  return kappa ? `ДИ ${fmtNum(c[0], 2)}–${fmtNum(c[1], 2)}` : `ДИ ${pc(c[0])}–${pc(c[1])}`;
+}
+
+/** Итоговый прогон (один, на отложенных зёрнах): стандартные и жёсткие условия рядом — только из NUMBERS.json → top5. */
+function FinalRun() {
+  const { st, hard, meta } = getTop5();
+  if (!st.length && !hard.length) return null;
+  const ids = (st.length ? st : hard).map((x) => x.id);
+  const by = (arr: Top5Item[], id: string) => arr.find((x) => x.id === id);
+  const mins = (arr: Top5Item[]) => arr[0]?.minutes;
+  return (
+    <div className="mt-4" data-testid="v-hl-final">
+      <h3 className="text-base font-bold text-brand-night">Итоговый прогон: одни настройки, два набора условий</h3>
+      <p className="mt-1 text-sm text-brand-ink/70">
+        Настройки выбраны на обучающих зёрнах, цифры — один прогон на отложенных. «Стандартные условия» — такие же
+        допущения, как в аналогичных решениях; «жёсткие» — угадывание, завышенные заявки, кандидаты у порогов и
+        осторожные параметры заданий. Модельные кандидаты, не люди.
+      </p>
+      <ScrollX>
+        <table className="mt-2 w-full min-w-[560px] text-sm" data-testid="v-hl-final-table">
+          <thead>
+            <tr className="text-left text-xs text-brand-ink/70">
+              <th className="py-1 pr-3">Метрика</th>
+              <th className="pr-3">Стандартные условия</th>
+              <th>Жёсткие условия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ids.map((id) => {
+              const a = by(st, id), b = by(hard, id);
+              const label = (a ?? b)?.label_ru ?? id;
+              const extra = WITH_SHOW.filter((k) => (a?.with?.[k] ?? b?.with?.[k]) != null);
+              return (
+                <Fragment key={id}>
+                  <tr className="border-t border-black/5" data-testid={`v-hl-final-${id}`}>
+                    <td className="py-1.5 pr-3 font-semibold text-brand-night">{label}</td>
+                    <td className="pr-3"><b className="text-brand-night">{cell(a)}</b> <span className="text-[11px] text-brand-ink/65">{ciTxt(a?.ci95, id === "retest_kappa_w")}{a?.n ? ` · N = ${nint(a.n)}` : ""}</span></td>
+                    <td><b className="text-brand-night">{cell(b)}</b> <span className="text-[11px] text-brand-ink/65">{ciTxt(b?.ci95, id === "retest_kappa_w")}{b?.n ? ` · N = ${nint(b.n)}` : ""}</span></td>
+                  </tr>
+                  {extra.map((k) => (
+                    <tr key={`${id}-${k}`} className="text-xs text-brand-ink/75">
+                      <td className="py-0.5 pl-3 pr-3">… {WITH_RU[k] ?? k}</td>
+                      <td className="pr-3">{a?.with?.[k] ? `${pc((a.with[k] as Frac).value)} %` : "—"}</td>
+                      <td>{b?.with?.[k] ? `${pc((b.with[k] as Frac).value)} %` : "—"}</td>
+                    </tr>
+                  ))}
+                </Fragment>
+              );
+            })}
+            <tr className="border-t border-black/5 text-xs text-brand-ink/75" data-testid="v-hl-final-minutes">
+              <td className="py-1.5 pr-3 font-semibold text-brand-night">Время всего пути, мин: среднее (у 90 % — до)</td>
+              <td className="pr-3">{mins(st) ? `${fmtNum(mins(st)?.mean, 0)} (${fmtNum(mins(st)?.p90, 0)})` : "—"}</td>
+              <td>{mins(hard) ? `${fmtNum(mins(hard)?.mean, 0)} (${fmtNum(mins(hard)?.p90, 0)})` : "—"}</td>
+            </tr>
+          </tbody>
+        </table>
+      </ScrollX>
+      <details className="mt-2 text-xs text-brand-ink/70">
+        <summary className="cursor-pointer font-semibold text-brand-night">Условия и пересчёт</summary>
+        {meta?.st && <p className="mt-1 [overflow-wrap:anywhere]"><b>Стандартные:</b> {meta.st.condition_ru}. Пересчёт: <code className="break-all">{meta.st.command}</code></p>}
+        {meta?.hard && <p className="mt-1 [overflow-wrap:anywhere]"><b>Жёсткие:</b> {meta.hard.condition_ru}. Пересчёт: <code className="break-all">{meta.hard.command}</code></p>}
+        {meta?.rule_ru && <p className="mt-1">{meta.rule_ru}</p>}
+      </details>
+    </div>
+  );
+}
+
 /** Главный блок /validation: точность решения по заявленному грейду — симуляция ПРОДУКТА (А4, 21.10).
  * Только docs/NUMBERS.json → grade_verdict (артефакт product_sim_test_*.json), никаких чисел в коде. */
 export default function Headline() {
@@ -66,6 +156,7 @@ export default function Headline() {
         истинный уровень, треть завышает заявку на ступень. Настройки подбирались на одних зёрнах, цифры — на других,
         отложенных. Людей в этом расчёте нет: пилот с людьми ещё впереди.
       </p>
+      <FinalRun />
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Big testid="v-hl-verdict" label="Верный вердикт по заявке" f={m.verdict_accuracy}
           sub="итог «подтверждён / не подтверждён» совпал с истиной (после второго этапа, если он нужен)" />
