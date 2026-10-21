@@ -78,7 +78,7 @@ def _normalize_skill_list(raw_skills: Any) -> list[dict[str, Any]]:
             tag = item.strip().lower()
             if not known_tag(tag) and tag not in st:
                 found = find_stack(item)
-                tag = found[0] if found else ""
+                tag = min(found, key=found.get) if found else ""  # find_stack → {тег: позиция}: первый упомянутый
             if tag and tag not in seen:
                 seen.add(tag)
                 out.append({"tag": tag, "correct": 4, "total": 5, "score": 0.8})
@@ -86,7 +86,7 @@ def _normalize_skill_list(raw_skills: Any) -> list[dict[str, Any]]:
             tag = str(item.get("tag") or item.get("skill") or "").strip().lower()
             if not known_tag(tag) and tag not in st:
                 found = find_stack(tag)
-                tag = found[0] if found else ""
+                tag = min(found, key=found.get) if found else ""  # find_stack → {тег: позиция}: первый упомянутый
             if not tag or tag in seen:
                 continue
             seen.add(tag)
