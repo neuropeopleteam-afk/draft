@@ -117,7 +117,6 @@ export function AndroidBetaButton() {
 }
 
 export function InstallDialog({ onClose }: { onClose: () => void }) {
-  const [showBeta, setShowBeta] = useState(false);
   const [, force] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -130,7 +129,7 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
     return () => document.removeEventListener("keydown", esc);
   }, [onClose]);
   const p = platform();
-  if (p === "android" || showBeta) {
+  if (p === "android") {
     return <AndroidBetaDialog onClose={onClose} />;
   }
   const installed = isStandalone();
