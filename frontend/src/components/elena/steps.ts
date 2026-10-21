@@ -298,6 +298,24 @@ export const STEPS: Record<string, TourStep> = {
       { target: "[data-testid='wr-tab-cheat'], main h1", click: "[data-testid='wr-tab-cheat']", clickAt: 0.25 },
     ],
   },
+  // Полигон целиком — когда его просят показать (не по порядку обзора) или «подробнее / полностью»: Настя сама
+  // запускает инцидент и атаку (замечание владельца 21.10 17:33: «покажи Полигон» — три фразы и ушла дальше).
+  // В обзор не входит; реплики — FULL_BEATS["warroom-full"] на сервере.
+  "warroom-full": {
+    id: "warroom-full", cabinet: "public", persona: null, path: "/warroom",
+    selector: "main h1",
+    beats: [
+      { target: H1 },
+      { target: "[data-testid='wr-quickstart'], [data-testid='wr-tab-arch'], main h1", click: "[data-testid='wr-tab-arch']", clickAt: 0.05 },
+      { target: "[data-testid='wr-quick-run'], [data-testid='wr-quickstart'], main h1", click: "[data-testid='wr-quick-run']", clickAt: 0.45 },
+      { target: "[data-testid='wr-metrics'], main h1" },
+      { target: "[data-testid='wr-verdict'], [data-testid='wr-metrics'], main h1" },
+      { target: "[data-testid='wr-anticheat-steps'], [data-testid='wr-tab-cheat'], main h1", click: "[data-testid='wr-tab-cheat']", clickAt: 0.15 },
+      { target: "[data-testid='wr-anticheat-main-btn'], [data-testid='wr-anticheat-steps'], main h1", click: "[data-testid='wr-anticheat-main-btn']", clickAt: 0.4 },
+      { target: "[data-testid='wr-grader-layers'], [data-testid='wr-radar'], main h1" },
+      { target: "[data-testid='wr-anticheat-steps'], main h1" },
+    ],
+  },
   "val-arena": {
     id: "val-arena", cabinet: "public", persona: null, path: "/validation",
     selector: "[data-testid='validation-headline'], main h1",
