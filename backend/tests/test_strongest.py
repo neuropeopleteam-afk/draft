@@ -33,7 +33,7 @@ def test_pipe_alternative_takes_over_on_failure(monkeypatch, net):
     net.on("or.test", SONNET, lambda req, body: reply(json.dumps({"stack_required": [
         {"tag": "grpc", "weight": 0.7, "quote": "межсервисное взаимодействие"}]}), body["model"]))
     r = parse_need(NEED_TEXT)
-    assert r["llm"]["used"] and r["llm"]["model"] == SONNET
+    assert r["llm"]["used"] and "model" not in r["llm"]  # провайдер и id модели в ответе API не отдаются (обход А19 №10) — кто ответил, видно по сети
     assert [c["model"] for c in net.calls] == [GLM, SONNET]
 
 

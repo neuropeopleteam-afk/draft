@@ -37,12 +37,19 @@ class CheckPublicTree(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
     def test_internal_markers_found(self) -> None:
-        d = make_repo({"x.md": "см. /home/user/workspace/x\n", "y.md": "отчёт reports_0910/a.md\n", "z.md": "решение штаба\n"})
+        d = make_repo({"x.md": "см. /home/user/workspace/x\n", "y.md": "отчёт reports_0910/a.md\n", "z.md": '{"fio_hash": "' + "a" * 64 + '"}\n'})
         r = run(str(HERE / "check_public_tree.py"), "--repo", str(d))
         self.assertEqual(r.returncode, 1)
         self.assertIn("x.md:1", r.stdout)
         self.assertIn("y.md:1", r.stdout)
         self.assertIn("z.md:1", r.stdout)
+
+    def test_ids_section_numbers_and_word_shtab_are_not_violations(self) -> None:
+        # 21.10: «штаб» — не секрет; security.secrets.* — id семейства банка; «п. 5.5.1.1» — номер пункта, не адрес
+        d = make_repo({"a.md": "решение штаба 21.10\n", "b.py": 'FAMILY_ID = "security.secrets.t21_key_bits"\n',
+                       "c.json": '{"source_page": "п. 5.5.1.1–5.5.1.2"}\n'})
+        r = run(str(HERE / "check_public_tree.py"), "--repo", str(d))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
     def test_value_from_file_found_without_printing_it(self) -> None:
         secret = "Zq9-test-value-123456"
