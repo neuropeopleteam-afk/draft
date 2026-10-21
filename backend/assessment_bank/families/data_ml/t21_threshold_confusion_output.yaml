@@ -1,0 +1,32 @@
+family_id: data_ml.eval.t21_threshold_confusion_output
+title: Матрица ошибок при пороге — скоры на пороге и цепочки сравнений с bool
+direction: data_ml
+skills:
+- python
+- ml
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 10
+  - 10
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.85
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо проследить 8–10
+    скоров с 2–3 значениями, равными порогу (сравнение > или >= по варианту), и посчитать TP/FP/FN/TN, записанные
+    суммами сравнений bool с int: цепочка p == y == 1 означает p == y and y == 1, а не (p == y) == 1; затем полнота
+    целочисленным делением. Уровень Senior: точная семантика цепочек сравнений и bool как int вместе с метрикой на
+    границе порога. Набор t21 (21.10) у порога Senior (b = 0,85)'
+generator: assessment_bank.families.data_ml.t21_threshold_confusion_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Классификатор переводит вероятности в метки по
+  порогу (есть скоры, равные порогу), программа считает TP, FP, FN, TN цепочками сравнений и полноту в процентах;
+  предсказать вывод. Ключ — независимая модель в генераторе, проверка — исполнение показанного кода в песочнице
+  Python.'
