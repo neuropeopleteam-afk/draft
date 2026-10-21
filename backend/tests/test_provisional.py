@@ -284,6 +284,11 @@ def test_api_confirm_mode_with_bank(client, monkeypatch):
 
     monkeypatch.setattr(be, "grade_open", lambda **k: GradeOutcome(
         status="scored", score=0.9 if len(k["answer"]) > 40 else 0.0, method="llm", model="test"))
+    # «Junior (предварительно)» и дотестирование — механика прежнего правила (posterior): по правилу SPRT
+    # (поправка №2) её роль играет второй этап у спорного порога, и статуса «предварительно» не бывает — поэтому
+    # тест закреплён за прежним правилом, как три теста дотестирования в test_two_stage (6dd4fb70d)
+    from app.core.config import get_settings
+    monkeypatch.setattr(get_settings(), "assessment_verdict_rule", "posterior")
     t = register_and_verify(client, email="bankjun@example.com")
     client.put("/api/me/onboarding", json={**ONBOARDING, "experience_years": 1}, headers=H(t))
     # первый тест — без дотестирования: сразу ли «предварительно», зависит от ответов; подбираем сид

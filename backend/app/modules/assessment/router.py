@@ -249,8 +249,8 @@ def create_appeal(session_id: uuid.UUID, body: AppealIn | None = None, user: Use
                   db: Session = Depends(get_db)) -> dict:
     ts = service.get_own_session(db, user.id, session_id, lock=True)
     if body is None or not body.item_id.strip() or len(body.reason.strip()) < 3:
-        from app.core.errors import AppError
-        raise AppError(422, "invalid_appeal", "Укажите токен задания и причину апелляции (от 3 символов)")
+        from app.core.errors import api_error
+        raise api_error(422, "invalid_appeal", "Укажите токен задания и причину апелляции (от 3 символов)")
     return service.submit_item_appeal(
         db, ts, item_id=body.item_id.strip(), reason=body.reason.strip(), actor=user.email,
     )

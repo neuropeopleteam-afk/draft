@@ -140,7 +140,8 @@ def test_express_engine_short_no_canaries_no_extension(bank):
     res = bank.finish(st)
     d = res.details
     assert d["mode"] == "express" and 5 <= d["n_scored"] <= 7 and d["n_canaries"] == 0 and d["extension"] is None
-    assert "Экспресс-тест" in res.explanation and "интервал θ шире" in res.explanation
+    # без θ в тексте кандидату (правило владельца: без θ/IRT в основном интерфейсе) — «интервал оценки шире»
+    assert "Экспресс-тест" in res.explanation and "интервал оценки шире" in res.explanation
     # полный режим не изменился
     full = bank.start(direction="backend", claimed_grade="middle", stack_tags=[], seed=99)
     assert full["mode"] == "full" and "canary_positions" not in full["cfg"] or full["cfg"].get("canary_positions") != []

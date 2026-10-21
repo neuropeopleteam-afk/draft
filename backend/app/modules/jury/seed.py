@@ -61,9 +61,10 @@ PERSONAS = [
      "description": "Мария Королёва · Backend · Middle и Frontend · Junior. Два отдельных теста, достижения ФСП (T2)."},
     {"id": "candidate_nofsp", "role": "candidate", "title": "Кандидат без ФСП",
      "description": "Илья Сергеев · Backend · Middle. Истории ФСП нет — без штрафа. Ждёт входящее приглашение."},
-    {"id": "candidate_junior", "role": "candidate", "title": "Кандидат «Junior (предварительно)»",
-     "description": "Артём Лебедев · Backend · Junior (предварительно). Тест у порога Junior: грейд не подтверждён, но и "
-                    "не доказанно ниже — вероятность уровня, короткое дотестирование у порога, статус у работодателя."},
+    {"id": "candidate_junior", "role": "candidate", "title": "Junior — нужен доп. этап",
+     "description": "Артём Лебедев · Backend · заявлен Junior. Тест у порога Junior: надёжного решения по грейду пока нет — "
+                    "предложен второй этап (короткий блок заданий у этого порога), категория не присваивается до "
+                    "решения; у работодателя — «нужен доп. этап»."},
     {"id": "candidate_new", "role": "candidate", "title": "Пройдите тест сами",
      "description": "Антон Лебедев · Backend · категории нет. Опрос и резюме есть, теста нет: экспресс-тест ≈ 5 минут "
                     "или полный, подсказка грейда, путь до категории и подборки."},
@@ -234,7 +235,8 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
                away_items: tuple[int, ...] = (), sid: str = "", claimed: str = "middle", experience: float = 3.5,
                salary: int = 200_000, want: str = "category", copy_items: tuple[int, ...] = (), camera: bool = False):
     """Демо-кандидат жюри. want — какой исход теста нужен: category — любая категория (подтверждённая или
-    предварительная), provisional — «Junior (предварительно)»; демо-респондент случаен, поэтому до 6 попыток
+    предварительная), followup — «нужен доп. этап» (по правилу SPRT решения у порога нет, предложен второй этап;
+    прежнее «Junior (предварительно)» по этому правилу не бывает); демо-респондент случаен, поэтому до 6 попыток
     с разными seed, затем остаётся последний исход. copy_items — позиции заданий с попыткой копирования (И9);
     camera — тест с камерой по согласию (И16)."""
     u = _user(db, persona, UserRole.candidate, sid)
@@ -271,13 +273,14 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
                               verified=True, source_ref="demo-registry"))
     db.commit()
     res = {}
-    # демо-респондент случаен (выбор заданий и ответы): нужен заданный исход — иначе следующий seed. Для «Junior
-    # (предварительно)» окно уже: при пороге уверенности 0,6 (Я22) θ = −1,05 чаще подтверждает Junior, чем раньше при 0,8,
-    # поэтому попыток 12 (6 не хватало примерно раз на сотню песочниц — test_jury_persona_candidate_junior).
-    attempts = 12 if want == "provisional" else 6
+    # демо-респондент случаен (выбор заданий и ответы): нужен заданный исход — иначе следующий seed. «Нужен доп. этап»
+    # у порога — не каждый раз (SPRT может и решить), поэтому попыток 12
+    attempts = 12 if want in ("followup", "provisional") else 6
     for attempt in range(attempts):
         res = run_demo_test(db, u.id, claimed, theta, seed + attempt, pending_left, away_items, copy_items,
                             camera=camera)
+        if want == "followup" and ((res.get("details") or {}).get("verdict") or {}).get("status") == "needs_followup":
+            break
         if want == "provisional" and res.get("category_provisional"):
             break
         if want == "category" and (res.get("confirmed") or res.get("category_id")):
@@ -422,9 +425,9 @@ def _create_jury(db: Session, sid: str) -> dict:
     # работодателю и Илье с причинами)
     u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8), sid=sid,
                             copy_items=(8,))
-    # у порога Junior: тест не подтвердил грейд, но и не доказал уровень ниже — «Junior (предварительно)»
-    _, p3, r3 = _candidate(db, "candidate_junior", "Артём Лебедев", False, -1.05, 5301, 0, sid=sid, claimed="junior",
-                           experience=0.5, salary=80_000, want="provisional")
+    # у порога Junior: решения по грейду нет — «Junior — нужен доп. этап» (предложен второй этап, категории нет)
+    _, p3, r3 = _candidate(db, "candidate_junior", "Артём Лебедев", False, -1.0, 5301, 0, sid=sid, claimed="junior",
+                           experience=0.5, salary=80_000, want="followup")
     _, p4 = _candidate_new(db, sid)  # «Пройдите тест сами»: без теста, категории нет — в подборки не попадает
     eu = _user(db, "employer", UserRole.employer, sid)
     c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург",
@@ -481,6 +484,7 @@ def _create_jury(db: Session, sid: str) -> dict:
             "candidate_nofsp": {"ref": p2.public_ref, "confirmed": r2.get("confirmed"), "theta": r2.get("theta"),
                                 "pending": (r2.get("details") or {}).get("pending_review")},
             "candidate_junior": {"ref": p3.public_ref, "provisional": r3.get("category_provisional"),
+                                 "followup": ((r3.get("details") or {}).get("verdict") or {}).get("status") == "needs_followup",
                                  "theta": r3.get("theta"), "category_id": r3.get("category_id")},
             "candidate_new": {"ref": p4.public_ref},
             "employer": {"company": c.name, "needs": len(needs), "cups": cups, "assignments": tasks},

@@ -14,6 +14,13 @@ import json
 from pathlib import Path
 
 FC_MAX, P90_MAX, EXACT_DROP_MAX, TIE = 0.025, 105.0, 0.01, 0.005
+# Сравнения — в людях, а не в округлённых долях (замечание А15, P2): L_k = 3 · k_FC + k_FR; «в пределах 0,5 п.п.» —
+# L_k ≤ лучший + 0,005 · N; «FC ≤ 2,5 %» — k_FC ≤ 0,025 · N; «точный грейд не ниже T0 более чем на 1 п.п.» — в людях.
+
+
+def _k(v: dict, key: str) -> int | None:
+    x, n = v.get(key), v.get("n")
+    return None if x is None or not n else int(round(float(x) * int(n)))
 
 
 def choose(summary: dict, prefix: str = "T", base: str = "T0") -> dict:
@@ -24,13 +31,17 @@ def choose(summary: dict, prefix: str = "T", base: str = "T0") -> dict:
     for k, v in sorted(rows.items(), key=lambda kv: int(kv[0][len(prefix):]) if kv[0][len(prefix):].isdigit() else 99):
         p90 = (v.get("minutes_total") or {}).get("p90")
         why = []
-        if v.get("false_confirm_all") is None or v["false_confirm_all"] > FC_MAX:
-            why.append(f"FC {v.get('false_confirm_all')} > {FC_MAX}")
+        n = int(v.get("n") or 0)
+        k_fc, k_fr, k_ex = _k(v, "false_confirm_all"), _k(v, "false_reject_all"), _k(v, "exact_grade_final")
+        if k_fc is None or k_fc > FC_MAX * n:
+            why.append(f"FC {k_fc} из {n} > {FC_MAX}")
         if p90 is None or p90 > P90_MAX:
             why.append(f"p90 {p90} > {P90_MAX}")
-        if ex0 is not None and (v.get("exact_grade_final") is None or v["exact_grade_final"] < ex0 - EXACT_DROP_MAX):
+        if ex0 is not None and (k_ex is None or k_ex < (ex0 - EXACT_DROP_MAX) * n - 1e-9):
             why.append(f"точный грейд {v.get('exact_grade_final')} < {base} {ex0} − {EXACT_DROP_MAX}")
-        r = {"config": k, "env": v.get("env"), "L": v.get("loss_3fc_fr"), "FC": v.get("false_confirm_all"),
+        r = {"config": k, "env": v.get("env"), "L": v.get("loss_3fc_fr"),
+             "L_people": (3 * k_fc + k_fr) if k_fc is not None and k_fr is not None else None, "k_FC": k_fc, "k_FR": k_fr,
+             "FC": v.get("false_confirm_all"),
              "FR": v.get("false_reject_all"), "exact_grade_final": v.get("exact_grade_final"),
              "exact_grade_final_5": v.get("exact_grade_final_5"), "retest_exact": v.get("retest_exact"),
              "retest_decision": v.get("retest_decision"), "retest_kappa_w": v.get("retest_kappa_w"),
@@ -39,11 +50,12 @@ def choose(summary: dict, prefix: str = "T", base: str = "T0") -> dict:
              "minutes_total_mean": (v.get("minutes_total") or {}).get("mean"), "minutes_total_p90": p90,
              "n": v.get("n"), "passes": not why, "fails": why}
         table.append(r)
-        if not why and r["L"] is not None:
+        if not why and r["L_people"] is not None:
             ok.append(r)
     if ok:
-        best_l = min(r["L"] for r in ok)
-        near = [r for r in ok if r["L"] <= best_l + TIE]
+        best = min(ok, key=lambda r: r["L_people"] / r["n"])
+        best_l = best["L"]
+        near = [r for r in ok if r["L_people"] / r["n"] <= best["L_people"] / best["n"] + TIE + 1e-12]
         near.sort(key=lambda r: (-(r["exact_grade_final"] or 0), -(r["retest_exact"] or 0), r["minutes_total_mean"] or 1e9))
         chosen, reason = near[0]["config"], (f"минимум L = {best_l} среди прошедших ограничения; в пределах {TIE} — "
                                              f"{', '.join(r['config'] for r in near)}; из них больше точный грейд")

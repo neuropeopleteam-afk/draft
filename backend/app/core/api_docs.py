@@ -144,13 +144,24 @@ def _local_imports(body: list[ast.stmt]) -> dict[str, Any]:
     return out
 
 
+_CV_CACHE: dict[Any, Any] = {}
+
+
+def _closurevars(fn: Any) -> Any:
+    """inspect.getclosurevars с кэшем на функцию: без него разбор байткода повторялся на каждом имени в каждом вызове
+    (≈23 000 раз), и первая сборка /api/openapi.json занимала ~55 с — Swagger «висел» на LOADING (21.10)."""
+    if fn not in _CV_CACHE:
+        _CV_CACHE[fn] = inspect.getclosurevars(fn)
+    return _CV_CACHE[fn]
+
+
 def _resolve(node: ast.AST, fn: Any, local: dict[str, Any] | None = None) -> Any:
     """Имя или цепочка a.b.c → объект из локальных импортов, глобальных имён и замыкания функции."""
     if isinstance(node, ast.Name):
         if local and node.id in local:
             return local[node.id]
         try:
-            cv = inspect.getclosurevars(fn)
+            cv = _closurevars(fn)
             for ns in (cv.nonlocals, cv.globals):
                 if node.id in ns:
                     return ns[node.id]
