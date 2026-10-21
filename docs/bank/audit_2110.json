@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-21 07:35:20",
+ "generated_at": "2026-10-21 09:04:20",
  "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 2 --out ../docs/bank/audit_2110.json",
  "n_families": 1524,
  "n_seeds": 20,
- "seconds": 119.4,
+ "seconds": 114.7,
  "formats": {
   "mcq_concept": 1234,
   "predict_output": 85,
@@ -48,7 +48,7 @@
    "mobile.ios.appearance_mcq": 0.8
   },
   "by_format_mean": {
-   "mcq_concept": 0.1134,
+   "mcq_concept": 0.1116,
    "predict_output": 0.1047,
    "find_bug": 0.3657,
    "choose_fix": 0.1881,
@@ -59,19 +59,19 @@
   "all_numeric_choice": {
    "n_variants": 22412,
    "chance": 0.2032,
-   "best_heuristic": "closest_to_mean",
-   "best_accuracy": 0.2189,
+   "best_heuristic": "series_exclusion",
+   "best_accuracy": 0.2192,
    "by_heuristic": {
     "chance": 0.2032,
-    "median": 0.2043,
-    "closest_to_mean": 0.2189,
-    "min": 0.2,
-    "max": 0.2005,
-    "roundest": 0.1902,
-    "longest": 0.1994,
-    "cluster_center": 0.2047,
-    "series_exclusion": 0.2,
-    "series_all_out": 0.0
+    "median": 0.2024,
+    "closest_to_mean": 0.2012,
+    "min": 0.2027,
+    "max": 0.2027,
+    "roundest": 0.1943,
+    "longest": 0.204,
+    "cluster_center": 0.2029,
+    "series_exclusion": 0.2192,
+    "series_all_out": 0.0096
    }
   },
   "forward": {
@@ -82,46 +82,46 @@
    "by_heuristic": {
     "chance": 0.2,
     "median": 0.2,
-    "closest_to_mean": 0.1857,
+    "closest_to_mean": 0.1884,
     "min": 0.2,
     "max": 0.2,
-    "roundest": 0.1697,
-    "longest": 0.1469,
+    "roundest": 0.174,
+    "longest": 0.1685,
     "cluster_center": 0.2
    }
   },
   "inverse": {
    "n_variants": 13900,
    "chance": 0.2,
-   "best_heuristic": "closest_to_mean",
-   "best_accuracy": 0.2269,
+   "best_heuristic": "longest",
+   "best_accuracy": 0.2199,
    "by_heuristic": {
     "chance": 0.2,
-    "median": 0.2004,
-    "closest_to_mean": 0.2269,
-    "min": 0.1988,
-    "max": 0.2004,
-    "roundest": 0.1981,
-    "longest": 0.2238,
-    "cluster_center": 0.2004,
-    "series_exclusion": 0.2,
-    "series_all_out": 0.0
+    "median": 0.2,
+    "closest_to_mean": 0.2007,
+    "min": 0.2,
+    "max": 0.2,
+    "roundest": 0.2028,
+    "longest": 0.2199,
+    "cluster_center": 0.2,
+    "series_exclusion": 0.2192,
+    "series_all_out": 0.0096
    }
   },
   "other": {
    "n_variants": 1432,
    "chance": 0.25,
    "best_heuristic": "closest_to_mean",
-   "best_accuracy": 0.3052,
+   "best_accuracy": 0.2696,
    "by_heuristic": {
     "chance": 0.25,
-    "median": 0.264,
-    "closest_to_mean": 0.3052,
-    "min": 0.2109,
-    "max": 0.2046,
-    "roundest": 0.2154,
-    "longest": 0.2232,
-    "cluster_center": 0.2703
+    "median": 0.2374,
+    "closest_to_mean": 0.2696,
+    "min": 0.2423,
+    "max": 0.2423,
+    "roundest": 0.2122,
+    "longest": 0.2252,
+    "cluster_center": 0.2451
    }
   }
  }

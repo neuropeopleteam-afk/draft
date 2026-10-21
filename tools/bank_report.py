@@ -51,6 +51,19 @@ def main() -> None:
          f"уникальных {n(v.get('n_unique_variants'))}; проверок исполнением {n(v.get('n_checks'))}, не прошло "
          f"{n(v.get('n_checks_failed'))}; статусы {v.get('status')}.",
          f"- Где: {bs['validation']['where']}.", ""]
+    vb = q.get("vs_base")
+    if vb:
+        cc = vb["common_changed"]
+        L += ["## Отличие от банка, на котором считала методика (`docs/bank/bank_diff_vs_603474f.json`)", "",
+              f"- База: `{vb['base']['ref']}` ({vb['base']['ref_commit']}), манифест банка commit "
+              f"`{vb['base']['bank_manifest_commit']}`, {n(vb['base']['n_families_loaded'])} семейств. "
+              f"Текущий: голова `{vb['head']['commit']}`, {n(vb['head']['n_families_loaded'])} семейств.",
+              f"- Добавлено {vb['added']['n']} (LP-3: {vb['added']['groups']['lp3']}), снято {vb['removed']['n']}; "
+              "320 семейств LP-v2 в базе не было — они жили только в этой ветке и сняты до слияния.",
+              f"- Из общих {n(vb['base']['n_families_loaded'] - vb['removed']['n'])}: изменён a — {n(cc.get('a', 0))}, "
+              f"b — {n(cc.get('b', 0))}, грейды — {n(cc.get('grades', 0))}, время — {n(cc.get('time_limit_s', 0))}, "
+              f"сам вариант на первых зёрнах — {n(cc.get('variants', 0))}.",
+              f"- Переходы a: {', '.join(f'{k}: {v}' for k, v in vb['a_transitions'].items())}.", ""]
     if au:
         g = au["guess_attack"]
         L += ["## Аудит утечек и угадываемости (`docs/bank/audit_2110.json`)", "",

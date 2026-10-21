@@ -38,6 +38,10 @@ def main() -> int:
     ap.add_argument("--validation-report", required=True)
     ap.add_argument("--audit", default=str(REPO / "docs" / "bank" / "audit_2110.json"))
     ap.add_argument("--mutation", default=str(REPO / "docs" / "bank" / "mutation_report.json"))
+    ap.add_argument("--diff", default=str(REPO / "docs" / "bank" / "bank_diff_vs_603474f.json"),
+                    help="JSON tools/bank_diff_base.py: отличие от банка, на котором считала А4")
+    ap.add_argument("--validated-commit", default="",
+                    help="голова, на дереве которой шёл прогон валидатора (банк в ней должен совпадать с текущим)")
     ap.add_argument("--where", default="сервер «Москва», одноразовый контейнер api (tmpfs /dev/shm с exec)")
     a = ap.parse_args()
 
@@ -89,11 +93,29 @@ def main() -> int:
     if mp.exists():
         quality["mutation"] = {"file": str(mp.relative_to(REPO)), **{k: v for k, v in json.loads(
             mp.read_text(encoding="utf-8")).items() if not isinstance(v, (list, dict)) or k == "summary"}}
+    dp = Path(a.diff)
+    if dp.exists():
+        dd = json.loads(dp.read_text(encoding="utf-8"))
+        quality["vs_base"] = {
+            "file": str(dp.relative_to(REPO)), "command": dd["command"], "generated_at": dd["generated_at"],
+            "base": dd["base"], "head": dd["head"],
+            "added": {k: dd["added"][k] for k in ("n", "groups", "by_direction", "by_format", "by_grade")},
+            "removed": {k: dd["removed"][k] for k in ("n", "groups", "by_direction", "by_format", "by_grade")},
+            "common_changed": dd["common"]["changed_counts"], "a_transitions": dd["common"]["a_transitions"],
+            "b_delta": dd["common"]["b_delta"],
+            "note": ("lp_v2 — 320 семейств, которые были только в этой ветке и сняты до слияния (в базе их нет); "
+                     "variants — изменился сам вариант на первых зёрнах (дистракторы, формулировки)"),
+        }
+    bank_code_commit = _git("log", "-1", "--format=%h", "--", "backend/assessment_bank",
+                            ":(exclude)backend/assessment_bank/BANK_SYNC.json")
     manifest = {
         "source": "backend/assessment_bank (банк правится в дереве платформы, ветка ag/a3-bank)",
         "commit": _git("rev-parse", "--short=7", "HEAD"),
         "dirty_files": len([l for l in _git("status", "--porcelain", "--", "backend/assessment_bank").splitlines() if l]),
         "content_hash": sync_bank.tree_hash(PKG),
+        "bank_code_commit": bank_code_commit,
+        "commit_note": ("commit — голова, на которой собран манифест; bank_code_commit — последний коммит, менявший "
+                        "файлы банка (кроме самого BANK_SYNC.json); validation.commit — дерево прогона валидатора"),
         "synced_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "n_families": final["n_families"], "by_direction": final["by_direction"],
         "directions_verified": verified,
@@ -101,12 +123,18 @@ def main() -> int:
                                "min_per_grade": sync_bank.READY_MIN_PER_GRADE}, "by_direction": readiness},
         "excluded": [],
         "validation": {"summary": summ, "seeds": rep.get("seeds") or summ.get("n_seeds") or 20,
-                       "verify_seeds": rep.get("verify_seeds"), "where": a.where},
+                       "verify_seeds": rep.get("verify_seeds"), "where": a.where,
+                       "commit": a.validated_commit or None,
+                       "bank_unchanged_since": (not _git("diff", "--name-only", a.validated_commit, "HEAD", "--",
+                                                         "backend/assessment_bank",
+                                                         ":(exclude)backend/assessment_bank/BANK_SYNC.json"))
+                       if a.validated_commit else None},
         "quality": quality,
     }
     (PKG / "BANK_SYNC.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     # Сводка для методики (А4) — то же содержимое, без копий цифр руками
     a4 = {"source": "tools/bank_manifest.py (из BANK_SYNC.json)", "bank_commit": manifest["commit"],
+          "bank_code_commit": bank_code_commit,
           "content_hash": manifest["content_hash"], "synced_at": manifest["synced_at"],
           "n_families": manifest["n_families"], "by_direction": manifest["by_direction"],
           "directions_verified": verified, "validation": manifest["validation"], "quality": quality}

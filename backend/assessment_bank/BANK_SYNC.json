@@ -1,9 +1,11 @@
 {
   "source": "backend/assessment_bank (банк правится в дереве платформы, ветка ag/a3-bank)",
-  "commit": "b87f441",
+  "commit": "b7e8832",
   "dirty_files": 0,
   "content_hash": "9a4bea7bf98cd67e",
-  "synced_at": "2026-10-21T08:01:28+00:00",
+  "bank_code_commit": "b87f4415",
+  "commit_note": "commit — голова, на которой собран манифест; bank_code_commit — последний коммит, менявший файлы банка (кроме самого BANK_SYNC.json); validation.commit — дерево прогона валидатора",
+  "synced_at": "2026-10-21T09:05:13+00:00",
   "n_families": 1524,
   "by_direction": {
     "analyst": {
@@ -240,15 +242,15 @@
     "summary": {
       "n_families": 1524,
       "n_variants_generated": 30480,
-      "n_unique_variants": 30454,
+      "n_unique_variants": 30453,
       "n_checks": 38991,
       "n_checks_failed": 0,
       "status": {
-        "PASS": 1442,
-        "WARN": 82
+        "PASS": 1441,
+        "WARN": 83
       },
       "n_fail": 0,
-      "n_warn": 82,
+      "n_warn": 83,
       "by_direction": {
         "analyst": 144,
         "backend": 156,
@@ -269,12 +271,14 @@
         "choose_fix": 59,
         "open_book_3step": 22
       },
-      "seconds": 1672.1,
+      "seconds": 2062.8,
       "jobs": 2
     },
     "seeds": 20,
     "verify_seeds": null,
-    "where": "Москва, контейнер a3-val, 20 сидов, голова 3697c327"
+    "where": "Москва, контейнер a3-val2, 20 сидов, дерево d715469a (банк = b87f4415)",
+    "commit": "d715469a",
+    "bank_unchanged_since": true
   },
   "quality": {
     "prior_a_by_format": {
@@ -353,7 +357,7 @@
     },
     "audit": {
       "file": "docs/bank/audit_2110.json",
-      "generated_at": "2026-10-21 07:35:20",
+      "generated_at": "2026-10-21 09:04:20",
       "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 2 --out ../docs/bank/audit_2110.json",
       "n_families": 1524,
       "n_seeds": 20,
@@ -365,8 +369,8 @@
         "all_numeric_choice": {
           "n_variants": 22412,
           "chance": 0.2032,
-          "best_heuristic": "closest_to_mean",
-          "best_accuracy": 0.2189
+          "best_heuristic": "series_exclusion",
+          "best_accuracy": 0.2192
         },
         "forward": {
           "n_variants": 7080,
@@ -377,14 +381,14 @@
         "inverse": {
           "n_variants": 13900,
           "chance": 0.2,
-          "best_heuristic": "closest_to_mean",
-          "best_accuracy": 0.2269
+          "best_heuristic": "longest",
+          "best_accuracy": 0.2199
         },
         "other": {
           "n_variants": 1432,
           "chance": 0.25,
           "best_heuristic": "closest_to_mean",
-          "best_accuracy": 0.3052
+          "best_accuracy": 0.2696
         }
       }
     },
@@ -404,6 +408,94 @@
       "elapsed_s": 16.1,
       "generated_at": "2026-10-21 07:08:24",
       "recompute": "python3 tools/bank_mutation_check.py --seeds 1 --limit 8"
+    },
+    "vs_base": {
+      "file": "docs/bank/bank_diff_vs_603474f.json",
+      "command": "python3 tools/bank_diff_base.py --base-ref srv/integ/2010n --seeds 2",
+      "generated_at": "2026-10-21T09:04:04+00:00",
+      "base": {
+        "ref": "srv/integ/2010n",
+        "ref_commit": "9ad3f08c2",
+        "bank_manifest_commit": "603474f",
+        "content_hash": "82a05fdbacf00481",
+        "n_families_manifest": 1504,
+        "n_families_loaded": 1504
+      },
+      "head": {
+        "commit": "b7e883225",
+        "bank_tree": "6f767ea8073f",
+        "n_families_loaded": 1524
+      },
+      "added": {
+        "n": 20,
+        "groups": {
+          "lp_v2": 0,
+          "lp3": 20,
+          "other": 0
+        },
+        "by_direction": {
+          "analyst": 2,
+          "backend": 2,
+          "common": 2,
+          "data_eng": 2,
+          "data_ml": 2,
+          "devops": 2,
+          "frontend": 2,
+          "mobile": 2,
+          "qa": 2,
+          "security": 2
+        },
+        "by_format": {
+          "predict_output": 20
+        },
+        "by_grade": {
+          "lead": 20,
+          "principal": 5,
+          "senior": 4
+        }
+      },
+      "removed": {
+        "n": 0,
+        "groups": {
+          "lp_v2": 0,
+          "lp3": 0,
+          "other": 0
+        },
+        "by_direction": {},
+        "by_format": {},
+        "by_grade": {}
+      },
+      "common_changed": {
+        "a": 1448,
+        "b": 1034,
+        "basis": 1504,
+        "grades": 353,
+        "time_limit_s": 975,
+        "variants": 1166
+      },
+      "a_transitions": {
+        "0.8->1.3": 1,
+        "0.9->1.3": 13,
+        "1->1.3": 70,
+        "1.1->1": 12,
+        "1.1->1.3": 90,
+        "1.2->1": 30,
+        "1.2->1.3": 36,
+        "1.3->1": 54,
+        "1.4->1": 22,
+        "1.4->1.3": 18,
+        "1.45->1": 428,
+        "1.5->1": 50,
+        "1.5->1.3": 3,
+        "3->1": 621
+      },
+      "b_delta": {
+        "n": 1034,
+        "min": -1.63,
+        "max": 0.61,
+        "mean": -0.371
+      },
+      "note": "lp_v2 — 320 семейств, которые были только в этой ветке и сняты до слияния (в базе их нет); variants — изменился сам вариант на первых зёрнах (дистракторы, формулировки)"
     }
   }
 }
