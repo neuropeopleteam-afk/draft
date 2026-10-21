@@ -1,0 +1,61 @@
+{
+ "what": "FREEZE сравнения «один в один» на генераторе Dev_dev (до прогона)",
+ "frozen_at": "2026-10-21T15:01:08+00:00",
+ "git_head_before_freeze_commit": "18ebd1def69060b60642e5721d7410f499c1720a",
+ "their_repo": "https://github.com/LaimOr127/Digital-platform-aggregator-of-IT-vacancies-FSP-",
+ "their_commit": "dec3f95449d2f89972bd99f5b6fb661ddd836cea",
+ "holdout_seeds": [
+  2026,
+  77021161,
+  77021162,
+  77021163,
+  77021164,
+  77021165
+ ],
+ "dev_seeds_never_these": [
+  1,
+  2,
+  3
+ ],
+ "rows": {
+  "main": {
+   "config": "final",
+   "mode": "default"
+  },
+  "exact": {
+   "config": "final",
+   "mode": "grade_exact"
+  },
+  "base": {
+   "config": "base",
+   "mode": "default"
+  }
+ },
+ "theta": "last",
+ "metrics": [
+  "p5",
+  "p10",
+  "ndcg10",
+  "rr",
+  "overrated10"
+ ],
+ "bootstrap": {
+  "reps": 2000,
+  "seed": 7702116
+ },
+ "files_sha256": {
+  "tools/realdata/devdev/export_world.py": "5463223d6e0a644bd4afed630344214737d3bec10af8498cd6901561aabb7f64",
+  "tools/realdata/devdev/rank_ours.py": "82e610f50ba454baca352b15d6cf559a2a540306fe0b4417dff0428069a5a3c5",
+  "tools/realdata/devdev/devdev_1to1.py": "253876a812f13ad16542556b7c3c02ea73074840e61a608953090e582273a91d",
+  "tools/realdata/bench2.py": "6d3694107e8332fb85f0e47ecd1c5d79224939dc339fb910bca3b91290a5171d",
+  "docs/realdata/DEVDEV_PROTOCOL.md": "20a7ce71c21d7173cb401a31b75dcc7670b33e277d01bfe5c978bf65acb5cadd"
+ },
+ "dirs_sha256": {
+  "backend/app/modules/matching": "0eefd9a2910ec707b00fcf5bcda400dcbe15f9a00f7af296d7e8ff3b92b526ca",
+  "backend/app/modules/catalog": "d84b8232114f6bdb890a3a9e136ac9c3dc018b55d11e936ee78da7444090f3d3",
+  "backend/app/modules/profiles": "c363c5858d6fc2854ee6179f9681a8f6203daa9b0f60cb9b94e8484950bb6c08",
+  "backend/app/modules/fsp": "606247372ab0fd48bb9011ae9846f0196a51446d975c59f4d0a527ca51886e76",
+  "backend/app/modules/validation/bench_world.py": "6111882efa8f1965d3eda1895fe670d438e76f247c81a5a934f737cad3145167"
+ },
+ "rule": "один прогон: run отказывается при несовпадении любого хэша и при уже существующем результате"
+}
