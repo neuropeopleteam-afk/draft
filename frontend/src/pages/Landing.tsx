@@ -9,6 +9,7 @@ import { juryLogin } from "../lib/jury";
 import { useDemoUi, useJuryTab } from "../lib/juryMode";
 import { lazyNamed } from "../lib/lazyPage";
 import { daysText, getLandingCards, usePageTitle, useRules } from "../lib/meta";
+import { getTop5, getTop5Hard, getTop5Meta } from "../lib/numbers";
 
 const LazyJuryPanel = lazyNamed(() => import("../components/JuryPanel"), "JuryPanel");
 
@@ -61,13 +62,16 @@ export default function Landing() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busyRole, setBusyRole] = useState<string | null>(null);
   const cards = getLandingCards();
+  const top5 = getTop5();
+  const top5Hard = getTop5Hard();
+  const top5Meta = getTop5Meta() as any;
 
-  const showInlineJury = typeof window !== "undefined" && (
+  const showInlineJury = Boolean(demoUi) || (typeof window !== "undefined" && !me && (
     !(new URLSearchParams(window.location.search).has("real") || localStorage.getItem("fsp_real_ui") === "1") &&
-    ((typeof navigator !== "undefined" && !!navigator.webdriver) ||
-      new URLSearchParams(window.location.search).has("jury") ||
-      window.location.hash === "#jury")
-  );
+    (new URLSearchParams(window.location.search).has("jury") ||
+      window.location.hash === "#jury" ||
+      !!localStorage.getItem("jury_scenario"))
+  ));
 
   async function tryInvite() {
     if (!demoUi) { navigate("/register?role=employer"); return; }
@@ -107,12 +111,12 @@ export default function Landing() {
 
           {/* Для кого и что сделать — 3 карточки ролей с одной главной кнопкой на роль */}
           <div
-            className="mt-6 grid gap-3 sm:grid-cols-3"
+            className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3"
             data-testid="hero-roles-grid"
             aria-label="Для кого платформа и главное действие по роли"
           >
-            <div className="np-card flex flex-col justify-between p-4">
-              <div>
+            <div className="np-card flex min-w-0 flex-col justify-between p-4">
+              <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-indigo-300">Работодателю</p>
                 <p className="mt-1 text-sm font-bold leading-snug np-text">Найти проверенного инженера</p>
                 <p className="mt-1 text-xs leading-relaxed np-muted">
@@ -123,14 +127,14 @@ export default function Landing() {
                 to="/register?role=employer"
                 data-tour="hero-employer-btn"
                 data-testid="hero-cta-employer"
-                className="np-btn-primary mt-3.5 w-full justify-center px-3 py-2.5 text-center text-xs font-bold"
+                className="np-btn-primary mt-3.5 w-full justify-center whitespace-normal px-3 py-2.5 text-center text-xs font-bold leading-tight"
               >
                 Создать вакансию бесплатно
               </Link>
             </div>
 
-            <div className="np-card flex flex-col justify-between p-4">
-              <div>
+            <div className="np-card flex min-w-0 flex-col justify-between p-4">
+              <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">Кандидату · 0 ₽</p>
                 <p className="mt-1 text-sm font-bold leading-snug np-text">Получать офферы с вилкой</p>
                 <p className="mt-1 text-xs leading-relaxed np-muted">
@@ -141,14 +145,14 @@ export default function Landing() {
                 to="/register?role=candidate"
                 data-tour="hero-candidate-btn"
                 data-testid="hero-cta-candidate"
-                className="np-btn-ghost mt-3.5 w-full justify-center px-3 py-2.5 text-center text-xs font-bold"
+                className="np-btn-ghost mt-3.5 w-full justify-center whitespace-normal px-3 py-2.5 text-center text-xs font-bold leading-tight"
               >
                 Подтвердить свой грейд (0 ₽)
               </Link>
             </div>
 
-            <div className="np-card flex flex-col justify-between p-4">
-              <div>
+            <div className="np-card flex min-w-0 flex-col justify-between p-4 sm:col-span-2 lg:col-span-1">
+              <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-300">Федерации ФСП</p>
                 <p className="mt-1 text-sm font-bold leading-snug np-text">Связать турниры и карьеру</p>
                 <p className="mt-1 text-xs leading-relaxed np-muted">
@@ -159,7 +163,7 @@ export default function Landing() {
                 href="#fsp-ecosystem"
                 data-tour="hero-fsp-btn"
                 data-testid="hero-cta-fsp"
-                className="np-btn-ghost mt-3.5 w-full justify-center px-3 py-2.5 text-center text-xs font-bold"
+                className="np-btn-ghost mt-3.5 w-full justify-center whitespace-normal px-3 py-2.5 text-center text-xs font-bold leading-tight"
               >
                 Кабинет и кубки ФСП
               </a>
@@ -177,7 +181,7 @@ export default function Landing() {
               </>
             )}
           </p>
-          <ul className="mt-6 grid gap-3 text-[0.82rem] leading-snug sm:grid-cols-3" aria-label="Ключевые преимущества">
+          <ul className="mt-6 grid gap-3 text-[0.82rem] leading-snug sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3" aria-label="Ключевые преимущества">
             <Fact k="Навык" t="Подборка по доказанным задачам вместо откликов" />
             <Fact k="₽" t="Прозрачная вилка в каждом приглашении" />
             <Fact k="ФСП" t="Верификация достижений и кубки работодателей" />
@@ -314,6 +318,70 @@ export default function Landing() {
             </div>
           ))}
         </dl>
+
+        {/* Блок точности в двух режимах: стандартные условия (S-T / S-M) и проверка на прочность в жёстких условиях */}
+        <div className="mt-6 np-glass p-5 sm:p-6" data-testid="landing-top5-dual">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div>
+              <p className="np-eyebrow">Протокол честного сравнения · выбор заголовка зафиксирован до прогонов</p>
+              <h3 className="mt-1 text-lg font-extrabold np-text">
+                Точность ядра: стандартные условия (S-T / S-M) и проверка на прочность
+              </h3>
+            </div>
+            <Link to="/validation#headline" className="text-xs font-semibold np-accent hover:underline">
+              Все протоколы на /validation →
+            </Link>
+          </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-4" data-testid="landing-top5-standard">
+              <p className="text-xs font-bold uppercase tracking-wider text-indigo-300">
+                1. Стандартные условия, принятые в аналогичных решениях (S-T / S-M)
+              </p>
+              <p className="mt-1 text-xs np-muted">
+                {top5Meta?.standard_condition_ru ?? "Единая шкала для сопоставления с другими командами; точный грейд — среди тех, кому продукт определяет уровень."}
+              </p>
+              {top5 && top5.length > 0 ? (
+                <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                  {top5.slice(0, 5).map((m) => (
+                    <div key={m.id} className="rounded-xl bg-white/[0.04] p-2.5">
+                      <dt className="text-[11px] leading-tight np-faint">{m.label_ru ?? m.id}</dt>
+                      <dd className="mt-1 text-lg font-extrabold tabular-nums np-text">{m.display_ru ?? "пересчитывается"}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="mt-2 text-xs font-semibold np-muted" data-testid="landing-top5-standard-pending">
+                  Показатели единого снимка: пересчитывается
+                </p>
+              )}
+            </div>
+            <div className="rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-4" data-testid="landing-top5-hard">
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                2. Проверка на прочность в наших жёстких условиях (стресс-режим)
+              </p>
+              <p className="mt-1 text-xs np-muted">
+                {top5Meta?.hard_condition_ru ?? "Угадывание, завышение заявок на грейд, пограничные кандидаты у порогов, погрешность параметров заданий и неточные резюме."}
+              </p>
+              {top5Hard && top5Hard.length > 0 ? (
+                <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                  {top5Hard.slice(0, 5).map((m) => (
+                    <div key={m.id} className="rounded-xl bg-white/[0.04] p-2.5">
+                      <dt className="text-[11px] leading-tight np-faint">{m.label_ru ?? m.id}</dt>
+                      <dd className="mt-1 text-lg font-extrabold tabular-nums np-text">{m.display_ru ?? "пересчитывается"}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="mt-2 text-xs font-semibold np-muted" data-testid="landing-top5-hard-pending">
+                  Показатели стресс-режима: пересчитывается
+                </p>
+              )}
+            </div>
+          </div>
+          <p className="mt-3 text-xs np-muted">
+            Оба ряда всегда публикуются вместе: стандартный ряд сопоставим с аналогами по отрасли, а жёсткий ряд проверяет запас прочности при нечестном поведении и шуме в данных.
+          </p>
+        </div>
       </section>
 
       <section className="relative mx-auto max-w-content px-4 pb-24 sm:px-6" aria-label="Начать работу">
