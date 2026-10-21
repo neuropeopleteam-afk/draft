@@ -382,7 +382,8 @@ def build(numbers: dict) -> dict:
     # другого решения не публикуем: в NUMBERS.json условие уже обезличено (condition_ru).
     ext = (n.get("external_benchmarks") or {}).get("devdev_1to1") or {}
     if ext.get("main") and ext.get("condition_ru"):
-        cond_x = ext["condition_ru"] + (f"; проверка: {ext['checked_by']}" if ext.get("checked_by") else "")
+        chk = re.sub(r"^[АA]\d+,\s*", "независимый рецензент, ", ext.get("checked_by") or "")  # без внутренних кодов агентов
+        cond_x = ext["condition_ru"] + (f"; проверка: {chk}" if chk else "")
         rc_x = ext.get("recompute")
         base_k = "external_benchmarks.devdev_1to1"
 
@@ -432,23 +433,23 @@ def build(numbers: dict) -> dict:
             journal.append({"what": what, "key": key, "kind": kind, "hash": str(value)[:12], "extra": extra})
 
     gvm = (n.get("grade_verdict") or {}).get("main") or {}
-    jr("Тест на грейд — итоговый прогон, отложенные зёрна", "grade_verdict.main.bank_content_hash",
+    jr("Тест на грейд — итоговый прогон", "grade_verdict.main.bank_content_hash",
        gvm.get("bank_content_hash"), kind="банк заданий", extra=f"N{NBSP}={NBSP}{fint(gvm['n'])}" if gvm.get("n") else "")
     mt_ = n.get("matching") or {}
-    jr("Подбор — отложенные миры, один прогон", "matching.freeze_sha256", mt_.get("freeze_sha256"), kind="FREEZE")
-    jr("Реальные вакансии hh.ru — второй отложенный набор", "hh_match.manifest_sha256",
+    jr("Подбор — отложенные миры", "matching.freeze_sha256", mt_.get("freeze_sha256"), kind="FREEZE")
+    jr("Вакансии hh.ru — второй отложенный набор", "hh_match.manifest_sha256",
        (n.get("hh_match") or {}).get("manifest_sha256"), kind="список вакансий")
-    jr("Открытый генератор другого решения — один в один", "external_benchmarks.devdev_1to1.condition_ru",
+    jr("Чужой открытый генератор — один в один", "external_benchmarks.devdev_1to1.condition_ru",
        "515460d3" if "FREEZE 515460d3" in (ext.get("condition_ru") or "") else None,
        kind="FREEZE", extra="пересчёт в чистой копии — 0 расхождений" if "0 расхождений" in (ext.get("checked_by") or "") else "")
     dj = ((n.get("external_benchmarks") or {}).get("djinni") or {}).get("freeze") or {}
-    jr("Открытый набор вакансий и резюме — отложенная часть", "external_benchmarks.djinni.freeze.bench_sha256",
+    jr("Открытый набор вакансий и резюме", "external_benchmarks.djinni.freeze.bench_sha256",
        dj.get("bench_sha256"), kind="набор")
     ah = (n.get("anticheat") or {}).get("holdout_offline") or {}
-    jr("Защита проверки ответов — отложенный набор атак", "anticheat.holdout_offline.dataset_sha256",
+    jr("Защита проверки ответов — набор атак", "anticheat.holdout_offline.dataset_sha256",
        ah.get("dataset_sha256") if ah.get("single_pass") else None, kind="набор атак", extra="один проход")
     oa = (n.get("fsp_protocols") or {}).get("ocr_audit") or {}
-    jr("Протоколы ФСП — ручная сверка распознавания", "fsp_protocols.ocr_audit.sample_sha256", oa.get("sample_sha256"), kind="выборка",
+    jr("Протоколы ФСП — ручная сверка", "fsp_protocols.ocr_audit.sample_sha256", oa.get("sample_sha256"), kind="выборка",
        extra=f"{fint(oa['pages_checked'])} страниц" if oa.get("pages_checked") else "")
 
     # ---------- пары «стандартные условия / проверка на прочность» ----------
