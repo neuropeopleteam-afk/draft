@@ -87,56 +87,6 @@ NON_ATHLETE_TITLE_PATTERNS = (
     "справка о количестве субъектов",
 )
 
-_EVSK_RANK_VALUES = {
-    "ЗМС", "МСМК", "МС", "КМС", "I", "II", "III",
-    "I разряд", "II разряд", "III разряд",
-    "1 разряд", "2 разряд", "3 разряд",
-    "1", "2", "3",
-}
-_EKP_PREFIXES = ("2101", "1101", "2025", "2026", "СБОРНАЯ", "КР-", "КФ-", "ПФО-", "ЦФО-")
-
-
-def is_legacy_ekp_in_evsk_code(val: str | None, source_ref: str | None = None) -> bool:
-    """Проверяет, было ли в поле evsk_code сохранено значение номера ЕКП (находка А8)."""
-    if not val:
-        return False
-    s = str(val).strip()
-    if not s or s in _EVSK_RANK_VALUES:
-        return False
-    if s.isdigit() and len(s) >= 6:
-        return True
-    if s.startswith(_EKP_PREFIXES):
-        return True
-    if (source_ref or "").startswith("protocol:"):
-        return True
-    return False
-
-
-def resolve_achievement_ekp_no(a: object) -> str | None:
-    """Возвращает номер ЕКП (ekp_no) отдельно от кода/разряда ЕВСК, включая чтение старых записей из evsk_code."""
-    pref = getattr(a, "protocol_ref", None) or {}
-    tr = getattr(a, "team_result", None) or {}
-    ekp = getattr(a, "ekp_no", None) or pref.get("ekp_no") or tr.get("ekp_no")
-    if ekp:
-        return str(ekp)
-    raw_evsk_code = getattr(a, "evsk_code", None)
-    if is_legacy_ekp_in_evsk_code(raw_evsk_code, getattr(a, "source_ref", None)):
-        return str(raw_evsk_code).strip()
-    return None
-
-
-def resolve_achievement_evsk_code(a: object) -> str | None:
-    """Возвращает код ЕВСК (без подмены номером ЕКП или спортивным разрядом)."""
-    raw_evsk_code = getattr(a, "evsk_code", None)
-    if not raw_evsk_code:
-        return None
-    s = str(raw_evsk_code).strip()
-    if not s or s in _EVSK_RANK_VALUES:
-        return None
-    if is_legacy_ekp_in_evsk_code(s, getattr(a, "source_ref", None)):
-        return None
-    return s
-
 _CACHE: dict = {"mtime": None, "path": None, "records": [], "by_key": {}, "sources_by_url": {}, "stats": {}}
 
 
@@ -835,7 +785,7 @@ def confirm_protocol_matches(
                 source_ref=sref,
                 event_id=(str(pref.get("doc_id"))[:100] if pref.get("doc_id") else None),
                 result_kind=r_kind,
-                evsk_code=None,
+                evsk_code=(str(evsk["evsk_rank"])[:64] if evsk["evsk_rank"] else None),
                 sport_rank=(str(evsk["evsk_rank"])[:64] if evsk["evsk_rank"] else None),
                 protocol_status=p_status,
                 protocol_ref=pref,

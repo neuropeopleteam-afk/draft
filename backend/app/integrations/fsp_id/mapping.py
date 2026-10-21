@@ -83,14 +83,7 @@ def parse_achievements(raw) -> list[dict]:
             d = date.fromisoformat(a["date"]) if a.get("date") else None
         except ValueError:
             d = None
-        from app.modules.fsp.protocols import is_legacy_ekp_in_evsk_code
-
         place = a.get("place")
-        raw_evsk_code = str(a.get("evsk_code") or "")[:64] or None
-        raw_ekp_no = str(a.get("ekp_no") or "")[:64] or None
-        if not raw_ekp_no and is_legacy_ekp_in_evsk_code(raw_evsk_code):
-            raw_ekp_no = raw_evsk_code
-            raw_evsk_code = None
         out.append({"discipline": disc, "event": str(a["event"])[:255], "level": lvl, "date": d,
                     "place": int(place) if isinstance(place, int | str) and str(place).isdigit() else None,
                     "result": (str(a.get("result") or "")[:100] or None), "team": (str(a.get("team") or "")[:200] or None),
@@ -98,10 +91,7 @@ def parse_achievements(raw) -> list[dict]:
                     "event_id": str(a.get("event_id") or "")[:100] or None,
                     "result_kind": a.get("result_kind") if a.get("result_kind") in
                     ("winner", "prize", "finalist", "participant") else None,
-                    "evsk_code": raw_evsk_code,
-                    "ekp_no": raw_ekp_no,
-                    "evsk_rank": str(a.get("evsk_rank") or "")[:64] or None,
-                    "evsk_basis": str(a.get("evsk_basis") or "")[:255] or None,
+                    "evsk_code": str(a.get("evsk_code") or "")[:64] or None,
                     "sport_rank": str(a.get("sport_rank") or "")[:64] or None,
                     "team_result": a.get("team_result") if isinstance(a.get("team_result"), dict) else None,
                     "verified": a.get("verified") is not False,
@@ -154,9 +144,7 @@ def apply_claims(db: Session, user_id, claims: dict) -> FspPassport:
                               result_title=a["result"], team_name=a["team"], role_in_team=a["role"],
                               verified=a["verified"], source_ref=f"registry:{a['source_id']}" if a["source_id"]
                               else f"fsp-id:{sub}", event_id=a["event_id"], result_kind=a["result_kind"],
-                              evsk_code=a["evsk_code"], ekp_no=a.get("ekp_no"),
-                              evsk_rank=a.get("evsk_rank"), evsk_basis=a.get("evsk_basis"),
-                              sport_rank=a["sport_rank"], team_result=a["team_result"]))
+                              evsk_code=a["evsk_code"], sport_rank=a["sport_rank"], team_result=a["team_result"]))
     cp = db.get(CandidateProfile, user_id)
     if cp is not None and claims.get("fsp_id"):
         cp.fsp_id_claimed = str(claims["fsp_id"])[:64]

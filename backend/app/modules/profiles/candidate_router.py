@@ -306,11 +306,7 @@ def set_jury_mode(data: JuryIn, user: User = Depends(candidate), db: Session = D
 @router.get("/fsp", summary="Паспорт ФСП: статус связи и достижения (T2)", responses=AUTH)
 def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     from app.integrations.settings import get_isettings
-    from app.modules.fsp.protocols import (
-        load_index,
-        resolve_achievement_ekp_no,
-        resolve_achievement_evsk_code,
-    )
+    from app.modules.fsp.protocols import load_index
 
     integration = get_isettings()
     b = load_bundles(db, [user.id])[user.id]
@@ -334,8 +330,8 @@ def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> di
                 "place_range": (a.team_result or {}).get("place_range"),
                 "place_text": (a.team_result or {}).get("place_text"),
                 "evsk_status": (a.team_result or {}).get("evsk_status"),
-                "evsk_code": resolve_achievement_evsk_code(a),
-                "ekp_no": resolve_achievement_ekp_no(a),
+                "evsk_code": a.evsk_code,
+                "ekp_no": getattr(a, "ekp_no", None) or (getattr(a, "protocol_ref", None) or {}).get("ekp_no") or (a.team_result or {}).get("ekp_no"),
                 "evsk_rank": getattr(a, "evsk_rank", None) or (a.team_result or {}).get("evsk_rank") or a.sport_rank,
                 "evsk_basis": getattr(a, "evsk_basis", None) or (a.team_result or {}).get("evsk_basis"),
                 "protocol_ref": getattr(a, "protocol_ref", None),
