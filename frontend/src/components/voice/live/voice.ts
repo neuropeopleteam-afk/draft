@@ -9,6 +9,8 @@ export type SayResult = "done" | "aborted";
 
 export interface Utterance {
   readonly text: string;
+  /** Дописать текст реплики (ответ приходит по фразам): эхо и «что прозвучало» — по всему тексту. */
+  append(more: string): void;
   readonly startedAt: number;
   /** Длительность отправленного звука, мс. */
   readonly durationMs: number;
@@ -64,6 +66,7 @@ export class Voice {
     let finished = false;
     let ended: Promise<SayResult> | null = null;
     const bpms = (rate * 2) / 1000;
+    let full = text;
     this.current = text;
 
     const send = (chunk: Uint8Array) => {
@@ -100,7 +103,12 @@ export class Voice {
     };
 
     const u: Utterance = {
-      text,
+      get text() { return full; },
+      append(more: string) {
+        if (!more) return;
+        full = full ? `${full} ${more}` : more;
+        if (my === self.seq) self.current = full;
+      },
       get startedAt() { return startedAt; },
       get durationMs() { return sentMs; },
       push(bytes: Uint8Array) {
@@ -121,7 +129,7 @@ export class Voice {
           while (performance.now() < self.until && !self.aborted(my)) await sleep(Math.min(120, self.until - performance.now()));
           if (self.aborted(my)) return "aborted" as SayResult;
           if (my === self.seq) {
-            self.tail = { text, until: performance.now() + 1500 };
+            self.tail = { text: full, until: performance.now() + 1500 };
           }
           return "done" as SayResult;
         })();
