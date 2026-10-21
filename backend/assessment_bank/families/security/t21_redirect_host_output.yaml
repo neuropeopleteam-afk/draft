@@ -1,0 +1,32 @@
+family_id: security.web.t21_redirect_host_output
+title: 'Адрес возврата — urlsplit(...).hostname: //host, userinfo@host, порт, регистр и endswith'
+direction: security
+skills:
+- python
+- security
+- input_validation
+- http
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 12
+  - 12
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Для 3–4 адресов возврата определить
+    hostname по правилам urlsplit: «//host» без схемы — сетевой адрес, после «@» — настоящий хост, «#» обрывает netloc,
+    порт отбрасывается, регистр приводится к нижнему, у относительного пути hostname None; затем применить проверку endswith
+    (наивную или с точкой). Уровень Senior: глубокая семантика разбора URL. Набор t21 (21.10) у порога Senior (b = +1,0)'
+generator: assessment_bank.families.security.t21_redirect_host_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Проверка адреса возврата после входа через urllib.parse.urlsplit;
+  предсказать hostname и решение по каждому адресу. Ключ — независимая модель по формам адресов в генераторе, проверка —
+  исполнение показанного кода в песочнице Python.
