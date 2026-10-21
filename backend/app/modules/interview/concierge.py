@@ -369,25 +369,31 @@ def plural(n: int, one: str, few: str, many: str) -> str:
     return one if n % 10 == 1 else few if 2 <= n % 10 <= 4 else many
 
 
+def _pc_words(v: float) -> str:
+    """0,9774 → «девяносто семь и семь десятых процента» (для реплик обзора — числа словами)."""
+    x = round(float(v) * 100, 1)
+    w_int, w_frac = int(x), int(round((x - int(x)) * 10))
+    if w_frac:
+        return f"{num_words(w_int)} и {num_words(w_frac, fem=True)} {plural(w_frac, 'десятая', 'десятых', 'десятых')} процента"
+    return f"{num_words(w_int)} {plural(w_int, 'процент', 'процента', 'процентов')}"
+
+
 def _arena_lines() -> list[str]:
+    """Реплики экрана «Арена метрик». Точность грейда — только если блок grade_verdict есть в docs/NUMBERS.json."""
     n = live_numbers()
     pp = int(round(float(n.get("p5_vs_bm25", 0.31)) * 100))
-    within = round(float(n.get("within1_one_session", 0.9936)) * 100, 1)
-    attacks = int(n.get("attacks_n", 116))
-    passed = int(n.get("attacks_passed", 0))
-    w_int, w_frac = int(within), int(round((within - int(within)) * 10))
-    if w_frac:
-        within_txt = f"{num_words(w_int)} и {num_words(w_frac, fem=True)} {plural(w_frac, 'десятая', 'десятых', 'десятых')} процента"
-    else:
-        within_txt = f"{num_words(w_int)} {plural(w_int, 'процент', 'процента', 'процентов')}"
-    tail = "ни одна не прошла" if passed == 0 else f"прошли {num_words(passed, fem=True)}"
-    return [
+    out = [
         f"Арена ранжирования: в первой пятёрке Драфта подходящих кандидатов на {num_words(pp)} "
         f"{plural(pp, 'процентный пункт', 'процентных пункта', 'процентных пунктов')} больше, чем у поиска по резюме, "
         f"а раздутые резюме почти не попадают в первую десятку.",
-        f"А здесь точность грейда: в пределах одной ступени — {within_txt}, и из {num_words(attacks, gen=True)} атак "
-        f"на оценщика {tail}.",
     ]
+    if "grade_verdict_accuracy" in n:
+        out.append(f"А здесь точность грейда: уверенный вердикт верен в {_pc_words(n['grade_verdict_accuracy'])} случаев. "
+                   f"У каждой цифры — доверительный интервал и команда пересчёта.")
+    else:
+        out.append("А здесь точность грейда и защита от списывания: у каждой цифры — доверительный интервал и команда "
+                   "пересчёта, они обновляются вместе с методикой.")
+    return out
 
 
 def _arena_speech() -> str:  # совместимость: одной репликой
@@ -693,7 +699,6 @@ def warm_async() -> None:
 
 _HERE = Path(__file__).resolve()
 _BENCH_JSON = _HERE.parents[1] / "validation" / "data" / "matching_bench.json"
-_ACCURACY_JSON = _HERE.parents[1] / "validation" / "data" / "accuracy_views.json"
 
 
 def _numbers_paths() -> list[Path]:
@@ -705,11 +710,13 @@ def _numbers_paths() -> list[Path]:
     return out
 
 
-NUMBERS_FALLBACK: dict[str, float | int | str] = {  # снимок make bench 20.10.2026 (банк 4d44), accuracy_views 19.10.2026
+# Запасной снимок — только подбор (make bench 20.10.2026, банк 4d44). Точность грейда и античит — ТОЛЬКО из docs/NUMBERS.json
+# (grade_verdict.main.*, anticheat.claim_ru): блока нет — Настя эти цифры не называет (решение владельца 20.10: цифры честные,
+# из одного источника; старые grade_accuracy.views и accuracy_views.json отбракованы методикой).
+NUMBERS_FALLBACK: dict[str, float | int | str] = {
     "as_of": "2026-10-20", "p5": 0.751, "p10": 0.725, "mrr": 0.896, "ndcg10": 0.566, "recall30": 0.24,
     "p5_vs_bm25": 0.31, "p10_vs_bm25": 0.294, "inflated_top10": 0.069, "inflated_top10_bm25": 0.32,
-    "within1_one_session": 0.9936, "within1_retest": 0.998, "far_from_cut": 0.8338, "no_under_claim": 0.8215,
-    "two_stage": 0.694, "attacks_n": 116, "attacks_passed": 0, "demo_candidates": 860,
+    "demo_candidates": 860,
 }
 
 
@@ -721,7 +728,7 @@ def _read_json(p: Path) -> dict | None:
 
 
 def _mtimes() -> tuple:
-    return tuple(p.stat().st_mtime if p.is_file() else 0.0 for p in (*_numbers_paths(), _BENCH_JSON, _ACCURACY_JSON))
+    return tuple(p.stat().st_mtime if p.is_file() else 0.0 for p in (*_numbers_paths(), _BENCH_JSON))
 
 
 @lru_cache(maxsize=4)
@@ -737,11 +744,20 @@ def _live_numbers_cached(_key: tuple) -> dict:
         rc = m.get("recall30") or m.get("recall@30")
         if isinstance(rc, dict) and isinstance(rc.get("mean"), (int, float)):
             out["recall30"] = rc["mean"]
-        v = (nums.get("grade_accuracy") or {}).get("views") or {}
-        for k, src, fld in (("far_from_cut", "far_from_cut", "exact"), ("no_under_claim", "no_under_claim", "exact"),
-                            ("within1_retest", "strict_pool", "within_1")):
-            if isinstance((v.get(src) or {}).get(fld), (int, float)):
-                out[k] = v[src][fld]
+        # точность грейда — новый блок методики; старые grade_accuracy.views не читаем
+        gv = nums.get("grade_verdict") or {}
+        main = gv.get("main") if isinstance(gv.get("main"), dict) else {}
+        for k in ("verdict_accuracy", "false_confirm", "confident_share", "exact_grade"):
+            cell = main.get(k)
+            val = cell.get("value") if isinstance(cell, dict) else cell
+            if isinstance(val, (int, float)) and 0 <= float(val) <= 1:
+                out["grade_" + k] = float(val)
+        claim = main.get("claim_ru") or gv.get("claim_ru")
+        if isinstance(claim, str) and claim.strip():
+            out["grade_claim"] = claim.strip()
+        ac = nums.get("anticheat") or {}
+        if isinstance(ac.get("claim_ru"), str) and ac["claim_ru"].strip():
+            out["anticheat_claim"] = ac["claim_ru"].strip()
         dc = (nums.get("demo") or {}).get("candidates")
         if isinstance(dc, int) and dc > 0:
             out["demo_candidates"] = dc
@@ -770,12 +786,6 @@ def _live_numbers_cached(_key: tuple) -> dict:
         if fresher:
             out["as_of"] = str(bench.get("generated_at"))[:10]
             out["source"] = (out["source"] + " + " if nums else "") + "бенчмарк make bench"
-    acc = _read_json(_ACCURACY_JSON)
-    if acc:
-        for k, path in (("within1_one_session", ("one_session_metrics", "within_1")), ("two_stage", ("two_stage_metrics", "exact"))):
-            val = (acc.get(path[0]) or {}).get(path[1])
-            if isinstance(val, (int, float)):
-                out[k] = val
     out.pop("_numbers_at", None)
     return out
 
@@ -792,21 +802,45 @@ def _pc(v: float) -> str:
     return f"{v * 100:.1f}".replace(".", ",") + " процента"
 
 
+def _grade_sentence(n: dict) -> str:
+    """Точность грейда — только из docs/NUMBERS.json (grade_verdict.main). Нет блока — ни одной цифры."""
+    if n.get("grade_claim"):
+        return str(n["grade_claim"])
+    parts = []
+    if "grade_verdict_accuracy" in n:
+        parts.append(f"точность уверенного вердикта по грейду — {_pc(n['grade_verdict_accuracy'])}")
+    if "grade_confident_share" in n:
+        parts.append(f"уверенный вердикт получают {_pc(n['grade_confident_share'])} кандидатов")
+    if "grade_exact_grade" in n:
+        parts.append(f"точный грейд — {_pc(n['grade_exact_grade'])}")
+    if "grade_false_confirm" in n:
+        parts.append(f"ложных подтверждений — {_pc(n['grade_false_confirm'])}")
+    return ("Точность грейда: " + "; ".join(parts) + ".") if parts else ""
+
+
 def numbers_chunk() -> dict[str, str]:
     n = live_numbers()
+    grade = _grade_sentence(n)
+    anti = str(n.get("anticheat_claim") or "")
+    body = (
+        f"Проверка механики (/validation), «Арена метрик» (данные на {n['as_of']}). Драфт против поиска по резюме на "
+        f"мире со скрытой истиной: точность первой пятёрки — {_pc(n['p5'])}, первой десятки — {_pc(n['p10'])}; "
+        f"отрыв от полнотекстового поиска — плюс {n['p5_vs_bm25'] * 100:.0f} процентных пунктов в пятёрке; раздутые "
+        f"резюме в десятке: {_pc(n['inflated_top10'])} у Драфта против {_pc(n['inflated_top10_bm25'])}. "
+    )
+    body += (grade + " ") if grade else ("Точность грейда числами сейчас не называем: актуальные цифры с доверительными "
+                                        "интервалами — на экране «Проверка» (/validation). ")
+    if anti:
+        body += anti.rstrip(".") + ". "
+    else:
+        body += "Цифры по защите от списывания — на экране «Проверка» (/validation). "
+    body += "Это синтетика: проверяется механика, а не люди."
     return {
         "id": "validation_numbers",
         "paths": "/validation /expertise",
         "keywords": "точность метрики арена бенчмарк цифры bm25 резюме раздутые грейд ступень атаки оценщик проверка "
                     "валидация доказательства сколько процент",
-        "content": (
-            f"Проверка механики (/validation), «Арена метрик» (данные на {n['as_of']}). Драфт против поиска по резюме на "
-            f"мире со скрытой истиной: точность первой пятёрки — {_pc(n['p5'])}, первой десятки — {_pc(n['p10'])}; "
-            f"отрыв от полнотекстового поиска — плюс {n['p5_vs_bm25'] * 100:.0f} процентных пунктов в пятёрке; раздутые "
-            f"резюме в десятке: {_pc(n['inflated_top10'])} у Драфта против {_pc(n['inflated_top10_bm25'])}. Грейд в "
-            f"пределах одной ступени — {_pc(n['within1_one_session'])} за одну сессию; защита оценщика: прошло "
-            f"{n['attacks_passed']} из {n['attacks_n']} атак. Это синтетика: проверяется механика, а не люди."
-        ),
+        "content": body,
     }
 
 
