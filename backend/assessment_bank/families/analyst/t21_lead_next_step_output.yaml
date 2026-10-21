@@ -1,0 +1,39 @@
+family_id: analyst.sql.t21_lead_next_step_output
+title: LEAD по партиции пользователя — переходы «шаг A → сразу шаг B» в воронке
+direction: analyst
+skills:
+- sql
+- window_functions
+- funnels
+target_grades:
+- senior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 14
+  - 14
+  extra:
+    events:
+    - 9
+    - 12
+    users:
+    - 3
+    - 4
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.2
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Для 9–12 событий 3–4
+    пользователей вперемешку найти следующее событие того же пользователя (LEAD по PARTITION BY) и посчитать пары
+    «A, затем сразу B за N дней»; ловушки — LEAD видит только соседнюю строку, у последнего события NULL, слишком
+    поздний переход отсекается, пользователи без пар не выводятся. Уровень Senior: LAG/LEAD по партициям в
+    многошаговом запросе. Набор t21 (21.10) у порога Senior (b = +1,2)'
+generator: assessment_bank.families.analyst.t21_lead_next_step_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Лог событий воронки (магазин, онбординг, B2B,
+  бронирования) и запрос CTE с LEAD() OVER (PARTITION BY user_id ORDER BY day) + подсчёт переходов по пользователям;
+  предсказать строки «user_id|conversions». Ключ — независимый расчёт в генераторе, проверка — исполнение запроса в
+  песочнице sqlite.'

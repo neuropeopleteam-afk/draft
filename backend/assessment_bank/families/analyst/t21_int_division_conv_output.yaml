@@ -1,0 +1,38 @@
+family_id: analyst.sql.t21_int_division_conv_output
+title: Конверсия в процентах — целочисленное деление и ROUND с 100.0
+direction: analyst
+skills:
+- sql
+- metrics
+target_grades:
+- middle
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra:
+    groups:
+    - 3
+    - 3
+    forms:
+    - mul_first
+    - div_first
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Для трёх групп посчитать
+    конверсию в процентах целым выражением (деление целых отбрасывает дробь; при делении раньше умножения — 0) и через
+    ROUND(100.0 * …, 1); одна неочевидная семантика — тип результата деления в SQLite зависит от типов операндов.
+    Уровень Middle, ближе к нижней границе: конструкция частая, ловушка известная. Набор t21 (21.10) у порога Middle
+    (b = −0,2)'
+generator: assessment_bank.families.analyst.t21_int_division_conv_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Дневная статистика каналов / платформ / лендингов /
+  кампаний и запрос GROUP BY с двумя колонками конверсии — целочисленной и ROUND(100.0 * …, 1); предсказать строки
+  результата. Ключ — независимый расчёт на точных дробях в генераторе, проверка — исполнение запроса в песочнице
+  sqlite.'
