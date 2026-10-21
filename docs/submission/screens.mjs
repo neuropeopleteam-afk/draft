@@ -37,10 +37,10 @@ async function role(p, name) {
   await btn.click({ timeout: 20000 }).catch((e) => console.log(`  роль «${name}»: ${e.message.split('\n')[0]}`));
   await settle(p, 2500);
 }
-async function scrollTo(p, text) {
+async function scrollTo(p, text, top = 120) {
   const el = p.getByText(text).first();
   if (await el.count()) {
-    await el.evaluate((n) => { const r = n.getBoundingClientRect(); window.scrollBy(0, r.top - 120); }).catch(() => {});
+    await el.evaluate((n, t) => { const r = n.getBoundingClientRect(); window.scrollBy(0, r.top - t); }, top).catch(() => {});
     await p.waitForTimeout(800);
     return true;
   }
@@ -58,7 +58,7 @@ const SHOTS = {
     const links = await p.$$eval('main a[href^="/employer/needs/"]', (e) => e.map((x) => [x.getAttribute('href'), x.innerText])).catch(() => []);
     const href = (links.find((l) => /платёж/i.test(l[1])) || links[0] || [])[0];
     if (href) await go(p, href); else console.log('  нет ссылок на подборки');
-    await scrollTo(p, 'Кого пригласить первым');
+    await scrollTo(p, 'Версии подборки:', 46);
   },
   // 3. Итог теста кандидата: категория «направление · грейд» и паспорт грейда
   category: async (p) => { await role(p, 'Кандидат'); await go(p, '/candidate/category'); },
