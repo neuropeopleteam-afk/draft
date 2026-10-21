@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { num, signed } from "./ui";
-import { NUMBERS, fmtPct } from "../lib/numbers";
+import { NUMBERS, fmtPct, getGradeVerdict } from "../lib/numbers";
 
 const SCALE_MIN = -2.0;
 const SCALE_MAX = 4.0;
@@ -30,6 +30,7 @@ export interface ThetaScaleProps {
 
 /** Визуальная психометрическая шкала 2PL IRT: положение оценки уровня кандидата и стандартная ошибка ±SE по реальным порогам грейдов. */
 export function ThetaScale({ theta, se, grade, confirmed, compact = false, className = "" }: ThetaScaleProps) {
+  const gv = getGradeVerdict();
   const [openMath, setOpenMath] = useState(false);
   if (theta == null || Number.isNaN(Number(theta))) return null;
   const th = Number(theta);
@@ -107,9 +108,9 @@ export function ThetaScale({ theta, se, grade, confirmed, compact = false, class
 
       {openMath && !compact && (
         <div className="mt-3 rounded-xl bg-white p-3 text-xs leading-relaxed text-brand-ink/80 ring-1 ring-brand-night/10">
-          <p className="font-semibold text-brand-night">Классификационный адаптивный тест у порогов + последовательный критерий SPRT</p>
+          <p className="font-semibold text-brand-night">Классификационный адаптивный тест у порогов и решение по заявленному уровню</p>
           <p className="mt-1">
-            После каждого ответа движок пересчитывает апостериорную оценку уровня методом EAP (Expected A Posteriori) по модели 2PL/GPCM и выбирает из банка ({NUMBERS.bank.families.toLocaleString("ru-RU")} семейств × 2,15 млрд зёрен, {NUMBERS.bank.code_and_open_families} практических семейств с кодом и симулятором инцидента) следующее задание с максимумом информации Фишера у ближайшего порога грейда. Точность уверенного вердикта SPRT — {fmtPct(NUMBERS.sprt_verdict.precision_decided, 1)}, точный грейд вдали от порога — {fmtPct(NUMBERS.sprt_verdict.exact_far_from_cut, 1)}, совпадение в пределах ±1 ступени — {fmtPct(NUMBERS.sprt_verdict.within_1, 1)}.
+            После каждого ответа движок пересчитывает апостериорную оценку уровня методом EAP (Expected A Posteriori) по модели 2PL/GPCM и выбирает из банка ({NUMBERS.bank.families.toLocaleString("ru-RU")} семейств × 2,15 млрд зёрен, {NUMBERS.bank.code_and_open_families} практических семейств с кодом и симулятором инцидента) следующее задание с максимумом информации Фишера у ближайшего порога грейда. Решение «подтверждён / не подтверждён» принимается, когда вероятность уровня не ниже заявленного выходит за 80 % или 20 %; между ними — короткий второй этап у порога.{gv ? ` На симуляции продукта (модельные кандидаты, не люди) итоговый вердикт верен в ${fmtPct(gv.main.verdict_accuracy?.value, 1)}, ложное подтверждение у завысивших заявку — ${fmtPct(gv.main.false_confirm?.value, 1)}.` : ""}
           </p>
         </div>
       )}
