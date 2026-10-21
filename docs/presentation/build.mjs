@@ -71,12 +71,12 @@ function bigNum(s, x, y, w, value, label, { size = 30, color = C.white } = {}) {
   s.addText(value ?? PENDING, { x, y, w, h: 0.6, fontFace: FONT, fontSize: value ? size : 11, bold: !!value, color: value ? color : C.faint, valign: 'bottom', margin: 0 });
   s.addText(label, { x, y: y + 0.62, w, h: 0.62, fontFace: FONT, fontSize: 11, color: C.muted, valign: 'top', margin: 0 });
 }
-function note(s, text, { x = 0.45, y = 6.42, w = 12.4 } = {}) {
-  s.addText(text, { x, y, w, h: 0.45, fontFace: FONT, fontSize: 9.5, color: C.faint, valign: 'top', margin: 0 });
+function note(s, text, { x = 0.45, y = 6.42, w = 12.4, h = 0.45, size = 9.5 } = {}) {
+  s.addText(text, { x, y, w, h, fontFace: FONT, fontSize: size, color: C.faint, valign: 'top', margin: 0 });
 }
 const bullets = (arr, opt = {}) => arr.map((t) => ({ text: t, options: { bullet: { indent: 14 }, paraSpaceAfter: 5, ...opt } }));
 
-// ===================== ВЫСТУПЛЕНИЕ: 7 слайдов на ≈2,5 мин (текст — docs/presentation/PITCH.md) =====================
+// ===================== ВЫСТУПЛЕНИЕ: 8 слайдов на ≈2 мин 45 с (текст — docs/presentation/PITCH.md) =====================
 // Дальше — приложение для вопросов жюри (прежние слайды 2–12). Цифры — те же facts.json; нет цифры — «после итогового прогона».
 const pair = (id) => PAIRS.pairs.find((p) => p.id === id) || { label: id };
 const realv = (id) => PAIRS.real.find((r) => r.id === id) || { label: id };
@@ -210,6 +210,47 @@ function numCell(s, x, y, w, v, { size = 26, color = C.white } = {}) {
   note(s, 'Модельные кандидаты, не люди: где кандидаты модельные — это написано рядом с цифрой. Условия, N и команда пересчёта — на сайте, раздел «Как мы проверяем себя».', { y: 6.3 });
 }
 
+
+// ---------- В6а. На чужих данных: открытый генератор другого решения, его же кодом ----------
+// Обе строки рядом (решение владельца 21.10): по умолчанию — где мы ниже, и «строго запрошенный грейд» — с ценой.
+// Названий других решений нет; условие — из NUMBERS.json (external_benchmarks.…1to1.condition_ru).
+if (has('ext_main_ndcg10', 'ext_exact_ndcg10')) {
+  const s = base('На чужих данных');
+  title(s, 'Чужой открытый бенчмарк — его же кодом.\nПоказываем и строку, где мы ниже', { size: 28 });
+  sub(s, 'Генератор кандидатов и вакансий, тест и метки релевантности — из открытого кода другого решения, без изменений; наш подбор — четвёртой выдачей в его процедуре.', { y: 1.98, size: 12, h: 0.5 });
+  const rows = [['ndcg10', 'nDCG@10 — качество порядка'], ['p5', 'Точность в топ-5'], ['p10', 'Точность в топ-10'], ['rr', 'Первый подходящий (MRR)'], ['overrated10', 'Переоценённых в топ-10 ↓']];
+  const X = [0.45, 4.15, 5.95, 7.75, 9.45, 11.45], W = [3.6, 1.7, 1.7, 1.6, 1.95, 1.4], TW = 12.4;
+  const hy = 2.55;
+  card(s, 0.45, hy, TW, 0.62, { transparency: 85 });
+  const heads = [['Метрика', C.white], ['Другое решение,\nего код', C.white], ['Мы —\nпо умолчанию', C.white], ['Разность', C.white], ['Мы — «строго\nзапрошенный грейд»', C.ok], ['Разность', C.ok]];
+  heads.forEach(([t, col], i) => s.addText(t, { x: X[i] + (i ? 0 : 0.2), y: hy + 0.03, w: W[i], h: 0.56, fontFace: FONT, fontSize: 10, bold: true, color: col, valign: 'middle', margin: 0 }));
+  const sign = (f, lowerBetter) => {
+    if (!f) return C.faint;
+    const v = f.value; const good = lowerBetter ? v < 0 : v > 0;
+    const ci = (f.ci || '').match(/[−+]?\d+(?:,\d+)?/g) || [];
+    const num = (t) => parseFloat(t.replace('−', '-').replace(',', '.'));
+    const crosses = ci.length >= 2 && num(ci[1]) * num(ci[ci.length - 1]) <= 0;
+    return crosses ? C.muted : good ? C.ok : 'FF8A98';
+  };
+  rows.forEach(([m, lab], i) => {
+    const y = hy + 0.68 + i * 0.47;
+    if (i % 2 === 0) s.addShape(pptx.ShapeType.rect, { x: 0.45, y, w: TW, h: 0.45, fill: { color: C.white, transparency: 94 }, line: { color: C.white, transparency: 100 } });
+    const low = m === 'overrated10';
+    s.addText(lab, { x: X[0] + 0.2, y, w: W[0], h: 0.45, fontFace: FONT, fontSize: 12, color: C.text, valign: 'middle', margin: 0 });
+    const cells = [[F['ext_other_' + m], C.white], [F['ext_main_' + m], C.white], [F['ext_main_' + m + '_diff'], sign(F['ext_main_' + m + '_diff'], low)], [F['ext_exact_' + m], C.white], [F['ext_exact_' + m + '_diff'], sign(F['ext_exact_' + m + '_diff'], low)]];
+    cells.forEach(([f, col], j) => s.addText(f ? f.text : '—', { x: X[j + 1], y, w: W[j + 1], h: 0.45, fontFace: FONT, fontSize: 14, bold: true, color: col, valign: 'middle', margin: 0 }));
+  });
+  const yb = hy + 0.68 + rows.length * 0.47 + 0.1;
+  s.addText([
+    { text: 'Почему по умолчанию ниже: ', options: { bold: true, color: C.white } },
+    { text: 'мы показываем и кандидатов сильнее запроса, а метка этого генератора считает их лишь «частично подходящими». Если работодателю нужен строго запрошенный грейд — режим (опция подбора в API) точнее по всем четырём метрикам качества, цена — больше переоценённых в топ-10.', options: { color: C.text } },
+  ], { x: 0.45, y: yb, w: TW, h: 0.55, fontFace: FONT, fontSize: 11, margin: 0, valign: 'top' });
+  const cx = F.ext_main_ndcg10;
+  const cond = String(cx.cond).replace(/; проверка:.*$/, '');
+  const rechk = /0 расхождений/.test(String(cx.cond)) ? ' Независимый пересчёт в чистой копии репозитория — 0 расхождений.' : '';
+  note(s, `Условие: ${cond}.${rechk} Режим «строго запрошенный грейд» выбран на зёрнах разработки этого генератора, отчётные зёрна — другие. Зелёный — лучше, красный — хуже, серый — разница в пределах 95 % ДИ. Команда пересчёта — приложение Б документации.`, { y: 6.08, h: 0.8, size: 8.5 });
+}
+
 // ---------- В7. ФСП и команда ----------
 {
   const s = base('ФСП и команда');
@@ -242,8 +283,73 @@ function numCell(s, x, y, w, v, { size = 26, color = C.white } = {}) {
   s.background = { path: A('bg_title.jpg') };
   s.addImage({ path: A('logo_draft.png'), x: 0.75, y: 2.4, w: 3.0, h: 0.957 });
   s.addText('Приложение', { x: 0.45, y: 3.6, w: 9.6, h: 0.8, fontFace: FONT, fontSize: 36, bold: true, color: C.white, margin: 0 });
-  s.addText('Подробности для вопросов жюри: механика подбора, тест, валидация, документы ФСП, интеграции, архитектура, монетизация, ссылки.',
+  s.addText('Подробности для вопросов жюри: замечания экспертизы, как мы проверяем, механика подбора, тест, валидация, документы ФСП, интеграции, архитектура, монетизация, ссылки.',
     { x: 0.45, y: 4.45, w: 8.6, h: 0.9, fontFace: FONT, fontSize: 15, color: C.text, margin: 0, valign: 'top' });
+}
+
+
+// ---------- П1. Вы сказали — мы сделали: 12 замечаний экспертизы 20.10 ----------
+{
+  const s = base('Замечания экспертизы');
+  title(s, 'Вы сказали — мы сделали:\n12 замечаний экспертизы 20.10', { size: 28 });
+  const items = [
+    ['Место — по тесту и ФСП, стек — фильтр', 'Порядок задают тест по навыкам вакансии и ФСП; заявленное без теста не влияет', '/employer/needs/<id>'],
+    ['Фильтр грейда без заявленного уровня', 'Фильтр отбирает только грейд, подтверждённый тестом', '/employer/search'],
+    ['Ответ не должен уходить в браузер', 'Ключи хранятся и проверяются только на сервере; сквозной тест', 'e2e 21-no-answer-keys'],
+    ['Демо-код ФСП ID — не как рабочий', 'Код виден только в демо-роли, с пометкой «Демо-стенд»', '/candidate/fsp'],
+    ['Порядок — с потребностью и без', 'Два правила описаны и покрыты тестами', 'docs/matching/ORDER.md'],
+    ['«Почему» — без устного перевода', 'Пояснения полными фразами, без внутренних кодов', 'карточка в подборке'],
+    ['Вилка до согласия, контакты закрыты', 'Без вилки — ошибка 422; отзыв согласия снова закрывает контакты', '/candidate/invitations'],
+    ['Провал не снимает грейд; без ФСП — в выдаче', 'Правило в коде и тестах; ФСП без истории — ноль, без штрафа', '/demo'],
+    ['Секреты — не в репозитории', 'Только .env на сервере; проверка всей истории gitleaks', '.gitleaks.toml'],
+    ['Письмо подтверждения — настоящее', 'Код приходит письмом; почта — с проверкой сертификата', '/register'],
+    ['README без обещаний', 'Каждая цифра — из NUMBERS.json с условием; сборка проверяет ссылки', 'README.md'],
+    ['Что изменилось к финалу и почему', 'Отдельный документ по волнам доработки', 'docs/submission/CHANGELOG.md'],
+  ];
+  const cw = 3.0, ch = 1.32, gx = 0.133, gy = 0.1, x0 = 0.45, y0 = 2.05;
+  items.forEach(([said, did, where], i) => {
+    const x = x0 + (i % 4) * (cw + gx), y = y0 + Math.floor(i / 4) * (ch + gy);
+    card(s, x, y, cw, ch, { transparency: 88 });
+    s.addText(String(i + 1), { x: x + 0.14, y: y + 0.1, w: 0.38, h: 0.32, fontFace: FONT, fontSize: 14, bold: true, color: C.red, margin: 0, valign: 'top' });
+    s.addText(said, { x: x + 0.5, y: y + 0.1, w: cw - 0.62, h: 0.42, fontFace: FONT, fontSize: 10, bold: true, color: C.white, margin: 0, valign: 'top' });
+    s.addText(did, { x: x + 0.14, y: y + 0.55, w: cw - 0.26, h: 0.48, fontFace: FONT, fontSize: 9, color: C.text, margin: 0, valign: 'top' });
+    s.addText(where, { x: x + 0.14, y: y + 1.02, w: cw - 0.26, h: 0.25, fontFace: FONT, fontSize: 8.5, bold: true, color: C.lav, margin: 0, valign: 'top' });
+  });
+  note(s, 'Каждую строку можно проверить самостоятельно — адрес на сайте, тест или файл указан в карточке. Полная таблица с методами API и тестами — README, раздел «Замечания экспертизы 20.10 — как проверить».', { y: 6.42 });
+}
+
+// ---------- П2. Как мы проверяем: процедура и журнал отчётных прогонов ----------
+{
+  const s = base('Как мы проверяем');
+  title(s, 'Как мы проверяем себя:\nсначала правила и хэш, потом один прогон', { size: 28 });
+  const steps = [
+    ['Протокол и хэш — до прогона', 'что меряем и на каких данных — коммит в git; отложенный набор заморожен, его хэш записан'],
+    ['Один прогон на отложенных', 'настройка — только на обучающих данных; повторного отчётного прогона на тех же данных нет, лучший из нескольких не выбираем'],
+    ['Независимый пересчёт', 'независимый рецензент повторяет прогон в чистой копии репозитория и сверяет каждое поле'],
+    ['Две колонки', 'каждая метрика — в стандартных условиях и в проверке на прочность, рядом'],
+    ['Один файл цифр', 'docs/NUMBERS.json → сайт, README, документация и эти слайды; цифры руками не пишем'],
+  ];
+  steps.forEach(([h, b], i) => {
+    const y = 2.05 + i * 0.84;
+    card(s, 0.45, y, 5.2, 0.76, { transparency: 88 });
+    s.addText(String(i + 1), { x: 0.6, y, w: 0.4, h: 0.76, fontFace: FONT, fontSize: 20, bold: true, color: C.red, valign: 'middle', margin: 0 });
+    s.addText(h, { x: 1.05, y: y + 0.07, w: 4.5, h: 0.3, fontFace: FONT, fontSize: 11.5, bold: true, color: C.white, margin: 0, valign: 'top' });
+    s.addText(b, { x: 1.05, y: y + 0.36, w: 4.5, h: 0.4, fontFace: FONT, fontSize: 8.8, color: C.text, margin: 0, valign: 'top' });
+  });
+  const J = FACTS.journal || [];
+  const jx = 5.9, jw = 6.95;
+  card(s, jx, 2.05, jw, 4.12);
+  s.addText('Журнал отчётных прогонов', { x: jx + 0.22, y: 2.15, w: jw - 0.4, h: 0.38, fontFace: FONT, fontSize: 13, bold: true, color: C.ok, margin: 0 });
+  s.addText('Что заморожено до прогона', { x: jx + 4.0, y: 2.18, w: 2.8, h: 0.34, fontFace: FONT, fontSize: 9, color: C.muted, margin: 0, valign: 'middle' });
+  J.slice(0, 7).forEach((j, i) => {
+    const y = 2.6 + i * 0.5;
+    if (i % 2 === 0) s.addShape(pptx.ShapeType.rect, { x: jx + 0.1, y, w: jw - 0.2, h: 0.48, fill: { color: C.white, transparency: 94 }, line: { color: C.white, transparency: 100 } });
+    s.addText([{ text: j.what, options: { color: C.white, bold: true } }, ...(j.extra ? [{ text: '\n' + j.extra, options: { color: C.muted, fontSize: 8.5 } }] : [])],
+      { x: jx + 0.22, y, w: 3.75, h: 0.48, fontFace: FONT, fontSize: 9.5, margin: 0, valign: 'middle' });
+    s.addText([{ text: j.kind + ' ', options: { color: C.muted } }, { text: j.hash, options: { color: C.white, bold: true, fontFace: 'Courier New' } }],
+      { x: jx + 4.0, y, w: 2.85, h: 0.48, fontFace: FONT, fontSize: 9.5, margin: 0, valign: 'middle' });
+  });
+  note(s, 'Хэш — начало SHA-256 из docs/NUMBERS.json. Где кандидаты модельные, а не люди, — это написано рядом с каждой цифрой.', { y: 6.3 });
 }
 
 // (прежний слайд «Проблема» — в выступлении, слайд 2)
@@ -389,30 +495,30 @@ function numCell(s, x, y, w, v, { size = 26, color = C.white } = {}) {
   s.addText('Метрика', { x: colX[0] + 0.2, y: 2.1, w: colW[0], h: 0.52, fontFace: FONT, fontSize: 11.5, bold: true, color: C.white, valign: 'middle', margin: 0 });
   s.addText('Стандартные условия\n(как в аналогичных решениях)', { x: colX[1], y: 2.08, w: colW[1], h: 0.56, fontFace: FONT, fontSize: 9.5, bold: true, color: C.white, valign: 'middle', margin: 0 });
   s.addText('Проверка на прочность\n(наши жёсткие условия)', { x: colX[2], y: 2.08, w: colW[2] + 0.3, h: 0.56, fontFace: FONT, fontSize: 9.5, bold: true, color: 'FF8A98', valign: 'middle', margin: 0 });
-  const rows = PAIRS.pairs.slice(0, 10);
-  const rh = 0.355;
+  const rows = PAIRS.pairs.slice(0, 11);
+  const rh = 0.31;
   rows.forEach((p, i) => {
     const y = 2.75 + i * rh;
     if (i % 2 === 0) s.addShape(pptx.ShapeType.rect, { x: 0.45, y, w: TW, h: rh, fill: { color: C.white, transparency: 94 }, line: { color: C.white, transparency: 100 } });
-    s.addText(p.label, { x: colX[0] + 0.2, y, w: colW[0] - 0.25, h: rh, fontFace: FONT, fontSize: 10.5, color: C.text, valign: 'middle', margin: 0 });
+    s.addText(p.label, { x: colX[0] + 0.2, y, w: colW[0] - 0.25, h: rh, fontFace: FONT, fontSize: 9.5, color: C.text, valign: 'middle', margin: 0 });
     for (const [k, x, w] of [['standard', colX[1], colW[1]], ['hard', colX[2], colW[2]]]) {
       const v = p[k];
       s.addText(v ? v.text : PENDING, { x, y, w, h: rh, fontFace: FONT, fontSize: v ? 12.5 : 9.5, bold: !!v, color: v ? C.white : C.faint, valign: 'middle', margin: 0 });
     }
   });
   // реальные данные — справа
-  card(s, 9.5, 2.05, 3.35, 4.25);
+  card(s, 9.5, 2.05, 3.35, 4.11);
   s.addText('Реальные данные', { x: 9.72, y: 2.17, w: 3.0, h: 0.4, fontFace: FONT, fontSize: 13, bold: true, color: C.ok, margin: 0 });
   const real = PAIRS.real.filter((r) => r.value).slice(0, 4);
   real.forEach((r, i) => {
-    const y = 2.68 + i * 0.9;
+    const y = 2.6 + i * 0.86;
     s.addText(r.value.text, { x: 9.72, y, w: 3.0, h: 0.42, fontFace: FONT, fontSize: 18, bold: true, color: C.white, margin: 0, valign: 'bottom' });
     s.addText(r.label, { x: 9.72, y: y + 0.43, w: 3.0, h: 0.42, fontFace: FONT, fontSize: 9.5, color: C.muted, margin: 0, valign: 'top' });
   });
   const c1 = (PAIRS.pairs.find((p) => p.standard && p.standard.cond) || {}).standard;
   const c2 = (PAIRS.pairs.find((p) => p.hard && p.hard.cond) || {}).hard;
   const condLine = [c1 ? `Стандартные: ${c1.cond}.` : '', c2 ? `Прочность: ${c2.cond}.` : ''].filter(Boolean).join('  ');
-  note(s, (condLine ? condLine + ' ' : '') + 'Модельные кандидаты, не люди; какие условия идут заголовком, решено до прогонов. Все условия, N и команды пересчёта — docs/NUMBERS.json, приложение Б документации, /validation.', { y: 6.36 });
+  note(s, (condLine ? condLine + ' ' : '') + 'Модельные кандидаты, не люди; какие условия идут заголовком, решено до прогонов. Все условия, N и команды пересчёта — docs/NUMBERS.json, приложение Б документации, /validation.', { y: 6.22, h: 0.72, size: 7.5 });
 }
 
 // ---------- 10. Архитектура ----------
