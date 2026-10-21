@@ -24,24 +24,31 @@
   ],
   "shortcuts": [
     {
-      "name": "Подборка",
+      "name": "Потребности и подборки",
       "short_name": "Подборка",
-      "description": "Подборки подтверждённых специалистов по вашим вакансиям",
+      "description": "Потребности, вакансии и ранжированные подборки специалистов",
       "url": "/employer/needs?source=pwa-shortcut",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Мой грейд",
+      "name": "Тест и грейд",
       "short_name": "Мой грейд",
-      "description": "Адаптивный тест и подтверждённый инженерный грейд",
+      "description": "Адаптивный тест, подтверждённая категория и паспорт навыков",
       "url": "/candidate/assessment?source=pwa-shortcut",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Приглашения",
+      "name": "Приглашения и вакансии",
       "short_name": "Приглашения",
-      "description": "Приглашения с вилкой зарплаты и диалоги с компаниями",
+      "description": "Приглашения с вилкой зарплаты, открытые вакансии и переписка",
       "url": "/candidate/invitations?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Аналитика спроса на таланты",
+      "short_name": "Спрос",
+      "description": "Карта талантов по регионам России и спрос работодателей",
+      "url": "/fsp/demand?source=pwa-shortcut",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]

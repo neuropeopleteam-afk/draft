@@ -72,7 +72,7 @@ export function CandidateWarRoomStage({
 
   return (
     <section
-      className={`rounded-2xl border border-indigo-500/25 bg-gradient-to-br from-indigo-950/40 via-[#120f24] to-rose-950/30 p-4 text-white ${className}`}
+      className={`rounded-2xl border border-indigo-500/30 bg-[#120f24] p-4 text-white shadow-sm ${className}`}
       data-testid="wr-candidate-stage"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -134,9 +134,11 @@ export function CandidateWarRoomStage({
 /** Карточка результата Боевого ИИ-Полигона кандидата для кабинета работодателя. */
 export function EmployerCandidateWarRoomCard({
   candidateRef,
+  compact = false,
   className = "",
 }: {
   candidateRef: string;
+  compact?: boolean;
   className?: string;
 }) {
   const [data, setData] = useState<{
@@ -168,35 +170,47 @@ export function EmployerCandidateWarRoomCard({
 
   return (
     <div
-      className={`rounded-xl border border-indigo-500/25 bg-indigo-950/20 p-3 text-xs ${className}`}
+      className={`mt-3 rounded-xl border border-indigo-200/80 bg-[#F7F6FB] p-3 text-xs text-brand-night ${className}`}
       data-testid="wr-employer-card"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-bold text-indigo-200">
+        <span className="font-bold text-brand-night">
           Боевой этап (разбор инцидента): {b.scenario_title}
         </span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-            b.passed ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-200"
-          }`}
-        >
-          {b.passed ? `Подтверждён ${b.confirmed_grade.toUpperCase()}` : `Частично (${nf(b.total_score * 100)} %)`}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to={`/demo/warroom?direction=${encodeURIComponent(b.direction || "backend")}#architecture`}
+            className="text-[11px] font-bold text-indigo-700 hover:underline"
+            data-testid="wr-employer-how-solved"
+          >
+            Как решал инцидент →
+          </Link>
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+              b.passed ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"
+            }`}
+          >
+            {b.passed ? `Подтверждён ${b.confirmed_grade.toUpperCase()}` : `Частично (${nf(b.total_score * 100)} %)`}
+          </span>
+        </div>
       </div>
-      <p className="mt-1 text-[11px] text-white/70">
-        Итоговый балл: <strong>{nf(b.total_score * 100)} %</strong> · SLO:{" "}
-        {b.slo_met ? "выполнены" : "не выполнены"} · Инфраструктура: {nf(b.cost_rub_month)} из{" "}
+      <p className="mt-1 text-[11px] text-brand-ink/80">
+        Итоговый балл: <strong className="text-brand-night">{nf(b.total_score * 100)} %</strong> · Показатели работы:{" "}
+        {b.slo_met ? "восстановлены в бюджете" : "не выполнены"} · Инфраструктура: {nf(b.cost_rub_month)} из{" "}
         {nf(b.cost_budget_rub_month)} ₽/мес
-        {b.metrics?.p99_ms ? ` · p99 = ${nf(b.metrics.p99_ms)} мс` : ""}
+        {b.metrics?.p99_ms ? ` · время ответа = ${nf(b.metrics.p99_ms)} мс` : ""}
       </p>
-      {quotes.length > 0 && (
-        <div className="mt-2 space-y-1 border-t border-white/10 pt-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/50">
+      <p className="mt-0.5 text-[10px] text-brand-ink/65">
+        Вклад практического этапа — по правилу, на людях ещё не откалиброван.
+      </p>
+      {!compact && quotes.length > 0 && (
+        <div className="mt-2 space-y-1 border-t border-brand-night/10 pt-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-ink/60">
             Проверенные цитаты из обоснования кандидата:
           </p>
           {quotes.map((q) => (
-            <p key={q.id} className="text-[11px] text-white/75">
-              <span className="font-semibold text-indigo-200">{q.title}:</span> «{q.quote}»
+            <p key={q.id} className="text-[11px] text-brand-ink/85">
+              <span className="font-semibold text-brand-night">{q.title}:</span> «{q.quote}»
             </p>
           ))}
         </div>
@@ -205,21 +219,36 @@ export function EmployerCandidateWarRoomCard({
   );
 }
 
-export default function WarRoomBadge(props: {
+export function WarRoomBadge(props: {
   role?: "candidate" | "employer";
+  mode?: "candidate" | "employer";
   candidateRef?: string;
+  refId?: string;
   direction?: string | null;
   claimedGrade?: string | null;
+  grade?: string | null;
+  compact?: boolean;
   className?: string;
 }) {
-  if (props.role === "employer" && props.candidateRef) {
-    return <EmployerCandidateWarRoomCard candidateRef={props.candidateRef} className={props.className} />;
+  const effRole = props.role ?? props.mode ?? "candidate";
+  const effRef = props.candidateRef ?? props.refId;
+  const effGrade = props.claimedGrade ?? props.grade;
+  if (effRole === "employer" && effRef) {
+    return (
+      <EmployerCandidateWarRoomCard
+        candidateRef={effRef}
+        compact={props.compact}
+        className={props.className}
+      />
+    );
   }
   return (
     <CandidateWarRoomStage
       direction={props.direction}
-      claimedGrade={props.claimedGrade}
+      claimedGrade={effGrade}
       className={props.className}
     />
   );
 }
+
+export default WarRoomBadge;

@@ -30,3 +30,23 @@ regexes = ['''test-secret-not-for-prod''', '''abcDEF123456''']  # вторая �
 description = "Пустая переменная шаблона .env, за которой идёт следующая переменная"
 regexTarget = "match"
 regexes = ['''^[A-Z0-9_]+=\s*\n[A-Z0-9_]+=''']
+
+# Обезличенные ключи сверки протоколов ФСП (SHA-256, docs/realdata/fsp_protocols): хэш записи, а не секрет доступа.
+[[allowlists]]
+description = "Хэши обезличивания протоколов ФСП (key_hash, fio_hash, team_hash)"
+regexTarget = "line"
+regexes = ['''"(key|fio|team)_hash":\s*"[0-9a-f]{64}"''']
+
+# Метки образов отката в хендоверах (spectrek_fsp-api:rb-…): имя docker-образа, не ключ.
+[[allowlists]]
+description = "Метки docker-образов отката"
+regexTarget = "line"
+regexes = ['''spectrek_fsp-(api|web):rb-[A-Za-z0-9._-]+''']
+
+# Переменная key в вызове прогона отложенного набора античита: значение берётся из окружения, в коде его нет.
+[[allowlists]]
+description = "Имя переменной ключа в tools/grader_check/run_holdout_eval.py"
+condition = "AND"
+paths = ['''tools/grader_check/run_holdout_eval\.py$''']
+regexTarget = "line"
+regexes = ['''run_llm_chain_on_holdout\(d, items_map, key,''']

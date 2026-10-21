@@ -67,23 +67,36 @@ export function BootMark() {
   return null;
 }
 
-function Screen({ title, text, children, note, why, full = true }: { title: string; text: string; children?: ReactNode; note?: string; why?: string; full?: boolean }) {
+function Screen({ title, text, children, note, why, badge, full = true }: { title: string; text: string; children?: ReactNode; note?: string; why?: string; badge?: string; full?: boolean }) {
   const h = useRef<HTMLHeadingElement>(null);
   useEffect(() => { h.current?.focus({ preventScroll: true }); }, []);
   const body = (
-    <>
-      <h1 ref={h} tabIndex={-1} className="text-xl font-bold text-brand-night outline-none">{title}</h1>
+    <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 rounded-3xl border border-brand-night/10 bg-white p-7 text-center shadow-sm sm:p-9">
+      <div className="inline-flex items-center gap-2.5 text-sm font-extrabold text-brand-night">
+        <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#310F53" />
+          <circle cx="12.5" cy="16" r="7" fill="none" stroke="#FFD6E4" strokeWidth="2.5" />
+          <circle cx="19.5" cy="16" r="7" fill="none" stroke="#FF0053" strokeWidth="2.5" />
+        </svg>
+        <span>Драфт</span>
+        {badge && (
+          <span className="rounded-full bg-brand-blush/80 px-2.5 py-0.5 font-mono text-xs font-extrabold text-brand-night">
+            {badge}
+          </span>
+        )}
+      </div>
+      <h1 ref={h} tabIndex={-1} className="text-xl font-extrabold text-brand-night outline-none sm:text-2xl">{title}</h1>
       <p className="max-w-md text-base leading-relaxed text-brand-ink/80">{text}</p>
-      {why && <p className="max-w-md break-all text-sm text-brand-ink/80" data-boot-why>{why}</p>}
-      {children && <div className="flex flex-wrap justify-center gap-3">{children}</div>}
-      <p className="min-h-[1.5em] text-sm text-brand-plum" role="status">{note ?? ""}</p>
-    </>
+      {why && <p className="max-w-md break-all rounded-xl bg-[#F3F2FB] px-3.5 py-2 font-mono text-xs text-brand-ink/80" data-boot-why>{why}</p>}
+      {children && <div className="mt-1 flex flex-wrap justify-center gap-3">{children}</div>}
+      <p className="min-h-[1.5em] text-sm font-medium text-brand-plum" role="status">{note ?? ""}</p>
+    </div>
   );
-  const cls = "flex flex-col items-center justify-center gap-4 px-6 text-center";
+  const cls = "flex flex-col items-center justify-center gap-4 bg-[#FAF8FC] px-4 py-10 text-center";
   // full — весь экран (свой <main>); иначе — внутри <main> кабинета
   return full
     ? <main id="main" tabIndex={-1} data-boot-screen className={`${cls} min-h-screen outline-none`}>{body}</main>
-    : <div data-boot-screen className={`${cls} min-h-[50vh]`}>{body}</div>;
+    : <div data-boot-screen className={`${cls} min-h-[50vh] rounded-2xl`}>{body}</div>;
 }
 
 /** Пауза перед автоматической повторной загрузкой: человек успевает прочитать, что происходит (как у сторожа
@@ -113,11 +126,12 @@ function CrashScreen({ error, full, onRetry }: { error: unknown; full?: boolean;
     );
   }
   return (
-    <Screen full={full} title="Что-то пошло не так"
+    <Screen full={full} badge="500" title="Что-то пошло не так"
       text="Экран не смог открыться из-за ошибки. Обновите страницу или вернитесь на главную — введённые на других экранах данные сохранены на сервере.">
       {onRetry && <button type="button" className="btn-primary" onClick={onRetry}>Попробовать ещё раз</button>}
       <button type="button" className={onRetry ? "btn-ghost" : "btn-primary"} onClick={hardReload}>Обновить страницу</button>
       <a href="/" className="btn-ghost">На главную</a>
+      <a href="/support" className="btn-ghost">Служба поддержки</a>
     </Screen>
   );
 }
