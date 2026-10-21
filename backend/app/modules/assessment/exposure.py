@@ -164,6 +164,9 @@ class AppCATSession(CATSession):
         return self._apply_format_quota(oldest)
 
     def _ext_candidates(self) -> list[PoolItem]:
+        return self._ext_quota(self._ext_candidates_raw())
+
+    def _ext_candidates_raw(self) -> list[PoolItem]:
         base = self._limit(super()._ext_candidates())
         if not self.seen:
             return base
@@ -174,6 +177,16 @@ class AppCATSession(CATSession):
         # попадали); дотестирование предварительного Junior (confirm) — LRU по всем, чтобы не кончилось без заданий
         return self._oldest(base if self.ext_lru else [i for i in base if self.seen.get(i.family_id, 0) >= 1])
 
+    def _ext_quota(self, cands: list[PoolItem]) -> list[PoolItem]:
+        """Квота практических заданий (код и развёрнутые ответы с автопроверкой) и в дотестировании у порога и во
+        втором этапе — по всей сессии, а не только в основной части (настройка ASSESSMENT_CODE_QUOTA_EXT).
+        Без неё дотестирование шло одними вопросами с выбором ответа и доля практических падала до ~20 %."""
+        if not cands or self.code_open_share <= 0.0 or not _ext_quota_on():
+            return cands
+        cnt = self.format_counts()
+        n_co = sum(v for k, v in cnt.items() if k in CODE_OPEN_FORMATS)
+        return filter_code_open_pool(cands, self.n_scored, n_co, self.code_open_share)
+
     def _oldest(self, cands: list[PoolItem]) -> list[PoolItem]:
         """LRU: из виденных кандидатом семейств — те, что он видел давнее всего (наибольший «возраст»)."""
         old = [i for i in cands if i.family_id in self.seen]
@@ -181,6 +194,12 @@ class AppCATSession(CATSession):
             return []
         m = max(self.seen[i.family_id] for i in old)
         return [i for i in old if self.seen[i.family_id] == m]
+
+
+def _ext_quota_on() -> bool:
+    from app.core.config import get_settings
+
+    return bool(getattr(get_settings(), "assessment_code_quota_ext", False))
 
 
 @lru_cache(maxsize=1)
