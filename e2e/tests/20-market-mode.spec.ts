@@ -105,8 +105,16 @@ function demoMarkers(): string[] {
   return [...(d.companies || []), ...(d.refs || [])].filter((s: string) => s && s.length >= 6);
 }
 
-async function scanPage(page: Page, url: string, markers: string[]): Promise<string[]> {
+/** Фрагмент текста вокруг находки: по нему владелец зоны видит, где именно на странице демо. */
+function snippet(text: string, at: number, len: number): string {
+  return text.slice(Math.max(0, at - 60), at + len + 60).replace(/\s+/g, " ").trim();
+}
+
+type Scan = { found: string[]; context: string[]; final: string; h1: string };
+
+async function scanPage(page: Page, url: string, markers: string[]): Promise<Scan> {
   const found: string[] = [];
+  const context: string[] = [];
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
   await page.waitForTimeout(600);
@@ -119,10 +127,28 @@ async function scanPage(page: Page, url: string, markers: string[]): Promise<str
     });
     return t;
   }).catch(() => "");
-  for (const t of FORBIDDEN_TEXT) if (text.includes(t)) found.push(`текст «${t}»`);
-  for (const m of markers) if (text.includes(m)) found.push(`демо-объект «${m}»`);
-  for (const id of FORBIDDEN_TESTIDS) if (await page.getByTestId(id).count()) found.push(`элемент data-testid=${id}`);
-  return found;
+  for (const t of FORBIDDEN_TEXT) {
+    const at = text.indexOf(t);
+    if (at >= 0) { found.push(`текст «${t}»`); context.push(snippet(text, at, t.length)); }
+  }
+  for (const m of markers) {
+    const at = text.indexOf(m);
+    if (at >= 0) { found.push(`демо-объект «${m}»`); if (context.length < 8) context.push(snippet(text, at, m.length)); }
+  }
+  for (const id of FORBIDDEN_TESTIDS) {
+    const el = page.getByTestId(id);
+    if (await el.count()) {
+      found.push(`элемент data-testid=${id}`);
+      context.push(`[${id}] ${(await el.first().innerText().catch(() => "")).replace(/\s+/g, " ").slice(0, 120)}`);
+    }
+  }
+  // доказательство, что страница открылась под ролью: итоговый адрес и заголовок (пустая страница или
+  // переадресация на вход не должны сойти за «нет демо»)
+  const info = await page.evaluate(() => ({
+    final: location.pathname + location.search,
+    h1: (document.querySelector("h1")?.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120),
+  })).catch(() => ({ final: "?", h1: "" }));
+  return { found, context, ...info };
 }
 
 test.describe.configure({ mode: "serial" });
@@ -136,8 +162,13 @@ test("рыночный режим: ни на одной странице App.tsx
     anon: null, candidate: await realToken("candidate"), employer: await realToken("employer"),
     fsp: process.env.E2E_FSP_TOKEN || null,
   };
-  const findings: { role: Role; page: string; found: string[] }[] = [];
-  let pages = 0;
+  const findings: { role: Role; page: string; found: string[]; context: string[] }[] = [];
+  const visited: { role: Role; page: string; final: string; h1: string }[] = [];
+  const report = (done: boolean) => {
+    fs.mkdirSync("reports", { recursive: true });
+    fs.writeFileSync("reports/market_mode.json", JSON.stringify({ base_url: BASE_URL, pages: visited.length,
+      routes: all.length, done, findings, visited }, null, 2));
+  };
   for (const role of ["anon", "candidate", "employer", "fsp"] as Role[]) {
     if (role === "fsp" && !tokens.fsp) { console.log("[e2e] E2E_FSP_TOKEN не задан — роль ФСП пропущена"); continue; }
     const ctx = await browser.newContext({ baseURL: BASE_URL, serviceWorkers: "block", locale: "ru-RU" });
@@ -150,17 +181,18 @@ test("рыночный режим: ни на одной странице App.tsx
     const page = await ctx.newPage();
     const extra = role === "employer" ? await employerNeedPages(tokens.employer!) : [];
     for (const p of [...rolePages(all, role), ...extra]) {
-      pages += 1;
-      const found = await scanPage(page, p, markers);
-      if (found.length) findings.push({ role, page: p, found });
-      // промежуточный отчёт после каждой страницы: прерванный прогон не теряет находок
-      fs.mkdirSync("reports", { recursive: true });
-      fs.writeFileSync("reports/market_mode.json", JSON.stringify({ pages, routes: all.length, done: false, findings }, null, 2));
+      const r = await scanPage(page, p, markers);
+      visited.push({ role, page: p, final: r.final, h1: r.h1 });
+      if (r.found.length) findings.push({ role, page: p, found: r.found, context: r.context });
+      report(false); // промежуточный отчёт после каждой страницы: прерванный прогон не теряет находок
     }
     await ctx.close();
   }
-  fs.mkdirSync("reports", { recursive: true });
-  fs.writeFileSync("reports/market_mode.json", JSON.stringify({ pages, routes: all.length, done: true, findings }, null, 2));
-  console.log(`[e2e] рыночный режим: страниц ${pages}, находок ${findings.length}`);
+  report(true);
+  console.log(`[e2e] рыночный режим: страниц ${visited.length}, находок ${findings.length}`);
+  // вошедшая роль, выброшенная на вход, — не «чистая» страница, а несостоявшаяся проверка
+  const auth = /^\/(login|register)(\/|\?|$)/; // сами страницы входа и регистрации открываются у всех ролей
+  const bounced = visited.filter((v) => v.role !== "anon" && auth.test(v.final) && !auth.test(v.page));
+  expect(bounced, bounced.map((v) => `${v.page} [${v.role}] → ${v.final}`).join("\n")).toEqual([]);
   expect(findings, findings.map((f) => `${f.page} [${f.role}]: ${f.found.join(", ")}`).join("\n")).toEqual([]);
 });
