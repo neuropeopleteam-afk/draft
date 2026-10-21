@@ -1,0 +1,34 @@
+family_id: frontend.async.t21_async_interleave_output
+title: Чередование async-функций — await в цикле, then на результате и таймер
+direction: frontend
+skills:
+- javascript
+- async
+- event_loop
+target_grades:
+- senior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 10
+  - 13
+  extra:
+    tasks:
+    - 2
+    - 3
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.85
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две-три async-функции
+    без await при вызове: каждая выполняется синхронно до первого await, затем продолжения чередуются по очереди
+    микрозадач (по шагу за тик), .then на результате — через тик после завершения, таймер — после всех микрозадач.
+    Уровень Senior: async/await и очередь микрозадач. Набор t21 (21.10) у порога Senior (b = +0,85)'
+generator: assessment_bank.families.frontend.t21_async_interleave_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Несколько async-функций с await в цикле
+  запускаются одновременно; предсказать порядок строк вывода. Ключ — модель очереди микрозадач в генераторе,
+  проверка — исполнение показанного кода в Node.js.'
