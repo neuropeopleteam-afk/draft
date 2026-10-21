@@ -40,19 +40,83 @@ export default function CandidateOverview() {
       <PageTitle title={name ? `Здравствуйте, ${name}` : "Кабинет кандидата"} subtitle={category ? (c?.visible_to_employers ? "Ваш профиль виден работодателям: ниже — ваша пошаговая дорожная карта от подтверждения навыков до оффера с зарплатой." : "Категория присвоена. Дайте согласие на публикацию профиля, чтобы работодатели могли вас найти.") : "Пройдите опрос и тест — после этого работодатели смогут найти вас и прислать приглашение с зарплатой."} />
       {err && <div className="mt-4"><Alert>{err}</Alert></div>}
 
+      {/* Объёмный цифровой паспорт грейда и статус спортсмена ФСП */}
+      <section
+        className="fsp-hero-banner mt-5 p-5 sm:p-6"
+        data-testid="candidate-passport-banner"
+        aria-label="Цифровой паспорт грейда и статус ФСП"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            <span
+              className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/20 shadow-lg"
+              style={{
+                background: "linear-gradient(145deg, #2B1CE0 0%, #402FFF 55%, #161B42 100%)",
+                boxShadow: "0 12px 28px -10px rgba(64, 47, 255, 0.85), inset 0 1px 0 rgba(255,255,255,0.35)",
+              }}
+              aria-hidden="true"
+            >
+              <svg viewBox="0 0 40 40" className="h-8 w-8" fill="none">
+                <polygon points="20,4 34,12 34,28 20,36 6,28 6,12" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" fill="rgba(255,255,255,0.08)" />
+                <path d="M14 20l4 4 8-8" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="20" cy="4" r="2.2" fill="#EDEDED" />
+                <circle cx="34" cy="12" r="2.2" fill="#402FFF" />
+                <circle cx="6" cy="28" r="2.2" fill="#EC1D35" />
+              </svg>
+            </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[#A59DFF]" title="Как устроено: защищённая асимметричная подпись Ed25519">
+                  Цифровой паспорт грейда
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                  <span className={`h-1.5 w-1.5 rounded-full ${c?.visible_to_employers ? "bg-emerald-400" : "bg-amber-300"}`} />
+                  {c?.visible_to_employers ? "Открыт для офферов с вилкой" : "Скрыт до публикации"}
+                </span>
+              </div>
+              <p className="mt-1 text-lg font-extrabold tracking-tight text-white sm:text-xl">
+                {catTitle(category)}
+              </p>
+              <p className="mt-0.5 text-xs text-white/75">
+                {me?.fsp?.linked
+                  ? `Профиль ФСП подтверждён · достижений в реестре: ${me.fsp.achievements_count || 1}`
+                  : "Подключите ФСП ID в профиле, чтобы добавить спортивные разряды и кубки к паспорту грейда"}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link to="/candidate/category" className="btn-light !px-3.5 !py-2 text-xs font-bold">
+              Паспорт и категория
+            </Link>
+            <Link to="/candidate/invitations" className="btn-primary !px-3.5 !py-2 text-xs">
+              Приглашения ({inv.data?.length ?? 0})
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Наглядная пошаговая дорожная карта кандидата (Шаг 1 → Шаг 2 → Шаг 3 с живым ИИ-аватаром → Шаг 4) */}
       <section className="card mt-6 space-y-4 border-brand/20 bg-white" data-tour="cand-roadmap" aria-label="Пошаговая дорожная карта кандидата">
-        <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand">Дорожная карта кандидата · 4 шага</p>
-          <h2 className="mt-0.5 text-lg font-bold text-brand-night">Как устроен ваш путь в «Драфте» и куда нажимать</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="font-mono text-xs font-extrabold uppercase tracking-[0.12em] text-brand">Дорожная карта кандидата · 4 шага</p>
+            <h2 className="mt-0.5 text-lg font-bold text-brand-night">Как устроен ваш путь в «Драфте» и куда нажимать</h2>
+          </div>
+          <svg viewBox="0 0 180 24" className="hidden h-6 w-44 sm:block" fill="none" aria-hidden="true">
+            <path d="M12 12 H168" stroke="rgba(64,47,255,0.25)" strokeWidth="2" strokeDasharray="4 4" />
+            <circle cx="12" cy="12" r="4" fill="#402FFF" />
+            <circle cx="64" cy="12" r="4" fill="#402FFF" />
+            <circle cx="116" cy="12" r="4.5" fill="#EC1D35" />
+            <circle cx="168" cy="12" r="4" fill="#0E1126" />
+          </svg>
         </div>
 
         <ol className="grid gap-3 md:grid-cols-2">
-          <li className="flex flex-col justify-between rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+          <li className="flex flex-col justify-between rounded-2xl border border-brand-night/10 bg-gradient-to-b from-[#F8F9FF] to-[#EFF2FC] p-4">
             <div>
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-night px-2.5 py-0.5 text-xs font-bold text-white">Шаг 1</span>
-                <span className="text-xs font-semibold text-emerald-700">{c?.onboarding_completed_at ? "✓ Заполнено" : "Начните здесь"}</span>
+                <span className="font-mono text-xs font-semibold text-brand">{c?.onboarding_completed_at ? "✓ Заполнено" : "Начните здесь"}</span>
               </div>
               <p className="mt-2 font-bold text-brand-night">Направление и стек технологий</p>
               <p className="mt-1 text-xs leading-relaxed text-brand-ink/75">
@@ -66,11 +130,11 @@ export default function CandidateOverview() {
             </div>
           </li>
 
-          <li className="flex flex-col justify-between rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+          <li className="flex flex-col justify-between rounded-2xl border border-brand-night/10 bg-gradient-to-b from-[#F8F9FF] to-[#EFF2FC] p-4">
             <div>
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-night px-2.5 py-0.5 text-xs font-bold text-white">Шаг 2</span>
-                <span className="text-xs font-semibold text-emerald-700">{category ? `✓ ${catTitle(category)}` : "Ждёт старта"}</span>
+                <span className="font-mono text-xs font-semibold text-brand">{category ? `✓ ${catTitle(category)}` : "Ждёт старта"}</span>
               </div>
               <p className="mt-2 font-bold text-brand-night">Адаптивный тест на грейд</p>
               <p className="mt-1 text-xs leading-relaxed text-brand-ink/75">
@@ -85,11 +149,11 @@ export default function CandidateOverview() {
           </li>
 
           {iv?.enabled && iv.avatar ? (
-            <li className="flex flex-col justify-between rounded-2xl border-2 border-brand/35 bg-brand-blush/25 p-4" data-testid="candidate-avatar">
+            <li className="flex flex-col justify-between rounded-2xl border-2 border-brand/40 bg-gradient-to-br from-[#EEF1FF] via-white to-[#E5EAFF] p-4 shadow-[0_12px_28px_-16px_rgba(64,47,255,0.35)]" data-testid="candidate-avatar">
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white">Шаг 3 · Ключевая фишка</span>
-                  <span className="text-xs font-semibold text-brand-plum">≈ {minutes(iv.defense_minutes || 3)} голосом</span>
+                  <span className="font-mono text-xs font-semibold text-brand-plum">≈ {minutes(iv.defense_minutes || 3)} голосом</span>
                 </div>
                 <div className="mt-2.5 flex items-start gap-3">
                   <img
@@ -124,7 +188,7 @@ export default function CandidateOverview() {
               </div>
             </li>
           ) : (
-            <li className="flex flex-col justify-between rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+            <li className="flex flex-col justify-between rounded-2xl border border-brand-night/10 bg-gradient-to-b from-[#F8F9FF] to-[#EFF2FC] p-4">
               <div>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-night px-2.5 py-0.5 text-xs font-bold text-white">Шаг 3</span>
                 <p className="mt-2 font-bold text-brand-night">Категория и паспорт ФСП</p>
@@ -136,11 +200,11 @@ export default function CandidateOverview() {
             </li>
           )}
 
-          <li className="flex flex-col justify-between rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+          <li className="flex flex-col justify-between rounded-2xl border border-brand-night/10 bg-gradient-to-b from-[#F8F9FF] to-[#EFF2FC] p-4">
             <div>
               <div className="flex items-center justify-between gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-night px-2.5 py-0.5 text-xs font-bold text-white">Шаг 4</span>
-                <span className="text-xs font-semibold text-brand-plum">
+                <span className="font-mono text-xs font-semibold text-brand-plum">
                   {inv.data ? `Приглашений: ${inv.data.length}` : "Рынок hh.ru"}
                 </span>
               </div>

@@ -291,9 +291,9 @@ export function CandidateCard({ c, score, reasons, explain, actions, must, core,
           <summary className="cursor-pointer text-sm font-semibold text-brand-night">Почему в подборке</summary>
           <ul className="mt-2 space-y-1.5">
             {reasons.map((r, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm">
+              <li key={i} className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
                 <ReasonLevel r={r} />
-                <span><b className="font-semibold">{r.requirement}.</b> <span className="text-brand-ink/70">{ruText(r.text)}</span></span>
+                <span className="min-w-[12rem] flex-1"><b className="font-semibold">{r.requirement}.</b> <span className="text-brand-ink/70">{ruText(r.text)}</span></span>
               </li>
             ))}
           </ul>
