@@ -123,7 +123,12 @@ def compare(x: dict, c: dict) -> dict:
     if c.get("error") or not c.get("found"):
         return {"found": False}
     fio_ok = _norm(c.get("fio")) == x["fio_norm"]
-    place_ok = None if c.get("place") is None or x.get("place") is None else int(c["place"]) == int(x["place"])
+    place_ok = None
+    if c.get("place") is not None and x.get("place") is not None:
+        nums = [int(n) for n in re.findall(r"\d+", str(c["place"]))]
+        if nums:
+            lo, hi = nums[0], nums[-1]
+            place_ok = lo <= int(x["place"]) <= hi  # «14-24» — общее место
     b1, b2 = _bd(x.get("birth_date")), _bd(c.get("birth_date"))
     bd_ok = None if not b1 or not b2 else (b1 == b2 if len(b1) == len(b2) else b1[:4] == b2[:4])
     return {"found": True, "fio_ok": fio_ok, "place_ok": place_ok, "birth_ok": bd_ok}

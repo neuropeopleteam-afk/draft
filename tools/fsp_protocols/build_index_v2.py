@@ -87,6 +87,26 @@ def role_of(doc_id: str, page: int, fio_norm: str | None) -> str | None:
     return None
 
 
+# Личные протоколы, где место = порядковый номер строки. В КР-2026 (алгоритмическое) распознавание со 2-й
+# страницы записывало в «место» число решённых задач (1, 2, 3…) — 17 человек получали «1 место» и норматив КМС.
+# Протокол упорядочен по месту, места уникальны: восстанавливаем по порядку строк (сверено глазами: стр. 8 — места 146–167).
+SEQUENTIAL_PLACE_DOCS = {"rof2o18vujo5me8hfep08nn3bp6sd3lv.pdf": "kr_2026_algo_otbor"}
+seq_place: dict[tuple[str, int, str], int] = {}
+for fn, doc_id in SEQUENTIAL_PLACE_DOCS.items():
+    n = 0
+    for p in range(1, 200):
+        d = cache.get((doc_id, p))
+        if d is None:
+            if p > 20:
+                break
+            continue
+        for row in d.get("rows") or []:
+            if (row.get("role") or "").strip() == "Спортсмен" and row.get("fio"):
+                n += 1
+                seq_place.setdefault((fn, p, norm.normalize_fio(row["fio"])), n)
+NO_PLACE_DOCS = {"e5miei2aikivxs93d6qz2iqfnfaf0xp1.pdf"}  # список кандидатов в сборную — не протокол, «место» = номер в списке
+fixes = collections.Counter()
+
 removed = collections.Counter()
 out: list[dict] = []
 
@@ -101,6 +121,16 @@ def enrich(r: dict, fn: str) -> dict | None:
         return None
     ev = events[seg["event_id"]]
     r = dict(r)
+    if fn in SEQUENTIAL_PLACE_DOCS:
+        sp = seq_place.get((fn, r.get("page"), r.get("fio_norm")))
+        if sp is not None and sp != r.get("place"):
+            r["place_raw"] = r.get("place")
+            r["place"] = sp
+            fixes["место восстановлено по порядку строк (КР-2026 алгоритмическое)"] += 1
+    if fn in NO_PLACE_DOCS and r.get("place") is not None:
+        r["list_no"] = r.pop("place")
+        r["place"] = None
+        fixes["номер в списке сборной перенесён из «места» в list_no"] += 1
     r["event_id"] = seg["event_id"]
     r["event_title"] = ev["title"]
     r["ekp_no"] = ev.get("ekp_no")
@@ -267,7 +297,7 @@ except PermissionError:
     pass
 tmp.replace(target)
 report = {"generated_at": now, "input_records_v1": len(v1["records"]), "output_records": len(final),
-          "removed_by_reason": dict(removed), "stats": stats}
+          "removed_by_reason": dict(removed), "fixes": dict(fixes), "stats": stats}
 rep_path = base / (OUT_NAME.replace(".json", "") + "_report.json")
 rep_path.write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
 os.chmod(rep_path, 0o600)
