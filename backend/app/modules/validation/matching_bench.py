@@ -128,7 +128,7 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
     prod = np.zeros((n, m))
     for i, r in enumerate(reqs):
         for j, b in enumerate(bundles):
-            s, c, _ = score_candidate(b, r)
+            s, c, _ = score_candidate(b, r, WEIGHTS)  # явные веса v1: исторический бенч не переключается флагом MATCH_V2 (А5)
             prod[i, j] = s
             comps[i, j] = [c[k] for k in COMP_KEYS]
     has_req = np.array([bool(r.get("stack_required")) for r in reqs])
