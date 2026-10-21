@@ -177,19 +177,31 @@ export function EmployerCandidateWarRoomCard({
         <span className="font-bold text-brand-night">
           Боевой этап (разбор инцидента): {b.scenario_title}
         </span>
-        <span
-          className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-            b.passed ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"
-          }`}
-        >
-          {b.passed ? `Подтверждён ${b.confirmed_grade.toUpperCase()}` : `Частично (${nf(b.total_score * 100)} %)`}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to={`/demo/warroom?direction=${encodeURIComponent(b.direction || "backend")}#architecture`}
+            className="text-[11px] font-bold text-indigo-700 hover:underline"
+            data-testid="wr-employer-how-solved"
+          >
+            Как решал инцидент →
+          </Link>
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+              b.passed ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"
+            }`}
+          >
+            {b.passed ? `Подтверждён ${b.confirmed_grade.toUpperCase()}` : `Частично (${nf(b.total_score * 100)} %)`}
+          </span>
+        </div>
       </div>
       <p className="mt-1 text-[11px] text-brand-ink/80">
-        Итоговый балл: <strong className="text-brand-night">{nf(b.total_score * 100)} %</strong> · SLO:{" "}
-        {b.slo_met ? "выполнены в бюджете" : "не выполнены"} · Инфраструктура: {nf(b.cost_rub_month)} из{" "}
+        Итоговый балл: <strong className="text-brand-night">{nf(b.total_score * 100)} %</strong> · Показатели работы:{" "}
+        {b.slo_met ? "восстановлены в бюджете" : "не выполнены"} · Инфраструктура: {nf(b.cost_rub_month)} из{" "}
         {nf(b.cost_budget_rub_month)} ₽/мес
-        {b.metrics?.p99_ms ? ` · p99 = ${nf(b.metrics.p99_ms)} мс` : ""}
+        {b.metrics?.p99_ms ? ` · время ответа = ${nf(b.metrics.p99_ms)} мс` : ""}
+      </p>
+      <p className="mt-0.5 text-[10px] text-brand-ink/65">
+        Вклад практического этапа — по правилу, на людях ещё не откалиброван.
       </p>
       {!compact && quotes.length > 0 && (
         <div className="mt-2 space-y-1 border-t border-brand-night/10 pt-2">

@@ -11,6 +11,7 @@ import {
 import type {
   AntiCheatContourSpec,
   AntiCheatSignalSpec,
+  FollowupContext,
   MeasureSpec,
   ScenarioPublic,
 } from "../components/warroom/types";
@@ -77,21 +78,25 @@ export default function WarRoom() {
   const [measures, setMeasures] = useState<MeasureSpec[]>(FALLBACK_MEASURES);
   const [contours, setContours] = useState<AntiCheatContourSpec[]>(FALLBACK_CONTOURS);
   const [signals, setSignals] = useState<AntiCheatSignalSpec[]>(FALLBACK_SIGNALS);
+  const [followupContext, setFollowupContext] = useState<FollowupContext | null>(null);
 
   useEffect(() => {
     let alive = true;
+    const fParam = followupAttemptId ? `&followup=${encodeURIComponent(followupAttemptId)}` : "";
     api<{
       scenarios: ScenarioPublic[];
       measures: MeasureSpec[];
       anticheat_contours: AntiCheatContourSpec[];
       anticheat_signals: AntiCheatSignalSpec[];
-    }>(`/warroom/scenarios?demo=${demoMode ? "true" : "false"}`)
+      followup_context?: FollowupContext | null;
+    }>(`/warroom/scenarios?demo=${demoMode ? "true" : "false"}${fParam}`)
       .then((res) => {
         if (!alive) return;
         if (res.scenarios?.length) setScenarios(res.scenarios);
         if (res.measures?.length) setMeasures(res.measures);
         if (res.anticheat_contours?.length) setContours(res.anticheat_contours);
         if (res.anticheat_signals?.length) setSignals(res.anticheat_signals);
+        if (res.followup_context !== undefined) setFollowupContext(res.followup_context ?? null);
       })
       .catch(() => {
         /* остаёмся на встроенном каталоге */
@@ -99,7 +104,7 @@ export default function WarRoom() {
     return () => {
       alive = false;
     };
-  }, [demoMode]);
+  }, [demoMode, followupAttemptId]);
 
   const handleScenarioUpdated = (updated: ScenarioPublic) => {
     setScenarios((cur) => cur.map((x) => (x.id === updated.id ? updated : x)));
@@ -263,6 +268,8 @@ export default function WarRoom() {
               scenarios={scenarios}
               measuresCatalog={measures}
               demoMode={demoMode}
+              followupAttemptId={followupAttemptId}
+              followupContext={followupContext}
               onScenarioUpdated={handleScenarioUpdated}
             />
           ) : (

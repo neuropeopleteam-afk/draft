@@ -670,7 +670,7 @@ export default function AntiCheatMode({
     <div className="space-y-5" data-testid="wr-mode-anticheat">
       {/* Полоса «Как это работает»: 3 шага простыми словами и одна главная кнопка */}
       <div
-        className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-400/30 bg-rose-950/20 px-4 py-3"
+        className="flex flex-col gap-3 rounded-2xl border border-rose-400/30 bg-rose-950/20 px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
         data-testid="wr-anticheat-steps"
       >
         <div className="grid flex-1 gap-2 text-xs text-white/85 sm:grid-cols-3">
@@ -689,7 +689,7 @@ export default function AntiCheatMode({
           disabled={!!running}
           onClick={() => void attackGpt()}
           data-testid="wr-anticheat-main-btn"
-          className="shrink-0 rounded-xl bg-rose-500 px-4 py-2 text-xs font-extrabold text-white shadow hover:bg-rose-400 disabled:opacity-60"
+          className="w-full shrink-0 rounded-xl bg-rose-500 px-4 py-2 text-xs font-extrabold text-white shadow hover:bg-rose-400 disabled:opacity-60 sm:w-auto"
         >
           Показать перехват обмана
         </button>

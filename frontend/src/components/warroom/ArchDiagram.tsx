@@ -184,10 +184,11 @@ export function ArchDiagram({
                 const m = e.d.match(/(-?\d+(?:\.\d+)?)/g)?.map(Number) ?? [0, 0];
                 const lx = (m[0] + m[m.length - 2]) / 2;
                 const ly = (m[1] + m[m.length - 1]) / 2;
+                const labelY = ly <= 90 ? ly - 32 : ly - 8;
                 return (
                   <text
                     x={lx}
-                    y={ly - 6}
+                    y={labelY}
                     textAnchor="middle"
                     fontSize="10"
                     fontWeight={700}

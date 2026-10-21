@@ -11,6 +11,7 @@ import {
 import { FALLBACK_MEASURES, FALLBACK_SCENARIOS } from "../../components/warroom/fallbackData";
 import type {
   EvaluateResult,
+  FollowupContext,
   MeasureSelection,
   MeasureSpec,
   ScenarioPublic,
@@ -58,26 +59,42 @@ export default function ArchitectureMode({
   scenarios = FALLBACK_SCENARIOS,
   measuresCatalog = FALLBACK_MEASURES,
   demoMode = true,
+  followupAttemptId = null,
+  followupContext = null,
   onScenarioUpdated,
 }: {
   voice: Voice;
   scenarios?: ScenarioPublic[];
   measuresCatalog?: MeasureSpec[];
   demoMode?: boolean;
+  followupAttemptId?: string | null;
+  followupContext?: FollowupContext | null;
   onScenarioUpdated?: (scn: ScenarioPublic) => void;
 }) {
   const { me, signIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialDir = searchParams.get("direction");
+  const effFollowupId = followupAttemptId || searchParams.get("followup") || null;
 
   const [sid, setSid] = useState<string>(() => {
+    if (followupContext?.incident_id) return followupContext.incident_id;
     if (initialDir) {
       const found = scenarios.find((x) => x.direction === initialDir || x.id === initialDir);
       if (found) return found.id;
     }
     return scenarios[0]?.id ?? "payment";
   });
+
+  useEffect(() => {
+    if (followupContext?.incident_id && followupContext.incident_id !== sid) {
+      const next = scenarios.find((x) => x.id === followupContext.incident_id);
+      if (next) {
+        setSid(next.id);
+        setCode(next.patches[1]?.code ?? "");
+      }
+    }
+  }, [followupContext?.incident_id, scenarios, sid]);
 
   const s = useMemo(() => scenarios.find((x) => x.id === sid) ?? scenarios[0], [scenarios, sid]);
 
@@ -271,6 +288,7 @@ export default function ArchitectureMode({
           elapsed_s: Math.max(30, sec),
           save: !demoMode,
           demo: demoMode,
+          followup_attempt_id: effFollowupId || undefined,
         },
       });
       for (const line of res.feedback.deploy_log) {
@@ -361,9 +379,33 @@ export default function ArchitectureMode({
 
   return (
     <div className="space-y-5" data-testid="wr-mode-arch">
+      {/* Полоса дополнительного этапа проверки для Senior / Lead / Principal */}
+      {effFollowupId && (
+        <div
+          className="rounded-2xl border border-amber-400/50 bg-amber-500/15 px-4 py-3 text-xs text-amber-50 shadow-sm"
+          data-testid="wr-followup-banner"
+          role="status"
+        >
+          <p className="text-sm font-extrabold text-white">
+            {followupContext?.banner_ru ??
+              `Это доп. этап вашей проверки на ${
+                followupContext?.grade_label ??
+                (s.target_grade === "lead"
+                  ? "Lead"
+                  : s.target_grade === "principal"
+                    ? "Principal"
+                    : "Senior")
+              }: почините сервис — результат войдёт в итог.`}
+          </p>
+          <p className="mt-1 text-[11px] text-amber-100/85">
+            Основной тест завершился у границы уровня. Выберите меры в рамках бюджета, исправьте код и коротко опишите решение — одна попытка дополнительного этапа обновит итоговый вердикт. Вклад практического этапа — по правилу, на людях ещё не откалиброван.
+          </p>
+        </div>
+      )}
+
       {/* Полоса «Как это работает»: 3 шага простыми словами и одна главная кнопка */}
       <div
-        className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-400/30 bg-indigo-950/25 px-4 py-3"
+        className="flex flex-col gap-3 rounded-2xl border border-indigo-400/30 bg-indigo-950/25 px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
         data-testid="wr-quickstart"
       >
         <div className="grid flex-1 gap-2 text-xs text-white/85 sm:grid-cols-3">
@@ -382,7 +424,7 @@ export default function ArchitectureMode({
             type="button"
             onClick={() => void quickRunDemo()}
             data-testid="wr-quick-run"
-            className="shrink-0 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-extrabold text-slate-950 shadow hover:bg-emerald-400"
+            className="w-full shrink-0 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-extrabold text-slate-950 shadow hover:bg-emerald-400 sm:w-auto"
           >
             Начать инцидент и показать разбор
           </button>
@@ -391,7 +433,7 @@ export default function ArchitectureMode({
             type="button"
             onClick={() => selectScenario(s.id, true)}
             data-testid="wr-start-incident"
-            className="shrink-0 rounded-xl bg-indigo-500 px-4 py-2 text-xs font-extrabold text-white shadow hover:bg-indigo-400"
+            className="w-full shrink-0 rounded-xl bg-indigo-500 px-4 py-2 text-xs font-extrabold text-white shadow hover:bg-indigo-400 sm:w-auto"
           >
             Начать инцидент
           </button>
@@ -865,7 +907,7 @@ export default function ArchitectureMode({
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-semibold text-white">{c.title}</span>
                       <span
-                        className={`font-mono font-bold ${
+                        className={`shrink-0 whitespace-nowrap font-mono font-bold ${
                           c.score >= 1
                             ? "text-emerald-300"
                             : c.score >= 0.5
@@ -917,9 +959,11 @@ export default function ArchitectureMode({
                     {evalResult.sprt_preview.explanation_ru ??
                       `Практический этап оценён на ${evalResult.points_gpcm} из 4 баллов (${nf(evalResult.total_score * 100)} %).`}
                   </p>
-                  <p className="mt-1.5 text-[10.5px] text-indigo-200/80">
-                    Вклад практического этапа — по правилу, на людях ещё не откалиброван.
-                  </p>
+                  {!(evalResult.sprt_preview.explanation_ru ?? "").includes("на людях ещё не откалиброван") && (
+                    <p className="mt-1.5 text-[10.5px] text-indigo-200/80">
+                      Вклад практического этапа — по правилу, на людях ещё не откалиброван.
+                    </p>
+                  )}
                 </div>
               )}
 
