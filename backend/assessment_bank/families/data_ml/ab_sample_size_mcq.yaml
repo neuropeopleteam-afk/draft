@@ -21,8 +21,11 @@ invariants:
     distractors:
     - one_sided
     - no_power
-    - double
+    - no_square
     - one_group
+    - beta_two_sided
+    - za_twice
+    - double
     - double_count
 time_limit_s: 420
 canary: false

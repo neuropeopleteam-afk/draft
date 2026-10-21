@@ -23,14 +23,21 @@ invariants:
     - no_errors
     - max_rps
     - p99
+    - zero_err
+    - strict
+    little_modes:
+    - vu
+    - inflight
+    - vu_inv
+    - inflight_inv
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.4
   a: 1.0
   sigma_variant: 0.35
-  basis: Априорная, до калибровки на людях (a = 1,0). Таблица из 7 ступеней с ловушками (медиана, быстрые отказы
-    503 с «улучшенным» p95, пик RPS за пределами SLO) или расчёт по закону Литтла со средним и p95; требует опыта
+  basis: Априорная, до калибровки на людях (a = 1,0). Таблица из 8–10 ступеней с ловушками (медиана, быстрые отказы
+    503 с «улучшенным» p95, пик RPS за пределами SLO, p99, «ошибок нет совсем», строгое неравенство) или расчёт по закону Литтла со средним и p95; требует опыта
     чтения отчётов нагрузочного тестирования (Middle/Senior)
 generator: assessment_bank.families.qa.load_slo_capacity_mcq
 version: 1
