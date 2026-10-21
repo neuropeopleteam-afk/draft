@@ -1,24 +1,37 @@
 family_id: common.docker.layer_cache_output
 title: Docker — кэш слоёв при повторной сборке
 direction: common
-skills: [docker, dockerfile, docker_build_cache]
-target_grades: [junior, middle]
+skills:
+- docker
+- dockerfile
+- docker_build_cache
+target_grades:
+- junior
+- middle
 format: predict_output
 language: dockerfile
 invariants:
-  code_lines: [7, 10]
-  operations: [7, 10]
+  code_lines:
+  - 7
+  - 10
+  operations:
+  - 7
+  - 10
   extra:
     subtype: copy_checksum_invalidation
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.3
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.4
-  basis: "Dockerfile из 7–10 инструкций и список файлов; нужно знать три правила кэша (COPY по контрольной сумме, RUN по тексту команды, с первой инвалидации всё ниже); варианты с игнорируемым файлом (ответ «нет») и с зависимостями легче, с COPY . . и вторым файлом труднее → σ повышена; Junior/Middle"
+  basis: Априорная, до калибровки на людях (a = 1,3). Dockerfile из 7–10 инструкций и список файлов; нужно знать
+    три правила кэша (COPY по контрольной сумме, RUN по тексту команды, с первой инвалидации всё ниже); варианты
+    с игнорируемым файлом (ответ «нет») и с зависимостями легче, с COPY . . и вторым файлом труднее → σ повышена;
+    Junior/Middle
 generator: assessment_bank.families.common.docker_layer_cache_output
 version: 1
-description: >
-  Какие инструкции RUN и COPY выполнятся заново после изменения файлов контекста. Ключ проверяется
-  исполнением модели кэша слоёв (COPY по контрольной сумме с учётом .dockerignore, RUN по тексту команды).
+description: 'Какие инструкции RUN и COPY выполнятся заново после изменения файлов контекста. Ключ проверяется исполнением
+  модели кэша слоёв (COPY по контрольной сумме с учётом .dockerignore, RUN по тексту команды).
+
+  '

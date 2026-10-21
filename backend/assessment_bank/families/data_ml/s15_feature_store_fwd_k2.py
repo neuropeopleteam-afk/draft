@@ -6,6 +6,6 @@
 """
 from assessment_bank.families._w2010_scale_defs import make
 
-FAMILY_ID = "data_ml.feature_store.intern_fwd_k2"
-N_ABOVE = (0, 1, 2, 3)  # при каком числе ловушек «выше ключа» подбор выполним (пробная выборка генератора волны)
+FAMILY_ID = 'data_ml.feature_store.intern_fwd_k2'
+N_ABOVE = (0, 1, 2, 3, 4)  # 5 вариантов ответа: стратифицированное место ключа по величине (0..4 равновероятно)
 generate = make(FAMILY_ID, N_ABOVE)

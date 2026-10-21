@@ -1,0 +1,29 @@
+family_id: backend.db.t21_sql_between_latency_output
+title: Полоса задержки в журнале запросов — BETWEEN, AND и COUNT / MIN / MAX
+direction: backend
+skills:
+- sql
+- metrics
+target_grades:
+- intern
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 4
+  - 4
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.65
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Фильтр WHERE по 7–9 строкам:
+    BETWEEN включает обе границы, второе условие AND отсекает часть строк; затем COUNT(*), MIN, MAX. Уровень Стажёра:
+    WHERE и простые агрегаты. Набор t21 (21.10) у порога Стажёра (b = −1,65)'
+generator: assessment_bank.families.backend.t21_sql_between_latency_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Отчёт по журналу запросов считает запросы в полосе
+  задержки (BETWEEN) с дополнительным условием; предсказать COUNT(*), MIN и MAX. Ключ — независимый подсчёт по данным
+  в генераторе, проверка — исполнение запроса в SQLite на данных из условия.'

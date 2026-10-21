@@ -1,0 +1,30 @@
+family_id: devops.release.t21_ref_slices_output
+title: Python — срезы имени ветки релиза и len
+direction: devops
+skills:
+- python
+- ci_cd
+- release
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 4
+  - 5
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Три среза строки (начало,
+    середина, хвост с отрицательным индексом) и иногда len; ловушки — правая граница не входит, счёт с нуля, границы
+    сдвинуты на символ. Уровень Стажёра: индексы и срезы одной строки. Набор t21 (21.10) у порога Стажёра (b = −1,6)'
+generator: assessment_bank.families.devops.t21_ref_slices_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Шаг CI разбирает имя ветки релиза срезами строки;
+  предсказать вывод print. Ключ — независимый расчёт в генераторе, проверка — исполнение показанного кода в песочнице
+  Python.

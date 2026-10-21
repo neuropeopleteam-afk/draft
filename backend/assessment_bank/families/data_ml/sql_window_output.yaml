@@ -1,27 +1,47 @@
 family_id: data_ml.sql.window_output
 title: Оконные функции — что вернёт запрос (ранги, накопительная сумма, LAG)
 direction: data_ml
-skills: [sql, window_functions, ranking, analytics]
-target_grades: [junior, middle]
+skills:
+- sql
+- window_functions
+- ranking
+- analytics
+target_grades:
+- junior
+- middle
 format: predict_output
 language: sql
 invariants:
-  code_lines: [4, 8]
-  operations: [4, 7]
+  code_lines:
+  - 4
+  - 8
+  operations:
+  - 4
+  - 7
   extra:
-    templates: [row_number, rank, dense_rank, running_peers, lag_diff]
-    rows: [6, 8]
+    templates:
+    - row_number
+    - rank
+    - dense_rank
+    - running_peers
+    - lag_diff
+    rows:
+    - 6
+    - 8
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: -0.3
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.45
-  basis: "4–9 строк SQL, 6–8 строк данных; пять ловушек разной трудности: LAG и ROW_NUMBER проще, RANK/DENSE_RANK при ничьей средне, рамка RANGE по умолчанию с равными датами труднее → σ повышена (Junior/Middle). Калибровка 05.10: трудность росла с числом строк вывода (σ > 0,5); в ранговых шаблонах 5–6 строк вместо 6–7"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). 4–9 строк SQL, 6–8 строк данных; пять ловушек разной трудности:
+    LAG и ROW_NUMBER проще, RANK/DENSE_RANK при ничьей средне, рамка RANGE по умолчанию с равными датами труднее
+    → σ повышена (Junior/Middle). Калибровка 05.10: трудность росла с числом строк вывода (σ > 0,5); в ранговых
+    шаблонах 5–6 строк вместо 6–7'
 generator: assessment_bank.families.data_ml.sql_window_output
 version: 2
-description: >
-  Небольшая таблица и аналитический запрос с оконной функцией; кандидат записывает
-  результат. Ловушки: ROW_NUMBER/RANK/DENSE_RANK при ничьей, накопительная сумма с
-  «равными» по дате строками, NULL у первой строки в LAG.
-  Версия 2: в ранговых шаблонах 5–6 строк вместо 6–7.
+description: 'Небольшая таблица и аналитический запрос с оконной функцией; кандидат записывает результат. Ловушки:
+  ROW_NUMBER/RANK/DENSE_RANK при ничьей, накопительная сумма с «равными» по дате строками, NULL у первой строки
+  в LAG. Версия 2: в ранговых шаблонах 5–6 строк вместо 6–7.
+
+  '

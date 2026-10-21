@@ -1,23 +1,40 @@
 family_id: security.principal.security_strategy_open
-title: Программа безопасности организации — секреты, сегментация, цепочка поставок, безопасная разработка, разбор утечки (Principal)
+title: Программа безопасности организации — секреты, сегментация, цепочка поставок, безопасная разработка, разбор
+  утечки (Principal)
 direction: security
-skills: [secure_design, secrets_management, threat_modeling, incident_response, access_control, supply_chain_security]
-target_grades: [principal]
+skills:
+- secure_design
+- secrets_management
+- threat_modeling
+- incident_response
+- access_control
+- supply_chain_security
+target_grades:
+- principal
 format: open_answer
 language: text
 invariants:
   extra:
-    topics: [appsec, postmortem, secrets, segmentation, supply_chain]
+    topics:
+    - appsec
+    - postmortem
+    - secrets
+    - segmentation
+    - supply_chain
 time_limit_s: 1500
 canary: false
 prior_difficulty:
   b: 2.6
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Ситуация уровня организации с числами (сервисы, подрядчики, репозитории, доли повторов, сроки); рубрика из 3 критериев — системные причины, меры по риску с этапами, управление программой и компромиссы для команд. Перечень средств защиты (уровень Senior/Lead) даёт средний эталон; сильный требует порядка по риску, проверки эффекта и стоимости для команд: у порога Lead/Principal (2,75)"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Ситуация уровня организации с числами (сервисы, подрядчики,
+    репозитории, доли повторов, сроки); рубрика из 3 критериев — системные причины, меры по риску с этапами, управление
+    программой и компромиссы для команд. Перечень средств защиты (уровень Senior/Lead) даёт средний эталон; сильный
+    требует порядка по риску, проверки эффекта и стоимости для команд: у порога Lead/Principal (2,75)'
 generator: assessment_bank.families.security.principal_security_strategy_open
 version: 1
-description: >
-  Открытые вопросы уровня Principal: переход на короткоживущие учётные данные, сегментация после фишинга,
-  цепочка поставок, программа безопасной разработки, разбор утечки через сервисную учётную запись. Оценка по
-  рубрике с цитатами из ответа.
+description: 'Открытые вопросы уровня Principal: переход на короткоживущие учётные данные, сегментация после фишинга,
+  цепочка поставок, программа безопасной разработки, разбор утечки через сервисную учётную запись. Оценка по рубрике
+  с цитатами из ответа.
+
+  '

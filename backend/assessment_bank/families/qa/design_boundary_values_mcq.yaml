@@ -1,25 +1,43 @@
 family_id: qa.design.boundary_values_mcq
 title: Анализ граничных значений — минимальный набор тестовых значений
 direction: qa
-skills: [test_design, boundary_value_analysis, equivalence_partitioning, requirements]
-target_grades: [junior]
+skills:
+- test_design
+- boundary_value_analysis
+- equivalence_partitioning
+- requirements
+target_grades:
+- junior
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    kinds: [closed, half, money]
-    distractors: [inside, skip, upper_shift, lower_shift, outer, int_step]
+    kinds:
+    - closed
+    - half
+    - money
+    distractors:
+    - inside
+    - skip
+    - upper_shift
+    - lower_shift
+    - outer
+    - int_step
 time_limit_s: 150
 canary: false
 prior_difficulty:
   b: -0.9
-  a: 1.1
+  a: 1.0
   sigma_variant: 0.35
-  basis: "Короткое требование и четыре набора по 4 значения; нужно применить двухточечный анализ граничных значений. Полуоткрытый диапазон («не включая») и шаг ввода 0,01 ₽ заметно труднее закрытого целочисленного — σ повышена (Junior). Калибровка 05.10: разброс объяснялся составом дистракторов (inside / skip); состав зафиксирован: inside всегда, skip исключён"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Короткое требование и четыре набора по 4 значения; нужно
+    применить двухточечный анализ граничных значений. Полуоткрытый диапазон («не включая») и шаг ввода 0,01 ₽ заметно
+    труднее закрытого целочисленного — σ повышена (Junior). Калибровка 05.10: разброс объяснялся составом дистракторов
+    (inside / skip); состав зафиксирован: inside всегда, skip исключён'
 generator: assessment_bank.families.qa.design_boundary_values_mcq
 version: 2
-description: >
-  Выбор наименьшего набора значений, который обнаружит сдвиг любой границы диапазона на
-  шаг ввода. Ключ проверяется исполнением на четырёх мутантах проверки диапазона.
-  Версия 2: дистрактор «значения только внутри диапазона» есть всегда, «пропущена граница» — исключён.
+description: 'Выбор наименьшего набора значений, который обнаружит сдвиг любой границы диапазона на шаг ввода. Ключ
+  проверяется исполнением на четырёх мутантах проверки диапазона. Версия 2: дистрактор «значения только внутри диапазона»
+  есть всегда, «пропущена граница» — исключён.
+
+  '

@@ -1,0 +1,31 @@
+family_id: devops.bash.t21_local_dynamic_scope_output
+title: local и динамическая область видимости в функциях bash — счётчик неудачных попыток
+direction: devops
+skills:
+- bash
+- linux
+target_grades:
+- middle
+format: predict_output
+language: bash
+invariants:
+  code_lines:
+  - 10
+  - 13
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.2
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проследить, какую
+    переменную меняет функция без local, вызванная из функции с local (динамическая область — копию вызывающего, а
+    не глобальную), и что local во вспомогательной функции читает значение вызывающего, но изменение пропадает при
+    выходе. Одна неочевидная семантика bash — уровень Middle. Набор t21 (21.10) у порога Middle (b = 0,2)'
+generator: assessment_bank.families.devops.t21_local_dynamic_scope_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Скрипт считает неудачные попытки
+  вспомогательной функцией, которую вызывают функция задачи (с local или без) и основной код; предсказать вывод echo.
+  Ключ — независимая модель областей видимости в генераторе, проверка — исполнение показанного скрипта в
+  bash-песочнице.'

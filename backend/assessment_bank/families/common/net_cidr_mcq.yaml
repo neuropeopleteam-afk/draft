@@ -1,25 +1,40 @@
 family_id: common.net.cidr_mcq
 title: Сети IPv4 — CIDR, маршрут по длинному префиксу, границы подсети
 direction: common
-skills: [networking, ipv4, cidr, routing]
-target_grades: [junior, middle]
+skills:
+- networking
+- ipv4
+- cidr
+- routing
+target_grades:
+- junior
+- middle
 format: mcq_concept
 language: text
 invariants:
-  code_lines: [1, 5]
+  code_lines:
+  - 1
+  - 5
   n_options: 4
   extra:
-    qtypes: [route, member, hosts, bounds]
+    qtypes:
+    - route
+    - member
+    - hosts
+    - bounds
 time_limit_s: 180
 canary: false
 prior_difficulty:
   b: -0.2
   a: 1.0
   sigma_variant: 0.4
-  basis: "Короткий фрагмент конфигурации (1–4 строки); нужно перевести префикс в размер блока и сравнить адреса; маршрут по самому длинному префиксу и границы подсети на нестандартной маске (/21, /27) труднее, чем /24 → σ повышена; Junior/Middle"
+  basis: Априорная, до калибровки на людях (a = 1,0). Короткий фрагмент конфигурации (1–4 строки); нужно перевести
+    префикс в размер блока и сравнить адреса; маршрут по самому длинному префиксу и границы подсети на нестандартной
+    маске (/21, /27) труднее, чем /24 → σ повышена; Junior/Middle
 generator: assessment_bank.families.common.net_cidr_mcq
 version: 1
-description: >
-  Вопросы по адресации IPv4: шлюз по таблице маршрутизации, принадлежность адреса
-  сети из allow-списка, число назначаемых адресов, адрес сети и broadcast. Ключ считает
-  битовая арифметика генератора, проверка — модуль ipaddress в песочнице Python.
+description: 'Вопросы по адресации IPv4: шлюз по таблице маршрутизации, принадлежность адреса сети из allow-списка,
+  число назначаемых адресов, адрес сети и broadcast. Ключ считает битовая арифметика генератора, проверка — модуль
+  ipaddress в песочнице Python.
+
+  '

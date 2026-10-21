@@ -1,23 +1,32 @@
 family_id: common.git.history_count
 title: История Git после merge, reset, revert и cherry-pick
 direction: common
-skills: [git, branching]
-target_grades: [junior, middle]
+skills:
+- git
+- branching
+target_grades:
+- junior
+- middle
 format: predict_output
 language: bash
 invariants:
-  code_lines: [6, 14]
-  operations: [6, 14]
+  code_lines:
+  - 6
+  - 14
+  operations:
+  - 6
+  - 14
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: 0.0
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.45
-  basis: "6–14 команд, 2–4 операции над историей; трудность сильно зависит от набора операций (fast-forward против --no-ff, reset после merge) → σ высокая"
+  basis: Априорная, до калибровки на людях (a = 1,3). 6–14 команд, 2–4 операции над историей; трудность сильно зависит
+    от набора операций (fast-forward против --no-ff, reset после merge) → σ высокая
 generator: assessment_bank.families.common.git_history_count
 version: 1
-description: >
-  Последовательность команд git в пустом репозитории; спрашивается число коммитов в истории,
-  файлы рабочей копии или число коммитов ветки, не попавших в main. Ключ — по модели DAG и
-  исполнением настоящего git в песочнице.
+description: 'Последовательность команд git в пустом репозитории; спрашивается число коммитов в истории, файлы рабочей
+  копии или число коммитов ветки, не попавших в main. Ключ — по модели DAG и исполнением настоящего git в песочнице.
+
+  '

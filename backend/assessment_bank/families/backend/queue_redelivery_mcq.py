@@ -4,6 +4,7 @@
 * visibility — обработка дольше visibility timeout: сообщение снова выдаётся другим воркерам;
 * crash — падение потребителя до/после ack при ручном подтверждении (prefetch = 1);
 * nested — внутренние повторы обработчика × maxReceiveCount очереди до переноса в DLQ.
+Ранг ключа задаётся по seed до подбора параметров (0–3 ниже ключа), ловушки отбираются через spread_pick.
 Ключ проверяется исполнением: программа моделирует брокер по шагам (события доставки,
 подтверждения, падения) и печатает букву варианта, совпавшего с результатом моделирования.
 """
@@ -11,7 +12,7 @@ from __future__ import annotations
 
 import math
 
-from assessment_bank.gen_utils import build_variant, make_options, make_rng
+from assessment_bank.gen_utils import build_variant, make_options, make_rng, spread_pick
 from assessment_bank.schema import AnswerKey, Check
 
 FAMILY_ID = "backend.queue.redelivery_mcq"
@@ -84,14 +85,15 @@ def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, effects_word, unit = rng.choice(CONTEXTS)
     kind = rng.choice(["visibility", "crash", "nested"])
+    n_below = make_rng(FAMILY_ID, seed // 4, "rank").sample(range(4), 4)[seed % 4]
     if kind == "visibility":
         V = rng.choice([10, 15, 20, 30])
         while True:
-            P = rng.randint(V + 1, 4 * V + V // 2)
+            P = rng.randint(3 * V + 1, 5 * V + V // 2)
             if P % V:
                 break
         ans = math.ceil(P / V)
-        pool = [1, ans - 1, ans + 1, ans + 2, 2 * ans]
+        pool = {f"d_{i}": x for i, x in enumerate([ans - 3, ans - 2, ans - 1, ans + 1, ans + 2, ans + 3]) if 1 <= x <= 9}
         vals = dict(P=P, V=V)
         stem = (f"Очередь с visibility timeout (как в SQS или Yandex Message Queue), сценарий: "
                 f"{ctx}. Visibility timeout — {V} с; обработка одного сообщения занимает {P} с; "
@@ -104,12 +106,16 @@ def generate(seed: int):
                f"⌈{P}/{V}⌉ = {ans}. Нужно увеличить visibility timeout или продлевать его во "
                f"время обработки и делать обработчик идемпотентным.")
     elif kind == "crash":
-        N = rng.randint(5, 12)
-        K = rng.randint(2, N - 1)
+        N = rng.randint(14, 24)
+        K = rng.randint(3, N - 3)
         mode, point = rng.choice([("ack_after", "after_effect"), ("ack_after", "before_effect"),
                                   ("ack_before", "after_ack")])
         ans = {"after_effect": N + 1, "before_effect": N, "after_ack": N - 1}[point]
-        pool = [N - 1, N, N + 1, N + K, 2 * N]
+        raw_pool = [ans - 3, ans - 2, ans - 1, ans + 1, ans + 2, ans + 3, N - K, N + K]
+        pool = {}
+        for i, x in enumerate(raw_pool):
+            if 10 <= x <= 99 and x != ans and x not in pool.values():
+                pool[f"d_{i}"] = x
         vals = dict(N=N, K=K, mode=mode, point=point)
         ack = ("подтверждает сообщение (ack) после выполнения действия" if mode == "ack_after"
                else "подтверждает сообщение (ack) сразу при получении, затем выполняет действие")
@@ -129,10 +135,21 @@ def generate(seed: int):
                "after_ack": f"Сообщение {K} уже подтверждено и не вернётся, действие потеряно: "
                             f"{N} − 1. Подтверждать нужно после действия."}[point]
     else:
-        R = rng.randint(2, 5)
-        r = rng.randint(1, 4)
-        ans = R * (1 + r)
-        pool = [R, R + r, R * r, (R + 1) * (1 + r), R * (1 + r) + 1]
+        for _ in range(200):
+            R = rng.randint(4, 7)
+            r = rng.randint(2, 5)
+            ans = R * (1 + r)
+            if not (15 <= ans <= 42):
+                continue
+            raw_pool = [R + r, R * r, ans - R, ans - r, ans - 2, ans + 2, ans + r, ans + R, (R + 1) * (1 + r)]
+            pool = {}
+            for i, x in enumerate(raw_pool):
+                if 10 <= x <= 99 and x != ans and x not in pool.values():
+                    pool[f"d_{i}"] = x
+            below = [k for k, v in pool.items() if v < ans]
+            above = [k for k, v in pool.items() if v > ans]
+            if len(below) >= n_below and len(above) >= 3 - n_below:
+                break
         vals = dict(R=R, r=r)
         stem = (f"Очередь с DLQ (как в SQS), сценарий: {ctx}. maxReceiveCount = {R}: после {R} "
                 f"неудачных получений сообщение переносится в очередь недоставленных сообщений. "
@@ -143,11 +160,12 @@ def generate(seed: int):
         why = (f"Получений {R}, в каждом — первый вызов и повторов: {r}, то есть вызовов за одну доставку: {1 + r}; {R} × {1 + r} = {ans}. "
                f"Вложенные повторы перемножаются; ошибки данных не стоит повторять вовсе — "
                f"такое сообщение сразу отправляют в DLQ.")
-    distractors = []
-    for x in pool:
-        if x != ans and x >= 0 and x not in distractors:
-            distractors.append(x)
-    picked = rng.sample(distractors, 3)
+    below = [k for k, v in pool.items() if v < ans]
+    above = [k for k, v in pool.items() if v > ans]
+    rng.shuffle(below)
+    rng.shuffle(above)
+    sp = spread_pick(rng, ans, below, above, n_below, 3 - n_below, pool.__getitem__, min_step=0.05)
+    picked = [v for _, v in sp] if sp else [pool[k] for k in rng.sample(below, n_below) + rng.sample(above, 3 - n_below)]
     opts, key = make_options(rng, (fmt(ans), None), [(fmt(x), None) for x in picked])
     sim = SIM[kind].format(**vals)
     mapping = {o.id: o.text for o in opts}
@@ -165,4 +183,4 @@ def generate(seed: int):
                          verification="execution", checks=checks, language="text",
                          display_code_note="Показанного кода нет; исполняется пошаговая модель "
                                            "брокера, печатающая букву верного варианта.",
-                         params={"kind": kind, **vals, "answer": ans})
+                         params={"kind": kind, **vals, "answer": ans, "n_below": n_below})

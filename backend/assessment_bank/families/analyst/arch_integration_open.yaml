@@ -1,23 +1,36 @@
 family_id: analyst.arch.integration_open
 title: Проектирование интеграции систем — асинхронность, согласованность, контракты, версии
 direction: analyst
-skills: [integrations, async_integration, api_contracts, webhooks, versioning]
-target_grades: [senior]
+skills:
+- integrations
+- async_integration
+- api_contracts
+- webhooks
+- versioning
+target_grades:
+- senior
 format: open_answer
 language: text
 invariants:
   extra:
-    topics: [sync_to_async, consistency, files_to_api, webhooks, versioning]
+    topics:
+    - sync_to_async
+    - consistency
+    - files_to_api
+    - webhooks
+    - versioning
 time_limit_s: 1200
 canary: false
 prior_difficulty:
   b: 1.3
-  a: 0.9
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Проектное решение интеграции с числами контекста и симптомом; рубрика из 3 критериев (решение, надёжность и ошибки, контракт/переход и эксплуатация). Senior"
+  basis: Априорная, до калибровки на людях (a = 1,3). Проектное решение интеграции с числами контекста и симптомом;
+    рубрика из 3 критериев (решение, надёжность и ошибки, контракт/переход и эксплуатация). Senior
 generator: assessment_bank.families.analyst.arch_integration_open
 version: 1
-description: >
-  Открытые вопросы о проектировании интеграций: переход с синхронного вызова учётной системы на
-  асинхронный обмен, согласованность CRM и биллинга без распределённых транзакций, замена обмена файлами
-  на API, контракт webhook-уведомлений, версионирование публичного API. Оценка по рубрике с эталонами.
+description: 'Открытые вопросы о проектировании интеграций: переход с синхронного вызова учётной системы на асинхронный
+  обмен, согласованность CRM и биллинга без распределённых транзакций, замена обмена файлами на API, контракт webhook-уведомлений,
+  версионирование публичного API. Оценка по рубрике с эталонами.
+
+  '

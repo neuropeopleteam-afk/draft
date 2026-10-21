@@ -1,27 +1,42 @@
 family_id: backend.async.missing_await_bug
 title: Пропущенный await — объект корутины вместо результата
 direction: backend
-skills: [python, asyncio, async_await]
-target_grades: [junior]
+skills:
+- python
+- asyncio
+- async_await
+target_grades:
+- junior
 format: find_bug
 language: python
 invariants:
-  code_lines: [16, 18]
-  operations: [12, 13]
+  code_lines:
+  - 16
+  - 18
+  operations:
+  - 12
+  - 13
   defect_type: missing_await
   extra:
-    subtypes: [cond, arith]
-    polarity: [pos, neg]
+    subtypes:
+    - cond
+    - arith
+    polarity:
+    - pos
+    - neg
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.6
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.35
-  basis: "16–18 строк, 12–13 операций; три асинхронные функции, все вызовы, кроме одного, с await; симптом дан (TypeError, 0 или сумма без фильтра); подтип «условие с not» труднее TypeError → σ повышена; Junior"
+  basis: Априорная, до калибровки на людях (a = 1,3). 16–18 строк, 12–13 операций; три асинхронные функции, все
+    вызовы, кроме одного, с await; симптом дан (TypeError, 0 или сумма без фильтра); подтип «условие с not» труднее
+    TypeError → σ повышена; Junior
 generator: assessment_bank.families.backend.async_missing_await_bug
 version: 1
-description: >
-  Асинхронная агрегация с проверкой-фильтром; в одной строке пропущен await. В условии объект
-  корутины всегда истинен (фильтр ломается молча), в арифметике — TypeError. Дефектный код
-  падает на тесте, исправленный проходит.
+description: 'Асинхронная агрегация с проверкой-фильтром; в одной строке пропущен await. В условии объект корутины
+  всегда истинен (фильтр ломается молча), в арифметике — TypeError. Дефектный код падает на тесте, исправленный
+  проходит.
+
+  '

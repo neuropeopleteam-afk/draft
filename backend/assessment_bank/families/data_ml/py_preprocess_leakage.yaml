@@ -1,28 +1,45 @@
 family_id: data_ml.py.preprocess_leakage
 title: Утечка через предобработку — статистики по всем данным
 direction: data_ml
-skills: [python, data_leakage, preprocessing, validation, time_split]
-target_grades: [junior, middle]
+skills:
+- python
+- data_leakage
+- preprocessing
+- validation
+- time_split
+target_grades:
+- junior
+- middle
 format: find_bug
 language: python
 invariants:
-  code_lines: [7, 10]
-  operations: [6, 7]
+  code_lines:
+  - 7
+  - 10
+  operations:
+  - 6
+  - 7
   defect_type: preprocessing_leakage
   extra:
-    kinds: [minmax, zscore, impute_median, impute_mean]
+    kinds:
+    - minmax
+    - zscore
+    - impute_median
+    - impute_mean
     stateless_distractor_share: 0.6
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.6
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.3
-  basis: "7–10 строк, одна функция; дефект — параметры преобразования по всем данным (классическая утечка Junior/Middle); в 60 % вариантов рядом безопасное поэлементное преобразование (log1p, -1→None) как правдоподобная ложная гипотеза; четыре вида преобразования близкой трудности"
+  basis: Априорная, до калибровки на людях (a = 1,3). 7–10 строк, одна функция; дефект — параметры преобразования
+    по всем данным (классическая утечка Junior/Middle); в 60 % вариантов рядом безопасное поэлементное преобразование
+    (log1p, -1→None) как правдоподобная ложная гипотеза; четыре вида преобразования близкой трудности
 generator: assessment_bank.families.data_ml.py_preprocess_leakage
 version: 1
-description: >
-  Функция сортирует записи по времени, отделяет отложенную выборку и масштабирует или
-  заполняет признак. Параметры преобразования считаются по всем данным, включая
-  отложенную часть. Исправление — оценивать их по обучающей части; дефектный код падает на
-  тесте с дрейфом значений, исправленный проходит.
+description: 'Функция сортирует записи по времени, отделяет отложенную выборку и масштабирует или заполняет признак.
+  Параметры преобразования считаются по всем данным, включая отложенную часть. Исправление — оценивать их по обучающей
+  части; дефектный код падает на тесте с дрейфом значений, исправленный проходит.
+
+  '

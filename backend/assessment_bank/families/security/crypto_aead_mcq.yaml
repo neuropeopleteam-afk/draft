@@ -1,20 +1,41 @@
 family_id: security.crypto.aead_mcq
 title: Бюджет ключа AES-GCM со случайными nonce — период ротации
 direction: security
-skills: [cryptography, aead, nonce_uniqueness, key_lifecycle, capacity_estimation]
-target_grades: [senior]
+skills:
+- cryptography
+- aead
+- nonce_uniqueness
+- key_lifecycle
+- capacity_estimation
+target_grades:
+- senior
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
-  extra: {instances: [2, 8], rate_per_s: [150, 1500], distractors: [per_instance, birthday, with_decrypt]}
+  extra:
+    instances:
+    - 2
+    - 8
+    rate_per_s:
+    - 150
+    - 1500
+    distractors:
+    - per_instance
+    - birthday
+    - with_decrypt
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.9
   a: 1.0
   sigma_variant: 0.2
-  basis: "Версия 2 (калибровка 05.10: версию 1 решали малые модели — верный вариант узнавался по ключевым словам). Расчётная задача: нужно знать лимит NIST SP 800-38D §8.3 (2^32 вызовов шифрования на ключ при случайных IV), применить его к сумме по экземплярам, не засчитывать расшифровывания и перевести в сутки; дистракторы — три типичные ошибки, верный ответ не крайний; Senior"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Версия 2 (калибровка 05.10: версию 1 решали малые модели
+    — верный вариант узнавался по ключевым словам). Расчётная задача: нужно знать лимит NIST SP 800-38D §8.3 (2^32
+    вызовов шифрования на ключ при случайных IV), применить его к сумме по экземплярам, не засчитывать расшифровывания
+    и перевести в сутки; дистракторы — три типичные ошибки, верный ответ не крайний; Senior'
 generator: assessment_bank.families.security.crypto_aead_mcq
 version: 2
-description: "Период ротации общего ключа AES-GCM при случайных 96-битных nonce: K экземпляров × R записей/с, чтения не расходуют бюджет. Ключ проверяется исполнением (Python находит единственный наибольший допустимый период среди вариантов); источник — NIST SP 800-38D §8.3."
+description: 'Период ротации общего ключа AES-GCM при случайных 96-битных nonce: K экземпляров × R записей/с, чтения
+  не расходуют бюджет. Ключ проверяется исполнением (Python находит единственный наибольший допустимый период среди
+  вариантов); источник — NIST SP 800-38D §8.3.'

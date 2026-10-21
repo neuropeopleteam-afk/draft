@@ -1,0 +1,32 @@
+family_id: data_eng.etl.t21_hash_eq_dedup_output
+title: Дедупликация через set объектов — __eq__ и __hash__ против словаря по ключу
+direction: data_eng
+skills:
+- python
+- deduplication
+- etl
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 11
+  - 13
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Определить, что останется в set
+    объектов с собственными __hash__ / __eq__ (только хэш — без свёртки; равенство по ключу — первый добавленный объект;
+    по ключу и версии — только полные копии) и в словаре последней версии; ловушки — без __eq__ одинаковый хэш не сворачивает,
+    set не заменяет равный элемент. Уровень Senior: __eq__/__hash__ в set и dict. Набор t21 (21.10) у порога Senior (b =
+    +1,1)'
+generator: assessment_bank.families.data_eng.t21_hash_eq_dedup_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Поток записей с повторами сворачивается через set объектов
+  с переопределёнными __eq__ / __hash__ и через словарь; предсказать размеры и суммы версий. Ключ — независимая модель в
+  генераторе, проверка — исполнение показанного кода в песочнице Python.

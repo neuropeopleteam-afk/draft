@@ -1,0 +1,31 @@
+family_id: mobile.ui.t21_tab_handlers_output
+title: Обработчики вкладок, созданные в цикле — var и let в замыканиях
+direction: mobile
+skills:
+- javascript
+- closures
+- ui_lists
+target_grades:
+- middle
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 11
+  - 12
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: -0.05
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Два цикла создают замыкания-обработчики:
+    со счётчиком var (иногда до length − 1, иногда с const внутри тела) и с let; вызываются по одному из каждого. Одна неочевидная
+    семантика: var — общая переменная со значением после цикла, let и const — новая привязка на итерации. Уровень Middle:
+    var и let в замыканиях. Набор t21 (21.10) у порога Middle (b = −0,05)'
+generator: assessment_bank.families.mobile.t21_tab_handlers_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Обработчики нажатий на вкладки нижней панели создаются
+  в циклах с var и с let; предсказать результат двух вызовов. Ключ — независимая модель в генераторе на Python, проверка
+  — исполнение показанного кода в песочнице Node.js.

@@ -1,0 +1,38 @@
+family_id: mobile.principal.rollout_segments_mcq
+title: Поэтапная выкатка версии по сегментам — интервал доли сбоев против порога (Principal)
+direction: mobile
+skills:
+- mobile_release_management
+- statistics
+- testing
+- architecture
+- android
+target_grades:
+- principal
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors:
+    - point
+    - pooled
+    - baseline
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.0
+  sigma_variant: 0.35
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Нужно для каждого из четырёх сегментов оценить неопределённость
+    доли сбоев (интервал, а не точечная оценка), сравнить обе границы с порогом допустимого, а не с долей прежней
+    версии, и принимать решение по сегментам, а не по сумме, где плохой сегмент прячется за хорошими. Числа подобраны
+    так, что решение не зависит от метода интервала и z (1,645 или 1,96). Дистракторы — три типичные ошибки управления
+    выкаткой; Lead обычно избегает одной-двух, Principal — всех трёх: у порога Lead/Principal'
+generator: assessment_bank.families_retired.form_leak_2110.mobile.principal_rollout_segments_mcq
+version: 1
+description: 'Решение о выкатке новой версии мобильного приложения по четырём сегментам ОС на этапе 5 %: продолжить,
+  держать или откатить по интервалу доли сессий со сбоем против порога. Ключ — программа: интервалы Уилсона по тем
+  же числам.
+
+  '

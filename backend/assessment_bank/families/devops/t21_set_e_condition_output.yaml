@@ -1,0 +1,31 @@
+family_id: devops.ci.t21_set_e_condition_output
+title: bash — set -e внутри функции в условии if и в списках || / &&
+direction: devops
+skills:
+- bash
+- shell
+- ci_cd
+target_grades:
+- senior
+format: predict_output
+language: bash
+invariants:
+  code_lines:
+  - 12
+  - 13
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.15
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Функция этапа под set
+    -e вызывается в условии if, в списке || или && и обычной командой; надо знать, что в условиях -e выключено для
+    всего тела функции (статус — последней команды), а обычный вызов завершает подоболочку кодом упавшей команды.
+    Уровень Senior: set -e в функциях и условиях. Набор t21 (21.10) у порога Senior (b = +1,15)'
+generator: assessment_bank.families.devops.t21_set_e_condition_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Шаг CI запускает этапы функцией в подоболочке со
+  set -e; предсказать вывод и итоговый код. Ключ — независимая модель в генераторе, проверка — исполнение показанного
+  скрипта в bash-песочнице.

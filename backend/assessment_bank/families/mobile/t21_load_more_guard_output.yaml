@@ -1,0 +1,32 @@
+family_id: mobile.paging.t21_load_more_guard_output
+title: Подгрузка страниц по onEndReached с флагом loading — вызовы из then и таймеров
+direction: mobile
+skills:
+- javascript
+- event_loop
+- pagination
+target_grades:
+- senior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 17
+  - 18
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). async-функция с флагом loading
+    до await, вызовы синхронно, из then и из 2–3 таймеров (в части вариантов — таймер с той же задержкой, что загрузка).
+    Нужно знать, что синхронная часть до await поднимает флаг раньше микрозадачи, таймеры с равной задержкой идут в порядке
+    создания, а продолжение после await выполняется до следующего таймера. Уровень Senior: микро- и макрозадачи, async/await.
+    Набор t21 (21.10) у порога Senior (b = +0,9)'
+generator: assessment_bank.families.mobile.t21_load_more_guard_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). FlatList многократно вызывает подгрузку следующей страницы,
+  защищённую флагом loading; предсказать строки skip / page / items. Ключ — независимая модель в генераторе на Python, проверка
+  — исполнение показанного кода в песочнице Node.js.

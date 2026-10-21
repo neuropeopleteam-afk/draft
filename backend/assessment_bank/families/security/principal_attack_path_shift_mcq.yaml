@@ -1,23 +1,33 @@
 family_id: security.principal.attack_path_shift_mcq
 title: Успех атакующего после меры — переключение на следующий путь дерева атак (Principal, короткое)
 direction: security
-skills: [threat_modeling, risk_prioritization, secure_design, access_control]
-target_grades: [principal]
+skills:
+- threat_modeling
+- risk_prioritization
+- secure_design
+- access_control
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    distractors: "три из пяти моделей ошибок: prev_after, avg_after (ниже ключа); before, union_after, sum_after (выше); меньше ключа 0–2 равновероятно"
+    distractors: 'три из пяти моделей ошибок: prev_after, avg_after (ниже ключа); before, union_after, sum_after
+      (выше); меньше ключа 0–2 равновероятно'
 time_limit_s: 360
 canary: false
 prior_difficulty:
   b: 2.5
-  a: 1.4
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: оценка эффекта защитной меры по дереву атак целиком. Senior и Lead обычно считают, что мера «закрыла» атаку (успех прежнего пути после меры) или усредняют пути; Principal видит, что атакующий переключается на следующий по силе путь и эффект меры ограничен им. Ловушки с обеих сторон от ключа"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Короткое расчётное задание у границы Lead/Principal: оценка
+    эффекта защитной меры по дереву атак целиком. Senior и Lead обычно считают, что мера «закрыла» атаку (успех
+    прежнего пути после меры) или усредняют пути; Principal видит, что атакующий переключается на следующий по силе
+    путь и эффект меры ограничен им. Ловушки с обеих сторон от ключа'
 generator: assessment_bank.families.security.principal_attack_path_shift_mcq
 version: 1
-description: >
-  Вероятность успеха атакующего, выбирающего лучший путь в дереве атак, после меры на шаге прежнего лучшего пути.
-  Ключ — программа: рекурсивное вычисление дерева «ИЛИ — максимум, И — произведение» точными дробями.
+description: 'Вероятность успеха атакующего, выбирающего лучший путь в дереве атак, после меры на шаге прежнего
+  лучшего пути. Ключ — программа: рекурсивное вычисление дерева «ИЛИ — максимум, И — произведение» точными дробями.
+
+  '

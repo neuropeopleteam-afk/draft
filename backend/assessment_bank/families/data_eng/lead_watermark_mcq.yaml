@@ -1,26 +1,41 @@
 family_id: data_eng.stream.lead_watermark_mcq
 title: Окно по времени события с watermark — что выдаст окно при опоздавших и событии на границе
 direction: data_eng
-skills: [streaming, watermarks, windowing, late_data, stream_processing]
-target_grades: [lead]
+skills:
+- streaming
+- watermarks
+- windowing
+- late_data
+- stream_processing
+target_grades:
+- lead
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    distractors: "три из пяти: no_drop, inclusive_end, processing_time, no_lag, in_order_only (меньше ключа 0–3 равновероятно)"
-    events: [8, 10]
+    distractors: 'три из пяти: no_drop, inclusive_end, processing_time, no_lag, in_order_only (меньше ключа 0–3
+      равновероятно)'
+    events:
+    - 8
+    - 10
     boundary_event: true
     dropped_min: 1
 time_limit_s: 480
 canary: false
 prior_difficulty:
   b: 1.6
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Нужно проиграть поток из 8–10 событий в порядке прихода: watermark от максимума времени события, момент закрытия окна, отбрасывание опоздавших, граница окна [начало, конец). В каждом варианте есть опоздавшее событие и событие ровно на границе; дистракторы — три из пяти типичных ошибок (без отбрасывания, время прихода вместо времени события, включённая граница, watermark без отставания, отбрасывание всего пришедшего не по порядку); место ключа по величине меняется (версия 2). Senior знает термины, но редко проигрывает поток аккуратно — граница Senior/Lead (θ ≈ 2,0). Один подтип"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Нужно проиграть поток из 8–10 событий в порядке прихода:
+    watermark от максимума времени события, момент закрытия окна, отбрасывание опоздавших, граница окна [начало,
+    конец). В каждом варианте есть опоздавшее событие и событие ровно на границе; дистракторы — три из пяти типичных
+    ошибок (без отбрасывания, время прихода вместо времени события, включённая граница, watermark без отставания,
+    отбрасывание всего пришедшего не по порядку); место ключа по величине меняется (версия 2). Senior знает термины,
+    но редко проигрывает поток аккуратно — граница Senior/Lead (θ ≈ 2,0). Один подтип'
 generator: assessment_bank.families.data_eng.lead_watermark_mcq
 version: 2
-description: >
-  Lead: сумма, которую выдаст окно потоковой обработки по времени события при заданном watermark и опоздавших
+description: 'Lead: сумма, которую выдаст окно потоковой обработки по времени события при заданном watermark и опоздавших
   событиях. Ключ — исполнением модели потока событие за событием.
+
+  '

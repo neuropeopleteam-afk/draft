@@ -1,0 +1,37 @@
+family_id: analyst.sql.t21_not_in_null_output
+title: IN, NOT IN и NOT EXISTS при NULL в подзапросе — три счётчика в одной строке
+direction: analyst
+skills:
+- sql
+- null_semantics
+target_grades:
+- senior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra:
+    parents:
+    - 5
+    - 9
+    events:
+    - 6
+    - 9
+    null_passes_share: 0.65
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Посчитать IN, NOT IN и NOT
+    EXISTS по подзапросу с фильтром статуса; ловушка — NULL в результате подзапроса делает NOT IN ложным для всех
+    (0), а если строка с NULL отфильтрована статусом, NOT IN и NOT EXISTS совпадают. Уровень Senior: трёхзначная
+    логика в NOT IN. Набор t21 (21.10) у порога Senior (b = +0,9)'
+generator: assessment_bank.families.analyst.t21_not_in_null_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Справочник (пользователи / лиды / водители /
+  подписчики) и события с пустыми ссылками; один запрос считает IN, NOT IN и NOT EXISTS; предсказать строку из трёх
+  чисел. Ключ — независимый расчёт в генераторе, проверка — исполнение запроса в песочнице sqlite.'

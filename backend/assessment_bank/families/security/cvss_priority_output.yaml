@@ -1,21 +1,35 @@
 family_id: security.triage.cvss_priority_output
 title: Уровни CVSS v3.1 и порядок очереди исправлений
 direction: security
-skills: [cvss, vulnerability_triage, prioritization, python]
-target_grades: [senior]
+skills:
+- cvss
+- vulnerability_triage
+- prioritization
+- python
+target_grades:
+- senior
 format: predict_output
 language: python
 invariants:
-  code_lines: [14, 14]
-  operations: [13, 13]
-  extra: {findings: 4, cvss_version: "3.1", scoring: given_base_scores}
+  code_lines:
+  - 14
+  - 14
+  operations:
+  - 13
+  - 13
+  extra:
+    findings: 4
+    cvss_version: '3.1'
+    scoring: given_base_scores
 time_limit_s: 360
 canary: false
 prior_difficulty:
   b: 0.6
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.2
-  basis: "14 строк и четыре находки с совпадающими баллами; проверяются границы уровней и последовательность критериев риска; расчёт вектора намеренно не требуется."
+  basis: Априорная, до калибровки на людях (a = 1,3). 14 строк и четыре находки с совпадающими баллами; проверяются
+    границы уровней и последовательность критериев риска; расчёт вектора намеренно не требуется.
 generator: assessment_bank.families.security.cvss_priority_output
 version: 1
-description: "Независимая модель на целых десятых балла и Python; не выдаёт синтетическую очередь за универсальную оценку риска."
+description: Независимая модель на целых десятых балла и Python; не выдаёт синтетическую очередь за универсальную
+  оценку риска.

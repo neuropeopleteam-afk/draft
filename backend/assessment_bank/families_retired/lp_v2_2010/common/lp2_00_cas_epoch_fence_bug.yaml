@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: common.lead_v2.cas_epoch_fence_bug
+title: 'Общеинженерный контур: Потеря монотонности fencing-токена при оптимистичной записи'
+direction: common
+skills:
+- algorithms
+- sql
+- http
+- python
+- asyncio
+target_grades:
+- senior
+- lead
+format: find_bug
+language: python
+invariants:
+  defect_type: stale_epoch_boundary
+  extra:
+    wave: LP-v2
+    slot: 0
+    direction_ru: Общеинженерный контур
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 1.65
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Общеинженерный контур: потеря монотонности fencing-токена
+    при оптимистичной записи; формат find_bug, целевые грейды senior, lead (b = 1,65 у порога старшего грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.common.lp2_00_cas_epoch_fence_bug
+version: 1
+description: 'Общеинженерный контур (senior, lead): Потеря монотонности fencing-токена при оптимистичной записи.
+  Проверка исполнением и рубрикой.'

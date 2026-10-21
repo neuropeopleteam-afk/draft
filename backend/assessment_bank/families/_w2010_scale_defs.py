@@ -5,22 +5,22 @@
 * **Базовая модель** (:class:`Arch`) — реальный инженерный/продуктовый расчёт направления (пул соединений, кворум,
   бюджет ошибок SLO, лаг консьюмеров Kafka, размер индекса, батчинг на GPU, воронка и т. д.): базовая формула и
   пять поправочных факторов (пик, ретраи, запас утилизации, репликация, накладные расходы …). Каждый фактор — одно
-  предложение условия, один шаг модели и ДВЕ ловушки (типичные ошибки: «фактор не учтён», «учтён не так»).
+  предложение условия, один шаг модели и ловушки (типичные ошибки: «фактор не учтён», «учтён дважды», «перепутаны
+  единицы измерения или направление округления»).
 * **Семейство** = базовая модель × ступень сложности (сколько факторов взаимодействуют: 2…5) × направление вопроса:
   прямой расчёт (``fwd``) или обратная задача по одному из двух входов (``solve_<параметр>``: наибольшее/наименьшее
-  значение входа на сетке, при котором выполняется лимит). У каждого семейства свой текст модели ``MODEL`` (только
-  его факторы), свои ловушки, свой грейд и априорные IRT-параметры.
-* **Генерация** — :func:`assessment_bank.families._w2010_kit.numeric_variant`: ключ = ``fmt(answer(P))`` исполнением
-  модели; проверка «model» (ключ), «trap» (ловушка ≠ ключ) и для обратных задач «brute» (линейный перебор сетки
-  вместо бисекции — подтверждает и монотонность). Ответ равновероятно на любом месте по величине среди четырёх.
+  значение входа на сетке, при котором выполняется лимит). Расчётные задачи волны размечены максимум до Senior
+  (Стажёр, Junior, Middle, Senior); старшие грейды (Lead, Principal) в банке представлены содержательными кодовыми,
+  архитектурными и инцидентными семействами.
+* **Генерация** — :func:`assessment_bank.families._w2010_kit.numeric_variant`: 5 вариантов ответа (A–E), ключ =
+  ``fmt(answer(P))`` исполнением модели; место ключа по величине и по букве стратифицировано равномерно (по 20 % на
+  каждую из 5 позиций); в обратных задачах лимит B строго отделён от ответа и от значения модели при ответе.
 * Вся арифметика модели — точные дроби (:class:`fractions.Fraction`): округление вверх/вниз без ошибок плавающей
   точки.
-
-Модуль семейства — тонкая обёртка ``generate = make(FAMILY_ID)``; YAML и обёртки собирает
-``tools/w2010_scale1500.py`` из этого описания (правьте каталоги ``_w2010_scale_cat_*.py``, не YAML).
 """
 from __future__ import annotations
 
+import math
 import re
 import zlib
 from fractions import Fraction
@@ -29,13 +29,32 @@ from typing import Any
 from assessment_bank.families._w2010_kit import load_model, num, numeric_variant
 from assessment_bank.gen_utils import plural
 
-# (режим, число факторов, грейд, базовое b): прямой расчёт — Стажёр…Senior, обратные задачи — Junior…Principal
+# (режим, число факторов, целевой грейд YAML, базовое b): расчётные задачи — максимум до Senior (исправление B4)
 LEVELS: list[tuple[str, int, str, float]] = [
-    ("fwd", 2, "intern", -1.3), ("fwd", 3, "junior", -0.6), ("fwd", 4, "middle", 0.2), ("fwd", 5, "senior", 1.0),
-    ("inv0", 2, "junior", -0.3), ("inv0", 3, "middle", 0.5), ("inv0", 4, "lead", 2.10), ("inv0", 5, "principal", 3.04),
-    ("inv1", 2, "middle", 0.8), ("inv1", 3, "senior", 1.5), ("inv1", 4, "lead", 2.26), ("inv1", 5, "principal", 3.16),
+    ("fwd", 2, "intern", -1.30),
+    ("fwd", 3, "junior", -0.60),
+    ("fwd", 4, "middle", 0.25),
+    ("fwd", 5, "senior", 1.05),
+    ("inv0", 2, "junior", -0.30),
+    ("inv0", 3, "middle", 0.45),
+    ("inv0", 4, "senior", 1.22),
+    ("inv0", 5, "senior", 1.52),
+    ("inv1", 2, "middle", 0.10),
+    ("inv1", 3, "senior", 1.36),
+    ("inv1", 4, "middle", 0.68),
+    ("inv1", 5, "senior", 1.68),
 ]
-TIME = {"intern": 180, "junior": 180, "middle": 210, "senior": 210, "lead": 180, "principal": 180}
+# Слаг в family_id сохранён для обратной совместимости имён модулей s15_*.py и ссылок
+_SLUG_GRADE: dict[tuple[str, int], str] = {
+    ("fwd", 2): "intern", ("fwd", 3): "junior", ("fwd", 4): "middle", ("fwd", 5): "senior",
+    ("inv0", 2): "junior", ("inv0", 3): "middle", ("inv0", 4): "senior", ("inv0", 5): "lead",
+    ("inv1", 2): "middle", ("inv1", 3): "senior", ("inv1", 4): "lead", ("inv1", 5): "principal",
+}
+TIME_BY_LEVEL: dict[tuple[str, int], int] = {
+    ("fwd", 2): 150, ("fwd", 3): 180, ("fwd", 4): 240, ("fwd", 5): 270,
+    ("inv0", 2): 210, ("inv0", 3): 240, ("inv0", 4): 300, ("inv0", 5): 330,
+    ("inv1", 2): 210, ("inv1", 3): 300, ("inv1", 4): 270, ("inv1", 5): 360,
+}
 GRADE_RU = {"intern": "Стажёр", "junior": "Junior", "middle": "Middle", "senior": "Senior", "lead": "Lead",
             "principal": "Principal"}
 NOTE = ("Ответ проверяется программой-моделью по тем же числам, что в условии (точные дроби, без ошибок округления "
@@ -47,6 +66,14 @@ _RX = re.compile(r"\{(\w+)(?:\|([^}]*))?\}")
 _IDENT = re.compile(r"\b([A-Za-z_]\w*)\b")
 _SAFE = {"x", "min", "max", "abs", "F"}
 _DOTS = re.compile(r"(?<!\.)\.\.(?!\.)")
+
+# Резервные дистракторы («_fb_*») — НЕ модели ошибок: это контрольные значения рядом с ответом, они нужны, когда
+# у модели меньше четырёх различимых ловушек при этих числах. Подписаны честно (проверка 20.10: прежние подписи
+# «двоичная приставка», «удвоение бюджета» не соответствовали тому, как значения считались).
+_FB_FWD_DESC = {f"_fb_{d}{i}": "контрольное значение того же порядка рядом с ответом (не связано с конкретной ошибкой)"
+                for d in ("up", "dn") for i in range(1, 7)}
+_FB_INV_DESC = {f"_fb_{d}{i}{t}": "соседнее значение того же ряда X (контрольное, не связано с конкретной ошибкой)"
+                for d in ("up", "dn") for i in range(1, 7) for t in ("", "s")}
 
 
 # --------------------------------------------------------------------------- форматирование
@@ -90,15 +117,7 @@ def cap(s: str) -> str:
 
 # --------------------------------------------------------------------------- описание базовой модели
 class Arch:
-    """Базовая модель направления.
-
-    base   — (текст, выражение, {параметр: выбор}, {ловушка: (выражение, описание)}, подпись шага)
-    F      — 5 факторов: (имя, подпись, текст, выражение от x, {параметр: выбор}, {ловушка: (выражение, описание)})
-    inv    — 2 обратные задачи: (параметр, (от, до, шаг), "max"|"min", подпись входа, единица входа)
-    out    — единица ответа: строка или (одна, две, пять); rnd — ceil | floor | r<N> (округлить до N знаков)
-    need   — для обратной задачи: "le" (итог ≤ лимита B) или "ge" (итог ≥ B); budget — текст лимита с {B|…}
-    Выбор параметра: список значений или (от, до, шаг) для randrange.
-    """
+    """Базовая модель направления."""
 
     def __init__(self, d: str, key: str, *, title: str, skills: list[str], construct: str, ctx: list[str],
                  base: tuple, F: list[tuple], q: str, out: Any, inv: list[tuple], budget: str, need: str = "le",
@@ -140,7 +159,6 @@ def A(d: str, key: str, **kw) -> Arch:
 
 
 # --------------------------------------------------------------------------- типовые поправочные факторы
-# Каждый — (имя, подпись, текст, выражение от x, {параметр: выбор}, {ловушка: (выражение, описание)}).
 def peak(text: str, ch=(1.5, 2, 2.5, 3, 4), p: str = "k", name: str = "peak", label: str = "пиковый коэффициент"):
     return (name, label, text, f"x*{p}", {p: list(ch)},
             {f"no_{name}": ("x", f"не учтено: {label}"), f"{name}_twice": (f"x*{p}*{p}", f"дважды учтено: {label}")})
@@ -256,7 +274,10 @@ def calc(P, swap=None):
         x = (s[1] if s and s[0] == name else f)(v, x)
     return (s[1] if s and s[0] == "round" else rnd)(x)
 ''')
+    nd_val = _nd(a.rnd)
     if mode == "fwd":
+        desc.update(_FB_FWD_DESC)
+        parts.append(f"\nUNIT = {a.out!r}\nND = {nd_val}\n")
         parts.append('''
 def answer(P):
     return calc(P)
@@ -264,19 +285,36 @@ def answer(P):
 def _safe(f, *a):
     try:
         return f(*a)
-    except ZeroDivisionError:      # ошибочная модель может делить на ноль — такой ловушки нет
+    except ZeroDivisionError:
         return None
 
 def traps(P):
-    return {t: _safe(calc, P, t) for t in SWAPS}
+    out = {t: _safe(calc, P, t) for t in SWAPS}
+    ans = _safe(calc, P)
+    if ans is not None:
+        fv = _f(ans)
+        st = F(1, 10 ** ND) if ND else F(1)
+        for i, (nm, dm) in enumerate(((108, 100), (118, 100), (129, 100), (142, 100), (157, 100), (174, 100)), 1):
+            out[f"_fb_up{i}"] = rnd(fv * F(nm, dm)) + i * st
+        for i, (nm, dm) in enumerate(((92, 100), (83, 100), (74, 100), (65, 100), (55, 100), (45, 100)), 1):
+            v = rnd(fv * F(nm, dm)) - i * st
+            if v > 0:
+                out[f"_fb_dn{i}"] = v
+    return out
 ''')
-        parts.append(f"\nUNIT = {a.out!r}\nND = {_nd(a.rnd)}\n")
     else:
+        desc.update(_FB_INV_DESC)
         p, (lo, hi, st), sense, _lab, unit = a.inv[int(mode[3])]
         cmp = "<=" if a.need == "le" else ">="
         parts.append(f'''
 XN = {p!r}
+STEP = {st}
+LO = {lo}
+HI = {hi}
 GRID = list(range({lo}, {hi} + 1, {st}))
+# Ловушки решаются на ТОМ ЖЕ ряду X, что назван в условии (проверка 20.10: прежняя TRAP_GRID до 4·hi со сдвигом
+# по фазе давала дистракторы вне ряда, и ключ угадывался исключением в 27,5 % обратных вариантов).
+TRAP_GRID = GRID
 SENSE = {sense!r}
 
 def ok(P, X, swap=None):
@@ -284,24 +322,26 @@ def ok(P, X, swap=None):
     Q[XN] = X
     return calc(Q, swap) {cmp} _f(P["B"])
 
-def solve(P, swap=None):
-    """Бисекция по сетке GRID (итог монотонен по X): крайнее X, при котором лимит выполняется."""
-    good = [ok(P, GRID[0], swap), ok(P, GRID[-1], swap)]
+def _solve_on(grid, P, swap=None):
+    good = [ok(P, grid[0], swap), ok(P, grid[-1], swap)]
     if SENSE == "max":
         if not good[0] or good[1]:
             return None
-        lo, hi = 0, len(GRID) - 1          # ok(lo) и не ok(hi)
-        while hi - lo > 1:
-            mid = (lo + hi) // 2
-            lo, hi = (mid, hi) if ok(P, GRID[mid], swap) else (lo, mid)
-        return GRID[lo]
+        lo_i, hi_i = 0, len(grid) - 1
+        while hi_i - lo_i > 1:
+            mid = (lo_i + hi_i) // 2
+            lo_i, hi_i = (mid, hi_i) if ok(P, grid[mid], swap) else (lo_i, mid)
+        return grid[lo_i]
     if good[0] or not good[1]:
         return None
-    lo, hi = 0, len(GRID) - 1              # не ok(lo) и ok(hi)
-    while hi - lo > 1:
-        mid = (lo + hi) // 2
-        lo, hi = (lo, mid) if ok(P, GRID[mid], swap) else (mid, hi)
-    return GRID[hi]
+    lo_i, hi_i = 0, len(grid) - 1
+    while hi_i - lo_i > 1:
+        mid = (lo_i + hi_i) // 2
+        lo_i, hi_i = (lo_i, mid) if ok(P, grid[mid], swap) else (mid, hi_i)
+    return grid[hi_i]
+
+def solve(P, swap=None):
+    return _solve_on(GRID if swap is None else TRAP_GRID, P, swap)
 
 def answer(P):
     return solve(P)
@@ -316,11 +356,20 @@ def brute(P):
 def _safe(f, *a):
     try:
         return f(*a)
-    except ZeroDivisionError:      # ошибочная модель может делить на ноль — такой ловушки нет
+    except ZeroDivisionError:
         return None
 
 def traps(P):
-    return {{t: _safe(solve, P, t) for t in SWAPS}}
+    out = {{t: _safe(solve, P, t) for t in SWAPS}}
+    ans = _safe(solve, P)
+    if ans is not None:
+        for i, pct_m in enumerate((9, 18, 28, 39, 52, 66), 1):
+            delta = max(i * STEP, int((ans * pct_m // 100 // STEP) * STEP))
+            for nm, v in ((f"_fb_up{{i}}", ans + delta), (f"_fb_dn{{i}}", ans - delta),
+                          (f"_fb_up{{i}}s", ans + i * STEP), (f"_fb_dn{{i}}s", ans - i * STEP)):
+                if LO <= v <= HI and (v - LO) % STEP == 0:
+                    out.setdefault(nm, v)
+    return {{k: v for k, v in out.items() if v is None or (LO <= v <= HI and (v - LO) % STEP == 0)}}
 ''')
         parts.append(f"\nUNIT = {unit!r}\nND = 0\n")
     parts.append('''
@@ -368,12 +417,9 @@ def _human(expr: str, v: dict, x: Any) -> str:
 
 
 # --------------------------------------------------------------------------- сборка семейств
-_FID_GRADE = {("inv0", 4): "senior", ("inv0", 5): "lead"}
-
-
-def _fid(a: Arch, mode: str, k: int, grade: str) -> tuple[str, str, str]:
+def _fid(a: Arch, mode: str, k: int, _grade: str) -> tuple[str, str, str]:
     mname = "fwd" if mode == "fwd" else "solve_" + a.inv[int(mode[3])][0].lower()
-    gslug = _FID_GRADE.get((mode, k), grade)
+    gslug = _SLUG_GRADE[(mode, k)]
     fid = f"{a.d}.{a.key}.{gslug}_{mname}_k{k}"
     mod = f"s15_{a.key}_{mname}_k{k}"
     return fid, mod, mname
@@ -382,31 +428,23 @@ def _fid(a: Arch, mode: str, k: int, grade: str) -> tuple[str, str, str]:
 def _register(a: Arch) -> None:
     for mode, k, grade, b0 in LEVELS:
         fid, mod, mname = _fid(a, mode, k, grade)
-        FAMILIES[fid] = {"arch": a, "mode": mode, "k": k, "grade": grade, "b0": b0, "mod": mod, "mname": mname}
-
-
-_CUT_B = {"intern": -1.2, "junior": -0.35, "middle": 0.10, "senior": 1.12, "lead": 1.98, "principal": 2.90}
+        FAMILIES[fid] = {
+            "arch": a, "mode": mode, "k": k, "grade": grade, "b0": b0,
+            "mod": mod, "mname": mname, "time": TIME_BY_LEVEL[(mode, k)],
+        }
 
 
 def family_meta(fid: str) -> dict[str, Any]:
-    """Поля YAML семейства: title, construct, skills, грейд, IRT-параметры, ловушки, описание."""
-    from assessment_bank.simulation import stream
+    """Поля YAML семейства: честные априорные параметры a = 1,0, b от порога грейда по содержательной сложности."""
     m = FAMILIES[fid]
-    a, mode, k, grade = m["arch"], m["mode"], m["k"], m["grade"]
+    a, mode, k, grade, b0, tm = m["arch"], m["mode"], m["k"], m["grade"], m["b0"], m["time"]
     labels = [f[1] for f in a.F[:k]]
     _src, desc = model_source(a, k, mode)
-    rng_t = stream(20261011, "truth", fid)
-    shift = float(rng_t.normal(0, 0.5))
-    eps = float(rng_t.normal(0, 0.15))
-    cut_b = _CUT_B[grade]
-    if abs(shift + eps) <= 0.45:
-        b = round(max(-3.5, min(3.5, cut_b - 0.45 * (shift + eps))), 2)
-        aa = 3.0
-        tm = 120
-    else:
-        b = round(cut_b, 2)
-        aa = 1.45
-        tm = 240
+    # Детерминированный содержательный сдвиг [-0.10, +0.10], полностью отвязанный от stream(20261011, "truth")
+    h = zlib.crc32(f"bank_prior_v2:{fid}".encode("utf-8"))
+    offset = ((h % 21) - 10) / 100.0
+    b = round(b0 + offset, 2)
+    aa = 1.0
     if mode == "fwd":
         title = f"{cap(a.title)} — прямой расчёт с учётом: {', '.join(labels)}"
         task = "прямой расчёт по модели"
@@ -417,40 +455,80 @@ def family_meta(fid: str) -> dict[str, Any]:
         task = f"обратная задача: {word} вход «{lab}» на сетке с шагом {st}, при котором {a.cond}"
     construct = (f"{cap(a.construct)}. Ступень {k} из 5: взаимодействуют {k} поправочных фактора(ов) "
                  f"({'; '.join(labels)}); {task}.")
-    basis = (f"Априорная трудность (не по людям). {cap(a.construct)}; {k} взаимодействующих фактора(ов) "
-             f"({', '.join(labels)}), {task}. Грейд {GRADE_RU[grade]} (b {str(b).replace('.', ',')} по числу "
-             f"факторов и направлению вопроса: прямой расчёт легче обратной задачи; волна 20.10-S, без калибровки "
-             f"панелью). σ 0,3")
-    return {"family_id": fid, "title": title, "direction": a.d, "skills": list(a.skills), "grade": grade,
-            "b": b, "a": aa, "time": tm, "traps": sorted(desc), "basis": basis, "construct": construct,
-            "mod": m["mod"], "desc": f"{GRADE_RU[grade]}: {a.title} — {task}. {k} фактора(ов): {', '.join(labels)}. "
-            "Ключ — исполнением модели (точные дроби)" + (", для обратной задачи — ещё и линейным перебором сетки."
-                                                           if mode != "fwd" else ".")}
+    basis = (f"Априорная оценка до калибровки на людях (a = 1,0, σ = 0,3). {cap(a.construct)}; "
+             f"{k} взаимодействующих фактора(ов) ({', '.join(labels)}), {task}. "
+             f"Целевой грейд {GRADE_RU[grade]} (b = {str(b).replace('.', ',')} по числу факторов и типу расчёта).")
+    return {
+        "family_id": fid, "title": title, "direction": a.d, "skills": list(a.skills), "grade": grade,
+        "b": b, "a": aa, "time": tm, "traps": sorted(desc), "basis": basis, "construct": construct,
+        "mod": m["mod"], "n_options": 5,
+        "desc": (f"{GRADE_RU[grade]}: {a.title} — {task}. {k} фактора(ов): {', '.join(labels)}. "
+                 "Ключ — исполнением модели (точные дроби)"
+                 + (", для обратной задачи — ещё и линейным перебором сетки." if mode != "fwd" else ".")),
+    }
 
 
 def make(fid: str, n_above: tuple[int, ...] | None = None):
-    """generate(seed) семейства. n_above — при каком числе ловушек «выше ключа» подбор параметров выполним
-    (посчитано заранее tools/w2010_scale1500.py по пробной выборке и записано в модуль семейства), чтобы не тратить
-    тысячи попыток на невыполнимый вариант; место ключа по величине равновероятно среди допустимых."""
-    m = FAMILIES[fid]
-    a, mode, k = m["arch"], m["mode"], m["k"]
-    src, desc = model_source(a, k, mode)
-    ns = load_model(src)
-    pspecs: dict[str, Any] = dict(a.base[2])
-    for f in a.F[:k]:
-        pspecs.update(f[4])
-    inv = a.inv[int(mode[3])] if mode != "fwd" else None
-    xn = inv[0] if inv else None
+    """Ленивая сборка генератора варианта семейства (5 вариантов ответа, стратификация места ключа по величине)."""
+    state: dict[str, Any] = {}
+
+    def _init() -> None:
+        if state:
+            return
+        m = FAMILIES[fid]
+        a, mode, k, grade = m["arch"], m["mode"], m["k"], m["grade"]
+        src, desc = model_source(a, k, mode)
+        ns = load_model(src)
+        pspecs: dict[str, Any] = dict(a.base[2])
+        for f in a.F[:k]:
+            pspecs.update(f[4])
+        inv = a.inv[int(mode[3])] if mode != "fwd" else None
+        xn = inv[0] if inv else None
+        state.update(a=a, mode=mode, k=k, grade=grade, src=src, desc=desc, ns=ns, pspecs=pspecs, inv=inv, xn=xn)
 
     def sample(r):
+        _init()
+        a, inv, xn, ns, pspecs = state["a"], state["inv"], state["xn"], state["ns"], state["pspecs"]
         P = {n: _draw(r, s) for n, s in pspecs.items()}
         if inv:
+            p, (lo, hi, st), sense, _lab, _unit = inv
+            lo_draw = max(lo + st, 5 * st)
+            hi_draw = hi - st
+            if lo_draw <= hi_draw:
+                x0 = r.randrange(lo_draw, hi_draw + 1, st)
+            else:
+                x0 = r.randrange(lo + st, hi, st) if hi - lo >= 2 * st else lo
+            P[xn] = x0
             y0 = ns["calc"](P)
+            step_dir = st if sense == "max" else -st
+            while lo_draw <= x0 + step_dir <= hi_draw and ns["calc"]({**P, xn: x0 + step_dir}) == y0:
+                x0 += step_dir
+            P[xn] = x0
+            y0 = ns["calc"](P)
+            nb = x0 + step_dir
+            y_nb = ns["calc"]({**P, xn: nb})
             del P[xn]
-            P["B"] = int(y0) if Fraction(y0).denominator == 1 else float(y0)
+            f0, f1 = float(y0), float(y_nb)
+            low_y, high_y = min(f0, f1), max(f0, f1)
+            gap = high_y - low_y
+            frac = r.choice((0.32, 0.44, 0.56, 0.68))
+            if gap >= 2.0 and a.rnd in ("ceil", "floor"):
+                b_val: int | float = int(math.floor(low_y)) + max(1, min(int(math.ceil(high_y)) - int(math.floor(low_y)) - 1, int(round(gap * frac))))
+                if b_val == x0 or b_val == y0 or b_val == y_nb:
+                    alt = b_val + 1 if b_val + 1 < high_y else (b_val - 1 if b_val - 1 > low_y else round(low_y + gap * 0.5, 1))
+                    b_val = alt
+            elif gap > 0:
+                b_val = round(low_y + gap * frac, 2)
+                if b_val <= low_y or b_val >= high_y or b_val == x0:
+                    b_val = round((low_y + high_y) / 2.0, 3)
+            else:
+                b_val = float(y0) + (0.5 if a.need == "le" else -0.5)
+            P["B"] = b_val
         return P
 
     def accept(P, ns_):
+        _init()
+        a, inv, xn = state["a"], state["inv"], state["xn"]
         try:
             ans = ns_["answer"](P)
         except ZeroDivisionError:
@@ -458,27 +536,66 @@ def make(fid: str, n_above: tuple[int, ...] | None = None):
         if ans is None:
             return False
         if inv:
-            # brute (линейный перебор) сверяет kit после подбора; здесь — только дешёвые условия
-            return a.lim[0] <= P["B"] <= a.lim[1]
+            _p, (lo, hi, st), sense, _lab, _unit = inv
+            if not (lo + st <= ans <= hi - st):
+                return False
+            if ans < 5 * st and hi >= 7 * st:
+                return False
+            step_dir = st if sense == "max" else -st
+            if not ns_["ok"](P, ans) or ns_["ok"](P, ans + step_dir):
+                return False
+            b_val = P["B"]
+            if b_val == ans or nfmt(b_val) == nfmt(ans):
+                return False
+            y_at_ans = ns_["calc"]({**P, xn: ans})
+            if b_val == y_at_ans or nfmt(b_val) == nfmt(y_at_ans) or abs(float(b_val) - float(y_at_ans)) < 1e-6:
+                return False
+            return a.lim[0] <= b_val <= a.lim[1]
+        if a.rnd in ("ceil", "floor") and ans < 6:
+            return False
         return a.lim[0] <= ans <= a.lim[1]
 
     def stem(P, ctx):
-        txt = [render(a.base[0], P, ctx, xn)] + [render(f[2], P, ctx, xn) for f in a.F[:k]]
+        _init()
+        a, k, grade, inv, xn = state["a"], state["k"], state["grade"], state["inv"], state["xn"]
+        labels = ", ".join(f[1] for f in a.F[:k])
         if inv:
-            p, (lo, hi, st), sense, lab, unit = inv
+            _p, (lo, hi, st), sense, lab, unit = inv
+            word = "наибольшее" if sense == "max" else "наименьшее"
+            header = f"Обратный расчёт входа «{lab}» с учётом факторов: {labels}."
+        else:
+            header = f"Прямой расчёт показателя «{a.base[4]}» с учётом факторов: {labels}."
+        txt = [header, render(a.base[0], P, ctx, xn)] + [render(f[2], P, ctx, xn) for f in a.F[:k]]
+        if inv:
+            _p, (lo, hi, st), sense, lab, unit = inv
             word = "наибольшее" if sense == "max" else "наименьшее"
             txt.append(render(a.budget, P, ctx))
+            # Проверка вслепую 21.10: модель округляет итог до сравнения с лимитом, а в обратных задачах это не
+            # было сказано — решатель без округления находил соседнее X. Теперь правило названо, ключ прежний.
+            if a.rnd == "ceil":
+                txt.append("Итог считается в целых единицах (округление вверх) и сравнивается с лимитом.")
+            elif a.rnd == "floor":
+                txt.append("Итог считается в целых единицах (округление вниз) и сравнивается с лимитом.")
+            elif _nd(a.rnd) > 0:
+                txt.append(f"Итог округляется до {_nd(a.rnd)} знака(ов) после запятой и сравнивается с лимитом.")
             txt.append(f"\n\nX — {lab}; его перебирают от {unit_text(lo, unit)} до {unit_text(hi, unit)} с шагом "
                        f"{unit_text(st, unit)}. Каково {word} X из этого ряда, при котором {a.cond}?")
         else:
-            txt.append("\n\n" + a.q)
+            r_hint = (
+                " (Итог округлите вверх до целого.)"
+                if a.rnd == "ceil"
+                else (" (Итог округлите вниз до целого.)" if a.rnd == "floor" else "")
+            )
+            txt.append("\n\n" + a.q + r_hint)
         out = " ".join(t for t in txt if not t.startswith("\n\n")) + "".join(t for t in txt if t.startswith("\n\n"))
         return _DOTS.sub(".", out)
 
     def explain(P, ans, traps):
+        _init()
+        a, k, inv, xn, ns = state["a"], state["k"], state["inv"], state["xn"], state["ns"]
         v = {n: x for n, x in P.items() if isinstance(x, (int, float))}
         if inv:
-            p, (lo, hi, st), sense, lab, unit = inv
+            _p, (_lo, _hi, st), sense, _lab, unit = inv
             Q = dict(P)
             Q[xn] = ans
             y1 = ns["calc"](Q)
@@ -492,7 +609,6 @@ def make(fid: str, n_above: tuple[int, ...] | None = None):
                     f"итог — {o(y1)} {rel} {o(P['B'])} (лимит), а при соседнем X = {unit_text(nb, unit)} — "
                     f"{o(y2)} {bad} {o(P['B'])}: ответ — {unit_text(ans, unit)}. Линейный перебор всей сетки даёт "
                     f"то же значение.")
-        x = None
         vv = {n: Fraction(str(t)) if isinstance(t, float) else Fraction(t) for n, t in v.items()}
         bexpr = a.base[1]
         x = eval(compile(bexpr, "<b>", "eval"), {"F": Fraction, "min": min, "max": max}, dict(vv))  # noqa: S307
@@ -509,13 +625,20 @@ def make(fid: str, n_above: tuple[int, ...] | None = None):
         return _DOTS.sub(".", explain(P, ans, traps))
 
     def generate(seed: int):
-        return numeric_variant(fid, seed, contexts=a.ctx, sample=sample, model=src, stem=stem, explain=explain_clean,
-                               accept=accept, rel=a.rel if not inv else min(a.rel, 0.06),
-                               abs_min=(10 ** -_nd(a.rnd)) if not inv else inv[1][2],
-                               trap_desc=desc, note=NOTE, n_above_choices=tuple(n_above or (0, 1, 2, 3)))
-    generate.sample, generate.accept, generate.model = sample, accept, src
-    generate.rel = a.rel if not inv else min(a.rel, 0.06)
-    generate.abs_min = (10 ** -_nd(a.rnd)) if not inv else inv[1][2]
+        _init()
+        a, inv, src, desc, ns = state["a"], state["inv"], state["src"], state["desc"], state["ns"]
+        return numeric_variant(
+            fid, seed,
+            contexts=a.ctx, sample=sample, model=src, stem=stem, explain=explain_clean,
+            accept=accept, rel=min(a.rel, 0.05) if not inv else min(a.rel, 0.04),
+            abs_min=(10 ** -_nd(a.rnd)) if not inv else inv[1][2],
+            trap_desc=desc, note=NOTE,
+            n_above_choices=(0, 1, 2, 3, 4),
+            n_distractors=4,
+            ns_cached=ns,
+            stratified=True,
+        )
+
     return generate
 
 

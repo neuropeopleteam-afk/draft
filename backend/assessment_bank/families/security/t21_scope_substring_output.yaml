@@ -1,0 +1,35 @@
+family_id: security.authz.t21_scope_substring_output
+title: Права токена — in по строке (подстрока) против in по списку после split()
+direction: security
+skills:
+- python
+- security
+- authorization
+target_grades:
+- intern
+- junior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra:
+    required:
+    - 3
+    - 4
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Два генератора списка
+    с условием: not in по строке прав (подстрока — «read» находится внутри «orders:read») и not in по списку после
+    split() (точное совпадение), затем ",".join(...) or "ok". Уровень Junior: генератор списка с условием вместе со
+    split / join и различием строки и списка. Набор t21 (21.10) у порога Junior (b = −1,1)'
+generator: assessment_bank.families.security.t21_scope_substring_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Шлюз API ищет недостающие права токена двумя
+  способами — по строке и по списку; предсказать две строки вывода. Ключ — независимая модель в генераторе,
+  проверка — исполнение показанного кода в песочнице Python.'

@@ -1,0 +1,36 @@
+family_id: analyst.sql.t21_and_or_where_output
+title: WHERE с AND и OR без скобок — какие строки попадут в выгрузку
+direction: analyst
+skills:
+- sql
+- filtering
+target_grades:
+- intern
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 4
+  - 4
+  extra:
+    rows:
+    - 7
+    - 9
+    forms:
+    - or_and
+    - and_or
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.5
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проверить 7–9 строк по
+    условию из трёх сравнений без скобок; одна ловушка — приоритет AND над OR (одна категория отбирается без порога).
+    Уровень Стажёра: WHERE и приоритет логических операций, без агрегатов; ближе к верхней границе диапазона, потому что
+    прочтение «по порядку слева направо» частое. Набор t21 (21.10) у порога Стажёра (b = −1,5)'
+generator: assessment_bank.families.analyst.t21_and_or_where_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Таблица лидов / обращений / пользователей / заказов
+  / баннеров и запрос SELECT id с условием «c = X OR c = Y AND v >= T» (или «v >= T AND c = X OR c = Y»); предсказать
+  список id. Ключ — независимый отбор в генераторе, проверка — исполнение показанного запроса в песочнице sqlite.'

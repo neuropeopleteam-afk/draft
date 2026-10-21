@@ -1,0 +1,30 @@
+family_id: backend.db.t21_sql_group_having_output
+title: Отчёт для дежурного — WHERE, GROUP BY и HAVING
+direction: backend
+skills:
+- sql
+- metrics
+target_grades:
+- intern
+- junior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.95
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две конструкции вместе:
+    WHERE отбрасывает строки до группировки, HAVING — группы после; 9–11 строк, 4 группы, сортировка по счётчику и
+    имени. Уровень Junior: GROUP BY + HAVING. Набор t21 (21.10) у порога Junior (b = −0,95)'
+generator: assessment_bank.families.backend.t21_sql_group_having_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Отчёт для дежурного: группы, где «плохих» строк
+  (ошибок 5xx, отказов, повторов) не меньше порога; предсказать строки результата. Ключ — независимый подсчёт по
+  данным в генераторе, проверка — исполнение запроса в SQLite на данных из условия.'

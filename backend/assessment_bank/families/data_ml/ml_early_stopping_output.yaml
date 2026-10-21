@@ -1,28 +1,51 @@
 family_id: data_ml.ml.early_stopping_output
 title: Ранняя остановка обучения — patience и min_delta (предсказать вывод)
 direction: data_ml
-skills: [python, overfitting, early_stopping, model_training, validation]
-target_grades: [junior, middle]
+skills:
+- python
+- overfitting
+- early_stopping
+- model_training
+- validation
+target_grades:
+- junior
+- middle
 format: predict_output
 language: python
 invariants:
-  code_lines: [12, 12]
-  operations: [11, 11]
+  code_lines:
+  - 12
+  - 12
+  operations:
+  - 11
+  - 11
   extra:
-    epochs: [8, 11]
-    modes: [loss, auc]
-    patience: [2, 3]
-    min_delta: [0.002, 0.005, 0.01]
+    epochs:
+    - 8
+    - 11
+    modes:
+    - loss
+    - auc
+    patience:
+    - 2
+    - 3
+    min_delta:
+    - 0.002
+    - 0.005
+    - 0.01
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.3
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.3
-  basis: "12 строк, ряд из 8–11 эпох; нужно аккуратно провести счётчик patience, учесть min_delta (в ряду всегда есть улучшение меньше порога), нумерацию эпох и направление метрики. Строгое сравнение wait > patience и прогон без остановки повышают трудность отдельных вариантов (Junior/Middle)"
+  basis: Априорная, до калибровки на людях (a = 1,3). 12 строк, ряд из 8–11 эпох; нужно аккуратно провести счётчик
+    patience, учесть min_delta (в ряду всегда есть улучшение меньше порога), нумерацию эпох и направление метрики.
+    Строгое сравнение wait > patience и прогон без остановки повышают трудность отдельных вариантов (Junior/Middle)
 generator: assessment_bank.families.data_ml.ml_early_stopping_output
 version: 1
-description: >
-  Цикл ранней остановки по валидационной метрике (loss или AUC) с patience и min_delta.
-  Вывод: эпоха остановки, лучшая эпоха и лучшее значение. Ключ считается независимой
-  моделью и сверяется с исполнением показанного кода.
+description: 'Цикл ранней остановки по валидационной метрике (loss или AUC) с patience и min_delta. Вывод: эпоха
+  остановки, лучшая эпоха и лучшее значение. Ключ считается независимой моделью и сверяется с исполнением показанного
+  кода.
+
+  '

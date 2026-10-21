@@ -1,25 +1,42 @@
 family_id: devops.net.nginx_location_mcq
 title: Сети — какой location nginx обработает запрос
 direction: devops
-skills: [nginx, networking, http, reverse_proxy]
-target_grades: [middle, senior]
+skills:
+- nginx
+- networking
+- http
+- reverse_proxy
+target_grades:
+- middle
+- senior
 format: mcq_concept
 language: text
 invariants:
-  code_lines: [9, 9]
+  code_lines:
+  - 9
+  - 9
   n_options: 4
   extra:
     subtype: location_priority
-    traps: [regex_over_prefix, caret_blocks_regex, exact_only, longest_prefix, case_sensitive]
+    traps:
+    - regex_over_prefix
+    - caret_blocks_regex
+    - exact_only
+    - longest_prefix
+    - case_sensitive
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: 0.5
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.35
-  basis: "Пять блоков location (=, ^~, ~ или ~*, префикс, /) в одном из двух порядков и один URI-ловушка: регулярное выражение важнее длинного префикса, ^~ блокирует регулярные, = только точный, ~ с учётом регистра. Нужно знать алгоритм выбора, а не «первый подходящий». Middle, ближе к границе Middle/Senior"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Пять блоков location (=, ^~, ~ или ~*, префикс, /) в одном
+    из двух порядков и один URI-ловушка: регулярное выражение важнее длинного префикса, ^~ блокирует регулярные,
+    = только точный, ~ с учётом регистра. Нужно знать алгоритм выбора, а не «первый подходящий». Middle, ближе к
+    границе Middle/Senior'
 generator: assessment_bank.families.devops.net_nginx_location_mcq
 version: 1
-description: >
-  Определить блок location nginx для URI. Ключ — исполнение модели алгоритма выбора location над показанной
+description: 'Определить блок location nginx для URI. Ключ — исполнение модели алгоритма выбора location над показанной
   конфигурацией.
+
+  '

@@ -1,31 +1,58 @@
 family_id: data_ml.mlops.psi_drift_ob3
 title: Мониторинг дрейфа через PSI — пустые корзины (открытая книга)
 direction: data_ml
-skills: [python, ml_monitoring, data_drift, psi, mlops, reproducibility]
-target_grades: [senior]
+skills:
+- python
+- ml_monitoring
+- data_drift
+- psi
+- mlops
+- reproducibility
+target_grades:
+- senior
 format: open_book_3step
 language: python
 invariants:
-  code_lines: [1, 40]
-  operations: [1, 40]
+  code_lines:
+  - 1
+  - 40
+  operations:
+  - 1
+  - 40
   defect_type: psi_zero_bins
   n_options: 4
   extra:
-    bins: [4, 5]
-    step2_distractors: [ref_only, kl_only, abs_diff, ref_len]
-    step3_conditions: [seasonality, label_delay, categorical, response]
+    bins:
+    - 4
+    - 5
+    step2_distractors:
+    - ref_only
+    - kl_only
+    - abs_diff
+    - ref_len
+    step3_conditions:
+    - seasonality
+    - label_delay
+    - categorical
+    - response
 time_limit_s: 900
 canary: false
 prior_difficulty:
   b: 1.0
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.3
-  step_offsets: [-0.6, -0.1, 0.7]
-  basis: "14 строк; нужно понять, что пропуск корзин с нулевой долей скрывает самый сильный дрейф; шаг 1 — разложить 4 выборки по 4–5 корзинам и найти пустую (сдвинутая и перекошенная выборки — правдоподобные ловушки); шаг 2 — тонкие отличия формулы (KL, модуль, знаменатель, пропуск пустых в эталоне); шаг 3 — эксплуатация мониторинга, задержка меток, воспроизводимость (Senior)"
+  step_offsets:
+  - -0.6
+  - -0.1
+  - 0.7
+  basis: Априорная, до калибровки на людях (a = 1,3). 14 строк; нужно понять, что пропуск корзин с нулевой долей
+    скрывает самый сильный дрейф; шаг 1 — разложить 4 выборки по 4–5 корзинам и найти пустую (сдвинутая и перекошенная
+    выборки — правдоподобные ловушки); шаг 2 — тонкие отличия формулы (KL, модуль, знаменатель, пропуск пустых в
+    эталоне); шаг 3 — эксплуатация мониторинга, задержка меток, воспроизводимость (Senior)
 generator: assessment_bank.families.data_ml.mlops_psi_drift_ob3
 version: 1
-description: >
-  Функция PSI пропускает корзины, где одна из долей нулевая, и не видит «схлопнувшийся»
-  признак. Шаг 1 — выборка current, на которой результат расходится с регламентом; шаг 2 —
-  исправленная функция; шаг 3 — сезонность и шумные алерты, задержка меток, категориальные
-  признаки или реакция на алерт и воспроизводимость.
+description: 'Функция PSI пропускает корзины, где одна из долей нулевая, и не видит «схлопнувшийся» признак. Шаг
+  1 — выборка current, на которой результат расходится с регламентом; шаг 2 — исправленная функция; шаг 3 — сезонность
+  и шумные алерты, задержка меток, категориальные признаки или реакция на алерт и воспроизводимость.
+
+  '

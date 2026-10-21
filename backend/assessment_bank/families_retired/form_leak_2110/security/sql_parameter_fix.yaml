@@ -1,0 +1,35 @@
+family_id: security.sql.parameter_fix
+title: Параметризованный поиск SQLite без изменения значения
+direction: security
+skills:
+- secure_code_review
+- sql
+- parameterized_queries
+- sqlite
+target_grades:
+- junior
+format: choose_fix
+language: python
+invariants:
+  code_lines:
+  - 3
+  - 3
+  operations:
+  - 2
+  - 2
+  defect_type: sql_string_concatenation
+  n_options: 4
+  extra:
+    input_kind: legitimate_names_with_special_characters
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.9
+  a: 1.3
+  sigma_variant: 0.2
+  basis: Априорная, до калибровки на людях (a = 1,3). 3 строки, один дефект склейки SQL; требуется выбрать отдельное
+    связывание параметра, не потеряв апострофы и пробелы.
+generator: assessment_bank.families_retired.form_leak_2110.security.sql_parameter_fix
+version: 1
+description: Учебные законные названия; sqlite3 исполняет все исправления, отдельный sqlite runner проверяет контрольную
+  запись.

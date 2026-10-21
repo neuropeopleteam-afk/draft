@@ -1,26 +1,47 @@
 family_id: qa.bash.trace_logs_output
 title: Локализация дефекта по журналам шлюза и сервиса
 direction: qa
-skills: [bash, logs, defect_localization, awk, incident_analysis]
-target_grades: [middle]
+skills:
+- bash
+- logs
+- defect_localization
+- awk
+- incident_analysis
+target_grades:
+- middle
 format: predict_output
 language: bash
 invariants:
-  code_lines: [1, 3]
-  operations: [4, 7]
+  code_lines:
+  - 1
+  - 3
+  operations:
+  - 4
+  - 7
   extra:
-    kinds: [masked, per_version, error_rate, users]
-    gateway_lines: [8, 11]
+    kinds:
+    - masked
+    - per_version
+    - error_rate
+    - users
+    gateway_lines:
+    - 8
+    - 11
 time_limit_s: 360
 canary: false
 prior_difficulty:
   b: 0.4
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.4
-  basis: "1–3 строки команд над двумя журналами по 6–8 строк, связь по идентификатору запроса; четыре вида команд (comm по двум спискам, awk с метками деплоя, доля 5xx, уникальные пользователи) разной трудности — σ 0,4. Калибровка 05.10: конвейер users (grep -o | sort -u | wc -l, уровень Junior) решался в 0,42 против 0,00–0,14 у остальных — исключён; остаются конвейеры с состоянием и агрегацией (comm, awk); журналы укорочены до 6–8 строк (было «слишком трудное»)"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). 1–3 строки команд над двумя журналами по 6–8 строк, связь
+    по идентификатору запроса; четыре вида команд (comm по двум спискам, awk с метками деплоя, доля 5xx, уникальные
+    пользователи) разной трудности — σ 0,4. Калибровка 05.10: конвейер users (grep -o | sort -u | wc -l, уровень
+    Junior) решался в 0,42 против 0,00–0,14 у остальных — исключён; остаются конвейеры с состоянием и агрегацией
+    (comm, awk); журналы укорочены до 6–8 строк (было «слишком трудное»)'
 generator: assessment_bank.families.qa.sh_trace_logs_output
 version: 2
-description: >
-  Два журнала (шлюз и сервис) и команда разбора инцидента: замаскированные ошибки, ошибки
-  по версиям, доля 5xx, затронутые пользователи. Ключ — модель на Python, сверка в bash.
-  Версия 2: без конвейера users (подсчёт уникальных пользователей) — он был заметно легче остальных; журналы 6–8 строк.
+description: 'Два журнала (шлюз и сервис) и команда разбора инцидента: замаскированные ошибки, ошибки по версиям,
+  доля 5xx, затронутые пользователи. Ключ — модель на Python, сверка в bash. Версия 2: без конвейера users (подсчёт
+  уникальных пользователей) — он был заметно легче остальных; журналы 6–8 строк.
+
+  '

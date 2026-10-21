@@ -1,0 +1,30 @@
+family_id: mobile.push.t21_push_preview_output
+title: Превью push-уведомления — length, slice и конкатенация
+direction: mobile
+skills:
+- javascript
+- push_notifications
+- strings
+target_grades:
+- intern
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Сравнить длину строки с MAX,
+    взять slice(0, MAX − 3) и дописать «...»; ловушки — подсчёт символов с пробелами, невключаемая граница среза, строгое
+    > при длине, равной MAX. Уровень Стажёра: len, срезы, конкатенация. Набор t21 (21.10) у порога Стажёра (b = −1,6)'
+generator: assessment_bank.families.mobile.t21_push_preview_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Программа укорачивает текст push-уведомления для превью;
+  предсказать превью и его длину. Ключ — независимая модель в генераторе на Python, проверка — исполнение показанного кода
+  в песочнице Node.js.

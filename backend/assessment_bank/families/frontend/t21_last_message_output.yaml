@@ -1,0 +1,32 @@
+family_id: frontend.chat.t21_last_message_output
+title: Длина массива и индексы — последний элемент, индекс с нуля и выход за границу
+direction: frontend
+skills:
+- javascript
+target_grades:
+- intern
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 5
+  - 5
+  extra:
+    items:
+    - 3
+    - 6
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.75
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Массив из 3–6 строк,
+    четыре строки вывода: длина, последний элемент через length − 1, элемент по индексу с нуля и обращение за
+    границу (arr[arr.length] или arr[-1] — undefined). Уровень Стажёра: индексы и длина массива. Набор t21 (21.10)
+    у порога Стажёра (b = −1,75)'
+generator: assessment_bank.families.frontend.t21_last_message_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Программа печатает длину массива строк
+  интерфейса и элементы по индексам, включая обращение за границу; предсказать вывод. Ключ — независимая модель
+  в генераторе, проверка — исполнение показанного кода в Node.js.'

@@ -1,0 +1,31 @@
+family_id: frontend.cart.t21_cart_sum_output
+title: Итог корзины — цикл с суммой price × qty и счётчиком штук или позиций
+direction: frontend
+skills:
+- javascript
+target_grades:
+- intern
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra:
+    rows:
+    - 3
+    - 4
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.85
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл по 3–4 объектам
+    корзины: сумма price × qty и счётчик — штуки (count += qty) или позиции (count++). Уровень Стажёра: цикл
+    с суммой и счётчиком. Набор t21 (21.10) у порога Стажёра (b = −1,85)'
+generator: assessment_bank.families.frontend.t21_cart_sum_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Цикл по массиву объектов корзины считает сумму
+  и счётчик для значка; предсказать вывод. Ключ — независимый подсчёт в генераторе, проверка — исполнение
+  показанного кода в Node.js.'

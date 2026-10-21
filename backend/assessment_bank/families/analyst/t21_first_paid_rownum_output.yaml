@@ -1,0 +1,35 @@
+family_id: analyst.sql.t21_first_paid_rownum_output
+title: ROW_NUMBER и фильтр статуса — до оконной функции или после
+direction: analyst
+skills:
+- sql
+- window_functions
+target_grades:
+- senior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 11
+  - 12
+  extra:
+    rows:
+    - 7
+    - 10
+    inner_filter_share: 0.4
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Пронумеровать строки
+    3–4 пользователей по времени (ROW_NUMBER по PARTITION BY) и применить фильтр статуса — снаружи (после окна:
+    пользователь с «не той» первой строкой выпадает) или внутри CTE (до окна: берётся первая нужная строка). Уровень
+    Senior: порядок вычисления WHERE и оконных функций. Набор t21 (21.10) у порога Senior (b = +0,9)'
+generator: assessment_bank.families.analyst.t21_first_paid_rownum_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Заказы / платежи / поездки / бронирования
+  пользователей вперемешку; CTE с ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at) и выбор rn = 1 с
+  фильтром статуса снаружи или внутри; предсказать строки результата. Ключ — независимый расчёт в генераторе,
+  проверка — исполнение запроса в песочнице sqlite.'

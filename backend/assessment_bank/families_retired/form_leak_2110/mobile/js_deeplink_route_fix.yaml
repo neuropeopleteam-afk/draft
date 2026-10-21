@@ -1,0 +1,42 @@
+family_id: mobile.js.deeplink_route_fix
+title: Диплинк с метками открывает главный экран — разбор пути ссылки
+direction: mobile
+skills:
+- deep_links
+- navigation
+- javascript
+target_grades:
+- intern
+- junior
+format: choose_fix
+language: javascript
+invariants:
+  code_lines:
+  - 26
+  - 26
+  operations:
+  - 21
+  - 21
+  defect_type: query_in_path
+  n_options: 4
+  extra:
+    distractors:
+    - replace_q
+    - no_prefix
+    - decode_only
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: -1.1
+  a: 1.3
+  sigma_variant: 0.2
+  basis: Априорная, до калибровки на людях (a = 1,3). Симптом прямо указывает на метки в ссылке; нужно выбрать разбор,
+    отрезающий и префикс, и query, и якорь; фиксированный состав дистракторов той же длины (каждый исправляет «половину»).
+    Стажёр/Junior, у порога Junior (b ≈ −1,1)
+generator: assessment_bank.families_retired.form_leak_2110.mobile.js_deeplink_route_fix
+version: 1
+description: 'Разбор диплинков сравнивает с маршрутами путь вместе с query-строкой, и ссылки с utm-метками открывают
+  главный экран. Ключ: все четыре варианта функции исполняются в Node на ссылках с метками, якорем и параметром
+  пути.
+
+  '

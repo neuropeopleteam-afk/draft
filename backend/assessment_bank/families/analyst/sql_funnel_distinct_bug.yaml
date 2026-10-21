@@ -1,24 +1,36 @@
 family_id: analyst.sql.funnel_distinct_bug
 title: Воронка в SQL — на одном шаге считаются события, а не пользователи
 direction: analyst
-skills: [sql, product_analytics, funnels]
-target_grades: [intern, junior]
+skills:
+- sql
+- product_analytics
+- funnels
+target_grades:
+- intern
+- junior
 format: find_bug
 language: sql
 invariants:
-  code_lines: [6, 7]
-  operations: [3, 3]
+  code_lines:
+  - 6
+  - 7
+  operations:
+  - 3
+  - 3
   defect_type: count_events_not_users
 time_limit_s: 180
 canary: false
 prior_difficulty:
   b: -1.1
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.2
-  basis: "Запрос 6–8 строк одной формы, на одном шаге нет DISTINCT; симптом «конверсия выше 100 %» указывает на шаг, но строки шагов выглядят одинаково, нужно заметить отличие и понять, почему повторные события раздувают счёт. Стажёр/Junior, у порога Junior (b ≈ −1,1)"
+  basis: Априорная, до калибровки на людях (a = 1,3). Запрос 6–8 строк одной формы, на одном шаге нет DISTINCT;
+    симптом «конверсия выше 100 %» указывает на шаг, но строки шагов выглядят одинаково, нужно заметить отличие
+    и понять, почему повторные события раздувают счёт. Стажёр/Junior, у порога Junior (b ≈ −1,1)
 generator: assessment_bank.families.analyst.sql_funnel_distinct_bug
 version: 1
-description: >
-  Запрос воронки, в котором один шаг считает события вместо уникальных пользователей. Ключ: показанный
-  запрос исполняется в sqlite3 на данных с повторными событиями — дефектный расходится с эталоном,
-  исправленный совпадает.
+description: 'Запрос воронки, в котором один шаг считает события вместо уникальных пользователей. Ключ: показанный
+  запрос исполняется в sqlite3 на данных с повторными событиями — дефектный расходится с эталоном, исправленный
+  совпадает.
+
+  '

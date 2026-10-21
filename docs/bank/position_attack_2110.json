@@ -1,0 +1,658 @@
+{
+ "command": "../tools/bank_position_attack.py --train 100 --test 100 --jobs 12 --top 60 --out /w/a3/pos_after.json",
+ "rule": "обучение на train случайных зёрнах из диапазона выдачи, проверка на test других; признаки варианта без знания предмета: буква, ранг по величине, ранг по длине, текст (цифры → #), сюжет и их пары; выбор — вариант с наибольшей долей «ключ» на обучении (ничья — доля); шанс — 1/k",
+ "before": {
+  "tree": "7b30f54d (до правки _w2010_kit)",
+  "n_families": 1293,
+  "train_seeds": 100,
+  "test_seeds": 100,
+  "key": "2110",
+  "by_attack": {
+   "chance": 0.2094,
+   "letter": {
+    "acc": 0.2323,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "value_rank": {
+    "acc": 0.2307,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 113000
+   },
+   "len_rank": {
+    "acc": 0.267,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "letter_x_value_rank": {
+    "acc": 0.6294,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 113000
+   },
+   "letter_x_len_rank": {
+    "acc": 0.375,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "text": {
+    "acc": 0.2587,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "text_x_letter": {
+    "acc": 0.2714,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "ctx_x_letter": {
+    "acc": 0.2631,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "ctx_x_value_rank": {
+    "acc": 0.2623,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 113000
+   },
+   "ctx_x_text": {
+    "acc": 0.254,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   }
+  },
+  "positional": {
+   "attacks": [
+    "letter",
+    "value_rank",
+    "letter_x_value_rank",
+    "ctx_x_letter",
+    "ctx_x_value_rank"
+   ],
+   "n_families_excess_gt_0_10": 1108,
+   "n_families_excess_gt_0_25": 1100,
+   "n_families_acc_ge_0_90": 51,
+   "top": [
+    {
+     "family_id": "security.principal.revocation_window_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.principal.password_hash_budget_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "qa.ui.ui_explicit_wait_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "qa.principal.flaky_budget_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "qa.principal.e2e_shards_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "qa.manual.manual_pairwise_bound_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "qa.manual.manual_boundary_values_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.rn.rn_flatlist_window_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.principal.staged_rollout_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.principal.offline_queue_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "frontend.perf.principal_virtual_overscan_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "frontend.perf.principal_js_budget_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "frontend.api.rest_cursor_pagination_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "devops.sre.principal_burn_rate_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "devops.kafka.kafka_broker_disk_mcq",
+     "excess": 0.75
+    }
+   ]
+  },
+  "form": {
+   "attacks": [
+    "len_rank",
+    "text",
+    "letter_x_len_rank",
+    "text_x_letter",
+    "ctx_x_text"
+   ],
+   "n_families_excess_gt_0_10": 838,
+   "n_families_excess_gt_0_25": 277,
+   "n_families_acc_ge_0_90": 48,
+   "top": [
+    {
+     "family_id": "security.web.ssrf_allowlist_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.web.html_escape_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.web.cors_csrf_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.web.cookie_policy_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.supply.dependency_patch_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.sql.parameter_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.auth.password_storage_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "qa.load.percentile_merge_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.security.secret_storage_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.push.fcm_message_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.js.token_refresh_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.js.offline_queue_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.js.double_submit_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.js.deeplink_route_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.ios.appearance_mcq",
+     "excess": 0.75
+    }
+   ]
+  }
+ },
+ "after": {
+  "tree": "после правки _w2010_kit (ac0c5eac), до вывода семейств по форме",
+  "n_families": 1293,
+  "train_seeds": 100,
+  "test_seeds": 100,
+  "key": "2110",
+  "by_attack": {
+   "chance": 0.2094,
+   "letter": {
+    "acc": 0.2091,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "value_rank": {
+    "acc": 0.203,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 113000
+   },
+   "len_rank": {
+    "acc": 0.2667,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "letter_x_value_rank": {
+    "acc": 0.2038,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 113000
+   },
+   "letter_x_len_rank": {
+    "acc": 0.2617,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "text": {
+    "acc": 0.2591,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "text_x_letter": {
+    "acc": 0.2516,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "ctx_x_letter": {
+    "acc": 0.209,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   },
+   "ctx_x_value_rank": {
+    "acc": 0.2055,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 113000
+   },
+   "ctx_x_text": {
+    "acc": 0.2528,
+    "chance": 0.2094,
+    "n_families": 1293,
+    "n_test_variants": 129300
+   }
+  },
+  "positional": {
+   "attacks": [
+    "letter",
+    "value_rank",
+    "letter_x_value_rank",
+    "ctx_x_letter",
+    "ctx_x_value_rank"
+   ],
+   "n_families_excess_gt_0_10": 39,
+   "n_families_excess_gt_0_25": 0,
+   "n_families_acc_ge_0_90": 0,
+   "top": [
+    {
+     "family_id": "security.deps_audit.senior_solve_wk_k3",
+     "excess": 0.14
+    },
+    {
+     "family_id": "data_eng.stream.delivery_semantics_mcq",
+     "excess": 0.14
+    },
+    {
+     "family_id": "common.amdahl.intern_fwd_k2",
+     "excess": 0.135
+    },
+    {
+     "family_id": "security.siem_storage.lead_solve_eps_k5",
+     "excess": 0.13
+    },
+    {
+     "family_id": "security.principal.revocation_window_mcq",
+     "excess": 0.13
+    },
+    {
+     "family_id": "devops.rolling_deploy.lead_solve_n_k5",
+     "excess": 0.13
+    },
+    {
+     "family_id": "data_ml.vector_index.middle_solve_pq_k2",
+     "excess": 0.13
+    },
+    {
+     "family_id": "data_eng.airflow_slots.junior_fwd_k3",
+     "excess": 0.13
+    },
+    {
+     "family_id": "common.http.status_codes",
+     "excess": 0.13
+    },
+    {
+     "family_id": "qa.flaky_pipeline.lead_solve_n_k5",
+     "excess": 0.12
+    },
+    {
+     "family_id": "mobile.perf.frame_budget_mcq",
+     "excess": 0.12
+    },
+    {
+     "family_id": "mobile.js.deeplink_route_fix",
+     "excess": 0.12
+    },
+    {
+     "family_id": "frontend.ssr_pods.middle_solve_lam_k3",
+     "excess": 0.12
+    },
+    {
+     "family_id": "frontend.offline_quota.principal_solve_s_k5",
+     "excess": 0.12
+    },
+    {
+     "family_id": "frontend.api_waterfall.middle_solve_n_k2",
+     "excess": 0.12
+    }
+   ]
+  },
+  "form": {
+   "attacks": [
+    "len_rank",
+    "text",
+    "letter_x_len_rank",
+    "text_x_letter",
+    "ctx_x_text"
+   ],
+   "n_families_excess_gt_0_10": 228,
+   "n_families_excess_gt_0_25": 77,
+   "n_families_acc_ge_0_90": 48,
+   "top": [
+    {
+     "family_id": "security.web.ssrf_allowlist_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.web.html_escape_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.web.cors_csrf_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.web.cookie_policy_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.supply.dependency_patch_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.sql.parameter_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "security.auth.password_storage_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "qa.load.percentile_merge_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.security.secret_storage_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.push.fcm_message_mcq",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.js.token_refresh_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.js.offline_queue_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.js.double_submit_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.js.deeplink_route_fix",
+     "excess": 0.75
+    },
+    {
+     "family_id": "mobile.ios.appearance_mcq",
+     "excess": 0.75
+    }
+   ]
+  }
+ },
+ "final": {
+  "tree": "банк заморозки a526dc3ee (после вывода 57 семейств по форме и набора t21 — 177); отчёт docs/bank/position_attack_2110g_final.json",
+  "n_families": 1236,
+  "train_seeds": 100,
+  "test_seeds": 300,
+  "key": "2110g",
+  "by_attack": {
+   "chance": 0.2076,
+   "letter": {
+    "acc": 0.2072,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "value_rank": {
+    "acc": 0.2048,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 339000
+   },
+   "len_rank": {
+    "acc": 0.2427,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "letter_x_value_rank": {
+    "acc": 0.2032,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 339000
+   },
+   "letter_x_len_rank": {
+    "acc": 0.239,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "text": {
+    "acc": 0.2292,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "text_x_letter": {
+    "acc": 0.2259,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "ctx_x_letter": {
+    "acc": 0.2079,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "ctx_x_value_rank": {
+    "acc": 0.2041,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 339000
+   },
+   "ctx_x_text": {
+    "acc": 0.225,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   }
+  },
+  "positional": {
+   "attacks": [
+    "letter",
+    "value_rank",
+    "letter_x_value_rank",
+    "ctx_x_letter",
+    "ctx_x_value_rank"
+   ],
+   "n_families_excess_gt_0_10": 2,
+   "n_families_excess_gt_0_25": 0,
+   "n_families_acc_ge_0_90": 0,
+   "top": [
+    {
+     "family_id": "data_eng.stream.delivery_semantics_mcq",
+     "excess": 0.173
+    },
+    {
+     "family_id": "data_eng.pg.pg_partition_pruning_mcq",
+     "excess": 0.127
+    },
+    {
+     "family_id": "data_ml.exp.duration_cuped_mcq",
+     "excess": 0.097
+    },
+    {
+     "family_id": "mobile.rn.rn_flatlist_window_mcq",
+     "excess": 0.087
+    },
+    {
+     "family_id": "devops.es_shards.senior_solve_d_k3",
+     "excess": 0.087
+    },
+    {
+     "family_id": "common.arch.availability_chain_mcq",
+     "excess": 0.083
+    },
+    {
+     "family_id": "analyst.backlog_story_points.principal_solve_ac_k5",
+     "excess": 0.077
+    },
+    {
+     "family_id": "devops.k8s_nodes.intern_fwd_k2",
+     "excess": 0.073
+    },
+    {
+     "family_id": "devops.db_iops.senior_fwd_k5",
+     "excess": 0.073
+    },
+    {
+     "family_id": "data_ml.feature_store.principal_solve_f_k5",
+     "excess": 0.073
+    },
+    {
+     "family_id": "data_eng.etl_window.middle_solve_v_k2",
+     "excess": 0.073
+    },
+    {
+     "family_id": "data_eng.ch_storage.middle_fwd_k4",
+     "excess": 0.073
+    },
+    {
+     "family_id": "common.http.status_codes",
+     "excess": 0.071
+    },
+    {
+     "family_id": "devops.egress_cost.senior_solve_h_k3",
+     "excess": 0.07
+    },
+    {
+     "family_id": "common.linux.umask_chmod",
+     "excess": 0.07
+    }
+   ]
+  },
+  "form": {
+   "attacks": [
+    "len_rank",
+    "text",
+    "letter_x_len_rank",
+    "text_x_letter",
+    "ctx_x_text"
+   ],
+   "n_families_excess_gt_0_10": 116,
+   "n_families_excess_gt_0_25": 21,
+   "n_families_acc_ge_0_90": 0,
+   "top": [
+    {
+     "family_id": "backend.api.idempotency_key_fix",
+     "excess": 0.487
+    },
+    {
+     "family_id": "devops.docker.entrypoint_cmd_mcq",
+     "excess": 0.48
+    },
+    {
+     "family_id": "backend.cache.stampede_fix",
+     "excess": 0.458
+    },
+    {
+     "family_id": "common.strategy.migration_plan_mcq",
+     "excess": 0.444
+    },
+    {
+     "family_id": "qa.lead.retry_tradeoff_mcq",
+     "excess": 0.427
+    },
+    {
+     "family_id": "backend.kafka.offset_commit_mcq",
+     "excess": 0.397
+    },
+    {
+     "family_id": "data_ml.llm.chunking_fix",
+     "excess": 0.375
+    },
+    {
+     "family_id": "analyst.principal.launch_effect_mcq",
+     "excess": 0.369
+    },
+    {
+     "family_id": "common.dist.outbox_fix",
+     "excess": 0.352
+    },
+    {
+     "family_id": "mobile.android.lifecycle_mcq",
+     "excess": 0.35
+    },
+    {
+     "family_id": "analyst.er.cardinality_ddl_fix",
+     "excess": 0.34
+    },
+    {
+     "family_id": "common.http.status_codes",
+     "excess": 0.331
+    },
+    {
+     "family_id": "mobile.perf.cold_start_mcq",
+     "excess": 0.32
+    },
+    {
+     "family_id": "security.crypto.aead_mcq",
+     "excess": 0.316
+    },
+    {
+     "family_id": "qa.principal.test_budget_mcq",
+     "excess": 0.303
+    }
+   ]
+  }
+ }
+}

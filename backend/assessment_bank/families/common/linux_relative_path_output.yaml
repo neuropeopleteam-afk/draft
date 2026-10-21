@@ -1,24 +1,35 @@
 family_id: common.linux.relative_path_output
 title: Linux — относительные пути и ..-переходы
 direction: common
-skills: [linux, shell, filesystem]
-target_grades: [intern, junior]
+skills:
+- linux
+- shell
+- filesystem
+target_grades:
+- intern
+- junior
 format: predict_output
 language: bash
 invariants:
-  code_lines: [2, 2]
-  operations: [2, 2]
+  code_lines:
+  - 2
+  - 2
+  operations:
+  - 2
+  - 2
   extra:
     subtype: relative_cd
 time_limit_s: 120
 canary: false
 prior_difficulty:
   b: -1.5
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.2
-  basis: "Дерево каталогов, стартовый каталог и путь из 2–3 переходов с .. и ./, realpath -m; одна ловушка — .. считается от текущего каталога; у порога Junior, грейд «Стажёр»"
+  basis: Априорная, до калибровки на людях (a = 1,3). Дерево каталогов, стартовый каталог и путь из 2–3 переходов
+    с .. и ./, realpath -m; одна ловушка — .. считается от текущего каталога; у порога Junior, грейд «Стажёр»
 generator: assessment_bank.families.common.linux_relative_path_output
 version: 1
-description: >
-  Лёгкое семейство у порога Junior: куда приведёт цепочка cd по относительным путям. Исполняется bash;
+description: 'Лёгкое семейство у порога Junior: куда приведёт цепочка cd по относительным путям. Исполняется bash;
   ключ — независимая нормализация пути.
+
+  '
