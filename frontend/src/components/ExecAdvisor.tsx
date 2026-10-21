@@ -55,9 +55,10 @@ function CandCard({ c }: { c: Card }) {
   return (
     <li className={`min-w-0 rounded-2xl px-3 py-2.5 ring-1 ${c.leader ? "bg-white text-brand-ink ring-white" : "bg-white/10 text-white ring-white/20"}`} data-testid="advisor-cand">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-sm font-bold">{ORD[c.n - 1] ?? c.n} <span className={`font-mono text-xs font-semibold ${c.leader ? "text-brand-ink/60" : "text-white/70"}`}>{c.ref}</span></span>
-        <span className={`text-lg font-extrabold tabular-nums ${c.leader ? "text-brand" : ""}`}>{c.score}<span className={`text-xs font-semibold ${c.leader ? "text-brand-ink/60" : "text-white/70"}`}> из 100</span></span>
+        <span className="text-sm font-bold">{ORD[c.n - 1] ?? c.n}</span>
+        <span className={`whitespace-nowrap text-lg font-extrabold tabular-nums ${c.leader ? "text-brand" : ""}`}>{c.score}<span className={`text-xs font-semibold ${c.leader ? "text-brand-ink/60" : "text-white/70"}`}> из 100</span></span>
       </div>
+      <p className={`whitespace-nowrap font-mono text-xs font-semibold ${c.leader ? "text-brand-ink/60" : "text-white/70"}`}>{c.ref}</p>
       <p className={`mt-0.5 text-xs ${c.leader ? "text-brand-ink/70" : "text-white/75"}`}>
         {c.leader && <b className="mr-1 rounded bg-brand-strong px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">лидер</b>}
         {c.required_total ? `обязательное: ${c.required_confirmed} из ${c.required_total} подтверждено` : "обязательных навыков нет"}
@@ -173,7 +174,9 @@ export function ExecAdvisor({ needId, refs, version }: { needId: string; refs: s
   function submit(e: FormEvent) { e.preventDefault(); const t = draft; setDraft(""); void ask(t); }
 
   const phase = view?.phase ?? (busy ? "thinking" : "off");
-  const state: WaveState = phase === "speaking" ? "speaking" : phase === "listening" ? "listening" : phase === "thinking" ? "thinking" : "idle";
+  // текстом (без голоса) — тоже разговор: «слушаю», пока не думает
+  const state: WaveState = phase === "speaking" ? "speaking" : phase === "listening" ? "listening" : phase === "thinking" ? "thinking"
+    : sid ? "listening" : "idle";
   const level = () => lv.current?.level() ?? 0;
   const live = !!sid;
 
