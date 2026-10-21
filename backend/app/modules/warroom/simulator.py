@@ -405,9 +405,12 @@ def evaluate_justification_rubric(
         cleaned_text, meta_removed = grader.strip_meta(raw)
 
     # Для сценария ИИ-безопасности ("ai") инженер по делу пишет про «системные инструкции» и «оценщик»:
-    # не блокируем одиночный тематический сигнал model_address без императивных директив.
+    # не блокируем одиночный тематический сигнал model_address без императивных директив
+    # и не вырезаем тематическое описание первопричины про системные инструкции оценщика.
     if scn.get("id") == "ai":
         blocking_signals = [s for s in inj_signals if s not in _NON_IMPERATIVE_AI_SIGNALS]
+        if not blocking_signals:
+            cleaned_text = raw
     else:
         blocking_signals = inj_signals
 

@@ -1,5 +1,5 @@
-// Боевой ИИ-Полигон Драфта (/warroom и /demo/warroom) — практический этап подтверждения старших грейдов
-// (Senior / Lead / Principal) для кандидатов и интерактивная демонстрационная витрина для жюри.
+// Боевой ИИ-Полигон Драфта (/warroom и /demo/warroom) — практический этап подтверждения старших уровней
+// для кандидатов и интерактивная демонстрационная витрина для жюри.
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -14,7 +14,7 @@ import type {
   MeasureSpec,
   ScenarioPublic,
 } from "../components/warroom/types";
-import { useArchitectVoice } from "../components/warroom/voice";
+import { VoiceControlStrip, useArchitectVoice } from "../components/warroom/voice";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { usePageTitle } from "../lib/meta";
@@ -56,12 +56,14 @@ export default function WarRoom() {
   const isJuryAccount = Boolean(
     me?.email && (me.email.toLowerCase().endsWith("@jury.example.com") || me.email.toLowerCase().startsWith("jury"))
   );
+  const followupAttemptId = searchParams.get("followup") || null;
   const isCombatCandidate = Boolean(
-    me &&
-      me.role === "candidate" &&
-      !isJuryAccount &&
-      !location.pathname.startsWith("/demo") &&
-      searchParams.get("demo") !== "1"
+    followupAttemptId ||
+      (me &&
+        me.role === "candidate" &&
+        !isJuryAccount &&
+        !location.pathname.startsWith("/demo") &&
+        searchParams.get("demo") !== "1")
   );
   const demoMode = !isCombatCandidate;
 
@@ -159,7 +161,7 @@ export default function WarRoom() {
                 isCombatCandidate ? "bg-emerald-400" : "bg-rose-400"
               }`}
             />
-            {isCombatCandidate ? "боевой этап кандидата" : "демо-витрина полигона"}
+            {isCombatCandidate ? "Этап кандидата" : "Демо"}
           </span>
           {me && (
             <NavBtn
@@ -181,22 +183,27 @@ export default function WarRoom() {
         tabIndex={-1}
         className="relative mx-auto max-w-[1400px] px-3 pb-24 pt-5 outline-none sm:px-6"
       >
-        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-300">
-          {isCombatCandidate
-            ? "Драфт · практический боевой этап кандидата (Senior · Lead · Principal)"
-            : "Драфт · демонстрационная витрина архитектурного симулятора и контуров честности"}
-        </p>
-        <h1 className="mt-1 text-3xl font-black leading-tight tracking-tight md:text-4xl">
-          Боевой ИИ-Полигон{" "}
-          <span className="bg-gradient-to-r from-rose-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">
-            Драфта
-          </span>
-        </h1>
-        <p className="mt-2 max-w-4xl text-sm leading-relaxed text-white/70">
-          Старшие инженерные уровни нельзя измерить только выбором из вариантов. Восстановите
-          работу системы под пиковой нагрузкой в рамках бюджета инфраструктуры и защитите решение
-          письменным обоснованием с проверкой дословных цитат.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-300">
+              {isCombatCandidate
+                ? "Драфт · практический этап проверки кандидата"
+                : "Драфт · демонстрационный стенд для жюри"}
+            </p>
+            <h1 className="mt-1 text-3xl font-black leading-tight tracking-tight md:text-4xl">
+              Боевой ИИ-Полигон{" "}
+              <span className="bg-gradient-to-r from-rose-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">
+                Драфта
+              </span>
+            </h1>
+            <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-white/75" data-testid="wr-subtitle">
+              Практическая проверка старших инженеров и стенд защиты от списывания: здесь жюри видит, как кандидат чинит падающий сервис и как платформа перехватывает обман без аннулирования попытки.
+            </p>
+          </div>
+          <div className="pt-1">
+            <VoiceControlStrip voice={voice} />
+          </div>
+        </div>
 
         <div
           className="mt-4 grid gap-3 md:grid-cols-2"
@@ -219,11 +226,10 @@ export default function WarRoom() {
               Режим А
             </span>
             <p className="mt-1 text-lg font-extrabold md:text-xl">
-              Живой архитектурный полигон
+              Почините сервис
             </p>
             <p className="mt-1 text-xs text-white/75">
-              8 боевых инцидентов по направлениям · настройка численных параметров и бюджета ·
-              рубрика с дословными цитатами
+              Сервис падает под нагрузкой — 4 инцидента, разбор решения
             </p>
           </button>
           <button
@@ -242,10 +248,10 @@ export default function WarRoom() {
               Режим Б · Демонстрационный стенд
             </span>
             <p className="mt-1 text-lg font-extrabold md:text-xl">
-              Полигон перехвата нечестных попыток
+              Попробуйте обмануть тест
             </p>
             <p className="mt-1 text-xs text-white/75">
-              Демонстрация на подготовленных примерах · фильтр оценщика, вариант-двойник и 5 контуров честности
+              Слева — действия нечестного кандидата, справа — что видит платформа
             </p>
           </button>
         </div>
@@ -270,8 +276,8 @@ export default function WarRoom() {
         </div>
 
         <p className="mt-10 text-center text-[11px] text-white/60">
-          Расчёт метрик, бюджета, рубрики с цитатами и фильтрации текста выполняется на сервере
-          (/api/warroom/*). В демонстрационном режиме попытки не сохраняются в профиль кандидата.
+          Расчёт показателей нагрузки, бюджета, цитат и сигналов честности выполняется на сервере.
+          В демонстрационном режиме попытки не сохраняются в профиль кандидата.
         </p>
       </main>
     </div>
