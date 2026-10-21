@@ -1,7 +1,7 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T14:42:58Z",
-  "git_commit": "4c009f684",
+  "generated_at": "2026-10-21T14:47:05Z",
+  "git_commit": "c65344fe2",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
     "code_and_open_families": 416,
@@ -11986,7 +11986,7 @@
       "eyebrow": "Точность топ-5 подбора (P@5)",
       "value": "76,0",
       "accent": "%",
-      "subtext": "MRR 0,89 · 95 % ДИ 72,8–79,3 % · 210 потребностей в 3 отложенных мирах × 900 кандидатов, один прогон (модели, не люди)",
+      "subtext": "95 % ДИ 72,8–79,3 %, nDCG@10 0,66 · стандартные условия: 210 потребностей в 3 отложенных мирах × 900 кандидатов; жёсткие: P@5 76,6 %, nDCG@10 0,59 · один прогон, модели, не люди",
       "provenance": "бенчмарк подбора, 2026-10-21",
       "recompute": "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
       "code_ref": "tools/realdata/bench_holdout2.py"
@@ -12651,7 +12651,7 @@
     },
     {
       "section": "Подбор под потребность (бенчмарк)",
-      "metric": "P@5 76,0 %, MRR 0,89, nDCG@10 0,66",
+      "metric": "P@5 76,0 %, nDCG@10 0,66; жёсткие — P@5 76,6 %, nDCG@10 0,59",
       "sample": "210 потребностей, 3 отложенных мира × 900, один прогон, модели",
       "command": "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
       "code_ref": "tools/realdata/bench_holdout2.py",
