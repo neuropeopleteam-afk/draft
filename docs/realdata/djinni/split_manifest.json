@@ -1,0 +1,45 @@
+{
+  "seed": "a17-djinni-2026-10-21",
+  "dev_share": 0.2,
+  "rule": "part = \"dev\" if int(sha256(f\"{seed}:{kind}:{id}\")[:8], 16) < dev_share * 2**32 else \"holdout\"",
+  "license": "MIT (lang-uk/recruitment-dataset-*)",
+  "paper": "https://aclanthology.org/2024.unlp-1.2/",
+  "sources": {
+    "jobs": {
+      "repo": "lang-uk/recruitment-dataset-job-descriptions-english",
+      "revision": "b56a6054c10f1266a141e37c8df66c79ff2863af",
+      "url": "https://huggingface.co/datasets/lang-uk/recruitment-dataset-job-descriptions-english",
+      "parquet_sha256": "71dddaf0d9660f34ddf946953b67f54f1e7d60e22dcf9a4b8139b6378b18aab9",
+      "rows": 141897
+    },
+    "cvs": {
+      "repo": "lang-uk/recruitment-dataset-candidate-profiles-english",
+      "revision": "86255174c6c378a2b52cd7e81d79002c64d899a6",
+      "url": "https://huggingface.co/datasets/lang-uk/recruitment-dataset-candidate-profiles-english",
+      "parquet_sha256": "a7b1378e0b231507c377659bf2c80fa4ba60c4e31e1107b13425d103879ecc3b",
+      "rows": 210250
+    }
+  },
+  "parts": {
+    "jobs": {
+      "dev": {
+        "n": 28578,
+        "ids_sha256": "7f9cd1a9977a982eff0b1e9b7236df246e96ebd60b200914036e3242ef3ffee8"
+      },
+      "holdout": {
+        "n": 113319,
+        "ids_sha256": "0c83d056de9b7447543e1613f5fa97df1a49d20c5cce3459f506a3b9fe3fa0b8"
+      }
+    },
+    "cvs": {
+      "dev": {
+        "n": 41765,
+        "ids_sha256": "d3c34e2da56d00d0db19a6cf8e2b8c506b1284ae30152ca963a3e113e7934e2f"
+      },
+      "holdout": {
+        "n": 168485,
+        "ids_sha256": "b16ddf03fc4363513bb8f46d0afe50bceefc1b56a19ac6b9fc2426bad1a34598"
+      }
+    }
+  }
+}

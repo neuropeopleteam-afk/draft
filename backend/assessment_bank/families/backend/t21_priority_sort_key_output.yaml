@@ -1,0 +1,31 @@
+family_id: backend.queue.t21_priority_sort_key_output
+title: Порядок задач планировщика — sorted с ключом-кортежем
+direction: backend
+skills:
+- python
+- queues
+target_grades:
+- intern
+- junior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.85
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две конструкции вместе:
+    sorted с ключом-кортежем (минус обращает только первый компонент) и генератор списка / сумма по срезу
+    отсортированного списка; 5–6 задач с равными приоритетами. Уровень Junior. Набор t21 (21.10) у порога Junior
+    (b = −0,85)'
+generator: assessment_bank.families.backend.t21_priority_sort_key_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Планировщик сортирует задачи по приоритету и
+  длительности ключом-кортежем; предсказать порядок имён и сумму длительностей первых задач. Ключ — независимая
+  модель сортировки в генераторе, проверка — исполнение показанного кода в песочнице Python.'

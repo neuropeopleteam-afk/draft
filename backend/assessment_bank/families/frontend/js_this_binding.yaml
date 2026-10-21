@@ -1,26 +1,50 @@
 family_id: frontend.js.this_binding
 title: Потеря this — извлечённые методы, bind, call и стрелочные поля
 direction: frontend
-skills: [javascript, this, closures, classes]
-target_grades: [junior, middle]
+skills:
+- javascript
+- this
+- closures
+- classes
+target_grades:
+- junior
+- middle
 format: predict_output
 language: javascript
 invariants:
-  code_lines: [15, 16]
-  operations: [13, 14]
+  code_lines:
+  - 15
+  - 16
+  operations:
+  - 13
+  - 14
   extra:
     calls: 4
-    kinds: [direct, detached, arrow, bind_self, bind_other, call, rebind, arrow_call, borrow]
+    kinds:
+    - direct
+    - detached
+    - arrow
+    - bind_self
+    - bind_other
+    - call
+    - rebind
+    - arrow_call
+    - borrow
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: 0.3
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.35
-  basis: "15–16 строк, четыре вызова с отслеживанием состояния; в каждом варианте есть извлечённый метод (TypeError) и хотя бы одна ловушка (повторный bind, call у стрелочной функции, заимствованный метод) → σ повышена; Junior с запасом вверх. Пересмотр 06.10: b −0,3 → +0,3 и грейды Junior/Middle — четыре независимых правила привязки this (извлечённый метод, повторный bind, call у стрелочной функции, заимствованный метод) должны быть применены верно одновременно; конъюнкция четырёх шагов труднее, чем предполагала исходная оценка"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). 15–16 строк, четыре вызова с отслеживанием состояния; в каждом
+    варианте есть извлечённый метод (TypeError) и хотя бы одна ловушка (повторный bind, call у стрелочной функции,
+    заимствованный метод) → σ повышена; Junior с запасом вверх. Пересмотр 06.10: b −0,3 → +0,3 и грейды Junior/Middle
+    — четыре независимых правила привязки this (извлечённый метод, повторный bind, call у стрелочной функции, заимствованный
+    метод) должны быть применены верно одновременно; конъюнкция четырёх шагов труднее, чем предполагала исходная
+    оценка'
 generator: assessment_bank.families.frontend.js_this_binding
 version: 1
-description: >
-  Класс со счётчиком, методом и стрелочным полем; четыре вызова через run(fn) разными
-  способами. Вывод — независимая модель в генераторе, сверяется с исполнением показанного
-  кода в Node.js.
+description: 'Класс со счётчиком, методом и стрелочным полем; четыре вызова через run(fn) разными способами. Вывод
+  — независимая модель в генераторе, сверяется с исполнением показанного кода в Node.js.
+
+  '

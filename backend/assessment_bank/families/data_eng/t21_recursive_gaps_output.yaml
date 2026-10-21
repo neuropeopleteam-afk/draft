@@ -1,0 +1,31 @@
+family_id: data_eng.sql.t21_recursive_gaps_output
+title: 'SQL — пропущенные дни загрузки: календарь рекурсивным CTE и LEFT JOIN ... IS NULL'
+direction: data_eng
+skills:
+- sql
+- backfill
+- partitioning
+target_grades:
+- senior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 12
+  - 12
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проследить рекурсивный CTE, который
+    строит календарь до границы (< или <=), и найти дни без загрузки через LEFT JOIN; ловушки — условие рекурсии проверяется
+    на предыдущем дне (последний день — граница или следующий за ней), загрузки вне календаря и несколько загрузок за день.
+    Уровень Senior: рекурсивный CTE. Набор t21 (21.10) у порога Senior (b = +0,8)'
+generator: assessment_bank.families.data_eng.t21_recursive_gaps_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Журнал загрузок по дням и запрос, который рекурсивным CTE
+  строит календарь и выводит дни без загрузки; предсказать даты. Ключ — независимая модель календаря в генераторе, проверка
+  — исполнение запроса в sqlite.

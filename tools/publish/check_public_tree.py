@@ -44,7 +44,9 @@ ALLOW = {
     "tools/core_skill/evaluate.py": {"путь рабочего места", "ссылка на внутренний отчёт или передачу дел"},
     "tools/realdata/audit_expert_ranking.py": {"путь рабочего места", "ссылка на внутренний отчёт или передачу дел"},
 }
-IGNORE_SELF = {"tools/publish/check_public_tree.py", "tools/publish/scan_history_values.py", "tools/publish/test_publish_tools.py"}
+IGNORE_SELF = {"tools/publish/check_public_tree.py", "tools/publish/scan_history_values.py", "tools/publish/test_publish_tools.py",
+               # вариант В публикации: список исключаемых путей и замены по этим же правилам (сами шаблоны — не нарушение)
+               "ops/publish_exclude.txt", "ops/publish_sanitize.py", "ops/publish_history_scan.py"}
 MAX_BYTES = 20 * 1024 * 1024
 
 

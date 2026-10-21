@@ -91,8 +91,23 @@ export function Compare() {
   const [invite, setInvite] = useState<Cand | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
-  if (loading && !data) return <Loading />;
-  if (error || !data) return <div className="max-w-3xl space-y-4"><Alert>{error}</Alert><Link to={`/employer/needs/${id}`} className="btn-ghost">К подборке</Link></div>;
+  if (loading && !data) {
+    return (
+      <div className="min-w-0 max-w-6xl space-y-5">
+        <PageTitle title="Сравнение кандидатов" subtitle="Сопоставьте 2–3 кандидатов рядом по подтверждённым навыкам, результатам теста и достижениям ФСП, чтобы выбрать, кого пригласить." />
+        <Loading />
+      </div>
+    );
+  }
+  if (error || !data) {
+    return (
+      <div className="max-w-3xl space-y-4">
+        <PageTitle title="Сравнение кандидатов" subtitle="Сопоставьте 2–3 кандидатов рядом по подтверждённым навыкам, результатам теста и достижениям ФСП, чтобы выбрать, кого пригласить." />
+        <Alert>{error}</Alert>
+        <Link to={`/employer/needs/${id}`} className="btn-ghost">К подборке</Link>
+      </div>
+    );
+  }
   const cs = data.candidates;
   const market = cs.find((c) => c.market_range)?.market_range ?? null;
   const needSalary = { from: data.need.requirements?.salary_from, to: data.need.requirements?.salary_to, net: data.need.requirements?.salary_net };
@@ -216,12 +231,26 @@ export function CompareLanding() {
   useEffect(() => {
     if (pick) navigate(`/employer/needs/${pick.id}/compare?v=${pick.versions.at(-1).version}`, { replace: true });
   }, [pick?.id]);  // eslint-disable-line react-hooks/exhaustive-deps
-  if (loading && !data) return <Loading />;
-  if (error) return <Alert>{error}</Alert>;
+  if (loading && !data) {
+    return (
+      <div className="max-w-3xl space-y-5">
+        <PageTitle title="Сравнение кандидатов" subtitle="Сопоставьте 2–3 кандидатов рядом по требованиям вашей потребности и получите рекомендацию ИИ-советника." />
+        <Loading />
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="max-w-3xl space-y-5">
+        <PageTitle title="Сравнение кандидатов" subtitle="Сопоставьте 2–3 кандидатов рядом по требованиям вашей потребности и получите рекомендацию ИИ-советника." />
+        <Alert>{error}</Alert>
+      </div>
+    );
+  }
   if (!pick) {
     return (
       <div className="max-w-3xl space-y-5">
-        <PageTitle title="Сравнение кандидатов" subtitle="Сопоставление 2–3 кандидатов рядом по требованиям вашей потребности с рекомендацией ИИ-советника." />
+        <PageTitle title="Сравнение кандидатов" subtitle="Сопоставьте 2–3 кандидатов рядом по требованиям вашей потребности и получите рекомендацию ИИ-советника." />
         <Empty
           title="Сравнивать пока некого"
           text="Создайте первую потребность (описание вакансии) — платформа подберёт кандидатов по подтверждённым навыкам и откроет таблицу сравнения топ-3 рядом."
@@ -235,5 +264,10 @@ export function CompareLanding() {
       </div>
     );
   }
-  return <Loading />;
+  return (
+    <div className="max-w-3xl space-y-5">
+      <PageTitle title="Сравнение кандидатов" subtitle="Сопоставьте 2–3 кандидатов рядом по требованиям вашей потребности и получите рекомендацию ИИ-советника." />
+      <Loading />
+    </div>
+  );
 }

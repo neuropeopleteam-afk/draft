@@ -1,0 +1,31 @@
+family_id: data_eng.sql.t21_rank_dedup_ties_output
+title: 'SQL — последняя версия по ключу: RANK против ROW_NUMBER по PARTITION BY при равных временах'
+direction: data_eng
+skills:
+- sql
+- window_functions
+- deduplication
+target_grades:
+- middle
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Пронумеровать версии каждого
+    ключа окном PARTITION BY … ORDER BY loaded_at DESC и оставить rn = 1; ловушки — RANK даёт 1 обеим версиям с одинаковым
+    временем (дубль остаётся), ROW_NUMBER с вторым ключом id DESC оставляет одну. Уровень Middle: ROW_NUMBER / RANK по PARTITION.
+    Набор t21 (21.10) у порога Middle (b = 0,0)'
+generator: assessment_bank.families.data_eng.t21_rank_dedup_ties_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Сырые версии записей с временем загрузки и запрос дедупликации
+  через оконную функцию; предсказать оставшиеся строки. Ключ — независимая модель в генераторе, проверка — исполнение запроса
+  в sqlite.

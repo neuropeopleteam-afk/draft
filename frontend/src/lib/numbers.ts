@@ -29,9 +29,49 @@ export interface RecomputeRow {
   artifact: string;
 }
 
+export interface Top5Metric {
+  id: "confident_accuracy" | "false_confirm_all" | "exact_grade" | "within_one" | "retest_kappa_w" | string;
+  value?: number | null;
+  display_ru?: string | null;
+  ci95?: [number, number] | null;
+  k?: number | null;
+  n?: number | null;
+  label_ru?: string;
+  condition_ru?: string;
+  minutes?: number | null;
+  recompute?: string;
+}
+
+export interface Top5Meta {
+  bank_families?: number;
+  bank_hash?: string;
+  bank_commit?: string;
+  generated_at?: string;
+  world_ru?: string;
+  how_obtained_ru?: string;
+  n?: number;
+}
+
 export const NUMBERS = rawNumbers;
 // Блоки появляются только при наличии JSON-артефакта (tools/publish/gen_numbers.py) — доступ без жёсткой типизации JSON.
 const ANY = NUMBERS as any;
+
+export function getTop5(): Top5Metric[] | null {
+  const raw = NUMBERS as any;
+  if (Array.isArray(raw.top5) && raw.top5.length > 0) return raw.top5 as Top5Metric[];
+  return null;
+}
+
+export function getTop5Hard(): Top5Metric[] | null {
+  const raw = NUMBERS as any;
+  if (Array.isArray(raw.top5_hard) && raw.top5_hard.length > 0) return raw.top5_hard as Top5Metric[];
+  return null;
+}
+
+export function getTop5Meta(): Top5Meta | null {
+  const raw = NUMBERS as any;
+  return (raw.top5_meta ?? null) as Top5Meta | null;
+}
 
 export function getLandingCards(): LandingCardMetric[] {
   return (NUMBERS.landing_cards ?? []) as LandingCardMetric[];
@@ -122,7 +162,8 @@ export interface Top5Item {
   with?: Record<string, Frac | { value: number; ci95?: [number, number] | null; n?: number }>;
 }
 
-export function getTop5(): { st: Top5Item[]; hard: Top5Item[]; meta: any } {
+/** Форма А4 (итоговый прогон {st, hard, meta}); getTop5() выше — массив для лендинга (А1). */
+export function getTop5Run(): { st: Top5Item[]; hard: Top5Item[]; meta: any } {
   return { st: (ANY.top5 ?? []) as Top5Item[], hard: (ANY.top5_hard ?? []) as Top5Item[], meta: ANY.top5_meta ?? null };
 }
 

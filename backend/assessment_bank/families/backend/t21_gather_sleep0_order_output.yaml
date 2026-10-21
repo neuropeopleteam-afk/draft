@@ -1,0 +1,31 @@
+family_id: backend.async.t21_gather_sleep0_order_output
+title: Параллельные запросы в asyncio — create_task, sleep(0) и порядок gather
+direction: backend
+skills:
+- python
+- asyncio
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 13
+  - 14
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо проследить очередь
+    готовых задач цикла событий: create_task не запускает задачу до первого await в main, sleep(0) ставит задачу в
+    конец очереди, корутина из gather становится задачей позже, gather возвращает результаты в порядке аргументов.
+    Уровень Senior: глубокая семантика выполнения asyncio. Набор t21 (21.10) у порога Senior (b = +1,1)'
+generator: assessment_bank.families.backend.t21_gather_sleep0_order_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Обработчик параллельно запрашивает данные у
+  внутренних сервисов: две задачи create_task и корутина в gather, шаги разделены sleep(0); предсказать порядок
+  строк и результат gather. Ключ — независимая модель очереди готовых задач в генераторе, проверка — исполнение
+  показанного кода в песочнице Python.'

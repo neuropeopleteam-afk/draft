@@ -1,0 +1,35 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: security.lead_v2.idempotent_claim_lease_fix
+title: 'Информационная безопасность: Атомарный захват ключа идемпотентности с перехватом просроченного лиза'
+direction: security
+skills:
+- secure_code_review
+- authorization
+- aead
+- token_validation
+- incident_response
+target_grades:
+- senior
+- lead
+format: choose_fix
+language: python
+invariants:
+  defect_type: idempotency_lease_race
+  extra:
+    wave: LP-v2
+    slot: 6
+    direction_ru: Информационная безопасность
+  n_options: 4
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Информационная безопасность: атомарный захват ключа
+    идемпотентности с перехватом просроченного лиза; формат choose_fix, целевые грейды senior, lead (b = 1,8 у порога
+    старшего грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.security.lp2_06_idempotent_claim_lease_fix
+version: 1
+description: 'Информационная безопасность (senior, lead): Атомарный захват ключа идемпотентности с перехватом просроченного
+  лиза. Проверка исполнением и рубрикой.'

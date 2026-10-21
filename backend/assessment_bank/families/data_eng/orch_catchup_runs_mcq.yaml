@@ -1,25 +1,43 @@
 family_id: data_eng.orch.catchup_runs_mcq
 title: Оркестрация (Airflow) — сколько запусков создаст catchup и какая у них logical_date
 direction: data_eng
-skills: [airflow, orchestration, scheduling, backfill]
-target_grades: [junior, middle]
+skills:
+- airflow
+- orchestration
+- scheduling
+- backfill
+target_grades:
+- junior
+- middle
 format: mcq_concept
 language: python
 invariants:
-  code_lines: [8, 8]
+  code_lines:
+  - 8
+  - 8
   n_options: 4
   extra:
-    subtypes: [catchup_true, catchup_false]
-    schedules: ["@daily", "@hourly", "0 */6 * * *", "0 3 * * *"]
+    subtypes:
+    - catchup_true
+    - catchup_false
+    schedules:
+    - '@daily'
+    - '@hourly'
+    - 0 */6 * * *
+    - 0 3 * * *
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: -0.1
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.35
-  basis: "Заголовок DAG Airflow 2 (start_date, schedule из четырёх видов, catchup True/False) и момент включения; нужно знать, что запуск создаётся по завершённому интервалу данных, а logical_date — начало интервала. Дистракторы фиксированного состава по подтипу: незавершённый текущий интервал посчитан, logical_date = момент запуска, catchup проигнорирован. Граница Junior/Middle"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Заголовок DAG Airflow 2 (start_date, schedule из четырёх
+    видов, catchup True/False) и момент включения; нужно знать, что запуск создаётся по завершённому интервалу данных,
+    а logical_date — начало интервала. Дистракторы фиксированного состава по подтипу: незавершённый текущий интервал
+    посчитан, logical_date = момент запуска, catchup проигнорирован. Граница Junior/Middle'
 generator: assessment_bank.families.data_eng.orch_catchup_runs_mcq
 version: 1
-description: >
-  Определить число запусков DAG по прошедшим интервалам после включения и logical_date самого позднего из них
-  (catchup=True/False). Ключ — исполнение показанного кода DAG с заглушкой airflow и моделью интервалов данных.
+description: 'Определить число запусков DAG по прошедшим интервалам после включения и logical_date самого позднего
+  из них (catchup=True/False). Ключ — исполнение показанного кода DAG с заглушкой airflow и моделью интервалов данных.
+
+  '

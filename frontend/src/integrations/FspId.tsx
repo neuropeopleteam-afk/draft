@@ -5,6 +5,7 @@ import { AuthShell } from "../components/AuthShell";
 import { Alert, Field, Level, Loading, Toggle, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 import { cabinetPath, useAuth } from "../lib/auth";
+import { useDemoUi } from "../lib/juryMode";
 import { dateOnly } from "./Trust";
 import { NO_FSP } from "../components/Origin";
 
@@ -29,10 +30,12 @@ async function start(intent: "login" | "link", role: "candidate" | "employer" = 
  *  (SIMPLIFY п.7а); на «Регистрации» демо-учётки не показываем — они про вход (п.7б). */
 export function FspIdLogin({ role = "candidate", demo = true }: { role?: "candidate" | "employer"; demo?: boolean }) {
   const { data } = useApi<FspConfig>("/fsp-id/config");
+  const demoUi = useDemoUi();
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   if (!data) return null;
-  const accounts = demo ? data.demo_accounts : [];
+  const showDemoCreds = Boolean(demo && data.demo && demoUi);
+  const accounts = showDemoCreds ? data.demo_accounts : [];
   const main = accounts.find((a) => a.username === "fsp-champion") ?? accounts[0];
   const rest = accounts.filter((a) => a !== main);
   return (
@@ -43,12 +46,15 @@ export function FspIdLogin({ role = "candidate", demo = true }: { role?: "candid
         <FspIdMark /> {busy ? "Переходим в ФСП ID…" : "Войти через ФСП ID"}
       </button>
       {main && (
-        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-brand-night" data-testid="fsp-demo-account">
-          <span>Демо-участник: логин <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5 font-semibold">{main.username}</code></span>
-          <CopyButton value={main.username} label="логин" />
-          {data.demo_password && <><span aria-hidden="true">·</span><span>пароль <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5 font-semibold">{data.demo_password}</code></span>
-            <CopyButton value={data.demo_password} label="пароль" /></>}
-        </p>
+        <div className="space-y-1 text-center" data-testid="fsp-demo-account">
+          <p className="text-[11px] font-semibold text-amber-900">Демо-стенд: код показан здесь вместо письма</p>
+          <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-brand-night">
+            <span>Демо-участник: логин <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5 font-semibold">{main.username}</code></span>
+            <CopyButton value={main.username} label="логин" />
+            {data.demo_password && <><span aria-hidden="true">·</span><span>пароль <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5 font-semibold">{data.demo_password}</code></span>
+              <CopyButton value={data.demo_password} label="пароль" /></>}
+          </p>
+        </div>
       )}
       <p className="text-center text-xs leading-relaxed text-brand-ink/70">{data.enabled
         ? (role === "candidate" ? "При первом входе создадим кабинет кандидата с достижениями ФСП" : "При первом входе создадим кабинет работодателя")

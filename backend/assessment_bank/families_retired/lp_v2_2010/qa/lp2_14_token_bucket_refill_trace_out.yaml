@@ -1,0 +1,34 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: qa.lead_v2.token_bucket_refill_trace_out
+title: 'Обеспечение качества (QA): Трассировка корзины токенов с дробным пополнением и потолком всплеска'
+direction: qa
+skills:
+- test_design
+- pytest
+- api_testing
+- load_testing
+- test_architecture
+target_grades:
+- senior
+- lead
+format: predict_output
+language: python
+invariants:
+  defect_type: token_bucket_state
+  extra:
+    wave: LP-v2
+    slot: 14
+    direction_ru: Обеспечение качества (QA)
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 1.82
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Обеспечение качества (QA): трассировка корзины
+    токенов с дробным пополнением и потолком всплеска; формат predict_output, целевые грейды senior, lead (b = 1,82
+    у порога старшего грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.qa.lp2_14_token_bucket_refill_trace_out
+version: 1
+description: 'Обеспечение качества (QA) (senior, lead): Трассировка корзины токенов с дробным пополнением и потолком
+  всплеска. Проверка исполнением и рубрикой.'

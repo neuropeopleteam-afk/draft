@@ -1,23 +1,35 @@
 family_id: mobile.arch.offline_sync_open
 title: Архитектура данных мобильного клиента — офлайн, загрузка, миграции, realtime, модули
 direction: mobile
-skills: [architecture, offline_first, persistence, background_execution]
-target_grades: [senior]
+skills:
+- architecture
+- offline_first
+- persistence
+- background_execution
+target_grades:
+- senior
 format: open_answer
 language: text
 invariants:
   extra:
-    topics: [offline_sync, upload, migrations, realtime, modular]
+    topics:
+    - offline_sync
+    - upload
+    - migrations
+    - realtime
+    - modular
 time_limit_s: 1200
 canary: false
 prior_difficulty:
   b: 1.3
-  a: 0.9
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Проектное решение для мобильного клиента с числовыми ограничениями; рубрика из 3 критериев (основное решение, надёжность и конфликты, эксплуатация); Senior"
+  basis: Априорная, до калибровки на людях (a = 1,3). Проектное решение для мобильного клиента с числовыми ограничениями;
+    рубрика из 3 критериев (основное решение, надёжность и конфликты, эксплуатация); Senior
 generator: assessment_bank.families.mobile.arch_offline_sync_open
 version: 1
-description: >
-  Открытые вопросы об архитектуре данных мобильного клиента: офлайн-режим и конфликты синхронизации,
-  фоновая загрузка больших файлов, миграции локальной базы, доставка обновлений в переднем плане и в
-  фоне, модульность большого приложения. Оценка по рубрике с эталонами.
+description: 'Открытые вопросы об архитектуре данных мобильного клиента: офлайн-режим и конфликты синхронизации,
+  фоновая загрузка больших файлов, миграции локальной базы, доставка обновлений в переднем плане и в фоне, модульность
+  большого приложения. Оценка по рубрике с эталонами.
+
+  '

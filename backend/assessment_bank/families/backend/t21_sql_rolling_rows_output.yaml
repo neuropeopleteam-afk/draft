@@ -1,0 +1,30 @@
+family_id: backend.db.t21_sql_rolling_rows_output
+title: Ограничитель нагрузки в SQL — скользящая сумма ROWS по партициям
+direction: backend
+skills:
+- sql
+- window_functions
+target_grades:
+- senior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 9
+  - 9
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо посчитать скользящую
+    сумму с рамкой ROWS BETWEEN k PRECEDING AND CURRENT ROW отдельно в каждой партиции (окно начинается заново,
+    у первых строк рамка короче) и отфильтровать во внешнем запросе; ответ отличается от расчёта без PARTITION BY и от
+    накопительной суммы. Уровень Senior: рамки окна и партиции. Набор t21 (21.10) у порога Senior (b = +0,9)'
+generator: assessment_bank.families.backend.t21_sql_rolling_rows_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Ограничитель нагрузки считает скользящую сумму
+  единиц по клиенту оконной функцией с рамкой ROWS и ищет превышения лимита; предсказать строки результата. Ключ —
+  независимая модель скользящего окна в генераторе, проверка — исполнение запроса в SQLite.'

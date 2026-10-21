@@ -27,7 +27,7 @@ function PassportLookup() {
     <form className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
       onSubmit={(e) => { e.preventDefault(); if (id) navigate(`/verify/${id}`); }} aria-label="Проверка паспорта грейда">
       <p className="font-semibold">Проверяете паспорт грейда кандидата?</p>
-      <p className="mt-1 text-xs">Подпись Ed25519 проверяется по открытому ключу JWKS — без входа и регистрации.</p>
+      <p className="mt-1 text-xs" title="Как устроено: асимметричная подпись Ed25519 проверяется по открытому ключу JWKS">Цифровая подпись паспорта проверяется по открытому ключу платформы — без входа и регистрации.</p>
       <div className="mt-2 flex gap-2">
         <label className="sr-only" htmlFor="passport-id">Ссылка или ID паспорта</label>
         <input id="passport-id" className="input flex-1" placeholder="Ссылка /verify/… или ID паспорта" value={v} onChange={(e) => setV(e.target.value)} />
@@ -80,7 +80,13 @@ function EmailVerify({ params }: { params: URLSearchParams }) {
   return (
     <AuthShell
       title="Подтверждение почты"
-      subtitle={devCode ? "Код показан для проверки, в рабочем режиме приходит письмом." : email ? `Мы отправили 6-значный код на ${email}.` : "Введите почту и код из письма."}
+      subtitle={
+        devCode
+          ? "Это шаг подтверждения электронной почты: введите 6-значный код ниже (на проверочном стенде он показан на экране, в рабочем режиме приходит письмом)."
+          : email
+            ? `Это шаг подтверждения электронной почты: введите 6-значный код, отправленный на ${email}, чтобы активировать аккаунт.`
+            : "Это шаг подтверждения электронной почты: укажите свою почту и введите 6-значный код из письма, чтобы активировать аккаунт."
+      }
       footer={<>Уже подтвердили? <Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Войти</Link></>}
     >
       {devCode && (

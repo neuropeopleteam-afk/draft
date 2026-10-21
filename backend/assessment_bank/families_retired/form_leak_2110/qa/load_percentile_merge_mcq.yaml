@@ -1,0 +1,44 @@
+family_id: qa.load.percentile_merge_mcq
+title: Перцентиль времени ответа по сервису из гистограмм узлов
+direction: qa
+skills:
+- performance_testing
+- percentiles
+- histograms
+- monitoring
+- metrics_aggregation
+target_grades:
+- senior
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    leak_resistance: low
+    nodes:
+    - 3
+    - 4
+    percentiles:
+    - 0.95
+    - 0.99
+    distractors:
+    - mean
+    - weighted
+    - max
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 0.3
+  a: 1.0
+  sigma_variant: 0.2
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Версия 2: выбор метода, а не числа — нужно знать, что перцентили
+    не усредняются (даже взвешенно) и перцентиль общей выборки берётся из суммарной гистограммы; дашборд в условии
+    подсказывает неверный метод; таблица — иллюстрация (маленький медленный узел). По панели 06.10 числовая версия
+    имела b ≈ 1,9–2,5 (Middle/Senior)'
+generator: assessment_bank.families_retired.form_leak_2110.qa.load_percentile_merge_mcq
+version: 3
+description: 'По гистограммам времени ответа нескольких узлов выбрать способ получить p95/p99 по всем запросам сервиса:
+  сложить гистограммы и интерполировать внутри интервала. Дистракторы — способы усреднения перцентилей узлов. Ключ
+  проверяется исполнением: только метод ключа даёт перцентиль общей выборки по показанной таблице.
+
+  '

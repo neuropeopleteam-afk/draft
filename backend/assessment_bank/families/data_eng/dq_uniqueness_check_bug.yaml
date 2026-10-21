@@ -1,13 +1,23 @@
 family_id: data_eng.dq.uniqueness_check_bug
 title: Качество данных — проверка уникальности по неполному составному ключу
 direction: data_eng
-skills: [data_quality, data_validation, python, deduplication]
-target_grades: [junior, middle]
+skills:
+- data_quality
+- data_validation
+- python
+- deduplication
+target_grades:
+- junior
+- middle
 format: find_bug
 language: python
 invariants:
-  code_lines: [7, 10]
-  operations: [5, 7]
+  code_lines:
+  - 7
+  - 10
+  operations:
+  - 5
+  - 7
   defect_type: partial_composite_key
   extra:
     subtype: missing_grain_column
@@ -15,11 +25,14 @@ time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.4
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Код 7–10 строк (Counter по ключу); зерно 2–3 столбца дано в условии, в ключе нет одного; ловушки-«не ошибки» — нормализация strip/lower и Counter. Граница Junior/Middle, ближе к Junior"
+  basis: Априорная, до калибровки на людях (a = 1,3). Код 7–10 строк (Counter по ключу); зерно 2–3 столбца дано
+    в условии, в ключе нет одного; ловушки-«не ошибки» — нормализация strip/lower и Counter. Граница Junior/Middle,
+    ближе к Junior
 generator: assessment_bank.families.data_eng.dq_uniqueness_check_bug
 version: 1
-description: >
-  Найти строку проверки уникальности, где ключ собран не из всех столбцов зерна. Ключ — исполнение показанного
+description: 'Найти строку проверки уникальности, где ключ собран не из всех столбцов зерна. Ключ — исполнение показанного
   кода в песочнице Python.
+
+  '

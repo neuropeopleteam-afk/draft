@@ -1,0 +1,31 @@
+family_id: devops.bash.t21_plus_equals_append_output
+title: bash — += дописывает строку, $(( )) складывает числа
+direction: devops
+skills:
+- bash
+- shell
+- linux
+target_grades:
+- intern
+format: predict_output
+language: bash
+invariants:
+  code_lines:
+  - 7
+  - 7
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.5
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Три параметра меняются
+    разными способами: += вне арифметического контекста дописывает строку, v=$v+5 — тоже строка, $(( )) и (( ))
+    складывают числа. Уровень Стажёра: переменные и $(( )), одна ловушка с дописыванием. Набор t21 (21.10) у порога
+    Стажёра (b = −1,5)'
+generator: assessment_bank.families.devops.t21_plus_equals_append_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Скрипт запуска поправляет три числовых параметра
+  и печатает их одной строкой; предсказать вывод echo. Ключ — независимая модель в генераторе, проверка — исполнение
+  показанного скрипта в bash-песочнице.

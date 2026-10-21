@@ -154,10 +154,16 @@ def _structural_errors(spec: FamilySpec, v: Variant) -> list[str]:
             c = names.get(f"alt_fix:{a}")
             if c is None or c.expect != "pass":
                 errs.append(f"find_bug: нет проверки alt_fix:{a} (pass)")
-    if fmt in ("choose_fix", "open_book_3step"):
+    if fmt in ("choose_fix", "open_book_3step", "incident_sim"):
         groups = [("option", None)] if fmt == "choose_fix" else [("step1", 1), ("step2", 2)]
         for prefix, step in groups:
             opts = [o for o in v.options or [] if o.step == step]
+            if fmt == "choose_fix" or step == 2:
+                codes = [(o.code or "").strip() for o in opts]
+                if any(not c for c in codes):
+                    errs.append(f"{prefix}: пустой code в варианте ответа")
+                elif len(set(codes)) != len(codes):
+                    errs.append(f"{prefix}: совпадает code в вариантах ответа")
             key = v.answer_key.value if step is None else v.answer_key.value[str(step)]
             for o in opts:
                 c = names.get(f"{prefix}:{o.id}")
@@ -165,10 +171,14 @@ def _structural_errors(spec: FamilySpec, v: Variant) -> list[str]:
                     errs.append(f"нет проверки {prefix}:{o.id}")
                     continue
                 positive = c.expect in ("pass", "stdout_equals")
-                if fmt == "open_book_3step" and step == 1:
+                if fmt in ("open_book_3step", "incident_sim") and step == 1:
                     positive = c.expect in ("fail", "stdout_differs")  # «воспроизводит дефект»
                 if positive != (o.id == key):
                     errs.append(f"{prefix}:{o.id}: ожидание проверки не согласовано с ключом")
+    if fmt == "incident_sim":
+        inc = (v.meta.params or {}).get("incident")
+        if not isinstance(inc, dict) or not {"service", "slo", "series", "logs", "actions"} <= set(inc):
+            errs.append("incident_sim: нет params.incident с полями service/slo/series/logs/actions")
     if fmt == "mcq_concept" and v.meta.verification == "execution":
         if not any(c.expect == "stdout_equals" for c in v.meta.checks):
             errs.append("mcq_concept: нет проверки исполнением")
@@ -275,7 +285,7 @@ def _validate_core(family_id: str, n_seeds: int = 200,
     rep.top_context_share = round(max(ctx.values()) / len(variants), 3)
     if spec.format in ("choose_fix", "mcq_concept"):
         pos = Counter(v.answer_key.value for v in variants)
-    elif spec.format == "open_book_3step":
+    elif spec.format in ("open_book_3step", "incident_sim"):
         pos = Counter()
         for v in variants:
             pos.update([v.answer_key.value["1"], v.answer_key.value["2"]])

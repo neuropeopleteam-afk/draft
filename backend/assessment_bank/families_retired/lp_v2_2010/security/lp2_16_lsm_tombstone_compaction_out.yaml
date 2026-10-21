@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: security.lead_v2.lsm_tombstone_compaction_out
+title: 'Информационная безопасность: Слияние уровней LSM-дерева с удержанием маркеров удаления до горизонта снимка'
+direction: security
+skills:
+- secure_code_review
+- authorization
+- aead
+- token_validation
+- incident_response
+target_grades:
+- lead
+format: predict_output
+language: python
+invariants:
+  defect_type: lsm_compaction
+  extra:
+    wave: LP-v2
+    slot: 16
+    direction_ru: Информационная безопасность
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.2
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Информационная безопасность: слияние уровней lsm-дерева
+    с удержанием маркеров удаления до горизонта снимка; формат predict_output, целевые грейды lead (b = 2,2 у порога
+    старшего грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.security.lp2_16_lsm_tombstone_compaction_out
+version: 1
+description: 'Информационная безопасность (lead): Слияние уровней LSM-дерева с удержанием маркеров удаления до горизонта
+  снимка. Проверка исполнением и рубрикой.'

@@ -1,0 +1,29 @@
+family_id: backend.http.t21_timeout_budget_output
+title: Бюджет времени запроса с повторами — приоритет операций и деление /
+direction: backend
+skills:
+- python
+- http
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -2.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Два арифметических
+    выражения из трёх переменных: умножение раньше сложения и деление /, которое всегда даёт float (2.0, а не 2).
+    Уровень Стажёра: базовая арифметика без циклов и библиотек. Набор t21 (21.10) у порога Стажёра (b = −2,1)'
+generator: assessment_bank.families.backend.t21_timeout_budget_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Программа считает худшее время запроса к внешнему
+  API с повторами — без скобок и со скобками, в миллисекундах и секундах; предсказать две строки вывода. Ключ —
+  независимый расчёт в генераторе, проверка — исполнение показанного кода в песочнице Python.'

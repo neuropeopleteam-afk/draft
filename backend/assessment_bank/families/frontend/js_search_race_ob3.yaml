@@ -1,29 +1,47 @@
 family_id: frontend.js.search_race_ob3
 title: Гонка ответов в живом поиске (открытая книга)
 direction: frontend
-skills: [javascript, async_await, race_conditions, react, ux]
-target_grades: [senior]
+skills:
+- javascript
+- async_await
+- race_conditions
+- react
+- ux
+target_grades:
+- senior
 format: open_book_3step
 language: javascript
 invariants:
-  code_lines: [6, 6]
-  operations: [4, 6]
+  code_lines:
+  - 6
+  - 6
+  operations:
+  - 4
+  - 6
   defect_type: stale_response_race
   n_options: 4
   extra:
-    step3_conditions: [react, abort, cache, states]
+    step3_conditions:
+    - react
+    - abort
+    - cache
+    - states
 time_limit_s: 900
 canary: false
 prior_difficulty:
   b: 0.9
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.3
-  step_offsets: [-0.3, 0.1, 0.9]
-  basis: "6 строк, но дефект временной (порядок ответов); шаг 1 требует отличить пересечение запросов без вреда от устаревшего итога; шаг 3 — React, отмена, кэш, состояния (Senior)"
+  step_offsets:
+  - -0.3
+  - 0.1
+  - 0.9
+  basis: Априорная, до калибровки на людях (a = 1,3). 6 строк, но дефект временной (порядок ответов); шаг 1 требует
+    отличить пересечение запросов без вреда от устаревшего итога; шаг 3 — React, отмена, кэш, состояния (Senior)
 generator: assessment_bank.families.frontend.js_search_race_ob3
 version: 1
-description: >
-  Живой поиск отрисовывает ответы в порядке прихода. Шаг 1 — сценарий, при котором итог
-  устаревший (среди дистракторов — пересекающиеся запросы с верным итогом); шаг 2 —
-  исправление со счётчиком запросов; шаг 3 — перенос на React, отмену, кэш, состояния.
-  Проверка — Node.js с поддельными таймерами.
+description: 'Живой поиск отрисовывает ответы в порядке прихода. Шаг 1 — сценарий, при котором итог устаревший (среди
+  дистракторов — пересекающиеся запросы с верным итогом); шаг 2 — исправление со счётчиком запросов; шаг 3 — перенос
+  на React, отмену, кэш, состояния. Проверка — Node.js с поддельными таймерами.
+
+  '

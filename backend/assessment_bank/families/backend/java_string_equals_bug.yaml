@@ -1,13 +1,22 @@
 family_id: backend.java.string_equals_bug
 title: Java — сравнение строк через == вместо equals
 direction: backend
-skills: [java, java_strings, java_basics]
-target_grades: [intern, junior]
+skills:
+- java
+- java_strings
+- java_basics
+target_grades:
+- intern
+- junior
 format: find_bug
 language: java
 invariants:
-  code_lines: [17, 28]
-  operations: [10, 18]
+  code_lines:
+  - 17
+  - 28
+  operations:
+  - 10
+  - 18
   defect_type: string_reference_equality
   extra:
     subtype: reference_equality_literal
@@ -15,12 +24,15 @@ time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -1.0
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.2
-  basis: "Один класс, 17–28 значащих строк, ровно одно сравнение строк; симптом дан (с литералами работало, после загрузки из файла всегда false). Классическая ошибка начинающего в Java (== сравнивает ссылки); ключ однозначен, у порога Junior; Стажёр/Junior"
+  basis: Априорная, до калибровки на людях (a = 1,3). Один класс, 17–28 значащих строк, ровно одно сравнение строк;
+    симптом дан (с литералами работало, после загрузки из файла всегда false). Классическая ошибка начинающего в
+    Java (== сравнивает ссылки); ключ однозначен, у порога Junior; Стажёр/Junior
 generator: assessment_bank.families.backend.java_string_equals_bug
 version: 1
-description: >
-  Найти строку, из-за которой сравнение значения-строки с литералом всегда ложно после загрузки данных
-  из текста. Проверка исполнением (javac + JVM): строки собираются во время выполнения, проверяются
-  положительный и отрицательный случай.
+description: 'Найти строку, из-за которой сравнение значения-строки с литералом всегда ложно после загрузки данных
+  из текста. Проверка исполнением (javac + JVM): строки собираются во время выполнения, проверяются положительный
+  и отрицательный случай.
+
+  '

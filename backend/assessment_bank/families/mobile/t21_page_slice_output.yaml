@@ -1,0 +1,30 @@
+family_id: mobile.paging.t21_page_slice_output
+title: Страница списка через slice — нумерация с 1 и неполная последняя страница
+direction: mobile
+skills:
+- javascript
+- pagination
+- ui_lists
+target_grades:
+- intern
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.65
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Вычислить start = (page − 1)·size
+    и взять slice(start, start + size) из 7–17 идентификаторов; ловушки — сдвиг на единицу, невключаемая правая граница,
+    неполная последняя страница. Уровень Стажёра: индексы и срезы. Набор t21 (21.10) у порога Стажёра (b = −1,65)'
+generator: assessment_bank.families.mobile.t21_page_slice_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Программа вырезает из массива идентификаторов страницу
+  списка (нумерация с 1) через slice; предсказать длину страницы и её элементы. Ключ — независимая модель в генераторе на
+  Python, проверка — исполнение показанного кода в песочнице Node.js.

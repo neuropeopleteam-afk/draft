@@ -1,0 +1,34 @@
+family_id: security.net.t21_port_allowlist_js_output
+title: Список разрешённых портов — цикл с !includes, счётчик и последний заблокированный
+direction: security
+skills:
+- javascript
+- security
+- access_control
+target_grades:
+- intern
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra:
+    attempts:
+    - 4
+    - 5
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.75
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл for…of по 4–5
+    попыткам соединения с условием !allowed.includes(port): счётчик заблокированных и перезапись «последнего
+    заблокированного»; ловушки — отрицание и то, что остаётся последний из заблокированных, а не последний элемент.
+    Уровень Стажёра: цикл, if и счётчик. Набор t21 (21.10) у порога Стажёра (b = −1,75)'
+generator: assessment_bank.families.security.t21_port_allowlist_js_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Сетевой фильтр считает соединения на
+  неразрешённые порты и запоминает последнее заблокированное; предсказать вывод console.log. Ключ — независимый
+  подсчёт в генераторе, проверка — исполнение показанного кода в Node.js.'

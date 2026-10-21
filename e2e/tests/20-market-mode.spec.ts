@@ -1,0 +1,198 @@
+/**
+ * «Рыночный режим» по всем страницам (решение владельца 20.10, п. 2): настоящие учётки — аноним, кандидат,
+ * работодатель, представитель ФСП (не жюри, is_demo = false) — не видят демо: ни панели «Роль в 1 клик», ни
+ * проводника жюри «Ваш маршрут», ни кнопок сброса песочницы, ни подписей «Демо жюри», «демо-профиль», «для жюри»,
+ * ни демо-компаний и демо-кандидатов. Единственный вход в демо — вкладка «Демо для жюри» (/demo) и ссылки жюри.
+ *
+ * Маршруты — из frontend/src/App.tsx (разбор вложенных <Route>), а не список вручную: каждая страница каждой роли.
+ * Пропускаются только демо-пространства (/demo*, /jury*, /x/, /j/), чужие роли (админ, эксперт) и адреса
+ * с параметрами без объекта. Настоящие кандидат и работодатель регистрируются через API стенда (DEV_MODE: код
+ * подтверждения приходит в ответе); представитель ФСП — токен из E2E_FSP_TOKEN (регистрация этой роли через API
+ * закрыта; на пробном стенде токен выдаёт tools/ci/fsp_token.sh или `docker exec … issue_token`).
+ * E2E_DEMO_MARKERS — путь к JSON со списком названий демо-компаний и номеров демо-профилей (необязательно).
+ *
+ * Итог — все находки разом: страница, роль, что найдено (reports/market_mode.json).
+ */
+import { test, expect, type Page } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { apiContext, BASE_URL } from "../lib/stand";
+
+const APP_TSX = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../frontend/src/App.tsx");
+const FORBIDDEN_TEXT = [
+  "Роль в 1 клик", "Ваш маршрут", "Быстрый переход для жюри", "Демо-аккаунт для жюри", "Сбросить песочницу",
+  "Сбросить демо", "Демо жюри", "Демо: ", "демо-профиль", "Демо-профиль", "Демо-кандидат", "демо-кандидат", "для жюри",
+];
+const FORBIDDEN_TESTIDS = ["cabinet-top-bar", "cabinet-route", "jury-panel", "jury-guide", "jury-quick", "jury-reset"];
+const SKIP = [/^\/demo/, /^\/jury/, /^\/x\//, /^\/j\//, /^\/admin/, /^\/expert/, /^\/share\//, /^\/expert-invite\//,
+  /^\/verify\//, /^\/fsp-id\//, /^\/login\/2fa/, /^\/reset/, /^\/sus/, /^\/tariffs\/live/, /:/, /\*/];
+
+type Role = "anon" | "candidate" | "employer" | "fsp";
+
+/** Полные пути всех <Route path=…> из App.tsx с учётом вложенности. Тег разбирается с учётом {…}: внутри
+ * element={<Navigate … />} есть свои «>», по ним тег не заканчивается. */
+export function appRoutes(src = fs.readFileSync(APP_TSX, "utf8")): string[] {
+  const out = new Set<string>();
+  const stack: string[] = [];
+  let i = 0;
+  while (i < src.length) {
+    const open = src.indexOf("<Route", i);
+    const close = src.indexOf("</Route>", i);
+    if (open < 0 && close < 0) break;
+    if (close >= 0 && (open < 0 || close < open)) { stack.pop(); i = close + 8; continue; }
+    if (!/[\s>]/.test(src[open + 6] || "")) { i = open + 6; continue; } // <RouteBoundary> и т.п.
+    let j = open + 6, depth = 0;
+    for (; j < src.length; j++) {
+      const c = src[j];
+      if (c === "{") depth++;
+      else if (c === "}") depth--;
+      else if (c === ">" && depth === 0) break;
+    }
+    const attrs = src.slice(open + 6, j);
+    const selfClose = attrs.trimEnd().endsWith("/");
+    const top = attrs.replace(/\{[^{}]*(\{[^{}]*\}[^{}]*)*\}/g, "{}"); // атрибуты верхнего уровня
+    const p = /\bpath="([^"]*)"/.exec(top)?.[1];
+    const index = /\bindex\b/.test(top);
+    const parent = stack.length ? stack[stack.length - 1] : "";
+    const full = p === undefined ? parent : p.startsWith("/") ? p : `${parent.replace(/\/$/, "")}/${p}`;
+    if (p !== undefined || index) out.add(full || "/");
+    if (!selfClose) stack.push(full);
+    i = j + 1;
+  }
+  return [...out].sort();
+}
+
+function rolePages(all: string[], role: Role): string[] {
+  const own = (p: string) =>
+    role === "candidate" ? p.startsWith("/candidate") : role === "employer" ? p.startsWith("/employer")
+      : role === "fsp" ? p.startsWith("/fsp") : false;
+  const cabinet = (p: string) => /^\/(candidate|employer|fsp)(\/|$)/.test(p);
+  return all.filter((p) => !SKIP.some((r) => r.test(p)) && (cabinet(p) ? own(p) : true));
+}
+
+/** Настоящая потребность работодателя → адреса её подборки, версии и сравнения (иначе списки пусты и утечка не видна). */
+async function employerNeedPages(token: string): Promise<string[]> {
+  const api = await apiContext();
+  const r = await api.post("/api/employer/needs", {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { text: "Нужен backend-разработчик уровня middle: Python, FastAPI, PostgreSQL. Удалённо, вилка 200–250 тыс. ₽ на руки, опыт от 3 лет." },
+  });
+  expect(r.status(), await r.text()).toBe(201);
+  const id = (await r.json()).id;
+  return [`/employer/needs/${id}`, `/employer/needs/${id}/v/1`, `/employer/needs/${id}/compare`];
+}
+
+async function realToken(role: "candidate" | "employer"): Promise<string> {
+  const api = await apiContext();
+  const email = `market-${role}-${Date.now()}@example.org`;
+  const r = await api.post("/api/auth/register", { data: {
+    email, password: "Market-pass-123", role, consent_processing: true,
+    ...(role === "employer" ? { company_name: "ООО «Рыночный режим»" } : {}),
+  } });
+  expect(r.status(), await r.text()).toBe(201);
+  const code = (await r.json()).dev_verification_code;
+  expect(code, "стенд без DEV_MODE: код подтверждения не вернулся").toBeTruthy();
+  const v = await api.post("/api/auth/verify-email", { data: { email, code } });
+  expect(v.status(), await v.text()).toBe(200);
+  return (await v.json()).access_token;
+}
+
+function demoMarkers(): string[] {
+  const f = process.env.E2E_DEMO_MARKERS;
+  if (!f || !fs.existsSync(f)) return [];
+  const d = JSON.parse(fs.readFileSync(f, "utf8"));
+  return [...(d.companies || []), ...(d.refs || [])].filter((s: string) => s && s.length >= 6);
+}
+
+/** Фрагмент текста вокруг находки: по нему владелец зоны видит, где именно на странице демо. */
+function snippet(text: string, at: number, len: number): string {
+  return text.slice(Math.max(0, at - 60), at + len + 60).replace(/\s+/g, " ").trim();
+}
+
+type Scan = { found: string[]; context: string[]; final: string; h1: string };
+
+async function scanPage(page: Page, url: string, markers: string[]): Promise<Scan> {
+  const found: string[] = [];
+  const context: string[] = [];
+  await page.goto(url, { waitUntil: "domcontentloaded" });
+  await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
+  await page.waitForTimeout(600);
+  // текст страницы без ссылок на вкладку «Демо для жюри» (/demo) — это разрешённый вход в демо, не утечка
+  const text = await page.evaluate(() => {
+    let t = document.body.innerText;
+    document.querySelectorAll<HTMLElement>('a[href^="/demo"], a[href="/jury"]').forEach((e) => {
+      const s = e.innerText.trim();
+      if (s) t = t.split(s).join(" ");
+    });
+    return t;
+  }).catch(() => "");
+  for (const t of FORBIDDEN_TEXT) {
+    const at = text.indexOf(t);
+    if (at >= 0) { found.push(`текст «${t}»`); context.push(snippet(text, at, t.length)); }
+  }
+  for (const m of markers) {
+    const at = text.indexOf(m);
+    if (at >= 0) { found.push(`демо-объект «${m}»`); if (context.length < 8) context.push(snippet(text, at, m.length)); }
+  }
+  for (const id of FORBIDDEN_TESTIDS) {
+    const el = page.getByTestId(id);
+    if (await el.count()) {
+      found.push(`элемент data-testid=${id}`);
+      context.push(`[${id}] ${(await el.first().innerText().catch(() => "")).replace(/\s+/g, " ").slice(0, 120)}`);
+    }
+  }
+  // доказательство, что страница открылась под ролью: итоговый адрес и заголовок (пустая страница или
+  // переадресация на вход не должны сойти за «нет демо»)
+  const info = await page.evaluate(() => ({
+    final: location.pathname + location.search,
+    h1: (document.querySelector("h1")?.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120),
+  })).catch(() => ({ final: "?", h1: "" }));
+  return { found, context, ...info };
+}
+
+test.describe.configure({ mode: "serial" });
+
+test("рыночный режим: ни на одной странице App.tsx у настоящих учёток нет демо", async ({ browser }) => {
+  test.setTimeout(30 * 60_000);
+  const all = appRoutes();
+  expect(all.length, "разбор App.tsx не нашёл маршрутов").toBeGreaterThan(50);
+  const markers = demoMarkers();
+  const tokens: Record<Role, string | null> = {
+    anon: null, candidate: await realToken("candidate"), employer: await realToken("employer"),
+    fsp: process.env.E2E_FSP_TOKEN || null,
+  };
+  const findings: { role: Role; page: string; found: string[]; context: string[] }[] = [];
+  const visited: { role: Role; page: string; final: string; h1: string }[] = [];
+  const report = (done: boolean) => {
+    fs.mkdirSync("reports", { recursive: true });
+    fs.writeFileSync("reports/market_mode.json", JSON.stringify({ base_url: BASE_URL, pages: visited.length,
+      routes: all.length, done, findings, visited }, null, 2));
+  };
+  for (const role of ["anon", "candidate", "employer", "fsp"] as Role[]) {
+    if (role === "fsp" && !tokens.fsp) { console.log("[e2e] E2E_FSP_TOKEN не задан — роль ФСП пропущена"); continue; }
+    const ctx = await browser.newContext({ baseURL: BASE_URL, serviceWorkers: "block", locale: "ru-RU" });
+    await ctx.addInitScript((tok) => {
+      localStorage.setItem("draft_cookie_consent", "essential");
+      localStorage.removeItem("jury_scenario");
+      localStorage.removeItem("fsp_jury_guide");
+      if (tok) localStorage.setItem("fsp_token", tok);
+    }, tokens[role]);
+    const page = await ctx.newPage();
+    const extra = role === "employer" ? await employerNeedPages(tokens.employer!) : [];
+    for (const p of [...rolePages(all, role), ...extra]) {
+      const r = await scanPage(page, p, markers);
+      visited.push({ role, page: p, final: r.final, h1: r.h1 });
+      if (r.found.length) findings.push({ role, page: p, found: r.found, context: r.context });
+      report(false); // промежуточный отчёт после каждой страницы: прерванный прогон не теряет находок
+    }
+    await ctx.close();
+  }
+  report(true);
+  console.log(`[e2e] рыночный режим: страниц ${visited.length}, находок ${findings.length}`);
+  // вошедшая роль, выброшенная на вход, — не «чистая» страница, а несостоявшаяся проверка
+  const auth = /^\/(login|register)(\/|\?|$)/; // сами страницы входа и регистрации открываются у всех ролей
+  const bounced = visited.filter((v) => v.role !== "anon" && auth.test(v.final) && !auth.test(v.page));
+  expect(bounced, bounced.map((v) => `${v.page} [${v.role}] → ${v.final}`).join("\n")).toEqual([]);
+  expect(findings, findings.map((f) => `${f.page} [${f.role}]: ${f.found.join(", ")}`).join("\n")).toEqual([]);
+});

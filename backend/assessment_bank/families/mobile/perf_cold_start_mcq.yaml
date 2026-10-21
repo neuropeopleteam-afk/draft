@@ -1,25 +1,41 @@
 family_id: mobile.perf.cold_start_mcq
 title: Холодный старт — какое изменение сильнее сократит время до первого кадра
 direction: mobile
-skills: [mobile_performance, main_thread, ui_threading, lifecycle, architecture]
-target_grades: [middle, senior]
+skills:
+- mobile_performance
+- main_thread
+- ui_threading
+- lifecycle
+- architecture
+target_grades:
+- middle
+- senior
 format: mcq_concept
 language: text
 invariants:
-  code_lines: [8, 9]
+  code_lines:
+  - 8
+  - 9
   n_options: 4
   extra:
-    changes: [to_bg, lazy, half]
+    changes:
+    - to_bg
+    - lazy
+    - half
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.9
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.3
-  basis: "6–7 задач инициализации; нужно посчитать критический путь до первого кадра с ожиданием нужных фоновых задач и ленивых задач на отрисовке. В каждом варианте есть ловушка — перенос в фон или «ленивая» инициализация долгой задачи, нужной первому экрану (выигрыш меньше её длительности); отрыв верного ответа ≥ 15 % выигрыша. Middle/Senior (b ≈ 0,9)"
+  basis: Априорная, до калибровки на людях (a = 1,0). 6–7 задач инициализации; нужно посчитать критический путь
+    до первого кадра с ожиданием нужных фоновых задач и ленивых задач на отрисовке. В каждом варианте есть ловушка
+    — перенос в фон или «ленивая» инициализация долгой задачи, нужной первому экрану (выигрыш меньше её длительности);
+    отрыв верного ответа ≥ 15 % выигрыша. Middle/Senior (b ≈ 0,9)
 generator: assessment_bank.families.mobile.perf_cold_start_mcq
 version: 1
-description: >
-  Таблица задач холодного старта (поток, длительность, нужна ли первому экрану) и четыре изменения; нужно
-  выбрать то, что сильнее всего сократит время до первого кадра. Ключ: Python разбирает таблицу и считает
+description: 'Таблица задач холодного старта (поток, длительность, нужна ли первому экрану) и четыре изменения;
+  нужно выбрать то, что сильнее всего сократит время до первого кадра. Ключ: Python разбирает таблицу и считает
   время до первого кадра для каждого изменения.
+
+  '

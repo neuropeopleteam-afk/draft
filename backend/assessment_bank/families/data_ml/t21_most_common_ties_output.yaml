@@ -1,0 +1,35 @@
+family_id: data_ml.data.t21_most_common_ties_output
+title: Counter и top-k классов при равных частотах — порядок первого появления метки и доля лидера
+direction: data_ml
+skills:
+- python
+- ml
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 12
+  extra:
+    labels:
+    - 9
+    - 15
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проследить порядок ключей
+    Counter (первое появление метки, метки второй партии — после первой; subtract место не меняет) и устойчивость
+    most_common / sorted(-частота) / sorted(reverse=True) при ничьей на первом месте или на границе top-k, затем долю
+    n * 100 // total. Уровень Senior: знание реализации порядка при равных частотах, а не синтаксиса Counter. Набор
+    t21 (21.10) у порога Senior (b = +0,8)'
+generator: assessment_bank.families.data_ml.t21_most_common_ties_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Баланс классов разметки (обращения, отзывы,
+  изображения, антифрод, интенты): Counter по двум партиям или циклом, иногда subtract, top-k через most_common или
+  sorted и доля самого частого класса в процентах; предсказать вывод. Ключ — независимая модель (частота по убыванию,
+  при равенстве — первое появление) в генераторе, проверка — исполнение показанного кода в песочнице Python.'

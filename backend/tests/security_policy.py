@@ -419,6 +419,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/fsp-cabinet/cups"): "fsp",
     ("GET", "/api/fsp-cabinet/report"): "fsp",
     ("GET", "/api/fsp-cabinet/regions"): "fsp",  # А2: карта талантов по регионам РФ
+    ("GET", "/api/fsp-cabinet/protocol-claims"): "fsp",  # А2: очередь заявок на сверку протоколов ФСП
+    ("POST", "/api/fsp-cabinet/protocol-claims/{achievement_id}/decide"): "fsp",  # А2: решение по заявке
     ("GET", "/api/fsp-cabinet/export/{section}.csv"): "fsp",
     ("GET", "/api/admin/sus"): "admin",
     ("POST", "/api/admin/passports/{pid}/revoke"): ("admin", {"admin": OK404}),  # feat/passport; паспорт не создаётся
@@ -545,8 +547,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/interview/concierge/turn"): "open",
     ("GET", "/api/interview/concierge/script"): "open",
     ("POST", "/api/interview/concierge/event"): "open",
-    # Счётчики расходов проводника за сегодня (без ПДн: суммы, число адресов, лимиты). Сейчас открыт без входа;
-    # зона чата «Аватар» — закрыть ролью администратора, когда там решат (тогда здесь станет "admin").
+    # Счётчики расходов проводника за сегодня (суммы, число адресов, лимиты) — только администратор (живая ветка
+    # d99e30987, чат «Аватар»).
     ("GET", "/api/interview/concierge/budget"): "admin",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
@@ -600,6 +602,8 @@ PARAM_OVERRIDES: dict[tuple[str, str], dict[str, object]] = {
     ("GET", "/api/employer/needs/parse/{job_id}"): {"job_id": "00000000-0000-4000-8000-000000000027"},  # И27
     # А9: Боевой ИИ-Полигон
     ("GET", "/api/warroom/scenarios/{scenario_id}"): {"scenario_id": "payment"},
+    # А2: решение по заявке на сверку протокола ФСП — несуществующая заявка (без тела аналитик получает 422, чужие роли — 401/403)
+    ("POST", "/api/fsp-cabinet/protocol-claims/{achievement_id}/decide"): {"achievement_id": "00000000-0000-4000-8000-0000000000a2"},
 }
 
 # Маршруты, меняющие состояние так, что дальнейшие проверки могут сломаться (сброс песочницы отзывает токены,

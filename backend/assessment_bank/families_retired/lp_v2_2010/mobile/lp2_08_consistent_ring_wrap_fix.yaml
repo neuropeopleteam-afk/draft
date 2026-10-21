@@ -1,0 +1,34 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: mobile.lead_v2.consistent_ring_wrap_fix
+title: 'Мобильная разработка: Замыкание кольца консистентного хэширования с пропуском выведенных узлов'
+direction: mobile
+skills:
+- architecture
+- kotlin_coroutines
+- swift_concurrency
+- offline_first
+- ui_threading
+target_grades:
+- lead
+format: choose_fix
+language: python
+invariants:
+  defect_type: ring_wraparound
+  extra:
+    wave: LP-v2
+    slot: 8
+    direction_ru: Мобильная разработка
+  n_options: 4
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.09
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Мобильная разработка: замыкание кольца консистентного
+    хэширования с пропуском выведенных узлов; формат choose_fix, целевые грейды lead (b = 2,09 у порога старшего
+    грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.mobile.lp2_08_consistent_ring_wrap_fix
+version: 1
+description: 'Мобильная разработка (lead): Замыкание кольца консистентного хэширования с пропуском выведенных узлов.
+  Проверка исполнением и рубрикой.'

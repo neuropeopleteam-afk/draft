@@ -1,22 +1,38 @@
 family_id: mobile.principal.mobile_strategy_open
-title: Техническая стратегия мобильной разработки — модули, кросс-платформа, релизный поезд, стабильность, мини-приложения (Principal)
+title: Техническая стратегия мобильной разработки — модули, кросс-платформа, релизный поезд, стабильность, мини-приложения
+  (Principal)
 direction: mobile
-skills: [architecture, clean_architecture, navigation, testing, mobile_release_management]
-target_grades: [principal]
+skills:
+- architecture
+- clean_architecture
+- navigation
+- testing
+- mobile_release_management
+target_grades:
+- principal
 format: open_answer
 language: text
 invariants:
   extra:
-    topics: [cross_platform, mini_apps, modularity, release_train, stability]
+    topics:
+    - cross_platform
+    - mini_apps
+    - modularity
+    - release_train
+    - stability
 time_limit_s: 1500
 canary: false
 prior_difficulty:
   b: 2.6
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Ситуация уровня продукта и нескольких команд с числами (команды, время сборки, доли сбоев, ритм релизов); рубрика из 3 критериев — диагноз по данным, целевая архитектура с компромиссами, план перехода с критериями. Знание практик (модули, флаги, KMP) — средний эталон (Senior/Lead); сильный требует выбора с обоснованием, пилота и критериев остановки: у порога Lead/Principal (2,75)"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Ситуация уровня продукта и нескольких команд с числами (команды,
+    время сборки, доли сбоев, ритм релизов); рубрика из 3 критериев — диагноз по данным, целевая архитектура с компромиссами,
+    план перехода с критериями. Знание практик (модули, флаги, KMP) — средний эталон (Senior/Lead); сильный требует
+    выбора с обоснованием, пилота и критериев остановки: у порога Lead/Principal (2,75)'
 generator: assessment_bank.families.mobile.principal_mobile_strategy_open
 version: 1
-description: >
-  Открытые вопросы уровня Principal по мобильной разработке: модульность, кросс-платформенный выбор, релизный
-  поезд, программа стабильности, платформа мини-приложений. Оценка по рубрике с цитатами из ответа.
+description: 'Открытые вопросы уровня Principal по мобильной разработке: модульность, кросс-платформенный выбор,
+  релизный поезд, программа стабильности, платформа мини-приложений. Оценка по рубрике с цитатами из ответа.
+
+  '

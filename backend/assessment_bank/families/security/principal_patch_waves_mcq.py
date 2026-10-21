@@ -45,7 +45,7 @@ print(fmt(q * sum(cnt * prob_before(day) for cnt, day in WAVES)))
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx = rng.choice(CONTEXTS)
-    n_below = rng.choice([0, 1, 2])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный; недостающие — контрольные значения
     fmt, fmt_src = formatter("int", "серв.")
     k = rng.choice([3, 4])
     for _ in range(6000):

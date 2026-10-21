@@ -1,23 +1,35 @@
 family_id: mobile.perf.frame_budget_mcq
 title: Бюджет кадра при прокрутке на дисплее 90/120 Гц
 direction: mobile
-skills: [mobile_performance, ui_threading, main_thread]
-target_grades: [junior, middle]
+skills:
+- mobile_performance
+- ui_threading
+- main_thread
+target_grades:
+- junior
+- middle
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    distractors: [budget60, dropped, average]
+    distractors:
+    - budget60
+    - dropped
+    - average
 time_limit_s: 180
 canary: false
 prior_difficulty:
   b: -0.2
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.25
-  basis: "Расчёт по шагам: бюджет 1000/F для 90/120 Гц, кадры с новой ячейкой и картинкой; фиксированный состав дистракторов — по одному типичному заблуждению (бюджет 16,7 мс как у 60 Гц, пропущенные интервалы вместо опоздавших кадров, среднее время кадра). Junior/Middle (b ≈ −0,2), различает Junior и Middle"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Расчёт по шагам: бюджет 1000/F для 90/120 Гц, кадры с новой
+    ячейкой и картинкой; фиксированный состав дистракторов — по одному типичному заблуждению (бюджет 16,7 мс как
+    у 60 Гц, пропущенные интервалы вместо опоздавших кадров, среднее время кадра). Junior/Middle (b ≈ −0,2), различает
+    Junior и Middle'
 generator: assessment_bank.families.mobile.perf_frame_budget_mcq
 version: 1
-description: >
-  Сколько кадров опоздает за секунду прокрутки, если в части кадров главный поток привязывает новые ячейки
-  и декодирует картинки. Ключ — модель бюджета кадра на Python.
+description: 'Сколько кадров опоздает за секунду прокрутки, если в части кадров главный поток привязывает новые
+  ячейки и декодирует картинки. Ключ — модель бюджета кадра на Python.
+
+  '

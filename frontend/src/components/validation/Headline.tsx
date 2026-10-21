@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { NB, num, pct } from "../ui";
 import { ProvenanceLine } from "./Provenance";
 import { ScrollX } from "../A11y";
-import { fmtNum, getGradeVerdict, getTop5, type Frac, type Top5Item } from "../../lib/numbers";
+import { fmtNum, getGradeVerdict, getTop5Run, type Frac, type Top5Item } from "../../lib/numbers";
 
 /** Первый экран /validation: точность решения по грейду — симуляция продукта (docs/NUMBERS.json → grade_verdict).
  *  Каждое число — из расчёта с подписью мира; нет расчёта — нет числа. */
@@ -67,7 +67,7 @@ function ciTxt(c?: [number, number] | null, kappa = false) {
 
 /** Итоговый прогон (один, на отложенных зёрнах): стандартные и жёсткие условия рядом — только из NUMBERS.json → top5. */
 function FinalRun() {
-  const { st, hard, meta } = getTop5();
+  const { st, hard, meta } = getTop5Run();
   if (!st.length && !hard.length) return null;
   const ids = (st.length ? st : hard).map((x) => x.id);
   const by = (arr: Top5Item[], id: string) => arr.find((x) => x.id === id);
@@ -80,7 +80,7 @@ function FinalRun() {
         допущения, как в аналогичных решениях; «жёсткие» — угадывание, завышенные заявки, кандидаты у порогов и
         осторожные параметры заданий. Модельные кандидаты, не люди.
       </p>
-      <ScrollX>
+      <ScrollX label="Итоговый прогон: стандартные и жёсткие условия">
         <table className="mt-2 w-full min-w-[560px] text-sm" data-testid="v-hl-final-table">
           <thead>
             <tr className="text-left text-xs text-brand-ink/70">
@@ -135,16 +135,19 @@ export default function Headline() {
   const gv = getGradeVerdict();
   if (!gv) {
     return (
+      <div data-testid="validation-headline">
       <section id="headline" className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10" data-testid="v-headline">
         <h2 className="text-lg font-extrabold text-brand-night">Точность решения по грейду</h2>
         <p className="mt-2 text-sm text-brand-ink/70">Отчётный прогон симуляции продукта ещё не опубликован.</p>
       </section>
+      </div>
     );
   }
   const m = gv.main;
   const mm = m.minutes_main, mt = m.minutes_total;
   const rows = Object.entries(m.by_claim || {});
   return (
+    <div data-testid="validation-headline">
     <section id="headline" className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10" data-testid="v-headline">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-extrabold text-brand-night">Точность решения по грейду: симуляция продукта</h2>
@@ -226,6 +229,7 @@ export default function Headline() {
         <p className="mt-1">Код: <code>{gv.code_ref}</code>.</p>
       </details>
     </section>
+    </div>
   );
 }
 

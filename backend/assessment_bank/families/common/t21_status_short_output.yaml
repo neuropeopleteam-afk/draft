@@ -1,0 +1,31 @@
+family_id: common.git.t21_status_short_output
+title: git status --short после коммита, правок и git add части файлов
+direction: common
+skills:
+- git
+target_grades:
+- intern
+format: predict_output
+language: bash
+invariants:
+  code_lines:
+  - 5
+  - 7
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.5
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо проследить 3–4 файла
+    после первого коммита (правка без add, правка с add, новый файл с add, новый файл с add и повторной правкой,
+    неотслеживаемый, нетронутый) и записать краткий статус с кодами ??, « M», «M », «A », «AM» в порядке вывода
+    git. Уровень Стажёр: базовые команды git (add, commit, status) и чтение двух столбцов статуса. Набор t21 (21.10)
+    у порога Стажёр (b = −1,5)'
+generator: assessment_bank.families.common.t21_status_short_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Скрипт в новом репозитории коммитит часть файлов,
+  правит и добавляет в индекс остальные и печатает git status --short (пробелы заменены на «_»); предсказать
+  строки статуса. Ключ — независимая модель состояний HEAD/индекс/рабочая копия в генераторе, проверка — исполнение
+  скрипта раннером git в песочнице.'

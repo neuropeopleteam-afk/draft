@@ -1,28 +1,51 @@
 family_id: data_eng.etl.watermark_ob3
 title: Инкрементальная выгрузка по водяному знаку updated_at теряет строки на границе (открытая книга)
 direction: data_eng
-skills: [incremental_load, etl, idempotency, deduplication, late_data, python]
-target_grades: [middle, senior]
+skills:
+- incremental_load
+- etl
+- idempotency
+- deduplication
+- late_data
+- python
+target_grades:
+- middle
+- senior
 format: open_book_3step
 language: python
 invariants:
-  code_lines: [6, 6]
-  operations: [4, 6]
+  code_lines:
+  - 6
+  - 6
+  operations:
+  - 4
+  - 6
   defect_type: strict_watermark_boundary
   n_options: 4
   extra:
-    step3_conditions: [late_commit, deletes, backfill]
+    step3_conditions:
+    - late_commit
+    - deletes
+    - backfill
 time_limit_s: 900
 canary: false
 prior_difficulty:
   b: 0.9
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.3
-  step_offsets: [-0.5, 0.1, 0.8]
-  basis: "Функция 6 строк: строки с updated_at > водяного знака, знак = максимум пакета; дефект — строка с тем же updated_at, зафиксированная после запуска, теряется. Шаг 1 — сценарий с такой строкой среди «новая строка позже», «изменение старой строки», «новых строк нет»; шаг 2 — три почти верных исправления фиксированного состава (>= без защиты от повторов, защита по id, память только о последнем пакете); шаг 3 — поздняя фиксация транзакций, удаления, повторная загрузка периода. Граница Middle/Senior"
+  step_offsets:
+  - -0.5
+  - 0.1
+  - 0.8
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Функция 6 строк: строки с updated_at > водяного знака, знак
+    = максимум пакета; дефект — строка с тем же updated_at, зафиксированная после запуска, теряется. Шаг 1 — сценарий
+    с такой строкой среди «новая строка позже», «изменение старой строки», «новых строк нет»; шаг 2 — три почти
+    верных исправления фиксированного состава (>= без защиты от повторов, защита по id, память только о последнем
+    пакете); шаг 3 — поздняя фиксация транзакций, удаления, повторная загрузка периода. Граница Middle/Senior'
 generator: assessment_bank.families.data_eng.etl_watermark_ob3
 version: 1
-description: >
-  Инкрементальная выгрузка по updated_at со строгим сравнением теряет строки на границе водяного знака.
-  Шаг 1 — сценарий, воспроизводящий потерю; шаг 2 — исправление без потерь и повторов; шаг 3 — развёрнутый
-  ответ по рубрике. Шаги 1–2 проверяются исполнением в Python.
+description: 'Инкрементальная выгрузка по updated_at со строгим сравнением теряет строки на границе водяного знака.
+  Шаг 1 — сценарий, воспроизводящий потерю; шаг 2 — исправление без потерь и повторов; шаг 3 — развёрнутый ответ
+  по рубрике. Шаги 1–2 проверяются исполнением в Python.
+
+  '

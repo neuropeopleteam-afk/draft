@@ -1,0 +1,31 @@
+family_id: backend.http.t21_query_string_dict_output
+title: Разбор query string — split и словарь с повторным параметром
+direction: backend
+skills:
+- python
+- http
+target_grades:
+- intern
+- junior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 7
+  - 7
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две конструкции вместе:
+    split по «&» и «=» и запись в словарь; повторный параметр перезаписывает значение, но ключ остаётся на месте первого
+    появления, get с умолчанием — только для отсутствующего ключа. Уровень Junior: строки и словари в связке. Набор t21
+    (21.10) у порога Junior (b = −0,9)'
+generator: assessment_bank.families.backend.t21_query_string_dict_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Обработчик вручную разбирает строку запроса в
+  словарь, в строке есть повторный параметр; предсказать число ключей, значения и порядок ключей. Ключ — независимая
+  модель в генераторе, проверка — исполнение показанного кода в песочнице Python.'

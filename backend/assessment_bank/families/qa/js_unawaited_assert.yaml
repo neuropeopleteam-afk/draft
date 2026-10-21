@@ -1,27 +1,42 @@
 family_id: qa.js.unawaited_assert
 title: Асинхронная проверка в тесте Jest без ожидания промиса
 direction: qa
-skills: [javascript, jest, async_testing, test_review, false_positive]
-target_grades: [junior, middle]
+skills:
+- javascript
+- jest
+- async_testing
+- test_review
+- false_positive
+target_grades:
+- junior
+- middle
 format: find_bug
 language: javascript
 invariants:
-  code_lines: [17, 17]
-  operations: [13, 13]
+  code_lines:
+  - 17
+  - 17
+  operations:
+  - 13
+  - 13
   defect_type: unawaited_assertion
   extra:
-    subtypes: [then_no_return, await_missing]
+    subtypes:
+    - then_no_return
+    - await_missing
     contexts: 4
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.4
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.3
-  basis: "17 строк, три теста Jest, два из них написаны правильно (await) и служат образцом; дефект — отсутствие return/await перед цепочкой .then; подтип с async-колбэком без await чуть труднее (async создаёт ложное ощущение ожидания)"
+  basis: Априорная, до калибровки на людях (a = 1,3). 17 строк, три теста Jest, два из них написаны правильно (await)
+    и служат образцом; дефект — отсутствие return/await перед цепочкой .then; подтип с async-колбэком без await
+    чуть труднее (async создаёт ложное ощущение ожидания)
 generator: assessment_bank.families.qa.js_unawaited_assert
 version: 1
-description: >
-  Тестовый файл Jest из трёх тестов: в одном из них проверка выполняется внутри .then без
-  return/await, поэтому тест зелёный при любой реализации. Ключ проверяется исполнением в
-  Node на правильной реализации и на мутанте.
+description: 'Тестовый файл Jest из трёх тестов: в одном из них проверка выполняется внутри .then без return/await,
+  поэтому тест зелёный при любой реализации. Ключ проверяется исполнением в Node на правильной реализации и на мутанте.
+
+  '

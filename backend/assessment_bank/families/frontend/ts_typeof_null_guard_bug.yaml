@@ -19,18 +19,19 @@ invariants:
   - 10
   defect_type: unsound_type_guard
   extra:
+    leak_resistance: low
     subtypes:
     - null_check
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: 0.3
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.3
-  basis: 'Выделено из frontend.ts.type_guard_bug: подтип typeof null === "object". Калибровка панелью
-    LLM 05.10: варианты неизоморфны (σ > 0,5, χ² p < 0,01), разброс объяснялся подтипом. b оставлен 0,3:
-    содержательной причины менять нет.'
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Выделено из frontend.ts.type_guard_bug: подтип typeof null
+    === "object". Калибровка панелью LLM 05.10: варианты неизоморфны (σ > 0,5, χ² p < 0,01), разброс объяснялся
+    подтипом. b оставлен 0,3: содержательной причины менять нет.'
 generator: assessment_bank.families.frontend.ts_typeof_null_guard_bug
 version: 1
-description: 'Выделено из frontend.ts.type_guard_bug по итогам калибровки 05.10: подтип typeof null ===
-  "object". Генератор общий с исходным семейством, подтип фиксирован.'
+description: 'Выделено из frontend.ts.type_guard_bug по итогам калибровки 05.10: подтип typeof null === "object".
+  Генератор общий с исходным семейством, подтип фиксирован.'

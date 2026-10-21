@@ -1,0 +1,32 @@
+family_id: backend.http.t21_status_buckets_output
+title: Коды ответа HTTP по классам — цикл с if / elif и границами диапазонов
+direction: backend
+skills:
+- python
+- http
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 10
+  - 10
+  extra:
+    codes:
+    - 6
+    - 8
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.75
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл по 6–8 кодам и три
+    ветки if / elif с границами диапазонов; одна ловушка — код 3xx не попадает ни в одну ветку. Уровень Стажёра: базовый
+    синтаксис и сравнения без библиотек. Набор t21 (21.10) у порога Стажёра (b = −1,75)'
+generator: assessment_bank.families.backend.t21_status_buckets_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Программа считает успешные ответы, ошибки клиента
+  и ошибки сервера по списку кодов HTTP; предсказать вывод print. Ключ — независимый подсчёт в генераторе, проверка —
+  исполнение показанного кода в песочнице Python.'

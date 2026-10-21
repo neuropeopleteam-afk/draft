@@ -49,7 +49,12 @@ function Body({ r }: { r: any }) {
         потребности (правила, без модели) и подборку на демо-пуле из 500 модельных кандидатов. Метки — из полей, которые работодатель
         заполнил на hh.ru (роль, слово грейда в названии, «Ключевые навыки»), разбору они не даются. В репозитории — номера и метки, без текстов.
       </p>
-      <p className="mt-1 text-xs text-brand-ink/65">Прогон {d10(r.generated_at)} · код {r.code_commit} · алгоритм {r.algorithm} · недоступно: {r.n_missing ?? 0}</p>
+      <details className="mt-1.5 text-xs text-brand-ink/65">
+        <summary className="cursor-pointer font-medium text-brand-plum/85 hover:underline">
+          Техническая подпись прогона (дата, код и алгоритм)
+        </summary>
+        <p className="mt-1">Прогон {d10(r.generated_at)} · код {r.code_commit} · алгоритм {r.algorithm} · недоступно: {r.n_missing ?? 0}</p>
+      </details>
       <div className="mt-4">
         <ScrollX label="Подбор на вакансиях hh.ru: итог" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
           <table className="w-full min-w-[36rem] text-left text-sm">

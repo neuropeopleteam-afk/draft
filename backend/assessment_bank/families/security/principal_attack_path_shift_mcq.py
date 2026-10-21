@@ -60,7 +60,7 @@ print(fmt(float(value(TREE))))
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx = rng.choice(CONTEXTS)
-    n_below = rng.choice([0, 1, 2])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный; недостающие — контрольные значения
     fmt, fmt_src = formatter("p1")
     names = rng.sample(sorted(STEP_POOL), 3)
     for _ in range(5000):

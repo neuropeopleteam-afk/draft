@@ -1,24 +1,39 @@
 family_id: devops.k8s.lead_rollout_capacity_mcq
 title: RollingUpdate под ёмкость, квоту и окно выкладки — maxSurge/maxUnavailable с округлением процентов
 direction: devops
-skills: [kubernetes, deployments, capacity_planning, release, reliability]
-target_grades: [lead]
+skills:
+- kubernetes
+- deployments
+- capacity_planning
+- release
+- reliability
+target_grades:
+- lead
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    outcomes: [ok, below_min, stuck, slow]
+    outcomes:
+    - ok
+    - below_min
+    - stuck
+    - slow
     distractor_kinds_min: 2
 time_limit_s: 420
 canary: false
 prior_difficulty:
   b: 1.7
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.35
-  basis: "Априорная трудность (не по людям). Три ограничения одновременно: минимум готовых подов (maxUnavailable с округлением процента вниз), квота (лишний surge не создаётся — при maxUnavailable = 0 выкладка встаёт), окно выкладки (число волн × время готовности). Дистракторы — минимум двух разных типов отказа. Senior знает смысл параметров, но не сводит квоту и округление; граница Senior/Lead (θ ≈ 2,0). σ 0,35 — в части вариантов отказ очевиднее"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Три ограничения одновременно: минимум готовых подов (maxUnavailable
+    с округлением процента вниз), квота (лишний surge не создаётся — при maxUnavailable = 0 выкладка встаёт), окно
+    выкладки (число волн × время готовности). Дистракторы — минимум двух разных типов отказа. Senior знает смысл
+    параметров, но не сводит квоту и округление; граница Senior/Lead (θ ≈ 2,0). σ 0,35 — в части вариантов отказ
+    очевиднее'
 generator: assessment_bank.families.devops.lead_rollout_capacity_mcq
 version: 1
-description: >
-  Lead: выбор пары maxSurge/maxUnavailable для Deployment при требуемом минимуме готовых подов, квоте
+description: 'Lead: выбор пары maxSurge/maxUnavailable для Deployment при требуемом минимуме готовых подов, квоте
   пространства имён и окне выкладки. Ключ — исполнением модели контроллера по волнам.
+
+  '

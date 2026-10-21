@@ -1,27 +1,42 @@
 family_id: qa.pytest.vacuous_assert
 title: Всегда истинная проверка в тесте pytest
 direction: qa
-skills: [pytest, python, test_review, false_positive]
-target_grades: [junior]
+skills:
+- pytest
+- python
+- test_review
+- false_positive
+target_grades:
+- junior
 format: find_bug
 language: python
 invariants:
-  code_lines: [11, 11]
-  operations: [6, 6]
+  code_lines:
+  - 11
+  - 11
+  operations:
+  - 6
+  - 6
   defect_type: vacuous_assert
   extra:
-    subtypes: [comma, method, tuple]
+    subtypes:
+    - comma
+    - method
+    - tuple
     contexts: 4
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.8
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.35
-  basis: "11 строк, три теста по одной проверке; дефект локален (одна строка), но требует понять, почему зелёный тест не ловит регрессию; подтип «метод без скобок» труднее запятой и кортежа — σ повышена"
+  basis: Априорная, до калибровки на людях (a = 1,3). 11 строк, три теста по одной проверке; дефект локален (одна
+    строка), но требует понять, почему зелёный тест не ловит регрессию; подтип «метод без скобок» труднее запятой
+    и кортежа — σ повышена
 generator: assessment_bank.families.qa.py_vacuous_assert
 version: 1
-description: >
-  Тестовый модуль pytest из трёх тестов; одна проверка всегда истинна (запятая вместо
-  сравнения, метод без вызова, кортеж в скобках), поэтому регрессия в коде проходит
-  незамеченной. Ключ проверяется исполнением на правильной реализации и на мутанте.
+description: 'Тестовый модуль pytest из трёх тестов; одна проверка всегда истинна (запятая вместо сравнения, метод
+  без вызова, кортеж в скобках), поэтому регрессия в коде проходит незамеченной. Ключ проверяется исполнением на
+  правильной реализации и на мутанте.
+
+  '

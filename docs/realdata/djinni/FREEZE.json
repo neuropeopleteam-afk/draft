@@ -1,0 +1,51 @@
+{
+  "frozen_at": "2026-10-21T11:18:32+00:00",
+  "part": "holdout",
+  "bench_sha256": "f06ae238d62e6d50bf7461b508876dfccaa86ee0e0e20618061ae70845fb5ae3",
+  "vacancy_ids_sha256": "3e1ed97a7768b57cecce15dbd10f0dc30fc0b3698d7bb691727beeda25afc257",
+  "cv_ids_sha256": "51fe419e87ace05682e588cfb75839c363e9195ff44114b83a55ed3c7a6f2e0d",
+  "n_vacancies": 50,
+  "label2": 925,
+  "label1": 1575,
+  "configs": {
+    "B_grade_from_text": {
+      "env": {
+        "MATCH_UNCONFIRMED_BY_CLAIM": "1"
+      },
+      "args": [
+        "--mode",
+        "adapter",
+        "--need-dir",
+        "title",
+        "--need-grade"
+      ]
+    },
+    "A_direction_only": {
+      "env": {},
+      "args": [
+        "--mode",
+        "adapter",
+        "--need-dir",
+        "title"
+      ]
+    }
+  },
+  "main_config": "B_grade_from_text",
+  "main_metric": "ndcg@10",
+  "code": {
+    "split.py": "73df5164cca4380222706d7314590b35ce45aa33f1fcbd4bffbaab51dec609d2",
+    "build.py": "7072cd0aeb78d86695655ffc5d56fd6210ce1478c6f4f6f0fb3a943ba0e19885",
+    "adapter.py": "93fa6c045d8ed26ef59f9ede1af3ba219ccef735d3c88a481dcc00550e118685",
+    "metrics.py": "5c32a47d4f79e6e799c6c63cf3d90a4b00f9e048be55535f8d05523d46ce05d4",
+    "run.py": "fa934620317d5197c6597680770ca5cf7c379628a78b33a3f7863d90abe0fa1f",
+    "final.py": "799065a735cb930f7b2a5673d2856edcd49fc3fdda88455698f124ab2c934a45"
+  },
+  "protocol_sha256": "2f62961f0e7eaccbc61f8ad5bb3ae2c550f32774d88ffc464563f6a726a52bf2",
+  "split_manifest_sha256": "9e35b715cc96c2b435a66e5c8dfdccbabb63771f0288286fc2abc39e94cb611b",
+  "product": {
+    "backend/app/modules/matching": "a2e7dc53ff6009fa0077f00152d89ae2b9173762880a5fdeed228cdc50785e5b",
+    "backend/app/modules/catalog": "cf7ab44532d66d942a4a37738aff9a828c3ac5efdc4596c216e009e0fd473af1",
+    "backend/app/modules/resume": "90c9d3f6d4fb0973a5c4109963c2b1b7f505494c355b64e21e2b681caeaee270",
+    "backend/app/modules/profiles": "3c8fdd98c25b978cb65c5fb43f33fc8db9bdef7d2a93c08df99deba21f6576ba"
+  }
+}

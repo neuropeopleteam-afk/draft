@@ -55,7 +55,8 @@ def test_sample_anonymized_has_no_personal_data() -> None:
     for row in data["sample_records"]:
         assert "152-ФЗ" in (row.get("fio_norm") or "")
         assert row.get("birth_date") is None or "152-ФЗ" in str(row.get("birth_date"))
-        assert len(row.get("key_hash") or "") == 64
+        # с e31b107c хэши в индексе — HMAC с секретом сервера; в образце в git хэша нет вовсе (заглушка)
+        assert row.get("key_hash") == "<hmac-sha256>" and row.get("fio_hash") == "<hmac-sha256>"
         assert row.get("pdf_url", "").startswith("https://fsp-russia.ru/")
 
 

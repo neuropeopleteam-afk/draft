@@ -1,0 +1,37 @@
+family_id: analyst.python.t21_groupby_iter_output
+title: itertools.groupby на несортированном логе — соседние группы и отложенное чтение итераторов
+direction: analyst
+skills:
+- python
+- data_cleaning
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 9
+  - 9
+  extra:
+    runs:
+    - 4
+    - 5
+    rows:
+    - 4
+    - 9
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.2
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проследить groupby по логу
+    из 4–5 кусков с повтором ключа: группы только из соседних строк, словарь перезаписывает значение, сохраняя место
+    ключа, а сохранённые итераторы групп после перехода groupby дальше пусты. Уровень Senior: ленивые итераторы с
+    общим источником и порядок их чтения. Набор t21 (21.10) у порога Senior (b = +1,2)'
+generator: assessment_bank.families.analyst.t21_groupby_iter_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Лог заказов / сессий / обращений / покупок в
+  порядке поступления; цикл по groupby сохраняет первое значение и итератор группы, после цикла печатаются первое
+  значение и сумма (или длина) остатка; предсказать вывод. Ключ — независимая модель в генераторе, проверка —
+  исполнение показанного кода в песочнице Python.'

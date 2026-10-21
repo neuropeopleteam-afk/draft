@@ -1,0 +1,32 @@
+family_id: common.json.t21_json_access_output
+title: JSON-ответ API — вложенные ключи, списки, get и имена типов
+direction: common
+skills:
+- python
+- http
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 5
+  - 5
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо прочитать небольшой
+    JSON-документ после json.loads: вложенный ключ, длина списка, элемент списка по индексу (в том числе -1),
+    d.get(ключ, «—») для отсутствующего ключа или ключа со значением null и имена типов (int, str, float, bool, list,
+    dict, NoneType). Уровень Стажёр: базовый доступ к словарям и спискам с одной ловушкой null → None. Набор t21
+    (21.10) у порога Стажёр (b = −1,6)'
+generator: assessment_bank.families.common.t21_json_access_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Разбор JSON-ответа API (заказ, профиль, тикет,
+  доставка) через json.loads; предсказать вложенные поля, длину списка, результат get и имена типов значений. Ключ
+  — независимая модель по исходному словарю в генераторе, проверка — исполнение показанного кода в песочнице
+  Python.'
