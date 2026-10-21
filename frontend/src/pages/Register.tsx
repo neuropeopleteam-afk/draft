@@ -20,7 +20,7 @@ const DEMO_PRESETS: Record<"candidate" | "employer", { email: string; password: 
     email: "hr.tour@draft-demo.ru",
     password: "DemoPassword2026",
     full_name: "Мария Орлова",
-    company_name: "ООО «Инженерный Контур»",
+    company_name: "Компания «Инженерный Контур»",
   },
 };
 
@@ -222,7 +222,7 @@ export default function Register({ demoPreview = false }: { demoPreview?: boolea
         {role === "employer" ? (
           <div>
             <label className="label" htmlFor="company">Компания</label>
-            <input id="company" className="input" value={form.company_name} onChange={set("company_name")} autoComplete="organization" placeholder="ООО «Пример»" />
+            <input id="company" className="input" value={form.company_name} onChange={set("company_name")} autoComplete="organization" placeholder="Компания «Пример»" />
           </div>
         ) : (
           <div>
