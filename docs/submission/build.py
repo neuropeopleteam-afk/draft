@@ -444,6 +444,7 @@ def main() -> int:
     if a.text:
         return 0
     run([sys.executable, str(HERE / "render_docs.py")])
+    run([sys.executable, str(HERE / "render_readme2.py")])
     pres = ROOT / "docs/presentation/build.mjs"
     if pres.exists():
         run(["node", str(pres)], cwd=str(pres.parent))

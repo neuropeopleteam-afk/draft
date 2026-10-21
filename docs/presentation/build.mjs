@@ -127,12 +127,11 @@ function head(s, x, y, w, text, color = C.white) {
   card(s, 0.45, 1.75, 5.55, 4.55);
   head(s, 0.7, 1.95, 5.0, 'О команде');
   s.addText([
-    ...para([B('Капитан: '), 'Денис Михеев, ', tbd()]),
-    ...para([B('Количество участников: '), tbd()]),
-    ...para([B('Краткое описание: '), 'команда Neuropeople, оператор платформы — команда Neuropeople'], { after: 3 }),
-    ...para(['как образовалась команда: ', tbd()], { indentLevel: 1, after: 3 }),
-    ...para(['место работы / учёбы: ', tbd()], { indentLevel: 1 }),
-    ...para([B('Город и регион: '), tbd()]),
+    ...para([B('Капитан: '), 'Михеев Денис Геннадьевич, генеральный директор NeuroPeople']),
+    ...para([B('Количество участников: '), '2 человека']),
+    ...para([B('Краткое описание: '), 'NeuroPeople делает нейросотрудников — ИИ, который выполняет работу специалиста от начала до конца; первый продукт на рынке — «Ноэма», нейропсихолог'], { after: 3 }),
+    ...para(['место работы участников: NeuroPeople (команда Neuropeople — оператор платформы «Драфт»)'], { indentLevel: 1 }),
+    ...para([B('Город и регион: '), 'Москва']),
   ], { x: 0.7, y: 2.62, w: 5.1, h: 3.5, fontFace: FONT, fontSize: 13.5, color: C.text, margin: 0, valign: 'top' });
 
   card(s, 6.2, 1.75, 6.65, 2.5);
@@ -155,22 +154,22 @@ function head(s, x, y, w, text, color = C.white) {
   const s = base('Участники');
   title(s, 'Участники команды', { size: 26 });
   const TEAM = [
-    { name: 'Денис Михеев', photo: 'team_mikheev.jpg', rows: [['Роль в команде', ['капитан · ', tbd()]], ['Ник в мессенджере', [tbd()]], ['Номер телефона', [tbd()]], ['Место работы / учёбы', [tbd()]]] },
-    { name: 'Дмитрий Кузнецов', photo: 'team_kuznetsov.jpg', rows: [['Роль в команде', ['инженер по качеству и внедрению']], ['Ник в мессенджере', [tbd()]], ['Номер телефона', [tbd()]], ['Место работы / учёбы', [tbd()]]] },
+    { name: 'Михеев Денис Геннадьевич', photo: 'team_mikheev.jpg', rows: [['Роль в команде', ['капитан, руководитель проекта']], ['Ник в мессенджере', ['@den_kot']], ['Номер телефона', ['+7\u00a0926\u00a0725-55-34']], ['Место работы', ['NeuroPeople, генеральный директор']]] },
+    { name: 'Кузнецов Дмитрий', photo: 'team_kuznetsov.jpg', rows: [['Роль в команде', ['инженер по качеству и внедрению']], ['Ник в мессенджере', ['@dmkuznetsoff']], ['Номер телефона', ['+7\u00a0981\u00a0170-19-87']], ['Место работы', ['NeuroPeople']]] },
   ];
   const PH = 1000 / 1070; // высота фото / ширина
   if (TEAM.length <= 2) {
-    const cw = (12.4 - 0.25) / 2, ch = 3.95, y = 1.9;
+    const cw = (12.4 - 0.25) / 2, ch = 4.35, y = 1.8;
     TEAM.forEach((m, i) => {
       const x = 0.45 + i * (cw + 0.25);
       card(s, x, y, cw, ch);
       const pw = 2.9, ph = pw * PH;
       s.addImage({ path: A(m.photo), x: x + 0.25, y: y + 0.25, w: pw, h: ph });
       const tx = x + 0.25 + pw + 0.3, tw = cw - pw - 0.8;
-      s.addText(m.name, { x: tx, y: y + 0.22, w: tw, h: 0.42, fontFace: FONT, fontSize: 18, bold: true, color: C.white, margin: 0, valign: 'top', fit: 'shrink' });
-      s.addShape(pptx.ShapeType.rect, { x: tx, y: y + 0.7, w: 0.42, h: 0.05, fill: { color: C.red }, line: { color: C.red } });
+      s.addText(m.name, { x: tx, y: y + 0.22, w: tw, h: 0.62, fontFace: FONT, fontSize: 16, bold: true, color: C.white, margin: 0, valign: 'top' });
+      s.addShape(pptx.ShapeType.rect, { x: tx, y: y + 0.9, w: 0.42, h: 0.05, fill: { color: C.red }, line: { color: C.red } });
       m.rows.forEach(([lab, val], k) => {
-        const ry = y + 0.9 + k * 0.72;
+        const ry = y + 1.05 + k * 0.8;
         s.addText(lab, { x: tx, y: ry, w: tw, h: 0.26, fontFace: FONT, fontSize: 9.5, color: C.muted, margin: 0, valign: 'top' });
         s.addText(val.map((v) => (typeof v === 'string' ? { text: v } : v)), { x: tx, y: ry + 0.25, w: tw, h: 0.44, fontFace: FONT, fontSize: 12, color: C.white, margin: 0, valign: 'top' });
       });
@@ -196,22 +195,31 @@ function head(s, x, y, w, text, color = C.white) {
   title(s, 'История команды, выбор задачи и сложности', { size: 26 });
   const hr = (y) => s.addShape(pptx.ShapeType.line, { x: 0.45, y, w: 12.4, h: 0, line: { color: C.red, width: 1 } });
   const num = (y, t) => s.addText(t, { x: 11.85, y, w: 1.0, h: 0.4, fontFace: FONT, fontSize: 16, bold: true, color: C.red, margin: 0, align: 'right', valign: 'top' });
-  hr(1.65); num(1.75, '01');
-  s.addText('Краткая история команды', { x: 0.45, y: 1.75, w: 9, h: 0.35, fontFace: FONT, fontSize: 14, bold: true, color: C.white, margin: 0 });
-  s.addText([tbd()], { x: 0.45, y: 2.12, w: 11.2, h: 0.35, fontFace: FONT, fontSize: 12, color: C.text, margin: 0, valign: 'top' });
-  hr(2.62); num(2.72, '02');
-  s.addText('Почему мы выбрали эту задачу', { x: 0.45, y: 2.72, w: 9, h: 0.35, fontFace: FONT, fontSize: 14, bold: true, color: C.white, margin: 0 });
-  s.addText('Найм в ИТ держится на резюме, которые пишут все, а доказательств в них нет. Задача ФСП даёт шанс соединить проверяемые достижения спортсменов с реальным спросом работодателей. Нам была интересна именно «обратная» механика: компания сама приходит к кандидату, чей уровень подтверждён.',
-    { x: 0.45, y: 3.1, w: 11.2, h: 0.75, fontFace: FONT, fontSize: 12, color: C.text, margin: 0, valign: 'top' });
-  hr(3.98); num(4.08, '03');
+  hr(1.6); num(1.68, '01');
+  s.addText('Краткая история команды', { x: 0.45, y: 1.68, w: 9, h: 0.35, fontFace: FONT, fontSize: 14, bold: true, color: C.white, margin: 0 });
+  s.addText('Мы делаем нейросотрудников — ИИ, который берёт работу специалиста целиком. Первый из них, «Ноэма», уже разговаривает с пользователями. Каждый день мы решаем задачу: как проверить, что исполнитель умеет заявленное. В «Драфте» мы решили её для ИТ-найма.',
+    { x: 0.45, y: 2.03, w: 11.3, h: 0.7, fontFace: FONT, fontSize: 11.5, color: C.text, margin: 0, valign: 'top' });
+  hr(2.8); num(2.88, '02');
+  s.addText('Почему мы выбрали эту задачу', { x: 0.45, y: 2.88, w: 9, h: 0.35, fontFace: FONT, fontSize: 14, bold: true, color: C.white, margin: 0 });
+  s.addText('Эту задачу не решить красивым интерфейсом: нужно доказать, что тест измеряет уровень, а подбор находит тех, кто справится. Так мы проверяем и своих нейросотрудников: сможет ли небольшая команда с ними за неделю сделать продукт уровня большой компании.',
+    { x: 0.45, y: 3.23, w: 11.3, h: 0.7, fontFace: FONT, fontSize: 11.5, color: C.text, margin: 0, valign: 'top' });
+  hr(4.0); num(4.08, '03');
   s.addText('Основные сложности и как мы с ними справились', { x: 0.45, y: 4.08, w: 9, h: 0.35, fontFace: FONT, fontSize: 14, bold: true, color: C.white, margin: 0 });
   const ch = [
-    ['Честная проверка качества без людей', 'модельные кандидаты; протокол и хэш данных — до прогона; один прогон на отложенных мирах', C.red],
+    ['Честная проверка качества без людей', 'модельные кандидаты, не люди; протокол и хэш данных — до прогона; один прогон на отложенных мирах', C.red],
     ['Голосовой ИИ-проводник в реальном времени', 'задержки ответа, естественность речи, устный этап теста тем же голосом', C.lav],
     ['Распознавание протоколов ФСП', `в индексе ${fv('fsp_documents') ?? PENDING} официальных протоколов и ${fv('fsp_results') ?? PENDING} результатов спортсменов`, C.ok],
     ['Адаптивный тест с античитом', `видов сигналов честности — ${fv('ac_signals') ?? PENDING}; при подозрении — дополнительная проверка, без автоблокировок`, C.indigo],
+    ['Сильные модели за рубежом, данные — в Москве', 'личные данные вырезаются до отправки', 'FF8A98'],
   ];
-  ch.forEach(([h, b, col], i) => cardText(s, 0.45 + i * 3.13, 4.55, 2.95, 1.72, h, b, { headSize: 12, bodySize: 10.5, accent: col }));
+  const cw4 = (12.4 - 0.15 * 4) / 5;
+  ch.forEach(([h, b, col], i) => {
+    const x = 0.45 + i * (cw4 + 0.15), y = 4.52;
+    card(s, x, y, cw4, 1.82);
+    s.addShape(pptx.ShapeType.rect, { x: x + 0.18, y: y + 0.18, w: 0.42, h: 0.06, fill: { color: col }, line: { color: col } });
+    s.addText(h, { x: x + 0.18, y: y + 0.32, w: cw4 - 0.32, h: 0.62, fontFace: FONT, fontSize: 11, bold: true, color: C.white, margin: 0, valign: 'top' });
+    s.addText(b, { x: x + 0.18, y: y + 0.96, w: cw4 - 0.32, h: 0.8, fontFace: FONT, fontSize: 9.5, color: C.text, margin: 0, valign: 'top' });
+  });
   note(s, 'Цифры — docs/NUMBERS.json: fsp_protocols.index.documents, fsp_protocols.index.results, anticheat.proctoring_signals_total.', { y: 6.42 });
 }
 
