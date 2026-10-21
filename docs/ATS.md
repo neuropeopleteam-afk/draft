@@ -225,7 +225,7 @@ def verify(secret: str, body: bytes, header: str, tolerance_s: int = 300) -> boo
   "schema": "draft.candidate.v1",
   "exported_at": "2026-10-05T15:00:00+00:00",
   "source": {"platform": "Драфт (спецтрек ФСП)", "url": "https://fsp.neuropeople.pro"},
-  "company": {"id": "…", "name": "…", "inn": "<реквизит>"},
+  "company": {"id": "…", "name": "…", "inn": "…"},
   "candidate_ref": "C-7Q2K9M",
   "consent": true,
   "consent_at": "2026-10-05T15:00:00+00:00",

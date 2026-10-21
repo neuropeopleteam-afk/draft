@@ -30,7 +30,7 @@ const has = (...ids) => ids.every((i) => F[i]);
 const pptx = new pptxgen();
 pptx.layout = 'LAYOUT_WIDE'; // 13,333 × 7,5 дюйма
 pptx.author = 'Команда Neuropeople';
-pptx.company = 'команда Neuropeople';
+pptx.company = 'Команда Neuropeople';
 pptx.title = '«Драфт» — найм IT-специалистов с подтверждённым грейдом';
 
 let N = 0;
@@ -130,7 +130,7 @@ function head(s, x, y, w, text, color = C.white) {
     ...para([B('Капитан: '), 'Михеев Денис Геннадьевич, генеральный директор NeuroPeople']),
     ...para([B('Количество участников: '), '2 человека']),
     ...para([B('Краткое описание: '), 'NeuroPeople делает нейросотрудников — ИИ, который выполняет работу специалиста от начала до конца; первый продукт на рынке — «Ноэма», нейропсихолог'], { after: 3 }),
-    ...para(['место работы участников: NeuroPeople (команда Neuropeople — оператор платформы «Драфт»)'], { indentLevel: 1 }),
+    ...para(['место работы участников: NeuroPeople — оператор платформы «Драфт»'], { indentLevel: 1 }),
     ...para([B('Город и регион: '), 'Москва']),
   ], { x: 0.7, y: 2.62, w: 5.1, h: 3.5, fontFace: FONT, fontSize: 13.5, color: C.text, margin: 0, valign: 'top' });
 
@@ -380,7 +380,7 @@ function head(s, x, y, w, text, color = C.white) {
   const ty = 2.25 + 6.65 * 1000 / 2170 + 0.12;
   s.addText([{ text: 'Дмитрий Кузнецов', options: { bold: true, color: C.white } }, { text: '\nинженер по качеству и внедрению', options: { color: C.muted, fontSize: 10.5 } }],
     { x: 6.2, y: ty, w: 3.3, h: 0.7, fontFace: FONT, fontSize: 13, margin: 0, align: 'center', valign: 'top' });
-  s.addText([{ text: 'Денис Михеев', options: { bold: true, color: C.white } }, { text: '\nкапитан, «Neuropeople»', options: { color: C.muted, fontSize: 10.5 } }],
+  s.addText([{ text: 'Денис Михеев', options: { bold: true, color: C.white } }, { text: '\nкапитан, Neuropeople', options: { color: C.muted, fontSize: 10.5 } }],
     { x: 9.55, y: ty, w: 3.3, h: 0.7, fontFace: FONT, fontSize: 13, margin: 0, align: 'center', valign: 'top' });
   s.addText([{ text: 'Проверьте сами: ', options: { color: C.muted } }, { text: `${SITE}/demo`, options: { bold: true, color: C.white, hyperlink: { url: `https://${SITE}/demo` } } }],
     { x: 6.2, y: 6.05, w: 6.65, h: 0.4, fontFace: FONT, fontSize: 14, margin: 0, align: 'center' });
