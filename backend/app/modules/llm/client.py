@@ -524,6 +524,13 @@ def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 12
 
 
 def chat_json(system: str, user: str, **kw) -> LLMResult:
+    if isinstance(user, str) and kw.get("func") in ("resume", "parse_need"):
+        try:
+            from app.modules.assessment import grader as _grader
+
+            user = _grader.sanitize_resume_for_llm(user)["llm_text"]
+        except Exception:  # noqa: BLE001
+            pass
     return chat([{"role": "system", "content": system}, {"role": "user", "content": user}], want_json=True, **kw)
 
 
