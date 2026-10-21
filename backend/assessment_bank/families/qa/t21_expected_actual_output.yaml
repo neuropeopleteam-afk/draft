@@ -1,0 +1,26 @@
+family_id: qa.asserts.t21_expected_actual_output
+title: Сверка ожидаемых и фактических кодов ответа — цикл по индексам
+direction: qa
+skills:
+- python
+- testing
+- http
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл for по range(len()) с if и счётчиком: напечатать индексы и фактические коды расхождений в списках из 4–6 элементов и их число; ловушка — индекс с нуля, а не номер шага. Уровень Стажёра: цикл со счётчиком и индексы. Набор t21 (21.10) у порога Стажёра (b = −1,9)'
+generator: assessment_bank.families.qa.t21_expected_actual_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). API-тест сверяет ожидаемые коды ответа с фактическими по шагам; предсказать вывод расхождений. Ключ — независимое сравнение в генераторе, проверка — исполнение показанного кода в песочнице Python.'

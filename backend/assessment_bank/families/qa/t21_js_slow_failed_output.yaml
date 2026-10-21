@@ -1,0 +1,26 @@
+family_id: qa.reports.t21_js_slow_failed_output
+title: Медленные и упавшие тесты — filter, map и reduce с деструктуризацией (JavaScript)
+direction: qa
+skills:
+- javascript
+- testing
+target_grades:
+- intern
+- junior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 9
+  - 10
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.05
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две конструкции вместе: filter/map с деструктуризацией параметров и filter/reduce с начальным значением по массиву из 4–5 объектов; ловушки — строгое сравнение с порогом (время ровно на пороге), фильтр по !ok. Уровень Junior. Набор t21 (21.10) у порога Junior (b = −1,05)'
+generator: assessment_bank.families.qa.t21_js_slow_failed_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Результаты прогона в массиве объектов: программа на JavaScript выбирает медленные тесты и суммирует время упавших; предсказать вывод. Ключ — независимая модель в генераторе, проверка — исполнение показанного кода в Node.js.'
