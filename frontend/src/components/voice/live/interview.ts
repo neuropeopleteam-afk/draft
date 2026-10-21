@@ -1,11 +1,13 @@
 // Устная защита «как по видеосвязи»: микрофон включается один раз в начале разговора, вопросы звучат голосом
-// интервьюера (потоком, первый звук ≈ 1 с), ответ уходит сам, когда кандидат договорил (пауза ~2 с, «я закончил» — сразу).
-// Можно перебить вопрос и начать отвечать; «повторите вопрос» — повтор без отправки ответа.
+// интервьюера (потоком, первый звук ≈ 1 с), ответ уходит сам, когда кандидат договорил: законченная мысль — 2,2 с тишины,
+// иначе 3,5 с, оборванная на «потому что» — 5 с; «я закончил» словами или кнопкой — сразу.
+// Пока звучит вопрос, микрофон закрыт (решение владельца 21.10): вопрос не перебивается эхом и случайными словами,
+// после вопроса — 0,4 с тишины на хвост эха. «Повторите вопрос» — повтор без отправки ответа.
 // Пока ответ записывается, звучит короткое «Спасибо.» — без мёртвой тишины.
 import { apiUrl } from "../../../lib/api";
 import type { AnamHandle } from "../AnamAvatar";
 import { LiveListener, liveSttSupported, type MicState, type SttEvent } from "./listener";
-import { SpeechBuffer, bargeIn, endDelay, isEcho, stripEndMarker, words } from "./turns";
+import { SpeechBuffer, endDelay, isEcho, stripEndMarker, words } from "./turns";
 import { Voice } from "./voice";
 import { fetchPhrasePcm } from "./decode";
 
@@ -46,6 +48,7 @@ export class LiveInterview {
   private firstAsk = true;
   private fillerN = 0;
   private fillers = new Map<string, Promise<Uint8Array | null>>();
+  private quietUntil = 0;   // после вопроса — хвост эха не считаем ответом
 
   constructor(private d: LiveInterviewDeps) {
     this.voice = new Voice(d.avatar);
@@ -113,6 +116,8 @@ export class LiveInterview {
       await this.voice.say(question, r.body, RATE);
     } catch { /* голос недоступен — текст вопроса открывается ссылкой, слушаем ответ */ }
     if (my !== this.asking || this.closed) return;
+    this.quietUntil = performance.now() + 400;
+    this.buf.reset();
     this.set({ phase: "listening" });
   }
 
@@ -136,15 +141,8 @@ export class LiveInterview {
       const text = e.text.trim();
       if (!text) return;
       const her = this.voice.echoText();
-      if (this.voice.speaking()) {
-        const heard = (this.buf.read() + " " + text).trim();
-        if (!bargeIn(heard, her, this.voice.sinceStart(), 3)) return;
-        this.asking++;          // вопрос перебили — дальше слушаем ответ
-        this.voice.stop();
-        this.set({ phase: "listening" });
-      } else if (her && isEcho(text, her)) {
-        return;
-      }
+      if (this.view.phase === "speaking" || this.voice.speaking() || performance.now() < this.quietUntil) return;   // микрофон закрыт
+      if (her && isEcho(text, her)) return;
       if (this.buf.accept(e)) {
         if (!this.view.talking) this.set({ talking: true, phase: "listening" });
         window.clearTimeout(this.endTimer);
@@ -195,6 +193,17 @@ export class LiveInterview {
     if (!ok && !this.closed) { this.busy = false; this.set({ phase: "listening" }); }
     // принят — следующий вопрос придёт с обновлением сессии (ask), до тех пор микрофон молчит
   }
+
+  /** Кнопка «Я закончил»: отправить то, что уже сказано, не дожидаясь паузы. false — отправлять нечего. */
+  finishNow(): boolean {
+    if (this.closed || this.busy || !this.buf.read()) return false;
+    window.clearTimeout(this.endTimer);
+    this.endTimer = 0;
+    void this.submit();
+    return true;
+  }
+
+  hasSpeech(): boolean { return !!this.buf.read(); }
 
   stop() {
     if (this.closed) return;

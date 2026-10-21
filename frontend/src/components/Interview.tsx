@@ -388,7 +388,7 @@ const READ_MS = (q: string) => Math.max(1200, Math.min(4000, q.length * 35));
 
 const LIVE_HINT: Record<string, string> = {
   starting: "Включаю микрофон…",
-  speaking: "Интервьюер говорит — можно перебить и сразу отвечать",
+  speaking: "Интервьюер задаёт вопрос — микрофон включится, когда он договорит",
   listening: "Отвечайте голосом — я слушаю",
   talking: "Слушаю…",
   thinking: "Записываю ответ…",
@@ -396,7 +396,7 @@ const LIVE_HINT: Record<string, string> = {
 };
 
 /** Живой микрофон устной защиты: включён весь разговор, кольцо — громкость голоса, нажатие — выключить/включить. */
-function LiveMic({ view, level, onToggle }: { view: LiveView; level: () => number; onToggle: () => void }) {
+function LiveMic({ view, level, onToggle, onDone }: { view: LiveView; level: () => number; onToggle: () => void; onDone?: () => void }) {
   const ring = useRef<HTMLSpanElement | null>(null);
   useEffect(() => {
     let raf = 0;
@@ -422,6 +422,11 @@ function LiveMic({ view, level, onToggle }: { view: LiveView; level: () => numbe
         </svg>
       </button>
       <p className="text-sm text-brand-ink/75" aria-live="polite" data-testid="iv-live-hint">{hint}</p>
+      {onDone && view.talking && view.phase === "listening" && (
+        <button type="button" onClick={onDone} className="btn-primary !py-1.5 !px-4 text-sm" data-testid="iv-live-done">
+          Я закончил — отправить ответ
+        </button>
+      )}
     </div>
   );
 }
@@ -682,7 +687,7 @@ export function InterviewRoom() {
       {note && <p className="text-sm text-brand-ink/75" role="status">{note}</p>}
       {s.status === "created" && c && (
         <section className="card space-y-3" aria-label="Начало разговора">
-          <p className="text-sm text-brand-ink/80">До {s.max_questions} вопросов, около {s.minutes} минут. Отвечайте своими словами — так же, как писали в тесте.{c.channels.voice && c.channels.stt ? (!isWebdriver && liveInterviewSupported() ? " Голосом — как по видеосвязи: микрофон включится один раз, просто отвечайте вслух; замолчите на ~2 с — ответ уйдёт сам; можно и текстом в чате" : " Голосом — одна кнопка «Ответить»: замолчите на ~2 с, и ответ отправится сам; или текстом в чате") : c.channels.stt ? " Отвечать можно голосом («нажми и говори», текст можно поправить перед отправкой) или текстом" : " Отвечать — текстом"}; закончить — в любой момент.</p>
+          <p className="text-sm text-brand-ink/80">До {s.max_questions} вопросов, около {s.minutes} минут. Отвечайте своими словами — так же, как писали в тесте.{c.channels.voice && c.channels.stt ? (!isWebdriver && liveInterviewSupported() ? " Голосом — как по видеосвязи: микрофон включится один раз, пока звучит вопрос — он закрыт; отвечайте вслух, договорите и помолчите пару секунд — ответ уйдёт сам, или нажмите «Я закончил»; можно и текстом в чате" : " Голосом — одна кнопка «Ответить»: замолчите на ~2 с, и ответ отправится сам; или текстом в чате") : c.channels.stt ? " Отвечать можно голосом («нажми и говори», текст можно поправить перед отправкой) или текстом" : " Отвечать — текстом"}; закончить — в любой момент.</p>
           <div className="flex flex-wrap items-center gap-3">
             <button className="btn-primary" disabled={busy} onClick={() => begin(c.channels.voice ? "voice" : "text")}
               data-testid={c.channels.voice ? "iv-begin-voice" : "iv-begin-text"}>Начать разговор</button>
@@ -708,7 +713,7 @@ export function InterviewRoom() {
             {c.context && <p className="line-clamp-3 border-t border-brand-night/10 pt-2 text-xs text-brand-ink/75" data-testid="iv-context">Ваш письменный ответ в тесте: «{c.context}»</p>}
           </div>
           <div className="flex justify-center">
-            {lview ? <LiveMic view={lview} level={() => lv.current?.micLevel() ?? 0} onToggle={() => lv.current?.toggleMute()} /> :
+            {lview ? <LiveMic view={lview} level={() => lv.current?.micLevel() ?? 0} onToggle={() => lv.current?.toggleMute()} onDone={() => { lv.current?.finishNow(); }} /> :
             <VoiceAnswerButton testId="iv-record" disabled={busy} maxSeconds={90} silenceMs={3500}
               autoStartKey={autoListenKey}
               transcribe={(b) => postAudio(`/interview/sessions/${id}/transcribe`, b)}

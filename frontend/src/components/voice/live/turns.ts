@@ -88,7 +88,9 @@ export function endDelay(text: string, mode: "guide" | "answer" = "guide"): numb
     // незаконченная мысль («потому что», «и») — 5 с (разбор 21.10: при 1,9 с ответы уходили обрубками)
     if (END_MARKERS.test(t)) return 250;
     if (UNFINISHED.test(t)) return 5000;
-    return n < 4 ? 3500 : 3500;
+    // законченная мысль: распознавание поставило точку или вопрос, ответ развёрнутый — 2,2 с; иначе 3,5 с
+    if (n >= 12 && /[.!?…]$/.test(text.trim())) return 2200;
+    return 3500;
   }
   if (UNFINISHED.test(t)) return 1500;
   if (/[?]$/.test(t)) return 200;

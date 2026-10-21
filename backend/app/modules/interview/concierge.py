@@ -41,6 +41,9 @@ ROLES = ("all", "candidate", "employer", "fsp")
 
 TTS_HOST = "api.elevenlabs.io"
 TTS_MODEL = os.environ.get("CONCIERGE_TTS_MODEL", "eleven_turbo_v2_5")
+# Живые ответы модели (каждый раз новый текст, в кэш не идут): быстрая модель того же голоса — первый звук 0,6 с вместо
+# 1,3 с (замер 21.10 через ретранслятор). Реплики обзора и фразы сценария — прежней моделью из кэша (без пересинтеза).
+TTS_LIVE_MODEL = os.environ.get("CONCIERGE_TTS_LIVE_MODEL", "eleven_flash_v2_5")
 TTS_SPEED = float(os.environ.get("CONCIERGE_TTS_SPEED", "1.0"))
 # Лицо Насти (живой аватар). Экспериментальная «манера» (customStylePrompt) по опыту соседних живых стендов портит
 # движение губ, поэтому по умолчанию выключена; выразительность низкая, как у работающих стендов (0,09–0,35):
@@ -152,12 +155,32 @@ class TtsError(RuntimeError):
     pass
 
 
-def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
-    """Голос фразы кусками по мере синтеза; постоянные фразы — из кэша. Куски PCM всегда чётной длины."""
+_TTS_POOL: dict = {}
+_TTS_LOCK = threading.Lock()
+
+
+def _tts_client(verify):
+    """Один клиент на процесс (на каждый способ проверки сертификата): соединение с ретранслятором переиспользуется —
+    без рукопожатия TLS на каждой фразе (≈0,15–0,3 с на фразу)."""
+    import httpx
+
+    key = verify if isinstance(verify, (str, bool)) else "ctx"
+    with _TTS_LOCK:
+        c = _TTS_POOL.get(key)
+        if c is None:
+            c = httpx.Client(timeout=httpx.Timeout(25.0, connect=6.0), verify=verify,
+                             limits=httpx.Limits(max_connections=16, max_keepalive_connections=8, keepalive_expiry=90))
+            _TTS_POOL[key] = c
+        return c
+
+
+def synth_stream(text: str, fmt: str = "pcm24", live: bool = False) -> Iterator[bytes]:
+    """Голос фразы кусками по мере синтеза; постоянные фразы — из кэша. Куски PCM всегда чётной длины.
+    live — живой ответ модели: быстрая модель синтеза, без кэша (текст не повторится, диск не засоряем)."""
     clean = _clean(text)
     if not clean:
         return
-    hit = cached(clean, fmt)
+    hit = None if live else cached(clean, fmt)
     if hit:
         step = 19200
         for i in range(0, len(hit), step):
@@ -175,7 +198,7 @@ def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
     r = relay.route(TTS_HOST, path, {"xi-api-key": key, "Content-Type": "application/json", "Accept": "*/*"})
     body = {
         "text": clean,
-        "model_id": TTS_MODEL,
+        "model_id": TTS_LIVE_MODEL if live else TTS_MODEL,
         "language_code": "ru",
         "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "style": 0.0, "use_speaker_boost": True,
                            "speed": TTS_SPEED},
@@ -186,7 +209,8 @@ def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
     tail = b""
     t0 = time.monotonic()
     try:
-        with httpx.Client(timeout=httpx.Timeout(25.0, connect=6.0), verify=r.verify) as c:
+        c = _tts_client(r.verify)
+        if True:
             with c.stream("POST", r.url, headers=r.headers, json=body) as resp:
                 if resp.status_code >= 400:
                     raise TtsError(f"tts_http_{resp.status_code}")
@@ -218,8 +242,10 @@ def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
         raise
     except Exception as e:  # noqa: BLE001 — сеть, ретранслятор
         raise TtsError(type(e).__name__) from e
-    log.info("concierge tts %s: %d байт за %d мс", fmt, len(whole), int((time.monotonic() - t0) * 1000))
-    _store(clean, fmt, bytes(whole))
+    log.info("concierge tts %s%s: %d байт за %d мс", fmt, " live" if live else "", len(whole),
+             int((time.monotonic() - t0) * 1000))
+    if not live:
+        _store(clean, fmt, bytes(whole))
 
 
 def synth_bytes(text: str, fmt: str = "pcm24") -> bytes:
@@ -313,14 +339,15 @@ PHRASES: dict[str, str] = {
     "skip_public": "Хорошо, тогда дальше — раздел для технического жюри.",
     "skip_end": "Хорошо. Это был последний раздел. Спрашивайте или скажите, что показать.",
     "done_all": "Это главное о «Драфте». Спрашивайте о чём угодно или скажите, что показать подробнее.",
-    "done_candidate": "Это весь кабинет кандидата — от регистрации до приглашений. Могу показать любой экран подробнее, "
-                      "рассказать про сторону работодателя или ответить на вопросы.",
-    "done_employer": "Это весь кабинет работодателя. Могу показать любой экран подробнее, рассказать путь кандидата "
-                     "или ответить на вопросы.",
-    "done_fsp": "Это весь кабинет Федерации. Могу показать подробнее любой экран, сторону кандидата или работодателя — или ответить на вопросы.",
+    "done_candidate": "Это главное в кабинете кандидата. Кубки, сообщения, тройки, мои данные и настройки покажу по "
+                      "просьбе — просто назовите. Или расскажу про сторону работодателя.",
+    "done_employer": "Это главное в кабинете работодателя. Команду, сообщения, тройки, кубки и ATS покажу по просьбе — "
+                     "просто назовите. Или расскажу путь кандидата.",
+    "done_fsp": "Это главное в кабинете Федерации. Воронку, кубки, выгоду и методику покажу по просьбе — просто назовите. "
+                "Или покажу сторону кандидата или работодателя.",
     "hello": "Здравствуйте. Как к вам обращаться?",
     "ask_role": "Подскажите, кто вы: кандидат, работодатель или Федерация? Покажу именно ваш кабинет — "
-                "начнём с регистрации и пройдём по всем разделам.",
+                "главное за несколько минут.",
     "nomic": "Здравствуйте. Я Настя, ИИ-проводник по «Драфту». Микрофон недоступен, поэтому я просто проведу вас по сайту.",
 }
 
@@ -630,10 +657,51 @@ STEP_BEATS: dict[str, list[str]] = {
 
 STEP_IDS = tuple(STEP_BEATS.keys())
 
+# Показ для жюри на 2 минуты (питч 24.10, текст — «Аватар — показ для жюри 2 минуты, текст по экранам»). Отдельный
+# маршрут «pitch»: в STEP_IDS не входит (модель туда не ведёт), реплики заранее озвучиваются и кэшируются.
+# Цифры — без точных чисел, которые меняет волна 2б (спортсменов — «больше двух тысяч»).
+PITCH_BEATS: dict[str, list[str]] = {
+    "pitch-qr": [
+        "Здравствуйте. Я Настя, ИИ-проводник «Драфта».",
+        "Наведите камеру телефона на QR-код: пока я показываю платформу, вы пройдёте мини-тест из трёх заданий, "
+        "а в конце увидим вас в подборке работодателя.",
+    ],
+    "pitch-needs": ["Компания просто вставляет текст вакансии."],
+    "pitch-need": [
+        "Разбираю требования: стек выделен с цитатами из текста, дискриминационные формулировки убраны.",
+        "И сразу — подборка: у каждого видно, почему он подходит и чем подтверждён навык — тестом, задачей или "
+        "протоколом ФСП.",
+    ],
+    "pitch-compare": [
+        "ИИ-советник руководителя: первым — тот, у кого все обязательные навыки подтверждены тестом.",
+        "И подсказывает, о чём спросить на финальном созвоне.",
+    ],
+    "pitch-red": [
+        "Проверим честность подбора: меняю у всех кандидатов имя, пол и возраст.",
+        "Выдача не изменилась — подбор смотрит только на подтверждённые навыки.",
+    ],
+    "pitch-defense": [
+        "Теперь сторона кандидата. Грейд подтверждает адаптивный тест: каждое задание подбирается по прошлым ответам.",
+        "Спорный результат — три минуты устной защиты с ИИ-интервьюером по ответам самого кандидата: дополнительная "
+        "проверка, что он сам понимает свои решения.",
+    ],
+    "pitch-fsp": [
+        "Для Федерации спортивного программирования — таланты по официальным протоколам соревнований: больше двух "
+        "тысяч спортсменов.",
+        "А спортивный разряд переводится в понятный работодателю ИТ-грейд.",
+    ],
+    "pitch-final": [
+        "А вот и зал: результаты мини-теста сразу попадают в подборку работодателя, а участникам приходит "
+        "приглашение с зарплатной вилкой.",
+        "Грейд подтверждён — компании приходят сами.",
+    ],
+}
+
 
 def beats() -> dict[str, list[str]]:
     out = {k: list(v) for k, v in STEP_BEATS.items()}
     out["val-arena"] = [*STEP_BEATS["val-arena"], *_arena_lines()]
+    out.update({k: list(v) for k, v in PITCH_BEATS.items()})
     return out
 
 
@@ -1723,7 +1791,7 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
 
             def tts_job(text: str, cq: queue.Queue) -> None:
                 try:
-                    for chunk in synth_stream(text, "pcm24"):
+                    for chunk in synth_stream(text, "pcm24", live=True):
                         cq.put(("pcm", chunk))
                 except TtsError as e:
                     cq.put(("err", str(e)))

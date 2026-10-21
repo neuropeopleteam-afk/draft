@@ -115,7 +115,7 @@ class Splitter:
                     break
             if m is None:
                 if self.n == 0 and len(self.buf) > self.first_cut:
-                    cut = self.buf.rfind(", ", 40, self.first_cut + 30)
+                    cut = self.buf.rfind(", ", 28, self.first_cut + 30)
                     if cut > 0:
                         out.append(self.buf[:cut + 1].strip())
                         self.buf = self.buf[cut + 2:]
