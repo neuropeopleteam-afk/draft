@@ -138,81 +138,124 @@ export function getDemoCapabilityCards(searchParams?: URLSearchParams): Capabili
   return cards;
 }
 
+const STEPS_3MIN: {
+  step: string;
+  role: string;
+  title: string;
+  whatYouSee: string;
+  label: string;
+  persona: Persona;
+  to: string;
+  testid: string;
+}[] = [
+  {
+    step: "Шаг 1 · 1 минута",
+    role: "Работодатель",
+    title: "Подборка проверенных инженеров под задачу",
+    whatYouSee: "Что увидите: разбор текста вакансии, ранжированный список кандидатов с объяснением по каждому требованию и отправку оффера с зарплатной вилкой.",
+    label: "1. Открыть подборку работодателя →",
+    persona: "employer",
+    to: "/employer/needs",
+    testid: "step3m-1",
+  },
+  {
+    step: "Шаг 2 · 1 минута",
+    role: "Кандидат",
+    title: "Практический тест на грейд и цифровой паспорт",
+    whatYouSee: "Что увидите: индивидуальный вариант задач у порога грейда, контроль самостоятельности решения и цифровой паспорт подтверждённого уровня.",
+    label: "2. Пройти пробный тест кандидата →",
+    persona: "candidate_new",
+    to: "/candidate/express",
+    testid: "step3m-2",
+  },
+  {
+    step: "Шаг 3 · 1 минута",
+    role: "Федерация ФСП",
+    title: "Аналитика регионов, кубки и проверка протоколов",
+    whatYouSee: "Что увидите: карту спроса компаний по регионам, верификацию спортивных достижений по официальным протоколам ФСП и отборочные кубки.",
+    label: "3. Открыть кабинет ФСП →",
+    persona: "fsp",
+    to: "/fsp",
+    testid: "step3m-3",
+  },
+];
+
 const CRITERIA_3MIN: {
   id: string;
   weight: string;
   title: string;
   summary: string;
+  hint: string;
   actions: ActionItem[];
 }[] = [
   {
     id: "c1",
     weight: "35 %",
     title: "1. Новая механика подбора и выхода на контакт",
-    summary: "Работодатель описывает задачу своими словами → разбор с цитатами и фильтром ст. 64 ТК РФ → ранжированная подборка по доказанным навыкам (тест + ФСП) с объяснением «почему он здесь» → приглашение с обязательной вилкой.",
+    summary: "Что увидите: готовую подборку кандидатов по тексту вакансии с объяснением «почему подходит» и отправкой приглашения с обязательной вилкой в рублях.",
+    hint: "Как считается: разбор требований с фильтром ст. 64 ТК РФ и ранжирование по подтверждённому грейду, стеку и достижениям ФСП.",
     actions: [
-      { label: "Открыть подборку и объяснение (1 клик)", persona: "employer", to: "/employer/needs", testid: "c3m-matching", primary: true },
-      { label: "Проверить на своём наборе пар", to: "#demo-custom-bench", testid: "c3m-bench" },
+      { label: "Открыть подборку работодателя", persona: "employer", to: "/employer/needs", testid: "c3m-matching", primary: true },
     ],
   },
   {
     id: "c2",
     weight: "25 %",
     title: "2. Тестирование, валидация и категоризация",
-    summary: `Банк ${NUMBERS.bank.families.toLocaleString("ru-RU")} семейств заданий с параметрической генерацией вариантов, адаптивный тест с подтверждением заявленного грейда, защита от утечки заданий и промпт-инъекций.`,
+    summary: `Что увидите: адаптивный тест из банка на ${NUMBERS.bank.families.toLocaleString("ru-RU")} семейств задач с защитой от списывания и присвоением категории «направление · грейд».`,
+    hint: "Как считается: адаптивный подбор заданий у порога заявленного грейда с последовательным правилом останова и защитой от утечки.",
     actions: [
-      { label: "Пройти экспресс-тест (1 клик)", persona: "candidate_new", to: "/candidate/express", testid: "c3m-test", primary: true },
-      { label: "Протоколы валидации и античит", to: "/validation", testid: "c3m-validation" },
+      { label: "Пройти экспресс-тест кандидата", persona: "candidate_new", to: "/candidate/express", testid: "c3m-test", primary: true },
     ],
   },
   {
     id: "c3",
     weight: "10 %",
     title: "3. Понятность и удобство интерфейса",
-    summary: "Изолированные продуктовые кабинеты работодателя (B2B ядро), кандидата и ФСП без перегруза, 1 клик до целевого действия, контраст WCAG AA, адаптив 360 / 768 / 1280 px.",
+    summary: "Что увидите: чистые рабочие кабинеты работодателя, кандидата и ФСП с переходом к главному действию в один клик на телефоне и компьютере.",
+    hint: "Как устроено: раздельные продуктовые кабинеты по ролям, высокий контраст текста и адаптивная вёрстка 360 / 768 / 1280 пикселей.",
     actions: [
-      { label: "Кабинет работодателя", persona: "employer", to: "/employer", testid: "c3m-ui-emp", primary: true },
-      { label: "Кабинет кандидата и карта навыков", persona: "candidate", to: "/candidate/feedback", testid: "c3m-ui-cand" },
+      { label: "Открыть кабинет работодателя", persona: "employer", to: "/employer", testid: "c3m-ui-emp", primary: true },
     ],
   },
   {
     id: "c4",
     weight: "7 %",
     title: "4. Техническая проработка и архитектура",
-    summary: "Полная спецификация OpenAPI со строгой матрицей прав доступа по ролям, криптопаспорт грейда с асимметричной подписью Ed25519 (JWKS), устойчивая дозагрузка модулей.",
+    summary: "Что увидите: интерактивную схему сервисов под нагрузкой, строгую изоляцию ролей и проверку цифровой подписи паспорта навыков.",
+    hint: "Как устроено: полная спецификация программного интерфейса, матрица прав доступа и асимметричная цифровая подпись паспорта грейда.",
     actions: [
-      { label: "Боевой ИИ-Полигон (архитектура вживую)", to: "/demo/warroom", testid: "c3m-warroom", primary: true },
-      { label: "Спецификация OpenAPI / Swagger", to: "/api/docs", testid: "c3m-openapi" },
+      { label: "Открыть стенд архитектуры", to: "/demo/warroom", testid: "c3m-warroom", primary: true },
     ],
   },
   {
     id: "c5",
     weight: "6 %",
     title: "5. Полнота реализации и документация",
-    summary: "Все обязательные этапы пути кандидата и работодателя, корректная работа профиля без истории ФСП (без штрафа), управление согласиями и выгрузка данных по 152-ФЗ, кабинет методиста.",
+    summary: "Что увидите: профиль кандидата без соревновательной истории ФСП, который честно ранжируется по результатам теста без занижения позиции.",
+    hint: "Как считается: при отсутствии записей ФСП вес спортивного контура перераспределяется в пользу практического теста без штрафа кандидату.",
     actions: [
-      { label: "Кандидат без истории ФСП", persona: "candidate_nofsp", to: "/candidate/invitations", testid: "c3m-nofsp", primary: true },
-      { label: "Карта соответствия ТЗ", to: "#demo-tz-map", testid: "c3m-tzmap" },
+      { label: "Открыть профиль без истории ФСП", persona: "candidate_nofsp", to: "/candidate/invitations", testid: "c3m-nofsp", primary: true },
     ],
   },
   {
     id: "c6",
     weight: "7 %",
     title: "6. Дополнительный функционал",
-    summary: "Самостоятельный отклик на вакансии, регулярные задания с автопроверкой и Кубки, защита от фиктивных вакансий, живая интеграция с ATS «Поток», мобильное приложение RuStore, трёхсторонняя связь с ФСП.",
+    summary: "Что увидите: прямую передачу согласованного кандидата в кадровую систему компании, кубки работодателей и трёхсторонний диалог с ФСП.",
+    hint: "Как устроено: двухсторонняя синхронизация статусов с кадровыми системами «Поток Рекрутмент», Хантфлоу и Talantix.",
     actions: [
-      { label: "Живая передача в ATS «Поток»", persona: "employer", to: "/employer/ats", testid: "c3m-ats", primary: true },
-      { label: "Трёхсторонняя связь с ФСП", persona: "employer", to: "/employer/trio", testid: "c3m-trio" },
+      { label: "Проверить передачу в кадровую систему", persona: "employer", to: "/employer/ats", testid: "c3m-ats", primary: true },
     ],
   },
   {
     id: "c7",
     weight: "10 %",
     title: "7. Живая демонстрация для питча",
-    summary: "QR-код на экране зала → эксперты жюри со своих телефонов без регистрации проходят 3-минутный мини-тест → на большом экране в реальном времени распределение уровней и сигналы античита.",
+    summary: "Что увидите: экран зала с QR-кодом, где участники с телефонов проходят мини-тест за 3 минуты и сразу появляются в подборке.",
+    hint: "Как устроено: мгновенная гостевая сессия по QR-коду с обновлением табло зала в реальном времени.",
     actions: [
-      { label: "Открыть Живой зал с QR (/demo/live)", to: "/demo/live", testid: "c3m-live", primary: true },
-      { label: "Подробная сверка по разделу 6 ТЗ", to: "/demo/criteria", testid: "c3m-criteria" },
+      { label: "Открыть Живой зал с QR-кодом", to: "/demo/live", testid: "c3m-live", primary: true },
     ],
   },
 ];
@@ -227,7 +270,7 @@ const TZ_MAP: {
       { req: "Регистрация с кодом подтверждения и согласием 152-ФЗ", impl: "Почта + 6-значный код + вход через ФСП ID (безопасный демо-показ без записи в БД)", persona: null, to: "/demo/register" },
       { req: "Первичный опрос, стек и загрузка резюме (PDF)", impl: "Разбор стека + локальное обезличивание ФИО", persona: "candidate", to: "/candidate/profile" },
       { req: "Адаптивное тестирование и защита от утечки заданий", impl: `Индивидуальные варианты из ${NUMBERS.bank.families.toLocaleString("ru-RU")} семейств + адаптивный отбор`, persona: "candidate_new", to: "/candidate/express" },
-      { req: "Присвоение категории «направление · грейд» и статус", impl: "Подтверждён / нужен доп. этап / не подтверждён + паспорт Ed25519", persona: "candidate", to: "/candidate/category" },
+      { req: "Присвоение категории «направление · грейд» и статус", impl: "Подтверждён / нужен доп. этап / не подтверждён + защищённый цифровой паспорт", persona: "candidate", to: "/candidate/category" },
       { req: "Обратная связь и карта навыков без раскрытия ключей", impl: "Профиль тем относительно грейда и спроса рынка", persona: "candidate", to: "/candidate/feedback" },
       { req: "Профиль кандидата без истории ФСП (без занижения)", impl: "Кандидат Илья Сергеев ранжируется по тесту без штрафа", persona: "candidate_nofsp", to: "/candidate/invitations" },
     ],
@@ -254,8 +297,8 @@ const TZ_MAP: {
       { req: "Самостоятельный отклик на открытые вакансии", impl: "Публикация вакансий работодателем и отклик кандидата", persona: "candidate", to: "/candidate/vacancies" },
       { req: "Регулярные короткие задания и Кубки работодателей", impl: "Задания с рубрикой 70/30 и турниры на 3–5 задач", persona: "employer", to: "/employer/assignments" },
       { req: "Защита от фиктивных вакансий и сомнительных компаний", impl: "Индекс доверия (ЕГРЮЛ, домен почты, вилка в рынке) + жалобы", persona: "candidate", to: "/candidate/invitations" },
-      { req: "Интеграция с внешними ATS (Поток, Хантфлоу, Talantix)", impl: "Прямая передача профиля и обратная синхронизация этапов", persona: "employer", to: "/employer/ats" },
-      { req: "Мобильная версия, PWA и подписанный Android-пакет RuStore", impl: "Адаптив 360px + установка в 1 клик + APK с цифровой подписью", persona: null, to: "/install" },
+      { req: "Интеграция с внешними кадровыми системами (Поток, Хантфлоу, Talantix)", impl: "Прямая передача профиля и обратная синхронизация этапов", persona: "employer", to: "/employer/ats" },
+      { req: "Мобильная версия, веб-приложение и пакет для Android (RuStore)", impl: "Адаптив 360px + установка в 1 клик + пакет с цифровой подписью", persona: null, to: "/install" },
       { req: "Кабинет ФСП, методиста и трёхсторонняя связь", impl: "Агрегированная аналитика (K≥5), польза для ФСП, канал 3 сторон", persona: "fsp", to: "/fsp" },
     ],
   },
@@ -430,103 +473,159 @@ export default function DemoHub() {
             Демо для жюри · <span className="np-grad">Экспертиза ФСП</span>
           </h1>
         </div>
-        <p className="mt-4 max-w-3xl text-base leading-relaxed np-muted md:text-lg">
-          Основная платформа работает как чистый коммерческий продукт для работодателей, кандидатов и ФСП. Все инструменты конкурсной приёмки — быстрый проход по 7 критериям ТЗ за 3 минуты, переключение демо-ролей в 1 клик, карта соответствия ТЗ, Боевой ИИ-Полигон и стенд атак — собраны здесь.
+        <p className="mt-4 max-w-3xl text-base leading-relaxed np-muted md:text-lg" data-testid="demo-h1-lead">
+          Это единый экран конкурсной проверки: здесь можно без регистрации войти в любую демо-роль за один клик, за 3 минуты проверить работу подбора, тестирования и аналитики ФСП и сверить все пункты технического задания.
         </p>
         {err && <p className="mt-4 text-sm np-risk" role="alert">{err}</p>}
 
-        {/* P0: Проверьте нас за 3 минуты по 7 критериям ТЗ (35/25/10/7/6/7/10 %) */}
+        {/* Как проверить нас за 3 минуты — 3 простых шага с одной кнопкой на шаг */}
+        <section id="demo-3steps" className="mt-8" aria-labelledby="demo-3steps-t" data-testid="demo-3steps">
+          <div className="np-glass np-glass-accent p-5 sm:p-7">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="np-eyebrow">Быстрый обзор своими руками · 3 ключевых экрана</p>
+                <h2 id="demo-3steps-t" className="mt-1 text-2xl font-extrabold tracking-tight np-text md:text-3xl">
+                  Экспресс-знакомство за 3 минуты (3 роли без проводника)
+                </h2>
+              </div>
+              <span className="np-chip">Вход в 1 клик · ниже — пошаговый проводник на 12 минут</span>
+            </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {STEPS_3MIN.map((s) => (
+                <article
+                  key={s.testid}
+                  className="np-card flex flex-col justify-between p-5"
+                  data-testid={`card-${s.testid}`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">{s.step}</span>
+                      <span className="np-chip np-chip-sm">{s.role}</span>
+                    </div>
+                    <h3 className="mt-2.5 text-base font-bold leading-snug np-text">{s.title}</h3>
+                    <p className="mt-2 text-xs leading-relaxed np-muted">{s.whatYouSee}</p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!!busy}
+                    data-testid={s.testid}
+                    onClick={() => void jump(s.persona, s.to, s.testid)}
+                    className="np-btn-primary mt-4 w-full justify-center px-4 py-2.5 text-xs font-bold"
+                  >
+                    {busy === s.testid ? "Открываем…" : s.label}
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* P0: Все 7 критериев ТЗ (у каждой карточки — что посмотреть по критерию и где, без самооценки) */}
         <section id="demo-3min" className="mt-10" aria-labelledby="demo-3min-t" data-testid="demo-3min">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="np-eyebrow">Экспресс-маршрут по разделу 6 ТЗ · 100 % баллов оценки</p>
+              <p className="np-eyebrow">Навигатор по разделу 6 ТЗ · 7 критериев экспертизы</p>
               <h2 id="demo-3min-t" className="mt-1 text-2xl font-extrabold tracking-tight np-text md:text-3xl">
-                Проверьте нас за 3 минуты: все 7 критериев в 1 клик
+                Что посмотреть по каждому критерию ТЗ и где это открыть
               </h2>
             </div>
             <div className="flex flex-wrap gap-2">
-              <a href="#demo-tz-map" className="np-btn-ghost px-4 py-2 text-xs">Карта соответствия ТЗ</a>
+              <a href="#demo-tz-map" className="np-btn-ghost px-4 py-2 text-xs">Карта разделов ТЗ</a>
               <a href="#demo-beat-test" className="np-btn-ghost px-4 py-2 text-xs">Вызов: Обмани тест</a>
               <a href="#demo-custom-bench" className="np-btn-ghost px-4 py-2 text-xs">Свой набор пар</a>
             </div>
           </div>
           <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {CRITERIA_3MIN.map((c) => (
-              <article key={c.id} className="np-glass flex flex-col justify-between p-5" data-testid={`crit-card-${c.id}`}>
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full bg-rose-500/20 px-2.5 py-0.5 font-mono text-xs font-extrabold text-rose-300">
-                      Вес в оценке: {c.weight}
-                    </span>
-                    <span className="font-mono text-xs text-emerald-300">✓ Готово</span>
+            {CRITERIA_3MIN.map((c) => {
+              const primaryAction = c.actions[0];
+              return (
+                <article key={c.id} className="np-glass flex flex-col justify-between p-5" data-testid={`crit-card-${c.id}`}>
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 font-mono text-xs font-extrabold text-indigo-200">
+                        Критерий ТЗ · вес {c.weight}
+                      </span>
+                      <span
+                        className="cursor-help text-xs np-muted"
+                        title={c.hint}
+                      >
+                        Как устроено ⓘ
+                      </span>
+                    </div>
+                    <h3 className="mt-3 text-base font-bold leading-snug np-text">{c.title}</h3>
+                    <p className="mt-2 text-xs leading-relaxed np-muted">{c.summary}</p>
+                    <p className="mt-1.5 font-mono text-[11px] np-faint">Где открыть: {primaryAction.to ?? "/demo"}</p>
                   </div>
-                  <h3 className="mt-3 text-base font-bold leading-snug np-text">{c.title}</h3>
-                  <p className="mt-2 text-xs leading-relaxed np-muted">{c.summary}</p>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2 pt-2">
-                  {c.actions.map((a) => (
+                  <div className="mt-4 pt-2">
                     <button
-                      key={a.testid}
                       type="button"
                       disabled={!!busy}
-                      data-testid={a.testid}
-                      onClick={() => void jump(a.persona, a.to ?? "/demo", a.testid)}
-                      className={`${a.primary ? "np-btn-primary" : "np-btn-ghost"} px-3.5 py-2 text-xs`}
+                      data-testid={primaryAction.testid}
+                      onClick={() => void jump(primaryAction.persona, primaryAction.to ?? "/demo", primaryAction.testid)}
+                      className="np-btn-primary w-full justify-center px-3.5 py-2.5 text-xs font-bold"
                     >
-                      {busy === a.testid ? "Открываем…" : a.label}
+                      {busy === primaryAction.testid ? "Открываем…" : primaryAction.label}
                     </button>
-                  ))}
-                </div>
-              </article>
-            ))}
+                  </div>
+                </article>
+              );
+            })}
           </div>
 
-          {/* Карточки проверенных возможностей (протоколы ФСП/ЕВСК, вердикт SPRT, отложенный hh.ru, нагрузка, демо-регистрация) */}
+          {/* Карточки проверенных возможностей: у каждой одна строка «что увидите» и одна кнопка */}
           {capabilityCards.length > 0 && (
             <div className="mt-6" data-testid="demo-3min-capabilities">
-              <p className="np-eyebrow">Ключевые доказательства и верифицированные модули</p>
+              <p className="np-eyebrow">Проверенные модули и воспроизводимые расчёты</p>
               <div className="mt-3 grid gap-4 md:grid-cols-2">
-                {capabilityCards.map((cap) => (
-                  <article
-                    key={cap.id}
-                    className="np-glass flex flex-col justify-between border border-emerald-400/25 p-5"
-                    data-testid={`cap-card-${cap.id}`}
-                  >
-                    <div>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 font-mono text-xs font-bold text-emerald-300">
-                          {cap.badge}
-                        </span>
+                {capabilityCards.map((cap) => {
+                  const primaryAction = cap.actions[0];
+                  return (
+                    <article
+                      key={cap.id}
+                      className="np-glass flex flex-col justify-between border border-emerald-400/25 p-5"
+                      data-testid={`cap-card-${cap.id}`}
+                    >
+                      <div>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-300">
+                            {cap.badge}
+                          </span>
+                          {cap.recompute && (
+                            <span
+                              className="cursor-help text-[11px] np-faint"
+                              title={`Как считается и пересчитывается: ${cap.recompute}`}
+                            >
+                              Как считается ⓘ
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="mt-3 text-base font-bold leading-snug np-text">{cap.title}</h3>
+                        <p className="mt-2 text-xs leading-relaxed np-muted">Что увидите: {cap.summary}</p>
                       </div>
-                      <h3 className="mt-3 text-base font-bold leading-snug np-text">{cap.title}</h3>
-                      <p className="mt-2 text-xs leading-relaxed np-muted">{cap.summary}</p>
-                      {cap.recompute && (
-                        <p className="mt-2 font-mono text-[11px] np-faint">Пересчёт: {cap.recompute}</p>
-                      )}
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2 pt-2">
-                      {cap.actions.map((a) => (
+                      <div className="mt-4 pt-2">
                         <button
-                          key={a.testid}
                           type="button"
                           disabled={!!busy}
-                          data-testid={a.testid}
-                          onClick={() => void jump(a.persona, a.to ?? "/demo", a.testid)}
-                          className={`${a.primary ? "np-btn-primary" : "np-btn-ghost"} px-3.5 py-2 text-xs`}
+                          data-testid={primaryAction.testid}
+                          onClick={() => void jump(primaryAction.persona, primaryAction.to ?? "/demo", primaryAction.testid)}
+                          className="np-btn-primary w-full justify-center px-3.5 py-2.5 text-xs font-bold"
                         >
-                          {busy === a.testid ? "Открываем…" : a.label}
+                          {busy === primaryAction.testid ? "Открываем…" : primaryAction.label}
                         </button>
-                      ))}
-                    </div>
-                  </article>
-                ))}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
           )}
         </section>
 
-        {/* Панель ролей и проверки за 12 минут */}
-        <div className="mt-10"><JuryPanel /></div>
+        {/* Панель ролей и пошагового проводника на 12 минут */}
+        <div className="mt-12" id="demo-guided-12min">
+          <p className="np-eyebrow mb-3">Полный управляемый обход с подсказками проводника · все роли и сценарии</p>
+          <JuryPanel />
+        </div>
 
         {/* Инновации и Боевой ИИ-Полигон */}
         <section className="mt-12" aria-labelledby="exp-knockout-t" data-testid="exp-knockout">
@@ -537,35 +636,35 @@ export default function DemoHub() {
             <span className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-rose-500/25 blur-3xl" aria-hidden="true" />
             <span className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-indigo-500/25 blur-3xl" aria-hidden="true" />
             <span className="relative flex flex-wrap items-center gap-2 font-mono text-xs font-bold uppercase tracking-[0.2em] text-rose-300">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-rose-400" />Витрина полигона · war room live
+              <span className="h-2 w-2 animate-pulse rounded-full bg-rose-400" />Интерактивный стенд · проверка вживую
             </span>
             <span className="relative mt-3 block text-2xl font-black leading-tight md:text-3xl">Боевой ИИ-Полигон: Архитектура, Аватар и Античит вживую</span>
             <span className="relative mt-3 grid gap-3 text-sm text-white/75 md:grid-cols-2">
-              <span><b className="text-white">Режим А.</b> Живая схема микросервисов под нагрузкой: включайте паттерны отказоустойчивости, правьте конфигурацию и проверяйте реакцию системы в реальном времени.</span>
-              <span><b className="text-white">Режим Б.</b> Сравнение «нечестный кандидат против радара сигналов самостоятельности»: скрытая метка задания, динамика ввода и автоматический вызов на устную защиту.</span>
+              <span><b className="text-white">Режим А.</b> Живая схема микросервисов под нагрузкой: включайте режимы отказоустойчивости, правьте настройки и проверяйте реакцию системы в реальном времени.</span>
+              <span><b className="text-white">Режим Б.</b> Сравнение «нечестный кандидат против контроля самостоятельности»: скрытая метка задания, темп набора и автоматический вызов на устную защиту.</span>
             </span>
-            <span className="relative mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-[#1a1240] transition group-hover:bg-rose-50">Открыть Боевой ИИ-Полигон (/demo/warroom) <span aria-hidden="true">→</span></span>
+            <span className="relative mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-[#1a1240] transition group-hover:bg-rose-50">Открыть Боевой ИИ-Полигон <span aria-hidden="true">→</span></span>
           </Link>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <article className="np-glass p-6">
               <span className="font-mono text-xs np-accent">ИННОВАЦИЯ 01 · КАНДИДАТ</span>
               <h3 className="mt-2 text-xl font-bold np-text">Живой видео-аватар: устная защита кода</h3>
               <p className="mt-2 text-sm leading-relaxed np-muted">
-                Прямой вход в комнату разговора без промежуточных анкет: ИИ-интервьюер задаёт вопрос по решению кандидата голосом и включает микрофон для ответа.
+                Что увидите: прямой вход в комнату разговора, где ИИ-интервьюер голосом задаёт вопрос по написанному решению и принимает голосовой ответ.
               </p>
               <button type="button" onClick={openCandidateAvatar} disabled={!!busy} className="np-btn-primary mt-4 px-5 py-2.5 text-sm" data-testid="exp-go-avatar">
-                {busy === "cand-avatar" ? "Открываем комнату разговора…" : "Поговорить с ИИ-интервьюером (1 клик)"}
+                {busy === "cand-avatar" ? "Открываем комнату разговора…" : "Поговорить с ИИ-интервьюером"}
               </button>
             </article>
 
             <article className="np-glass p-6">
-              <span className="font-mono text-xs np-accent">ИННОВАЦИЯ 02 · ДИРЕКТОР И HR</span>
+              <span className="font-mono text-xs np-accent">ИННОВАЦИЯ 02 · РУКОВОДИТЕЛЬ НАЙМА</span>
               <h3 className="mt-2 text-xl font-bold np-text">ИИ-советник руководителя на сравнении кандидатов</h3>
               <p className="mt-2 text-sm leading-relaxed np-muted">
-                Аватар докладывает голосом по топ-кандидатам вакансии (кто лидер по тесту и ФСП, какие навыки подтверждены, чья вилка выгоднее) и отвечает на вопросы.
+                Что увидите: голосовой доклад по лучшим кандидатам вакансии — кто лидирует по тесту и ФСП, какие навыки подтверждены и чья зарплатная вилка выгоднее.
               </p>
               <button type="button" onClick={openEmployerAdvisor} disabled={!!busy} className="np-btn-primary mt-4 px-5 py-2.5 text-sm" data-testid="exp-go-advisor">
-                {busy === "emp-advisor" ? "Открываем сравнение…" : "Открыть ИИ-советника директора (1 клик)"}
+                {busy === "emp-advisor" ? "Открываем сравнение…" : "Открыть ИИ-советника руководителя"}
               </button>
             </article>
 
@@ -573,7 +672,7 @@ export default function DemoHub() {
               <span className="font-mono text-xs np-accent">ИННОВАЦИЯ 03 · ИНТЕРАКТИВНЫЙ ТЕСТ</span>
               <h3 className="mt-2 text-xl font-bold np-text">Визуальный тренажёр «Пульт инцидента»</h3>
               <p className="mt-2 text-sm leading-relaxed np-muted">
-                Инженерная симуляция платёжного шлюза под нагрузкой для старших грейдов: переключайте параметры и смотрите, как меняются задержки и ошибки.
+                Что увидите: инженерный симулятор платёжного шлюза под нагрузкой для старших грейдов с переключением настроек и графиком ошибок.
               </p>
               <button type="button" onClick={() => setShowIncident((v) => !v)} className="np-btn-ghost mt-4 px-5 py-2.5 text-sm font-bold" data-testid="exp-go-incident">
                 {showIncident ? "Скрыть пульт инцидента" : "Открыть «Пульт инцидента» прямо здесь"}
@@ -584,10 +683,10 @@ export default function DemoHub() {
               <span className="font-mono text-xs np-accent">ИННОВАЦИЯ 04 · ЭКОСИСТЕМА ФСП</span>
               <h3 className="mt-2 text-xl font-bold np-text">Отборочный турнир ФСП из вакансии в 1 клик</h3>
               <p className="mt-2 text-sm leading-relaxed np-muted">
-                Работодатель одной кнопкой превращает свою вакансию в 7-дневный турнир из 3 задач банка с автопроверкой и таблицей призёров.
+                Что увидите: как работодатель одной кнопкой превращает свою вакансию в 7-дневный турнир из 3 задач банка с автопроверкой и таблицей призёров.
               </p>
               <button type="button" onClick={openFspTournament} disabled={!!busy} className="np-btn-ghost mt-4 px-5 py-2.5 text-sm font-bold" data-testid="exp-go-tournament">
-                {busy === "fsp-cup" ? "Запускаем турнир…" : "Запустить турнир ФСП из вакансии (1 клик)"}
+                {busy === "fsp-cup" ? "Запускаем турнир…" : "Запустить турнир ФСП из вакансии"}
               </button>
             </article>
           </div>
@@ -637,9 +736,9 @@ export default function DemoHub() {
               </div>
               <div className="rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-5">
                 <p className="font-mono text-xs font-bold text-rose-300">ВЕКТОР 03 · ПОДДЕЛКА ПАСПОРТА И РЕЗЮМЕ</p>
-                <h3 className="mt-1 text-base font-bold np-text">Раздуйте резюме или измените грейд в JSON паспорта</h3>
-                <p className="mt-2 text-xs leading-relaxed np-muted">
-                  Ранжирование опирается на подтверждённые навыки (самоописание не выводит в топ), а изменение одной буквы в паспорте ломает подпись Ed25519.
+                <h3 className="mt-1 text-base font-bold np-text">Раздуйте резюме или измените грейд в данных паспорта</h3>
+                <p className="mt-2 text-xs leading-relaxed np-muted" title="Как устроено: асимметричная цифровая подпись Ed25519 по открытому ключу">
+                  Ранжирование опирается на подтверждённые навыки (самоописание не выводит в топ), а изменение одной буквы в паспорте нарушает защищённую цифровую подпись.
                 </p>
                 <Link to="/demo/validation#red-button" className="np-btn-ghost mt-4 inline-flex px-4 py-2 text-xs">
                   Проверить на «Красной кнопке»
@@ -706,11 +805,11 @@ export default function DemoHub() {
           </div>
         </section>
 
-        {/* Полная карта соответствия ТЗ */}
+        {/* Полная карта разделов ТЗ */}
         <section id="demo-tz-map" className="mt-14 scroll-mt-24" aria-labelledby="tz-map-title" data-testid="demo-tz-map">
-          <p className="np-eyebrow">Полнота реализации · Все требования технического задания</p>
+          <p className="np-eyebrow">Справочник по пунктам технического задания · где что посмотреть</p>
           <h2 id="tz-map-title" className="mt-2 text-2xl font-extrabold tracking-tight np-text md:text-3xl">
-            Карта соответствия ТЗ: каждое требование — в 1 клик
+            Карта разделов ТЗ: что посмотреть по каждому пункту и где открыть
           </h2>
           <div className="mt-6 space-y-6">
             {TZ_MAP.map((block) => (
@@ -723,10 +822,10 @@ export default function DemoHub() {
                       <div key={row.req} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold np-text">
-                            <span className="mr-2 text-emerald-400" aria-hidden="true">✓</span>
+                            <span className="mr-2 text-indigo-300" aria-hidden="true">•</span>
                             {row.req}
                           </p>
-                          <p className="mt-0.5 text-xs np-muted">{row.impl}</p>
+                          <p className="mt-0.5 text-xs np-muted">Что посмотреть: {row.impl} · экран: <code className="text-[11px]">{row.to}</code></p>
                         </div>
                         <button
                           type="button"

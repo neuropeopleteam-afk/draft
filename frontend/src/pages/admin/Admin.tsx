@@ -176,7 +176,9 @@ export default function Admin() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-brand-night">Панель администратора</h1>
-            <p className="mt-1 text-sm text-brand-ink/70">Управление тарифами B2B, партнёрами ФСП, пользователями и продуктовой аналитикой.</p>
+            <p className="mt-1 text-sm text-brand-ink/70" data-testid="admin-h1-lead">
+              Это панель управления платформой: переключайте вкладки слева, чтобы обрабатывать заявки на тарифы, отвечать на обращения в поддержку и управлять учётными записями.
+            </p>
           </div>
           <label className="inline-flex items-center gap-2 rounded-xl border border-brand-night/15 bg-white px-3 py-2 text-xs font-semibold text-brand-night">
             <input

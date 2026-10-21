@@ -11,6 +11,7 @@ export interface TrustShort {
   score: number; level: "high" | "medium" | "low"; level_title: string; preliminary: boolean; critical: boolean;
   summary: string; offer_salary?: { status: string; text: string } | null; company_id?: string;
   origin?: Origin | null;  // Я8: сведения ФНС — модельные данные / реальный запрос / не проверено
+  response_badge?: { median_hours: number; sample_size: number; label: string } | null;
 }
 export interface TrustFactor { id: string; title: string; status: "ok" | "warn" | "bad" | "unknown" | "neutral"; points: number; max: number; text: string }
 export interface Trust extends TrustShort {
@@ -33,10 +34,21 @@ export function TrustBadge({ t, compact }: { t?: TrustShort | null; compact?: bo
   if (!t) return null;
   const [cls, dot] = LEVEL[t.level] ?? LEVEL.medium;
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${cls}`}
-      title={`Индекс доверия работодателя: ${t.score} из 100. ${t.summary}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />
-      {compact ? `Доверие ${t.score}` : `Доверие ${t.score}/100 · ${t.level_title}`}{t.preliminary ? " · предв." : ""}
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${cls}`}
+        title={`Индекс доверия работодателя: ${t.score} из 100. ${t.summary}`}>
+        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />
+        {compact ? `Доверие ${t.score}` : `Доверие ${t.score}/100 · ${t.level_title}`}{t.preliminary ? " · предв." : ""}
+      </span>
+      {t.response_badge?.label && (
+        <span
+          className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-900 ring-1 ring-sky-200"
+          title={`Медиана времени ответа компании по ${t.response_badge.sample_size} реальным приглашениям и откликам`}
+          data-testid="company-response-badge"
+        >
+          ⏱ {t.response_badge.label}
+        </span>
+      )}
     </span>
   );
 }

@@ -279,7 +279,7 @@ def salary_factor(db: Session, company: Company, cats: dict[str, Category]) -> t
     share_ok = 1 - len(bad) / len(known)
     pts = 15 * share_ok
     by_hh = sum(1 for c in known if (c.get("hh") or {}).get("conclusive"))
-    src = (f" (по hh.ru — {by_hh} из {len(known)}, остальные — по Хабр Карьере)" if 0 < by_hh < len(known)
+    src = (f" (по hh.ru — {by_hh} из {len(known)}, остальные — по открытым данным рынка)" if 0 < by_hh < len(known)
            else " (рынок hh.ru по роли и региону)" if by_hh else "")
     if not bad:
         return _factor("salary", "Реалистичность вилок", "ok", pts, 15,
@@ -309,6 +309,74 @@ def acceptance_factor(db: Session, company: Company) -> dict:
         return _factor("acceptance", "Доля принятых приглашений", "ok", 6, 10, f"кандидаты приняли {acc} из {n} ({pct} %)")
     return _factor("acceptance", "Доля принятых приглашений", "warn", 2, 10,
                    f"кандидаты часто отказываются: принято {acc} из {n} ({pct} %)")
+
+
+def _collect_response_hours(db: Session, company_id) -> list[float]:
+    """Собирает часы до реакции компании по реальным приглашениям (встречные условия), откликам и зондам."""
+    from app.modules.contact.models import InvitationCounter
+
+    hours: list[float] = []
+    syn_uids = set(
+        db.scalars(select(CandidateProfile.user_id).where(CandidateProfile.is_synthetic.is_(True))).all()
+    )
+    apps = db.scalars(
+        select(VacancyApplication)
+        .join(Vacancy, Vacancy.id == VacancyApplication.vacancy_id)
+        .where(Vacancy.company_id == company_id)
+    ).all()
+    now = utcnow()
+    for a in apps:
+        if a.candidate_user_id in syn_uids:
+            continue
+        first = a.viewed_at or a.responded_at
+        if first:
+            h = (as_aware(first) - as_aware(a.created_at)).total_seconds() / 3600
+            if h >= 0:
+                hours.append(h)
+        elif a.status == "sent" and (now - as_aware(a.created_at)) > timedelta(days=7):
+            hours.append((now - as_aware(a.created_at)).total_seconds() / 3600)
+    for p in db.scalars(select(Probe).where(Probe.company_id == company_id, Probe.submitted_at.is_not(None))).all():
+        if p.candidate_user_id in syn_uids:
+            continue
+        reviewed = next((e.get("at") for e in (p.events or []) if e.get("status") == ProbeStatus.reviewed.value), None)
+        if reviewed:
+            from datetime import datetime
+
+            h = (as_aware(datetime.fromisoformat(reviewed)) - as_aware(p.submitted_at)).total_seconds() / 3600
+            if h >= 0:
+                hours.append(h)
+    invs = db.scalars(select(Invitation).where(Invitation.company_id == company_id)).all()
+    real_inv_ids = [inv.id for inv in invs if inv.candidate_user_id not in syn_uids]
+    if real_inv_ids:
+        for cnt in db.scalars(
+            select(InvitationCounter).where(
+                InvitationCounter.invitation_id.in_(real_inv_ids),
+                InvitationCounter.decided_at.is_not(None),
+            )
+        ).all():
+            h = (as_aware(cnt.decided_at) - as_aware(cnt.created_at)).total_seconds() / 3600
+            if h >= 0:
+                hours.append(h)
+    return hours
+
+
+def company_response_badge(db: Session, company_id) -> dict | None:
+    """А2 (P1-5): бейдж «Отвечает в среднем за N ч» (медиана по реальным приглашениям/откликам; при < 3 — None)."""
+    hours = _collect_response_hours(db, company_id)
+    if len(hours) < 3:
+        return None
+    m = median(hours)
+    hrs_int = max(1, round(m))
+    label = (
+        f"Отвечает в среднем за {hrs_int} ч"
+        if m <= 72
+        else f"Отвечает в среднем за {max(1, round(m / 24))} дн."
+    )
+    return {
+        "median_hours": round(m, 1),
+        "sample_size": len(hours),
+        "label": label,
+    }
 
 
 def speed_factor(db: Session, company: Company) -> dict:
@@ -400,11 +468,13 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
         offer = {"status": st, "text": txt, **({"hh": hh} if hh else {})}
     reasons_bad = [f for f in factors if f["status"] in ("bad", "warn")]
     reasons_ok = [f for f in factors if f["status"] == "ok"]
+    resp_badge = company_response_badge(db, company.id)
     return {
         "company_id": str(company.id), "company_name": company.name, "score": score, "level": level,
         "level_title": title, "preliminary": preliminary, "critical": critical,
         "demo": demo_mod.is_demo_company(company),  # сведения ФНС — демо (пометка «демо» в интерфейсе)
         "factors": factors, "registry": registry, "offer_salary": offer,
+        "response_badge": resp_badge,
         "origin": fns_origin(registry),  # Я8: сведения ФНС — модельные данные / реальный запрос / не проверено
         "salary_checks": salary_checks[:10],
         "summary": (reasons_bad[0]["text"] if reasons_bad else (reasons_ok[0]["text"] if reasons_ok else "")),
@@ -415,4 +485,17 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
 
 def short(t: dict) -> dict:
     return {k: t.get(k) for k in ("score", "level", "level_title", "preliminary", "critical", "summary", "offer_salary", "demo",
-                                  "origin")}
+                                  "origin", "response_badge")}
+
+
+def company_trust(
+    db: Session,
+    company: Company,
+    *,
+    short: bool = False,
+    invitation: Invitation | None = None,
+    vacancy: Vacancy | None = None,
+) -> dict:
+    t = compute(db, company, invitation=invitation, vacancy=vacancy)
+    return globals()["short"](t) if short else t
+

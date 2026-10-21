@@ -148,7 +148,7 @@ class Filters(BaseModel):
     conditions_off: bool = Field(False, description="Ф2: не применять условия потребности (формат, город) — показать "
                                                     "всех; по умолчанию условия применяются сразу")
     exclude_refs: list[str] | None = Field(None, max_length=200, description="Исключить отмеченных «не подходит» (Н2)")
-    real_only: bool = Field(False, description="Исключить модельные и синтетические профили (profiles.is_synthetic)")
+    real_only: bool | None = Field(None, description="Исключить модельные и синтетические профили (для реальных учёток true по умолчанию)")
 
 
 class SelectionIn(BaseModel):
@@ -210,8 +210,13 @@ def _need_title(req: dict) -> str:
 
 def _make_version(db: Session, need: EmployerNeed, user: User, filters: dict, parent: int | None,
                   req: dict | None = None) -> SelectionVersion:
+    from app.modules.jury import scope as jury_scope
+
     last = db.scalar(select(func.max(SelectionVersion.version)).where(SelectionVersion.need_id == need.id)) or 0
     req = req or need.requirements
+    filters = dict(filters or {})
+    if "real_only" not in filters or filters["real_only"] is None:
+        filters["real_only"] = jury_scope.real_default(user, None, db=db)
     sel = ranking.build_selection(db, req, filters)
     # Ф2: снимок версии (категории со счётчиками, условия, «скрыто условиями») — в filters["_meta"]: открытие
     # сохранённой версии отдаёт его без пересчёта
@@ -263,7 +268,8 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         recs = meta["categories"]  # снимок на момент расчёта версии — без пересчёта пула (Ф2, п. 4)
     else:  # версии до Ф2: считаем и сохраняем снимок, следующие открытия — без пересчёта
         cats = {c.id: c for c in db.scalars(select(Category)).all()}
-        (counts, prov), unc = ranking.pool_counts(db), ranking.unconfirmed_counts(db)
+        ro = bool(filters.get("real_only"))
+        (counts, prov), unc = ranking.pool_counts(db, real_only=ro), ranking.unconfirmed_counts(db, real_only=ro)
         recs = ranking.recommended_categories(v.requirements, counts, cats)
         for r in recs:
             r["provisional"], r["unconfirmed"] = prov.get(r["id"], 0), unc.get(r["id"], 0)
@@ -578,19 +584,28 @@ def search_candidates(
     fsp: bool = Query(False, description="Только с паспортом ФСП"),
     confirmed: bool = Query(False, description="Только подтверждённый грейд: без «Junior (предварительно)» и без "
                                                "«грейд не подтверждён» (по умолчанию они показываются ниже подтверждённых)"),
-    real_only: bool = Query(False, description="Исключить модельные и синтетические профили (profiles.is_synthetic)"),
+    real_only: bool | None = Query(None, description="Исключить модельные и синтетические профили (для реальных учёток true по умолчанию)"),
     limit: int = Query(30, ge=1, le=100), offset: int = Query(0, ge=0),
     user: User = Depends(employer), db: Session = Depends(get_db),
 ) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     my_company(db, user)
+    ro = jury_scope.real_default(user, real_only, db=db)
     return ranking.search(db, direction=direction, grade=grade, category=category, stack=stack or None,
                           stack_level=stack_level, fsp_only=fsp, limit=limit, offset=offset,
-                          confirmed_only=confirmed, real_only=real_only)
+                          confirmed_only=confirmed, real_only=ro)
 
 
 @router.get("/categories", summary="Категории с числом видимых кандидатов и рыночным диапазоном", responses=AUTH)
-def categories(user: User = Depends(employer), db: Session = Depends(get_db)) -> list[dict]:
-    (counts, prov), unc = ranking.pool_counts(db), ranking.unconfirmed_counts(db)  # пул — одной загрузкой
+def categories(
+    real_only: bool | None = Query(None, description="Исключить модельные и синтетические профили"),
+    user: User = Depends(employer), db: Session = Depends(get_db),
+) -> list[dict]:
+    from app.modules.jury import scope as jury_scope
+
+    ro = jury_scope.real_default(user, real_only, db=db)
+    (counts, prov), unc = ranking.pool_counts(db, real_only=ro), ranking.unconfirmed_counts(db, real_only=ro)  # пул — одной загрузкой
     return [{"id": c.id, "title": c.title, "direction": c.direction_id, "grade": c.grade_id,
              "count": counts.get(c.id, 0), "provisional": prov.get(c.id, 0), "unconfirmed": unc.get(c.id, 0),
              "market_range": ranking._mr(c)}

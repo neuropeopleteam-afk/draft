@@ -64,13 +64,29 @@ def _company_id(db: Session, user: User) -> uuid.UUID | None:
     return ep.company_id if ep else None
 
 
+def _fsp_thread_visible(db: Session, user: User, t: TrioThread) -> bool:
+    from app.modules.jury import scope as jury_scope
+
+    comp = db.get(Company, t.company_id)
+    cand_u = db.get(User, t.candidate_user_id)
+    emp_u = db.get(User, comp.created_by) if comp and comp.created_by else None
+    if not jury_scope.visible(cand_u.email if cand_u else None):
+        return False
+    if not jury_scope.visible(emp_u.email if emp_u else None):
+        return False
+    if not jury_scope.sees_demo(user):
+        if (comp and comp.is_demo) or (cand_u and cand_u.is_demo) or (emp_u and emp_u.is_demo):
+            return False
+    return True
+
+
 def _side(db: Session, user: User, t: TrioThread) -> str | None:
     if user.role == UserRole.candidate and t.candidate_user_id == user.id:
         return "candidate"
     if user.role == UserRole.employer and _company_id(db, user) == t.company_id:
         return "employer"
     if user.role in FSP_ROLES and t.status != "pending":
-        return "fsp"
+        return "fsp" if _fsp_thread_visible(db, user, t) else None
     return None
 
 
@@ -214,7 +230,9 @@ def unread(user: User = Depends(_trio_user), db: Session = Depends(get_db)) -> d
     total = 0
     pending_consent = 0
     for t in db.scalars(q).all():
-        side = _side(db, user, t) or "fsp"
+        side = _side(db, user, t)
+        if side is None:
+            continue
         if t.status == "pending" and side == "candidate":
             pending_consent += 1
             total += 1
@@ -251,7 +269,11 @@ def threads(user: User = Depends(_trio_user), db: Session = Depends(get_db)) -> 
         q = q.where(TrioThread.status != "pending")
     else:
         return []
-    rows = [_thread_out(db, t, _side(db, user, t) or "fsp") for t in db.scalars(q).all()]
+    rows = []
+    for t in db.scalars(q).all():
+        side = _side(db, user, t)
+        if side is not None:
+            rows.append(_thread_out(db, t, side))
     rows.sort(key=lambda r: r["activity_at"], reverse=True)
     return rows
 

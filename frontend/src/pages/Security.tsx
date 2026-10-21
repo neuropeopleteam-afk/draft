@@ -66,8 +66,8 @@ function EnrollWizard({ token, rotationCode, onDone, onCancel }: { token?: strin
         <li className="flex gap-3">
           <Step n={1} />
           <div>
-            <p className="font-semibold text-brand-night">Откройте приложение-аутентификатор</p>
-            <p className="mt-0.5 leading-relaxed">Подойдёт любое со стандартом TOTP: Яндекс Ключ, Google Authenticator, Microsoft Authenticator, FreeOTP, Aegis. Если на телефоне его ещё нет — установите из магазина приложений.</p>
+            <p className="font-semibold text-brand-night">Откройте приложение одноразовых кодов</p>
+            <p className="mt-0.5 leading-relaxed" title="Как устроено: стандарт одноразовых кодов по времени TOTP (RFC 6238)">Подойдёт любое мобильное приложение двухэтапной защиты (например, «Яндекс Ключ» или другое стандартное приложение кодов по времени). Если на телефоне его ещё нет — установите из магазина приложений.</p>
           </div>
         </li>
         <li className="flex gap-3">
@@ -85,7 +85,7 @@ function EnrollWizard({ token, rotationCode, onDone, onCancel }: { token?: strin
                   <div className="rounded-xl bg-[#F3F2FB] p-3 text-xs leading-relaxed text-brand-ink/80">
                     <p>Учётная запись: <span className="break-all font-semibold text-brand-night">{setup.account}</span></p>
                     <p className="mt-1">Ключ: <code className="break-all font-mono text-sm font-bold tracking-wider text-brand-night" data-testid="twofa-secret">{setup.secret_grouped}</code></p>
-                    <p className="mt-1">Тип — по времени (TOTP), SHA1, 6 цифр, 30 секунд. Издатель: {setup.issuer}.</p>
+                    <p className="mt-1" title="Как устроено: TOTP RFC 6238, SHA1, 6 цифр, 30 секунд">Тип — по времени, 6 цифр, смена каждые 30 секунд. Издатель: {setup.issuer}.</p>
                   </div>
                 )}
               </div>
@@ -198,7 +198,7 @@ export function TwoFactorSettings() {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <PageTitle title="Безопасность входа" subtitle="Второй фактор: кроме пароля или персональной ссылки — код из приложения-аутентификатора на телефоне (TOTP, RFC 6238)." />
+      <PageTitle title="Безопасность входа" subtitle="Это раздел двухэтапной защиты: подключите одноразовые коды в приложении на телефоне и сохраните резервные коды доступа." />
       {demoUi && st.demo_note && <Alert kind="info">{st.demo_note}</Alert>}
 
       <section className="card space-y-4" aria-labelledby="twofa-state">
@@ -271,7 +271,7 @@ export function TwoFactorSettings() {
       <section className="card text-sm leading-relaxed text-brand-ink/80">
         <h2 className="font-bold text-brand-night">Как это устроено</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>Стандарт TOTP (RFC 6238): {st.params.algorithm}, {st.params.digits} цифр, шаг {st.params.period_s} с, допуск ±{st.params.window_steps} шаг на рассинхронизацию часов. Работает с любым приложением-аутентификатором, без СМС и без интернета на телефоне.</li>
+          <li title="Как считается: стандарт TOTP (RFC 6238), алгоритм хеширования по времени">Стандарт одноразовых кодов по времени: {st.params.digits} цифр, обновление каждые {st.params.period_s} с, допуск ±{st.params.window_steps} шаг на рассинхронизацию часов. Работает с любым приложением двухэтапной защиты, без СМС и без интернета на телефоне.</li>
           <li>Секрет хранится в базе зашифрованным и после подключения сервером не выдаётся; резервные коды — только хешами, каждый гасится после использования.</li>
           <li>Повтор уже принятого кода отклоняется; после 5 неверных кодов подряд — пауза 15 минут; промежуточный токен после пароля живёт 5 минут и в кабинет не пускает.</li>
           <li>Для администратора и аналитика ФСП с реальной учётной записью второй фактор обязателен: без него после пароля открывается только подключение. Эксперт панели входит по персональной ссылке и подключает код по желанию. Демо-учётки жюри — без второго фактора, с пометкой.</li>

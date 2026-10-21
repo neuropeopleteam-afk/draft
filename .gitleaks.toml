@@ -50,3 +50,13 @@ condition = "AND"
 paths = ['''tools/grader_check/run_holdout_eval\.py$''']
 regexTarget = "line"
 regexes = ['''run_llm_chain_on_holdout\(d, items_map, key,''']
+
+# Пароль одноразовых тестовых учёток e2e «рыночный режим» (market-<роль>-<время>@example.org, создаются на пробном
+# стенде через /api/auth/register): значение задано в тесте открыто, доступа ни к чему не даёт. Исключена только
+# эта строка этого файла — другой пароль или тот же в другом файле по-прежнему будет найден.
+[[allowlists]]
+description = "Пароль одноразовых учёток в e2e/tests/20-market-mode.spec.ts"
+condition = "AND"
+paths = ['''e2e/tests/20-market-mode\.spec\.ts$''']
+regexTarget = "line"
+regexes = ['''password: "Market-pass-123"''']

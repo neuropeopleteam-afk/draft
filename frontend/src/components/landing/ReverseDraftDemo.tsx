@@ -78,8 +78,13 @@ function CandidateCard({ c, onTry, onLiveAvatar, busyLive }: { c: DemoCandidate;
         {c.stack.map((s) => <span key={s} className="np-chip np-chip-sm">{s}</span>)}
       </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        <Proof tone="ok" title="Подтверждено тестом IRT и реестром ФСП" items={c.proved} />
+      <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+        <Proof
+          tone="ok"
+          title="Подтверждено тестом и реестром ФСП"
+          hint="Как считается: адаптивный тест на грейд (психометрическая модель IRT) и официальные протоколы соревнований ФСП"
+          items={c.proved}
+        />
         <Proof tone="indigo" title="Косвенно проверено" items={c.indirect} />
         <Proof tone="calm" title="Сигналов риска нет" items={c.risk} />
       </div>
@@ -115,12 +120,12 @@ function CandidateCard({ c, onTry, onLiveAvatar, busyLive }: { c: DemoCandidate;
   );
 }
 
-function Proof({ tone, title, items }: { tone: "ok" | "indigo" | "calm"; title: string; items: string[] }) {
+function Proof({ tone, title, hint, items }: { tone: "ok" | "indigo" | "calm"; title: string; hint?: string; items: string[] }) {
   return (
-    <div className={`np-proof ${tone === "ok" ? "np-proof-ok" : tone === "indigo" ? "np-proof-indigo" : "np-proof-calm"}`}>
-      <p className="text-[11px] font-bold uppercase leading-snug tracking-[0.08em]">{title}</p>
-      <ul className="mt-1.5 space-y-1 text-xs leading-snug np-muted">
-        {items.map((t) => <li key={t} className="flex gap-1.5"><span aria-hidden="true" className="np-proof-dot" />{t}</li>)}
+    <div className={`np-proof min-w-0 [overflow-wrap:normal] ${tone === "ok" ? "np-proof-ok" : tone === "indigo" ? "np-proof-indigo" : "np-proof-calm"}`} title={hint}>
+      <p className="text-[11px] font-bold uppercase leading-snug tracking-[0.04em] [overflow-wrap:normal] [word-break:normal]">{title}</p>
+      <ul className="mt-1.5 space-y-1 text-xs leading-snug np-muted [overflow-wrap:normal] [word-break:normal]">
+        {items.map((t) => <li key={t} className="flex gap-1.5"><span aria-hidden="true" className="np-proof-dot" /><span className="min-w-0">{t}</span></li>)}
       </ul>
     </div>
   );
