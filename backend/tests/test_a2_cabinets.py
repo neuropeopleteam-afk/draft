@@ -308,12 +308,12 @@ def test_fsp_cabinet_real_protocols_vs_hh_demand(client):
     rm = r.json()["real_protocols_vs_hh"]
     assert rm["summary"]["judges_excluded"] is True
     assert rm["summary"]["documents_count"] == 18
-    assert rm["summary"]["athlete_results"] == 2911
-    # число спортсменов — из снимка индекса протоколов (v5: 2 236 после снятия дубля), а не константой
+    # число результатов и спортсменов — из снимка индекса протоколов (v6: 2 908 / 2 232), а не константой
     import json, pathlib
     import app.modules.fsp as _fsp
-    exp = json.loads((pathlib.Path(_fsp.__file__).parent / "evsk_data" / "index_stats.json").read_text(encoding="utf-8"))["athletes"]
-    assert rm["summary"]["unique_athletes"] == exp
+    st = json.loads((pathlib.Path(_fsp.__file__).parent / "evsk_data" / "index_stats.json").read_text(encoding="utf-8"))
+    assert rm["summary"]["athlete_results"] == st["results"]
+    assert rm["summary"]["unique_athletes"] == st["athletes"]
     assert rm["summary"]["athletes_with_evsk_norm"] in (125, 130)
     assert rm["summary"]["hh_total_vacancies"] >= 7000
     assert len(rm["by_discipline"]) == 5
