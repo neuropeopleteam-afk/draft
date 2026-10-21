@@ -564,8 +564,32 @@ def _bot_gap(m: dict) -> float | None:
     return float(x.group(1).replace(",", ".")) if x else None
 
 
+def _ci(v) -> dict | None:
+    return {k: v.get(k) for k in ("mean", "lo", "hi")} if isinstance(v, dict) else None
+
+
 def matching_block() -> dict | None:
     a5 = _load(A5_MATCHING)
+    site = (a5.get("site") or {}) if isinstance(a5.get("site"), dict) else {}
+    h = site.get("headline") if isinstance(site.get("headline"), dict) else None
+    if h:  # А5, итог подбора №2: match-v2, ОДИН прогон на отложенных мирах после FREEZE — блок site.headline как есть
+        v2 = a5.get("matching_v2") or {}
+        bw = h.get("by_world") or []
+        sub = lambda s: ({k: _ci(s.get(k)) for k in ("p5", "p10", "ndcg10", "mrr", "top5_any", "over10")}
+                         | {"n_needs": s.get("n_needs"), "condition_ru": s.get("condition")}) if isinstance(s, dict) else None
+        return {
+            "algorithm": "match-v2", **{k: _ci(h.get(k)) for k in ("p5", "p10", "ndcg10", "mrr", "top5_any", "over10", "ndcg10_linear")},
+            "n_needs": h.get("n_needs"), "n_worlds": len(bw), "n_candidates": (bw[0].get("m") if bw else None),
+            "seeds": [w.get("seed") for w in bw], "by_world": bw,
+            "gain": h.get("gain"), "bases_ru": h.get("bases_ru"),
+            "condition_ru": h.get("condition"), "set": "отложенные миры, один прогон после FREEZE (модели, не люди)",
+            "hard": sub(site.get("hard")), "with_followup": sub(site.get("headline_doz")),
+            "hard_with_followup": sub(site.get("hard_doz")),
+            "freeze_sha256": v2.get("freeze_sha256"), "git_head": v2.get("git_head"), "protocol": v2.get("protocol"),
+            "generated_at": v2.get("run_at") or a5.get("generated_at"),
+            "what": v2.get("what"), "recompute": h.get("recompute"),
+            "code_ref": "tools/realdata/bench_holdout2.py", "artifact": "docs/realdata/bench_holdout2.json → docs/realdata/numbers_matching.json",
+        }
     if a5.get("matching"):
         return a5["matching"]
     b = _load(DATA / "matching_bench.json")
@@ -589,8 +613,14 @@ def hh_block() -> dict | None:
     a5 = _load(A5_MATCHING)
     if a5.get("hh_match"):  # для сайта — блок site (отложенный набор А5), не набор разработки dev
         h = a5["hh_match"]
-        site = h.get("site") if isinstance(h.get("site"), dict) else {k: v for k, v in h.items() if k != "dev"}
-        return site
+        if isinstance(h.get("site"), dict):  # на экран — только то, что А5 вынес в site (отложенный набор №2)
+            s = h["site"]
+            d = s.get("direction_ok") or {}
+            return {**s, "n": d.get("n") or h.get("n"), "set": s.get("condition") or h.get("set"),
+                    "manifest_sha256": h.get("manifest_sha256"), "code_commit": h.get("code_ref"),
+                    "generated_at": h.get("generated_at"),
+                    "recompute": s.get("recompute") or h.get("recompute"), "code_ref": "tools/realdata/hh_holdout.py"}
+        return {k: v for k, v in h.items() if k not in ("dev", "history")}
     h = _load(DATA / "hh_match.json")
     if not h:
         return None
@@ -681,9 +711,13 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
         p5, mrr = matching["p5"], matching.get("mrr") or {}
         cards.append({
             "id": "matching_p5", "eyebrow": "Точность топ-5 подбора (P@5)", "value": pct(p5.get("mean")), "accent": "%",
-            "subtext": (f"MRR {num(mrr.get('mean'))} · 95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} % · бенчмарк: "
-                        f"{matching.get('n_needs')} потребностей × {int_ru(matching.get('n_candidates'))} кандидатов "
-                        f"(синтетический мир, seed {matching.get('seed')})"),
+            "subtext": ((f"MRR {num(mrr.get('mean'))} · 95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} % · "
+                         f"{matching.get('n_needs')} потребностей в {matching.get('n_worlds')} отложенных мирах × "
+                         f"{int_ru(matching.get('n_candidates'))} кандидатов, один прогон (модели, не люди)")
+                        if matching.get("n_worlds") else
+                        (f"MRR {num(mrr.get('mean'))} · 95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} % · бенчмарк: "
+                         f"{matching.get('n_needs')} потребностей × {int_ru(matching.get('n_candidates'))} кандидатов "
+                         f"(синтетический мир, seed {matching.get('seed')})")),
             "provenance": f"бенчмарк подбора, {_date(matching.get('generated_at'))}",
             "recompute": matching["recompute"], "code_ref": matching["code_ref"]})
     if fsp and (fsp.get("index") or {}).get("documents"):
@@ -709,8 +743,9 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
         d, g = hh["direction_ok"], hh.get("grade_ok") or {}
         cards.append({
             "id": "hh_real", "eyebrow": "Реальные вакансии hh.ru", "value": int_ru(hh.get("n")), "accent": "вакансий",
-            "subtext": (f"направление вакансии определено верно в {pct(d.get('value'))} % ({d.get('k')} из {d.get('n')}), "
-                        f"грейд — в {pct(g.get('value'))} % ({g.get('k')} из {g.get('n')}); {hh.get('set') or ''}").rstrip("; "),
+            "subtext": (f"направление вакансии определено верно в {pct(d.get('value'))} % ({d.get('k')} из {d.get('n')})"
+                        + (f", грейд — в {pct(g.get('value'))} % ({g.get('k')} из {g.get('n')})" if g.get("value") is not None else "")
+                        + f"; {hh.get('set') or ''}").rstrip("; "),
             "provenance": "разбор вакансий hh.ru",
             "recompute": hh["recompute"], "code_ref": hh["code_ref"]})
     return cards
@@ -737,13 +772,17 @@ def recompute_table(bank, gv, cheat, matching, hh, anticheat, fsp, load) -> list
                      "artifact": "backend/app/modules/validation/data/cheat_bots.json"})
     if matching and isinstance(matching.get("p5"), dict):
         rows.append({"section": "Подбор под потребность (бенчмарк)",
-                     "metric": f"P@5 {pct(matching['p5'].get('mean'))} %, MRR {num((matching.get('mrr') or {}).get('mean'))}",
-                     "sample": f"{matching.get('n_needs')} × {int_ru(matching.get('n_candidates'))}, синтетический мир",
+                     "metric": f"P@5 {pct(matching['p5'].get('mean'))} %, MRR {num((matching.get('mrr') or {}).get('mean'))}"
+                               + (f", nDCG@10 {num((matching.get('ndcg10') or {}).get('mean'))}" if matching.get("ndcg10") else ""),
+                     "sample": (f"{matching.get('n_needs')} потребностей, {matching.get('n_worlds')} отложенных мира × "
+                                f"{int_ru(matching.get('n_candidates'))}, один прогон, модели" if matching.get("n_worlds")
+                                else f"{matching.get('n_needs')} × {int_ru(matching.get('n_candidates'))}, синтетический мир"),
                      "command": matching["recompute"], "code_ref": matching["code_ref"],
-                     "artifact": "backend/app/modules/validation/data/matching_bench.json"})
+                     "artifact": matching.get("artifact") or "backend/app/modules/validation/data/matching_bench.json"})
     if hh:
         rows.append({"section": "Реальные вакансии hh.ru",
-                     "metric": f"направление {pct((hh.get('direction_ok') or {}).get('value'))} %, грейд {pct((hh.get('grade_ok') or {}).get('value'))} %",
+                     "metric": f"направление {pct((hh.get('direction_ok') or {}).get('value'))} %"
+                               + (f", грейд {pct((hh.get('grade_ok') or {}).get('value'))} %" if (hh.get("grade_ok") or {}).get("value") is not None else ""),
                      "sample": f"N = {hh.get('n')}; {hh.get('set') or ''}", "command": hh["recompute"],
                      "code_ref": hh["code_ref"], "artifact": "docs/realdata/numbers_matching.json или validation/data/hh_match.json"})
     if anticheat and isinstance(anticheat.get("holdout_offline"), dict):
