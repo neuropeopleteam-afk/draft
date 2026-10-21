@@ -64,7 +64,7 @@ TOP5 = (("confident_accuracy", "Точность уверенного верди
         ("false_confirm_all", "Ложное подтверждение (от всех)", "false_confirm_all"),
         ("exact_grade", "Точный грейд (6 ступеней, все кандидаты)", "exact_grade_final"),
         ("within_one", "Грейд ±1 ступень", "within_one_final"),
-        ("retest_kappa_w", "Повтор теста (κw)", None))
+        ("retest_kappa_w", "Повтор теста: согласие двух попыток (взвешенная каппа)", None))
 TOP5_PAIRS = {"confident_accuracy": {"confident_share": "confident_share_final"},
               "false_confirm_all": {"among_overclaim": "false_confirm_among_overclaim"},
               "exact_grade": {"grades_5": "exact_grade_final_5", "grades_4": "exact_grade_final_4",
@@ -509,7 +509,9 @@ def top5_meta(hard: dict, st: dict) -> dict:
     man = (((hard or st or {}).get("meta") or {}).get("bank") or {}).get("manifest") or {}
     return {"st": a, "hard": b,
             # плоские поля для главной (Landing.tsx: standard_condition_ru / hard_condition_ru, Top5Meta)
-            "standard_condition_ru": (a or {}).get("condition_ru"), "hard_condition_ru": (b or {}).get("condition_ru"),
+            # простыми словами (А19 №7: на главной без a × U(…), θ ~ N(…)); полное условие — st/hard.condition_ru
+            "standard_condition_ru": _plain_cond(st, hard=False), "hard_condition_ru": _plain_cond(hard, hard=True),
+            "standard_condition_tech_ru": (a or {}).get("condition_ru"), "hard_condition_tech_ru": (b or {}).get("condition_ru"),
             "bank_hash": man.get("content_hash"), "bank_commit": man.get("commit"),
             "bank_families": man.get("n_families") or (len(man.get("families") or []) or None),
             "n": (b or a or {}).get("n"), "generated_at": (b or a or {}).get("date"),
@@ -749,10 +751,10 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
         p5, mrr = matching["p5"], matching.get("mrr") or {}
         cards.append({
             "id": "matching_p5", "eyebrow": "Точность топ-5 подбора (P@5)", "value": pct(p5.get("mean")), "accent": "%",
-            "subtext": ((f"95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} %, nDCG@10 {num((matching.get('ndcg10') or {}).get('mean'))} · "
+            "subtext": ((f"95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} %, качество порядка {num((matching.get('ndcg10') or {}).get('mean'))} · "
                          f"стандартные условия: {matching.get('n_needs')} потребностей в {matching.get('n_worlds')} отложенных мирах × "
                          f"{int_ru(matching.get('n_candidates'))} кандидатов"
-                         + (f"; жёсткие: P@5 {pct(((matching.get('hard') or {}).get('p5') or {}).get('mean'))} %, nDCG@10 "
+                         + (f"; жёсткие: {pct(((matching.get('hard') or {}).get('p5') or {}).get('mean'))} %, качество порядка "
                             f"{num(((matching.get('hard') or {}).get('ndcg10') or {}).get('mean'))}" if matching.get("hard") else "")
                          + " · один прогон, модели, не люди")
                         if matching.get("n_worlds") else
@@ -850,6 +852,19 @@ def recompute_table(bank, gv, cheat, matching, hh, anticheat, fsp, load) -> list
         rows.append({"section": "Нагрузка", "metric": load.get("claim_ru") or "см. docs/perf/LOAD.md", "sample": load.get("sample") or "",
                      "command": load.get("recompute") or "", "code_ref": "tools/perf/", "artifact": "docs/perf/load.json"})
     return rows
+
+
+def _plain_cond(d: dict | None, hard: bool) -> str | None:
+    """Условие прогона простыми словами — для главной; числа (N, минуты) — из того же JSON прогона."""
+    if not d:
+        return None
+    s = d.get("summary") or {}
+    mt = s.get("minutes_total") or {}
+    head = (f"{COL_HARD_RU}: угадывание в вопросах с выбором, больше завышенных и заниженных заявок, кандидаты у самых "
+            "порогов, осторожные параметры заданий" if hard else
+            f"{COL_ST_RU}: те же допущения о заданиях и кандидатах, что у других решений, часть заявок завышена на ступень")
+    return (f"{head}; модельные кандидаты, не люди; N = {int_ru(s.get('n'))}; время — в среднем {num(mt.get('mean'), 0)} мин "
+            f"(у 90 % — до {num(mt.get('p90'), 0)}).")
 
 
 def final_blocks() -> tuple[dict, dict, dict]:

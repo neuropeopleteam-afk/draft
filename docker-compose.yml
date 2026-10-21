@@ -19,8 +19,16 @@
 # Нагрузочный тест — docs/LOAD_TEST.md. Keycloak включается COMPOSE_PROFILES=fsp-id.
 name: spectrek_fsp
 
+# Ротация логов контейнеров на время экспертизы (22–24.10): до 3 файлов по 20 МБ на сервис
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "3"
+
 services:
   db:
+    logging: *default-logging
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -42,6 +50,7 @@ services:
     mem_limit: 320m
 
   api:
+    logging: *default-logging
     build:
       context: ./backend
       additional_contexts:
@@ -130,6 +139,7 @@ services:
     mem_limit: ${API_MEM_LIMIT:-3072m}
 
   web:
+    logging: *default-logging
     build: ./frontend
     restart: unless-stopped
     depends_on:
@@ -142,6 +152,7 @@ services:
   # За nginx по пути /auth (web → keycloak:8080), консоль администратора — только 127.0.0.1:${KEYCLOAK_PORT}.
   # Хранилище — наш PostgreSQL, отдельная база keycloak. Включение: COMPOSE_PROFILES=fsp-id в .env.
   keycloak:
+    logging: *default-logging
     profiles: ["fsp-id"]
     build: ./keycloak
     restart: unless-stopped
@@ -189,6 +200,7 @@ services:
   # LLM_LOCAL_HF_REPO=unsloth/Qwen3.5-4B-GGUF:Q4_K_M, LLM_LOCAL_MODEL=qwen3.5-4b, LLM_LOCAL_MEM_LIMIT=4g (2,7 ГБ).
   # Потоков — по числу доступных ядер (nproc), а не всех ядер хоста: --threads -1 на 8 vCPU сервера проверок взял 192.
   llm-local:
+    logging: *default-logging
     profiles: ["llm-local"]
     image: ${LLM_LOCAL_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-b11515}
     restart: unless-stopped

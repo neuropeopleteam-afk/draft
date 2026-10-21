@@ -243,6 +243,31 @@ def load_specializations(db: Session, profiles: list[CandidateProfile]) -> dict:
     return out
 
 
+def _light_bundles(db: Session, ids: list, *, direction: str | None, category_ids: list[str] | None) -> list[Bundle]:
+    """Пакеты только с профилем и специализациями — выбор направления тем же правилом, что facts.load_bundles
+    (основное/подтверждённое, затем категория фильтра): грейд, статус, рейтинг и порядок поиска совпадают с полными
+    пакетами (проверка — ответ поиска побайтно до/после); факты, тесты и ФСП не грузятся."""
+    profiles = db.scalars(select(CandidateProfile).where(CandidateProfile.user_id.in_(list(dict.fromkeys(ids))))).all()
+    specs = load_specializations(db, list(profiles))
+    out = []
+    for p in profiles:
+        b = Bundle(profile=p)
+        b.specializations.update(specs.get(p.user_id, {}))
+        primary = next((r.direction_id for r in b.specializations.values() if r.is_primary), p.current_direction_id)
+        proven = [r for r in b.specializations.values() if r.category_id]
+        default = primary
+        if proven and not (b.specializations.get(primary) and b.specializations[primary].category_id):
+            default = sorted(proven, key=lambda r: (not r.is_primary, r.direction_id))[0].direction_id
+        selected = direction or default
+        if category_ids:
+            eligible = [r for r in b.specializations.values() if r.category_id in category_ids
+                        and (not direction or r.direction_id == direction)]
+            if eligible:
+                selected = sorted(eligible, key=lambda r: (not r.is_primary, -(r.rating_score or 0), r.direction_id))[0].direction_id
+        out.append(b.for_direction(selected))
+    return out
+
+
 def pool_counts(db: Session, real_only: bool = False) -> tuple[dict[str, int], dict[str, int]]:
     """(category_counts, provisional_counts) за одну загрузку видимого пула. Экран категорий и расчёт подборки звали
     обе функции — пул (до 500 кандидатов с профилями) грузился дважды; под нагрузкой это CPU воркера (docs/LOAD.md)."""
@@ -861,13 +886,22 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, direction=direction, grades=[grade] if grade else None,
                                                              category_ids=[category] if category else None,
                                                              real_only=real_only)]
-    bundles = list(load_bundles(db, ids, direction=direction, category_ids=wanted).values())
     f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only, "real_only": real_only,
          "fsp_protocol_only": fsp_protocol_only}
     if stack:
         f["stack_t1" if stack_level == "t1" else "stack_any"] = stack
+    light = not (fsp_only or fsp_protocol_only or stack)
+    if light:  # фильтры и порядок — только по профилю и специализациям: полные пакеты — лишь для страницы выдачи
+        bundles = _light_bundles(db, ids, direction=direction, category_ids=wanted)
+    else:
+        bundles = list(load_bundles(db, ids, direction=direction, category_ids=wanted).values())
     bundles = apply_filters(bundles, f)
     bundles.sort(key=lambda b: (tier(b), -(b.rating or 0), b.profile.public_ref or ""))
+    if light:
+        page_ids = [b.profile.user_id for b in bundles[offset: offset + limit]]
+        full = load_bundles(db, page_ids, direction=direction, category_ids=wanted)
+        page = [full[u] for u in page_ids]
+        bundles = bundles[:offset] + page + bundles[offset + limit:]
     # Место в категории — по рейтингу среди видимых
     by_cat: dict[str, list[float]] = {}
     for specs in load_specializations(db, visible_pool(db, real_only=real_only)).values():  # без фактов всего пула
