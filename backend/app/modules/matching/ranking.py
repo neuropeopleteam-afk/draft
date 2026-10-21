@@ -224,13 +224,32 @@ def unconfirmed_counts(db: Session, real_only: bool = False) -> dict[str, int]:
     return out
 
 
+def load_specializations(db: Session, profiles: list[CandidateProfile]) -> dict:
+    """Только специализации кандидатов — то же, что Bundle.specializations в facts.load_bundles (строки
+    CandidateSpecialization + устаревшая из профиля), без фактов, тестов и ФСП всего пула: для счётчиков категорий и
+    мест в рейтинге (поиск и подборка грузили весь видимый пул целиком только ради этих чисел)."""
+    from app.modules.profiles.specializations import legacy_specialization
+
+    out: dict = {p.user_id: {} for p in profiles}
+    if not out:
+        return out
+    for r in db.scalars(select(CandidateSpecialization).where(CandidateSpecialization.user_id.in_(list(out)))):
+        out[r.user_id][r.direction_id] = r
+    for p in profiles:
+        if p.current_direction_id not in out[p.user_id]:
+            r = legacy_specialization(p)
+            if r:
+                out[p.user_id][r.direction_id] = r
+    return out
+
+
 def pool_counts(db: Session, real_only: bool = False) -> tuple[dict[str, int], dict[str, int]]:
     """(category_counts, provisional_counts) за одну загрузку видимого пула. Экран категорий и расчёт подборки звали
     обе функции — пул (до 500 кандидатов с профилями) грузился дважды; под нагрузкой это CPU воркера (docs/LOAD.md)."""
     out: dict[str, int] = {}
     prov: dict[str, int] = {}
-    for b in load_bundles(db, [p.user_id for p in visible_pool(db, real_only=real_only)]).values():
-        for r in b.specializations.values():
+    for specs in load_specializations(db, visible_pool(db, real_only=real_only)).values():  # без фактов всего пула
+        for r in specs.values():
             if r.category_id and r.status in ("confirmed", "provisional"):
                 out[r.category_id] = out.get(r.category_id, 0) + 1
             if r.category_id and r.status == "provisional":
@@ -827,8 +846,8 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
     bundles.sort(key=lambda b: (tier(b), -(b.rating or 0), b.profile.public_ref or ""))
     # Место в категории — по рейтингу среди видимых
     by_cat: dict[str, list[float]] = {}
-    for b in load_bundles(db, [p.user_id for p in visible_pool(db, real_only=real_only)]).values():
-        for r in b.specializations.values():
+    for specs in load_specializations(db, visible_pool(db, real_only=real_only)).values():  # без фактов всего пула
+        for r in specs.values():
             if r.category_id:
                 by_cat.setdefault(r.category_id, []).append(r.rating_score or 0)
     items = []
