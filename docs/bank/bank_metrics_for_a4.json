@@ -1,8 +1,8 @@
 {
   "source": "tools/bank_manifest.py (из BANK_SYNC.json)",
-  "bank_commit": "3697c32",
-  "content_hash": "5f66b978cf805496",
-  "synced_at": "2026-10-21T07:35:25+00:00",
+  "bank_commit": "b87f441",
+  "content_hash": "9a4bea7bf98cd67e",
+  "synced_at": "2026-10-21T08:01:28+00:00",
   "n_families": 1524,
   "by_direction": {
     "analyst": {
@@ -138,43 +138,43 @@
   ],
   "validation": {
     "summary": {
-      "n_families": 1514,
-      "n_variants_generated": 30280,
-      "n_unique_variants": 30254,
-      "n_checks": 38791,
+      "n_families": 1524,
+      "n_variants_generated": 30480,
+      "n_unique_variants": 30454,
+      "n_checks": 38991,
       "n_checks_failed": 0,
       "status": {
-        "PASS": 1436,
-        "WARN": 78
+        "PASS": 1442,
+        "WARN": 82
       },
       "n_fail": 0,
-      "n_warn": 78,
+      "n_warn": 82,
       "by_direction": {
-        "analyst": 143,
-        "backend": 155,
-        "common": 174,
-        "data_eng": 152,
-        "data_ml": 154,
-        "devops": 147,
-        "frontend": 155,
-        "mobile": 139,
-        "qa": 149,
-        "security": 146
+        "analyst": 144,
+        "backend": 156,
+        "common": 175,
+        "data_eng": 153,
+        "data_ml": 155,
+        "devops": 148,
+        "frontend": 156,
+        "mobile": 140,
+        "qa": 150,
+        "security": 147
       },
       "by_format": {
         "mcq_concept": 1234,
-        "predict_output": 75,
+        "predict_output": 85,
         "open_answer": 57,
         "find_bug": 67,
         "choose_fix": 59,
         "open_book_3step": 22
       },
-      "seconds": 1903.2,
+      "seconds": 1672.1,
       "jobs": 2
     },
     "seeds": 20,
     "verify_seeds": null,
-    "where": "сервер «Москва», контейнер api, tmpfs /dev/shm с exec; полный прогон на снимке 9032485e (1 514 семейств), 10 семейств LP-3 второй порции — отдельно, PASS; прогон на голове 3697c327 идёт: /opt/spectrek_fsp/work/ag_a3/src3/val20"
+    "where": "Москва, контейнер a3-val, 20 сидов, голова 3697c327"
   },
   "quality": {
     "prior_a_by_format": {
