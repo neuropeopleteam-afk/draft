@@ -222,33 +222,33 @@ export function FspHeroMonolithStage({ mobile = false }: { mobile?: boolean }) {
           </span>
         </div>
 
-        {/* Три парящие стеклянные орбитальные плашки (Orbit Pills) — на десктопе парят вокруг, на мобильном строятся компактным каскадом */}
-        <div className="relative z-20 mt-2 grid w-full grid-cols-1 gap-1.5 sm:static sm:mt-0 sm:block">
+        {/* Три стеклянные капсулы показателей в нижней док-панели сцены (не перекрывают 3D-образ) */}
+        <div className="relative z-20 mt-3 grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
           <a
             href="#fsp-ecosystem"
-            className="fsp-orbit-pill fsp-orbit-pill--top"
+            className="fsp-orbit-pill"
             title={getRegionsClaim()}
           >
             <span className="fsp-orbit-pill__dot" aria-hidden="true" />
             <span>
-              <b>ФСП: {regions} региональных представительств</b>
-              <small>Спортивные разряды и кубки России</small>
+              <b>ФСП: {regions} регионов</b>
+              <small>Разряды и кубки России</small>
             </span>
           </a>
 
-          <a href="#candidates" className="fsp-orbit-pill fsp-orbit-pill--left">
+          <a href="#candidates" className="fsp-orbit-pill">
             <span className="fsp-orbit-pill__dot fsp-orbit-pill__dot--red" aria-hidden="true" />
             <span>
-              <b>Банк · {NUMBERS.bank.directions} ИТ-направлений</b>
-              <small>{fmtInt(NUMBERS.bank.families)} семейств задач · устная защита</small>
+              <b>Банк · {NUMBERS.bank.directions} направлений</b>
+              <small>{fmtInt(NUMBERS.bank.families)} семейств задач</small>
             </span>
           </a>
 
-          <a href="#employers" className="fsp-orbit-pill fsp-orbit-pill--bottom">
+          <a href="#employers" className="fsp-orbit-pill">
             <span className="fsp-orbit-pill__dot" aria-hidden="true" />
             <span>
-              <b>Цифровой паспорт грейда</b>
-              <small>Приглашение — только с вилкой зарплаты</small>
+              <b>Паспорт грейда</b>
+              <small>Офферы только с вилкой</small>
             </span>
           </a>
         </div>

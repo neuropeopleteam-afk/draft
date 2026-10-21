@@ -560,18 +560,18 @@ html[data-theme="light"] .np .fsp-serif-italic {
 }
 
 .fsp-orbit-pill {
-  position: absolute;
+  position: relative;
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 13px;
+  gap: 8px;
+  padding: 8px 11px;
   border-radius: 14px;
-  background: rgba(12, 15, 34, 0.95);
-  border: 1px solid rgba(165, 157, 255, 0.42);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.55);
+  background: rgba(12, 15, 34, 0.92);
+  border: 1px solid rgba(165, 157, 255, 0.36);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
   color: #F3F4FF;
-  font-size: 12px;
+  font-size: 11.5px;
   line-height: 1.25;
   text-decoration: none;
   transition: transform 0.2s ease, border-color 0.2s ease;
