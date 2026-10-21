@@ -610,6 +610,12 @@ def apply_engine_result(db: Session, ts: TestSession, res, profile: CandidatePro
 
 
 
+def _guessing_flag(er: dict) -> bool:
+    """Сигнал А6 «похоже на угадывание» в достоверности попытки (замечание А19 №5)."""
+    integ = (er.get("details") or {}).get("integrity") or {}
+    return any("угадыван" in str(r) for r in integ.get("reasons") or [])
+
+
 def _accept_lower_fields(ts: TestSession, specialization, er: dict) -> dict:
     """Поля «принять уровень ниже» для итога теста (И2): доказанный уровень ниже заявленного (P ≥ 0,8), который выше
     текущего подтверждённого; у «Junior (предварительно)» доказанный Стажёр принимается (консилиум 07.10, 7.3в)."""
@@ -620,6 +626,10 @@ def _accept_lower_fields(ts: TestSession, specialization, er: dict) -> dict:
 
     can_lower, _ = accept_lower_allowed(current, ts.claimed_grade_id, bool(er.get("confirmed")), probs,
                                         provisional=cur_prov, level=_cl(er.get("se")))
+    # А19 №5: при сигналах достоверности (например, «похоже на угадывание») уровень ниже одним нажатием не выдаётся —
+    # «доказан уверенно» рядом с «похоже на угадывание» противоречиво; путь — повтор теста или доп. этап
+    if _guessing_flag(er):
+        can_lower = None
     accepted = ((ts.result or {}).get("outcome") or {}).get("accepted_lower")
     avail = bool(can_lower and not accepted)
     return {
@@ -708,6 +718,9 @@ def accept_lower_grade(db: Session, ts: TestSession) -> dict:
 
     lower, why = accept_lower_allowed(current, ts.claimed_grade_id, bool(er.get("confirmed")), er.get("probabilities"),
                                       provisional=cur_prov, level=_cl(er.get("se")))
+    if lower is not None and _guessing_flag(er):
+        raise api_error(409, "integrity_review", "Ответы этой попытки похожи на угадывание — уровень ниже одним "
+                        "нажатием не принимается: пройдите тест ещё раз")
     if lower is None:
         from app.modules.assessment.grades import confirm_pct
 

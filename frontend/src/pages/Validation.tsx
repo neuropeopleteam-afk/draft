@@ -29,6 +29,7 @@ import { useHashScroll } from "../lib/hashScroll";
 import { useMeta } from "../lib/meta";
 import { ScrollX } from "../components/A11y";
 import { Fold, FoldAllButton, FoldGroup, FoldProvider } from "../components/validation/Fold";  // SIMPLIFY п.3: разделы свёрнуты
+import { makeModelAlias, noVendor } from "../components/validation/noVendor";
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
@@ -223,8 +224,8 @@ function Report({ r, before }: { r: any; before?: ReactNode }) {
       <Section id="matching" title="Подбор на демо-данных: разметка правилами" lead={`${m.n_needs} потребностей × ${m.set_size} кандидатов из демо-данных, ${m.n_pairs} пар. ${m.method ?? ""}`}>
         <ProvenanceLine p={pv.demo} className="mb-2" />
         <div className="mb-3"><Alert kind="info"><b>Не доказательство. </b>Метки здесь построены правилами и частично повторяют фильтр категории платформы — оценка циркулярна. Доказательство качества подбора — бенчмарк со скрытой истиной и абляции выше, затем разметка моделью; этот блок показывает только, что подборка на демо-данных работает.</Alert></div>
-        <Table head={["Способ", "precision@5", "nDCG@5", "nDCG@10", "Внутри категории: nDCG@3"]}
-          rows={[["Подборка платформы", "platform"], ["Платформа без бонуса ФСП", "platform_no_fsp"], ["BM25 по тексту резюме и потребности", "bm25"], ["Совпадение тегов заявленного стека", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
+        <Table head={["Способ", "Точность топ-5 (precision@5)", "Качество порядка (nDCG@5)", "Качество порядка (nDCG@10)", "Внутри категории: качество порядка (nDCG@3)"]}
+          rows={[["Подборка платформы", "platform"], ["Платформа без бонуса ФСП", "platform_no_fsp"], ["Поиск по словам резюме и потребности (BM25)", "bm25"], ["Совпадение тегов заявленного стека", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
             [t, num(m.summary?.["p@5"]?.[k]), num(m.summary?.["ndcg@5"]?.[k]), num(m.summary?.["ndcg@10"]?.[k]), num(m.summary?.["within_category_ndcg@3"]?.[k])])} />
         <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Пересчёт по {r.experts?.model_panel ? "разметке модельной панели (не люди)" : "экспертной разметке"} — в разделе <a href="#experts" className="font-semibold text-brand-plum underline">«{r.experts?.model_panel ? "Модельная панель" : "Экспертная разметка"}»</a>.</p>
         <p className="mt-3 rounded-xl bg-[#F3F2FB] p-4 text-sm text-brand-ink/80">Рейтинг ФСП v2: все дисциплины и типы мероприятий имеют одинаковый вес. Победитель / призёр выше финалиста, финалист выше участника отбора. Повторные соревнования дают убывающий вклад; после 12 месяцев вес плавно снижается. Бонус ФСП в подборке — 0,10, грейд он не меняет. Возрастные группы 18+, 16–17 и 14–15 не участвуют в скоре: это проверяет «Красная кнопка».</p>
@@ -283,7 +284,7 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
           <label><span className={lab}>Стратегия ответов</span>
             <select className={sel} value={f.strategy} onChange={(e) => setF({ ...f, strategy: e.target.value })}>{strategies.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}</select>
             <span className="mt-1 block text-xs text-brand-ink/65">{strategies.find((x) => x.id === f.strategy)?.text}</span></label>
-          {f.strategy === "theta" && <label><span className={lab}>Уровень θ (от −3 до 3)</span>
+          {f.strategy === "theta" && <label><span className={lab}>Уровень кандидата по шкале теста (от −3 до 3)</span>
             <input className={sel} type="number" step="0.1" min={-3} max={3} value={f.theta} onChange={(e) => setF({ ...f, theta: Number(e.target.value) })} />
             <span className="mt-1 block text-xs text-brand-ink/65">Пороги: Junior −1, Middle 0, Senior 1</span></label>}
           <label><span className={lab}>Направление</span>
@@ -312,17 +313,17 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
             </div>
             <div className="grid gap-4 md:grid-cols-4">
               <Kpi label="Подтверждений" value={pct(res.confirm_rate)} hint={`${res.runs_total} прогонов · ${num(res.seconds, 1)} с`} />
-              <Kpi label="θ̂ среднее ± SE" value={`${sgn(res.theta_hat?.mean)} ± ${num(res.se?.mean)}`} hint={`разброс θ̂ между кандидатами: ${num(res.theta_hat?.sd)}`} />
+              <Kpi label="Оценка уровня: среднее ± погрешность" value={`${sgn(res.theta_hat?.mean)} ± ${num(res.se?.mean)}`} hint={`разброс оценки между кандидатами: ${num(res.theta_hat?.sd)}`} />
               <Kpi label="Заданий" value={num(res.n_items?.mean, 1)} hint={`от ${res.n_items?.min} до ${res.n_items?.max} · дотестирование у ${pct(res.extension_share)}`} />
               <Kpi label="Расчётное время" value={`${num(res.time_min?.mean, 0)} мин`} hint={`от ${num(res.time_min?.min, 0)} до ${num(res.time_min?.max, 0)} мин`} />
             </div>
             <dl className="divide-y divide-brand-night/5 rounded-2xl bg-white text-sm ring-1 ring-brand-night/10">
               {([
-                ["Присвоенный грейд", dist(res.assigned)], ["Точечный грейд по θ̂", dist(res.point_grade)],
+                ["Присвоенный грейд", dist(res.assigned)], ["Грейд по оценке уровня", dist(res.point_grade)],
                 ["Доля верных ответов", pct(res.correct_share)], ["Причины остановки", Object.entries(res.stops ?? {}).map(([k, v]) => `${k}: ${v}`).join(" · ")],
                 ...(res.retest ? [
                   ["Повтор: решение совпало", pct(res.retest.decision_agreement)], ["Повтор: грейд точно / в пределах одного", `${pct(res.retest.grade_exact_agreement)} / ${pct(res.retest.grade_within_1)}`],
-                  ["Повтор: |Δθ| в среднем", `${num(res.retest.mean_abs_diff_theta)} при среднем SE ${num(res.retest.mean_se)}`],
+                  ["Повтор: разница оценок уровня в среднем", `${num(res.retest.mean_abs_diff_theta)} при средней погрешности ${num(res.retest.mean_se)}`],
                 ] : []),
               ] as [string, string][]).map(([k, v]) => (
                 <div key={k} className="grid gap-1 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] sm:gap-4">
@@ -334,7 +335,7 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
             {res.retest?.note && <p className="text-xs text-brand-ink/65">{res.retest.note}</p>}
             <details className="text-sm">
               <summary className="cursor-pointer font-semibold text-brand-plum">Все прогоны ({res.runs?.length})</summary>
-              <div className="mt-2"><Table head={["№", "θ̂", "SE", "Решение", "Точечный грейд", "Заданий", "Дотест.", "Минут", "Верных", "Остановка"]}
+              <div className="mt-2"><Table head={["№", "Оценка уровня", "Погрешность", "Решение", "Точечный грейд", "Заданий", "Дотест.", "Минут", "Верных", "Остановка"]}
                 rows={(res.runs ?? []).map((x: any, i: number) => [String(i + 1), sgn(x.theta), num(x.se), x.confirmed ? "подтверждён" : "нет", GRADE_RU[x.point_grade] ?? x.point_grade, x.n_items, x.n_ext, num(x.time_min, 0), `${x.correct}/${x.answered}`, x.stop])} /></div>
             </details>
           </div>
@@ -512,8 +513,8 @@ function ExpertResults({ res, kind = "people" }: { res: any; kind?: string }) {
           <p className="mt-1 text-sm text-brand-ink/70">Размечено пар {m.pairs_labeled} из {m.pairs_total}, полностью — {m.needs_complete} из {m.needs_total} потребностей{m.ratings_per_pair ? `, в среднем ${num(m.ratings_per_pair, 1)} оценки на пару` : ""}. Релевантна пара с медианной оценкой от 2. В скобках — 95 % ДИ (бутстреп по потребностям).</p>
           {s ? (
             <>
-              <div className="mt-3"><Table head={["Способ", "precision@5", "nDCG@5"]}
-                rows={[["Подборка платформы", "platform"], ["BM25 по тексту резюме и потребности", "bm25"], ["Случайный порядок по всей базе", "random"], ["Для сравнения: платформа по разметке по правилам", "rules_platform"], ["Для сравнения: BM25 по разметке по правилам", "rules_bm25"]]
+              <div className="mt-3"><Table head={["Способ", "Точность топ-5 (precision@5)", "Качество порядка (nDCG@5)"]}
+                rows={[["Подборка платформы", "platform"], ["Поиск по словам резюме и потребности (BM25)", "bm25"], ["Случайный порядок по всей базе", "random"], ["Для сравнения: платформа по разметке по правилам", "rules_platform"], ["Для сравнения: BM25 по разметке по правилам", "rules_bm25"]]
                   .map(([t, k]) => [t, ci(s["p@5"][k]), ci(s["ndcg@5"][k])])} /></div>
               <p className="mt-2 text-sm text-brand-ink/75">Платформа − BM25: precision@5 {ci(s["p@5"].diff_platform_bm25)}, p = {pv(s["p@5"].diff_platform_bm25.wilcoxon_p)}; nDCG@5 {ci(s["ndcg@5"].diff_platform_bm25)}, p = {pv(s["ndcg@5"].diff_platform_bm25.wilcoxon_p)} (знаковый критерий Уилкоксона по потребностям).
                 {m.vs_rules && ` Совпадение ${T.ref} с разметкой по правилам: κ = ${num(m.vs_rules.kappa)} (${m.vs_rules.level}), одинаково «релевантна / нет» — ${pct(m.vs_rules.relevant_agree)}.`}</p>
@@ -525,8 +526,8 @@ function ExpertResults({ res, kind = "people" }: { res: any; kind?: string }) {
       {(ag.A || ag.B) && (
         <div>
           <h3 className="text-base font-bold text-brand-night">{T.agree}</h3>
-          {model && res.agreement_caveat && <p className="mt-1 text-sm font-semibold text-brand-plum" data-testid="experts-agreement-caveat">κ и α ниже — {res.agreement_caveat}.</p>}
-          <div className="mt-3"><Table head={["Задание", T.coders, "Объектов с 2+ оценками", "κ попарно, среднее", "α Криппендорфа [95 % ДИ]", "Вывод"]}
+          {model && res.agreement_caveat && <p className="mt-1 text-sm font-semibold text-brand-plum" data-testid="experts-agreement-caveat">Согласие (каппа κ и альфа α) ниже — {res.agreement_caveat}.</p>}
+          <div className="mt-3"><Table head={["Задание", T.coders, "Объектов с 2+ оценками", "Согласие попарно (каппа), среднее", "α Криппендорфа [95 % ДИ]", "Вывод"]}
             rows={["A", "B", "B_weighted", "C"].filter((k) => ag[k]?.coders).map((k) => {
               const a = ag[k];
               const note = model && res.agreement_caveat ? " *" : "";
@@ -544,8 +545,8 @@ function ExpertResults({ res, kind = "people" }: { res: any; kind?: string }) {
         <div>
           <h3 className="text-base font-bold text-brand-night">Пороги грейдов: Ангофф против текущих{res.angoff.reference_only ? ` — ${res.angoff.note}` : ""}</h3>
           {res.angoff.reference_only && <p className="mt-1 text-sm font-semibold text-brand-plum">Справочно, модельная панель: доли решивших оценены прогонами модели, текущие пороги не меняются.</p>}
-          <p className="mt-1 text-sm text-brand-ink/70">Для каждого {model ? "прогона" : "эксперта"} и границы — θ, при котором ожидаемая доля решивших по модели теста (2PL, параметры заданий) совпадает с его оценками; порог — среднее по {model ? "прогонам" : "экспертам"}. Оценок: {res.angoff.judgements}, {model ? "прогонов" : "экспертов"}: {res.angoff.coders}.</p>
-          <div className="mt-3"><Table head={["Граница", "Порог в продукте θ", "Ангофф θ ± SE", "Разница", T.per, "Разброс по семействам", "Сдвиг доли кандидатов", "Вывод"]}
+          <p className="mt-1 text-sm text-brand-ink/70">Для каждого {model ? "прогона" : "эксперта"} и границы — уровень по шкале теста, при котором ожидаемая доля решивших по модели теста (2PL, параметры заданий) совпадает с его оценками; порог — среднее по {model ? "прогонам" : "экспертам"}. Оценок: {res.angoff.judgements}, {model ? "прогонов" : "экспертов"}: {res.angoff.coders}.</p>
+          <div className="mt-3"><Table head={["Граница", "Порог в продукте", "Ангофф ± погрешность", "Разница", T.per, "Разброс по семействам", "Сдвиг доли кандидатов", "Вывод"]}
             rows={res.angoff.boundaries.map((b: any) => [b.title, num(b.current), `${num(b.angoff)}${b.se != null ? ` ± ${num(b.se)}` : ""}`, sgn(b.delta), (b.per_expert ?? []).map((x: number) => num(x)).join(" · "), num(b.family_sd), pct(b.population_shift, 1),
               res.angoff.reference_only ? "справочно, модельная панель" : b.replace_suggested == null ? "нужно 2+ эксперта" : b.replace_suggested ? "предложить новый порог" : "оставить текущий"])} /></div>
           <p className="mt-2 text-xs text-brand-ink/65">{res.angoff.reference_only ? "Для экспертов-людей «предложить новый порог» — когда разница больше стандартной ошибки среднего; для модельной панели вывод не делается." : "«Предложить новый порог» — когда разница больше стандартной ошибки среднего по экспертам."} Сдвиг доли — сколько кандидатов при стандартном нормальном распределении уровня сменили бы грейд. Порог меняет владелец после разбора, автоматически не меняется.</p>
@@ -567,7 +568,7 @@ function PacksBlock({ p }: { p: any }) {
       <h3 className="text-base font-bold text-brand-night">Подбор по экспертной разметке: пакеты v1 и v2</h3>
       {p.caption && <div className="mt-2" data-testid="experts-packs-caption"><Alert kind="info">{p.caption}</Alert></div>}
       <p className="mt-2 text-sm text-brand-ink/70">Пакет v2: {info.A_pairs_new} новых пар по {info.A_needs} потребностям ({info.plan}). {info.A_pairs_from_v1 ? `Ещё ${info.A_pairs_from_v1} пар совпали с v1 по снимку карточки — их эталон взят из оценок v1. ` : ""}Метрики считаются по снимку пакета: места и ранги сохранены при сборке и не зависят от пересоздания демо-данных.</p>
-      <div className="mt-3"><Table head={["Пакет", "Метрика", "match-v1", "BM25", "Разность [95 % ДИ]", "p"]}
+      <div className="mt-3"><Table head={["Пакет", "Метрика", "Подбор платформы", "Поиск по словам (BM25)", "Разность [95 % ДИ]", "p"]}
         rows={PACK_T.filter(([k]) => pk[k]?.summary).flatMap(([k, t]) => (["p@5", "ndcg@10"] as const).map((m) => {
           const s = pk[k].summary[m];
           return [t, m === "p@5" ? "P@5" : "nDCG@10", num(s.platform.mean), num(s.bm25.mean), d(s.diff), pv(s.diff.wilcoxon_p)];
@@ -587,6 +588,7 @@ function PacksBlock({ p }: { p: any }) {
 /** panel — с чем сравнивается модель-оценщик, если разметка не людей («модельной панели»). */
 function LlmTable({ llm, note, panel }: { llm: any; note?: string; panel?: string }) {
   const abs = llm.criterion === "absolute";
+  const alias = makeModelAlias();  // поставщики на сайте не называются
   const th = llm.thresholds ?? {};
   const inj = (x: any) => x.injection_ok == null ? "—" : x.injection_mode === "blocked" ? "не дошла до модели: фильтр, эксперту" : x.injection_ok ? "не повлияла" : "подняла балл";
   const rule = abs
@@ -595,12 +597,12 @@ function LlmTable({ llm, note, panel }: { llm: any; note?: string; panel?: strin
   return (
     <>
       {llm.choice && (
-        <p className="mb-3 text-sm text-brand-ink/80"><span className="chip mr-2">Выбранный оценщик</span><b className="text-brand-night">{llm.choice}</b>{(() => { const c = llm.models.find((x: any) => x.model === llm.choice); return c ? ` · κ с консенсусом ${num(c.kappa_consensus)}, MAE ${num(c.mae_weighted)}, разброс прогонов ${num(c.run_spread)}${c.latency_ms_median ? `, задержка ${num(c.latency_ms_median / 1000, 1)} с` : ""}` : ""; })()}</p>
+        <p className="mb-3 text-sm text-brand-ink/80"><span className="chip mr-2">Выбранный оценщик</span><b className="text-brand-night">{alias(llm.choice)}</b>{(() => { const c = llm.models.find((x: any) => x.model === llm.choice); return c ? ` · κ с консенсусом ${num(c.kappa_consensus)}, MAE ${num(c.mae_weighted)}, разброс прогонов ${num(c.run_spread)}${c.latency_ms_median ? `, задержка ${num(c.latency_ms_median / 1000, 1)} с` : ""}` : ""; })()}</p>
       )}
-      {llm.caveat && <div className="mb-3"><Alert kind="info">{llm.caveat}</Alert></div>}
-      <Table head={["Модель", "Роль", "Прогонов", panel ? `κ с консенсусом ${panel}` : "κ с консенсусом экспертов", panel ? "κ с прогонами панели, среднее" : "κ с экспертами, среднее", panel ? "κ между прогонами панели" : "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
-        rows={llm.models.map((x: any) => [x.model, x.product == null ? "—" : x.product ? "в продукте" : "эталон", x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), inj(x), x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
-      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). ${panel ? `Сравнение — с консенсусом ${panel} (прогоны модели, не люди), поэтому вывод справочный. ` : ""}${rule} В продукте — модели цепочки оценщика (Claude, запасная — YandexGPT); остальные — эталон для сравнения. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
+      {llm.caveat && <div className="mb-3"><Alert kind="info">{noVendor(llm.caveat)}</Alert></div>}
+      <Table head={["Модель", "Роль", "Прогонов", panel ? `Согласие с консенсусом ${panel} (каппа)` : "Согласие с консенсусом экспертов (каппа)", panel ? "Согласие с прогонами панели (каппа), среднее" : "κ с экспертами, среднее", panel ? "κ между прогонами панели" : "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
+        rows={llm.models.map((x: any) => [alias(x.model), x.product == null ? "—" : x.product ? "в продукте" : "эталон", x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), inj(x), x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
+      <p className="mt-2 text-xs text-brand-ink/65">{note ? noVendor(note) : `Балл модели 0–1 переводится в 0–3 (×3, округление). ${panel ? `Сравнение — с консенсусом ${panel} (прогоны модели, не люди), поэтому вывод справочный. ` : ""}${rule} В продукте — модели цепочки оценщика (модель стенда, запасная — российская модель); остальные — эталон для сравнения. ${llm.choice ? `Выбор: ${alias(llm.choice)}.` : "Допустимой модели пока нет."}`}</p>
     </>
   );
 }
