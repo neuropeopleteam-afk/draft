@@ -152,7 +152,7 @@ function frameOf(stage: Stage, vw: number, vh: number, tab = 0, side: "right" | 
   const small = vw < 640;
   const usable = vh - tab;   // над нижней панелью навигации на телефоне (если она есть)
   if (stage === "large") {
-    let width = Math.min(760, vw - (small ? 20 : 48));
+    let width = Math.min(600, vw - (small ? 40 : 48));   // владелец 21.10 22:30: чуть меньше (было 760 / vw−20)
     let height = Math.round(width * (small ? 1.12 : 0.66));
     const maxH = usable - (small ? 120 : 140);
     if (height > maxH) { height = maxH; width = Math.min(width, Math.round(height / (small ? 1.12 : 0.66))); }

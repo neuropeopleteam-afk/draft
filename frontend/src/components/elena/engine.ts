@@ -331,7 +331,7 @@ export class ElenaEngine {
   private loading = 0;
   private ui: ElenaUi = {
     phase: "idle", mic: "off", speaking: false, userTalking: false, hearing: false, track: null, stepNo: 0, stepTotal: 0,
-    target: null, click: null, canPause: false, stage: "corner",   // владелец 21.10 22:20: сразу обычное окно, без большого на знакомстве
+    target: null, click: null, canPause: false, stage: "large",   // знакомство — большое окно по центру (владелец 21.10 22:30: «пусть будет большое, только чуть меньше»), обзор — в углу
     awaiting: null, listen: "open", autoNext: false,
   };
   private closed = false;
