@@ -99,18 +99,23 @@ def _has_category_clause():
                    CandidateSpecialization.status.in_(["confirmed", "provisional"])).exists())
 
 
-def _pool_query(confirmed: bool):
+def _pool_query(confirmed: bool, real_only: bool = False):
     q = (select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
          .where(CandidateProfile.visible_to_employers.is_(True), User.is_active.is_(True),
                 User.is_email_verified.is_(True), jury_scope.pool_clause(User.email)))
+    if real_only:
+        q = q.where(User.is_demo.is_(False), CandidateProfile.is_synthetic.is_(False))
     if confirmed:
         return q.where(_has_category_clause())
     return q.where(~_has_category_clause(), CandidateProfile.onboarding_completed_at.is_not(None))
 
 
 def is_synthetic_profile(p: CandidateProfile) -> bool:
-    """Модельный или синтетический профиль (признак profiles.is_synthetic от А2 или метка demo_model в privacy)."""
-    if getattr(p, "is_synthetic", False):
+    """Модельный, синтетический или демо-профиль (признак profiles.is_synthetic, User.is_demo или метка в privacy)."""
+    if getattr(p, "is_synthetic", False) or getattr(p, "is_demo", False):
+        return True
+    u = getattr(p, "user", None)
+    if u is not None and getattr(u, "is_demo", False):
         return True
     priv = p.privacy or {}
     return bool(priv.get("is_synthetic") or priv.get("demo_model") or priv.get("demo_audience") == "model")
@@ -137,17 +142,19 @@ def visible_pool(db: Session, direction: str | None = None, grades: list[str] | 
          .where(CandidateProfile.visible_to_employers.is_(True),
                 or_(and_(*legacy), select(CandidateSpecialization.user_id).where(*special).exists()),
                 User.is_active.is_(True), User.is_email_verified.is_(True), jury_scope.pool_clause(User.email)))
+    if real_only:
+        q = q.where(User.is_demo.is_(False), CandidateProfile.is_synthetic.is_(False))
     rows = list(db.scalars(q).all())
     return [p for p in rows if not is_synthetic_profile(p)] if real_only else rows
 
 
 def unconfirmed_pool(db: Session, direction: str | None = None, grades: list[str] | None = None,
-                     category_ids: list[str] | None = None) -> list[tuple[CandidateProfile, str, str]]:
+                     category_ids: list[str] | None = None, real_only: bool = False) -> list[tuple[CandidateProfile, str, str]]:
     """Кандидаты без подтверждённого грейда (опрос пройден, категории нет), видимые работодателю, с заявленными
     направлением и грейдом из последнего опроса: [(профиль, направление, грейд)]. Фильтры — по заявленному."""
     from app.modules.assessment.models import SurveyResponse
 
-    profiles = list(db.scalars(_pool_query(confirmed=False)).all())
+    profiles = list(db.scalars(_pool_query(confirmed=False, real_only=real_only)).all())
     if not profiles:
         return []
     claims: dict = {}
@@ -156,6 +163,8 @@ def unconfirmed_pool(db: Session, direction: str | None = None, grades: list[str
         claims.setdefault(sv.user_id, (sv.direction_id, sv.claimed_grade_id))
     out = []
     for p in profiles:
+        if real_only and is_synthetic_profile(p):
+            continue
         d, g = claims.get(p.user_id, (None, None))
         if not d or not g:
             continue
@@ -169,20 +178,20 @@ def unconfirmed_pool(db: Session, direction: str | None = None, grades: list[str
     return out
 
 
-def unconfirmed_counts(db: Session) -> dict[str, int]:
+def unconfirmed_counts(db: Session, real_only: bool = False) -> dict[str, int]:
     """Сколько кандидатов без подтверждённого грейда заявили каждую категорию."""
     out: dict[str, int] = {}
-    for _, d, g in unconfirmed_pool(db):
+    for _, d, g in unconfirmed_pool(db, real_only=real_only):
         out[f"{d}.{g}"] = out.get(f"{d}.{g}", 0) + 1
     return out
 
 
-def pool_counts(db: Session) -> tuple[dict[str, int], dict[str, int]]:
+def pool_counts(db: Session, real_only: bool = False) -> tuple[dict[str, int], dict[str, int]]:
     """(category_counts, provisional_counts) за одну загрузку видимого пула. Экран категорий и расчёт подборки звали
     обе функции — пул (до 500 кандидатов с профилями) грузился дважды; под нагрузкой это CPU воркера (docs/LOAD.md)."""
     out: dict[str, int] = {}
     prov: dict[str, int] = {}
-    for b in load_bundles(db, [p.user_id for p in visible_pool(db)]).values():
+    for b in load_bundles(db, [p.user_id for p in visible_pool(db, real_only=real_only)]).values():
         for r in b.specializations.values():
             if r.category_id and r.status in ("confirmed", "provisional"):
                 out[r.category_id] = out.get(r.category_id, 0) + 1
@@ -484,20 +493,21 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
 
 def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, include_refs: tuple = ()) -> dict:
     """include_refs: кандидаты, которые идут в results со своим настоящим местом, даже ниже limit (QR-демо жюри)."""
+    real_only = bool(filters.get("real_only"))
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
-    counts, prov = pool_counts(db)
+    counts, prov = pool_counts(db, real_only=real_only)
     recs = recommended_categories(req, counts, cats)
     cat_ids = filters.get("categories") or [r["id"] for r in recs if r["relation"] in ("exact", "direction", "all")]
     # Я12б: в точной категории меньше 30 подтверждённых — добор категории на ступень выше (grade_above, match-v1.3)
     above = grade_above.applies(recs, filters)
     above_id = above["above"]["id"] if above else None
     pool_ids = cat_ids + [above_id] if above else cat_ids
-    pool = visible_pool(db, category_ids=pool_ids)
+    pool = visible_pool(db, category_ids=pool_ids, real_only=real_only)
     ids = [p.user_id for p in pool]
     if not filters.get("confirmed_only"):
         # без подтверждённого грейда — по заявленной категории, отдельным ярусом ниже (видео №6: показывать, не скрывать);
         # добор ступенью выше их не касается — только точный уровень
-        ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids)]
+        ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids, real_only=real_only)]
     bundles = list(load_bundles(db, ids, direction=req.get("direction"), category_ids=pool_ids).values())
     # Ф2: условия потребности (формат, город — T0) применяются по умолчанию, только сужают выдачу и не дают баллов;
     # сколько скрыто условиями — в ответе (чип «скрыто условиями: N», отмена — filters.conditions_off)
@@ -536,7 +546,7 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         item["explain"] = explain_mod.build_explain_from_result(item, req, WEIGHTS)
         results.append(item)
     explain_mod.annotate_selection_neighbors(results, req, WEIGHTS)
-    unc = unconfirmed_counts(db)
+    unc = unconfirmed_counts(db, real_only=real_only)
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)
         r["unconfirmed"] = unc.get(r["id"], 0)
@@ -619,8 +629,8 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
     ids = [p.user_id for p in pool]
     if not confirmed_only:  # без подтверждённого грейда — по заявленному, ярусом ниже
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, direction=direction, grades=[grade] if grade else None,
-                                                             category_ids=[category] if category else None)
-                if not (real_only and is_synthetic_profile(p))]
+                                                             category_ids=[category] if category else None,
+                                                             real_only=real_only)]
     bundles = list(load_bundles(db, ids, direction=direction, category_ids=wanted).values())
     f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only, "real_only": real_only}
     if stack:
@@ -629,7 +639,7 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
     bundles.sort(key=lambda b: (tier(b), -(b.rating or 0), b.profile.public_ref or ""))
     # Место в категории — по рейтингу среди видимых
     by_cat: dict[str, list[float]] = {}
-    for b in load_bundles(db, [p.user_id for p in visible_pool(db)]).values():
+    for b in load_bundles(db, [p.user_id for p in visible_pool(db, real_only=real_only)]).values():
         for r in b.specializations.values():
             if r.category_id:
                 by_cat.setdefault(r.category_id, []).append(r.rating_score or 0)

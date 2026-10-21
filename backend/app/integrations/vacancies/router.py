@@ -121,16 +121,25 @@ def _own_vacancy(db: Session, company: Company, vid: uuid.UUID) -> Vacancy:
 _Creator = aliased(User)
 
 
-def _pool_join(stmt):
-    return (stmt.join(Company, Company.id == Vacancy.company_id)
+def _pool_join(stmt, user: User | None = None):
+    stmt = (stmt.join(Company, Company.id == Vacancy.company_id)
             .outerjoin(_Creator, _Creator.id == Company.created_by)
             .where(or_(_Creator.email.is_(None), jury_scope.pool_clause(_Creator.email))))
+    if user is not None and not jury_scope.sees_demo(user):
+        stmt = stmt.where(Vacancy.is_demo.is_(False), Company.is_demo.is_(False),
+                          or_(_Creator.id.is_(None), _Creator.is_demo.is_(False)))
+    return stmt
 
 
-def _in_pool(db: Session, v: Vacancy) -> bool:
+def _in_pool(db: Session, v: Vacancy, user: User | None = None) -> bool:
     """То же условие для одной вакансии (карточка, отклик)."""
     c = db.get(Company, v.company_id)
+    if user is not None and not jury_scope.sees_demo(user):
+        if v.is_demo or (c and c.is_demo):
+            return False
     creator = db.get(User, c.created_by) if c and c.created_by else None
+    if user is not None and not jury_scope.sees_demo(user) and creator and creator.is_demo:
+        return False
     return creator is None or jury_scope.visible(creator.email)
 
 
@@ -349,7 +358,7 @@ def list_vacancies(q: str | None = Query(None, max_length=100), direction: str |
                    category_id: str | None = Query(None, max_length=48), salary_min: int | None = Query(None, ge=0),
                    work_format: str | None = Query(None, pattern=FORMATS), limit: int = Query(50, ge=1, le=100),
                    user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
-    stmt = _pool_join(select(Vacancy).where(Vacancy.status == "published"))
+    stmt = _pool_join(select(Vacancy).where(Vacancy.status == "published"), user=user)
     if q:
         like = f"%{q.strip()}%"
         stmt = stmt.where(or_(Vacancy.title.ilike(like), Vacancy.description.ilike(like), Company.name.ilike(like)))
@@ -377,7 +386,7 @@ def list_vacancies(q: str | None = Query(None, max_length=100), direction: str |
 def get_vacancy(vid: uuid.UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
     v = db.get(Vacancy, vid)
     own = user.role == UserRole.employer and v is not None and _is_own(db, user, v)
-    if v is None or (v.status != "published" and not own) or (not own and not _in_pool(db, v)):
+    if v is None or (v.status != "published" and not own) or (not own and not _in_pool(db, v, user=user)):
         raise api_error(404, "vacancy_not_found", "Вакансия не найдена")
     mine = db.scalar(select(VacancyApplication).where(VacancyApplication.vacancy_id == v.id,
                                                       VacancyApplication.candidate_user_id == user.id))
@@ -404,7 +413,7 @@ class ApplyIn(BaseModel):
 def apply(vid: uuid.UUID, data: ApplyIn, bg: BackgroundTasks, user: User = Depends(candidate),
           db: Session = Depends(get_db)) -> dict:
     v = db.get(Vacancy, vid)
-    if v is None or v.status != "published" or not _in_pool(db, v):
+    if v is None or v.status != "published" or not _in_pool(db, v, user=user):
         raise api_error(404, "vacancy_not_found", "Вакансия не найдена или снята с публикации")
     if not data.consent_contacts:
         raise api_error(422, "consent_required", "Отклик раскрывает ваши контакты компании — подтвердите согласие")

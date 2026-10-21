@@ -209,7 +209,7 @@ def _compute(db: Session, req: dict, filters: dict) -> dict:
             if cid in cats and cid not in cat_ids:
                 neighbours.append(cid)
     universe = cat_ids + neighbours
-    pool = ranking.visible_pool(db, category_ids=universe)
+    pool = ranking.visible_pool(db, category_ids=universe, real_only=bool(filters.get("real_only")))
     loaded = [b for b in load_bundles(db, [p.user_id for p in pool], direction=d, category_ids=universe).values()
               if b.category_id in universe]
     bundles = [b for b in loaded if b.grade_status == "confirmed"]
