@@ -106,7 +106,17 @@ ls = lambda r: {l.split("\t", 1)[1]: l.split("\t", 1)[0] for l in subprocess.run
 a = {p: v for p, v in ls(src).items() if not s.excluded(p)}
 b = ls(cl)
 diff = sorted(set(a) ^ set(b)) + sorted(p for p in set(a) & set(b) if a[p] != b[p])
-print(f"  ..   файлов в голове: исходная без исключённых {len(a)}, очищенная {len(b)}, расхождений {len(diff)}")
+# намеренные правки головы — только правило «соперники» (PUBLISH_COMPETITORS=a|b): файл очищенной головы должен быть
+# ровно результатом этих замен над исходным, и исходный файл не нарушает никакого другого правила
+cat = lambda r, sha: subprocess.run(["git", "-C", r, "cat-file", "blob", sha], capture_output=True, check=True).stdout
+intended = []
+for p in [p for p in diff if p in a and p in b]:
+    src_data = cat(src, a[p])
+    if s.head_rules(p, src_data) == {"соперники"} and s.clean_text(src_data.decode("utf-8"), p).encode("utf-8") == cat(cl, b[p]):
+        intended.append(p)
+diff = [p for p in diff if p not in intended]
+print(f"  ..   файлов в голове: исходная без исключённых {len(a)}, очищенная {len(b)}, намеренно (соперники) {len(intended)}, "
+      f"расхождений {len(diff)}")
 for p in diff[:20]:
     print(f"  ..   расходится: {p}")
 sys.exit(1 if diff else 0)
