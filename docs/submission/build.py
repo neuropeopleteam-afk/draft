@@ -301,6 +301,7 @@ def build_texts(res: dict) -> list[Path]:
         (HERE / "src/README.md", ROOT / "README.md"),
         (HERE / "src/DOCUMENTATION.md", HERE / "DOCUMENTATION.md"),
         (ROOT / "docs/video/src/SCRIPT.md", ROOT / "docs/video/SCRIPT.md"),
+        (ROOT / "docs/presentation/src/PITCH.md", ROOT / "docs/presentation/PITCH.md"),
     ]
     written = []
     for src, dst in targets:
