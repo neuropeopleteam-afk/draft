@@ -134,7 +134,7 @@ export function ResetPassword() {
         <form onSubmit={submit} className="space-y-4" noValidate data-testid="reset-form">
           {devCode && (
             <Alert kind="info">
-              Код подтверждения (стенд без внешней почты): <b className="font-mono">{devCode}</b>
+              Код показан для проверки, в рабочем режиме приходит письмом: <b className="font-mono">{devCode}</b>
             </Alert>
           )}
           <div>

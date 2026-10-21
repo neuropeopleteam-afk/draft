@@ -11,6 +11,7 @@ import {
 import { FALLBACK_MEASURES, FALLBACK_SCENARIOS } from "../../components/warroom/fallbackData";
 import type {
   EvaluateResult,
+  FollowupContext,
   MeasureSelection,
   MeasureSpec,
   ScenarioPublic,
@@ -23,21 +24,21 @@ import { useAuth } from "../../lib/auth";
 
 const SAMPLE_JUSTIFICATIONS: Record<string, string> = {
   payment:
-    "Первопричина инцидента: синхронный вызов внешнего шлюза эквайринга внутри открытой транзакции БД исчерпывает пул соединений, а повторные запросы клиентов без ключа идемпотентности приводят к двойным списаниям. Для устранения атомарно фиксируем ключ идемпотентности в Redis через SET NX с TTL 24 часа, выносим вызов эквайринга под предохранитель breaker с коротким таймаутом 800 мс и включаем пул транзакций PgBouncer в рамках бюджета стоимости. При канареечной выкатке контролируем метрики задержки p99, долю ошибок 5xx и нулевое число двойных списаний по SLO.",
+    "Первопричина инцидента: синхронный вызов внешнего шлюза эквайринга внутри открытой транзакции БД исчерпывает пул соединений, а повторные запросы клиентов без ключа идемпотентности приводят к двойным списаниям. Для устранения атомарно фиксируем ключ идемпотентности в кэше через SET NX с временем хранения 24 часа, выносим вызов эквайринга под предохранитель breaker с коротким таймаутом 800 мс и включаем пул транзакций в рамках бюджета стоимости. При поэтапной выкатке контролируем метрики задержки p99, долю ошибок 5xx и нулевое число двойных списаний по SLO.",
   kafka:
-    "Первопричина сбоя: двойная запись в базу данных и брокер без общей транзакции приводит к потере событий при сетевых сбоях, а перебалансировка консюмеров без идемпотентности создаёт дубли заказов на складе. Применяем паттерн транзакционной таблицы outbox с пакетной выгрузкой batch и дедупликацию по ключу события через ON CONFLICT DO NOTHING. Контролируем разбор очереди, отставание лага консюмеров и сверку доставленных заказов по SLO.",
+    "Первопричина сбоя: двойная запись в базу данных и брокер без общей транзакции приводит к потере событий при сетевых сбоях, а перебалансировка обработчиков без идемпотентности создаёт дубли заказов на складе. Применяем паттерн транзакционной таблицы outbox с пакетной выгрузкой batch и дедупликацию по ключу события через ON CONFLICT DO NOTHING. Контролируем разбор очереди, отставание лага обработчиков и сверку доставленных заказов по SLO.",
   k8s:
     "Первопричина каскадного отказа: выход процесса за предел памяти контейнера вызывает аварийные завершения OOM, отсутствие пробы готовности readiness направляет трафик в непрогретые узлы, а синхронные повторы без разброса добивают кластер. Задаём квоты limits.memory и долю кучи MaxRAMPercentage=70, включаем readinessProbe и экспоненциальные повторы со случайным разбросом jitter под предохранителем. Контролируем плавный rollout в рамках бюджета, p99 и отсутствие рестартов.",
   ai:
-    "Первопричина уязвимости: прямая конкатенация системных инструкций и недоверенного текста ответа кандидата позволяет промпт-инъекции перехватить управление оценщиком и сжечь бюджет токенов. Вводим предварительный фильтр, изолируем данные разделителями и одноразовыми маркерами, требуем строгую JSON-схему с программной проверкой цитат, проверяем скрытую канарейку и ограничиваем max_tokens и бюджет сессии. Подозрительные ответы направляем эксперту на аудит и мониторинг квот.",
+    "Первопричина уязвимости: прямая конкатенация системных инструкций и недоверенного текста ответа кандидата позволяет инъекции перехватить управление оценщиком и сжечь бюджет токенов. Вводим предварительный фильтр, изолируем данные разделителями и одноразовыми маркерами, требуем строгую JSON-схему с программной проверкой цитат, проверяем скрытую метку и ограничиваем max_tokens и бюджет сессии. Подозрительные ответы направляем эксперту на аудит и мониторинг квот.",
   frontend_ssr:
-    "Первопричина деградации: хранение состояния запроса в глобальном сторе Node.js вызывает утечку памяти SSR, а одновременное истечение кэша каталога и повторные запросы при гидратации создают пробой кэша. Переходим на изолированный request-scoped стор, включаем кэширование swr с фоновым обновлением и склейкой coalesce параллельных запросов и сериализуем состояние для клиента. Контролируем потребление памяти воркеров в МБ и задержку p99 по SLO.",
+    "Первопричина деградации: хранение состояния запроса в глобальном хранилище вызывает утечку памяти серверного рендеринга SSR, а одновременное истечение кэша каталога и повторные запросы при гидратации создают пробой кэша. Переходим на изолированный request-scoped контекст, включаем кэширование swr с фоновым обновлением и склейкой coalesce параллельных запросов и сериализуем состояние для клиента. Контролируем потребление памяти воркеров в МБ и задержку p99 по SLO.",
   mobile_sync:
     "Первопричина шторма: одновременный выход мобильных устройств из офлайна с поштучной отправкой событий в цикле без разброса перегружает сеть и держит радиомодуль активным, разряжая батарею. Вводим случайный разброс jitter перед стартом синхронизации, агрегацию очереди в пачки batch с заголовком идемпотентности и соблюдение Retry-After при коде 429. Контролируем снижение числа фоновых пробуждений, p99 и отсутствие дублей очереди.",
   ml_drift:
-    "Первопричина деградации: синхронные запросы в холодное хранилище признаков вызывают таймауты инференса, а рассинхронизация формул онлайн и офлайн витрин ведёт к дрейфу и пропуску фрода. Включаем потоковый прогрев горячего кэша признаков в Redis по единой спецификации, защищаем вызов предохранителем с коротким таймаутом и консервативным фолбэком по правилам. Контролируем задержку p99, индекс стабильности PSI и полноту детекции по SLO.",
+    "Первопричина деградации: синхронные запросы в холодное хранилище признаков вызывают таймауты расчёта, а рассинхронизация формул онлайн и офлайн витрин ведёт к дрейфу и пропуску фрода. Включаем потоковый прогрев горячего кэша признаков по единой спецификации, защищаем вызов предохранителем с коротким таймаутом и консервативным фолбэком по правилам. Контролируем задержку p99, стабильность признаков PSI и полноту детекции по SLO.",
   qa_flaky:
-    "Первопричина паралича конвейера: параллельные воркеры автотестов мутируют общую базу данных без изоляции и зависят от нестабильной внешней песочницы, что вызывает гонки состояния и ложные падения flaky. Выделяем изолированную схему или вложенную транзакцию с откатом rollback на каждый worker_id и заменяем внешние вызовы детерминированным контрактным стабом. Отключаем слепые перезапуски, вводим карантин и мониторинг времени прохождения очереди.",
+    "Первопричина паралича конвейера: параллельные воркеры автотестов изменяют общую базу данных без изоляции и зависят от нестабильной внешней песочницы, что вызывает гонки состояния и ложные падения flaky. Выделяем изолированную схему или вложенную транзакцию с откатом rollback на каждый worker_id и заменяем внешние вызовы детерминированным контрактным стабом. Отключаем слепые перезапуски, вводим карантин и мониторинг времени прохождения очереди.",
 };
 
 const DEMO_RECOMMENDED_MEASURES: Record<string, string[]> = {
@@ -58,26 +59,42 @@ export default function ArchitectureMode({
   scenarios = FALLBACK_SCENARIOS,
   measuresCatalog = FALLBACK_MEASURES,
   demoMode = true,
+  followupAttemptId = null,
+  followupContext = null,
   onScenarioUpdated,
 }: {
   voice: Voice;
   scenarios?: ScenarioPublic[];
   measuresCatalog?: MeasureSpec[];
   demoMode?: boolean;
+  followupAttemptId?: string | null;
+  followupContext?: FollowupContext | null;
   onScenarioUpdated?: (scn: ScenarioPublic) => void;
 }) {
   const { me, signIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialDir = searchParams.get("direction");
+  const effFollowupId = followupAttemptId || searchParams.get("followup") || null;
 
   const [sid, setSid] = useState<string>(() => {
+    if (followupContext?.incident_id) return followupContext.incident_id;
     if (initialDir) {
       const found = scenarios.find((x) => x.direction === initialDir || x.id === initialDir);
       if (found) return found.id;
     }
     return scenarios[0]?.id ?? "payment";
   });
+
+  useEffect(() => {
+    if (followupContext?.incident_id && followupContext.incident_id !== sid) {
+      const next = scenarios.find((x) => x.id === followupContext.incident_id);
+      if (next) {
+        setSid(next.id);
+        setCode(next.patches[1]?.code ?? "");
+      }
+    }
+  }, [followupContext?.incident_id, scenarios, sid]);
 
   const s = useMemo(() => scenarios.find((x) => x.id === sid) ?? scenarios[0], [scenarios, sid]);
 
@@ -143,7 +160,17 @@ export default function ArchitectureMode({
     return () => window.clearInterval(iv);
   }, [phase, evalResult, s.base.loss]);
 
-  const selectScenario = (id: string) => {
+  const speakIfEnabled = useCallback(
+    (text: string) => {
+      voice.setSubtitle(text);
+      if (voice.voiceEnabled) {
+        void voice.speak(text);
+      }
+    },
+    [voice]
+  );
+
+  const selectScenario = (id: string, announce = true) => {
     const next = scenarios.find((x) => x.id === id) ?? scenarios[0];
     setSid(id);
     setSelectedMeasures({});
@@ -157,9 +184,11 @@ export default function ArchitectureMode({
     setSec(0);
     setLostRub(0);
     setErr(null);
-    void voice.speak(
-      `Инцидент «${next.title}». ${next.story} Выберите инженерные меры, настройте их параметры в рамках бюджета, исправьте патч кода и обоснуйте решение.`
-    );
+    if (announce) {
+      speakIfEnabled(
+        `Инцидент «${next.title}». ${next.story} Выберите меры, поправьте код и нажмите «Проверить решение».`
+      );
+    }
   };
 
   const regenerateSeedVariant = async () => {
@@ -209,8 +238,7 @@ export default function ArchitectureMode({
     setCode(s.patches[idx]?.code ?? "");
   };
 
-  const fillOptimalDemo = () => {
-    if (!demoMode) return;
+  const buildOptimalMeasures = () => {
     const reqIds = DEMO_RECOMMENDED_MEASURES[s.id] ?? ["idem", "cb", "pgb"];
     const opt: Record<string, Record<string, number>> = {};
     reqIds.forEach((id) => {
@@ -221,14 +249,27 @@ export default function ArchitectureMode({
       });
       opt[id] = defaults;
     });
+    return opt;
+  };
+
+  const fillOptimalDemo = () => {
+    if (!demoMode) return;
+    const opt = buildOptimalMeasures();
     setSelectedMeasures(opt);
     setPatchIdx(0);
     setCode(s.patches[0]?.code ?? "");
     setJustification(SAMPLE_JUSTIFICATIONS[s.id] ?? SAMPLE_JUSTIFICATIONS.payment);
   };
 
-  const applyHotfix = async () => {
+  const applyHotfix = async (override?: {
+    measuresMap?: Record<string, Record<string, number>>;
+    codePatch?: string;
+    justText?: string;
+  }) => {
     if (phase === "deploying") return;
+    const effMeasures = override?.measuresMap ?? selectedMeasures;
+    const effCode = override?.codePatch ?? code;
+    const effJust = override?.justText ?? justification;
     setPhase("deploying");
     setEvalResult(null);
     setDeployLog([]);
@@ -241,27 +282,40 @@ export default function ArchitectureMode({
         body: {
           scenario_id: s.id,
           seed: demoMode ? s.seed : undefined,
-          measures: buildMeasuresPayload(selectedMeasures),
-          code_patch: code,
-          justification,
+          measures: buildMeasuresPayload(effMeasures),
+          code_patch: effCode,
+          justification: effJust,
           elapsed_s: Math.max(30, sec),
           save: !demoMode,
           demo: demoMode,
+          followup_attempt_id: effFollowupId || undefined,
         },
       });
       for (const line of res.feedback.deploy_log) {
         setDeployLog((l) => [...l, line]);
-        await sleep(220);
+        await sleep(140);
       }
-      setAppliedMeasures({ ...selectedMeasures });
+      setAppliedMeasures({ ...effMeasures });
       setEvalResult(res);
       setSimPreview(res);
       setPhase("applied");
-      void voice.speak(res.voice_summary_ru);
+      speakIfEnabled(res.voice_summary_ru);
     } catch (e) {
       setPhase("incident");
       setErr(errText(e));
     }
+  };
+
+  const quickRunDemo = async () => {
+    if (!demoMode || phase === "deploying") return;
+    const opt = buildOptimalMeasures();
+    const optCode = s.patches[0]?.code ?? "";
+    const optJust = SAMPLE_JUSTIFICATIONS[s.id] ?? SAMPLE_JUSTIFICATIONS.payment;
+    setSelectedMeasures(opt);
+    setPatchIdx(0);
+    setCode(optCode);
+    setJustification(optJust);
+    await applyHotfix({ measuresMap: opt, codePatch: optCode, justText: optJust });
   };
 
   const goDefense = async () => {
@@ -325,11 +379,72 @@ export default function ArchitectureMode({
 
   return (
     <div className="space-y-5" data-testid="wr-mode-arch">
+      {/* Полоса дополнительного этапа проверки для Senior / Lead / Principal */}
+      {effFollowupId && (
+        <div
+          className="rounded-2xl border border-amber-400/50 bg-amber-500/15 px-4 py-3 text-xs text-amber-50 shadow-sm"
+          data-testid="wr-followup-banner"
+          role="status"
+        >
+          <p className="text-sm font-extrabold text-white">
+            {followupContext?.banner_ru ??
+              `Это доп. этап вашей проверки на ${
+                followupContext?.grade_label ??
+                (s.target_grade === "lead"
+                  ? "Lead"
+                  : s.target_grade === "principal"
+                    ? "Principal"
+                    : "Senior")
+              }: почините сервис — результат войдёт в итог.`}
+          </p>
+          <p className="mt-1 text-[11px] text-amber-100/85">
+            Основной тест завершился у границы уровня. Выберите меры в рамках бюджета, исправьте код и коротко опишите решение — одна попытка дополнительного этапа обновит итоговый вердикт. Вклад практического этапа — по правилу, на людях ещё не откалиброван.
+          </p>
+        </div>
+      )}
+
+      {/* Полоса «Как это работает»: 3 шага простыми словами и одна главная кнопка */}
+      <div
+        className="flex flex-col gap-3 rounded-2xl border border-indigo-400/30 bg-indigo-950/25 px-4 py-3 lg:flex-row lg:items-center lg:justify-between"
+        data-testid="wr-quickstart"
+      >
+        <div className="grid flex-1 gap-2 text-xs text-white/85 sm:grid-cols-3">
+          <div>
+            <strong className="text-indigo-200">1)</strong> Выберите инцидент
+          </div>
+          <div>
+            <strong className="text-indigo-200">2)</strong> Выберите меры и поправьте код
+          </div>
+          <div>
+            <strong className="text-indigo-200">3)</strong> Получите разбор и влияние на итог проверки
+          </div>
+        </div>
+        {demoMode ? (
+          <button
+            type="button"
+            onClick={() => void quickRunDemo()}
+            data-testid="wr-quick-run"
+            className="w-full shrink-0 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-extrabold text-slate-950 shadow hover:bg-emerald-400 sm:w-auto"
+          >
+            Начать инцидент и показать разбор
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => selectScenario(s.id, true)}
+            data-testid="wr-start-incident"
+            className="w-full shrink-0 rounded-xl bg-indigo-500 px-4 py-2 text-xs font-extrabold text-white shadow hover:bg-indigo-400 sm:w-auto"
+          >
+            Начать инцидент
+          </button>
+        )}
+      </div>
+
       {/* Выбор одного из 8 боевых сценариев по направлениям */}
       <div
         className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4"
         role="radiogroup"
-        aria-label="Боевой сценарий по направлению"
+        aria-label="Сценарий инцидента по направлению"
       >
         {scenarios.map((x, i) => (
           <button
@@ -337,7 +452,7 @@ export default function ArchitectureMode({
             type="button"
             role="radio"
             aria-checked={x.id === sid}
-            onClick={() => selectScenario(x.id)}
+            onClick={() => selectScenario(x.id, true)}
             data-testid={`wr-scn-${x.id}`}
             className={`group rounded-2xl border px-3.5 py-3 text-left transition-all ${
               x.id === sid
@@ -359,19 +474,16 @@ export default function ArchitectureMode({
         ))}
       </div>
 
-      {/* Информационная полоса режима: в демо-витрине — кнопки примера без сохранения в профиль; в боевом режиме кандидата — индивидуальный серверный вариант */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-400/25 bg-indigo-950/20 px-4 py-2.5">
-        <div className="text-xs text-white/80">
+      {/* Информационная полоса варианта */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-2 text-xs text-white/75">
+        <div>
           <span className="font-bold text-indigo-200">
             {demoMode
-              ? `Демонстрационная витрина · вариант #${s.seed}`
-              : `Боевой этап кандидата · индивидуальный серверный вариант #${s.seed}`}
+              ? `Демо · вариант #${s.seed}`
+              : `Этап кандидата · вариант #${s.seed}`}
           </span>{" "}
           · сервис <code className="font-mono text-white">{s.service}</code> (релиз{" "}
-          <code className="font-mono text-white">{s.release}</code>) ·{" "}
-          {demoMode
-            ? "режим демонстрации: доступны эталонные примеры, результат не сохраняется в профиль кандидата."
-            : "числа нагрузки и бюджет зафиксированы сервером для вашей учётной записи."}
+          <code className="font-mono text-white">{s.release}</code>)
         </div>
         {demoMode && (
           <div className="flex flex-wrap gap-2">
@@ -381,7 +493,7 @@ export default function ArchitectureMode({
               data-testid="wr-fill-optimal"
               className="rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-200 hover:bg-emerald-500/25"
             >
-              Подставить эталонное решение (демо)
+              Подставить пример решения
             </button>
             <button
               type="button"
@@ -405,7 +517,7 @@ export default function ArchitectureMode({
                     incidentOn ? "animate-pulse bg-rose-500" : "bg-emerald-400"
                   }`}
                 />
-                {incidentOn ? `АВАРИЯ В ПРОДАКШНЕ · ${s.title}` : `ИНЦИДЕНТ УСТРАНЁН · ${s.title}`}
+                {incidentOn ? `СБОЙ СЕРВИСА · ${s.title}` : `РАБОТА ВОССТАНОВЛЕНА · ${s.title}`}
               </p>
               <p className="font-mono text-xs text-white/55">
                 Время {String(Math.floor(sec / 60)).padStart(2, "0")}:
@@ -413,7 +525,7 @@ export default function ArchitectureMode({
               </p>
             </div>
             <div className="overflow-x-auto px-2 pt-2">
-              <div className="min-w-[600px] md:min-w-0">
+              <div className="min-w-[520px] md:min-w-0">
                 <ArchDiagram
                   scenario={s}
                   measuresCatalog={measuresCatalog}
@@ -433,7 +545,7 @@ export default function ArchitectureMode({
               <MetricTile
                 label="Успешный поток"
                 value={nf(shownMetrics.rps)}
-                unit="RPS"
+                unit="запр./с"
                 tone={
                   shownMetrics.error_rate_pct > 5
                     ? "bad"
@@ -441,21 +553,21 @@ export default function ArchitectureMode({
                       ? "warn"
                       : "ok"
                 }
-                hint={`вход ${nf(s.base.rps)} RPS`}
+                hint={`вход ${nf(s.base.rps)} запр./с`}
               />
               <MetricTile
-                label="Задержка p99"
+                label="Время ответа"
                 value={nf(shownMetrics.p99_ms)}
                 unit="мс"
                 tone={tP99}
-                hint={`цель SLO ≤ ${nf(s.slo.p99_limit_ms)} мс`}
+                hint={`норма ≤ ${nf(s.slo.p99_limit_ms)} мс`}
               />
               <MetricTile
-                label="Ошибки 5xx"
+                label="Доля ошибок"
                 value={nf(shownMetrics.error_rate_pct, shownMetrics.error_rate_pct < 1 ? 2 : 1)}
                 unit="%"
                 tone={tErr}
-                hint={`цель SLO ≤ ${nf(s.slo.error_limit_pct, 1)} %`}
+                hint={`норма ≤ ${nf(s.slo.error_limit_pct, 1)} %`}
               />
               <MetricTile
                 label="Потери бизнеса"
@@ -469,7 +581,7 @@ export default function ArchitectureMode({
                 value={nf(shownMetrics.extra_value)}
                 unit={s.extra.unit}
                 tone={tExtra}
-                hint={`цель SLO ≤ ${nf(s.slo.extra_limit)}`}
+                hint={`норма ≤ ${nf(s.slo.extra_limit)}`}
               />
               <MetricTile
                 label="Стоимость инфры"
@@ -486,7 +598,7 @@ export default function ArchitectureMode({
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-white/60">
-                  1. Инженерные меры и численные параметры
+                  1. Выберите меры и настройте параметры
                 </p>
                 <span className="font-mono text-[11px] text-indigo-200">
                   Выбрано: {stagedIds.size}
@@ -569,7 +681,7 @@ export default function ArchitectureMode({
                                   data-testid={`wr-param-${m.id}-${p.key}`}
                                   className="h-1.5 w-full cursor-pointer accent-indigo-400"
                                 />
-                                <p className="text-[10px] text-white/45">{p.hint}</p>
+                                <p className="text-[10.5px] text-white/65">{p.hint}</p>
                               </div>
                             );
                           })}
@@ -585,7 +697,7 @@ export default function ArchitectureMode({
             <div className="flex min-w-0 flex-col gap-4">
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-white/60">
-                  2. Исправление кода (патч релиза)
+                  2. Поправьте код сервиса
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {s.patches.map((p, i) => (
@@ -617,7 +729,7 @@ export default function ArchitectureMode({
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                     spellCheck={false}
-                    aria-label="Патч кода хотфикса"
+                    aria-label="Патч кода сервиса"
                     data-testid="wr-code"
                     className="block h-44 w-full resize-y bg-transparent p-3 font-mono text-[11.5px] leading-relaxed text-emerald-100/90 outline-none"
                   />
@@ -634,11 +746,11 @@ export default function ArchitectureMode({
                 </ul>
               </div>
 
-              {/* Письменное архитектурное обоснование (постмортем) */}
+              {/* Письменное обоснование решения */}
               <div className="flex-1 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-white/60">
-                    3. Письменное обоснование решения (рубрика с цитатами)
+                    3. Объясните решение и проверьте результат
                   </p>
                   {demoMode && (
                     <button
@@ -649,13 +761,13 @@ export default function ArchitectureMode({
                       data-testid="wr-fill-justification"
                       className="text-[11px] font-bold text-indigo-300 hover:underline"
                     >
-                      Заполнить пример обоснования (демо)
+                      Заполнить пример обоснования
                     </button>
                   )}
                 </div>
                 <p className="mt-1 text-[11px] text-white/55">
-                  Опишите: (1) первопричину и узкое место, (2) почему выбраны эти меры и параметры с учётом
-                  бюджета, (3) какие метрики SLO контролируете при выкатке.
+                  Коротко опишите: (1) первопричину сбоя, (2) почему выбраны эти меры в рамках бюджета,
+                  (3) какие показатели контролируете при запуске.
                 </p>
                 <textarea
                   value={justification}
@@ -663,7 +775,7 @@ export default function ArchitectureMode({
                   rows={4}
                   data-testid="wr-justification"
                   aria-label="Письменное инженерное обоснование"
-                  placeholder="Первопричина инцидента: … Для устранения включаем … При выкатке контролируем p99, ошибки и бюджет по SLO…"
+                  placeholder="Первопричина инцидента: … Для устранения включаем … При запуске контролируем время ответа, ошибки и бюджет…"
                   className="mt-2 w-full rounded-xl border border-white/10 bg-[#05040c] p-3 text-xs leading-relaxed text-white/90 outline-none focus:border-indigo-400"
                 />
 
@@ -677,7 +789,7 @@ export default function ArchitectureMode({
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-white/60">
                   <span>
-                    Готовность симулятора:{" "}
+                    Готовность мер:{" "}
                     <strong className="text-white">
                       {nf((simPreview?.scores.sim_score ?? 0) * 100)} %
                     </strong>{" "}
@@ -708,12 +820,12 @@ export default function ArchitectureMode({
                     className="flex-1 rounded-2xl bg-gradient-to-r from-rose-500 via-fuchsia-500 to-indigo-500 px-5 py-3.5 text-sm font-extrabold text-white shadow-[0_10px_40px_-10px_rgba(244,63,94,0.85)] transition hover:brightness-110 disabled:opacity-60"
                   >
                     {phase === "deploying"
-                      ? "Проверка симулятором и рецензентом…"
-                      : "Применить хотфикс в продакшн и оценить"}
+                      ? "Проверяем решение…"
+                      : "Проверить решение"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => selectScenario(s.id)}
+                    onClick={() => selectScenario(s.id, false)}
                     className="rounded-xl border border-white/20 px-4 py-2.5 text-xs font-semibold text-white/80 hover:bg-white/10"
                   >
                     Сбросить
@@ -737,13 +849,13 @@ export default function ArchitectureMode({
           )}
         </div>
 
-        {/* Правая панель: ИИ-архитектор, шкала инженерного уровня и разбор рубрики с цитатами */}
+        {/* Правая панель: ИИ-архитектор, уровень и разбор рубрики с цитатами */}
         <aside className="space-y-4">
           <div className="rounded-2xl border border-indigo-400/30 bg-gradient-to-b from-indigo-500/15 to-transparent p-4">
             <AvatarStage
               voice={voice}
               name="Настя · ИИ-архитектор"
-              role="Рецензент архитектурных решений"
+              role="Разбор инженерного решения"
               size={168}
             />
           </div>
@@ -767,7 +879,7 @@ export default function ArchitectureMode({
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-extrabold text-white">
                   {evalResult.passed
-                    ? `Инцидент устранён · ориентир ${evalResult.confirmed_grade.toUpperCase()}`
+                    ? `Инцидент устранён · уровень ${evalResult.confirmed_grade.toUpperCase()}`
                     : "Частичное решение · требуется доработка"}
                 </p>
                 <span className="rounded-lg bg-white/15 px-2 py-0.5 font-mono text-xs font-extrabold text-white">
@@ -777,8 +889,8 @@ export default function ArchitectureMode({
 
               <p className="mt-1.5 text-xs text-white/75">{evalResult.summary_ru}</p>
               <p className="mt-1 text-[11px] text-white/60">
-                Симулятор: {nf(evalResult.scores.sim_score * 100)} % · Код:{" "}
-                {nf(evalResult.scores.code_score * 100)} % · Рубрика обоснования:{" "}
+                Меры и бюджет: {nf(evalResult.scores.sim_score * 100)} % · Код:{" "}
+                {nf(evalResult.scores.code_score * 100)} % · Обоснование:{" "}
                 {nf(evalResult.rubric.rubric_score * 100)} %
               </p>
 
@@ -795,7 +907,7 @@ export default function ArchitectureMode({
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-semibold text-white">{c.title}</span>
                       <span
-                        className={`font-mono font-bold ${
+                        className={`shrink-0 whitespace-nowrap font-mono font-bold ${
                           c.score >= 1
                             ? "text-emerald-300"
                             : c.score >= 0.5
@@ -807,17 +919,53 @@ export default function ArchitectureMode({
                       </span>
                     </div>
                     {c.quote ? (
-                      <p className="mt-1 text-[10.5px] italic text-emerald-100/85">
+                      <p className="mt-1 text-[10.5px] text-emerald-100/90">
                         Цитата: «{c.quote}»
                       </p>
                     ) : (
-                      <p className="mt-1 text-[10px] text-white/45">
+                      <p className="mt-1 text-[10.5px] text-white/65">
                         Дословная цитата по критерию в тексте не найдена
                       </p>
                     )}
                   </div>
                 ))}
               </div>
+
+              {evalResult.sprt_preview && (
+                <div
+                  className="mt-3 rounded-xl border border-indigo-400/35 bg-indigo-950/35 p-3 text-[11px]"
+                  data-testid="wr-verdict-impact"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-bold uppercase tracking-wider text-indigo-200">
+                      Влияние на итог проверки уровня
+                    </span>
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                        evalResult.sprt_preview.verdict_status === "confirmed"
+                          ? "bg-emerald-500/20 text-emerald-200"
+                          : evalResult.sprt_preview.verdict_status === "needs_followup"
+                            ? "bg-amber-500/20 text-amber-200"
+                            : "bg-rose-500/20 text-rose-200"
+                      }`}
+                    >
+                      {evalResult.sprt_preview.verdict_title_ru ??
+                        (evalResult.passed
+                          ? `Подтверждён ${evalResult.confirmed_grade.toUpperCase()}`
+                          : "Требуется доработка")}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 leading-relaxed text-white/85">
+                    {evalResult.sprt_preview.explanation_ru ??
+                      `Практический этап оценён на ${evalResult.points_gpcm} из 4 баллов (${nf(evalResult.total_score * 100)} %).`}
+                  </p>
+                  {!(evalResult.sprt_preview.explanation_ru ?? "").includes("на людях ещё не откалиброван") && (
+                    <p className="mt-1.5 text-[10.5px] text-indigo-200/80">
+                      Вклад практического этапа — по правилу, на людях ещё не откалиброван.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="mt-3 flex flex-col gap-2">
                 <div
@@ -830,7 +978,7 @@ export default function ArchitectureMode({
                       : "Демонстрационный расчёт (без сохранения в профиль кандидата)"}
                   </p>
                   <p className="mt-0.5 break-all font-mono text-[10px] text-emerald-200/75">
-                    Контрольная сумма записи SHA-256: {evalResult.sha256_sig.slice(0, 32)}…
+                    Контрольная сумма записи: {evalResult.sha256_sig.slice(0, 32)}…
                   </p>
                 </div>
                 <button

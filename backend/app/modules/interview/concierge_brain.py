@@ -373,9 +373,18 @@ SYSTEM_STATIC = """Ты — Настя, живой голосовой прово
 • "next_section" — идёт обзор, а человеку не интересен текущий раздел («не про это», «пропусти», «это не надо», \
 «давай дальше другое»): пропустить его остаток и перейти к следующему разделу обзора; reply — короткая связка с \
 названием следующего раздела («Хорошо, тогда кабинет Федерации.»);
+• "scroll" — просят показать, что ниже или выше на этом экране («ниже», «пролистай», «наверх»): dir — down, up, top \
+или bottom; ты сама пролистаешь и назовёшь блоки, reply — пусто или одна короткая фраза;
 • "pause" — просит подождать или остановиться; "resume" — продолжить показ: «дальше», «продолжай», «что дальше», \
 «веди сама», «рассказывай», «не останавливайся», «сама всё покажи» — всегда resume (если обзор ещё не начинался — \
 start_tour с ролью человека); "end" — закончить разговор.
+Не повторяй в ответе свои прошлые фразы и реплики сценария — отвечай новыми словами по сути. Просят «сразу кабинет», \
+«без регистрации», «к делу» — start_tour (регистрация пропустится сама) или goto на экран кабинета, не на регистрацию. \
+Никогда не обещай действий словами («прокручиваю», «вернулась», «открываю») — действие задаётся полем action, а не \
+текстом; если подходящего действия нет, честно скажи, что показать это не можешь, и предложи, что можешь. На вопрос о \
+блоке экрана объясняй, что он делает и что в нём заполнять или нажимать, — по сути, без общих слов. Не отвечай вопросом \
+«что именно вас интересует?» — вместо этого назови два конкретных варианта или сразу объясни самое вероятное. \
+Человек хочет остаться на экране и разобраться — не уводи его к обзору; обзор продолжится, когда он скажет «дальше».
 Ты экскурсовод: ведёшь сама и не стоишь молча. Не спрашивай «продолжать?» и не жди разрешения идти дальше — после ответа \
 показ продолжается сам. В начале разговора ты выясняешь, кто пришёл (кандидат, работодатель или Федерация), и ведёшь \
 по его кабинету; если человек из жюри или хочет увидеть всё — role all.
@@ -415,7 +424,7 @@ def _static_prompt() -> str:
 
 def _dynamic(s: Session | None, *, message: str, name: str | None, role: str | None, path: str, step: str | None,
              touring: bool, paused: bool, screen: dict | None, numbers: dict | None, awaiting: str | None = None,
-             last_said: str = "") -> str:
+             last_said: str = "", accepted: str | None = None) -> str:
     shown = [STEP_TITLES.get(x, x) for x in (s.shown if s else [])][-8:]
     tour = ("на паузе" if paused else f"идёт, сейчас шаг «{STEP_TITLES.get(step or '', step or '—')}»" if touring
             else "не идёт")
@@ -446,9 +455,16 @@ def _dynamic(s: Session | None, *, message: str, name: str | None, role: str | N
     if awaiting and last_q.endswith("?"):
         lines.append(f"Ты только что спросила: «{last_q[:300]}» — и ждёшь ответа. Реплика человека, скорее всего, "
                      "ответ на этот вопрос.")
+    if accepted:
+        lines.append(f"Человек согласился на твоё предложение «{accepted[:200]}». Выполни его сейчас: action goto на "
+                     "подходящий экран или point на элемент; ответ — одна короткая фраза без вопроса.")
     if step and s and step in s.shown:
         lines.append(f"Экран «{STEP_TITLES.get(step, step)}» ты уже показывала: просят подробнее — расскажи больше "
                      "или покажи элемент (point), не открывай этот экран заново.")
+    focus = (screen or {}).get("focus") if isinstance(screen, dict) else None
+    if isinstance(focus, dict) and focus.get("text"):
+        lines.append(f"Блок экрана, о котором, похоже, спрашивают, — «{str(focus.get('heading') or '')[:80]}»: "
+                     f"{str(focus['text'])[:700]}. Объясни по нему: что это, зачем и что здесь заполнять или нажимать.")
     if screen:
         title = str(screen.get("title") or "").strip()[:120]
         items = [str(x).strip()[:60] for x in (screen.get("items") or []) if str(x).strip()][:28]
@@ -529,16 +545,17 @@ def _client():
 
 TURN_SCHEMA = {"type": "json_schema", "json_schema": {"name": "elena_turn", "strict": True, "schema": {
     "type": "object", "additionalProperties": False,
-    "required": ["reply", "action", "step", "point", "role", "user_name"],
+    "required": ["reply", "action", "step", "point", "role", "user_name", "dir"],
     "properties": {
         "reply": {"type": "string"},
-        "action": {"type": "string", "enum": ["answer", "goto", "point", "start_tour", "next_section", "pause", "resume", "end"]},
+        "action": {"type": "string", "enum": ["answer", "goto", "point", "start_tour", "next_section", "pause", "resume", "end", "scroll"]},
         "step": {"type": ["string", "null"]}, "point": {"type": ["string", "null"]},
         "role": {"type": ["string", "null"]}, "user_name": {"type": ["string", "null"]},
+        "dir": {"type": ["string", "null"]},
     }}}}
 
 _REPLY_RE = re.compile(r'"reply"\s*:\s*"((?:[^"\\]|\\.)*)')
-_FIELD_RE = re.compile(r'"(action|step|point|role|user_name)"\s*:\s*"([^"]*)"')
+_FIELD_RE = re.compile(r'"(action|step|point|role|user_name|dir)"\s*:\s*"([^"]*)"')
 
 
 def _salvage(text: str) -> dict | None:
@@ -611,12 +628,13 @@ LLM_PREFER_S = float(os.environ.get("CONCIERGE_LLM_PREFER_S", "1.2"))
 
 def answer(message: str, *, sid: str | None, name: str | None, role: str | None, path: str, step: str | None,
            touring: bool, paused: bool, screen: dict | None, history: list[dict] | None,
-           numbers: dict | None = None, awaiting: str | None = None, last_said: str = "") -> dict | None:
+           numbers: dict | None = None, awaiting: str | None = None, last_said: str = "",
+           accepted: str | None = None) -> dict | None:
     """Ответ модели. Модели спрашиваются сразу: берём первый ответ основных (первые LLM_PRIMARY_N в LLM_MODELS); если
     ни одна основная не ответила за LLM_PREFER_S — лучший из пришедших (по порядку в списке)."""
     s = session(sid)
     dyn = _dynamic(s, message=message, name=name, role=role, path=path, step=step, touring=touring, paused=paused,
-                   screen=screen, numbers=numbers, awaiting=awaiting, last_said=last_said)
+                   screen=screen, numbers=numbers, awaiting=awaiting, last_said=last_said, accepted=accepted)
     msgs = _messages(s, dyn, message, history)
     models = list(LLM_MODELS)
     if not models:

@@ -92,22 +92,47 @@ function upsertMeta(attr: "name" | "property", key: string, content: string) {
   el.setAttribute("content", content);
 }
 
-/** Свой заголовок и мета-описание страницы (включая OpenGraph для превью ссылок). */
-export function usePageTitle(title: string, description?: string) {
+function defaultOgImageForPath(pathname: string): string {
+  if (pathname.startsWith("/demo") || pathname.startsWith("/expertise") || pathname.startsWith("/warroom") || pathname.startsWith("/validation") || pathname.startsWith("/criteria")) {
+    return "/favicon-og-demo.png";
+  }
+  if (pathname.startsWith("/pricing") || pathname.startsWith("/tariffs")) {
+    return "/favicon-og-pricing.png";
+  }
+  return "/favicon-og-1200x630.png";
+}
+
+/** Свой заголовок и мета-описание страницы (включая OpenGraph и Twitter Card для превью ссылок). */
+export function usePageTitle(title: string, description?: string, ogImage?: string) {
   const product = useProductName();
   useEffect(() => {
     ownTitle = true;
     const fullTitle = product ? `${title} · ${product}` : `${title} · Драфт`;
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const imgPath = ogImage ?? defaultOgImageForPath(pathname);
+    const imgUrl = imgPath.startsWith("http") ? imgPath : `${origin}${imgPath}`;
     document.title = fullTitle;
     upsertMeta("property", "og:title", fullTitle);
     upsertMeta("property", "og:type", "website");
-    upsertMeta("property", "og:image", "/icons/icon-512.png");
+    upsertMeta("property", "og:locale", "ru_RU");
+    upsertMeta("property", "og:site_name", product || "Драфт");
+    if (origin) upsertMeta("property", "og:url", `${origin}${pathname}`);
+    upsertMeta("property", "og:image", imgUrl);
+    upsertMeta("property", "og:image:type", "image/png");
+    upsertMeta("property", "og:image:width", "1200");
+    upsertMeta("property", "og:image:height", "630");
+    upsertMeta("property", "og:image:alt", fullTitle);
+    upsertMeta("name", "twitter:card", "summary_large_image");
+    upsertMeta("name", "twitter:title", fullTitle);
+    upsertMeta("name", "twitter:image", imgUrl);
     if (description) {
       upsertMeta("name", "description", description);
       upsertMeta("property", "og:description", description);
+      upsertMeta("name", "twitter:description", description);
     }
     return () => { ownTitle = false; if (loaded) document.title = defaultTitle(loaded); };
-  }, [title, description, product]);
+  }, [title, description, ogImage, product]);
 }
 
 /** Заголовок вкладки по экрану (WCAG 2.4.2): «<заголовок h1> · Драфт»; null — общий. Вызывает RouteAnnouncer

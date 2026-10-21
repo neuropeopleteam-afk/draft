@@ -17,10 +17,22 @@ from tests.conftest import register_and_verify
 
 NEED_TEXT = "Ищем бэкенд-разработчика middle: обязательно Python и PostgreSQL, желательно Kafka. Удалённо, 200–280 тыс."
 UTC = timezone.utc
-T1 = datetime(2027, 10, 19, 7, 0, tzinfo=UTC)   # 10:00 по Москве, вторник
-T1_EVE = datetime(2027, 10, 19, 17, 0, tzinfo=UTC)  # 20:00
-T1_NIGHT = datetime(2027, 10, 19, 20, 30, tzinfo=UTC)  # 23:30 — тихие часы
-T2 = datetime(2027, 10, 20, 6, 30, tzinfo=UTC)  # 09:30 следующего дня
+
+
+def _next_tuesday_10msk() -> datetime:
+    """Ближайший вторник, 10:00 МСК, не раньше чем через сутки от настоящего «сейчас».
+
+    Раньше T1 был зашит как 20.10.2026: подписка создаётся настоящим временем (computed_at = utcnow()), и после
+    этой даты обход «в прошлом» видел отрицательный возраст подборки и ничего не находил — тесты падали по календарю.
+    Сдвиг сохраняет все соотношения (день недели, вечер, тихие часы, следующий день)."""
+    d = datetime.now(UTC).replace(hour=7, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    return d + timedelta(days=(1 - d.weekday()) % 7)
+
+
+T1 = _next_tuesday_10msk()   # 10:00 по Москве, вторник
+T1_EVE = T1.replace(hour=17)  # 20:00
+T1_NIGHT = T1.replace(hour=20, minute=30)  # 23:30 — тихие часы
+T2 = (T1 + timedelta(days=1)).replace(hour=6, minute=30)  # 09:30 следующего дня
 
 
 class Mails(list):

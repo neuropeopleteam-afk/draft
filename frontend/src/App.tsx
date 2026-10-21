@@ -1,10 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { RouteAnnouncer, SkipLink } from "./components/A11y";
-import { JuryGuide } from "./components/JuryGuide";
-import { InteractiveAvatarTour } from "./components/InteractiveAvatarTour";
-import { StudyDock } from "./components/study/StudyDock";
-import { RouteBoundary, RouteFallback } from "./components/Boot";
+import { RouteBoundary, RouteFallback, hardReload } from "./components/Boot";
 import Landing from "./pages/Landing";
 import { candidateSections } from "./pages/candidate/sections";
 import { employerSections } from "./pages/employer/sections";
@@ -160,6 +157,9 @@ const DemoHub = lazyNamed(pg.demoHub, "default");
 const WarRoom = lazyNamed(pg.warroom, "default");
 const Support = lazyNamed(pg.support, "default");
 const Admin = lazyNamed(pg.admin, "default");
+const JuryGuide = lazyNamed(() => import("./components/JuryGuide"), "JuryGuide");
+const InteractiveAvatarTour = lazyNamed(() => import("./components/InteractiveAvatarTour"), "InteractiveAvatarTour");
+const StudyDock = lazyNamed(() => import("./components/study/StudyDock"), "StudyDock");
 
 /** Переадресация со старого демо-маршрута с сохранением query и hash (для обзора Насти и закладок). */
 function RedirectPreserve({ to }: { to: string }) {
@@ -205,6 +205,7 @@ export default function App() {
 
       {/* Раздел «Демо для жюри» (/demo/*) и совместимые прямые маршруты для e2e/проводника */}
       <Route path="/demo" element={<DemoGuard><DemoHub /></DemoGuard>} />
+      <Route path="/demo/register" element={<DemoGuard><Register demoPreview /></DemoGuard>} />
       <Route path="/demo/warroom" element={<DemoGuard><WarRoom /></DemoGuard>} />
       <Route path="/demo/validation" element={<DemoGuard><Validation /></DemoGuard>} />
       <Route path="/demo/criteria" element={<DemoGuard><Criteria /></DemoGuard>} />
@@ -322,14 +323,17 @@ export default function App() {
         <Route path="analytics" element={<Navigate to="/fsp/demand" replace />} />
         <Route path="regions" element={<Navigate to="/fsp/demand" replace />} />
       </Route>
+      <Route path="/500" element={<ServerErrorPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
     </Suspense>
     </RouteBoundary>
-    <JuryGuide />
-    <InteractiveAvatarTour />
+    <Suspense fallback={null}>
+      <JuryGuide />
+      <InteractiveAvatarTour />
+      <StudyDock />
+    </Suspense>
     <HashScroll />
-    <StudyDock />
     <CookieBanner />
     <RouteAnnouncer />
     </>
@@ -347,7 +351,13 @@ function CookieBanner() {
     }
   });
   const loc = useLocation();
-  if (choice || loc.pathname.startsWith("/j/")) return null;
+  if (
+    choice ||
+    loc.pathname.startsWith("/j/") ||
+    ["/login", "/register", "/demo/register", "/verify", "/forgot", "/reset", "/500"].includes(loc.pathname)
+  ) {
+    return null;
+  }
 
   function pick(val: "essential" | "all") {
     try {
@@ -360,7 +370,7 @@ function CookieBanner() {
     <aside
       aria-label="Настройки файлов cookie"
       data-testid="cookie-banner"
-      className="fixed bottom-3 left-3 right-3 z-40 mx-auto max-w-3xl rounded-2xl border border-brand-night/15 bg-white/95 p-4 text-xs text-brand-ink shadow-xl backdrop-blur sm:flex sm:items-center sm:justify-between sm:gap-4 print:hidden"
+      className="fixed inset-x-3 bottom-[calc(5.25rem+var(--mobile-tabbar-h,0px))] z-40 rounded-2xl border border-brand-night/15 bg-white/95 p-3.5 text-xs text-brand-ink shadow-xl backdrop-blur sm:bottom-[calc(0.75rem+var(--mobile-tabbar-h,0px))] sm:left-4 sm:right-56 sm:max-w-xl sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-4 print:hidden"
     >
       <p className="leading-relaxed">
         Мы используем файлы cookie для авторизации, безопасности входа и работы личного кабинета (без сторонних рекламных счётчиков). Подробнее — в{" "}
@@ -391,16 +401,58 @@ function CookieBanner() {
 function NotFound() {
   const demoUi = useDemoUi();
   return (
-    <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center" data-testid="not-found-page">
-      <p className="text-6xl font-extrabold text-brand" aria-hidden="true">404</p>
-      <h1 className="text-xl font-bold text-brand-night">Такой страницы нет</h1>
-      <p className="max-w-sm text-sm text-brand-ink/70">
-        Возможно, ссылка устарела или страница была перемещена. Вернитесь на главную или обратитесь в службу поддержки.
-      </p>
-      <div className="flex flex-wrap justify-center gap-3">
-        <Link to="/" className="btn-primary">На главную</Link>
-        <Link to="/support" className="btn-ghost">Служба поддержки</Link>
-        {demoUi && <Link to="/demo" className="btn-ghost">Демо для жюри</Link>}
+    <main id="main" tabIndex={-1} className="flex min-h-screen flex-col items-center justify-center bg-[#FAF8FC] px-4 py-10 text-center outline-none" data-testid="not-found-page">
+      <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 rounded-3xl border border-brand-night/10 bg-white p-7 shadow-sm sm:p-9">
+        <div className="inline-flex items-center gap-2.5 text-sm font-extrabold text-brand-night">
+          <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="#310F53" />
+            <circle cx="12.5" cy="16" r="7" fill="none" stroke="#FFD6E4" strokeWidth="2.5" />
+            <circle cx="19.5" cy="16" r="7" fill="none" stroke="#FF0053" strokeWidth="2.5" />
+          </svg>
+          <span>Драфт</span>
+          <span className="rounded-full bg-brand-blush/80 px-2.5 py-0.5 font-mono text-xs font-extrabold text-brand-night">404</span>
+        </div>
+        <p className="text-5xl font-extrabold text-brand sm:text-6xl" aria-hidden="true">404</p>
+        <h1 className="text-xl font-extrabold text-brand-night sm:text-2xl">Такой страницы нет</h1>
+        <p className="max-w-md text-sm leading-relaxed text-brand-ink/75">
+          Возможно, ссылка устарела или страница была перемещена. Вернитесь на главную страницу или обратитесь в службу поддержки.
+        </p>
+        <div className="mt-1 flex flex-wrap justify-center gap-3">
+          <Link to="/" className="btn-primary">На главную</Link>
+          <Link to="/support" className="btn-ghost">Служба поддержки</Link>
+          {demoUi && <Link to="/demo" className="btn-ghost">Демо для жюри</Link>}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function ServerErrorPage() {
+  const demoUi = useDemoUi();
+  return (
+    <main id="main" tabIndex={-1} className="flex min-h-screen flex-col items-center justify-center bg-[#FAF8FC] px-4 py-10 text-center outline-none" data-testid="server-error-page">
+      <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 rounded-3xl border border-brand-night/10 bg-white p-7 shadow-sm sm:p-9">
+        <div className="inline-flex items-center gap-2.5 text-sm font-extrabold text-brand-night">
+          <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="#310F53" />
+            <circle cx="12.5" cy="16" r="7" fill="none" stroke="#FFD6E4" strokeWidth="2.5" />
+            <circle cx="19.5" cy="16" r="7" fill="none" stroke="#FF0053" strokeWidth="2.5" />
+          </svg>
+          <span>Драфт</span>
+          <span className="rounded-full bg-brand-blush/80 px-2.5 py-0.5 font-mono text-xs font-extrabold text-brand-night">500</span>
+        </div>
+        <p className="text-5xl font-extrabold text-brand sm:text-6xl" aria-hidden="true">500</p>
+        <h1 className="text-xl font-extrabold text-brand-night sm:text-2xl">Внутренняя ошибка страницы</h1>
+        <p className="max-w-md text-sm leading-relaxed text-brand-ink/75">
+          При обработке запроса возникла непредвиденная ошибка. Введённые данные сохранены — обновите страницу, проверьте состояние сервиса или напишите в поддержку.
+        </p>
+        <div className="mt-1 flex flex-wrap justify-center gap-3">
+          <button type="button" onClick={hardReload} className="btn-primary">Обновить страницу</button>
+          <Link to="/" className="btn-ghost">На главную</Link>
+          <Link to="/support" className="btn-ghost">Служба поддержки</Link>
+          <a href="/status" className="btn-ghost">Состояние сервиса</a>
+          {demoUi && <Link to="/demo" className="btn-ghost">Демо для жюри</Link>}
+        </div>
       </div>
     </main>
   );

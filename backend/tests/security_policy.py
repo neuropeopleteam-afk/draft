@@ -60,7 +60,6 @@ POLICIES: dict[str, dict[str, object]] = {
     # публичные
     "open": _p(OK),
     "open404": _p(OK404),
-    "open_upstream": _p(OK_UPSTREAM),
     # любой вошедший
     "auth": _p(OK, anon=401),
     "auth404": _p(OK404, anon=401),
@@ -417,8 +416,6 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/fsp-cabinet/cups"): "fsp",
     ("GET", "/api/fsp-cabinet/report"): "fsp",
     ("GET", "/api/fsp-cabinet/regions"): "fsp",  # А2: карта талантов по регионам РФ
-    ("GET", "/api/fsp-cabinet/protocol-claims"): "fsp",  # А2: очередь заявок на подтверждение протоколов ФСП
-    ("POST", "/api/fsp-cabinet/protocol-claims/{achievement_id}/decide"): ("fsp", {"fsp_analyst": OK404, "admin": OK404, "jury_fsp": OK404}),
     ("GET", "/api/fsp-cabinet/export/{section}.csv"): "fsp",
     ("GET", "/api/admin/sus"): "admin",
     ("POST", "/api/admin/passports/{pid}/revoke"): ("admin", {"admin": OK404}),  # feat/passport; паспорт не создаётся
@@ -530,13 +527,18 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate_own",
     ("POST", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate",
     ("POST", "/api/interview/quick-defense"): "candidate",
-    ("POST", "/api/interview/concierge/avatar-token"): "open_upstream",
+    # доступ открыт всем; в тестах ключа видеопотока нет → 503 avatar_unavailable (браузер переходит на голос),
+    # как у advisor/avatar-token выше
+    ("POST", "/api/interview/concierge/avatar-token"): ("open", {r: 503 for r in ROLES}),
     ("POST", "/api/interview/concierge/speech"): "open",
     ("POST", "/api/interview/concierge/transcribe"): "open",
     ("POST", "/api/interview/concierge/chat"): "open",
     ("POST", "/api/interview/concierge/turn"): "open",
     ("GET", "/api/interview/concierge/script"): "open",
     ("POST", "/api/interview/concierge/event"): "open",
+    # Счётчики расходов проводника за сегодня (без ПДн: суммы, число адресов, лимиты). Сейчас открыт без входа;
+    # зона чата «Аватар» — закрыть ролью администратора, когда там решат (тогда здесь станет "admin").
+    ("GET", "/api/interview/concierge/budget"): "admin",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
     # А5: режим «Принесите свой набор» для жюри (подбор, метрики P@5/P@10/nDCG@10/MRR, объяснение, выгрузка CSV)

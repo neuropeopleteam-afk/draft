@@ -432,3 +432,188 @@ def test_warroom_api_never_leaks_keys_or_mechanics(client):
     assert my_r.status_code == 200, my_r.text
     _assert_no_leaks(my_r.json(), "/api/warroom/attempts/my (кандидат)")
 
+
+def test_no_empty_steps_and_verdict_impact(client):
+    """P0-2/P0-3 (21.10): ни одного пустого шага в сценариях; sprt_preview рассчитывает вклад в вердикт в демо и боевом режимах."""
+    from app.modules.warroom.catalog import list_bank_incident_items
+
+    reset_all()
+    for base in BASE_SCENARIOS:
+        scn = parameterize_scenario(base["id"], 1001)
+        assert scn["story"].strip()
+        assert len(scn["patches"]) >= 3 and all(p["code"].strip() for p in scn["patches"])
+        assert len(scn["checks"]) >= 4 and all(c["label"].strip() for c in scn["checks"])
+        assert len(scn["rubric"]) == 3 and abs(sum(r["weight"] for r in scn["rubric"]) - 1.0) < 1e-6
+        inc = scn["incident"]
+        assert len(inc["series"]) == 3 and len(inc["logs"]) >= 3 and len(inc["actions"]) >= 2
+        assert all("sim_effect" not in act for act in inc["actions"])
+
+    # Адаптер банка не падает и не возвращает пустых шагов
+    bank_items = list_bank_incident_items(seed=1001)
+    assert isinstance(bank_items, list)
+    for bi in bank_items:
+        assert bi["stem"] and bi["steps"]
+        assert all("sim_effect" not in a for a in bi.get("incident", {}).get("actions", []))
+
+    # Проверка sprt_preview (влияние на вердикт) при полном и частичном решении
+    req_ids = BASE_SCENARIOS[0]["required"]
+    scn_pub = client.get("/api/warroom/scenarios/payment?demo=true").json()
+    ev_pass = client.post(
+        "/api/warroom/evaluate",
+        json={
+            "scenario_id": "payment",
+            "measures": [{"id": m, "params": {}} for m in req_ids],
+            "code_patch": scn_pub["patches"][0]["code"],
+            "justification": REFERENCE_JUSTIFICATIONS["payment"],
+            "save": False,
+            "demo": True,
+        },
+    ).json()
+    assert ev_pass["passed"] is True
+    sp = ev_pass["sprt_preview"]
+    assert sp is not None
+    assert sp["verdict_status"] == "confirmed"
+    assert sp["stage_points"] == 4
+    assert sp["llr_delta"] > 0
+    assert sp["se_post"] < sp["se_before"]
+    assert "Подтверждён" in sp["verdict_title_ru"]
+    assert "на людях ещё не откалиброван" in sp["explanation_ru"]
+
+
+def test_followup_incident_stage_flow(client, monkeypatch):
+    """Интеграция инцидента «Полигона» как доп. этапа для Senior/Lead/Principal (интерфейс А4 ↔ А9 21.10)."""
+    import uuid
+    from sqlalchemy import select
+    from app.core.db import SessionLocal
+    from app.core.enums import TestSessionStatus
+    from app.modules.assessment.models import TestSession
+    from app.modules.auth.models import User
+    from app.modules.warroom.router import get_candidate_incident_stage
+
+    reset_all()
+    cand_tok = register_and_verify(client, email="followup_sr@example.com")
+
+    with SessionLocal() as db:
+        cand = db.scalar(select(User).where(User.email == "followup_sr@example.com"))
+        ts = TestSession(
+            id=uuid.uuid4(),
+            user_id=cand.id,
+            direction_id="backend",
+            claimed_grade_id="senior",
+            form_seed=1001,
+            status=TestSessionStatus.finished,
+            result={
+                "direction": "backend",
+                "claimed_grade": "senior",
+                "theta": 1.02,
+                "se": 0.36,
+                "engine_result": {
+                    "theta": 1.02,
+                    "se": 0.36,
+                    "claimed_grade": "senior",
+                    "assigned_grade": "middle",
+                    "confirmed": False,
+                    "provisional": True,
+                    "p_claimed": 0.54,
+                    "details": {
+                        "verdict": {
+                            "status": "needs_followup",
+                            "title": "Нужен дополнительный этап у порога",
+                            "claimed_grade": "senior",
+                            "followup_cut_grade": "senior",
+                            "followup_kind": "incident",
+                            "followup_incident_id": "payment",
+                            "followup_incident_title": "Шторм платежей в «Чёрную пятницу»",
+                            "followup_minutes": 30,
+                            "theta": 1.02,
+                            "se": 0.36,
+                            "p_claimed": 0.54,
+                        }
+                    },
+                },
+            },
+        )
+        db.add(ts)
+        db.commit()
+        ts_id = str(ts.id)
+
+    # 1. GET /api/warroom/scenarios?followup=<attempt_id> открывает боевой режим без демо-подсказок и возвращает followup_context
+    scn_resp = client.get(f"/api/warroom/scenarios?followup={ts_id}", headers=H(cand_tok))
+    assert scn_resp.status_code == 200, scn_resp.text
+    scn_body = scn_resp.json()
+    assert scn_body["mode"] == "combat"
+    assert scn_body["demo_mode"] is False
+    f_ctx = scn_body["followup_context"]
+    assert f_ctx is not None
+    assert f_ctx["attempt_id"] == ts_id
+    assert f_ctx["incident_id"] == "payment"
+    assert "Это доп. этап вашей проверки на Senior" in f_ctx["banner_ru"]
+
+    # 2. POST /api/warroom/evaluate с followup_attempt_id формирует stage по контракту А4/А9 и вызывает apply_followup_stage
+    called_stages: list[dict] = []
+
+    def _fake_apply(db_sess, att_id, stage_dict):
+        called_stages.append({"attempt_id": str(att_id), "stage": dict(stage_dict)})
+        return {
+            "attempt_id": str(att_id),
+            "grade": "senior" if stage_dict["passed"] else "middle",
+            "changed": bool(stage_dict["passed"]),
+            "verdict": {
+                "status": "confirmed" if stage_dict["passed"] else "not_confirmed",
+                "title": "Подтверждён" if stage_dict["passed"] else "Не подтверждён",
+                "explanation_ru": "Подтверждён: тест у порога спорный, практический этап пройден. Вклад практического этапа — по правилу, на людях ещё не откалиброван.",
+                "rule_ru": "Вклад практического этапа — по правилу, на людях ещё не откалиброван.",
+                "followup_applied": True,
+                "mode": "refine",
+            },
+        }
+
+    from app.modules.assessment import service as assessment_service
+    monkeypatch.setattr(assessment_service, "apply_followup_stage", _fake_apply, raising=False)
+
+    req_ids = BASE_SCENARIOS[0]["required"]
+    patch_a = BASE_SCENARIOS[0]["patches"][0]["code"]
+    ev_resp = client.post(
+        "/api/warroom/evaluate",
+        json={
+            "scenario_id": "payment",
+            "measures": [{"id": m, "params": {}} for m in req_ids],
+            "code_patch": patch_a,
+            "justification": REFERENCE_JUSTIFICATIONS["payment"],
+            "elapsed_s": 240,
+            "save": True,
+            "demo": False,
+            "followup_attempt_id": ts_id,
+        },
+        headers=H(cand_tok),
+    )
+    assert ev_resp.status_code == 200, ev_resp.text
+    ev_data = ev_resp.json()
+    assert ev_data["saved_to_db"] is True
+    assert ev_data["followup_result"] is not None
+    assert ev_data["followup_result"]["verdict"]["status"] == "confirmed"
+    assert ev_data["sprt_preview"]["verdict_status"] == "confirmed"
+    assert "на людях ещё не откалиброван" in ev_data["sprt_preview"]["explanation_ru"]
+
+    assert len(called_stages) == 1
+    st = called_stages[0]["stage"]
+    assert st["incident_id"] == "payment"
+    assert st["passed"] is True
+    assert st["measures_ok"] is True
+    assert st["code_ok"] is True
+    assert st["justification_ok"] is True
+    assert st["minutes"] == 4
+    assert isinstance(st["integrity"], dict)
+    assert st["attempt_id"] == ev_data["attempt_id"]
+
+    with SessionLocal() as db:
+        cand = db.scalar(select(User).where(User.email == "followup_sr@example.com"))
+        saved_stage = get_candidate_incident_stage(db, cand.id, direction="backend", test_session_id=uuid.UUID(ts_id))
+        assert saved_stage is not None
+        assert saved_stage["incident_id"] == "payment"
+        assert saved_stage["measures_ok"] is True
+        assert saved_stage["code_ok"] is True
+        assert saved_stage["justification_ok"] is True
+
+
+

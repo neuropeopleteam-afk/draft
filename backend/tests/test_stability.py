@@ -51,9 +51,15 @@ def test_extension_at_nearest_cut_short_items(pool):
 def test_extension_respects_quarantine_and_previous_families(pool):
     first = _run(pool, 0.05, CATConfig(**NEW), subpool=0, seed=3)
     prev = {a.family_id for a in first.administered if not a.canary}
-    s = _run(pool, 0.05, CATConfig(**NEW), subpool=1, seed=4, exclude_ext=prev, blocked_subpools={0})
+    # Дотестирование у порога включается, только если оценка второй попытки легла у порога; при θ = 0,05 это
+    # зависит от случайных ответов (с ростом банка до ~200 семейств на направление seed=4 перестал давать порог).
+    # Берём первый seed из фиксированного ряда, где дотестирование было, и проверяем его свойства.
+    for seed in range(4, 64):
+        s = _run(pool, 0.05, CATConfig(**NEW), subpool=1, seed=seed, exclude_ext=prev, blocked_subpools={0})
+        if s.ext_start is not None:
+            break
     ext = [a.family_id for a in s.administered if not a.canary][s.ext_start or 0:]
-    assert s.ext_start is not None and ext
+    assert s.ext_start is not None and ext, "ни в одной из 60 попыток не было дотестирования у порога"
     assert not set(ext) & prev
     assert all(s.items[f].subpool == 1 for f in ext)
 
