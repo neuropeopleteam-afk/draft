@@ -98,6 +98,19 @@ def hh_block(h: dict, adj: dict | None, dev: dict | None) -> dict:
             "согласии, иначе метка hh.ru. Модели, не люди (протокол — docs/realdata/hh_holdout_PROTOCOL.md).")
         out["what"]["grade_ok_adjudicated"] = out["what"]["direction_ok_adjudicated"].replace("направление", "грейд")
         out["adjudication_ref"] = "docs/realdata/hh_holdout_adjudication.json"
+        # дополнительно, ВНЕ протокола (выведено после прогона — не главная величина): вакансии, которые оба арбитра
+        # признали не IT (метка hh.ru по роли ошибочна); разбор на них чаще честно не называет направление
+        rows = [r for r in adj["rows"] if r["field"] == "direction"]
+        not_it = [r for r in rows if r["final"] == "not_it"]
+        d = adj["direction"]
+        n_it = d["n"] - len(not_it)
+        out["supplementary_outside_protocol"] = {
+            "not_it_by_arbiters": len(not_it),
+            "parser_none_on_not_it": sum(1 for r in not_it if r.get("parser") is None),
+            "direction_ok_it_only": {"value": round(d["k"] / n_it, 4) if n_it else None, "k": d["k"], "n": n_it},
+            "what": "Дополнительно, вне протокола (посчитано после прогона): доля верного направления среди вакансий, "
+                    "которые оба арбитра признали IT-вакансиями; на не-IT вакансиях разбор не называет направление "
+                    "(parser_none_on_not_it) — это верное поведение, но по протоколу засчитано как ошибка."}
     if dev:
         out["dev"] = {"set": dev["set"], "direction_ok": dev["direction_ok"], "grade_ok": dev["grade_ok"],
                       "generated_at": dev["generated_at"], "recompute": dev["recompute"]}
