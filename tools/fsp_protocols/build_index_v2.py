@@ -26,7 +26,7 @@ from pathlib import Path
 
 base = Path(sys.argv[1])
 code = Path(sys.argv[2])
-OUT_NAME = sys.argv[3] if len(sys.argv) > 3 and not sys.argv[3].startswith("--") else "index_v3.json"
+OUT_NAME = sys.argv[3] if len(sys.argv) > 3 and not sys.argv[3].startswith("--") else "index_v4.json"
 WRITE_W1 = "--w1" in sys.argv
 APP_UID = 10001  # пользователь api в контейнере — файл индекса должен быть его (600)
 
@@ -45,13 +45,15 @@ STAFF_ROLES_OK = {"спортсмен", "команда", ""}
 SPORT_RANKS = {"МСМК", "МС", "КМС", "I", "II", "III", "Iю", "IIю", "IIIю"}
 NO_PERSON_DOCS = {"txbuswvkginckkbtbwtkata1wbfukqda.pdf", "9uxtofnr07t1n3lha1o0ku1anbqndqe1.pdf",
                   "f4ikw0r1e2qwmvt3usudy5ve81r3ykrf.pdf"}  # протоколы только с названиями команд
-REBUILT = {"e6rp6ekcljtfofzw99bao13a8mpav8i9.pdf": ("kr_2026_sib_otbor", range(1, 7))}
+REBUILT: dict[str, tuple[str, set[int]]] = {}  # файл -> (doc_id, страницы, распознанные заново) — по work/cache_v2
 TABLE_DUP = "f0gja1njckgfwu6heobl1o3z4021wlpg.pdf"
 DOC_BY_FILE = {}
 
 v1 = json.loads((base / "index.json").read_text(encoding="utf-8"))
 for s in v1["sources"]:
     DOC_BY_FILE[s["pdf_url"].rsplit("/", 1)[-1]] = s
+FILE_BY_DOC = {s.get("doc_id"): fn for fn, s in DOC_BY_FILE.items()}
+norm.require_key()  # v4: хэши ФИО только HMAC-SHA256 с серверным секретом
 events_doc = json.loads((Path(os.environ["FSP_EVSK_DATA_DIR"]) / "events.json").read_text(encoding="utf-8"))
 events = events_doc["events"]
 page_map = events_doc["page_map"]
@@ -69,12 +71,29 @@ def seg_for(fn: str, page: int | None) -> dict | None:
     return None
 
 
-cache = {}
-for root in ("work/cache", "work/cache_v2"):
+cache = {}      # первичное построчное распознавание (v1)
+cache_v2 = {}   # повторный разбор командных протоколов (retable.py: блоки команд + линии таблицы)
+for root, dst in (("work/cache", cache), ("work/cache_v2", cache_v2)):
     for f in (base / root).glob("*/pages_json/*.json"):
         doc_id = f.parts[-3]
         page = int(f.stem.split("_")[-1])
-        cache[(doc_id, page)] = json.loads(f.read_text(encoding="utf-8"))
+        dst[(doc_id, page)] = json.loads(f.read_text(encoding="utf-8"))
+for (doc_id, page) in cache_v2:
+    fn = FILE_BY_DOC.get(doc_id)
+    if fn:
+        REBUILT.setdefault(fn, (doc_id, set()))[1].add(page)
+    else:
+        print("cache_v2: документ не найден в индексе v1, пропущен:", doc_id, file=sys.stderr)
+# роли по первичному распознаванию всего документа: тренеры/представители в блоках команд повторного разбора
+staff_names: dict[str, set[str]] = collections.defaultdict(set)
+athlete_names: dict[str, set[str]] = collections.defaultdict(set)
+for (doc_id, page), d in cache.items():
+    for row in d.get("rows") or []:
+        fnm = norm.normalize_fio(row.get("fio")) if row.get("fio") else None
+        if not fnm:
+            continue
+        role = (row.get("role") or "").strip().lower()
+        (athlete_names if role in STAFF_ROLES_OK else staff_names)[doc_id].add(fnm)
 
 
 def role_of(doc_id: str, page: int, fio_norm: str | None) -> str | None:
@@ -173,7 +192,7 @@ for r in v1["records"]:
         removed["документ — не протокол (справка о судьях)"] += 1
         continue
     if fn in REBUILT and r.get("page") in REBUILT[fn][1]:
-        removed["заменено повторным распознаванием (КР-2026 СИБ, стр. 1–6)"] += 1
+        removed["заменено повторным разбором командного протокола (retable)"] += 1
         continue
     doc_id = DOC_BY_FILE.get(fn, {}).get("doc_id")
     role = role_of(doc_id, r.get("page"), r.get("fio_norm")) if doc_id else None
@@ -187,20 +206,37 @@ for r in v1["records"]:
     if e:
         out.append(e)
 
-# КР-2026 СИБ: новые записи со страниц 1–6
-for fn, (doc_id, pages) in REBUILT.items():
+# командные протоколы: записи повторного разбора (места по блокам команд). Если место совпало с первичным
+# построчным распознаванием (две независимые разметки), пометка «место требует сверки» снимается.
+v1_place: dict[tuple[str, int, str], object] = {}
+for r in v1["records"]:
+    v1_place[(r["pdf_url"].rsplit("/", 1)[-1], r.get("page"), r.get("fio_norm"))] = r.get("place")
+for fn, (doc_id, pages) in sorted(REBUILT.items()):
     src = DOC_BY_FILE[fn]
-    for p in pages:
-        d = cache.get((doc_id, p)) or {}
+    for p in sorted(pages):
+        d = cache_v2.get((doc_id, p)) or {}
+        geometry = d.get("status", "geometry") == "geometry"
         for row in d.get("rows") or []:
             fio_norm = norm.normalize_fio(row.get("fio"))
             if not fio_norm:
                 continue
+            role = (row.get("role") or "").strip().lower()
+            if role not in STAFF_ROLES_OK or (fio_norm in staff_names[doc_id] and fio_norm not in athlete_names[doc_id]):
+                removed["не спортсмен (по первичному распознаванию документа)"] += 1
+                continue
             bdate, byear = norm.extract_birth_date(row.get("birth_date"))
-            rec = {"key_hash": norm.compute_key_hash(fio_norm, byear), "fio_hash": norm.compute_fio_hash(fio_norm),
-                   "fio_norm": fio_norm, "birth_date": bdate or byear, "discipline": d.get("discipline"),
-                   "place": row.get("place"), "rank": None, "team": row.get("team"), "region": row.get("region"),
-                   "pdf_url": src["pdf_url"], "page": p, "recognized": "v2_team_blocks"}
+            uncertain = bool(row.get("place_uncertain", not geometry)) or row.get("place") is None
+            if uncertain and row.get("place") is not None and v1_place.get((fn, p, fio_norm)) == row.get("place"):
+                uncertain = False
+                fixes["место повторного разбора подтверждено первичным распознаванием"] += 1
+            rec = {"fio_norm": fio_norm, "birth_date": bdate or byear, "discipline": d.get("discipline"),
+                   "place": row.get("place"), "rank": row.get("rank"), "team": row.get("team"), "region": row.get("region"),
+                   "pdf_url": src["pdf_url"], "page": p,
+                   "recognized": "v2_team_blocks_geometry" if geometry else "v2_team_blocks_model",
+                   "place_uncertain": uncertain}
+            old = v1_place.get((fn, p, fio_norm), "нет")
+            if old != row.get("place"):
+                fixes["место изменено повторным разбором" if old != "нет" else "запись добавлена повторным разбором"] += 1
             e = enrich(rec, fn)
             if e:
                 out.append(e)
@@ -248,6 +284,25 @@ if WRITE_W1:
     t1.with_suffix(".tmp").replace(t1)
     print("index_w1.json:", len(w1_keep), "записей,", w1["stats"]["unique_athletes_count"], "уникальных ФИО")
 
+# дата рождения, невозможная для участника (в протоколе КР-2026 у части строк стоит дата соревнования):
+# не используем ни для ключа, ни для возраста по ЕВСК
+for r in final:
+    bd = str(r.get("birth_date") or "")
+    ev_year = int(str(r.get("date") or "0")[:4] or 0)
+    if bd[:4].isdigit() and ev_year and int(bd[:4]) > ev_year - 8:
+        r["birth_date_source"] = bd
+        r["birth_date"] = None
+        fixes["дата рождения в протоколе невозможна (позже года соревнования − 8) — не используется"] += 1
+        if r.get("person") and r.get("event_status") is not None:
+            e = evsk.evsk_rank_for(r, events[r["event_id"]])
+            r["evsk_rank"], r["evsk_status"], r["evsk_fulfilled"], r["evsk_pending"] = e["rank"], e["status"], e["fulfilled"], e["pending"]
+    if r.get("evsk_status") == "place_unverified":
+        fixes["норматив по месту, которое требует сверки по скану, не засчитан (place_unverified)"] += 1
+    fio = r.get("fio_norm") or ""
+    by = str(r.get("birth_date") or "")[:4]
+    r["fio_hash"] = norm.compute_fio_hash(fio)
+    r["key_hash"] = norm.compute_key_hash(fio, by if by.isdigit() else None)
+
 persons = [r for r in final if r["person"]]
 st = collections.Counter(r.get("evsk_status") for r in persons)
 ranks = collections.Counter(r.get("evsk_rank") for r in persons if r.get("evsk_status") in ("fulfilled", "needs_second_result"))
@@ -284,7 +339,8 @@ stats = {
 }
 idx = dict(v1)
 idx.update({"schema_version": "2.0", "generated_at": now, "stats": stats, "sources": sources, "records": final,
-            "events_version": events_doc.get("version")})
+            "events_version": events_doc.get("version"), "hash_scheme": "hmac-sha256",
+            "hash_key_env": "FSP_INDEX_HMAC_KEY"})
 target = base / OUT_NAME
 if target.exists() and "--force" not in sys.argv:
     sys.exit(f"{target} уже существует: выложенные версии индекса не перезаписываются (новое имя или --force)")

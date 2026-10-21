@@ -52,6 +52,7 @@ STATUS_TITLES = {
     "fulfilled": "норматив выполнен",
     "needs_second_result": "нужен повторный результат",
     "conditions_not_met": "условия соревнования не выполнены",
+    "place_unverified": "место требует сверки по скану протокола",
     "no_norm": "место ниже нормативов",
     "unknown": "нет данных о соревновании",
 }
@@ -240,6 +241,10 @@ def evsk_rank_for(record: dict[str, Any], context: dict[str, Any] | None = None,
     min_age = norms["min_age"].get(rank)
     conds.append({"code": "age", "ok": (None if age is None else age >= min_age), "value": age, "need": min_age,
                   "basis": norms["min_age_basis"]})
+    if record.get("place_uncertain"):
+        # командный протокол: граница команды распознана неоднозначно — место нужно сверить по скану
+        conds.append({"code": "place", "ok": None, "value": place, "need": "место сверено по скану протокола",
+                      "basis": "распознавание скана (docs/realdata/fsp_protocols/README.md, «Аудит распознавания»)"})
     if rank == "МС":
         conds.append({"code": "prior_rank", "ok": None, "value": None, "need": "КМС", "basis": cond["prior_rank_for_ms"]["basis"]})
     res["conditions"] = conds
@@ -250,6 +255,9 @@ def evsk_rank_for(record: dict[str, Any], context: dict[str, Any] | None = None,
         res["status"] = "needs_second_result"
     else:
         res["status"] = "fulfilled"
+    if record.get("place_uncertain") and res["status"] in ("fulfilled", "needs_second_result"):
+        res["status_if_place_confirmed"] = res["status"]
+        res["status"] = "place_unverified"
     res["fulfilled"] = res["status"] == "fulfilled" and not res["pending"]
     res["explain"] = _explain(title, place, rank, res, ctx)
     return res
@@ -282,7 +290,8 @@ def _explain(title: str, place: int, rank: str, res: dict[str, Any], ctx: dict[s
 
 def best_evsk_for_athlete(records: Iterable[dict[str, Any]], *, birth_date: str | None = None) -> dict[str, Any] | None:
     """Лучший результат спортсмена: сначала выполненные нормативы, затем по званию/разряду и свежести."""
-    status_rank = {"fulfilled": 0, "needs_second_result": 1, "conditions_not_met": 2, "no_norm": 3, "unknown": 4}
+    status_rank = {"fulfilled": 0, "needs_second_result": 1, "place_unverified": 2, "conditions_not_met": 3, "no_norm": 4,
+                   "unknown": 5}
     best = None
     for r in records:
         e = r.get("evsk") or evsk_rank_for(r, birth_date=birth_date)
