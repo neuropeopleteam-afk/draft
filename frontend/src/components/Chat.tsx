@@ -79,13 +79,13 @@ export function Thread({ kind, id, compact, onUpdate }: { kind: ThreadKind; id: 
   return (
     <div className="space-y-3">
       {qa && (
-        <p className="rounded-xl bg-[#F3F2FB] px-3 py-2 text-xs leading-relaxed text-brand-night">
+        <p className="rounded-xl bg-[#EEF1FC] px-3 py-2 text-xs leading-relaxed text-brand-night">
           {t.kind === "invitation" && t.revoked ? "Кандидат отозвал доступ к контактам. " : "До принятия приглашения — "}
           формат «вопрос — ответ»: не больше двух сообщений подряд, телефоны, почты и ссылки на мессенджеры скрываются автоматически у обеих сторон.
           {t.can_write && t.left != null && ` Осталось сообщений: ${t.left}.`}
         </p>
       )}
-      <div ref={list} className={`space-y-2 overflow-y-auto overscroll-contain rounded-xl border border-brand-night/10 bg-[#FBF8FC] p-3 ${compact ? "max-h-72" : "max-h-[55vh] min-h-[12rem]"}`} aria-live="polite">
+      <div ref={list} className={`space-y-2 overflow-y-auto overscroll-contain rounded-xl border border-brand-night/10 bg-[#F4F6FC] p-3 ${compact ? "max-h-72" : "max-h-[55vh] min-h-[12rem]"}`} aria-live="polite">
         {!t.messages.length ? (
           <p className="py-6 text-center text-sm text-brand-ink/65">{t.side === "candidate" ? "Сообщений пока нет. Задайте вопрос работодателю — о команде, задачах, формате." : "Сообщений пока нет. Можно уточнить детали у кандидата — контакты останутся скрытыми до принятия."}</p>
         ) : t.messages.map((m) => (

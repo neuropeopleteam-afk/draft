@@ -118,6 +118,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
     : fspAchs.length > 0
       ? `Соревнования ФСП: ${fspAchs[0].text}${fspAchs.length > 1 ? ` и ещё ${fspAchs.length - 1}` : ""}`
       : "Нет подтверждённых результатов соревнований ФСП (фактор ФСП = 0, без штрафа)";
+  const exactReason = (r.reasons ?? []).find((x: any) => x.requirement === "Строго запрошенный грейд");
   return (
     <article className={`card !p-4 sm:!p-5 ${active ? "ring-2 ring-brand/40" : ""}`} data-testid="candidate-card" data-compact="true" aria-label={`Кандидат ${r.ref}, место ${rank}`}>
       <div className="flex items-start justify-between gap-3">
@@ -135,7 +136,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
         {r.score != null && <ScoreBox score={r.score} must={r.must} />}
       </div>
       <ul className="mt-2 space-y-1 text-sm" data-testid="compact-lines">
-        <Line label="Грейд и тест" tone="text-brand-night" testid="compact-grade-test">{gradeLine}. {testLine}.</Line>
+        <Line label="Грейд и тест" tone="text-brand-night" testid="compact-grade-test">{gradeLine}. {testLine}.{exactReason?.text ? ` Строго запрошенный грейд: ${exactReason.text}.` : ""}</Line>
         <Line label="Навыки" tone="text-emerald-800" testid="compact-matched">{f.matched.length || f.matchedTask.length
           ? [f.matched.length ? `навыки вакансии, подтверждённые тестом: ${f.matched.join(", ")}` : "",
              f.matchedTask.length ? `заданием работодателя: ${f.matchedTask.join(", ")}` : ""].filter(Boolean).join("; ")

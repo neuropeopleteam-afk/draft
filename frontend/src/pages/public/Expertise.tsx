@@ -119,7 +119,7 @@ export default function Expertise() {
               <span className="font-mono text-xs np-accent">ИННОВАЦИЯ 02 · ДИРЕКТОР И HR</span>
               <h3 className="mt-2 text-xl font-bold np-text">ИИ-советник руководителя на сравнении кандидатов</h3>
               <p className="mt-2 text-sm leading-relaxed np-muted">
-                Аватар докладывает голосом по топ-кандидатам вакансии (кто лидер по тесту IRT и ФСП, какие навыки не проверены, чья вилка выгоднее) и отвечает на вопросы руководителя голосом.
+                Аватар докладывает голосом по топ-кандидатам вакансии (кто лидер по адаптивному тесту и ФСП, какие навыки не проверены, чья вилка выгоднее) и отвечает на вопросы руководителя голосом.
               </p>
               <button type="button" onClick={openEmployerAdvisor} disabled={!!busy} className="np-btn-primary mt-4 px-5 py-2.5 text-sm" data-testid="exp-go-advisor">
                 {busy === "emp-advisor" ? "Открываем сравнение…" : "Открыть ИИ-советника директора (1 клик)"}

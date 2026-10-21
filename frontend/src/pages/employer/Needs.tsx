@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CandidateCard, SCORE_HINT } from "../../components/CandidateCard";
 import { CompactCard } from "../../components/CompactCard";  // Я10: компактная подборка
 import { TournamentLaunch } from "../../components/FspTournament";  // Н5: отборочный турнир ФСП под вакансию
@@ -451,6 +451,7 @@ const TOP = 5, MORE = 10, WIDE_PX = 1000;  // Я10: первый экран по
 export function Selection() {
   const { id, version } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const demoUi = useDemoUi();
   const need = useApi<any>(`/employer/needs/${id}`);
   const last = need.data?.versions?.at(-1)?.version;
@@ -474,7 +475,22 @@ export function Selection() {
   const [busy, setBusy] = useState(false);
 
   // FIX7 п. 10: стаж из потребности подставляется в «Стаж от, лет», если версия его не задала — уходит в следующую версию
-  useEffect(() => { if (sel.data) { setFilters(withNeedExperience(sel.data.filters ?? {}, sel.data.requirements)); setRealOnly(!!sel.data.filters?.real_only); setPicked([]); setShown(TOP); setOpen({}); setActive(null); } }, [sel.data]);
+  useEffect(() => {
+    if (sel.data) {
+      const urlExact = searchParams.get("grade_exact") === "1" || searchParams.get("grade_exact") === "true";
+      const baseFilters = withNeedExperience(sel.data.filters ?? {}, sel.data.requirements);
+      const exactVal = sel.data.filters?.grade_exact != null ? !!sel.data.filters.grade_exact : urlExact;
+      setFilters({ ...baseFilters, ...(exactVal ? { grade_exact: true } : {}) });
+      setRealOnly(!!sel.data.filters?.real_only);
+      const next = new URLSearchParams(searchParams);
+      if (exactVal) next.set("grade_exact", "1");
+      else next.delete("grade_exact");
+      if (next.toString() !== searchParams.toString()) {
+        setSearchParams(next, { replace: true });
+      }
+      setPicked([]); setShown(TOP); setOpen({}); setActive(null);
+    }
+  }, [sel.data]); // eslint-disable-line react-hooks/exhaustive-deps
   // Я10: первые TOP — компактно, остальные свёрнуты («Показать ещё»); на широком блоке (≥ 1000 px) доказательства — справа
   const [shown, setShown] = useState(TOP);
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -497,7 +513,7 @@ export function Selection() {
       if (refineReq) body.requirements = reqBody(refineReq);
       const r = await api<any>(`/employer/needs/${id}/selections`, { body });
       await need.reload(); setRefineReq(null);
-      navigate(`/employer/needs/${id}/v/${r.version}`);
+      navigate(`/employer/needs/${id}/v/${r.version}${f.grade_exact ? "?grade_exact=1" : ""}`);
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
 
@@ -508,7 +524,7 @@ export function Selection() {
       if (o.requirements) body.requirements = reqBody(o.requirements);
       const r = await api<any>(`/employer/needs/${id}/selections`, { body });
       await need.reload();
-      navigate(`/employer/needs/${id}/v/${r.version}`);
+      navigate(`/employer/needs/${id}/v/${r.version}${(o.filters as any)?.grade_exact ? "?grade_exact=1" : ""}`);
     } catch (e) { setWErr(errText(e)); } finally { setBusy(false); }
   }
 
@@ -520,7 +536,7 @@ export function Selection() {
       const body: any = { parent_version: v, filters: { ...f, conditions_off: off || undefined } };
       const r = await api<any>(`/employer/needs/${id}/selections`, { body });
       await need.reload();
-      navigate(`/employer/needs/${id}/v/${r.version}`);
+      navigate(`/employer/needs/${id}/v/${r.version}${f.grade_exact ? "?grade_exact=1" : ""}`);
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
 
@@ -569,7 +585,7 @@ export function Selection() {
         <Link to="/employer/needs" className="font-semibold text-brand hover:underline sm:hidden">Все потребности</Link>
         <span className="text-brand-ink/65">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
-          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} title={x.filters?.relaxation ? `из версии ${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
+          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}${x.filters?.grade_exact ? "?grade_exact=1" : ""}`} title={x.filters?.relaxation ? `из версии ${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
             версия {x.version} · {x.total}
           </Link>
         ))}
@@ -610,6 +626,11 @@ export function Selection() {
               {(s.stack_filter ?? s.meta?.stack_filter)?.text && (
                 <p className="rounded-xl border border-brand-night/10 bg-white px-3 py-2 text-xs font-medium text-brand-night" data-testid="stack-filter-note">
                   <b className="font-semibold text-brand-plum">Фильтр стека вакансии:</b> {(s.stack_filter ?? s.meta?.stack_filter).text}
+                </p>
+              )}
+              {(s.grade_exact?.on || s.filters?.grade_exact) && (
+                <p className="rounded-xl border border-brand-night/10 bg-white px-3 py-2 text-xs font-medium text-brand-night" data-testid="grade-exact-note">
+                  <b className="font-semibold text-brand-plum">Строго запрошенный грейд:</b> Только кандидаты с подтверждённым грейдом, равным запрошенному. По умолчанию показываем и тех, кто сильнее запроса.
                 </p>
               )}
               {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
@@ -704,6 +725,20 @@ export function Selection() {
                 hint="Оставить только кандидатов с достижениями, подтверждёнными официальным протоколом ФСП (ЕКП, ЕВСК, ссылка на PDF)." />
               <Toggle checked={!!filters.confirmed_only} onChange={(x) => setFilters({ ...filters, confirmed_only: x || undefined })} label="Только подтверждённый грейд"
                 hint="Убрать кандидатов со статусом «нужен доп. этап» и без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждённым грейдом." />
+              <div data-testid="grade-exact-toggle">
+                <Toggle
+                  checked={!!filters.grade_exact}
+                  onChange={(x) => {
+                    setFilters({ ...filters, grade_exact: x || undefined });
+                    const next = new URLSearchParams(searchParams);
+                    if (x) next.set("grade_exact", "1");
+                    else next.delete("grade_exact");
+                    setSearchParams(next, { replace: true });
+                  }}
+                  label="Строго запрошенный грейд"
+                  hint="Только кандидаты с подтверждённым грейдом, равным запрошенному. По умолчанию показываем и тех, кто сильнее запроса."
+                />
+              </div>
               <Toggle checked={!!filters.learn_from_company} onChange={(x) => setFilters({ ...filters, learn_from_company: x || undefined })} label="Учитывать решения компании"
                 hint="Скорректировать веса навыков по истории приглашений, собеседований и офферов вашей компании (по умолчанию выключено)." />
               {reqTags.length > 0 && (

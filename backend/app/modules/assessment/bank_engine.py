@@ -630,8 +630,8 @@ class BankEngine:
             engine=self.name, theta=theta_r, se=se_r, claimed_grade=claimed,
             point_grade=dec.point_grade, confirmed=dec.confirmed, upgrade_available=dec.upgrade_available,
             retake_lower=retake, probabilities=dec.probabilities, answered=len(answered), correct=correct,
-            skills=skills, explanation=(self._explain_express(dec, claimed, details) if details.get("mode") == "express"
-                                        else self._explain(dec, theta_r, se_r, claimed, details)), details=_finite(details),
+            skills=skills, explanation=(self._explain_express(dec, claimed, details, vd) if details.get("mode") == "express"
+                                        else self._explain(dec, theta_r, se_r, claimed, details, vd)), details=_finite(details),
             provisional=dec.provisional, provisional_reason=dec.provisional_reason, p_claimed=dec.p_claimed,
         )
 
@@ -1079,7 +1079,7 @@ class BankEngine:
         if (details.get("preknowledge") or {}).get("rescored"):
             s += " Часть ответов не учтена в оценке уровня: по ним есть признаки, что ответы были известны заранее."
         if details.get("mode") == "express":
-            s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без дотестирования, поэтому интервал θ "
+            s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без дотестирования, поэтому интервал оценки "
                   "шире, чем у полного теста; правило решения то же — последовательная проверка у порога заявленного "
                   "грейда: решение принимается только при достаточной уверенности, иначе нужен полный тест.")
             if claimed == "senior":
@@ -1089,13 +1089,19 @@ class BankEngine:
         return s
 
     @staticmethod
-    def _explain_express(dec, claimed: str, details: dict) -> str:
-        """Пояснение экспресс-теста жюри простыми словами — без θ и сырых оценок (правило владельца)."""
+    def _explain_express(dec, claimed: str, details: dict, vd: dict | None = None) -> str:
+        """Пояснение экспресс-теста жюри простыми словами — без θ и сырых оценок (правило владельца).
+        vd — трёхзначный вердикт: если он есть, первая фраза — его пояснение (одна вероятность и один порог на экране,
+        замечание А19 №5), без второй формулировки с другим порогом."""
         g = GRADE_RU[claimed]
         p = sum(v for k, v in dec.probabilities.items() if GRADES.index(claimed) <= (
             GRADES.index(k) if k in GRADES else -1))
         ps = "более 99 %" if p > 0.99 else ("менее 1 %" if p < 0.01 else f"{p * 100:.0f} %")
-        if dec.confirmed:
+        if vd and vd.get("explanation"):
+            s = vd["explanation"]
+            if vd.get("status") == "not_confirmed":
+                s += " Принудительного понижения нет: можно пройти полный тест."
+        elif dec.confirmed:
             s = f"Грейд {g} подтверждён экспресс-тестом: вероятность уровня не ниже {g} — {ps}."
         else:
             s = (f"Грейд {g} экспресс-тестом пока не подтверждён: вероятность уровня не ниже {g} — {ps} (нужно ≥ "
@@ -1106,8 +1112,9 @@ class BankEngine:
         if (details.get("preknowledge") or {}).get("rescored"):
             s += " Часть ответов не учтена в оценке уровня: по ним есть признаки, что ответы были известны заранее."
         s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без дотестирования, поэтому интервал "
-              f"оценки шире, чем у полного теста; правило решения экспресса — вероятность уровня не ниже заявленного ≥ "
-              f"{confirm_pct()} % (полный тест решает последовательной проверкой у порога).")
+              "оценки шире, чем у полного теста" + ("." if vd and vd.get("explanation") else
+              f"; правило решения экспресса — вероятность уровня не ниже заявленного ≥ {confirm_pct()} % "
+              "(полный тест решает последовательной проверкой у порога)."))
         if claimed == "senior":
             mx = (details.get("length") or {}).get("max_items", 12)
             s += (f" За Senior экспресс длиннее (до {mx} заданий): крайняя категория подтверждается при почти всех верных "
@@ -1115,12 +1122,17 @@ class BankEngine:
         return s
 
     @staticmethod
-    def _explain(dec, theta: float, se: float, claimed: str, details: dict) -> str:
+    def _explain(dec, theta: float, se: float, claimed: str, details: dict, vd: dict | None = None) -> str:
         g = GRADE_RU[claimed]
         p = sum(v for k, v in dec.probabilities.items() if GRADES.index(claimed) <= (
             GRADES.index(k) if k in GRADES else -1))
         ps = "более 99 %" if p > 0.99 else ("менее 1 %" if p < 0.01 else f"{p * 100:.0f} %")
-        if dec.confirmed:
+        if vd and vd.get("explanation"):  # одна формулировка и один порог — из трёхзначного вердикта (А19 №5), без θ
+            s = vd["explanation"]
+            if vd.get("status") == "not_confirmed":
+                s += (f" Принудительного понижения нет: можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower
+                      else " Принудительного понижения нет: можно повторить после подготовки.")
+        elif dec.confirmed:
             s = f"Грейд {g} подтверждён: θ = {theta_se(theta, se)}, вероятность уровня не ниже {g} — {ps}."
             if dec.upgrade_available:
                 s += f" Результат уверенно выше порога — можно пройти тест на {GRADE_RU[GRADES[GRADES.index(claimed) + 1]]}."
@@ -1155,8 +1167,9 @@ class BankEngine:
             s += " Часть ответов не учтена в оценке уровня: по ним есть признаки, что ответы были известны заранее."
         if details.get("mode") == "express":
             s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без дотестирования, "
-                  f"поэтому интервал θ шире, чем у полного теста; правило решения экспресса — вероятность уровня не ниже "
-                  f"заявленного ≥ {confirm_pct()} % (полный тест решает последовательной проверкой у порога).")
+                  "поэтому интервал оценки шире, чем у полного теста" + ("." if vd and vd.get("explanation") else
+                  f"; правило решения экспресса — вероятность уровня не ниже заявленного ≥ {confirm_pct()} % "
+                  "(полный тест решает последовательной проверкой у порога)."))
             if claimed == "senior":
                 mx = (details.get("length") or {}).get("max_items", 12)
                 s += (f" За Senior экспресс длиннее (до {mx} заданий): крайняя категория подтверждается при почти всех верных "

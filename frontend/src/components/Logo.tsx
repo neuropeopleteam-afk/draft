@@ -4,9 +4,12 @@ import { useProductName } from "../lib/meta";
 export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true" fill="none">
-      <rect width="32" height="32" rx="8" fill="#310F53" />
-      <circle cx="12.5" cy="16" r="7" stroke="#FFD6E4" strokeWidth="2.5" />
-      <circle cx="19.5" cy="16" r="7" stroke="#FF0053" strokeWidth="2.5" />
+      <rect width="32" height="32" rx="9" fill="#0F132E" />
+      <rect x="0.5" y="0.5" width="31" height="31" rx="8.5" stroke="#5E52FF" strokeOpacity="0.45" />
+      <circle cx="12.5" cy="16" r="6.8" stroke="#6355FF" strokeWidth="2.6" />
+      <circle cx="19.5" cy="16" r="6.8" stroke="#FF3B56" strokeWidth="2.6" />
+      <circle cx="16" cy="12.2" r="1.4" fill="#EDEDED" />
+      <circle cx="16" cy="19.8" r="1.4" fill="#EDEDED" />
     </svg>
   );
 }

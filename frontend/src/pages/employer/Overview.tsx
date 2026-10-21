@@ -7,6 +7,7 @@ import { useAuth } from "../../lib/auth";
 import { CompanyTrustCard } from "../../integrations/Trust";
 import { InvitesLeft, PartnerBadge, useTariffsOn } from "./Tariffs";  // Я29: тариф и остаток приглашений
 import { HireRoi } from "./SquadDraft";
+import { FspCabinet3DStage } from "../../components/Fsp3DShowcase";
 
 function InvitationFunnelWidget({ invitations }: { invitations: any[] }) {
   const now = Date.now();
@@ -51,12 +52,15 @@ function InvitationFunnelWidget({ invitations }: { invitations: any[] }) {
         <Link to="/employer/invitations" className="text-sm font-semibold text-brand hover:underline">Все приглашения →</Link>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stages.map((s) => {
+        {stages.map((s, idx) => {
           const diff = s.cur - s.prev;
           return (
-            <div key={s.key} className="rounded-xl bg-[#FBF8FC] p-3 ring-1 ring-brand-night/5">
-              <p className="text-xs font-semibold text-brand-ink/65">{s.label}</p>
-              <p className="mt-1 text-xl font-extrabold tabular-nums text-brand-night">{s.cur}</p>
+            <div key={s.key} className="relative overflow-hidden rounded-xl border border-brand-night/10 bg-gradient-to-b from-[#F8F9FF] to-[#EEF1FC] p-3.5">
+              <div className="flex items-center justify-between gap-1">
+                <p className="text-xs font-semibold text-brand-ink/70">{s.label}</p>
+                <span className="font-mono text-[10px] font-bold text-brand/70">0{idx + 1}</span>
+              </div>
+              <p className="mt-1 font-mono text-2xl font-extrabold tabular-nums text-brand-night">{s.cur}</p>
               <p className="mt-0.5 text-[11px] text-brand-ink/60">
                 пред. 30 дн.: {s.prev} ({diff > 0 ? `+${diff}` : diff})
               </p>
@@ -65,7 +69,7 @@ function InvitationFunnelWidget({ invitations }: { invitations: any[] }) {
         })}
       </div>
       {topReasons.length > 0 && (
-        <div className="rounded-xl bg-[#F3F2FB] px-3.5 py-2.5 text-xs text-brand-ink/80">
+        <div className="rounded-xl border border-brand/15 bg-[#EEF1FE] px-3.5 py-2.5 text-xs text-brand-ink/85">
           <b className="text-brand-night">Причины отказов:</b>{" "}
           {topReasons.map(([r, n]) => `«${r}» (${n})`).join(" · ")}
         </div>
@@ -104,15 +108,25 @@ export default function EmployerOverview() {
         <Stat label="Задания с вилкой" value={probes.data?.length ?? "…"} hint={probes.data ? `на оценке: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
         <Link to="needs" className="block"><Stat label="Новых подходящих" value={subs.data?.new_total ?? "…"} hint={subs.data ? `подписок: ${subs.data.items.filter((x: any) => x.enabled).length}` : undefined} /></Link>
       </div></div>
-      {/* Командный Драфт ФСП: сборка сыгранного звена из 4 человек под проект в 1 клик */}
+      {/* Командный Драфт ФСП: сборка сыгранного звена из 4 человек под проект в 1 клик с 3D-ядром верификации */}
       <Link to="/employer/squad" data-testid="employer-squad-card"
-        className="group mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-night p-5 text-white transition-colors hover:bg-brand-plum sm:p-6">
-        <div className="min-w-0">
-          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand-blush">Новое · Командный Драфт ФСП</p>
-          <h2 className="mt-1 text-lg font-bold">Сборка звена под проект в 1 клик</h2>
-          <p className="mt-1 text-sm text-white/80">4 проверенных специалиста с паспортом Ed25519 и разрядом ФСП под ваш бюджет ФОТ, пакетный оффер всей четвёрке, экономика найма и рентген кода.</p>
+        className="fsp-stage-card group mt-8 flex flex-col items-center justify-between gap-5 rounded-3xl p-5 transition-transform hover:-translate-y-0.5 sm:flex-row sm:p-6">
+        <div className="min-w-0 flex-1 space-y-2">
+          <p className="inline-flex items-center gap-2 font-mono text-xs font-extrabold uppercase tracking-[0.14em] text-[#B8B4FF]">
+            <i className="fsp-pulse-dot" aria-hidden="true" />
+            Новое · Командный Драфт ФСП
+          </p>
+          <h2 className="text-xl font-extrabold tracking-tight text-white sm:text-2xl">
+            Сборка <span className="fsp-serif-italic">сыгранного звена</span> под проект в 1 клик
+          </h2>
+          <p className="max-w-xl text-sm leading-relaxed text-white/80">
+            4 проверенных специалиста с цифровым паспортом и разрядом ФСП под ваш бюджет ФОТ, пакетный оффер всей четвёрке, экономика найма и рентген кода.
+          </p>
+          <div className="pt-1">
+            <span className="btn-primary inline-flex !px-5 !py-2.5 text-xs font-bold">Собрать звено под ФОТ →</span>
+          </div>
         </div>
-        <span className="btn shrink-0 bg-white text-brand-night group-hover:bg-brand-blush">Собрать звено →</span>
+        <FspCabinet3DStage kind="core" badge="Команда из 4 ролей" sub="Подбор под бюджет ФОТ" />
       </Link>
       <InvitationFunnelWidget invitations={inv.data ?? []} />
       <section className="mt-8 space-y-3" data-testid="employer-overview-roi">

@@ -1,8 +1,9 @@
 import { num, pct, useApi } from "../ui";
 import { ScrollX } from "../A11y";
+import { makeModelAlias, noVendor } from "./noVendor";
 
 /** /validation#ru-llm: режим «только российская модель» (LLM_CHAIN=yandex) — все LLM-функции на одних входах:
- * YandexGPT 5.1 против Claude Sonnet 5.5 и правил (backend: app/modules/validation/data/ru_llm.json ←
+ * российская модель против модели стенда и правил (названия на экран — через noVendor/makeModelAlias) (backend: app/modules/validation/data/ru_llm.json ←
  * tools/llm/ru_llm_bench.py + ru_llm_summary.py; подробно — docs/LLM.md, раздел 11). Числа — только из JSON. */
 
 type Q = Record<string, number | null | undefined>;
@@ -12,7 +13,7 @@ type Cell = {
   price?: { rub_per_1k_calls?: number; usd_per_1k_calls?: number };
 };
 type Func = { key: string; title: string; set: string; metric: string; rows: Record<string, Cell> };
-type Model = { key: string; label: string; where: string };
+type Model = { key: string; label: string; where: string; spec?: string | null };
 type Ref = { label: string; needs_full: { ok: number; n: number; p50_s: number; stack_f1: number } };
 type Data = { missing?: boolean; date: string; code_sha: string; models: Model[]; functions: Func[]; conditions: string[];
   ref_0810?: Ref; pending_note?: string; how_to_enable: { env: string[] } };
@@ -61,12 +62,13 @@ function cellView(d: Data, f: Func, model: string) {
 export default function RuLlm() {
   const { data: d } = useApi<Data>("/validation/ru-llm", []);
   if (!d || d.missing || !d.functions?.length) return null;
-  const models = d.models;
+  const alias = makeModelAlias();
+  const models = d.models.map((m) => ({ ...m, label: alias(m.key === "rules" ? "rules" : m.spec ?? m.label) }));
   return (
     <div className="mt-6" id="ru-llm" data-testid="ru-llm">
-      <h3 className="text-base font-bold text-brand-night">Только российская модель: YandexGPT против Claude Sonnet и правил</h3>
+      <h3 className="text-base font-bold text-brand-night">Только российская модель: против модели стенда и правил</h3>
       <p className="mt-1 text-sm text-brand-ink/75">
-        Весь путь работает в режиме <code>LLM_CHAIN=yandex</code> (Yandex AI Studio, РФ): тексты не уходят за рубеж.
+        Весь путь может работать только на российской модели в российском облаке: тексты не уходят за рубеж.
         Одни и те же входы, одна попытка на вход, путь продукта целиком. Замер {d.date}, код {d.code_sha}.
       </p>
       <ScrollX label="Только российская модель" className="mt-3 hidden overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10 md:block">
@@ -81,7 +83,7 @@ export default function RuLlm() {
             {d.functions.map((f) => (
               <tr key={f.key} className="border-t border-brand-night/5" data-testid={`ru-llm-${f.key}`}>
                 <td className="px-3 py-2 align-top font-medium text-brand-night">
-                  {f.title}<br /><span className="text-xs font-normal text-brand-ink/65">{f.set}; {f.metric}</span>
+                  {f.title}<br /><span className="text-xs font-normal text-brand-ink/65">{noVendor(f.set)}; {noVendor(f.metric)}</span>
                 </td>
                 {models.map((m) => <td key={m.key} className="px-3 py-2 align-top tabular-nums text-brand-ink/80">{cellView(d, f, m.key)}</td>)}
               </tr>
@@ -93,7 +95,7 @@ export default function RuLlm() {
         {d.functions.map((f) => (
           <div key={f.key} className="rounded-2xl bg-white p-3 text-sm ring-1 ring-brand-night/10" data-testid={`ru-llm-m-${f.key}`}>
             <div className="font-medium text-brand-night">{f.title}</div>
-            <div className="text-xs text-brand-ink/65">{f.set}; {f.metric}</div>
+            <div className="text-xs text-brand-ink/65">{noVendor(f.set)}; {noVendor(f.metric)}</div>
             <dl className="mt-2 space-y-1.5">
               {models.map((m) => (
                 <div key={m.key}>
@@ -105,10 +107,10 @@ export default function RuLlm() {
           </div>
         ))}
       </div>
-      <p className="mt-2 text-sm text-brand-ink/75" data-testid="ru-llm-price">{d.conditions.find((c) => c.startsWith("Цена"))}</p>
-      {d.pending_note && <p className="mt-1 text-sm text-brand-ink/75" data-testid="ru-llm-pending">{d.pending_note}</p>}
+      <p className="mt-2 text-sm text-brand-ink/75" data-testid="ru-llm-price">{noVendor(d.conditions.find((c) => c.startsWith("Цена")))}</p>
+      {d.pending_note && <p className="mt-1 text-sm text-brand-ink/75" data-testid="ru-llm-pending">{noVendor(d.pending_note)}</p>}
       <p className="mt-1 text-xs text-brand-ink/65">
-        {d.conditions[d.conditions.length - 1]} Включить: <code>{d.how_to_enable.env[0]}</code> в .env (модели по функциям — docs/LLM.md, раздел 11).
+        {noVendor(d.conditions[d.conditions.length - 1])} Как включить и какие модели по функциям — docs/LLM.md, раздел 11.
       </p>
     </div>
   );
