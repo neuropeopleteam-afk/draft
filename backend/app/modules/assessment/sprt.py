@@ -435,6 +435,11 @@ class ThreeValuedVerdict:
                 "kind": (self.integrity_followup or {}).get("followup_kind") or ("oral_defense" if self.oral_defense_required else ("stage2" if self.followup_needed else None)),
             },
             "explanation": self.explanation,
+            # плоские поля для карточки работодателя (profiles/facts.verdict_summary читает их с верхнего уровня):
+            # «рекомендована устная защита» и вид доп. этапа — те же значения, что в followup
+            "oral_defense_required": self.oral_defense_required,
+            "followup_kind": (self.integrity_followup or {}).get("followup_kind") or ("oral_defense" if self.oral_defense_required else ("stage2" if self.followup_needed else None)),
+            "integrity_oral": bool((self.integrity_followup or {}).get("integrity_oral")),
         }
         if self.incident_stage is not None:
             out["incident_stage"] = self.incident_stage
@@ -756,8 +761,9 @@ def compute_verdict(
         if not susp_reasons:
             susp_reasons.append("Признаки использования подсказок")
 
-    # Финал-2, флаг INTEGRITY_ORAL (по умолчанию выкл.): низкая достоверность итога (level «low», points ≥ 3 — правило
-    # anticheat.behavioral_followup) → грейд не подтверждается сразу, итог решает короткий устный этап (без бана).
+    # Экспериментальный флаг INTEGRITY_ORAL (по умолчанию выкл., на стенде не включён): одиночная низкая достоверность
+    # (level «low», ≥ 3 балла; это НЕ правило А6 «2+ признака», см. config.integrity_oral) → грейд не подтверждается
+    # сразу, итог решает короткий устный этап (без бана). Симуляции продукта принудительно идут с флагом 0.
     low_integrity_oral = False
     if _integrity_oral_on() and str((integ_input or {}).get("level") or "") == "low":
         low_integrity_oral = True

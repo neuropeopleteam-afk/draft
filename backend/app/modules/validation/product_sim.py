@@ -1026,4 +1026,7 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     for k, v in STAND_ENV.items():
         os.environ.setdefault(k, v)
+    # INTEGRITY_ORAL (флаг продукта, по умолчанию выкл., на стенде не включён — решение штаба 21.10 по рецензии А15):
+    # симуляция всегда без него — переменная окружения не может молча поменять прогон, цифры FINAL №2 описывают код с 0
+    os.environ["INTEGRITY_ORAL"] = "false"
     raise SystemExit(main())
