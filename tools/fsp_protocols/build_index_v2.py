@@ -78,6 +78,12 @@ for root, dst in (("work/cache", cache), ("work/cache_v2", cache_v2)):
         doc_id = f.parts[-3]
         page = int(f.stem.split("_")[-1])
         dst[(doc_id, page)] = json.loads(f.read_text(encoding="utf-8"))
+# v5: восстановленные места (place_recover.py — текст ячейки «Место» дословно двумя поставщиками + геометрия v2)
+# заменяют страницы cache_v2 целиком: «б/м», DSQ, диапазоны «14-24», места под печатью — см. place_recover.py
+cache_v3_pages = 0
+for f in (base / "work/cache_v3").glob("*/pages_json/*.json"):
+    cache_v2[(f.parts[-3], int(f.stem.split("_")[-1]))] = json.loads(f.read_text(encoding="utf-8"))
+    cache_v3_pages += 1
 for (doc_id, page) in cache_v2:
     fn = FILE_BY_DOC.get(doc_id)
     if fn:
@@ -130,6 +136,16 @@ removed = collections.Counter()
 out: list[dict] = []
 
 
+def evsk_for(r: dict, ev: dict) -> dict:
+    """ЕВСК по месту записи. Поделённое место «a-b» (place = None, place_range) считаем по худшему месту b —
+    норматив засчитывается, только если он выполнен при любом месте из диапазона."""
+    if r.get("place") is None and r.get("place_range"):
+        e = evsk.evsk_rank_for(dict(r, place=r["place_range"][1]), ev)
+        e["place_basis"] = f"поделённое место {r['place_range'][0]}–{r['place_range'][1]}: по худшему ({r['place_range'][1]})"
+        return e
+    return evsk.evsk_rank_for(r, ev)
+
+
 def enrich(r: dict, fn: str) -> dict | None:
     seg = seg_for(fn, r.get("page"))
     if seg is None:
@@ -171,11 +187,13 @@ def enrich(r: dict, fn: str) -> dict | None:
     fio = r.get("fio_norm") or ""
     r["person"] = fn not in NO_PERSON_DOCS and len(fio.split()) >= 2
     if r["person"] and ev.get("evsk_status") is not None:
-        e = evsk.evsk_rank_for(r, ev)
+        e = evsk_for(r, ev)
         r["evsk_rank"] = e["rank"]
         r["evsk_status"] = e["status"]
         r["evsk_fulfilled"] = e["fulfilled"]
         r["evsk_pending"] = e["pending"]
+        if e.get("place_basis"):
+            r["evsk_place_basis"] = e["place_basis"]
         b = e.get("basis")
         r["evsk_basis_short"] = (f"Приложение № 24 к приказу Минспорта № 450, стр. {b['page']}: {b['row']}, {b['column']} — места {b['places']}"
                                  if b else None)
@@ -240,6 +258,14 @@ for fn, (doc_id, pages) in sorted(REBUILT.items()):
                    "pdf_url": src["pdf_url"], "page": p,
                    "recognized": "v2_team_blocks_geometry" if geometry else "v2_team_blocks_model",
                    "place_uncertain": uncertain}
+            if "place_status" in row:  # cache_v3: место восстановлено (или честно отсутствует по протоколу)
+                st = row["place_status"]
+                if st == "no_place" and "dsq" in str(row.get("score") or "").lower():
+                    st = "disqualified"  # «б/м» в колонке места и DSQ в баллах
+                rec.update(place_text=row.get("place_text"), place_range=row.get("place_range"), place_status=st,
+                           place_check=row.get("place_check"), place_uncertain=bool(row.get("place_uncertain")),
+                           recognized="v3_place_recover")
+                fixes[f"cache_v3: место {st}" + (" (подтверждено)" if not row.get("place_uncertain") else " (не подтверждено)")] += 1
             old = v1_place.get((fn, p, fio_norm), "нет")
             if old != row.get("place"):
                 fixes["место изменено повторным разбором" if old != "нет" else "запись добавлена повторным разбором"] += 1
@@ -300,7 +326,7 @@ for r in final:
         r["birth_date"] = None
         fixes["дата рождения в протоколе невозможна (позже года соревнования − 8) — не используется"] += 1
         if r.get("person") and r.get("event_status") is not None:
-            e = evsk.evsk_rank_for(r, events[r["event_id"]])
+            e = evsk_for(r, events[r["event_id"]])
             r["evsk_rank"], r["evsk_status"], r["evsk_fulfilled"], r["evsk_pending"] = e["rank"], e["status"], e["fulfilled"], e["pending"]
     if r.get("evsk_status") == "place_unverified":
         fixes["норматив по месту, которое требует сверки по скану, не засчитан (place_unverified)"] += 1
@@ -308,6 +334,16 @@ for r in final:
     by = str(r.get("birth_date") or "")[:4]
     r["fio_hash"] = norm.compute_fio_hash(fio)
     r["key_hash"] = norm.compute_key_hash(fio, by if by.isdigit() else None)
+
+# статус места для всех записей (v5): почему места нет — по построению документа или не распознано
+for r in final:
+    if "place_status" not in r:
+        if r["pdf_url"].rsplit("/", 1)[-1] in NO_PLACE_DOCS:
+            r["place_status"] = "not_a_protocol"  # список кандидатов в сборную: мест нет по построению
+        elif r.get("place") is not None:
+            r["place_status"] = "placed"
+        else:
+            r["place_status"] = "not_recognized"
 
 persons = [r for r in final if r["person"]]
 st = collections.Counter(r.get("evsk_status") for r in persons)
@@ -341,6 +377,9 @@ stats = {
     "evsk_status_counts": dict(st),
     "evsk_rank_counts_fulfilled_or_second": {k: v for k, v in ranks.items() if k},
     "athletes_with_fulfilled_norm": len(best),
+    "place_status_counts_persons": dict(collections.Counter(r["place_status"] for r in persons)),
+    "place_unverified_persons": sum(1 for r in persons if r.get("place_uncertain")),
+    "cache_v3_pages": cache_v3_pages,
     "athletes_with_fulfilled_norm_by_rank": dict(collections.Counter(r["evsk_rank"] for r in best.values())),
 }
 idx = dict(v1)

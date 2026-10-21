@@ -1,0 +1,97 @@
+{
+ "generated_at": "2026-10-21T10:08:34+00:00",
+ "input_records_v1": 3139,
+ "output_records": 2911,
+ "removed_by_reason": {
+  "не спортсмен: тренер": 9,
+  "не спортсмен: начальник спортивной сборной команды рос": 1,
+  "не спортсмен: администратор тренировочного процесса": 2,
+  "не спортсмен: аналитик": 1,
+  "не спортсмен: оператор видеозаписи спортивной сборной ": 1,
+  "не спортсмен: психолог": 1,
+  "не спортсмен: судья": 139,
+  "заменено повторным разбором командного протокола (retable)": 2169,
+  "страница справки (судьи, подписи, субъекты)": 21,
+  "документ — не протокол (справка о судьях)": 8,
+  "не спортсмен (по первичному распознаванию документа)": 35,
+  "турнирная таблица КР-2026 (дублирует протокол того же соревнования)": 199
+ },
+ "fixes": {
+  "номер в списке сборной перенесён из «места» в list_no": 43,
+  "место восстановлено по порядку строк (КР-2026 алгоритмическое)": 44,
+  "место изменено повторным разбором": 591,
+  "запись добавлена повторным разбором": 270,
+  "cache_v3: место placed (подтверждено)": 251,
+  "cache_v3: место no_place (подтверждено)": 204,
+  "cache_v3: место placed (не подтверждено)": 4,
+  "cache_v3: место shared_range (подтверждено)": 49,
+  "cache_v3: место disqualified (подтверждено)": 4,
+  "дата рождения в протоколе невозможна (позже года соревнования − 8) — не используется": 28
+ },
+ "stats": {
+  "documents_count": 18,
+  "events_count": 27,
+  "total_records": 2911,
+  "person_records": 2834,
+  "team_only_records": 77,
+  "unique_athletes_count": 2236,
+  "by_event": {
+   "sbornaya_rf_2026": 115,
+   "kr2025_algo_stage": 122,
+   "kr2025_prod_stage": 35,
+   "kr2025_ib_stage": 42,
+   "kr2025_algo_final": 24,
+   "kr2026_bas_stage": 51,
+   "kr2026_algo_stage": 199,
+   "kf2026_sib_stage": 1276,
+   "kf2026_sib_final": 81,
+   "kr2025_ib_final": 77,
+   "kr2025_prod_final": 82,
+   "kr2026_sib_stage": 244,
+   "kr2026_prod_stage": 142,
+   "chr2025_prod": 65,
+   "fo2026_champ_szfo_prod": 6,
+   "fo2026_champ_skfo_prod": 9,
+   "fo2026_champ_sfo_prod": 47,
+   "fo2026_champ_ufo_prod": 6,
+   "fo2026_champ_pfo_prod": 54,
+   "fo2026_champ_cfo_prod": 39,
+   "fo2026_champ_yufo_prod": 55,
+   "kr2026_robo_stage": 81,
+   "fo2026_perv_cfo_prod": 22,
+   "fo2026_perv_yufo_prod": 11,
+   "fo2026_perv_ufo_prod": 4,
+   "fo2026_perv_pfo_prod": 17,
+   "fo2026_perv_sfo_prod": 5
+  },
+  "evsk_status_counts": {
+   "no_norm": 2360,
+   "fulfilled": 159,
+   "needs_second_result": 84,
+   "conditions_not_met": 231
+  },
+  "evsk_rank_counts_fulfilled_or_second": {
+   "КМС": 88,
+   "I": 120,
+   "II": 10,
+   "III": 19,
+   "МС": 6
+  },
+  "athletes_with_fulfilled_norm": 130,
+  "place_status_counts_persons": {
+   "not_a_protocol": 115,
+   "placed": 2462,
+   "no_place": 204,
+   "shared_range": 49,
+   "disqualified": 4
+  },
+  "place_unverified_persons": 4,
+  "cache_v3_pages": 28,
+  "athletes_with_fulfilled_norm_by_rank": {
+   "КМС": 44,
+   "I": 65,
+   "II": 5,
+   "III": 16
+  }
+ }
+}
