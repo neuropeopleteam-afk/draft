@@ -22,7 +22,7 @@ import { apiContext, BASE_URL } from "../lib/stand";
 const APP_TSX = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../frontend/src/App.tsx");
 const FORBIDDEN_TEXT = [
   "Роль в 1 клик", "Ваш маршрут", "Быстрый переход для жюри", "Демо-аккаунт для жюри", "Сбросить песочницу",
-  "Сбросить демо", "Демо жюри", "демо-профиль", "Демо-профиль", "Демо-кандидат", "демо-кандидат", "для жюри",
+  "Сбросить демо", "Демо жюри", "Демо: ", "демо-профиль", "Демо-профиль", "Демо-кандидат", "демо-кандидат", "для жюри",
 ];
 const FORBIDDEN_TESTIDS = ["cabinet-top-bar", "cabinet-route", "jury-panel", "jury-guide", "jury-quick", "jury-reset"];
 const SKIP = [/^\/demo/, /^\/jury/, /^\/x\//, /^\/j\//, /^\/admin/, /^\/expert/, /^\/share\//, /^\/expert-invite\//,
@@ -71,6 +71,18 @@ function rolePages(all: string[], role: Role): string[] {
   return all.filter((p) => !SKIP.some((r) => r.test(p)) && (cabinet(p) ? own(p) : true));
 }
 
+/** Настоящая потребность работодателя → адреса её подборки, версии и сравнения (иначе списки пусты и утечка не видна). */
+async function employerNeedPages(token: string): Promise<string[]> {
+  const api = await apiContext();
+  const r = await api.post("/api/employer/needs", {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { text: "Нужен backend-разработчик уровня middle: Python, FastAPI, PostgreSQL. Удалённо, вилка 200–250 тыс. ₽ на руки, опыт от 3 лет." },
+  });
+  expect(r.status(), await r.text()).toBe(201);
+  const id = (await r.json()).id;
+  return [`/employer/needs/${id}`, `/employer/needs/${id}/v/1`, `/employer/needs/${id}/compare`];
+}
+
 async function realToken(role: "candidate" | "employer"): Promise<string> {
   const api = await apiContext();
   const email = `market-${role}-${Date.now()}@example.org`;
@@ -98,7 +110,15 @@ async function scanPage(page: Page, url: string, markers: string[]): Promise<str
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
   await page.waitForTimeout(600);
-  const text = await page.locator("body").innerText().catch(() => "");
+  // текст страницы без ссылок на вкладку «Демо для жюри» (/demo) — это разрешённый вход в демо, не утечка
+  const text = await page.evaluate(() => {
+    let t = document.body.innerText;
+    document.querySelectorAll<HTMLElement>('a[href^="/demo"], a[href="/jury"]').forEach((e) => {
+      const s = e.innerText.trim();
+      if (s) t = t.split(s).join(" ");
+    });
+    return t;
+  }).catch(() => "");
   for (const t of FORBIDDEN_TEXT) if (text.includes(t)) found.push(`текст «${t}»`);
   for (const m of markers) if (text.includes(m)) found.push(`демо-объект «${m}»`);
   for (const id of FORBIDDEN_TESTIDS) if (await page.getByTestId(id).count()) found.push(`элемент data-testid=${id}`);
@@ -128,7 +148,8 @@ test("рыночный режим: ни на одной странице App.tsx
       if (tok) localStorage.setItem("fsp_token", tok);
     }, tokens[role]);
     const page = await ctx.newPage();
-    for (const p of rolePages(all, role)) {
+    const extra = role === "employer" ? await employerNeedPages(tokens.employer!) : [];
+    for (const p of [...rolePages(all, role), ...extra]) {
       pages += 1;
       const found = await scanPage(page, p, markers);
       if (found.length) findings.push({ role, page: p, found });
