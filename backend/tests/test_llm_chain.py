@@ -142,7 +142,7 @@ def test_openrouter_first_success(monkeypatch, net):
     configure(monkeypatch, LLM_CHAIN="openrouter,yandex")
     net.on("or.test", None, OK_JSON)
     r = llm.chat(MSG, want_json=True, func="grade")
-    assert r.ok and r.provider == "openrouter" and r.model == SONNET and r.label == "Claude Sonnet 5.5"
+    assert r.ok and r.provider == "openrouter" and r.model == SONNET and r.label == "языковая модель"
     (c,) = net.calls
     assert c["url"] == OR_URL + "/chat/completions" and c["headers"]["authorization"] == f"Bearer {SECRET_OR}"
     assert c["body"]["provider"] == {"data_collection": "deny"}
@@ -291,12 +291,13 @@ def test_extract_json_tolerant():
 
 
 def test_model_labels():
-    assert llm.model_label("anthropic/claude-sonnet-5.5") == "Claude Sonnet 5.5"
-    assert llm.model_label("anthropic/claude-fable-5.1:batch") == "Claude Fable 5.1"
-    assert llm.model_label("gpt://b1abc/yandexgpt/latest") == "YandexGPT"
-    assert llm.model_label("yandexgpt-5.1/latest") == "YandexGPT 5.1"  # подпись в режиме LLM_CHAIN=yandex
-    assert llm.model_label("gpt-oss-120b/latest") == "gpt-oss-120b"
-    assert llm.model_label(None) == ""
+    assert llm.model_name("anthropic/claude-sonnet-5.5") == "Claude Sonnet 5.5"
+    assert llm.model_name("anthropic/claude-fable-5.1:batch") == "Claude Fable 5.1"
+    assert llm.model_name("gpt://b1abc/yandexgpt/latest") == "YandexGPT"
+    assert llm.model_name("yandexgpt-5.1/latest") == "YandexGPT 5.1"  # подпись в режиме LLM_CHAIN=yandex
+    assert llm.model_name("gpt-oss-120b/latest") == "gpt-oss-120b"
+    assert llm.model_name(None) == "" and llm.model_label(None) == ""
+    assert llm.model_label("anthropic/claude-sonnet-5.5") == "языковая модель"  # интерфейс: без имён моделей (21.10)
 
 
 def test_meta_endpoint_reports_chain(monkeypatch, net, client):
@@ -325,14 +326,14 @@ def test_need_parser_reports_actual_model(monkeypatch, net):
     net.on("or.test", None, _need_reply)
     r = parse_need(NEED_TEXT)
     assert r["method"] == "llm+rules"
-    assert (r["llm"]["provider"], r["llm"]["model"], r["llm"]["model_label"]) == ("openrouter", SONNET, "Claude Sonnet 5.5")
+    assert (r["llm"]["provider"], r["llm"]["model"], r["llm"]["model_label"]) == ("openrouter", SONNET, "языковая модель")
     grpc = next(i for i in r["stack_required"] if i["tag"] == "grpc")
-    assert grpc["evidence"]["source"] == "llm" and grpc["evidence"]["model"] == "Claude Sonnet 5.5"
+    assert grpc["evidence"]["source"] == "llm" and grpc["evidence"]["model"] == "языковая модель"
     # основная модель недоступна → ответила запасная, подпись — её
     net.on("or.test", None, lambda req, body: httpx.Response(403))
     net.on("ya.test", None, _need_reply)
     r = parse_need(NEED_TEXT)
-    assert r["llm"]["model_label"] == "YandexGPT" and r["llm"]["fallback"] is True
+    assert r["llm"]["model_label"] == "языковая модель" and r["llm"]["fallback"] is True
     # никто не ответил → правила
     net.on("ya.test", None, lambda req, body: httpx.Response(500))
     r = parse_need(NEED_TEXT)
@@ -369,7 +370,7 @@ def test_second_opinion_only_for_disputed(monkeypatch, net):
     net.on("or.test", SONNET, _grade({"cause": 1, "fix": 1}, "strong"))  # уверенный балл — второй оценки нет
     g = _go()
     assert g.status == "scored" and g.score == 1.0 and g.method == "llm" and g.second is None and g.checks == []
-    assert (g.provider, g.model, g.model_label) == ("openrouter", SONNET, "Claude Sonnet 5.5")
+    assert (g.provider, g.model, g.model_label) == ("openrouter", SONNET, "языковая модель")
     assert [c["model"] for c in net.calls] == [SONNET]
 
 
@@ -381,7 +382,7 @@ def test_second_opinion_agrees_mean(monkeypatch, net):
     assert "near_threshold" in g.checks and [c["model"] for c in net.calls] == [SONNET, FABLE]
     assert g.status == "scored" and g.method == "llm2" and g.score == 0.625 and g.scores == [0.5, 0.75]
     assert g.criteria == {"cause": 1.0, "fix": 0.25}
-    assert g.second["model"] == FABLE and g.second["model_label"] == "Claude Fable 5.1" and g.second["score"] == 0.75
+    assert g.second["model"] == FABLE and g.second["model_label"] == "вторая модель" and g.second["score"] == 0.75
     # второй вызов независимый: эталоны в обратном порядке, первая оценка не передаётся
     sys2 = net.calls[1]["body"]["messages"][0]["content"]
     assert sys2.startswith("Ты — второй, независимый проверяющий")
@@ -426,7 +427,7 @@ def test_grader_invalid_reply_falls_to_next_provider(monkeypatch, net):
     net.on("or.test", SONNET, lambda req, body: reply('{"criteria": {"cause": 1}}', body["model"]))  # нет fix
     net.on("ya.test", None, _grade({"cause": 1, "fix": 1}, "strong"))
     g = _go()
-    assert g.status == "scored" and g.provider == "yandex" and g.model_label == "YandexGPT"
+    assert g.status == "scored" and g.provider == "yandex" and g.model_label == "языковая модель"
 
 
 def test_doubts_rules():
@@ -484,7 +485,7 @@ def test_no_pii_in_resume_request(monkeypatch, net, client):
     r = client.post("/api/me/resume", files={"file": ("cv.pdf", pdf, "application/pdf")}, headers=H(t))
     assert r.status_code == 201, r.text
     _assert_no_pii(net.calls)
-    assert r.json()["extracted"]["llm"]["model_label"] == "Claude Sonnet 5.5"
+    assert r.json()["extracted"]["llm"]["model_label"] == "языковая модель"
 
 
 def test_no_pii_in_grader_request(monkeypatch, net):
