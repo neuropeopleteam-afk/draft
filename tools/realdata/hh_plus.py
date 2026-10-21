@@ -382,8 +382,18 @@ def match(limit: int) -> None:
     # implied) и потолок — какая доля обязательных навыков вакансии вообще может быть подтверждена тестом
     cov_best_t, ceil_v = defaultdict(list), defaultdict(list)
     compare = os.environ.get("HH_MATCH_COMPARE", "1") != "0"
+    if os.environ.get("HH_MATCH_MAX"):  # только проверка скрипта на наборе разработки (отложенный — запрещено)
+        if "holdout" in str(CORPUS):
+            sys.exit("HH_MATCH_MAX с отложенным набором запрещён")
+        items = items[: int(os.environ["HH_MATCH_MAX"])]
     with SessionLocal() as db:
         cat_ids = {c.id for c in db.scalars(select(Category)).all()}
+        from app.modules.matching import fsp_factor
+        from app.modules.matching.ranking import load_bundles, visible_pool
+
+        vis = visible_pool(db, category_ids=sorted(cat_ids))
+        vb = load_bundles(db, [p.user_id for p in vis]).values()
+        pool_nofsp = _share(sum(1 for b in vb if fsp_factor.details(b.achievements)["strength"] == 0), len(vis))
         for i, it in enumerate(items, 1):
             v = raws.get(it["id"])
             if v is None:
@@ -443,6 +453,9 @@ def match(limit: int) -> None:
                 above_id = (sel.get("grade_above") or {}).get("above")
                 c[pre + "top5_slots"] += len(top5)
                 c[pre + "top5_above"] += sum(1 for x in top5 if above_id and x["category_id"] == above_id)
+                if pre == "":  # нет истории ФСП — штраф 0: доля таких в пятёрках против доли в пуле (no_fsp_top5_share)
+                    c["top5_main_slots"] += len(top5)
+                    c["top5_nofsp"] += sum(1 for x in top5 if not (x["components"].get("fsp") or 0))
                 if req:
                     c[pre + "req_vac"] += 1
                     vals = [x["components"].get("stack_required") or 0 for x in top5]
@@ -512,6 +525,9 @@ def match(limit: int) -> None:
                      "у лучшего из пяти; req_full_top5_testable — в пятёрке есть кандидат со всем ядром.",
            "implied": os.environ.get("MATCH_IMPLIED", "1"),
            "overall": _summary(tot, allcv, covs(list(per))),
+           "no_fsp": {"top5": _share(tot["top5_nofsp"], tot["top5_main_slots"]), "pool": pool_nofsp,
+                      "what": "Доля кандидатов без учтённых достижений ФСП: в первых пятёрках подборок (top5) и в видимом "
+                              "пуле подтверждённых кандидатов (pool). Отсутствие ФСП — штраф 0, ФСП — 10 % балла."},
            "catalog_only": _summary(cat_tot, [x for d in catalog for x in cov_best[d]], covs(catalog)),
            "grade_above": {"compare": compare, "flag": grade_above.FLAG, "min_exact": grade_above.MIN_EXACT,
                            "keep": grade_above.KEEP,
@@ -519,7 +535,10 @@ def match(limit: int) -> None:
                                    "по умолчанию (match-v1.3): в точной категории меньше 30 подтверждённых — добор "
                                    "категории на ступень выше, первые 2 места — лучшие точного уровня"},
            "directions": dict(sorted(dirs.items())),
-           "errors_top": errors[:80], "errors_by_field": dict(Counter(e["field"] for e in errors))}
+           "errors_top": errors[:80], "errors_by_field": dict(Counter(e["field"] for e in errors)),
+           # все расхождения направления и грейда с метками hh.ru — для независимой проверки спорных меток
+           # (hh_holdout.py adjudicate, протокол docs/realdata/hh_holdout_PROTOCOL.md)
+           "disputed": [e for e in errors if e["field"] in ("direction", "grade")]}
     OUT_MATCH.parent.mkdir(parents=True, exist_ok=True)
     OUT_MATCH.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     MD_MATCH.write_text(render_match(out), encoding="utf-8")
