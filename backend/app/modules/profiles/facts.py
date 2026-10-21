@@ -100,7 +100,7 @@ def achievement_text(a: FspAchievement) -> str:
     evsk_rank = getattr(a, "evsk_rank", None) or tr.get("evsk_rank")
     evsk_basis = getattr(a, "evsk_basis", None) or tr.get("evsk_basis")
     page = pref.get("page") or tr.get("page")
-    if (a.source_ref or "").startswith("protocol:") or ekp_no or pref.get("url") or tr.get("pdf_url"):
+    if (getattr(a, "source_ref", None) or "").startswith("protocol:") or ekp_no or pref.get("url") or tr.get("pdf_url"):
         from app.modules.fsp.protocols import format_protocol_achievement_text
 
         return format_protocol_achievement_text(
@@ -110,7 +110,7 @@ def achievement_text(a: FspAchievement) -> str:
             place=a.place,
             result_title=a.result_title,
             ekp_no=ekp_no,
-            evsk_rank=evsk_rank or a.sport_rank,
+            evsk_rank=evsk_rank or getattr(a, "sport_rank", None),
             evsk_basis=evsk_basis,
             page=page,
             place_status=tr.get("place_status"),
@@ -129,7 +129,7 @@ def _achievement_card_item(a: FspAchievement, direction: str | None) -> dict:
     pref = getattr(a, "protocol_ref", None) or {}
     p_status = getattr(a, "protocol_status", None) or tr.get("protocol_status") or ("verified" if tr.get("protocol_verified") else "none")
     ekp_no = getattr(a, "ekp_no", None) or pref.get("ekp_no") or tr.get("ekp_no")
-    evsk_rank = getattr(a, "evsk_rank", None) or tr.get("evsk_rank") or a.sport_rank
+    evsk_rank = getattr(a, "evsk_rank", None) or tr.get("evsk_rank") or getattr(a, "sport_rank", None)
     evsk_basis = getattr(a, "evsk_basis", None) or tr.get("evsk_basis")
     pdf_url = pref.get("url") or tr.get("pdf_url")
     page = pref.get("page") or tr.get("page")
