@@ -29,13 +29,17 @@ function ci(f?: Frac | null) {
   return f?.ci95 ? `95 % ДИ ${pc(f.ci95[0])}–${pc(f.ci95[1])}` : "";
 }
 
-function Big({ label, f, sub, testid }: { label: string; f?: Frac | null; sub: string; testid: string }) {
+/** Карточка: заголовок — стандартные условия (S-T), рядом всегда «проверка на прочность» (жёсткие условия) —
+ * правило владельца 21.10; если S-T нет — жёсткие условия как есть. */
+function Big({ label, f, hard, sub, testid }: { label: string; f?: Frac | null; hard?: Frac | null; sub: string; testid: string }) {
+  const main = f ?? hard;
   return (
     <div className="rounded-xl bg-brand-cream/40 p-4 ring-1 ring-brand-night/10" data-testid={testid}>
       <div className="text-[11px] font-bold uppercase tracking-wide text-brand-ink/70">{label}</div>
-      <div className="mt-1 text-2xl font-extrabold text-brand-night">{f ? `${pc(f.value)} %` : "—"}</div>
+      <div className="mt-1 text-2xl font-extrabold text-brand-night">{main ? `${pc(main.value)} %` : "—"}</div>
+      {f && hard && <div className="text-[11px] font-semibold text-brand-ink/75" data-testid={`${testid}-pair`}>стандартные условия · в жёстких — {pc(hard.value)} %</div>}
       <div className="mt-1 text-xs text-brand-ink/70">{sub}</div>
-      {f && <div className="mt-1 text-[11px] text-brand-ink/70">{[f.k != null && f.n != null ? `${f.k} из ${f.n}` : "", ci(f)].filter(Boolean).join(" · ")}</div>}
+      {main && <div className="mt-1 text-[11px] text-brand-ink/70">{[main.k != null && main.n != null ? `${main.k} из ${main.n}` : "", ci(main)].filter(Boolean).join(" · ")}</div>}
     </div>
   );
 }
@@ -51,8 +55,12 @@ const WITH_RU: Record<string, string> = {
   gross_error_2plus: "ошибка на 2+ ступени",
   exact_agreement: "тот же грейд при повторе",
   decision_agreement: "то же решение при повторе",
+  kappa_decision: "κ решения «подтверждён / нет» при повторе",
+  far_grades4: "4 ступени, дальше 0,25 от любого порога",
+  above_true_5: "выше истинного (5 ступеней)",
 };
-const WITH_SHOW = ["confident_share", "among_overclaim", "grades_5", "grades_4", "not_underclaim", "main_part", "gross_error_2plus", "exact_agreement", "decision_agreement"];
+const WITH_SHOW = ["confident_share", "among_overclaim", "grades_5", "grades_4", "far_grades4", "above_true_5", "not_underclaim", "main_part", "gross_error_2plus", "exact_agreement", "decision_agreement", "kappa_decision"];
+const WITH_NUM = new Set(["kappa_decision"]);
 
 function cell(it?: Top5Item) {
   if (!it) return "—";
@@ -104,8 +112,8 @@ function FinalRun() {
                   {extra.map((k) => (
                     <tr key={`${id}-${k}`} className="text-xs text-brand-ink/75">
                       <td className="py-0.5 pl-3 pr-3">… {WITH_RU[k] ?? k}</td>
-                      <td className="pr-3">{a?.with?.[k] ? `${pc((a.with[k] as Frac).value)} %` : "—"}</td>
-                      <td>{b?.with?.[k] ? `${pc((b.with[k] as Frac).value)} %` : "—"}</td>
+                      <td className="pr-3">{a?.with?.[k] ? (WITH_NUM.has(k) ? fmtNum((a.with[k] as Frac).value, 2) : `${pc((a.with[k] as Frac).value)} %`) : "—"}</td>
+                      <td>{b?.with?.[k] ? (WITH_NUM.has(k) ? fmtNum((b.with[k] as Frac).value, 2) : `${pc((b.with[k] as Frac).value)} %`) : "—"}</td>
                     </tr>
                   ))}
                 </Fragment>
@@ -144,6 +152,7 @@ export default function Headline() {
     );
   }
   const m = gv.main;
+  const sv: any = (gv as any).st?.view ?? null;  // стандартные условия (S-T) — заголовок; m — жёсткие условия
   const mm = m.minutes_main, mt = m.minutes_total;
   const rows = Object.entries(m.by_claim || {});
   return (
@@ -155,20 +164,24 @@ export default function Headline() {
       </div>
       <p className="mt-2 text-sm text-brand-ink/70">
         Тот же движок, что у кандидата: выбор заданий у порога грейда, остановка, дотестирование, вердикт и второй этап у
-        границы — на реальном банке из {nint(m.bank_families ?? 0)} семейств. Кандидатов {nint(m.n)}: у каждого известен
-        истинный уровень, треть завышает заявку на ступень. Настройки подбирались на одних зёрнах, цифры — на других,
-        отложенных. Людей в этом расчёте нет: пилот с людьми ещё впереди.
+        границы — на реальном банке из {nint(m.bank_families ?? 0)} семейств. Крупная цифра — стандартные условия (как в
+        аналогичных решениях: каждая четвёртая заявка завышена на ступень), подпись под ней — проверка на прочность в
+        жёстких условиях (угадывание, треть заявок завышена, осторожные параметры заданий); в каждой строке
+        {" "}{nint(sv?.n ?? m.n)} модельных кандидатов с известным истинным уровнем. Настройки подбирались на одних
+        зёрнах, цифры — на других, отложенных. Людей в этом расчёте нет: пилот с людьми ещё впереди.
       </p>
       <FinalRun />
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Big testid="v-hl-verdict" label="Верный вердикт по заявке" f={m.verdict_accuracy}
-          sub="итог «подтверждён / не подтверждён» совпал с истиной (после второго этапа, если он нужен)" />
-        <Big testid="v-hl-false-confirm" label="Ложное подтверждение" f={m.false_confirm}
+        {/* Один заголовок на главной, здесь и в claim_ru (замечание «Аватара» 21.10): точность уверенного вердикта;
+            верный вердикт по всем — рядом одной строкой */}
+        <Big testid="v-hl-verdict" label="Точность уверенного вердикта" f={sv?.confident_accuracy_final} hard={m.confident_accuracy_final}
+          sub={`уверенных — ${sv?.confident_share_final ? pc(sv.confident_share_final.value) : "—"} %; верный вердикт по всем, включая «нужен доп. этап», — ${(sv ?? m).verdict_accuracy ? pc((sv ?? m).verdict_accuracy.value) : "—"} % (после второго этапа)`} />
+        <Big testid="v-hl-false-confirm" label="Ложное подтверждение" f={sv?.false_confirm} hard={m.false_confirm}
           sub="у тех, кто завысил заявку: тест подтвердил уровень, которого нет" />
-        <Big testid="v-hl-confident" label="Решено после основной части" f={m.confident_share}
-          sub={`уверенных решений; из них верных — ${m.confident_accuracy ? pc(m.confident_accuracy.value) : "—"} %. Остальным — короткий второй этап у порога`} />
-        <Big testid="v-hl-exact" label="Точный грейд" f={m.exact_grade}
-          sub={`присвоенный уровень равен истинному; ошибок на 2+ ступени — ${m.gross_error ? pc(m.gross_error.value) : "—"} %`} />
+        <Big testid="v-hl-confident" label="Решено после основной части" f={sv?.confident_share} hard={m.confident_share}
+          sub={`уверенных решений; из них верных — ${(sv ?? m).confident_accuracy ? pc((sv ?? m).confident_accuracy.value) : "—"} %. Остальным — короткий второй этап у порога`} />
+        <Big testid="v-hl-exact" label="Точный грейд" f={sv?.exact_grade} hard={m.exact_grade}
+          sub={`присвоенный уровень равен истинному; ошибок на 2+ ступени — ${(sv ?? m).gross_error ? pc((sv ?? m).gross_error.value) : "—"} %`} />
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl bg-brand-cream/40 p-3 text-xs text-brand-ink/75 ring-1 ring-brand-night/10" data-testid="v-hl-time">

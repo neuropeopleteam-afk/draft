@@ -67,6 +67,7 @@ TOP5_PAIRS = {"confident_accuracy": {"confident_share": "confident_share_final"}
                               "main_part_grades_5": "exact_grade_main_5", "main_part_grades_4": "exact_grade_main_4",
                               "above_true": "grade_above_true_final"},
               "within_one": {"gross_error_2plus": "gross_error_2plus"}}
+TOP5_PAIRS["exact_grade"]["above_true_5"] = "grade_above_true_final_5"  # для сравнения с аналогичными — по 5 ступеням
 GRADE_RU = {"none": "ниже Intern", "intern": "Intern", "junior": "Junior", "middle": "Middle", "senior": "Senior",
             "lead": "Lead", "principal": "Principal"}
 
@@ -429,8 +430,15 @@ def top5_from(d: dict) -> list[dict]:
             it["with"] = {k: v for k, v in {
                 "exact_agreement": frac(rt.get("exact_agreement")),
                 "decision_agreement": frac(rt.get("decision_agreement")),
+                # κ Коэна бинарного решения «подтверждён / нет» между попытками (так считают аналогичные решения)
+                "kappa_decision": rt.get("kappa_decision"),
                 "kappa_cohen_unweighted": rt.get("kappa_cohen_unweighted"),
-                "kappa_w_with_truth": s.get("kappa_w_with_truth_final")}.items() if v}
+                "kappa_w_with_truth": s.get("kappa_w_with_truth_final"),
+                "kappa_w_with_truth_4": s.get("kappa_w_with_truth_final_4")}.items() if v}
+        if it["id"] == "exact_grade":  # 4 ступени у кандидатов дальше 0,25 от любого порога 0 / 1 / 2
+            f4 = (s.get("far_from_cut_0_25_grades4") or {}).get("exact_grade_final_4")
+            if f4:
+                it.setdefault("with", {})["far_grades4"] = frac(f4)
     return out
 
 
@@ -450,6 +458,14 @@ def _extra(d: dict) -> dict | None:
             "outside_0_25": s.get("outside_0_25"), "outside_0_4": s.get("outside_0_4"),
             "fixed_vs_adaptive": s.get("fixed_vs_adaptive"), "minutes_total": s.get("minutes_total"),
             "far_from_cut_0_25": s.get("far_from_cut_0_25"),
+            "far_from_cut_0_25_grades4": s.get("far_from_cut_0_25_grades4"),
+            "retest": {k: (d.get("retest") or {}).get(k) for k in (
+                "n_pairs", "kappa_w_quadratic", "kappa_w_quadratic_ci", "kappa_decision", "kappa_cohen_unweighted",
+                "exact_agreement", "exact_agreement_5", "exact_agreement_4", "decision_agreement", "within_one_agreement")
+                if (d.get("retest") or {}).get(k) is not None} or None,
+            "outside_0_25": s.get("outside_0_25"), "outside_0_3": s.get("outside_0_3"),
+            "kappa_w_with_truth_final_4": s.get("kappa_w_with_truth_final_4"),
+            "grade_above_true_final_5": frac(s.get("grade_above_true_final_5")),
             "confident_accuracy_final": frac(s.get("confident_accuracy_final")),
             "false_confirm_all": frac(s.get("false_confirm_all")), "within_one_final": frac(s.get("within_one_final")),
             "exact_grade_final_5": frac(s.get("exact_grade_final_5")), "exact_grade_final_4": frac(s.get("exact_grade_final_4")),
@@ -501,28 +517,50 @@ def cheat_block() -> dict | None:
         return None
     t = d.get("table") or {}
     m = d.get("meta") or {}
-    worst = max(((k, v) for k, v in t.items() if k != "control"),
+    # single_form — контрфакт «единая форма на всех» (не стратегия против продукта): в «худшую стратегию» не входит
+    worst = max(((k, v) for k, v in t.items() if k not in ("control", "single_form")),
                 key=lambda kv: (kv[1].get("false_confirmed") or {}).get("value") or 0, default=(None, None))
     ctrl = (t.get("control") or {}).get("false_confirmed") or {}
+    gap = _bot_gap(m)
     claim = None
     if worst[0]:
         w = worst[1]["false_confirmed"]
-        claim = (f"Боты-стратегии через движок продукта ({len(t)} стратегий × {m.get('n_per_strategy')} попыток, "
-                 f"реальные варианты и проверка ответа): самая успешная стратегия «{worst[0]}» получила подтверждение "
-                 f"заявленного грейда в {pct(w.get('value'))} % попыток (95 % ДИ {pct((w.get('ci95') or [None, None])[0])}–"
-                 f"{pct((w.get('ci95') or [None, None])[1])} %); контроль — честный кандидат на 0,75 логита ниже порога — "
-                 f"{pct(ctrl.get('value'))} %.")
+        sf = (t.get("single_form") or {}).get("false_confirmed") or {}
+        claim = (f"Боты-стратегии через движок продукта ({len([k for k in t if k != 'single_form'])} стратегий × "
+                 f"{m.get('n_per_strategy')} попыток, реальные варианты и проверка ответа): самая успешная стратегия "
+                 f"«{worst[0]}» получила подтверждение заявленного грейда в {pct(w.get('value'))} % попыток (95 % ДИ "
+                 f"{pct((w.get('ci95') or [None, None])[0])}–{pct((w.get('ci95') or [None, None])[1])} %); контроль — "
+                 f"честный кандидат чуть слабее заявленного уровня (на {num(gap, 1)} по шкале теста) — "
+                 f"{pct(ctrl.get('value'))} %"
+                 + (f"; единая форма на всех (как у статичных тестов) с утёкшими ответами — подтверждение в "
+                    f"{pct(sf.get('value'))} % попыток, а при вариативных формах продукта слепая подстановка утёкших "
+                    f"ответов не работает" if sf.get("value") is not None else "") + ".")
     lf = {}
     for key, strat in (("weak_no_leak", "control"), ("weak_leak_10", "leak_10"), ("weak_leak_100", "leak_100"),
-                       ("weak_leak_1000", "leak_1000")):
+                       ("weak_leak_1000", "leak_1000"), ("single_form", "single_form")):
         r = t.get(strat)
         if r:
             f = r.get("false_confirmed") or {}
-            lf[key] = {"value": f.get("value"), "k": f.get("k"), "n": r.get("n"), "ci95": f.get("ci95")}
+            lf[key] = {"value": f.get("value"), "k": f.get("k"), "n": r.get("n"), "ci95": f.get("ci95"),
+                       # сдвиг оценки уровня θ̂ относительно того же «слабого» без утечки — разность средних с 95 % ДИ
+                       "theta_shift_vs_control": r.get("theta_shift_vs_control")}
     return {"table": t, "meta": m, "worst_strategy": worst[0], "claim_ru": claim, "leak_form": lf or None,
-            "leak_form_ru": ("Доля слабых кандидатов (уровень на 0,75 логита ниже порога заявленного грейда), получивших "
-                             "подтверждение: без утечки и с утечкой K вариантов каждого семейства с ключами") if lf else None,
+            "bot_gap": gap,
+            "leak_form_ru": (f"Доля слабых кандидатов (чуть слабее заявленного грейда — на {num(gap, 1)} по шкале теста), "
+                             "получивших подтверждение: без утечки, со слепой подстановкой ключей K утёкших вариантов "
+                             "каждого семейства (бот подставляет утёкший ответ и там, где вариант другой — наивный "
+                             "противник, не доказательство стойкости) и в контрфакте «единая форма на всех»; рядом — "
+                             "сдвиг оценки уровня относительно того же слабого без утечки") if lf else None,
             "recompute": m.get("command"), "code_ref": "backend/app/modules/validation/cheat_bots.py"}
+
+
+def _bot_gap(m: dict) -> float | None:
+    """На сколько логитов «слабый» бот ниже порога — из meta прогона (поле gap или текст bot_theta), не константой."""
+    if isinstance(m.get("gap"), (int, float)):
+        return float(m["gap"])
+    import re as _re
+    x = _re.search(r"−\s*([0-9]+(?:[.,][0-9]+)?)\s*логита", str(m.get("bot_theta") or ""))
+    return float(x.group(1).replace(",", ".")) if x else None
 
 
 def matching_block() -> dict | None:
@@ -617,13 +655,15 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
         # итоговый прогон: точность уверенного вердикта — всегда парой с долей уверенных; S-T и жёсткие рядом
         a, sh, fc = stx["confident_accuracy_final"], stx.get("confident_share_final") or {}, stx.get("false_confirm_all") or {}
         ha, hsh, hfc = hx["confident_accuracy_final"], hx.get("confident_share_final") or {}, hx.get("false_confirm_all") or {}
-        n_st = (stx.get("far_from_cut_0_25") or {}).get("n")
+        va = ((gv.get("st") or {}).get("view") or {}).get("verdict_accuracy") or {}
+        hva = (gv.get("main") or {}).get("verdict_accuracy") or {}
         cards.append({
             "id": "grade_verdict", "eyebrow": "Точность уверенного вердикта по грейду", "value": pct(a["value"]), "accent": "%",
-            "subtext": (f"уверенных — {pct(sh.get('value'))} %, ложное подтверждение — {pct(fc.get('value'))} % всех "
-                        f"кандидатов (стандартные условия); в жёстких — {pct(ha['value'])} %, уверенных "
-                        f"{pct(hsh.get('value'))} %, ложных подтверждений {pct(hfc.get('value'))} % · симуляция продукта, "
-                        f"модельные кандидаты, не люди"),
+            "subtext": (f"уверенных — {pct(sh.get('value'))} %; верный вердикт по всем, включая «нужен доп. этап», — "
+                        f"{pct(va.get('value'))} %; ложное подтверждение — {pct(fc.get('value'))} % всех кандидатов "
+                        f"(стандартные условия). В жёстких: {pct(ha['value'])} %, уверенных {pct(hsh.get('value'))} %, "
+                        f"по всем {pct(hva.get('value'))} %, ложных подтверждений {pct(hfc.get('value'))} % · симуляция "
+                        f"продукта, модельные кандидаты, не люди"),
             "provenance": f"итоговый прогон симуляции продукта, {(gv['main'] or {}).get('date')}",
             "recompute": gv["recompute"], "code_ref": gv["code_ref"]})
     elif gv and gv["main"].get("verdict_accuracy"):
@@ -740,8 +780,10 @@ def final_claim(st: dict | None, hard: dict | None) -> str | None:
         e = x["extra"]
         g = lambda k: (e.get(k) or {}).get("value")
         mt = e.get("minutes_total") or {}
+        va = ((x.get("view") or {}).get("verdict_accuracy") or {}).get("value")
         return (f"точность уверенного вердикта {pct(g('confident_accuracy_final'))} % при доле уверенных "
-                f"{pct(g('confident_share_final'))} %, ложное подтверждение {pct(g('false_confirm_all'))} % всех кандидатов, "
+                f"{pct(g('confident_share_final'))} % (верный вердикт по всем, включая «нужен доп. этап», — {pct(va)} %), "
+                f"ложное подтверждение {pct(g('false_confirm_all'))} % всех кандидатов, "
                 f"точный грейд {pct(g('exact_grade_all'))} % по 6 ступеням ({pct(g('exact_grade_final_4'))} % по 4), "
                 f"±1 ступень — {pct(g('within_one_final'))} %; время — в среднем {num(mt.get('mean'), 0)} мин "
                 f"(p90 {num(mt.get('p90'), 0)})")
@@ -837,7 +879,11 @@ WITH_RU = {"confident_share": "доля уверенных вердиктов", 
            "main_part_grades_4": "основная часть, 4 ступени", "above_true": "грейд выше истинного",
            "gross_error_2plus": "ошибка на 2+ ступени", "exact_agreement": "тот же грейд при повторе",
            "decision_agreement": "то же решение (подтверждён / нет) при повторе",
-           "kappa_cohen_unweighted": "κ Коэна без весов (повтор)", "kappa_w_with_truth": "κw с истиной"}
+           "kappa_cohen_unweighted": "согласие грейда при повторе (κ Коэна без весов)", "kappa_w_with_truth": "κw с истиной",
+           "kappa_decision": "κ Коэна решения «подтверждён / нет» при повторе",
+           "kappa_w_with_truth_4": "κw с истиной по 4 ступеням",
+           "far_grades4": "4 ступени, кандидаты дальше 0,25 от любого порога",
+           "above_true_5": "грейд выше истинного (по 5 ступеням)"}
 
 
 def _f(x: dict | None, d: int = 1) -> str:
@@ -948,7 +994,18 @@ def report_md(n: dict) -> str:
                          f"{pct((x.get('false_confirm') or {}).get('value'))} %, точный грейд {pct((x.get('exact_grade') or {}).get('value'))} % "
                          f"(N = {x.get('n')}).")
         sel = gv.get("selection") or {}
-        if sel.get("rows"):
+        if sel.get("rows") and "L" in (sel["rows"][0] or {}):  # поправка №3: выбор скриптом train_choice.py
+            L += ["", f"Выбор настроек на обучающих зёрнах: {sel.get('rule_ru')} Выбрано {sel.get('chosen')} — "
+                      f"{sel.get('reason_ru')}. Испробовано конфигураций: {len(sel['rows'])}.", "",
+                  "| Конфигурация | L = 3·FC + FR | Ложное подтв. | Ложный отказ | Точный грейд | Тот же грейд при повторе | "
+                  "Минуты всего (p90) | Ограничения |", "|---|---|---|---|---|---|---|---|"]
+            for r in sel["rows"]:
+                env = ", ".join(f"{k.replace('ASSESSMENT_', '')}={v}" for k, v in (r.get("env") or {}).items())
+                L.append(f"| {r['config']} ({env}) | {num(r.get('L'), 4)} | {pct(r.get('FC'))} % | {pct(r.get('FR'))} % | "
+                         f"{pct(r.get('exact_grade_final'))} % | {pct(r.get('retest_exact'))} % | "
+                         f"{num(r.get('minutes_total_mean'), 1)} ({num(r.get('minutes_total_p90'), 1)}) | "
+                         f"{'да' if r.get('passes') else '; '.join(r.get('fails') or [])} |")
+        elif sel.get("rows"):
             L += ["", f"Выбор настроек на обучающих зёрнах ({sel.get('rule')}); выбрано {sel.get('chosen')}:", "",
                   "| Конфигурация | Верный вердикт | Ложное подтв. | p90 основной, мин |", "|---|---|---|---|"]
             for r in sel["rows"]:

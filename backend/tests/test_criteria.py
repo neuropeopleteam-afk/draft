@@ -124,13 +124,16 @@ def test_api_numbers_come_from_validation_json(client):
     # продукта: движок стенда на реальном банке), а /api/validation/headline (path_retest.json) — отдельный блок
     # «Повтор всего пути». Поэтому κ повтора в 2.2 сверяется с симуляцией продукта и с NUMBERS.json, а не с
     # path_retest (прежнее ожидание сравнивало с источником, который первый экран больше не показывает)
+    # С 21.10 (правило владельца) заголовок — стандартные условия (product_st), жёсткие (product) — пара рядом
     p22 = d["criteria"][1]["items"][1]["proof"]
-    prod = json.loads(C.SOURCES["product"][0].read_text(encoding="utf-8"))
-    assert p22["value"] == prod["retest"]["kappa_w_quadratic"]
+    prod = json.loads(C.SOURCES[p22["src"]][0].read_text(encoding="utf-8"))
+    assert p22["src"] == "product_st" and p22["value"] == prod["retest"]["kappa_w_quadratic"]
+    hard = json.loads(C.SOURCES["product"][0].read_text(encoding="utf-8"))
+    assert p22["pair"]["src"] == "product" and p22["pair"]["value"] == hard["retest"]["kappa_w_quadratic"]
     nums = json.loads((Path(__file__).resolve().parents[2] / "docs" / "NUMBERS.json").read_text(encoding="utf-8"))
     rt = (((nums.get("grade_verdict") or {}).get("main") or {}).get("retest") or {})
-    if rt.get("kappa_w") is not None:
-        assert p22["value"] == rt["kappa_w"]
+    if rt.get("kappa_w") is not None:  # первый экран /validation: жёсткие условия — gv.main
+        assert p22["pair"]["value"] == rt["kappa_w"]
 
 
 def test_no_calculation_no_number(monkeypatch, tmp_path):
