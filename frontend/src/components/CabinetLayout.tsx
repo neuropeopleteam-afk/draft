@@ -83,8 +83,8 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF8FC] md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
-      <aside aria-label="Меню кабинета" className="sticky top-0 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none">
+    <div className="min-h-screen bg-gradient-to-b from-[#F3F5FC] via-[#F7F8FE] to-[#EEF1FB] md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
+      <aside aria-label="Меню кабинета" className="sticky top-0 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-gradient-to-b md:from-white md:via-[#FAFbff] md:to-[#F2F5FE] md:backdrop-blur-none">
         <div className="flex h-12 items-center justify-between gap-2 px-4 md:block md:h-auto md:px-5 md:py-5">
           <NavLink to="/" aria-label="На главную"><Logo /></NavLink>
           {demoUi && <GuideSlot where="header" />}
@@ -191,7 +191,7 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
                       className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
                         isActive
                           ? "bg-brand text-white shadow-sm"
-                          : "bg-[#F3F2FB] text-brand-night hover:bg-brand-blush/60"
+                          : "bg-[#EEF1FC] text-brand-night hover:bg-brand-blush/80"
                       }`}
                     >
                       {switchingRole === p ? "Вход…" : label}
@@ -293,7 +293,7 @@ const ROUTES: Partial<Record<Role, RouteStep[]>> = {
     { to: "/candidate/profile", title: "Профиль и резюме", match: (p) => under(p, "/candidate/profile") },
     { to: "/candidate/assessment", title: "Адаптивный тест / Экспресс", match: (p) => under(p, "/candidate/assessment", "/candidate/express", "/candidate/category") },
     { to: "/candidate/attempts", title: "Устная защита с ИИ-аватаром", match: (p) => under(p, "/candidate/attempts", "/candidate/interview") },
-    { to: "/candidate/invitations", title: "Паспорт Ed25519 и офферы с вилкой", match: (p) => under(p, "/candidate/invitations", "/candidate/fsp", "/candidate/messages") },
+    { to: "/candidate/invitations", title: "Цифровой паспорт и офферы с вилкой", match: (p) => under(p, "/candidate/invitations", "/candidate/fsp", "/candidate/messages") },
   ],
   employer: [
     { to: "/employer/needs", title: "Создать вакансию (текст/голос)", match: (p) => p === "/employer/needs" || under(p, "/employer/vacancies") },
@@ -312,7 +312,7 @@ function CabinetRoute({ role, pathname }: { role: Role; pathname: string }) {
     <section
       data-testid="cabinet-route"
       aria-label="Ваш маршрут (4 шага)"
-      className="border-b border-brand-night/10 bg-[#F6F3FA] px-4 py-2.5 sm:px-6 md:px-10 print:hidden"
+      className="border-b border-brand-night/10 bg-gradient-to-r from-[#EDF0FD] via-[#F5F7FE] to-[#EDF0FD] px-4 py-2.5 sm:px-6 md:px-10 print:hidden"
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-brand-plum">
@@ -360,7 +360,14 @@ function CabinetRoute({ role, pathname }: { role: Role; pathname: string }) {
 function NavItem({ to, label, end, hint, badge = 0, badgeLabel = "непрочитанных", also = false }: { to: string; label: string; end?: boolean; hint?: string; badge?: number; badgeLabel?: string; also?: boolean }) {
   return (
     <NavLink to={to} end={end} title={hint}
-      className={({ isActive: a }) => { const isActive = a || also; return `block shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors md:py-2 md:whitespace-normal ${isActive ? "bg-brand-blush text-brand-night font-semibold" : "text-brand-ink/75 hover:bg-brand-blush/40 hover:text-brand-night"}`; }}>
+      className={({ isActive: a }) => {
+        const isActive = a || also;
+        return `block shrink-0 whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-medium transition-all md:py-2 md:whitespace-normal ${
+          isActive
+            ? "border-l-[3px] border-brand bg-gradient-to-r from-brand/15 via-brand/8 to-transparent text-brand-night font-bold shadow-[0_2px_10px_-4px_rgba(64,47,255,0.25)]"
+            : "text-brand-ink/75 hover:bg-brand-blush/50 hover:text-brand-night"
+        }`;
+      }}>
       {label}
       {badge > 0 && <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-brand-strong px-1.5 text-xs font-bold leading-5 text-white" aria-label={`, ${badgeLabel}: ${badge}`}>{badge}</span>}
     </NavLink>
