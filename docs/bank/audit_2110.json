@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-21 09:04:20",
+ "generated_at": "2026-10-21 09:37:19",
  "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 2 --out ../docs/bank/audit_2110.json",
  "n_families": 1524,
  "n_seeds": 20,
- "seconds": 114.7,
+ "seconds": 94.2,
  "formats": {
   "mcq_concept": 1234,
   "predict_output": 85,
@@ -48,7 +48,7 @@
    "mobile.ios.appearance_mcq": 0.8
   },
   "by_format_mean": {
-   "mcq_concept": 0.1116,
+   "mcq_concept": 0.1115,
    "predict_output": 0.1047,
    "find_bug": 0.3657,
    "choose_fix": 0.1881,
@@ -57,18 +57,18 @@
  },
  "guess_attack": {
   "all_numeric_choice": {
-   "n_variants": 22412,
-   "chance": 0.2032,
+   "n_variants": 22610,
+   "chance": 0.2036,
    "best_heuristic": "series_exclusion",
    "best_accuracy": 0.2192,
    "by_heuristic": {
-    "chance": 0.2032,
-    "median": 0.2024,
-    "closest_to_mean": 0.2012,
-    "min": 0.2027,
-    "max": 0.2027,
-    "roundest": 0.1943,
-    "longest": 0.204,
+    "chance": 0.2036,
+    "median": 0.2027,
+    "closest_to_mean": 0.2003,
+    "min": 0.204,
+    "max": 0.2036,
+    "roundest": 0.1944,
+    "longest": 0.2043,
     "cluster_center": 0.2029,
     "series_exclusion": 0.2192,
     "series_all_out": 0.0096
@@ -109,19 +109,19 @@
    }
   },
   "other": {
-   "n_variants": 1432,
+   "n_variants": 1630,
    "chance": 0.25,
-   "best_heuristic": "closest_to_mean",
-   "best_accuracy": 0.2696,
+   "best_heuristic": "min",
+   "best_accuracy": 0.2552,
    "by_heuristic": {
     "chance": 0.25,
-    "median": 0.2374,
-    "closest_to_mean": 0.2696,
-    "min": 0.2423,
-    "max": 0.2423,
-    "roundest": 0.2122,
-    "longest": 0.2252,
-    "cluster_center": 0.2451
+    "median": 0.238,
+    "closest_to_mean": 0.2479,
+    "min": 0.2552,
+    "max": 0.2497,
+    "roundest": 0.211,
+    "longest": 0.2267,
+    "cluster_center": 0.2399
    }
   }
  }

@@ -1,11 +1,11 @@
 {
   "source": "backend/assessment_bank (банк правится в дереве платформы, ветка ag/a3-bank)",
-  "commit": "b7e8832",
+  "commit": "de4c6ec",
   "dirty_files": 0,
-  "content_hash": "9a4bea7bf98cd67e",
-  "bank_code_commit": "b87f4415",
+  "content_hash": "9cce07fc1a29bca5",
+  "bank_code_commit": "de4c6ec4",
   "commit_note": "commit — голова, на которой собран манифест; bank_code_commit — последний коммит, менявший файлы банка (кроме самого BANK_SYNC.json); validation.commit — дерево прогона валидатора",
-  "synced_at": "2026-10-21T09:05:13+00:00",
+  "synced_at": "2026-10-21T09:38:18+00:00",
   "n_families": 1524,
   "by_direction": {
     "analyst": {
@@ -276,8 +276,8 @@
     },
     "seeds": 20,
     "verify_seeds": null,
-    "where": "Москва, контейнер a3-val2, 20 сидов, дерево d715469a (банк = b87f4415)",
-    "commit": "d715469a",
+    "where": "Москва, контейнер a3-val2 (20 сидов на d715469a) + 20 сидов по 11 доработанных семейств на de4c6ec4",
+    "commit": "de4c6ec4",
     "bank_unchanged_since": true
   },
   "quality": {
@@ -357,7 +357,7 @@
     },
     "audit": {
       "file": "docs/bank/audit_2110.json",
-      "generated_at": "2026-10-21 09:04:20",
+      "generated_at": "2026-10-21 09:37:19",
       "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 2 --out ../docs/bank/audit_2110.json",
       "n_families": 1524,
       "n_seeds": 20,
@@ -367,8 +367,8 @@
       "key_constancy_ge_0_8": 17,
       "guess_attack": {
         "all_numeric_choice": {
-          "n_variants": 22412,
-          "chance": 0.2032,
+          "n_variants": 22610,
+          "chance": 0.2036,
           "best_heuristic": "series_exclusion",
           "best_accuracy": 0.2192
         },
@@ -385,10 +385,10 @@
           "best_accuracy": 0.2199
         },
         "other": {
-          "n_variants": 1432,
+          "n_variants": 1630,
           "chance": 0.25,
-          "best_heuristic": "closest_to_mean",
-          "best_accuracy": 0.2696
+          "best_heuristic": "min",
+          "best_accuracy": 0.2552
         }
       }
     },
@@ -412,7 +412,7 @@
     "vs_base": {
       "file": "docs/bank/bank_diff_vs_603474f.json",
       "command": "python3 tools/bank_diff_base.py --base-ref srv/integ/2010n --seeds 2",
-      "generated_at": "2026-10-21T09:04:04+00:00",
+      "generated_at": "2026-10-21T09:38:16+00:00",
       "base": {
         "ref": "srv/integ/2010n",
         "ref_commit": "9ad3f08c2",
@@ -422,8 +422,8 @@
         "n_families_loaded": 1504
       },
       "head": {
-        "commit": "b7e883225",
-        "bank_tree": "6f767ea8073f",
+        "commit": "de4c6ec41",
+        "bank_tree": "9ee25c2046de",
         "n_families_loaded": 1524
       },
       "added": {
@@ -471,7 +471,7 @@
         "basis": 1504,
         "grades": 353,
         "time_limit_s": 975,
-        "variants": 1166
+        "variants": 1173
       },
       "a_transitions": {
         "0.8->1.3": 1,

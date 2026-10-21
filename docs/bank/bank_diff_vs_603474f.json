@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-21T09:04:04+00:00",
+ "generated_at": "2026-10-21T09:38:16+00:00",
  "command": "python3 tools/bank_diff_base.py --base-ref srv/integ/2010n --seeds 2",
  "base": {
   "ref": "srv/integ/2010n",
@@ -10,8 +10,8 @@
   "n_families_loaded": 1504
  },
  "head": {
-  "commit": "b7e883225",
-  "bank_tree": "6f767ea8073f",
+  "commit": "de4c6ec41",
+  "bank_tree": "9ee25c2046de",
   "n_families_loaded": 1524
  },
  "added": {
@@ -84,7 +84,7 @@
    "basis": 1504,
    "grades": 353,
    "time_limit_s": 975,
-   "variants": 1166
+   "variants": 1173
   },
   "a_transitions": {
    "0.8->1.3": 1,
@@ -5632,6 +5632,7 @@
     "backend.pgpool.senior_solve_t_k3",
     "backend.py.idempotency_coarse_ob3",
     "backend.py.idempotency_ob3",
+    "backend.queue.redelivery_mcq",
     "backend.ratelimit.principal_split_bucket_mcq",
     "backend.retry_storm.intern_fwd_k2",
     "backend.retry_storm.junior_fwd_k3",
@@ -5730,6 +5731,7 @@
     "common.log_storage.senior_solve_d_k3",
     "common.log_storage.senior_solve_lam_k4",
     "common.net.cidr_mcq",
+    "common.perf.fanout_tail_mcq",
     "common.process.tech_debt_portfolio_open",
     "common.python.principal_worker_fleet_mcq",
     "common.retry_backoff.intern_fwd_k2",
@@ -5904,6 +5906,7 @@
     "data_eng.storage.principal_tiering_cost_mcq",
     "data_eng.strategy.principal_platform_open",
     "data_eng.stream.consumer_lag_mcq",
+    "data_ml.ab.sample_size_mcq",
     "data_ml.batch_scoring.intern_fwd_k2",
     "data_ml.batch_scoring.junior_fwd_k3",
     "data_ml.batch_scoring.junior_solve_n_k2",
@@ -5988,6 +5991,7 @@
     "data_ml.rag_cost.senior_solve_ch_k3",
     "data_ml.rag_cost.senior_solve_nq_k4",
     "data_ml.serving.principal_gpu_batching_mcq",
+    "data_ml.serving.principal_gpu_fleet_mcq",
     "data_ml.strategy.ml_platform_open",
     "data_ml.train_time.intern_fwd_k2",
     "data_ml.train_time.junior_fwd_k3",
@@ -6074,6 +6078,7 @@
     "devops.es_shards.senior_fwd_k5",
     "devops.es_shards.senior_solve_d_k3",
     "devops.es_shards.senior_solve_g_k4",
+    "devops.k8s.pdb_disruptions_mcq",
     "devops.k8s.principal_hpa_ramp_mcq",
     "devops.k8s.service_selector_bug",
     "devops.k8s.target_port_bug",
@@ -6090,6 +6095,7 @@
     "devops.k8s_nodes.senior_solve_nc_k3",
     "devops.k8s_nodes.senior_solve_pods_k4",
     "devops.kafka.kafka_broker_disk_mcq",
+    "devops.mon.histogram_quantile_mcq",
     "devops.oncall_pages.intern_fwd_k2",
     "devops.oncall_pages.junior_fwd_k3",
     "devops.oncall_pages.junior_solve_al_k2",
@@ -6451,6 +6457,7 @@
     "qa.flaky_pipeline.senior_fwd_k5",
     "qa.flaky_pipeline.senior_solve_n_k4",
     "qa.flaky_pipeline.senior_solve_sh_k3",
+    "qa.load.slo_capacity_mcq",
     "qa.load_vusers.intern_fwd_k2",
     "qa.load_vusers.junior_fwd_k3",
     "qa.load_vusers.junior_solve_rps_k2",
