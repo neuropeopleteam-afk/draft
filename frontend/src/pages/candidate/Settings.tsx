@@ -161,7 +161,11 @@ export function Fsp() {
                                 {m.status_title ?? "Найдено в протоколе — ожидает подтверждения ФСП"}
                               </span>
                               {m.evsk_rank && <span className="chip">Разряд по ЕВСК: {m.evsk_rank}</span>}
-                              {m.place != null && <span className="chip">Место: {m.place}</span>}
+                              {m.place_display ? (
+                                <span className="chip" data-testid="fsp-search-match-place">{m.place_display}</span>
+                              ) : m.place != null ? (
+                                <span className="chip" data-testid="fsp-search-match-place">Место: {m.place}</span>
+                              ) : null}
                             </div>
                             <p className="font-semibold text-brand-night">{m.event_title}</p>
                             <p className="text-xs text-brand-ink/70">
@@ -239,7 +243,13 @@ export function Fsp() {
                     <p className="mt-1 text-xs text-brand-ink/65">
                       {[
                         a.team ? `Команда: ${a.team}` : null,
-                        a.team_result?.place ? `командное место: ${num(a.team_result.place, 0)}` : null,
+                        a.evsk_status === "place_unverified" || a.place_status === "not_recognized" || a.place_status === "place_unverified"
+                          ? "место не подтверждено"
+                          : a.team_result?.place != null
+                            ? `командное место: ${num(a.team_result.place, 0)}`
+                            : Array.isArray(a.place_range ?? a.team_result?.place_range) && (a.place_range ?? a.team_result?.place_range).length === 2
+                              ? `место: ${(a.place_range ?? a.team_result?.place_range)[0]}–${(a.place_range ?? a.team_result?.place_range)[1]} место`
+                              : null,
                         a.ekp_no ? `ЕКП № ${a.ekp_no}` : null,
                         a.evsk_rank ? `разряд по ЕВСК: ${a.evsk_rank}${a.evsk_basis ? ` (${a.evsk_basis})` : ""}` : a.sport_rank ? `разряд: ${a.sport_rank}` : null,
                         a.region ? `регион: ${a.region}` : null,

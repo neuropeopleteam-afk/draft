@@ -492,3 +492,99 @@ def test_expert_checklist_7_salary_before_consent_contacts_hidden_and_revoke(cli
     assert card_rev["contacts_revoked"] is True
 
 
+def test_index_v5_place_status_shared_range_and_unverified(client, tmp_path, monkeypatch):
+    """index_v5 (21.10): поделённое место place_range [14, 24] при place=None -> «14–24 место»;
+    evsk_status == place_unverified / place_status == not_recognized -> «место не подтверждено»."""
+    import json
+    from app.modules.fsp import protocols as prot_mod
+
+    idx_file = tmp_path / "index_v5.json"
+    idx_data = {
+        "schema_version": "5.0",
+        "stats": {"documents": 1, "total_records": 2},
+        "sources": [
+            {
+                "doc_id": "chr_2025_alg",
+                "title": "Чемпионат России по спортивному программированию 2025",
+                "ekp_no": "2025120001001888",
+                "pdf_url": "https://fsp-russia.ru/upload/iblock/chr2025.pdf",
+            }
+        ],
+        "records": [
+            {
+                "key_hash": "v5_shared_14_24",
+                "fio_norm": "морозов дмитрий сергеевич",
+                "fio_hash": prot_mod.fio_sha256("Морозов Дмитрий Сергеевич"),
+                "discipline": "программирование алгоритмическое",
+                "event_title": "Чемпионат России по спортивному программированию 2025",
+                "event_id": "chr_2025_alg",
+                "ekp_no": "2025120001001888",
+                "date": "2025-12-05",
+                "place": None,
+                "place_status": "shared_range",
+                "place_range": [14, 24],
+                "evsk_rank": "II разряд",
+                "evsk_status": "fulfilled",
+                "evsk_place_basis": 24,
+                "evsk_basis_short": "п. 4 ЕВСК от 22.04.2025 (по худшему месту диапазона 24)",
+                "region": "г. Санкт-Петербург",
+                "pdf_url": "https://fsp-russia.ru/upload/iblock/chr2025.pdf",
+                "page": 7,
+                "person": True,
+            },
+            {
+                "key_hash": "v5_unverified_01",
+                "fio_norm": "морозов дмитрий сергеевич",
+                "fio_hash": prot_mod.fio_sha256("Морозов Дмитрий Сергеевич"),
+                "discipline": "программирование продуктовое",
+                "event_title": "Кубок России по спортивному программированию 2025",
+                "event_id": "kr_2025_prod",
+                "ekp_no": "2025120001001477",
+                "date": "2025-11-15",
+                "place": None,
+                "place_status": "not_recognized",
+                "place_range": None,
+                "evsk_rank": None,
+                "evsk_status": "place_unverified",
+                "region": "г. Санкт-Петербург",
+                "pdf_url": "https://fsp-russia.ru/upload/iblock/kr2025.pdf",
+                "page": 11,
+                "person": True,
+            },
+        ],
+    }
+    idx_file.write_text(json.dumps(idx_data, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setenv("FSP_PROTOCOLS_INDEX", str(idx_file))
+    prot_mod._CACHE["mtime"] = None
+
+    tc = candidate_with_category(client, "c_v5_places@example.com")
+    client.patch("/api/me/candidate-profile", json={"full_name": "Морозов Дмитрий Сергеевич"}, headers=H(tc))
+    s_res = client.post("/api/me/fsp/protocols/search", json={}, headers=H(tc))
+    assert s_res.status_code == 200
+    matches = {m["key_hash"]: m for m in s_res.json()["matches"]}
+    assert matches["v5_shared_14_24"]["place_display"] == "14–24 место"
+    assert "14–24 место" in matches["v5_shared_14_24"]["formatted_text"]
+    assert matches["v5_unverified_01"]["place_display"] == "место не подтверждено"
+    assert "место не подтверждено" in matches["v5_unverified_01"]["formatted_text"]
+
+    # Привязываем оба достижения и проверяем карточку работодателя + паспорт кандидата
+    c_res = client.post(
+        "/api/me/fsp/protocols/confirm",
+        json={"key_hashes": ["v5_shared_14_24", "v5_unverified_01"], "consent_employers": True},
+        headers=H(tc),
+    )
+    assert c_res.status_code == 200
+    fsp_achs = c_res.json()["fsp"]["achievements"]
+    texts = [a["text"] for a in fsp_achs]
+    assert any("14–24 место" in t for t in texts), texts
+    assert any("место не подтверждено" in t for t in texts), texts
+
+    te = employer(client)
+    ref = my_ref(client, tc)
+    card_emp = client.get(f"/api/employer/candidates/{ref}", headers=H(te)).json()
+    emp_texts = [a["text"] for a in card_emp["fsp"]["achievements"]]
+    assert any("14–24 место" in t for t in emp_texts), emp_texts
+    assert any("место не подтверждено" in t for t in emp_texts), emp_texts
+
+
+

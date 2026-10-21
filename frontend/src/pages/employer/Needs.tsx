@@ -555,7 +555,7 @@ export function Selection() {
         {/* Я10: подзаголовок мельче на телефоне — первая карточка выше (PageTitle — та же разметка h1) */}
         <div>
           <h1 className="text-xl font-extrabold tracking-tight text-brand-night sm:text-2xl">{need.data.title}</h1>
-          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-brand-ink/70 sm:mt-2 sm:text-base">Балл — только по проверенным фактам: тест, задания работодателя, достижения ФСП. Сказанное кандидатом о себе в балл не входит.</p>
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-brand-ink/70 sm:mt-2 sm:text-base">Категория и фильтр грейда — только по результату теста; место внутри категории определяют результат теста и достижения ФСП (отдельной осью). Навыки вакансии, подтверждённые тестом, показаны строкой совпадения; сказанное кандидатом о себе в балл не входит.</p>
         </div>
         <Link to="/employer/needs" className="btn-ghost hidden sm:inline-flex">Все потребности</Link>
       </div>
@@ -604,9 +604,14 @@ export function Selection() {
                   {ordered.length > 0 && wide && expandBtn}
                 </div>
               </div>
-              {ordered.length > 0 && <DecisionProofStrip totalCandidates={s.total} version={s.version} />}
+              {ordered.length > 0 && <DecisionProofStrip totalCandidates={s.total} version={s.version} algorithm={s.algorithm} formula={s.formula ?? s.meta?.formula} rankingBasisRu={s.ranking_basis_ru ?? s.meta?.ranking_basis_ru} stackFilter={s.stack_filter ?? s.meta?.stack_filter} />}
+              {(s.stack_filter ?? s.meta?.stack_filter)?.text && (
+                <p className="rounded-xl border border-brand-night/10 bg-white px-3 py-2 text-xs font-medium text-brand-night" data-testid="stack-filter-note">
+                  <b className="font-semibold text-brand-plum">Фильтр стека вакансии:</b> {(s.stack_filter ?? s.meta?.stack_filter).text}
+                </p>
+              )}
               {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
-                <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Место внутри категории определяют результат теста и достижения ФСП (отдельной осью); навыки вакансии, подтверждённые тестом, показаны строкой совпадения и ярусом покрытия. Самоописание в балл не входит. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
+                <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Место внутри категории определяют результат теста и достижения ФСП (отдельной осью); навыки вакансии, подтверждённые тестом, показаны строкой совпадения и фильтром стека. Самоописание (заявленный стек, грейд, формат, город, вилка) в балл не входит. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
               </div>}
               {invited && <Alert kind="ok">{invited}</Alert>}
               {!ordered.length ? (

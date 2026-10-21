@@ -256,6 +256,13 @@ function ProtocolClaimsQueue() {
                         {it.status_title}
                       </span>
                       {it.evsk_rank && <span className="chip">Разряд по ЕВСК: {it.evsk_rank}</span>}
+                      {(it.evsk_status === "place_unverified" || it.place_status === "not_recognized" || it.place_status === "place_unverified") ? (
+                        <span className="chip bg-amber-50 text-amber-900">место не подтверждено</span>
+                      ) : Array.isArray(it.place_range) && it.place_range.length === 2 && it.place == null ? (
+                        <span className="chip">{it.place_range[0]}–{it.place_range[1]} место</span>
+                      ) : it.place != null ? (
+                        <span className="chip">{it.place} место</span>
+                      ) : null}
                     </div>
                     <p className="font-semibold text-brand-night">{it.formatted_text}</p>
                     <p className="text-xs text-brand-ink/70">
