@@ -392,6 +392,22 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
     cands_by_id = {c["id"]: c for c in parsed["candidates"]}
     labels: dict[tuple[str, str], int] = parsed["labels"]
 
+    # Шкала релевантности — одна на весь файл: если во всём наборе оценки только 0/1, релевантен тот, у кого 1;
+    # иначе шкала 0–3 и релевантен тот, у кого ≥ 2. Раньше порог выбирался по каждой вакансии отдельно, и вакансия,
+    # где эксперт поставил только 0 и 1 при общей шкале 0–3, считалась по другой планке.
+    file_rels = list(labels.values())
+    scale_max = max(file_rels) if file_rels else 3
+    rel_threshold = 1 if scale_max <= 1 else 2
+    label_scale = {
+        "max": 1 if scale_max <= 1 else 3,
+        "threshold": rel_threshold,
+        "text": (
+            "Оценки 0/1 по всему файлу: релевантен кандидат с оценкой 1."
+            if scale_max <= 1
+            else "Шкала 0–3 по всему файлу: релевантен кандидат с оценкой не ниже 2."
+        ),
+    }
+
     per_need: list[dict[str, Any]] = []
     plat_metrics_list: list[dict[str, float]] = []
     base_metrics_list: list[dict[str, float]] = []
@@ -460,7 +476,6 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         if need_labels:
             rels_ordered = [need_labels.get(r["candidate_id"], 0) for r in rows]
             all_rels = list(need_labels.values())
-            rel_threshold = 1 if (all_rels and max(all_rels) <= 1) else 2
             k5 = min(5, max(1, len(eligible)))
             k10 = min(10, max(1, len(eligible)))
             k_eff = min(k, max(1, len(eligible)))
@@ -588,6 +603,7 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         "n_candidates": len(parsed["candidates"]),
         "n_labels": len(labels),
         "k": k,
+        "label_scale": label_scale,
         "evaluated_needs": len(plat_metrics_list),
         "summary": summary,
         "baseline_t0": baseline_summary,

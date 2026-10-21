@@ -79,3 +79,23 @@ def test_format_errors_point_to_sample_and_fields():
     assert d["code"] == "invalid_json_root" and "/api/employer/benchmark/sample" in d["message"]
     d = _err(lambda: ev(_csv([("q1", "x", "d1", "y", 1)], head=["query_id", "query_text", "doc_id", "doc_text", "label"]), "csv", 5))
     assert "/api/employer/benchmark/sample?format=csv" in d["message"]
+
+
+def test_label_scale_is_one_for_whole_file():
+    """Шкала по всему файлу (п. 1): вакансия, где эксперт поставил только 0/1 при общей шкале 0–3, считается по порогу 2.
+
+    Раньше порог выбирался по каждой вакансии: у V2 (оценки 1 и 0) кандидат с «1» считался релевантным, хотя по шкале
+    файла 0–3 «1» — «слабо подходит». Ожидание: у V2 нет релевантных, P@5 и MRR = 0; у V1 (оценка 3) — MRR > 0.
+    """
+    rows = [list(p) for p in PAIRS]
+    rows[0][-1] = 3  # V1/C1 — оценка 3: файл на шкале 0–3
+    r = ev(_csv([tuple(x) for x in rows]), "csv", 5)
+    assert r["label_scale"] == {"max": 3, "threshold": 2,
+                                "text": "Шкала 0–3 по всему файлу: релевантен кандидат с оценкой не ниже 2."}
+    by = {n["need_id"]: n["metrics"] for n in r["per_need"]}
+    assert by["V1"]["mrr"] > 0
+    assert by["V2"]["p@5"] == 0 and by["V2"]["mrr"] == 0
+    # файл только 0/1 — порог 1 для всех вакансий
+    b = ev(_csv(PAIRS), "csv", 5)
+    assert b["label_scale"]["max"] == 1 and b["label_scale"]["threshold"] == 1
+    assert {n["need_id"]: n["metrics"]["mrr"] for n in b["per_need"]}["V2"] > 0
