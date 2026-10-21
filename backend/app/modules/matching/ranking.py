@@ -713,9 +713,9 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
         scored.append((s, b, comps, reasons))
     scored, sf = ltr.stack_filter(scored, req, filters, first_tier=lambda b: tier(b) == 0)
     steps = sf.get("steps") or {}
-    exact = bool(filters.get("grade_exact"))
+    exact_on = bool(filters.get("grade_exact"))
     pex: dict[int, float] = {}
-    if exact:  # «строго запрошенный грейд»: порядок по вероятности, что уровень именно запрошенный (по тесту)
+    if exact_on:  # «строго запрошенный грейд»: порядок по вероятности, что уровень именно запрошенный (по тесту)
         for x in scored:
             p = p_exact(x[1], req)
             if p is not None:
@@ -735,7 +735,7 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
         scored = sorted(scored, key=key)
     return scored, {"effective": effective, "before_conditions": before_conditions, "after_conditions": len(kept),
                     "stack_filter": ltr.public_meta(sf), "weights": W,
-                    "grade_exact": {"on": exact, "with_test": len(pex),
+                    "grade_exact": {"on": exact_on, "with_test": len(pex),
                                     "below_half": sum(1 for p in pex.values() if p < 0.5)}}
 
 

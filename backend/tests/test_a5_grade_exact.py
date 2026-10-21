@@ -89,3 +89,17 @@ def test_probability_is_band_mass():
     assert ranking.p_exact(B(), {"grade": "middle"}) < 0.1  # уже за порогом Senior
     T.value = {}
     assert ranking.p_exact(B(), {"grade": "middle"}) is None
+
+
+def test_info_flag_is_bool_with_grade_above(world):
+    """При доборе ступенью выше (above_id) признак в info — bool, а не список (замечание А15 P2)."""
+    w, bundles = world
+    for req, pool in _cases(world):
+        above = next((b.profile.current_category_id for b in bundles
+                      if b.profile.current_category_id and b.profile.current_category_id != pool[0].profile.current_category_id
+                      and b.profile.current_category_id.split(".")[0] == req["direction"]), None)
+        extra = [b for b in bundles if b.profile.current_category_id == above]
+        for flag in (False, True):
+            _, info = ranking.order_bundles(pool + extra, req, {"grade_exact": flag}, above_id=above)
+            assert info["grade_exact"]["on"] is flag
+        return
