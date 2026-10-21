@@ -268,6 +268,12 @@ def apply_to_result(db: Session, ts: TestSession, details: dict) -> None:
         details["camera"] = view
         if details.get("integrity") is not None:
             details["integrity"] = integrity.add_reasons(details["integrity"], summ["reasons"], camera=view)
+        st_items = rules.items_for_followup(_state(ts))
+        details["integrity_followup"] = rules.integrity_followup(
+            details.get("integrity"),
+            items=st_items,
+            theta=ts.theta,
+        )
         if ps is not None:
             ps.summary = {k: summ[k] for k in ("mode", "camera", "title", "points", "remarks", "notes", "totals")}
             ps.finished_at = utcnow()
@@ -279,12 +285,26 @@ def session_view(db: Session, ts: TestSession, ps: ProctorSession | None = None,
     """Для кандидата: режим, окна наблюдения, итог (как у работодателя) и — по запросу — свои события."""
     ps = ps if ps is not None else _proctor(db, ts)
     summ = summarize(db, ts, ps)
+    er_details = ((ts.result or {}).get("engine_result") or {}).get("details") or {}
+    fup = er_details.get("integrity_followup") or rules.integrity_followup(
+        er_details.get("integrity"),
+        items=rules.items_for_followup(_state(ts)),
+        theta=ts.theta,
+    )
     out = {
         "session_id": str(ts.id), "status": ts.status.value, "mode": ps.mode if ps else None,
         "camera_active": bool(ps and ps.mode == "camera" and ps.windows and ps.windows[-1].get("to") is None),
         "windows": ps.windows if ps else [], "resumes": ps.resumes if ps else 0,
         "consent_version": ps.consent_version if ps else None,
         "summary": {**rules.employer_view(summ), "points": summ["points"], "totals": summ["totals"]},
+        "followup": {
+            "needed": bool(fup.get("needs_followup_stage")),
+            "kind": fup.get("followup_kind"),
+            "honesty_index": fup.get("honesty_index"),
+            "banned": False,
+            "verdict": fup.get("verdict"),
+            "reason": fup.get("candidate_reason_ru"),
+        },
     }
     if events and ps is not None:
         out["events"] = [{"position": e.position, "kind": e.kind, "title": rules.KIND_TITLES.get(e.kind, e.kind),

@@ -21,8 +21,6 @@ export interface MeasureParamSpec {
   max: number;
   step: number;
   default: number;
-  opt_min?: number;
-  opt_max?: number;
   unit: string;
   hint: string;
 }
@@ -31,10 +29,8 @@ export interface MeasureSpec {
   id: string;
   label: string;
   tech: string;
-  heals?: NodeId[];
   badge: string;
   at: NodeId;
-  trap?: boolean;
   base_cost_rub: number;
   params: MeasureParamSpec[];
 }
@@ -61,7 +57,6 @@ export interface RubricCriterionSpec {
   id: string;
   title: string;
   weight: number;
-  reference?: string;
   score?: number;
   quote?: string;
 }
@@ -79,9 +74,6 @@ export interface ScenarioPublic {
   story: string;
   labels: Partial<Record<NodeId, string>>;
   problem: NodeId[];
-  required?: string[];
-  helpful?: string[];
-  harmful?: string[];
   base: {
     rps: number;
     p99_ms: number;
@@ -107,8 +99,6 @@ export interface ScenarioPublic {
   patches: ScenarioPatch[];
   checks: ScenarioCheck[];
   rubric: RubricCriterionSpec[];
-  deploy?: string[];
-  win?: string;
   incident?: Record<string, unknown>;
   demo_mode?: boolean;
 }
@@ -152,7 +142,7 @@ export interface SimulateResult {
     actions_score: number;
     code_score: number;
     cost_efficiency: number;
-    trap_count: number;
+    penalty_count?: number;
   };
   code_checks: ScenarioCheck[];
   node_tones: Record<NodeId, Tone>;
@@ -215,7 +205,14 @@ export interface EvaluateResult extends SimulateResult {
   attempt_id?: string | null;
   saved_to_db?: boolean;
   sprt_preview?: {
+    verdict_status?: "confirmed" | "needs_followup" | "not_confirmed";
+    verdict_title_ru?: string;
+    stage_points?: number;
+    max_stage_points?: number;
+    explanation_ru?: string;
+    theta_before?: number;
     theta_post: number;
+    se_before?: number;
     se_post: number;
     llr_delta: number;
   } | null;
@@ -268,8 +265,8 @@ export interface AntiCheatInspectResult {
     soft_signals: string[];
     layers: GraderInspectLayer[];
   };
-  canary_detected: boolean;
-  canary_word: string | null;
+  marker_detected: boolean;
+  marker_word: string | null;
   copy_decoy?: {
     decoy_stem: string;
     decoy_expected: string;

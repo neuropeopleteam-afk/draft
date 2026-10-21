@@ -93,12 +93,12 @@
     "salary_net": false,
     "evidence": {
       "direction": {
-        "quote": "backend",
-        "start": 546,
-        "end": 553,
-        "context": "- Проектировать и разрабатывать высоконагруженные backend-сервисы на Go",
+        "quote": "Go-разработчик",
+        "start": 19,
+        "end": 33,
+        "context": "# Middle+ / Senior Go-разработчик",
         "source": "rules",
-        "basis": "keyword"
+        "basis": "title"
       },
       "grade": {
         "quote": "Senior",
@@ -116,9 +116,9 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "Удалённо",
+        "quote": "Удалённо•Удалённо",
         "start": 58,
-        "end": 66,
+        "end": 75,
         "context": "от 258 600 до 347 400 ₽•Удалённо•Удалённо•Senior",
         "source": "rules"
       },
@@ -132,8 +132,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка соответствует рынку категории, признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -169,9 +202,9 @@
         "tag": "statistics",
         "weight": 0.8,
         "evidence": {
-          "quote": "статистик",
-          "start": 1481,
-          "end": 1490,
+          "quote": "теория вероятност",
+          "start": 1444,
+          "end": 1461,
           "context": "Особенно интересны теория вероятностей и математическая статистика;",
           "source": "rules",
           "basis": "neutral"
@@ -234,6 +267,19 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": {
+      "code": "currency",
+      "text": "Вилка указана не в рублях — платформа сравнивает вилку с рынком категории в рублях. Укажите её в рублях вручную.",
+      "evidence": {
+        "start": 1887,
+        "end": 1892,
+        "quote": "4500$",
+        "context": "**заработную плату**по результатам собеседования и вашей квалификации в вилке **от 4500$ до 12000$;",
+        "source": "rules"
+      }
+    },
     "bias": [
       {
         "category": "age",
@@ -245,7 +291,37 @@
         "suggestion": "Вместо возраста опишите уровень и опыт: грейд Senior, опыт от 5 лет."
       }
     ],
-    "suggested_text": "Находимся в поиске\n\n**senior Java разработчика** к нам в команду!\n\n**Чем предстоит заниматься:**\n\n- Писать надежный код на JavaSE;\n\n- Оптимизировать существующие алгоритмы по быстродействию и потреблению памяти;\n\n- Прототипировать идеи и проводить эксперименты с целью определения слабых и сильных мест в существующих алгоритмах;\n\n- Делать статистический анализ и обработку данных;\n\n- Собирать и подготавливать данные для обучения предиктивных моделей;\n\n- Разрабатывать алгоритмы искусственного интеллекта;\n\n- Читать научные статьи и применять идеи, предложенные там в разработке АИ\n\n**.**\n\n**Пожелания к кандидату:**\n\n- Java SE от 5 лет. Фреймворки не нужны. Нужны структуры данных, многопоточность, алгоритмы;\n\n- Умение программировать: быстро разбираться в уже написанном коде, пользоваться дебаггером, читать логи, искать проблемы, делать фиксы, интегрировать новый код в уже существующую кодовую базу, писать новый код, прототипировать идеи;\n\n- Высшее техническое образование (физмат, computer science) в профильном университете;\n\n- Хороший алгоритмический бэкграунд: опыт создания алгоритмов, их оптимизации по быстродействию и потреблению памяти, применение многопоточности;\n\n- Английский язык для чтения технической документации.\n\n**Будет плюсом:**\n\n- Математический бэкграунд. Умение применить математический аппарат для решения задач, прочитать и понять теорему или формулу, применить ее в коде для решения задачи. Особенно интересны теория вероятностей и математическая статистика;\n\n- Опыт программирования на С++;\n\n- Опыт работы в области ML (machine learning);\n\n- Опыт работы с текстовой информацией: RegExp, bash, grep, эффективный поиск по файлам.\n\n**Что мы предлагаем:**\n\n- Участие в разработке динамично развивающегося продукта, работающего на рынке в реальном времени;\n\n- Справедливую\n\n**заработную плату**по результатам собеседования и вашей квалификации в вилке **от 4500$ до 12000$;**\n\n- Повышение заработной платы\n\n**раз в год;**\n\n- Проработав 1 год у нас разработчики получают\n\n**премию 3-6 окладов,**в зависимости от вклада в компанию;\n\n- Корпоративный психолог и занятия английском языком с носителем;\n\n**ДМС**и **компенсация спорта**после прохождения испытательного срока;\n\n- Проверенный и постоянно обновляемый набор обучающих материалов: развитие сотрудников - наш фокус;\n\nКлассный профессионалов, заряженных на результат. Ценим порядочность, честность и открытость;\n\n- Возможность реализовывать смелые и амбициозные инициативы;\n\n- Горизонтальную структуру, отсюда отсутствие бюрократии, микроменеджмента и синдромов «больших начальников»;\n\n- Мы за результат, а не процесс. У всех наших сотрудников удобный график и удаленная работа;. Оцениваем по навыкам и уровню: грейд Senior, Java, Алгоритмы и структуры данных, Статистика и A/B-тесты, Linux."
+    "suggested_text": "Находимся в поиске\n\n**senior Java разработчика** к нам в команду!\n\n**Чем предстоит заниматься:**\n\n- Писать надежный код на JavaSE;\n\n- Оптимизировать существующие алгоритмы по быстродействию и потреблению памяти;\n\n- Прототипировать идеи и проводить эксперименты с целью определения слабых и сильных мест в существующих алгоритмах;\n\n- Делать статистический анализ и обработку данных;\n\n- Собирать и подготавливать данные для обучения предиктивных моделей;\n\n- Разрабатывать алгоритмы искусственного интеллекта;\n\n- Читать научные статьи и применять идеи, предложенные там в разработке АИ\n\n**.**\n\n**Пожелания к кандидату:**\n\n- Java SE от 5 лет. Фреймворки не нужны. Нужны структуры данных, многопоточность, алгоритмы;\n\n- Умение программировать: быстро разбираться в уже написанном коде, пользоваться дебаггером, читать логи, искать проблемы, делать фиксы, интегрировать новый код в уже существующую кодовую базу, писать новый код, прототипировать идеи;\n\n- Высшее техническое образование (физмат, computer science) в профильном университете;\n\n- Хороший алгоритмический бэкграунд: опыт создания алгоритмов, их оптимизации по быстродействию и потреблению памяти, применение многопоточности;\n\n- Английский язык для чтения технической документации.\n\n**Будет плюсом:**\n\n- Математический бэкграунд. Умение применить математический аппарат для решения задач, прочитать и понять теорему или формулу, применить ее в коде для решения задачи. Особенно интересны теория вероятностей и математическая статистика;\n\n- Опыт программирования на С++;\n\n- Опыт работы в области ML (machine learning);\n\n- Опыт работы с текстовой информацией: RegExp, bash, grep, эффективный поиск по файлам.\n\n**Что мы предлагаем:**\n\n- Участие в разработке динамично развивающегося продукта, работающего на рынке в реальном времени;\n\n- Справедливую\n\n**заработную плату**по результатам собеседования и вашей квалификации в вилке **от 4500$ до 12000$;**\n\n- Повышение заработной платы\n\n**раз в год;**\n\n- Проработав 1 год у нас разработчики получают\n\n**премию 3-6 окладов,**в зависимости от вклада в компанию;\n\n- Корпоративный психолог и занятия английском языком с носителем;\n\n**ДМС**и **компенсация спорта**после прохождения испытательного срока;\n\n- Проверенный и постоянно обновляемый набор обучающих материалов: развитие сотрудников - наш фокус;\n\nКлассный профессионалов, заряженных на результат. Ценим порядочность, честность и открытость;\n\n- Возможность реализовывать смелые и амбициозные инициативы;\n\n- Горизонтальную структуру, отсюда отсутствие бюрократии, микроменеджмента и синдромов «больших начальников»;\n\n- Мы за результат, а не процесс. У всех наших сотрудников удобный график и удаленная работа;. Оцениваем по навыкам и уровню: грейд Senior, Java, Алгоритмы и структуры данных, Статистика и A/B-тесты, Linux.",
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -385,7 +461,10 @@
     "stack_desired": [],
     "experience_years_min": 2.0,
     "work_format": "remote",
-    "work_formats": null,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
     "city": null,
     "salary_from": null,
     "salary_to": null,
@@ -415,17 +494,71 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "удалённо",
+        "quote": "удалённо или гибрид",
         "start": 91,
-        "end": 99,
+        "end": 110,
         "context": "Формат работы: удалённо или гибрид",
         "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Nginx",
+        "evidence": {
+          "start": 514,
+          "end": 519,
+          "quote": "nginx",
+          "context": "- **Инфраструктура:** nginx, RabbitMQ, Docker (для локальной разработки), Grafana",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Grafana",
+        "evidence": {
+          "start": 566,
+          "end": 573,
+          "quote": "Grafana",
+          "context": "- **Инфраструктура:** nginx, RabbitMQ, Docker (для локальной разработки), Grafana",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -474,8 +607,12 @@
     "stack_desired": [],
     "experience_years_min": 3.0,
     "work_format": "remote",
-    "work_formats": null,
-    "city": null,
+    "work_formats": [
+      "remote",
+      "hybrid",
+      "office"
+    ],
+    "city": "Москва",
     "salary_from": null,
     "salary_to": null,
     "salary_net": null,
@@ -504,17 +641,57 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "Удаленная",
+        "quote": "Удаленная и гибридная",
         "start": 989,
-        "end": 998,
+        "end": 1010,
         "context": "- Удаленная и гибридная работа, рассмотрим кандидатов из разных регионов;",
+        "source": "rules"
+      },
+      "city": {
+        "quote": "Москва",
+        "start": 1114,
+        "end": 1120,
+        "context": "- Возможность работать в современных офисах (Химки, Москва, Нижний Новгород, Минск, Ростов-на-Дону);",
         "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -582,8 +759,52 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "C++",
+        "evidence": {
+          "start": 1192,
+          "end": 1195,
+          "quote": "C++",
+          "context": "• C/C++ на уровне чтения и анализа существующего кода**🖇️ Задачи:**",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка соответствует рынку категории, признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -735,9 +956,12 @@
     ],
     "stack_desired": [],
     "experience_years_min": 3.0,
-    "work_format": "remote",
-    "work_formats": null,
-    "city": null,
+    "work_format": "hybrid",
+    "work_formats": [
+      "hybrid",
+      "remote"
+    ],
+    "city": "Москва",
     "salary_from": 200000,
     "salary_to": 300000,
     "salary_net": true,
@@ -766,10 +990,10 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "Удалённо",
-        "start": 86,
+        "quote": "Гибрид\nУдалённо",
+        "start": 79,
         "end": 94,
-        "context": "Удалённо",
+        "context": "Гибрид\nУдалённо",
         "source": "rules"
       },
       "salary": {
@@ -778,16 +1002,67 @@
         "end": 65,
         "context": "### ≈ 200 000 —‍ 300 000 ₽/‍мес на руки",
         "source": "rules"
+      },
+      "city": {
+        "quote": "Москва",
+        "start": 196,
+        "end": 202,
+        "context": "📍 Москва (м.",
+        "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Figma",
+        "evidence": {
+          "start": 985,
+          "end": 990,
+          "quote": "Figma",
+          "context": "***О проекте:* ** Наша команда поддерживает платформу автоматизации производства технологических продуктов/программного обеспечения, покрывающую полный цикл разработки и последующую эксплуатацию (замещение — Jira, Confluence, TeamCity, Bitb",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка соответствует рынку категории, признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
-    "grade": "junior",
+    "grade": "intern",
     "stack_required": [
       {
         "tag": "react",
@@ -877,8 +1152,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
@@ -913,8 +1221,12 @@
     ],
     "stack_desired": [],
     "experience_years_min": 1.0,
-    "work_format": "remote",
-    "work_formats": null,
+    "work_format": "office",
+    "work_formats": [
+      "office",
+      "remote",
+      "hybrid"
+    ],
     "city": null,
     "salary_from": null,
     "salary_to": null,
@@ -944,8 +1256,8 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "удаленно",
-        "start": 1327,
+        "quote": "офисе или удаленно",
+        "start": 1317,
         "end": 1335,
         "context": "- Работу в офисе или удаленно — по договоренности",
         "source": "rules"
@@ -953,8 +1265,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
@@ -964,9 +1309,9 @@
         "tag": "react",
         "weight": 1.0,
         "evidence": {
-          "quote": "React",
+          "quote": "React JS",
           "start": 31,
-          "end": 36,
+          "end": 39,
           "context": "# Junior Frontend Разработчик (React JS) в Globus удалённо",
           "source": "rules",
           "basis": "neutral"
@@ -1072,17 +1417,50 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "удалённо",
+        "quote": "удалённо\njunior\n\n# Junior Frontend Разработчик (React JS) в Globus удалённо",
         "start": 50,
-        "end": 58,
-        "context": "# Junior Frontend Разработчик (React JS) в Globus удалённо",
+        "end": 125,
+        "context": "# Junior Frontend Разработчик (React JS) в Globus удалённо\njunior\n\n# Junior Frontend Разработчик (React JS) в Globus удалённо",
         "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
@@ -1092,10 +1470,10 @@
         "tag": "vue",
         "weight": 1.0,
         "evidence": {
-          "quote": "Vue",
+          "quote": "Vue.JS",
           "start": 27,
-          "end": 30,
-          "context": "Middle Frontend developer (Vue.",
+          "end": 33,
+          "context": "Middle Frontend developer (Vue.JS) [Эксплуатация продуктовых решений]",
           "source": "rules",
           "basis": "neutral"
         },
@@ -1209,8 +1587,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
@@ -1311,8 +1722,12 @@
     "stack_desired": [],
     "experience_years_min": 3.0,
     "work_format": "remote",
-    "work_formats": null,
-    "city": null,
+    "work_formats": [
+      "remote",
+      "office",
+      "hybrid"
+    ],
+    "city": "Москва",
     "salary_from": null,
     "salary_to": null,
     "salary_net": null,
@@ -1341,17 +1756,57 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "удаленно",
+        "quote": "удаленно или в офисе",
         "start": 2045,
-        "end": 2053,
+        "end": 2065,
+        "context": "- Комфортный формат работы — удаленно или в офисе (Москва/Чебоксары);",
+        "source": "rules"
+      },
+      "city": {
+        "quote": "Москва",
+        "start": 2067,
+        "end": 2073,
         "context": "- Комфортный формат работы — удаленно или в офисе (Москва/Чебоксары);",
         "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "data_ml",
@@ -1465,16 +1920,62 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "data_ml",
     "grade": "senior",
     "stack_required": [
       {
-        "tag": "statistics",
+        "tag": "scikit-learn",
         "weight": 1.0,
+        "evidence": {
+          "quote": "CatBoost",
+          "start": 919,
+          "end": 927,
+          "context": "- Разрабатывать и улучшать скоринговые, рисковые и конверсионные модели (ML/GBDT/GLM: CatBoost/LightGBM/XGBoost/GLM);",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      },
+      {
+        "tag": "statistics",
+        "weight": 0.9,
         "evidence": {
           "quote": "статистик",
           "start": 1610,
@@ -1487,7 +1988,7 @@
       },
       {
         "tag": "python",
-        "weight": 0.9,
+        "weight": 0.8,
         "evidence": {
           "quote": "Python",
           "start": 1659,
@@ -1500,7 +2001,7 @@
       },
       {
         "tag": "pytorch",
-        "weight": 0.8,
+        "weight": 0.7,
         "evidence": {
           "quote": "pytorch",
           "start": 1682,
@@ -1513,7 +2014,7 @@
       },
       {
         "tag": "pandas",
-        "weight": 0.7,
+        "weight": 0.6,
         "evidence": {
           "quote": "pandas",
           "start": 1691,
@@ -1531,19 +2032,6 @@
           "quote": "numpy",
           "start": 1699,
           "end": 1704,
-          "context": "- Опыт работы с Python и библиотеками: pytorch, pandas, numpy, SQLAlchemy, Scikit-learn, Matplotlib/Seaborn;",
-          "source": "rules",
-          "basis": "required"
-        },
-        "status": "extracted"
-      },
-      {
-        "tag": "scikit-learn",
-        "weight": 0.6,
-        "evidence": {
-          "quote": "Scikit-learn",
-          "start": 1718,
-          "end": 1730,
           "context": "- Опыт работы с Python и библиотеками: pytorch, pandas, numpy, SQLAlchemy, Scikit-learn, Matplotlib/Seaborn;",
           "source": "rules",
           "basis": "required"
@@ -1600,8 +2088,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "data_ml",
@@ -1611,8 +2132,8 @@
         "tag": "airflow",
         "weight": 1.0,
         "evidence": {
-          "quote": "Airflow",
-          "start": 392,
+          "quote": "Apache Airflow",
+          "start": 385,
           "end": 399,
           "context": "Наш стек:** Greenplum, Trino, Apache Airflow, ClickHouse, Python, Spark, SQL (dbt), S3,Hadoop ** Задачи:**",
           "source": "rules",
@@ -1753,8 +2274,82 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Greenplum",
+        "evidence": {
+          "start": 367,
+          "end": 376,
+          "quote": "Greenplum",
+          "context": "Наш стек:** Greenplum, Trino, Apache Airflow, ClickHouse, Python, Spark, SQL (dbt), S3,Hadoop ** Задачи:**",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "dbt",
+        "evidence": {
+          "start": 433,
+          "end": 436,
+          "quote": "dbt",
+          "context": "Наш стек:** Greenplum, Trino, Apache Airflow, ClickHouse, Python, Spark, SQL (dbt), S3,Hadoop ** Задачи:**",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Flink",
+        "evidence": {
+          "start": 727,
+          "end": 732,
+          "quote": "Flink",
+          "context": "\\* Разработка, реализация и поддержка интеграционных потоков, а также потоков сборки витрин-данных на стеке технологий, принятых в команде: Trino, Iceberg,S3, Spark, Apache Airflow, Kafka, Cosmos, Flink",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Oracle",
+        "evidence": {
+          "start": 1339,
+          "end": 1345,
+          "quote": "Oracle",
+          "context": "- Опыт работы c реляционными БД (Oracle, Postgres, MySQL, MsSQL, т.",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "data_ml",
@@ -1887,20 +2482,74 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Oracle",
+        "evidence": {
+          "start": 575,
+          "end": 581,
+          "quote": "Oracle",
+          "context": "Опыт работы с любой реляционной БД (Oracle, Postgres, MySQL, MsSQL, DB2 и т.",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Hive",
+        "evidence": {
+          "start": 886,
+          "end": 890,
+          "quote": "Hive",
+          "context": "Понимание работы с Hive или любого другого хранилища на основе Hadoop.",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "security",
     "grade": "middle",
     "stack_required": [
       {
-        "tag": "siem-soc",
+        "tag": "network-security",
         "weight": 1.0,
         "evidence": {
-          "quote": "SIEM",
-          "start": 331,
-          "end": 335,
+          "quote": "DLP",
+          "start": 326,
+          "end": 329,
           "context": "- Администрирование и настройка средств защиты информации (СЗИ): DLP, SIEM, межсетевые экраны (NGFW), антивирусная защита, СКЗИ/ЭЦП.",
           "source": "rules",
           "basis": "neutral"
@@ -1908,12 +2557,12 @@
         "status": "extracted"
       },
       {
-        "tag": "network-security",
+        "tag": "siem-soc",
         "weight": 0.9,
         "evidence": {
-          "quote": "межсетев",
-          "start": 337,
-          "end": 345,
+          "quote": "SIEM",
+          "start": 331,
+          "end": 335,
           "context": "- Администрирование и настройка средств защиты информации (СЗИ): DLP, SIEM, межсетевые экраны (NGFW), антивирусная защита, СКЗИ/ЭЦП.",
           "source": "rules",
           "basis": "neutral"
@@ -1996,8 +2645,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка соответствует рынку категории, признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -2043,8 +2725,21 @@
         "status": "extracted"
       },
       {
+        "tag": "ci-cd",
+        "weight": 0.7,
+        "evidence": {
+          "quote": "CICD",
+          "start": 677,
+          "end": 681,
+          "context": "CICD | Gitlab",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      },
+      {
         "tag": "git",
-        "weight": 0.56,
+        "weight": 0.48,
         "evidence": {
           "quote": "Gitlab",
           "start": 684,
@@ -2063,19 +2758,6 @@
           "start": 747,
           "end": 757,
           "context": "Obverability | Thanos + Prometheus + VictoriaMetrics + Clickhouse + Grafana + Vector",
-          "source": "rules",
-          "basis": "neutral"
-        },
-        "status": "extracted"
-      },
-      {
-        "tag": "ci-cd",
-        "weight": 0.6,
-        "evidence": {
-          "quote": "CI/CD",
-          "start": 1708,
-          "end": 1713,
-          "context": "- Развивать и поддерживать CI/CD-процессы внутри инфраструктурой команды;",
           "source": "rules",
           "basis": "neutral"
         },
@@ -2100,6 +2782,50 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Ansible",
+        "evidence": {
+          "start": 629,
+          "end": 636,
+          "quote": "Ansible",
+          "context": "IaC | Ansible + Terraform",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Terraform",
+        "evidence": {
+          "start": 639,
+          "end": 648,
+          "quote": "Terraform",
+          "context": "IaC | Ansible + Terraform",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Prometheus",
+        "evidence": {
+          "start": 716,
+          "end": 726,
+          "quote": "Prometheus",
+          "context": "Obverability | Thanos + Prometheus + VictoriaMetrics + Clickhouse + Grafana + Vector",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Grafana",
+        "evidence": {
+          "start": 760,
+          "end": 767,
+          "quote": "Grafana",
+          "context": "Obverability | Thanos + Prometheus + VictoriaMetrics + Clickhouse + Grafana + Vector",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
     "suggested_text": null,
     "coverage": {
@@ -2116,6 +2842,36 @@
         "end": 108,
         "quote": "DevOps",
         "source": "rules"
+      }
+    },
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
       }
     }
   },
@@ -2205,8 +2961,12 @@
     "stack_desired": [],
     "experience_years_min": null,
     "work_format": "remote",
-    "work_formats": null,
-    "city": null,
+    "work_formats": [
+      "remote",
+      "office",
+      "hybrid"
+    ],
+    "city": "Москва",
     "salary_from": null,
     "salary_to": null,
     "salary_net": null,
@@ -2218,15 +2978,76 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "Удаленная",
+        "quote": "Удаленная работа с 9:30—18:00, в пятницу до 16:00 (по желанию офис",
         "start": 1284,
-        "end": 1293,
+        "end": 1350,
+        "context": "- Удаленная работа с 9:30—18:00, в пятницу до 16:00 (по желанию офис в Москве);",
+        "source": "rules"
+      },
+      "city": {
+        "quote": "Москве",
+        "start": 1353,
+        "end": 1359,
         "context": "- Удаленная работа с 9:30—18:00, в пятницу до 16:00 (по желанию офис в Москве);",
         "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Elasticsearch",
+        "evidence": {
+          "start": 352,
+          "end": 365,
+          "quote": "ElasticSearch",
+          "context": "Предстоит создавать и поддерживать кластера Kubernetes, управлять потоками логирования в ElasticSearch, мониторинга в VictoriaMetrics+Zabbix обеспечивать оперативную поддержку команд разработки и развивать инструменты CI/CD.",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Zabbix",
+        "evidence": {
+          "start": 397,
+          "end": 403,
+          "quote": "Zabbix",
+          "context": "Предстоит создавать и поддерживать кластера Kubernetes, управлять потоками логирования в ElasticSearch, мониторинга в VictoriaMetrics+Zabbix обеспечивать оперативную поддержку команд разработки и развивать инструменты CI/CD.",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Nginx",
+        "evidence": {
+          "start": 560,
+          "end": 565,
+          "quote": "Nginx",
+          "context": "**Стек:** Kubernetes, Linux, Git, Nginx, Python/Bash, Flux, GitLabCI, Prometheus/VictoriaMetrics, ELK",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Prometheus",
+        "evidence": {
+          "start": 596,
+          "end": 606,
+          "quote": "Prometheus",
+          "context": "**Стек:** Kubernetes, Linux, Git, Nginx, Python/Bash, Flux, GitLabCI, Prometheus/VictoriaMetrics, ELK",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Grafana",
+        "evidence": {
+          "start": 799,
+          "end": 806,
+          "quote": "Grafana",
+          "context": "- Опыт работы с системами мониторинга и логирования: ELK, Zabbix, Prometheus, Grafana;",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
     "suggested_text": null,
     "coverage": {
@@ -2243,6 +3064,36 @@
         "end": 22,
         "quote": "Devops",
         "source": "rules"
+      }
+    },
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
       }
     }
   },
@@ -2337,6 +3188,30 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Android",
+        "evidence": {
+          "start": 2,
+          "end": 9,
+          "quote": "Android",
+          "context": "# Android Developer для Kotlin",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Jetpack Compose",
+        "evidence": {
+          "start": 1037,
+          "end": 1052,
+          "quote": "Jetpack Compose",
+          "context": "- Опыт разработки приложений с использованием Jetpack Compose",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
     "suggested_text": null,
     "coverage": {
@@ -2353,6 +3228,36 @@
         "end": 9,
         "quote": "Android",
         "source": "rules"
+      }
+    },
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка соответствует рынку категории, признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
       }
     }
   },
@@ -2440,6 +3345,50 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Android",
+        "evidence": {
+          "start": 9,
+          "end": 16,
+          "quote": "Android",
+          "context": "# Senior Android Developer (Kotlin) В архиве с 4 сентября 2026",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Jetpack Compose",
+        "evidence": {
+          "start": 422,
+          "end": 437,
+          "quote": "Jetpack Compose",
+          "context": "- Реализация компонентов дизайн системы на Jetpack Compose;",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Kotlin Multiplatform",
+        "evidence": {
+          "start": 707,
+          "end": 710,
+          "quote": "KMP",
+          "context": "- Опыт Hilt, Retrofit, Ktor, KMP, Compose Navigation, Coil;",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Gradle",
+        "evidence": {
+          "start": 1038,
+          "end": 1044,
+          "quote": "gradle",
+          "context": "- Опыт написание gradle скриптов;",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
     "suggested_text": null,
     "coverage": {
@@ -2456,6 +3405,36 @@
         "end": 16,
         "quote": "Android",
         "source": "rules"
+      }
+    },
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
       }
     }
   },
@@ -2510,6 +3489,40 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Excel",
+        "evidence": {
+          "start": 801,
+          "end": 806,
+          "quote": "Excel",
+          "context": "- уверенно владеете MS Excel и автоматизацией процессов в таблицах (например, перенос данных в облачные хранилища, макросы);",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Tableau",
+        "evidence": {
+          "start": 925,
+          "end": 932,
+          "quote": "Tableau",
+          "context": "- уверенно владеете Tableau (или схожим инструментом, например Power BI, но готовы познакомиться с Tableau).",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Power BI",
+        "evidence": {
+          "start": 968,
+          "end": 976,
+          "quote": "Power BI",
+          "context": "- уверенно владеете Tableau (или схожим инструментом, например Power BI, но готовы познакомиться с Tableau).",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
     "suggested_text": null,
     "coverage": {
@@ -2526,6 +3539,36 @@
         "end": 17,
         "quote": "Аналитик данных",
         "source": "rules"
+      }
+    },
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
       }
     }
   },
@@ -2594,6 +3637,30 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Excel",
+        "evidence": {
+          "start": 732,
+          "end": 737,
+          "quote": "Excel",
+          "context": "- Навык работы с Excel, базовые SQL-запросы;",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "1С",
+        "evidence": {
+          "start": 1169,
+          "end": 1171,
+          "quote": "1С",
+          "context": "- Сбор и анализ данных из текущих справочников номенклатуры и мест хранения\\эксплуатации: 1С УХ, Инфра-М, АХО, склады;",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
     "suggested_text": null,
     "coverage": {
@@ -2610,6 +3677,36 @@
         "end": 17,
         "quote": "Data - аналитик",
         "source": "rules"
+      }
+    },
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка соответствует рынку категории, признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
       }
     }
   },
@@ -2710,6 +3807,20 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "1С",
+        "evidence": {
+          "start": 14,
+          "end": 16,
+          "quote": "1С",
+          "context": "# Разработчик 1С",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
     "suggested_text": null,
     "coverage": {
@@ -2726,6 +3837,36 @@
         "end": 16,
         "quote": "1С",
         "source": "rules"
+      }
+    },
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
       }
     }
   },
@@ -2750,8 +3891,8 @@
         "tag": "sql",
         "weight": 0.72,
         "evidence": {
-          "quote": "SQL",
-          "start": 757,
+          "quote": "MS SQL",
+          "start": 754,
           "end": 760,
           "context": "- понимание принципов разработки баз данных для MS SQL.",
           "source": "rules",
@@ -2769,12 +3910,6 @@
     "salary_to": null,
     "salary_net": null,
     "evidence": {
-      "direction": {
-        "start": 14,
-        "end": 16,
-        "quote": "1С",
-        "source": "rules"
-      },
       "grade": {
         "quote": "Опыт работы: 3–6 лет",
         "start": 17,
@@ -2803,10 +3938,30 @@
         "end": 982,
         "context": "- офис в центре Москвы в БЦ класса А (м.",
         "source": "rules"
+      },
+      "direction": {
+        "start": 14,
+        "end": 16,
+        "quote": "1С",
+        "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "1С",
+        "evidence": {
+          "start": 14,
+          "end": 16,
+          "quote": "1С",
+          "context": "# Программист 1С",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
     "suggested_text": null,
     "coverage": {
@@ -2823,6 +3978,36 @@
         "end": 16,
         "quote": "1С",
         "source": "rules"
+      }
+    },
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
       }
     }
   },
@@ -3007,10 +4192,10 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "удаленно",
+        "quote": "удаленно, аутстафф\nдо 200 000 ₽\nSenior\nМожно удалённо",
         "start": 38,
-        "end": 46,
-        "context": "# QA Automation (Java/Kotlin),Senior, удаленно, аутстафф",
+        "end": 91,
+        "context": "# QA Automation (Java/Kotlin),Senior, удаленно, аутстафф\nдо 200 000 ₽\nSenior\nМожно удалённо",
         "source": "rules"
       },
       "salary": {
@@ -3023,8 +4208,92 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "MongoDB",
+        "evidence": {
+          "start": 1102,
+          "end": 1109,
+          "quote": "MongoDB",
+          "context": "- Умение работать с нереляционными БД (Желательно MongoDB)",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "JUnit",
+        "evidence": {
+          "start": 1654,
+          "end": 1659,
+          "quote": "JUnit",
+          "context": "- Уверенные знания JUnit/TestNG/KTest или аналогов",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "TestNG",
+        "evidence": {
+          "start": 1660,
+          "end": 1666,
+          "quote": "TestNG",
+          "context": "- Уверенные знания JUnit/TestNG/KTest или аналогов",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Maven",
+        "evidence": {
+          "start": 1838,
+          "end": 1843,
+          "quote": "maven",
+          "context": "- Понимание работы систем сборки приложений (maven/gradle/npm и т.",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Gradle",
+        "evidence": {
+          "start": 1844,
+          "end": 1850,
+          "quote": "gradle",
+          "context": "- Понимание работы систем сборки приложений (maven/gradle/npm и т.",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка соответствует рынку категории, признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -3086,12 +4355,12 @@
         "tag": "test-design",
         "weight": 0.6,
         "evidence": {
-          "quote": "тест-дизайн",
-          "start": 1975,
-          "end": 1986,
-          "context": "- **Знание методик тест-дизайна** (классы эквивалентности, граничные значения, попарное тестирование и др.",
+          "quote": "функционального тестирования",
+          "start": 1356,
+          "end": 1384,
+          "context": "**Опыт:** от **1 года автоматизации** (Java) + от **1 года ручного функционального тестирования**.",
           "source": "rules",
-          "basis": "required"
+          "basis": "neutral"
         },
         "status": "extracted"
       },
@@ -3190,8 +4459,52 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Cucumber",
+        "evidence": {
+          "start": 2376,
+          "end": 2384,
+          "quote": "Cucumber",
+          "context": "- Использование **BDD-подхода (Cucumber)**.",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -3211,8 +4524,21 @@
         "status": "extracted"
       },
       {
+        "tag": "test-design",
+        "weight": 0.9,
+        "evidence": {
+          "quote": "Функциональное тестирование",
+          "start": 739,
+          "end": 766,
+          "context": "**Функциональное тестирование сложных сценариев:**",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      },
+      {
         "tag": "http",
-        "weight": 0.72,
+        "weight": 0.64,
         "evidence": {
           "quote": "REST",
           "start": 1033,
@@ -3225,7 +4551,7 @@
       },
       {
         "tag": "rest-api",
-        "weight": 0.8,
+        "weight": 0.7,
         "evidence": {
           "quote": "REST API",
           "start": 1033,
@@ -3238,7 +4564,7 @@
       },
       {
         "tag": "sql",
-        "weight": 0.56,
+        "weight": 0.48,
         "evidence": {
           "quote": "SQL",
           "start": 1972,
@@ -3246,19 +4572,6 @@
           "context": "- **SQL:** уверенное владение (все базовые команды, JOIN-ы, вложенные запросы, фильтрация данных).",
           "source": "rules",
           "basis": "required"
-        },
-        "status": "extracted"
-      },
-      {
-        "tag": "test-design",
-        "weight": 0.6,
-        "evidence": {
-          "quote": "тест-кейс",
-          "start": 2505,
-          "end": 2514,
-          "context": "- Опыт подготовки тестовой документации (тест-кейсы, чек-листы, отчеты о дефектах).",
-          "source": "rules",
-          "basis": "neutral"
         },
         "status": "extracted"
       }
@@ -3273,8 +4586,8 @@
     "salary_net": null,
     "evidence": {
       "direction": {
-        "quote": "тестированию",
-        "start": 13,
+        "quote": "Инженер по тестированию",
+        "start": 2,
         "end": 25,
         "context": "# Инженер по тестированию (Java-автоматизация) / QA Automation Engineer (ЦФА / Бло",
         "source": "rules",
@@ -3305,8 +4618,72 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "TestNG",
+        "evidence": {
+          "start": 1457,
+          "end": 1463,
+          "quote": "TestNG",
+          "context": "- Написание и поддержка автотестов на **Java** (TestNG).",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Grafana",
+        "evidence": {
+          "start": 2279,
+          "end": 2286,
+          "quote": "Grafana",
+          "context": "- Опыт работы с инструментами мониторинга (Kibana, Grafana, Zabbix или аналоги) — умение читать логи и метрики.",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Zabbix",
+        "evidence": {
+          "start": 2288,
+          "end": 2294,
+          "quote": "Zabbix",
+          "context": "- Опыт работы с инструментами мониторинга (Kibana, Grafana, Zabbix или аналоги) — умение читать логи и метрики.",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -3426,8 +4803,52 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "UML",
+        "evidence": {
+          "start": 1841,
+          "end": 1844,
+          "quote": "UML",
+          "context": "- **Базовые знания:** Java (основы ООП), UML, XML, HTML (на уровне чтения/понимания).",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -3567,7 +4988,11 @@
     "stack_desired": [],
     "experience_years_min": 3.0,
     "work_format": "remote",
-    "work_formats": null,
+    "work_formats": [
+      "remote",
+      "office",
+      "hybrid"
+    ],
     "city": null,
     "salary_from": null,
     "salary_to": null,
@@ -3606,8 +5031,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -3627,8 +5085,21 @@
         "status": "extracted"
       },
       {
+        "tag": "test-design",
+        "weight": 0.9,
+        "evidence": {
+          "quote": "функционального тестирования",
+          "start": 157,
+          "end": 185,
+          "context": "- Проведение функционального тестирования",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      },
+      {
         "tag": "http",
-        "weight": 0.72,
+        "weight": 0.64,
         "evidence": {
           "quote": "Rest",
           "start": 487,
@@ -3641,7 +5112,7 @@
       },
       {
         "tag": "rest-api",
-        "weight": 0.8,
+        "weight": 0.7,
         "evidence": {
           "quote": "Rest API",
           "start": 487,
@@ -3654,7 +5125,7 @@
       },
       {
         "tag": "sql",
-        "weight": 0.56,
+        "weight": 0.48,
         "evidence": {
           "quote": "sql",
           "start": 512,
@@ -3812,8 +5283,52 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Ruby",
+        "evidence": {
+          "start": 712,
+          "end": 716,
+          "quote": "Ruby",
+          "context": "- Опыт покрытия новых функциональностей при помощи инструментов автоестирования (Java как основной, плюсом будет если есть база по Ruby)",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -4102,8 +5617,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -4295,8 +5843,12 @@
     "stack_desired": [],
     "experience_years_min": null,
     "work_format": "remote",
-    "work_formats": null,
-    "city": null,
+    "work_formats": [
+      "remote",
+      "office",
+      "hybrid"
+    ],
+    "city": "Москва",
     "salary_from": null,
     "salary_to": null,
     "salary_net": null,
@@ -4323,12 +5875,63 @@
         "end": 53,
         "context": "Можно удалённо",
         "source": "rules"
+      },
+      "city": {
+        "quote": "Москве",
+        "start": 1819,
+        "end": 1825,
+        "context": "Если захочется познакомиться лично, двери нашего офиса в Москве всегда открыты).",
+        "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Ansible",
+        "evidence": {
+          "start": 1507,
+          "end": 1514,
+          "quote": "ansible",
+          "context": "- Знание php, k8s, ansible;",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -4377,8 +5980,8 @@
         "tag": "kafka",
         "weight": 0.7,
         "evidence": {
-          "quote": "Kafka",
-          "start": 179,
+          "quote": "Apache Kafka",
+          "start": 172,
           "end": 184,
           "context": "Apache Kafka",
           "source": "rules",
@@ -4448,8 +6051,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -4593,8 +6229,8 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "в офисе",
-        "start": 1242,
+        "quote": "офисе",
+        "start": 1244,
         "end": 1249,
         "context": "- Работа в офисе: Уфа, Томск, Рязань;",
         "source": "rules"
@@ -4609,8 +6245,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -4776,8 +6445,62 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Grafana",
+        "evidence": {
+          "start": 1560,
+          "end": 1567,
+          "quote": "Grafana",
+          "context": "- **Grafana / Prometheus:** опыт работы с системами мониторинга.",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Prometheus",
+        "evidence": {
+          "start": 1570,
+          "end": 1580,
+          "quote": "Prometheus",
+          "context": "- **Grafana / Prometheus:** опыт работы с системами мониторинга.",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "qa",
@@ -4878,12 +6601,66 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Android",
+        "evidence": {
+          "start": 1049,
+          "end": 1056,
+          "quote": "Android",
+          "context": "- Смартфон или планшет с операционной системой Android 10 или iOS 15.",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "iOS",
+        "evidence": {
+          "start": 1064,
+          "end": 1067,
+          "quote": "iOS",
+          "context": "- Смартфон или планшет с операционной системой Android 10 или iOS 15.",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
-    "grade": "junior",
+    "grade": "intern",
     "stack_required": [
       {
         "tag": "javascript",
@@ -4940,9 +6717,13 @@
     ],
     "stack_desired": [],
     "experience_years_min": null,
-    "work_format": "remote",
-    "work_formats": null,
-    "city": null,
+    "work_format": "office",
+    "work_formats": [
+      "office",
+      "remote",
+      "hybrid"
+    ],
+    "city": "Москва",
     "salary_from": null,
     "salary_to": null,
     "salary_net": null,
@@ -4964,21 +6745,61 @@
         "basis": "keyword"
       },
       "work_format": {
-        "quote": "удаленно",
-        "start": 1601,
+        "quote": "офиса, могут пройти обучение удаленно",
+        "start": 1572,
         "end": 1609,
         "context": "- кандидаты из городов России, где нет нашего офиса, могут пройти обучение удаленно;",
+        "source": "rules"
+      },
+      "city": {
+        "quote": "Москве",
+        "start": 1666,
+        "end": 1672,
+        "context": "- формат работы после старта на коммерческом проекте в Москве: офисный;",
         "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
-    "grade": "junior",
+    "grade": "intern",
     "stack_required": [
       {
         "tag": "http",
@@ -5062,10 +6883,10 @@
         "tag": "vue",
         "weight": 0.6,
         "evidence": {
-          "quote": "Vue",
+          "quote": "Vue.js",
           "start": 961,
-          "end": 964,
-          "context": "- базовый опыт с **Vue.",
+          "end": 967,
+          "context": "- базовый опыт с **Vue.js или React** (компоненты, пропсы, управление состоянием)",
           "source": "rules",
           "basis": "neutral"
         },
@@ -5101,9 +6922,9 @@
         "tag": "html-css",
         "weight": 0.6,
         "evidence": {
-          "quote": "вёрстк",
-          "start": 1073,
-          "end": 1079,
+          "quote": "HTML5",
+          "start": 1028,
+          "end": 1033,
           "context": "- **HTML5 и CSS3**: адаптивная и кроссбраузерная вёрстка",
           "source": "rules",
           "basis": "neutral"
@@ -5139,12 +6960,45 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
-    "grade": "junior",
+    "grade": "intern",
     "stack_required": [
       {
         "tag": "react",
@@ -5248,8 +7102,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
@@ -5376,7 +7263,10 @@
     "stack_desired": [],
     "experience_years_min": 5.0,
     "work_format": "remote",
-    "work_formats": null,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
     "city": null,
     "salary_from": null,
     "salary_to": null,
@@ -5415,8 +7305,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
@@ -5426,10 +7349,10 @@
         "tag": "react",
         "weight": 1.0,
         "evidence": {
-          "quote": "React",
+          "quote": "React.js",
           "start": 349,
-          "end": 354,
-          "context": "- Разрабатывать и поддерживать веб-приложения на React.",
+          "end": 357,
+          "context": "- Разрабатывать и поддерживать веб-приложения на React.js и Next.",
           "source": "rules",
           "basis": "neutral"
         },
@@ -5529,8 +7452,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
@@ -5566,10 +7522,10 @@
         "tag": "vue",
         "weight": 0.8,
         "evidence": {
-          "quote": "Vue",
+          "quote": "Vue.js",
           "start": 969,
-          "end": 972,
-          "context": "**Frontend-стек:** JavaScript, TypeScript, Vue.",
+          "end": 975,
+          "context": "**Frontend-стек:** JavaScript, TypeScript, Vue.js, Pinia, Webpack Module Federation.",
           "source": "rules",
           "basis": "neutral"
         },
@@ -5741,8 +7697,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
@@ -5912,8 +7901,52 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "RxJS",
+        "evidence": {
+          "start": 405,
+          "end": 409,
+          "quote": "RxJS",
+          "context": "- Используем TypeScript, React, Redux, RxJS.",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "security",
@@ -5923,9 +7956,9 @@
         "tag": "network-security",
         "weight": 1.0,
         "evidence": {
-          "quote": "IPS",
-          "start": 2226,
-          "end": 2229,
+          "quote": "WAF",
+          "start": 2195,
+          "end": 2198,
           "context": "- Anti-DDoS, WAF, FW, Антивирус, Песочница, IPS, IDS, DLP, PAM, MDM, Защита баз данных.",
           "source": "rules",
           "basis": "neutral"
@@ -5933,8 +7966,21 @@
         "status": "extracted"
       },
       {
-        "tag": "siem-soc",
+        "tag": "owasp",
         "weight": 0.9,
+        "evidence": {
+          "quote": "SAST",
+          "start": 2272,
+          "end": 2276,
+          "context": "- SAST, DAST, Контроль конфигураций.",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      },
+      {
+        "tag": "siem-soc",
+        "weight": 0.8,
         "evidence": {
           "quote": "SIEM",
           "start": 2309,
@@ -5981,8 +8027,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "security",
@@ -6023,8 +8102,48 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "caution",
+      "badge_title": "Требует внимания",
+      "risk_score": 10,
+      "is_suspicious": true,
+      "flags": [
+        {
+          "code": "no_tech_stack",
+          "severity": "low",
+          "title": "Не указан технический стек",
+          "text": "В описании не найдено конкретных технологий из инженерного справочника — уточните задачи перед откликом."
+        }
+      ],
+      "summary": "В описании не найдено конкретных технологий из инженерного справочника — уточните задачи перед откликом.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -6129,10 +8248,10 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "удаленно",
+        "quote": "удаленно, Аутстафф\nдо 200 000 ₽\nMiddle\nМожно удалённо",
         "start": 28,
-        "end": 36,
-        "context": "NET разработчик, Middle, удаленно, Аутстафф",
+        "end": 81,
+        "context": "NET разработчик, Middle, удаленно, Аутстафф\nдо 200 000 ₽\nMiddle\nМожно удалённо",
         "source": "rules"
       },
       "salary": {
@@ -6145,8 +8264,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка соответствует рынку категории, признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -6241,8 +8393,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -6291,8 +8476,8 @@
         "tag": "kafka",
         "weight": 0.7,
         "evidence": {
-          "quote": "Kafka",
-          "start": 1016,
+          "quote": "Apache Kafka",
+          "start": 1009,
           "end": 1021,
           "context": "- Опыт работы с Apache Kafka",
           "source": "rules",
@@ -6330,7 +8515,10 @@
     "stack_desired": [],
     "experience_years_min": 5.0,
     "work_format": "remote",
-    "work_formats": null,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
     "city": null,
     "salary_from": null,
     "salary_to": null,
@@ -6369,8 +8557,41 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "backend",
@@ -6553,21 +8774,105 @@
         "source": "rules"
       },
       "work_format": {
-        "quote": "Офисный",
+        "quote": "Офисный формат работы, офис",
         "start": 1946,
-        "end": 1953,
+        "end": 1973,
         "context": "- **Офисный формат работы, офис находится на м.",
         "source": "rules"
       }
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "JUnit",
+        "evidence": {
+          "start": 169,
+          "end": 174,
+          "quote": "Junit",
+          "context": "14, RabbitMQ, PostgreSql 11, ArangoDB, Micronaut, Docker, Kubernetes, Junit 5, Mockito, Maven, Git, Liquibase, Swagger.",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Maven",
+        "evidence": {
+          "start": 187,
+          "end": 192,
+          "quote": "Maven",
+          "context": "14, RabbitMQ, PostgreSql 11, ArangoDB, Micronaut, Docker, Kubernetes, Junit 5, Mockito, Maven, Git, Liquibase, Swagger.",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Hibernate",
+        "evidence": {
+          "start": 1048,
+          "end": 1057,
+          "quote": "Hibernate",
+          "context": "- Знания Java Core 11, Spring, Spring Boot, Hibernate, Micronaut;",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "BPMN",
+        "evidence": {
+          "start": 1086,
+          "end": 1090,
+          "quote": "BPMN",
+          "context": "- Опыт работы с BPMN‑диаграммами бизнес‑процессов (Camunda);",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Gradle",
+        "evidence": {
+          "start": 1554,
+          "end": 1560,
+          "quote": "Gradle",
+          "context": "- Умение работать с системой контроля версий (Git), сборки (Maven, Gradle), IDE (IntelliJ IDEA, Eclipse)",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
-    "suggested_text": null
+    "suggested_text": null,
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
+      }
+    }
   },
   {
     "direction": "frontend",
-    "grade": "junior",
+    "grade": "intern",
     "stack_required": [
       {
         "tag": "csharp",
@@ -6636,6 +8941,40 @@
     },
     "review": {},
     "method": "rules",
+    "excluded": [],
+    "unknown_terms": [
+      {
+        "term": "Unity",
+        "evidence": {
+          "start": 2,
+          "end": 7,
+          "quote": "Unity",
+          "context": "# Unity-разработчик",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "iOS",
+        "evidence": {
+          "start": 2460,
+          "end": 2463,
+          "quote": "iOS",
+          "context": "- Разберёшь кроссплатформенные особенности: различия сборок под iOS, Android и ПК, настройки проекта и типичные ограничения платформ",
+          "source": "rules"
+        }
+      },
+      {
+        "term": "Android",
+        "evidence": {
+          "start": 2465,
+          "end": 2472,
+          "quote": "Android",
+          "context": "- Разберёшь кроссплатформенные особенности: различия сборок под iOS, Android и ПК, настройки проекта и типичные ограничения платформ",
+          "source": "rules"
+        }
+      }
+    ],
+    "salary_note": null,
     "bias": [],
     "suggested_text": null,
     "coverage": {
@@ -6652,6 +8991,36 @@
         "end": 7,
         "quote": "Unity",
         "source": "rules"
+      }
+    },
+    "weight_rule": "Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить вес можно вручную.",
+    "vacancy_guard": {
+      "status": "verified",
+      "badge_title": "Проверенная вакансия",
+      "risk_score": 0,
+      "is_suspicious": false,
+      "flags": [],
+      "summary": "Зарплатная вилка в тексте не указана; признаков вакансии-приманки в тексте не обнаружено.",
+      "egrul": {
+        "status": "unverified",
+        "inn": null,
+        "badge": "ЕГРЮЛ: не проверено",
+        "active": null,
+        "name_matches": null,
+        "registered_at": null,
+        "text": "ИНН работодателя не передан или проверка в реестре ФНС ещё не проводилась — статус «не проверено»."
+      },
+      "responsibility": {
+        "status": "insufficient_data",
+        "score": null,
+        "level": "unknown",
+        "total_events": 0,
+        "badge": "Индекс ответственности: пока мало данных",
+        "response_rate_pct": null,
+        "median_response_hours": null,
+        "realistic_salary_pct": null,
+        "cancelled_invitations_pct": null,
+        "summary": "Пока мало данных для расчёта индекса ответственности (событий: 0, нужно не менее 5 приглашений или откликов)."
       }
     }
   }

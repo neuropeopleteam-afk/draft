@@ -310,7 +310,7 @@ def simulate_incident(
             "actions_score": round(req_ratio, 4),
             "code_score": code_res["score"],
             "cost_efficiency": cost_eff,
-            "trap_count": trap_count,
+            "penalty_count": trap_count,
         },
         "code_checks": code_res["checks"],
         "node_tones": node_tones,
