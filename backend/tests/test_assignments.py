@@ -1,6 +1,7 @@
 """И7 «Задания работодателя с автопроверкой»: сборка по стеку потребности/вакансии, зонд кандидату, задание к
 вакансии при отклике, лента «Задания для вас» раз в N дней с push, факты T1 по навыкам в подборке и «почему»,
 ключи не уходят на клиент, вилка обязательна, песочница жюри."""
+import re
 from datetime import timedelta
 import uuid
 
@@ -374,4 +375,8 @@ def test_jury_sandbox_has_assignments(client):
     maria = client.get("/api/me", headers=H(tm)).json()["candidate"]["public_ref"]
     row = next(x for x in sel["results"] if x["ref"] == maria)
     assert any(p["title"].startswith("Задание работодателя") for p in row["card"]["probes"])
-    assert any("заданием работодателя" in r["text"] for r in row["reasons"]), [r["text"] for r in row["reasons"]]
+    # Ф6 Н5 (4c867d40): один источник — «Подтверждено заданием работодателя: 2 из 2»; если у навыка Марии есть и часть
+    # теста (так бывает при -n 10: состав её фактов зависит от порядка сида), причина — раздельные исходы
+    # «Тест — …; задание работодателя — выполнено, 2 из 2». Оба вида законны; проверяем, что задание засчитано.
+    ok = re.compile(r"заданием работодателя|задание работодателя — выполнено")
+    assert any(ok.search(r["text"]) for r in row["reasons"]), [r["text"] for r in row["reasons"]]
