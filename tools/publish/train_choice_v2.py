@@ -128,11 +128,12 @@ def main() -> int:
     ap.add_argument("dir")
     ap.add_argument("--out", required=True)
     ap.add_argument("--boot", type=int, default=200)
+    ap.add_argument("--plan", default=str(HERE.parents[1] / "docs" / "validation" / "TRAIN_PLAN_2110d.json"))
     a = ap.parse_args()
     d = Path(a.dir)
     a15 = _a15()
     names = sorted({p.name.split("__")[0][2:] for p in d.glob("S_*__*.json")}, key=lambda s: int(s[1:]))
-    plan = json.loads((HERE.parents[1] / "docs" / "validation" / "TRAIN_PLAN_2110d.json").read_text(encoding="utf-8"))
+    plan = json.loads(Path(a.plan).read_text(encoding="utf-8"))
     nchg = {v: len(e) for v, e in (plan.get("variants") or {}).items()}
     table, raw = {}, {}
     for v in names:
@@ -163,7 +164,7 @@ def main() -> int:
         else:
             why = (f"лучший прошедший {top}: нижняя граница парного 95 % ДИ разности счёта с V0 = {lo} ≤ 0 — "
                    "не лучше FINAL №2, остаётся №2")
-    res = {"rule": "docs/validation/RULE_V2_2110.md", "plan": "docs/validation/TRAIN_PLAN_2110d.json", "choice": choice, "why": why,
+    res = {"rule": "docs/validation/RULE_V2_2110.md", "plan": a.plan, "choice": choice, "why": why,
            "baseline_score_pp": base, "table": table}
     Path(a.out).write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     for v, t in table.items():
