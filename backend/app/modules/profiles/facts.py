@@ -113,6 +113,10 @@ def achievement_text(a: FspAchievement) -> str:
             evsk_rank=evsk_rank or a.sport_rank,
             evsk_basis=evsk_basis,
             page=page,
+            place_status=tr.get("place_status"),
+            place_range=tr.get("place_range"),
+            place_text=tr.get("place_text"),
+            evsk_status=tr.get("evsk_status"),
         )
     lvl = a.event_level.value if hasattr(a.event_level, "value") else a.event_level
     place = a.result_title or (f"{a.place} место" if a.place else "участник")
@@ -150,6 +154,11 @@ def _achievement_card_item(a: FspAchievement, direction: str | None) -> dict:
         "ekp_no": ekp_no,
         "evsk_rank": evsk_rank,
         "evsk_basis": evsk_basis,
+        "place": a.place,
+        "place_status": tr.get("place_status"),
+        "place_range": tr.get("place_range"),
+        "place_text": tr.get("place_text"),
+        "evsk_status": tr.get("evsk_status"),
         "protocol_ref": protocol_ref,
         "pdf_url": pdf_url,
         "page": page,

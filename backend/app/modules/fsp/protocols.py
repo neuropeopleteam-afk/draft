@@ -36,8 +36,12 @@ from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateProfile
 
-# FSP_PROTOCOLS_INDEX (на стенде — index_v4.json, выкладка оркестратора) проверяется первым в _index_path()
+# FSP_PROTOCOLS_INDEX (на стенде — index_v5.json) проверяется первым в _index_path()
 DEFAULT_PATHS = (
+    "/data_local/fsp_protocols/index_v5.json",
+    "/opt/spectrek_fsp/data_local/fsp_protocols/index_v5.json",
+    "/data_local/fsp_protocols/index_v4.json",
+    "/opt/spectrek_fsp/data_local/fsp_protocols/index_v4.json",
     "/data_local/fsp_protocols/index.json",
     "/opt/spectrek_fsp/data_local/fsp_protocols/index.json",
     "/app/data_local/fsp_protocols/index.json",
