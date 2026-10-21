@@ -217,6 +217,7 @@ export function InteractiveAvatarTour() {
   const [ui, setUi] = useState<ElenaUi | null>(null);
   // окно в углу уходит в другой угол, когда подсвеченный блок оказывается под ним
   const [dodge, setDodge] = useState(false);
+  const freeSince = useRef(0);
   useEffect(() => {
     if (!open || !ui || ui.stage !== "corner") { setDodge(false); return; }
     const check = () => {
@@ -230,7 +231,13 @@ export function InteractiveAvatarTour() {
       const hit = (fr: Frame) => r.right > fr.left - pad && r.left < fr.left + fr.width + pad && r.bottom > fr.top - pad && r.top < fr.top + fr.height + pad;
       const right = hit(frameOf("corner", vp.w, vp.h, vp.tab, "right"));
       const left = hit(frameOf("corner", vp.w, vp.h, vp.tab, "left"));
-      setDodge((d) => (right && !left ? true : left && !right ? false : d));
+      if (right && !left) { freeSince.current = 0; setDodge(true); return; }
+      if (left && !right) { freeSince.current = 0; setDodge(false); return; }
+      // блок ни под одним углом — возвращаемся в правый (свой) угол, но не раньше чем через секунду, чтобы не дёргаться
+      if (!right && !left) {
+        if (!freeSince.current) freeSince.current = Date.now();
+        else if (Date.now() - freeSince.current > 1000) setDodge(false);
+      }
     };
     check();
     const iv = window.setInterval(check, 400);
