@@ -27,7 +27,7 @@ prior_difficulty:
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Общеинженерный контур: потеря граничного события
     на стыке водяного знака и допустимого опоздания; формат find_bug, целевые грейды principal (b = 3,01 у порога
     старшего грейда).'
-generator: assessment_bank.families.common.lp2_05_watermark_late_admission_bug
+generator: assessment_bank.families_retired.lp_v2_2010.common.lp2_05_watermark_late_admission_bug
 version: 1
 description: 'Общеинженерный контур (principal): Потеря граничного события на стыке водяного знака и допустимого
   опоздания. Проверка исполнением и рубрикой.'

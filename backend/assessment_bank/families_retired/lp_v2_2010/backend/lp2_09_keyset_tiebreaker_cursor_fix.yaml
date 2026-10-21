@@ -27,7 +27,7 @@ prior_difficulty:
   sigma_variant: 0.25
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Backend-разработка: курсорная пагинация без потери
     записей с совпадающей меткой времени; формат choose_fix, целевые грейды lead (b = 2,15 у порога старшего грейда).'
-generator: assessment_bank.families.backend.lp2_09_keyset_tiebreaker_cursor_fix
+generator: assessment_bank.families_retired.lp_v2_2010.backend.lp2_09_keyset_tiebreaker_cursor_fix
 version: 1
 description: 'Backend-разработка (lead): Курсорная пагинация без потери записей с совпадающей меткой времени. Проверка
   исполнением и рубрикой.'

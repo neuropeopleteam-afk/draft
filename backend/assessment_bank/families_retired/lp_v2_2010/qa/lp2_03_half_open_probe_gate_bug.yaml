@@ -26,7 +26,7 @@ prior_difficulty:
   sigma_variant: 0.25
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Обеспечение качества (QA): лавина пробных запросов
     в полуоткрытом состоянии предохранителя; формат find_bug, целевые грейды lead (b = 2,16 у порога старшего грейда).'
-generator: assessment_bank.families.qa.lp2_03_half_open_probe_gate_bug
+generator: assessment_bank.families_retired.lp_v2_2010.qa.lp2_03_half_open_probe_gate_bug
 version: 1
 description: 'Обеспечение качества (QA) (lead): Лавина пробных запросов в полуоткрытом состоянии предохранителя.
   Проверка исполнением и рубрикой.'

@@ -27,7 +27,7 @@ prior_difficulty:
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Обеспечение качества (QA): системная архитектура
     удержания p99 в жёстком slo при десятикратных пиках; формат open_answer, целевые грейды principal (b = 2,94
     у порога старшего грейда).'
-generator: assessment_bank.families.qa.lp2_30_tail_latency_slo_budget_oa
+generator: assessment_bank.families_retired.lp_v2_2010.qa.lp2_30_tail_latency_slo_budget_oa
 version: 1
 description: 'Обеспечение качества (QA) (principal): Системная архитектура удержания p99 в жёстком SLO при десятикратных
   пиках. Проверка исполнением и рубрикой.'

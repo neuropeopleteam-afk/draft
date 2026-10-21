@@ -28,7 +28,7 @@ prior_difficulty:
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Обеспечение качества (QA): потеря монотонности
     fencing-токена при оптимистичной записи; формат find_bug, целевые грейды senior, lead (b = 1,74 у порога старшего
     грейда).'
-generator: assessment_bank.families.qa.lp2_00_cas_epoch_fence_bug
+generator: assessment_bank.families_retired.lp_v2_2010.qa.lp2_00_cas_epoch_fence_bug
 version: 1
 description: 'Обеспечение качества (QA) (senior, lead): Потеря монотонности fencing-токена при оптимистичной записи.
   Проверка исполнением и рубрикой.'

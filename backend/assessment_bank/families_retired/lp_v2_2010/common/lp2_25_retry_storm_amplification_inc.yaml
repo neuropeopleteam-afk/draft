@@ -33,7 +33,7 @@ prior_difficulty:
   - -0.35
   - 0.0
   - 0.35
-generator: assessment_bank.families.common.lp2_25_retry_storm_amplification_inc
+generator: assessment_bank.families_retired.lp_v2_2010.common.lp2_25_retry_storm_amplification_inc
 version: 1
 description: 'Общеинженерный контур (lead): Инцидент: каскадный шторм повторов между слоями без бюджета ретраев.
   Проверка исполнением и рубрикой.'

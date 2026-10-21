@@ -27,7 +27,7 @@ prior_difficulty:
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Обеспечение качества (QA): план миграции схемы
     и контрактов под нагрузкой без окна простоя (expand-contract); формат open_answer, целевые грейды lead (b =
     2,3 у порога старшего грейда).'
-generator: assessment_bank.families.qa.lp2_29_zero_downtime_contract_mig_oa
+generator: assessment_bank.families_retired.lp_v2_2010.qa.lp2_29_zero_downtime_contract_mig_oa
 version: 1
 description: 'Обеспечение качества (QA) (lead): План миграции схемы и контрактов под нагрузкой без окна простоя
   (Expand-Contract). Проверка исполнением и рубрикой.'

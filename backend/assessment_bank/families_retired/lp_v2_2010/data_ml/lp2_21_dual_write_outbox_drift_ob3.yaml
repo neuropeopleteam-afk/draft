@@ -32,7 +32,7 @@ prior_difficulty:
   - -0.35
   - 0.0
   - 0.35
-generator: assessment_bank.families.data_ml.lp2_21_dual_write_outbox_drift_ob3
+generator: assessment_bank.families_retired.lp_v2_2010.data_ml.lp2_21_dual_write_outbox_drift_ob3
 version: 1
 description: 'Аналитика данных и ML (lead): Развал консистентности при двойной записи в БД и брокер без outbox (3
   шага). Проверка исполнением и рубрикой.'

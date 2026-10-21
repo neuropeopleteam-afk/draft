@@ -27,7 +27,7 @@ prior_difficulty:
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Frontend-разработка: нарушение обратного порядка
     компенсаций при откате распределённой саги; формат find_bug, целевые грейды principal (b = 2,74 у порога старшего
     грейда).'
-generator: assessment_bank.families.frontend.lp2_04_saga_lifo_compensate_bug
+generator: assessment_bank.families_retired.lp_v2_2010.frontend.lp2_04_saga_lifo_compensate_bug
 version: 1
 description: 'Frontend-разработка (principal): Нарушение обратного порядка компенсаций при откате распределённой
   саги. Проверка исполнением и рубрикой.'

@@ -27,7 +27,7 @@ prior_difficulty:
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Информационная безопасность: видимость версий строк
     при чтении снимка mvcc с активными транзакциями; формат predict_output, целевые грейды lead (b = 2,0 у порога
     старшего грейда).'
-generator: assessment_bank.families.security.lp2_15_mvcc_snapshot_visibility_out
+generator: assessment_bank.families_retired.lp_v2_2010.security.lp2_15_mvcc_snapshot_visibility_out
 version: 1
 description: 'Информационная безопасность (lead): Видимость версий строк при чтении снимка MVCC с активными транзакциями.
   Проверка исполнением и рубрикой.'

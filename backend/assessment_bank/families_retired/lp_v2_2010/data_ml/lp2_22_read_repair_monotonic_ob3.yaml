@@ -32,7 +32,7 @@ prior_difficulty:
   - -0.35
   - 0.0
   - 0.35
-generator: assessment_bank.families.data_ml.lp2_22_read_repair_monotonic_ob3
+generator: assessment_bank.families_retired.lp_v2_2010.data_ml.lp2_22_read_repair_monotonic_ob3
 version: 1
 description: 'Аналитика данных и ML (principal): Немонотонное чтение при неполном кворуме и гонке read-repair (3
   шага). Проверка исполнением и рубрикой.'

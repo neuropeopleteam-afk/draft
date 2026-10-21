@@ -28,7 +28,7 @@ prior_difficulty:
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Информационная безопасность: повторный захват зависших
     сообщений transactional outbox без дублей; формат choose_fix, целевые грейды principal (b = 2,88 у порога старшего
     грейда).'
-generator: assessment_bank.families.security.lp2_11_outbox_atomic_reclaim_fix
+generator: assessment_bank.families_retired.lp_v2_2010.security.lp2_11_outbox_atomic_reclaim_fix
 version: 1
 description: 'Информационная безопасность (principal): Повторный захват зависших сообщений transactional outbox
   без дублей. Проверка исполнением и рубрикой.'

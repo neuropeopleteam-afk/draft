@@ -32,7 +32,7 @@ prior_difficulty:
   - -0.35
   - 0.0
   - 0.35
-generator: assessment_bank.families.mobile.lp2_23_shard_rebalance_epoch_ob3
+generator: assessment_bank.families_retired.lp_v2_2010.mobile.lp2_23_shard_rebalance_epoch_ob3
 version: 1
 description: 'Мобильная разработка (principal): Потеря обновлений во время онлайн-миграции шарда между эпохами (3
   шага). Проверка исполнением и рубрикой.'

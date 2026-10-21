@@ -34,7 +34,7 @@ prior_difficulty:
   - -0.35
   - 0.0
   - 0.35
-generator: assessment_bank.families.data_eng.lp2_24_pool_starvation_cascade_inc
+generator: assessment_bank.families_retired.lp_v2_2010.data_eng.lp2_24_pool_starvation_cascade_inc
 version: 1
 description: 'Инженерия данных (senior, lead): Инцидент: исчерпание пула соединений из-за внешнего вызова внутри
   транзакции. Проверка исполнением и рубрикой.'

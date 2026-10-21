@@ -33,7 +33,7 @@ prior_difficulty:
   - -0.35
   - 0.0
   - 0.35
-generator: assessment_bank.families.common.lp2_27_stale_cache_poison_rollout_inc
+generator: assessment_bank.families_retired.lp_v2_2010.common.lp2_27_stale_cache_poison_rollout_inc
 version: 1
 description: 'Общеинженерный контур (principal): Инцидент: отравление общего кэша несовместимой схемой при канарской
   выкладке. Проверка исполнением и рубрикой.'

@@ -28,7 +28,7 @@ prior_difficulty:
   basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Общеинженерный контур: отбор лидера по актуальности
     журнала (term, длина) и подсчёт кворума голосов; формат predict_output, целевые грейды lead, principal (b =
     2,49 у порога старшего грейда).'
-generator: assessment_bank.families.common.lp2_17_raft_election_quorum_out
+generator: assessment_bank.families_retired.lp_v2_2010.common.lp2_17_raft_election_quorum_out
 version: 1
 description: 'Общеинженерный контур (lead, principal): Отбор лидера по актуальности журнала (term, длина) и подсчёт
   кворума голосов. Проверка исполнением и рубрикой.'

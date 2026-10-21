@@ -32,7 +32,7 @@ prior_difficulty:
   - -0.35
   - 0.0
   - 0.35
-generator: assessment_bank.families.data_eng.lp2_25_retry_storm_amplification_inc
+generator: assessment_bank.families_retired.lp_v2_2010.data_eng.lp2_25_retry_storm_amplification_inc
 version: 1
 description: 'Инженерия данных (lead): Инцидент: каскадный шторм повторов между слоями без бюджета ретраев. Проверка
   исполнением и рубрикой.'
