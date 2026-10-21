@@ -1,0 +1,14 @@
+# Вариант В публикации (ops/publish_repo.sh --filter): пути, которые удаляются из ВСЕХ коммитов публикуемой копии.
+# По одному в строке; каталог — с «/» на конце. Дополняется автоматически путями, которые check_public_tree находит
+# в истории и которых уже нет в голове (ops/publish_history_scan.py --paths-out).
+# Внутренние документы процесса
+docs/agents/
+docs/handover/
+docs/audit_2010/
+docs/elena/HANDOVER_ELENA.md
+reports_0710/
+competitors/
+# Мост eu.fsp-draft.ru (служебная схема второго сервера)
+infra/mirror/
+infra/nginx/eu.fsp-draft.ru.conf
+infra/nginx/fsp.neuropeople.pro.mirror.conf

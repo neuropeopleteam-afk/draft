@@ -6,14 +6,22 @@
 #   PUBLISH_CONFIRM=yes-publish ops/publish_repo.sh --remote URL --execute   # отправка и проверка после неё
 #   ops/publish_repo.sh --remote URL --verify-only         # только проверка уже опубликованного (клон и сравнение)
 #   ops/publish_repo.sh --remote URL --snapshot [...]      # вариант Б: вместо полной истории — один коммит со снимком дерева
+#   ops/publish_repo.sh --remote URL --filter [...]        # вариант В: история сохраняется, внутренние файлы и строки вычищены
 #
 # Параметры:
 #   --remote URL    адрес нового репозитория (создаёт владелец: пустой, без README и LICENSE; публичность включается позже)
 #   --branch NAME   локальная ветка для публикации (по умолчанию main)
 #   --values FILE   файл значений секретов (вне репозитория, по одному в строке) для tools/publish/scan_history_values.py
-#   --deadline ISO  последняя допустимая дата коммита (по умолчанию 2026-10-11T23:59:59+03:00)
+#   --deadline ISO  последняя допустимая дата коммита (по умолчанию 2026-10-21T23:59:59+03:00 — срок доработки)
 #   --snapshot      вариант Б: опубликовать одним коммитом (снимок дерева ветки без истории; прежняя история не уходит наружу).
 #                   Автор — как у последнего коммита ветки, дата — момент создания (не позже срока). История остаётся только у вас.
+#   --filter        вариант В: отдельный клон ветки (исходный репозиторий не меняется) → git filter-repo: из ВСЕХ коммитов
+#                   удаляются пути ops/publish_exclude.txt и пути, где check_public_tree находит нарушения в истории и
+#                   которых нет в голове (ops/publish_history_scan.py); в остальных файлах заменяются только строки-нарушения
+#                   (ops/publish_sanitize.py), сообщения коммитов — так же. Порядок коммитов, авторы и даты сохраняются,
+#                   SHA меняются; коммиты, ставшие пустыми, выпадают. Проверка: check_public_tree по КАЖДОМУ коммиту
+#                   результата и сообщениям (publish_history_scan.py = 0), дерево головы = исходному без исключённых путей.
+#                   Затем все обычные шаги и отправка выполняются из очищенного клона (каталог — PUBLISH_WORKDIR или mktemp).
 #   --allow-nonempty  разрешить отправку, если в удалённом репозитории уже есть ссылки (не рекомендуется)
 #   --execute       выполнить отправку (иначе dry-run); требует PUBLISH_CONFIRM=yes-publish
 #
@@ -24,11 +32,13 @@ set -euo pipefail
 BRANCH=main
 REMOTE=""
 VALUES=""
-DEADLINE="2026-10-11T23:59:59+03:00"
+DEADLINE="2026-10-21T23:59:59+03:00"
 EXECUTE=0
 VERIFY_ONLY=0
 ALLOW_NONEMPTY=0
 SNAPSHOT=0
+FILTER=0
+ARGS=("$@")
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -40,7 +50,8 @@ while [ $# -gt 0 ]; do
     --verify-only) VERIFY_ONLY=1; shift ;;
     --allow-nonempty) ALLOW_NONEMPTY=1; shift ;;
     --snapshot) SNAPSHOT=1; shift ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    --filter) FILTER=1; shift ;;
+    -h|--help) sed -n '2,32p' "$0"; exit 0 ;;
     *) echo "неизвестный параметр: $1" >&2; exit 2 ;;
   esac
 done
@@ -54,6 +65,57 @@ bad()  { echo "  FAIL $*" >&2; FAIL=1; }
 step() { echo; echo "== $*"; }
 
 hide_url() { echo "$1" | sed -E 's#(https?://)[^/@]*@#\1***@#'; }   # без пароля/токена в адресе при печати
+
+if [ "$FILTER" = 1 ] && [ -z "${PUBLISH_FILTERED:-}" ]; then
+  # Вариант В. Всё делается в отдельном клоне; исходный репозиторий (ветки, remotes, объекты) не меняется.
+  [ "$SNAPSHOT" = 1 ] && { echo "--filter и --snapshot — разные варианты, выберите один" >&2; exit 2; }
+  if python3 -m git_filter_repo --version >/dev/null 2>&1; then FR=(python3 -m git_filter_repo)
+  elif command -v git-filter-repo >/dev/null 2>&1; then FR=(git-filter-repo)
+  else echo "нужен git filter-repo (pip install git-filter-repo)" >&2; exit 2; fi
+  git show-ref --verify --quiet "refs/heads/$BRANCH" || { echo "нет ветки $BRANCH" >&2; exit 1; }
+  [ -z "$VALUES" ] || VALUES=$(realpath "$VALUES")
+  WORK=${PUBLISH_WORKDIR:-$(mktemp -d)}; mkdir -p "$WORK"; CL="$WORK/filtered"; SRC=$(pwd)
+  [ ! -e "$CL" ] || { echo "каталог $CL уже есть — удалите его или задайте другой PUBLISH_WORKDIR" >&2; exit 2; }
+  step "В. Очищенная копия истории: $CL (исходный репозиторий не меняется)"
+  python3 ops/publish_history_scan.py --rev "$BRANCH" ${VALUES:+--values "$VALUES"} --paths-out "$WORK/gone.txt" \
+    > "$WORK/scan_before.txt" 2>&1 || true
+  ok "до очистки: $(tail -n 1 "$WORK/scan_before.txt") (подробно — $WORK/scan_before.txt)"
+  cat ops/publish_exclude.txt "$WORK/gone.txt" > "$WORK/exclude.txt"
+  ok "исключаемых путей: $(grep -cvE '^(#|$)' "$WORK/exclude.txt") (ops/publish_exclude.txt + найденные в истории — $WORK/exclude.txt)"
+  cp ops/publish_sanitize.py "$WORK/publish_sanitize.py"; cp tools/publish/check_public_tree.py "$WORK/cpt.py"
+  git clone --quiet --no-local --single-branch --branch "$BRANCH" "$SRC" "$CL"
+  N_BEFORE=$(git rev-list --count "$BRANCH")
+  ( cd "$CL" && PUBLISH_CPT="$WORK/cpt.py" PUBLISH_EXCLUDE="$WORK/exclude.txt" PUBLISH_VALUES="$VALUES" PYTHONPATH="$WORK" \
+      "${FR[@]}" --force --quiet \
+      --file-info-callback 'return __import__("publish_sanitize").file_info(filename, mode, blob_id, value)' \
+      --message-callback 'return __import__("publish_sanitize").message(message)' ) > "$WORK/filter_repo.log" 2>&1 \
+    || { bad "git filter-repo завершился с ошибкой ($WORK/filter_repo.log)"; exit 1; }
+  N_AFTER=$(git -C "$CL" rev-list --count "$BRANCH")
+  ok "git filter-repo: коммитов $N_BEFORE → $N_AFTER (ставшие пустыми выпали), авторы и даты сохранены"
+  if python3 "$SRC/ops/publish_history_scan.py" --repo "$CL" --rev "$BRANCH" ${VALUES:+--values "$VALUES"} > "$WORK/scan_after.txt" 2>&1; then
+    ok "check_public_tree по каждому коммиту и сообщениям очищенной истории: $(tail -n 1 "$WORK/scan_after.txt")"
+  else
+    bad "в очищенной истории остались нарушения: $(tail -n 1 "$WORK/scan_after.txt") (подробно — $WORK/scan_after.txt)"
+  fi
+  # дерево головы: ровно исходное за вычетом исключённых путей (содержимое файлов головы не тронуто)
+  if PUBLISH_CPT="$WORK/cpt.py" PUBLISH_EXCLUDE="$WORK/exclude.txt" PUBLISH_VALUES="$VALUES" PYTHONPATH="$WORK" python3 - "$SRC" "$CL" "$BRANCH" <<'PY'
+import subprocess, sys
+import publish_sanitize as s
+src, cl, br = sys.argv[1:4]
+ls = lambda r: {l.split("\t", 1)[1]: l.split("\t", 1)[0] for l in subprocess.run(["git", "-C", r, "ls-tree", "-r", br], capture_output=True, text=True, check=True).stdout.splitlines()}
+a = {p: v for p, v in ls(src).items() if not s.excluded(p)}
+b = ls(cl)
+diff = sorted(set(a) ^ set(b)) + sorted(p for p in set(a) & set(b) if a[p] != b[p])
+print(f"  ..   файлов в голове: исходная без исключённых {len(a)}, очищенная {len(b)}, расхождений {len(diff)}")
+for p in diff[:20]:
+    print(f"  ..   расходится: {p}")
+sys.exit(1 if diff else 0)
+PY
+  then ok "дерево головы совпадает с исходным за вычетом исключённых путей"; else bad "дерево головы отличается от исходного (см. выше)"; fi
+  [ "$FAIL" = 0 ] || { echo; echo "Очистка не прошла проверку — дальше не идём. Каталог: $WORK" >&2; exit 1; }
+  step "Дальше — обычные проверки и отправка из очищенного клона"
+  cd "$CL" && PUBLISH_FILTERED=1 exec bash "$CL/ops/publish_repo.sh" "${ARGS[@]}"
+fi
 
 verify_published() {
   step "Проверка после отправки: чистый клон опубликованного репозитория"
