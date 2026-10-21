@@ -41,11 +41,12 @@ export function ProvenanceLine({ p, className = "" }: { p?: Prov | null; classNa
   const bankLabel = p.bank ? (famCount ? `банк ${famCount.toLocaleString("ru-RU")}${NB}семейств` : "банк продукта") : p.snapshot === "no_bank" ? "банк не нужен" : p.snapshot === "live" ? null : "банк продукта";
   const commit = p.commit && p.commit !== "unknown" ? p.commit : null;
   const plainParts = [d10(p.date), bankLabel].filter(Boolean);
+  const snapLabel = p.snapshot === "historical" ? "снимок расчёта" : (SNAP[p.snapshot] ?? p.snapshot);
   return (
     <span className={`flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs leading-snug text-brand-ink/70 [overflow-wrap:anywhere] ${className}`} data-testid="provenance-line" data-snapshot={p.snapshot} data-kind={p.kind}>
       <KindChip p={p} />
       {plainParts.map((x, i) => <span key={i}>{i ? "· " : ""}{x}</span>)}
-      <span className={p.snapshot === "historical" ? "font-semibold text-brand-plum" : ""}>· {SNAP[p.snapshot] ?? p.snapshot}</span>
+      <span>· {snapLabel}</span>
       {(commit || p.command || p.bank) && (
         <details className="inline-block text-[11px] text-brand-ink/60">
           <summary className="cursor-pointer font-medium text-brand-plum/80 hover:underline">код и пересчёт</summary>

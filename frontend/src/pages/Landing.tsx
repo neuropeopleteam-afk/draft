@@ -6,7 +6,7 @@ import { ReverseDraftDemo } from "../components/landing/ReverseDraftDemo";
 import { errText } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { juryLogin } from "../lib/jury";
-import { useDemoUi, useJuryTab } from "../lib/juryMode";
+import { useDemoUi } from "../lib/juryMode";
 import { lazyNamed } from "../lib/lazyPage";
 import { daysText, getLandingCards, usePageTitle, useRules } from "../lib/meta";
 import { getTop5, getTop5Hard, getTop5Meta } from "../lib/numbers";
@@ -56,7 +56,6 @@ export default function Landing() {
   );
   const rules = useRules();
   const demoUi = useDemoUi();
-  const juryTab = useJuryTab();
   const { me, signIn } = useAuth();
   const navigate = useNavigate();
   const [msg, setMsg] = useState<string | null>(null);
@@ -172,7 +171,7 @@ export default function Landing() {
 
           <p className="mt-3 text-xs np-muted">
             Тариф «Старт» для компаний — 0 ₽ (3 приглашения в месяц). Кандидатам и спортсменам ФСП — всегда 0 ₽.
-            {juryTab && (
+            {demoUi && (
               <>
                 {" · "}
                 <Link to="/demo" className="font-semibold np-accent hover:underline" data-testid="hero-demo-link">
