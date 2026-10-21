@@ -29,8 +29,8 @@ export const JURY: { id: Persona; title: string; text: string }[] = [
 export const MAIN_ROLES: { id: Persona; label: string; grad: string }[] = [
   { id: "candidate", label: "Кандидат", grad: "np-btn-grad-sapphire" },
   { id: "candidate_new", label: "Пройти тест с нуля", grad: "np-btn-grad-violet" },
-  { id: "employer", label: "Работодатель", grad: "np-btn-grad-cyan" },
-  { id: "fsp", label: "Федерация (ФСП)", grad: "np-btn-grad-crimson" },
+  { id: "employer", label: "Работодатель", grad: "np-btn-grad-violet" },
+  { id: "fsp", label: "Федерация (ФСП)", grad: "np-btn-grad-violet" },
 ];
 const isMain = (p: Persona) => MAIN_ROLES.some((m) => m.id === p);
 
@@ -155,10 +155,10 @@ function plainClaim(s: string): string {
     .filter(Boolean);
   const splitTracks = (
     <div className="mt-5 grid gap-4 border-t pt-5 np-border md:grid-cols-2" data-testid="jury-split-tracks">
-      <div className="rounded-2xl border border-indigo-400/35 bg-gradient-to-br from-indigo-950/45 via-[#101436]/60 to-indigo-900/20 p-4 shadow-[0_14px_34px_-18px_rgba(64,47,255,0.6)]">
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-300">Маршрут А · Продуктовое и бизнес-жюри (3–5 мин)</span>
-        <h3 className="mt-1 text-base font-extrabold np-text">Продукт, подбор с объяснением, торг по зарплате и ФСП</h3>
-        <p className="mt-1 text-[13px] leading-relaxed np-muted">
+      <div className="rounded-2xl border border-indigo-400/30 bg-[#101432] p-4">
+        <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#B8B2FF]">Маршрут А · Продуктовое и бизнес-жюри (3–5 мин)</span>
+        <h3 className="mt-1.5 text-base font-extrabold text-white">Продукт, подбор с объяснением, торг по зарплате и ФСП</h3>
+        <p className="mt-1 text-sm leading-relaxed text-[#DCE2FF]/85">
           Разбор вакансии, приглашение с зарплатной вилкой и встречным торгом в защищённом чате, сборка команды от 2 до 10 человек и передача в кадровую систему «Поток Рекрутмент».
         </p>
         <div className="mt-3.5 flex flex-wrap gap-2">
@@ -168,22 +168,23 @@ function plainClaim(s: string): string {
           <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/squad", "prod_squad")} className="np-btn-grad-violet px-3.5 py-2 text-xs">
             2. Командный Драфт (2–10 чел.)
           </button>
-          <button type="button" disabled={!!busy} onClick={() => enter("fsp", "/fsp", "prod_fsp")} className="np-btn-grad-crimson px-3.5 py-2 text-xs">
+          <button type="button" disabled={!!busy} onClick={() => enter("fsp", "/fsp", "prod_fsp")} className="np-btn-grad-violet px-3.5 py-2 text-xs">
             3. Кабинет ФСП
           </button>
-          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/ats", "prod_ats")} className="np-btn-grad-cyan px-3.5 py-2 text-xs">
+          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/ats", "prod_ats")} className="np-btn-grad-violet px-3.5 py-2 text-xs">
             4. Кадровая система «Поток»
           </button>
         </div>
       </div>
-      <div className="rounded-2xl border border-rose-400/35 bg-gradient-to-br from-rose-950/40 via-[#1A102A]/60 to-indigo-950/30 p-4 shadow-[0_14px_34px_-18px_rgba(236,29,53,0.5)]">
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-rose-300">Маршрут Б · Техническое и научное жюри (3–5 мин)</span>
-        <h3 className="mt-1 text-base font-extrabold np-text">Математика теста, {NUMBERS.bank.families.toLocaleString("ru-RU")} семейств и проверка античита в 1 клик</h3>
-        <p className="mt-1 text-[13px] leading-relaxed np-muted">
+      <div className="rounded-2xl border border-indigo-400/30 bg-[#101432] p-4">
+        <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#B8B2FF]">Маршрут Б · Техническое и научное жюри (3–5 мин)</span>
+        <h3 className="mt-1.5 text-base font-extrabold text-white">Математика теста, {NUMBERS.bank.families.toLocaleString("ru-RU")} семейств и проверка античита в 1 клик</h3>
+        <p className="mt-1 text-sm leading-relaxed text-[#DCE2FF]/85">
           Запустите проверку защиты оценщика, валидацию банка заданий и протоколы подтверждения грейда с открытыми командами пересчёта.
         </p>
         <div className="mt-3.5 flex flex-wrap gap-2">
           <Link to="/demo/warroom" className="np-btn-grad-crimson px-3.5 py-2 text-xs">
+            <span className="h-2 w-2 rounded-full bg-white animate-pulse" aria-hidden="true" />
             1. Боевой ИИ-Полигон
           </Link>
           <Link to="/validation" className="np-btn-grad-sapphire px-3.5 py-2 text-xs">
@@ -196,16 +197,16 @@ function plainClaim(s: string): string {
             type="button"
             disabled={off}
             onClick={() => setQr(true)}
-            className="np-btn-grad-emerald px-3.5 py-2 text-xs"
+            className="np-btn-grad-violet px-3.5 py-2 text-xs"
             title="Как устроено: асимметричная подпись Ed25519"
           >
             4. Цифровой паспорт грейда
           </button>
         </div>
       </div>
-      <div className="rounded-2xl border border-indigo-400/30 bg-gradient-to-r from-[#0E132E]/90 via-[#13183A]/90 to-[#181234]/90 p-4 text-sm leading-relaxed np-muted md:col-span-2" data-testid="jury-numbers-banner">
+      <div className="rounded-2xl border border-indigo-400/30 bg-[#0E132E] p-4 text-sm leading-relaxed np-muted md:col-span-2" data-testid="jury-numbers-banner">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-300">
+          <span className="text-xs font-bold uppercase tracking-[0.08em] text-[#B8B2FF]">
             Проверенные метрики стенда · единый артефакт docs/NUMBERS.json
           </span>
           <Link to="/validation" className="text-xs font-semibold text-indigo-300 hover:text-white hover:underline">
