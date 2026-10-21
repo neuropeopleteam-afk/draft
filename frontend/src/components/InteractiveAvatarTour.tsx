@@ -348,7 +348,7 @@ export function InteractiveAvatarTour() {
     : micOn && ui.phase === "thinking" ? "Думаю…"
     : micOn && ui.speaking ? "Говорю"
     : listening ? (large && !f.small ? lbl.long : lbl.short)
-    : micOn ? "Секунду…" : lbl.short;
+    : micOn ? "Думаю…" : lbl.short;
   // подсказка «ваша очередь»: в паузах обзора и когда Настя спросила — чтобы было видно, что можно говорить
   const turnHint = listening && (ui.phase === "listening" || ui.phase === "paused")
     ? (ui.phase === "paused" ? (large ? "Пауза. Скажите «дальше» или спросите" : "Пауза — скажите «дальше»")
