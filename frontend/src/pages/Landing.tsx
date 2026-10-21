@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { AndroidBetaButton } from "../components/InstallAppButton";
 import { FspHeroMonolithStage, FspPulseBar } from "../components/Fsp3DShowcase";
+import LandingPair from "../components/validation/LandingPair";
 import { DraftLaws } from "../components/landing/DraftLaws";
 import { ReverseDraftDemo } from "../components/landing/ReverseDraftDemo";
 import { errText } from "../components/ui";
@@ -327,8 +328,14 @@ export default function Landing() {
             <div key={c.id} className="np-glass flex flex-col justify-between px-5 py-4" data-testid={`landing-number-${c.id}`}>
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wider np-faint">{plainMetricText(c.eyebrow)}</dt>
-                <dd className="mt-1 text-2xl font-extrabold tabular-nums np-text">
-                  {c.value} <span className="text-sm font-semibold np-accent">{plainMetricText(c.accent)}</span>
+                <dd className="mt-1 tabular-nums np-text">
+                  {c.pair ? (
+                    <LandingPair card={c} />
+                  ) : (
+                    <span className="text-2xl font-extrabold">
+                      {c.value} <span className="text-sm font-semibold np-accent">{plainMetricText(c.accent)}</span>
+                    </span>
+                  )}
                 </dd>
                 <p className="mt-1.5 text-xs leading-relaxed np-muted">{plainMetricText(c.subtext)}</p>
               </div>

@@ -1,13 +1,13 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import fspCrystalCore from "../assets/fsp-crystal-core.webp";
 import fspMedallion3d from "../assets/fsp-medallion-3d.webp";
-import { NUMBERS } from "../lib/numbers";
+import { getFspFacts, NUMBERS } from "../lib/numbers";
 
 const fmtInt = (n: number): string => Number(n).toLocaleString("ru-RU");
 
-const getRegionsCount = (): number => (NUMBERS as any)?.fsp_facts?.regions ?? 89;
+const getRegionsCount = (): number => getFspFacts()?.regions ?? 89;
 const getRegionsClaim = (): string =>
-  (NUMBERS as any)?.fsp_facts?.claim_ru ?? "89 действующих региональных представительств ФСП в России";
+  getFspFacts()?.claim_ru ?? "89 действующих региональных представительств ФСП в России";
 
 /** Строка ключевых показателей и правил под шапкой главной страницы (все цифры — из NUMBERS, статус — из /api/health). */
 export function FspPulseBar() {
