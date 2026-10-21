@@ -1,6 +1,6 @@
 # Отчёт валидации «Драфт» (генерируется tools/publish/gen_numbers.py из docs/NUMBERS.json)
 
-Коммит 66dddabb7, 2026-10-21T10:16:12Z. Чисел, введённых руками, здесь нет.
+Коммит 2619a5dc2, 2026-10-21T13:11:48Z. Чисел, введённых руками, здесь нет.
 
 ## Решение по заявленному грейду — симуляция продукта
 
@@ -65,10 +65,10 @@
 
 | Раздел | Цифра | Выборка | Команда |
 |---|---|---|---|
-| Банк заданий | 1 504 семейств, ошибок генерации 0, проверок ключей 10 702 | 20 зёрен | `cd backend && python -m assessment_bank validate --seeds 20` |
+| Банк заданий | 1 646 семейств, ошибок генерации 0, проверок ключей 38 131 | None зёрен | `cd backend && python -m assessment_bank validate --seeds 20` |
 | Вердикт по грейду (симуляция продукта) | верный вердикт 87,9 %, ложное подтверждение 16,0 %, точный грейд 71,0 % | N = 3 000, отложенные зёрна [2201, 2202, 2203, 2204, 2205, 2206, 2207, 2208, 2209, 2210], модельные кандидаты | `cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json` |
 | «Обмани тест»: боты через движок | Боты-стратегии через движок продукта (11 стратегий × 100 попыток, реальные варианты и проверка ответа): самая успешная стратегия «leak_100» получила подтверждение заявленного грейда в 5,0 % попыток (95 % ДИ 2,1–11,2 %); контроль — честный кандидат на 0,75 логита ниже порога — 1,0 %. | 100 попыток на стратегию | `cd backend && python -m app.modules.validation.cheat_bots --n 100 --k 10,100 --out /w/out/cheat_bots.json` |
 | Подбор под потребность (бенчмарк) | P@5 75,1 %, MRR 0,90 | 200 × 2 000, синтетический мир | `cd backend && python -m app.modules.validation.matching_bench` |
 | Реальные вакансии hh.ru | направление 90,3 %, грейд 96,3 % | N = 414; набор разработки (по этим вакансиям настраивался словарь); отложенный набор — после пересчёта А5 | `python tools/realdata/hh_plus.py match` |
 | Античит оценщика развёрнутых ответов | слепой набор: фильтр 137/176, ложные 2/176, полная цепочка с моделью — пробитий 0/176 | атаки от моделей других поставщиков, хэш набора до прогона | `python3 tools/grader_check/run_holdout_eval.py --offline` |
-| Протоколы ФСП | 18 документов, 2 911 результатов | официальные протоколы с сайта ФСП | `python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp` |
+| Протоколы ФСП | 18 документов, 2 908 результатов | официальные протоколы с сайта ФСП | `python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp` |

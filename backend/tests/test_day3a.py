@@ -33,7 +33,15 @@ def test_format_limits_and_length(bank, direction):
         assert sum(1 for i in scored if i["format"] == "open_book_3step") <= 2
         assert sum(1 for i in scored if i["format"] == "open_answer") <= 1
         ext = res.details.get("extension")
-        assert len(scored) <= 16 + (ext["items"] if ext else 0)
+        sp_ = st["cfg"].get("sprt")
+        if sp_:
+            # поправка №2 (SPRT): обычный предел — soft_max_items (16); пока решение по заявленному грейду не
+            # принято, тест продлевается у спорного порога до cfg.max_items (ASSESSMENT_CONTESTED_MAX_ITEMS, 30).
+            # Прежнее ожидание «≤ 16 + дотестирование» относилось к правилу без SPRT
+            assert len(scored) <= st["cfg"]["max_items"]
+            assert sp_["soft_max_items"] <= st["cfg"]["max_items"]
+        else:
+            assert len(scored) <= 16 + (ext["items"] if ext else 0)
         assert res.details["formats"] and res.details["subpool"] in (0, 1)
 
 

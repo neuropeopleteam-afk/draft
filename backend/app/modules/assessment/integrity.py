@@ -208,7 +208,10 @@ def format_gap_logits(items: list[dict]) -> dict | None:
     flagged = gap > FORMAT_GAP_WARN
     pts = 2 if gap > FORMAT_GAP_ALARM else 1 if flagged else 0
     reason_ru = (
-        f"{FORMAT_GAP_TITLE} (разница {ru_num(gap, 2)} логита: выбор ответа θ = {ru_num(th_mcq, 2)} против кода и практики θ = {ru_num(th_code, 2)})"
+        # простыми словами, без θ и логитов (правило владельца: без θ/IRT в основном интерфейсе); числа — в полях
+        # theta_mcq / theta_code / gap для подсказки «как считается»
+        (f"{FORMAT_GAP_TITLE}: результаты разных форм заданий расходятся сильнее, чем бывает при одном уровне знаний"
+         + (" (расхождение большое)" if gap > FORMAT_GAP_ALARM else ""))
         if flagged else ""
     )
     return {

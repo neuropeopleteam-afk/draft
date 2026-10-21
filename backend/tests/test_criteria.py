@@ -120,10 +120,17 @@ def test_api_numbers_come_from_validation_json(client):
     assert p14["value"] == bench["metrics"]["platform"]["p@5"]["mean"]
     assert p14["ci"] == [bench["metrics"]["platform"]["p@5"]["lo"], bench["metrics"]["platform"]["p@5"]["hi"]]
     assert p14["signature"]["commit"] == bench["signature"]["commit"]
-    # тот же расчёт, что у первого экрана /validation: κ повтора пути совпадает с карточкой «5 чисел»
-    head = {i["id"]: i for i in client.get("/api/validation/headline").json()["items"]}
+    # тот же расчёт, что у первого экрана /validation. С 21.10 первый экран читает docs/NUMBERS.json (симуляция
+    # продукта: движок стенда на реальном банке), а /api/validation/headline (path_retest.json) — отдельный блок
+    # «Повтор всего пути». Поэтому κ повтора в 2.2 сверяется с симуляцией продукта и с NUMBERS.json, а не с
+    # path_retest (прежнее ожидание сравнивало с источником, который первый экран больше не показывает)
     p22 = d["criteria"][1]["items"][1]["proof"]
-    assert p22["value"] == head["path_kappa"]["value"] and p22["signature"] == head["path_kappa"]["signature"]
+    prod = json.loads(C.SOURCES["product"][0].read_text(encoding="utf-8"))
+    assert p22["value"] == prod["retest"]["kappa_w_quadratic"]
+    nums = json.loads((Path(__file__).resolve().parents[2] / "docs" / "NUMBERS.json").read_text(encoding="utf-8"))
+    rt = (((nums.get("grade_verdict") or {}).get("main") or {}).get("retest") or {})
+    if rt.get("kappa_w") is not None:
+        assert p22["value"] == rt["kappa_w"]
 
 
 def test_no_calculation_no_number(monkeypatch, tmp_path):

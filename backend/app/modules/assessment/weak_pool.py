@@ -15,14 +15,17 @@
 """
 from __future__ import annotations
 
+# 21.10: убраны 5 семейств, выведенных из банка по форме ключа (А3; в банке их нет — поведение не меняется):
+# common.git.move_commits_mcq, data_ml.sql.latest_record_fix, data_ml.stats.ztest_fix, backend.go.map_race_fix,
+# security.supply.dependency_patch_fix
 WEAK_FAMILIES: frozenset[str] = frozenset("""
-backend.db.overbooking_ob3 backend.go.defer_recover_output backend.go.map_race_fix backend.go.slice_append_output
+backend.db.overbooking_ob3 backend.go.defer_recover_output backend.go.slice_append_output
 backend.kafka.offset_commit_mcq backend.py.idempotency_coarse_ob3 common.conc.async_lost_update_ob3
-common.db.index_plan_mcq common.db.tx_isolation_mcq common.git.move_commits_mcq common.perf.fanout_tail_mcq
-common.time.tz_report_ob3 data_ml.ab.sample_size_mcq data_ml.sql.latest_record_fix data_ml.stats.mean_median_output
-data_ml.stats.ztest_fix frontend.a11y.focus_trap_ob3 frontend.js.microtask_order frontend.react.state_batch_mcq
-frontend.ts.nullish_mcq qa.api.cursor_pagination_ob3 qa.pytest.shared_state_ob3 security.access.owner_check_bug
-security.auth.token_validation_ob3 security.crypto.aead_mcq security.supply.dependency_patch_fix""".split())
+common.db.index_plan_mcq common.db.tx_isolation_mcq common.perf.fanout_tail_mcq common.time.tz_report_ob3
+data_ml.ab.sample_size_mcq data_ml.stats.mean_median_output frontend.a11y.focus_trap_ob3
+frontend.js.microtask_order frontend.react.state_batch_mcq frontend.ts.nullish_mcq qa.api.cursor_pagination_ob3
+qa.pytest.shared_state_ob3 security.access.owner_check_bug security.auth.token_validation_ob3
+security.crypto.aead_mcq""".split())
 
 WEAK_SOURCE = "банк feat/bank-core-plus 5493728, reports/weak_families.json (калибровка панелью моделей, не люди)"
 
