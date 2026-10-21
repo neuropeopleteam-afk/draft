@@ -37,14 +37,18 @@ def row_metrics(rows: list, pairs: list, a15) -> dict:
     """Только строки сравнения (для парного бутстрэпа по зёрнам)."""
     st = a15.point_metrics(rows, "grade_stage2", "verdict_stage2")
     rt = a15.retest(pairs) if pairs else {}
-    av = a15.adaptive_vs_fixed(rows) or {}
     out = {}
     for k, _, _ in REF:
         if k in st:
             out[k] = _v(st[k])
         elif k in rt:
             out[k] = _v(rt[k])
-    out["adaptive_minus_fixed_4"] = (av.get("exact_4") or {}).get("diff")
+    # та же точечная величина, что a15.adaptive_vs_fixed()["exact_4"]["diff"], без её внутреннего бутстрэпа (скорость)
+    M = a15.MERGES["4"]
+    rs = [r for r in rows if r.get("fixed_grade") is not None]
+    out["adaptive_minus_fixed_4"] = (sum(int(M[r["true_grade"]] == M[r.get("grade_main") or "none"])
+                                         - int(M[r["true_grade"]] == M[r.get("fixed_grade") or "none"]) for r in rs) / len(rs)
+                                     if rs else None)
     return out
 
 
@@ -93,6 +97,9 @@ def by_seed(rows: list, pairs: list) -> dict:
     return g
 
 
+_V0_CACHE: dict = {}
+
+
 def paired_boot(SV: dict, S0: dict, a15, B: int, seed: int = 2110) -> dict:
     """Парный бутстрэп по зёрнам (кластер = зерно; те же зёрна и люди у V и V0): ДИ разности счёта и SE счёта V."""
     import random
@@ -104,7 +111,10 @@ def paired_boot(SV: dict, S0: dict, a15, B: int, seed: int = 2110) -> dict:
         pick = [rnd.choice(seeds) for _ in seeds]
         rv = [x for s in pick for x in gv[s][0]]; pv = [x for s in pick for x in gv[s][1]]
         r0 = [x for s in pick for x in g0[s][0]]; p0 = [x for s in pick for x in g0[s][1]]
-        a, _ = score(row_metrics(rv, pv, a15)); b, _ = score(row_metrics(r0, p0, a15))
+        key = tuple(pick)
+        if key not in _V0_CACHE:
+            _V0_CACHE[key] = score(row_metrics(r0, p0, a15))[0]
+        a, _ = score(row_metrics(rv, pv, a15)); b = _V0_CACHE[key]
         if a is not None and b is not None:
             diffs.append(a - b); sv.append(a)
     diffs.sort()

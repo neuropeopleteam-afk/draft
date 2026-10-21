@@ -52,7 +52,8 @@ PS_FINAL = {"hard": DATA / "product_sim_final_calibrated.json", "misspec": DATA 
 PS_ST = {"st": DATA / "product_sim_st.json"}
 DJINNI = ROOT / "docs" / "realdata" / "djinni" / "external_djinni.json"  # А17: внешний открытый набор (подбор)
 FSP_FACTS = ROOT / "docs" / "validation" / "fsp_facts.json"  # внешние факты ФСП с источником (плашка А18)
-DEVDEV = ROOT / "docs" / "realdata" / "numbers_devdev.json"  # А5: «один в один» на открытом генераторе другого решения
+DEVDEV = ROOT / "docs" / "realdata" / "numbers_devdev.json"
+DEVDEV4 = ROOT / "docs" / "realdata" / "numbers_devdev_4.json"  # цикл №4 (заголовок), №3 — в журнале  # А5: «один в один» на открытом генераторе другого решения
 TRAIN_CHOICE = ROOT / "docs" / "validation" / "TRAIN_CHOICE_2110b.json"  # выбор конфигурации на TRAIN (поправка №3)
 # Пятёрка первого экрана (поправка №3): точность уверенного — всегда парой с долей уверенных; точный грейд — по всем
 # кандидатам и 6 ступеням, рядом строки 5 и 4 ступеней (сопоставимость) и «среди тех, кому продукт его определяет»;
@@ -603,7 +604,14 @@ def matching_block() -> dict | None:
             "freeze_sha256": v2.get("freeze_sha256"), "git_head": v2.get("git_head"), "protocol": v2.get("protocol"),
             "generated_at": v2.get("run_at") or a5.get("generated_at"),
             "what": v2.get("what"), "recompute": h.get("recompute"),
-            "code_ref": "tools/realdata/bench_holdout2.py", "artifact": "docs/realdata/bench_holdout2.json → docs/realdata/numbers_matching.json",
+            "code_ref": (re.search(r"tools/realdata/[\w./]+\.py", h.get("recompute") or "") or [None])[0] or "tools/realdata/numbers_matching.py",
+            "artifact": (str(v2.get("protocol") or "").replace("_PROTOCOL.md", ".json") or "docs/realdata/bench_holdout*.json")
+                        + " → docs/realdata/numbers_matching.json",
+            # журнал прогонов: прежний цикл подбора (заголовок — последний при любом исходе, объявлено до прогона)
+            "history": [{"cycle": 3, "git_head": (a5.get("matching_v2_cycle3") or {}).get("git_head"),
+                         "run_at": (a5.get("matching_v2_cycle3") or {}).get("run_at"),
+                         **{k: _ci(((a5.get("matching_v2_cycle3") or {}).get("site") or {}).get("headline", {}).get(k))
+                            for k in ("p5", "ndcg10", "mrr")}}] if a5.get("matching_v2_cycle3") else [],
         }
     if a5.get("matching"):
         return a5["matching"]
@@ -899,7 +907,8 @@ def fsp_facts_block() -> dict | None:
 def devdev_block() -> dict | None:
     """«Один в один» (А5, проверено А15): их генератор, их тест, их метки, их ранжировщик — и наш подбор четвёртой выдачей.
     Заголовок — main (настройка по умолчанию), рядом — опция API «строго запрошенный грейд» и её цена."""
-    x = (_load(DEVDEV) or {}).get("devdev_1to1")
+    x3 = (_load(DEVDEV) or {}).get("devdev_1to1")
+    x = (_load(DEVDEV4) or {}).get("devdev_1to1_4") or x3
     if not x or not x.get("main"):
         return None
 
@@ -916,14 +925,19 @@ def devdev_block() -> dict | None:
     claim = (f"На открытом генераторе другого решения (MIT; его тест, его метки, синтетика — модели, не люди; отложенные "
              f"зёрна, один прогон после FREEZE): наш подбор по умолчанию — nDCG@10 {num(m.get('ours'), 3)} "
              f"{ci(m.get('ours_ci95'))} против {num(m.get('other'), 3)} у его ранжировщика (разность {sg(m.get('diff'))} "
-             f"{ci(m.get('diff_ci95'))}) — ниже." + (
+             f"{ci(m.get('diff_ci95'))}) — ниже; переоценённых в топ-10 — {pct((mv.get('overrated10') or {}).get('ours'))} % "
+             f"против {pct((mv.get('overrated10') or {}).get('other'))} %." + (
              f" В режиме «строго запрошенный грейд» (опция API, выбрана на зёрнах разработки этого генератора) — "
              f"{num(e.get('ours'), 3)} ({sg(e.get('diff'))} {ci(e.get('diff_ci95'))}); цена — переоценённых в топ-10 "
              f"{pct(eo.get('ours'))} % против {pct(eo.get('other'))} %." if e else ""))
     return {"condition_ru": _anon_other(x.get("condition")), "note_ru": _anon_other(x.get("note")),
             "main": mv, "exact_option_api": ev, "exact_is_api_option": True,
             "recompute": x.get("recompute"), "source": "docs/realdata/numbers_devdev.json ← " + str(x.get("source")),
-            "checked_by": "А15, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений", "claim_ru": claim}
+            "checked_by": ("А15, пересчёт в чистом клоне FREEZE 4d104eb4e0 — 0 расхождений" if x is not x3 else
+                           "А15, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений"), "claim_ru": claim,
+            "cycle": 4 if x is not x3 else 3,
+            "history": ([{"cycle": 3, "main": view(x3["main"]), "exact_option_api": view(x3.get("exact_option_api") or {}),
+                          "condition_ru": _anon_other(x3.get("condition"))}] if x3 and x is not x3 else [])}
 
 
 def external_block() -> dict | None:
