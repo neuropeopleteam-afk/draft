@@ -182,7 +182,7 @@ def test_consent_text_and_lifecycle(client):
     assert c["active"] is False and c["enabled"] is True and c["current_version"] == c["text"]["version"]
     txt = c["text"]
     assert txt["kind"] == "proctoring" and txt["what"] and txt["stored"] and txt["how_long"] and txt["who_sees"]
-    assert "ИНН" in txt["operator"] and "не биометрическая идентификация" in " ".join(txt["what"]).lower()
+    assert "команда Neuropeople (конкурсный прототип)" in txt["operator"] and "ИНН" not in txt["operator"] and "не биометрическая идентификация" in " ".join(txt["what"]).lower()
     raw = json.dumps(txt, ensure_ascii=False)
     for word in ("не отправляются", "Работодатель", "без камеры", "отозвать"):
         assert word in raw, word

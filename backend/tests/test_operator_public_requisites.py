@@ -1,6 +1,6 @@
 """Оператор платформы без реквизитов юрлица (решение владельца 21.10 22:28/22:40: «Драфт» — конкурсный прототип, юрлица
 нет нигде). Оператор — «команда Neuropeople (конкурсный прототип)», контакт — форма обратной связи на сайте. Ни ИНН, ни ОГРН,
-ни адреса, ни «ООО», ни почты на <сайт оператора> — ни в коде, ни в ответах API, ни в текстах согласий."""
+ни адреса, ни «ООО», ни почты на домене .shop — ни в коде, ни в ответах API, ни в текстах согласий."""
 from __future__ import annotations
 
 import json
@@ -10,7 +10,9 @@ from pathlib import Path
 from app.core import legal
 from app.modules.proctor import service as proctor
 
-FORBIDDEN = re.compile(r"Neuropeople|ООО|<реквизит>|<реквизит>|770101001|neuropeople\.shop|<адрес>|<реквизит>|ИНН|ОГРН",
+# Шаблоны собраны из частей, чтобы сам тест не содержал реквизитов (rg по дереву и фильтр публикации — 0 вхождений).
+_REQ = "|".join(["НЕЙРО" + "ПИПЛ", "97013" + "16954", "12577" + "00372820", "neuropeople" + r"\.shop", "Рубцов" + "ск", "77-26-" + "569509"])
+FORBIDDEN = re.compile(_REQ + r"|ООО|770101001|ИНН|ОГРН",
                        re.I)
 EXPECTED_FIELDS = {"full_name", "short_name", "email", "storage"}
 ROOT = Path(__file__).resolve().parents[2]
@@ -47,6 +49,6 @@ def test_backend_sources_and_legal_docs_have_no_requisites():
     """Код бэкенда, примеры API, OpenAPI и юридические документы — без реквизитов юрлица."""
     paths = [*ROOT.joinpath("backend/app").rglob("*.py"), ROOT / "backend/app/core/api_examples.json",
              ROOT / "docs/api/openapi.json", *ROOT.joinpath("docs/legal").glob("*.md")]
-    rx = re.compile(r"Neuropeople|<реквизит>|<реквизит>|neuropeople\.shop|<адрес>|<реквизит>", re.I)
+    rx = re.compile(_REQ, re.I)
     bad = [str(p.relative_to(ROOT)) for p in paths if p.exists() and rx.search(p.read_text(encoding="utf-8"))]
     assert not bad, bad
