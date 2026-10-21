@@ -72,6 +72,8 @@ def client() -> HhClient:
 
 
 def code_commit() -> str:
+    if os.environ.get("CODE_COMMIT"):  # прогон на копии без .git (сервер «Москва»): коммит передаётся явно
+        return os.environ["CODE_COMMIT"][:9]
     try:
         return subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], text=True).strip()
     except (OSError, subprocess.CalledProcessError):
