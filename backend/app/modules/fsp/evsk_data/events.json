@@ -1,0 +1,1670 @@
+{
+ "version": "2026-10-21",
+ "description": "Соревнования ФСП из официальных протоколов и справок (без ПДн)",
+ "sources": {
+  "h77wns4jpn7z3pmkrm0azxfye6era08y.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/969/h77wns4jpn7z3pmkrm0azxfye6era08y.pdf",
+   "sha256": "b535041524235cdba12b1d4bbfe316270fa127c46118d8acc1007717b34b203d"
+  },
+  "txbuswvkginckkbtbwtkata1wbfukqda.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/6cb/txbuswvkginckkbtbwtkata1wbfukqda.pdf",
+   "sha256": "2109a051d1a1e2403d66f92bf07d28ec548b2fbca472f9b1c9fe1390b840aa85"
+  },
+  "9uxtofnr07t1n3lha1o0ku1anbqndqe1.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/922/9uxtofnr07t1n3lha1o0ku1anbqndqe1.pdf",
+   "sha256": "43d3404d11a81e48603aa3b242df85c5940748eb9c8d62dea0d95dcaa7bec02e"
+  },
+  "f4ikw0r1e2qwmvt3usudy5ve81r3ykrf.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/b0d/f4ikw0r1e2qwmvt3usudy5ve81r3ykrf.pdf",
+   "sha256": "57f8a678214e175f1615558432f8b270673e2d0ad750683b1ce5e1c94795e3f2"
+  },
+  "8ma6l935b05m4q88wi5n24ne23p7qbya.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/f5e/8ma6l935b05m4q88wi5n24ne23p7qbya.pdf",
+   "sha256": "f34df368c2170f2a9df7fe98756b7ecf45160cd76df787bd3a220fcf8ba84b51"
+  },
+  "5hs99w6a2n362vlqnonn51110vlhkvc5.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/27f/5hs99w6a2n362vlqnonn51110vlhkvc5.pdf",
+   "sha256": "b78b97534fb42fdf6b24a4ffcaa750d769e098b8acb2d6ab26e6cbdb1ded22ad"
+  },
+  "go7v4ekr13s1wwepx7poocbxgxd2u92i.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/2fd/go7v4ekr13s1wwepx7poocbxgxd2u92i.pdf",
+   "sha256": "efdcfcbb860bb402b862a68b17ce1a361f7ad13e2e6e6dbb09dc4cbcac578b8b"
+  },
+  "tb1vnqokiid4fiwdb40evznavplvmysg.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/138/tb1vnqokiid4fiwdb40evznavplvmysg.pdf",
+   "sha256": "19137f97f68cf0952371ff97ee0e4e8554b6ae8ddb73238338107865c614ad74"
+  },
+  "rof2o18vujo5me8hfep08nn3bp6sd3lv.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/fff/rof2o18vujo5me8hfep08nn3bp6sd3lv.pdf",
+   "sha256": "70e7058b79887517289bd87049da9b37502e941bda9316e5bfce3158a8bac447"
+  },
+  "f0gja1njckgfwu6heobl1o3z4021wlpg.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/a0b/f0gja1njckgfwu6heobl1o3z4021wlpg.pdf",
+   "sha256": "149b050fd6dca60b158b16d217ed5c251c4ba496f6311f8b58553f6b1ba97f7e"
+  },
+  "f8mtqy9398owua73i24f999rly5fovnf.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/120/f8mtqy9398owua73i24f999rly5fovnf.pdf",
+   "sha256": "df8be9f13ab7bafbc8b09bbbf1fa1331b6e387d72a61346a5b8cbe2146bd0e99"
+  },
+  "e6rp6ekcljtfofzw99bao13a8mpav8i9.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/9db/e6rp6ekcljtfofzw99bao13a8mpav8i9.pdf",
+   "sha256": "213ed3143a947d745ebbf2028e306c4e70d78da743aceb17a4488bdced78bfaa"
+  },
+  "p3ikqnt1g9iw1kvczvxgv5qjhv2x9tya.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/5c8/p3ikqnt1g9iw1kvczvxgv5qjhv2x9tya.pdf",
+   "sha256": "abd920276fb25dc8a1748480bab5ff8e6edf1da7f33f824d7c2992c0d18cb2f0"
+  },
+  "us9qvdfvm0kwathyo67wjuvje8c9v1ra.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/092/us9qvdfvm0kwathyo67wjuvje8c9v1ra.pdf",
+   "sha256": "6c712783491a685a6deb4b2be2786c803ff9a710c75549b6f3429465a00a8b1b"
+  },
+  "15a3exjee1npp1vux0sl5qborm4n6q3r.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/ef1/15a3exjee1npp1vux0sl5qborm4n6q3r.pdf",
+   "sha256": "002afbd666c6d8c7dc572aba14c0f1a83af659fa2263e46622156a92b33cc93c"
+  },
+  "e5miei2aikivxs93d6qz2iqfnfaf0xp1.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/503/e5miei2aikivxs93d6qz2iqfnfaf0xp1.pdf",
+   "sha256": "6835340c7b156d47749f57a0552157c5ba395125bf848728acff5d07b9bbe2f0"
+  },
+  "u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/a3d/u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "sha256": "cc98696960d5a2180d407978bafb0f7f0daa3eb321f4a6a0272b252eee8eaf06"
+  },
+  "xqhh07qp40z3mfi8lraxt53842qlw772.pdf": {
+   "url": "https://fsp-russia.ru/upload/iblock/f68/xqhh07qp40z3mfi8lraxt53842qlw772.pdf",
+   "sha256": "69510b182a2499c434d38cc3b65db25a21fdc6ae5942ed2002de453fe1ab658e"
+  }
+ },
+ "events": {
+  "kr2025_algo_stage": {
+   "event_id": "kr2025_algo_stage",
+   "title": "Кубок России 2025, отборочный этап — программирование алгоритмическое",
+   "evsk_status": "allrus_other_sport_ekp",
+   "stage": "stage",
+   "discipline": "программирование алгоритмическое",
+   "ekp_no": "2101770020035561",
+   "date_start": "2025-04-24",
+   "date_end": "2025-04-26",
+   "venue": "дистанционно",
+   "age_group": "men_women",
+   "subjects_total": null,
+   "participants_total": null,
+   "judges": null,
+   "certificates": [],
+   "note": "справок о субъектах и судьях для отборочного этапа 2025 на сайте нет — условия п. 30 и 40.2 не проверены",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/969/h77wns4jpn7z3pmkrm0azxfye6era08y.pdf",
+   "protocol_sha256": "b535041524235cdba12b1d4bbfe316270fa127c46118d8acc1007717b34b203d",
+   "team_event": false,
+   "check": "visual"
+  },
+  "kr2025_prod_stage": {
+   "event_id": "kr2025_prod_stage",
+   "title": "Кубок России 2025, отборочный этап — программирование продуктовое",
+   "evsk_status": "allrus_other_sport_ekp",
+   "stage": "stage",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000020035559",
+   "date_start": "2025-04-21",
+   "date_end": "2025-04-28",
+   "venue": "дистанционно",
+   "age_group": "men_women",
+   "subjects_total": null,
+   "participants_total": null,
+   "judges": null,
+   "certificates": [],
+   "note": "протокол только с названиями команд, без состава — личная сверка невозможна",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/6cb/txbuswvkginckkbtbwtkata1wbfukqda.pdf",
+   "protocol_sha256": "2109a051d1a1e2403d66f92bf07d28ec548b2fbca472f9b1c9fe1390b840aa85",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kr2025_ib_stage": {
+   "event_id": "kr2025_ib_stage",
+   "title": "Кубок России 2025, отборочный этап — программирование систем информационной безопасности",
+   "evsk_status": "allrus_other_sport_ekp",
+   "stage": "stage",
+   "discipline": "программирование систем информационной безопасности",
+   "ekp_no": "2101000020041809",
+   "date_start": "2025-04-26",
+   "date_end": "2025-04-26",
+   "venue": null,
+   "age_group": "men_women",
+   "subjects_total": null,
+   "participants_total": null,
+   "judges": null,
+   "certificates": [],
+   "note": "протокол только с названиями команд, без состава",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/922/9uxtofnr07t1n3lha1o0ku1anbqndqe1.pdf",
+   "protocol_sha256": "43d3404d11a81e48603aa3b242df85c5940748eb9c8d62dea0d95dcaa7bec02e",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kr2025_robo_stage": {
+   "event_id": "kr2025_robo_stage",
+   "title": "Кубок России 2025, отборочный этап — программирование робототехники",
+   "evsk_status": "allrus_other_sport_ekp",
+   "stage": "stage",
+   "discipline": "программирование робототехники",
+   "ekp_no": "2101000020035557",
+   "date_start": "2025-05-12",
+   "date_end": "2025-05-14",
+   "venue": "дистанционно",
+   "age_group": "men_women",
+   "subjects_total": null,
+   "participants_total": null,
+   "judges": {
+    "ВК": 1,
+    "1К": 3,
+    "2К": 2,
+    "3К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "file": "058/g6txm9cku30ktl7o93u8xw40kpjv9kin.pdf",
+     "page": 1
+    }
+   ],
+   "note": "протокол только с названиями команд; справки о субъектах нет",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/b0d/f4ikw0r1e2qwmvt3usudy5ve81r3ykrf.pdf",
+   "protocol_sha256": "57f8a678214e175f1615558432f8b270673e2d0ad750683b1ce5e1c94795e3f2",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kr2025_prod_final": {
+   "event_id": "kr2025_prod_final",
+   "title": "Кубок России 2025, финал — программирование продуктовое",
+   "evsk_status": "kr_final",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101620020035562",
+   "date_start": "2025-05-18",
+   "date_end": "2025-05-22",
+   "venue": "Смоленск",
+   "age_group": "men_women",
+   "subjects_total": 23,
+   "participants_total": 170,
+   "judges": {
+    "ВК": 1,
+    "1К": 3,
+    "2К": 2,
+    "3К": 4
+   },
+   "certificates": [
+    {
+     "type": "subjects",
+     "file": "tcwdz7r278a2ag9tfs30wx0uhmbkyt3e.pdf",
+     "page": 1,
+     "sha256": "e066af6ba9c16a69a31c2eda4d6f62f1a96025a30e4cf055aeb1aca4b9d5642f"
+    },
+    {
+     "type": "judges",
+     "file": "xmaz6tfu1s1i4npv4cov6i8tx9uih491.pdf",
+     "page": 1,
+     "sha256": "3153547a02cd6d2e525639b216c52033c0b7fe413ca857cd1725c0054b2d8fba"
+    }
+   ],
+   "note": "в справке: 204 участника из 23 регионов (170 спортсменов и 34 тренера)",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/f5e/8ma6l935b05m4q88wi5n24ne23p7qbya.pdf",
+   "protocol_sha256": "f34df368c2170f2a9df7fe98756b7ecf45160cd76df787bd3a220fcf8ba84b51",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kr2025_ib_final": {
+   "event_id": "kr2025_ib_final",
+   "title": "Кубок России 2025, финал — программирование систем информационной безопасности",
+   "evsk_status": "kr_final",
+   "stage": "final",
+   "discipline": "программирование систем информационной безопасности",
+   "ekp_no": "2101670020041686",
+   "date_start": "2025-05-19",
+   "date_end": "2025-05-22",
+   "venue": "Смоленск",
+   "age_group": "men_women",
+   "subjects_total": 23,
+   "participants_total": 294,
+   "judges": {
+    "ВК": 1,
+    "1К": 3,
+    "2К": 2,
+    "3К": 4
+   },
+   "certificates": [
+    {
+     "type": "subjects",
+     "page": 1,
+     "file": "dxry6o6q7cupi2869xufoyj5xmpd6oxl.pdf",
+     "sha256": "40170f42571aaf18104f5075b5f9e0bed83c9db4fd5e99be91b0806de117e331"
+    },
+    {
+     "type": "judges",
+     "page": 1,
+     "file": "ioj8xp1kj123khtif177ghkajz37rlvt.pdf",
+     "sha256": "a5ba2a7dfc21d2335a5c91c1b8126036f193ffc4539e93f8fbd562bbe3f05d4e"
+    }
+   ],
+   "note": "в справке: 336 участников из 23 регионов (294 спортсмена и 42 тренера)",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/27f/5hs99w6a2n362vlqnonn51110vlhkvc5.pdf",
+   "protocol_sha256": "b78b97534fb42fdf6b24a4ffcaa750d769e098b8acb2d6ab26e6cbdb1ded22ad",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kr2025_algo_final": {
+   "event_id": "kr2025_algo_final",
+   "title": "Кубок России 2025, финал — программирование алгоритмическое",
+   "evsk_status": "kr_final",
+   "stage": "final",
+   "discipline": "программирование алгоритмическое",
+   "ekp_no": "2101770020035561",
+   "date_start": "2025-05-23",
+   "date_end": "2025-05-25",
+   "venue": "Москва",
+   "age_group": "men_women",
+   "subjects_total": 32,
+   "participants_total": 217,
+   "judges": {
+    "ВК": 1,
+    "1К": 3,
+    "2К": 2,
+    "3К": 4
+   },
+   "certificates": [
+    {
+     "type": "subjects",
+     "page": 1,
+     "file": "7e26ftguiuunswmt1d7njeoqq0ykg2cs.pdf",
+     "sha256": "ea8ea6e1fefa8858487bd0b03ff44cea49b588faa9b8fc186229cd397abf1560"
+    },
+    {
+     "type": "judges",
+     "page": 1,
+     "file": "iyazju5ylp8x0mh3dqlqf0iymppdonff.pdf",
+     "sha256": "7a7ad97cab15185ba2077fca2000b716b792dc08b1c9c290e48c64ab4b29849e"
+    }
+   ],
+   "note": "в справке: 434 участника из 32 регионов (217 спортсменов и 217 тренеров)",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/2fd/go7v4ekr13s1wwepx7poocbxgxd2u92i.pdf",
+   "protocol_sha256": "efdcfcbb860bb402b862a68b17ce1a361f7ad13e2e6e6dbb09dc4cbcac578b8b",
+   "team_event": false,
+   "check": "visual"
+  },
+  "chr2025_prod": {
+   "event_id": "chr2025_prod",
+   "title": "Чемпионат России 2025 — программирование продуктовое",
+   "evsk_status": "chr",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101590019043742",
+   "date_start": "2025-11-20",
+   "date_end": "2025-11-24",
+   "venue": "Москва",
+   "age_group": "men_women",
+   "subjects_total": 10,
+   "participants_total": 69,
+   "judges": {
+    "ВК": 3,
+    "2К": 1,
+    "3К": 1
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 1
+    },
+    {
+     "type": "subjects",
+     "page": 2
+    }
+   ],
+   "note": "субъектов 10 из 89 (меньше 25 %, но не менее 6) — по п. 31 нужен повторный результат",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/138/tb1vnqokiid4fiwdb40evznavplvmysg.pdf",
+   "protocol_sha256": "19137f97f68cf0952371ff97ee0e4e8554b6ae8ddb73238338107865c614ad74",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kr2026_algo_stage": {
+   "event_id": "kr2026_algo_stage",
+   "title": "Кубок России 2026, отборочный этап — программирование алгоритмическое",
+   "evsk_status": "allrus_other_sport_ekp",
+   "stage": "stage",
+   "discipline": "программирование алгоритмическое",
+   "ekp_no": "2101000020046569",
+   "date_start": "2026-04-11",
+   "date_end": "2026-04-12",
+   "venue": "по месту нахождения участников",
+   "age_group": "men_women",
+   "subjects_total": 24,
+   "participants_total": 199,
+   "judges": {
+    "ВК": 1,
+    "1К": 3
+   },
+   "certificates": [
+    {
+     "type": "subjects",
+     "page": 11
+    },
+    {
+     "type": "subjects",
+     "page": 12
+    },
+    {
+     "type": "judges",
+     "page": 13
+    }
+   ],
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/fff/rof2o18vujo5me8hfep08nn3bp6sd3lv.pdf",
+   "protocol_sha256": "70e7058b79887517289bd87049da9b37502e941bda9316e5bfce3158a8bac447",
+   "team_event": false,
+   "check": "visual"
+  },
+  "kr2026_prod_stage": {
+   "event_id": "kr2026_prod_stage",
+   "title": "Кубок России 2026, отборочный этап — программирование продуктовое",
+   "evsk_status": "allrus_other_sport_ekp",
+   "stage": "stage",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000020046570",
+   "date_start": "2026-04-17",
+   "date_end": "2026-04-27",
+   "venue": "по месту нахождения участников",
+   "age_group": "men_women",
+   "subjects_total": 18,
+   "participants_total": 143,
+   "judges": {
+    "ВК": 2,
+    "1К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 8
+    },
+    {
+     "type": "subjects",
+     "page": 9
+    }
+   ],
+   "note": "субъектов 18 из 89 — по п. 31 нужен повторный результат",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/120/f8mtqy9398owua73i24f999rly5fovnf.pdf",
+   "protocol_sha256": "df8be9f13ab7bafbc8b09bbbf1fa1331b6e387d72a61346a5b8cbe2146bd0e99",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kr2026_sib_stage": {
+   "event_id": "kr2026_sib_stage",
+   "title": "Кубок России 2026, отборочный этап — программирование систем информационной безопасности",
+   "evsk_status": "allrus_other_sport_ekp",
+   "stage": "stage",
+   "discipline": "программирование систем информационной безопасности",
+   "ekp_no": "2101000020046571",
+   "date_start": "2026-04-18",
+   "date_end": "2026-04-19",
+   "venue": "по месту нахождения участников",
+   "age_group": "men_women",
+   "subjects_total": 25,
+   "participants_total": 236,
+   "judges": {
+    "ВК": 1,
+    "1К": 3
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 7
+    },
+    {
+     "type": "judges_other_event",
+     "page": 8,
+     "note": "финал КР 2026, ЕКП 2101000020046578, 11–14.05.2026, Воронеж — протокола финала на сайте нет"
+    },
+    {
+     "type": "subjects",
+     "page": 9
+    },
+    {
+     "type": "subjects",
+     "page": 10
+    }
+   ],
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/9db/e6rp6ekcljtfofzw99bao13a8mpav8i9.pdf",
+   "protocol_sha256": "213ed3143a947d745ebbf2028e306c4e70d78da743aceb17a4488bdced78bfaa",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kr2026_bas_stage": {
+   "event_id": "kr2026_bas_stage",
+   "title": "Кубок России 2026, отборочный этап — программирование беспилотных авиационных систем",
+   "evsk_status": "allrus_other_sport_ekp",
+   "stage": "stage",
+   "discipline": "программирование беспилотных авиационных систем",
+   "ekp_no": "2101000020046573",
+   "date_start": "2026-04-20",
+   "date_end": "2026-04-23",
+   "venue": "по месту нахождения участников",
+   "age_group": "men_women",
+   "subjects_total": 13,
+   "participants_total": 51,
+   "judges": {
+    "ВК": 2,
+    "1К": 1,
+    "2К": 1
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 1
+    },
+    {
+     "type": "subjects",
+     "page": 2
+    }
+   ],
+   "note": "субъектов 13 из 89 — по п. 31 нужен повторный результат",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/5c8/p3ikqnt1g9iw1kvczvxgv5qjhv2x9tya.pdf",
+   "protocol_sha256": "abd920276fb25dc8a1748480bab5ff8e6edf1da7f33f824d7c2992c0d18cb2f0",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kr2026_robo_stage": {
+   "event_id": "kr2026_robo_stage",
+   "title": "Кубок России 2026, отборочный этап — программирование робототехники",
+   "evsk_status": "allrus_other_sport_ekp",
+   "stage": "stage",
+   "discipline": "программирование робототехники",
+   "ekp_no": "2101000020046572",
+   "date_start": "2026-04-26",
+   "date_end": "2026-04-29",
+   "venue": "по месту нахождения участников",
+   "age_group": "men_women",
+   "subjects_total": 13,
+   "participants_total": 81,
+   "judges": {
+    "ВК": 2,
+    "1К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 1
+    },
+    {
+     "type": "subjects",
+     "page": 2
+    }
+   ],
+   "note": "субъектов 13 из 89 — по п. 31 нужен повторный результат",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/092/us9qvdfvm0kwathyo67wjuvje8c9v1ra.pdf",
+   "protocol_sha256": "6c712783491a685a6deb4b2be2786c803ff9a710c75549b6f3429465a00a8b1b",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kf2026_sib_stage": {
+   "event_id": "kf2026_sib_stage",
+   "title": "Кубок Федерации спортивного программирования 2026, отборочный этап — программирование систем информационной безопасности",
+   "evsk_status": null,
+   "stage": "stage",
+   "discipline": "программирование систем информационной безопасности",
+   "ekp_no": "1101770002005773",
+   "date_start": "2026-09-19",
+   "date_end": "2026-09-20",
+   "venue": "онлайн",
+   "age_group": "men_women",
+   "subjects_total": 67,
+   "participants_total": 1306,
+   "judges": {
+    "1К": 2,
+    "2К": 1,
+    "3К": 1
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 1
+    },
+    {
+     "type": "subjects",
+     "page": 2
+    },
+    {
+     "type": "subjects",
+     "page": 3
+    },
+    {
+     "type": "subjects",
+     "page": 4
+    }
+   ],
+   "note": "отборочный этап всероссийского физкультурного мероприятия: итог мероприятия — финал; нормы ЕВСК к отборочному этапу не применяются (консервативно)",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/ef1/15a3exjee1npp1vux0sl5qborm4n6q3r.pdf",
+   "protocol_sha256": "002afbd666c6d8c7dc572aba14c0f1a83af659fa2263e46622156a92b33cc93c",
+   "team_event": true,
+   "check": "visual"
+  },
+  "kf2026_sib_final": {
+   "event_id": "kf2026_sib_final",
+   "title": "Кубок Федерации спортивного программирования 2026, финал — программирование систем информационной безопасности",
+   "evsk_status": "allrus_other_fizkult_ekp",
+   "stage": "final",
+   "discipline": "программирование систем информационной безопасности",
+   "ekp_no": "1101770002005773",
+   "date_start": "2026-10-09",
+   "date_end": "2026-10-11",
+   "venue": "Москва",
+   "age_group": "men_women",
+   "subjects_total": 67,
+   "participants_total": 1306,
+   "judges": {
+    "1К": 2,
+    "2К": 1,
+    "3К": 1
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 1
+    },
+    {
+     "type": "subjects",
+     "page": 2
+    }
+   ],
+   "note": "всероссийское физкультурное мероприятие (ЕКП, часть I); справка о субъектах — общая для отборочного этапа и финала",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/ef1/15a3exjee1npp1vux0sl5qborm4n6q3r.pdf",
+   "protocol_sha256": "002afbd666c6d8c7dc572aba14c0f1a83af659fa2263e46622156a92b33cc93c",
+   "team_event": true,
+   "check": "visual"
+  },
+  "sbornaya_rf_2026": {
+   "event_id": "sbornaya_rf_2026",
+   "title": "Список кандидатов в спортивные сборные команды Российской Федерации по спортивному программированию 2026",
+   "evsk_status": null,
+   "stage": "list",
+   "discipline": null,
+   "ekp_no": null,
+   "date_start": "2026-05-14",
+   "date_end": null,
+   "venue": null,
+   "age_group": null,
+   "subjects_total": null,
+   "participants_total": null,
+   "judges": null,
+   "certificates": [],
+   "note": "не протокол соревнования: включение в список кандидатов в сборную — отдельный сильный признак",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/503/e5miei2aikivxs93d6qz2iqfnfaf0xp1.pdf",
+   "protocol_sha256": "6835340c7b156d47749f57a0552157c5ba395125bf848728acff5d07b9bbe2f0",
+   "team_event": false,
+   "check": "visual"
+  },
+  "fo2026_champ_szfo_prod": {
+   "event_id": "fo2026_champ_szfo_prod",
+   "title": "Чемпионат Северо-Западного федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_champ",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000017056281",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "men_women",
+   "fo": "СЗФО",
+   "fo_subjects_total": 11,
+   "subjects_total": 2,
+   "participants_total": 6,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 1
+    },
+    {
+     "type": "subjects",
+     "page": 2
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/a3d/u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "protocol_sha256": "cc98696960d5a2180d407978bafb0f7f0daa3eb321f4a6a0272b252eee8eaf06",
+   "team_event": true
+  },
+  "fo2026_champ_skfo_prod": {
+   "event_id": "fo2026_champ_skfo_prod",
+   "title": "Чемпионат Северо-Кавказского федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_champ",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000017056287",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "men_women",
+   "fo": "СКФО",
+   "fo_subjects_total": 7,
+   "subjects_total": 1,
+   "participants_total": 9,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 4
+    },
+    {
+     "type": "subjects",
+     "page": 5
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/a3d/u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "protocol_sha256": "cc98696960d5a2180d407978bafb0f7f0daa3eb321f4a6a0272b252eee8eaf06",
+   "team_event": true
+  },
+  "fo2026_champ_sfo_prod": {
+   "event_id": "fo2026_champ_sfo_prod",
+   "title": "Чемпионат Сибирского федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_champ",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000017056284",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "men_women",
+   "fo": "СФО",
+   "fo_subjects_total": 10,
+   "subjects_total": 2,
+   "participants_total": 47,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 7
+    },
+    {
+     "type": "subjects",
+     "page": 8
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/a3d/u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "protocol_sha256": "cc98696960d5a2180d407978bafb0f7f0daa3eb321f4a6a0272b252eee8eaf06",
+   "team_event": true
+  },
+  "fo2026_champ_ufo_prod": {
+   "event_id": "fo2026_champ_ufo_prod",
+   "title": "Чемпионат Уральского федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_champ",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000017056285",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "men_women",
+   "fo": "УФО",
+   "fo_subjects_total": 6,
+   "subjects_total": 1,
+   "participants_total": 6,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 13
+    },
+    {
+     "type": "subjects",
+     "page": 14
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/a3d/u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "protocol_sha256": "cc98696960d5a2180d407978bafb0f7f0daa3eb321f4a6a0272b252eee8eaf06",
+   "team_event": true
+  },
+  "fo2026_champ_pfo_prod": {
+   "event_id": "fo2026_champ_pfo_prod",
+   "title": "Чемпионат Приволжского федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_champ",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000017056286",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "men_women",
+   "fo": "ПФО",
+   "fo_subjects_total": 14,
+   "subjects_total": 4,
+   "participants_total": 54,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 16
+    },
+    {
+     "type": "subjects",
+     "page": 17
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/a3d/u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "protocol_sha256": "cc98696960d5a2180d407978bafb0f7f0daa3eb321f4a6a0272b252eee8eaf06",
+   "team_event": true
+  },
+  "fo2026_champ_cfo_prod": {
+   "event_id": "fo2026_champ_cfo_prod",
+   "title": "Чемпионат Центрального федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_champ",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000017056280",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "men_women",
+   "fo": "ЦФО",
+   "fo_subjects_total": 18,
+   "subjects_total": 6,
+   "participants_total": 39,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 22
+    },
+    {
+     "type": "subjects",
+     "page": 23
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/a3d/u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "protocol_sha256": "cc98696960d5a2180d407978bafb0f7f0daa3eb321f4a6a0272b252eee8eaf06",
+   "team_event": true
+  },
+  "fo2026_champ_yufo_prod": {
+   "event_id": "fo2026_champ_yufo_prod",
+   "title": "Чемпионат Южного федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_champ",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000017056282",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "men_women",
+   "fo": "ЮФО",
+   "fo_subjects_total": 12,
+   "subjects_total": 4,
+   "participants_total": 55,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 27
+    },
+    {
+     "type": "subjects",
+     "page": 28
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/a3d/u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "protocol_sha256": "cc98696960d5a2180d407978bafb0f7f0daa3eb321f4a6a0272b252eee8eaf06",
+   "team_event": true
+  },
+  "fo2026_perv_cfo_prod": {
+   "event_id": "fo2026_perv_cfo_prod",
+   "title": "Первенство Центрального федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_perv",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000018059197",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "youth_u19",
+   "fo": "ЦФО",
+   "fo_subjects_total": 18,
+   "subjects_total": 3,
+   "participants_total": 22,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 1
+    },
+    {
+     "type": "subjects",
+     "page": 2
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/f68/xqhh07qp40z3mfi8lraxt53842qlw772.pdf",
+   "protocol_sha256": "69510b182a2499c434d38cc3b65db25a21fdc6ae5942ed2002de453fe1ab658e",
+   "team_event": true
+  },
+  "fo2026_perv_yufo_prod": {
+   "event_id": "fo2026_perv_yufo_prod",
+   "title": "Первенство Южного федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_perv",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000018059200",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "youth_u19",
+   "fo": "ЮФО",
+   "fo_subjects_total": 12,
+   "subjects_total": 1,
+   "participants_total": 11,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 5
+    },
+    {
+     "type": "subjects",
+     "page": 6
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/f68/xqhh07qp40z3mfi8lraxt53842qlw772.pdf",
+   "protocol_sha256": "69510b182a2499c434d38cc3b65db25a21fdc6ae5942ed2002de453fe1ab658e",
+   "team_event": true
+  },
+  "fo2026_perv_ufo_prod": {
+   "event_id": "fo2026_perv_ufo_prod",
+   "title": "Первенство Уральского федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_perv",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000018059204",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "youth_u19",
+   "fo": "УФО",
+   "fo_subjects_total": 6,
+   "subjects_total": 1,
+   "participants_total": 4,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 9
+    },
+    {
+     "type": "subjects",
+     "page": 10
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/f68/xqhh07qp40z3mfi8lraxt53842qlw772.pdf",
+   "protocol_sha256": "69510b182a2499c434d38cc3b65db25a21fdc6ae5942ed2002de453fe1ab658e",
+   "team_event": true
+  },
+  "fo2026_perv_pfo_prod": {
+   "event_id": "fo2026_perv_pfo_prod",
+   "title": "Первенство Приволжского федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_perv",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000018059205",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "youth_u19",
+   "fo": "ПФО",
+   "fo_subjects_total": 14,
+   "subjects_total": 4,
+   "participants_total": 17,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 12
+    },
+    {
+     "type": "subjects",
+     "page": 13
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/f68/xqhh07qp40z3mfi8lraxt53842qlw772.pdf",
+   "protocol_sha256": "69510b182a2499c434d38cc3b65db25a21fdc6ae5942ed2002de453fe1ab658e",
+   "team_event": true
+  },
+  "fo2026_perv_sfo_prod": {
+   "event_id": "fo2026_perv_sfo_prod",
+   "title": "Первенство Сибирского федерального округа 2026 — программирование продуктовое",
+   "evsk_status": "fo_perv",
+   "stage": "final",
+   "discipline": "программирование продуктовое",
+   "ekp_no": "2101000018059203",
+   "date_start": "2026-09-10",
+   "date_end": "2026-09-18",
+   "venue": "онлайн",
+   "age_group": "youth_u19",
+   "fo": "СФО",
+   "fo_subjects_total": 10,
+   "subjects_total": 1,
+   "participants_total": 5,
+   "judges": {
+    "ВК": 2,
+    "1К": 2,
+    "2К": 2
+   },
+   "certificates": [
+    {
+     "type": "judges",
+     "page": 16
+    },
+    {
+     "type": "subjects",
+     "page": 17
+    }
+   ],
+   "check": "model",
+   "note": "реквизиты из разметки страниц моделью; ЧСЗФО, ПЦФО и ПСФО сверены глазами",
+   "protocol_url": "https://fsp-russia.ru/upload/iblock/f68/xqhh07qp40z3mfi8lraxt53842qlw772.pdf",
+   "protocol_sha256": "69510b182a2499c434d38cc3b65db25a21fdc6ae5942ed2002de453fe1ab658e",
+   "team_event": true
+  }
+ },
+ "page_map": {
+  "h77wns4jpn7z3pmkrm0azxfye6era08y.pdf": [
+   {
+    "pages": [
+     1,
+     7
+    ],
+    "event_id": "kr2025_algo_stage",
+    "page_type": "protocol"
+   }
+  ],
+  "txbuswvkginckkbtbwtkata1wbfukqda.pdf": [
+   {
+    "pages": [
+     1,
+     2
+    ],
+    "event_id": "kr2025_prod_stage",
+    "page_type": "protocol"
+   }
+  ],
+  "9uxtofnr07t1n3lha1o0ku1anbqndqe1.pdf": [
+   {
+    "pages": [
+     1,
+     2
+    ],
+    "event_id": "kr2025_ib_stage",
+    "page_type": "protocol"
+   }
+  ],
+  "f4ikw0r1e2qwmvt3usudy5ve81r3ykrf.pdf": [
+   {
+    "pages": [
+     1,
+     1
+    ],
+    "event_id": "kr2025_robo_stage",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     1,
+     1
+    ],
+    "event_id": "kr2025_robo_stage",
+    "page_type": "protocol"
+   }
+  ],
+  "8ma6l935b05m4q88wi5n24ne23p7qbya.pdf": [
+   {
+    "pages": [
+     1,
+     5
+    ],
+    "event_id": "kr2025_prod_final",
+    "page_type": "protocol"
+   }
+  ],
+  "5hs99w6a2n362vlqnonn51110vlhkvc5.pdf": [
+   {
+    "pages": [
+     1,
+     5
+    ],
+    "event_id": "kr2025_ib_final",
+    "page_type": "protocol"
+   }
+  ],
+  "go7v4ekr13s1wwepx7poocbxgxd2u92i.pdf": [
+   {
+    "pages": [
+     1,
+     2
+    ],
+    "event_id": "kr2025_algo_final",
+    "page_type": "protocol"
+   }
+  ],
+  "tb1vnqokiid4fiwdb40evznavplvmysg.pdf": [
+   {
+    "pages": [
+     1,
+     1
+    ],
+    "event_id": "chr2025_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     2,
+     2
+    ],
+    "event_id": "chr2025_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     3,
+     5
+    ],
+    "event_id": "chr2025_prod",
+    "page_type": "protocol"
+   }
+  ],
+  "rof2o18vujo5me8hfep08nn3bp6sd3lv.pdf": [
+   {
+    "pages": [
+     1,
+     10
+    ],
+    "event_id": "kr2026_algo_stage",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     11,
+     11
+    ],
+    "event_id": "kr2026_algo_stage",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     12,
+     12
+    ],
+    "event_id": "kr2026_algo_stage",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     13,
+     13
+    ],
+    "event_id": "kr2026_algo_stage",
+    "page_type": "certificate_judges"
+   }
+  ],
+  "f0gja1njckgfwu6heobl1o3z4021wlpg.pdf": [
+   {
+    "pages": [
+     1,
+     13
+    ],
+    "event_id": "kr2026_algo_stage",
+    "page_type": "protocol"
+   }
+  ],
+  "f8mtqy9398owua73i24f999rly5fovnf.pdf": [
+   {
+    "pages": [
+     1,
+     7
+    ],
+    "event_id": "kr2026_prod_stage",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     8,
+     8
+    ],
+    "event_id": "kr2026_prod_stage",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     9,
+     9
+    ],
+    "event_id": "kr2026_prod_stage",
+    "page_type": "certificate_subjects"
+   }
+  ],
+  "e6rp6ekcljtfofzw99bao13a8mpav8i9.pdf": [
+   {
+    "pages": [
+     1,
+     6
+    ],
+    "event_id": "kr2026_sib_stage",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     7,
+     7
+    ],
+    "event_id": "kr2026_sib_stage",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     8,
+     8
+    ],
+    "event_id": "kr2026_sib_stage",
+    "page_type": "certificate_judges_other_event"
+   },
+   {
+    "pages": [
+     9,
+     9
+    ],
+    "event_id": "kr2026_sib_stage",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     10,
+     10
+    ],
+    "event_id": "kr2026_sib_stage",
+    "page_type": "certificate_subjects"
+   }
+  ],
+  "p3ikqnt1g9iw1kvczvxgv5qjhv2x9tya.pdf": [
+   {
+    "pages": [
+     1,
+     1
+    ],
+    "event_id": "kr2026_bas_stage",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     2,
+     2
+    ],
+    "event_id": "kr2026_bas_stage",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     3,
+     4
+    ],
+    "event_id": "kr2026_bas_stage",
+    "page_type": "protocol"
+   }
+  ],
+  "us9qvdfvm0kwathyo67wjuvje8c9v1ra.pdf": [
+   {
+    "pages": [
+     1,
+     1
+    ],
+    "event_id": "kr2026_robo_stage",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     2,
+     2
+    ],
+    "event_id": "kr2026_robo_stage",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     3,
+     6
+    ],
+    "event_id": "kr2026_robo_stage",
+    "page_type": "protocol"
+   }
+  ],
+  "15a3exjee1npp1vux0sl5qborm4n6q3r.pdf": [
+   {
+    "pages": [
+     1,
+     1
+    ],
+    "event_id": "kf2026_sib_stage",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     1,
+     1
+    ],
+    "event_id": "kf2026_sib_final",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     2,
+     2
+    ],
+    "event_id": "kf2026_sib_stage",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     2,
+     2
+    ],
+    "event_id": "kf2026_sib_final",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     3,
+     3
+    ],
+    "event_id": "kf2026_sib_stage",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     4,
+     4
+    ],
+    "event_id": "kf2026_sib_stage",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     5,
+     70
+    ],
+    "event_id": "kf2026_sib_stage",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     71,
+     75
+    ],
+    "event_id": "kf2026_sib_final",
+    "page_type": "protocol"
+   }
+  ],
+  "e5miei2aikivxs93d6qz2iqfnfaf0xp1.pdf": [
+   {
+    "pages": [
+     1,
+     19
+    ],
+    "event_id": "sbornaya_rf_2026",
+    "page_type": "protocol"
+   }
+  ],
+  "u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf": [
+   {
+    "pages": [
+     1,
+     1
+    ],
+    "event_id": "fo2026_champ_szfo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     2,
+     2
+    ],
+    "event_id": "fo2026_champ_szfo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     3,
+     3
+    ],
+    "event_id": "fo2026_champ_szfo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     4,
+     4
+    ],
+    "event_id": "fo2026_champ_skfo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     5,
+     5
+    ],
+    "event_id": "fo2026_champ_skfo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     6,
+     6
+    ],
+    "event_id": "fo2026_champ_skfo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     7,
+     7
+    ],
+    "event_id": "fo2026_champ_sfo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     8,
+     8
+    ],
+    "event_id": "fo2026_champ_sfo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     9,
+     12
+    ],
+    "event_id": "fo2026_champ_sfo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     13,
+     13
+    ],
+    "event_id": "fo2026_champ_ufo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     14,
+     14
+    ],
+    "event_id": "fo2026_champ_ufo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     15,
+     15
+    ],
+    "event_id": "fo2026_champ_ufo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     16,
+     16
+    ],
+    "event_id": "fo2026_champ_pfo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     17,
+     17
+    ],
+    "event_id": "fo2026_champ_pfo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     18,
+     21
+    ],
+    "event_id": "fo2026_champ_pfo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     22,
+     22
+    ],
+    "event_id": "fo2026_champ_cfo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     23,
+     23
+    ],
+    "event_id": "fo2026_champ_cfo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     24,
+     26
+    ],
+    "event_id": "fo2026_champ_cfo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     27,
+     27
+    ],
+    "event_id": "fo2026_champ_yufo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     28,
+     28
+    ],
+    "event_id": "fo2026_champ_yufo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     29,
+     32
+    ],
+    "event_id": "fo2026_champ_yufo_prod",
+    "page_type": "protocol"
+   }
+  ],
+  "xqhh07qp40z3mfi8lraxt53842qlw772.pdf": [
+   {
+    "pages": [
+     1,
+     1
+    ],
+    "event_id": "fo2026_perv_cfo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     2,
+     2
+    ],
+    "event_id": "fo2026_perv_cfo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     3,
+     4
+    ],
+    "event_id": "fo2026_perv_cfo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     5,
+     5
+    ],
+    "event_id": "fo2026_perv_yufo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     6,
+     6
+    ],
+    "event_id": "fo2026_perv_yufo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     7,
+     8
+    ],
+    "event_id": "fo2026_perv_yufo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     9,
+     9
+    ],
+    "event_id": "fo2026_perv_ufo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     10,
+     10
+    ],
+    "event_id": "fo2026_perv_ufo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     11,
+     11
+    ],
+    "event_id": "fo2026_perv_ufo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     12,
+     12
+    ],
+    "event_id": "fo2026_perv_pfo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     13,
+     13
+    ],
+    "event_id": "fo2026_perv_pfo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     14,
+     15
+    ],
+    "event_id": "fo2026_perv_pfo_prod",
+    "page_type": "protocol"
+   },
+   {
+    "pages": [
+     16,
+     16
+    ],
+    "event_id": "fo2026_perv_sfo_prod",
+    "page_type": "certificate_judges"
+   },
+   {
+    "pages": [
+     17,
+     17
+    ],
+    "event_id": "fo2026_perv_sfo_prod",
+    "page_type": "certificate_subjects"
+   },
+   {
+    "pages": [
+     18,
+     18
+    ],
+    "event_id": "fo2026_perv_sfo_prod",
+    "page_type": "protocol"
+   }
+  ]
+ }
+}

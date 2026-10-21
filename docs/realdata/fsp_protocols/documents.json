@@ -1,0 +1,350 @@
+{
+ "source_page": "https://fsp-russia.ru/about/documents/",
+ "downloaded_at": "2026-10-21",
+ "stored_on_server": "/opt/spectrek_fsp/data_local/fsp_protocols/src/ (вне git)",
+ "documents": [
+  {
+   "file": "z7lkm1z1clqnt0grv9xfvciytni5wltf.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/a47/z7lkm1z1clqnt0grv9xfvciytni5wltf.pdf",
+   "label": "+7 (499) 678-03-05 125047, г. Москва, 2-я Брестская, д.8, этаж 9 ru en Документы Учредительные документы Нормативные документы ЕВСК ФСП 2024",
+   "sha256": "fe014588f02a6dc9c296cd05dbf5a77c17528a63c629993de42b4bb73fced7b6",
+   "bytes": 1402701
+  },
+  {
+   "file": "d4faed9gs4wnztslhzqii3zi4vn5cgrv.doc",
+   "url": "https://fsp-russia.ru/upload/iblock/869/d4faed9gs4wnztslhzqii3zi4vn5cgrv.doc",
+   "label": "ЕВСК от 22.04.2025",
+   "sha256": "9f944bfdf93f8d404879a34ad01d6ad60b2f6489b03868655b65bee259fe8c17",
+   "bytes": 489472
+  },
+  {
+   "file": "kcf7c5gmd5c5ddt8bu5eu4xd9c9vq7i7.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/839/kcf7c5gmd5c5ddt8bu5eu4xd9c9vq7i7.pdf",
+   "label": "Положение об обработке персональных данных",
+   "sha256": "9203a9125d44e05bd2b770ce282010fcb9fd5cc2dd4e267868615b639915dc02",
+   "bytes": 4740145
+  },
+  {
+   "file": "63qf8xdxzbur6g55btxgamokgvts0zdz.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/199/63qf8xdxzbur6g55btxgamokgvts0zdz.pdf",
+   "label": "лификационных требований к присвоению соответствующих квалификационных категорий спортивных судей по виду спорта спортивное программирование",
+   "sha256": "63bf8141db8d442891ccd7eb174848bbacf3836fc2693881d8de9c15aad4733f",
+   "bytes": 786708
+  },
+  {
+   "file": "v5g2i62pfw5sa8pra2t395w0kwe8zql2.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/8f5/v5g2i62pfw5sa8pra2t395w0kwe8zql2.pdf",
+   "label": "Приказ Об утверждении правил вида спорта спортивное программирование",
+   "sha256": "d87d6597ed42dd80ab0903b3a5119f6c19cdeef4e2f6c6415a89c6a4ea4018bc",
+   "bytes": 4110682
+  },
+  {
+   "file": "oo8ko76ythpa1ud9r4ow1528xzhgwat7.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/804/oo8ko76ythpa1ud9r4ow1528xzhgwat7.pdf",
+   "label": "Приказ об отмене доверенностей",
+   "sha256": "29468e046de7bca335a28c49fc4dcc5f747caa533c8658881b9f89b7f24b8d20",
+   "bytes": 183740
+  },
+  {
+   "file": "7ydkxzf69xg8nzdpj1wi9fgl7iq9zuy9.docx",
+   "url": "https://fsp-russia.ru/upload/iblock/f06/7ydkxzf69xg8nzdpj1wi9fgl7iq9zuy9.docx",
+   "label": "Целевые отчисления от азартных игр Распределение отчислений ЕРАИ протокол 31.01.2025",
+   "sha256": "6b7c6b8ab72a536941773f8e2c4a12fea66b44a3c992d7ce26ffaec2eaa9ceb3",
+   "bytes": 21012
+  },
+  {
+   "file": "9c8a8u3660m760mh5ubntv6q0xrvv8vz.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/45a/9c8a8u3660m760mh5ubntv6q0xrvv8vz.pdf",
+   "label": "Выписка из протокола №21 об утверждении распределения денежных средств, полученных ОФСОО \"ФСП\" в виде целевых отчислений от азартных игр",
+   "sha256": "e3eb51351c066f2378296a08ff36238fd0a5a85d7f58a9a85ebbfde31e39fcbc",
+   "bytes": 1439690
+  },
+  {
+   "file": "ltjmxkmgrusf1eca0ebxdpdziv5106ho.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/ff4/ltjmxkmgrusf1eca0ebxdpdziv5106ho.pdf",
+   "label": "Решение Правления ОФСОО ФСП от 16.08.2024",
+   "sha256": "ee295a182ba51ac13bfddb58d59dd60759455b74f2d7f84e88e5211ebf193115",
+   "bytes": 117677
+  },
+  {
+   "file": "bwbm90m2epzub8cwswpwnvsp4jgl9p2l.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/762/bwbm90m2epzub8cwswpwnvsp4jgl9p2l.pdf",
+   "label": "Решение правления от 24 ноября 2023 г.№13",
+   "sha256": "5417287ec98494b2eb98cd0ab407d92050cb04d95f481545660a1a849d2302dd",
+   "bytes": 385857
+  },
+  {
+   "file": "nojgxj3r45osow0eltz35hygnc0iyilj.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/b8b/nojgxj3r45osow0eltz35hygnc0iyilj.pdf",
+   "label": "Документы к соревнованиям Спортивное программирование изменение 5",
+   "sha256": "17aac8ec1c22da8b39eff4924a373484920c3d1c08e2f18ad109a812807f2806",
+   "bytes": 636747
+  },
+  {
+   "file": "zdzr8uvpdp2ntdvytp15n7ebbtpfyym6.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/23e/zdzr8uvpdp2ntdvytp15n7ebbtpfyym6.pdf",
+   "label": "Спортивное программирование изменение 4",
+   "sha256": "e9441ce2cf61cf27c02b1e6c8bc0bddc418fbd94fb243b89a269d4b611345c10",
+   "bytes": 1036742
+  },
+  {
+   "file": "4mgtmq08bwur1leejqcvc9kdq6sbkij5.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/5b5/4mgtmq08bwur1leejqcvc9kdq6sbkij5.pdf",
+   "label": "РЕГЛАМЕНТ Кубка России по спортивному программированию в дисциплине \"программирование робототехники\"",
+   "sha256": "23d21a49e71d1541e32918aeadcdb5cf11f57d4365b4f495890640e82bef70eb",
+   "bytes": 10393182
+  },
+  {
+   "file": "jfyfe6oxp4u4gnp7w3hn3qd12ju2oqeh.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/07d/jfyfe6oxp4u4gnp7w3hn3qd12ju2oqeh.pdf",
+   "label": "Положение о межрегиональных и всероссийских официальных спортивных",
+   "sha256": "25233294d6bdb786c7eded80197dda5254a395b122f0e3be73bac65a49855661",
+   "bytes": 1203035
+  },
+  {
+   "file": "yodtck730xp93dsbe04da6htnbk4gvmd.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/56a/yodtck730xp93dsbe04da6htnbk4gvmd.pdf",
+   "label": "Спортивное программирование изменение 1",
+   "sha256": "c1a7ce2840e6efc1d2b51656595a32a5d18ea5749b2f8b0f8274faab458b953c",
+   "bytes": 531157
+  },
+  {
+   "file": "hzytwlfofgx3qz0u9b3bpemwzw1o2cag.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/bea/hzytwlfofgx3qz0u9b3bpemwzw1o2cag.pdf",
+   "label": "Спортивное программирование изменение 2",
+   "sha256": "433662eea7bcee7fd40d917c3c654062776dc2fc787b7073ad99552dcdd48a97",
+   "bytes": 619130
+  },
+  {
+   "file": "jjbzqbgw4vnw9e3m70d9shx3mzgp0aop.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/dcc/jjbzqbgw4vnw9e3m70d9shx3mzgp0aop.pdf",
+   "label": "Спортивное программирование изменение 3",
+   "sha256": "7976c34dcaea9ecc346a721ec717647ba63a4f1e0f87070644c5905af4d673ec",
+   "bytes": 504330
+  },
+  {
+   "file": "mjdrxv11jeydplbjq351etsq644pq6se.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/97d/mjdrxv11jeydplbjq351etsq644pq6se.pdf",
+   "label": "Регламент КР Алгоритмика 2025",
+   "sha256": "95ebd9c6eabd16cd9b67f17ed2047256d76fde2c1f88ee783d7dd8a29e88cd89",
+   "bytes": 9428615
+  },
+  {
+   "file": "e5miei2aikivxs93d6qz2iqfnfaf0xp1.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/503/e5miei2aikivxs93d6qz2iqfnfaf0xp1.pdf",
+   "label": "Сборная России Список сборных команд РФ по спортивному программированию на 2026 год",
+   "sha256": "6835340c7b156d47749f57a0552157c5ba395125bf848728acff5d07b9bbe2f0",
+   "bytes": 1676996
+  },
+  {
+   "file": "ozdwlgqmccq3ik47j2ctd7aqpv1mcxrr.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/31b/ozdwlgqmccq3ik47j2ctd7aqpv1mcxrr.pdf",
+   "label": "Разное Порядок уплаты членских взносов",
+   "sha256": "8437323698e329bf20a30c5497d7bbd413fd1f9d39201d662980be0d9fe633c9",
+   "bytes": 201638
+  },
+  {
+   "file": "tb1vnqokiid4fiwdb40evznavplvmysg.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/138/tb1vnqokiid4fiwdb40evznavplvmysg.pdf",
+   "label": "Чемпионат России 2025 Итоговые протоколы ЧР-2025 Программирование Продуктовое",
+   "sha256": "19137f97f68cf0952371ff97ee0e4e8554b6ae8ddb73238338107865c614ad74",
+   "bytes": 2302512
+  },
+  {
+   "file": "5hs99w6a2n362vlqnonn51110vlhkvc5.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/27f/5hs99w6a2n362vlqnonn51110vlhkvc5.pdf",
+   "label": "Итоговый протокол финал ИБ",
+   "sha256": "b78b97534fb42fdf6b24a4ffcaa750d769e098b8acb2d6ab26e6cbdb1ded22ad",
+   "bytes": 2366615
+  },
+  {
+   "file": "g6txm9cku30ktl7o93u8xw40kpjv9kin.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/058/g6txm9cku30ktl7o93u8xw40kpjv9kin.pdf",
+   "label": "СПРАВКА о составе и квалификации судейской коллегии отборочного этапа",
+   "sha256": "d39e26a93cba1bbc6729976eccf8f519de8c5f904638f5f2b8681936b49b5850",
+   "bytes": 542038
+  },
+  {
+   "file": "f4ikw0r1e2qwmvt3usudy5ve81r3ykrf.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/b0d/f4ikw0r1e2qwmvt3usudy5ve81r3ykrf.pdf",
+   "label": "ИТОГОВЫЙ ПРОТОКОЛ отборочного этапа Кубка России по спортивному программированию \"робототехника\"",
+   "sha256": "57f8a678214e175f1615558432f8b270673e2d0ad750683b1ce5e1c94795e3f2",
+   "bytes": 695629
+  },
+  {
+   "file": "tcwdz7r278a2ag9tfs30wx0uhmbkyt3e.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/830/tcwdz7r278a2ag9tfs30wx0uhmbkyt3e.pdf",
+   "label": "Справка о количестве субъектов Хакатон",
+   "sha256": "e066af6ba9c16a69a31c2eda4d6f62f1a96025a30e4cf055aeb1aca4b9d5642f",
+   "bytes": 194722
+  },
+  {
+   "file": "dxry6o6q7cupi2869xufoyj5xmpd6oxl.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/5b3/dxry6o6q7cupi2869xufoyj5xmpd6oxl.pdf",
+   "label": "Справка о количестве субъектов ИБ",
+   "sha256": "40170f42571aaf18104f5075b5f9e0bed83c9db4fd5e99be91b0806de117e331",
+   "bytes": 805986
+  },
+  {
+   "file": "7e26ftguiuunswmt1d7njeoqq0ykg2cs.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/456/7e26ftguiuunswmt1d7njeoqq0ykg2cs.pdf",
+   "label": "Справка о количестве субъектов КР АП",
+   "sha256": "ea8ea6e1fefa8858487bd0b03ff44cea49b588faa9b8fc186229cd397abf1560",
+   "bytes": 886840
+  },
+  {
+   "file": "h77wns4jpn7z3pmkrm0azxfye6era08y.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/969/h77wns4jpn7z3pmkrm0azxfye6era08y.pdf",
+   "label": "Итоговый протокол отборочного этапа без состава Алгоритмика 2",
+   "sha256": "b535041524235cdba12b1d4bbfe316270fa127c46118d8acc1007717b34b203d",
+   "bytes": 1288697
+  },
+  {
+   "file": "txbuswvkginckkbtbwtkata1wbfukqda.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/6cb/txbuswvkginckkbtbwtkata1wbfukqda.pdf",
+   "label": "Итоговый протокол отборочного этапа без состава Хакатон",
+   "sha256": "2109a051d1a1e2403d66f92bf07d28ec548b2fbca472f9b1c9fe1390b840aa85",
+   "bytes": 462697
+  },
+  {
+   "file": "9uxtofnr07t1n3lha1o0ku1anbqndqe1.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/922/9uxtofnr07t1n3lha1o0ku1anbqndqe1.pdf",
+   "label": "Итоговый протокол отборочного этапа ИБ",
+   "sha256": "43d3404d11a81e48603aa3b242df85c5940748eb9c8d62dea0d95dcaa7bec02e",
+   "bytes": 533066
+  },
+  {
+   "file": "xmaz6tfu1s1i4npv4cov6i8tx9uih491.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/669/xmaz6tfu1s1i4npv4cov6i8tx9uih491.pdf",
+   "label": "Справка о составе СК КР финал Хакатон",
+   "sha256": "3153547a02cd6d2e525639b216c52033c0b7fe413ca857cd1725c0054b2d8fba",
+   "bytes": 600633
+  },
+  {
+   "file": "ioj8xp1kj123khtif177ghkajz37rlvt.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/ace/ioj8xp1kj123khtif177ghkajz37rlvt.pdf",
+   "label": "Справка о составе СК КР финал ИБ",
+   "sha256": "a5ba2a7dfc21d2335a5c91c1b8126036f193ffc4539e93f8fbd562bbe3f05d4e",
+   "bytes": 602209
+  },
+  {
+   "file": "iyazju5ylp8x0mh3dqlqf0iymppdonff.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/0c0/iyazju5ylp8x0mh3dqlqf0iymppdonff.pdf",
+   "label": "Справка о составе СК КР финал Алгоритмика",
+   "sha256": "7a7ad97cab15185ba2077fca2000b716b792dc08b1c9c290e48c64ab4b29849e",
+   "bytes": 579586
+  },
+  {
+   "file": "8ma6l935b05m4q88wi5n24ne23p7qbya.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/f5e/8ma6l935b05m4q88wi5n24ne23p7qbya.pdf",
+   "label": "ИТОГОВЫЙ ПРОТОКОЛ Кубка России Хакатон",
+   "sha256": "f34df368c2170f2a9df7fe98756b7ecf45160cd76df787bd3a220fcf8ba84b51",
+   "bytes": 2444655
+  },
+  {
+   "file": "go7v4ekr13s1wwepx7poocbxgxd2u92i.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/2fd/go7v4ekr13s1wwepx7poocbxgxd2u92i.pdf",
+   "label": "ИТОГОВЫЙ ПРОТОКОЛ Кубка России Алгоритмика",
+   "sha256": "efdcfcbb860bb402b862a68b17ce1a361f7ad13e2e6e6dbb09dc4cbcac578b8b",
+   "bytes": 994165
+  },
+  {
+   "file": "us9qvdfvm0kwathyo67wjuvje8c9v1ra.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/092/us9qvdfvm0kwathyo67wjuvje8c9v1ra.pdf",
+   "label": "Чемпионат России 2026 Кубок России 2026 Протокол отборочного этапа Кубка России робототехника 2026 справка",
+   "sha256": "6c712783491a685a6deb4b2be2786c803ff9a710c75549b6f3429465a00a8b1b",
+   "bytes": 27500255
+  },
+  {
+   "file": "f8mtqy9398owua73i24f999rly5fovnf.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/120/f8mtqy9398owua73i24f999rly5fovnf.pdf",
+   "label": "Протокол отборочного этапа Кубка России продуктовое 2026 справка",
+   "sha256": "df8be9f13ab7bafbc8b09bbbf1fa1331b6e387d72a61346a5b8cbe2146bd0e99",
+   "bytes": 892148
+  },
+  {
+   "file": "lucj0oal23wqbfre9cawz0xxlyduplob.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/81b/lucj0oal23wqbfre9cawz0xxlyduplob.pdf",
+   "label": "Положение Кубка России по спортивному программированию инфобез",
+   "sha256": "1f59362e0b8e824d5fa9121f528bbdb2c75fef074be2e1e8392f6a02f22e85c2",
+   "bytes": 2232234
+  },
+  {
+   "file": "p3ikqnt1g9iw1kvczvxgv5qjhv2x9tya.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/5c8/p3ikqnt1g9iw1kvczvxgv5qjhv2x9tya.pdf",
+   "label": "Протокол отборочного этапа Кубка России БАС 2026 справки по ГСК",
+   "sha256": "abd920276fb25dc8a1748480bab5ff8e6edf1da7f33f824d7c2992c0d18cb2f0",
+   "bytes": 5320236
+  },
+  {
+   "file": "l5c2c29h05sy3ifo36dgr0mm9mpi4ssn.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/7bc/l5c2c29h05sy3ifo36dgr0mm9mpi4ssn.pdf",
+   "label": "Спортивное программирование изменение 1",
+   "sha256": "53766899f820950695cbef8022366b95ab0f136efc4a503f9880615f3ae5a0de",
+   "bytes": 1154406
+  },
+  {
+   "file": "e6rp6ekcljtfofzw99bao13a8mpav8i9.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/9db/e6rp6ekcljtfofzw99bao13a8mpav8i9.pdf",
+   "label": "Протокол отборочного этапа Кубка России СИБ 2026 справка о ГСК субъектах",
+   "sha256": "213ed3143a947d745ebbf2028e306c4e70d78da743aceb17a4488bdced78bfaa",
+   "bytes": 3433319
+  },
+  {
+   "file": "8zl0rvumvllbcmt2gd4udlmt1hfjfwks.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/2ca/8zl0rvumvllbcmt2gd4udlmt1hfjfwks.pdf",
+   "label": "РЕГЛАМЕНТ Кубка России по спортивному программированию в дисциплине программирование алгоритмическое 2026",
+   "sha256": "baf3e526e1afe66007dad35eb1781e957f2d2b994cc605798f6282fabd74baad",
+   "bytes": 2549494
+  },
+  {
+   "file": "rof2o18vujo5me8hfep08nn3bp6sd3lv.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/fff/rof2o18vujo5me8hfep08nn3bp6sd3lv.pdf",
+   "label": "Протокол отборочного этапа Кубка России (алгоритмика) 2026 (справка о ГСК, субъектах РФ)",
+   "sha256": "70e7058b79887517289bd87049da9b37502e941bda9316e5bfce3158a8bac447",
+   "bytes": 1714695
+  },
+  {
+   "file": "f0gja1njckgfwu6heobl1o3z4021wlpg.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/a0b/f0gja1njckgfwu6heobl1o3z4021wlpg.pdf",
+   "label": "Турнирная таблица Кубка России (алгоритмика) 2026",
+   "sha256": "149b050fd6dca60b158b16d217ed5c251c4ba496f6311f8b58553f6b1ba97f7e",
+   "bytes": 1154403
+  },
+  {
+   "file": "pzkqzwyun9rwzlcst9ehwl27kc3xw11w.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/8ae/pzkqzwyun9rwzlcst9ehwl27kc3xw11w.pdf",
+   "label": "Регламент отборочных этапов Кубка России по спортивному программированию",
+   "sha256": "b40b694d432028fe17030b7f96842ad414427a0df4bb169dda405e24ce012988",
+   "bytes": 4939269
+  },
+  {
+   "file": "15a3exjee1npp1vux0sl5qborm4n6q3r.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/ef1/15a3exjee1npp1vux0sl5qborm4n6q3r.pdf",
+   "label": "Протоколы Итоговые протоколы Кубок Федерации 2026",
+   "sha256": "002afbd666c6d8c7dc572aba14c0f1a83af659fa2263e46622156a92b33cc93c",
+   "bytes": 25231065
+  },
+  {
+   "file": "xqhh07qp40z3mfi8lraxt53842qlw772.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/f68/xqhh07qp40z3mfi8lraxt53842qlw772.pdf",
+   "label": "Протоколы ПФО 2026 программирование продуктовое",
+   "sha256": "69510b182a2499c434d38cc3b65db25a21fdc6ae5942ed2002de453fe1ab658e",
+   "bytes": 8058232
+  },
+  {
+   "file": "u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/a3d/u4g6723ljtd8cxp3fa1kfhbs01f7cfbs.pdf",
+   "label": "Протоколы ЧФО 2026 программирование продуктовое",
+   "sha256": "cc98696960d5a2180d407978bafb0f7f0daa3eb321f4a6a0272b252eee8eaf06",
+   "bytes": 14943184
+  },
+  {
+   "file": "j75vmhswllu072bzub37uv8d0r25t3j5.pdf",
+   "url": "https://fsp-russia.ru/upload/iblock/7a3/j75vmhswllu072bzub37uv8d0r25t3j5.pdf",
+   "label": "Регламенты Регламент чемпионат первенство РФ по алгоритмическому программированию",
+   "sha256": "6eb0a9dddd938d3c3785afc099db27c8ba3428fd8a2711ed316929e21b9686be",
+   "bytes": 2344810
+  }
+ ]
+}
