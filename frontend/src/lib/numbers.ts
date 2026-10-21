@@ -222,3 +222,21 @@ export function fmtNum(v: number | null | undefined, digits = 3): string {
   if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
   return Number(v).toFixed(digits).replace(".", ",");
 }
+
+/** Внешние факты о ФСП (не измерения платформы): число регионов с цитатой и источником — docs/validation/fsp_facts.json. */
+export interface FspFacts {
+  regions: number;
+  claim_ru: string;
+  source_url: string;
+  source_section_ru?: string;
+  checked_at: string;
+}
+
+export function getFspFacts(): FspFacts | null {
+  return (ANY.fsp_facts as FspFacts | undefined) ?? null;
+}
+
+/** Подбор «один в один» на открытом генераторе другого решения (А5, проверено А15): main — заголовок, exact — опция API. */
+export function getDevdev1to1(): any {
+  return ANY.external_benchmarks?.devdev_1to1 ?? null;
+}
