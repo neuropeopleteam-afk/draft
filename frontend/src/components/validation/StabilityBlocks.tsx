@@ -2,6 +2,7 @@ import { createContext, useContext, type ReactNode } from "react";
 import { DIRECTION_TITLES } from "../ui";
 import { ScrollX } from "../A11y";
 import { ProvenanceLine, type Prov } from "./Provenance";
+import { numCol } from "./numAlign";
 
 /* Блоки страницы /validation про стабильность грейда, условия симуляции, прогон «в других условиях измерения»
    и атаку утечкой по доле слитых вариантов. Данные — simulation из validation/report.json (make validate). */
@@ -29,16 +30,17 @@ function H3({ children }: { children: ReactNode }) {
 }
 
 function Table({ head, rows, strong = [] }: { head: string[]; rows: ReactNode[][]; strong?: number[] }) {
+  const nc = (j: number) => numCol(rows, j);
   return (
     <ScrollX label="Таблица" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[40rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
-          <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
+          <tr>{head.map((h, hi) => <th key={h} scope="col" className={`px-3 py-2.5 font-semibold ${nc(hi) ? "text-right" : ""}`}>{h}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
             <tr key={i} className={`border-t border-brand-night/5 ${strong.includes(i) ? "bg-brand-blush/15 font-semibold" : ""}`}>
-              {r.map((c, j) => <td key={j} className={`px-3 py-2 tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
+              {r.map((c, j) => <td key={j} className={`px-3 py-2 ${nc(j) ? "text-right" : ""} tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
             </tr>
           ))}
         </tbody>
@@ -139,7 +141,7 @@ export function RetestSection({ sim }: { sim: any }) {
       <H3>Теоретический потолок совпадения при данной погрешности</H3>
       <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
         Даже идеальный тест с погрешностью SE даёт при повторе два независимых измерения θ ± SE, и кандидат у порога иногда попадает в соседний
-        грейд. Потолок — ожидаемое совпадение для θ ~ N(0, 1), порогов −1, 0, +1 и постоянной SE (план пилота, раздел 2.2); в таблицах выше —
+        грейд. Потолок — ожидаемое совпадение для θ ~ N(0, 1), порогов −1, 0, +1 и постоянной SE (план калибровки на ответах людей, раздел 2.2; не проведена); в таблицах выше —
         тот же расчёт с погрешностью каждой симулированной попытки.
       </p>
       <Table head={["SE одной попытки", "Надёжность", "Грейд совпал", "±1 ступень", "κ (квадр.)"]}

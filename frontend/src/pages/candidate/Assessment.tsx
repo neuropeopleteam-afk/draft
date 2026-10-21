@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEve
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { DefensePanel } from "../../components/Interview";
 import { IncidentSandbox, isIncidentTask } from "../../components/IncidentSandbox";  // Н2: пульт инцидента к архитектурным заданиям  // Я15: устная защита ответа, по желанию
-import { ThetaScale } from "../../components/ThetaScale";
+import { ThetaScale, levelWords } from "../../components/ThetaScale";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, fmtHoursText, num, pct, signed, useApi, plainText } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, fmtHoursText, num, pct, useApi, plainText } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
@@ -1061,7 +1061,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         </Alert></div>
       )}
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Оценка уровня</p><p className="mt-2 text-xl font-bold text-brand-night">{signed(r.theta)}</p><p className="text-xs text-brand-ink/65">по шкале теста · точность ± {num(r.se)}</p></div>
+        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Оценка уровня</p><p className="mt-2 text-lg font-bold text-brand-night">{levelWords(r.theta)}</p><p className="text-xs text-brand-ink/65">по ответам этого теста · числа — в «Как считается» ниже</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
@@ -1113,7 +1113,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <p className="mt-3 text-xs text-brand-ink/65">
           Оценено заданий: {r.details.n_scored}
           {r.details.extension ? ` · дотестирование: ${r.details.extension.items}` : ""}
-          {r.details.time_used_s ? ` · время: ${Math.round(r.details.time_used_s / 60)} мин` : ""}
+          {r.details.time_used_s ? ` · время: ${r.details.time_used_s < 60 ? "меньше минуты" : `${Math.round(r.details.time_used_s / 60)} мин`}` : ""}
         </p>
       )}
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " Автоматическая проверка сейчас недоступна: ответы проверяет эксперт." : ""}</Alert></div>}
