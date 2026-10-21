@@ -99,3 +99,38 @@ def test_label_scale_is_one_for_whole_file():
     b = ev(_csv(PAIRS), "csv", 5)
     assert b["label_scale"]["max"] == 1 and b["label_scale"]["threshold"] == 1
     assert {n["need_id"]: n["metrics"]["mrr"] for n in b["per_need"]}["V2"] > 0
+
+
+def test_note_has_no_internal_codes():
+    """Пояснение под результатом — понятным языком (п. 2): без уровней T0/T1/T2 и других внутренних кодов."""
+    import re
+
+    from app.modules.matching.bench_upload import sample_dataset_response
+
+    body, _, _ = sample_dataset_response("json")
+    for r in (ev(body, "json", 5), ev(_csv(PAIRS), "csv", 5)):
+        assert not re.search(r"\bT[0-3]\b|θ|IRT", r["note"]), r["note"]
+        assert "тест" in r["note"] and "резюме" in r["note"]
+
+
+def test_fairness_counts_people_not_pairs():
+    """Правило 4/5 считает людей (п. 3): каждый кандидат входит в расчёт один раз, сколько бы вакансий ни было в файле.
+
+    Раньше знаменатель — пары вакансия × кандидат (в образце 2 вакансии × 5 кандидатов = 10 «человек» из 5).
+    """
+    from app.modules.matching.bench_upload import sample_dataset_response
+
+    body, _, _ = sample_dataset_response("json")
+    r = ev(body, "json", 5)
+    f = r["fairness"]
+    assert f["unit"] == "people"
+    assert 0 < f["n_without_fsp"] + f["n_with_fsp"] <= r["n_candidates"]
+    assert f["n_with_fsp"] > 0 and f["n_without_fsp"] > 0
+    # доли — отобранные люди / люди в группе; «отобран» = в первых 5 хотя бы одной вакансии
+    top = {x["candidate_id"] for n in r["per_need"] for x in n["results"][:5]}
+    assert f["selection_rate_with_fsp"] <= 1 and f["selection_rate_without_fsp"] <= 1
+    assert all("_eligible_ids" not in n for n in r["per_need"])  # служебное поле не уходит в ответ
+    assert top  # выдача не пуста
+    # CSV пар: 6 людей, 2 вакансии — в расчёте не больше 6, а не 12
+    p = ev(_csv(PAIRS), "csv", 5)["fairness"]
+    assert p["n_without_fsp"] + p["n_with_fsp"] <= 6

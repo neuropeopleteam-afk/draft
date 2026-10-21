@@ -510,6 +510,7 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
                 "stack_desired": req.get("stack_desired") or [],
             },
             "eligible": len(eligible),
+            "_eligible_ids": [cid for cid, _ in eligible],
             "returned": len(top_k_rows),
             "labeled_pairs": len(need_labels),
             "label_coverage": round(len(need_labels) / max(len(bundles), 1), 3),
@@ -532,30 +533,35 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
             for key in ("p@5", "p@10", "ndcg@5", "ndcg@10", "mrr")
         }
 
-    # Оценка правила справедливости 4/5 для кандидатов без истории ФСП на загруженном наборе
-    with_fsp_hits, with_fsp_tot = 0, 0
-    no_fsp_hits, no_fsp_tot = 0, 0
+    # Правило справедливости 4/5 для кандидатов без истории ФСП — считаем ЛЮДЕЙ, а не пары вакансия × кандидат.
+    # В расчёт входит подтверждённый тестом кандидат, который подходил хотя бы под одну вакансию набора; «отобран» —
+    # если попал в первые 5 хотя бы одной вакансии. Раньше каждый кандидат считался столько раз, сколько вакансий в
+    # файле (в том числе чужих направлений), и доли смещались к тем, кого больше.
+    considered: set[str] = set()
+    selected: set[str] = set()
     for n in per_need:
-        top_ids = {r["candidate_id"] for r in (n.get("results") or [])[:5]}
-        for cid, b in bundles.items():
-            if b.unconfirmed:
-                continue
-            has_fsp = bool(b.achievements)
-            in_top = cid in top_ids
-            if has_fsp:
-                with_fsp_tot += 1
-                with_fsp_hits += int(in_top)
-            else:
-                no_fsp_tot += 1
-                no_fsp_hits += int(in_top)
-    rate_no_fsp = no_fsp_hits / max(no_fsp_tot, 1) if no_fsp_tot else 1.0
-    rate_with_fsp = with_fsp_hits / max(with_fsp_tot, 1) if with_fsp_tot else rate_no_fsp
+        considered.update(n.pop("_eligible_ids"))
+        selected.update(r["candidate_id"] for r in (n.get("results") or [])[:5])
+    with_fsp_hits = with_fsp_tot = no_fsp_hits = no_fsp_tot = 0
+    for cid in considered:
+        b = bundles[cid]
+        if b.unconfirmed:
+            continue
+        if b.achievements:
+            with_fsp_tot += 1
+            with_fsp_hits += int(cid in selected)
+        else:
+            no_fsp_tot += 1
+            no_fsp_hits += int(cid in selected)
+    rate_no_fsp = no_fsp_hits / no_fsp_tot if no_fsp_tot else 1.0
+    rate_with_fsp = with_fsp_hits / with_fsp_tot if with_fsp_tot else rate_no_fsp
     fairness = bias_mod.fairness_four_fifths(
         rate_no_fsp,
         rate_with_fsp,
         n_without_fsp=no_fsp_tot,
         n_with_fsp=with_fsp_tot,
     )
+    fairness["unit"] = "people"
 
     # Генерация CSV для мгновенного скачивания
     csv_buf = io.StringIO()
@@ -613,8 +619,9 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         "csv_export": "\ufeff" + csv_buf.getvalue(),
         "note": (
             "Набор обработан изолированно в памяти запроса (общая база кандидатов не изменяется). "
-            "Категория и фильтр грейда — только по подтверждённому тесту (T1); внутри категории — тест (T1), "
-            "подтверждённый стек (T1), достижения ФСП (T2) и короткие задания (T1). Самоописание (T0) в балл не входит."
+            "Категория и грейд — только по пройденному тесту; внутри категории порядок задают результат теста, "
+            "навыки, подтверждённые тестом, достижения на соревнованиях ФСП и короткие задания работодателя. "
+            "То, что кандидат написал о себе в резюме, в балл не входит."
         ),
     }
 
