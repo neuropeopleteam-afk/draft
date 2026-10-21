@@ -1,7 +1,7 @@
 {
  "what": "Пять реальных записей индекса протоколов ФСП с выводом ЕВСК, обезличенно (без ФИО, даты рождения, команды)",
- "index": "index_v4.json",
- "generated_at": "2026-10-21T07:29:04+00:00",
+ "index": "index_v5.json",
+ "generated_at": "2026-10-21T10:09:13+00:00",
  "recompute": "FSP_EVSK_DATA_DIR=<evsk_data> python3 tools/fsp_protocols/evsk_examples.py <index.json> <код> <out.json>",
  "examples": [
   {
