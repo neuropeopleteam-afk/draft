@@ -827,6 +827,10 @@ def _live_numbers_cached(_key: tuple) -> dict:
         ac = nums.get("anticheat") or {}
         if isinstance(ac.get("claim_ru"), str) and ac["claim_ru"].strip():
             out["anticheat_claim"] = ac["claim_ru"].strip()
+        bk = nums.get("bank") or {}
+        for k in ("families", "variants_20seeds", "checks", "checks_failed", "directions"):
+            if isinstance(bk.get(k), int) and not isinstance(bk.get(k), bool):
+                out["bank_" + k] = bk[k]
         dc = (nums.get("demo") or {}).get("candidates")
         if isinstance(dc, int) and dc > 0:
             out["demo_candidates"] = dc
@@ -887,10 +891,32 @@ def _grade_sentence(n: dict) -> str:
     return ("Точность грейда: " + "; ".join(parts) + ".") if parts else ""
 
 
+def _spoken_claim(t: str) -> str:
+    """Заявление из NUMBERS.json — для речи: без скобок с латиницей (поставщики моделей на сайте не называются, хеши,
+    формулы) и без технических параметров симуляции."""
+    t = re.sub(r"\s*\([^()]*[A-Za-zθ][^()]*\)", "", t or "")
+    t = re.sub(r"\s*θ\s*~\s*N\([^)]*\)[,;]?", "", t)
+    return re.sub(r"\s{2,}", " ", t).strip()
+
+
+def _bank_sentence(n: dict) -> str:
+    if not isinstance(n.get("bank_families"), int):
+        return ""
+    sp = lambda v: f"{v:,}".replace(",", "\u00a0")  # noqa: E731
+    parts = [f"Банк заданий — {sp(n['bank_families'])} параметрических семейств"]
+    if isinstance(n.get("bank_variants_20seeds"), int):
+        parts.append(f"{sp(n['bank_variants_20seeds'])} проверенных вариантов на 20 зёрнах")
+    if isinstance(n.get("bank_checks"), int):
+        parts.append(f"{sp(n['bank_checks'])} проверок ключей исполнением кода, ошибок — {n.get('bank_checks_failed', 0)}")
+    if isinstance(n.get("bank_directions"), int):
+        parts.append(f"{n['bank_directions']} ИТ-направлений")
+    return ", ".join(parts) + ". "
+
+
 def numbers_chunk() -> dict[str, str]:
     n = live_numbers()
-    grade = _grade_sentence(n)
-    anti = str(n.get("anticheat_claim") or "")
+    grade = _spoken_claim(_grade_sentence(n))
+    anti = _spoken_claim(str(n.get("anticheat_claim") or ""))
     body = (
         f"Проверка механики (/validation), «Арена метрик» (данные на {n['as_of']}). Драфт против поиска по резюме на "
         f"мире со скрытой истиной: точность первой пятёрки — {_pc(n['p5'])}, первой десятки — {_pc(n['p10'])}; "
@@ -903,6 +929,7 @@ def numbers_chunk() -> dict[str, str]:
         body += anti.rstrip(".") + ". "
     else:
         body += "Цифры по защите от списывания — на экране «Проверка» (/validation). "
+    body += _bank_sentence(n)
     body += "Это синтетика: проверяется механика, а не люди."
     return {
         "id": "validation_numbers",
@@ -1546,7 +1573,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     msgs = brain.build_messages(msg, sid=session_id, name=name, role=cur_role, path=current_path, step=step_id,
                                 touring=touring, paused=paused, screen=screen, history=history, awaiting=awaiting,
                                 last_said=last_said, accepted=accepted,
-                                numbers=numbers_chunk() if re.search(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак",
+                                numbers=numbers_chunk() if re.search(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак|банк|семейств|вариант|сколько задан",
                                                                      msg.lower()) or current_path.startswith("/validation") else None)
     ctx = {"msg": msg, "name": name, "cur_role": cur_role, "touring": touring, "paused": paused, "step_id": step_id,
            "current_path": current_path, "first_tour": first_tour, "sid": session_id}
@@ -1733,6 +1760,9 @@ def _j(d: dict) -> bytes:
     return (json.dumps(d, ensure_ascii=False) + "\n").encode()
 
 
+_GAP_B64 = base64.b64encode(b"\0" * int(24000 * 2 * 0.22)).decode()   # пауза между фразами живого ответа, 24 кГц
+
+
 def turn_stream(message: str, **kw) -> Iterator[bytes]:
     """NDJSON: ack → meta (решение) → [say (фраза) → pcm…]… → end. Быстрые команды — мгновенно, без модели. Ход модели —
     потоком: решение первой строкой ответа (meta через ≈1,8 с — экран начинает открываться), затем каждая фраза сразу
@@ -1837,6 +1867,9 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
                 if j is None:
                     break
                 t, cq = j
+                if spoken:
+                    # синтез срезает тишину в начале каждой фразы — без паузы фразы слипаются; 220 мс — как вдох
+                    yield _j({"t": "pcm", "b64": _GAP_B64})
                 spoken.append(t)
                 yield _j({"t": "say", "text": t})
                 while True:

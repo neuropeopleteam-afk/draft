@@ -95,11 +95,13 @@ def parse_head(line: str) -> dict | None:
 
 
 class Splitter:
-    """Режет поток текста на фразы для голоса: по концу предложения; длинное первое — по запятой (быстрее звук)."""
+    """Режет поток текста на фразы для голоса — только по концу предложения: разрез по запятой давал интонацию конца
+    фразы посреди предложения («а имя, | пол и возраст»), естественность важнее 0,2 с. Исключение — первое предложение
+    длиннее first_cut знаков: режется по тире не ближе 60 знаков от начала."""
 
     END = re.compile(r"([.?…!]+)(\s+|$)")
 
-    def __init__(self, first_cut: int = 70):
+    def __init__(self, first_cut: int = 260):
         self.buf = ""
         self.n = 0
         self.first_cut = first_cut
@@ -115,10 +117,10 @@ class Splitter:
                     break
             if m is None:
                 if self.n == 0 and len(self.buf) > self.first_cut:
-                    cut = self.buf.rfind(", ", 28, self.first_cut + 30)
+                    cut = self.buf.rfind(" — ", 60, self.first_cut)
                     if cut > 0:
-                        out.append(self.buf[:cut + 1].strip())
-                        self.buf = self.buf[cut + 2:]
+                        out.append(self.buf[:cut].strip())
+                        self.buf = self.buf[cut + 3:]
                         self.n += 1
                         continue
                 break
