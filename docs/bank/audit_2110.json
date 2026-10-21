@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-10-21 09:37:19",
- "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 2 --out ../docs/bank/audit_2110.json",
- "n_families": 1524,
+ "generated_at": "2026-10-21 12:20:15",
+ "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 12 --out /w/a3f/audit_2110.json",
+ "n_families": 1644,
  "n_seeds": 20,
- "seconds": 94.2,
+ "seconds": 34.9,
  "formats": {
-  "mcq_concept": 1234,
-  "predict_output": 85,
+  "mcq_concept": 1218,
+  "predict_output": 262,
   "open_answer": 57,
   "find_bug": 67,
-  "choose_fix": 59,
+  "choose_fix": 18,
   "open_book_3step": 22
  },
  "generation_errors": {
@@ -26,8 +26,8 @@
  },
  "key_constancy": {
   "threshold": 0.8,
-  "n_families_at_or_above": 17,
-  "n_families_measured": 1467,
+  "n_families_at_or_above": 11,
+  "n_families_measured": 1587,
   "families": {
    "backend.django.form_fields_bug": 1.0,
    "backend.kafka.partition_key_bug": 1.0,
@@ -35,23 +35,17 @@
    "data_eng.etl.csv_parse_bug": 1.0,
    "data_eng.etl.tz_partition_bug": 1.0,
    "data_ml.metrics.auc_pairwise_ties_bug": 1.0,
-   "devops.bash.pipefail_fix": 1.0,
    "frontend.ts.typeof_null_guard_bug": 1.0,
    "mobile.js.cursor_pagination_bug": 1.0,
    "mobile.js.version_gate_bug": 1.0,
-   "mobile.push.fcm_message_mcq": 1.0,
-   "security.auth.password_storage_fix": 1.0,
    "security.crypto.nonce_lifecycle_bug": 1.0,
-   "security.input.json_parser_bug": 1.0,
-   "security.web.cors_csrf_mcq": 1.0,
-   "qa.load.percentile_merge_mcq": 0.85,
-   "mobile.ios.appearance_mcq": 0.8
+   "security.input.json_parser_bug": 1.0
   },
   "by_format_mean": {
-   "mcq_concept": 0.1115,
-   "predict_output": 0.1047,
+   "mcq_concept": 0.107,
+   "predict_output": 0.0786,
    "find_bug": 0.3657,
-   "choose_fix": 0.1881,
+   "choose_fix": 0.0611,
    "open_book_3step": 0.0705
   }
  },
@@ -60,68 +54,68 @@
    "n_variants": 22610,
    "chance": 0.2036,
    "best_heuristic": "series_exclusion",
-   "best_accuracy": 0.2192,
+   "best_accuracy": 0.2195,
    "by_heuristic": {
     "chance": 0.2036,
-    "median": 0.2027,
-    "closest_to_mean": 0.2003,
-    "min": 0.204,
-    "max": 0.2036,
-    "roundest": 0.1944,
-    "longest": 0.2043,
-    "cluster_center": 0.2029,
-    "series_exclusion": 0.2192,
+    "median": 0.2024,
+    "closest_to_mean": 0.2036,
+    "min": 0.2046,
+    "max": 0.2043,
+    "roundest": 0.1955,
+    "longest": 0.2029,
+    "cluster_center": 0.2043,
+    "series_exclusion": 0.2195,
     "series_all_out": 0.0096
    }
   },
   "forward": {
    "n_variants": 7080,
    "chance": 0.2,
-   "best_heuristic": "median",
-   "best_accuracy": 0.2,
+   "best_heuristic": "min",
+   "best_accuracy": 0.2017,
    "by_heuristic": {
     "chance": 0.2,
-    "median": 0.2,
-    "closest_to_mean": 0.1884,
-    "min": 0.2,
-    "max": 0.2,
-    "roundest": 0.174,
-    "longest": 0.1685,
-    "cluster_center": 0.2
+    "median": 0.2007,
+    "closest_to_mean": 0.1836,
+    "min": 0.2017,
+    "max": 0.2006,
+    "roundest": 0.1767,
+    "longest": 0.1675,
+    "cluster_center": 0.2007
    }
   },
   "inverse": {
    "n_variants": 13900,
    "chance": 0.2,
-   "best_heuristic": "longest",
-   "best_accuracy": 0.2199,
+   "best_heuristic": "series_exclusion",
+   "best_accuracy": 0.2195,
    "by_heuristic": {
     "chance": 0.2,
-    "median": 0.2,
-    "closest_to_mean": 0.2007,
-    "min": 0.2,
-    "max": 0.2,
-    "roundest": 0.2028,
-    "longest": 0.2199,
-    "cluster_center": 0.2,
-    "series_exclusion": 0.2192,
+    "median": 0.1996,
+    "closest_to_mean": 0.2084,
+    "min": 0.1996,
+    "max": 0.2006,
+    "roundest": 0.2034,
+    "longest": 0.2189,
+    "cluster_center": 0.1996,
+    "series_exclusion": 0.2195,
     "series_all_out": 0.0096
    }
   },
   "other": {
    "n_variants": 1630,
    "chance": 0.25,
-   "best_heuristic": "min",
-   "best_accuracy": 0.2552,
+   "best_heuristic": "cluster_center",
+   "best_accuracy": 0.2601,
    "by_heuristic": {
     "chance": 0.25,
-    "median": 0.238,
-    "closest_to_mean": 0.2479,
-    "min": 0.2552,
-    "max": 0.2497,
-    "roundest": 0.211,
-    "longest": 0.2267,
-    "cluster_center": 0.2399
+    "median": 0.2344,
+    "closest_to_mean": 0.2497,
+    "min": 0.2589,
+    "max": 0.2528,
+    "roundest": 0.2102,
+    "longest": 0.221,
+    "cluster_center": 0.2601
    }
   }
  }

@@ -91,7 +91,9 @@ def main() -> None:
             return (f"- {tag} ({r['tree']}; {n(r['n_families'])} семейств, {r['test_seeds']} проверочных зёрен): "
                     f"«буква × ранг» {pct(ba['letter_x_value_rank']['acc'])} при шансе "
                     f"{pct(ba['letter_x_value_rank']['chance'])}, «сюжет × буква» {pct(ba['ctx_x_letter']['acc'])} при "
-                    f"{pct(ba['ctx_x_letter']['chance'])}; семейств с позиционной подсказкой > +10 п. п. — "
+                    f"{pct(ba['ctx_x_letter']['chance'])}; по форме: «ранг длины» {pct(ba['len_rank']['acc'])}, «текст» "
+                    f"{pct(ba['text']['acc'])} при шансе {pct(ba['len_rank']['chance'])}; "
+                    f"семейств с позиционной подсказкой > +10 п. п. — "
                     f"{r['positional']['n_families_excess_gt_0_10']}, ≥ 90 % — {r['positional']['n_families_acc_ge_0_90']}; "
                     f"по форме варианта > +10 п. п. — {r['form']['n_families_excess_gt_0_10']}, ≥ 90 % — "
                     f"{r['form']['n_families_acc_ge_0_90']}.")

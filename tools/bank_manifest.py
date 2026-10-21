@@ -101,7 +101,7 @@ def main() -> int:
     if pa.exists():
         pj = json.loads(pa.read_text(encoding="utf-8"))
         quality["position_attack"] = {"file": str(pa.relative_to(REPO)),
-                                      **{k: pj[k] for k in ("command", "rule", "before", "after") if k in pj}}
+                                      **{k: pj[k] for k in ("command", "rule", "before", "after", "final") if k in pj}}
     ap_ = Path(a.audit)
     if ap_.exists():
         au = json.loads(ap_.read_text(encoding="utf-8"))

@@ -436,5 +436,223 @@
     }
    ]
   }
+ },
+ "final": {
+  "tree": "банк заморозки a526dc3ee (после вывода 57 семейств по форме и набора t21 — 177); отчёт docs/bank/position_attack_2110g_final.json",
+  "n_families": 1236,
+  "train_seeds": 100,
+  "test_seeds": 300,
+  "key": "2110g",
+  "by_attack": {
+   "chance": 0.2076,
+   "letter": {
+    "acc": 0.2072,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "value_rank": {
+    "acc": 0.2048,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 339000
+   },
+   "len_rank": {
+    "acc": 0.2427,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "letter_x_value_rank": {
+    "acc": 0.2032,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 339000
+   },
+   "letter_x_len_rank": {
+    "acc": 0.239,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "text": {
+    "acc": 0.2292,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "text_x_letter": {
+    "acc": 0.2259,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "ctx_x_letter": {
+    "acc": 0.2079,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   },
+   "ctx_x_value_rank": {
+    "acc": 0.2041,
+    "chance": 0.2036,
+    "n_families": 1130,
+    "n_test_variants": 339000
+   },
+   "ctx_x_text": {
+    "acc": 0.225,
+    "chance": 0.2076,
+    "n_families": 1236,
+    "n_test_variants": 370799
+   }
+  },
+  "positional": {
+   "attacks": [
+    "letter",
+    "value_rank",
+    "letter_x_value_rank",
+    "ctx_x_letter",
+    "ctx_x_value_rank"
+   ],
+   "n_families_excess_gt_0_10": 2,
+   "n_families_excess_gt_0_25": 0,
+   "n_families_acc_ge_0_90": 0,
+   "top": [
+    {
+     "family_id": "data_eng.stream.delivery_semantics_mcq",
+     "excess": 0.173
+    },
+    {
+     "family_id": "data_eng.pg.pg_partition_pruning_mcq",
+     "excess": 0.127
+    },
+    {
+     "family_id": "data_ml.exp.duration_cuped_mcq",
+     "excess": 0.097
+    },
+    {
+     "family_id": "mobile.rn.rn_flatlist_window_mcq",
+     "excess": 0.087
+    },
+    {
+     "family_id": "devops.es_shards.senior_solve_d_k3",
+     "excess": 0.087
+    },
+    {
+     "family_id": "common.arch.availability_chain_mcq",
+     "excess": 0.083
+    },
+    {
+     "family_id": "analyst.backlog_story_points.principal_solve_ac_k5",
+     "excess": 0.077
+    },
+    {
+     "family_id": "devops.k8s_nodes.intern_fwd_k2",
+     "excess": 0.073
+    },
+    {
+     "family_id": "devops.db_iops.senior_fwd_k5",
+     "excess": 0.073
+    },
+    {
+     "family_id": "data_ml.feature_store.principal_solve_f_k5",
+     "excess": 0.073
+    },
+    {
+     "family_id": "data_eng.etl_window.middle_solve_v_k2",
+     "excess": 0.073
+    },
+    {
+     "family_id": "data_eng.ch_storage.middle_fwd_k4",
+     "excess": 0.073
+    },
+    {
+     "family_id": "common.http.status_codes",
+     "excess": 0.071
+    },
+    {
+     "family_id": "devops.egress_cost.senior_solve_h_k3",
+     "excess": 0.07
+    },
+    {
+     "family_id": "common.linux.umask_chmod",
+     "excess": 0.07
+    }
+   ]
+  },
+  "form": {
+   "attacks": [
+    "len_rank",
+    "text",
+    "letter_x_len_rank",
+    "text_x_letter",
+    "ctx_x_text"
+   ],
+   "n_families_excess_gt_0_10": 116,
+   "n_families_excess_gt_0_25": 21,
+   "n_families_acc_ge_0_90": 0,
+   "top": [
+    {
+     "family_id": "backend.api.idempotency_key_fix",
+     "excess": 0.487
+    },
+    {
+     "family_id": "devops.docker.entrypoint_cmd_mcq",
+     "excess": 0.48
+    },
+    {
+     "family_id": "backend.cache.stampede_fix",
+     "excess": 0.458
+    },
+    {
+     "family_id": "common.strategy.migration_plan_mcq",
+     "excess": 0.444
+    },
+    {
+     "family_id": "qa.lead.retry_tradeoff_mcq",
+     "excess": 0.427
+    },
+    {
+     "family_id": "backend.kafka.offset_commit_mcq",
+     "excess": 0.397
+    },
+    {
+     "family_id": "data_ml.llm.chunking_fix",
+     "excess": 0.375
+    },
+    {
+     "family_id": "analyst.principal.launch_effect_mcq",
+     "excess": 0.369
+    },
+    {
+     "family_id": "common.dist.outbox_fix",
+     "excess": 0.352
+    },
+    {
+     "family_id": "mobile.android.lifecycle_mcq",
+     "excess": 0.35
+    },
+    {
+     "family_id": "analyst.er.cardinality_ddl_fix",
+     "excess": 0.34
+    },
+    {
+     "family_id": "common.http.status_codes",
+     "excess": 0.331
+    },
+    {
+     "family_id": "mobile.perf.cold_start_mcq",
+     "excess": 0.32
+    },
+    {
+     "family_id": "security.crypto.aead_mcq",
+     "excess": 0.316
+    },
+    {
+     "family_id": "qa.principal.test_budget_mcq",
+     "excess": 0.303
+    }
+   ]
+  }
  }
 }

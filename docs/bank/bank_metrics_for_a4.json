@@ -1,76 +1,74 @@
 {
   "source": "tools/bank_manifest.py (из BANK_SYNC.json)",
-  "bank_commit": "de4c6ec",
-  "bank_code_commit": "de4c6ec4",
-  "content_hash": "9cce07fc1a29bca5",
-  "synced_at": "2026-10-21T09:38:18+00:00",
-  "n_families": 1524,
+  "bank_commit": "a526dc3",
+  "bank_code_commit": "a526dc3e",
+  "content_hash": "c6755c46ddb79f86",
+  "synced_at": "2026-10-21T12:38:48+00:00",
+  "n_families": 1644,
   "by_direction": {
     "analyst": {
-      "families": 144,
+      "families": 158,
       "canary": 0,
       "formats": {
-        "mcq_concept": 123,
-        "predict_output": 7,
+        "mcq_concept": 121,
+        "predict_output": 26,
         "open_answer": 5,
         "find_bug": 5,
-        "choose_fix": 4
+        "choose_fix": 1
       }
     },
     "backend": {
-      "families": 156,
+      "families": 168,
       "canary": 2,
       "formats": {
-        "choose_fix": 15,
-        "predict_output": 14,
+        "choose_fix": 5,
+        "predict_output": 37,
         "find_bug": 11,
         "open_answer": 6,
         "open_book_3step": 5,
-        "mcq_concept": 105
+        "mcq_concept": 104
       }
     },
     "common": {
-      "families": 175,
+      "families": 174,
       "canary": 3,
       "formats": {
         "find_bug": 4,
-        "mcq_concept": 138,
-        "predict_output": 13,
+        "mcq_concept": 136,
+        "predict_output": 18,
         "open_book_3step": 4,
         "open_answer": 8,
-        "choose_fix": 8
+        "choose_fix": 4
       }
     },
     "data_eng": {
-      "families": 153,
+      "families": 170,
       "canary": 1,
       "formats": {
         "mcq_concept": 127,
         "open_answer": 5,
         "find_bug": 4,
-        "choose_fix": 4,
-        "predict_output": 12,
+        "predict_output": 33,
         "open_book_3step": 1
       }
     },
     "data_ml": {
-      "families": 155,
+      "families": 164,
       "canary": 1,
       "formats": {
-        "mcq_concept": 123,
+        "mcq_concept": 122,
         "open_answer": 6,
         "find_bug": 9,
-        "choose_fix": 7,
-        "predict_output": 8,
+        "choose_fix": 3,
+        "predict_output": 22,
         "open_book_3step": 2
       }
     },
     "devops": {
-      "families": 148,
+      "families": 170,
       "canary": 1,
       "formats": {
-        "predict_output": 8,
-        "choose_fix": 1,
+        "predict_output": 31,
         "find_bug": 3,
         "open_book_3step": 2,
         "mcq_concept": 129,
@@ -78,49 +76,49 @@
       }
     },
     "frontend": {
-      "families": 156,
+      "families": 168,
       "canary": 2,
       "formats": {
         "mcq_concept": 123,
         "open_book_3step": 4,
         "open_answer": 8,
-        "choose_fix": 7,
-        "predict_output": 8,
+        "choose_fix": 2,
+        "predict_output": 25,
         "find_bug": 6
       }
     },
     "mobile": {
-      "families": 140,
+      "families": 146,
       "canary": 0,
       "formats": {
-        "mcq_concept": 120,
+        "mcq_concept": 114,
         "open_answer": 5,
         "find_bug": 7,
-        "choose_fix": 5,
-        "predict_output": 3
+        "predict_output": 19,
+        "choose_fix": 1
       }
     },
     "qa": {
-      "families": 150,
+      "families": 167,
       "canary": 1,
       "formats": {
         "open_book_3step": 2,
-        "mcq_concept": 126,
+        "mcq_concept": 124,
         "find_bug": 9,
-        "choose_fix": 2,
+        "choose_fix": 1,
         "open_answer": 4,
-        "predict_output": 7
+        "predict_output": 27
       }
     },
     "security": {
-      "families": 147,
+      "families": 159,
       "canary": 1,
       "formats": {
         "find_bug": 9,
-        "predict_output": 5,
-        "mcq_concept": 120,
-        "choose_fix": 6,
+        "predict_output": 24,
+        "mcq_concept": 118,
         "open_answer": 5,
+        "choose_fix": 1,
         "open_book_3step": 2
       }
     }
@@ -139,74 +137,74 @@
   ],
   "validation": {
     "summary": {
-      "n_families": 1524,
-      "n_variants_generated": 30480,
-      "n_unique_variants": 30453,
-      "n_checks": 38991,
+      "n_families": 1644,
+      "n_variants_generated": 32880,
+      "n_unique_variants": 32856,
+      "n_checks": 38031,
       "n_checks_failed": 0,
       "status": {
-        "PASS": 1441,
-        "WARN": 83
+        "PASS": 1616,
+        "WARN": 28
       },
       "n_fail": 0,
-      "n_warn": 83,
+      "n_warn": 28,
       "by_direction": {
-        "analyst": 144,
-        "backend": 156,
-        "common": 175,
-        "data_eng": 153,
-        "data_ml": 155,
-        "devops": 148,
-        "frontend": 156,
-        "mobile": 140,
-        "qa": 150,
-        "security": 147
+        "analyst": 158,
+        "backend": 168,
+        "common": 174,
+        "data_eng": 170,
+        "data_ml": 164,
+        "devops": 170,
+        "frontend": 168,
+        "mobile": 146,
+        "qa": 167,
+        "security": 159
       },
       "by_format": {
-        "mcq_concept": 1234,
-        "predict_output": 85,
+        "mcq_concept": 1218,
+        "predict_output": 262,
         "open_answer": 57,
         "find_bug": 67,
-        "choose_fix": 59,
+        "choose_fix": 18,
         "open_book_3step": 22
       },
-      "seconds": 2062.8,
-      "jobs": 2
+      "seconds": 161.5,
+      "jobs": 12
     },
     "seeds": 20,
     "verify_seeds": null,
-    "where": "Москва, контейнер a3-val2 (20 сидов на d715469a) + 20 сидов по 11 доработанных семейств на de4c6ec4",
-    "commit": "de4c6ec4",
+    "where": "под RunPod fsp-ci-2110 (main), 12 процессов; /dev/shm там с noexec — песочница сама берёт /tmp (bcdd9483)",
+    "commit": "a526dc3ee",
     "bank_unchanged_since": true
   },
   "quality": {
     "prior_a_by_format": {
-      "choose_fix:1.3": 59,
+      "choose_fix:1.3": 18,
       "find_bug:1.3": 67,
-      "mcq_concept:1": 1234,
+      "mcq_concept:1": 1218,
       "open_answer:1.3": 57,
       "open_book_3step:1.3": 22,
-      "predict_output:1.3": 85
+      "predict_output:1.3": 262
     },
     "prior_a_rule": "до калибровки на людях: a = 1,0 — выбор ответа; a = 1,3 — код, ввод ответа, открытые; параметра угадывания в банке нет (поправка 1/число вариантов — в движке)",
     "families_by_grade": {
-      "middle": 518,
-      "senior": 568,
-      "intern": 116,
-      "junior": 308,
-      "lead": 91,
-      "principal": 121
+      "middle": 495,
+      "senior": 605,
+      "intern": 212,
+      "junior": 311,
+      "lead": 88,
+      "principal": 119
     },
     "lead_principal_mcq": {
       "lead": {
-        "families": 91,
+        "families": 88,
         "mcq_concept": 36,
-        "share": 0.3956
+        "share": 0.4091
       },
       "principal": {
-        "families": 121,
-        "mcq_concept": 95,
-        "share": 0.7851
+        "families": 119,
+        "mcq_concept": 94,
+        "share": 0.7899
       }
     },
     "leak_resistance_low": [
@@ -216,17 +214,11 @@
       "data_eng.etl.csv_parse_bug",
       "data_eng.etl.tz_partition_bug",
       "data_ml.metrics.auc_pairwise_ties_bug",
-      "devops.bash.pipefail_fix",
       "frontend.ts.typeof_null_guard_bug",
-      "mobile.ios.appearance_mcq",
       "mobile.js.cursor_pagination_bug",
       "mobile.js.version_gate_bug",
-      "mobile.push.fcm_message_mcq",
-      "qa.load.percentile_merge_mcq",
-      "security.auth.password_storage_fix",
       "security.crypto.nonce_lifecycle_bug",
-      "security.input.json_parser_bug",
-      "security.web.cors_csrf_mcq"
+      "security.input.json_parser_bug"
     ],
     "lp3_families": [
       "analyst.metrics.lp3_mix_adjusted_change_output",
@@ -252,42 +244,777 @@
     ],
     "retired": {
       "lp_v2_2010": 320,
-      "readme": "backend/assessment_bank/families_retired/lp_v2_2010/README.md"
+      "readme": "backend/assessment_bank/families_retired/lp_v2_2010/README.md",
+      "form_leak_2110": 57,
+      "form_leak_2110_readme": "backend/assessment_bank/families_retired/form_leak_2110/README.md"
+    },
+    "t21": {
+      "families": 177,
+      "rule": "predict_output без вариантов ответа, лимит 120–150 с, a = 1,3, σ варианта 0,3, b — у порога грейда ±0,3 (Стажёр от −2,4); ключ — независимая модель генератора, проверка — исполнение показанного кода в песочнице",
+      "by_direction_nearest_cut": {
+        "analyst": {
+          "intern": 7,
+          "middle": 3,
+          "senior": 8,
+          "junior": 1
+        },
+        "backend": {
+          "intern": 9,
+          "senior": 7,
+          "middle": 3,
+          "junior": 4
+        },
+        "common": {
+          "junior": 1,
+          "intern": 4
+        },
+        "data_eng": {
+          "senior": 7,
+          "middle": 3,
+          "intern": 8,
+          "junior": 3
+        },
+        "data_ml": {
+          "intern": 8,
+          "senior": 6
+        },
+        "devops": {
+          "intern": 8,
+          "senior": 8,
+          "junior": 3,
+          "middle": 4
+        },
+        "frontend": {
+          "senior": 4,
+          "intern": 9,
+          "junior": 4
+        },
+        "mobile": {
+          "middle": 2,
+          "intern": 6,
+          "senior": 8
+        },
+        "qa": {
+          "intern": 9,
+          "junior": 3,
+          "senior": 6,
+          "middle": 2
+        },
+        "security": {
+          "senior": 5,
+          "junior": 3,
+          "middle": 2,
+          "intern": 9
+        }
+      },
+      "by_language": {
+        "sql": 33,
+        "python": 91,
+        "bash": 17,
+        "javascript": 36
+      },
+      "b_range": [
+        -2.1,
+        1.2
+      ],
+      "time_limit_s": [
+        120,
+        150
+      ]
+    },
+    "position_attack": {
+      "file": "docs/bank/position_attack_2110.json",
+      "command": "../tools/bank_position_attack.py --train 100 --test 100 --jobs 12 --top 60 --out /w/a3/pos_after.json",
+      "rule": "обучение на train случайных зёрнах из диапазона выдачи, проверка на test других; признаки варианта без знания предмета: буква, ранг по величине, ранг по длине, текст (цифры → #), сюжет и их пары; выбор — вариант с наибольшей долей «ключ» на обучении (ничья — доля); шанс — 1/k",
+      "before": {
+        "tree": "7b30f54d (до правки _w2010_kit)",
+        "n_families": 1293,
+        "train_seeds": 100,
+        "test_seeds": 100,
+        "key": "2110",
+        "by_attack": {
+          "chance": 0.2094,
+          "letter": {
+            "acc": 0.2323,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "value_rank": {
+            "acc": 0.2307,
+            "chance": 0.2036,
+            "n_families": 1130,
+            "n_test_variants": 113000
+          },
+          "len_rank": {
+            "acc": 0.267,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "letter_x_value_rank": {
+            "acc": 0.6294,
+            "chance": 0.2036,
+            "n_families": 1130,
+            "n_test_variants": 113000
+          },
+          "letter_x_len_rank": {
+            "acc": 0.375,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "text": {
+            "acc": 0.2587,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "text_x_letter": {
+            "acc": 0.2714,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "ctx_x_letter": {
+            "acc": 0.2631,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "ctx_x_value_rank": {
+            "acc": 0.2623,
+            "chance": 0.2036,
+            "n_families": 1130,
+            "n_test_variants": 113000
+          },
+          "ctx_x_text": {
+            "acc": 0.254,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          }
+        },
+        "positional": {
+          "attacks": [
+            "letter",
+            "value_rank",
+            "letter_x_value_rank",
+            "ctx_x_letter",
+            "ctx_x_value_rank"
+          ],
+          "n_families_excess_gt_0_10": 1108,
+          "n_families_excess_gt_0_25": 1100,
+          "n_families_acc_ge_0_90": 51,
+          "top": [
+            {
+              "family_id": "security.principal.revocation_window_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.principal.password_hash_budget_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "qa.ui.ui_explicit_wait_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "qa.principal.flaky_budget_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "qa.principal.e2e_shards_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "qa.manual.manual_pairwise_bound_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "qa.manual.manual_boundary_values_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.rn.rn_flatlist_window_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.principal.staged_rollout_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.principal.offline_queue_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "frontend.perf.principal_virtual_overscan_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "frontend.perf.principal_js_budget_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "frontend.api.rest_cursor_pagination_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "devops.sre.principal_burn_rate_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "devops.kafka.kafka_broker_disk_mcq",
+              "excess": 0.75
+            }
+          ]
+        },
+        "form": {
+          "attacks": [
+            "len_rank",
+            "text",
+            "letter_x_len_rank",
+            "text_x_letter",
+            "ctx_x_text"
+          ],
+          "n_families_excess_gt_0_10": 838,
+          "n_families_excess_gt_0_25": 277,
+          "n_families_acc_ge_0_90": 48,
+          "top": [
+            {
+              "family_id": "security.web.ssrf_allowlist_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.web.html_escape_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.web.cors_csrf_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.web.cookie_policy_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.supply.dependency_patch_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.sql.parameter_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.auth.password_storage_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "qa.load.percentile_merge_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.security.secret_storage_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.push.fcm_message_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.js.token_refresh_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.js.offline_queue_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.js.double_submit_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.js.deeplink_route_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.ios.appearance_mcq",
+              "excess": 0.75
+            }
+          ]
+        }
+      },
+      "after": {
+        "tree": "после правки _w2010_kit (ac0c5eac), до вывода семейств по форме",
+        "n_families": 1293,
+        "train_seeds": 100,
+        "test_seeds": 100,
+        "key": "2110",
+        "by_attack": {
+          "chance": 0.2094,
+          "letter": {
+            "acc": 0.2091,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "value_rank": {
+            "acc": 0.203,
+            "chance": 0.2036,
+            "n_families": 1130,
+            "n_test_variants": 113000
+          },
+          "len_rank": {
+            "acc": 0.2667,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "letter_x_value_rank": {
+            "acc": 0.2038,
+            "chance": 0.2036,
+            "n_families": 1130,
+            "n_test_variants": 113000
+          },
+          "letter_x_len_rank": {
+            "acc": 0.2617,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "text": {
+            "acc": 0.2591,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "text_x_letter": {
+            "acc": 0.2516,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "ctx_x_letter": {
+            "acc": 0.209,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          },
+          "ctx_x_value_rank": {
+            "acc": 0.2055,
+            "chance": 0.2036,
+            "n_families": 1130,
+            "n_test_variants": 113000
+          },
+          "ctx_x_text": {
+            "acc": 0.2528,
+            "chance": 0.2094,
+            "n_families": 1293,
+            "n_test_variants": 129300
+          }
+        },
+        "positional": {
+          "attacks": [
+            "letter",
+            "value_rank",
+            "letter_x_value_rank",
+            "ctx_x_letter",
+            "ctx_x_value_rank"
+          ],
+          "n_families_excess_gt_0_10": 39,
+          "n_families_excess_gt_0_25": 0,
+          "n_families_acc_ge_0_90": 0,
+          "top": [
+            {
+              "family_id": "security.deps_audit.senior_solve_wk_k3",
+              "excess": 0.14
+            },
+            {
+              "family_id": "data_eng.stream.delivery_semantics_mcq",
+              "excess": 0.14
+            },
+            {
+              "family_id": "common.amdahl.intern_fwd_k2",
+              "excess": 0.135
+            },
+            {
+              "family_id": "security.siem_storage.lead_solve_eps_k5",
+              "excess": 0.13
+            },
+            {
+              "family_id": "security.principal.revocation_window_mcq",
+              "excess": 0.13
+            },
+            {
+              "family_id": "devops.rolling_deploy.lead_solve_n_k5",
+              "excess": 0.13
+            },
+            {
+              "family_id": "data_ml.vector_index.middle_solve_pq_k2",
+              "excess": 0.13
+            },
+            {
+              "family_id": "data_eng.airflow_slots.junior_fwd_k3",
+              "excess": 0.13
+            },
+            {
+              "family_id": "common.http.status_codes",
+              "excess": 0.13
+            },
+            {
+              "family_id": "qa.flaky_pipeline.lead_solve_n_k5",
+              "excess": 0.12
+            },
+            {
+              "family_id": "mobile.perf.frame_budget_mcq",
+              "excess": 0.12
+            },
+            {
+              "family_id": "mobile.js.deeplink_route_fix",
+              "excess": 0.12
+            },
+            {
+              "family_id": "frontend.ssr_pods.middle_solve_lam_k3",
+              "excess": 0.12
+            },
+            {
+              "family_id": "frontend.offline_quota.principal_solve_s_k5",
+              "excess": 0.12
+            },
+            {
+              "family_id": "frontend.api_waterfall.middle_solve_n_k2",
+              "excess": 0.12
+            }
+          ]
+        },
+        "form": {
+          "attacks": [
+            "len_rank",
+            "text",
+            "letter_x_len_rank",
+            "text_x_letter",
+            "ctx_x_text"
+          ],
+          "n_families_excess_gt_0_10": 228,
+          "n_families_excess_gt_0_25": 77,
+          "n_families_acc_ge_0_90": 48,
+          "top": [
+            {
+              "family_id": "security.web.ssrf_allowlist_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.web.html_escape_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.web.cors_csrf_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.web.cookie_policy_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.supply.dependency_patch_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.sql.parameter_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "security.auth.password_storage_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "qa.load.percentile_merge_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.security.secret_storage_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.push.fcm_message_mcq",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.js.token_refresh_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.js.offline_queue_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.js.double_submit_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.js.deeplink_route_fix",
+              "excess": 0.75
+            },
+            {
+              "family_id": "mobile.ios.appearance_mcq",
+              "excess": 0.75
+            }
+          ]
+        }
+      },
+      "final": {
+        "tree": "банк заморозки a526dc3ee (после вывода 57 семейств по форме и набора t21 — 177); отчёт docs/bank/position_attack_2110g_final.json",
+        "n_families": 1236,
+        "train_seeds": 100,
+        "test_seeds": 300,
+        "key": "2110g",
+        "by_attack": {
+          "chance": 0.2076,
+          "letter": {
+            "acc": 0.2072,
+            "chance": 0.2076,
+            "n_families": 1236,
+            "n_test_variants": 370799
+          },
+          "value_rank": {
+            "acc": 0.2048,
+            "chance": 0.2036,
+            "n_families": 1130,
+            "n_test_variants": 339000
+          },
+          "len_rank": {
+            "acc": 0.2427,
+            "chance": 0.2076,
+            "n_families": 1236,
+            "n_test_variants": 370799
+          },
+          "letter_x_value_rank": {
+            "acc": 0.2032,
+            "chance": 0.2036,
+            "n_families": 1130,
+            "n_test_variants": 339000
+          },
+          "letter_x_len_rank": {
+            "acc": 0.239,
+            "chance": 0.2076,
+            "n_families": 1236,
+            "n_test_variants": 370799
+          },
+          "text": {
+            "acc": 0.2292,
+            "chance": 0.2076,
+            "n_families": 1236,
+            "n_test_variants": 370799
+          },
+          "text_x_letter": {
+            "acc": 0.2259,
+            "chance": 0.2076,
+            "n_families": 1236,
+            "n_test_variants": 370799
+          },
+          "ctx_x_letter": {
+            "acc": 0.2079,
+            "chance": 0.2076,
+            "n_families": 1236,
+            "n_test_variants": 370799
+          },
+          "ctx_x_value_rank": {
+            "acc": 0.2041,
+            "chance": 0.2036,
+            "n_families": 1130,
+            "n_test_variants": 339000
+          },
+          "ctx_x_text": {
+            "acc": 0.225,
+            "chance": 0.2076,
+            "n_families": 1236,
+            "n_test_variants": 370799
+          }
+        },
+        "positional": {
+          "attacks": [
+            "letter",
+            "value_rank",
+            "letter_x_value_rank",
+            "ctx_x_letter",
+            "ctx_x_value_rank"
+          ],
+          "n_families_excess_gt_0_10": 2,
+          "n_families_excess_gt_0_25": 0,
+          "n_families_acc_ge_0_90": 0,
+          "top": [
+            {
+              "family_id": "data_eng.stream.delivery_semantics_mcq",
+              "excess": 0.173
+            },
+            {
+              "family_id": "data_eng.pg.pg_partition_pruning_mcq",
+              "excess": 0.127
+            },
+            {
+              "family_id": "data_ml.exp.duration_cuped_mcq",
+              "excess": 0.097
+            },
+            {
+              "family_id": "mobile.rn.rn_flatlist_window_mcq",
+              "excess": 0.087
+            },
+            {
+              "family_id": "devops.es_shards.senior_solve_d_k3",
+              "excess": 0.087
+            },
+            {
+              "family_id": "common.arch.availability_chain_mcq",
+              "excess": 0.083
+            },
+            {
+              "family_id": "analyst.backlog_story_points.principal_solve_ac_k5",
+              "excess": 0.077
+            },
+            {
+              "family_id": "devops.k8s_nodes.intern_fwd_k2",
+              "excess": 0.073
+            },
+            {
+              "family_id": "devops.db_iops.senior_fwd_k5",
+              "excess": 0.073
+            },
+            {
+              "family_id": "data_ml.feature_store.principal_solve_f_k5",
+              "excess": 0.073
+            },
+            {
+              "family_id": "data_eng.etl_window.middle_solve_v_k2",
+              "excess": 0.073
+            },
+            {
+              "family_id": "data_eng.ch_storage.middle_fwd_k4",
+              "excess": 0.073
+            },
+            {
+              "family_id": "common.http.status_codes",
+              "excess": 0.071
+            },
+            {
+              "family_id": "devops.egress_cost.senior_solve_h_k3",
+              "excess": 0.07
+            },
+            {
+              "family_id": "common.linux.umask_chmod",
+              "excess": 0.07
+            }
+          ]
+        },
+        "form": {
+          "attacks": [
+            "len_rank",
+            "text",
+            "letter_x_len_rank",
+            "text_x_letter",
+            "ctx_x_text"
+          ],
+          "n_families_excess_gt_0_10": 116,
+          "n_families_excess_gt_0_25": 21,
+          "n_families_acc_ge_0_90": 0,
+          "top": [
+            {
+              "family_id": "backend.api.idempotency_key_fix",
+              "excess": 0.487
+            },
+            {
+              "family_id": "devops.docker.entrypoint_cmd_mcq",
+              "excess": 0.48
+            },
+            {
+              "family_id": "backend.cache.stampede_fix",
+              "excess": 0.458
+            },
+            {
+              "family_id": "common.strategy.migration_plan_mcq",
+              "excess": 0.444
+            },
+            {
+              "family_id": "qa.lead.retry_tradeoff_mcq",
+              "excess": 0.427
+            },
+            {
+              "family_id": "backend.kafka.offset_commit_mcq",
+              "excess": 0.397
+            },
+            {
+              "family_id": "data_ml.llm.chunking_fix",
+              "excess": 0.375
+            },
+            {
+              "family_id": "analyst.principal.launch_effect_mcq",
+              "excess": 0.369
+            },
+            {
+              "family_id": "common.dist.outbox_fix",
+              "excess": 0.352
+            },
+            {
+              "family_id": "mobile.android.lifecycle_mcq",
+              "excess": 0.35
+            },
+            {
+              "family_id": "analyst.er.cardinality_ddl_fix",
+              "excess": 0.34
+            },
+            {
+              "family_id": "common.http.status_codes",
+              "excess": 0.331
+            },
+            {
+              "family_id": "mobile.perf.cold_start_mcq",
+              "excess": 0.32
+            },
+            {
+              "family_id": "security.crypto.aead_mcq",
+              "excess": 0.316
+            },
+            {
+              "family_id": "qa.principal.test_budget_mcq",
+              "excess": 0.303
+            }
+          ]
+        }
+      }
     },
     "audit": {
       "file": "docs/bank/audit_2110.json",
-      "generated_at": "2026-10-21 09:37:19",
-      "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 2 --out ../docs/bank/audit_2110.json",
-      "n_families": 1524,
+      "generated_at": "2026-10-21 12:20:15",
+      "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 12 --out /w/a3f/audit_2110.json",
+      "n_families": 1644,
       "n_seeds": 20,
       "generation_errors": 0,
       "grade_in_stem": 0,
       "public_leak": 0,
-      "key_constancy_ge_0_8": 17,
+      "key_constancy_ge_0_8": 11,
       "guess_attack": {
         "all_numeric_choice": {
           "n_variants": 22610,
           "chance": 0.2036,
           "best_heuristic": "series_exclusion",
-          "best_accuracy": 0.2192
+          "best_accuracy": 0.2195
         },
         "forward": {
           "n_variants": 7080,
           "chance": 0.2,
-          "best_heuristic": "median",
-          "best_accuracy": 0.2
+          "best_heuristic": "min",
+          "best_accuracy": 0.2017
         },
         "inverse": {
           "n_variants": 13900,
           "chance": 0.2,
-          "best_heuristic": "longest",
-          "best_accuracy": 0.2199
+          "best_heuristic": "series_exclusion",
+          "best_accuracy": 0.2195
         },
         "other": {
           "n_variants": 1630,
           "chance": 0.25,
-          "best_heuristic": "min",
-          "best_accuracy": 0.2552
+          "best_heuristic": "cluster_center",
+          "best_accuracy": 0.2601
         }
       }
     },
@@ -295,23 +1022,23 @@
       "file": "docs/bank/mutation_report.json",
       "method": "мутанты эталонного решения (сравнения, ±1 к числу, + ↔ −, and ↔ or, True ↔ False) вне строк и комментариев, тесты задания без изменений; выживший мутант не «добивается»; недоступный исполнитель — вне знаменателя; эквивалентные мутанты не отделяются (оценка консервативная)",
       "mutants_per_variant_max": 8,
-      "n_families": 148,
-      "n_ref_ok": 148,
-      "n_mutants": 448,
-      "n_killed": 307,
-      "mutation_kill_rate": 0.6853,
-      "n_known_bad": 294,
-      "n_known_bad_rejected": 294,
+      "n_families": 107,
+      "n_ref_ok": 107,
+      "n_mutants": 316,
+      "n_killed": 218,
+      "mutation_kill_rate": 0.6899,
+      "n_known_bad": 183,
+      "n_known_bad_rejected": 183,
       "known_bad_reject_rate": 1.0,
-      "unsupported_runner_families": 73,
-      "elapsed_s": 16.1,
-      "generated_at": "2026-10-21 07:08:24",
+      "unsupported_runner_families": 55,
+      "elapsed_s": 23.3,
+      "generated_at": "2026-10-21 12:20:38",
       "recompute": "python3 tools/bank_mutation_check.py --seeds 1 --limit 8"
     },
     "vs_base": {
       "file": "docs/bank/bank_diff_vs_603474f.json",
       "command": "python3 tools/bank_diff_base.py --base-ref srv/integ/2010n --seeds 2",
-      "generated_at": "2026-10-21T09:38:16+00:00",
+      "generated_at": "2026-10-21T12:17:56+00:00",
       "base": {
         "ref": "srv/integ/2010n",
         "ref_commit": "9ad3f08c2",
@@ -321,71 +1048,95 @@
         "n_families_loaded": 1504
       },
       "head": {
-        "commit": "de4c6ec41",
-        "bank_tree": "9ee25c2046de",
-        "n_families_loaded": 1524
+        "commit": "a526dc3ee",
+        "bank_tree": "91c96148f88b",
+        "n_families_loaded": 1644
       },
       "added": {
-        "n": 20,
+        "n": 197,
         "groups": {
           "lp_v2": 0,
           "lp3": 20,
-          "other": 0
+          "other": 177
         },
         "by_direction": {
-          "analyst": 2,
-          "backend": 2,
-          "common": 2,
-          "data_eng": 2,
-          "data_ml": 2,
-          "devops": 2,
-          "frontend": 2,
-          "mobile": 2,
-          "qa": 2,
-          "security": 2
+          "analyst": 21,
+          "backend": 25,
+          "common": 7,
+          "data_eng": 23,
+          "data_ml": 16,
+          "devops": 25,
+          "frontend": 19,
+          "mobile": 18,
+          "qa": 22,
+          "security": 21
         },
         "by_format": {
-          "predict_output": 20
+          "predict_output": 197
         },
         "by_grade": {
+          "intern": 99,
+          "junior": 22,
           "lead": 20,
+          "middle": 19,
           "principal": 5,
-          "senior": 4
+          "senior": 63
         }
       },
       "removed": {
-        "n": 0,
+        "n": 57,
         "groups": {
           "lp_v2": 0,
           "lp3": 0,
-          "other": 0
+          "other": 57
         },
-        "by_direction": {},
-        "by_format": {},
-        "by_grade": {}
+        "by_direction": {
+          "analyst": 5,
+          "backend": 11,
+          "common": 6,
+          "data_eng": 4,
+          "data_ml": 5,
+          "devops": 1,
+          "frontend": 5,
+          "mobile": 10,
+          "qa": 3,
+          "security": 7
+        },
+        "by_format": {
+          "choose_fix": 41,
+          "mcq_concept": 16
+        },
+        "by_grade": {
+          "intern": 3,
+          "junior": 19,
+          "lead": 3,
+          "middle": 42,
+          "principal": 2,
+          "senior": 22
+        }
       },
       "common_changed": {
-        "a": 1448,
+        "a": 1406,
         "b": 1034,
-        "basis": 1504,
+        "basis": 1447,
         "grades": 353,
         "time_limit_s": 975,
-        "variants": 1173
+        "variants": 1175
       },
       "a_transitions": {
         "0.8->1.3": 1,
         "0.9->1.3": 13,
-        "1->1.3": 70,
-        "1.1->1": 12,
-        "1.1->1.3": 90,
-        "1.2->1": 30,
-        "1.2->1.3": 36,
-        "1.3->1": 54,
+        "1->1.3": 66,
+        "1.1->1": 8,
+        "1.1->1.3": 69,
+        "1.2->1": 26,
+        "1.2->1.3": 31,
+        "1.3->1": 52,
         "1.4->1": 22,
-        "1.4->1.3": 18,
+        "1.4->1.3": 17,
         "1.45->1": 428,
         "1.5->1": 50,
-        "1.5->1.3": 3,
+        "1.5->1.3": 2,
         "3->1": 621
       },
       "b_delta": {
