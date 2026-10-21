@@ -58,8 +58,9 @@ def formula_v2(weights: dict[str, float] | None = None) -> dict[str, Any]:
     from app.modules.matching import ltr
 
     w = weights or ltr.weights()
-    plus = [{"key": k, "title": ltr.TITLES[k], "pct": round(w[k] * 100)} for k in ltr.POSITIVE if w.get(k, 0) > 0]
-    minus = [{"key": k, "title": ltr.TITLES[k], "pct": round(-w[k] * 100)} for k in ltr.NEGATIVE if w.get(k, 0) < 0]
+    # знак признака «сильнее запроса» (ltr.FREE) — из обучения: показываем по фактическому знаку веса
+    plus = [{"key": k, "title": ltr.TITLES[k], "pct": round(w[k] * 100)} for k in ltr.FEATURES if w.get(k, 0) > 0]
+    minus = [{"key": k, "title": ltr.TITLES[k], "pct": round(-w[k] * 100)} for k in ltr.FEATURES if w.get(k, 0) < 0]
     meta = ltr.model()["meta"]
     return {"version": ltr.VERSION, "plus": plus, "minus": minus,
             "text": "Место в категории = " + " + ".join(f"{x['title'][:1].lower()}{x['title'][1:]} {x['pct']} %" for x in plus)
@@ -700,7 +701,7 @@ def build_explain_from_result(
                 continue
             breakdown.append({"key": key, "label": ltr.TITLES[key], "weight_pct": round(w2[key] * 100),
                               "raw_pct": round(float(raw.get(key) or 0.0) * 100),
-                              "points100": float(comps["contrib"].get(key) or 0.0), "minus": key in ltr.NEGATIVE})
+                              "points100": float(comps["contrib"].get(key) or 0.0), "minus": w2[key] < 0})
     for key in (() if breakdown else ("test", "stack_required", "stack_desired", "fsp", "probe")):
         label, default_pct = WEIGHT_LABELS[key]
         w = float(w_map.get(key, default_pct / 100.0))

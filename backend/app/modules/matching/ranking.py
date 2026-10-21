@@ -434,8 +434,9 @@ def score_candidate(b: Bundle, req: dict, weights: dict | None = None) -> tuple[
     comps = {"test": test, "stack_required": round(sreq, 3), "stack_desired": round(sdes, 3), "fsp": fsp,
              "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0,
              "grade_status": b.grade_status}
-    if ltr.enabled():
-        # match-v2: признаки только из теста, заданий и ФСП; балл — линейная модель (ltr_weights.json)
+    if ltr.enabled() and not (weights and "stack_required" in weights):
+        # match-v2: признаки только из теста, заданий и ФСП; балл — линейная модель (ltr_weights.json).
+        # Явно переданные веса формы v1 (ranking.WEIGHTS: исторический бенчмарк v1.x, learn-v1) — формула v1.
         from app.modules.catalog.seed_data import GRADE_ORDER
         from app.modules.profiles.facts import GRADE_CUTS
 
@@ -444,14 +445,17 @@ def score_candidate(b: Bundle, req: dict, weights: dict | None = None) -> tuple[
         th = t.get("theta") if has_test else None
         nxt = GRADE_ORDER[GRADE_ORDER.index(g) + 1] if g in GRADE_ORDER and GRADE_ORDER.index(g) + 1 < len(GRADE_ORDER) else None
         x = {"test": test, "margin": ltr.margin_of(th, GRADE_CUTS.get(g)) if has_test else 0.0,
-             "fsp": fsp, "required": round(sreq, 3), "desired": round(sdes, 3), "probe": probe,
+             "fsp": fsp, "required": round(sreq, 3), "desired": round(sdes, 3),
+             # задания работодателя: больше половины верно — плюс, меньше — минус, заданий нет — 0 (нейтрально:
+             # проваленное задание не должно поднимать над тем, кто его не получал)
+             "probe": round(2.0 * probe - 1.0, 4) if b.probes_t1 else 0.0,
              "failed": round(failed_w["Обязательно"], 3), "provisional": 1.0 if b.provisional else 0.0,
              "over": ltr.over_of(th, GRADE_CUTS.get(nxt) if nxt else None),
              "p_below": ltr.p_below_of(th, t.get("se"), GRADE_CUTS.get(g)) if has_test else 0.0}
         W2 = weights if (weights and "margin" in weights) else ltr.weights()
         comps.update({"margin": x["margin"], "required": x["required"], "desired": x["desired"],
                       "failed": x["failed"], "provisional_flag": x["provisional"], "over": x["over"],
-                      "p_below": x["p_below"],
+                      "p_below": x["p_below"], "probe_v2": x["probe"],
                       "contrib": ltr.contributions(x, W2)})
         return ltr.score(x, W2), comps, reasons
     W = weights or WEIGHTS  # learn-v1 («учитывать решения компании», по умолчанию выкл.) — matching/learn.py
