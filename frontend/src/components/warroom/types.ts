@@ -171,7 +171,9 @@ export interface RubricResult {
 }
 
 export interface IncidentStage {
+  incident_id?: string;
   scenario_id: string;
+  title?: string;
   direction: string;
   target_grade: string;
   status: "completed" | "in_progress" | "skipped";
@@ -180,6 +182,10 @@ export interface IncidentStage {
   actions_score: number;
   code_score: number;
   rubric_score: number;
+  measures_ok?: boolean;
+  code_ok?: boolean;
+  justification_ok?: boolean;
+  minutes?: number;
   criteria: Record<string, number>;
   slo_met: boolean;
   cost_rub_month: number;
@@ -189,6 +195,19 @@ export interface IncidentStage {
   passed: boolean;
   confirmed_grade: string;
   summary_ru: string;
+}
+
+export interface FollowupContext {
+  attempt_id: string;
+  direction: string;
+  claimed_grade: string;
+  grade_label: string;
+  incident_id: string;
+  incident_title: string;
+  followup_minutes: number;
+  already_applied: boolean;
+  status: string;
+  banner_ru: string;
 }
 
 export interface EvaluateResult extends SimulateResult {
@@ -205,16 +224,31 @@ export interface EvaluateResult extends SimulateResult {
   attempt_id?: string | null;
   saved_to_db?: boolean;
   sprt_preview?: {
-    verdict_status?: "confirmed" | "needs_followup" | "not_confirmed";
+    verdict_status?: "confirmed" | "needs_followup" | "not_confirmed" | "pending_review";
     verdict_title_ru?: string;
     stage_points?: number;
     max_stage_points?: number;
     explanation_ru?: string;
+    rule_ru?: string;
+    oral_defense_required?: boolean;
+    followup_applied?: boolean;
     theta_before?: number;
     theta_post: number;
     se_before?: number;
     se_post: number;
     llr_delta: number;
+  } | null;
+  followup_result?: {
+    attempt_id: string;
+    status?: string;
+    grade?: string;
+    changed?: boolean;
+    verdict?: {
+      status?: string;
+      title?: string;
+      explanation_ru?: string;
+      oral_defense_required?: boolean;
+    };
   } | null;
 }
 

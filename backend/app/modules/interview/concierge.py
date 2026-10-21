@@ -55,8 +55,10 @@ ANAM_AVATAR_ID = os.environ.get("CONCIERGE_ANAM_AVATAR_ID", "d7d4dd15-e996-4595-
 MAX_MINUTES = float(os.environ.get("CONCIERGE_MAX_MINUTES", "0"))   # 0 — без потолка (владелец: можно просто нажать снова)
 
 
-def anam_director_notes() -> dict:
-    d: dict = {"expressivity": max(0.0, min(1.0, ANAM_EXPRESSIVITY))}
+def anam_director_notes(expressivity: float | None = None) -> dict:
+    """expressivity — переопределение из браузера (флаг ?elena_expr=0.35 для сравнения губ), иначе из окружения."""
+    e = ANAM_EXPRESSIVITY if expressivity is None else expressivity
+    d: dict = {"expressivity": max(0.0, min(1.0, float(e)))}
     if ANAM_STYLE:
         d["customStylePrompt"] = ANAM_STYLE[:400]
     return d
@@ -293,6 +295,11 @@ PHRASES: dict[str, str] = {
     "remind_start": "Подскажите: кандидат, работодатель или Федерация? Или назовите раздел — открою.",
     "default_role": "Начну с кабинета кандидата. Если вы работодатель или из Федерации — просто скажите.",
     "after_goto": "Продолжить дальше по кабинету?",
+    "ask_go_on": "Продолжить показ?",
+    "scroll_end": "Это весь экран, ниже ничего нет.",
+    "scroll_top": "Это начало экрана.",
+    "scroll_more": "Вот {items}.",
+    "scroll_more_tour": "Ещё на этом экране — {items}.",
     "go_on": "Идём дальше.",
     "copilot_hint": "Смотрите сами, я рядом. Скажите «дальше» — и я продолжу показ, или спросите о чём угодно.",
     # короткий вопрос каждые несколько экранов — напоминает, что с Настей можно разговаривать и просить открыть любой раздел
@@ -408,25 +415,16 @@ STEP_BEATS: dict[str, list[str]] = {
     ],
     # ---- регистрация (первый акт обзора роли; форму не отправляем, дальше — готовый демо-профиль)
     "cand-register": [
-        "Регистрация занимает минуту. Сначала выбираем, кто вы: кандидат или работодатель. Выбираю кандидата.",
-        "Имя — так вас увидят работодатели в приглашениях.",
-        "Почта — на неё придёт код подтверждения, по ней же вход.",
-        "Пароль — от восьми знаков. Контакты кандидата закрыты: работодатель получит их только после вашего согласия.",
-        "Два согласия: с правилами платформы и на обработку персональных данных — без них аккаунт не создаётся.",
-        "А если есть аккаунт ФСП ID — вход в один клик без пароля, и ваши результаты Федерации сразу попадут в паспорт грейда.",
-        "Дальше пришло бы письмо с кодом. Чтобы не ждать его, войду в готовый демо-профиль кандидата и покажу кабинет.",
+        "Регистрация — минута: роль, почта, пароль и два согласия. Контакты закрыты, пока вы сами не откроете их работодателю.",
+        "Есть аккаунт ФСП ID — вход в один клик, и результаты Федерации сразу попадут в паспорт грейда.",
+        "Дальше письмо с кодом. Не будем ждать — войду в готовый демо-профиль и покажу сам кабинет.",
     ],
     "emp-register": [
-        "Регистрация компании — тоже минута. Переключаю на работодателя.",
-        "Название компании — его увидят кандидаты в приглашениях и в подборках.",
-        "Рабочая почта — на неё придёт код подтверждения, по ней же вход в кабинет.",
-        "Пароль — от восьми знаков. Доступ к контактам кандидатов открывается только по их согласию.",
-        "Согласие с правилами и на обработку данных — и можно создавать потребность в специалистах.",
-        "Дальше пришло бы письмо с кодом. Чтобы не ждать, войду в готовый демо-кабинет компании.",
+        "Регистрация компании — минута: название, рабочая почта, пароль и согласия. Контакты кандидатов откроются только с их разрешения.",
+        "Дальше письмо с кодом. Не будем ждать — войду в готовый демо-кабинет компании.",
     ],
     "fsp-register": [
-        "Кабинет Федерации не создаётся через форму: его выдают сотрудникам ФСП по приглашению, а вход — через ФСП ID, вот эта кнопка.",
-        "Кандидаты и работодатели регистрируются здесь сами. Покажу кабинет Федерации на демо-учётке.",
+        "Кабинет Федерации выдают сотрудникам ФСП по приглашению, вход — через ФСП ID. Покажу его на демо-учётке.",
     ],
     # ---- кандидат (пункты меню по порядку)
     "cand-overview": [
@@ -492,8 +490,11 @@ STEP_BEATS: dict[str, list[str]] = {
         "Здесь же свежесть профиля и как часто предлагать вам такие задания.",
     ],
     "cand-settings": [
-        "Настройки и приватность: какие поля попадают в обезличенную карточку.",
-        "Скрытый минимум зарплаты и согласия по закону о персональных данных — тоже здесь.",
+        "Настройки и приватность — здесь кандидат решает, что о нём видно. Четыре блока, пройду по каждому.",
+        "Поля обезличенной карточки: переключателями выбираете, что попадёт в карточку для работодателя. Имя, почта, телефон и сумма минимума не показываются никогда — только после принятого приглашения.",
+        "Скрытый минимум зарплаты: сумма в рублях в месяц. Работодатель её не видит — только пометку, попадает ли его вилка в ваши ожидания.",
+        "«Что вам интересно» — это взаимный подбор: готовность к предложениям, интересные задачи и технологии, с которыми хочется работать. По ним система понимает, подходит ли вам предложение, а не только вы ему.",
+        "Согласия по закону о персональных данных: когда дано, какая редакция, текст по кнопке. Любое можно отозвать в «Моих данных».",
     ],
     "cand-vacancies": [
         "Вакансии — вакансии компаний, загруженные из их систем найма; на них можно откликнуться прямо здесь.",
@@ -680,7 +681,7 @@ def warm_async() -> None:
         n = 0
         # постоянные фразы, реплики шагов и типовые ответы на выбор роли (звучат сразу, без синтеза)
         texts = script_texts()
-        extra = [_start_reply(None, r, False, ft) for r in ROLES for ft in (True, False)]
+        extra = [_start_reply(None, r, False, ft, skip_reg=sk) for r in ROLES for ft in (True, False) for sk in (True, False)]
         try:
             # только PCM 24 кГц: Настя говорит им и в видеопоток, и запасным голосом; mp3 грел бы вдвое больше знаков синтеза
             for text in [*texts, *extra]:
@@ -972,6 +973,8 @@ def detect_role(text: str) -> Role | None:
 # Порядок важен: сначала точные сочетания, потом общие слова. Для каждого пункта меню каждого кабинета — свой шаг.
 _GOTO: list[tuple[str, str]] = [
     (r"регистрац|зарегистрир|создать аккаунт|завести аккаунт|как войти|вход на сайт", "cand-register"),
+    (r"дорожн\w* карт|карт\w* пути|четыре шага|4 шага", "cand-overview"),
+    (r"взаимн\w* подбор|интересные задачи|что вам интересно|готовность к предложениям", "cand-settings"),
     (r"арен|метрик|точност|бенчмарк|валидац|цифр|как вы проверяете", "val-arena"),
     (r"полигон|war ?room|вор ?рум", "warroom"),
     (r"тариф|монетизац|сколько стоит|цен[аы]\b|оплат", "tariffs"),
@@ -982,7 +985,7 @@ _GOTO: list[tuple[str, str]] = [
     (r"эффект соревн|эффект", "fsp-effect"),
     (r"зарплат\w* из оффер|зарплаты из|офферы против рынка|зарплат\w* федерац", "fsp-salaries"),
     (r"воронк", "fsp-funnel"),
-    (r"польз\w* для фсп|польз\w* федерац|польза", "fsp-benefit"),
+    (r"польз\w* (?:для |от )?(?:фсп|федерац)|почт\w* (?:для |от )?(?:фсп|федерац)|польз\w* федерац|польза|выгод\w* (?:для )?(?:фсп|федерац)", "fsp-benefit"),
     (r"партн[её]р", "fsp-partners"),
     (r"методик|выгрузк|csv|обезличиван", "fsp-method"),
     (r"безопасност\w* входа|второй фактор|двухфактор|аутентификатор|totp", "fsp-security"),
@@ -1165,6 +1168,11 @@ def _offered(last_said: str) -> bool:
     return "?" in t and bool(re.search(r"весь сайт|обзор|по шагам|с вашей роли|кандидат, работодатель|начн[её]м\?", t))
 
 
+SCROLL = re.compile(r"(?:ещё|еще|чуть|немного|давай|так|и|а|ну|теперь|дальше|пожалуйста|настя|можно|покажи|что там|а что|там)?[\s,]*"
+                    r"(?:ниже|вниз|пониже|прокрути\w*|пролистай\w*|листай\w*|полистай\w*|покрути\w*|проскроль\w*|скроль\w*|опусти\w*|"
+                    r"выше|вверх|повыше|подними\w*|наверх|в начало|в самый верх|в конец|в самый низ|до конца)"
+                    r"(?:[\s,]+(?:ниже|вниз|выше|вверх|ещё|еще|экран|страниц\w*|пожалуйста|давай|дальше|что там|покажи|до конца|немного|чуть))*[\s?.!]*$")
+SKIP_REG = re.compile(r"без регистрац|сразу|к делу|не надо регистрац|пропусти регистрац|без формы|кабинет")
 GO_ON = re.compile(r"^(?:(?:ну|так|и|а|окей|ок|хорошо|ладно|давай(?:те)?|тогда|просто|пожалуйста|интересно|слушай(?:те)?|настя|вот|значит|"
                    r"короче|мне|нам|всё|все|да|ага|понятно|ясно|спасибо)[\s,]+)*"
                    r"(?:что дальше|дальше|продолжа\w*|продолжим|рассказывай(?:те)?|показывай(?:те)?|веди(?:те)?|"
@@ -1178,15 +1186,42 @@ GO_BARE = re.compile(r"^(?:(?:ну|сразу|просто|давай(?:те)?|�
                      r"поехали|веди(?:те)?|проведи(?:те)?|рассказывай(?:те)?)(?:\s+(?:всё|все|сразу|уже|пожалуйста))*$")
 
 
-def _start_reply(name: str | None, role: Role, first_time: bool, first_tour: bool = False) -> str:
+def _skip_reg(msg: str, s) -> bool:
+    """Регистрация — первым актом только один раз за разговор и только если роль названа в знакомстве. Явное
+    «кабинет», «сразу», «без регистрации» или вторая роль в том же разговоре — сразу кабинет."""
+    if SKIP_REG.search(_norm(msg)):
+        return True
+    shown = list(getattr(s, "shown", []) or [])
+    return any(x.endswith("-register") or x in ("cand-overview", "emp-home", "fsp-cabinet") for x in shown)
+
+
+def _drop_repeats(reply: str, said: list[str]) -> str:
+    """Модель иногда вставляет в ответ свои прошлые реплики (эхо истории). Предложения, которые дословно (от 40 знаков)
+    уже звучали, убираем; если убрали всё — оставляем первое предложение."""
+    if not reply or not said:
+        return reply
+    corpus = " ".join(said).lower()
+    parts = [x.strip() for x in re.split(r"(?<=[.!?…])\s+", reply.strip()) if x.strip()]
+    keep = [x for x in parts if not (len(x) >= 40 and x.lower().rstrip(".!?…") in corpus)]
+    if not keep:
+        keep = parts[:1]
+    return " ".join(keep)
+
+
+def _start_reply(name: str | None, role: Role, first_time: bool, first_tour: bool = False, skip_reg: bool = False) -> str:
     who = {"candidate": "путь кандидата — от регистрации до приглашений", "employer": "кабинет работодателя — от регистрации до найма",
            "fsp": "кабинет Федерации", "all": "весь сайт по шагам"}[role]
+    verb = "показываю"
+    if skip_reg and role != "all":
+        # без регистрации — сразу кабинет, и в ответе про регистрацию ни слова
+        who = {"candidate": "кабинет кандидата", "employer": "кабинет работодателя", "fsp": "кабинет Федерации"}[role]
+        verb = "открываю"
     tail = " Перебивайте и спрашивайте в любой момент." if first_tour else ""
     if name and first_time:
-        return f"Очень приятно, {name}. Показываю {who}.{tail}"
+        return f"Очень приятно, {name}. {verb.capitalize()} {who}.{tail}"
     if name:
-        return f"{name}, показываю {who}.{tail}"
-    return f"Хорошо, показываю {who}.{tail}"
+        return f"{name}, {verb} {who}.{tail}"
+    return f"Хорошо, {verb} {who}.{tail}"
 
 
 def _clean_reply(text: str) -> str:
@@ -1264,6 +1299,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             on_ack(kind)
 
     base = {"user_name": name, "role": cur_role, "step": None, "point": None, "reply": "", "phrase": None}
+    accepted: str | None = None   # человек согласился на её предложение без распознанного экрана — выполнит модель
     # «да», «показывай» в ответ на предложение Насти («Показать …?») — сразу делаем предложенное
     offer = s.offer if s and isinstance(s.offer, dict) and time.time() - float(s.offer.get("at", 0)) < 120 else None
     if offer and (awaiting in ("checkin", "continue", "detour") or
@@ -1274,88 +1310,99 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         act = offer.get("action")
         if act == "start_tour":
             r = offer.get("role") if offer.get("role") in ROLES else (cur_role or "all")
-            return {**base, "kind": "instant", "action": "start_tour", "role": r, "reply": _start_reply(name, r, False, first_tour)}
+            return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": r, "reply": _start_reply(name, r, False, first_tour, skip_reg=_skip_reg(msg, s))}
         if act == "goto" and offer.get("step") in STEP_IDS:
             return {**base, "kind": "instant", "action": "goto", "step": offer["step"], "phrase": "goto"}
         if act == "point" and offer.get("point"):
             return {**base, "kind": "instant", "action": "point", "point": offer["point"], "reply": "Вот здесь."}
+        if act == "ask" and offer.get("text"):
+            accepted = str(offer["text"])   # модель выполнит своё же предложение (goto/point), без нового вопроса
         if act in ("prev", "repeat"):
             return {**base, "kind": "instant", "action": act}
     t_norm = _norm(msg)
-    if words_n <= 9 and GO_ON.search(t_norm) and not detect_goto(msg, path=current_path, step=step_id):
-        # «что дальше?», «продолжай», «веди сама», «не останавливайся» — экскурсовод идёт дальше без модели
-        ack("instant")
-        if touring or paused or awaiting in ("continue", "checkin", "detour", "answer"):
+    if not accepted:   # человек согласился на предложение Насти — минуя быстрые правила, сразу к модели
+        sc = words_n <= 8 and SCROLL.search(t_norm)
+        if sc and not detect_goto(msg, path=current_path, step=step_id):
+            # «ниже», «ещё ниже», «прокрути», «наверх» — листает экран сама и называет появившиеся блоки
+            ack("instant")
+            w = sc.group(0)
+            d = "top" if re.search(r"начал|наверх|в самый верх", w) else "bottom" if re.search(r"конец|самый низ|до конца", w) \
+                else "up" if re.search(r"выше|вверх|подними", w) else "down"
+            return {**base, "kind": "instant", "action": "scroll", "dir": d}
+        if words_n <= 9 and GO_ON.search(t_norm) and not detect_goto(msg, path=current_path, step=step_id):
+            # «что дальше?», «продолжай», «веди сама», «не останавливайся» — экскурсовод идёт дальше без модели
+            ack("instant")
+            if touring or paused or awaiting in ("continue", "checkin", "detour", "answer"):
+                return {**base, "kind": "instant", "action": "resume"}
+            if cur_role:
+                return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": cur_role,
+                        "reply": _start_reply(name, cur_role, False, first_tour, skip_reg=_skip_reg(msg, s))}
+            return {**base, "kind": "instant", "action": "ask_role", "reply": f"Хорошо. {PHRASES['ask_role']}"}
+        if awaiting == "checkin" and words_n <= 6:
+            if CHECKIN_NO.search(t_norm):
+                ack("instant")
+                return {**base, "kind": "instant", "action": "resume"}
+            if CHECKIN_YES.search(t_norm):
+                ack("instant")
+                return {**base, "kind": "instant", "action": "listen", "phrase": "listen"}
+        if awaiting in ("continue", "detour") and words_n <= 5 and CMD_NO.search(t_norm):
+            ack("instant")
+            return {**base, "kind": "instant", "action": "pause", "phrase": "no_more"}
+        if awaiting == "continue" and words_n <= 5 and CONT_YES.search(t_norm):
+            ack("instant")   # «Всё понятно? Идём дальше?» — «понятно», «да, дальше», «всё ясно» — продолжаем
             return {**base, "kind": "instant", "action": "resume"}
-        if cur_role:
-            return {**base, "kind": "instant", "action": "start_tour", "role": cur_role,
-                    "reply": _start_reply(name, cur_role, False, first_tour)}
-        return {**base, "kind": "instant", "action": "ask_role", "reply": f"Хорошо. {PHRASES['ask_role']}"}
-    if awaiting == "checkin" and words_n <= 6:
-        if CHECKIN_NO.search(t_norm):
+        if (touring or paused) and words_n <= 7 and CMD_SKIP.search(t_norm):
             ack("instant")
-            return {**base, "kind": "instant", "action": "resume"}
-        if CHECKIN_YES.search(t_norm):
+            nxt = brain.next_section(step_id)
+            return {**base, "kind": "instant", "action": "next_section", "phrase": f"skip_{nxt}" if nxt else "skip_end"}
+        if first_time and (touring or paused) and words_n <= 4 and not is_q:
+            # назвался посреди обзора — знакомимся и продолжаем с того же места
             ack("instant")
-            return {**base, "kind": "instant", "action": "listen", "phrase": "listen"}
-    if awaiting in ("continue", "detour") and words_n <= 5 and CMD_NO.search(t_norm):
-        ack("instant")
-        return {**base, "kind": "instant", "action": "pause", "phrase": "no_more"}
-    if awaiting == "continue" and words_n <= 5 and CONT_YES.search(t_norm):
-        ack("instant")   # «Всё понятно? Идём дальше?» — «понятно», «да, дальше», «всё ясно» — продолжаем
-        return {**base, "kind": "instant", "action": "resume"}
-    if (touring or paused) and words_n <= 7 and CMD_SKIP.search(t_norm):
-        ack("instant")
-        nxt = brain.next_section(step_id)
-        return {**base, "kind": "instant", "action": "next_section", "phrase": f"skip_{nxt}" if nxt else "skip_end"}
-    if first_time and (touring or paused) and words_n <= 4 and not is_q:
-        # назвался посреди обзора — знакомимся и продолжаем с того же места
-        ack("instant")
-        return {**base, "kind": "instant", "action": "resume", "reply": f"Очень приятно, {name}."}
-    if words_n <= 8 and _GOTO_VERB.search(t_norm) and not is_q:
-        g = detect_goto(msg, path=current_path, step=step_id)   # «открой кабинет кандидата ещё раз» — переход, не «повтори»
-        if g:
+            return {**base, "kind": "instant", "action": "resume", "reply": f"Очень приятно, {name}."}
+        if words_n <= 8 and _GOTO_VERB.search(t_norm) and not is_q:
+            g = detect_goto(msg, path=current_path, step=step_id)   # «открой кабинет кандидата ещё раз» — переход, не «повтори»
+            if g:
+                ack("instant")
+                cab_role = {"cand-overview": "candidate", "emp-home": "employer", "fsp-cabinet": "fsp"}.get(g)
+                if cab_role and re.search(r"кабинет|путь|сторон|раздел", t_norm) and not (touring and cur_role == cab_role):
+                    # «открой кабинет работодателя» — обзор этого кабинета (уже смотрели — браузер пройдёт коротко)
+                    return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": cab_role,
+                            "reply": _start_reply(name, cab_role, False, first_tour, skip_reg=_skip_reg(msg, s))}
+                return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto"}
+        quick = classify(msg, touring=touring, paused=paused)
+        if quick:
             ack("instant")
-            cab_role = {"cand-overview": "candidate", "emp-home": "employer", "fsp-cabinet": "fsp"}.get(g)
-            if cab_role and re.search(r"кабинет|путь|сторон|раздел", t_norm) and not (touring and cur_role == cab_role):
-                # «открой кабинет работодателя» — обзор этого кабинета (уже смотрели — браузер пройдёт коротко)
-                return {**base, "kind": "instant", "action": "start_tour", "role": cab_role,
-                        "reply": _start_reply(name, cab_role, False, first_tour)}
-            return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto"}
-    quick = classify(msg, touring=touring, paused=paused)
-    if quick:
-        ack("instant")
-        out = {**base, "kind": "instant", "action": quick["action"]}
-        if quick.get("phrase"):
-            out["phrase"] = quick["phrase"]
-        return out
+            out = {**base, "kind": "instant", "action": quick["action"]}
+            if quick.get("phrase"):
+                out["phrase"] = quick["phrase"]
+            return out
 
-    if not touring and not paused and not is_q and words_n <= 5 and GO_BARE.search(_norm(msg)):
-        r = cur_role or "all"   # «сразу покажи», «поехали» без уточнения — обзор (своей роли или всего сайта)
-        ack("instant")
-        return {**base, "kind": "instant", "action": "start_tour", "role": r, "reply": _start_reply(name, r, first_time, first_tour)}
-    if not touring and not paused and not is_q and words_n <= 6:
-        det = detect_role(msg)
-        if det:
+        if not touring and not paused and not is_q and words_n <= 5 and GO_BARE.search(_norm(msg)):
+            r = cur_role or "all"   # «сразу покажи», «поехали» без уточнения — обзор (своей роли или всего сайта)
             ack("instant")
-            return {**base, "kind": "instant", "action": "start_tour", "role": det,
-                    "reply": _start_reply(name, det, first_time, first_tour)}
-        if HELLO.search(_norm(msg)) and words_n <= 3 and not first_time:
+            return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": r, "reply": _start_reply(name, r, first_time, first_tour, skip_reg=_skip_reg(msg, s))}
+        if not touring and not paused and not is_q and words_n <= 6:
+            det = detect_role(msg)
+            if det:
+                ack("instant")
+                return {**base, "kind": "instant", "action": "start_tour", "role": det, "skip_reg": _skip_reg(msg, s),
+                        "reply": _start_reply(name, det, first_time, first_tour, skip_reg=_skip_reg(msg, s))}
+            if HELLO.search(_norm(msg)) and words_n <= 3 and not first_time:
+                ack("instant")
+                return {**base, "kind": "instant", "action": "ask_role",
+                        "reply": f"Здравствуйте, {name}. {PHRASES['ask_role']}" if name else "", "phrase": None if name else "hello"}
+            if YES.search(_norm(msg)) and _offered(last_said):
+                r = cur_role or "all"
+                ack("instant")
+                return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": r,
+                        "reply": _start_reply(name, r, False, first_tour, skip_reg=_skip_reg(msg, s))}
+            if first_time and words_n <= 4:
+                ack("instant")
+                return {**base, "kind": "instant", "action": "ask_role", "reply": f"Очень приятно, {name}. {PHRASES['ask_role']}"}
+        goto = detect_goto(msg, path=current_path, step=step_id) if not is_q and words_n <= 7 else None
+        if goto:
             ack("instant")
-            return {**base, "kind": "instant", "action": "ask_role",
-                    "reply": f"Здравствуйте, {name}. {PHRASES['ask_role']}" if name else "", "phrase": None if name else "hello"}
-        if YES.search(_norm(msg)) and _offered(last_said):
-            r = cur_role or "all"
-            ack("instant")
-            return {**base, "kind": "instant", "action": "start_tour", "role": r,
-                    "reply": _start_reply(name, r, False, first_tour)}
-        if first_time and words_n <= 4:
-            ack("instant")
-            return {**base, "kind": "instant", "action": "ask_role", "reply": f"Очень приятно, {name}. {PHRASES['ask_role']}"}
-    goto = detect_goto(msg, path=current_path, step=step_id) if not is_q and words_n <= 7 else None
-    if goto:
-        ack("instant")
-        return {**base, "kind": "instant", "action": "goto", "step": goto, "phrase": "goto"}
+            return {**base, "kind": "instant", "action": "goto", "step": goto, "phrase": "goto"}
 
     if no_llm:
         # дневной лимит ходов модели исчерпан — без модели: экран по словам реплики или ответ из базы знаний
@@ -1366,7 +1413,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         return {**base, "kind": "fallback", "action": "answer", "reply": _kb_answer(msg, current_path, step_id)}
     ack("llm")
     d = brain.answer(msg, sid=session_id, name=name, role=cur_role, path=current_path, step=step_id, touring=touring,
-                     paused=paused, screen=screen, history=history, awaiting=awaiting, last_said=last_said,
+                     paused=paused, screen=screen, history=history, awaiting=awaiting, last_said=last_said, accepted=accepted,
                      numbers=numbers_chunk() if re.search(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак",
                                                           msg.lower()) or current_path.startswith("/validation") else None)
     if not d:
@@ -1382,7 +1429,9 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             rest = reply[len(name) + 1:].lstrip()
             reply = rest[:1].upper() + rest[1:] if rest else reply
     action = d.get("action") if d.get("action") in ("answer", "start_tour", "goto", "point", "next_section", "pause",
-                                                     "resume", "end") else "answer"
+                                                     "resume", "end", "scroll") else "answer"
+    scroll_dir = d.get("dir") if d.get("dir") in ("down", "up", "top", "bottom") else "down"
+    skip_now = False
     if action == "next_section" and not (touring or paused):
         action = "answer"
     if action == "answer" and re.match(r"^(?:да[,.]?\s*)?(?:конечно[,.]?\s*)?(?:слушаю|спрашивайте|задавайте|говорите|я слушаю)\b", reply.lower().strip()) \
@@ -1394,11 +1443,18 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     llm_name = valid_llm_name(d.get("user_name") if isinstance(d.get("user_name"), str) else None, msg)
     if action == "goto" and not step:
         action = "answer"
+    if action == "goto" and step and step == step_id and (touring or paused):
+        action = "resume"   # просят то, что уже идёт («начинай кабинет» на шаге кабинета) — продолжаем, не заново
+    if action == "goto" and step and step.endswith("-register") and SKIP_REG.search(_norm(msg)):
+        step = {"cand-register": "cand-overview", "emp-register": "emp-home", "fsp-register": "fsp-cabinet"}[step]
+        if touring and step_id and step_id.endswith("-register"):
+            action = "resume"   # стоим на регистрации, просят кабинет — следующий шаг и есть кабинет
+            skip_now = True
     if action == "goto" and step in ("cand-overview", "emp-home", "fsp-cabinet") and not (touring or paused):
         # «покажи кабинет кандидата» — экскурсовод ведёт по кабинету, а не показывает один экран
         action, llm_role = "start_tour", {"cand-overview": "candidate", "emp-home": "employer", "fsp-cabinet": "fsp"}[step]
         if not reply or reply.rstrip().endswith("?"):
-            reply = _start_reply(name, llm_role, False, first_tour)
+            reply = _start_reply(name, llm_role, False, first_tour, skip_reg=_skip_reg(msg, s))
     if action == "point" and not point:
         action = "answer"
     if action == "start_tour" and not (llm_role or cur_role):
@@ -1418,6 +1474,9 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
                 action, llm_role = "start_tour", llm_role or cur_role or "all"
             elif re.search(r"предыдущ|прошл\w* (?:раздел|экран)", reply.lower()):
                 action = "prev"   # «Предыдущий раздел был про зарплаты. Показать его ещё раз?» → по «да» — назад
+            else:
+                # «Показать их на дорожной карте?» без распознанного экрана — по «да»/«покажи» выполнит модель
+                new_offer = {"action": "ask", "step": None, "role": None, "point": None, "at": time.time(), "text": reply}
     if action in ("prev", "repeat") and reply.rstrip().endswith("?"):
         new_offer = {"action": action, "step": None, "role": None, "point": None, "at": time.time(), "text": reply}
         action = "answer"
@@ -1426,8 +1485,15 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         new_offer = {"action": action, "step": step, "role": llm_role, "point": point, "at": time.time(), "text": reply}
         action = "answer"
     new_name = name or llm_name
+    reply = _drop_repeats(reply, [h["text"] for h in ((s.history if s else None) or history or []) if h.get("who") == "elena"][-4:])
+    if action == "scroll":
+        return {**base, "kind": "llm", "action": "scroll", "dir": scroll_dir, "reply": reply if reply and not reply.rstrip().endswith("?") else "",
+                "offer": None, "user_name": new_name, "role": llm_role or cur_role, "step": None, "point": None, "phrase": None,
+                "model": d.get("model"), "llm_ms": d.get("llm_ms")}
     return {
         "offer": new_offer,
+        "skip_reg": _skip_reg(msg, s) if action == "start_tour" else None,
+        "skip_now": skip_now,
         "user_name": new_name,
         "role": llm_role or cur_role,
         "step": step,
@@ -1476,6 +1542,11 @@ def _allow_turn() -> bool:
         return True
 
 
+def brain_session(sid: str | None):
+    from app.modules.interview import concierge_brain as brain
+    return brain.session(sid)
+
+
 def turn_stream(message: str, **kw) -> Iterator[bytes]:
     """NDJSON: ack → meta → pcm… → end. Любой сбой голоса — {"t": "voice_error"}, фронт скажет текст своим откатом."""
     import queue
@@ -1494,7 +1565,11 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
                               "action": "answer", "phrase": None,
                               "reply": "Сейчас со мной говорит очень много людей. Давайте я просто покажу сайт — скажите «дальше»."}
                 return
-            box["res"] = turn(message, on_ack=lambda k: q.put(("ack", k)), **kw)
+            res = turn(message, on_ack=lambda k: q.put(("ack", k)), **kw)
+            if res.get("action") == "start_tour" and res.get("skip_reg") is None:
+                # регистрация первым актом — только по роли из знакомства и один раз за разговор
+                res["skip_reg"] = _skip_reg(message, brain_session(kw.get("session_id")))
+            box["res"] = res
         except Exception as e:  # noqa: BLE001
             log.warning("concierge turn: %s", type(e).__name__)
         finally:
