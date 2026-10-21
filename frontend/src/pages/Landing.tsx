@@ -2,6 +2,7 @@ import { Suspense, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { AndroidBetaButton } from "../components/InstallAppButton";
+import { FspHeroMonolithStage, FspPulseBar } from "../components/Fsp3DShowcase";
 import { DraftLaws } from "../components/landing/DraftLaws";
 import { ReverseDraftDemo } from "../components/landing/ReverseDraftDemo";
 import { errText } from "../components/ui";
@@ -10,7 +11,7 @@ import { juryLogin } from "../lib/jury";
 import { useDemoUi } from "../lib/juryMode";
 import { lazyNamed } from "../lib/lazyPage";
 import { daysText, getLandingCards, usePageTitle, useRules } from "../lib/meta";
-import { getTop5, getTop5Hard, getTop5Meta, NUMBERS } from "../lib/numbers";
+import { getTop5, getTop5Hard, getTop5Meta } from "../lib/numbers";
 
 const LazyJuryPanel = lazyNamed(() => import("../components/JuryPanel"), "JuryPanel");
 
@@ -101,14 +102,15 @@ export default function Landing() {
       </div>
       <div className="np-backdrop-low" aria-hidden="true"><div className="np-glow np-glow-indigo-low" /><div className="np-glow np-glow-red-low" /></div>
       <SiteHeader premium />
+      <FspPulseBar />
       <main id="main" tabIndex={-1} className="relative outline-none">
 
       {/* Первый экран: что это, для кого (кандидат / работодатель / ФСП) и одна главная кнопка на роль */}
       <section className="relative mx-auto grid max-w-content items-start gap-8 px-4 pb-14 pt-8 sm:px-6 md:pt-12 lg:grid-cols-[1.04fr_0.96fr] lg:gap-10 lg:pb-16">
         <div className="min-w-0 lg:pt-1">
           <p className="np-eyebrow">Платформа обратного ИТ-найма · Работодателям · Кандидатам · ФСП</p>
-          <h1 className="mt-3 text-[1.95rem] font-extrabold leading-[1.1] tracking-tight np-text sm:text-[2.45rem] xl:text-[2.7rem]">
-            Найм IT-специалистов с <span className="np-grad">подтверждённым грейдом</span>: компания сама приглашает проверенных кандидатов
+          <h1 className="mt-3 text-[1.95rem] font-extrabold leading-[1.08] tracking-tight np-text sm:text-[2.45rem] xl:text-[2.75rem]">
+            Найм IT-специалистов с <span className="fsp-serif-italic">подтверждённым грейдом</span>: компания сама приглашает проверенных кандидатов
           </h1>
           <p className="mt-3 max-w-2xl text-base leading-relaxed np-muted md:text-lg" data-testid="hero-subtitle">
             Это платформа обратного найма без чтения сотен резюме: выберите свою роль ниже, чтобы получить готовую подборку проверенных инженеров, подтвердить свой уровень или открыть аналитику Федерации.
@@ -207,9 +209,9 @@ export default function Landing() {
             <Fact k="ФСП" t="Верификация достижений и кубки работодателей" />
           </ul>
         </div>
-        <div className="min-w-0 space-y-3.5 lg:sticky lg:top-20">
+        <div className="min-w-0 space-y-4 lg:sticky lg:top-20">
+          <FspHeroMonolithStage />
           <ReverseDraftDemo onTry={tryInvite} onLiveAvatar={tryLiveAvatar} busyLive={busyRole === "avatar"} />
-          <FspHeroShowcase />
           {msg && <p className="mt-2 text-sm np-risk" role="status">{msg}</p>}
         </div>
       </section>
@@ -465,52 +467,6 @@ function FspBackdropCircuit() {
       <circle cx="1356" cy="120" r="4.5" fill="#402FFF" />
       <circle cx="1032" cy="540" r="4.5" fill="#EC1D35" />
     </svg>
-  );
-}
-
-/** 3D-витрина «Контур верификации ФСП»: закрывает пустую зону под демо-карточкой и связывает 3 элемента брендбука ФСП. */
-function FspHeroShowcase() {
-  return (
-    <div
-      className="np-glass relative overflow-hidden px-4 py-3.5 sm:px-5"
-      data-testid="hero-fsp-showcase"
-      aria-label="Контур верификации Федерации спортивного программирования"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          {/* Объёмный 3D-медальон с узлом-созвездием ФСП (#402FFF, #EC1D35, #EDEDED) */}
-          <span
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/20 shadow-lg"
-            style={{
-              background: "linear-gradient(145deg, #1E2252 0%, #0E1128 60%, #2718D8 100%)",
-              boxShadow: "0 10px 24px -10px rgba(64, 47, 255, 0.8), inset 0 1px 0 rgba(255,255,255,0.28)",
-            }}
-            aria-hidden="true"
-          >
-            <svg viewBox="0 0 36 36" className="h-6 w-6" fill="none">
-              <path d="M10 24 Q10 15 18 15 H26" stroke="#7C70FF" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M18 15 V9" stroke="#EDEDED" strokeWidth="1.8" strokeLinecap="round" />
-              <circle cx="10" cy="24" r="3.2" fill="#402FFF" />
-              <circle cx="18" cy="9" r="3.2" fill="#EC1D35" />
-              <circle cx="26" cy="15" r="3.2" fill="#EDEDED" />
-              <circle cx="18" cy="15" r="2.2" fill="#402FFF" />
-            </svg>
-          </span>
-          <div className="min-w-0">
-            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] np-accent" title="Как устроено: защищённая асимметричная подпись паспорта Ed25519">
-              Единый контур верификации ФСП
-            </p>
-            <p className="text-sm font-bold leading-snug np-text">
-              Протоколы соревнований + адаптивный тест → цифровой паспорт грейда
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
-          <span className="np-badge np-badge-indigo">89 регионов ФСП</span>
-          <span className="np-badge np-badge-ok">{NUMBERS.bank.families} семейств задач</span>
-        </div>
-      </div>
-    </div>
   );
 }
 

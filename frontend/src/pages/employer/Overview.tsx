@@ -7,6 +7,7 @@ import { useAuth } from "../../lib/auth";
 import { CompanyTrustCard } from "../../integrations/Trust";
 import { InvitesLeft, PartnerBadge, useTariffsOn } from "./Tariffs";  // Я29: тариф и остаток приглашений
 import { HireRoi } from "./SquadDraft";
+import { FspCabinet3DStage } from "../../components/Fsp3DShowcase";
 
 function InvitationFunnelWidget({ invitations }: { invitations: any[] }) {
   const now = Date.now();
@@ -107,34 +108,25 @@ export default function EmployerOverview() {
         <Stat label="Задания с вилкой" value={probes.data?.length ?? "…"} hint={probes.data ? `на оценке: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
         <Link to="needs" className="block"><Stat label="Новых подходящих" value={subs.data?.new_total ?? "…"} hint={subs.data ? `подписок: ${subs.data.items.filter((x: any) => x.enabled).length}` : undefined} /></Link>
       </div></div>
-      {/* Командный Драфт ФСП: сборка сыгранного звена из 4 человек под проект в 1 клик */}
+      {/* Командный Драфт ФСП: сборка сыгранного звена из 4 человек под проект в 1 клик с 3D-ядром верификации */}
       <Link to="/employer/squad" data-testid="employer-squad-card"
-        className="fsp-hero-banner group mt-8 flex flex-wrap items-center justify-between gap-4 p-5 transition-transform hover:-translate-y-0.5 sm:p-6">
-        <div className="flex min-w-0 flex-1 items-start gap-4">
-          <span
-            className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 sm:inline-flex"
-            style={{
-              background: "linear-gradient(145deg, #2B1CE0 0%, #402FFF 55%, #161B42 100%)",
-              boxShadow: "0 10px 24px -8px rgba(64, 47, 255, 0.8), inset 0 1px 0 rgba(255,255,255,0.3)",
-            }}
-            aria-hidden="true"
-          >
-            <svg viewBox="0 0 36 36" className="h-6 w-6" fill="none">
-              <path d="M9 24 Q9 14 18 14 H27" stroke="#A59DFF" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M18 14 V8" stroke="#EDEDED" strokeWidth="1.8" strokeLinecap="round" />
-              <circle cx="9" cy="24" r="3" fill="#402FFF" />
-              <circle cx="18" cy="8" r="3" fill="#EC1D35" />
-              <circle cx="27" cy="14" r="3" fill="#EDEDED" />
-              <circle cx="18" cy="14" r="2.2" fill="#402FFF" />
-            </svg>
-          </span>
-          <div className="min-w-0">
-            <p className="font-mono text-xs font-extrabold uppercase tracking-[0.12em] text-[#A59DFF]">Новое · Командный Драфт ФСП</p>
-            <h2 className="mt-1 text-lg font-bold text-white">Сборка звена под проект в 1 клик</h2>
-            <p className="mt-1 text-sm text-white/80">4 проверенных специалиста с цифровым паспортом и разрядом ФСП под ваш бюджет ФОТ, пакетный оффер всей четвёрке, экономика найма и рентген кода.</p>
+        className="fsp-stage-card group mt-8 flex flex-col items-center justify-between gap-5 rounded-3xl p-5 transition-transform hover:-translate-y-0.5 sm:flex-row sm:p-6">
+        <div className="min-w-0 flex-1 space-y-2">
+          <p className="inline-flex items-center gap-2 font-mono text-xs font-extrabold uppercase tracking-[0.14em] text-[#B8B4FF]">
+            <i className="fsp-pulse-dot" aria-hidden="true" />
+            Новое · Командный Драфт ФСП
+          </p>
+          <h2 className="text-xl font-extrabold tracking-tight text-white sm:text-2xl">
+            Сборка <span className="fsp-serif-italic">сыгранного звена</span> под проект в 1 клик
+          </h2>
+          <p className="max-w-xl text-sm leading-relaxed text-white/80">
+            4 проверенных специалиста с цифровым паспортом и разрядом ФСП под ваш бюджет ФОТ, пакетный оффер всей четвёрке, экономика найма и рентген кода.
+          </p>
+          <div className="pt-1">
+            <span className="btn-primary inline-flex !px-5 !py-2.5 text-xs font-bold">Собрать звено под ФОТ →</span>
           </div>
         </div>
-        <span className="btn-primary shrink-0 !px-4 !py-2.5 text-xs font-bold">Собрать звено →</span>
+        <FspCabinet3DStage kind="core" badge="Звено 4×ФСП" sub="Подбор под бюджет ФОТ" />
       </Link>
       <InvitationFunnelWidget invitations={inv.data ?? []} />
       <section className="mt-8 space-y-3" data-testid="employer-overview-roi">
