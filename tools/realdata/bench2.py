@@ -158,19 +158,9 @@ def truth_sm(need, lat) -> int:
 
 
 def label2(need, lat) -> int:
-    """Шкала 0–2 «как у соперника с nDCG 0,83» (только для сверки определений): 2 — направление, истинный грейд равен
-    и знает хотя бы один обязательный навык; 1 — соседний грейд с навыком или точный без навыка; 0 — иначе."""
-    from app.modules.catalog.seed_data import GRADE_LEVEL
-
-    if lat.direction != need.direction or lat.true_grade is None:
-        return 0
-    has = bool(set(need.required) & set(lat.known))
-    diff = abs(GRADE_LEVEL[lat.true_grade] - GRADE_LEVEL[need.grade])
-    if diff == 0 and has:
-        return 2
-    if (diff == 1 and has) or (diff == 0 and not has):
-        return 1
-    return 0
+    """Шкала 0–2 «условия B» (bench_world.relevance_label2; как у решения с nDCG 0,83): 2 — направление, истинный грейд
+    равен и знает хотя бы один обязательный навык; 1 — соседний грейд с навыком или точный без навыка; 0 — иначе."""
+    return init(_STATE["cond"])["bw"].relevance_label2(need, lat)
 
 
 @dataclass
@@ -316,6 +306,86 @@ def order_v13(bundles: list, idx: list[int], req: dict, above_id: str | None) ->
         os.environ["MATCH_V2"] = "1"
 
 
+# --------------------------------------------------------------------------- дозапрос (вторая ступень подборки)
+# Работодатель отправляет топ-K подборки короткие задания по обязательным навыкам, которые не подтверждены проверкой
+# (в продукте — POST /api/employer/assignments mode=probe; факты T1 по навыкам сливаются с тестом через merge_skill).
+DOZ = {"k": 20, "per_skill": 3, "max_tasks": 9, "resp": 0.7}
+
+
+def dozapros_plan(w: W2, bundles: list, i: int, req: dict, order: list[int], p: dict | None = None) -> dict:
+    """{кандидат: (новые skills_t1, новые probes_t1)} для топ-K яруса 0 с непроверенными обязательными навыками.
+    Ответ на задание — та же модель, что задания теста мира (bench_world._run_test): p = guess + (1 − guess)·σ(1,7·
+    (θ* + сдвиг − b)), сдвиг known_bonus / unknown_penalty, b — середина полосы запрошенного грейда + N(0; 0,5).
+    Отвечает доля resp (кто не ответил — без изменений). Детерминированно по (зерно, потребность, кандидат)."""
+    from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
+    from app.modules.matching import ltr, ranking
+    from app.modules.profiles.facts import merge_skill, skill_confirmed
+
+    bw = init(w.cond)["bw"]
+    p = dict(DOZ, **(p or {}))
+    cfg = w.cfg
+    tags = ltr.required_tags(req)
+    g = req.get("grade") or w.needs[i].grade
+    gi = GRADE_ORDER.index(g) if g in GRADE_ORDER else 1
+    lo = GRADE_CUTS[g]
+    hi = GRADE_CUTS[GRADE_ORDER[gi + 1]] if gi + 1 < len(GRADE_ORDER) else lo + 1.0
+    centre = (lo + hi) / 2
+    out = {}
+    top = [k for k in order if ranking.tier(bundles[k]) == 0][: p["k"]]
+    for k in top:
+        b = bundles[k]
+        todo = [t for t in tags if not skill_confirmed(b.skills_t1.get(t))]
+        if not todo:
+            continue
+        rng = np.random.default_rng(np.random.SeedSequence([w.seed, 7, i, k]))
+        if rng.random() >= p["resp"]:
+            continue
+        lat = w.cands[k].latent
+        sk = dict(b.skills_t1)
+        n_tasks, correct_all = 0, 0
+        for t in todo:
+            n = min(p["per_skill"], p["max_tasks"] - n_tasks)
+            if n <= 0:
+                break
+            shift = cfg.known_bonus if t in lat.known else cfg.unknown_penalty
+            c = 0
+            for _ in range(n):
+                bdiff = centre + rng.normal(0, 0.5)
+                pr = cfg.guess + (1 - cfg.guess) / (1 + math.exp(-1.7 * (lat.theta + shift - bdiff)))
+                c += int(rng.random() < pr)
+            n_tasks += n
+            correct_all += c
+            f = bw._fact(b.profile.user_id, "skill", t, {"correct": c, "total": n, "score": round(c / n, 3),
+                                                         "origin": "assignment", "direction": w.needs[i].direction},
+                         bw.EvidenceLevel.T1, bw.FactSource.probe, False)
+            sk[t] = merge_skill(sk.get(t), f)
+        if n_tasks:
+            pf = bw._fact(b.profile.user_id, "probe", f"probe.need{i}", {"score": round(correct_all / n_tasks, 3),
+                                                                           "origin": "assignment", "n": n_tasks,
+                                                                           "direction": w.needs[i].direction},
+                          bw.EvidenceLevel.T1, bw.FactSource.probe, False)
+            out[k] = (sk, list(b.probes_t1) + [pf])
+    return out
+
+
+class applied:
+    """Контекст: временно применить план дозапроса к пакетам (после выхода — как было)."""
+
+    def __init__(self, bundles: list, plan: dict):
+        self.bundles, self.plan, self.saved = bundles, plan, {}
+
+    def __enter__(self):
+        for k, (sk, pr) in self.plan.items():
+            b = self.bundles[k]
+            self.saved[k] = (b.skills_t1, b.probes_t1)
+            b.skills_t1, b.probes_t1 = sk, pr
+        return self
+
+    def __exit__(self, *a):
+        for k, (sk, pr) in self.saved.items():
+            self.bundles[k].skills_t1, self.bundles[k].probes_t1 = sk, pr
+
+
 # --------------------------------------------------------------------------- базовые линии (по всем кандидатам мира)
 def _tok(text: str) -> list[str]:
     from app.modules.validation.matching_eval import _tokens
@@ -441,7 +511,7 @@ def evaluate_world(w: W2, *, weights: dict | None = None, with_v13: bool = True,
     reqs = parse(w)
     rel = w.rel if label == "rel" else w.rel_l2
     over = overrated(w)
-    per = {"match_v2": [], "oracle_pool": []}
+    per = {"match_v2": [], "match_v2_doz": [], "oracle_pool": []}
     if with_v13:
         per["match_v13"] = []
     info_rows = []
@@ -449,6 +519,10 @@ def evaluate_world(w: W2, *, weights: dict | None = None, with_v13: bool = True,
         idx, above_id = pool_for(bundles, req)
         order, info, _ = order_v2(bundles, idx, req, above_id, weights=weights)
         per["match_v2"].append(need_metrics(rel[i], order, over))
+        plan = dozapros_plan(w, bundles, i, req, order)
+        with applied(bundles, plan):
+            order_d, _, _ = order_v2(bundles, idx, req, above_id, weights=weights)
+        per["match_v2_doz"].append(need_metrics(rel[i], order_d, over))
         # оракул пула: та же подборка (после фильтров), но по истинной метке — потолок порядка внутри подборки
         orc = sorted(order, key=lambda k: -int(rel[i][k]))
         per["oracle_pool"].append(need_metrics(rel[i], orc, over))
@@ -466,19 +540,30 @@ def evaluate_world(w: W2, *, weights: dict | None = None, with_v13: bool = True,
             "n": len(w.needs), "m": len(w.cands)}
 
 
+def run_world(cond: str, seed: int, labels: tuple[str, ...] = ("rel", "l2")) -> dict:
+    """Один мир: генерация один раз, оценка по каждой шкале меток. Для tools/realdata/bench_holdout2.py."""
+    init(cond)
+    w = make_world(cond, seed)
+    out = {"cond": cond, "seed": seed, "digest": w.digest(), "resampled": w.resampled, "n": len(w.needs),
+           "m": len(w.cands), "labels": {}}
+    for lb in labels:
+        r = evaluate_world(w, label=lb)
+        out["labels"][lb] = {"per_need": r["per_need"], "info": r["info"],
+                             "summary": {k: summarize(v) for k, v in r["per_need"].items()}}
+    return out
+
+
 if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--cond", required=True, choices=CONDS)
     ap.add_argument("--seed", type=int, required=True)
-    ap.add_argument("--label", default="rel", choices=("rel", "l2"))
+    ap.add_argument("--labels", default="rel,l2")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
-    init(a.cond)
-    w = make_world(a.cond, a.seed)
-    res = evaluate_world(w, label=a.label)
-    res["summary"] = {k: summarize(v) for k, v in res["per_need"].items()}
+    res = run_world(a.cond, a.seed, tuple(a.labels.split(",")))
     Path(a.out).write_text(json.dumps(res, ensure_ascii=False), encoding="utf-8")
-    print(json.dumps({"cond": a.cond, "seed": a.seed, "digest": res["digest"][:16], **{k: v for k, v in res["summary"].items()}},
-                     ensure_ascii=False, indent=1))
+    print(json.dumps({"cond": a.cond, "seed": a.seed, "digest": res["digest"][:16],
+                      **{lb: {k: v.get("ndcg10") for k, v in r["summary"].items()} for lb, r in res["labels"].items()}},
+                     ensure_ascii=False))

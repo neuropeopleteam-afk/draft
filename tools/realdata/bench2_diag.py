@@ -27,7 +27,7 @@ FALLBACK = {"test": 0.45, "margin": 0.20, "fsp": 0.15, "required": 0.0, "desired
             "failed": -0.45, "provisional": -0.05}
 LIN_FEATS = ("test", "margin", "fsp", "required", "desired", "probe", "failed", "provisional", "over")
 SIGNS = {"test": 1, "margin": 1, "fsp": 1, "required": 1, "desired": 1, "probe": 1, "failed": -1, "provisional": -1,
-         "over": 0}
+         "over": 0, "p_below": -1, "p_over": 0}
 GBM_ALLOWED = ("test", "margin", "fsp", "required", "desired", "probe", "failed", "provisional", "theta_cut",
                "theta_next", "se", "above", "n_req")
 GBM_ALL = GBM_ALLOWED + ("stack_cov", "n_declared", "decl_grade_diff", "years", "bm25", "decl_cov_raw")
@@ -43,6 +43,13 @@ def load(path: str, label: str = "rel") -> dict:
         d = {c: X[:, j] for j, c in enumerate(cols)}
         d["over"] = 1 / (1 + np.exp(-1.7 * d["theta_next"]))
         d["over"][d["theta_next"] <= -2.999] = 0.0
+        from scipy.stats import norm
+
+        se = np.clip(d["se"], 0.05, None)
+        d["p_below"] = norm.cdf(-d["theta_cut"] / se)  # P(θ ниже порога запрошенного грейда | θ̂, SE)
+        d["p_below"][d["theta_cut"] <= -2.999] = 0.0
+        d["p_over"] = norm.cdf(d["theta_next"] / se)  # P(θ выше порога следующего грейда | θ̂, SE)
+        d["p_over"][d["theta_next"] <= -2.999] = 0.0
         if label == "l2":  # шкала 0–2 (сверка определений с соперником): релевантен = 2
             W[s] = {"F": d, "y": z[f"{s}_y2"], "qid": z[f"{s}_qid"], "idcg": z[f"{s}_idcg2"], "nrel": z[f"{s}_nrel2"]}
         else:
@@ -91,16 +98,19 @@ def metrics(y: np.ndarray, order: np.ndarray, idcg: float, nrel: int) -> dict:
             "pool_rel_share": float((y >= 2).sum() / nrel) if nrel else 0.0}
 
 
-def eval_scores(W: dict, seeds: list[str], scorer, mode: str) -> dict:
+def eval_scores(W: dict, seeds: list[str], scorer, mode: str, state: int | None = None) -> dict:
+    """state: None — все запросы, 0 — без дозапроса, 1 — после дозапроса."""
     rows = []
     for s in seeds:
         w = W[s]
         F, y, q = w["F"], w["y"], w["qid"]
         sc = scorer(F)
         for i in np.unique(q):
+            if state is not None and int(i >= 100000) != state:
+                continue
             m = q == i
             o = order_query(sc[m], F["tier"][m], F["stack_cov"][m], mode)
-            rows.append(metrics(y[m], o, float(w["idcg"][i]), int(w["nrel"][i])))
+            rows.append(metrics(y[m], o, float(w["idcg"][i % 100000]), int(w["nrel"][i % 100000])))
     return {k: round(float(np.mean([r[k] for r in rows])), 4) for k in rows[0]}
 
 
@@ -225,7 +235,7 @@ def run(path: str, label: str = "rel") -> dict:
         for i in np.unique(w["qid"]):
             m = w["qid"] == i
             y = w["y"][m]
-            rows.append(metrics(y, np.argsort(-y, kind="stable"), float(w["idcg"][i]), int(w["nrel"][i])))
+            rows.append(metrics(y, np.argsort(-y, kind="stable"), float(w["idcg"][i % 100000]), int(w["nrel"][i % 100000])))
     res["rows"]["oracle_pool"] = {k: round(float(np.mean([r[k] for r in rows])), 4) for k in rows[0]}
     print("oracle_pool", res["rows"]["oracle_pool"], flush=True)
     return res
