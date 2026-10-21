@@ -26,3 +26,5 @@ junit*.xml
 backend/app/modules/validation/data/grade_sweep_raw_last.json
 # кэш голоса постоянных фраз проводника (docker-compose: api → /srv/cache/concierge)
 cache/
+# сети России для моста: собираются infra/mirror/ru_nets.py, в репозиторий не кладутся (8 664 публичных адреса)
+infra/mirror/spectrek_fsp_ru_nets.conf
