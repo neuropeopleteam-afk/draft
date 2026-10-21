@@ -12735,6 +12735,24 @@
             "title": "Fsp Only",
             "type": "boolean"
           },
+          "fsp_protocol_only": {
+            "default": false,
+            "description": "Только с результатом из официального протокола ФСП (найдено в протоколе и ждёт подтверждения ФСП или подтверждено ФСП)",
+            "title": "Fsp Protocol Only",
+            "type": "boolean"
+          },
+          "grade_exact": {
+            "default": false,
+            "description": "Строго запрошенный грейд: кандидаты с результатом теста выше полосы запрошенного грейда идут после точного уровня (не скрываются)",
+            "title": "Grade Exact",
+            "type": "boolean"
+          },
+          "learn_from_company": {
+            "default": false,
+            "description": "Учитывать решения компании: ограниченная объяснимая подстройка весов по «подходит»/«не подходит» и приглашениям (learn-v1)",
+            "title": "Learn From Company",
+            "type": "boolean"
+          },
           "min_score": {
             "anyOf": [
               {
@@ -45667,6 +45685,18 @@
               "default": false,
               "description": "Только с паспортом ФСП",
               "title": "Fsp",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Только с результатом из официального протокола ФСП (ждёт подтверждения ФСП или подтверждено ФСП)",
+            "in": "query",
+            "name": "fsp_protocol_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Только с результатом из официального протокола ФСП (ждёт подтверждения ФСП или подтверждено ФСП)",
+              "title": "Fsp Protocol Only",
               "type": "boolean"
             }
           },
