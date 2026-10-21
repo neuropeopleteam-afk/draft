@@ -42,7 +42,23 @@ import re
 import tempfile
 import threading
 
-_SHM = "/dev/shm" if os.path.isdir("/dev/shm") and os.access("/dev/shm", os.W_OK) else None
+def _shm_dir():
+    """Каталог в памяти для временных файлов песочницы — только если он доступен на запись И разрешает запуск
+    файлов: в контейнерах /dev/shm часто смонтирован с noexec, и тогда проверки, которые запускают показанные
+    скрипты (`./http_get.sh`) или собранные бинарники, падают с «Permission denied» не из-за задания.
+    Иначе — обычный временный каталог системы (None для tempfile)."""
+    path = "/dev/shm"
+    if not (os.path.isdir(path) and os.access(path, os.W_OK)):
+        return None
+    try:
+        if os.statvfs(path).f_flag & getattr(os, "ST_NOEXEC", 8):
+            return None
+    except OSError:
+        return None
+    return path
+
+
+_SHM = _shm_dir()
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
