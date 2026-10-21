@@ -30,13 +30,14 @@ def validate_experience_years(
     if age is not None:
         try:
             age_val = float(age)
+        except (TypeError, ValueError):
+            age_val = None
+        if age_val is not None:
             max_by_age = max(0.0, age_val - MIN_WORK_AGE)
             if val > max_by_age:
                 raise ValueError(
                     f"Стаж ({val:g} л.) не может быть больше возраста минус 14 лет (максимум {max_by_age:g} л.)"
                 )
-        except (TypeError, ValueError):
-            pass
     if age_group in AGE_GROUP_MAX_AGE:
         max_age = AGE_GROUP_MAX_AGE[age_group]
         max_by_group = max(0, max_age - MIN_WORK_AGE)
