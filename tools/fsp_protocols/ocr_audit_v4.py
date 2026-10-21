@@ -225,9 +225,11 @@ def report(sample_path: Path, check_path: Path, adj_path: Path, out_path: Path) 
     verifier_disagree = collections.Counter()
     missing = collections.Counter()
     adjudicated = collections.Counter()
+    not_athlete = 0  # найдено при разборе: строка не спортсмена (тренер/специалист), ошибочно записанная спортсменом
     for c in cmp_:
         r = by_idx[c["idx"]]
         a = adj["items"].get(str(c["idx"]), {})
+        not_athlete += a.get("record") == "not_athlete"
         for fld, ok_key in (("fio", "fio_ok"), ("birth_date", "birth_ok"), ("place", "place_ok")):
             ok = c.get(ok_key)
             if ok is False or (not c["found"]):
@@ -267,11 +269,14 @@ def report(sample_path: Path, check_path: Path, adj_path: Path, out_path: Path) 
         "checked_at": chk["checked_at"], "pages_checked": chk["pages"], "usage": chk.get("usage"),
         "errors": {k: {"errors": v[0], "checked": v[1], "rate": round(v[0] / v[1], 4) if v[1] else None, "ci95": wilson(v[0], v[1])}
                    for k, v in res.items()},
+        "record_not_athlete": {"errors": not_athlete, "checked": len(cmp_), "rate": round(not_athlete / len(cmp_), 4),
+                               "ci95": wilson(not_athlete, len(cmp_)),
+                               "what": "запись тренера/специалиста, ошибочно записанная спортсменом (найдено при разборе глазами)"},
         "verifier_disagreements_before_adjudication": dict(verifier_disagree),
         "adjudication_counts": dict(sorted(adjudicated.items())),
         "place_absent": {"total": sum(missing.values()), "by_reason": {k: {"count": v, "reason": by_cause.get(k, k)} for k, v in sorted(missing.items())}},
         "adjudication_notes": adj.get("notes", []),
-        "recompute": "python3 tools/fsp_protocols/ocr_audit_v4.py report <sample.json> <check.json> <adjudication.json> docs/realdata/fsp_protocols/ocr_audit_v4.json",
+        "recompute": "python3 tools/fsp_protocols/ocr_audit_v4.py report <sample.json> <check.json> <adjudication.json> docs/realdata/fsp_protocols/ocr_audit_v5.json",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
     out_path.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

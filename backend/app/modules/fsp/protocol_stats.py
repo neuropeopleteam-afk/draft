@@ -16,7 +16,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-DEFAULT_INDEX = "/opt/spectrek_fsp/data_local/fsp_protocols/index_v5.json"  # v5: места восстановлены (place_recover.py)
+DEFAULT_INDEX = "/opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json"  # v6 = v5 + исправления по аудиту v5 (apply_audit_fixes.py)
 
 # 89 субъектов РФ: (официальное имя, федеральный округ, основы для распознавания записи протокола)
 SUBJECTS: list[tuple[str, str, tuple[str, ...]]] = [
