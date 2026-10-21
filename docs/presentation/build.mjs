@@ -207,7 +207,7 @@ function numCell(s, x, y, w, v, { size = 26, color = C.white } = {}) {
     s.addText(String(i + 1), { x: x + 0.2, y: 5.12, w: 0.4, h: 0.85, fontFace: FONT, fontSize: 22, bold: true, color: C.red, valign: 'middle', margin: 0 });
     s.addText(t, { x: x + 0.65, y: 5.12, w: 2.2, h: 0.85, fontFace: FONT, fontSize: 12, bold: true, color: C.white, valign: 'middle', margin: 0 });
   });
-  note(s, 'Модельные кандидаты, не люди: где кандидаты модельные — это написано рядом с цифрой. Условия, N и команда пересчёта — на сайте, раздел «Как мы проверяем себя».', { y: 6.3 });
+  note(s, 'Почему справа строже: грейд — по шести ступеням; в тесте кандидаты угадывают, чаще завышают заявку, больше людей у порогов; в подборе часть анкет завышает грейд и стек. Обе колонки — один прогон на отложенных данных. Кандидаты модельные, не люди; условия, N и команда пересчёта — на сайте, раздел «Как мы проверяем себя».', { y: 6.18, h: 0.62, size: 9 });
 }
 
 
@@ -477,7 +477,8 @@ function numCell(s, x, y, w, v, { size = 26, color = C.white } = {}) {
   });
   const c1 = (PAIRS.pairs.find((p) => p.standard && p.standard.cond) || {}).standard;
   const c2 = (PAIRS.pairs.find((p) => p.hard && p.hard.cond) || {}).hard;
-  const condLine = [c1 ? `Стандартные: ${c1.cond}.` : '', c2 ? `Прочность: ${c2.cond}.` : ''].filter(Boolean).join('  ');
+  const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+  const condLine = [c1 ? `${cap(c1.cond)}.` : '', c2 ? `${cap(c2.cond)}.` : ''].filter(Boolean).join('  ');
   note(s, (condLine ? condLine + ' ' : '') + 'Модельные кандидаты, не люди; какие условия идут заголовком, решено до прогонов. Все условия, N и команды пересчёта — docs/NUMBERS.json, приложение Б документации, /validation.', { y: 6.22, h: 0.72, size: 7.5 });
 }
 
