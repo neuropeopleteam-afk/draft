@@ -1,0 +1,231 @@
+{
+ "phase": "train",
+ "n_per_seed": 120,
+ "seeds": [
+  1301,
+  1302,
+  1303,
+  1304,
+  1305,
+  1306,
+  1307,
+  1308,
+  1309,
+  1310
+ ],
+ "common_args": [
+  "--retest"
+ ],
+ "note": "TRAIN раунд 2 правила решения v2 (21.10 ~19:55, до FINAL №3): V0 = FINAL №2, V1 = продление 30/80 (прошёл ограничения в раунде 1), V2–V11 — поверх V1 рычаги границы подтверждения (TWO_STAGE_CONFIRM, TWO_STAGE_LEVEL, CONFIRM_LEVEL), вес времени, δ, длина второго этапа, randomesque; выбор — RULE_V2_2110.md с поправкой №1 и разделом «Раунд 2»",
+ "variants": {
+  "V0": {},
+  "V1": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80"
+  },
+  "V2": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_TWO_STAGE_CONFIRM": "0.45"
+  },
+  "V3": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_TWO_STAGE_CONFIRM": "0.4"
+  },
+  "V4": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_TWO_STAGE_LEVEL": "0.7"
+  },
+  "V5": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_CONFIRM_LEVEL": "0.7"
+  },
+  "V6": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_TWO_STAGE_CONFIRM": "0.45",
+   "ASSESSMENT_TWO_STAGE_LEVEL": "0.7"
+  },
+  "V7": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_TIME_WEIGHT": "0.5"
+  },
+  "V8": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_DELTA": "0.5"
+  },
+  "V9": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_TWO_STAGE_ITEMS": "16",
+   "ASSESSMENT_TWO_STAGE_MINUTES": "25"
+  },
+  "V10": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_EXPOSURE": "randomesque",
+   "ASSESSMENT_RANDOMESQUE_K": "3"
+  },
+  "V11": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_TWO_STAGE_CONFIRM": "0.45",
+   "ASSESSMENT_TWO_STAGE_ITEMS": "16",
+   "ASSESSMENT_TWO_STAGE_MINUTES": "25"
+  }
+ },
+ "configs": {
+  "S_V0": {
+   "env": {},
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V0": {
+   "env": {},
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V1": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V1": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80"
+   },
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V2": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_TWO_STAGE_CONFIRM": "0.45"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V2": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_TWO_STAGE_CONFIRM": "0.45"
+   },
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V3": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_TWO_STAGE_CONFIRM": "0.4"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V3": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_TWO_STAGE_CONFIRM": "0.4"
+   },
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V4": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_TWO_STAGE_LEVEL": "0.7"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V4": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_TWO_STAGE_LEVEL": "0.7"
+   },
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V5": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.7"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V5": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.7"
+   },
+   "args": [
+    "--fixed"
+   ]
+  }
+ },
+ "part_of": "TRAIN_PLAN_2110e.json"
+}

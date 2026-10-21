@@ -32,8 +32,18 @@ def cipp(v: list[float], pct: bool) -> str:
 
 
 def main() -> None:
+    import argparse
+
+    global SRC, MD, NUM
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--tag", default="", help="4 — цикл №4 (devdev_1to1_4.json → DEVDEV_1TO1_4.md, numbers_devdev_4.json)")
+    a = ap.parse_args()
+    if a.tag:
+        SRC = ROOT / f"docs/realdata/devdev_1to1_{a.tag}.json"
+        MD = ROOT / f"docs/realdata/DEVDEV_1TO1_{a.tag}.md"
+        NUM = ROOT / f"docs/realdata/numbers_devdev_{a.tag}.json"
     d = json.loads(SRC.read_text(encoding="utf-8"))
-    pool, s26 = d["pooled"], d["per_seed"]["2026"]
+    pool, s26 = d["pooled"], d["per_seed"].get("2026")
     cond = (f"синтетика (модель, не люди): открытый генератор Dev_dev (MIT, коммит {d['their_commit'][:8]}), "
             f"{len(d['seeds'])} отложенных зёрен × 40 вакансий × 1000 кандидатов ({d['n_vacancies']} вакансий), их тест и "
             f"их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон {d['run_at'][:10]}, код "
@@ -60,15 +70,15 @@ def main() -> None:
           "Сейчас это опция API подборки (`filters.grade_exact`), переключателя на экране подборки нет.", "",
           "| метрика | наш подбор | 95 % ДИ | IT Match | разность (парная) | 95 % ДИ |", "|---|---|---|---|---|---|"]
     L += rows("exact")
-    L += ["", "## Зерно 2026 (их опубликованный отчёт) — отдельно", "",
-          "| выдача | P@5 | P@10 | nDCG@10 | переоценённых |", "|---|---|---|---|---|"]
-    t = s26["their"]
-    for name, x in t.items():
-        L.append(f"| {name} (их код) | {f(x['p5'], 1)} | {f(x['p10'], 1)} | {f(x['ndcg10'], 0)} | {f(x['overrated10'], 1)} |")
-    for row, nm in (("main", "наш подбор, main"), ("exact", "наш подбор, «строго запрошенный грейд»"),
-                    ("base", "наш подбор без расширения каталога")):
-        x = s26[row]["ours"]
-        L.append(f"| {nm} | {f(x['p5'], 1)} | {f(x['p10'], 1)} | {f(x['ndcg10'], 0)} | {f(x['overrated10'], 1)} |")
+    if s26:
+        L += ["", "## Зерно 2026 (их опубликованный отчёт) — отдельно", "",
+              "| выдача | P@5 | P@10 | nDCG@10 | переоценённых |", "|---|---|---|---|---|"]
+        for name, x in s26["their"].items():
+            L.append(f"| {name} (их код) | {f(x['p5'], 1)} | {f(x['p10'], 1)} | {f(x['ndcg10'], 0)} | {f(x['overrated10'], 1)} |")
+        for row, nm in (("main", "наш подбор, main"), ("exact", "наш подбор, «строго запрошенный грейд»"),
+                        ("base", "наш подбор без расширения каталога")):
+            x = s26[row]["ours"]
+            L.append(f"| {nm} | {f(x['p5'], 1)} | {f(x['p10'], 1)} | {f(x['ndcg10'], 0)} | {f(x['overrated10'], 1)} |")
     L += ["", "## По зёрнам (nDCG@10)", "", "| зерно | IT Match | main | exact | base |", "|---|---|---|---|---|"]
     for s, v in d["per_seed"].items():
         L.append(f"| {s} | {f(v['their']['IT Match']['ndcg10'], 0)} | {f(v['main']['ours']['ndcg10'], 0)} | "
@@ -81,12 +91,13 @@ def main() -> None:
           "* base — без расширения каталога (нет направлений «мобильная разработка», DevOps и грейда Lead): их вакансии "
           "этих направлений наш базовый каталог не различает — справочно.", ""]
     MD.write_text("\n".join(L), encoding="utf-8")
-    num = {"devdev_1to1": {
+    num = {("devdev_1to1" + (f"_{a.tag}" if a.tag else "")): {
         "condition": cond, "recompute": d["recompute"], "source": "docs/realdata/devdev_1to1.json",
         "main": {m: {k: pool["main"][m][k] for k in ("ours", "ours_ci", "it_match", "diff", "diff_ci")} for m in NAMES},
         "exact_option_api": {m: {k: pool["exact"][m][k] for k in ("ours", "ours_ci", "it_match", "diff", "diff_ci")}
                              for m in NAMES},
-        "seed_2026": {"it_match": t["IT Match"], "main": s26["main"]["ours"], "exact": s26["exact"]["ours"]},
+        **({"seed_2026": {"it_match": s26["their"]["IT Match"], "main": s26["main"]["ours"],
+                          "exact": s26["exact"]["ours"]}} if s26 else {}),
         "note": "exact — только при выборе работодателем «строго запрошенный грейд» (опция API, создана и выбрана на "
                 "зёрнах разработки 1–3 этого генератора); главная строка — main"}}
     NUM.write_text(json.dumps(num, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

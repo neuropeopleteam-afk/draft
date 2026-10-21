@@ -63,7 +63,7 @@ function Body({ r }: { r: any }) {
             </thead>
             <tbody>
               {ROWS.map(([key, t]) => <tr key={key} className="border-t border-brand-night/5"><td className="px-3 py-2 font-medium text-brand-night">{t}</td><td className={td}>{pct(k[key])}</td><td className={td}>{pct(o[key])}</td></tr>)}
-              <tr className="border-t border-brand-night/5"><td className="px-3 py-2 font-medium text-brand-night">Покрытие обязательных навыков у лучшего из пяти (T1, среднее)</td><td className={td}>{mean(k.req_coverage_best_top5)}</td><td className={td}>{mean(o.req_coverage_best_top5)}</td></tr>
+              <tr className="border-t border-brand-night/5"><td className="px-3 py-2 font-medium text-brand-night">Покрытие обязательных навыков у лучшего из пяти (подтверждено тестом, среднее)</td><td className={td}>{mean(k.req_coverage_best_top5)}</td><td className={td}>{mean(o.req_coverage_best_top5)}</td></tr>
               {k.req_coverage_mean_top5 && <tr className="border-t border-brand-night/5"><td className="px-3 py-2 font-medium text-brand-night">… в среднем по первой пятёрке</td><td className={td}>{mean(k.req_coverage_mean_top5)}</td><td className={td}>{mean(o.req_coverage_mean_top5)}</td></tr>}
               {k.grade_above_off && <tr className="border-t border-brand-night/5" data-testid="hh-match-before"><td className="px-3 py-2 font-medium text-brand-night">До добора уровнем выше (match-v1.2): лучший из пяти / в среднем по пятёрке</td><td className={td}>{mean(k.grade_above_off.req_coverage_best_top5)} / {mean(k.grade_above_off.req_coverage_mean_top5)}</td><td className={td}>{mean(o.grade_above_off?.req_coverage_best_top5)} / {mean(o.grade_above_off?.req_coverage_mean_top5)}</td></tr>}
               {k.grade_above_applied && <tr className="border-t border-brand-night/5"><td className="px-3 py-2 font-medium text-brand-night">Добор уровнем выше сработал (в точной категории меньше 30)</td><td className={td}>{pct(k.grade_above_applied)}</td><td className={td}>{pct(o.grade_above_applied)}</td></tr>}
@@ -92,7 +92,7 @@ function Body({ r }: { r: any }) {
         </ScrollX>
       </div>
       <p className="mt-2 text-xs text-brand-ink/65">
-        «Подтверждённые» — модельные кандидаты, чей грейд подтверждён тестом. Покрытие — доля обязательных навыков потребности, подтверждённых тестом (T1),
+        «Подтверждённые» — модельные кандидаты, чей грейд подтверждён тестом. Покрытие — доля обязательных навыков потребности, подтверждённых тестом,
         у лучшего из первых пяти.{r.grade_above ? " Добор уровнем выше (match-v1.3): если в точной категории меньше 30 кандидатов, подборка добавляет категорию на ступень выше; первые 2 места — лучшие точного уровня, дальше кандидат уровнем выше стоит выше точного, только если покрывает больше обязательного. На синтетике со скрытой истиной P@5, nDCG и MRR не ниже прежних (docs/validation/grade_above.json)." : ""} Направления, которых пока нет в каталоге, разбор относит к ближайшему — это ошибка, которую закрывает расширение каталога.
         Ошибки разбора по полям: {Object.entries<number>(r.errors_by_field ?? {}).map(([f, n]) => `${f} — ${n}`).join(", ") || "—"}. Подробно — docs/validation/HH_MATCH.md.
       </p>

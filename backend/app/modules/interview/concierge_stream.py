@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import os
 import logging
 import queue
 import re
@@ -51,6 +52,12 @@ def stream_llm(msgs: list[dict], spec: str, *, max_tokens: int = 420, stop: thre
         body["max_tokens"] = max_tokens + int(effort[1:])
     elif effort:
         body["reasoning"] = {"effort": effort}
+    # Claude через OpenRouter — всегда у одного поставщика: кэш подсказки живёт у поставщика, при переброске между ними
+    # каждый ход платил полным чтением подсказки (боевой 21.10 19:07–19:13: решение 3,8–6 с вместо 1,5–1,8 с). Замер 19:40:
+    # Vertex — холодный 2,7 с, тёплый 1,4–1,7; Anthropic — 5,0 / 1,7–2,3; Bedrock — 3,5 / 1,5–3,0.
+    pin = os.environ.get("CONCIERGE_OR_PROVIDER", "google-vertex,anthropic").strip()
+    if prov == "openrouter" and model.startswith("anthropic/") and pin:
+        body["provider"] = {"order": [p.strip() for p in pin.split(",") if p.strip()], "allow_fallbacks": True}
     with brain._client().stream("POST", url, headers=headers, json=body,
                                 timeout=httpx.Timeout(timeout, connect=5)) as r:
         if r.status_code != 200:

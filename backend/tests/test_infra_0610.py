@@ -47,11 +47,15 @@ def test_jury_sandboxes_are_isolated(client):
                 and n["requirements"].get("work_format") == "remote")
     sel = client.get(f"/api/employer/needs/{need['id']}/selections/1", headers=H(ea["access_token"])).json()
     refs = {c["ref"] for c in sel["results"]}
-    # подборка по умолчанию — категория потребности (backend.middle): два своих подтверждённых и «Пройдите тест сами»
-    # со статусом «грейд не подтверждён» последним (И1); «Junior (предварительно)» песочницы в неё не входит,
-    # но виден в поиске по направлению
-    assert len(refs) == 3 and refs < own_a and not refs & own_b, (refs, own_a)
-    assert sel["results"][-1]["grade_status"] == "unconfirmed" and sel["confirmed_matched"] == 2
+    # подборка по умолчанию — категория потребности (backend.middle): два своих подтверждённых, затем ярус «грейд не
+    # подтверждён» (И1): «Пройдите тест сами» и «Junior — нужен доп. этап» (персона с 21.10 вместо «Junior
+    # (предварительно)»: по SPRT грейд не решён). Правило экспертов 20.10: без проверенного грейда кандидат идёт в
+    # подборку отдельным ярусом только по направлению, заявленный грейд не фильтрует — поэтому он здесь (прежнее
+    # ожидание 3 опиралось на фильтр по заявленному грейду). Чужая песочница по-прежнему не видна.
+    assert len(refs) == 4 and refs == own_a and not refs & own_b, (refs, own_a)
+    st = [r["grade_status"] for r in sel["results"]]
+    assert st[:2] == ["confirmed", "confirmed"] and st[2:] == ["unconfirmed", "unconfirmed"], st
+    assert sel["confirmed_matched"] == 2
     # обычный работодатель песочниц не видит
     real = register_and_verify(client, "hr@real.example.org", role="employer", company_name="Настоящая")
     seen = {c["ref"] for c in client.get("/api/employer/candidates", headers=H(real)).json()["items"]}

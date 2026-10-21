@@ -98,7 +98,7 @@ def test_local_request_json_mode_no_thinking(monkeypatch, net):
     net.on("llm-local.test", lambda req, body: reply('{"a": 1}'))
     r = llm.chat(MSG, want_json=True, func="parse_need")
     assert r.ok and r.data == {"a": 1} and r.provider == "local" and r.model == "qwen3.5-9b"
-    assert r.label == "Qwen3.5 9B (локально)"
+    assert r.label == "языковая модель (локально)"  # интерфейс: без имён моделей (21.10)
     (c,) = net.calls
     assert c["url"] == LOCAL_URL + "/chat/completions"
     b = c["body"]
@@ -245,9 +245,11 @@ def test_llm_local_env_file_profile(monkeypatch, net):
     ("gpt://b1/yandexgpt/latest", "YandexGPT"), ("qwen3.6-35b-a3b/latest", "qwen3.6-35b-a3b"),
 ])
 def test_model_labels(model, label):
-    assert llm.model_label(model) == label
-    assert llm.route_label("openrouter", model) == label
-    assert llm.route_label("local", model) == f"{label} (локально)"
+    assert llm.model_name(model) == label  # служебное имя (журналы, /api/meta)
+    assert llm.route_name("openrouter", model) == label
+    assert llm.route_name("local", model) == f"{label} (локально)"
+    assert llm.route_label("openrouter", model) == "языковая модель"  # интерфейс: без имён моделей (21.10)
+    assert llm.route_label("local", model) == "языковая модель (локально)"
 
 
 def test_meta_shows_local_chain(monkeypatch, net):
@@ -281,7 +283,7 @@ def test_parse_need_through_local_without_pii(monkeypatch, net):
     net.on("llm-local.test", answer)
     req = NP.parse_need(text)
     assert req["llm"]["used"] is True and req["llm"]["provider"] == "local"
-    assert req["llm"]["model_label"] == "Qwen3.5 9B (локально)" and req["method"] == "llm+rules"
+    assert req["llm"]["model_label"] == "языковая модель (локально)" and req["method"] == "llm+rules"
     assert "petr.sidorov@example.com" not in seen["user"] and "123-45-67" not in seen["user"]
     assert "Сидоров" not in seen["user"]
     assert net.calls[0]["body"]["response_format"] == {"type": "json_object"}

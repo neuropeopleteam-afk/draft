@@ -1,0 +1,107 @@
+{
+ "what": "цикл №5 — перебор порядка по умолчанию на РАЗРАБОТКЕ по правилу docs/realdata/CYCLE5_SELECTION_RULE.md",
+ "variants": {
+  "V0": {
+   "sm_rel": {
+    "ndcg10": 0.6482,
+    "p5": 0.74,
+    "mrr": 0.8439
+   },
+   "hard_rel": {
+    "ndcg10": 0.6035,
+    "p5": 0.789,
+    "mrr": 0.8774
+   },
+   "devdev_main": {
+    "ndcg10": 0.7892,
+    "p5": 0.6767,
+    "rr": 0.7631,
+    "overrated10": 0.0367
+   },
+   "devdev_it_match": {
+    "ndcg10": 0.8741,
+    "p5": 0.8217,
+    "rr": 0.9199,
+    "overrated10": 0.045
+   },
+   "admissible": true
+  },
+  "V1": {
+   "sm_rel": {
+    "ndcg10": 0.6497,
+    "p5": 0.6914,
+    "mrr": 0.8302
+   },
+   "hard_rel": {
+    "ndcg10": 0.5568,
+    "p5": 0.735,
+    "mrr": 0.8263
+   },
+   "devdev_main": {
+    "ndcg10": 0.8917,
+    "p5": 0.8617,
+    "rr": 0.9424,
+    "overrated10": 0.065
+   },
+   "devdev_it_match": {
+    "ndcg10": 0.8741,
+    "p5": 0.8217,
+    "rr": 0.9199,
+    "overrated10": 0.045
+   },
+   "admissible": false
+  },
+  "V2": {
+   "sm_rel": {
+    "ndcg10": 0.6503,
+    "p5": 0.6943,
+    "mrr": 0.8153
+   },
+   "hard_rel": {
+    "ndcg10": 0.5644,
+    "p5": 0.74,
+    "mrr": 0.8673
+   },
+   "devdev_main": {
+    "ndcg10": 0.8818,
+    "p5": 0.87,
+    "rr": 0.9132,
+    "overrated10": 0.0592
+   },
+   "devdev_it_match": {
+    "ndcg10": 0.8741,
+    "p5": 0.8217,
+    "rr": 0.9199,
+    "overrated10": 0.045
+   },
+   "admissible": false
+  },
+  "V3": {
+   "sm_rel": {
+    "ndcg10": 0.6559,
+    "p5": 0.7171,
+    "mrr": 0.8542
+   },
+   "hard_rel": {
+    "ndcg10": 0.5876,
+    "p5": 0.773,
+    "mrr": 0.8767
+   },
+   "devdev_main": {
+    "ndcg10": 0.8462,
+    "p5": 0.7817,
+    "rr": 0.8247,
+    "overrated10": 0.0508
+   },
+   "devdev_it_match": {
+    "ndcg10": 0.8741,
+    "p5": 0.8217,
+    "rr": 0.9199,
+    "overrated10": 0.045
+   },
+   "admissible": false
+  }
+ },
+ "decision": "ни один вариант не допустим (жёсткие ниже V0 − 0,005 и/или переоценённых Dev_dev + > 1 п.п.) — остаётся V0 (№4), FREEZE №5 не делается",
+ "command": "MATCH_DEFAULT_ORDER=V0..V3 (временный переключатель, в код не вошёл): bench_holdout2.py run --dev; devdev_1to1_4.py dev"
+}

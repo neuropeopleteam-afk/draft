@@ -63,7 +63,7 @@ export default function RuLlm() {
   const { data: d } = useApi<Data>("/validation/ru-llm", []);
   if (!d || d.missing || !d.functions?.length) return null;
   const alias = makeModelAlias();
-  const models = d.models.map((m) => ({ ...m, label: alias(m.key === "rules" ? "rules" : m.spec ?? m.label) }));
+  const models = d.models.map((m) => ({ ...m, label: alias(m.key === "rules" ? "rules" : m.label ?? m.spec) }));
   return (
     <div className="mt-6" id="ru-llm" data-testid="ru-llm">
       <h3 className="text-base font-bold text-brand-night">Только российская модель: против модели стенда и правил</h3>

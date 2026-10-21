@@ -30,6 +30,9 @@ import { useMeta } from "../lib/meta";
 import { ScrollX } from "../components/A11y";
 import { Fold, FoldAllButton, FoldGroup, FoldProvider } from "../components/validation/Fold";  // SIMPLIFY п.3: разделы свёрнуты
 import { makeModelAlias, noVendor } from "../components/validation/noVendor";
+import { getMatchingMetrics } from "../lib/numbers";
+
+const fmtPct1 = (x: number) => (x * 100).toFixed(1).replace(".", ",");
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
@@ -54,7 +57,20 @@ export default function Validation() {
         </p>
         <Headline />
         {/* KF4: «Арена метрик» — Драфт против поиска по резюме и точность грейда, сразу под «5 числами», над «Красной кнопкой» */}
-        <MatchingArena />
+        {/* А19 №1 (обход 2): арена — прежний бенчмарк разработки v1 (набор разработки, не отложенный); заголовок подбора —
+            отложенная проверка v2 из NUMBERS (карточка «Подбор» в Headline выше и на главной) */}
+        <Fold>
+          <section className="mt-6" data-testid="v-arena-v1">
+            <h2 className="text-lg font-bold text-brand-night">Прежний бенчмарк разработки v1 (история)</h2>
+            <p className="mt-1 text-sm text-brand-ink/75">
+              Это набор разработки первой версии подбора — на нём подбор настраивался, поэтому его цифры не заголовок.
+              Заголовок — отложенная проверка текущей версии
+              {(() => { const mm = getMatchingMetrics(); return mm?.p5?.mean != null ? `: из первых пяти подходят ${fmtPct1(mm.p5.mean)} %` : ""; })()}
+              {" "}(карточка «Подбор» выше).
+            </p>
+            <MatchingArena />
+          </section>
+        </Fold>
         <div className="mt-8">
           <CheatChallenge />
         </div>

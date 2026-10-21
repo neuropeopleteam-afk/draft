@@ -115,11 +115,13 @@ def test_api_numbers_come_from_validation_json(client):
         assert p["value"] == C._get(src, p["path"]), p["path"]
         sig = p["signature"]
         assert sig["world"] and "commit" in sig, p["path"]
+    # 1.4 «доля релевантных в топ-5» — из NUMBERS (отложенная проверка подбора, тот же заголовок, что на главной),
+    # а не из бенчмарка разработки v1 (А19, обход 2: на /criteria оставалось 75,1 % против 76,0 / 77,1 % на сайте)
     p14 = d["criteria"][0]["items"][3]["proof"]
-    bench = json.loads(C.SOURCES["bench"][0].read_text(encoding="utf-8"))
-    assert p14["value"] == bench["metrics"]["platform"]["p@5"]["mean"]
-    assert p14["ci"] == [bench["metrics"]["platform"]["p@5"]["lo"], bench["metrics"]["platform"]["p@5"]["hi"]]
-    assert p14["signature"]["commit"] == bench["signature"]["commit"]
+    nums = json.loads(C.SOURCES["numbers"][0].read_text(encoding="utf-8"))
+    assert p14["src"] == "numbers" and p14["value"] == nums["matching"]["p5"]["mean"]
+    assert p14["ci"] == [nums["matching"]["p5"]["lo"], nums["matching"]["p5"]["hi"]]
+    assert p14["signature"]["commit"] == nums["matching"]["git_head"]
     # тот же расчёт, что у первого экрана /validation. С 21.10 первый экран читает docs/NUMBERS.json (симуляция
     # продукта: движок стенда на реальном банке), а /api/validation/headline (path_retest.json) — отдельный блок
     # «Повтор всего пути». Поэтому κ повтора в 2.2 сверяется с симуляцией продукта и с NUMBERS.json, а не с
@@ -137,11 +139,11 @@ def test_api_numbers_come_from_validation_json(client):
 
 
 def test_no_calculation_no_number(monkeypatch, tmp_path):
-    monkeypatch.setitem(C.SOURCES, "bench", (tmp_path / "missing.json", "make bench"))
-    C._cache.pop("bench", None)
+    monkeypatch.setitem(C.SOURCES, "numbers", (tmp_path / "missing.json", "python3 tools/publish/gen_numbers.py"))
+    C._cache.pop("numbers", None)
     p = C.build()["criteria"][0]["items"][3]["proof"]
-    assert p["kind"] == "link" and p["missing"] and "value" not in p and "make bench" in p["label"]
-    C._cache.pop("bench", None)
+    assert p["kind"] == "link" and p["missing"] and "value" not in p and "gen_numbers" in p["label"]
+    C._cache.pop("numbers", None)
 
 
 def test_sus_proof_is_live_or_link(client):

@@ -146,6 +146,11 @@ export function minutes(n: number): string {
   return `${n} ${d === 1 && h !== 11 ? "минута" : d >= 2 && d <= 4 && (h < 12 || h > 14) ? "минуты" : "минут"}`;
 }
 
+/** После «около»: «около 1 минуты», «около 3 минут» (А19 21.10: было «около 3 минуты»). */
+export function minutesGen(n: number): string {
+  return `${n} ${n % 10 === 1 && n % 100 !== 11 ? "минуты" : "минут"}`;
+}
+
 /** Н1: реплика ИИ-интервьюера сразу после письменного теста. */
 export function liveGreeting(name: string | null | undefined): string {
   const n = (name ?? "").trim().split(/\s+/)[0];
@@ -179,7 +184,7 @@ function LiveDefenseHero({ st, name, busy, limited, onGo }: {
             </button>
           </div>
           <p className="text-xs leading-snug text-white/70">
-            До {st.max_questions} вопросов, около {minutes(st.minutes)}. Аватар озвучивает вопрос своим голосом и сразу включает ваш микрофон — просто отвечайте вслух. Грейд не меняется — подтверждается самостоятельность решения.
+            До {st.max_questions} вопросов, около {minutesGen(st.minutes)}. Аватар озвучивает вопрос своим голосом и сразу включает ваш микрофон — просто отвечайте вслух. Грейд не меняется — подтверждается самостоятельность решения.
           </p>
         </div>
       </div>
