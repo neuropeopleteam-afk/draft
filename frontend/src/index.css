@@ -421,15 +421,14 @@ html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg,
 }
 
 @keyframes fspLaserSweep {
-  0% { transform: translateX(-100%); opacity: 0.35; }
-  50% { opacity: 1; }
-  100% { transform: translateX(220%); opacity: 0.35; }
+  0% { transform: translate3d(-100%, 0, 0); }
+  100% { transform: translate3d(220%, 0, 0); }
 }
 
 @keyframes fspLaserVert {
-  0% { top: -22%; opacity: 0.2; }
+  0% { transform: translate3d(0, -40px, 0); opacity: 0.25; }
   50% { opacity: 1; }
-  100% { top: 102%; opacity: 0.2; }
+  100% { transform: translate3d(0, 260px, 0); opacity: 0.25; }
 }
 
 .fsp-serif-italic {
@@ -448,13 +447,44 @@ html[data-theme="light"] .np .fsp-serif-italic {
   background-image: linear-gradient(100deg, #1F12A6 0%, #402FFF 32%, #7A6BFF 58%, #D41430 82%, #1F12A6 100%);
 }
 
-/* Убрана лишняя светящаяся линия слева от заголовка (оставлен только благородный перелив текста) */
+/* Вертикальная лазерная полоса слева от главного заголовка + горизонтальная лазерная полоса под шапкой (чистый GPU transform без пересечения букв) */
 .fsp-laser-spine {
   position: relative;
+  padding-left: 1.35rem;
 }
-.fsp-laser-spine-photon,
+.fsp-laser-spine::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  width: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #38BDF8 0%, #402FFF 45%, #8B80FF 78%, #EC1D35 100%);
+  box-shadow: 0 0 12px rgba(64, 47, 255, 0.9), 0 0 20px rgba(56, 189, 248, 0.65);
+}
+.fsp-laser-spine-photon {
+  position: absolute;
+  left: -1.5px;
+  top: 0;
+  width: 5px;
+  height: 56px;
+  border-radius: 9999px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  background: linear-gradient(180deg, transparent 0%, #67E8F9 38%, #FFFFFF 55%, #A59DFF 82%, transparent 100%);
+  box-shadow: 0 0 14px 2px rgba(103, 232, 249, 0.95), 0 0 24px 4px rgba(64, 47, 255, 0.85);
+  animation: fspLaserVert 3.6s ease-in-out infinite;
+}
 .fsp-laser-node {
-  display: none;
+  position: absolute;
+  left: -3.5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: #67E8F9;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 12px 2px rgba(103, 232, 249, 0.95), 0 0 20px 4px rgba(64, 47, 255, 0.85);
 }
 
 .fsp-pulse-bar {
@@ -462,17 +492,31 @@ html[data-theme="light"] .np .fsp-serif-italic {
   z-index: 35;
   overflow: hidden;
   background: linear-gradient(90deg, #060814 0%, #11163A 35%, #19123E 65%, #060814 100%);
-  border-bottom: 1px solid rgba(125, 211, 252, 0.28);
-  box-shadow: 0 8px 28px -12px rgba(64, 47, 255, 0.7);
+  border-bottom: 1px solid rgba(103, 232, 249, 0.38);
+  box-shadow: 0 8px 28px -10px rgba(64, 47, 255, 0.85);
   color: #E2E5FF;
+}
+.fsp-pulse-bar::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(64, 47, 255, 0.25) 0%, #402FFF 25%, #38BDF8 50%, #EC1D35 78%, rgba(64, 47, 255, 0.25) 100%);
+  box-shadow: 0 0 12px rgba(64, 47, 255, 0.9);
 }
 .fsp-pulse-bar::after {
   content: "";
   position: absolute;
-  inset: auto 0 0 0;
-  height: 1px;
+  left: 0;
+  bottom: 0;
+  height: 2.5px;
+  width: 42%;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(104, 90, 255, 0.7) 30%, rgba(165, 157, 255, 0.9) 50%, rgba(236, 29, 53, 0.65) 75%, transparent 100%);
+  will-change: transform;
+  background: linear-gradient(90deg, transparent 0%, #38BDF8 28%, #FFFFFF 50%, #EC1D35 78%, transparent 100%);
+  box-shadow: 0 0 16px 2px rgba(56, 189, 248, 0.95), 0 0 24px 3px rgba(236, 29, 53, 0.85);
+  animation: fspLaserSweep 4.2s linear infinite;
 }
 
 .fsp-pulse-dot {
