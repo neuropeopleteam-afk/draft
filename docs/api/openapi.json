@@ -4520,6 +4520,21 @@
         "title": "Body_upload_resume_api_me_resume_post",
         "type": "object"
       },
+      "BriefAnswerIn": {
+        "properties": {
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "BriefAnswerIn",
+        "type": "object"
+      },
       "CabinetCupOut": {
         "additionalProperties": true,
         "properties": {
@@ -12313,6 +12328,21 @@
           "recomputed"
         ],
         "title": "ExpertReviewOut",
+        "type": "object"
+      },
+      "ExplainIn": {
+        "properties": {
+          "text": {
+            "maxLength": 6000,
+            "minLength": 20,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ExplainIn",
         "type": "object"
       },
       "FastForwardIn": {
@@ -59864,6 +59894,255 @@
         ]
       }
     },
+    "/api/interview/concierge/brief": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "concierge_brief_start_api_interview_concierge_brief_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Concierge Brief Start Api Interview Concierge Brief Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "rate_limited",
+                    "message": "Слишком много запросов — подождите минуту"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `rate_limited` — Слишком много запросов — подождите минуту."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Бриф работодателя голосом с Настей: начать",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/brief/{sid}/answer": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "concierge_brief_answer_api_interview_concierge_brief__sid__answer_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BriefAnswerIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Concierge Brief Answer Api Interview Concierge Brief  Sid  Answer Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "not_found",
+                    "message": "Бриф не найден — начните заново"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено. Коды `detail.code`: `not_found` — Бриф не найден — начните заново."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "rate_limited",
+                    "message": "Лимит ответов на сегодня исчерпан"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `rate_limited` — Лимит ответов на сегодня исчерпан."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Бриф голосом: ответ работодателя → следующий вопрос или текст вакансии",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/brief/{sid}/speech": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "concierge_brief_speech_api_interview_concierge_brief__sid__speech_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "not_found",
+                    "message": "Бриф не найден — начните заново"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено. Коды `detail.code`: `not_found` — Бриф не найден — начните заново."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tts_budget",
+                    "message": "Голос на сегодня исчерпан — продолжите текстом"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `tts_budget` — Голос на сегодня исчерпан — продолжите текстом."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tts_unavailable",
+                    "message": "Функция или внешний сервис недоступны"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `tts_unavailable`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Бриф голосом: голос текущего вопроса Насти (PCM 24 кГц потоком)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
     "/api/interview/concierge/budget": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
@@ -59971,6 +60250,73 @@
           }
         },
         "summary": "Событие разговора с Настей для стенограммы: открытие, реплика обзора, шаг, закрытие",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/explain-result": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "concierge_explain_result_api_interview_concierge_explain_result_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExplainIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "rate_limited",
+                    "message": "Слишком много запросов — подождите минуту"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `rate_limited` — Слишком много запросов — подождите минуту."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Настя голосом объясняет итог теста по тексту экрана результата (NDJSON)",
         "tags": [
           "interview"
         ]
