@@ -366,11 +366,16 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
             "recompute": matching["recompute"], "code_ref": matching["code_ref"]})
     if fsp and (fsp.get("index") or {}).get("documents"):
         ix = fsp["index"]
+        bits = [f"{int_ru(ix.get('results'))} результатов" if ix.get("results") is not None else None,
+                f"{int_ru(ix.get('athletes'))} спортсменов" if ix.get("athletes") is not None else None,
+                f"{ix.get('regions')} регионов" if ix.get("regions") is not None else None,
+                (f"норматив разряда по ЕВСК подтверждён протоколом у {ix.get('athletes_with_evsk_norm')}"
+                 if ix.get("athletes_with_evsk_norm") is not None else None)]
         cards.append({
             "id": "fsp_protocols", "eyebrow": "Официальные протоколы ФСП", "value": str(ix["documents"]),
             "accent": "документов",
-            "subtext": (f"{int_ru(ix.get('results'))} результатов соревнований ФСП {ix.get('years') or ''} — кандидат "
-                        "находит своё достижение в официальном протоколе, подтверждение — через ФСП"),
+            "subtext": " · ".join(b for b in bits if b) + " — кандидат находит своё достижение в официальном протоколе, "
+                       "подтверждение — через ФСП",
             "provenance": f"индекс протоколов, {_date(ix.get('generated_at'))}",
             "recompute": fsp["recompute"], "code_ref": fsp["code_ref"]})
     if hh and (hh.get("direction_ok") or {}).get("value") is not None:
@@ -465,6 +470,59 @@ def build() -> dict:
     }
 
 
+REPORT_MD = ROOT / "docs" / "validation" / "VALIDATION_REPORT.md"
+
+
+def report_md(n: dict) -> str:
+    """docs/validation/VALIDATION_REPORT.md — только из NUMBERS.json (генерируется вместе с ним)."""
+    L = ["# Отчёт валидации «Драфт» (генерируется tools/publish/gen_numbers.py из docs/NUMBERS.json)", "",
+         f"Коммит {n['git_commit']}, {n['generated_at']}. Чисел, введённых руками, здесь нет.", ""]
+    gv = n.get("grade_verdict")
+    if gv:
+        m = gv["main"]
+        L += ["## Решение по заявленному грейду — симуляция продукта", "", gv["what"], "", gv["claim_ru"], "",
+              "| Метрика | Значение | 95 % ДИ | k / n |", "|---|---|---|---|"]
+        for key, title in [("verdict_accuracy", "Верный итоговый вердикт"), ("false_confirm", "Ложное подтверждение (у завысивших)"),
+                           ("false_reject", "Ложный отказ (у соответствующих)"), ("confident_share", "Уверенно после основной части"),
+                           ("confident_accuracy", "Точность уверенных решений"), ("followup_share", "Второй этап"),
+                           ("exact_grade", "Точный грейд"), ("gross_error", "Ошибка на 2+ ступени")]:
+            f = m.get(key)
+            if f:
+                c = f.get("ci95") or [None, None]
+                L.append(f"| {title} | {pct(f['value'])} % | {pct(c[0])}–{pct(c[1])} % | {f.get('k')} / {f.get('n')} |")
+        if m.get("retest"):
+            r = m["retest"]
+            L += ["", f"Повторяемость (две независимые попытки, пар {r['n_pairs']}): тот же грейд — "
+                      f"{pct((r.get('exact_agreement') or {}).get('value'))} %, тот же вердикт — "
+                      f"{pct((r.get('verdict_agreement') or {}).get('value'))} %, взвешенная каппа {num(r.get('kappa_w'))}."]
+        for k, t in [("misspec", "Мир «банк не откалиброван»"), ("rater_noise", "Ошибка проверки развёрнутых ответов")]:
+            x = gv.get(k)
+            if x:
+                L.append(f"- {t}: верный вердикт {pct((x.get('verdict_accuracy') or {}).get('value'))} %, ложное подтверждение "
+                         f"{pct((x.get('false_confirm') or {}).get('value'))} %, точный грейд {pct((x.get('exact_grade') or {}).get('value'))} % "
+                         f"(N = {x.get('n')}).")
+        sel = gv.get("selection") or {}
+        if sel.get("rows"):
+            L += ["", f"Выбор настроек на обучающих зёрнах ({sel.get('rule')}); выбрано {sel.get('chosen')}:", "",
+                  "| Конфигурация | Верный вердикт | Ложное подтв. | p90 основной, мин |", "|---|---|---|---|"]
+            for r in sel["rows"]:
+                L.append(f"| {r['config']} — {r['desc']} | {pct(r['verdict_accuracy'])} % | {pct(r['false_confirm'])} % | {r['minutes_main_p90']} |")
+        L += ["", f"Пересчёт: `{gv['recompute']}`. Протокол: `{gv['protocol']}`.", ""]
+    cb = n.get("cheat_bots")
+    if cb:
+        L += ["## «Обмани тест»: боты через движок", "", cb.get("claim_ru") or "", "",
+              "| Стратегия | Попыток | Грейд подтверждён | 95 % ДИ |", "|---|---|---|---|"]
+        for k, r in (cb.get("table") or {}).items():
+            f = r["false_confirmed"]
+            c = f.get("ci95") or [None, None]
+            L.append(f"| {k} | {r['n']} | {pct(f['value'])} % ({f['k']}) | {pct(c[0])}–{pct(c[1])} % |")
+        L += ["", f"Пересчёт: `{cb.get('recompute')}`.", ""]
+    L += ["## Все цифры сайта и команды пересчёта", "", "| Раздел | Цифра | Выборка | Команда |", "|---|---|---|---|"]
+    for r in n.get("recompute_table") or []:
+        L.append(f"| {r['section']} | {r['metric']} | {r['sample']} | `{r['command']}` |")
+    return "\n".join(L) + "\n"
+
+
 def _strip(d: dict) -> dict:
     return {k: v for k, v in d.items() if k not in ("generated_at", "git_commit")}
 
@@ -481,7 +539,9 @@ def main() -> int:
     OUT.write_text(txt, encoding="utf-8")
     FRONTEND_OUT.parent.mkdir(parents=True, exist_ok=True)
     FRONTEND_OUT.write_text(txt, encoding="utf-8")
-    print(f"Записано {OUT.relative_to(ROOT)} и {FRONTEND_OUT.relative_to(ROOT)}")
+    REPORT_MD.parent.mkdir(parents=True, exist_ok=True)
+    REPORT_MD.write_text(report_md(new), encoding="utf-8")
+    print(f"Записано {OUT.relative_to(ROOT)}, {FRONTEND_OUT.relative_to(ROOT)} и {REPORT_MD.relative_to(ROOT)}")
     return 0
 
 
