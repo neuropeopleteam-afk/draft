@@ -63,8 +63,13 @@ def _greedy(rows, T, key):
     return _score(rows, used)
 
 
+PRODUCTS = ["интернет-магазин", "мобильный банк", "сервис доставки еды", "онлайн-кинотеатр", "сервис такси",
+            "маркетплейс услуг"]
+
+
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
+    prod = rng.choice(PRODUCTS)
     for _ in range(3000):
         n = rng.randint(9, 12)
         areas = rng.sample(AREAS, rng.randint(5, 7))
@@ -92,11 +97,11 @@ def generate(seed: int):
     for i, (a, m, p) in enumerate(rows, 1):
         lines.append(f"R{i} | {a} | {m} | {p}")
     block = "\n".join(lines)
-    stem = ("Срочный релиз: на регресс есть ограниченное время (блок ниже). Для каждого набора тестов известны время и "
+    stem = (f"Продукт «{prod}», срочный релиз: на регресс есть ограниченное время (блок ниже). Для каждого набора тестов известны время и "
             "очки риска — вес пользовательских сценариев, которые он проверяет. Наборы одной области дублируют друг "
             "друга: область засчитывается один раз, по лучшему набору. Наборы запускаются целиком, последовательно. "
             "Какое наибольшее число очков риска можно закрыть в бюджете? Ответ — целое число.")
     expl = (f"Перебор подмножеств наборов с суммарным временем ≤ {T} мин и подсчётом каждой области один раз: максимум "
             f"{good}. Жадно по очкам на минуту — {g1}, по очкам — {g2}; если сложить дубли областей — {dup}.")
-    return typed_variant(FAMILY_ID, seed, stem=stem, block=block, calc=CALC, out=str(good), expl=expl, ctx="регресс",
+    return typed_variant(FAMILY_ID, seed, stem=stem, block=block, calc=CALC, out=str(good), expl=expl, ctx=prod,
                          accept=num_accept(good, ("очков", "очка")), params={"T": T, "rows": rows})

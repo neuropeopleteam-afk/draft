@@ -44,8 +44,13 @@ print(rows)
 '''
 
 
+DWH = ["хранилище розничной сети", "хранилище банка", "хранилище телеком-оператора", "хранилище маркетплейса",
+       "хранилище страховой компании"]
+
+
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
+    dwh = rng.choice(DWH)
     for _ in range(3000):
         t2 = rng.sample(ATTRS2, 2)
         t1 = rng.sample(ATTRS1, 1)
@@ -93,12 +98,12 @@ def generate(seed: int):
     for k, a, val in batch:
         lines.append(f"пакет: {k} | {a} | {val}")
     block = "\n".join(lines)
-    stem = ("Хранилище данных: измерение «клиент». По атрибутам SCD2 изменение создаёт новую версию строки (старая "
+    stem = (f"{dwh.capitalize()}: измерение «клиент». По атрибутам SCD2 изменение создаёт новую версию строки (старая "
             "закрывается), по атрибутам SCD1 — перезаписывает текущую версию без новой строки. Новый ключ клиента — "
             "первая версия строки; запись пакета с тем же значением, что уже в текущей версии, ничего не меняет. "
             "Сначала в измерении по одной строке на клиента («было»), затем записи пакета применяются по порядку. "
             "Сколько строк (всех версий) будет в измерении? Ответ — целое число.")
     expl = (f"Начинаем с {nk} строк; по порядку: новый ключ +1, изменение атрибута SCD2 +1, повтор значения и SCD1 — 0. "
             f"Итого {good}. «Каждая запись пакета — строка» дало бы {all_rows}.")
-    return typed_variant(FAMILY_ID, seed, stem=stem, block=block, calc=CALC, out=str(good), expl=expl, ctx="клиент",
+    return typed_variant(FAMILY_ID, seed, stem=stem, block=block, calc=CALC, out=str(good), expl=expl, ctx=dwh,
                          accept=num_accept(good, ("строк", "строки")), params={"t2": t2, "t1": t1, "batch": batch})
