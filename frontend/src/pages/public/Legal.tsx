@@ -27,7 +27,7 @@ function inline(s: string, key = 0): ReactNode[] {
     if (m.index > last) out.push(s.slice(last, m.index));
     const t = m[0]; const k = `${key}-${i++}`;
     if (t.startsWith("**")) out.push(<strong key={k} className="font-semibold text-brand-night">{t.slice(2, -2)}</strong>);
-    else if (t.startsWith("`")) out.push(<code key={k} className="rounded bg-[#F3F2FB] px-1 text-[0.9em]">{t.slice(1, -1)}</code>);
+    else if (t.startsWith("`")) out.push(<code key={k} className="rounded bg-[#EEF1FC] px-1 text-[0.9em]">{t.slice(1, -1)}</code>);
     else {
       const md = t.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       const label = md ? md[1] : t; const href = md ? md[2] : t;
@@ -90,7 +90,7 @@ export function Markdown({ text }: { text: string }) {
       out.push(
         <div key={k++} className="mt-3 hidden overflow-x-auto rounded-xl border border-brand-night/10 md:block">
           <table className="w-full min-w-[48rem] text-left text-[13px] leading-snug">
-            <thead className="bg-[#F3F2FB] text-brand-night"><tr>{head.map((c, n) => <th key={n} className="px-3 py-2 font-semibold">{inline(c, n)}</th>)}</tr></thead>
+            <thead className="bg-[#EEF1FC] text-brand-night"><tr>{head.map((c, n) => <th key={n} className="px-3 py-2 font-semibold">{inline(c, n)}</th>)}</tr></thead>
             <tbody>{body.map((r, n) => <tr key={n} className="border-t border-brand-night/10 align-top">{r.map((c, m) => <td key={m} className="px-3 py-2">{inline(c, m)}</td>)}</tr>)}</tbody>
           </table>
         </div>);
@@ -115,7 +115,7 @@ export default function LegalPage() {
   const doc = LEGAL_DOCS.find((d) => d.path === pathname) ?? LEGAL_DOCS[0];
   usePageTitle(doc.title);
   return (
-    <div className="min-h-screen bg-[#FBF8FC]">
+    <div className="min-h-screen bg-[#F4F6FC]">
       <SiteHeader />
       <main id="main" className="mx-auto max-w-content space-y-6 px-4 py-10 sm:px-6" data-testid="legal-page">
         <nav aria-label="Юридические документы">

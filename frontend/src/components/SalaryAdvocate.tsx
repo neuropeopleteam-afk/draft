@@ -84,7 +84,7 @@ export default function SalaryAdvocate({ embedded = false }: { embedded?: boolea
         <span className="chip">{FACTS.percentile}-й перцентиль категории</span>
         <span className="chip">Рынок: {FACTS.skills.length} дефицитных навыка</span>
         <span className="chip">Паспорт ФСП</span>
-        <span className="chip">Ed25519 ✓</span>
+        <span className="chip" title="Как устроено: защищённая цифровая подпись паспорта">Подпись паспорта ✓</span>
       </div>
       <div>
         <div className="flex items-baseline justify-between text-xs">

@@ -58,13 +58,13 @@ function EvidenceItem({ it, open }: { it: Item; open: boolean }) {
       </summary>
       <p className="mt-2 text-xs text-brand-ink/70">
         <span className="chip mr-2">{it.method_title}</span>
-        {it.model_label ? `Модель: ${it.model_label}. ` : ""}Цитат: {it.quotes_total}{it.dropped_total ? `, отброшено: ${it.dropped_total}` : ""}.
+        Цитат: {it.quotes_total}{it.dropped_total ? `, отброшено: ${it.dropped_total}` : ""}.
         {it.status === "pending" ? " Ответ ждёт проверки эксперта." : ""}
       </p>
       <ul className="mt-3 space-y-2">{it.criteria.map((c) => <Criterion key={c.n} c={c} />)}</ul>
       {it.skeptic && (
         <p className="mt-3 text-xs text-brand-ink/75" data-testid="evidence-skeptic">
-          Проверка скептиком{it.skeptic.model_label ? ` (${it.skeptic.model_label})` : ""}: {it.skeptic.title}.
+          Проверка второй моделью-скептиком: {it.skeptic.title}.
           {ch.length > 0 && " " + ch.map((c) => `Пункт ${c.n ?? "?"}: ${sc(c.from)} → ${sc(c.to)}${c.accepted ? "" : " (не принято)"}`).join("; ") + "."}
         </p>
       )}
