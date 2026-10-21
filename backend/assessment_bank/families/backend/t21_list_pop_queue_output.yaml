@@ -1,0 +1,29 @@
+family_id: backend.queue.t21_list_pop_queue_output
+title: Список как очередь задач — append, pop(0) и pop()
+direction: backend
+skills:
+- python
+- queues
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 6
+  - 7
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -2.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Список из 4–6 задач:
+    append в конец, pop(0) с начала и pop() без аргумента — с конца; затем len и индекс. Уровень Стажёра: базовые
+    методы списка и индексы. Набор t21 (21.10) у порога Стажёра (b = −2,0)'
+generator: assessment_bank.families.backend.t21_list_pop_queue_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Планировщик держит задачи в списке, дописывает новые
+  и снимает задачи с обоих концов; предсказать снятые задачи, длину и элемент остатка. Ключ — независимая модель по
+  индексам в генераторе, проверка — исполнение показанного кода в песочнице Python.'
