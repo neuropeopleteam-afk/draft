@@ -47,14 +47,25 @@ PS_FINAL = {"hard": DATA / "product_sim_final_calibrated.json", "misspec": DATA 
             "rater": DATA / "product_sim_final_rater_noise.json", "amult07": DATA / "product_sim_final_amult07.json",
             "amult14": DATA / "product_sim_final_amult14.json", "testlet": DATA / "product_sim_final_testlet.json",
             "fatigue": DATA / "product_sim_final_fatigue.json"}
-PS_ST = {"st_b": DATA / "product_sim_st_b.json", "st_a": DATA / "product_sim_st_a.json",
-         "st_b_a10": DATA / "product_sim_st_b_a10.json", "st_b_a17": DATA / "product_sim_st_b_a17.json",
-         "st_b_a25": DATA / "product_sim_st_b_a25.json"}
+# Поправка №3: одна строка S-T — параметры А15 (a = 1,5; истина a × U(0,825; 1,175), b + N(0; 0,3); c 0,25 / 0,02;
+# θ ~ N(0,5; 1,0); заявки 65/25/10)
+PS_ST = {"st": DATA / "product_sim_st.json"}
+DJINNI = ROOT / "docs" / "realdata" / "djinni" / "external_djinni.json"  # А17: внешний открытый набор (подбор)
+# Пятёрка первого экрана (поправка №3): точность уверенного — всегда парой с долей уверенных; точный грейд — по всем
+# кандидатам и 6 ступеням, рядом строки 5 и 4 ступеней (сопоставимость) и «среди тех, кому продукт его определяет»;
+# ±1 — с числом грубых ошибок (2+ ступени); повтор — κw с ДИ, совпадение грейда и решения
 TOP5 = (("confident_accuracy", "Точность уверенного вердикта", "confident_accuracy_final"),
         ("false_confirm_all", "Ложное подтверждение (от всех)", "false_confirm_all"),
-        ("exact_grade", "Точный грейд", "exact_grade_final_not_underclaim"),
+        ("exact_grade", "Точный грейд (6 ступеней, все кандидаты)", "exact_grade_final"),
         ("within_one", "Грейд ±1 ступень", "within_one_final"),
         ("retest_kappa_w", "Повтор теста (κw)", None))
+TOP5_PAIRS = {"confident_accuracy": {"confident_share": "confident_share_final"},
+              "false_confirm_all": {"among_overclaim": "false_confirm_among_overclaim"},
+              "exact_grade": {"grades_5": "exact_grade_final_5", "grades_4": "exact_grade_final_4",
+                              "not_underclaim": "exact_grade_final_not_underclaim", "main_part": "exact_grade_main",
+                              "main_part_grades_5": "exact_grade_main_5", "main_part_grades_4": "exact_grade_main_4",
+                              "above_true": "grade_above_true_final"},
+              "within_one": {"gross_error_2plus": "gross_error_2plus"}}
 GRADE_RU = {"none": "ниже Intern", "intern": "Intern", "junior": "Junior", "middle": "Middle", "senior": "Senior",
             "lead": "Lead", "principal": "Principal"}
 
@@ -217,6 +228,12 @@ def _ps_view(d: dict) -> dict:
         "exact_grade": frac(s.get("exact_grade_final")),
         "exact_grade_not_above_claim": frac(s.get("exact_grade_final_not_above_claim")),
         "gross_error": frac(s.get("gross_error_2plus")),
+        "within_one": frac(s.get("within_one_final")),
+        "exact_grade_5": frac(s.get("exact_grade_final_5")),
+        "exact_grade_4": frac(s.get("exact_grade_final_4")),
+        "exact_grade_far_0_25": frac((s.get("far_from_cut_0_25") or {}).get("exact_grade_final")),
+        "confident_accuracy_final": frac(s.get("confident_accuracy_final")),
+        "confident_share_final": frac(s.get("confident_share_final")),
         "minutes_main": s.get("minutes_main"),
         "minutes_total": s.get("minutes_total"),
         "items_main": s.get("items_main"),
@@ -240,6 +257,8 @@ def _ps_view(d: dict) -> dict:
         out["retest"] = {"n_pairs": r.get("n_pairs"), "kappa_w": r.get("kappa_w_quadratic"),
                          "exact_agreement": frac(r.get("exact_agreement")),
                          "verdict_agreement": frac(r.get("verdict_agreement")),
+                         "decision_agreement": frac(r.get("decision_agreement")),
+                         "kappa_w_ci": r.get("kappa_w_quadratic_ci"),
                          "shared_families_mean": r.get("shared_families_mean")}
     return out
 
@@ -304,9 +323,9 @@ def _cond_ru(d: dict) -> str:
     pop = m.get("population_kind") or "hard"
     ba = m.get("bank_a_override") or {}
     if m.get("world") == "st":
-        cond = (f"стандартные условия: модель 2PL без угадывания, a вопросов с выбором {ba.get('mcq')}, практических "
-                f"{ba.get('code')}, ступень равновероятна Intern…Lead, заявки — "
-                + ("честные" if pop == "st-a" else "треть завышает на ступень"))
+        cond = (f"стандартные условия (как в аналогичных решениях): a = {num(ba.get('mcq'), 1)} в движке, истинные a × U(0,825; "
+                f"1,175) и b + N(0; 0,3), угадывание 0,25 в вопросах с выбором и 0,02 в остальных, θ ~ N(0,5; 1,0), "
+                f"заявки: 65 % точные, 25 % завышены, 10 % занижены")
     else:
         cond = ("жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, "
                 f"консервативные параметры банка (a = 1,0 / 1,3)" + ("" if m.get("world") in ("calibrated", None) else
@@ -339,9 +358,21 @@ def top5_from(d: dict) -> list[dict]:
         f = s.get(key) or {}
         if f.get("value") is None:
             continue
-        out.append({"id": iid, "label_ru": label, "value": f["value"], "display_ru": pct(f["value"]) + " %",
-                    "ci95": f.get("ci95"), "k": f.get("k"), "n": f.get("n"), "condition_ru": cond, "minutes": mt,
-                    "recompute": (d.get("meta") or {}).get("command")})
+        item = {"id": iid, "label_ru": label, "value": f["value"], "display_ru": pct(f["value"]) + " %",
+                "ci95": f.get("ci95"), "k": f.get("k"), "n": f.get("n"), "condition_ru": cond, "minutes": mt,
+                "recompute": (d.get("meta") or {}).get("command")}
+        pairs = {k: frac(s.get(v)) for k, v in (TOP5_PAIRS.get(iid) or {}).items() if s.get(v)}
+        if pairs:
+            item["with"] = pairs
+        out.append(item)
+    for it in out:  # повтор: к κw — ДИ и совпадения (грейд, решение подтверждён / не подтверждён), κ Коэна без весов
+        if it["id"] == "retest_kappa_w":
+            it["ci95"] = (rt.get("kappa_w_quadratic_ci") or {}).get("ci95")
+            it["with"] = {k: v for k, v in {
+                "exact_agreement": frac(rt.get("exact_agreement")),
+                "decision_agreement": frac(rt.get("decision_agreement")),
+                "kappa_cohen_unweighted": rt.get("kappa_cohen_unweighted"),
+                "kappa_w_with_truth": s.get("kappa_w_with_truth_final")}.items() if v}
     return out
 
 
@@ -360,6 +391,14 @@ def _extra(d: dict) -> dict | None:
                                  if far_n else None),
             "outside_0_25": s.get("outside_0_25"), "outside_0_4": s.get("outside_0_4"),
             "fixed_vs_adaptive": s.get("fixed_vs_adaptive"), "minutes_total": s.get("minutes_total"),
+            "far_from_cut_0_25": s.get("far_from_cut_0_25"),
+            "exact_grade_final_5": frac(s.get("exact_grade_final_5")), "exact_grade_final_4": frac(s.get("exact_grade_final_4")),
+            "exact_grade_main_5": frac(s.get("exact_grade_main_5")), "exact_grade_main_4": frac(s.get("exact_grade_main_4")),
+            "grade_above_true_final": frac(s.get("grade_above_true_final")),
+            "grade_below_true_final": frac(s.get("grade_below_true_final")),
+            "kappa_w_with_truth_final": s.get("kappa_w_with_truth_final"),
+            "kappa_w_with_truth_main": s.get("kappa_w_with_truth_main"),
+            "false_reject_all": frac(s.get("false_reject_all")),
             "minutes_main": s.get("minutes_main"), "extended_share": frac(s.get("extended_share")),
             "confident_share_main": frac(s.get("confident_share_main")),
             "confident_accuracy_main": frac(s.get("confident_accuracy_main")),
@@ -600,8 +639,34 @@ def final_blocks() -> tuple[dict, dict, dict]:
     arts = {k: _load(p) for k, p in {**PS_FINAL, **PS_ST}.items()}
     arts = {k: v for k, v in arts.items() if v}
     hard = arts.get("hard") or {}
-    st = arts.get("st_b") or {}
+    st = arts.get("st") or {}
     return hard, st, arts
+
+
+def external_block() -> dict | None:
+    """Внешний бенчмарк подбора (А17): открытый набор Djinni, один прогон после FREEZE — как есть из артефакта."""
+    d = _load(DJINNI)
+    if not d:
+        return None
+    mc = d.get("main_config") or "B_grade_from_text"
+    c = (d.get("configs") or {}).get(mc) or {}
+    sm = c.get("summary") or {}
+    dr, bm = sm.get("draft") or {}, sm.get("bm25") or {}
+    diff = c.get("draft_minus_bm25") or {}
+    nd = (dr.get("ndcg@10") or {})
+    return {"djinni": {
+        "dataset": d.get("dataset"), "condition_ru": d.get("condition"), "date": d.get("date"),
+        "main_config": mc, "main_metric": d.get("main_metric"),
+        "draft": {k: dr.get(k) for k in ("ndcg@10", "mrr_rel1", "p@5_rel1", "mrr_rel2", "p@5_rel2") if dr.get(k)},
+        "bm25": {k: bm.get(k) for k in ("ndcg@10", "mrr_rel1", "p@5_rel1") if bm.get(k)},
+        "draft_minus_bm25": diff, "success_rule_ru": d.get("success_rule"), "success": d.get("success"),
+        "freeze": d.get("freeze"), "git_head_at_run": d.get("git_head_at_run"), "recompute": d.get("command"),
+        "source": str(DJINNI.relative_to(ROOT)),
+        "claim_ru": (f"Внешний открытый набор вакансий и анкет (не наши данные, метки-посредники, не люди): nDCG@10 "
+                     f"{num(nd.get('mean'), 3)} [{num((nd.get('ci95') or [None])[0], 3)}; "
+                     f"{num((nd.get('ci95') or [None, None])[1], 3)}], выше BM25 на "
+                     f"{num((diff.get('ndcg@10') or {}).get('diff'), 3)} — один прогон после фиксации протокола")
+                    if nd.get("mean") is not None else None}}
 
 
 def build() -> dict:
@@ -612,7 +677,7 @@ def build() -> dict:
         gv["hard"] = {"extra": _extra(hard), "view": _ps_view(hard)} if hard else None
         gv["st"] = {"extra": _extra(st), "view": _ps_view(st)} if st else None
         gv["sensitivity"] = {k: {"view": _ps_view(v), "condition_ru": _cond_ru(v)} for k, v in arts.items()
-                             if k not in ("hard", "st_b")}
+                             if k not in ("hard", "st")}
     matching, hh, anticheat = matching_block(), hh_block(), anticheat_block()
     fsp, mutation, load = fsp_block(), mutation_block(), load_block()
     cards = landing_cards(bank, gv, matching, hh, fsp)
@@ -633,6 +698,7 @@ def build() -> dict:
         "grade_verdict": gv,
         "cheat_bots": cheat,
         "matching": matching,
+        "external_benchmarks": external_block(),
         "hh_match": hh,
         "anticheat": anticheat,
         "fsp_protocols": fsp,
@@ -651,12 +717,101 @@ def build() -> dict:
 REPORT_MD = ROOT / "docs" / "validation" / "VALIDATION_REPORT.md"
 
 
+WITH_RU = {"confident_share": "доля уверенных вердиктов", "among_overclaim": "среди завысивших заявку",
+           "grades_5": "по 5 ступеням (Lead и Principal вместе)", "grades_4": "по 4 ступеням (ещё Стажёр и Junior вместе)",
+           "not_underclaim": "среди тех, кому продукт определяет грейд (без занизивших)",
+           "main_part": "основная часть (одна сессия), 6 ступеней", "main_part_grades_5": "основная часть, 5 ступеней",
+           "main_part_grades_4": "основная часть, 4 ступени", "above_true": "грейд выше истинного",
+           "gross_error_2plus": "ошибка на 2+ ступени", "exact_agreement": "тот же грейд при повторе",
+           "decision_agreement": "то же решение (подтверждён / нет) при повторе",
+           "kappa_cohen_unweighted": "κ Коэна без весов (повтор)", "kappa_w_with_truth": "κw с истиной"}
+
+
+def _f(x: dict | None, d: int = 1) -> str:
+    """«78,4 % [77,0; 79,8], k / n» из frac-словаря."""
+    if not isinstance(x, dict) or x.get("value") is None:
+        return "—"
+    c = x.get("ci95") or [None, None]
+    kn = f", {x.get('k')} / {x.get('n')}" if x.get("k") is not None else ""
+    return f"{pct(x['value'], d)} % [{pct(c[0], d)}; {pct(c[1], d)}]{kn}"
+
+
+def _kap(x: dict | None) -> str:
+    if not isinstance(x, dict) or x.get("value") is None:
+        return "—"
+    c = x.get("ci95") or [None, None]
+    return f"{num(x['value'], 3)} [{num(c[0], 3)}; {num(c[1], 3)}]"
+
+
+def final_md(n: dict) -> list[str]:
+    """Раздел итоговых прогонов (поправки №2–3): S-T и жёсткие условия рядом, чувствительность, боты, внешний набор."""
+    gv = n.get("grade_verdict") or {}
+    L: list[str] = []
+    rows = [("st", "Стандартные условия (S-T, как в аналогичных решениях)"), ("hard", "Жёсткие условия (основной протокол)")]
+    if not any((gv.get(k) or {}).get("extra") for k, _ in rows):
+        return L
+    L += ["## Итоговый прогон симуляции продукта (один прогон на отложенных зёрнах)", "",
+          "Модельные кандидаты, не люди. Движок, банк и настройки — те же, что на стенде; «истина» — отдельный поток "
+          "случайных чисел; настройки выбраны только на обучающих зёрнах (протокол `docs/validation/PRODUCT_SIM_PROTOCOL.md`, "
+          "поправки №2–3).", ""]
+    for key, title in rows:
+        e = (gv.get(key) or {}).get("extra")
+        if not e:
+            continue
+        top = n.get("top5" if key == "st" else "top5_hard") or []
+        L += [f"### {title}", "", e.get("condition_ru") or "", "", "| Метрика | Значение [95 % ДИ], k / n |", "|---|---|"]
+        for it in top:
+            v = (f"{num(it['value'], 3)} [{num((it.get('ci95') or [None])[0], 3)}; {num((it.get('ci95') or [None, None])[1], 3)}]"
+                 if it["id"] == "retest_kappa_w" else _f(it))
+            L.append(f"| {it['label_ru']} | {v} |")
+            for k2, v2 in (it.get("with") or {}).items():
+                L.append(f"| — {WITH_RU.get(k2, k2)} | {_kap(v2) if 'kappa' in k2 else _f(v2)} |")
+        far = e.get("far_from_cut_0_25") or {}
+        fx = e.get("fixed_vs_adaptive") or {}
+        L += [f"| Точный грейд вдали от порога (> 0,25), N = {far.get('n')} | {_f(far.get('exact_grade_final'))} |",
+              f"| κw с истиной (весь путь) | {_kap(e.get('kappa_w_with_truth_final'))} |",
+              f"| Ложный отказ (от всех) | {_f(e.get('false_reject_all'))} |",
+              f"| Без решения после всего пути | {_f(e.get('undecided_final'))} |",
+              f"| Второй этап / устная защита | {_f(e.get('followup_share'))} / {_f(e.get('oral_share'))} |",
+              f"| Минуты: основная часть — среднее (p90) | {num((e.get('minutes_main') or {}).get('mean'), 1)} "
+              f"({num((e.get('minutes_main') or {}).get('p90'), 1)}) |",
+              f"| Минуты: весь путь — среднее (p90) | {num((e.get('minutes_total') or {}).get('mean'), 1)} "
+              f"({num((e.get('minutes_total') or {}).get('p90'), 1)}) |"]
+        if fx:
+            a, f = fx.get("adaptive_main") or {}, fx.get("fixed") or {}
+            L += [f"| Адаптивный / фиксированная форма той же длины — точный грейд, N = {fx.get('n')} | "
+                  f"{_f(a.get('exact_grade'))} / {_f(f.get('exact_grade'))} |",
+                  f"| — по 4 ступеням | {_f(a.get('exact_grade_4'))} / {_f(f.get('exact_grade_4'))} |"]
+        oc = e.get("oc_curve") or []
+        if isinstance(oc, list) and oc:
+            L += ["", "Кривая OC — доля «подтверждён» (весь путь) по θ − порог заявки: " + "; ".join(
+                f"[{num(b.get('from'), 2)}; {num(b.get('to'), 2)}) — {pct(b.get('p_confirmed_final'))} % (N = {b.get('n')})"
+                for b in oc if b.get("n")) + "."]
+        L += ["", f"Пересчёт: `{e.get('recompute')}`.", ""]
+    sens = gv.get("sensitivity") or {}
+    if sens:
+        L += ["### Проверка на прочность (те же настройки, другие допущения о мире)", "",
+              "| Мир | Условие | Точный грейд (6 / 5 ступеней) | ±1 | Ложное подтв. (от всех) | Точность уверенного |",
+              "|---|---|---|---|---|---|"]
+        for k, v in sens.items():
+            w = v.get("view") or {}
+            L.append(f"| {k} | {v.get('condition_ru')} | {_f(w.get('exact_grade'))} / {_f(w.get('exact_grade_5'))} | "
+                     f"{_f(w.get('within_one'))} | {_f(w.get('false_confirm_all'))} | {_f(w.get('confident_accuracy_final'))} |")
+        L.append("")
+    ext = (n.get("external_benchmarks") or {}).get("djinni")
+    if ext:
+        L += ["### Подбор на внешнем открытом наборе (агент А17)", "", ext.get("claim_ru") or "", "",
+              f"Условие: {ext.get('condition_ru')}. Пересчёт: `{ext.get('recompute')}`.", ""]
+    return L
+
+
 def report_md(n: dict) -> str:
     """docs/validation/VALIDATION_REPORT.md — только из NUMBERS.json (генерируется вместе с ним)."""
     L = ["# Отчёт валидации «Драфт» (генерируется tools/publish/gen_numbers.py из docs/NUMBERS.json)", "",
          f"Коммит {n['git_commit']}, {n['generated_at']}. Чисел, введённых руками, здесь нет.", ""]
+    L += final_md(n)
     gv = n.get("grade_verdict")
-    if gv:
+    if gv and gv.get("main"):
         m = gv["main"]
         L += ["## Решение по заявленному грейду — симуляция продукта", "", gv["what"], "", gv["claim_ru"], "",
               "| Метрика | Значение | 95 % ДИ | k / n |", "|---|---|---|---|"]
