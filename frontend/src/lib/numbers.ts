@@ -18,6 +18,19 @@ export interface LandingCardMetric {
   subtext: string;
   recompute: string;
   code_ref: string;
+  /** Две равные колонки (решение владельца 21.10): «Как в аналогичных решениях» | «Проверка на прочность — строже». */
+  pair?: LandingPair | null;
+}
+
+export interface LandingPairCol {
+  label_ru: string;
+  value: string;
+  accent: string;
+}
+
+export interface LandingPair {
+  st: LandingPairCol;
+  hard: LandingPairCol;
 }
 
 export interface RecomputeRow {

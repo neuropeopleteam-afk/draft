@@ -566,6 +566,19 @@ def _bot_gap(m: dict) -> float | None:
     return float(x.group(1).replace(",", ".")) if x else None
 
 
+COL_ST_RU = "Как в аналогичных решениях"
+COL_HARD_RU = "Проверка на прочность — строже"
+HH_CORPUS = ROOT / "docs" / "validation" / "hh_corpus_counts.json"  # собрано / в проверках (tools/publish/hh_corpus_counts.py)
+
+
+def _pair(st_value: str | None, st_accent: str, hard_value: str | None, hard_accent: str | None = None) -> dict | None:
+    """Две равные колонки карточки: «как в аналогичных решениях» | «проверка на прочность — строже»."""
+    if st_value is None or hard_value is None:
+        return None
+    return {"st": {"label_ru": COL_ST_RU, "value": st_value, "accent": st_accent},
+            "hard": {"label_ru": COL_HARD_RU, "value": hard_value, "accent": hard_accent or st_accent}}
+
+
 def _ci(v) -> dict | None:
     return {k: v.get(k) for k in ("mean", "lo", "hi")} if isinstance(v, dict) else None
 
@@ -611,6 +624,17 @@ def matching_block() -> dict | None:
     }
 
 
+def _hh_corpus() -> dict | None:
+    c = _load(HH_CORPUS)
+    if not c.get("collected"):
+        return None
+    s = c.get("sets") or {}
+    return {"collected": c["collected"], "in_checks": c.get("in_checks"), "dev": (s.get("dev") or {}).get("n"),
+            "holdout1": (s.get("holdout1") or {}).get("n"), "holdout2": (s.get("holdout2") or {}).get("n"),
+            "overlap_by_id": c.get("overlap_by_id"), "generated_at": c.get("generated_at"), "recompute": c.get("recompute"),
+            "artifact": str(HH_CORPUS.relative_to(ROOT))}
+
+
 def hh_block() -> dict | None:
     a5 = _load(A5_MATCHING)
     if a5.get("hh_match"):  # для сайта — блок site (отложенный набор А5), не набор разработки dev
@@ -621,7 +645,8 @@ def hh_block() -> dict | None:
             return {**s, "n": d.get("n") or h.get("n"), "set": s.get("condition") or h.get("set"),
                     "manifest_sha256": h.get("manifest_sha256"), "code_commit": h.get("code_ref"),
                     "generated_at": h.get("generated_at"),
-                    "recompute": s.get("recompute") or h.get("recompute"), "code_ref": "tools/realdata/hh_holdout.py"}
+                    "recompute": s.get("recompute") or h.get("recompute"), "code_ref": "tools/realdata/hh_holdout.py",
+                    "corpus": _hh_corpus()}
         return {k: v for k, v in h.items() if k not in ("dev", "history")}
     h = _load(DATA / "hh_match.json")
     if not h:
@@ -697,6 +722,7 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
                         f"(стандартные условия). В жёстких: {pct(ha['value'])} %, уверенных {pct(hsh.get('value'))} %, "
                         f"по всем {pct(hva.get('value'))} %, ложных подтверждений {pct(hfc.get('value'))} % · симуляция "
                         f"продукта, модельные кандидаты, не люди"),
+            "pair": _pair(pct(a["value"]), "%", pct(ha["value"])),
             "provenance": f"итоговый прогон симуляции продукта, {(gv['main'] or {}).get('date')}",
             "recompute": gv["recompute"], "code_ref": gv["code_ref"]})
     elif gv and gv["main"].get("verdict_accuracy"):
@@ -723,6 +749,8 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
                         (f"MRR {num(mrr.get('mean'))} · 95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} % · бенчмарк: "
                          f"{matching.get('n_needs')} потребностей × {int_ru(matching.get('n_candidates'))} кандидатов "
                          f"(синтетический мир, seed {matching.get('seed')})")),
+            "pair": (_pair(pct(p5.get("mean")), "%", pct(((matching.get("hard") or {}).get("p5") or {}).get("mean")))
+                     if matching.get("hard") else None),
             "provenance": f"бенчмарк подбора, {_date(matching.get('generated_at'))}",
             "recompute": matching["recompute"], "code_ref": matching["code_ref"]})
     if fsp and (fsp.get("index") or {}).get("documents"):
@@ -747,8 +775,13 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
     if hh and (hh.get("direction_ok") or {}).get("value") is not None:
         d, g = hh["direction_ok"], hh.get("grade_ok") or {}
         cards.append({
-            "id": "hh_real", "eyebrow": "Реальные вакансии hh.ru", "value": int_ru(hh.get("n")), "accent": "вакансий",
-            "subtext": (f"направление вакансии определено верно в {pct(d.get('value'))} % ({d.get('k')} из {d.get('n')})"
+            "id": "hh_real", "eyebrow": "Реальные вакансии hh.ru", "value": int_ru(hh.get("n")),
+            "accent": (f"отложенных из {int_ru(hh['corpus']['collected'])} собранных вакансий hh.ru"
+                       if (hh.get("corpus") or {}).get("collected") else "вакансий"),
+            "subtext": ((f"в проверках {int_ru(hh['corpus']['in_checks'])}: разработка {int_ru(hh['corpus']['dev'])}, "
+                         f"отложенный №1 {int_ru(hh['corpus']['holdout1'])}, №2 {int_ru(hh['corpus']['holdout2'])} (наборы не "
+                         f"пересекаются); точность — только по №2: " if (hh.get("corpus") or {}).get("in_checks") else "")
+                        + f"направление вакансии определено верно в {pct(d.get('value'))} % ({d.get('k')} из {d.get('n')})"
                         + (f", грейд — в {pct(g.get('value'))} % ({g.get('k')} из {g.get('n')})" if g.get("value") is not None else "")
                         + f"; {hh.get('set') or ''}").rstrip("; "),
             "provenance": "разбор вакансий hh.ru",
