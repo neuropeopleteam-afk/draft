@@ -146,7 +146,11 @@ const WAKE_ONLY_END_MS = 1800;     // сказали только «Настя»
 export function stripWake(text: string): string {
   const m = WAKE.exec(text);
   if (!m) return text.trim();
-  return text.slice(m.index + m[0].length).replace(/^[\s,.!?:;—-]+/u, "").trim();
+  const after = text.slice(m.index + m[0].length).replace(/^[\s,.!?:;—-]+/u, "").trim();
+  if (after) return after;
+  // просьба ДО имени («Открой кабинет сотрудника, Настя») — раньше терялась, Настя только замолкала (владелец 21.10 22:41)
+  const before = text.slice(0, m.index).replace(/[\s,.!?:;—-]+$/u, "").trim();
+  return words(before).length >= 2 ? before : "";
 }
 const SCROLL_STEP = 0.75;          // «ниже» — на столько высоты окна
 const START_REMIND_MS = 12000;     // знакомство: ждём ответа столько, потом короткое напоминание
@@ -331,7 +335,7 @@ export class ElenaEngine {
   private loading = 0;
   private ui: ElenaUi = {
     phase: "idle", mic: "off", speaking: false, userTalking: false, hearing: false, track: null, stepNo: 0, stepTotal: 0,
-    target: null, click: null, canPause: false, stage: "large",   // знакомство — большое окно по центру, обзор — в углу
+    target: null, click: null, canPause: false, stage: "large",   // знакомство — большое окно по центру (владелец 21.10 22:30: «пусть будет большое, только чуть меньше»), обзор — в углу
     awaiting: null, listen: "open", autoNext: false,
   };
   private closed = false;
@@ -432,7 +436,9 @@ export class ElenaEngine {
   private listenOpen(): boolean {
     if (performance.now() < this.wakeOpenUntil) return true;
     if (this.awaiting === "start") return true;
-    return this.awaiting === "answer" && this.lastAsked;
+    // владелец 21.10 22:05: задала вопрос — слышит любой ответ без «Настя» (раньше после «Что показать дальше?» и
+    // «Продолжить показ?» ответ без обращения отбрасывался: «перестала сразу слышать»)
+    return this.lastAsked;
   }
 
   /** Такт 100 мс: индикатор «говорит», открытие микрофона после её фразы, сброс накопленного при закрытом микрофоне. */
@@ -929,6 +935,8 @@ export class ElenaEngine {
       // первое слово терялось («Геннадий Иванович» → «Иванович», 19:03)
       if (performance.now() - this.gateOpenedAt < GATE_TAIL_IGNORE_MS && !this.buf.read()
           && (!hers ? !this.lastSaid || isEcho(text, this.lastSaid) : isEcho(text, hers))) return;
+      // её же фраза из динамиков посреди реплики человека — не его слова (22:41: «Простите, не поняла…» попало в ход)
+      if (hers && this.buf.read() && words(text).length >= 3 && isEcho(text, hers)) return;
       if (hers && !this.buf.read()) {
         // под её речь (и сразу после): её же слова из динамиков — эхо; «угу», «ага» — поддакивание, не реплика
         if (isEcho(text, hers)) return;

@@ -111,6 +111,8 @@ interface Slot {
 
 let sdkPromise: Promise<AnamSdk> | null = null;
 const loadSdk = () => (sdkPromise ??= import("@anam-ai/js-sdk"));
+/** Заранее загрузить библиотеку видеопотока (в простое страницы): старт Насти не ждёт её загрузки. */
+export function preloadAnamSdk(): void { void loadSdk().catch(() => { sdkPromise = null; }); }
 
 export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamAvatar(
   { sessionId, state, level, name = "Интервьюер", size = 200, tone = "light", className = "", tokenPath, onStatus, onSpeaking,
