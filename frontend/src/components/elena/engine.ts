@@ -432,7 +432,9 @@ export class ElenaEngine {
   private listenOpen(): boolean {
     if (performance.now() < this.wakeOpenUntil) return true;
     if (this.awaiting === "start") return true;
-    return this.awaiting === "answer" && this.lastAsked;
+    // владелец 21.10 22:05: задала вопрос — слышит любой ответ без «Настя» (раньше после «Что показать дальше?» и
+    // «Продолжить показ?» ответ без обращения отбрасывался: «перестала сразу слышать»)
+    return this.lastAsked;
   }
 
   /** Такт 100 мс: индикатор «говорит», открытие микрофона после её фразы, сброс накопленного при закрытом микрофоне. */

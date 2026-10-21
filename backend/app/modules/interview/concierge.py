@@ -1079,6 +1079,13 @@ def extract_name(text: str, current_name: str | None = None, asked: bool = False
     if current_name:
         return current_name
     t = re.sub(r"^\s*(?:настя|анастасия|настенька)[,.!\s]+", "", t, flags=re.I)   # «Настя, Алексей» — обращение к ней, имя дальше
+    # «Алексей Геннадьевич Кошкин» / «Кошкин Алексей Геннадьевич» — обращение по имени и отчеству (владелец 21.10 22:05)
+    m = re.match(rf"^\s*(?:это\s+|я\s+)?(?:([А-ЯЁа-яё]{{2,25}})\s+)?([А-ЯЁа-яё]{{2,18}})\s+({_PATR})(?:\s+([А-ЯЁа-яё]{{2,25}}))?[\s.!?,]*$",
+                 t, re.I)
+    if m and not (m.group(1) and m.group(4)):
+        nm = m.group(2).lower().replace("ё", "е")
+        if nm not in _SELF_NAMES and nm not in _STOP_NAMES and (asked or nm in {n.replace("ё", "е") for n in _NAMES}):
+            return _cap(f"{m.group(2)} {m.group(3)}")
     m = _SIMPLE_NAME_RE.match(t)
     if m:
         cand = m.group(1).strip()

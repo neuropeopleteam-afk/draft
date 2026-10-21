@@ -720,7 +720,8 @@ def view(row: InterviewSession, audience: str, *, transcript: bool = False) -> d
             "conversation": conversation(row) if audience == "candidate" else None,
             "created_at": row.created_at, "completed_at": row.completed_at, "expires_at": row.expires_at,
             "example": row.is_example, "example_label": EXAMPLE_LABEL if row.is_example else None,
-            "stub": row.engine == "stub" or bool(r.get("stub")), "jury": bool(row.jury_scope),
+            "stub": (pt.is_stub() if row.status == "created" else row.engine == "stub") or bool(r.get("stub")),  # до старта engine="stub" по умолчанию — смотрим на текущий движок (А19)
+            "jury": bool(row.jury_scope),
             "tasks": [{"id": t["id"], "title": _clean_title(t.get("title"))} for t in meta_.get("tasks") or []],
             "skills": [s_["name"] for s_ in meta_.get("skills") or []], "note": row.note if audience == "employer" else None,
             "transcript": row.transcript if transcript and done and audience == "employer" else None,

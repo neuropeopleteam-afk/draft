@@ -1050,8 +1050,6 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
   return (
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
-      {/* финальный этап теста — разговор с Настей для каждого (решение владельца 21.10); нижняя панель защиты скрывается сама */}
-      <DefensePanel sessionId={sessionId} live="auto" final />
       <ExtPreliminaryNote x={r.grade_preliminary} stage={extStage} direction={r.direction} className="mt-4" />
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · оценка менее точная, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
@@ -1065,6 +1063,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
+      {/* А21 №1 (ок владельца 21.10, 22:00): итог (заголовок + 3 карточки) первым, Настя сразу под ним. Финальный этап теста — разговор с Настей для каждого (решение владельца 21.10); нижняя панель защиты скрывается сама */}
+      <DefensePanel sessionId={sessionId} live="auto" final />
       <ThetaScale theta={r.theta} se={r.se} grade={r.claimed_grade} confirmed={r.confirmed} className="mt-4" />
       {v && (
         <div
