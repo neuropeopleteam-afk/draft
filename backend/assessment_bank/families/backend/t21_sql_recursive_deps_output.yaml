@@ -1,0 +1,30 @@
+family_id: backend.db.t21_sql_recursive_deps_output
+title: Граф зависимостей сервисов — рекурсивный CTE с UNION ALL
+direction: backend
+skills:
+- sql
+- dependencies
+target_grades:
+- senior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 11
+  - 11
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.2
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо проследить рекурсивный
+    CTE от корня по 7–8 рёбрам: UNION ALL сохраняет повторы, поэтому общий сервис встречается по числу путей и на
+    разной глубине; сервис вне графа корня в результат не попадает. Уровень Senior: рекурсивный CTE. Набор t21 (21.10)
+    у порога Senior (b = +1,2)'
+generator: assessment_bank.families.backend.t21_sql_recursive_deps_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Перед релизом строится список зависимостей
+  корневого сервиса рекурсивным CTE; предсказать для каждого сервиса число путей и наибольшую глубину. Ключ —
+  независимый перебор путей в генераторе, проверка — исполнение запроса в SQLite.'

@@ -5,14 +5,17 @@
 n на группу = (z(1 − α/2) + z(1 − β))² · (p1(1 − p1) + p2(1 − p2)) / (p2 − p1)².
 
 Вопрос двух видов: размер каждой группы или число полных дней теста при заданном трафике.
-Дистракторы — типичные ошибки планирования: односторонний z, забытая мощность (z(1 − β) = 0),
-итог на обе группы вместо одной, при расчёте дней — трафик только на одну группу или двойной
-учёт деления на группы. Ключ проверяется исполнением: программа считает n через
+Дистракторы — типичные ошибки планирования. Дают меньше верного: односторонний z, забытая мощность
+(z(1 − β) = 0), сумма квантилей без квадрата, при расчёте дней — размер только одной группы. Дают больше:
+мощность как двусторонняя (z(1 − β/2)), квантиль мощности приравнен к квантилю значимости, итог на обе группы
+вместо одной, при расчёте дней — двойной учёт деления на группы. Сколько ловушек ниже ключа (0–3), задаётся
+по seed до подбора чисел, поэтому ранг ключа равномерен (аудит 21.10: раньше ключ почти всегда был медианой). Ключ проверяется исполнением: программа считает n через
 statistics.NormalDist по двум формулам (с объединённой и раздельной дисперсией) и печатает
 ближайший вариант — он должен совпасть с ключом для обеих формул.
 """
 from __future__ import annotations
 
+import itertools
 import math
 from statistics import NormalDist
 
@@ -36,8 +39,24 @@ Z = NormalDist().inv_cdf
 def _n(p1, mde, alpha, power, kind="good"):
     p2 = p1 * (1 + mde)
     za = Z(1 - alpha) if kind == "one_sided" else Z(1 - alpha / 2)
-    zb = {"no_power": 0.0, "power80": Z(0.8)}.get(kind, Z(power))
-    return (za + zb) ** 2 * (p1 * (1 - p1) + p2 * (1 - p2)) / (p2 - p1) ** 2
+    zb = {"no_power": 0.0, "beta_two_sided": Z(1 - (1 - power) / 2), "za_twice": za}.get(kind, Z(power))
+    zz = (za + zb) if kind == "no_square" else (za + zb) ** 2
+    return zz * (p1 * (1 - p1) + p2 * (1 - p2)) / (p2 - p1) ** 2
+
+
+# Типовые ошибки планирования и их сторона относительно верного ответа (сторона не зависит от чисел):
+# ниже — односторонний квантиль, забытая мощность, сумма квантилей без квадрата, (дни) трафик только одной группы;
+# выше — мощность как двусторонняя (z(1 − β/2)), квантиль мощности приравнен к квантилю значимости,
+# итог на обе группы (размер) или двойной учёт деления на группы (дни).
+BELOW = {"n": ["one_sided", "no_power", "no_square"], "days": ["one_sided", "no_power", "no_square", "one_group"]}
+ABOVE = {"n": ["beta_two_sided", "za_twice", "double"], "days": ["beta_two_sided", "za_twice", "double_count"]}
+
+
+def _spread(vals):
+    """Неравномерность набора в логарифмической шкале: наибольший зазор / наименьший."""
+    v = sorted(math.log(x) for x in vals)
+    g = [b - a for a, b in zip(v, v[1:])]
+    return max(g) / min(g) if min(g) > 0 else float("inf")
 
 
 def _fmt_n(n):
@@ -58,7 +77,8 @@ def _pct(x):
     return s.replace(".", ",") + " %"
 
 
-PROGRAM = '''import math
+PROGRAM = '''import itertools
+import math
 from statistics import NormalDist
 
 Z = NormalDist().inv_cdf
@@ -84,46 +104,64 @@ def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     metric, change, who = rng.choice(CONTEXTS)
     ask = rng.choice(["n", "days"])
-    for _ in range(500):
+    # ранг ключа среди 4 вариантов задаётся ДО подбора чисел (аудит 21.10: раньше ключ почти всегда был медианой)
+    n_below = make_rng(FAMILY_ID, seed // 4, "rank").sample(range(4), 4)[seed % 4]
+    gap = 1.12 if ask == "n" else 1.2
+    best = None
+    for _ in range(800):
         p1 = rng.choice([0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2])
         mde = rng.choice([0.05, 0.08, 0.1, 0.15, 0.2])
         alpha = rng.choice([0.05, 0.05, 0.01])
         power = rng.choice([0.8, 0.9])
         good = _n(p1, mde, alpha, power)
+        traffic = None
         if ask == "n":
-            kinds = ["one_sided", "no_power", "double"]
             if not 3000 <= good <= 400000:
                 continue
-            vals = {"good": good, "double": 2 * good,
-                    "one_sided": _n(p1, mde, alpha, power, "one_sided"),
-                    "no_power": _n(p1, mde, alpha, power, "no_power")}
+            vals = {"good": good, "double": 2 * good}
+            for k in ("one_sided", "no_power", "no_square", "beta_two_sided", "za_twice"):
+                vals[k] = _n(p1, mde, alpha, power, k)
             nums = {k: int(math.ceil(v / 100.0)) * 100 for k, v in vals.items()}
-            texts = {k: f"≈ {_fmt_n(v)} {who} в каждой группе" for k, v in vals.items()}
-            traffic = None
         else:
-            kinds = (["one_sided", "no_power", "one_group"] if power == 0.9
-                     else ["one_sided", "one_group", "double_count"])
             traffic = rng.choice([1000, 1500, 2000, 3000, 5000, 8000, 12000, 20000])
             dg = 2 * good / traffic
             if not 10 <= dg <= 60:
                 continue
-            vals = {"good": dg, "one_group": good / traffic, "double_count": 4 * good / traffic,
-                    "one_sided": 2 * _n(p1, mde, alpha, power, "one_sided") / traffic,
-                    "no_power": 2 * _n(p1, mde, alpha, power, "no_power") / traffic}
-            vals = {k: v for k, v in vals.items() if k == "good" or k in kinds}
+            vals = {"good": dg, "one_group": good / traffic, "double_count": 4 * good / traffic}
+            for k in ("one_sided", "no_power", "no_square", "beta_two_sided", "za_twice"):
+                vals[k] = 2 * _n(p1, mde, alpha, power, k) / traffic
             nums = {k: int(math.ceil(v)) for k, v in vals.items()}
-            texts = {k: f"{v} {_days_word(v)}" for k, v in nums.items()}
-        ordered = sorted(nums.values())
-        # варианты различимы: соседние отличаются не меньше чем на 12 % (дни — на 20 %)
-        gap = 1.12 if ask == "n" else 1.2
-        if len(set(ordered)) == 4 and all(b / a >= gap for a, b in zip(ordered, ordered[1:])):
+        below = [k for k in BELOW[ask] if nums[k] < nums["good"]]
+        above = [k for k in ABOVE[ask] if nums[k] > nums["good"]]
+        if len(below) < n_below or len(above) < 3 - n_below:
+            continue
+        for cb in itertools.combinations(below, n_below):
+            for ca in itertools.combinations(above, 3 - n_below):
+                ks = list(cb) + list(ca)
+                ordered = sorted([nums["good"]] + [nums[k] for k in ks])
+                if len(set(ordered)) != 4 or not all(b / a >= gap for a, b in zip(ordered, ordered[1:])):
+                    continue
+                if ask == "days" and not (10 <= ordered[0] and ordered[-1] <= 99):
+                    continue  # все варианты двузначные: длина подписи не выдаёт ключ (он всегда 10–60 дней)
+                # разное число цифр — подсказка «самый длинный»: штраф, если у ключа не то же число цифр, что у всех
+                digits = {len(str(x)) for x in ordered}
+                sc = _spread(ordered) + rng.random() * 0.3 + (1.5 if len(digits) > 1 else 0.0)
+                if best is None or sc < best[0]:
+                    best = (sc, ks, (p1, mde, alpha, power, good, traffic, dict(nums)))
+        if best is not None and best[0] <= 2.5:
             break
-    else:
+    if best is None:
         raise RuntimeError("не удалось подобрать параметры")
+    _, kinds, (p1, mde, alpha, power, good, traffic, nums) = best
+    if ask == "n":
+        texts = {k: f"≈ {_fmt_n(v)} {who} в каждой группе" for k, v in nums.items()}
+    else:
+        texts = {k: f"{v} {_days_word(v)}" for k, v in nums.items()}
+    rng.shuffle(kinds)
     check_lengths(list(texts.values()))
     opts, key = balanced_options(FAMILY_ID, seed, rng, (texts["good"], None),
                                  [(texts[k], None) for k in kinds])
-    options = [(o.text, next(nums[k] for k in nums if texts[k] == o.text)) for o in opts]
+    options = [(o.text, next(nums[k] for k in ["good", *kinds] if texts[k] == o.text)) for o in opts]
     program = PROGRAM.format(p1=p1, mde=mde, alpha=alpha, power=power, ask=ask,
                              traffic=traffic, options=options)
     p2 = p1 * (1 + mde)
@@ -142,7 +180,10 @@ def generate(seed: int):
            "double_count": "трафик поделён на группы, а размер ещё раз умножен на две группы — "
                            "двойной учёт",
            "double": "это суммарный размер обеих групп, а не одной",
-           "one_group": "учтён размер только одной группы, а трафик делится на две — дней вдвое больше"}
+           "one_group": "учтён размер только одной группы, хотя трафик делится на две — дней вдвое меньше нужного",
+           "no_square": "сумма квантилей не возведена в квадрат",
+           "beta_two_sided": "квантиль мощности взят как двусторонний: z(1 − β/2) вместо z(1 − β)",
+           "za_twice": "квантиль мощности приравнен к квантилю значимости: z(1 − α/2) вместо z(1 − β)"}
     calc = f"n на группу = (z(1 − α/2) + z(1 − β))² · (p1(1 − p1) + p2(1 − p2)) / (p2 − p1)² ≈ {good:.0f}"
     if ask == "days":
         calc += (f"; дней = 2n / {traffic} ≈ {2 * good / traffic:.1f}".replace(".", ",")
@@ -158,4 +199,5 @@ def generate(seed: int):
                          display_code_note="Кода в задании нет: программа пересчитывает размер "
                                            "выборки по двум формулам и выбирает ближайший вариант.",
                          params={"ask": ask, "p1": p1, "mde": mde, "alpha": alpha,
-                                 "power": power, "traffic": traffic, "kinds": kinds})
+                                 "power": power, "traffic": traffic, "kinds": kinds,
+                                 "n_below": n_below})

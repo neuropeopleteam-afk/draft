@@ -250,8 +250,8 @@
   ],
   "sample_records": [
     {
-      "key_hash": "<sha256>",
-      "fio_hash": "<sha256>",
+      "key_hash": "<hmac-sha256>",
+      "fio_hash": "<hmac-sha256>",
       "fio_norm": "<хранится только в серверном индексе вне git (152-ФЗ)>",
       "birth_date": "<хранится только в серверном индексе вне git (152-ФЗ)>",
       "discipline": "все дисциплины",
@@ -266,8 +266,8 @@
       "page": 4
     },
     {
-      "key_hash": "<sha256>",
-      "fio_hash": "<sha256>",
+      "key_hash": "<hmac-sha256>",
+      "fio_hash": "<hmac-sha256>",
       "fio_norm": "<хранится только в серверном индексе вне git (152-ФЗ)>",
       "birth_date": null,
       "discipline": "программирование алгоритмическое",
@@ -282,8 +282,8 @@
       "page": 1
     },
     {
-      "key_hash": "<sha256>",
-      "fio_hash": "<sha256>",
+      "key_hash": "<hmac-sha256>",
+      "fio_hash": "<hmac-sha256>",
       "fio_norm": "<хранится только в серверном индексе вне git (152-ФЗ)>",
       "birth_date": null,
       "discipline": "программирование продуктовое",

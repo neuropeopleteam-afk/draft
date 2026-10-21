@@ -1,12 +1,13 @@
 // Кабинет ФСП (роль fsp_analyst): обезличенная аналитика платформы — только агрегаты, группы меньше 5 скрыты.
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Link, Outlet, useOutletContext } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, DIRECTION_TITLES, GRADES, Loading, Seg, Stat, dt, errText, range, useApi } from "../../components/ui";
-import { apiDownload } from "../../lib/api";
+import { Alert, DIRECTIONS, DIRECTION_TITLES, GRADES, Seg, Stat, cleanCompanyName, dt, errText, range } from "../../components/ui";
+import { api, apiDownload, tokenStore } from "../../lib/api";
 import { BarList, Donut, Funnel, Heatmap, Legend, PairBars, RangeChart, StackBar, fk, fpct, ftr, fx, type Stage } from "../charts";
 import { MODE_SHORT, Phase } from "../shared";
 import { CameraStats } from "../../proctor/CameraStats";
+import { useDemoUi } from "../../lib/juryMode";
 import FspRankConverter from "../../components/FspRankConverter";
 import { TalentMap } from "./TalentMap";
 
@@ -21,12 +22,155 @@ const q = (days: string) => (days === "all" ? "" : `?days=${days}`);
 /** Отклонение в процентах со знаком: «+4,2 %», «−10 %». */
 const sgn = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}\u00A0%`;
 
-/** Обёртка разделов: один запрос /fsp-cabinet/report на период, общий для всех экранов кабинета. */
+const REPORT_STALE_MS = 120_000; // ≥ 60 с: общий кэш отчёта для обзора и всех вкладок кабинета ФСП
+const REPORT_CACHE_PREFIX = "fsp_cabinet_report_v1:";
+
+interface ReportCacheEntry {
+  data: Rep;
+  ts: number;
+}
+
+const reportMemCache = new Map<string, ReportCacheEntry>();
+const reportInFlight = new Map<string, Promise<Rep>>();
+
+function reportCacheKey(days: string): string {
+  const tok = (tokenStore.get() ?? "anon").slice(-24);
+  return `${tok}:${days}`;
+}
+
+function readCachedReport(days: string): Rep | null {
+  const key = reportCacheKey(days);
+  const now = Date.now();
+  const mem = reportMemCache.get(key);
+  if (mem && now - mem.ts < REPORT_STALE_MS) return mem.data;
+  try {
+    const raw = sessionStorage.getItem(REPORT_CACHE_PREFIX + key);
+    if (raw) {
+      const parsed = JSON.parse(raw) as ReportCacheEntry;
+      if (parsed && parsed.data && now - parsed.ts < REPORT_STALE_MS) {
+        reportMemCache.set(key, parsed);
+        return parsed.data;
+      }
+    }
+  } catch {
+    /* sessionStorage может быть недоступен или переполнен */
+  }
+  return null;
+}
+
+function writeCachedReport(days: string, data: Rep): void {
+  const key = reportCacheKey(days);
+  const entry: ReportCacheEntry = { data, ts: Date.now() };
+  reportMemCache.set(key, entry);
+  try {
+    sessionStorage.setItem(REPORT_CACHE_PREFIX + key, JSON.stringify(entry));
+  } catch {
+    /* игнорируем переполнение хранилища */
+  }
+}
+
+function fetchReportShared(days: string): Promise<Rep> {
+  const cached = readCachedReport(days);
+  if (cached) return Promise.resolve(cached);
+  const key = reportCacheKey(days);
+  const inflight = reportInFlight.get(key);
+  if (inflight) return inflight;
+  const req = api<Rep>(`/fsp-cabinet/report${q(days)}`)
+    .then((res) => {
+      writeCachedReport(days, res);
+      return res;
+    })
+    .finally(() => {
+      reportInFlight.delete(key);
+    });
+  reportInFlight.set(key, req);
+  return req;
+}
+
+/** Скелет аналитики кабинета ФСП на время загрузки отчёта (вместо пустых блоков). */
+function ReportSkeleton() {
+  return (
+    <div className="space-y-6" role="status" aria-busy="true" aria-live="polite" data-testid="fsp-report-skeleton">
+      <span className="sr-only">Загрузка…</span>
+      <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="card min-w-0 space-y-2.5">
+            <div className="h-3 w-3/5 animate-pulse rounded bg-brand-blush/60" />
+            <div className="h-7 w-1/2 animate-pulse rounded bg-brand-blush/50" />
+            <div className="h-3 w-4/5 animate-pulse rounded bg-brand-blush/35" />
+          </div>
+        ))}
+      </div>
+      <div className="card space-y-3">
+        <div className="h-5 w-2/5 animate-pulse rounded bg-brand-blush/60" />
+        <div className="h-4 w-full animate-pulse rounded bg-brand-blush/35" />
+        <div className="h-4 w-5/6 animate-pulse rounded bg-brand-blush/35" />
+        <div className="h-4 w-4/6 animate-pulse rounded bg-brand-blush/35" />
+      </div>
+      <div className="grid gap-5 lg:grid-cols-2">
+        {[0, 1].map((i) => (
+          <div key={i} className="card min-w-0 space-y-4">
+            <div className="space-y-1.5">
+              <div className="h-5 w-1/2 animate-pulse rounded bg-brand-blush/60" />
+              <div className="h-3.5 w-3/4 animate-pulse rounded bg-brand-blush/35" />
+            </div>
+            <div className="h-36 animate-pulse rounded-2xl bg-brand-blush/30" />
+          </div>
+        ))}
+      </div>
+      <div className="card space-y-4">
+        <div className="h-5 w-1/2 animate-pulse rounded bg-brand-blush/60" />
+        <div className="h-48 animate-pulse rounded-2xl bg-brand-blush/25" />
+      </div>
+    </div>
+  );
+}
+
+/** Обёртка разделов: один запрос /fsp-cabinet/report на период (кэш ≥ 60 с + дедупликация), общий для всех вкладок кабинета. */
 export function FspReportLayout() {
   const [days, setDaysS] = useState(() => localStorage.getItem(KEY) ?? "all");
-  const { data, loading, error } = useApi<Rep>(`/fsp-cabinet/report${q(days)}`, [days]);
-  const setDays = (d: string) => { localStorage.setItem(KEY, d); setDaysS(d); };
-  return <Outlet context={{ rep: data, loading, error, days, setDays } satisfies Ctx} />;
+  const [data, setData] = useState<Rep | null>(() => readCachedReport(days));
+  const [loading, setLoading] = useState<boolean>(() => !readCachedReport(days));
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const cached = readCachedReport(days);
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    fetchReportShared(days)
+      .then((res) => {
+        if (!cancelled) {
+          setData(res);
+          setError(null);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) setError(errText(e));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [days]);
+
+  const setDays = (d: string) => {
+    localStorage.setItem(KEY, d);
+    setDaysS(d);
+  };
+  return (
+    <Suspense fallback={<ReportSkeleton />}>
+      <Outlet context={{ rep: data, loading, error, days, setDays } satisfies Ctx} />
+    </Suspense>
+  );
 }
 
 const useRep = () => useOutletContext<Ctx>();
@@ -66,8 +210,7 @@ function Head({ title, subtitle, csv }: { title: string; subtitle: string; csv?:
 function Body({ children }: { children: (rep: Rep) => React.ReactNode }) {
   const { rep, error, loading } = useRep();
   if (error && !rep) return <Alert>{error}</Alert>;
-  if (loading && !rep) return <Loading />;
-  if (!rep) return null;
+  if (loading || !rep) return <ReportSkeleton />;
   return <>{children(rep)}</>;
 }
 
@@ -87,7 +230,8 @@ function Card({ title, sub, children, more }: { title: string; sub?: string; chi
 }
 
 function DemoNote({ rep }: { rep: Rep }) {
-  if (!(rep.overview.demo_share >= 0.99)) return null;
+  const demoUi = useDemoUi();
+  if (!demoUi || !(rep.overview.demo_share >= 0.99)) return null;
   return (
     <Alert kind="info">
       Сейчас в данных только демо-компании и демо-кандидаты стенда: история приглашений для аналитики сгенерирована по модели
@@ -411,12 +555,13 @@ export function FspFunnel() {
 // ------------------------------------------------------------------ кубки
 
 export function FspCups() {
+  const demoUi = useDemoUi();
   return (
     <div className="max-w-6xl space-y-6">
       <Head title="Кубки работодателей" subtitle="Кубок — публичное мероприятие платформы: компания и условия открыты, участники — только числом. Места записываются в паспорт ФСП (уровень «платформа», T1)." />
       <Body>{(rep) => {
-        const cups: any[] = rep.cups;
-        const tours: any[] = rep.tournaments ?? [];
+        const cups: any[] = (rep.cups ?? []).filter((c: any) => demoUi || (!c.is_demo && !/^Демо(?:\s+жюри)?:/i.test(c.company ?? "")));
+        const tours: any[] = (rep.tournaments ?? []).filter((t: any) => demoUi || (!t.is_demo && !/^Демо(?:\s+жюри)?:/i.test(t.company ?? "")));
         return (
           <>
           {tours.length > 0 && <Tournaments items={tours} k={rep.k} />}
@@ -428,7 +573,7 @@ export function FspCups() {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{c.category_title} · {MODE_SHORT[c.mode] ?? c.mode}</p>
                     <h2 className="mt-1 text-lg font-bold text-brand-night">{c.title}</h2>
-                    <p className="text-sm text-brand-ink/65">{c.company}</p>
+                    <p className="text-sm text-brand-ink/65">{cleanCompanyName(c.company)}</p>
                   </div>
                   <Phase p={c.phase} />
                 </div>
@@ -474,7 +619,7 @@ function Tournaments({ items, k }: { items: any[]; k: number }) {
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{t.discipline} · {t.category_title}</p>
                 <h3 className="mt-1 text-base font-bold text-brand-night">{t.title}</h3>
-                <p className="text-sm text-brand-ink/65">{t.company} · {t.position_title}</p>
+                <p className="text-sm text-brand-ink/65">{cleanCompanyName(t.company)} · {t.position_title}</p>
               </div>
               <Phase p={t.phase} />
             </div>

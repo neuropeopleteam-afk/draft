@@ -204,6 +204,9 @@ export default function LivePitch() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Драфт · Живой зал для питч-сессии (без персональных данных)</p>
             <h1 className="mt-1 text-xl font-extrabold tracking-tight md:text-2xl">Отсканируйте QR с телефона: мини-тест за 3 минуты → уровень и радар античита на экране</h1>
+            <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-white/80" data-testid="live-h1-lead">
+              Это интерактивное табло для выступления: покажите QR-код залу или нажмите «+ Смоделировать участника зала», чтобы увидеть прохождение мини-теста и появление кандидата в подборке в реальном времени.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -281,8 +284,8 @@ export default function LivePitch() {
               {focused ? <Focus g={focused} /> : (
                 <div className="card flex min-h-[320px] flex-col items-center justify-center px-6 py-8 text-center">
                   <p className="text-lg font-bold text-brand-night">Зал готов к приёму участников с телефонов</p>
-                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-brand-ink/70">
-                    Отсканируйте QR-код камерой телефона или нажмите «Смоделировать участника зала» в шапке. Здесь в реальном времени появится калибровка уровня (θ ± SE), место в подборке работодателя, объяснение «почему он здесь» и отправка приглашения с зарплатной вилкой.
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-brand-ink/70" title="Как считается: адаптивная оценка уровня θ со стандартной ошибкой измерения SE">
+                    Отсканируйте QR-код камерой телефона или нажмите «Смоделировать участника зала» в шапке. Здесь в реальном времени появится оценка уровня и точности по тесту, место в подборке работодателя, объяснение «почему он здесь» и отправка приглашения с зарплатной вилкой.
                   </p>
                   <div className="mt-6 flex w-full max-w-xl flex-col gap-3">
                     <a href={`/j/${feed.code}`} target="_blank" rel="noopener"
@@ -378,7 +381,14 @@ function Focus({ g }: { g: Guest }) {
           ) : (
             <p className="mt-1 text-xl font-extrabold text-brand-night">Категория не присвоена — в подборку не попадает</p>
           )}
-          {r && <p className="mt-1 text-sm text-brand-ink/70">{r.correct} из {r.answered} верно · уровень = {num(r.theta)} ± {plain(r.se)} · {Math.round(r.time_s)} с</p>}
+          {r && (
+            <p
+              className="mt-1 text-sm text-brand-ink/70"
+              title={`Как считается: индекс уровня по шкале теста = ${num(r.theta)}, погрешность измерения = ±${plain(r.se)}`}
+            >
+              {r.correct} из {r.answered} верно · время решения {Math.round(r.time_s)} с · наведите для точной шкалы ⓘ
+            </p>
+          )}
         </div>
       </div>
 
@@ -434,7 +444,7 @@ function Focus({ g }: { g: Guest }) {
           <p className="mt-2 text-lg font-bold">{inv.position_title}</p>
           <p className="mt-1 text-3xl font-extrabold tracking-tight">{range(inv.salary_from, inv.salary_to)}</p>
           {inv.market && <p className="mt-1 text-xs text-white/70">Вилка по рынку категории: {range(inv.market.from, inv.market.to)}</p>}
-          {g.stage === "accepted" && <p className="mt-3 rounded-xl bg-emerald-500/20 px-3 py-2 text-sm font-semibold">Принято в {time(inv.responded_at)} — контакты открыты работодателю, профиль передан в ATS</p>}
+          {g.stage === "accepted" && <p className="mt-3 rounded-xl bg-emerald-500/20 px-3 py-2 text-sm font-semibold">Принято в {time(inv.responded_at)} — контакты открыты работодателю, профиль передан в кадровую систему</p>}
           {g.stage === "declined" && <p className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-sm">Отклонено в {time(inv.responded_at)} — контакты остались скрытыми</p>}
         </div>
       )}

@@ -9,7 +9,7 @@
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, make_rng
+from assessment_bank.gen_utils import build_variant, make_rng, pick_ranked
 from assessment_bank.schema import AnswerKey, Check
 
 from ._mob_utils import balanced_options
@@ -44,6 +44,10 @@ CTX = [("лента новостей", "карточка поста"), ("кат�
        ("галерея", "превью фото"), ("список заказов", "строка заказа"), ("лента вакансий", "карточка вакансии"),
        ("афиша событий", "карточка события"), ("список треков", "строка трека")]
 WRONGS = ["budget60", "dropped", "average"]
+_FRAME_ERR = {"budget60": "бюджет 16,7 мс, как у 60 Гц (опаздывают только кадры с картинкой)",
+              "dropped": "посчитаны пропущенные интервалы обновления, а не опоздавшие кадры",
+              "average": "сравнение со средним временем кадра", "double": "кадр с картинкой посчитан дважды",
+              "ontime": "посчитаны кадры, успевшие вовремя", "frames60": "расчёт для 60 кадров в секунду"}
 
 
 def _n(x: float, nd: int = 1) -> str:
@@ -52,7 +56,8 @@ def _n(x: float, nd: int = 1) -> str:
 
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
-    for _ in range(500):
+    n_below = rng.randrange(4)  # ранг ключа — равномерный (аудит 21.10: ключ всегда был вторым по величине)
+    for _ in range(2000):
         hz = rng.choice([90, 120])
         bud = 1000 / hz
         base = round(rng.uniform(bud * 0.45, bud * 0.65), 1)
@@ -61,13 +66,22 @@ def generate(seed: int):
         bind = round(rng.uniform(bud + 0.4, min(16.0, 1.9 * bud)) - base, 1)
         lo = max(2 * bud, 1000 / 60) + 0.3 - base - bind
         img = round(rng.uniform(lo, 3 * bud - 0.3 - base - bind), 1)
+        if img <= 0.5:
+            continue
         good = late_frames(hz, base, k, bind, img_every, img)
         vals = {w: late_frames(hz, base, k, bind, img_every, img, (w,)) for w in WRONGS}
-        if len({good, *vals.values()}) == 4 and img > 0.5:
+        # Ещё три типовые ошибки: кадр с картинкой посчитан дважды (ячейка + картинка); посчитаны кадры, успевшие
+        # вовремя; расчёт для 60 кадров в секунду (как у 60 Гц) при верном бюджете.
+        n_img_ = (hz // k) // img_every
+        vals["double"] = good + n_img_
+        vals["ontime"] = hz - good
+        vals["frames60"] = sum(1 for f in range(1, 61) if f % k == 0)
+        picked = pick_ranked(rng, good, vals, n_below)
+        if picked:
             break
     else:
         raise RuntimeError("нет параметров")
-    ws = WRONGS
+    ws = picked
     opts, key = balanced_options(FAMILY_ID, seed, rng, (str(good), None), [(str(vals[w]), None) for w in ws])
     ctx, cell = rng.choice(CTX)
     stem = (f"Экран «{ctx}», прокрутка на дисплее {hz} Гц. Измерено на главном потоке: каждый кадр — {_n(base)} мс "
@@ -86,10 +100,8 @@ def generate(seed: int):
                    explanation=(f"Бюджет кадра при {hz} Гц — 1000/{hz} ≈ {_n(1000 / hz, 2)} мс. Обычный кадр "
                                 f"({_n(base)} мс) укладывается; кадр с новой ячейкой — {_n(base + bind)} мс, уже больше "
                                 f"бюджета, с картинкой — {_n(base + bind + img)} мс. Новых ячеек за {hz} кадров — {n_bind}, "
-                                f"все эти кадры опаздывают: ответ {good}. Ошибки: бюджет 16,7 мс, как у 60 Гц "
-                                f"(тогда опаздывают только кадры с картинкой — {n_img}); считать пропущенные "
-                                f"интервалы обновления вместо опоздавших кадров ({vals['dropped']}); сравнивать "
-                                f"со средним временем кадра (0)."))
+                                f"все эти кадры опаздывают: ответ {good}. Дистракторы — типовые ошибки: "
+                                + "; ".join(f"{vals[w]} — {_FRAME_ERR[w]}" for w in ws) + "."))
     return build_variant(FAMILY_ID, seed, stem=stem, options=opts, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, language="text",
                          display_code_note="Ответ проверяется моделью бюджета кадра на Python.",

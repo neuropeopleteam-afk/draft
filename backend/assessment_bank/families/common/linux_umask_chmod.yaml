@@ -1,13 +1,21 @@
 family_id: common.linux.umask_chmod
 title: Права доступа — umask и chmod (канарейка)
 direction: common
-skills: [linux, permissions]
-target_grades: [junior, middle]
+skills:
+- linux
+- permissions
+target_grades:
+- junior
+- middle
 format: mcq_concept
 language: bash
 invariants:
-  code_lines: [4, 4]
-  operations: [4, 4]
+  code_lines:
+  - 4
+  - 4
+  operations:
+  - 4
+  - 4
   n_options: 4
 time_limit_s: 120
 canary: true
@@ -16,9 +24,11 @@ prior_difficulty:
   b: -0.4
   a: 1.0
   sigma_variant: 0.35
-  basis: "4 команды, 4 варианта ответа; umask с битами x (арифметическое вычитание даёт другой ответ) и символьный chmod с «=»"
+  basis: Априорная, до калибровки на людях (a = 1,0). 4 команды, 4 варианта ответа; umask с битами x (арифметическое
+    вычитание даёт другой ответ) и символьный chmod с «=»
 generator: assessment_bank.families.common.linux_umask_chmod
 version: 2
-description: >
-  Канареечное семейство: seed 1..24 опубликованы, кандидату выдаются только они.
-  Правильный ответ проверяется исполнением команд и `stat -c %a` в песочнице.
+description: 'Канареечное семейство: seed 1..24 опубликованы, кандидату выдаются только они. Правильный ответ проверяется
+  исполнением команд и `stat -c %a` в песочнице.
+
+  '

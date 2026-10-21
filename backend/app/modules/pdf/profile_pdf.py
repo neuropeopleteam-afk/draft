@@ -87,8 +87,8 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
                         + (f" · место в категории {card['rank_in_category']} из {card['category_size']}"
                            if card.get("rank_in_category") else "")
                         + (f" · статус грейда: <b>{_esc(gs.get('title'))}</b>" if gs.get("title") else ""), st["p"]))
-    if gs.get("status") == "unconfirmed":  # единая модель статуса: заявленное из опроса — T0
-        el.append(Paragraph(_esc(gs.get("text") or "Грейд не подтверждён") + " (заявленное — T0, на категорию и "
+    if gs.get("status") == "unconfirmed":  # единая модель статуса: заявленное из опроса — самоописание
+        el.append(Paragraph(_esc(gs.get("text") or "Грейд не подтверждён") + " (самозаявленное из анкеты, на категорию и "
                             "ранжирование не влияет).", st["small"]))
     pv = card.get("provisional")
     if pv:
@@ -102,15 +102,16 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
         el.append(Paragraph(f"Грейд был предварительным и подтверждён {_esc(cb.get('title'))}"
                             + (f" («{_esc(cb['ref_title'])}»)" if cb.get("ref_title") else "") + ".", st["small"]))
     el.append(Spacer(1, 4))
-    legend = ("Уровни доказанности: <b>T1</b> — подтверждено тестом или зондом на платформе; <b>T2</b> — подтверждено "
-              "реестром ФСП; <b>T0</b> — указано самим кандидатом, на категорию и рейтинг не влияет.")
+    legend = ("Уровни доказанности: <b>Подтверждено платформой</b> — проверено тестом или коротким заданием работодателя; "
+              "<b>Подтверждено реестром ФСП</b> — официальные протоколы и реестр Федерации спортивного программирования; "
+              "<b>Самозаявлено</b> — указано самим кандидатом, на категорию и рейтинг не влияет.")
     el.append(Paragraph(legend, st["small"]))
     specializations = card.get("specializations") or []
     if len(specializations) > 1:
         el.append(Paragraph("Основная и дополнительная специализации", st["h2"]))
         for s in specializations:
-            proof = "подтверждено отдельным тестом · T1" if s.get("confirmed_by") == "test" else "ожидает подтверждения"
-            metrics = (f"; θ = {theta_se(s['theta'], s['se'])}"
+            proof = "подтверждено отдельным тестом платформы" if s.get("confirmed_by") == "test" else "ожидает подтверждения"
+            metrics = (f"; оценка уровня = {theta_se(s['theta'], s['se'])}"
                        if s.get("theta") is not None and s.get("se") is not None else "")
             el.append(Paragraph(
                 f"<b>{_esc(s.get('category_title') or s['direction_title'])}</b> — "
@@ -123,14 +124,14 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
         if rows:
             el.append(_table(rows, st))
 
-    el.append(Paragraph("Результат теста · T1", st["h2"]))
+    el.append(Paragraph("Результат теста · подтверждено платформой", st["h2"]))
     t = card.get("test")
     if t:
         el.append(_table([
             ["Грейд", _esc(card.get("grade_title"))],
             *([["Уровень доказанности", f"предварительно: P(уровень ≥ Junior) = {_esc(pv.get('p_pct', '—'))} %"]]
               if pv else []),
-            ["Оценка уровня θ", theta_se(t['theta'], t['se']) if t.get("theta") is not None else "—"],
+            ["Оценка уровня по шкале теста", theta_se(t['theta'], t['se']) if t.get("theta") is not None else "—"],
             ["Верных ответов", f"{t.get('correct')} из {t.get('answered')}"],
             ["Дата", _esc(t.get("date"))],
         ], st))
@@ -143,7 +144,7 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
         at = gs.get("attempt") or {}
         el.append(Paragraph(
             (f"Последняя попытка ({_esc(at.get('at'))}): тест на {_esc(GRADES.get(at.get('grade'), at.get('grade')))} "
-             f"не подтвердил грейд, θ = {theta_se(at['theta'], at.get('se') or 0)}. Результат в скор не входит."
+             f"не подтвердил грейд (оценка уровня {theta_se(at['theta'], at.get('se') or 0)}). Результат в скор не входит."
              if at.get("theta") is not None else "Тест ещё не пройден."), st["p"]))
     if passport:
         el.extend(_passport_block(passport, st))
@@ -151,11 +152,11 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
         el.extend(_growth_block(growth, st))
     probes = card.get("probes") or []
     if probes:
-        el.append(Paragraph("Задачи от работодателей (зонды) · T1", st["h2"]))
+        el.append(Paragraph("Задачи от работодателей (зонды) · подтверждено платформой", st["h2"]))
         for pr in probes:
             el.append(Paragraph(f"• {_esc(pr['title'])} — {_esc(pr.get('verdict'))}", st["p"]))
 
-    el.append(Paragraph("Паспорт ФСП · T2", st["h2"]))
+    el.append(Paragraph("Паспорт ФСП · подтверждено реестром ФСП", st["h2"]))
     fsp = card.get("fsp") or {}
     if fsp.get("hidden"):
         el.append(Paragraph("Скрыто кандидатом.", st["p"]))
@@ -168,7 +169,7 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
     else:
         el.append(Paragraph(NO_FSP + ".", st["p"]))
 
-    el.append(Paragraph("Самоописание · T0", st["h2"]))
+    el.append(Paragraph("Самоописание · заявлено кандидатом", st["h2"]))
     rows = []
     if card.get("stack_declared"):
         rows.append(["Стек", ", ".join(_esc(s["title"]) for s in card["stack_declared"])])
@@ -210,7 +211,7 @@ def _passport_block(pp: dict, st) -> list:
     until = (pp.get("valid_until") or "")[:10]
     status = "подтверждён" if pp.get("grade_status") == "confirmed" else "предварительно"
     text = [Paragraph("Подписанный паспорт грейда", st["h2"]),
-            Paragraph(f"Грейд и навыки T1, достижения ФСП T2 подписаны электронной подписью платформы (Ed25519). "
+            Paragraph(f"Грейд и навыки, подтверждённые платформой, а также достижения ФСП подписаны электронной подписью платформы (Ed25519). "
                       f"Статус грейда: {status}. Действителен до {_esc(until)}, если не отозван.", st["p"]),
             Spacer(1, 3),
             Paragraph(f"Проверка: <b>{_esc(pp['url'])}</b>", st["p"]),
@@ -225,7 +226,7 @@ def _passport_block(pp: dict, st) -> list:
 
 _STATUS = {"strong": "уверенно", "ok": "в целом освоено", "gap": "пробел", "pending": "на проверке"}
 _REL = {"above": "выше вашего уровня", "below": "ниже вашего уровня", "as_expected": "на вашем уровне"}
-_DEMAND = {"confirmed": "подтверждён (T1)", "weak": "ниже 50 % в тесте", "declared": "заявлен (T0)", "missing": "нет"}
+_DEMAND = {"confirmed": "подтверждён платформой", "weak": "ниже 50 % в тесте", "declared": "самозаявлен", "missing": "нет"}
 
 
 def _pct(v) -> str:

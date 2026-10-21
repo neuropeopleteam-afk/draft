@@ -45,7 +45,7 @@ print(fmt(float(total_hidden)))
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, l1, l2 = rng.choice(CONTEXTS)
-    n_below = rng.choice([0, 1, 2])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный (аудит 21.10: без крайнего ранга ключ угадывался)
     fmt, fmt_src = formatter("int", "деф.")
     for _ in range(8000):
         # слой 1 — легко находимые: высокая доля общих; слой 2 — трудные: общих мало

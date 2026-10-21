@@ -1,0 +1,588 @@
+{
+ "plan": {
+  "phase": "train",
+  "n_per_seed": 150,
+  "seeds": [
+   1101,
+   1102,
+   1103,
+   1104,
+   1105,
+   1106,
+   1107,
+   1108,
+   1109,
+   1110
+  ],
+  "common_args": [
+   "--retest"
+  ],
+  "note": "TRAIN-раунд 3 (поправка №3а): T* — жёсткие условия, выбор по L = 3·FC + FR в точке «после второго этапа»; S* — S-T-мир на TRAIN-зёрнах (разведка); Z* — S-T без расхождения параметров (средняя SE для А5)",
+  "configs": {
+   "T0": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1"
+    },
+    "n_per_seed": 150
+   },
+   "T1": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_SPRT_DELTA": "0.45"
+    },
+    "n_per_seed": 150
+   },
+   "T2": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_SPRT_DELTA": "0.5"
+    },
+    "n_per_seed": 150
+   },
+   "T3": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+     "ASSESSMENT_TWO_STAGE_MINUTES": "20"
+    },
+    "n_per_seed": 150
+   },
+   "T4": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+     "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+     "ASSESSMENT_SPRT_DELTA": "0.4"
+    },
+    "n_per_seed": 150
+   },
+   "T5": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+     "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+     "ASSESSMENT_SPRT_DELTA": "0.45"
+    },
+    "n_per_seed": 150
+   },
+   "T6": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+     "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+     "ASSESSMENT_SPRT_DELTA": "0.5"
+    },
+    "n_per_seed": 150
+   },
+   "T7": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+     "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+     "ASSESSMENT_SPRT_ALPHA": "0.1"
+    },
+    "n_per_seed": 150
+   },
+   "T8": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+     "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+     "ASSESSMENT_SPRT_DELTA": "0.45",
+     "ASSESSMENT_UPGRADE_RULE": "none"
+    },
+    "n_per_seed": 150
+   },
+   "T9": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+     "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+     "ASSESSMENT_SPRT_DELTA": "0.45",
+     "ASSESSMENT_CONTESTED_MAX_ITEMS": "36",
+     "ASSESSMENT_CONTESTED_MAX_MINUTES": "105"
+    },
+    "n_per_seed": 150
+   }
+  }
+ },
+ "summary": {
+  "T0": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9474,
+   "confident_share_main": 0.672,
+   "confident_accuracy_final": 0.9133,
+   "confident_share_final": 0.8,
+   "false_confirm_all": 0.016,
+   "false_confirm_among_overclaim": 0.0415,
+   "false_reject_among_true": 0.2932,
+   "exact_grade_final": 0.7347,
+   "exact_grade_final_not_underclaim": 0.7903,
+   "within_one_final": 0.998,
+   "gross_error_2plus": 0.002,
+   "undecided_final": 0.2,
+   "followup_share": 0.328,
+   "oral_share": 0.0,
+   "extended_share": 0.506,
+   "false_reject_all": 0.18,
+   "exact_grade_final_5": 0.7407,
+   "exact_grade_final_4": 0.808,
+   "exact_grade_main": 0.724,
+   "loss_3fc_fr": 0.228,
+   "far_exact_grade_final": 0.822,
+   "minutes_main": {
+    "mean": 43.2,
+    "p90": 66.3
+   },
+   "minutes_total": {
+    "mean": 48.5,
+    "p90": 81.5
+   },
+   "items_main": {
+    "mean": 23.2,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.888,
+   "retest_exact": 0.6633,
+   "retest_decision": 0.7827,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1"
+   },
+   "args": null
+  },
+  "T1": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9378,
+   "confident_share_main": 0.772,
+   "confident_accuracy_final": 0.9141,
+   "confident_share_final": 0.8773,
+   "false_confirm_all": 0.0187,
+   "false_confirm_among_overclaim": 0.0484,
+   "false_reject_among_true": 0.2106,
+   "exact_grade_final": 0.748,
+   "exact_grade_final_not_underclaim": 0.7979,
+   "within_one_final": 0.9973,
+   "gross_error_2plus": 0.0027,
+   "undecided_final": 0.1227,
+   "followup_share": 0.228,
+   "oral_share": 0.0,
+   "extended_share": 0.416,
+   "false_reject_all": 0.1293,
+   "exact_grade_final_5": 0.754,
+   "exact_grade_final_4": 0.8153,
+   "exact_grade_main": 0.744,
+   "loss_3fc_fr": 0.1854,
+   "far_exact_grade_final": 0.8327,
+   "minutes_main": {
+    "mean": 41.4,
+    "p90": 62.3
+   },
+   "minutes_total": {
+    "mean": 45.1,
+    "p90": 72.7
+   },
+   "items_main": {
+    "mean": 21.9,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.898,
+   "retest_exact": 0.6773,
+   "retest_decision": 0.79,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.45"
+   },
+   "args": null
+  },
+  "T2": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9166,
+   "confident_share_main": 0.8153,
+   "confident_accuracy_final": 0.8982,
+   "confident_share_final": 0.8973,
+   "false_confirm_all": 0.0273,
+   "false_confirm_among_overclaim": 0.0708,
+   "false_reject_among_true": 0.2139,
+   "exact_grade_final": 0.7387,
+   "exact_grade_final_not_underclaim": 0.7758,
+   "within_one_final": 0.9973,
+   "gross_error_2plus": 0.0027,
+   "undecided_final": 0.1027,
+   "followup_share": 0.1847,
+   "oral_share": 0.0,
+   "extended_share": 0.35,
+   "false_reject_all": 0.1313,
+   "exact_grade_final_5": 0.744,
+   "exact_grade_final_4": 0.806,
+   "exact_grade_main": 0.7307,
+   "loss_3fc_fr": 0.2132,
+   "far_exact_grade_final": 0.826,
+   "minutes_main": {
+    "mean": 40.1,
+    "p90": 61.0
+   },
+   "minutes_total": {
+    "mean": 43.0,
+    "p90": 67.3
+   },
+   "items_main": {
+    "mean": 21.0,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.8955,
+   "retest_exact": 0.6567,
+   "retest_decision": 0.7993,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.5"
+   },
+   "args": null
+  },
+  "T3": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9489,
+   "confident_share_main": 0.6387,
+   "confident_accuracy_final": 0.914,
+   "confident_share_final": 0.806,
+   "false_confirm_all": 0.016,
+   "false_confirm_among_overclaim": 0.0415,
+   "false_reject_among_true": 0.2888,
+   "exact_grade_final": 0.73,
+   "exact_grade_final_not_underclaim": 0.7926,
+   "within_one_final": 0.9993,
+   "gross_error_2plus": 0.0007,
+   "undecided_final": 0.194,
+   "followup_share": 0.3613,
+   "oral_share": 0.0,
+   "extended_share": 0.5427,
+   "false_reject_all": 0.1773,
+   "exact_grade_final_5": 0.7393,
+   "exact_grade_final_4": 0.808,
+   "exact_grade_main": 0.7173,
+   "loss_3fc_fr": 0.2253,
+   "far_exact_grade_final": 0.8032,
+   "minutes_main": {
+    "mean": 44.5,
+    "p90": 68.9
+   },
+   "minutes_total": {
+    "mean": 51.3,
+    "p90": 90.3
+   },
+   "items_main": {
+    "mean": 23.6,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.9029,
+   "retest_exact": 0.684,
+   "retest_decision": 0.8,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20"
+   },
+   "args": null
+  },
+  "T4": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9393,
+   "confident_share_main": 0.7253,
+   "confident_accuracy_final": 0.9052,
+   "confident_share_final": 0.8513,
+   "false_confirm_all": 0.0227,
+   "false_confirm_among_overclaim": 0.0587,
+   "false_reject_among_true": 0.2443,
+   "exact_grade_final": 0.7287,
+   "exact_grade_final_not_underclaim": 0.7872,
+   "within_one_final": 0.9993,
+   "gross_error_2plus": 0.0007,
+   "undecided_final": 0.1487,
+   "followup_share": 0.2747,
+   "oral_share": 0.0,
+   "extended_share": 0.4587,
+   "false_reject_all": 0.15,
+   "exact_grade_final_5": 0.738,
+   "exact_grade_final_4": 0.8,
+   "exact_grade_main": 0.7207,
+   "loss_3fc_fr": 0.2181,
+   "far_exact_grade_final": 0.7938,
+   "minutes_main": {
+    "mean": 42.6,
+    "p90": 65.2
+   },
+   "minutes_total": {
+    "mean": 47.8,
+    "p90": 79.6
+   },
+   "items_main": {
+    "mean": 22.6,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.8963,
+   "retest_exact": 0.6727,
+   "retest_decision": 0.7833,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.4"
+   },
+   "args": null
+  },
+  "T5": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9328,
+   "confident_share_main": 0.7633,
+   "confident_accuracy_final": 0.9105,
+   "confident_share_final": 0.8713,
+   "false_confirm_all": 0.0233,
+   "false_confirm_among_overclaim": 0.0604,
+   "false_reject_among_true": 0.2226,
+   "exact_grade_final": 0.746,
+   "exact_grade_final_not_underclaim": 0.7986,
+   "within_one_final": 0.9987,
+   "gross_error_2plus": 0.0013,
+   "undecided_final": 0.1287,
+   "followup_share": 0.2367,
+   "oral_share": 0.0,
+   "extended_share": 0.4207,
+   "false_reject_all": 0.1367,
+   "exact_grade_final_5": 0.752,
+   "exact_grade_final_4": 0.8073,
+   "exact_grade_main": 0.7227,
+   "loss_3fc_fr": 0.2066,
+   "far_exact_grade_final": 0.8273,
+   "minutes_main": {
+    "mean": 41.4,
+    "p90": 63.0
+   },
+   "minutes_total": {
+    "mean": 46.1,
+    "p90": 74.7
+   },
+   "items_main": {
+    "mean": 22.0,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.9064,
+   "retest_exact": 0.696,
+   "retest_decision": 0.82,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45"
+   },
+   "args": null
+  },
+  "T6": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9224,
+   "confident_share_main": 0.808,
+   "confident_accuracy_final": 0.8977,
+   "confident_share_final": 0.906,
+   "false_confirm_all": 0.0233,
+   "false_confirm_among_overclaim": 0.0604,
+   "false_reject_among_true": 0.2052,
+   "exact_grade_final": 0.752,
+   "exact_grade_final_not_underclaim": 0.7979,
+   "within_one_final": 0.998,
+   "gross_error_2plus": 0.002,
+   "undecided_final": 0.094,
+   "followup_share": 0.192,
+   "oral_share": 0.0,
+   "extended_share": 0.352,
+   "false_reject_all": 0.126,
+   "exact_grade_final_5": 0.7593,
+   "exact_grade_final_4": 0.8167,
+   "exact_grade_main": 0.734,
+   "loss_3fc_fr": 0.1959,
+   "far_exact_grade_final": 0.822,
+   "minutes_main": {
+    "mean": 40.4,
+    "p90": 61.6
+   },
+   "minutes_total": {
+    "mean": 44.1,
+    "p90": 73.3
+   },
+   "items_main": {
+    "mean": 21.1,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.9027,
+   "retest_exact": 0.6787,
+   "retest_decision": 0.802,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.5"
+   },
+   "args": null
+  },
+  "T7": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9443,
+   "confident_share_main": 0.7307,
+   "confident_accuracy_final": 0.9119,
+   "confident_share_final": 0.8547,
+   "false_confirm_all": 0.026,
+   "false_confirm_among_overclaim": 0.0674,
+   "false_reject_among_true": 0.2117,
+   "exact_grade_final": 0.7353,
+   "exact_grade_final_not_underclaim": 0.7804,
+   "within_one_final": 0.9993,
+   "gross_error_2plus": 0.0007,
+   "undecided_final": 0.1453,
+   "followup_share": 0.2693,
+   "oral_share": 0.0,
+   "extended_share": 0.462,
+   "false_reject_all": 0.13,
+   "exact_grade_final_5": 0.7427,
+   "exact_grade_final_4": 0.8107,
+   "exact_grade_main": 0.73,
+   "loss_3fc_fr": 0.208,
+   "far_exact_grade_final": 0.8086,
+   "minutes_main": {
+    "mean": 42.4,
+    "p90": 64.9
+   },
+   "minutes_total": {
+    "mean": 47.4,
+    "p90": 78.7
+   },
+   "items_main": {
+    "mean": 22.4,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.9041,
+   "retest_exact": 0.696,
+   "retest_decision": 0.798,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_ALPHA": "0.1"
+   },
+   "args": null
+  },
+  "T8": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9328,
+   "confident_share_main": 0.7633,
+   "confident_accuracy_final": 0.9105,
+   "confident_share_final": 0.8713,
+   "false_confirm_all": 0.0233,
+   "false_confirm_among_overclaim": 0.0604,
+   "false_reject_among_true": 0.2226,
+   "exact_grade_final": 0.7087,
+   "exact_grade_final_not_underclaim": 0.8078,
+   "within_one_final": 0.9987,
+   "gross_error_2plus": 0.0013,
+   "undecided_final": 0.1287,
+   "followup_share": 0.2367,
+   "oral_share": 0.0,
+   "extended_share": 0.4207,
+   "false_reject_all": 0.1367,
+   "exact_grade_final_5": 0.7153,
+   "exact_grade_final_4": 0.7893,
+   "exact_grade_main": 0.6853,
+   "loss_3fc_fr": 0.2066,
+   "far_exact_grade_final": 0.7751,
+   "minutes_main": {
+    "mean": 41.4,
+    "p90": 63.0
+   },
+   "minutes_total": {
+    "mean": 46.1,
+    "p90": 74.7
+   },
+   "items_main": {
+    "mean": 22.0,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.9223,
+   "retest_exact": 0.7547,
+   "retest_decision": 0.82,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45",
+    "ASSESSMENT_UPGRADE_RULE": "none"
+   },
+   "args": null
+  },
+  "T9": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9223,
+   "confident_share_main": 0.824,
+   "confident_accuracy_final": 0.9048,
+   "confident_share_final": 0.91,
+   "false_confirm_all": 0.0207,
+   "false_confirm_among_overclaim": 0.0535,
+   "false_reject_among_true": 0.1965,
+   "exact_grade_final": 0.752,
+   "exact_grade_final_not_underclaim": 0.7964,
+   "within_one_final": 0.998,
+   "gross_error_2plus": 0.002,
+   "undecided_final": 0.09,
+   "followup_share": 0.176,
+   "oral_share": 0.0,
+   "extended_share": 0.39,
+   "false_reject_all": 0.1207,
+   "exact_grade_final_5": 0.7587,
+   "exact_grade_final_4": 0.8193,
+   "exact_grade_main": 0.7487,
+   "loss_3fc_fr": 0.1828,
+   "far_exact_grade_final": 0.8434,
+   "minutes_main": {
+    "mean": 43.6,
+    "p90": 70.8
+   },
+   "minutes_total": {
+    "mean": 47.0,
+    "p90": 83.8
+   },
+   "items_main": {
+    "mean": 23.0,
+    "min": 8,
+    "max": 36
+   },
+   "retest_kappa_w": 0.9038,
+   "retest_exact": 0.6813,
+   "retest_decision": 0.794,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45",
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "36",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "105"
+   },
+   "args": null
+  }
+ },
+ "fails": [],
+ "elapsed_s": 1310.4
+}

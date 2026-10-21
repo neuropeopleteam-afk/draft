@@ -1,24 +1,40 @@
 family_id: common.process.tech_debt_portfolio_open
 title: Портфель технического долга на квартал — срок, цена задержки, ёмкость и зависимость, объяснение бизнесу
 direction: common
-skills: [technical_strategy, engineering_metrics, prioritization, architecture, incident_response]
-target_grades: [principal]
+skills:
+- technical_strategy
+- engineering_metrics
+- prioritization
+- architecture
+- incident_response
+target_grades:
+- principal
 format: open_answer
 language: text
 invariants:
   extra:
     items: 5
-    criteria: [deadline, economics, constraints, communication, metrics]
-    scale: "0–4"
+    criteria:
+    - deadline
+    - economics
+    - constraints
+    - communication
+    - metrics
+    scale: 0–4
 time_limit_s: 1800
 canary: false
 prior_difficulty:
   b: 2.8
   a: 1.3
   sigma_variant: 0.35
-  basis: "Априорная трудность (не по людям). Пять пунктов долга с числами (инциденты, часы потерь, работа), внешний срок у пункта с малой ценой задержки, зависимость и ограниченная ёмкость — нужен план с явным отказом, расчёт цены задержки на неделю работы, учёт ограничений, объяснение в деньгах и метрики окупаемости. Опорный план считает генератор. Lead обычно ранжирует «по боли» без срока или без ёмкости и не объясняет бизнесу, что откладывается — граница Lead/Principal (θ ≈ 3,0); рубрика 0–4, σ 0,35"
+  basis: Априорная, до калибровки на людях (a = 1,3). Пять пунктов долга с числами (инциденты, часы потерь, работа),
+    внешний срок у пункта с малой ценой задержки, зависимость и ограниченная ёмкость — нужен план с явным отказом,
+    расчёт цены задержки на неделю работы, учёт ограничений, объяснение в деньгах и метрики окупаемости. Опорный
+    план считает генератор. Lead обычно ранжирует «по боли» без срока или без ёмкости и не объясняет бизнесу, что
+    откладывается — граница Lead/Principal (θ ≈ 3,0); рубрика 0–4, σ 0,35
 generator: assessment_bank.families.common.process_tech_debt_portfolio_open
 version: 1
-description: >
-  Principal: план работы с техническим долгом на квартал по числам варианта (цена задержки, длительность,
+description: 'Principal: план работы с техническим долгом на квартал по числам варианта (цена задержки, длительность,
   срок, зависимость, ёмкость) с объяснением руководителю продукта и метриками. Рубрика 0–4; оценка с цитатами.
+
+  '

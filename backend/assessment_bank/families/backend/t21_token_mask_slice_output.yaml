@@ -1,0 +1,29 @@
+family_id: backend.logs.t21_token_mask_slice_output
+title: Маскирование токена в логе — срезы строки с начала и с конца
+direction: backend
+skills:
+- python
+- logging
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 4
+  - 4
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.7
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Три среза одной строки:
+    [:h], [-t:] и [a:b] — надо отсчитать индексы с нуля и не включить правую границу. Уровень Стажёра: индексы и
+    срезы, конкатенация строк. Набор t21 (21.10) у порога Стажёра (b = −1,7)'
+generator: assessment_bank.families.backend.t21_token_mask_slice_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Сервис маскирует токен доступа перед записью в лог
+  (первые и последние символы) и печатает часть токена по срезу; предсказать две строки вывода. Ключ — независимая
+  посимвольная модель срезов в генераторе, проверка — исполнение показанного кода в песочнице Python.'

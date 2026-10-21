@@ -1,8 +1,13 @@
 family_id: backend.kafka.offset_commit_mcq
 title: Kafka — ручной коммит offset после пачки и падение потребителя
 direction: backend
-skills: [kafka, kafka_offsets, kafka_delivery]
-target_grades: [junior, middle]
+skills:
+- kafka
+- kafka_offsets
+- kafka_delivery
+target_grades:
+- junior
+- middle
 format: mcq_concept
 language: text
 invariants:
@@ -15,9 +20,13 @@ prior_difficulty:
   b: -0.5
   a: 1.0
   sigma_variant: 0.2
-  basis: "Сценарий с числами (offset, размер пачки N, падение после k); нужно знать, что при ручном коммите после пачки зафиксированный offset не сдвигается, чтение идёт с него, а k сообщений — дубли (at-least-once); дистракторы — коммит на каждое сообщение, вся пачка, коммит при poll; состав фиксирован; Junior/Middle"
+  basis: Априорная, до калибровки на людях (a = 1,0). Сценарий с числами (offset, размер пачки N, падение после
+    k); нужно знать, что при ручном коммите после пачки зафиксированный offset не сдвигается, чтение идёт с него,
+    а k сообщений — дубли (at-least-once); дистракторы — коммит на каждое сообщение, вся пачка, коммит при poll;
+    состав фиксирован; Junior/Middle
 generator: assessment_bank.families.backend.kafka_offset_commit_mcq
 version: 2
-description: >
-  Концептуальный вопрос о семантике доставки с числовым ответом. Ключ проверяется исполнением модели
+description: 'Концептуальный вопрос о семантике доставки с числовым ответом. Ключ проверяется исполнением модели
   потребителя: poll пачки, обработка по одному, commitSync после пачки, падение, перезапуск.
+
+  '

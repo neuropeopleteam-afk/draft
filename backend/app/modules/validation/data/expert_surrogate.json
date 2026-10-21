@@ -1,0 +1,672 @@
+{
+ "signature": {
+  "world": "ревизия 414 меток E1–E3 (07.10) + кросс-вендорная панель 2 независимых компаний (Anthropic + Google, N=40)",
+  "seed": 2026102005,
+  "config_hash": "8b494b74ae32",
+  "commit": "8e8f365",
+  "bank": "82a05fdbacf00481",
+  "n": 40,
+  "command": "python -m app.modules.validation.expert_surrogate",
+  "generated_at": "2026-10-20T17:26:03+00:00"
+ },
+ "generated_at": "2026-10-20T17:26:03+00:00",
+ "recompute": "cd backend && python -m app.modules.validation.expert_surrogate",
+ "code_ref": "backend/app/modules/validation/expert_surrogate.py",
+ "panel_v1_0710": {
+  "labels_total": 414,
+  "date": "2026-10-07",
+  "labeled_by_ru": "Модельная панель v1 (Claude Fable 5.1 в трёх независимых ролях E1, E2, E3 с разными должностными инструкциями; суррогат экспертной разметки до пилота с живыми экспертами)",
+  "sections": {
+   "A_candidates": {
+    "n_items": 40,
+    "n_labels": 120,
+    "inter_rater_kappa_w": 0.896,
+    "inter_rater_exact": 0.9,
+    "platform_vs_consensus_kappa_w": 0.916,
+    "platform_vs_consensus_exact": 0.9,
+    "platform_vs_consensus_within_1": 1.0
+   },
+   "B_pairs": {
+    "n_items": 78,
+    "n_labels": 234,
+    "inter_rater_kappa_w": 0.84,
+    "inter_rater_exact": 0.782,
+    "platform_vs_consensus_kappa_w": 0.787,
+    "platform_vs_consensus_exact": 0.692,
+    "platform_vs_consensus_within_1": 0.987
+   },
+   "C_tasks": {
+    "n_items": 20,
+    "n_labels": 60,
+    "inter_rater_kappa_w": 0.506,
+    "inter_rater_exact": 0.8,
+    "mean_quality_score": 2.93
+   }
+  }
+ },
+ "cross_vendor_surrogate": {
+  "status": "completed",
+  "date": "2026-10-20",
+  "labeled_by_ru": "Кросс-вендорная панель v2: две независимые модели разных производителей (Anthropic Claude Sonnet 4.5 + Google Gemini 2.5 Flash) без обмена ответами и без доступа к оценке платформы (суррогат до пилота с людьми)",
+  "vendors": [
+   "Anthropic",
+   "Google"
+  ],
+  "models": [
+   "anthropic/claude-sonnet-4.5",
+   "google/gemini-2.5-flash"
+  ],
+  "n_items": 40,
+  "live_api_verified_calls": 63,
+  "inter_model_kappa_w": 0.9767,
+  "inter_model_exact": 0.95,
+  "inter_model_within_1": 1.0,
+  "platform_vs_consensus_kappa_w": 0.9574,
+  "platform_vs_consensus_exact": 0.9,
+  "platform_vs_consensus_within_1": 1.0,
+  "items": [
+   {
+    "id": "A01",
+    "direction": "backend",
+    "platform_grade": "none",
+    "anthropic_grade": "none",
+    "google_grade": "none",
+    "consensus_grade": "none",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.873,
+     "google": 0.443
+    }
+   },
+   {
+    "id": "A02",
+    "direction": "backend",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 3.405,
+     "google": 0.784
+    }
+   },
+   {
+    "id": "A03",
+    "direction": "backend",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.827,
+     "google": 0.516
+    }
+   },
+   {
+    "id": "A04",
+    "direction": "backend",
+    "platform_grade": "senior",
+    "anthropic_grade": "senior",
+    "google_grade": "senior",
+    "consensus_grade": "senior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.814,
+     "google": 0.555
+    }
+   },
+   {
+    "id": "A05",
+    "direction": "frontend",
+    "platform_grade": "none",
+    "anthropic_grade": "none",
+    "google_grade": "none",
+    "consensus_grade": "none",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 3.32,
+     "google": 0.513
+    }
+   },
+   {
+    "id": "A06",
+    "direction": "frontend",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 2.07,
+     "google": 0.515
+    }
+   },
+   {
+    "id": "A07",
+    "direction": "frontend",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.854,
+     "google": 0.481
+    }
+   },
+   {
+    "id": "A08",
+    "direction": "frontend",
+    "platform_grade": "senior",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": false,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 2.217,
+     "google": 0.536
+    }
+   },
+   {
+    "id": "A09",
+    "direction": "data_ml",
+    "platform_grade": "none",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": false,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 2.005,
+     "google": 0.562
+    }
+   },
+   {
+    "id": "A10",
+    "direction": "data_ml",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 2.048,
+     "google": 0.484
+    }
+   },
+   {
+    "id": "A11",
+    "direction": "data_ml",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.854,
+     "google": 0.462
+    }
+   },
+   {
+    "id": "A12",
+    "direction": "data_ml",
+    "platform_grade": "senior",
+    "anthropic_grade": "senior",
+    "google_grade": "senior",
+    "consensus_grade": "senior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 2.058,
+     "google": 0.539
+    }
+   },
+   {
+    "id": "A13",
+    "direction": "qa",
+    "platform_grade": "none",
+    "anthropic_grade": "none",
+    "google_grade": "none",
+    "consensus_grade": "none",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 5.716,
+     "google": 0.499
+    }
+   },
+   {
+    "id": "A14",
+    "direction": "qa",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 2.207,
+     "google": 0.496
+    }
+   },
+   {
+    "id": "A15",
+    "direction": "qa",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.535,
+     "google": null
+    }
+   },
+   {
+    "id": "A16",
+    "direction": "qa",
+    "platform_grade": "senior",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": false,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.693,
+     "google": null
+    }
+   },
+   {
+    "id": "A17",
+    "direction": "devops",
+    "platform_grade": "none",
+    "anthropic_grade": "none",
+    "google_grade": "none",
+    "consensus_grade": "none",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.865,
+     "google": null
+    }
+   },
+   {
+    "id": "A18",
+    "direction": "devops",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.647,
+     "google": null
+    }
+   },
+   {
+    "id": "A19",
+    "direction": "devops",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.938,
+     "google": 0.51
+    }
+   },
+   {
+    "id": "A20",
+    "direction": "devops",
+    "platform_grade": "senior",
+    "anthropic_grade": "senior",
+    "google_grade": "senior",
+    "consensus_grade": "senior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.538,
+     "google": null
+    }
+   },
+   {
+    "id": "A21",
+    "direction": "security",
+    "platform_grade": "none",
+    "anthropic_grade": "none",
+    "google_grade": "none",
+    "consensus_grade": "none",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.359,
+     "google": null
+    }
+   },
+   {
+    "id": "A22",
+    "direction": "security",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.481,
+     "google": 0.459
+    }
+   },
+   {
+    "id": "A23",
+    "direction": "security",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 2.392,
+     "google": null
+    }
+   },
+   {
+    "id": "A24",
+    "direction": "security",
+    "platform_grade": "senior",
+    "anthropic_grade": "senior",
+    "google_grade": "senior",
+    "consensus_grade": "senior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.247,
+     "google": null
+    }
+   },
+   {
+    "id": "A25",
+    "direction": "mobile",
+    "platform_grade": "none",
+    "anthropic_grade": "none",
+    "google_grade": "none",
+    "consensus_grade": "none",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.488,
+     "google": 0.377
+    }
+   },
+   {
+    "id": "A26",
+    "direction": "mobile",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.716,
+     "google": 0.484
+    }
+   },
+   {
+    "id": "A27",
+    "direction": "mobile",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.513,
+     "google": null
+    }
+   },
+   {
+    "id": "A28",
+    "direction": "mobile",
+    "platform_grade": "senior",
+    "anthropic_grade": "senior",
+    "google_grade": "senior",
+    "consensus_grade": "senior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.489,
+     "google": 0.463
+    }
+   },
+   {
+    "id": "A29",
+    "direction": "gamedev",
+    "platform_grade": "none",
+    "anthropic_grade": "none",
+    "google_grade": "none",
+    "consensus_grade": "none",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.637,
+     "google": null
+    }
+   },
+   {
+    "id": "A30",
+    "direction": "gamedev",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.464,
+     "google": null
+    }
+   },
+   {
+    "id": "A31",
+    "direction": "gamedev",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.484,
+     "google": 0.534
+    }
+   },
+   {
+    "id": "A32",
+    "direction": "gamedev",
+    "platform_grade": "senior",
+    "anthropic_grade": "senior",
+    "google_grade": "senior",
+    "consensus_grade": "senior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.705,
+     "google": null
+    }
+   },
+   {
+    "id": "A33",
+    "direction": "sys_analytics",
+    "platform_grade": "none",
+    "anthropic_grade": "junior",
+    "google_grade": "none",
+    "consensus_grade": "none",
+    "exact_inter_model": false,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.552,
+     "google": 0.701
+    }
+   },
+   {
+    "id": "A34",
+    "direction": "sys_analytics",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.282,
+     "google": 0.584
+    }
+   },
+   {
+    "id": "A35",
+    "direction": "sys_analytics",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "middle",
+    "consensus_grade": "middle",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 2.097,
+     "google": null
+    }
+   },
+   {
+    "id": "A36",
+    "direction": "sys_analytics",
+    "platform_grade": "senior",
+    "anthropic_grade": "senior",
+    "google_grade": "senior",
+    "consensus_grade": "senior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.555,
+     "google": null
+    }
+   },
+   {
+    "id": "A37",
+    "direction": "pm_product",
+    "platform_grade": "none",
+    "anthropic_grade": "none",
+    "google_grade": "none",
+    "consensus_grade": "none",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.855,
+     "google": null
+    }
+   },
+   {
+    "id": "A38",
+    "direction": "pm_product",
+    "platform_grade": "junior",
+    "anthropic_grade": "junior",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.49,
+     "google": null
+    }
+   },
+   {
+    "id": "A39",
+    "direction": "pm_product",
+    "platform_grade": "middle",
+    "anthropic_grade": "middle",
+    "google_grade": "junior",
+    "consensus_grade": "junior",
+    "exact_inter_model": false,
+    "exact_platform_vs_consensus": false,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.428,
+     "google": null
+    }
+   },
+   {
+    "id": "A40",
+    "direction": "pm_product",
+    "platform_grade": "senior",
+    "anthropic_grade": "senior",
+    "google_grade": "senior",
+    "consensus_grade": "senior",
+    "exact_inter_model": true,
+    "exact_platform_vs_consensus": true,
+    "within1_platform_vs_consensus": true,
+    "latency_s": {
+     "anthropic": 1.547,
+     "google": 0.511
+    }
+   }
+  ]
+ },
+ "claim_ru": "Согласие итогового грейда теста с экспертной разметкой: на 414 метках модельной панели E1–E3 (07,10,2026) κw = 0,916 (точное совпадение грейда 90,0 %, ±1 ступень — 100 %); по протоколу двух независимых моделей разных компаний (Anthropic + Google, 20,10,2026, N = 40 слепых профилей по 10 направлениям) межэкспертное согласие между моделями κw = 0,977 (точное совпадение 95,0 %), согласие платформы с консенсусом — κw = 0,957, точное совпадение 90,0 %, в пределах ±1 ступени — 100,0 % (суррогат экспертной комиссии до завершения пилота с живыми ИТ-специалистами),",
+ "seconds": 12.82
+}

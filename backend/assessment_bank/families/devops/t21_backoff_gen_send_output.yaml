@@ -1,0 +1,31 @@
+family_id: devops.retry.t21_backoff_gen_send_output
+title: 'Python — генератор паузы повторов: next, send и StopIteration.value'
+direction: devops
+skills:
+- python
+- reliability
+- devops
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 15
+  - 15
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Генератор-корутина пауз:
+    next до первого yield, send подставляет результат yield и возвращает следующее значение, сброс и потолок паузы,
+    return в StopIteration.value. Уровень Senior: протокол генераторов send/return. Набор t21 (21.10) у порога Senior
+    (b = +1,0)'
+generator: assessment_bank.families.devops.t21_backoff_gen_send_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Клиент берёт паузу перед повтором из генератора
+  и сообщает ему результат попытки через send; предсказать вывод. Ключ — независимая модель протокола в генераторе,
+  проверка — исполнение показанного кода в песочнице Python.

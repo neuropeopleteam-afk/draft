@@ -44,4 +44,11 @@ class FspAchievement(UUIDPk, Base):
     evsk_code: Mapped[str | None] = mapped_column(sa.String(64))
     sport_rank: Mapped[str | None] = mapped_column(sa.String(64))
     team_result: Mapped[dict | None]
+    # А2 (21.10): честный двухшаговый статус подтверждения протокола ("none" | "pending_fsp" | "verified"),
+    # ссылка на протокол {doc_id, ekp_no, page, url}, номер ЕКП отдельно от ЕВСК и расчётный разряд по ЕВСК
+    protocol_status: Mapped[str] = mapped_column(sa.String(32), default="none", server_default="none")
+    protocol_ref: Mapped[dict | None] = mapped_column(sa.JSON)
+    ekp_no: Mapped[str | None] = mapped_column(sa.String(64))
+    evsk_rank: Mapped[str | None] = mapped_column(sa.String(64))
+    evsk_basis: Mapped[str | None] = mapped_column(sa.String(255))
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)

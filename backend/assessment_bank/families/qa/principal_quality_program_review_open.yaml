@@ -1,22 +1,41 @@
 family_id: qa.principal.quality_program_review_open
 title: Ревью программы качества — регрессия, покрытие, стенды, выкатка, разборы, стимулы, штат (Principal)
 direction: qa
-skills: [test_architecture, regression_strategy, risk_based_testing, defect_management, incident_analysis]
-target_grades: [principal]
+skills:
+- test_architecture
+- regression_strategy
+- risk_based_testing
+- defect_management
+- incident_analysis
+target_grades:
+- principal
 format: open_answer
 language: text
 invariants:
   extra:
-    issues_pool: [coverage, incentives, incidents, regression, rollout, staffing, stand]
+    issues_pool:
+    - coverage
+    - incentives
+    - incidents
+    - regression
+    - rollout
+    - staffing
+    - stand
     planted: 3
 time_limit_s: 1500
 canary: false
 prior_difficulty:
   b: 2.6
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Ревью программы качества организации: три вставленные проблемы из семи среди верных пунктов; каждая правдоподобна по отдельности, но конфликтует с числами контекста (команды, инженеры, частота выкаток) или с организационной реальностью (стимулы, культура разборов). Lead находит технические проблемы, Principal — также организационные и их связь с целью; шкала 0–4 даёт различение у порога Lead/Principal"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Ревью программы качества организации: три вставленные проблемы
+    из семи среди верных пунктов; каждая правдоподобна по отдельности, но конфликтует с числами контекста (команды,
+    инженеры, частота выкаток) или с организационной реальностью (стимулы, культура разборов). Lead находит технические
+    проблемы, Principal — также организационные и их связь с целью; шкала 0–4 даёт различение у порога Lead/Principal'
 generator: assessment_bank.families.qa.principal_quality_program_review_open
 version: 1
-description: >
-  Ревью выдержки программы качества организации: три проблемы из пула семи (ручная регрессия, порог покрытия, общий стенд, выкатка, разборы с поиском виновных, премия за дефекты, штат) среди верных пунктов. Рубрика — по критерию на проблему и приоритизация; шкала 0–4 с цитатами из ответа.
+description: 'Ревью выдержки программы качества организации: три проблемы из пула семи (ручная регрессия, порог
+  покрытия, общий стенд, выкатка, разборы с поиском виновных, премия за дефекты, штат) среди верных пунктов. Рубрика
+  — по критерию на проблему и приоритизация; шкала 0–4 с цитатами из ответа.
+
+  '

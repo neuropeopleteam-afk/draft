@@ -57,7 +57,7 @@ def _payback(cac, m, curve, limit=1000):
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx = rng.choice(CONTEXTS)
-    n_below = rng.choice([1, 2, 3])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный; недостающие — контрольные значения
     fmt, fmt_src = formatter("int", "мес.")
     for _ in range(6000):
         m = rng.choice([150, 200, 250, 300, 400, 500])

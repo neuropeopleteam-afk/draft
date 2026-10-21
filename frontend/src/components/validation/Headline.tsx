@@ -1,8 +1,10 @@
-import { Alert, Loading, NB, num, pct, signed, useApi } from "../ui";
-import { ProvenanceLine, RetestVsTruth } from "./Provenance";
+import { Fragment } from "react";
+import { NB, num, pct } from "../ui";
+import { ProvenanceLine } from "./Provenance";
 import { ScrollX } from "../A11y";
+import { fmtNum, getGradeVerdict, getTop5Run, type Frac, type Top5Item } from "../../lib/numbers";
 
-/** Первый экран /validation: «5 чисел, которые доказывают механику» (backend: app/modules/validation/headline.py).
+/** Первый экран /validation: точность решения по грейду — симуляция продукта (docs/NUMBERS.json → grade_verdict).
  *  Каждое число — из расчёта с подписью мира; нет расчёта — нет числа. */
 
 export type Signature = { world?: string; seed?: number; config_hash?: string; commit?: string; command?: string; generated_at?: string; n?: number };
@@ -16,44 +18,221 @@ export function SignatureLine({ s, className = "" }: { s?: Signature | null; cla
   );
 }
 
-const fmt = (v: number | null | undefined, f: string) => (f === "pct" ? pct(v) : f === "signed3" ? signed(v, 3) : num(v, 3));
+const pc = (v: number | null | undefined) => (v == null || Number.isNaN(Number(v)) ? "—" : (Number(v) * 100).toFixed(1).replace(".", ","));
+const nint = (v: number | null | undefined) => (v == null ? "—" : Math.round(Number(v)).toLocaleString("ru-RU"));
 
-export default function Headline() {
-  const { data, error, loading } = useApi<any>("/validation/headline", []);
-  if (loading) return <div className="mt-8"><Loading /></div>;
-  if (error) return <div className="mt-8"><Alert>{error}</Alert></div>;
-  if (!data || data.missing) return <div className="mt-8"><Alert kind="info">Ключевые числа ещё не посчитаны: make path-retest и make bench.</Alert></div>;
+const GRADE_TITLE: Record<string, string> = {
+  intern: "Intern", junior: "Junior", middle: "Middle", senior: "Senior", lead: "Lead", principal: "Principal",
+};
+
+function ci(f?: Frac | null) {
+  return f?.ci95 ? `95 % ДИ ${pc(f.ci95[0])}–${pc(f.ci95[1])}` : "";
+}
+
+function Big({ label, f, sub, testid }: { label: string; f?: Frac | null; sub: string; testid: string }) {
   return (
-    <section id="headline" className="mt-8 scroll-mt-20" aria-labelledby="headline-t" data-testid="validation-headline">
-      <h2 id="headline-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">5 чисел, которые доказывают механику</h2>
-      <p className="mt-2 max-w-4xl text-sm leading-relaxed text-brand-ink/70">{data.how_to_read}</p>
-      <AccuracyViews v={data.accuracy} className="mt-4" />
-      <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {data.items.map((it: any, i: number) => (
-          <li key={it.id} className="card flex min-w-0 flex-col" data-testid={`headline-${it.id}`}>
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-lavender">{i + 1}. {it.title}</p>
-            <p className="mt-2 text-3xl font-extrabold tabular-nums text-brand-night">{fmt(it.value, it.format)}</p>
-            {it.ci && <p className="text-xs tabular-nums text-brand-ink/70">95{NB}% ДИ: {fmt(it.ci[0], it.format)} … {fmt(it.ci[1], it.format)}</p>}
-            {it.pair && <p className="text-xs tabular-nums text-brand-ink/70">nDCG@10: {num(it.pair[0], 3)} против {num(it.pair[1], 3)}</p>}
-            <p className="mt-2 text-sm leading-snug text-brand-ink/80">{it.text}</p>
-            {it.note && <p className="mt-1 text-xs text-brand-ink/65">{it.note}</p>}
-            {it.protocol_note && <p className="mt-1 text-xs text-brand-ink/65" data-testid="headline-protocol-note">{it.protocol_note}</p>}
-            <div className="mt-auto pt-3">
-              <a href={`#${it.anchor}`} className="text-sm font-semibold text-brand-plum underline">Подробнее в разделе</a>
-              <ProvenanceLine p={it.provenance} className="mt-1.5" />
-              <SignatureLine s={it.signature} className="mt-1" />
-            </div>
-          </li>
-        ))}
-      </ol>
-      <RetestVsTruth v={data.retest_vs_truth} className="mt-3" />
-      <Protocols v={data.protocols} className="mt-3" />
-    </section>
+    <div className="rounded-xl bg-brand-cream/40 p-4 ring-1 ring-brand-night/10" data-testid={testid}>
+      <div className="text-[11px] font-bold uppercase tracking-wide text-brand-ink/70">{label}</div>
+      <div className="mt-1 text-2xl font-extrabold text-brand-night">{f ? `${pc(f.value)} %` : "—"}</div>
+      <div className="mt-1 text-xs text-brand-ink/70">{sub}</div>
+      {f && <div className="mt-1 text-[11px] text-brand-ink/70">{[f.k != null && f.n != null ? `${f.k} из ${f.n}` : "", ci(f)].filter(Boolean).join(" · ")}</div>}
+    </div>
   );
 }
 
-/** Д5: сверка двух протоколов с одним порогом P — перебор правил (make grade-sweep: числа docs/NUMBERS.json и слайдов)
- *  и контрольный прогон всего пути с настройками продукта (make path-retest: числа карточек выше). */
+const WITH_RU: Record<string, string> = {
+  confident_share: "доля уверенных вердиктов",
+  among_overclaim: "среди завысивших заявку",
+  grades_5: "по 5 ступеням (Lead и Principal вместе)",
+  grades_4: "по 4 ступеням (ещё Стажёр и Junior вместе)",
+  not_underclaim: "без занизивших заявку",
+  main_part: "только основная часть",
+  above_true: "выше истинного",
+  gross_error_2plus: "ошибка на 2+ ступени",
+  exact_agreement: "тот же грейд при повторе",
+  decision_agreement: "то же решение при повторе",
+};
+const WITH_SHOW = ["confident_share", "among_overclaim", "grades_5", "grades_4", "not_underclaim", "main_part", "gross_error_2plus", "exact_agreement", "decision_agreement"];
+
+function cell(it?: Top5Item) {
+  if (!it) return "—";
+  if (it.id === "retest_kappa_w") return fmtNum(it.value, 2);
+  return `${pc(it.value)} %`;
+}
+
+function ciTxt(c?: [number, number] | null, kappa = false) {
+  if (!c) return "";
+  return kappa ? `ДИ ${fmtNum(c[0], 2)}–${fmtNum(c[1], 2)}` : `ДИ ${pc(c[0])}–${pc(c[1])}`;
+}
+
+/** Итоговый прогон (один, на отложенных зёрнах): стандартные и жёсткие условия рядом — только из NUMBERS.json → top5. */
+function FinalRun() {
+  const { st, hard, meta } = getTop5Run();
+  if (!st.length && !hard.length) return null;
+  const ids = (st.length ? st : hard).map((x) => x.id);
+  const by = (arr: Top5Item[], id: string) => arr.find((x) => x.id === id);
+  const mins = (arr: Top5Item[]) => arr[0]?.minutes;
+  return (
+    <div className="mt-4" data-testid="v-hl-final">
+      <h3 className="text-base font-bold text-brand-night">Итоговый прогон: одни настройки, два набора условий</h3>
+      <p className="mt-1 text-sm text-brand-ink/70">
+        Настройки выбраны на обучающих зёрнах, цифры — один прогон на отложенных. «Стандартные условия» — такие же
+        допущения, как в аналогичных решениях; «жёсткие» — угадывание, завышенные заявки, кандидаты у порогов и
+        осторожные параметры заданий. Модельные кандидаты, не люди.
+      </p>
+      <ScrollX label="Итоговый прогон: стандартные и жёсткие условия">
+        <table className="mt-2 w-full min-w-[560px] text-sm" data-testid="v-hl-final-table">
+          <thead>
+            <tr className="text-left text-xs text-brand-ink/70">
+              <th className="py-1 pr-3">Метрика</th>
+              <th className="pr-3">Стандартные условия</th>
+              <th>Жёсткие условия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ids.map((id) => {
+              const a = by(st, id), b = by(hard, id);
+              const label = (a ?? b)?.label_ru ?? id;
+              const extra = WITH_SHOW.filter((k) => (a?.with?.[k] ?? b?.with?.[k]) != null);
+              return (
+                <Fragment key={id}>
+                  <tr className="border-t border-black/5" data-testid={`v-hl-final-${id}`}>
+                    <td className="py-1.5 pr-3 font-semibold text-brand-night">{label}</td>
+                    <td className="pr-3"><b className="text-brand-night">{cell(a)}</b> <span className="text-[11px] text-brand-ink/65">{ciTxt(a?.ci95, id === "retest_kappa_w")}{a?.n ? ` · N = ${nint(a.n)}` : ""}</span></td>
+                    <td><b className="text-brand-night">{cell(b)}</b> <span className="text-[11px] text-brand-ink/65">{ciTxt(b?.ci95, id === "retest_kappa_w")}{b?.n ? ` · N = ${nint(b.n)}` : ""}</span></td>
+                  </tr>
+                  {extra.map((k) => (
+                    <tr key={`${id}-${k}`} className="text-xs text-brand-ink/75">
+                      <td className="py-0.5 pl-3 pr-3">… {WITH_RU[k] ?? k}</td>
+                      <td className="pr-3">{a?.with?.[k] ? `${pc((a.with[k] as Frac).value)} %` : "—"}</td>
+                      <td>{b?.with?.[k] ? `${pc((b.with[k] as Frac).value)} %` : "—"}</td>
+                    </tr>
+                  ))}
+                </Fragment>
+              );
+            })}
+            <tr className="border-t border-black/5 text-xs text-brand-ink/75" data-testid="v-hl-final-minutes">
+              <td className="py-1.5 pr-3 font-semibold text-brand-night">Время всего пути, мин: среднее (у 90 % — до)</td>
+              <td className="pr-3">{mins(st) ? `${fmtNum(mins(st)?.mean, 0)} (${fmtNum(mins(st)?.p90, 0)})` : "—"}</td>
+              <td>{mins(hard) ? `${fmtNum(mins(hard)?.mean, 0)} (${fmtNum(mins(hard)?.p90, 0)})` : "—"}</td>
+            </tr>
+          </tbody>
+        </table>
+      </ScrollX>
+      <details className="mt-2 text-xs text-brand-ink/70">
+        <summary className="cursor-pointer font-semibold text-brand-night">Условия и пересчёт</summary>
+        {meta?.st && <p className="mt-1 [overflow-wrap:anywhere]"><b>Стандартные:</b> {meta.st.condition_ru}. Пересчёт: <code className="break-all">{meta.st.command}</code></p>}
+        {meta?.hard && <p className="mt-1 [overflow-wrap:anywhere]"><b>Жёсткие:</b> {meta.hard.condition_ru}. Пересчёт: <code className="break-all">{meta.hard.command}</code></p>}
+        {meta?.rule_ru && <p className="mt-1">{meta.rule_ru}</p>}
+      </details>
+    </div>
+  );
+}
+
+/** Главный блок /validation: точность решения по заявленному грейду — симуляция ПРОДУКТА (А4, 21.10).
+ * Только docs/NUMBERS.json → grade_verdict (артефакт product_sim_test_*.json), никаких чисел в коде. */
+export default function Headline() {
+  const gv = getGradeVerdict();
+  if (!gv) {
+    return (
+      <div data-testid="validation-headline">
+      <section id="headline" className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10" data-testid="v-headline">
+        <h2 className="text-lg font-extrabold text-brand-night">Точность решения по грейду</h2>
+        <p className="mt-2 text-sm text-brand-ink/70">Отчётный прогон симуляции продукта ещё не опубликован.</p>
+      </section>
+      </div>
+    );
+  }
+  const m = gv.main;
+  const mm = m.minutes_main, mt = m.minutes_total;
+  const rows = Object.entries(m.by_claim || {});
+  return (
+    <div data-testid="validation-headline">
+    <section id="headline" className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10" data-testid="v-headline">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-lg font-extrabold text-brand-night">Точность решения по грейду: симуляция продукта</h2>
+        <span className="chip-lime" title="Модельные кандидаты с известным истинным уровнем, не люди">модельные кандидаты, не люди</span>
+      </div>
+      <p className="mt-2 text-sm text-brand-ink/70">
+        Тот же движок, что у кандидата: выбор заданий у порога грейда, остановка, дотестирование, вердикт и второй этап у
+        границы — на реальном банке из {nint(m.bank_families ?? 0)} семейств. Кандидатов {nint(m.n)}: у каждого известен
+        истинный уровень, треть завышает заявку на ступень. Настройки подбирались на одних зёрнах, цифры — на других,
+        отложенных. Людей в этом расчёте нет: пилот с людьми ещё впереди.
+      </p>
+      <FinalRun />
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Big testid="v-hl-verdict" label="Верный вердикт по заявке" f={m.verdict_accuracy}
+          sub="итог «подтверждён / не подтверждён» совпал с истиной (после второго этапа, если он нужен)" />
+        <Big testid="v-hl-false-confirm" label="Ложное подтверждение" f={m.false_confirm}
+          sub="у тех, кто завысил заявку: тест подтвердил уровень, которого нет" />
+        <Big testid="v-hl-confident" label="Решено после основной части" f={m.confident_share}
+          sub={`уверенных решений; из них верных — ${m.confident_accuracy ? pc(m.confident_accuracy.value) : "—"} %. Остальным — короткий второй этап у порога`} />
+        <Big testid="v-hl-exact" label="Точный грейд" f={m.exact_grade}
+          sub={`присвоенный уровень равен истинному; ошибок на 2+ ступени — ${m.gross_error ? pc(m.gross_error.value) : "—"} %`} />
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl bg-brand-cream/40 p-3 text-xs text-brand-ink/75 ring-1 ring-brand-night/10" data-testid="v-hl-time">
+          <b className="text-brand-night">Время.</b> Основная часть — в среднем {mm ? fmtNum(mm.mean, 0) : "—"} мин (у 90 % — до{" "}
+          {mm ? fmtNum(mm.p90, 0) : "—"}), вместе со вторым этапом — {mt ? fmtNum(mt.mean, 0) : "—"} мин; лимит основной части — 60 мин.
+          {m.items_main ? ` Заданий — в среднем ${fmtNum(m.items_main.mean, 1)}.` : ""}
+        </div>
+        <div className="rounded-xl bg-brand-cream/40 p-3 text-xs text-brand-ink/75 ring-1 ring-brand-night/10" data-testid="v-hl-practice">
+          <b className="text-brand-night">Практика.</b> Код и развёрнутые ответы с автопроверкой — в среднем{" "}
+          {m.code_open_share ? pc(m.code_open_share.mean) : "—"} % заданий попытки
+          {m.code_open_share ? ` (не меньше трети — в ${pc(m.code_open_share.share_sessions_ge_one_third)} % попыток)` : ""}.
+        </div>
+        <div className="rounded-xl bg-brand-cream/40 p-3 text-xs text-brand-ink/75 ring-1 ring-brand-night/10" data-testid="v-hl-retest">
+          <b className="text-brand-night">Повторяемость.</b>{" "}
+          {m.retest
+            ? `Две независимые попытки одного кандидата (без общих семейств заданий): тот же грейд — ${m.retest.exact_agreement ? pc(m.retest.exact_agreement.value) : "—"} %, тот же вердикт — ${m.retest.verdict_agreement ? pc(m.retest.verdict_agreement.value) : "—"} %, взвешенная каппа ${m.retest.kappa_w != null ? fmtNum(m.retest.kappa_w, 2) : "—"} (пар: ${nint(m.retest.n_pairs)}).`
+            : "Расчёт ещё не опубликован."}
+        </div>
+      </div>
+      {gv.misspec && (
+        <p className="mt-3 text-xs text-brand-ink/70" data-testid="v-hl-misspec">
+          <b className="text-brand-night">Если банк ещё не откалиброван на людях</b> (трудность семейств ошибается в среднем на
+          полступени, различающая сила — на четверть; движок об этом не знает): верный вердикт —{" "}
+          {gv.misspec.verdict_accuracy ? pc(gv.misspec.verdict_accuracy.value) : "—"} %, ложное подтверждение —{" "}
+          {gv.misspec.false_confirm ? pc(gv.misspec.false_confirm.value) : "—"} %, точный грейд —{" "}
+          {gv.misspec.exact_grade ? pc(gv.misspec.exact_grade.value) : "—"} %. Поэтому первые 300 попыток людей идут на
+          калибровку банка.
+        </p>
+      )}
+      {rows.length > 0 && (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-sm font-semibold text-brand-night">По заявленному грейду</summary>
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full text-xs" data-testid="v-hl-by-claim">
+              <thead><tr className="text-left text-brand-ink/70"><th className="py-1 pr-3">Заявка</th><th className="pr-3">Кандидатов</th><th className="pr-3">Верный вердикт</th><th className="pr-3">Ложное подтверждение</th><th className="pr-3">Решено сразу</th><th className="pr-3">Точный грейд</th><th>Минут всего</th></tr></thead>
+              <tbody>
+                {rows.map(([g, r]) => (
+                  <tr key={g} className="border-t border-black/5 ">
+                    <td className="py-1 pr-3 font-semibold text-brand-night">{GRADE_TITLE[g] || g}</td>
+                    <td className="pr-3">{nint(r.n)}</td>
+                    <td className="pr-3">{r.verdict_accuracy ? `${pc(r.verdict_accuracy.value)} %` : "—"}</td>
+                    <td className="pr-3">{r.false_confirm_among_overclaim?.n ? `${pc(r.false_confirm_among_overclaim.value)} % (${r.false_confirm_among_overclaim.k}/${r.false_confirm_among_overclaim.n})` : "—"}</td>
+                    <td className="pr-3">{r.confident_share_main ? `${pc(r.confident_share_main.value)} %` : "—"}</td>
+                    <td className="pr-3">{r.exact_grade_final ? `${pc(r.exact_grade_final.value)} %` : "—"}</td>
+                    <td>{r.minutes_total ? fmtNum(r.minutes_total.mean, 0) : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
+      <details className="mt-3 text-xs text-brand-ink/70">
+        <summary className="cursor-pointer font-semibold text-brand-night">Как посчитано и как пересчитать</summary>
+        <p className="mt-2">{gv.what} Зёрна отчёта: {(m.seeds || []).join(", ")}; дата {m.date}. Протокол выбора настроек
+          зафиксирован до прогонов: <code>{gv.protocol}</code>.</p>
+        <p className="mt-1">Пересчёт: <code className="break-all">{gv.recompute}</code></p>
+        <p className="mt-1">Код: <code>{gv.code_ref}</code>.</p>
+      </details>
+    </section>
+    </div>
+  );
+}
+
 export function Protocols({ v, className = "" }: { v?: any; className?: string }) {
   if (!v) return null;
   const rows: [string, any][] = [[`Перебор правил, P${NB}≥${NB}${v.sweep?.confirm_level} (make grade-sweep)`, v.sweep], [`Весь путь, P${NB}≥${NB}${v.path?.confirm_level} (make path-retest, карточки)`, v.path]];

@@ -161,12 +161,13 @@ def service_line(spec: SessionSpec, item: PlanItem | None, kind: str, minute: fl
     elif item is not None:
         ref = f"задание [{item.task_id}] «{item.title}»" if item.task_id else f"навык «{item.skill}»"
         if kind == "opening":
-            what = "по вашим письменным ответам" if spec.mode == "defense" else "о вашем опыте"
+            what = "по вашим ответам" if spec.mode == "defense" else "о вашем опыте"
             n = plural(spec.max_questions, "короткий вопрос", "коротких вопроса", "коротких вопросов")
-            hello = (f"Здравствуйте, я — ИИ-интервьюер {genitive(product)}"
+            nastya = " Настя, финальный этап теста:" if spec.mode == "defense" else ","
+            hello = (f"Здравствуйте, я — ИИ-интервьюер {genitive(product)}{nastya}"
                      if is_generic_name(spec.candidate_name)
-                     else f"Здравствуйте, {spec.candidate_name}, я — ИИ-интервьюер {genitive(product)}")
-            parts.append(f"начало: приветствие — одна фраза, например «{hello}, задам {n} {what}.», и сразу вопрос 1; kind = opening")
+                     else f"Здравствуйте, {spec.candidate_name}, я — ИИ-интервьюер {genitive(product)}{nastya}")
+            parts.append(f"начало: приветствие — одна фраза, например «{hello} задам {n} {what}.», и сразу вопрос 1; kind = opening")
         else:
             parts.append(f"сейчас задай вопрос {item.k} из {spec.max_questions}: без оценки прошлого ответа, максимум «Поняла.» "
                          "перед вопросом; kind = question")

@@ -16,7 +16,7 @@ const NAV: [string, string][] = [
 
 const MOBILE_NAV: [string, string][] = [
   ...NAV,
-  ["/install", "На телефон / RuStore"],
+  ["/install", "На телефон / APK для Android"],
   ["/api/docs", "Документация API"],
 ];
 
@@ -171,7 +171,7 @@ export function SiteFooter({ premium = false }: { premium?: boolean }) {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <Link className={a} to="/pricing">Тарифы</Link>
           <Link className={a} to="/support">Помощь и поддержка</Link>
-          <Link className={a} to="/install">На телефон / RuStore</Link>
+          <Link className={a} to="/install">На телефон / APK для Android</Link>
           <InstallAppButton premium={premium} />
           {juryTab && <Link className={a} to="/demo">Демо для жюри</Link>}
           <a className={a} href="/api/docs">Документация API</a>

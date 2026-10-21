@@ -240,7 +240,7 @@ def fmt(x):
        trap_desc={"inclusive": "правая граница включительно", "diff": "разность месяцев", "all": "без отсечения",
                   "all_default": "все секции и DEFAULT", "one": "одна секция", "plus_default": "плюс DEFAULT",
                   "minus_one": "без первой секции", "full_only": "только полные месяцы"},
-       trap_first="inclusive", rel=0.0, abs_min=1, n_above=(1, 2, 3))
+       trap_first="inclusive", rel=0.0, abs_min=1, n_above=(0, 1, 2, 3))  # ранг ключа — весь диапазон; недостающие — контрольные значения
 
 # ---------------------------------------------------------------- pytorch: размер входа Linear после свёрток
 define("data_ml.dl.pytorch_conv_flatten_mcq",
@@ -650,8 +650,13 @@ def brute(P):
     return F(ms, 1000)
 
 def traps(P):
-    return {"parallel": secs(P, parallel=True), "no_server": secs(P, server=False), "rtt2": secs(P, rtt=2),
-            "x2": 2 * secs(P), "rtt_only_parallel": secs(P, parallel=True, server=False), "half": secs(P) / 2}
+    pages = cd(P["N"], P["s"])
+    step = P["rtt"] + P["t"]
+    return {"parallel": secs(P, parallel=True), "no_server": secs(P, server=False),
+            "no_rtt": F(pages * P["t"], 1000), "floor_m1": F(max(1, pages - 2) * step, 1000),
+            "rtt2": secs(P, rtt=2), "srv2": F(pages * (P["rtt"] + 2 * P["t"]), 1000),
+            "handshake": F(pages * (2 * P["rtt"] + 2 * P["t"]), 1000),
+            "extra_poll": F((pages + max(2, pages // 5)) * step, 1000)}
 
 def fmt(x):
     return (f"{float(x):.1f}".rstrip("0").rstrip(".") + " с").replace(".", ",")
@@ -666,9 +671,12 @@ def fmt(x):
        explain=lambda P, a, t: (f"Курсор следующей страницы известен только из ответа предыдущей — запросы строго "
                                 f"последовательны, параллелизм браузера не помогает: ⌈N/{P['s']}⌉ × ({P['rtt']} + "
                                 f"{P['t']}) мс."),
-       trap_desc={"parallel": "параллельные запросы", "no_server": "без времени сервера", "rtt2": "два RTT на запрос",
-                  "x2": "двойной запас", "rtt_only_parallel": "параллельно и только RTT", "half": "половина"},
-       trap_first="parallel", rel=0.1, abs_min=0.1)
+       trap_desc={"parallel": "параллельные запросы", "no_server": "без времени сервера",
+                  "no_rtt": "только время сервера без RTT", "floor_m1": "потеря неполной и граничной страницы",
+                  "rtt2": "два RTT на запрос", "srv2": "двойное время сервера на страницу",
+                  "handshake": "новое соединение и двойной цикл на каждую страницу",
+                  "extra_poll": "лишние проверочные запросы за курсором"},
+       rel=0.12, abs_min=0.2)
 
 # ---------------------------------------------------------------- react native: окно FlatList
 define("mobile.rn.rn_flatlist_window_mcq",

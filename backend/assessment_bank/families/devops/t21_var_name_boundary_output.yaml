@@ -1,0 +1,30 @@
+family_id: devops.bash.t21_var_name_boundary_output
+title: 'bash — граница имени переменной: $APP_$ENV и ${APP}_$ENV'
+direction: devops
+skills:
+- bash
+- shell
+- deployment
+target_grades:
+- intern
+format: predict_output
+language: bash
+invariants:
+  code_lines:
+  - 7
+  - 8
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.55
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). 3–4 строки echo с подстановкой
+    переменных; ловушка — буквы, цифры и _ продолжают имя ($APP_ — другая, незаданная переменная), а - . : его обрывают.
+    Уровень Стажёра: одна базовая конструкция — переменные и echo. Набор t21 (21.10) у порога Стажёра (b = −1,55)'
+generator: assessment_bank.families.devops.t21_var_name_boundary_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Скрипт выкладки собирает имена образа и окружения
+  из переменных; предсказать вывод echo. Ключ — независимая модель подстановки в генераторе, проверка — исполнение
+  показанного скрипта в bash-песочнице.

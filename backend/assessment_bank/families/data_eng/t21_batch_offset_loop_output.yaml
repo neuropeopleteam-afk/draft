@@ -1,0 +1,31 @@
+family_id: data_eng.etl.t21_batch_offset_loop_output
+title: Постраничная выгрузка — цикл while со счётчиком запросов и смещением
+direction: data_eng
+skills:
+- python
+- etl
+- incremental_load
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.8
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проследить цикл while, который
+    сдвигает смещение на размер страницы и считает запросы; ловушки — итоговое смещение больше общего числа строк и лишний
+    запрос при <= и делении без остатка. Уровень Стажёра: цикл со счётчиком без библиотек. Набор t21 (21.10) у порога Стажёра
+    (b = −1,8)'
+generator: assessment_bank.families.data_eng.t21_batch_offset_loop_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Загрузчик забирает строки страницами в цикле while; предсказать
+  число запросов и итоговое смещение. Ключ — независимая формула в генераторе, проверка — исполнение показанного кода в
+  песочнице Python.

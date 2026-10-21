@@ -107,6 +107,11 @@ def _run(eng, st, rnd, target, oracle):
 
 
 def test_bank_refine_session_short_new_items_at_cut(monkeypatch):
+    # прежнее правило итога второго этапа (P ≥ 0,5 / 0,9); правило поправки №2 (продолжение SPRT, устная защита
+    # без «монетки») — tests/test_sprt_v2.py::test_two_stage_continues_sprt_and_oral_instead_of_coin
+    from app.core.config import get_settings as _gs
+
+    monkeypatch.setattr(_gs(), "assessment_verdict_rule", "posterior")
     from app.modules.assessment import bank_engine as be
     from app.modules.assessment.bank_engine import BankEngine
     from app.modules.assessment.grader import GradeOutcome
@@ -186,6 +191,10 @@ def test_api_two_stage_offer_refine_and_employer_note(client, monkeypatch, flag)
     monkeypatch.setattr(be, "grade_open", lambda **k: GradeOutcome(
         status="scored", score=0.9 if len(k["answer"]) > 40 else 0.0, method="llm", model="test"))
     flag(True, level=0.9)
+    # поиск сессии с предложением второго этапа перебирает зёрна: неподтверждённая попытка у порога не должна
+    # закрывать следующую по правилу 30 дней (раньше тест падал случайно — retake_cooldown в цикле поиска)
+    monkeypatch.setenv("RETAKE_SAME_GRADE_DAYS", "0")
+    get_settings.cache_clear()
     t, uid = _onboard(client, "twostage@example.com")
     # флаг включён, но полного теста нет — уточнять нечего
     r = client.post("/api/assessment/sessions", json={"claimed_grade": "middle", "mode": "refine"}, headers=H(t))
@@ -237,7 +246,12 @@ def test_api_two_stage_offer_refine_and_employer_note(client, monkeypatch, flag)
     assert v["refine"]["source_session_id"] == str(sid)
     assert "обеих сессий" in out2["explanation"]
     f = v["refine"]["final_grade"]
-    if f != "none":
+    if v["refine"].get("rule") == "sprt":
+        # P0-1 (А15, 21.10): по правилу SPRT категория — только при «подтверждён», заявленный не переписывается
+        # уровнем по ответам; «не подтверждён» — нижний уровень предлагается, «нужен доп. этап» — без категории
+        assert out2["claimed_grade"] == out["claimed_grade"]
+        assert out2["confirmed"] is (v["refine"]["verdict"] == "confirmed")
+    elif f != "none":
         assert out2["claimed_grade"] == f and out2["confirmed"]
     # первая сессия: уточнение пройдено, нового нет
     r = client.get(f"/api/assessment/sessions/{sid}/result", headers=H(t))

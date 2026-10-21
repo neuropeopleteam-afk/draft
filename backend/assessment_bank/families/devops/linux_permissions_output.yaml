@@ -1,24 +1,36 @@
 family_id: devops.linux.permissions_output
 title: Linux — права доступа к файлу (владелец, группа, остальные)
 direction: devops
-skills: [linux, permissions]
-target_grades: [intern, junior]
+skills:
+- linux
+- permissions
+target_grades:
+- intern
+- junior
 format: predict_output
 language: text
 invariants:
-  code_lines: [5, 5]
+  code_lines:
+  - 5
+  - 5
   extra:
     subtype: posix_mode_classes
-    questions: [4, 4]
+    questions:
+    - 4
+    - 4
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -1.2
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.3
-  basis: "Строки ls -l двух файлов и вывод id трёх пользователей; четыре вопроса «сможет ли пользователь прочитать/изменить/запустить файл». Нужно знать, что применяется ровно один класс прав (владелец, иначе группа, иначе остальные); примерно в половине вариантов у владельца прав меньше, чем у группы или остальных. Intern/Junior"
+  basis: Априорная, до калибровки на людях (a = 1,3). Строки ls -l двух файлов и вывод id трёх пользователей; четыре
+    вопроса «сможет ли пользователь прочитать/изменить/запустить файл». Нужно знать, что применяется ровно один
+    класс прав (владелец, иначе группа, иначе остальные); примерно в половине вариантов у владельца прав меньше,
+    чем у группы или остальных. Intern/Junior
 generator: assessment_bank.families.devops.linux_permissions_output
 version: 1
-description: >
-  По строкам ls -l и выводу id определить, сможет ли каждый пользователь прочитать, изменить или запустить файл.
-  Ключ — исполнение модели проверки прав POSIX над показанными строками.
+description: 'По строкам ls -l и выводу id определить, сможет ли каждый пользователь прочитать, изменить или запустить
+  файл. Ключ — исполнение модели проверки прав POSIX над показанными строками.
+
+  '

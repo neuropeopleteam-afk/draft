@@ -6,6 +6,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Field, Loading, Seg, Stat, cleanCompanyName, dateOnly, errText, useApi } from "../../components/ui";
 import { api, apiDownload } from "../../lib/api";
 import { usePageTitle } from "../../lib/meta";
+import { useDemoUi } from "../../lib/juryMode";
 import { BarList, fk, fpct } from "../charts";
 import { PartnerBadge, useTariffsOn } from "../../pages/employer/Tariffs";
 
@@ -54,6 +55,7 @@ function GroupTable({ caption, rows }: { caption: string; rows: any[] }) {
 export function FspBenefit() {
   usePageTitle("Польза для ФСП");
   const on = useTariffsOn();
+  const demoUi = useDemoUi();
   const [days, setDaysS] = useState(() => localStorage.getItem(KEY) ?? "all");
   const setDays = (d: string) => { localStorage.setItem(KEY, d); setDaysS(d); };
   const { data: rep, loading, error } = useApi<any>(on ? `/fsp-cabinet/benefit${q(days)}` : null, [on, days]);
@@ -82,7 +84,7 @@ export function FspBenefit() {
       {err && <Alert>{err}</Alert>}
       {error && !rep ? <Alert>{error}</Alert> : loading && !rep ? <Loading /> : rep && (
         <>
-          {rep.demo_share >= 0.99 && <Alert kind="info">Сейчас в данных только демо-компании и демо-кандидаты стенда (модель, не люди): приглашения и наймы сгенерированы по модели поведения. На живых данных раздел считает те же показатели.</Alert>}
+          {demoUi && rep.demo_share >= 0.99 && <Alert kind="info">Сейчас в данных только демо-компании и демо-кандидаты стенда: приглашения и наймы сгенерированы по модели поведения. На живых данных раздел считает те же показатели.</Alert>}
           <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
             <Stat label="Участников ФСП" value={fk(t.candidates_fsp)} hint="с подтверждённым достижением в реестре ФСП, с категорией" />
             <Stat label="Приглашены" value={fk(t.invited_fsp)} hint={`участников ФСП · доля ${fpct(t.invite_rate_fsp)}`} />
@@ -164,8 +166,8 @@ function CompanyRow({ c, onChange }: { c: any; onChange: () => void }) {
         <PartnerBadge on={c.fsp_partner} />
         <span className="text-brand-ink/65">{[c.city, c.inn && `ИНН ${c.inn}`, `тариф «${c.plan_title}»`].filter(Boolean).join(" · ")}</span>
       </div>
-      {c.fsp_partner && <p className="mt-1 text-brand-ink/75">С {dateOnly(c.partner_since)}{c.partner_note ? ` · ${c.partner_note}` : ""}</p>}
-      {!c.fsp_partner && c.requested_at && <p className="mt-1 text-brand-ink/75">Заявка {dateOnly(c.requested_at)}{c.request_note ? `: «${c.request_note}»` : ""}</p>}
+      {c.fsp_partner && <p className="mt-1 text-brand-ink/75">С {dateOnly(c.partner_since)}{c.partner_note ? ` · ${c.partner_note.replace(/^Демо:\s*/i, "")}` : ""}</p>}
+      {!c.fsp_partner && c.requested_at && <p className="mt-1 text-brand-ink/75">Заявка {dateOnly(c.requested_at)}{c.request_note ? `: «${c.request_note.replace(/^Демо:\s*/i, "")}»` : ""}</p>}
       {c.can_manage ? (
         <div className="mt-2 flex flex-wrap items-end gap-2">
           {!c.fsp_partner && <div className="min-w-0 flex-1"><Field label="Основание (договор, пакет)" htmlFor={nid}><input id={nid} className="input" maxLength={300} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Спонсорский пакет, договор № …" /></Field></div>}
@@ -182,6 +184,7 @@ function CompanyRow({ c, onChange }: { c: any; onChange: () => void }) {
 export function FspPartners() {
   usePageTitle("Партнёры ФСП");
   const on = useTariffsOn();
+  const demoUi = useDemoUi();
   const ov = useApi<any>(on ? "/fsp-cabinet/partners" : null, [on]);
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<any[] | null>(null);
@@ -192,6 +195,8 @@ export function FspPartners() {
     try { setFound(await api<any[]>(`/fsp-cabinet/partners/search?q=${encodeURIComponent(query.trim())}`)); } catch (x) { setErr(errText(x)); }
   }
   const reload = () => { ov.reload(); if (found) void search(); };
+  const requests = (ov.data?.requests ?? []).filter((c: any) => demoUi || (!c.is_demo && !/^Демо(?:\s+жюри)?:/i.test(c.name ?? "") && !/^Демо:/i.test(c.request_note ?? "")));
+  const partners = (ov.data?.partners ?? []).filter((c: any) => demoUi || (!c.is_demo && !/^Демо(?:\s+жюри)?:/i.test(c.name ?? "") && !/^Демо:/i.test(c.partner_note ?? "")));
   return (
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Партнёры ФСП" subtitle="Метка «Партнёр ФСП» входит в спонсорский пакет федерации: расширенный тариф, отборочные задачи компании на соревнованиях ФСП (проводит ФСП), метка в карточке компании и приглашениях." />
@@ -199,13 +204,13 @@ export function FspPartners() {
         <>
           <section className="card space-y-3" aria-labelledby="req-h">
             <h2 id="req-h" className="text-lg font-bold text-brand-night">Заявки компаний</h2>
-            {!ov.data.requests.length ? <p className="text-sm text-brand-ink/65">Новых заявок нет.</p>
-              : <ul className="space-y-2">{ov.data.requests.map((c: any) => <CompanyRow key={c.company_id} c={c} onChange={reload} />)}</ul>}
+            {!requests.length ? <p className="text-sm text-brand-ink/65">Новых заявок нет.</p>
+              : <ul className="space-y-2">{requests.map((c: any) => <CompanyRow key={c.company_id} c={c} onChange={reload} />)}</ul>}
           </section>
           <section className="card space-y-3" aria-labelledby="par-h">
-            <h2 id="par-h" className="text-lg font-bold text-brand-night">Партнёры ({ov.data.partners.length})</h2>
-            {!ov.data.partners.length ? <p className="text-sm text-brand-ink/65">Партнёров пока нет.</p>
-              : <ul className="space-y-2">{ov.data.partners.map((c: any) => <CompanyRow key={c.company_id} c={c} onChange={reload} />)}</ul>}
+            <h2 id="par-h" className="text-lg font-bold text-brand-night">Партнёры ({partners.length})</h2>
+            {!partners.length ? <p className="text-sm text-brand-ink/65">Партнёров пока нет.</p>
+              : <ul className="space-y-2">{partners.map((c: any) => <CompanyRow key={c.company_id} c={c} onChange={reload} />)}</ul>}
           </section>
         </>
       )}

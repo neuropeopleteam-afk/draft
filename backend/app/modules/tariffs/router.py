@@ -131,17 +131,31 @@ def partners_set(company_id: uuid.UUID, data: PartnerSetIn, user: User = Depends
 @fsp_router.get("/benefit", summary="«Польза для ФСП»: приглашения и наймы участников ФСП по регионам и направлениям, "
                                     "вклад партнёров, доля приглашений с ФСП-бонусом (агрегаты, K = 5)", responses=F_AUTH)
 def benefit(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     svc.need_on()
     log.info("fsp_cabinet access user=%s role=%s section=benefit days=%s", user.id, user.role.value, days)
-    return benefit_mod.compute(db, days)
+    return benefit_mod.compute(
+        db,
+        days,
+        include_demo=not jury_scope.real_default(user, db=db),
+        jury_key=jury_scope.key_of(user.email),
+    )
 
 
 @fsp_router.get("/benefit/export.csv", summary="«Польза для ФСП» в CSV (те же агрегаты, малые группы скрыты)",
                 responses=F_AUTH)
 def benefit_csv(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> Response:
+    from app.modules.jury import scope as jury_scope
+
     svc.need_on()
     log.info("fsp_cabinet access user=%s role=%s section=export:benefit days=%s", user.id, user.role.value, days)
-    rep = benefit_mod.compute(db, days)
+    rep = benefit_mod.compute(
+        db,
+        days,
+        include_demo=not jury_scope.real_default(user, db=db),
+        jury_key=jury_scope.key_of(user.email),
+    )
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
     w.writerow(benefit_mod.CSV_COLS)

@@ -1,25 +1,39 @@
 family_id: data_eng.etl.tz_partition_bug
 title: ETL — дата партиции из UTC вместо местной даты
 direction: data_eng
-skills: [etl, partitioning, python, data_quality]
-target_grades: [junior, middle]
+skills:
+- etl
+- partitioning
+- python
+- data_quality
+target_grades:
+- junior
+- middle
 format: find_bug
 language: python
 invariants:
-  code_lines: [11, 11]
-  operations: [6, 8]
+  code_lines:
+  - 11
+  - 11
+  operations:
+  - 6
+  - 8
   defect_type: utc_date_partition
   extra:
+    leak_resistance: low
     subtype: utc_vs_local_date
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.3
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.25
-  basis: "Код 11 строк: три функции, одна берёт дату из UTC без перевода в местный пояс (UTC+3…+10); ловушки-«не ошибки» — константа пояса, is_valid и перевод в load_label; пример событий с ожидаемой партицией; симптом дан. Граница Junior/Middle"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Код 11 строк: три функции, одна берёт дату из UTC без перевода
+    в местный пояс (UTC+3…+10); ловушки-«не ошибки» — константа пояса, is_valid и перевод в load_label; пример событий
+    с ожидаемой партицией; симптом дан. Граница Junior/Middle'
 generator: assessment_bank.families.data_eng.etl_tz_partition_bug
 version: 1
-description: >
-  Найти строку, где дата партиции берётся из времени UTC вместо местного. Ключ — исполнение показанного
+description: 'Найти строку, где дата партиции берётся из времени UTC вместо местного. Ключ — исполнение показанного
   кода в песочнице Python.
+
+  '

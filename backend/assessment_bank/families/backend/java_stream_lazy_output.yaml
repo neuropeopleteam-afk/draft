@@ -1,24 +1,34 @@
 family_id: backend.java.stream_lazy_output
 title: Ленивость Stream API — порядок peek/filter/map и limit
 direction: backend
-skills: [java, java_streams, lazy_evaluation]
-target_grades: [middle]
+skills:
+- java
+- java_streams
+- lazy_evaluation
+target_grades:
+- middle
 format: predict_output
 language: java
 invariants:
-  code_lines: [19, 19]
-  operations: [16, 16]
+  code_lines:
+  - 19
+  - 19
+  operations:
+  - 16
+  - 16
   extra:
     subtype: peek_filter_map_limit
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.2
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.3
-  basis: "19 строк, 6–8 элементов, конвейер peek → filter → map → limit(1–3); нужно знать вертикальную обработку и короткое замыкание limit; вывод 4–12 строк; Middle"
+  basis: Априорная, до калибровки на людях (a = 1,3). 19 строк, 6–8 элементов, конвейер peek → filter → map → limit(1–3);
+    нужно знать вертикальную обработку и короткое замыкание limit; вывод 4–12 строк; Middle
 generator: assessment_bank.families.backend.java_stream_lazy_output
 version: 1
-description: >
-  Предсказать вывод программы на Java: журнал побочных эффектов последовательного потока и результат
+description: 'Предсказать вывод программы на Java: журнал побочных эффектов последовательного потока и результат
   limit. Ключ — модель конвейера, сверка исполнением показанного кода (javac + JVM).
+
+  '

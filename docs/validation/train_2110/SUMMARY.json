@@ -1,0 +1,559 @@
+{
+ "plan": {
+  "phase": "train",
+  "n_per_seed": 100,
+  "seeds": [
+   1101,
+   1102,
+   1103,
+   1104,
+   1105,
+   1106,
+   1107,
+   1108,
+   1109,
+   1110
+  ],
+  "common_args": [
+   "--retest"
+  ],
+  "configs": {
+   "K0": {
+    "env": {}
+   },
+   "K1": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1"
+    }
+   },
+   "K2": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_POINT_ESTIMATOR": "eap"
+    }
+   },
+   "K3": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_SPRT_DELTA": "0.5"
+    }
+   },
+   "K4": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_SPRT_BETA": "0.2"
+    }
+   },
+   "K5": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_SPRT_ALPHA": "0.1"
+    }
+   },
+   "K6": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_UPGRADE_RULE": "point"
+    }
+   },
+   "K7": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+     "ASSESSMENT_TWO_STAGE_MINUTES": "20"
+    }
+   },
+   "K8": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_TIME_WEIGHT": "0"
+    }
+   },
+   "K9": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_SPRT_DELTA": "0.25"
+    }
+   },
+   "K10": {
+    "env": {
+     "ASSESSMENT_SUBPOOLS": "1",
+     "ASSESSMENT_UPGRADE_RULE": "none"
+    }
+   },
+   "L0": {
+    "env": {
+     "ASSESSMENT_VERDICT_RULE": "posterior"
+    }
+   }
+  }
+ },
+ "summary": {
+  "K0": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9385,
+   "confident_share_main": 0.537,
+   "confident_accuracy_final": 0.9327,
+   "confident_share_final": 0.654,
+   "false_confirm_all": 0.013,
+   "false_confirm_among_overclaim": 0.0321,
+   "false_reject_among_true": 0.4185,
+   "exact_grade_final": 0.687,
+   "exact_grade_final_not_underclaim": 0.7537,
+   "within_one_final": 0.994,
+   "gross_error_2plus": 0.006,
+   "undecided_final": 0.346,
+   "followup_share": 0.463,
+   "oral_share": 0.4,
+   "extended_share": 0.674,
+   "minutes_main": {
+    "mean": 56.7,
+    "p90": 83.4
+   },
+   "minutes_total": {
+    "mean": 62.2,
+    "p90": 96.1
+   },
+   "items_main": {
+    "mean": 24.3,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.8994,
+   "retest_exact": 0.682,
+   "engine_errors": 0,
+   "env": {},
+   "args": null
+  },
+  "K1": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9551,
+   "confident_share_main": 0.579,
+   "confident_accuracy_final": 0.9451,
+   "confident_share_final": 0.711,
+   "false_confirm_all": 0.011,
+   "false_confirm_among_overclaim": 0.0272,
+   "false_reject_among_true": 0.3412,
+   "exact_grade_final": 0.743,
+   "exact_grade_final_not_underclaim": 0.8088,
+   "within_one_final": 0.999,
+   "gross_error_2plus": 0.001,
+   "undecided_final": 0.289,
+   "followup_share": 0.421,
+   "oral_share": 0.343,
+   "extended_share": 0.63,
+   "minutes_main": {
+    "mean": 52.8,
+    "p90": 81.9
+   },
+   "minutes_total": {
+    "mean": 57.9,
+    "p90": 95.0
+   },
+   "items_main": {
+    "mean": 24.0,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.9076,
+   "retest_exact": 0.717,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1"
+   },
+   "args": null
+  },
+  "K2": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9594,
+   "confident_share_main": 0.567,
+   "confident_accuracy_final": 0.9543,
+   "confident_share_final": 0.7,
+   "false_confirm_all": 0.008,
+   "false_confirm_among_overclaim": 0.0198,
+   "false_reject_among_true": 0.3479,
+   "exact_grade_final": 0.703,
+   "exact_grade_final_not_underclaim": 0.7694,
+   "within_one_final": 0.998,
+   "gross_error_2plus": 0.002,
+   "undecided_final": 0.3,
+   "followup_share": 0.433,
+   "oral_share": 0.359,
+   "extended_share": 0.625,
+   "minutes_main": {
+    "mean": 53.2,
+    "p90": 81.8
+   },
+   "minutes_total": {
+    "mean": 58.6,
+    "p90": 94.4
+   },
+   "items_main": {
+    "mean": 24.0,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.877,
+   "retest_exact": 0.659,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_POINT_ESTIMATOR": "eap"
+   },
+   "args": null
+  },
+  "K3": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9172,
+   "confident_share_main": 0.761,
+   "confident_accuracy_final": 0.9053,
+   "confident_share_final": 0.855,
+   "false_confirm_all": 0.025,
+   "false_confirm_among_overclaim": 0.0617,
+   "false_reject_among_true": 0.2387,
+   "exact_grade_final": 0.73,
+   "exact_grade_final_not_underclaim": 0.7649,
+   "within_one_final": 0.996,
+   "gross_error_2plus": 0.004,
+   "undecided_final": 0.145,
+   "followup_share": 0.239,
+   "oral_share": 0.186,
+   "extended_share": 0.442,
+   "minutes_main": {
+    "mean": 48.8,
+    "p90": 75.1
+   },
+   "minutes_total": {
+    "mean": 51.6,
+    "p90": 81.4
+   },
+   "items_main": {
+    "mean": 21.6,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.8947,
+   "retest_exact": 0.667,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.5"
+   },
+   "args": null
+  },
+  "K4": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9246,
+   "confident_share_main": 0.65,
+   "confident_accuracy_final": 0.9168,
+   "confident_share_final": 0.769,
+   "false_confirm_all": 0.012,
+   "false_confirm_among_overclaim": 0.0296,
+   "false_reject_among_true": 0.3412,
+   "exact_grade_final": 0.725,
+   "exact_grade_final_not_underclaim": 0.7852,
+   "within_one_final": 0.994,
+   "gross_error_2plus": 0.006,
+   "undecided_final": 0.231,
+   "followup_share": 0.35,
+   "oral_share": 0.283,
+   "extended_share": 0.536,
+   "minutes_main": {
+    "mean": 50.7,
+    "p90": 80.1
+   },
+   "minutes_total": {
+    "mean": 54.9,
+    "p90": 89.7
+   },
+   "items_main": {
+    "mean": 22.8,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.9013,
+   "retest_exact": 0.697,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_BETA": "0.2"
+   },
+   "args": null
+  },
+  "K5": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9487,
+   "confident_share_main": 0.643,
+   "confident_accuracy_final": 0.9348,
+   "confident_share_final": 0.767,
+   "false_confirm_all": 0.019,
+   "false_confirm_among_overclaim": 0.0469,
+   "false_reject_among_true": 0.2773,
+   "exact_grade_final": 0.737,
+   "exact_grade_final_not_underclaim": 0.7784,
+   "within_one_final": 0.998,
+   "gross_error_2plus": 0.002,
+   "undecided_final": 0.233,
+   "followup_share": 0.357,
+   "oral_share": 0.29,
+   "extended_share": 0.537,
+   "minutes_main": {
+    "mean": 51.5,
+    "p90": 77.0
+   },
+   "minutes_total": {
+    "mean": 55.8,
+    "p90": 87.8
+   },
+   "items_main": {
+    "mean": 23.1,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.896,
+   "retest_exact": 0.659,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_ALPHA": "0.1"
+   },
+   "args": null
+  },
+  "K6": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9551,
+   "confident_share_main": 0.579,
+   "confident_accuracy_final": 0.9425,
+   "confident_share_final": 0.713,
+   "false_confirm_all": 0.009,
+   "false_confirm_among_overclaim": 0.0222,
+   "false_reject_among_true": 0.3429,
+   "exact_grade_final": 0.697,
+   "exact_grade_final_not_underclaim": 0.6997,
+   "within_one_final": 0.993,
+   "gross_error_2plus": 0.007,
+   "undecided_final": 0.287,
+   "followup_share": 0.421,
+   "oral_share": 0.334,
+   "extended_share": 0.626,
+   "minutes_main": {
+    "mean": 53.2,
+    "p90": 82.2
+   },
+   "minutes_total": {
+    "mean": 58.3,
+    "p90": 95.3
+   },
+   "items_main": {
+    "mean": 24.1,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.8598,
+   "retest_exact": 0.576,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_UPGRADE_RULE": "point"
+   },
+   "args": null
+  },
+  "K7": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9616,
+   "confident_share_main": 0.573,
+   "confident_accuracy_final": 0.9483,
+   "confident_share_final": 0.715,
+   "false_confirm_all": 0.009,
+   "false_confirm_among_overclaim": 0.0222,
+   "false_reject_among_true": 0.3361,
+   "exact_grade_final": 0.726,
+   "exact_grade_final_not_underclaim": 0.7885,
+   "within_one_final": 0.998,
+   "gross_error_2plus": 0.002,
+   "undecided_final": 0.285,
+   "followup_share": 0.427,
+   "oral_share": 0.347,
+   "extended_share": 0.62,
+   "minutes_main": {
+    "mean": 52.4,
+    "p90": 80.1
+   },
+   "minutes_total": {
+    "mean": 59.2,
+    "p90": 96.7
+   },
+   "items_main": {
+    "mean": 24.0,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.8965,
+   "retest_exact": 0.689,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20"
+   },
+   "args": null
+  },
+  "K8": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9508,
+   "confident_share_main": 0.59,
+   "confident_accuracy_final": 0.945,
+   "confident_share_final": 0.709,
+   "false_confirm_all": 0.012,
+   "false_confirm_among_overclaim": 0.0296,
+   "false_reject_among_true": 0.363,
+   "exact_grade_final": 0.72,
+   "exact_grade_final_not_underclaim": 0.7818,
+   "within_one_final": 0.994,
+   "gross_error_2plus": 0.006,
+   "undecided_final": 0.291,
+   "followup_share": 0.41,
+   "oral_share": 0.341,
+   "extended_share": 0.617,
+   "minutes_main": {
+    "mean": 58.3,
+    "p90": 84.6
+   },
+   "minutes_total": {
+    "mean": 63.5,
+    "p90": 98.3
+   },
+   "items_main": {
+    "mean": 22.6,
+    "min": 6,
+    "max": 30
+   },
+   "retest_kappa_w": 0.895,
+   "retest_exact": 0.665,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TIME_WEIGHT": "0"
+   },
+   "args": null
+  },
+  "K9": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9718,
+   "confident_share_main": 0.39,
+   "confident_accuracy_final": 0.9726,
+   "confident_share_final": 0.547,
+   "false_confirm_all": 0.003,
+   "false_confirm_among_overclaim": 0.0074,
+   "false_reject_among_true": 0.4924,
+   "exact_grade_final": 0.701,
+   "exact_grade_final_not_underclaim": 0.7829,
+   "within_one_final": 0.996,
+   "gross_error_2plus": 0.004,
+   "undecided_final": 0.453,
+   "followup_share": 0.61,
+   "oral_share": 0.517,
+   "extended_share": 0.803,
+   "minutes_main": {
+    "mean": 56.7,
+    "p90": 83.7
+   },
+   "minutes_total": {
+    "mean": 64.2,
+    "p90": 97.3
+   },
+   "items_main": {
+    "mean": 26.1,
+    "min": 12,
+    "max": 30
+   },
+   "retest_kappa_w": 0.9029,
+   "retest_exact": 0.685,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_SPRT_DELTA": "0.25"
+   },
+   "args": null
+  },
+  "K10": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9569,
+   "confident_share_main": 0.58,
+   "confident_accuracy_final": 0.9483,
+   "confident_share_final": 0.715,
+   "false_confirm_all": 0.008,
+   "false_confirm_among_overclaim": 0.0198,
+   "false_reject_among_true": 0.3311,
+   "exact_grade_final": 0.705,
+   "exact_grade_final_not_underclaim": 0.793,
+   "within_one_final": 0.996,
+   "gross_error_2plus": 0.004,
+   "undecided_final": 0.285,
+   "followup_share": 0.42,
+   "oral_share": 0.34,
+   "extended_share": 0.605,
+   "minutes_main": {
+    "mean": 52.5,
+    "p90": 81.7
+   },
+   "minutes_total": {
+    "mean": 57.6,
+    "p90": 93.8
+   },
+   "items_main": {
+    "mean": 23.9,
+    "min": 8,
+    "max": 30
+   },
+   "retest_kappa_w": 0.9089,
+   "retest_exact": 0.716,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_UPGRADE_RULE": "none"
+   },
+   "args": null
+  },
+  "L0": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9266,
+   "confident_share_main": 0.668,
+   "confident_accuracy_final": 0.8094,
+   "confident_share_final": 0.997,
+   "false_confirm_all": 0.033,
+   "false_confirm_among_overclaim": 0.0815,
+   "false_reject_among_true": 0.2672,
+   "exact_grade_final": 0.566,
+   "exact_grade_final_not_underclaim": 0.6367,
+   "within_one_final": 0.993,
+   "gross_error_2plus": 0.007,
+   "undecided_final": 0.003,
+   "followup_share": 0.44,
+   "oral_share": 0.0,
+   "extended_share": 0.978,
+   "minutes_main": {
+    "mean": 58.3,
+    "p90": 72.1
+   },
+   "minutes_total": {
+    "mean": 63.5,
+    "p90": 82.5
+   },
+   "items_main": {
+    "mean": 23.4,
+    "min": 11,
+    "max": 26
+   },
+   "retest_kappa_w": 0.8841,
+   "retest_exact": 0.727,
+   "engine_errors": 0,
+   "env": {
+    "ASSESSMENT_VERDICT_RULE": "posterior"
+   },
+   "args": null
+  }
+ },
+ "fails": [],
+ "elapsed_s": 694.7
+}

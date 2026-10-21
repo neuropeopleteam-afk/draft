@@ -51,6 +51,12 @@ def team_factor(a) -> float:
     return 0.92
 
 
+def protocol_status_factor(a) -> float:
+    """До подтверждения заявки по протоколу представителем ФСП или через ФСП ID (`pending_fsp`) вес достижения в 2 раза меньше."""
+    st = getattr(a, "protocol_status", None) or (getattr(a, "team_result", None) or {}).get("protocol_status")
+    return 0.5 if st == "pending_fsp" else 1.0
+
+
 def details(achievements, *, today: date | None = None, direction: str | None = None,
             relevance: bool = False) -> dict:
     """Сила паспорта. relevance=True (флаг FSP_DISCIPLINE_RELEVANCE) — вклад результата умножается на коэффициент
@@ -65,7 +71,7 @@ def details(achievements, *, today: date | None = None, direction: str | None = 
         # Один турнир может иметь несколько дисциплин/записей; повтор импорта не даёт бонус.
         key = getattr(a, "event_id", None) or (a.event_name.strip().casefold(), a.event_date)
         kind = result_kind(a)
-        value = RESULT_WEIGHTS[kind] * recency(a.event_date, today) * team_factor(a)
+        value = RESULT_WEIGHTS[kind] * recency(a.event_date, today) * team_factor(a) * protocol_status_factor(a)
         c = rel.coef(getattr(a, "discipline", None), direction) if relevance else 1.0
         value *= c
         if key not in events or value > events[key]["value"]:

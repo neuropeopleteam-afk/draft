@@ -2,13 +2,15 @@
 
 Соответствие 152-ФЗ:
 - В открытый репозиторий никогда не записываются ФИО и даты рождения.
-- Поиск в промышленном режиме может выполняться по `key_hash` (SHA-256 от `fio_norm[:birth_year]`)
-  и `fio_hash` (SHA-256 от `fio_norm`).
+- Поиск выполняется по `key_hash` (HMAC-SHA256 от `fio_norm[:birth_year]`) и `fio_hash` (HMAC-SHA256 от
+  `fio_norm`) с секретом FSP_INDEX_HMAC_KEY — без секрета хэш не обращается перебором ФИО из открытых протоколов.
 """
 
 from __future__ import annotations
 
 import hashlib
+import hmac
+import os
 import re
 
 _WS_RE = re.compile(r"[\s\u00a0]+")
@@ -44,15 +46,30 @@ def extract_birth_date(raw: str | None) -> tuple[str | None, str | None]:
     return None, None
 
 
+def _person_hash(text: str) -> str:
+    """HMAC-SHA256 с секретом FSP_INDEX_HMAC_KEY (hex, /opt/spectrek_fsp/secrets/fsp_index.env).
+    Без секрета хэш ФИО из открытых протоколов обращается перебором — поэтому без него сборка индекса
+    v4+ останавливается (``require_key``)."""
+    raw = (os.environ.get("FSP_INDEX_HMAC_KEY") or "").strip()
+    if raw:
+        return hmac.new(bytes.fromhex(raw), text.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def require_key() -> None:
+    if not (os.environ.get("FSP_INDEX_HMAC_KEY") or "").strip():
+        raise RuntimeError("FSP_INDEX_HMAC_KEY не задан: индекс с несолёными хэшами ФИО не собираем")
+
+
 def compute_key_hash(fio_norm: str, birth_year: str | None = None) -> str:
-    """SHA-256 от `fio_norm:birth_year` (если год известен) или от `fio_norm`."""
+    """HMAC-SHA256 от `fio_norm:birth_year` (если год известен) или от `fio_norm`."""
     base = f"{fio_norm}:{birth_year}" if (fio_norm and birth_year) else fio_norm
-    return hashlib.sha256(base.encode("utf-8")).hexdigest()
+    return _person_hash(base)
 
 
 def compute_fio_hash(fio_norm: str) -> str:
-    """SHA-256 только от нормализованного ФИО (для поиска без ввода даты рождения)."""
-    return hashlib.sha256(fio_norm.encode("utf-8")).hexdigest()
+    """HMAC-SHA256 только от нормализованного ФИО (для поиска без ввода даты рождения)."""
+    return _person_hash(fio_norm)
 
 
 def compute_team_hash(team_name: str | None) -> str | None:

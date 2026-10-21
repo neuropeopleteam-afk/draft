@@ -1,0 +1,45 @@
+family_id: frontend.js.listener_leak_fix
+title: Утечка памяти — обработчик события не снимается из-за bind
+direction: frontend
+skills:
+- javascript
+- memory_leaks
+- dom_events
+- this
+target_grades:
+- middle
+- senior
+format: choose_fix
+language: javascript
+invariants:
+  code_lines:
+  - 15
+  - 15
+  operations:
+  - 10
+  - 10
+  defect_type: listener_not_removed
+  n_options: 4
+  extra:
+    distractors:
+    - unbound
+    - once
+    - new_arrow
+    - rebind_remove
+    - null_refs
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 0.4
+  a: 1.3
+  sigma_variant: 0.3
+  basis: Априорная, до калибровки на людях (a = 1,3). 15 строк, причина утечки — новая функция при каждом bind;
+    дистракторы правдоподобны (обнуление ссылок, once, новая стрелочная функция при снятии, метод без привязки)
+    и требуют понимать сравнение обработчиков по ссылке и this; Middle/Senior
+generator: assessment_bank.families_retired.form_leak_2110.frontend.js_listener_leak_fix
+version: 2
+description: 'Класс компонента подписывается на событие окна и не может отписаться. Каждое исправление проверяется
+  исполнением с поддельным EventTarget: три цикла mount/unmount, обработчик срабатывает с правильным this, после
+  unmount подписок нет.
+
+  '

@@ -1,0 +1,34 @@
+family_id: security.path.t21_dotdot_substring_output
+title: Фильтр обхода каталога if ".." in name — ложное срабатывание и закодированный обход
+direction: security
+skills:
+- python
+- security
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra:
+    names:
+    - 4
+    - 8
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл по 4–8 именам файлов
+    со счётчиком и проверкой ".." in name; ловушки — in по строке ищет подстроку (безобидное «report..v2.pdf»
+    блокируется), закодированное «%2e%2e/…» двух точек подряд не содержит и проходит. Уровень Стажёра: цикл, if/else
+    и in по строке; поправка вверх от порога — две ловушки в одном фильтре. Набор t21 (21.10) у порога Стажёра
+    (b = −1,6)'
+generator: assessment_bank.families.security.t21_dotdot_substring_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Сервис выдачи файлов отсеивает имена с подстрокой
+  «..» и печатает пропущенные имена и число заблокированных; предсказать вывод. Ключ — независимая модель (поиск двух
+  точек подряд посимвольно) в генераторе, проверка — исполнение показанного кода в песочнице Python.'

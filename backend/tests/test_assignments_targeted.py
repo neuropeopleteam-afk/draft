@@ -447,7 +447,11 @@ def test_jury_sandbox_targeted_demo(client):
     assert any(x["status_title"] == "Предложение истекло" for x in items)
     ta = client.post("/api/jury/login", json={"persona": "candidate_junior", "scenario": sid}).json()["access_token"]
     j = client.get("/api/candidate/assignments", headers=H(ta)).json()["items"][0]
-    assert j["why"]["kind"] == "weak_skill"
+    # 21.10: персона «Junior — нужен доп. этап» (правило SPRT): у порога решения нет, категории нет — навыки стека чаще
+    # ещё не подтверждены тестом (declared_only), а при записанных фактах теста — подтверждены слабо (weak_skill);
+    # обе причины — адресные («задание даёт возможность подтвердить навык»). Прежнее «только weak_skill» относилось к
+    # персоне «Junior (предварительно)» с категорией
+    assert j["why"]["kind"] in ("weak_skill", "declared_only"), j["why"]
     # вне песочницы кнопки нет
     t = candidate_with_category(client, EMAIL)
     assert client.post("/api/candidate/assignments/demo/next-week", headers=H(t)).status_code == 403

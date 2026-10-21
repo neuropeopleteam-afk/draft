@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { NUMBERS } from "../../lib/numbers";
 import { NB } from "../ui";
 import { DEMO, type DemoCandidate } from "./demoData";
 
@@ -22,7 +23,7 @@ export function ReverseDraftDemo({ onTry, onLiveAvatar, busyLive }: { onTry: () 
   return (
     <div className="np-glass np-glass-accent relative p-4 sm:p-5" role="region" aria-label="Обратный драфт в действии: пример интерфейса" data-testid="reverse-draft-demo">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="np-eyebrow">Обратный драфт в действии · 9 направлений</p>
+        <p className="np-eyebrow">Обратный драфт в действии · {NUMBERS.bank.directions} ИТ-направлений (6 примеров)</p>
         <span className="np-chip">Интерактивный пример</span>
       </div>
       <div role="tablist" aria-label="Направление" onKeyDown={onKey} className="np-tabs mt-3">
@@ -35,7 +36,7 @@ export function ReverseDraftDemo({ onTry, onLiveAvatar, busyLive }: { onTry: () 
       <div id="dir-panel" role="tabpanel" aria-labelledby={`dir-tab-${c.key}`} className="mt-3">
         <CandidateCard key={c.key} c={c} onTry={onTry} onLiveAvatar={onLiveAvatar} busyLive={busyLive} />
       </div>
-      <p className="mt-3 text-[11px] np-faint">Профиль специалиста обезличен до согласия · в каталоге также Аналитика, QA и Data Engineering</p>
+      <p className="mt-3 text-[11px] np-faint">Профиль специалиста обезличен до согласия · в банке заданий {NUMBERS.bank.directions} ИТ-направлений (включая Аналитику, QA, Data Engineering и Архитектуру ПО)</p>
     </div>
   );
 }
@@ -78,8 +79,13 @@ function CandidateCard({ c, onTry, onLiveAvatar, busyLive }: { c: DemoCandidate;
         {c.stack.map((s) => <span key={s} className="np-chip np-chip-sm">{s}</span>)}
       </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        <Proof tone="ok" title="Подтверждено тестом IRT и реестром ФСП" items={c.proved} />
+      <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+        <Proof
+          tone="ok"
+          title="Подтверждено тестом и реестром ФСП"
+          hint="Как считается: адаптивный тест на грейд (психометрическая модель IRT) и официальные протоколы соревнований ФСП"
+          items={c.proved}
+        />
         <Proof tone="indigo" title="Косвенно проверено" items={c.indirect} />
         <Proof tone="calm" title="Сигналов риска нет" items={c.risk} />
       </div>
@@ -115,12 +121,12 @@ function CandidateCard({ c, onTry, onLiveAvatar, busyLive }: { c: DemoCandidate;
   );
 }
 
-function Proof({ tone, title, items }: { tone: "ok" | "indigo" | "calm"; title: string; items: string[] }) {
+function Proof({ tone, title, hint, items }: { tone: "ok" | "indigo" | "calm"; title: string; hint?: string; items: string[] }) {
   return (
-    <div className={`np-proof ${tone === "ok" ? "np-proof-ok" : tone === "indigo" ? "np-proof-indigo" : "np-proof-calm"}`}>
-      <p className="text-[11px] font-bold uppercase leading-snug tracking-[0.08em]">{title}</p>
-      <ul className="mt-1.5 space-y-1 text-xs leading-snug np-muted">
-        {items.map((t) => <li key={t} className="flex gap-1.5"><span aria-hidden="true" className="np-proof-dot" />{t}</li>)}
+    <div className={`np-proof min-w-0 [overflow-wrap:normal] ${tone === "ok" ? "np-proof-ok" : tone === "indigo" ? "np-proof-indigo" : "np-proof-calm"}`} title={hint}>
+      <p className="text-[11px] font-bold uppercase leading-snug tracking-[0.04em] [overflow-wrap:normal] [word-break:normal]">{title}</p>
+      <ul className="mt-1.5 space-y-1 text-xs leading-snug np-muted [overflow-wrap:normal] [word-break:normal]">
+        {items.map((t) => <li key={t} className="flex gap-1.5"><span aria-hidden="true" className="np-proof-dot" /><span className="min-w-0">{t}</span></li>)}
       </ul>
     </div>
   );

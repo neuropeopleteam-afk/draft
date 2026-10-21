@@ -239,6 +239,11 @@ export function MatchingBenchUpload({
           {result && (
             <div className="mt-6 space-y-5" aria-live="polite" data-testid="bench-upload-results">
               <Alert kind="info">{result.note}</Alert>
+              {result.label_scale?.text && (
+                <p className="text-xs text-brand-ink/70" data-testid="bench-upload-scale">
+                  {result.label_scale.text}
+                </p>
+              )}
 
               {/* Сводка метрик */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">

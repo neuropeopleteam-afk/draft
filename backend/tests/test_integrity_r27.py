@@ -406,7 +406,9 @@ def test_rendered_mark_hidden_from_screen_and_screen_readers(tmp_path):
     try:
         entry.write_text(RENDER, encoding="utf-8")
         subprocess.run([str(FRONT / "node_modules/.bin/esbuild"), str(entry), "--bundle", "--platform=node",
-                        "--format=cjs", "--jsx=automatic", "--log-level=error", f"--outfile={out}"],
+                        "--format=cjs", "--jsx=automatic", "--log-level=error", "--define:import.meta.env={}",
+                        "--define:import.meta.glob=__viteGlob", "--banner:js=var __viteGlob = () => ({});",
+                        f"--outfile={out}"],
                        cwd=FRONT, check=True, timeout=120, env={**os.environ, "NODE_PATH": str(FRONT / "node_modules")})
     finally:
         entry.unlink(missing_ok=True)

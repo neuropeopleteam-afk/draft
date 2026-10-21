@@ -148,6 +148,18 @@ function Body({ d }: { d: Out }) {
   );
 }
 
+function cleanLimit(limit: string): string {
+  return limit
+    .replace(
+      /^(Демо-компании и демо-кандидаты:\s*на живом найме механика ещё не проверялась\.?|На реальном найме механика ещё не проверялась — она проверена на модельных данных и реальных вакансиях hh\.ru\.?)$/i,
+      "на реальном найме механика ещё не проверялась — она проверена на модельных данных и реальных вакансиях hh.ru"
+    )
+    .replace(
+      /^Вакансии — демо-компаний\.?$/i,
+      "вакансии в примере — модельных компаний; импорт с hh.ru поддерживается."
+    );
+}
+
 function Row({ it, personas }: { it: Item; personas: Record<string, string> }) {
   return (
     <article id={it.id} className="grid scroll-mt-20 gap-3 border-t border-brand-night/10 py-4 first:border-t-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] lg:gap-6" data-testid="criteria-item">
@@ -159,7 +171,7 @@ function Row({ it, personas }: { it: Item; personas: Record<string, string> }) {
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-ink/65">Что увидите</p>
         <p className="mt-1 text-sm leading-snug text-brand-ink/85">{it.see}</p>
-        <p className="mt-2 text-xs leading-snug text-brand-ink/65"><b className="font-semibold text-brand-ink/80">Ограничение:</b> {it.limit}</p>
+        <p className="mt-2 text-xs leading-snug text-brand-ink/65"><b className="font-semibold text-brand-ink/80">Ограничение:</b> {cleanLimit(it.limit)}</p>
       </div>
       <div className="min-w-0" data-testid={`proof-${it.id}`}>
         <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-ink/65">Чем доказано</p>

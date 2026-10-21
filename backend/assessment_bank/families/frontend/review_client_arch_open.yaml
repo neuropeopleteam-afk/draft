@@ -1,24 +1,42 @@
 family_id: frontend.review.client_arch_open
 title: Ревью архитектуры клиентского приложения ведущим — состояние, безопасность токена, бандл, ошибки, дизайн-система
 direction: frontend
-skills: [design_review, state_management, web_performance, frontend_security, architecture]
-target_grades: [lead]
+skills:
+- design_review
+- state_management
+- web_performance
+- frontend_security
+- architecture
+target_grades:
+- lead
 format: open_answer
 language: text
 invariants:
   extra:
     planted_flaws: 3
     sound_items: 2
-    flaw_pool: [server_state_store, token_localstorage, single_bundle, no_error_boundary, ds_copy, no_virtualization, polling, i18n_concat]
+    flaw_pool:
+    - server_state_store
+    - token_localstorage
+    - single_bundle
+    - no_error_boundary
+    - ds_copy
+    - no_virtualization
+    - polling
+    - i18n_concat
 time_limit_s: 1500
 canary: false
 prior_difficulty:
   b: 1.8
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Априорная трудность (не по людям). Пять пунктов дизайн-документа: 3 изъяна из пула 8 и 2 здравых решения; полный балл — найти все три, обосновать числами условия (размер бандла, число пользователей и вкладок, строк), предложить проверяемую меру и не поднять ложную тревогу. Senior находит 1–2 очевидных изъяна, пропуская серверное состояние и копии дизайн-системы, — граница Senior/Lead (θ ≈ 2,0); σ 0,35"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Пять пунктов дизайн-документа: 3 изъяна из пула 8 и 2 здравых
+    решения; полный балл — найти все три, обосновать числами условия (размер бандла, число пользователей и вкладок,
+    строк), предложить проверяемую меру и не поднять ложную тревогу. Senior находит 1–2 очевидных изъяна, пропуская
+    серверное состояние и копии дизайн-системы, — граница Senior/Lead (θ ≈ 2,0); σ 0,35'
 generator: assessment_bank.families.frontend.review_client_arch_open
 version: 1
-description: >
-  Lead: ревью дизайн-документа клиентской части; три заложенных изъяна и два здравых пункта. Рубрика по каждому
-  изъяну и по приоритетам без ложных тревог; оценка с цитатами-доказательствами.
+description: 'Lead: ревью дизайн-документа клиентской части; три заложенных изъяна и два здравых пункта. Рубрика
+  по каждому изъяну и по приоритетам без ложных тревог; оценка с цитатами-доказательствами.
+
+  '

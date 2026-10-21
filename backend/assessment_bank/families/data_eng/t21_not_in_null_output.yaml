@@ -1,0 +1,31 @@
+family_id: data_eng.etl.t21_not_in_null_output
+title: 'SQL — новые ключи для загрузки: NOT IN против NOT EXISTS при NULL (значения 1 / 0 / NULL)'
+direction: data_eng
+skills:
+- sql
+- incremental_load
+- null_semantics
+target_grades:
+- senior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Вычислить для каждой строки staging
+    значение условий NOT IN (подзапрос) и NOT EXISTS; ловушки — NULL в подзапросе превращает «нет совпадения» в UNKNOWN
+    (NULL), NULL-ключ даёт NULL в NOT IN и 1 в NOT EXISTS. Уровень Senior: трёхзначная логика в NOT IN с NULL. Набор t21
+    (21.10) у порога Senior (b = +1,1)'
+generator: assessment_bank.families.data_eng.t21_not_in_null_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Целевая и промежуточная таблицы с NULL-ключами в одной
+  или обеих таблицах и запрос, который двумя способами помечает новые строки; предсказать значения 1 / 0 / NULL. Ключ —
+  независимая трёхзначная логика в генераторе, проверка — исполнение запроса в sqlite.

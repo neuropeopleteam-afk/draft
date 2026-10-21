@@ -42,7 +42,23 @@ import re
 import tempfile
 import threading
 
-_SHM = "/dev/shm" if os.path.isdir("/dev/shm") and os.access("/dev/shm", os.W_OK) else None
+def _shm_dir():
+    """Каталог в памяти для временных файлов песочницы — только если он доступен на запись И разрешает запуск
+    файлов: в контейнерах /dev/shm часто смонтирован с noexec, и тогда проверки, которые запускают показанные
+    скрипты (`./http_get.sh`) или собранные бинарники, падают с «Permission denied» не из-за задания.
+    Иначе — обычный временный каталог системы (None для tempfile)."""
+    path = "/dev/shm"
+    if not (os.path.isdir(path) and os.access(path, os.W_OK)):
+        return None
+    try:
+        if os.statvfs(path).f_flag & getattr(os, "ST_NOEXEC", 8):
+            return None
+    except OSError:
+        return None
+    return path
+
+
+_SHM = _shm_dir()
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
@@ -354,7 +370,8 @@ def _run_batch(kind: str, sources: list[str], timeout: float) -> list[RunResult]
             runner = os.path.join(tmp, "runner.js")
             with open(runner, "w", encoding="utf-8") as fh:
                 fh.write(_NODE_RUNNER)
-            cmd = ["node", "--max-old-space-size=256", "--disallow-code-generation-from-strings",
+            # абсолютный путь: у программы PATH урезан (_base_env), а node бывает вне /usr/local/bin (под RunPod — /opt/node/bin)
+            cmd = [shutil.which("node") or "node", "--max-old-space-size=256", "--disallow-code-generation-from-strings",
                    runner, jobs_path]
             mem = None  # V8 резервирует большое адресное пространство; лимит — через heap
         out, err, code, timed_out = _exec(cmd, tmp, total, _base_env(tmp), mem)
@@ -390,7 +407,7 @@ def _run_shell(check: Check, timeout: float) -> RunResult:
                         "GIT_TERMINAL_PROMPT": "0", "GIT_ADVICE": "0"})
         with open(script, "w", encoding="utf-8") as fh:
             fh.write(body)
-        out, err, code, timed_out = _exec(["bash", "--noprofile", "--norc", script], tmp,
+        out, err, code, timed_out = _exec([shutil.which("bash") or "bash", "--noprofile", "--norc", script], tmp,
                                           timeout, env, 1024 * 1024 * 1024)
         if timed_out:
             return RunResult(out, "timeout")

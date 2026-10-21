@@ -175,7 +175,7 @@ def generate_variant(family_id: str, seed: int, bug: str):
                 f"({listen}; именованный порт `{p['pname']}`). port Service ({p['svc_port']}) — порт самого "
                 "Service, а не контейнера. Порт приложения менять нельзя: на него настроена readinessProbe.")
         dtype = "service_target_port_mismatch"
-    stem = (f"Манифест Kubernetes ({ctx}). {symptom} Укажите номер строки с ошибкой.")
+    stem = (f"Манифест Kubernetes ({ctx}). {symptom} Укажите номер строки, которую достаточно исправить одной правкой, чтобы ошибка ушла.")
     checks = [Check(name="buggy_fails", runner="python", program=program(MODEL, MANIFEST=buggy), expect="fail"),
               Check(name="fixed_passes", runner="python", program=program(MODEL, MANIFEST=fixed), expect="pass",
                     embeds_display_code=False)]

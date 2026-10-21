@@ -1,0 +1,37 @@
+family_id: analyst.sql.t21_group_having_output
+title: WHERE, GROUP BY и HAVING — сводка по группам после фильтра статуса
+direction: analyst
+skills:
+- sql
+- aggregation
+target_grades:
+- intern
+- junior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra:
+    rows:
+    - 10
+    - 12
+    having:
+    - count
+    - sum
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Отфильтровать 10–12 строк
+    по статусу, сгруппировать, посчитать COUNT(*) и SUM, отсечь группы по HAVING и отсортировать по сумме; ловушка —
+    HAVING видит только строки после WHERE (группа с достаточным числом строк «всего» отсекается). Уровень Junior: две
+    конструкции вместе — GROUP BY и HAVING после WHERE. Набор t21 (21.10) у порога Junior (b = −1,0)'
+generator: assessment_bank.families.analyst.t21_group_having_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Таблица заказов / поездок / заявок / покупок /
+  подписок и запрос WHERE status = … GROUP BY … HAVING … ORDER BY сумма DESC; предсказать строки сводки. Ключ —
+  независимый расчёт в генераторе, проверка — исполнение показанного запроса в песочнице sqlite.'

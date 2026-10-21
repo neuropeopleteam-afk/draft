@@ -922,7 +922,9 @@ function TwoStageOffer({ t, claimed, direction }: { t: any; claimed: string; dir
   return (
     <section className="card mt-4 border-brand/30 bg-[#F3F2FB] text-sm" data-testid="two-stage-offer" aria-label="Уточнение уровня у границы">
       <p className="font-semibold text-brand-night">{lab}{t.status === "offered" ? ": можно уточнить" : ""}</p>
-      {t.status === "done" && o ? (
+      {t.status === "done" && o && o.rule === "sprt" ? (
+        <p className="mt-1 text-brand-ink/80" data-testid="two-stage-sprt-line">{stage2Line(o)}</p>
+      ) : t.status === "done" && o ? (
         <p className="mt-1 text-brand-ink/80">Уточнение {o.passed ? "пройдено" : "не подтвердило уровень у границы"}: по двум сессиям — <b>{GRADE_TITLE_ALL[o.final_grade] ?? "без категории"}</b> (новых заданий: {o.new_items}).</p>
       ) : (
         <>
@@ -940,9 +942,27 @@ function TwoStageOffer({ t, claimed, direction }: { t: any; claimed: string; dir
   );
 }
 
+/** Итог второго этапа по правилу SPRT (исправление 21.10): категория — только при «подтверждён»; иначе уровень по
+ * ответам предлагается (не подтверждён) или показывается как предварительный (решения нет — устная защита). */
+function stage2Line(o: any): string {
+  const f = GRADE_TITLE_ALL[o.final_grade] ?? "без категории";
+  if (o.verdict === "confirmed") return `Второй этап: заявленный уровень подтверждён по ответам обеих сессий (новых заданий: ${o.new_items}).`;
+  if (o.verdict === "not_confirmed") return `Второй этап: заявленный уровень не подтверждён. По ответам — ${f}: этот уровень можно принять или пересдать тест позже, принудительного понижения нет.`;
+  return `Второй этап: решения пока нет. По ответам — ${f} (предварительно); категория не присваивается до короткой устной защиты.`;
+}
+
 function TwoStageOutcome({ t }: { t: any }) {
   const o = t.refine || {};
   const lab = t.label ? t.label.charAt(0).toUpperCase() + t.label.slice(1) : "";
+  if (o.rule === "sprt") {
+    return (
+      <div className="card mt-4 text-sm" data-testid="two-stage-outcome">
+        <p className="font-semibold text-brand-night">{lab} — второй этап: {o.verdict === "confirmed" ? "подтверждён" : o.verdict === "not_confirmed" ? "не подтверждён" : "нужна устная защита"}</p>
+        <p className="mt-1 text-brand-ink/80" data-testid="two-stage-sprt-line">{stage2Line(o)}</p>
+        <p className="mt-1 text-xs text-brand-ink/65">Решение принято по ответам обеих сессий одной проверкой; работодатель видит только итог: «подтверждён тестом» или «нужен доп. этап».</p>
+      </div>
+    );
+  }
   return (
     <div className="card mt-4 text-sm" data-testid="two-stage-outcome">
       <p className="font-semibold text-brand-night">{lab} — уточнение {t.status === "passed" ? "пройдено" : "не пройдено"}</p>
@@ -967,10 +987,12 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     try { setR(await api<any>(`/assessment/sessions/${sessionId}/accept-lower`, { method: "POST" })); await refresh(); }
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
+  const v = r.verdict ?? r.details?.verdict;
   const title = r.mode === "refine" && r.two_stage?.refine ? (r.two_stage.status === "passed" ? "Уточнение уровня пройдено" : "Уточнение не подтвердило уровень у границы")
     : r.accepted_lower ? `Принят уровень ${GRADE_TITLE_ALL[r.accepted_lower] ?? r.accepted_lower}`
     : r.confirmed && r.grade_preliminary ? `${GRADE_TITLE_ALL[r.grade_preliminary.grade] ?? r.grade_preliminary.grade} по тесту — предварительно`
     : r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
+    : v?.status === "needs_followup" ? "Нужен дополнительный этап у границы грейда"
     : r.category_provisional ? (r.mode === "confirm" ? "Дотестирование не подтвердило грейд" : "Грейд присвоен предварительно")
     : "Грейд не подтверждён";
   // Я26 + Я25: у Lead/Principal «предварительно» уточнение — «второй этап» в пометке (кнопка там же, без второго блока)
@@ -980,6 +1002,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
   return (
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
+      {/* финальный этап теста — разговор с Настей для каждого (решение владельца 21.10); нижняя панель защиты скрывается сама */}
+      <DefensePanel sessionId={sessionId} live="auto" final />
       <ExtPreliminaryNote x={r.grade_preliminary} stage={extStage} direction={r.direction} className="mt-4" />
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · оценка менее точная, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
@@ -994,6 +1018,42 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
       <ThetaScale theta={r.theta} se={r.se} grade={r.claimed_grade} confirmed={r.confirmed} className="mt-4" />
+      {v && (
+        <div
+          className={`card mt-4 border text-sm ${
+            v.status === "confirmed"
+              ? "border-emerald-300/70 bg-emerald-50/50"
+              : v.status === "needs_followup"
+              ? "border-amber-300/70 bg-amber-50/50"
+              : "border-brand-night/10 bg-white"
+          }`}
+          data-testid="sprt-verdict-card"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-bold text-brand-night">
+              Решение по заявленному уровню: <span data-testid="sprt-verdict-title">{v.title}</span>
+            </p>
+            <span className="chip tabular-nums">
+              {v.rule === "sprt"
+                ? `Учтено ответов: ${v.n_scored ?? r.answered} · практических заданий ${v.code_open_count ?? 0}`
+                : `Вероятность соответствия ${Math.round((v.p_claimed ?? r.p_claimed ?? 0) * 100)} % · практических заданий ${v.code_open_count ?? 0} из ${v.n_scored ?? r.answered}`}
+            </span>
+          </div>
+          <p className="mt-1.5 text-brand-ink/80">{v.explanation}</p>
+          {r.grade_by_answers?.product_grade && (
+            <p className="mt-1.5 text-brand-night" data-testid="grade-by-answers">
+              Уровень по ответам:{" "}
+              <b>{r.grade_by_answers.product_grade === "none" ? "ниже Стажёра" : (GRADE_TITLE_ALL[r.grade_by_answers.product_grade] ?? r.grade_by_answers.product_grade)}</b>
+              {r.grade_by_answers.preliminary ? " — предварительно, до доп. этапа" : ""}
+            </p>
+          )}
+          {v.incident_stage && (
+            <p className="mt-1.5 rounded-lg bg-white/80 px-3 py-1.5 text-xs font-medium text-brand-night" data-testid="incident-stage-summary">
+              {v.incident_stage.summary_ru}
+            </p>
+          )}
+        </div>
+      )}
       {/* Н1: сразу после письменной части — живой ИИ-интервьюер зовёт в устный разговор (метка достоверности) */}
       <DefensePanel sessionId={sessionId} live="auto" />
       {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}

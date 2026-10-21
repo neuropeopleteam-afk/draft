@@ -392,6 +392,26 @@
         "title": "AntiCheatInspectIn",
         "type": "object"
       },
+      "AppealIn": {
+        "properties": {
+          "item_id": {
+            "default": "",
+            "description": "Токен спорного задания сессии",
+            "maxLength": 64,
+            "title": "Item Id",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "description": "Причина апелляции кандидата по заданию",
+            "maxLength": 2000,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "title": "AppealIn",
+        "type": "object"
+      },
       "ApplicationOut": {
         "additionalProperties": true,
         "description": "Отклик кандидата на вакансию. Работодателю дополнительно приходят карточка кандидата и контакты (после ответа).",
@@ -4500,6 +4520,21 @@
         "title": "Body_upload_resume_api_me_resume_post",
         "type": "object"
       },
+      "BriefAnswerIn": {
+        "properties": {
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "BriefAnswerIn",
+        "type": "object"
+      },
       "CabinetCupOut": {
         "additionalProperties": true,
         "properties": {
@@ -6435,6 +6470,17 @@
         "title": "ChannelsOut",
         "type": "object"
       },
+      "CheatAttemptIn": {
+        "properties": {
+          "strategy": {
+            "default": "longest",
+            "title": "Strategy",
+            "type": "string"
+          }
+        },
+        "title": "CheatAttemptIn",
+        "type": "object"
+      },
       "ClosedSetNeedResultOut": {
         "additionalProperties": true,
         "properties": {
@@ -7529,6 +7575,16 @@
             ],
             "description": "Talantix: refresh-токен (если не в JSON)",
             "title": "Refresh Token"
+          },
+          "revoke": {
+            "default": false,
+            "title": "Revoke",
+            "type": "boolean"
+          },
+          "rotate": {
+            "default": false,
+            "title": "Rotate",
+            "type": "boolean"
           },
           "stage_id": {
             "anyOf": [
@@ -12274,6 +12330,21 @@
         "title": "ExpertReviewOut",
         "type": "object"
       },
+      "ExplainIn": {
+        "properties": {
+          "text": {
+            "maxLength": 6000,
+            "minLength": 20,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ExplainIn",
+        "type": "object"
+      },
       "FastForwardIn": {
         "properties": {
           "days": {
@@ -12629,10 +12700,16 @@
             "title": "Min Score"
           },
           "real_only": {
-            "default": false,
-            "description": "Исключить модельные и синтетические профили (profiles.is_synthetic)",
-            "title": "Real Only",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Исключить модельные и синтетические профили (для реальных учёток true по умолчанию)",
+            "title": "Real Only"
           },
           "relaxation": {
             "anyOf": [
@@ -15760,6 +15837,16 @@
             "title": "Enabled",
             "type": "boolean"
           },
+          "revoke": {
+            "default": false,
+            "title": "Revoke",
+            "type": "boolean"
+          },
+          "rotate": {
+            "default": false,
+            "title": "Rotate",
+            "type": "boolean"
+          },
           "status_id": {
             "anyOf": [
               {
@@ -16500,9 +16587,22 @@
             "type": "boolean"
           },
           "format": {
-            "description": "find_bug | predict_output | choose_fix | open_book_3step | mcq_concept | open_answer",
+            "description": "find_bug | predict_output | choose_fix | open_book_3step | incident_sim | mcq_concept | open_answer",
             "title": "Format",
             "type": "string"
+          },
+          "incident": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Данные интерактивного симулятора инцидента (для формата incident_sim)",
+            "title": "Incident"
           },
           "item_id": {
             "title": "Item Id",
@@ -21491,6 +21591,35 @@
         "title": "ProposedSlot",
         "type": "object"
       },
+      "ProtocolClaimDecideIn": {
+        "properties": {
+          "action": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "ProtocolClaimDecideIn",
+        "type": "object"
+      },
       "ProtocolConfirmIn": {
         "properties": {
           "consent_employers": {
@@ -23423,13 +23552,17 @@
           "huntflow": {
             "$ref": "#/components/schemas/HuntflowIn",
             "default": {
-              "enabled": false
+              "enabled": false,
+              "revoke": false,
+              "rotate": false
             }
           },
           "webhook": {
             "$ref": "#/components/schemas/WebhookIn",
             "default": {
-              "enabled": false
+              "enabled": false,
+              "revoke": false,
+              "rotate": false
             }
           }
         },
@@ -29734,6 +29867,16 @@
             "title": "Enabled",
             "type": "boolean"
           },
+          "revoke": {
+            "default": false,
+            "title": "Revoke",
+            "type": "boolean"
+          },
+          "rotate": {
+            "default": false,
+            "title": "Rotate",
+            "type": "boolean"
+          },
           "secret": {
             "anyOf": [
               {
@@ -33554,6 +33697,196 @@
           }
         ],
         "summary": "Ответ на задание",
+        "tags": [
+          "assessment"
+        ]
+      }
+    },
+    "/api/assessment/sessions/{session_id}/appeals": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "get_appeals_api_assessment_sessions__session_id__appeals_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Appeals Api Assessment Sessions  Session Id  Appeals Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "session_not_found",
+                    "message": "Сессия теста не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `session_not_found` — Сессия теста не найдена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Список апелляций по заданиям сессии теста",
+        "tags": [
+          "assessment"
+        ]
+      },
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "create_appeal_api_assessment_sessions__session_id__appeals_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AppealIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Appeal Api Assessment Sessions  Session Id  Appeals Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "session_not_found",
+                    "message": "Сессия теста не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия или задание не найдены. Коды `detail.code`: `session_not_found` — Сессия теста не найдена; `item_not_found` — Задание в этой сессии не найдено."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "appeals_unsupported",
+                    "message": "Движок сессии не поддерживает апелляции по заданиям"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Конфликт с текущим состоянием. Коды `detail.code`: `appeals_unsupported` — Движок сессии не поддерживает апелляции по заданиям."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invalid_appeal",
+                    "message": "Укажите токен задания и причину апелляции (от 3 символов)"
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `invalid_appeal` — Укажите токен задания и причину апелляции (от 3 символов)."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Оспорить задание теста: статус задания «на проверке», пересчёт вердикта без спорного задания",
         "tags": [
           "assessment"
         ]
@@ -45162,7 +45495,7 @@
                 }
               }
             },
-            "description": "Некорректный формат набора данных. Коды `detail.code`: `invalid_dataset`; `empty_dataset` — Передан пустой набор данных. Загрузите файл JSON или CSV либо используйте образец.; `invalid_json_root` — Корнем JSON должен быть объект с полями needs (или vacancies) и candidates.; `empty_csv` — В CSV-файле нет строк данных.; `invalid_json` — Ошибка разбора JSON: проверьте синтаксис файла (…).; `invalid_csv` — Не удалось прочитать CSV: …; `invalid_csv_row` — Строка …: укажите столбец kind (need / candidate / label) или плоские столбцы need_id и candidate_id.; `no_needs` — В наборе должна быть хотя бы одна вакансия (поле needs или vacancies).; ещё 6."
+            "description": "Некорректный формат набора данных. Коды `detail.code`: `invalid_dataset`; `empty_dataset` — Передан пустой набор данных. Загрузите файл JSON или CSV либо используйте образец.; `invalid_json_root`; `empty_csv` — В CSV-файле нет строк данных.; `invalid_json` — Ошибка разбора JSON: проверьте синтаксис файла (…).; `invalid_csv` — Не удалось прочитать CSV: …; `invalid_csv_row` — Строка …: укажите столбец kind (need / candidate / label) или плоские столбцы need_id и candidate_id. Образец: /api/employer/benchmark/sample?format=csv.; `no_needs`; ещё 6."
           }
         },
         "security": [
@@ -45301,15 +45634,21 @@
             }
           },
           {
-            "description": "Исключить модельные и синтетические профили (profiles.is_synthetic)",
+            "description": "Исключить модельные и синтетические профили (для реальных учёток true по умолчанию)",
             "in": "query",
             "name": "real_only",
             "required": false,
             "schema": {
-              "default": false,
-              "description": "Исключить модельные и синтетические профили (profiles.is_synthetic)",
-              "title": "Real Only",
-              "type": "boolean"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Исключить модельные и синтетические профили (для реальных учёток true по умолчанию)",
+              "title": "Real Only"
             }
           },
           {
@@ -46357,6 +46696,26 @@
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "categories_api_employer_categories_get",
+        "parameters": [
+          {
+            "description": "Исключить модельные и синтетические профили",
+            "in": "query",
+            "name": "real_only",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Исключить модельные и синтетические профили",
+              "title": "Real Only"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -46420,6 +46779,16 @@
               }
             },
             "description": "company_required — сначала заполните профиль компании"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
           }
         },
         "security": [
@@ -58118,6 +58487,151 @@
         ]
       }
     },
+    "/api/fsp-cabinet/protocol-claims": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "list_protocol_claims_api_fsp_cabinet_protocol_claims_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "pending_fsp",
+                "verified"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Protocol Claims Api Fsp Cabinet Protocol Claims Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Очередь заявок кандидатов на подтверждение достижений по официальным протоколам ФСП",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
+    "/api/fsp-cabinet/protocol-claims/{achievement_id}/decide": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "decide_protocol_claim_api_fsp_cabinet_protocol_claims__achievement_id__decide_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "achievement_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Achievement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtocolClaimDecideIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Decide Protocol Claim Api Fsp Cabinet Protocol Claims  Achievement Id  Decide Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "claim_not_found",
+                    "message": "Заявка на подтверждение протокола не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Заявка не найдена. Коды `detail.code`: `claim_not_found` — Заявка на подтверждение протокола не найдена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Подтвердить или отклонить заявку кандидата по официальному протоколу ФСП",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
     "/api/fsp-cabinet/regions": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
@@ -59380,6 +59894,255 @@
         ]
       }
     },
+    "/api/interview/concierge/brief": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "concierge_brief_start_api_interview_concierge_brief_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Concierge Brief Start Api Interview Concierge Brief Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "rate_limited",
+                    "message": "Слишком много запросов — подождите минуту"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `rate_limited` — Слишком много запросов — подождите минуту."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Бриф работодателя голосом с Настей: начать",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/brief/{sid}/answer": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "concierge_brief_answer_api_interview_concierge_brief__sid__answer_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BriefAnswerIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Concierge Brief Answer Api Interview Concierge Brief  Sid  Answer Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "not_found",
+                    "message": "Бриф не найден — начните заново"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено. Коды `detail.code`: `not_found` — Бриф не найден — начните заново."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "rate_limited",
+                    "message": "Лимит ответов на сегодня исчерпан"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `rate_limited` — Лимит ответов на сегодня исчерпан."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Бриф голосом: ответ работодателя → следующий вопрос или текст вакансии",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/brief/{sid}/speech": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "concierge_brief_speech_api_interview_concierge_brief__sid__speech_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "not_found",
+                    "message": "Бриф не найден — начните заново"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено. Коды `detail.code`: `not_found` — Бриф не найден — начните заново."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tts_budget",
+                    "message": "Голос на сегодня исчерпан — продолжите текстом"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `tts_budget` — Голос на сегодня исчерпан — продолжите текстом."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tts_unavailable",
+                    "message": "Функция или внешний сервис недоступны"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `tts_unavailable`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Бриф голосом: голос текущего вопроса Насти (PCM 24 кГц потоком)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
     "/api/interview/concierge/budget": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — администратор.",
@@ -59487,6 +60250,73 @@
           }
         },
         "summary": "Событие разговора с Настей для стенограммы: открытие, реплика обзора, шаг, закрытие",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/explain-result": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "concierge_explain_result_api_interview_concierge_explain_result_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExplainIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "rate_limited",
+                    "message": "Слишком много запросов — подождите минуту"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `rate_limited` — Слишком много запросов — подождите минуту."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Настя голосом объясняет итог теста по тексту экрана результата (NDJSON)",
         "tags": [
           "interview"
         ]
@@ -70904,6 +71734,93 @@
         ]
       }
     },
+    "/api/validation/cheat-challenge": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "get_cheat_challenge_api_validation_cheat_challenge_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "«Обмани тест»: отчётный прогон ботов через движок и последние живые попытки",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
+    "/api/validation/cheat-challenge/attempt": {
+      "post": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "post_cheat_attempt_api_validation_cheat_challenge_attempt_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/CheatAttemptIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Некорректный запрос."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов."
+          }
+        },
+        "summary": "Живая попытка бота: настоящий тест через движок (реальные варианты и проверка)",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
     "/api/validation/closed-set/evaluate": {
       "post": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель, администратор.",
@@ -71363,6 +72280,26 @@
           }
         },
         "summary": "Доказательная оценка: флаг выкл/вкл на одних ответах набора оценщика",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
+    "/api/validation/expert-surrogate": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "get_expert_surrogate_api_validation_expert_surrogate_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Снято 21.10 (числа без источника) — разметка E1–E3 была модельной",
         "tags": [
           "validation"
         ]
@@ -72407,6 +73344,26 @@
         ]
       }
     },
+    "/api/validation/leak-k-variants": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "get_leak_k_variants_api_validation_leak_k_variants_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Снято 21.10 (формула, а не прогон) — см. NUMBERS.json → cheat_bots",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
     "/api/validation/llm-models": {
       "get": {
         "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
@@ -73345,6 +74302,26 @@
           }
         ],
         "summary": "«Проверьте сами»: синтетический кандидат проходит N тестов на настоящем движке банка (вход обязателен)",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
+    "/api/validation/sprt-verdict": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "get_sprt_verdict_api_validation_sprt_verdict_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Снято 21.10 (не на продукте) — см. NUMBERS.json → grade_verdict",
         "tags": [
           "validation"
         ]

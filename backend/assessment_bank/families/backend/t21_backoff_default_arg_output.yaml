@@ -1,0 +1,29 @@
+family_id: backend.http.t21_backoff_default_arg_output
+title: Задержка перед повтором — функция с параметром по умолчанию
+direction: backend
+skills:
+- python
+- retries
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 5
+  - 5
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.85
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Простая функция с
+    параметром по умолчанию и три вызова: без второго аргумента, с позиционным и с именованным; степень раньше
+    умножения и 2 ** 0 = 1. Уровень Стажёра: простая функция и арифметика. Набор t21 (21.10) у порога Стажёра (b = −1,85)'
+generator: assessment_bank.families.backend.t21_backoff_default_arg_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Функция задержки перед повтором запроса с базой по
+  умолчанию и три вызова; предсказать три строки вывода. Ключ — независимый расчёт в генераторе, проверка —
+  исполнение показанного кода в песочнице Python.'

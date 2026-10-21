@@ -1,0 +1,31 @@
+family_id: devops.bash.t21_pipe_subshell_counter_output
+title: 'bash — счётчик в cmd | while read: подоболочка конвейера и цикл с перенаправлением'
+direction: devops
+skills:
+- bash
+- shell
+- logging
+target_grades:
+- senior
+format: predict_output
+language: bash
+invariants:
+  code_lines:
+  - 13
+  - 13
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Два цикла while read
+    по одному журналу: из конвейера (подоболочка — echo внутри печатает растущий счётчик, после цикла переменная
+    0) и с перенаправлением или подстановкой процесса (счётчик сохраняется). Уровень Senior: глубокая семантика
+    выполнения — какие части конвейера идут в подоболочке. Набор t21 (21.10) у порога Senior (b = +0,9)'
+generator: assessment_bank.families.devops.t21_pipe_subshell_counter_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Скрипт считает медленные и ошибочные запросы в
+  журнале двумя циклами while read; предсказать вывод. Ключ — независимая модель в генераторе, проверка — исполнение
+  показанного скрипта в bash-песочнице с тем же журналом.
