@@ -333,7 +333,15 @@ html[data-theme="light"] .np .np-card { background: linear-gradient(180deg, #FFF
 }
 html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg, #2415BA 0%, #402FFF 55%, #6557FF 100%); }
 .np-hero-shimmer {
-  color: var(--np-text);
+  background: linear-gradient(100deg, #FFFFFF 0%, #D8D2FF 22%, #8B7EFF 45%, #7CE8FF 68%, #FF7A92 86%, #FFFFFF 100%);
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: npTextIridescence 5.2s ease-in-out infinite;
+}
+html[data-theme="light"] .np .np-hero-shimmer {
+  background-image: linear-gradient(100deg, #101432 0%, #402FFF 35%, #685AFF 65%, #D41430 88%, #101432 100%);
 }
 .np-chip { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.25rem 0.7rem;
   font-size: 0.75rem; font-weight: 600; color: #DCE2FF; border: 1px solid var(--np-line-2); background: var(--np-surface); white-space: nowrap; }
