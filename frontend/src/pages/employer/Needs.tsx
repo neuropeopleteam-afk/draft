@@ -607,8 +607,13 @@ export function Selection() {
                 <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Балл — доля требований, подтверждённых тестом; порядок подборки не меняется. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
               </div>}
               {invited && <Alert kind="ok">{invited}</Alert>}
-              {!ordered.length ? <Empty title="Подходящих кандидатов нет"
-                text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» ниже — там видно, какое условие отсекает больше всего, — или ослабьте фильтры и выберите соседнюю категорию. Прежние версии сохранены.`} /> : (
+              {!ordered.length ? (
+                <Empty
+                  title="Подходящих кандидатов пока нет — пришлём уведомление, когда появятся"
+                  text="Ни один подтверждённый кандидат пока не прошёл условия этой версии. Подпишитесь на появление новых кандидатов по потребности или посмотрите рекомендации в блоке «Что если» ниже."
+                  action={<Link to="/employer/subscriptions" className="btn-primary">Уведомить о новых кандидатах</Link>}
+                />
+              ) : (
                 <div className={side ? "grid items-start gap-4 grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]" : ""}>
                   <div className="min-w-0 space-y-3">
                     {visible.map((r: any, i: number) => {

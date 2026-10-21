@@ -18,9 +18,9 @@ export function AuthShell({ title, subtitle, lead, children, footer }: { title: 
         <div className="w-full max-w-md">
           <Link to="/" className="mb-10 inline-block lg:hidden"><Logo /></Link>
           <h1 className="text-2xl font-extrabold tracking-tight text-brand-night">{title}</h1>
-          {/* UX-2: «Уже есть аккаунт? Войти» / «Нет аккаунта? Зарегистрироваться» — сразу под заголовком */}
+          {subtitle && <p className="mt-2 text-sm leading-relaxed text-brand-ink/75" data-testid="auth-subtitle">{subtitle}</p>}
+          {/* UX-2: «Уже есть аккаунт? Войти» / «Нет аккаунта? Зарегистрироваться» */}
           {lead && <p className="mt-2 text-sm text-brand-ink/70" data-testid="auth-lead">{lead}</p>}
-          {subtitle && <p className="mt-2 text-sm text-brand-ink/65">{subtitle}</p>}
           <div className="mt-8">{children}</div>
           {footer && <div className="mt-8 text-sm text-brand-ink/70">{footer}</div>}
         </div>

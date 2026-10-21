@@ -146,7 +146,13 @@ export function Search() {
             </div>
             <LevelLegend />
           </div>
-          {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !items.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры или отключите фильтр «Только реальные кандидаты»." /> :
+          {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !items.length ? (
+            <Empty
+              title="Подходящих кандидатов пока нет — пришлём уведомление, когда появятся"
+              text="Оформите подписку на нужную категорию или создайте потребность, чтобы получить уведомление сразу после появления новых подтверждённых специалистов."
+              action={<Link to="/employer/subscriptions" className="btn-primary">Настроить уведомления</Link>}
+            />
+          ) :
             <>
               {items.map((c: any) => <SearchCard key={c.ref} c={c} stack={stack} tags={tags} market={cats.data?.find((k) => k.id === c.category?.id)?.market_range}
                 actions={<Link className="btn-ghost !py-2" to={`/employer/candidates/${c.ref}?direction=${c.direction}`}>Открыть</Link>} />)}

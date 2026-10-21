@@ -278,7 +278,7 @@ def invite_entry(db: Session, user: User, company: Company, cup: Cup, e: CupEntr
     return inv
 
 
-def cabinet_list(db: Session, scope_key: str | None) -> list[dict]:
+def cabinet_list(db: Session, scope_key: str | None, include_demo: bool = True) -> list[dict]:
     """Кабинет ФСП: турниры «Компания × ФСП» — платформы и своей песочницы жюри (агрегаты, без ПДн)."""
     from app.fsp_cabinet.analytics import kc
 
@@ -287,6 +287,8 @@ def cabinet_list(db: Session, scope_key: str | None) -> list[dict]:
     for cup in rows:
         t = of(cup)
         if t is None or (cup.jury_scope is not None and cup.jury_scope != scope_key):
+            continue
+        if not include_demo and cup.is_demo:
             continue
         es = svc.entries(db, cup.id)
         scored = [e for e in es if e.status == "scored"]
