@@ -40,7 +40,8 @@ from app.modules.hh.directions import GRADE_WORDS, HH_DIRECTIONS, NEW_DIRECTIONS
 
 # сырьё корпуса (тексты вакансий) — только вне репозитория: HH_CORPUS_DIR, по умолчанию ../data_local/hh_corpus
 CACHE = Path(os.environ.get("HH_CORPUS_DIR") or ROOT.parent / "data_local/hh_corpus")
-CORPUS = ROOT / "docs/realdata/hh_match_corpus.json"
+# HH_MATCH_CORPUS — другой корпус (отложенный набор tools/realdata/hh_holdout.py); по умолчанию — набор разработки (414)
+CORPUS = Path(os.environ["HH_MATCH_CORPUS"]) if os.environ.get("HH_MATCH_CORPUS") else ROOT / "docs/realdata/hh_match_corpus.json"
 DATA = ROOT / "backend/app/modules/hh/data"
 # HH_MATCH_OUT — каталог для абляций (json и md туда, файлы репозитория не трогаются)
 _ABL = os.environ.get("HH_MATCH_OUT")
