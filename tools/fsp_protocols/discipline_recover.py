@@ -101,11 +101,12 @@ def cmd_merge(out: Path, rows_path: Path) -> None:
         per = []
         for m in MODELS:
             d = json.loads((out / f"p{p:02d}_{m.replace('/', '_')}.json").read_text(encoding="utf-8"))
-            per.append({(r.get("birth_date") or "").strip(): r for r in d.get("rows", [])})
-        for bd in sorted(set(per[0]) | set(per[1])):
-            a, b = per[0].get(bd), per[1].get(bd)
+            per.append({int(r["n"]): r for r in d.get("rows", []) if str(r.get("n", "")).isdigit()})
+        for n in sorted(set(per[0]) | set(per[1])):  # ключ — № п/п (даты рождения на странице могут совпадать)
+            a, b = per[0].get(n), per[1].get(n)
             da, db = canon(a and a.get("discipline")), canon(b and b.get("discipline"))
-            agree = bool(a and b and da and da == db)
+            bd = ((a or b).get("birth_date") or "").strip()
+            agree = bool(a and b and da and da == db and bd == (b.get("birth_date") or "").strip())
             stat["agree" if agree else "disagree"] += 1
             src = a or b
             rows.append({"page": p, "n": src.get("n"), "surname": src.get("surname"), "birth_date": bd,
