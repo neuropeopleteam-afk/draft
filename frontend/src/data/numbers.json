@@ -1,7 +1,7 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T16:47:11Z",
-  "git_commit": "4c108bb997",
+  "generated_at": "2026-10-21T16:59:58Z",
+  "git_commit": "unknown",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
     "code_and_open_families": 416,
@@ -12461,9 +12461,9 @@
       },
       "place_unverified": 4,
       "what": "Официальные протоколы ФСП России 2025–2026 (fsp-russia.ru/about/documents): результаты, привязанные к соревнованиям; судьи, тренеры и строки справок исключены; норматив ЕВСК — по месту, числу субъектов РФ и составу судейской коллегии.",
-      "generated_at": "2026-10-21T11:39:47+00:00",
-      "index": "index_v6.json",
-      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "generated_at": "2026-10-21T14:26:19+00:00",
+      "index": "index_v7.json",
+      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/build_index_v2.py, backend/app/modules/fsp/evsk.py, backend/app/modules/fsp/protocol_stats.py"
     },
     "ocr_audit": {
@@ -12582,7 +12582,7 @@
       },
       "results_needing_second_result": 84
     },
-    "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+    "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
     "code_ref": "tools/fsp_protocols/"
   },
   "mutation_testing": {
@@ -12916,7 +12916,7 @@
       "accent": "документов",
       "subtext": "2 908 результатов · 2 232 спортсменов · 69 регионов · норматив разряда по ЕВСК подтверждён протоколом у 130 · проверка распознавания: ошибок в ФИО — 1 из 155, в местах — 0 из 149, в датах рождения — 0 из 133 — кандидат находит своё достижение в официальном протоколе, подтверждение — через ФСП",
       "provenance": "индекс протоколов, 2026-10-21",
-      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/"
     },
     {
@@ -13595,7 +13595,7 @@
       "section": "Протоколы ФСП",
       "metric": "18 документов, 2 908 результатов",
       "sample": "официальные протоколы с сайта ФСП",
-      "command": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "command": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/",
       "artifact": "docs/realdata/fsp_protocols/index_stats.json"
     }
