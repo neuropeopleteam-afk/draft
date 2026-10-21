@@ -249,7 +249,7 @@ export default function Monetization() {
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="ООО «Технологии»"
+                placeholder="Компания «Технологии»"
               />
             </div>
             <div>

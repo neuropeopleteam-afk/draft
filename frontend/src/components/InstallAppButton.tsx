@@ -228,7 +228,7 @@ export function InstallAppButton({ variant = "header", premium = false }: { vari
     <>
       <button type="button" onClick={() => setOpen(true)} className={cls} data-testid={variant === "hero" ? "install-hero" : "install-header"} aria-haspopup="dialog" title="Мобильное приложение «Драфт» (iOS и Android)">
         <PhoneIcon className={variant === "hero" ? "h-5 w-5" : "h-4 w-4 text-[#A59DFF]"} />
-        {variant === "hero" ? <span>Мобильное приложение</span> : <><span className="hidden whitespace-nowrap lg:inline">Мобильное приложение</span><span className="sr-only lg:hidden">Мобильное приложение</span></>}
+        {variant === "hero" ? <span>Мобильное приложение</span> : <><span className="hidden whitespace-nowrap lg:inline">Приложение</span><span className="sr-only lg:hidden">Мобильное приложение</span></>}
       </button>
       {/* портал в body: у стеклянной шапки backdrop-filter, иначе fixed-окно привязывается к шапке */}
       {open && createPortal(<InstallDialog onClose={() => setOpen(false)} />, document.body)}

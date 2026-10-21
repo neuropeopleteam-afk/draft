@@ -19,7 +19,7 @@ export function Logo({ light = false }: { light?: boolean }) {
   return (
     <span className="inline-flex items-center gap-2.5" aria-label={`${name} — на главную`}>
       <LogoMark />
-      <span className={`min-w-[6rem] text-lg font-extrabold tracking-tight ${light ? "text-white" : "text-brand-night"}`}>{name}</span>
+      <span className={`min-w-[3.5rem] text-lg font-extrabold tracking-tight ${light ? "text-white" : "text-brand-night"}`}>{name || "Драфт"}</span>
     </span>
   );
 }
