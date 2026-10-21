@@ -30,82 +30,147 @@ async function scroll(p, px, ms) {
   while (Date.now() < end) { await p.mouse.wheel(0, step).catch(() => {}); await p.waitForTimeout(120); }
 }
 async function go(p, url) {
-  await p.goto(BASE + url, { waitUntil: 'networkidle', timeout: 90000 }).catch(() => {});
+  await p.goto(BASE + url, { waitUntil: 'load', timeout: 45000 }).catch((e) => console.log(`  ${url}: ${e.message.split('\n')[0]}`));
+  await p.waitForLoadState('networkidle', { timeout: 12000 }).catch(() => {});
   await p.waitForTimeout(800);
+  await hideGuide(p);
 }
 async function role(p, name) {
+  // кнопки входа в демо-роль на /demo: подпись «Кандидат», доступное имя «Войти как: Кандидат»
   await go(p, '/demo');
-  const anchor = p.locator('#jury-roles-anchor');
-  if (await anchor.count()) await anchor.scrollIntoViewIfNeeded().catch(() => {});
-  const btn = p.getByRole('button', { name, exact: true }).first();
-  await btn.click({ timeout: 20000 }).catch(() => {});
+  await cookies(p);
+  const btn = p.locator('#jury-roles-anchor button').filter({ hasText: new RegExp(`^\\s*${name.replace(/[()]/g, '\\$&')}\\s*$`) }).first();
+  await btn.scrollIntoViewIfNeeded().catch(() => {});
+  await btn.click({ timeout: 20000 }).catch((e) => console.log(`  роль «${name}»: ${e.message.split('\n')[0]}`));
   await p.waitForLoadState('networkidle', { timeout: 90000 }).catch(() => {});
   await p.waitForTimeout(1500);
 }
+async function hideGuide(p) {
+  // боковая панель «Проверка за 12 минут» закрывает половину кабинета — в ролике её прячем
+  const b = p.getByRole('button', { name: 'Скрыть проводник', exact: true }).first();
+  if (await b.count() && await b.isVisible().catch(() => false)) { await b.click({ timeout: 3000 }).catch(() => {}); await p.waitForTimeout(500); }
+}
+async function cookies(p) {
+  await p.getByRole('button', { name: 'Только необходимые' }).click({ timeout: 2500 }).catch(() => {});
+}
+async function click(p, text, { exact = false, wait = 1500 } = {}) {
+  const el = p.getByText(text, { exact }).first();
+  if (!(await el.count())) { console.log(`  нет на экране: «${text}»`); return false; }
+  await el.scrollIntoViewIfNeeded().catch(() => {});
+  await p.waitForTimeout(500);
+  await el.click({ timeout: 10000 }).catch((e) => console.log(`  «${text}»: ${e.message.split('\n')[0]}`));
+  await p.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => {});
+  await p.waitForTimeout(wait);
+  return true;
+}
+async function show(p, selectorOrText) {
+  const el = typeof selectorOrText === 'string' && /^[#.\[]/.test(selectorOrText) ? p.locator(selectorOrText).first() : p.getByText(selectorOrText).first();
+  if (await el.count()) { await el.scrollIntoViewIfNeeded().catch(() => {}); await p.waitForTimeout(400); }
+}
 
-// Действия сцен 1–10 (как в сценарии). Каждая сцена длится dur секунд: недостающее время — медленный скролл.
+// Сцены 1–10 (как в сценарии). prep — загрузка и вход в роль (в ролик не идёт), act — видимые действия:
+// в ролик идут dur секунд от начала act; если действий меньше, остаток — медленный скролл.
+// Только просмотр и черновики: приглашения не отправляются, потребности не сохраняются.
 const ACTIONS = {
-  1: async (p) => { await go(p, '/'); },
-  2: async (p) => { await scroll(p, 900, 1500); },
-  3: async (p) => { await role(p, 'Кандидат'); await go(p, '/candidate/assessment'); },
-  4: async (p) => { await go(p, '/candidate/category'); },
-  5: async (p) => { await role(p, 'Работодатель'); await go(p, '/employer/needs'); },
-  6: async (p) => { await go(p, '/employer/search'); },
-  7: async (p) => { await role(p, 'Кандидат'); await go(p, '/candidate/fsp'); },
-  8: async (p) => { await go(p, '/validation'); },
-  9: async (p) => { await go(p, '/api/docs'); },
-  10: async (p) => { await go(p, '/demo'); },
+  1: { prep: async (p) => { await go(p, '/'); await cookies(p); } },
+  2: { act: async (p) => { await show(p, 'Как это работает'); } },
+  3: {
+    prep: async (p) => { await role(p, 'Кандидат'); await go(p, '/candidate/assessment'); },
+    act: async (p) => {
+      await p.waitForTimeout(2500);
+      const ok = p.locator('main label').filter({ hasText: 'даю согласие' }).first();
+      if (await ok.count()) { await ok.scrollIntoViewIfNeeded().catch(() => {}); await ok.click({ timeout: 5000 }).catch(() => {}); await p.waitForTimeout(800); }
+      await click(p, 'Начать тест', { exact: true, wait: 3000 });
+      // экран согласия на наблюдение: для ролика — без камеры
+      await click(p, 'Пройти без камеры', { exact: true, wait: 3500 });
+      await hideGuide(p);
+      await scroll(p, 500, 4000);
+    },
+  },
+  4: { prep: async (p) => { await go(p, '/candidate/category'); }, act: async (p) => { await p.waitForTimeout(3000); await show(p, 'Паспорт грейда'); } },
+  5: {
+    prep: async (p) => { await role(p, 'Работодатель'); await go(p, '/employer/needs'); },
+    act: async (p) => {
+      await p.waitForTimeout(1500);
+      const ta = p.locator('main textarea').first();
+      if (await ta.count()) {
+        await ta.scrollIntoViewIfNeeded().catch(() => {});
+        await ta.click().catch(() => {});
+        await ta.pressSequentially('Нужен бэкенд-разработчик на Python для платёжного сервиса: FastAPI, PostgreSQL, Kafka. Уровень — middle, удалённо.', { delay: 28 }).catch(() => {});
+        await p.waitForTimeout(800);
+      } else console.log('  нет поля текста потребности');
+      await click(p, 'Разобрать требования', { exact: true, wait: 6000 });
+    },
+  },
+  6: {
+    prep: async (p) => {
+      await go(p, '/employer/needs');
+      const links = await p.$$eval('main a[href^="/employer/needs/"]', (e) => e.map((x) => [x.getAttribute('href'), x.innerText])).catch(() => []);
+      const href = (links.find((l) => /платёж/i.test(l[1])) || links[0] || [])[0];
+      if (href) await go(p, href);
+    },
+    act: async (p) => {
+      await show(p, 'Кого пригласить первым');
+      await p.waitForTimeout(2500);
+      await click(p, 'Подробнее: тест, ФСП, все причины', { exact: true, wait: 4000 });
+      // форма приглашения: вилка обязательна; не отправляем
+      await click(p, 'Пригласить', { exact: true, wait: 4000 });
+    },
+  },
+  7: {
+    // паспорт ФСП кандидата: связь с ФСП ID, строки официальных протоколов, статус проверки
+    prep: async (p) => { await role(p, 'Кандидат'); await go(p, '/candidate/fsp'); },
+    act: async (p) => { await p.waitForTimeout(3000); },
+  },
+  8: { prep: async (p) => { await go(p, '/validation'); } },
+  9: {
+    prep: async (p) => {
+      await go(p, '/api/docs');
+      const ok = await p.locator('.opblock').first().waitFor({ timeout: 20000 }).then(() => true).catch(() => false);
+      // запасной кадр: карта разделов ТЗ с интеграциями (если описание API не успело загрузиться)
+      if (!ok) { console.log('  /api/docs не загрузилось — показываем /criteria'); await go(p, '/criteria'); await show(p, 'Интеграц'); }
+    },
+  },
+  10: { prep: async (p) => { await go(p, '/'); }, act: async (p) => { await p.waitForTimeout(2000); await click(p, 'Демо для жюри', { exact: true, wait: 2500 }); } },
 };
 
-// Запись: кадры экрана через CDP (Page.startScreencast) с метками времени → склейка ffmpeg.
-const FR = path.join(OUT, 'frames');
-fs.rmSync(FR, { recursive: true, force: true });
-fs.mkdirSync(FR, { recursive: true });
+// Запись: встроенная запись видео браузера (кадры с метками времени страницы, без задержек приёма) → нарезка ffmpeg.
+const RAW = path.join(OUT, 'raw');
+fs.rmSync(RAW, { recursive: true, force: true });
 const b = await chromium.launch({ args: ['--no-sandbox'], executablePath: process.env.CHROME || undefined });
-const ctx = await b.newContext({ viewport: { width: W, height: H }, ignoreHTTPSErrors: true, locale: 'ru-RU' });
+const ctx = await b.newContext({ viewport: { width: W, height: H }, ignoreHTTPSErrors: true, locale: 'ru-RU',
+  recordVideo: { dir: RAW, size: { width: W, height: H } } });
 const p = await ctx.newPage();
+const t0 = Date.now() / 1000; // начало записи ≈ создание страницы
 await p.goto(ENTRY, { waitUntil: 'networkidle', timeout: 90000 }).catch(() => {});
-const cdp = await ctx.newCDPSession(p);
-const frames = []; // {t, file}
-cdp.on('Page.screencastFrame', async (f) => {
-  const file = path.join(FR, `f${String(frames.length).padStart(6, '0')}.jpg`);
-  fs.writeFileSync(file, Buffer.from(f.data, 'base64'));
-  frames.push({ t: Date.now() / 1000, file });
-  await cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => {});
-});
-await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 82, maxWidth: W, maxHeight: H, everyNthFrame: 1 });
 const marks = [];
+await cookies(p);
 for (const s of scenes) {
+  const a = ACTIONS[s.n] || {};
+  const tp = Date.now() / 1000;
+  if (a.prep) await a.prep(p);
+  await hideGuide(p);
+  console.log(`  сцена ${s.n}: подготовка ${(Date.now() / 1000 - tp).toFixed(1)} с, адрес ${new URL(p.url()).pathname}`);
   const start = Date.now() / 1000;
-  await (ACTIONS[s.n] || (async () => {}))(p);
-  // после действия сцена держится ещё dur секунд (в ролик идут последние dur секунд — без ожидания загрузки)
-  await scroll(p, s.n === 1 ? 300 : 900, s.dur * 1000);
-  marks.push({ ...s, start, end: Date.now() / 1000 });
-  console.log(`  сцена ${s.n}: ${(marks.at(-1).end - start).toFixed(1)} с записи, в ролик — ${s.dur} с`);
+  if (a.act) await a.act(p);
+  const left = s.dur - (Date.now() / 1000 - start);
+  if (left > 0) await scroll(p, s.n === 1 ? 300 : 900, left * 1000);
+  // в ролик — первые dur секунд от начала видимых действий
+  marks.push({ ...s, a: start - t0, b: start - t0 + s.dur });
+  console.log(`  сцена ${s.n}: действия ${(Date.now() / 1000 - start).toFixed(1)} с, в ролик — ${s.dur} с`);
 }
-await cdp.send('Page.stopScreencast').catch(() => {});
+const raw = await p.video().path();
 await ctx.close();
 await b.close();
 
-// Склейка: для каждой сцены — кадры последних dur секунд; длительность кадра — до следующего кадра.
-const lines = ['ffconcat version 1.0'];
-let tl = 0;
+// Нарезка: сцены подряд, титр сцены — на её отрезке.
 const caps = [];
-for (const m of marks) {
-  const from = m.end - m.dur;
-  let fs_ = frames.filter((f) => f.t >= from && f.t <= m.end);
-  const before = frames.filter((f) => f.t < from).at(-1);
-  if (before) fs_ = [{ ...before, t: from }, ...fs_];
-  if (!fs_.length) continue;
-  fs_.forEach((f, i) => {
-    const next = i + 1 < fs_.length ? fs_[i + 1].t : m.end;
-    lines.push(`file '${f.file}'`, `duration ${Math.max(0.04, next - f.t).toFixed(3)}`);
-  });
+let tl = 0;
+const parts = marks.map((m, i) => {
   caps.push({ title: m.title, a: tl, b: tl + m.dur });
   tl += m.dur;
-}
-lines.push(`file '${frames.at(-1).file}'`);
-fs.writeFileSync(path.join(OUT, 'frames.ffconcat'), lines.join('\n'));
+  return `[0:v]trim=start=${m.a.toFixed(3)}:end=${m.b.toFixed(3)},setpts=PTS-STARTPTS[v${i}]`;
+});
 fs.writeFileSync(path.join(OUT, 'scenes.json'), JSON.stringify(caps, null, 1));
 const esc = (t) => t.replace(/\\/g, '\\\\').replace(/:/g, '\\:').replace(/'/g, '’').replace(/%/g, '\\%').replace(/,/g, '\\,');
 const font = process.env.CAPTION_FONT || '/usr/share/fonts/truetype/montserrat/Montserrat-SemiBold.ttf';
@@ -113,8 +178,9 @@ const fontArg = fs.existsSync(font) ? `fontfile='${font}':` : "font='Montserrat'
 const filters = caps.map((c) => `drawtext=${fontArg}text='${esc(c.title)}':x=48:y=h-96:fontsize=30:fontcolor=white:box=1:boxcolor=0x0A0B1F@0.78:boxborderw=18:enable='between(t,${c.a.toFixed(2)},${c.b.toFixed(2)})'`);
 filters.push(`drawtext=${fontArg}text='Черновик · без голоса · fsp-draft.ru':x=w-tw-36:y=28:fontsize=18:fontcolor=white@0.85:box=1:boxcolor=0x402FFF@0.6:boxborderw=8`);
 const out = path.join(OUT, 'draft_video.mp4');
-execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', path.join(OUT, 'frames.ffconcat'),
-  '-vf', `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,fps=25,` + filters.join(','),
-  '-t', String(tl), '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '24', '-pix_fmt', 'yuv420p', '-an', out], { stdio: 'inherit' });
-fs.rmSync(FR, { recursive: true, force: true });
+const graph = parts.join(';') + ';' + marks.map((_, i) => `[v${i}]`).join('') + `concat=n=${marks.length}:v=1:a=0[cat];`
+  + `[cat]fps=25,` + filters.join(',') + '[out]';
+execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', raw, '-filter_complex', graph, '-map', '[out]',
+  '-t', String(tl), '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-pix_fmt', 'yuv420p', '-an', out], { stdio: 'inherit' });
+fs.rmSync(RAW, { recursive: true, force: true });
 console.log('  записано', path.relative(process.cwd(), out), `(${tl} с)`);
