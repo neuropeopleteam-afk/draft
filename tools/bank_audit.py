@@ -50,8 +50,11 @@ SERIES_RX = re.compile(r"от\s+([\d\u00a0 ]+(?:[.,]\d+)?)\s*\S*\s+до\s+([\d\u
                        r"([\d\u00a0 ]+(?:[.,]\d+)?)")
 
 
+PREFIX_RX = re.compile(r"^\s*(?:≈|~|около|примерно|до)\s*")
+
+
 def _num(s: str) -> float | None:
-    m = NUM_RX.match(s or "")
+    m = NUM_RX.match(PREFIX_RX.sub("", s or ""))
     if not m:
         return None
     t = m.group(0).replace("\u00a0", "").replace("\u202f", "").replace(" ", "").replace("−", "-").replace(",", ".")
