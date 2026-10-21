@@ -31,6 +31,7 @@ ADJ2 = ROOT / "docs/realdata/hh_holdout2_adjudication.json"
 DEV = ROOT / "docs/realdata/hh_dev_parse.json"
 OUT = ROOT / "docs/realdata/numbers_matching.json"
 BENCH2 = ROOT / "docs/realdata/bench_holdout2.json"
+BENCH4 = ROOT / "docs/realdata/bench_holdout4.json"  # цикл №4 (код с мягким режимом ступенью ниже), новые отложенные миры
 BASES_RU = {"bm25": "поиск по резюме (BM25)", "words_grade": "«слова + грейд» по анкете",
             "tfidf_filter": "TF-IDF по резюме с фильтром по заявленным направлению и грейду", "random": "случайный порядок",
             "match_v13": "наш подбор до 21.10 (match-v1.3)"}
@@ -108,7 +109,7 @@ def _sigma(b2: dict, cond: str) -> str:
     return f"{(w.get('config') or {}).get('theta_sigma', float('nan')):.3f}".replace(".", ",")
 
 
-def v2_block(b2: dict) -> dict:
+def v2_block(b2: dict, script: str = "bench_holdout2.py") -> dict:
     cond_ru = {
         "sm": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, "
               f"9 направлений; тест у всех (погрешность {_sigma(b2, 'sm')} — средняя SE нашего теста), в 35 % резюме по 4 "
@@ -116,7 +117,7 @@ def v2_block(b2: dict) -> dict:
         "hard": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; "
                 "20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
     }
-    rec = "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py"
+    rec = f"python3 tools/realdata/{script} run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py"
     site = {
         "headline": {**v2_row(b2, "sm"), "condition": cond_ru["sm"], "recompute": rec},
         "headline_doz": {**v2_row(b2, "sm", method="match_v2_doz"),
@@ -245,6 +246,14 @@ def main() -> None:
             "recompute": m["recompute"],
         }
     b2 = _load(BENCH2)
+    b4 = _load(BENCH4)
+    if b4 and b4.get("freeze_files_ok") and b2 and b2.get("freeze_files_ok"):
+        # на сайт — прогон кода выкладки (цикл №4); №3 (FREEZE №3, миры 77021131…) — в истории
+        out["matching_v2_cycle3"] = {**v2_block(b2), "note": "история: FREEZE №3, код до мягкого режима ступенью ниже"}
+        b2 = None
+        v2 = v2_block(b4, "bench_holdout4.py")
+        out["matching_v2"] = v2
+        out["site"] = {**v2["site"], "hh_match": (out.get("hh_match") or {}).get("site")}
     if b2 and b2.get("freeze_files_ok"):
         v2 = v2_block(b2)
         out["matching_v2"] = v2

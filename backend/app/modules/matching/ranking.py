@@ -224,13 +224,32 @@ def unconfirmed_counts(db: Session, real_only: bool = False) -> dict[str, int]:
     return out
 
 
+def load_specializations(db: Session, profiles: list[CandidateProfile]) -> dict:
+    """Только специализации кандидатов — то же, что Bundle.specializations в facts.load_bundles (строки
+    CandidateSpecialization + устаревшая из профиля), без фактов, тестов и ФСП всего пула: для счётчиков категорий и
+    мест в рейтинге (поиск и подборка грузили весь видимый пул целиком только ради этих чисел)."""
+    from app.modules.profiles.specializations import legacy_specialization
+
+    out: dict = {p.user_id: {} for p in profiles}
+    if not out:
+        return out
+    for r in db.scalars(select(CandidateSpecialization).where(CandidateSpecialization.user_id.in_(list(out)))):
+        out[r.user_id][r.direction_id] = r
+    for p in profiles:
+        if p.current_direction_id not in out[p.user_id]:
+            r = legacy_specialization(p)
+            if r:
+                out[p.user_id][r.direction_id] = r
+    return out
+
+
 def pool_counts(db: Session, real_only: bool = False) -> tuple[dict[str, int], dict[str, int]]:
     """(category_counts, provisional_counts) за одну загрузку видимого пула. Экран категорий и расчёт подборки звали
     обе функции — пул (до 500 кандидатов с профилями) грузился дважды; под нагрузкой это CPU воркера (docs/LOAD.md)."""
     out: dict[str, int] = {}
     prov: dict[str, int] = {}
-    for b in load_bundles(db, [p.user_id for p in visible_pool(db, real_only=real_only)]).values():
-        for r in b.specializations.values():
+    for specs in load_specializations(db, visible_pool(db, real_only=real_only)).values():  # без фактов всего пула
+        for r in specs.values():
             if r.category_id and r.status in ("confirmed", "provisional"):
                 out[r.category_id] = out.get(r.category_id, 0) + 1
             if r.category_id and r.status == "provisional":
@@ -587,6 +606,14 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     above = grade_above.applies(recs, filters)
     above_id = above["above"]["id"] if above else None
     pool_ids = cat_ids + [above_id] if above else cat_ids
+    # match-v2, мягкий запасной режим: точного уровня меньше 10 — добавить подтверждённых ступенью ниже (после точного)
+    exact_rec = next((r for r in recs if r.get("relation") == "exact"), None)
+    bcat = grade_above.below_category(req) if ltr.enabled() and exact_rec else None
+    below_id = grade_above.below_applies(req, exact_rec["count"] if exact_rec else 0,
+                                         counts.get(bcat, 0) - prov.get(bcat, 0) if bcat else 0, filters) if bcat else None
+    below_uids: set = set()
+    if below_id:
+        below_uids = {p.user_id for p in visible_pool(db, category_ids=[below_id], real_only=real_only)}
     pool = visible_pool(db, category_ids=pool_ids, real_only=real_only)
     ids = [p.user_id for p in pool]
     if not filters.get("confirmed_only"):
@@ -595,6 +622,9 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         # добор ступенью выше их не касается; real_only — рыночный режим (без демо-профилей)
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids, real_only=real_only)]
     bundles = list(load_bundles(db, ids, direction=req.get("direction"), category_ids=pool_ids).values())
+    if below_uids:  # только подтверждённые ступенью ниже (предварительные — нет), каждый — в специализации ниже
+        extra = load_bundles(db, list(below_uids - set(ids)), direction=req.get("direction"), category_ids=[below_id])
+        bundles += [b for b in extra.values() if b.category_id == below_id and not b.provisional]
     stack_meta = None
     if ltr.enabled():
         # match-v2: условия (формат, город) и стек вакансии — фильтры; место — тест и ФСП (тот же код — в бенчмарке)
@@ -714,6 +744,16 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
         scored.append((s, b, comps, reasons))
     scored, sf = ltr.stack_filter(scored, req, filters, first_tier=lambda b: tier(b) == 0)
     steps = sf.get("steps") or {}
+    # мягкий запасной режим (grade_above.below_*): кандидаты ступенью ниже есть в пуле, только если их добавил сборщик
+    # пула при малом точном уровне (build_selection / bench2.pool_for); при выбранных работодателем категориях — нет
+    bcat = None if filters.get("categories") else grade_above.below_category(req)
+    below_ids = {id(x[1]) for x in scored if bcat and x[1].category_id == bcat}
+    if below_ids:
+        n_exact = sum(1 for x in scored if x[1].category_id == f"{req.get('direction')}.{req.get('grade')}")
+        for x in scored:
+            if id(x[1]) in below_ids:
+                x[3].append({"requirement": grade_above.BELOW_REASON_REQ, "level": "T1", "status": "partial",
+                             "text": grade_above.below_text(n_exact)})
     exact_on = bool(filters.get("grade_exact"))
     pex: dict[int, float] = {}
     if exact_on:  # «строго запрошенный грейд»: порядок по вероятности, что уровень именно запрошенный (по тесту)
@@ -725,7 +765,8 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
 
     def key(x):  # ярус статуса грейда → ступень фильтра стека → [«строго этот грейд»: P(уровень именно этот)] →
         b = x[1]  # [добор выше] → балл → рейтинг → ref
-        return (tier(b), steps.get(id(b), 0), -pex.get(id(b), 0.0), int(bool(above_id) and b.category_id == above_id),
+        return (tier(b), int(id(b) in below_ids), steps.get(id(b), 0), -pex.get(id(b), 0.0),
+                int(bool(above_id) and b.category_id == above_id),
                 -x[0], -(b.rating or 0), b.profile.public_ref or "")
 
     if above_id:
@@ -736,6 +777,8 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
         scored = sorted(scored, key=key)
     return scored, {"effective": effective, "before_conditions": before_conditions, "after_conditions": len(kept),
                     "stack_filter": ltr.public_meta(sf), "weights": W,
+                    "grade_below": {"applied": bool(below_ids), "category": bcat if below_ids else None,
+                                    "count": len(below_ids)},
                     "grade_exact": {"on": exact_on, "with_test": len(pex),
                                     "below_half": sum(1 for p in pex.values() if p < 0.5)}}
 
@@ -827,8 +870,8 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
     bundles.sort(key=lambda b: (tier(b), -(b.rating or 0), b.profile.public_ref or ""))
     # Место в категории — по рейтингу среди видимых
     by_cat: dict[str, list[float]] = {}
-    for b in load_bundles(db, [p.user_id for p in visible_pool(db, real_only=real_only)]).values():
-        for r in b.specializations.values():
+    for specs in load_specializations(db, visible_pool(db, real_only=real_only)).values():  # без фактов всего пула
+        for r in specs.values():
             if r.category_id:
                 by_cat.setdefault(r.category_id, []).append(r.rating_score or 0)
     items = []
