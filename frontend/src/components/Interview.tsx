@@ -45,7 +45,7 @@ interface DefenseState {
 }
 interface Stage { enabled: boolean; stub: boolean; minutes: number; can_invite: boolean; reason?: string | null; skills: string[]; skills_reason?: string | null; name_hint?: string | null; consent?: Consent | null; session?: IvSession | null }
 
-const MODEL_NOTE = "Оценка — модель, не люди; грейд по тесту не меняется. Решение — за работодателем.";
+const MODEL_NOTE = "Ответы оценивает модель; грейд по тесту не меняется, решение — за работодателем.";
 const STYLE: Record<string, string> = {
   confirmed: "bg-emerald-50 text-emerald-800 ring-emerald-200", strong: "bg-emerald-50 text-emerald-800 ring-emerald-200",
   discrepancies: "bg-amber-50 text-amber-900 ring-amber-200", weak: "bg-amber-50 text-amber-900 ring-amber-200",
@@ -57,7 +57,8 @@ export const useInterviewOn = () => !!useMeta()?.interview?.enabled;
 /** Д3: подпись разбора — проценты не больше 100 («Совпадение ключевых слов — 183 %» → 100 %), у примера — «(правило примера)». */
 export function fmtReason(t: string, example = false): string {
   let out = t.replace(/(\d+(?:[.,]\d+)?)\s*%/g, (_m, n: string) => `${Math.min(100, Math.round(Number(n.replace(",", "."))))} %`);
-  if (example) out = out.replace(/\(правило заглушки\)/g, "(правило примера)").replace(/правилом заглушки/g, "по фиксированному правилу примера");
+  if (example) out = out.replace(/\(правило заглушки\)/g, "(правило примера)").replace(/правилом заглушки/g, "по фиксированному правилу примера")
+    .replace(/Совпадение ключевых слов[^—]*—\s*0\s*%\s*\(правило примера\)/g, "Пример: оценка по фиксированному правилу, не моделью");
   return out;
 }
 /** Заголовок задания без хвостового «:», «;», «,» — чтобы не было «Задание: …: · подтверждено». */
@@ -67,11 +68,11 @@ export const fmtTaskTitle = (t: string) => t.replace(/[\s:;,—-]+$/u, "") || t;
 export function DefenseBadge({ d }: { d?: { verdict: Verdict; title: string; example?: boolean; stub?: boolean; quotes?: number | null } | null }) {
   if (!d) return null;
   const cls = d.verdict ? STYLE[d.verdict] ?? STYLE.insufficient : "bg-white text-brand-ink/70 ring-brand-night/15";
-  const tail = d.example ? " · пример, модельный кандидат" : d.stub ? " · демо" : "";
+  const tail = d.example ? " · модельный кандидат" : d.stub ? " · демо" : "";
   return (
     <span className={`inline-flex max-w-full items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ${cls}`}
       title={`Устная защита развёрнутых ответов теста. ${MODEL_NOTE}`} data-testid="defense-badge">
-      <span aria-hidden="true">{d.verdict === "confirmed" ? "✓" : d.verdict === "discrepancies" ? "!" : "·"}</span>
+      <span aria-hidden="true">{d.verdict === "confirmed" ? "✓" : "·"}</span>
       <span className="min-w-0 break-words">{d.title}{d.verdict && d.quotes ? ` · цитат: ${d.quotes}` : ""}{tail}</span>
     </span>
   );
@@ -155,7 +156,7 @@ export function minutesGen(n: number): string {
 export function liveGreeting(name: string | null | undefined): string {
   const n = (name ?? "").trim().split(/\s+/)[0];
   const validName = n && !["кандидат", "мария", "илья", "артём", "артем", "антон"].includes(n.toLowerCase()) ? n : "";
-  return `${validName ? `${validName}, п` : "П"}исьменная часть принята. Нажмите кнопку ниже, чтобы войти в комнату живого видео- и голосового диалога с ИИ-интервьюером (3 коротких вопроса по вашему решению).`;
+  return `${validName ? `${validName}, п` : "П"}исьменная часть принята. Я задам 3 коротких вопроса по вашему решению — отвечайте вслух или текстом.`;
 }
 
 /** Н1: живой вход в разговор в 1 клик (без синтезатора браузера на промежуточной странице и без обязательного ввода имени). */
@@ -166,12 +167,12 @@ function LiveDefenseHero({ st, name, busy, limited, onGo }: {
   return (
     <div className="overflow-hidden rounded-2xl bg-[radial-gradient(120%_140%_at_0%_0%,#5b1a8f_0%,#310F53_55%,#1C1D22_100%)] p-4 text-white sm:p-5" data-testid="live-defense">
       <div className="grid items-center gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
-        <InterviewerAvatar state="idle" level={() => 0} name="ИИ-интервьюер" size={148} tone="dark"
+        <InterviewerAvatar state="idle" level={() => 0} name="Настя" size={148} tone="dark"
           className="mx-auto sm:mx-0" />
         <div className="min-w-0 space-y-3">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#FFD6E4]">
             <span className="relative flex h-2.5 w-2.5" aria-hidden="true"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-60 motion-reduce:animate-none" /><span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand" /></span>
-            Комната живого диалога готова · без кнопок во время речи
+            Настя готова
           </p>
           <blockquote className="relative rounded-2xl rounded-tl-sm bg-white p-3.5 text-[15px] font-medium leading-relaxed text-brand-ink shadow-sm" data-testid="live-defense-greeting" aria-live="polite">
             {greeting}
@@ -180,11 +181,11 @@ function LiveDefenseHero({ st, name, busy, limited, onGo }: {
             <button type="button" className="inline-flex items-center gap-2 rounded-full bg-brand-strong px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-white disabled:opacity-60"
               disabled={busy || limited} onClick={onGo} data-testid="live-defense-go">
               <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
-              {busy ? "Открываем комнату…" : limited ? "Живой запуск уже был в этот час" : "Начать живой разговор с ИИ-аватаром"}
+              {busy ? "Подключаемся…" : limited ? "Живой запуск уже был в этот час" : "Начать разговор с Настей"}
             </button>
           </div>
           <p className="text-xs leading-snug text-white/70">
-            До {st.max_questions} вопросов, около {minutesGen(st.minutes)}. Аватар озвучивает вопрос своим голосом и сразу включает ваш микрофон — просто отвечайте вслух. Грейд не меняется — подтверждается самостоятельность решения.
+            До {st.max_questions} вопросов, около {minutesGen(st.minutes)}. Настя задаёт вопрос голосом и сразу включает ваш микрофон — просто отвечайте вслух. Грейд не меняется — подтверждается самостоятельность решения.
           </p>
         </div>
       </div>
@@ -243,8 +244,8 @@ function ExplainResult() {
   }
   return (
     <div className="space-y-1" data-testid="explain-result">
-      <button type="button" className="btn-ghost !py-1.5 text-sm" disabled={state === "busy" || state === "speaking"} onClick={() => void go()}>
-        {state === "busy" ? "Настя смотрит итог…" : state === "speaking" ? "Настя объясняет…" : state === "done" ? "Объяснить ещё раз" : "Настя объяснит итог голосом"}
+      <button type="button" className="text-sm font-semibold text-brand-plum underline underline-offset-2 hover:text-brand-night disabled:opacity-60" disabled={state === "busy" || state === "speaking"} onClick={() => void go()}>
+        {state === "busy" ? "Настя смотрит итог…" : state === "speaking" ? "Настя объясняет…" : state === "done" ? "Объяснить итог ещё раз" : "Объяснить итог голосом"}
       </button>
       {said && <p className="text-sm text-brand-ink/80" aria-live="polite">{said}</p>}
       {state === "error" && <p className="text-xs text-red-700">Не получилось — итог и разбор на экране; попробуйте ещё раз.</p>}
@@ -296,12 +297,11 @@ export function DefensePanel({ sessionId, live, final = false }: { sessionId: st
   return (
     <section id="defense" className="card mt-4 space-y-3 scroll-mt-24" aria-labelledby={`defense-h-${sessionId}`} data-testid="defense-panel">
       <div className="flex items-center gap-3">
-        <img src="/avatar/interviewer.webp" alt="ИИ-интервьюер" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover" data-testid="defense-avatar" />
+        <img src="/avatar/interviewer.webp" alt="Настя" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover" data-testid="defense-avatar" />
         <h2 id={`defense-h-${sessionId}`} className="font-bold text-brand-night">{final
           ? <>Финальный этап теста: разговор с Настей, ≈{minutes(st.minutes)}</>
           : <>Подтвердите авторство ответа: устная защита {minutes(st.minutes)}, по желанию</>}</h2>
       </div>
-      {final && <ExplainResult />}
       {final && !fb ? (
         <p className="text-sm text-brand-ink/75" data-testid="final-oral-text">
           Настя задаст {st.max_questions} коротких вопроса по вашим же ответам и решениям — объясните своими словами, как решали.
@@ -311,11 +311,11 @@ export function DefensePanel({ sessionId, live, final = false }: { sessionId: st
       ) : fb ? (
         <p className="text-sm text-brand-ink/75" data-testid="defense-fallback">
           В экспресс-тесте жюри нет развёрнутых ответов, поэтому живой разговор пойдёт {fb.title}{fb.source === "example" ? " (развёрнутые ответы модельного кандидата, не человека)" : ""}.
-          ИИ-интервьюер задаст до {st.max_questions} вопросов — голосом или в чате; можно поговорить с аватаром прямо сейчас. Грейд не меняется; оценивает модель, решение — за людьми.
+          Настя задаст до {st.max_questions} вопросов — голосом или в чате; можно поговорить с ней прямо сейчас. Грейд не меняется; оценивает модель, решение — за людьми.
         </p>
       ) : (
         <p className="text-sm text-brand-ink/75">
-          ИИ-интервьюер задаст до {st.max_questions} вопросов по вашим развёрнутым ответам{st.answers_n ? ` (${st.answers_n})` : ""} — голосом или в чате.
+          Настя задаст до {st.max_questions} вопросов по вашим развёрнутым ответам{st.answers_n ? ` (${st.answers_n})` : ""} — голосом или в чате.
           Работодатель увидит «ответ подтверждён устно» или «есть расхождения» с цитатами. Грейд не меняется; оценивает модель, решение — за людьми.
         </p>
       )}
@@ -325,18 +325,18 @@ export function DefensePanel({ sessionId, live, final = false }: { sessionId: st
       {final && st.can_start && !active && !open && (
         <div className="flex flex-wrap items-center gap-2" data-testid="final-oral-text-start">
           <button className="btn-ghost !py-2" disabled={busy || limited} onClick={() => void start(false, true)}>Ответить текстом</button>
-          <span className="text-xs text-brand-ink/65">Нажимая «Начать разговор» или «Ответить текстом», вы соглашаетесь на запись и оценку ответов моделью — подробнее в «Условиях согласия».</span>
+          <span className="text-xs text-brand-ink/65">Нажимая «Начать разговор с Настей» или «Ответить текстом», вы соглашаетесь на запись и оценку ответов моделью — подробнее в «Условиях согласия».</span>
         </div>
       )}
       {live && active && (
         <Link to={`/candidate/interview/${s!.id}?start=voice`} data-testid="live-defense-room"
           className="flex items-center gap-3 rounded-2xl bg-brand-night p-3 text-white transition hover:bg-brand-plum">
           <img src="/avatar/interviewer.webp" alt="" width={44} height={44} className="h-11 w-11 rounded-full object-cover" />
-          <span className="text-sm font-semibold">ИИ-интервьюер ждёт: перейти в комнату живого разговора</span>
+          <span className="text-sm font-semibold">Настя ждёт: продолжить разговор</span>
         </Link>
       )}
-      {st.stub && <Alert kind="info">Демо-режим: вопросы по шаблону, оценка — по фиксированному правилу, не моделью. Итог помечен «демо».</Alert>}
-      {st.jury && <p className="text-xs text-brand-ink/65" data-testid="defense-jury">Песочница жюри: живой запуск — {st.jury.live_per_hour} в час, до {st.jury.max_minutes} минут. Готовый пример — ниже.</p>}
+      {st.stub && <Alert kind="info">Сейчас — запасной режим: вопросы по шаблону, оценка по фиксированному правилу, итог помечен «демо». Живой голосовой разговор с Настей — на странице /demo/live.</Alert>}
+      {st.jury && <p className="text-xs text-brand-ink/65" data-testid="defense-jury">В демо: до {st.jury.max_minutes} минут на разговор. Готовый пример — ниже.</p>}
       {s && s.status === "completed" && (
         <div className="space-y-2">
           <SessionResult s={s} />
@@ -357,11 +357,12 @@ export function DefensePanel({ sessionId, live, final = false }: { sessionId: st
           </div>
           {st.attempts_left != null && <p className="text-xs text-brand-ink/65">Сессий для этой попытки: {st.attempts_left} (при сбое связи можно ещё раз).</p>}
         </div>
-      ) : <button className={live ? "btn-ghost" : "btn-primary"} onClick={() => setOpen(true)} data-testid="defense-open">{live ? "Условия согласия и вход через чат" : fb ? "Поговорить с ИИ-интервьюером вживую" : "Подтвердить устно"}</button>)}
+      ) : <button className={live ? "btn-ghost" : "btn-primary"} onClick={() => setOpen(true)} data-testid="defense-open">{live ? "Условия согласия и вход через чат" : fb ? "Поговорить с Настей вживую" : "Подтвердить устно"}</button>)}
+      {final && <ExplainResult />}
       <Alert>{err}</Alert>
       {st.example && (
         <details key={limited ? "lim" : "ok"} className="rounded-xl bg-brand-blush/20 p-3" open={!s || limited} data-testid="defense-example">
-          <summary className="cursor-pointer font-semibold text-brand-night">Готовый пример — {st.example.example_label}</summary>
+          <summary className="cursor-pointer font-semibold text-brand-night">Пример карточки (модельный кандидат)</summary>
           <div className="mt-2"><SessionResult s={st.example} /></div>
         </details>
       )}
@@ -775,7 +776,7 @@ export function InterviewRoom() {
   return (
     <div className="max-w-2xl space-y-4">
       <PageTitle title={title} subtitle={`${s.status_title}. ${MODEL_NOTE}`} />
-      {s.stub && <Alert kind="info">Демо-режим: разговор по шаблону, без модели и голоса; оценка — по фиксированному правилу, итог помечен «демо».</Alert>}
+      {s.stub && <Alert kind="info">Этот разговор — в запасном режиме: по шаблону, без модели и голоса; итог помечен «демо». Живой голосовой разговор с Настей — на странице /demo/live.</Alert>}
       <audio ref={player.audioRef} className="hidden" />
       {(s.status === "created" || live || s.status === "evaluating") && (
         <div className="card flex flex-col items-center gap-2 !py-3" data-testid="iv-visual">
@@ -788,7 +789,7 @@ export function InterviewRoom() {
       {note && <p className="text-sm text-brand-ink/75" role="status">{note}</p>}
       {s.status === "created" && c && (
         <section className="card space-y-3" aria-label="Начало разговора">
-          <p className="text-sm text-brand-ink/80">До {s.max_questions} вопросов, около {s.minutes} минут. Отвечайте своими словами — так же, как писали в тесте.{c.channels.voice && c.channels.stt ? (!isWebdriver && liveInterviewSupported() ? " Голосом — как по видеосвязи: микрофон включится один раз, пока звучит вопрос — он закрыт; отвечайте вслух, договорите и помолчите пару секунд — ответ уйдёт сам, или нажмите «Я закончил»; можно и текстом в чате" : " Голосом — одна кнопка «Ответить»: замолчите на ~2 с, и ответ отправится сам; или текстом в чате") : c.channels.stt ? " Отвечать можно голосом («нажми и говори», текст можно поправить перед отправкой) или текстом" : " Отвечать — текстом"}; закончить — в любой момент.</p>
+          <p className="text-sm text-brand-ink/80">До {s.max_questions} вопросов, около {s.minutes} минут. Отвечайте своими словами — так же, как писали в тесте.{c.channels.voice && c.channels.stt ? (!isWebdriver && liveInterviewSupported() ? " Голосом — как по видеосвязи: микрофон включится один раз, пока звучит вопрос — он закрыт; отвечайте вслух, договорите и помолчите пару секунд — ответ уйдёт сам, или нажмите «Я закончил»; можно и текстом в чате" : " Голосом — одна кнопка «Ответить»: договорите и помолчите пару секунд — ответ отправится сам; или текстом в чате") : c.channels.stt ? " Отвечать можно голосом («нажми и говори», текст можно поправить перед отправкой) или текстом" : " Отвечать — текстом"}; закончить — в любой момент.</p>
           <div className="flex flex-wrap items-center gap-3">
             <button className="btn-primary" disabled={busy} onClick={() => begin(c.channels.voice ? "voice" : "text")}
               data-testid={c.channels.voice ? "iv-begin-voice" : "iv-begin-text"}>Начать разговор</button>
@@ -809,7 +810,7 @@ export function InterviewRoom() {
             )}
           </div>
           <div id="iv-qtext" hidden={!showQ} className="space-y-2 rounded-2xl border border-brand-night/10 bg-[#F7F4FA] p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-brand-plum">ИИ-интервьюер спрашивает:</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-brand-plum">Настя спрашивает:</p>
             <p className="text-base font-bold leading-snug text-brand-night" data-testid="iv-question">{c.question}</p>
             {c.context && <p className="line-clamp-3 border-t border-brand-night/10 pt-2 text-xs text-brand-ink/75" data-testid="iv-context">Ваш письменный ответ в тесте: «{c.context}»</p>}
           </div>
@@ -867,7 +868,7 @@ export function InterviewRoom() {
           </nav>
         </section>
       )}
-      {bye && <p className="font-semibold text-brand-night" role="status" data-testid="iv-bye">Интервьюер: {bye}</p>}
+      {bye && <p className="font-semibold text-brand-night" role="status" data-testid="iv-bye">Настя: {bye}</p>}
       {s.status === "evaluating" && <section className="card" role="status"><p className="font-semibold text-brand-night">Разговор окончен — модель оценивает ответы, итог появится здесь через минуту.</p></section>}
       {s.status === "completed" && <section className="card">{s.result_hidden ? <p className="font-semibold text-brand-night" data-testid="iv-done">Спасибо! Разговор окончен. Итог и расшифровку видит только пригласившая компания.</p> : <SessionResult s={s} />}</section>}
       {["failed", "expired", "cancelled", "deleted"].includes(s.status) && <Alert kind="info">{s.status_title}{s.error ? `: ${s.error}` : ""}.</Alert>}
