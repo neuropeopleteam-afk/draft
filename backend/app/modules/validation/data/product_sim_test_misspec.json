@@ -1,0 +1,573 @@
+{
+ "meta": {
+  "what": "симуляция продукта: движок стенда на реальном банке, модельные кандидаты (не люди)",
+  "phase": "test",
+  "world": "misspec",
+  "seeds": [
+   2201,
+   2202,
+   2203,
+   2204,
+   2205,
+   2206,
+   2207,
+   2208,
+   2209,
+   2210
+  ],
+  "n_requested": 2000,
+  "rater_noise_text_parts": 0.0,
+  "two_stage": true,
+  "responses": "2PL с истинными параметрами + угадывание c = 1/K в частях с выбором варианта (K — число вариантов шага), 1/строк для выбора строки",
+  "population": {
+   "theta": "N(0; 1.3)",
+   "claim_shift": [
+    0,
+    0,
+    0,
+    1,
+    1,
+    -1
+   ],
+   "stack": "1–3 тега направления, вероятность ∝ числу семейств банка с этим тегом"
+  },
+  "bank": {
+   "n_families": 1504,
+   "manifest": {
+    "commit": "603474f",
+    "dirty_files": 0,
+    "content_hash": "82a05fdbacf00481",
+    "synced_at": "2026-10-20T11:19:30+00:00",
+    "n_families": 1504
+   }
+  },
+  "settings": {
+   "assessment_ai_mark": false,
+   "assessment_classify_z": 1.28,
+   "assessment_code_quota_ext": true,
+   "assessment_confirm_level": 0.8,
+   "assessment_engine": "bank",
+   "assessment_exposure": "sympson_hetter",
+   "assessment_express_item_time_s": 240,
+   "assessment_express_max_items": 7,
+   "assessment_express_max_minutes": 20,
+   "assessment_express_min_items": 5,
+   "assessment_express_senior_item_time_s": 360,
+   "assessment_express_senior_max_items": 12,
+   "assessment_express_senior_max_minutes": 45,
+   "assessment_express_senior_min_items": 8,
+   "assessment_extension_items": 6,
+   "assessment_extension_minutes": 20,
+   "assessment_extension_own_first": true,
+   "assessment_guessing_3pl": true,
+   "assessment_max_items": 20,
+   "assessment_max_minutes": 60,
+   "assessment_max_open_answer": 1,
+   "assessment_max_open_book": 2,
+   "assessment_min_items": 8,
+   "assessment_partial_credit_enabled": false,
+   "assessment_partial_credit_select": true,
+   "assessment_se_target": 0.35,
+   "assessment_select_at": "cut",
+   "assessment_stop_rule": "classification",
+   "assessment_subpool_quarantine": "",
+   "assessment_subpools": 2,
+   "assessment_two_stage_above": 0.0,
+   "assessment_two_stage_confirm": 0.5,
+   "assessment_two_stage_confirm_up": 0.9,
+   "assessment_two_stage_enabled": true,
+   "assessment_two_stage_floor": false,
+   "assessment_two_stage_items": 8,
+   "assessment_two_stage_level": 0.8,
+   "assessment_two_stage_minutes": 15,
+   "assessment_weak_exclude": false,
+   "grades_ext_enabled": true,
+   "grades_ext_max_se": 0.6,
+   "grades_ext_min_items": 8,
+   "grades_ext_min_own": 1,
+   "grades_ext_min_total": 3,
+   "grades_ext_no_subpool": true,
+   "grades_ext_preliminary": true,
+   "grades_ext_prior_sd": 1.5,
+   "grades_ext_refine_item_time_s": 420.0,
+   "grades_ext_refine_items": 10,
+   "grades_ext_refine_minutes": 25
+  },
+  "git_commit": null,
+  "date": "2026-10-21T08:18:43+00:00",
+  "command": "cd backend && python -m app.modules.validation.product_sim --phase test --world misspec --n 2000 --out /w/out/product_sim_test_misspec.json"
+ },
+ "summary": {
+  "n": 2000,
+  "verdict_accuracy_final": {
+   "k": 1733,
+   "n": 2000,
+   "value": 0.8665,
+   "ci95": [
+    0.8509,
+    0.8807
+   ]
+  },
+  "false_confirm_among_overclaim": {
+   "k": 161,
+   "n": 791,
+   "value": 0.2035,
+   "ci95": [
+    0.1769,
+    0.233
+   ]
+  },
+  "false_reject_among_true": {
+   "k": 106,
+   "n": 1209,
+   "value": 0.0877,
+   "ci95": [
+    0.073,
+    0.105
+   ]
+  },
+  "confident_share_main": {
+   "k": 1533,
+   "n": 2000,
+   "value": 0.7665,
+   "ci95": [
+    0.7475,
+    0.7845
+   ]
+  },
+  "confident_accuracy_main": {
+   "k": 1404,
+   "n": 1533,
+   "value": 0.9159,
+   "ci95": [
+    0.9009,
+    0.9287
+   ]
+  },
+  "followup_share": {
+   "k": 637,
+   "n": 2000,
+   "value": 0.3185,
+   "ci95": [
+    0.2984,
+    0.3393
+   ]
+  },
+  "provisional_junior_share": {
+   "k": 22,
+   "n": 2000,
+   "value": 0.011,
+   "ci95": [
+    0.0073,
+    0.0166
+   ]
+  },
+  "provisional_among_overclaim": {
+   "k": 16,
+   "n": 791,
+   "value": 0.0202,
+   "ci95": [
+    0.0125,
+    0.0326
+   ]
+  },
+  "exact_grade_final": {
+   "k": 1403,
+   "n": 2000,
+   "value": 0.7015,
+   "ci95": [
+    0.6811,
+    0.7212
+   ]
+  },
+  "exact_grade_final_not_above_claim": {
+   "k": 1403,
+   "n": 1744,
+   "value": 0.8045,
+   "ci95": [
+    0.7852,
+    0.8224
+   ]
+  },
+  "gross_error_2plus": {
+   "k": 1,
+   "n": 2000,
+   "value": 0.0005,
+   "ci95": [
+    0.0001,
+    0.0028
+   ]
+  },
+  "oral_defense_share": {
+   "k": 0,
+   "n": 2000,
+   "value": 0.0,
+   "ci95": [
+    0.0,
+    0.0019
+   ]
+  },
+  "integrity_low_share_honest": {
+   "k": 333,
+   "n": 2000,
+   "value": 0.1665,
+   "ci95": [
+    0.1508,
+    0.1835
+   ]
+  },
+  "minutes_main": {
+   "mean": 35.4,
+   "p90": 53.4
+  },
+  "minutes_total": {
+   "mean": 38.6,
+   "p90": 60.1
+  },
+  "items_main": {
+   "mean": 19.3,
+   "min": 8,
+   "max": 26
+  },
+  "code_open_share_main": {
+   "mean": 0.315,
+   "share_sessions_ge_one_third": 0.28
+  }
+ },
+ "by_claim": {
+  "intern": {
+   "n": 471,
+   "verdict_accuracy_final": {
+    "k": 392,
+    "n": 471,
+    "value": 0.8323,
+    "ci95": [
+     0.7959,
+     0.8633
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 72,
+    "n": 196,
+    "value": 0.3673,
+    "ci95": [
+     0.303,
+     0.4368
+    ]
+   },
+   "confident_share_main": {
+    "k": 329,
+    "n": 471,
+    "value": 0.6985,
+    "ci95": [
+     0.6556,
+     0.7382
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 295,
+    "n": 329,
+    "value": 0.8967,
+    "ci95": [
+     0.8591,
+     0.9251
+    ]
+   },
+   "exact_grade_final": {
+    "k": 292,
+    "n": 471,
+    "value": 0.62,
+    "ci95": [
+     0.5753,
+     0.6627
+    ]
+   },
+   "minutes_total": {
+    "mean": 31.1,
+    "p90": 52.7
+   }
+  },
+  "junior": {
+   "n": 478,
+   "verdict_accuracy_final": {
+    "k": 412,
+    "n": 478,
+    "value": 0.8619,
+    "ci95": [
+     0.8281,
+     0.89
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 43,
+    "n": 104,
+    "value": 0.4135,
+    "ci95": [
+     0.3235,
+     0.5095
+    ]
+   },
+   "confident_share_main": {
+    "k": 383,
+    "n": 478,
+    "value": 0.8013,
+    "ci95": [
+     0.7631,
+     0.8346
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 351,
+    "n": 383,
+    "value": 0.9164,
+    "ci95": [
+     0.8844,
+     0.9402
+    ]
+   },
+   "exact_grade_final": {
+    "k": 307,
+    "n": 478,
+    "value": 0.6423,
+    "ci95": [
+     0.5983,
+     0.6839
+    ]
+   },
+   "minutes_total": {
+    "mean": 38.1,
+    "p90": 56.1
+   }
+  },
+  "middle": {
+   "n": 491,
+   "verdict_accuracy_final": {
+    "k": 439,
+    "n": 491,
+    "value": 0.8941,
+    "ci95": [
+     0.8637,
+     0.9183
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 30,
+    "n": 179,
+    "value": 0.1676,
+    "ci95": [
+     0.12,
+     0.2292
+    ]
+   },
+   "confident_share_main": {
+    "k": 382,
+    "n": 491,
+    "value": 0.778,
+    "ci95": [
+     0.7392,
+     0.8125
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 353,
+    "n": 382,
+    "value": 0.9241,
+    "ci95": [
+     0.8931,
+     0.9466
+    ]
+   },
+   "exact_grade_final": {
+    "k": 376,
+    "n": 491,
+    "value": 0.7658,
+    "ci95": [
+     0.7263,
+     0.8011
+    ]
+   },
+   "minutes_total": {
+    "mean": 38.2,
+    "p90": 57.7
+   }
+  },
+  "senior": {
+   "n": 349,
+   "verdict_accuracy_final": {
+    "k": 305,
+    "n": 349,
+    "value": 0.8739,
+    "ci95": [
+     0.835,
+     0.9047
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 12,
+    "n": 179,
+    "value": 0.067,
+    "ci95": [
+     0.0388,
+     0.1135
+    ]
+   },
+   "confident_share_main": {
+    "k": 271,
+    "n": 349,
+    "value": 0.7765,
+    "ci95": [
+     0.7299,
+     0.8171
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 249,
+    "n": 271,
+    "value": 0.9188,
+    "ci95": [
+     0.8801,
+     0.9458
+    ]
+   },
+   "exact_grade_final": {
+    "k": 277,
+    "n": 349,
+    "value": 0.7937,
+    "ci95": [
+     0.7482,
+     0.8328
+    ]
+   },
+   "minutes_total": {
+    "mean": 40.4,
+    "p90": 59.8
+   }
+  },
+  "lead": {
+   "n": 164,
+   "verdict_accuracy_final": {
+    "k": 145,
+    "n": 164,
+    "value": 0.8841,
+    "ci95": [
+     0.8261,
+     0.9246
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 2,
+    "n": 101,
+    "value": 0.0198,
+    "ci95": [
+     0.0054,
+     0.0693
+    ]
+   },
+   "confident_share_main": {
+    "k": 130,
+    "n": 164,
+    "value": 0.7927,
+    "ci95": [
+     0.7243,
+     0.8477
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 121,
+    "n": 130,
+    "value": 0.9308,
+    "ci95": [
+     0.8737,
+     0.9632
+    ]
+   },
+   "exact_grade_final": {
+    "k": 118,
+    "n": 164,
+    "value": 0.7195,
+    "ci95": [
+     0.6463,
+     0.7826
+    ]
+   },
+   "minutes_total": {
+    "mean": 52.1,
+    "p90": 74.9
+   }
+  },
+  "principal": {
+   "n": 47,
+   "verdict_accuracy_final": {
+    "k": 40,
+    "n": 47,
+    "value": 0.8511,
+    "ci95": [
+     0.7231,
+     0.9259
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 2,
+    "n": 32,
+    "value": 0.0625,
+    "ci95": [
+     0.0173,
+     0.2015
+    ]
+   },
+   "confident_share_main": {
+    "k": 38,
+    "n": 47,
+    "value": 0.8085,
+    "ci95": [
+     0.6746,
+     0.8958
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 35,
+    "n": 38,
+    "value": 0.9211,
+    "ci95": [
+     0.792,
+     0.9728
+    ]
+   },
+   "exact_grade_final": {
+    "k": 33,
+    "n": 47,
+    "value": 0.7021,
+    "ci95": [
+     0.5602,
+     0.8135
+    ]
+   },
+   "minutes_total": {
+    "mean": 61.7,
+    "p90": 81.5
+   }
+  }
+ },
+ "claims": {
+  "senior": 349,
+  "intern": 471,
+  "middle": 491,
+  "junior": 478,
+  "lead": 164,
+  "principal": 47
+ },
+ "true_grades": {
+  "middle": 527,
+  "none": 196,
+  "intern": 279,
+  "lead": 97,
+  "junior": 566,
+  "senior": 312,
+  "principal": 23
+ },
+ "engine_errors": {
+  "n": 0,
+  "examples": []
+ },
+ "elapsed_s": 874.7
+}
