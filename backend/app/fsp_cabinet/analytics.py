@@ -21,10 +21,12 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
+import os
 import statistics
+import time
 import uuid
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, event, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.db import as_aware, utcnow
@@ -90,6 +92,9 @@ class Cand:
     user_id: uuid.UUID
     category: str
     direction: str
+    grade: str = "middle"
+    city: str | None = None
+    is_synthetic: bool = False
     has_fsp: bool = False
     rank: str = "none"
     disciplines: set = field(default_factory=set)
@@ -121,6 +126,87 @@ class Data:
     entries: list[CupEntry]
     period_days: int | None
     demo_companies: set = field(default_factory=set)
+    companies_by_id: dict[uuid.UUID, Company] = field(default_factory=dict)
+    allowed_companies: set[uuid.UUID] = field(default_factory=set)
+
+
+# ------------------------------------------------------------------ 60-секундный кэш с автосбросом при записи в БД
+CACHE_TTL_S = 60.0
+_CACHE: dict[tuple, tuple[float, object]] = {}
+_HOOK_INSTALLED = False
+
+
+def invalidate_cache() -> None:
+    """Сбрасывает кэш аналитики кабинета ФСП (вызывается автоматически при любом коммите с записью в БД)."""
+    _CACHE.clear()
+
+
+def _install_Invalidation_hook() -> None:
+    global _HOOK_INSTALLED
+    if _HOOK_INSTALLED:
+        return
+    _HOOK_INSTALLED = True
+
+    @event.listens_for(Session, "after_flush")
+    def _on_after_flush(session: Session, _flush_context) -> None:
+        if session.new or session.dirty or session.deleted:
+            _CACHE.clear()
+
+    @event.listens_for(Session, "after_bulk_delete")
+    def _on_bulk_delete(_delete_context) -> None:
+        _CACHE.clear()
+
+    @event.listens_for(Session, "after_bulk_update")
+    def _on_bulk_update(_update_context) -> None:
+        _CACHE.clear()
+
+
+_install_Invalidation_hook()
+
+
+def _db_bind_id(db: Session) -> str:
+    bind = getattr(db, "bind", None) or db.get_bind()
+    return str(getattr(bind, "url", id(bind)))
+
+
+def cache_get(kind: str, db: Session, days: int | None, include_demo: bool, jury_key: str | None = None):
+    key = (
+        kind,
+        _db_bind_id(db),
+        days,
+        bool(include_demo),
+        jury_key or "",
+        os.environ.get("FSP_PROTOCOLS_INDEX") or "",
+    )
+    hit = _CACHE.get(key)
+    if hit is not None:
+        ts, val = hit
+        if time.monotonic() - ts <= CACHE_TTL_S:
+            return val
+        _CACHE.pop(key, None)
+    return None
+
+
+def cache_set(kind: str, db: Session, days: int | None, include_demo: bool, val: object, jury_key: str | None = None):
+    key = (
+        kind,
+        _db_bind_id(db),
+        days,
+        bool(include_demo),
+        jury_key or "",
+        os.environ.get("FSP_PROTOCOLS_INDEX") or "",
+    )
+    _CACHE[key] = (time.monotonic(), val)
+    return val
+
+
+def load_cached(db: Session, days: int | None = None, include_demo: bool = True, jury_key: str | None = None) -> Data:
+    hit = cache_get("data", db, days, include_demo, jury_key=jury_key)
+    if isinstance(hit, Data):
+        return hit
+    d = load(db, days, include_demo=include_demo)
+    cache_set("data", db, days, include_demo, d, jury_key=jury_key)
+    return d
 
 
 def _jury(db: Session, include_demo: bool = True) -> tuple[set, set]:
@@ -151,7 +237,18 @@ def load(db: Session, days: int | None = None, include_demo: bool = True) -> Dat
     if not include_demo:
         pq = pq.where(User.is_demo.is_(False), CandidateProfile.is_synthetic.is_(False))
     for p in db.scalars(pq).all():
-        cands[p.user_id] = Cand(p.user_id, p.current_category_id, p.current_direction_id or p.current_category_id.split(".")[0])
+        cat = p.current_category_id
+        direction = p.current_direction_id or cat.split(".")[0]
+        grade = p.current_grade_id or (cat.split(".")[1] if "." in cat else "middle")
+        is_syn = bool(getattr(p, "is_synthetic", False) or getattr(p, "is_demo", False))
+        cands[p.user_id] = Cand(
+            p.user_id,
+            cat,
+            direction,
+            grade=grade,
+            city=p.city,
+            is_synthetic=is_syn,
+        )
     pp = {p.id: p for p in db.scalars(select(FspPassport).where(FspPassport.user_id.in_(list(cands)))).all()} if cands else {}
     for p in pp.values():
         cands[p.user_id].rank = _rank_bucket(p.sport_rank)
@@ -200,8 +297,9 @@ def load(db: Session, days: int | None = None, include_demo: bool = True) -> Dat
     entries = [e for e in db.scalars(select(CupEntry).where(CupEntry.cup_id.in_([c.id for c in cups]))).all()
                if e.candidate_user_id not in jury_users] if cups else []
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
-    demo = set(db.scalars(select(Company.id).where(Company.is_demo.is_(True))).all())
-    return Data(cands, invs, needs, cats, cups, entries, days, demo)
+    all_comps = {c.id: c for c in db.scalars(select(Company)).all()}
+    demo = {cid for cid, c in all_comps.items() if getattr(c, "is_demo", False)}
+    return Data(cands, invs, needs, cats, cups, entries, days, demo, companies_by_id=all_comps, allowed_companies=companies)
 
 
 # ------------------------------------------------------------------ разделы
@@ -437,7 +535,7 @@ def cups_section(d: Data, db: Session) -> list[dict]:
     out = []
     for cup in sorted(d.cups, key=lambda c: as_aware(c.ends_at), reverse=True):
         es = by_cup.get(cup.id, [])
-        comp = db.get(Company, cup.company_id)
+        comp = d.companies_by_id.get(cup.company_id) or db.get(Company, cup.company_id)
         placed = [e for e in es if e.place is not None]
         inv = [e for e in placed if e.invitation_id]
         acc = [e for e in inv if inv_by_id.get(e.invitation_id) and
@@ -455,8 +553,8 @@ def cups_section(d: Data, db: Session) -> list[dict]:
     return out
 
 
-def report(db: Session, days: int | None = None, include_demo: bool = True) -> dict:
-    d = load(db, days, include_demo=include_demo)
+def report(db: Session, days: int | None = None, include_demo: bool = True, d: Data | None = None) -> dict:
+    d = d or load(db, days, include_demo=include_demo)
     return {"generated_at": utcnow().isoformat(), "k": K, "period_days": days, "overview": overview(d),
             "demand": demand(d), "fsp_effect": fsp_effect(d), "salaries": salaries(d), "funnel": funnel(d),
             "cups": cups_section(d, db), "methodology": METHODOLOGY}

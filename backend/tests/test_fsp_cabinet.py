@@ -282,3 +282,82 @@ def test_stale_demo_cups_reseeded_on_jury_login(client):
     titles = {c["title"]: c for c in items}
     assert titles["Маршрутизация заказов"]["phase"] == "active" and titles["Маршрутизация заказов"]["my_status"] is None
     assert titles["Платёжный шлюз"]["my_place"] == 2
+
+
+def test_report_single_load_cache_60s_invalidation_and_byte_for_byte_equivalence(client, monkeypatch):
+    """2б-1 (21.10): /api/fsp-cabinet/report вызывает an.load ровно 1 раз (передаёт Data в build_regions_map и benefit),
+    кэш 60 с по ключу (days, include_demo, jury_key) не смешивает песочницы и сбрасывается при записи в БД,
+    а ответы report / regions / benefit совпадают байт-в-байт с прямым расчётом без кэша."""
+    from app.core.config import get_settings
+    from app.cup import tournament
+    from app.fsp_cabinet import analytics as an
+    from app.fsp_cabinet import benefit as benefit_mod
+    from app.fsp_cabinet.regions import build_regions_map
+
+    monkeypatch.setattr(get_settings(), "tariffs_enabled", True)
+    _platform_demo()
+    ta = analyst_token(client)
+    an.invalidate_cache()
+
+    load_calls = 0
+    orig_load = an.load
+
+    def spy_load(db, days=None, include_demo=True):
+        nonlocal load_calls
+        load_calls += 1
+        return orig_load(db, days, include_demo=include_demo)
+
+    monkeypatch.setattr(an, "load", spy_load)
+
+    # 1. Первый вызов /report делает ровно ОДИН вызов an.load (а не два — для an.report и build_regions_map)
+    r1 = client.get("/api/fsp-cabinet/report", headers=H(ta))
+    assert r1.status_code == 200, r1.text
+    assert load_calls == 1
+    rep_cached = r1.json()
+
+    # 2. Повторный вызов /report и /benefit с теми же параметрами берут данные из кэша (0 новых вызовов an.load)
+    r2 = client.get("/api/fsp-cabinet/report", headers=H(ta))
+    assert r2.status_code == 200
+    assert load_calls == 1
+    r_ben = client.get("/api/fsp-cabinet/benefit", headers=H(ta))
+    assert r_ben.status_code == 200
+    assert load_calls == 1
+    ben_cached = r_ben.json()
+
+    # 3. Байт-в-байт совпадение с прямым расчётом без кэша на тех же данных (кроме метки generated_at)
+    with SessionLocal() as db:
+        d_fresh = orig_load(db, None, include_demo=True)
+        expected_rep = {
+            **an.report(db, None, include_demo=True, d=d_fresh),
+            "regions_map": build_regions_map(db, None, d=d_fresh, include_demo=True),
+            "tournaments": tournament.cabinet_list(db, None, include_demo=True),
+        }
+        expected_ben = benefit_mod.compute(db, None, d=d_fresh, include_demo=True)
+
+    rep_cmp = {**rep_cached, "generated_at": expected_rep["generated_at"]}
+    assert json.dumps(rep_cmp, sort_keys=True, ensure_ascii=False) == json.dumps(
+        expected_rep, sort_keys=True, ensure_ascii=False
+    )
+    assert json.dumps(ben_cached, sort_keys=True, ensure_ascii=False) == json.dumps(
+        expected_ben, sort_keys=True, ensure_ascii=False
+    )
+
+    # 4. Песочницы жюри не смешиваются по ключу кэша
+    f_a = _login(client, "fsp", "new")
+    an.invalidate_cache()
+    load_calls = 0
+    assert client.get("/api/fsp-cabinet/report", headers=H(f_a["access_token"])).status_code == 200
+    assert load_calls == 1
+    # Запрос от аналитика вне песочницы имеет другой jury_key -> отдельный ключ кэша
+    assert client.get("/api/fsp-cabinet/report", headers=H(ta)).status_code == 200
+    assert load_calls == 2
+
+    # 5. Запись в БД автоматически сбрасывает кэш
+    te = employer(client)
+    tc = candidate_with_category(client, "cache-bust@example.com")
+    assert client.post("/api/employer/invitations", json={**INVITE, "candidate_ref": my_ref(client, tc)}, headers=H(te)).status_code == 201
+    calls_before = load_calls
+    r_after = client.get("/api/fsp-cabinet/report", headers=H(ta))
+    assert r_after.status_code == 200
+    assert load_calls == calls_before + 1
+
