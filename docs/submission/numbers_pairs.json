@@ -238,15 +238,17 @@
   },
   {
    "id": "external",
-   "label": "Внешний открытый набор вакансий",
-   "fmt": "pct",
+   "label": "Открытый набор вакансий — nDCG@10",
+   "fmt": "dec",
    "paths": [
+    "external_benchmarks.djinni.draft.ndcg@10",
     "matching.site.djinni.direction_ok",
     "site.djinni.direction_ok",
     "external_djinni.direction_ok",
     "djinni.direction_ok"
    ],
    "cond": [
+    "external_benchmarks.djinni.condition_ru",
     "matching.site.djinni.set",
     "site.djinni.set",
     "external_djinni.set",
