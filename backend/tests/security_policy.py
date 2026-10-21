@@ -527,13 +527,18 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate_own",
     ("POST", "/api/candidate/invitations/{inv_id}/ai-interview"): "candidate",
     ("POST", "/api/interview/quick-defense"): "candidate",
-    ("POST", "/api/interview/concierge/avatar-token"): "open",
+    # доступ открыт всем; в тестах ключа видеопотока нет → 503 avatar_unavailable (браузер переходит на голос),
+    # как у advisor/avatar-token выше
+    ("POST", "/api/interview/concierge/avatar-token"): ("open", {r: 503 for r in ROLES}),
     ("POST", "/api/interview/concierge/speech"): "open",
     ("POST", "/api/interview/concierge/transcribe"): "open",
     ("POST", "/api/interview/concierge/chat"): "open",
     ("POST", "/api/interview/concierge/turn"): "open",
     ("GET", "/api/interview/concierge/script"): "open",
     ("POST", "/api/interview/concierge/event"): "open",
+    # Счётчики расходов проводника за сегодня (без ПДн: суммы, число адресов, лимиты). Сейчас открыт без входа;
+    # зона чата «Аватар» — закрыть ролью администратора, когда там решат (тогда здесь станет "admin").
+    ("GET", "/api/interview/concierge/budget"): "open",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
     # А5: режим «Принесите свой набор» для жюри (подбор, метрики P@5/P@10/nDCG@10/MRR, объяснение, выгрузка CSV)
