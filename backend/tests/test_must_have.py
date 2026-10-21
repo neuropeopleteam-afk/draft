@@ -22,6 +22,13 @@ NO_PG = {"python": 1.0, "fastapi": 1.0, "kafka": 1.0, "docker": 1.0, "redis": 1.
 TWO = {"python": 1.0, "fastapi": 0.33, "kafka": 1.0, "docker": 1.0, "redis": 1.0, "kubernetes": 1.0}  # FastAPI ниже порога
 
 
+@pytest.fixture(autouse=True)
+def _match_v1(monkeypatch):
+    """Весь модуль — ярусы обязательного (must_have, match-v1.1+) в v1-пути подборки: явно MATCH_V2=0. В match-v2 их роль
+    у каскада стека (ярус статуса → ступень стека → балл; балл не пересекает ступень) — test_a5_match_v2."""
+    monkeypatch.setenv("MATCH_V2", "0")
+
+
 def _cand(client, i: int, skills: dict, **onb) -> tuple[str, uuid.UUID]:
     t = candidate_with_category(client, email=f"mh{i}@example.com", **onb)
     me = client.get("/api/me", headers=H(t)).json()
@@ -44,8 +51,6 @@ def _order(text: str, filters: dict | None = None) -> tuple[list[str], dict]:
 
 # ---------------------------------------------------------------- ярусы обязательного
 def test_tiers_put_full_required_first_and_flag_restores_old_order(client, monkeypatch):
-    monkeypatch.setenv("MATCH_V2", "0")  # ярусы обязательного и флаг MATCH_MUST_FIRST — match-v1.1+; в match-v2 их
-    # роль у каскада стека (сначала все обязательные, затем часть) — test_a5_match_v2::test_cascade_hides_nobody…
     a, _ = _cand(client, 0, FULL)
     b, _ = _cand(client, 1, NO_PG)
     c, _ = _cand(client, 2, TWO)
@@ -70,8 +75,6 @@ def test_tiers_put_full_required_first_and_flag_restores_old_order(client, monke
 
 def test_bonus_does_not_cross_tier(client, monkeypatch):
     """ФСП и зонд входят в балл (до +0,15); балл сравнивается только внутри яруса."""
-    monkeypatch.setenv("MATCH_V2", "0")  # ярусы обязательного — match-v1.1+; в v2 балл не пересекает ступень каскада стека
-    # (ключ порядка order_bundles: ярус статуса → ступень стека → балл) — test_a5_match_v2::test_cascade_hides_nobody…
     a, _ = _cand(client, 0, FULL)
     b, ub = _cand(client, 1, NO_PG)
     orig = ranking.score_candidate
@@ -119,8 +122,7 @@ def test_missing_line_lists_up_to_three(client):
     assert m["missing"] == ["FastAPI", "PostgreSQL", "Redis"] and m["missing_more"] == 1 and m["tier"] == 2
 
 
-def test_api_selection_shows_must_and_candidate_detail(client, monkeypatch):
-    monkeypatch.setenv("MATCH_V2", "0")  # поля must_first/ярусы — подборка match-v1.1+; в match-v2 — stack_filter
+def test_api_selection_shows_must_and_candidate_detail(client):
     a, _ = _cand(client, 0, FULL)
     b, _ = _cand(client, 1, NO_PG)
     e = employer(client)
