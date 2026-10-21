@@ -82,7 +82,16 @@ def test_weak_candidate_not_confirmed(bank):
     assert not res.confirmed and res.theta < 0
 
 
-def test_result_near_cut_triggers_extension(bank):
+@pytest.fixture
+def legacy_rule(monkeypatch):
+    """Прежнее правило решения (до поправки №2, 21.10 вечер): дотестирование у порога отдельной частью и стоп по SE.
+    С ASSESSMENT_VERDICT_RULE=sprt его роль играет продление у спорного порога (tests/test_sprt_v2.py)."""
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "assessment_verdict_rule", "posterior")
+
+
+def test_result_near_cut_triggers_extension(bank, legacy_rule):
     st, res, _ = run_session(bank, "middle", "security", "edge")
     ext = res.details["extension"]
     z = st["cfg"]["classify_z"]
@@ -95,7 +104,7 @@ def test_result_near_cut_triggers_extension(bank):
     assert "у этого порога" in res.explanation
 
 
-def test_extension_skips_previous_families_and_quarantine(bank, monkeypatch):
+def test_extension_skips_previous_families_and_quarantine(bank, monkeypatch, legacy_rule):
     from app.core.config import get_settings
 
     first, _, _ = run_session(bank, "middle", "security", "edge")
@@ -115,7 +124,7 @@ def test_extension_skips_previous_families_and_quarantine(bank, monkeypatch):
     assert all(pool[i["family_id"]].subpool == 0 for i in st["items"] if not i["canary"])
 
 
-def test_session_started_before_update_still_works(bank):
+def test_session_started_before_update_still_works(bank, legacy_rule):
     """Сессия, начатая до 06.10 (в cfg нет новых ключей), доигрывается по прежним правилам остановки."""
     st = bank.start(direction="backend", claimed_grade="middle", stack_tags=[], seed=4321)
     for k in ("stop_rule", "classify_z", "select_at", "ext_time_s"):

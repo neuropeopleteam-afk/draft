@@ -2,7 +2,6 @@ import { useState, type ReactNode } from "react";
 import MatchingBench from "../components/MatchingBench";
 import MatchingArena from "../components/MatchingArena";
 import { FspRatingValidation } from "../components/validation/FspRating";
-import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
 import GraderCheck from "../components/validation/GraderCheck";
 import EvidenceBench from "../components/validation/EvidenceBench";
@@ -12,18 +11,18 @@ import RuLlm from "../components/validation/RuLlm";
 import Strongest from "../components/validation/Strongest";
 import RetestLive from "../components/validation/RetestLive";  // И26: доля повторов заданий между попытками
 import Headline from "../components/validation/Headline";
+import CheatChallenge from "../components/validation/CheatChallenge";
+import { getRecomputeTable } from "../lib/numbers";
 import { ProvenanceLine, Snapshots, type Prov } from "../components/validation/Provenance";  // Я8: происхождение чисел, снимки расчётов
-import PathRetest, { CalibrationCard, GradeAccuracy, TwoStage } from "../components/validation/PathRetest";
+import { CalibrationCard } from "../components/validation/PathRetest";
 import LiveUsers from "../components/validation/LiveUsers";
 import Ablations from "../components/validation/Ablations";
 import HhParse from "../components/validation/HhParse";  // Я12: разбор на вакансиях hh.ru (при HH_ENABLED)
 import HhMatch from "../components/validation/HhMatch";  // Я12б: подбор на вакансиях hh.ru и спрос (при HH_ENABLED)
-import GradesExtBlock from "../components/validation/GradesExt";  // Я25: Lead и Principal (при GRADES_EXT_ENABLED)
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, DIRECTION_TITLES, Loading, dtt, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
-import { InternCutSection } from "../components/validation/InternCutBlock";
-import { AsOf, AltConditions, ExposureNote, LeakShareTable, RetestSection, SimConditions } from "../components/validation/StabilityBlocks";
+import { AsOf, ExposureNote, SimConditions } from "../components/validation/StabilityBlocks";
 import { useAuth } from "../lib/auth";
 import { juryToken } from "../lib/jury";
 import { useHashScroll } from "../lib/hashScroll";
@@ -47,13 +46,18 @@ export default function Validation() {
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Валидация</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night md:text-4xl">Как мы проверяем себя</h1>
         <p className="mt-3 max-w-3xl leading-relaxed text-brand-ink/75">
-          Все цифры — как получились, без подгонки. Тест проверяется симуляцией на синтетических кандидатах
-          (параметры заданий — экспертная предкалибровка, пока нет калибровки на людях), подбор — на бенчмарке со скрытой истиной,
-          затем на {r?.experts?.model_panel ? "разметке модельной панели (не люди)" : "экспертной разметке"} и демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
+          Все цифры — как получились, без подгонки, и у каждой подписано, на ком посчитана. Главное — точность решения по
+          грейду: её считает симуляция самого продукта (тот же движок, что у кандидата, на реальном банке, модельные кандидаты —
+          не люди). Ниже — боты, которые пытаются обмануть настоящий тест, подбор на бенчмарке со скрытой истиной и на реальных
+          вакансиях, проверка банка и оценщика ответов. Пересчёт всех цифр сайта: <code className="rounded bg-white px-1.5 py-0.5 text-sm">python3 tools/publish/gen_numbers.py</code>.
         </p>
         <Headline />
         {/* KF4: «Арена метрик» — Драфт против поиска по резюме и точность грейда, сразу под «5 числами», над «Красной кнопкой» */}
         <MatchingArena />
+        <div className="mt-8">
+          <CheatChallenge />
+        </div>
+        <HowToRecompute />
         {loading ? <div className="mt-8"><Loading /></div> : error ? <div className="mt-8"><Alert>{error}</Alert></div> : r?.missing
           ? <div className="mt-8"><Alert kind="info">Отчёт ещё не построен: запустите make validate.</Alert></div> : null}
         {r && !r.missing && !loading && !error ? <Report r={r} before={<Before />} /> : <FoldGroup><Before /></FoldGroup>}
@@ -84,6 +88,63 @@ function HowToRead() {
   );
 }
 
+function HowToRecompute() {
+  const rows = getRecomputeTable();
+  if (!rows.length) return null;
+  return (
+    <section
+      id="how-to-recompute"
+      data-testid="validation-how-to-recompute"
+      className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <span className="chip-lime">Воспроизводимость · единый реестр docs/NUMBERS.json</span>
+          <h2 className="mt-1.5 text-lg font-extrabold text-brand-night">Как пересчитать самостоятельно</h2>
+        </div>
+        <code className="rounded bg-brand-night/5 px-2 py-1 text-xs text-brand-night">
+          python3 tools/publish/gen_numbers.py
+        </code>
+      </div>
+      <p className="mt-1 text-xs text-brand-ink/70">
+        Каждая ключевая цифра на сайте собирается из открытых скриптов и сохраняется в <code>docs/NUMBERS.json</code>{" "}
+        с указанием выборки, зерна генератора случайных чисел, одной команды пересчёта (<code>recompute</code>) и файла
+        исходного кода (<code>code_ref</code>).
+      </p>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-brand-night/10 text-[11px] uppercase tracking-wider text-brand-ink/60">
+              <th className="py-2 pr-3">Раздел</th>
+              <th className="py-2 pr-3">Показатель</th>
+              <th className="py-2 pr-3">Условия и выборка N</th>
+              <th className="py-2 pr-3">Команда пересчёта (recompute)</th>
+              <th className="py-2">Исходный код (code_ref)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-brand-night/5">
+            {rows.map((row) => (
+              <tr key={row.section}>
+                <td className="py-2 pr-3 font-semibold text-brand-night">{row.section}</td>
+                <td className="py-2 pr-3 font-bold tabular-nums text-brand-plum">{row.metric}</td>
+                <td className="py-2 pr-3 text-brand-ink/75">{row.sample}</td>
+                <td className="py-2 pr-3">
+                  <code className="rounded bg-brand-cream/60 px-1.5 py-0.5 text-[11px] text-brand-night">
+                    {row.command}
+                  </code>
+                </td>
+                <td className="py-2">
+                  <code className="text-[11px] text-brand-ink/75">{row.code_ref}</code>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 function Report({ r, before }: { r: any; before?: ReactNode }) {
   const sim = r.simulation ?? {};
   const dirs = Object.keys(sim.directions ?? {});
@@ -91,7 +152,6 @@ function Report({ r, before }: { r: any; before?: ReactNode }) {
   const live = r.live ?? {};
   const study = useApi<any>("/study/summary", []).data;  // «Живые пользователи»: блок и пункт навигации — только при N ≥ 3 завершённых путей
   const hhOn = useMeta()?.hh?.enabled ?? false;  // Я12: пункт навигации блока «Разбор на hh.ru»
-  const gxOn = useMeta()?.grades_ext?.enabled ?? false;  // Я25: пункт навигации блока «Lead и Principal»
   // Ф6 (Н7): подписи из одного источника (provenance): дата отчёта, банк расчёта и банк сейчас, калибровка — модели
   const pv = r.provenance ?? {}, bn = pv.bank_now ?? {}, rp = pv.report ?? {}, cal = pv.calibration ?? {};
   const rdate = r.generated_at ? d10(r.generated_at) : "";
@@ -106,16 +166,13 @@ function Report({ r, before }: { r: any; before?: ReactNode }) {
       <p className="mt-4 text-xs text-brand-ink/65" data-testid="report-signature">Отчёт симуляции построен {dtt(r.generated_at)} · {r.n_per_direction} синтетических кандидатов на направление · {num(r.seconds, 0)} с · банк расчёта: {rp.bank_n_families ?? "—"} семейств, коммит {rp.bank_commit ?? "—"}{pv.code_commit && pv.code_commit !== "unknown" ? ` · код стенда ${pv.code_commit}` : ""}</p>
       {bn.n_families != null && !rp.same_bank && <div className="mt-3"><Alert kind="info" ><b>Числа отчёта — на банке от {rp.bank_synced_at ? d10(rp.bank_synced_at) : rdate}.</b> Сейчас в банке {bn.n_families} семейств (синхронизирован {bn.synced_at ? d10(bn.synced_at) : "—"}, коммит {bn.commit ?? "—"}); полная симуляция теста на нём не пересчитывалась (make validate), поэтому таблицы ниже подписаны датой отчёта. Блоки «5 чисел» и «Весь путь дважды» посчитаны отдельно — их мир указан в подписи.</Alert></div>}
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["headline", "5 чисел"], ["arena", "Арена метрик"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["grade-accuracy", "Точность уровня"], ...(gxOn ? [["grades-ext", "Lead и Principal"]] : []), ["two-stage", "Две сессии"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["other-conditions", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", r.experts?.model_panel ? "Модельная панель" : "Экспертная разметка"], ["grader", "Оценщик ответов"], ["evidence", "Цитаты оценщика"], ["partial-credit", "Частичный балл"], ...(hhOn ? [["hh-parse", "Разбор на hh.ru"], ["hh-match", "Подбор на hh.ru"]] : []), ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["headline", "Точность грейда"], ["v-cheat-challenge", "Обмани тест"], ["arena", "Арена метрик"], ["bank", "Банк"], ["calibration", "Калибровка"], ["exposure", "Частота показа"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", r.experts?.model_panel ? "Модельная панель" : "Экспертная разметка"], ["grader", "Оценщик ответов"], ["evidence", "Цитаты оценщика"], ["partial-credit", "Частичный балл"], ...(hhOn ? [["hh-parse", "Разбор на hh.ru"], ["hh-match", "Подбор на hh.ru"]] : []), ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
-      {/* И26: стабильность при повторе и доля повторов заданий — выше по странице (жюри проверяет повтор руками) */}
-      <Fold><RetestSection sim={sim} /><RetestLive /></Fold>
-      <Fold><PathRetest /></Fold>
-      <Fold><GradeAccuracy /></Fold>
-      <Fold><GradesExtBlock /></Fold>
-      <Fold><TwoStage /></Fold>
+      {/* А4, 21.10: прежние модельные блоки (повтор, весь путь дважды, точность уровня, Lead/Principal, две сессии) сняты —
+          их заменяет симуляция продукта в начале страницы. Живая доля повторов заданий — ниже. */}
+      <Fold><RetestLive /></Fold>
 
       <Fold>
       <Section id="bank" title="Банк заданий и калибровка">
@@ -137,21 +194,7 @@ function Report({ r, before }: { r: any; before?: ReactNode }) {
       </Fold>
       <Fold><CalibrationCard /></Fold>
 
-      <Fold>
-      <Section id="test" title="Тест: точность оценки и решения по грейду (симуляция)"
-        lead={`Конфигурация платформы: ${sim.config?.min_items}–${sim.config?.max_items} заданий, до ${sim.config?.max_minutes} мин, ${sim.config?.subpools} субпула, контроль частоты Sympson — Hetter, open book не больше ${sim.config?.max_per_format?.open_book_3step}. Сравнение — с конфигурацией дня 2 (до 20 заданий, 90 мин, без контроля частоты и ротации). ${sim.population ?? ""}`}>
-        <Table head={["Направление", "r(θ)", "RMSE", "Заданий", "Минут", "Грейд точно", "Решение верно", "Ложное подтверждение", "Ложный отказ", "Open book, макс."]}
-          rows={[...dirs.map((d) => { const a = sim.directions[d].app; return [DIRECTION_TITLES[d], num(a.r_theta), num(a.rmse), num(a.mean_items, 1), num(a.mean_time_min, 0), pct(a.grade_exact), pct(a.decision_accuracy), pct(a.false_confirm_rate, 1), pct(a.false_reject_rate, 1), a.ob3_max]; }),
-            ["Среднее", num(sim.mean?.r_theta), num(sim.mean?.rmse), num(sim.mean?.mean_items, 1), num(sim.mean?.mean_time_min, 0), pct(sim.mean?.grade_exact), pct(sim.mean?.decision_accuracy), pct(sim.mean?.false_confirm_rate, 1), pct(sim.mean?.false_reject_rate, 1), ""],
-            ["День 2, среднее", num(sim.mean_baseline?.r_theta), num(sim.mean_baseline?.rmse), num(sim.mean_baseline?.mean_items, 1), num(sim.mean_baseline?.mean_time_min, 0), pct(sim.mean_baseline?.grade_exact), pct(sim.mean_baseline?.decision_accuracy), pct(sim.mean_baseline?.false_confirm_rate, 1), pct(sim.mean_baseline?.false_reject_rate, 1), Math.max(...dirs.map((d) => sim.directions[d].baseline_day2.ob3_max))]]} />
-        <SimConditions sim={sim} kind="test" />
-      </Section>
-      </Fold>
-
-      <Fold><JuniorStability /></Fold>
-      <Fold><InternCutSection ic={r.intern_cut} /></Fold>
-      <Fold><AltConditions sim={sim} /></Fold>
-
+      {/* А4, 21.10: «Тест: точность (симуляция)», «Junior у порога», «Стажёр», «Другие условия» — прежняя модель, сняты. */}
       <Fold>
       <Section id="exposure" title="Частота показа заданий"
         lead="Доля сессий, в которых показано семейство заданий. Цель Sympson — Hetter — не выше 0,3; канарейки опубликованы намеренно и не считаются.">
@@ -165,22 +208,7 @@ function Report({ r, before }: { r: any; before?: ReactNode }) {
       </Section>
       </Fold>
 
-      <Fold>
-      <Section id="leak" title="Устойчивость к утечке части банка"
-        lead={`Опубликовано ${pct(sim.directions?.[dirs[0]]?.leak?.leak_share)} вариантов и все канарейки, ${pct(sim.directions?.[dirs[0]]?.leak?.cheater_share)} кандидатов пользуются утечкой. Порог детектора — по честным кандидатам при 1 % ложных срабатываний.`}>
-        <Table head={["Направление", "Без утечки: завышение θ", "Утечка, без детектора", "С детектором", "Детектор + карантин", "Поймано списывающих", "Ложные срабатывания"]}
-          rows={dirs.map((d) => { const l = sim.directions[d].leak; return [DIRECTION_TITLES[d], sgn(l.no_leak.cheaters_bias_theta), sgn(l.leak_no_detector.cheaters_bias_theta), sgn(l.leak_detector.cheaters_bias_theta), sgn(l.leak_detector_rotation.cheaters_bias_theta), pct(l.leak_detector.detector_tpr), pct(l.leak_detector.detector_fpr, 1)]; })} />
-        <p className="mt-2 text-xs text-brand-ink/65">Завышение θ — средняя разница «оценка − истинный уровень» у списывающих, в единицах шкалы (1 ≈ одна ступень грейда).</p>
-        <h3 className="mt-6 text-base font-bold text-brand-night">Доля успешной атаки слитыми ответами</h3>
-        <p className="mt-1 text-sm text-brand-ink/70">Успех атаки — списывающий без нужного уровня получил подтверждение заявленного грейда. Фиксированная форма — одни и те же задания всем кандидатам грейда (без адаптивности, ротации, канареек и детектора); после утечки она остаётся той же, поэтому показан и случай «утекла целиком».</p>
-        <Table head={["Направление", "Фикс. форма: без утечки", "Фикс. форма: утечка 30 %", "Фикс. форма: утекла целиком", "Наш тест: утечка 30 %", "+ детектор", "+ детектор и карантин", "Списывающих без уровня"]}
-          rows={dirs.map((d) => { const l = sim.directions[d].leak; const a = l.attack_success_rate ?? {}; return [DIRECTION_TITLES[d], pct(a.fixed_no_leak), pct(a.fixed_leak), pct(a.fixed_full_leak), pct(a.leak_no_detector), pct(a.leak_detector), pct(a.leak_detector_rotation), l.n_unqualified_cheaters ?? "—"]; })} />
-        <p className="mt-2 text-xs text-brand-ink/65">Базовая доля «без утечки» — ошибка теста, а не атака. Выборка списывающих без уровня — десятки человек на направление, поэтому разброс ±10 п. п.</p>
-        <SimConditions sim={sim} kind="leak" />
-        <LeakShareTable sim={sim} />
-      </Section>
-      </Fold>
-
+      {/* А4, 21.10: «Устойчивость к утечке» прежней модели снята — её заменяют боты через движок («Обмани тест» вверху). */}
       <Fold><MatchingBench /></Fold>
       <Fold><Ablations /></Fold>
 

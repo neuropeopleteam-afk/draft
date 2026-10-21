@@ -86,7 +86,7 @@ export default function Attempts() {
         </>
       )}
       <p className="text-xs text-brand-ink/65">
-        Стабильность при повторе на синтетической популяции и доля повторов заданий между попытками — на <Link className="font-semibold text-brand" to="/validation#retest">/validation</Link> (модель, не люди).
+        Совпадение грейда при двух независимых попытках (симуляция продукта, не люди) — на <Link className="font-semibold text-brand" to="/validation#headline">/validation</Link>.
       </p>
     </div>
   );

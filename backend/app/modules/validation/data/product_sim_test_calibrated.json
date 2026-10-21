@@ -1,0 +1,596 @@
+{
+ "meta": {
+  "what": "симуляция продукта: движок стенда на реальном банке, модельные кандидаты (не люди)",
+  "phase": "test",
+  "world": "calibrated",
+  "seeds": [
+   2201,
+   2202,
+   2203,
+   2204,
+   2205,
+   2206,
+   2207,
+   2208,
+   2209,
+   2210
+  ],
+  "n_requested": 3000,
+  "rater_noise_text_parts": 0.0,
+  "two_stage": true,
+  "responses": "2PL с истинными параметрами + угадывание c = 1/K в частях с выбором варианта (K — число вариантов шага), 1/строк для выбора строки",
+  "population": {
+   "theta": "N(0; 1.3)",
+   "claim_shift": [
+    0,
+    0,
+    0,
+    1,
+    1,
+    -1
+   ],
+   "stack": "1–3 тега направления, вероятность ∝ числу семейств банка с этим тегом"
+  },
+  "bank": {
+   "n_families": 1504,
+   "manifest": {
+    "commit": "603474f",
+    "dirty_files": 0,
+    "content_hash": "82a05fdbacf00481",
+    "synced_at": "2026-10-20T11:19:30+00:00",
+    "n_families": 1504
+   }
+  },
+  "settings": {
+   "assessment_ai_mark": false,
+   "assessment_classify_z": 1.28,
+   "assessment_code_quota_ext": true,
+   "assessment_confirm_level": 0.8,
+   "assessment_engine": "bank",
+   "assessment_exposure": "sympson_hetter",
+   "assessment_express_item_time_s": 240,
+   "assessment_express_max_items": 7,
+   "assessment_express_max_minutes": 20,
+   "assessment_express_min_items": 5,
+   "assessment_express_senior_item_time_s": 360,
+   "assessment_express_senior_max_items": 12,
+   "assessment_express_senior_max_minutes": 45,
+   "assessment_express_senior_min_items": 8,
+   "assessment_extension_items": 6,
+   "assessment_extension_minutes": 20,
+   "assessment_extension_own_first": true,
+   "assessment_guessing_3pl": true,
+   "assessment_max_items": 20,
+   "assessment_max_minutes": 60,
+   "assessment_max_open_answer": 1,
+   "assessment_max_open_book": 2,
+   "assessment_min_items": 8,
+   "assessment_partial_credit_enabled": false,
+   "assessment_partial_credit_select": true,
+   "assessment_se_target": 0.35,
+   "assessment_select_at": "cut",
+   "assessment_stop_rule": "classification",
+   "assessment_subpool_quarantine": "",
+   "assessment_subpools": 2,
+   "assessment_two_stage_above": 0.0,
+   "assessment_two_stage_confirm": 0.5,
+   "assessment_two_stage_confirm_up": 0.9,
+   "assessment_two_stage_enabled": true,
+   "assessment_two_stage_floor": false,
+   "assessment_two_stage_items": 8,
+   "assessment_two_stage_level": 0.8,
+   "assessment_two_stage_minutes": 15,
+   "assessment_weak_exclude": false,
+   "grades_ext_enabled": true,
+   "grades_ext_max_se": 0.6,
+   "grades_ext_min_items": 8,
+   "grades_ext_min_own": 1,
+   "grades_ext_min_total": 3,
+   "grades_ext_no_subpool": true,
+   "grades_ext_preliminary": true,
+   "grades_ext_prior_sd": 1.5,
+   "grades_ext_refine_item_time_s": 420.0,
+   "grades_ext_refine_items": 10,
+   "grades_ext_refine_minutes": 25
+  },
+  "git_commit": null,
+  "date": "2026-10-21T08:04:07+00:00",
+  "command": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json"
+ },
+ "summary": {
+  "n": 3000,
+  "verdict_accuracy_final": {
+   "k": 2638,
+   "n": 3000,
+   "value": 0.8793,
+   "ci95": [
+    0.8672,
+    0.8905
+   ]
+  },
+  "false_confirm_among_overclaim": {
+   "k": 188,
+   "n": 1173,
+   "value": 0.1603,
+   "ci95": [
+    0.1404,
+    0.1824
+   ]
+  },
+  "false_reject_among_true": {
+   "k": 174,
+   "n": 1827,
+   "value": 0.0952,
+   "ci95": [
+    0.0826,
+    0.1096
+   ]
+  },
+  "confident_share_main": {
+   "k": 2335,
+   "n": 3000,
+   "value": 0.7783,
+   "ci95": [
+    0.7631,
+    0.7928
+   ]
+  },
+  "confident_accuracy_main": {
+   "k": 2197,
+   "n": 2335,
+   "value": 0.9409,
+   "ci95": [
+    0.9306,
+    0.9498
+   ]
+  },
+  "followup_share": {
+   "k": 933,
+   "n": 3000,
+   "value": 0.311,
+   "ci95": [
+    0.2947,
+    0.3278
+   ]
+  },
+  "provisional_junior_share": {
+   "k": 28,
+   "n": 3000,
+   "value": 0.0093,
+   "ci95": [
+    0.0065,
+    0.0135
+   ]
+  },
+  "provisional_among_overclaim": {
+   "k": 26,
+   "n": 1173,
+   "value": 0.0222,
+   "ci95": [
+    0.0152,
+    0.0323
+   ]
+  },
+  "exact_grade_final": {
+   "k": 2131,
+   "n": 3000,
+   "value": 0.7103,
+   "ci95": [
+    0.6938,
+    0.7263
+   ]
+  },
+  "exact_grade_final_not_above_claim": {
+   "k": 2131,
+   "n": 2612,
+   "value": 0.8158,
+   "ci95": [
+    0.8005,
+    0.8302
+   ]
+  },
+  "gross_error_2plus": {
+   "k": 0,
+   "n": 3000,
+   "value": 0.0,
+   "ci95": [
+    0.0,
+    0.0013
+   ]
+  },
+  "oral_defense_share": {
+   "k": 0,
+   "n": 3000,
+   "value": 0.0,
+   "ci95": [
+    0.0,
+    0.0013
+   ]
+  },
+  "integrity_low_share_honest": {
+   "k": 443,
+   "n": 3000,
+   "value": 0.1477,
+   "ci95": [
+    0.1354,
+    0.1608
+   ]
+  },
+  "minutes_main": {
+   "mean": 34.8,
+   "p90": 52.2
+  },
+  "minutes_total": {
+   "mean": 37.9,
+   "p90": 58.9
+  },
+  "items_main": {
+   "mean": 19.1,
+   "min": 8,
+   "max": 26
+  },
+  "code_open_share_main": {
+   "mean": 0.315,
+   "share_sessions_ge_one_third": 0.2787
+  }
+ },
+ "by_claim": {
+  "intern": {
+   "n": 704,
+   "verdict_accuracy_final": {
+    "k": 606,
+    "n": 704,
+    "value": 0.8608,
+    "ci95": [
+     0.8333,
+     0.8844
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 77,
+    "n": 287,
+    "value": 0.2683,
+    "ci95": [
+     0.2203,
+     0.3224
+    ]
+   },
+   "confident_share_main": {
+    "k": 500,
+    "n": 704,
+    "value": 0.7102,
+    "ci95": [
+     0.6756,
+     0.7425
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 472,
+    "n": 500,
+    "value": 0.944,
+    "ci95": [
+     0.9203,
+     0.961
+    ]
+   },
+   "exact_grade_final": {
+    "k": 462,
+    "n": 704,
+    "value": 0.6562,
+    "ci95": [
+     0.6204,
+     0.6904
+    ]
+   },
+   "minutes_total": {
+    "mean": 29.9,
+    "p90": 48.9
+   }
+  },
+  "junior": {
+   "n": 729,
+   "verdict_accuracy_final": {
+    "k": 650,
+    "n": 729,
+    "value": 0.8916,
+    "ci95": [
+     0.867,
+     0.9122
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 45,
+    "n": 147,
+    "value": 0.3061,
+    "ci95": [
+     0.2373,
+     0.3848
+    ]
+   },
+   "confident_share_main": {
+    "k": 584,
+    "n": 729,
+    "value": 0.8011,
+    "ci95": [
+     0.7706,
+     0.8285
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 554,
+    "n": 584,
+    "value": 0.9486,
+    "ci95": [
+     0.9276,
+     0.9638
+    ]
+   },
+   "exact_grade_final": {
+    "k": 470,
+    "n": 729,
+    "value": 0.6447,
+    "ci95": [
+     0.6093,
+     0.6786
+    ]
+   },
+   "minutes_total": {
+    "mean": 38.5,
+    "p90": 59.0
+   }
+  },
+  "middle": {
+   "n": 746,
+   "verdict_accuracy_final": {
+    "k": 663,
+    "n": 746,
+    "value": 0.8887,
+    "ci95": [
+     0.8642,
+     0.9093
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 40,
+    "n": 267,
+    "value": 0.1498,
+    "ci95": [
+     0.112,
+     0.1976
+    ]
+   },
+   "confident_share_main": {
+    "k": 590,
+    "n": 746,
+    "value": 0.7909,
+    "ci95": [
+     0.7602,
+     0.8185
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 556,
+    "n": 590,
+    "value": 0.9424,
+    "ci95": [
+     0.9206,
+     0.9585
+    ]
+   },
+   "exact_grade_final": {
+    "k": 568,
+    "n": 746,
+    "value": 0.7614,
+    "ci95": [
+     0.7295,
+     0.7906
+    ]
+   },
+   "minutes_total": {
+    "mean": 37.3,
+    "p90": 55.0
+   }
+  },
+  "senior": {
+   "n": 504,
+   "verdict_accuracy_final": {
+    "k": 433,
+    "n": 504,
+    "value": 0.8591,
+    "ci95": [
+     0.826,
+     0.8868
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 21,
+    "n": 268,
+    "value": 0.0784,
+    "ci95": [
+     0.0518,
+     0.1168
+    ]
+   },
+   "confident_share_main": {
+    "k": 385,
+    "n": 504,
+    "value": 0.7639,
+    "ci95": [
+     0.7249,
+     0.7989
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 355,
+    "n": 385,
+    "value": 0.9221,
+    "ci95": [
+     0.8909,
+     0.9449
+    ]
+   },
+   "exact_grade_final": {
+    "k": 390,
+    "n": 504,
+    "value": 0.7738,
+    "ci95": [
+     0.7353,
+     0.8082
+    ]
+   },
+   "minutes_total": {
+    "mean": 40.9,
+    "p90": 60.8
+   }
+  },
+  "lead": {
+   "n": 250,
+   "verdict_accuracy_final": {
+    "k": 225,
+    "n": 250,
+    "value": 0.9,
+    "ci95": [
+     0.8565,
+     0.9313
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 4,
+    "n": 157,
+    "value": 0.0255,
+    "ci95": [
+     0.01,
+     0.0637
+    ]
+   },
+   "confident_share_main": {
+    "k": 215,
+    "n": 250,
+    "value": 0.86,
+    "ci95": [
+     0.8115,
+     0.8976
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 202,
+    "n": 215,
+    "value": 0.9395,
+    "ci95": [
+     0.8993,
+     0.9643
+    ]
+   },
+   "exact_grade_final": {
+    "k": 192,
+    "n": 250,
+    "value": 0.768,
+    "ci95": [
+     0.7119,
+     0.816
+    ]
+   },
+   "minutes_total": {
+    "mean": 49.2,
+    "p90": 71.7
+   }
+  },
+  "principal": {
+   "n": 67,
+   "verdict_accuracy_final": {
+    "k": 61,
+    "n": 67,
+    "value": 0.9104,
+    "ci95": [
+     0.8181,
+     0.9583
+    ]
+   },
+   "false_confirm_among_overclaim": {
+    "k": 1,
+    "n": 47,
+    "value": 0.0213,
+    "ci95": [
+     0.0038,
+     0.1111
+    ]
+   },
+   "confident_share_main": {
+    "k": 61,
+    "n": 67,
+    "value": 0.9104,
+    "ci95": [
+     0.8181,
+     0.9583
+    ]
+   },
+   "confident_accuracy_main": {
+    "k": 58,
+    "n": 61,
+    "value": 0.9508,
+    "ci95": [
+     0.8651,
+     0.9831
+    ]
+   },
+   "exact_grade_final": {
+    "k": 49,
+    "n": 67,
+    "value": 0.7313,
+    "ci95": [
+     0.6148,
+     0.8228
+    ]
+   },
+   "minutes_total": {
+    "mean": 54.6,
+    "p90": 83.2
+   }
+  }
+ },
+ "claims": {
+  "senior": 504,
+  "intern": 704,
+  "middle": 746,
+  "junior": 729,
+  "lead": 250,
+  "principal": 67
+ },
+ "true_grades": {
+  "middle": 817,
+  "none": 287,
+  "intern": 420,
+  "lead": 146,
+  "junior": 847,
+  "senior": 455,
+  "principal": 28
+ },
+ "engine_errors": {
+  "n": 0,
+  "examples": []
+ },
+ "elapsed_s": 2693.5,
+ "retest": {
+  "n_pairs": 3000,
+  "kappa_w_quadratic": 0.9333,
+  "exact_agreement": {
+   "k": 2386,
+   "n": 3000,
+   "value": 0.7953,
+   "ci95": [
+    0.7805,
+    0.8094
+   ]
+  },
+  "verdict_agreement": {
+   "k": 2514,
+   "n": 3000,
+   "value": 0.838,
+   "ci95": [
+    0.8244,
+    0.8508
+   ]
+  },
+  "shared_families_mean": 0.0
+ }
+}

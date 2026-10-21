@@ -1,0 +1,16 @@
+{"phase": "train", "n_per_seed": 100, "seeds": [1101,1102,1103,1104,1105,1106,1107,1108,1109,1110],
+ "common_args": ["--retest"],
+ "configs": {
+  "K0": {"env": {}},
+  "K1": {"env": {"ASSESSMENT_SUBPOOLS": "1"}},
+  "K2": {"env": {"ASSESSMENT_SUBPOOLS": "1", "ASSESSMENT_POINT_ESTIMATOR": "eap"}},
+  "K3": {"env": {"ASSESSMENT_SUBPOOLS": "1", "ASSESSMENT_SPRT_DELTA": "0.5"}},
+  "K4": {"env": {"ASSESSMENT_SUBPOOLS": "1", "ASSESSMENT_SPRT_BETA": "0.2"}},
+  "K5": {"env": {"ASSESSMENT_SUBPOOLS": "1", "ASSESSMENT_SPRT_ALPHA": "0.1"}},
+  "K6": {"env": {"ASSESSMENT_SUBPOOLS": "1", "ASSESSMENT_UPGRADE_RULE": "point"}},
+  "K7": {"env": {"ASSESSMENT_SUBPOOLS": "1", "ASSESSMENT_TWO_STAGE_ITEMS": "12", "ASSESSMENT_TWO_STAGE_MINUTES": "20"}},
+  "K8": {"env": {"ASSESSMENT_SUBPOOLS": "1", "ASSESSMENT_TIME_WEIGHT": "0"}},
+  "K9": {"env": {"ASSESSMENT_SUBPOOLS": "1", "ASSESSMENT_SPRT_DELTA": "0.25"}},
+  "K10": {"env": {"ASSESSMENT_SUBPOOLS": "1", "ASSESSMENT_UPGRADE_RULE": "none"}},
+  "L0": {"env": {"ASSESSMENT_VERDICT_RULE": "posterior"}}
+ }}
