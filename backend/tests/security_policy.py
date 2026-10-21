@@ -550,6 +550,16 @@ POLICY: dict[tuple[str, str], Policy] = {
     # Счётчики расходов проводника за сегодня (суммы, число адресов, лимиты) — только администратор (живая ветка
     # d99e30987, чат «Аватар»).
     ("GET", "/api/interview/concierge/budget"): "admin",
+    # Бриф работодателя голосом с Настей (чат «Аватар», av8): только работодатель; бриф живёт 30 мин в файлах кэша,
+    # чужой или несуществующий id — 404. Ответ без тела — 422 до проверки брифа, поэтому у работодателей OK404.
+    ("POST", "/api/interview/concierge/brief"): "employer",
+    ("GET", "/api/interview/concierge/brief/{sid}/speech"): "employer_own404",
+    ("POST", "/api/interview/concierge/brief/{sid}/answer"): ("employer", {"employer": OK404, "employer_other": OK404,
+                                                                         "jury_employer": OK404,
+                                                                         "jury_other_employer": OK404}),
+    # Настя голосом объясняет итог теста по тексту экрана (av9): только кандидат (свой экран — текст из браузера,
+    # объектов не читает); без тела — 422, модель в тесте не вызывается
+    ("POST", "/api/interview/concierge/explain-result"): "candidate",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
     # А5: режим «Принесите свой набор» для жюри (подбор, метрики P@5/P@10/nDCG@10/MRR, объяснение, выгрузка CSV)
@@ -593,6 +603,8 @@ POLICY: dict[tuple[str, str], Policy] = {
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)
 PARAM_OVERRIDES: dict[tuple[str, str], dict[str, object]] = {
     ("POST", "/api/validation/attacks/{attack_id}"): {"attack_id": "nope"},
+    ("GET", "/api/interview/concierge/brief/{sid}/speech"): {"sid": "brief0000matrix"},
+    ("POST", "/api/interview/concierge/brief/{sid}/answer"): {"sid": "brief0000matrix"},
     ("DELETE", "/api/me/consents/{kind}"): {"kind": "processing"},  # 409 — профиль из подборок не пропадает
     ("POST", "/api/me/consents/{kind}"): {"kind": "publication"},
     ("GET", "/api/legal/consents/{kind}"): {"kind": "processing"},
