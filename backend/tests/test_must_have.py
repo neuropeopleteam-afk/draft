@@ -70,6 +70,8 @@ def test_tiers_put_full_required_first_and_flag_restores_old_order(client, monke
 
 def test_bonus_does_not_cross_tier(client, monkeypatch):
     """ФСП и зонд входят в балл (до +0,15); балл сравнивается только внутри яруса."""
+    monkeypatch.setenv("MATCH_V2", "0")  # ярусы обязательного — match-v1.1+; в v2 балл не пересекает ступень каскада стека
+    # (ключ порядка order_bundles: ярус статуса → ступень стека → балл) — test_a5_match_v2::test_cascade_hides_nobody…
     a, _ = _cand(client, 0, FULL)
     b, ub = _cand(client, 1, NO_PG)
     orig = ranking.score_candidate
