@@ -67,7 +67,7 @@ TOP5_PAIRS = {"confident_accuracy": {"confident_share": "confident_share_final"}
                               "main_part_grades_5": "exact_grade_main_5", "main_part_grades_4": "exact_grade_main_4",
                               "above_true": "grade_above_true_final"},
               "within_one": {"gross_error_2plus": "gross_error_2plus"}}
-TOP5_PAIRS["exact_grade"]["above_true_5"] = "grade_above_true_final_5"  # для сравнения с аналогичными — по 5 ступеням
+TOP5_PAIRS["exact_grade"]["above_true_5"] = "grade_above_true_final_5"  # справочная строка по 5 ступеням; как преимущество перед аналогами не подаётся (решение штаба 21.10, находка А13)
 GRADE_RU = {"none": "ниже Intern", "intern": "Intern", "junior": "Junior", "middle": "Middle", "senior": "Senior",
             "lead": "Lead", "principal": "Principal"}
 
