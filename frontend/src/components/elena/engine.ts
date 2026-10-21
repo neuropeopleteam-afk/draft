@@ -55,6 +55,9 @@ export interface ElenaUi {
   awaiting: Awaiting;
   /** Как слушает: wake — только «Настя …» (и короткие команды, когда молчит); open — любой ответ (она спросила). */
   listen: "wake" | "open";
+  /** Ждёт и продолжит сама по таймеру (ответ посреди своего обзора) — подсказка окна честно говорит «продолжу сама».
+   *  false — сама не уйдёт: экран, который попросили, ждёт «дальше» или вопрос (замечание владельца 21.10 17:33). */
+  autoNext: boolean;
 }
 
 export interface ElenaDeps {
@@ -105,6 +108,8 @@ interface Meta {
   skip_reg?: boolean | null;
   /** resume со стоящей регистрации — к следующему шагу (кабинет). */
   skip_now?: boolean | null;
+  /** goto: показать экран целиком («подробнее», «полностью», недовольство коротким показом) — вариант «<шаг>-full». */
+  full?: boolean | null;
 }
 
 interface Pos { ids: string[]; track: TourTrack | null; i: number; b: number }
@@ -133,6 +138,7 @@ const WAKE = /(?:^|[^а-яё])(?:наст(?:я|ь|енька|юша|ен|ю)|а�
 const QUIET_COMMAND = /^(?:(?:ну|так|давай|давайте|хорошо|ок)\s+)?(?:дальше|продолж[а-яё]*|поехали|идем дальше|стоп|стой|пауза|подожди[а-яё]*|назад|повтори[а-яё]*|пропусти[а-яё]*|вернись[а-яё]*)$/u;
 const WAKE_OPEN_MS = 8000;         // после «Настя» столько слушает просьбу без имени
 const WAKE_ONLY_END_MS = 1800;     // сказали только «Настя» — ждём продолжения фразы чуть дольше
+const DETOUR_NUDGE_MS = 20000;     // экран по просьбе: тишина — один вопрос «подробнее или дальше?», сама не уходит
 const RESUME_AFTER_MS = 15000;     // после ответа или экрана по просьбе: тишина столько — продолжает показ сама
 
 /** Текст после обращения «Настя» (обращение и знаки после него убраны); без обращения — как есть. */
@@ -325,7 +331,7 @@ export class ElenaEngine {
   private ui: ElenaUi = {
     phase: "idle", mic: "off", speaking: false, userTalking: false, hearing: false, track: null, stepNo: 0, stepTotal: 0,
     target: null, click: null, canPause: false, stage: "large",   // знакомство — большое окно по центру, обзор — в углу
-    awaiting: null, listen: "open",
+    awaiting: null, listen: "open", autoNext: false,
   };
   private closed = false;
   private ep = 0;                       // текущая «линия» действий; новая линия (ход, пауза, закрытие) обрывает старую
@@ -875,7 +881,7 @@ export class ElenaEngine {
   private waitFor(kind: Awaiting, ep: number, remindKey: string | null, opts: { remindMs?: number; auto?: { ms: number; run: () => void } } = {}) {
     this.awaiting = kind;
     this.clearWait();
-    this.set({ phase: this.paused ? "paused" : "listening", click: null });
+    this.set({ phase: this.paused ? "paused" : "listening", click: null, autoNext: !!opts.auto });
     if (this.noMic) return;
     if (remindKey) {
       this.remindTimer = window.setTimeout(() => {
@@ -1233,6 +1239,12 @@ export class ElenaEngine {
     return j < ids.length ? { ids, track, i: j, b: 0 } : null;
   }
 
+  /** Полный показ экрана («warroom» → «warroom-full»), если он есть и для него есть реплики. */
+  private fullOf(step: string): string | null {
+    const id = `${step}-full`;
+    return STEPS[id] && this.linesOf(id).length ? id : null;
+  }
+
   /** Куда ведёт «goto» посреди обзора: вперёд по обзору (продолжаем с этого экрана) или в сторону (показать и вернуться). */
   private forwardPos(step: string): Pos | null {
     const r = this.resumeAt;
@@ -1251,7 +1263,7 @@ export class ElenaEngine {
       : ns ? ns.ids[ns.i] : null;
     if (!step) return null;
     this.set({ stage: "corner" });
-    this.prefetch(this.linesOf(step));
+    this.prefetch(this.linesOf(meta.action === "goto" ? this.fullOf(step) ?? step : step));
     return this.enter(STEPS[step], ep, null);
   }
 
@@ -1282,6 +1294,20 @@ export class ElenaEngine {
       if (nav) await nav;
       if (!this.alive(ep)) return;
       this.paused = false;
+      // экран целиком: просили «подробнее / полностью» или открыли не по порядку обзора, а у экрана есть полный показ
+      const fullId = this.fullOf(meta.step);
+      if (fullId && (meta.full || !fwd)) {
+        this.pendingBridge = null;
+        if (fwd) this.resumeAt = fwd.i + 1 < fwd.ids.length ? { ...fwd, i: fwd.i + 1, b: 0 } : null;
+        void this.runTour({ ids: [fullId], track: null, i: 0, b: 0 }, ep, { bridge: false, single: true, detailed: true });
+        return;
+      }
+      if (meta.full && this.shownSteps.has(meta.step)) {
+        // «расскажи полностью» про уже показанный экран без полного варианта — все реплики экрана заново, не молча
+        if (fwd) { this.pendingBridge = null; this.resumeAt = fwd.i + 1 < fwd.ids.length ? { ...fwd, i: fwd.i + 1, b: 0 } : null; }
+        void this.runTour({ ids: [meta.step], track: null, i: 0, b: 0 }, ep, { bridge: false, single: true, detailed: true });
+        return;
+      }
       if (fwd) {
         // экран дальше по маршруту: показать его и ждать «дальше» (продолжит со следующего за ним) — человек ведёт
         this.pendingBridge = null;
@@ -1456,7 +1482,8 @@ export class ElenaEngine {
     await sleep(0);
     if (!this.alive(ep)) return;
     this.lastAsked = false;
-    this.waitFor("continue", ep, null, { auto: { ms: RESUME_AFTER_MS, run: () => this.autoResume(ep) } });
+    // экран попросили — сама дальше не идёт: ждёт «дальше» или вопрос; тишина — один раз «подробнее или дальше?»
+    this.waitFor("continue", ep, "detour_nudge", { remindMs: DETOUR_NUDGE_MS });
   }
 
   /** Обзор какой роли продолжать после этого экрана. */
@@ -1473,11 +1500,13 @@ export class ElenaEngine {
     this.lastAsked = false;
     this.set({ phase: "listening", click: null });
     if (this.resumeAt) {
+      // человек сам попросил этот экран — к обзору возвращаемся только по «дальше» (21.10 17:33: ушла с Полигона сама
+      // через 15 с, хотя на плашке было «Скажите «дальше»»); тишина — один раз «подробнее или дальше?»
       this.pendingBridge = this.phrase("back_tour") || null;
-      this.waitFor("detour", ep, null, { auto: { ms: RESUME_AFTER_MS, run: () => this.autoResume(ep) } });
+      this.waitFor("detour", ep, "detour_nudge", { remindMs: DETOUR_NUDGE_MS });
       return;
     }
-    this.waitFor(null, ep, null);
+    this.waitFor(null, ep, "detour_nudge", { remindMs: DETOUR_NUDGE_MS });
   }
 
   /** Экран обзора ли сейчас на виду (тогда после ответа можно скоро продолжить), или человек в стороне. */
@@ -1718,6 +1747,7 @@ export class ElenaEngine {
       if (!this.alive(ep) || !ok) return;
       if (b0 === 0) this.post("step", { step: step.id });
       this.shownSteps.add(step.id);
+      if (step.id.endsWith("-full")) this.shownSteps.add(step.id.slice(0, -5));   // полный показ — и обычный экран показан
       for (let k = 0; k < plan.length; k++) {
         const b = plan[k];
         if (!this.alive(ep)) return;

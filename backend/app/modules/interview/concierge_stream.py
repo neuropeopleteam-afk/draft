@@ -22,7 +22,7 @@ from typing import Iterator
 
 log = logging.getLogger("interview.concierge")
 
-_HEAD_KEYS = ("action", "step", "point", "role", "user_name", "dir", "offer")
+_HEAD_KEYS = ("action", "step", "point", "role", "user_name", "dir", "offer", "full")
 
 
 def _spec(spec: str) -> tuple[str, str, str]:
