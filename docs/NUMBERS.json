@@ -1,7 +1,7 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T13:42:03Z",
-  "git_commit": "b9b2a949f",
+  "generated_at": "2026-10-21T14:20:02Z",
+  "git_commit": "18aeafe6",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
     "code_and_open_families": 416,
@@ -10,7 +10,7 @@
     "directions": 10,
     "variants_20seeds": 32920,
     "unique_variants_20seeds": 32896,
-    "seeds": null,
+    "seeds": 20,
     "fail": 0,
     "checks": 38131,
     "checks_failed": 0,
@@ -11697,7 +11697,7 @@
       "eyebrow": "Банк заданий",
       "value": "1 646",
       "accent": "семейств",
-      "subtext": "32 920 вариантов на None зёрнах, уникальных — 32 896 · ошибок генерации — 0 · 38 131 проверок ключей исполнением кода, ошибок — 0 · 10 ИТ-направлений",
+      "subtext": "32 920 вариантов на 20 зёрнах, уникальных — 32 896 · ошибок генерации — 0 · 38 131 проверок ключей исполнением кода, ошибок — 0 · 10 ИТ-направлений",
       "provenance": "валидатор банка, 2026-10-21",
       "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
       "code_ref": "backend/assessment_bank/BANK_SYNC.json"
@@ -12359,7 +12359,7 @@
     {
       "section": "Банк заданий",
       "metric": "1 646 семейств, ошибок генерации 0, проверок ключей 38 131",
-      "sample": "None зёрен",
+      "sample": "20 зёрен",
       "command": "cd backend && python -m assessment_bank validate --seeds 20",
       "code_ref": "backend/assessment_bank/BANK_SYNC.json",
       "artifact": "backend/assessment_bank/BANK_SYNC.json"
