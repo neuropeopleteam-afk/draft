@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-21T07:48:39+00:00",
+ "generated_at": "2026-10-21T14:33:14+00:00",
  "source": "tools/realdata/numbers_matching.py (только из артефактов прогонов)",
  "matching": {
   "p5": {
@@ -67,97 +67,300 @@
   "recompute": "cd backend && python ../tools/realdata/bench_holdout.py run (один раз; новые seed — новый freeze)"
  },
  "hh_match": {
-  "n": 381,
+  "n": 336,
   "direction_ok": {
-   "value": 0.85,
-   "k": 324,
-   "n": 381
+   "value": 0.851,
+   "share": 0.851,
+   "k": 286,
+   "n": 336
   },
   "grade_ok": {
    "value": 1.0,
-   "k": 249,
-   "n": 249
+   "share": 1.0,
+   "k": 103,
+   "n": 103
   },
   "key_skills_recall": {
-   "value": 0.825,
-   "k": 567,
-   "n": 687
+   "value": 0.852,
+   "share": 0.852,
+   "k": 461,
+   "n": 541
   },
-  "set": "отложенный набор: 381 свежих вакансий hh.ru (SHA-256 db648a180c68…, заморожен 2026-10-21, прогон один)",
+  "set": "второй отложенный набор: 336 свежих вакансий hh.ru (SHA-256 2bb77a1cd8d7…, заморожен 2026-10-21, прогон один)",
+  "manifest_sha256": "2bb77a1cd8d79a87bea0600086de16c07857245e3997b32bb69399e5831b5e4f",
+  "protocol": "docs/realdata/hh_holdout2_PROTOCOL.md",
   "what": {
    "direction_ok": "Доля вакансий, где направление из разбора текста совпало с меткой hh.ru (роль hh.ru + слова направления в названии); знаменатель — все вакансии направлений каталога.",
    "grade_ok": "Доля вакансий со словом грейда в названии, где грейд из разбора текста совпал с этим словом. Это точность РАЗБОРА грейда вакансии, не точность теста кандидата.",
    "key_skills_recall": "Доля «Ключевых навыков» hh.ru (из справочника платформы), найденных разбором текста.",
    "confirmed_exact": "Доля вакансий, где в подборке есть кандидат с подтверждённым тестом грейдом точной категории — на МОДЕЛЬНОМ пуле демо-мира (модели, не люди); проверка механики, не рынка.",
    "no_fsp_top5": "Доля кандидатов без учтённых достижений ФСП в первых пятёрках подборок против их доли в пуле: отсутствие ФСП — штраф 0.",
-   "direction_ok_adjudicated": "То же после независимой проверки спорных меток: где разбор и метка hh.ru расходятся, два арбитра — модели разных компаний, не видевшие ни метку, ни ответ разбора, — определяют направление; итог только при их согласии, иначе метка hh.ru. Модели, не люди (протокол — docs/realdata/hh_holdout_PROTOCOL.md).",
-   "grade_ok_adjudicated": "То же после независимой проверки спорных меток: где разбор и метка hh.ru расходятся, два арбитра — модели разных компаний, не видевшие ни метку, ни ответ разбора, — определяют грейд; итог только при их согласии, иначе метка hh.ru. Модели, не люди (протокол — docs/realdata/hh_holdout_PROTOCOL.md)."
+   "direction_ok_adjudicated": "То же после независимой проверки спорных меток: где разбор и метка hh.ru расходятся, два арбитра — модели разных компаний, не видевшие ни метку, ни ответ разбора, — определяют направление; итог только при их согласии, иначе метка hh.ru. Модели, не люди (протокол — docs/realdata/hh_holdout2_PROTOCOL.md).",
+   "grade_ok_adjudicated": "То же после независимой проверки спорных меток: где разбор и метка hh.ru расходятся, два арбитра — модели разных компаний, не видевшие ни метку, ни ответ разбора, — определяют грейд; итог только при их согласии, иначе метка hh.ru. Модели, не люди (протокол — docs/realdata/hh_holdout2_PROTOCOL.md)."
   },
   "selection_model_pool": {
    "confirmed_exact": {
-    "value": 0.829,
-    "k": 316,
-    "n": 381
+    "value": 0.685,
+    "share": 0.685,
+    "k": 230,
+    "n": 336
    },
    "selection_nonempty": {
     "value": 1.0,
-    "k": 381,
-    "n": 381
+    "share": 1.0,
+    "k": 336,
+    "n": 336
    },
-   "pool_note": "модельный пул демо-мира (2 660 модельных кандидатов, из них 2 160 со связками навыков hh.ru)"
+   "pool_note": "модельный пул демо-мира: 2734 видимых модельных кандидатов (модели, не люди; часть — со связками навыков hh.ru, E2)"
   },
   "no_fsp_top5_share": {
-   "k": 977,
-   "n": 1904,
-   "share": 0.513
+   "k": 801,
+   "n": 1679,
+   "share": 0.477
   },
   "no_fsp_pool_share": {
    "k": 1914,
    "n": 2734,
    "share": 0.7
   },
-  "generated_at": "2026-10-21T07:09:57+00:00",
-  "code_ref": "c54006180730f44014bb5a2ac84e16995f332237",
-  "recompute": "cd backend && python ../tools/realdata/hh_holdout.py run (один раз; новый прогон — новый отложенный набор: collect → freeze → run)",
+  "generated_at": "2026-10-21T09:47:13+00:00",
+  "code_ref": "24944336764ca5e1396e6f9cb9da3511965ef0d5",
+  "recompute": "cd backend && python ../tools/realdata/hh_holdout.py --tag 2 run (один раз; новый прогон — новый отложенный набор: collect → freeze → run)",
   "direction_ok_adjudicated": {
-   "value": 0.8924,
-   "k": 340,
-   "n": 381
+   "value": 0.8899,
+   "k": 299,
+   "n": 336
   },
   "grade_ok_adjudicated": {
    "value": 1.0,
-   "k": 249,
-   "n": 249
+   "k": 103,
+   "n": 103
   },
   "noisy_labels": {
-   "direction": 29,
+   "direction": 33,
    "grade": 0
   },
-  "adjudication_ref": "docs/realdata/hh_holdout_adjudication.json",
-  "supplementary_outside_protocol": {
-   "not_it_by_arbiters": 11,
-   "parser_none_on_not_it": 8,
-   "direction_ok_it_only": {
-    "value": 0.9189,
-    "k": 340,
-    "n": 370
-   },
-   "what": "Дополнительно, вне протокола (посчитано после прогона): доля верного направления среди вакансий, которые оба арбитра признали IT-вакансиями; на не-IT вакансиях разбор не называет направление (parser_none_on_not_it) — это верное поведение, но по протоколу засчитано как ошибка."
+  "adjudication_ref": "docs/realdata/hh_holdout2_adjudication.json",
+  "direction_control_adjudicated": {
+   "value": 0.875,
+   "k": 294,
+   "n": 336
   },
-  "dev": {
-   "set": "набор разработки (414 вакансий hh.ru, 2026-10-10; на нём настраивались словарь, синонимы и классификатор — оптимистично)",
+  "direction_control": {
+   "flag": "NEED_TITLE_ROLE=0",
    "direction_ok": {
-    "value": 0.9372,
-    "k": 388,
-    "n": 414
+    "value": 0.833,
+    "share": 0.833,
+    "k": 280,
+    "n": 336
    },
-   "grade_ok": {
-    "value": 0.9971,
-    "k": 347,
-    "n": 348
+   "what": "Контроль: тот же код и тот же набор, направление разобрано с NEED_TITLE_ROLE=0 (без правила роли в названии, dir-v2) — для сравнения «до/после» на одном прогоне."
+  },
+  "by_direction": {
+   "analyst": {
+    "title": "Системный / бизнес-аналитик",
+    "direction_ok": {
+     "value": 0.812,
+     "share": 0.812,
+     "k": 39,
+     "n": 48
+    },
+    "direction_ok_control": {
+     "value": 0.812,
+     "share": 0.812,
+     "k": 39,
+     "n": 48
+    }
    },
-   "generated_at": "2026-10-21T07:12:07+00:00",
-   "recompute": "cd backend && CATALOG_EXT_ENABLED=1 HH_CORPUS_DIR=<сырьё> python ../tools/realdata/hh_parse_eval.py --out ../docs/realdata/hh_dev_parse.json"
+   "backend": {
+    "title": "Backend",
+    "direction_ok": {
+     "value": 0.935,
+     "share": 0.935,
+     "k": 43,
+     "n": 46
+    },
+    "direction_ok_control": {
+     "value": 0.848,
+     "share": 0.848,
+     "k": 39,
+     "n": 46
+    }
+   },
+   "data_eng": {
+    "title": "Инженер данных",
+    "direction_ok": {
+     "value": 0.829,
+     "share": 0.829,
+     "k": 29,
+     "n": 35
+    },
+    "direction_ok_control": {
+     "value": 0.829,
+     "share": 0.829,
+     "k": 29,
+     "n": 35
+    }
+   },
+   "data_ml": {
+    "title": "Data/ML",
+    "direction_ok": {
+     "value": 0.889,
+     "share": 0.889,
+     "k": 32,
+     "n": 36
+    },
+    "direction_ok_control": {
+     "value": 0.861,
+     "share": 0.861,
+     "k": 31,
+     "n": 36
+    }
+   },
+   "devops": {
+    "title": "DevOps / SRE",
+    "direction_ok": {
+     "value": 0.611,
+     "share": 0.611,
+     "k": 22,
+     "n": 36
+    },
+    "direction_ok_control": {
+     "value": 0.583,
+     "share": 0.583,
+     "k": 21,
+     "n": 36
+    }
+   },
+   "frontend": {
+    "title": "Frontend",
+    "direction_ok": {
+     "value": 1.0,
+     "share": 1.0,
+     "k": 23,
+     "n": 23
+    },
+    "direction_ok_control": {
+     "value": 1.0,
+     "share": 1.0,
+     "k": 23,
+     "n": 23
+    }
+   },
+   "mobile": {
+    "title": "Мобильная разработка",
+    "direction_ok": {
+     "value": 0.944,
+     "share": 0.944,
+     "k": 17,
+     "n": 18
+    },
+    "direction_ok_control": {
+     "value": 0.944,
+     "share": 0.944,
+     "k": 17,
+     "n": 18
+    }
+   },
+   "qa": {
+    "title": "QA",
+    "direction_ok": {
+     "value": 0.978,
+     "share": 0.978,
+     "k": 45,
+     "n": 46
+    },
+    "direction_ok_control": {
+     "value": 0.978,
+     "share": 0.978,
+     "k": 45,
+     "n": 46
+    }
+   },
+   "security": {
+    "title": "Информационная безопасность",
+    "direction_ok": {
+     "value": 0.75,
+     "share": 0.75,
+     "k": 36,
+     "n": 48
+    },
+    "direction_ok_control": {
+     "value": 0.75,
+     "share": 0.75,
+     "k": 36,
+     "n": 48
+    }
+   }
+  },
+  "history": {
+   "holdout1": {
+    "set": "отложенный набор: 381 свежих вакансий hh.ru (SHA-256 db648a180c68…, заморожен 2026-10-21, прогон один)",
+    "manifest_sha256": "db648a180c688b67957ae170f6b662a1c4a166396411822e12256d252a49ecea",
+    "n": 381,
+    "direction_ok": {
+     "value": 0.85,
+     "share": 0.85,
+     "k": 324,
+     "n": 381
+    },
+    "grade_ok": {
+     "value": 1.0,
+     "share": 1.0,
+     "k": 249,
+     "n": 249
+    },
+    "key_skills_recall": {
+     "value": 0.825,
+     "share": 0.825,
+     "k": 567,
+     "n": 687
+    },
+    "direction_ok_adjudicated": {
+     "value": 0.8924,
+     "k": 340,
+     "n": 381
+    },
+    "generated_at": "2026-10-21T07:09:57+00:00",
+    "code_ref": "c54006180730f44014bb5a2ac84e16995f332237",
+    "supplementary_outside_protocol": {
+     "not_it_by_arbiters": 11,
+     "parser_none_on_not_it": 8,
+     "direction_ok_it_only": {
+      "value": 0.9189,
+      "k": 340,
+      "n": 370
+     },
+     "what": "Дополнительно, вне протокола (посчитано после прогона): доля верного направления среди вакансий, которые оба арбитра признали IT-вакансиями; на не-IT вакансиях разбор не называет направление (parser_none_on_not_it) — это верное поведение, но по протоколу засчитано как ошибка."
+    },
+    "note": "до dir-v2: первый отложенный набор; после его отчёта на нём настраивался классификатор направления dir-v2 — для dir-v2 этот набор обучающий"
+   },
+   "dev": {
+    "set": "набор разработки (414 вакансий hh.ru, 2026-10-10; на нём настраивались словарь, синонимы и классификатор — оптимистично)",
+    "direction_ok": {
+     "value": 0.9372,
+     "k": 388,
+     "n": 414
+    },
+    "grade_ok": {
+     "value": 0.9971,
+     "k": 347,
+     "n": 348
+    },
+    "generated_at": "2026-10-21T07:12:07+00:00",
+    "recompute": "cd backend && CATALOG_EXT_ENABLED=1 HH_CORPUS_DIR=<сырьё> python ../tools/realdata/hh_parse_eval.py --out ../docs/realdata/hh_dev_parse.json"
+   }
+  },
+  "history_note": "История — только в отчёте и документации, на экран не выводится.",
+  "site": {
+   "direction_ok": {
+    "value": 0.851,
+    "share": 0.851,
+    "k": 286,
+    "n": 336
+   },
+   "condition": "второй отложенный набор: 336 свежих вакансий hh.ru (SHA-256 2bb77a1cd8d7…, заморожен 2026-10-21, прогон один); метки — поля hh.ru (роль и слова названия), разбор текста правилами без LLM; прогон 2026-10-21, код 249443367",
+   "recompute": "cd backend && python ../tools/realdata/hh_holdout.py --tag 2 run (один раз; новый прогон — новый отложенный набор: collect → freeze → run)"
   }
  }
 }
