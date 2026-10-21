@@ -652,10 +652,10 @@ export function MobileTabBar({
         ref={navRef}
         aria-label="Нижняя навигация кабинета"
         data-testid="mobile-tab-bar"
-        className={`fixed inset-x-0 bottom-0 z-40 border-t border-brand-night/10 bg-white/95 backdrop-blur-md md:hidden ${className}`}
+        className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#A59DFF]/25 bg-[#090B1A]/95 text-white shadow-[0_-12px_32px_rgba(9,11,26,0.45)] backdrop-blur-xl md:hidden ${className}`}
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="mx-auto grid max-w-lg grid-flow-col auto-cols-fr items-stretch px-1">
+        <div className="mx-auto grid max-w-lg grid-flow-col auto-cols-fr items-stretch px-0.5">
           {primaryTabs.map((s) => {
             const to = s.path ? `${base}/${s.path}` : base;
             const active = isSectionActive(s);
@@ -667,13 +667,13 @@ export function MobileTabBar({
                 to={to}
                 data-testid={`mobile-tab-${s.path || "overview"}`}
                 aria-current={active ? "page" : undefined}
-                className={`relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[11px] font-semibold transition-colors ${
-                  active ? "text-brand" : "text-brand-ink/70 hover:text-brand-night"
+                className={`relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 text-[9.5px] font-semibold tracking-[-0.03em] transition-colors ${
+                  active ? "text-white" : "text-[#C8CEFF]/75 hover:text-white"
                 }`}
               >
                 {active && (
                   <span
-                    className="absolute inset-x-3 top-0 h-0.5 rounded-b-full bg-brand"
+                    className="absolute inset-x-2.5 top-0 h-0.5 rounded-b-full bg-[#6557FF] shadow-[0_0_10px_#6557FF]"
                     aria-hidden="true"
                   />
                 )}
@@ -703,13 +703,13 @@ export function MobileTabBar({
                 setSheetOpen((v) => !v);
                 onOpenMenu?.();
               }}
-              className={`relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[11px] font-semibold transition-colors ${
-                activeInExtra || sheetOpen ? "text-brand" : "text-brand-ink/70 hover:text-brand-night"
+              className={`relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 text-[9.5px] font-semibold tracking-[-0.03em] transition-colors ${
+                activeInExtra || sheetOpen ? "text-white" : "text-[#C8CEFF]/75 hover:text-white"
               }`}
             >
               {(activeInExtra || sheetOpen) && (
                 <span
-                  className="absolute inset-x-3 top-0 h-0.5 rounded-b-full bg-brand"
+                  className="absolute inset-x-2.5 top-0 h-0.5 rounded-b-full bg-[#6557FF] shadow-[0_0_10px_#6557FF]"
                   aria-hidden="true"
                 />
               )}

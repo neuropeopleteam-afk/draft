@@ -12,9 +12,27 @@ export const num = (v?: number | null, d = 2) => (v == null || Number.isNaN(Numb
   : Number(v).toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "−"));
 /** Со знаком: «+1,76», «−0,10». */
 export const signed = (v?: number | null, d = 2) => (v == null ? "—" : `${v > 0 ? "+" : ""}${num(v, d)}`);
+/** Форматирование часов по-русски: до часа — минуты («59 мин»), от часа — «1 ч 20 мин» или «2 ч». */
+export function fmtHours(h: number): string {
+  const totalMin = Math.round(h * 60);
+  if (totalMin < 60) return `${Math.max(1, totalMin)}${NB}мин`;
+  const hrs = Math.floor(totalMin / 60);
+  const mins = totalMin % 60;
+  return mins > 0 ? `${hrs}${NB}ч ${mins}${NB}мин` : `${hrs}${NB}ч`;
+}
+/** Заменяет дробные часы вида «0.98 ч» / «0,98 ч» / «1.33 ч» в тексте на «59 мин» / «1 ч 20 мин» (не трогая мА·ч и ГБ/ч). */
+export const fmtHoursText = (s?: string | null) =>
+  (s ?? "").replace(
+    /(^|[\s(\u00A0«"':;—–-])(0|[1-9]\d*)[.,](\d+)[\s\u00A0]*ч(?![а-яА-Яa-zA-ZёЁ0-9_/·])/g,
+    (m, pre: string, intPart: string, fracPart: string) => {
+      const val = parseFloat(`${intPart}.${fracPart}`);
+      if (!Number.isFinite(val) || val <= 0) return m;
+      return `${pre}${fmtHours(val)}`;
+    },
+  );
 /** Текст объяснений с сервера: «θ = 1.27 ± 0.49» → «θ = 1,27 ± 0,49», «260 000 ₽» — с неразрывными пробелами.
  *  Даты «06.10» и версии вида «v1.2» не трогает. */
-export const ruText = (s?: string | null) => (s ?? "")
+export const ruText = (s?: string | null) => fmtHoursText(s)
   .replace(/(^|[\s(=±+−-])(0|[1-9]\d{0,2})\.(\d+)(?![.\d])/g, "$1$2,$3")
   .replace(/(\d) (?=\d{3}(?!\d))/g, `$1${NB}`)
   .replace(/(\d) (₽|%|тыс\.)/g, `$1${NB}$2`);
@@ -22,6 +40,10 @@ export const ruText = (s?: string | null) => (s ?? "")
  *  Только для экранов кандидата и работодателя; на /criteria и /validation остаётся ruText с обозначениями. */
 const nRu = (x: string) => parseFloat(x.replace("−", "-").replace(",", "."));
 export const plainText = (s?: string | null) => ruText(s)
+  .replace(/Оценка уровня θ/g, "Оценка уровня")
+  .replace(/сравнивают θ/g, "сравнивают оценку уровня")
+  .replace(/порогу θ/g, "порогу уровня")
+  .replace(/θ — на общей шкале/g, "Оценка уровня — на общей шкале")
   .replace(/тест: θ ([+−-]?\d+(?:,\d+)?) ± (\d+(?:,\d+)?) против θ ([+−-]?\d+(?:,\d+)?) ± (\d+(?:,\d+)?)/g,
     (_m, a: string, sa: string, b: string, sb: string) => (nRu(a) - nRu(sa) > nRu(b) + nRu(sb)
       ? "уровень по тесту выше, с запасом" : "уровень по тесту выше, но в пределах точности теста"))
@@ -36,7 +58,12 @@ export const plainText = (s?: string | null) => ruText(s)
   .replace(/погрешность SE|\bSE\b/g, "точность")
   .replace(/сила паспорта/g, "вес достижений")
   .replace(/\s*\((?:уровень )?T[012](?:\/T[012])*\)/g, "")
-  .replace(/,? ?уровень T[012]\b/g, "");
+  .replace(/\(T2;\s*/g, "(")
+  .replace(/\(T1;\s*/g, "(")
+  .replace(/,? ?уровень T[012]\b/g, "")
+  .replace(/\bT2\b/g, "реестр ФСП")
+  .replace(/\bT1\b/g, "проверка платформы")
+  .replace(/\bT0\b/g, "самоописание");
 /** Доля → проценты: 0.953 → «95 %». */
 export const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${num(v * 100, d)}${NB}%`);
 export const dt = (s?: string | null) => (s ? new Date(s).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "—");

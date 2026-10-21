@@ -107,47 +107,47 @@ interface RegionsMapData {
   };
 }
 
-// Геометрия федеральных округов России на схематичной SVG-карте (820×340, с запада на восток)
+// Геометрия федеральных округов России на схематичной SVG-карте (с запада на восток, без пустого поля снизу)
 const SVG_POLYGONS: Record<string, { path: string; cx: number; cy: number }> = {
   szfo: {
-    path: "M 55,48 L 195,35 L 235,98 L 165,138 L 62,122 Z",
-    cx: 145,
-    cy: 86,
+    path: "M 48,36 L 195,28 L 235,96 L 165,134 L 52,118 Z",
+    cx: 142,
+    cy: 82,
   },
   cfo: {
-    path: "M 50,126 L 165,140 L 185,205 L 85,212 L 45,172 Z",
-    cx: 118,
-    cy: 175,
+    path: "M 44,122 L 165,136 L 184,200 L 84,206 L 40,168 Z",
+    cx: 116,
+    cy: 168,
   },
   yufo: {
-    path: "M 55,216 L 165,208 L 178,266 L 92,275 L 48,248 Z",
-    cx: 115,
-    cy: 242,
+    path: "M 50,210 L 165,203 L 178,256 L 88,262 L 44,238 Z",
+    cx: 114,
+    cy: 233,
   },
   skfo: {
-    path: "M 92,278 L 178,269 L 188,312 L 105,318 Z",
-    cx: 140,
-    cy: 294,
+    path: "M 88,265 L 178,259 L 188,308 L 96,312 Z",
+    cx: 138,
+    cy: 286,
   },
   pfo: {
-    path: "M 188,136 L 285,126 L 298,242 L 182,252 Z",
+    path: "M 188,132 L 285,122 L 298,256 L 182,264 Z",
     cx: 240,
-    cy: 190,
+    cy: 194,
   },
   ufo: {
-    path: "M 240,56 L 378,52 L 392,235 L 302,240 L 288,124 Z",
-    cx: 332,
-    cy: 148,
+    path: "M 240,46 L 378,42 L 392,258 L 302,262 L 288,120 Z",
+    cx: 334,
+    cy: 152,
   },
   sfo: {
-    path: "M 382,48 L 575,44 L 585,275 L 396,268 Z",
-    cx: 484,
-    cy: 162,
+    path: "M 382,38 L 575,34 L 585,292 L 396,284 Z",
+    cx: 486,
+    cy: 164,
   },
   dfo: {
-    path: "M 579,38 L 788,28 L 798,282 L 589,276 Z",
-    cx: 688,
-    cy: 156,
+    path: "M 579,30 L 792,24 L 802,298 L 589,292 Z",
+    cx: 690,
+    cy: 160,
   },
 };
 
@@ -251,11 +251,11 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
         )}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-        <div className="min-w-0 rounded-2xl border border-brand-night/10 bg-[#FBFAFF] p-3">
+      <div className="grid items-start gap-5 lg:grid-cols-[1.35fr_1fr]">
+        <div className="min-w-0 self-start rounded-2xl border border-brand-night/10 bg-[#F7F9FF] p-3">
           <svg
-            viewBox="0 0 830 340"
-            className="h-auto w-full select-none"
+            viewBox="32 18 778 302"
+            className="block h-auto w-full select-none"
             role="img"
             aria-label="Интерактивная карта федеральных округов России"
           >
@@ -266,14 +266,15 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
               const gap = gapOf(d);
               const sup = supplyOf(d);
               const dem = demandOf(d);
+              const isDeficit = gap != null && gap > 0;
               const fill = isSel
-                ? "#0E1126"
-                : gap != null && gap > 0
-                  ? "#E8ECFF"
-                  : "#E6EAFC";
-              const stroke = isSel ? "#402FFF" : gap != null && gap > 0 ? "#402FFF" : "#5E6494";
-              const textFill = isSel ? "#FFFFFF" : "#1D0B30";
-              const subFill = isSel ? "#DCE2FF" : "#5B527A";
+                ? "#14183B"
+                : isDeficit
+                  ? "#DCE2FF"
+                  : "#D9F5EC";
+              const stroke = isSel ? "#402FFF" : isDeficit ? "#402FFF" : "#0D9488";
+              const textFill = isSel ? "#FFFFFF" : "#0E1126";
+              const subFill = isSel ? "#DCE2FF" : "#28305E";
               return (
                 <g
                   key={d.id}
@@ -294,14 +295,14 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
                     d={geo.path}
                     fill={fill}
                     stroke={stroke}
-                    strokeWidth={isSel ? 3 : 1.5}
+                    strokeWidth={isSel ? 3.5 : 1.8}
                     strokeLinejoin="round"
                   />
                   <text
                     x={geo.cx}
-                    y={geo.cy - 10}
+                    y={geo.cy - 8}
                     textAnchor="middle"
-                    fontSize="13"
+                    fontSize={d.id === "skfo" ? "16" : "19"}
                     fontWeight="800"
                     fill={textFill}
                   >
@@ -311,36 +312,66 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
                     x={geo.cx}
                     y={geo.cy + 8}
                     textAnchor="middle"
-                    fontSize="11"
-                    fontWeight="600"
+                    fontSize={d.id === "skfo" ? "11.5" : "13"}
+                    fontWeight="700"
                     fill={subFill}
                   >
-                    канд.: {fk(sup)} · спрос: {dem}
+                    {fk(sup)} / спрос {dem}
                   </text>
-                  <text
-                    x={geo.cx}
-                    y={geo.cy + 24}
-                    textAnchor="middle"
-                    fontSize="10"
-                    fontWeight="700"
-                    fill={isSel ? "#FFE082" : gap != null && gap > 0 ? "#B71C1C" : "#2E7D32"}
-                  >
-                    {gap == null ? "группа < 5" : gap > 0 ? `дефицит +${gap}` : `резерв ${Math.abs(gap)}`}
-                  </text>
+                  {d.id !== "skfo" && (
+                    <text
+                      x={geo.cx}
+                      y={geo.cy + 23}
+                      textAnchor="middle"
+                      fontSize="12"
+                      fontWeight="800"
+                      fill={isSel ? "#FFE082" : isDeficit ? "#C61A32" : "#047857"}
+                    >
+                      {gap == null ? "группа < 5" : gap > 0 ? `дефицит +${gap}` : `резерв ${Math.abs(gap)}`}
+                    </text>
+                  )}
                 </g>
               );
             })}
           </svg>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-brand-ink/65">
+          {/* Быстрый выбор округа крупными кнопками (особенно удобно на экранах 360 px) */}
+          <div className="mt-2.5 flex flex-wrap gap-1.5" aria-label="Быстрый выбор федерального округа">
+            {districts.map((d) => {
+              const isSel = d.id === active.id;
+              const gap = gapOf(d);
+              const isDeficit = gap != null && gap > 0;
+              return (
+                <button
+                  key={`pill-${d.id}`}
+                  type="button"
+                  onClick={() => setSelectedId(d.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                    isSel
+                      ? "bg-brand-night text-white ring-2 ring-brand"
+                      : isDeficit
+                        ? "bg-[#DCE2FF]/80 text-brand-night ring-1 ring-brand/40 hover:bg-[#DCE2FF]"
+                        : "bg-[#D9F5EC]/80 text-emerald-950 ring-1 ring-teal-600/35 hover:bg-[#D9F5EC]"
+                  }`}
+                >
+                  <span>{d.short}</span>
+                  <span className={`font-mono text-[11px] ${isSel ? "text-[#B8B4FF]" : "opacity-75"}`}>{fk(supplyOf(d))}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-brand-night/10 pt-2 px-1 text-xs text-brand-ink/75">
             <span className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm bg-[#E8ECFF] ring-1 ring-[#402FFF]" /> Дефицит кадров (спрос &gt; предложения)
+              <span className="inline-flex items-center gap-1.5 font-medium">
+                <span className="h-3 w-3 rounded-sm bg-[#14183B] ring-1 ring-[#402FFF]" /> Выбранный округ
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm bg-[#E6EAFC] ring-1 ring-[#5E6494]" /> Достаточный резерв
+              <span className="inline-flex items-center gap-1.5 font-medium">
+                <span className="h-3 w-3 rounded-sm bg-[#DCE2FF] ring-1 ring-[#402FFF]" /> Дефицит кадров (спрос &gt; предложения)
+              </span>
+              <span className="inline-flex items-center gap-1.5 font-medium">
+                <span className="h-3 w-3 rounded-sm bg-[#D9F5EC] ring-1 ring-[#0D9488]" /> Достаточный резерв
               </span>
             </span>
-            <span>Нажмите на округ для детализации по регионам</span>
+            <span className="text-[11px] text-brand-ink/60">Нажмите на округ для детализации</span>
           </div>
         </div>
 

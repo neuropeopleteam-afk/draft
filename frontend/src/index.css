@@ -514,11 +514,21 @@ html[data-theme="light"] .np .fsp-serif-italic {
 .fsp-orbit-pill--bottom { bottom: 2%; right: 2%; }
 
 @media (max-width: 639.98px) {
-  .fsp-orbit-pill {
-    padding: 6px 10px;
-    font-size: 10.5px;
+  .fsp-hero-visual {
+    min-height: 210px;
   }
-  .fsp-orbit-pill small { display: none; }
+  .fsp-orbit-pill {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    padding: 7px 11px;
+    font-size: 11px;
+  }
+  .fsp-orbit-pill small {
+    font-size: 10px;
+  }
 }
 
 .fsp-mini-orbit-pill {
@@ -551,16 +561,14 @@ html[data-theme="light"] .np .fsp-serif-italic {
   color: #B8B4FF;
 }
 
-/* Контрастный обсидианово-титановый сайдбар Личных кабинетов на десктопе */
-@media (min-width: 768px) {
-  .fsp-cabinet-sidebar {
-    background:
-      radial-gradient(120% 80% at 10% 0%, rgba(64, 47, 255, 0.28) 0%, transparent 55%),
-      radial-gradient(90% 70% at 90% 100%, rgba(236, 29, 53, 0.14) 0%, transparent 55%),
-      linear-gradient(180deg, #090B1A 0%, #0E1229 55%, #090B1A 100%) !important;
-    border-right: 1px solid rgba(165, 157, 255, 0.18) !important;
-    color: #F3F4FF;
-  }
+/* Контрастный обсидианово-титановый сайдбар и мобильная шапка Личных кабинетов */
+.fsp-cabinet-sidebar {
+  background:
+    radial-gradient(120% 80% at 10% 0%, rgba(64, 47, 255, 0.3) 0%, transparent 55%),
+    radial-gradient(90% 70% at 90% 100%, rgba(236, 29, 53, 0.14) 0%, transparent 55%),
+    linear-gradient(180deg, #090B1A 0%, #0E1229 55%, #090B1A 100%) !important;
+  border-color: rgba(165, 157, 255, 0.2) !important;
+  color: #F3F4FF;
 }
 
 /* Защита таблицы сравнения кандидатов (/employer/needs/:id/compare) от посимвольного сжатия текста рядом со значком уровня */

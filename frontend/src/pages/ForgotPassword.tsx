@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { AuthShell, FormError } from "../components/AuthShell";
+import { AuthShell, FormError, PasswordInput } from "../components/AuthShell";
 import { Alert } from "../components/ui";
 import { api, ApiError } from "../lib/api";
 import { usePageTitle } from "../lib/meta";
@@ -167,9 +167,8 @@ export function ResetPassword() {
           </div>
           <div>
             <label className="label" htmlFor="reset-password">Новый пароль</label>
-            <input
+            <PasswordInput
               id="reset-password"
-              type="password"
               minLength={8}
               required
               className="input"
