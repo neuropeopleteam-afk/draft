@@ -51,12 +51,15 @@ function InvitationFunnelWidget({ invitations }: { invitations: any[] }) {
         <Link to="/employer/invitations" className="text-sm font-semibold text-brand hover:underline">Все приглашения →</Link>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stages.map((s) => {
+        {stages.map((s, idx) => {
           const diff = s.cur - s.prev;
           return (
-            <div key={s.key} className="rounded-xl bg-[#FBF8FC] p-3 ring-1 ring-brand-night/5">
-              <p className="text-xs font-semibold text-brand-ink/65">{s.label}</p>
-              <p className="mt-1 text-xl font-extrabold tabular-nums text-brand-night">{s.cur}</p>
+            <div key={s.key} className="relative overflow-hidden rounded-xl border border-brand-night/10 bg-gradient-to-b from-[#F8F9FF] to-[#EEF1FC] p-3.5">
+              <div className="flex items-center justify-between gap-1">
+                <p className="text-xs font-semibold text-brand-ink/70">{s.label}</p>
+                <span className="font-mono text-[10px] font-bold text-brand/70">0{idx + 1}</span>
+              </div>
+              <p className="mt-1 font-mono text-2xl font-extrabold tabular-nums text-brand-night">{s.cur}</p>
               <p className="mt-0.5 text-[11px] text-brand-ink/60">
                 пред. 30 дн.: {s.prev} ({diff > 0 ? `+${diff}` : diff})
               </p>
@@ -65,7 +68,7 @@ function InvitationFunnelWidget({ invitations }: { invitations: any[] }) {
         })}
       </div>
       {topReasons.length > 0 && (
-        <div className="rounded-xl bg-[#F3F2FB] px-3.5 py-2.5 text-xs text-brand-ink/80">
+        <div className="rounded-xl border border-brand/15 bg-[#EEF1FE] px-3.5 py-2.5 text-xs text-brand-ink/85">
           <b className="text-brand-night">Причины отказов:</b>{" "}
           {topReasons.map(([r, n]) => `«${r}» (${n})`).join(" · ")}
         </div>
@@ -106,13 +109,32 @@ export default function EmployerOverview() {
       </div></div>
       {/* Командный Драфт ФСП: сборка сыгранного звена из 4 человек под проект в 1 клик */}
       <Link to="/employer/squad" data-testid="employer-squad-card"
-        className="group mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-night p-5 text-white transition-colors hover:bg-brand-plum sm:p-6">
-        <div className="min-w-0">
-          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand-blush">Новое · Командный Драфт ФСП</p>
-          <h2 className="mt-1 text-lg font-bold">Сборка звена под проект в 1 клик</h2>
-          <p className="mt-1 text-sm text-white/80">4 проверенных специалиста с паспортом Ed25519 и разрядом ФСП под ваш бюджет ФОТ, пакетный оффер всей четвёрке, экономика найма и рентген кода.</p>
+        className="fsp-hero-banner group mt-8 flex flex-wrap items-center justify-between gap-4 p-5 transition-transform hover:-translate-y-0.5 sm:p-6">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
+          <span
+            className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 sm:inline-flex"
+            style={{
+              background: "linear-gradient(145deg, #2B1CE0 0%, #402FFF 55%, #161B42 100%)",
+              boxShadow: "0 10px 24px -8px rgba(64, 47, 255, 0.8), inset 0 1px 0 rgba(255,255,255,0.3)",
+            }}
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 36 36" className="h-6 w-6" fill="none">
+              <path d="M9 24 Q9 14 18 14 H27" stroke="#A59DFF" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M18 14 V8" stroke="#EDEDED" strokeWidth="1.8" strokeLinecap="round" />
+              <circle cx="9" cy="24" r="3" fill="#402FFF" />
+              <circle cx="18" cy="8" r="3" fill="#EC1D35" />
+              <circle cx="27" cy="14" r="3" fill="#EDEDED" />
+              <circle cx="18" cy="14" r="2.2" fill="#402FFF" />
+            </svg>
+          </span>
+          <div className="min-w-0">
+            <p className="font-mono text-xs font-extrabold uppercase tracking-[0.12em] text-[#A59DFF]">Новое · Командный Драфт ФСП</p>
+            <h2 className="mt-1 text-lg font-bold text-white">Сборка звена под проект в 1 клик</h2>
+            <p className="mt-1 text-sm text-white/80">4 проверенных специалиста с цифровым паспортом и разрядом ФСП под ваш бюджет ФОТ, пакетный оффер всей четвёрке, экономика найма и рентген кода.</p>
+          </div>
         </div>
-        <span className="btn shrink-0 bg-white text-brand-night group-hover:bg-brand-blush">Собрать звено →</span>
+        <span className="btn-primary shrink-0 !px-4 !py-2.5 text-xs font-bold">Собрать звено →</span>
       </Link>
       <InvitationFunnelWidget invitations={inv.data ?? []} />
       <section className="mt-8 space-y-3" data-testid="employer-overview-roi">

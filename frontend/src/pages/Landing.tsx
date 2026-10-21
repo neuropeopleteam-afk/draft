@@ -1,6 +1,7 @@
 import { Suspense, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
+import { AndroidBetaButton } from "../components/InstallAppButton";
 import { DraftLaws } from "../components/landing/DraftLaws";
 import { ReverseDraftDemo } from "../components/landing/ReverseDraftDemo";
 import { errText } from "../components/ui";
@@ -9,7 +10,7 @@ import { juryLogin } from "../lib/jury";
 import { useDemoUi } from "../lib/juryMode";
 import { lazyNamed } from "../lib/lazyPage";
 import { daysText, getLandingCards, usePageTitle, useRules } from "../lib/meta";
-import { getTop5, getTop5Hard, getTop5Meta } from "../lib/numbers";
+import { getTop5, getTop5Hard, getTop5Meta, NUMBERS } from "../lib/numbers";
 
 const LazyJuryPanel = lazyNamed(() => import("../components/JuryPanel"), "JuryPanel");
 
@@ -92,32 +93,40 @@ export default function Landing() {
 
   return (
     <div className="np relative min-h-screen overflow-x-clip">
-      <div className="np-backdrop" aria-hidden="true"><div className="np-gridlines" /><div className="np-glow np-glow-indigo" /><div className="np-glow np-glow-red" /></div>
+      <div className="np-backdrop" aria-hidden="true">
+        <div className="np-gridlines" />
+        <div className="np-glow np-glow-indigo" />
+        <div className="np-glow np-glow-red" />
+        <FspBackdropCircuit />
+      </div>
       <div className="np-backdrop-low" aria-hidden="true"><div className="np-glow np-glow-indigo-low" /><div className="np-glow np-glow-red-low" /></div>
       <SiteHeader premium />
       <main id="main" tabIndex={-1} className="relative outline-none">
 
       {/* Первый экран: что это, для кого (кандидат / работодатель / ФСП) и одна главная кнопка на роль */}
-      <section className="relative mx-auto grid max-w-content gap-10 px-4 pb-14 pt-10 sm:px-6 md:pt-14 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:pb-20">
-        <div className="min-w-0 lg:pt-2">
+      <section className="relative mx-auto grid max-w-content items-start gap-8 px-4 pb-14 pt-8 sm:px-6 md:pt-12 lg:grid-cols-[1.04fr_0.96fr] lg:gap-10 lg:pb-16">
+        <div className="min-w-0 lg:pt-1">
           <p className="np-eyebrow">Платформа обратного ИТ-найма · Работодателям · Кандидатам · ФСП</p>
-          <h1 className="mt-3 text-[1.95rem] font-extrabold leading-[1.1] tracking-tight np-text sm:text-[2.45rem] xl:text-[2.75rem]">
+          <h1 className="mt-3 text-[1.95rem] font-extrabold leading-[1.1] tracking-tight np-text sm:text-[2.45rem] xl:text-[2.7rem]">
             Найм IT-специалистов с <span className="np-grad">подтверждённым грейдом</span>: компания сама приглашает проверенных кандидатов
           </h1>
           <p className="mt-3 max-w-2xl text-base leading-relaxed np-muted md:text-lg" data-testid="hero-subtitle">
             Это платформа обратного найма без чтения сотен резюме: выберите свою роль ниже, чтобы получить готовую подборку проверенных инженеров, подтвердить свой уровень или открыть аналитику Федерации.
           </p>
 
-          {/* Для кого и что сделать — 3 карточки ролей с одной главной кнопкой на роль */}
+          {/* Для кого и что сделать — 3 карточки ролей с одной главной кнопкой на роль в строгой палитре ФСП */}
           <div
-            className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3"
+            className="mt-6 grid gap-3 sm:grid-cols-3"
             data-testid="hero-roles-grid"
             aria-label="Для кого платформа и главное действие по роли"
           >
-            <div className="np-card flex min-w-0 flex-col justify-between p-4">
+            <div className="np-card flex min-w-0 flex-col justify-between overflow-hidden p-4">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-indigo-300">Работодателю</p>
-                <p className="mt-1 text-sm font-bold leading-snug np-text">Найти проверенного инженера</p>
+                <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.1em] np-accent">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#402FFF]" aria-hidden="true" />
+                  Работодателю
+                </p>
+                <p className="mt-1.5 text-sm font-bold leading-snug np-text">Найти проверенного инженера</p>
                 <p className="mt-1 text-xs leading-relaxed np-muted">
                   Опишите задачу — получите готовую подборку с доказанным грейдом и отправьте оффер с вилкой.
                 </p>
@@ -132,10 +141,13 @@ export default function Landing() {
               </Link>
             </div>
 
-            <div className="np-card flex min-w-0 flex-col justify-between p-4">
+            <div className="np-card flex min-w-0 flex-col justify-between overflow-hidden p-4">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">Кандидату · 0 ₽</p>
-                <p className="mt-1 text-sm font-bold leading-snug np-text">Получать офферы с вилкой</p>
+                <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.1em] np-accent">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#685AFF]" aria-hidden="true" />
+                  Кандидату · 0 ₽
+                </p>
+                <p className="mt-1.5 text-sm font-bold leading-snug np-text">Получать офферы с вилкой</p>
                 <p className="mt-1 text-xs leading-relaxed np-muted">
                   Один раз подтвердите уровень на задачах и турнирах ФСП — компании сами напишут вам.
                 </p>
@@ -150,10 +162,13 @@ export default function Landing() {
               </Link>
             </div>
 
-            <div className="np-card flex min-w-0 flex-col justify-between p-4 sm:col-span-2 lg:col-span-1">
+            <div className="np-card flex min-w-0 flex-col justify-between overflow-hidden p-4">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-300">Федерации ФСП</p>
-                <p className="mt-1 text-sm font-bold leading-snug np-text">Связать турниры и карьеру</p>
+                <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.1em] np-accent">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#EC1D35]" aria-hidden="true" />
+                  Федерации ФСП
+                </p>
+                <p className="mt-1.5 text-sm font-bold leading-snug np-text">Связать турниры и карьеру</p>
                 <p className="mt-1 text-xs leading-relaxed np-muted">
                   Смотрите спрос компаний по регионам, запускайте кубки и подтверждайте разряды.
                 </p>
@@ -180,14 +195,21 @@ export default function Landing() {
               </>
             )}
           </p>
-          <ul className="mt-6 grid gap-3 text-[0.82rem] leading-snug sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3" aria-label="Ключевые преимущества">
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] px-3.5 py-2.5" data-testid="hero-mobile-app-bar">
+            <AndroidBetaButton />
+            <Link to="/install" className="text-xs np-muted hover:underline" data-testid="hero-iphone-install">
+              На iPhone — добавьте сайт на экран «Домой» →
+            </Link>
+          </div>
+          <ul className="mt-5 grid gap-3 text-[0.82rem] leading-snug sm:grid-cols-3" aria-label="Ключевые преимущества">
             <Fact k="Навык" t="Подборка по доказанным задачам вместо откликов" />
             <Fact k="₽" t="Прозрачная вилка в каждом приглашении" />
             <Fact k="ФСП" t="Верификация достижений и кубки работодателей" />
           </ul>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 space-y-3.5 lg:sticky lg:top-20">
           <ReverseDraftDemo onTry={tryInvite} onLiveAvatar={tryLiveAvatar} busyLive={busyRole === "avatar"} />
+          <FspHeroShowcase />
           {msg && <p className="mt-2 text-sm np-risk" role="status">{msg}</p>}
         </div>
       </section>
@@ -333,7 +355,7 @@ export default function Landing() {
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-4" data-testid="landing-top5-standard">
-              <p className="text-xs font-bold uppercase tracking-wider text-indigo-300">
+              <p className="font-mono text-xs font-bold uppercase tracking-wider np-accent">
                 1. Стандартные условия, принятые в аналогичных решениях
               </p>
               <p className="mt-1 text-xs np-muted">
@@ -355,7 +377,7 @@ export default function Landing() {
               )}
             </div>
             <div className="rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-4" data-testid="landing-top5-hard">
-              <p className="text-xs font-bold uppercase tracking-wider text-amber-300">
+              <p className="font-mono text-xs font-bold uppercase tracking-wider np-accent">
                 2. Проверка на прочность в жёстких условиях
               </p>
               <p className="mt-1 text-xs np-muted">
@@ -411,11 +433,92 @@ function Fact({ k, t }: { k: string; t: string }) {
   );
 }
 
+/** Фирменные маршрутные линии брендбука ФСП (скруглённые повороты 90° и узловые точки) на фоне первого экрана. */
+function FspBackdropCircuit() {
+  return (
+    <svg
+      viewBox="0 0 1440 900"
+      fill="none"
+      className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[900px] w-full max-w-[1440px] opacity-40"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="fsp-circuit-grad" x1="0" y1="0" x2="1440" y2="900" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#402FFF" stopOpacity="0.55" />
+          <stop offset="65%" stopColor="#7C70FF" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="#EC1D35" stopOpacity="0.35" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M84 180 V320 Q84 368 132 368 H380 Q428 368 428 416 V560 Q428 608 476 608 H760"
+        stroke="url(#fsp-circuit-grad)"
+        strokeWidth="1.4"
+      />
+      <path
+        d="M1356 120 V290 Q1356 338 1308 338 H1080 Q1032 338 1032 386 V540"
+        stroke="url(#fsp-circuit-grad)"
+        strokeWidth="1.4"
+      />
+      <circle cx="84" cy="180" r="4.5" fill="#402FFF" />
+      <circle cx="428" cy="416" r="4" fill="#7C70FF" />
+      <circle cx="760" cy="608" r="4.5" fill="#402FFF" />
+      <circle cx="1356" cy="120" r="4.5" fill="#402FFF" />
+      <circle cx="1032" cy="540" r="4.5" fill="#EC1D35" />
+    </svg>
+  );
+}
+
+/** 3D-витрина «Контур верификации ФСП»: закрывает пустую зону под демо-карточкой и связывает 3 элемента брендбука ФСП. */
+function FspHeroShowcase() {
+  return (
+    <div
+      className="np-glass relative overflow-hidden px-4 py-3.5 sm:px-5"
+      data-testid="hero-fsp-showcase"
+      aria-label="Контур верификации Федерации спортивного программирования"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          {/* Объёмный 3D-медальон с узлом-созвездием ФСП (#402FFF, #EC1D35, #EDEDED) */}
+          <span
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/20 shadow-lg"
+            style={{
+              background: "linear-gradient(145deg, #1E2252 0%, #0E1128 60%, #2718D8 100%)",
+              boxShadow: "0 10px 24px -10px rgba(64, 47, 255, 0.8), inset 0 1px 0 rgba(255,255,255,0.28)",
+            }}
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 36 36" className="h-6 w-6" fill="none">
+              <path d="M10 24 Q10 15 18 15 H26" stroke="#7C70FF" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M18 15 V9" stroke="#EDEDED" strokeWidth="1.8" strokeLinecap="round" />
+              <circle cx="10" cy="24" r="3.2" fill="#402FFF" />
+              <circle cx="18" cy="9" r="3.2" fill="#EC1D35" />
+              <circle cx="26" cy="15" r="3.2" fill="#EDEDED" />
+              <circle cx="18" cy="15" r="2.2" fill="#402FFF" />
+            </svg>
+          </span>
+          <div className="min-w-0">
+            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] np-accent" title="Как устроено: защищённая асимметричная подпись паспорта Ed25519">
+              Единый контур верификации ФСП
+            </p>
+            <p className="text-sm font-bold leading-snug np-text">
+              Протоколы соревнований + адаптивный тест → цифровой паспорт грейда
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+          <span className="np-badge np-badge-indigo">89 регионов ФСП</span>
+          <span className="np-badge np-badge-ok">{NUMBERS.bank.families} семейств задач</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StepList({
   id,
   title,
   steps,
-  tone,
+  tone: _tone,
   cta,
   secondaryCta,
   onDemo,
@@ -434,7 +537,7 @@ function StepList({
       <ol className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {steps.map(([t, d], i) => (
           <li key={t} className="flex flex-col gap-2 rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-4">
-            <span className={`np-num ${tone === "indigo" ? "np-num-indigo" : "np-num-red"}`}>{i + 1}</span>
+            <span className="np-num np-num-indigo" style={{ background: "linear-gradient(135deg, #2717D1 0%, #402FFF 65%, #5B4BFF 100%)", boxShadow: "0 6px 16px -6px rgba(64, 47, 255, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.3)" }}>{i + 1}</span>
             <p className="font-semibold np-text">{t}</p>
             <p className="text-xs leading-relaxed np-muted">{d}</p>
           </li>

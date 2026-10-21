@@ -5,8 +5,8 @@ import { Logo } from "./Logo";
 export function AuthShell({ title, subtitle, lead, children, footer }: { title: string; subtitle?: string; lead?: ReactNode; children: ReactNode; footer?: ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[0.9fr_1.1fr]">
-      <aside className="relative hidden overflow-hidden bg-brand-night p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div className="pointer-events-none absolute -left-32 bottom-0 h-96 w-96 rounded-full bg-brand-plum blur-3xl" />
+      <aside className="relative hidden overflow-hidden bg-brand-night p-12 text-white lg:flex lg:flex-col lg:justify-between" style={{ background: "radial-gradient(120% 90% at 85% 15%, rgba(64, 47, 255, 0.45) 0%, transparent 55%), radial-gradient(80% 80% at 15% 90%, rgba(236, 29, 53, 0.22) 0%, transparent 55%), linear-gradient(160deg, #0B0D1E 0%, #121636 60%, #0B0D1E 100%)" }}>
+        <div className="pointer-events-none absolute -left-32 bottom-0 h-96 w-96 rounded-full bg-brand/30 blur-3xl" />
         <Link to="/" className="relative"><Logo light /></Link>
         <div className="relative max-w-sm">
           <p className="text-3xl font-extrabold leading-tight">Категория по тесту, а не по резюме.</p>

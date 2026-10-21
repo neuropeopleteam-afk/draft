@@ -141,7 +141,7 @@ export default function Monetization() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FBF8FC]">
+    <div className="min-h-screen bg-[#F4F6FC]">
       <SiteHeader />
       <main id="main" className="mx-auto max-w-content space-y-12 px-4 py-10 sm:px-6" data-testid="pricing-page">
         <header className="max-w-3xl">
@@ -163,7 +163,7 @@ export default function Monetization() {
                 <h3 className="text-lg font-bold text-brand-night">{p.title}</h3>
                 <p className="mt-1 text-2xl font-extrabold text-brand-night">{p.price}</p>
                 <p className="text-xs text-brand-ink/60">{p.note}</p>
-                <p className="mt-3 rounded-lg bg-[#F3F2FB] px-3 py-1.5 text-sm font-semibold text-brand-night">{p.invites}</p>
+                <p className="mt-3 rounded-lg bg-[#EEF1FC] px-3 py-1.5 text-sm font-semibold text-brand-night">{p.invites}</p>
                 <ul className="mt-4 flex-1 space-y-2 text-sm text-brand-ink/85">
                   {p.items.map((x) => <li key={x} className="flex gap-2"><Check />{x}</li>)}
                 </ul>
@@ -207,7 +207,7 @@ export default function Monetization() {
                     type="button"
                     onClick={() => selectPlanForRequest("partner")}
                     className={`rounded-xl px-3.5 py-2 text-xs font-bold transition ${
-                      p.accent ? "bg-white text-brand-night hover:bg-brand-blush" : "bg-[#F3F2FB] text-brand-night hover:bg-brand-blush/60"
+                      p.accent ? "bg-white text-brand-night hover:bg-brand-blush" : "bg-[#EEF1FC] text-brand-night hover:bg-brand-blush/60"
                     }`}
                   >
                     Запросить пакет

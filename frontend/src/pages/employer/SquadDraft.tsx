@@ -45,7 +45,7 @@ function Range({ id, label, value, min, max, step, onChange, fmt, hint }: {
         <label htmlFor={id} className="text-sm font-semibold text-brand-night">{label}</label>
         <span className="text-sm font-bold tabular-nums text-brand-night" aria-live="polite">{fmt(value)}</span>
       </div>
-      <input id={id} type="range" className="mt-2 w-full accent-[#E0004C]" min={min} max={max} step={step} value={value}
+      <input id={id} type="range" className="mt-2 w-full accent-[#402FFF]" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))} aria-valuetext={fmt(value)} />
       <div className="flex justify-between text-[11px] text-brand-ink/55"><span>{fmt(min)}</span>{hint && <span>{hint}</span>}<span>{fmt(max)}</span></div>
     </div>
@@ -55,7 +55,7 @@ function Range({ id, label, value, min, max, step, onChange, fmt, hint }: {
 function Kpi({ label, value, hint, tone = "night" }: { label: string; value: string; hint?: string; tone?: "night" | "ok" | "warn" }) {
   const c = tone === "ok" ? "text-emerald-700" : tone === "warn" ? "text-amber-700" : "text-brand-night";
   return (
-    <div className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+    <div className="rounded-2xl border border-brand-night/10 bg-[#F4F6FC] p-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-lavender">{label}</p>
       <p className={`mt-1.5 text-2xl font-extrabold tabular-nums ${c}`}>{value}</p>
       {hint && <p className="mt-1 text-xs leading-relaxed text-brand-ink/65">{hint}</p>}
@@ -281,7 +281,7 @@ function SquadBuilder() {
           <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Размер команды">
             {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((sz) => (
               <button key={sz} type="button" role="radio" aria-checked={teamSize === sz} onClick={() => handleSizeChange(sz)}
-                className={`rounded-xl px-3.5 py-2 text-xs font-bold transition ${teamSize === sz ? "bg-brand text-white shadow-sm" : "bg-[#F3F2FB] text-brand-night hover:bg-brand-blush/60"}`}>
+                className={`rounded-xl px-3.5 py-2 text-xs font-bold transition ${teamSize === sz ? "bg-brand text-white shadow-sm" : "bg-[#EEF1FC] text-brand-night hover:bg-brand-blush/60"}`}>
                 {sz} чел.
               </button>
             ))}
@@ -340,7 +340,7 @@ function SquadBuilder() {
                       <span className="block h-1.5 rounded-full bg-brand-strong" style={{ width: `${Math.round(((t.x.theta + 3) / 6) * 100)}%` }} />
                     </span>
                   </td>
-                  <td className="py-3 pr-3"><span className="font-mono text-xs">Ed25519 {t.x.key}</span><span className="block text-xs text-emerald-700">✓ подпись верна</span></td>
+                  <td className="py-3 pr-3"><span className="font-mono text-xs" title="Как устроено: асимметричная цифровая подпись Ed25519">Ключ {t.x.key}</span><span className="block text-xs text-emerald-700">✓ подпись верна</span></td>
                   <td className="py-3 pr-3 text-xs">{t.x.fsp ? <><span className="chip !px-2 !py-0.5">реестр ФСП</span> <span className="mt-1 block max-w-[13rem] leading-snug">{t.x.fsp}</span></> : <span className="text-brand-ink/55">нет истории — нейтрально</span>}</td>
                   <td className="py-3 pr-3 text-right font-semibold tabular-nums">{rub(t.x.salary)}</td>
                   <td className="py-3 text-right">
@@ -429,9 +429,9 @@ export function HireRoi() {
       <div className="grid gap-3 sm:grid-cols-2">
         <Kpi label="Часы Senior на техсобеседованиях" value={`−${n0(r.hoursSaved)}${NB}ч`}
           hint={`≈ ${mln(r.hoursRub)}: 3-минутная устная защита кода с видеоаватаром и параметрический тест вместо 8 техинтервью на найм`} />
-        <Kpi label="Bad-Hire Shield" value={mln(r.badRub)} tone="ok"
+        <Kpi label="Защита от ошибки найма" value={mln(r.badRub)} tone="ok"
           hint={`«Раздутые» резюме в топ-10: 58${NB}% → 6,9${NB}%. Ошибочных наймов ${r.badBefore.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} → ${r.badAfter.toLocaleString("ru-RU", { maximumFractionDigits: 1 })} в год`} />
-        <Kpi label="Time-to-Hire" value={`42 → 3${NB}дня`}
+        <Kpi label="Скорость закрытия вакансии" value={`42 → 3${NB}дня`}
           hint={`−${r.daysSaved} дней на вакансию; ≈ ${mln(r.tthRub)} выработки, которую не теряет пустое место`} />
         <Kpi label="Без кадровых агентств" value={mln(r.agency)} hint={`Комиссия 20${NB}% годового дохода × ${hires} наймов`} />
       </div>
@@ -440,7 +440,7 @@ export function HireRoi() {
         <ul className="mt-3 list-disc space-y-1.5 pl-5 marker:text-brand">
           <li>Классика: {M.interviewsPerHire} техсобеседований на найм × {M.seniorsPerInterview} Senior × {M.hoursPerInterview.toLocaleString("ru-RU")} ч; «Драфт»: {M.draftFinalists} финалиста × {M.draftHours} ч. Час Senior — {rub(M.seniorHourRate)} с налогами.</li>
           <li>Доля «раздутых» резюме в топ-10 — по стенду проверки подборки (58 % у ранжирования по резюме, 6,9 % у «Драфта»); до оффера доходит каждое {Math.round(1 / M.slipToOffer)}-е. Цена ошибки — {M.badHireMonths} месяцев ФОТ × {M.payroll.toLocaleString("ru-RU")} (налоги, адаптация, повторный поиск).</li>
-          <li>Time-to-Hire: 42 дня на рынке против 3 дней от подборки до принятия приглашения; день пустого места — месячный ФОТ / 30.</li>
+          <li>Срок закрытия вакансии: 42 дня на рынке против 3 дней от подборки до принятия приглашения; день пустого места — месячный ФОТ / 30.</li>
           <li>Агентство: {Math.round(M.agencyFee * 100)} % годового дохода за каждого найденного специалиста.</li>
         </ul>
       </details>
@@ -452,7 +452,7 @@ export function HireRoi() {
 
 const SAMPLES: { id: string; title: string; code: string }[] = [
   {
-    id: "gpt", title: "Слепо из ChatGPT",
+    id: "gpt", title: "Слепо из нейросети",
     code: `# Here is an optimized and secure implementation of the payment transfer function.
 # Мы учитываем принцип аммонита для надёжности перевода.
 import redis
