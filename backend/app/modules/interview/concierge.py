@@ -329,7 +329,7 @@ PHRASES_NAMED: dict[str, str] = {
     "done_all": "{name}, это главное о «Драфте». Спрашивайте о чём угодно или скажите, что показать подробнее.",
 }
 
-FILLERS = ("Сейчас.", "Так, смотрю.", "Момент.")   # звучат только если модель думает дольше 3 с
+FILLERS: tuple[str, ...] = ()   # заполнители выключены (решение владельца 21.10): пауза лучше «момента»
 
 
 
@@ -916,8 +916,39 @@ def extract_name(text: str, current_name: str | None = None, asked: bool = False
         cand = m.group(1).strip()
         low = cand.lower().replace("ё", "е")
         # одно слово «Настя» — обращение к ней самой, не имя собеседника (своё имя — только через «меня зовут …»)
-        if low in {n.replace("ё", "е") for n in _NAMES} and low not in _SELF_NAMES and (asked or len(_words(t)) == 1):
+        if low in _SELF_NAMES or low in _STOP_NAMES or low.startswith(("кандидат", "работодат", "федерац")):
+            return None
+        if low in {n.replace("ё", "е") for n in _NAMES} and (asked or len(_words(t)) == 1):
             return _cap(cand)
+        # Настя только что спросила имя: ответ из 1–2 слов — это имя, даже если его нет в словаре («Василиса.», «Лейла»)
+        if asked and len(_words(t)) <= 2 and len(low) >= 2 and not _is_command_word(low):
+            return _cap(cand)
+    return None
+
+
+# Короткие реплики, которые никогда не бывают именем (команды и поддакивания в ответ на «как к вам обращаться»)
+_NOT_NAME = re.compile(r"^(?:да|нет|неа|ага|угу|ок|окей|хорошо|ладно|стоп|дальше|сразу|давай|давайте|потом|неважно|никак|"
+                       r"зачем|пропусти\w*|без\w*|кабинет\w*|регистрац\w*|покажи\w*|начинай\w*|поехали|продолж\w*|"
+                       r"слушай\w*|подожди\w*|понятно|ясно|спасибо|привет|здравствуй\w*)$", re.I)
+
+
+def _is_command_word(low: str) -> bool:
+    return bool(_NOT_NAME.match(low))
+
+
+# «я же говорил», «я тебе сказал имя», «уже называл» — имя есть в истории разговора
+NAME_TOLD = re.compile(r"(?:говорил|говорила|сказал|сказала|называл|называла|представил|представилась)\w*"
+                       r"(?:[^.?!]{0,30}\b(?:имя|как\s+меня|зовут))?", re.I)
+
+
+def name_from_history(history: list[dict] | None) -> str | None:
+    """Ответ человека сразу после её вопроса об имени — имя (для «я же говорил, как меня зовут»)."""
+    h = list(history or [])
+    for i in range(len(h) - 1):
+        if h[i].get("who") == "elena" and _NAME_ASK.search(h[i].get("text") or "") and h[i + 1].get("who") == "user":
+            n = extract_name(h[i + 1].get("text") or "", None, True)
+            if n:
+                return n
     return None
 
 
@@ -933,8 +964,9 @@ def valid_llm_name(name: str | None, message: str) -> str | None:
         return None
     if low[:4] not in (message or "").lower():
         return None
-    if low.replace("ё", "е") not in {x.replace("ё", "е") for x in _NAMES} and not (_NAME_RE.search(message or "") or _NAME_RE2.search(message or "")):
+    if low in _SELF_NAMES or _is_command_word(low) or not re.fullmatch(r"[а-яёa-z-]{2,20}", low):
         return None
+    # словарь имён больше не нужен: имя прозвучало в реплике и модель его назвала («Василиса.»)
     return _cap(n)
 
 
@@ -1232,7 +1264,23 @@ def _clean_reply(text: str) -> str:
     t = re.sub(r"!", ".", t)
     t = re.sub(r"\b(?:ElevenLabs|Anam|Deepgram|OpenRouter|WebRTC|Claude|Anthropic|Gemini|GPT|OpenAI)\b", "", t, flags=re.I)
     t = " ".join(t.split()).strip()
+    t = _drop_moralizing(t)
     return _brief(t)
+
+
+# Ответы на резкие слова — без морали (решение владельца 21.10): «я не могу использовать такие слова», «давайте без
+# грубостей», «простите, не расслышала» после мата — убираем; если ничего не осталось — короткое «Хорошо.»
+_MORAL = re.compile(r"(?:не могу (?:использовать|повторять|употреблять)|такие слова|такими словами|давайте без|"
+                    r"без (?:грубост|оскорблен|ругательств|мата)|прошу (?:вас )?(?:не (?:ругаться|грубить)|быть вежлив)|"
+                    r"не (?:стоит|надо) (?:ругаться|грубить)|вежлив)", re.I)
+
+
+def _drop_moralizing(t: str) -> str:
+    if not t or not _MORAL.search(t):
+        return t
+    parts = [x.strip() for x in re.split(r"(?<=[.!?…])\s+", t) if x.strip()]
+    keep = [x for x in parts if not _MORAL.search(x)]
+    return " ".join(keep) if keep else "Хорошо."
 
 
 _SELF_TALK = re.compile(r"^[^.?]*\b(?:я|меня)\b[^.?]*\b(?:торопил|поторопил|сбил|запутал|перебил|ошиблас|увлеклас|спешил)\w*[^.?]*\.\s*",
@@ -1287,6 +1335,8 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     known = user_name or (valid_stored_name(s.name) if s else None)
     asked = bool(_NAME_ASK.search(last_said or "")) or bool(s and _NAME_ASK.search(s.last_elena or ""))
     name_now = extract_name(msg, known, asked)
+    if not name_now and not known and NAME_TOLD.search(msg):
+        name_now = name_from_history((s.history if s else None) or history)
     name = name_now or known
     first_time = bool(name_now and name_now != known)
     cur_role = role if role in ROLES else (s.role if s and s.role in ROLES else None)
@@ -1320,6 +1370,11 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         if act in ("prev", "repeat"):
             return {**base, "kind": "instant", "action": act}
     t_norm = _norm(msg)
+    on_reg = bool((step_id or "").endswith("-register") or (current_path or "").startswith("/register"))
+    if on_reg and (touring or paused) and words_n <= 9 and SKIP_REG.search(t_norm) and not is_q:
+        # стоим на регистрации, просят «сразу кабинет» / «без регистрации» — мгновенно, без модели, к кабинету
+        ack("instant")
+        return {**base, "kind": "instant", "action": "resume", "skip_now": True, "reply": "Хорошо, сразу в кабинет."}
     if not accepted:   # человек согласился на предложение Насти — минуя быстрые правила, сразу к модели
         sc = words_n <= 8 and SCROLL.search(t_norm)
         if sc and not detect_goto(msg, path=current_path, step=step_id):
