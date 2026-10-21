@@ -342,7 +342,7 @@ const PITCH: Record<string, TourStep> = {
   },
   "pitch-red": {
     id: "pitch-red", cabinet: "public", persona: null, path: "/validation", match: /^\/validation/,
-    selector: "#red-button, main h1",
+    selector: "#red-button article, #red-button, main h1",
     beats: [
       { target: "#red-button article:nth-of-type(3), #red-button", click: "#red-button article:nth-of-type(3) button", clickAt: 0.45 },
       { target: "#red-button article:nth-of-type(3), #red-button" },

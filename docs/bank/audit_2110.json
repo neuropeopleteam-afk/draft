@@ -1,15 +1,15 @@
 {
- "generated_at": "2026-10-21 12:20:15",
- "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 12 --out /w/a3f/audit_2110.json",
- "n_families": 1644,
+ "generated_at": "2026-10-21 13:03:46",
+ "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 12 --out /w/a3p/audit_2110.json",
+ "n_families": 1646,
  "n_seeds": 20,
- "seconds": 34.9,
+ "seconds": 16.0,
  "formats": {
-  "mcq_concept": 1218,
+  "mcq_concept": 1219,
   "predict_output": 262,
   "open_answer": 57,
   "find_bug": 67,
-  "choose_fix": 18,
+  "choose_fix": 19,
   "open_book_3step": 22
  },
  "generation_errors": {
@@ -27,7 +27,7 @@
  "key_constancy": {
   "threshold": 0.8,
   "n_families_at_or_above": 11,
-  "n_families_measured": 1587,
+  "n_families_measured": 1589,
   "families": {
    "backend.django.form_fields_bug": 1.0,
    "backend.kafka.partition_key_bug": 1.0,
@@ -42,10 +42,10 @@
    "security.input.json_parser_bug": 1.0
   },
   "by_format_mean": {
-   "mcq_concept": 0.107,
+   "mcq_concept": 0.1071,
    "predict_output": 0.0786,
    "find_bug": 0.3657,
-   "choose_fix": 0.0611,
+   "choose_fix": 0.0605,
    "open_book_3step": 0.0705
   }
  },

@@ -1645,12 +1645,16 @@ export class ElenaEngine {
     const at = performance.now() + lead + Math.max(1200, totalMs) * (beat.clickAt ?? 0.5);
     this.set({ click: { selector: beat.click, at } });
     const sel = beat.click;
-    this.clickTimer = window.setTimeout(() => {
+    // блок может ещё грузиться (атаки на «Проверке» — несколько секунд): повторяем, пока звучит эта реплика, до 6 с
+    const until = at + 6000;
+    const tryClick = () => {
       this.clickTimer = 0;
       if (!this.alive(ep) || this.stepUtter !== u) return;
       const el = findTarget(sel);
-      if (el) { this.lastNavAt = performance.now(); try { el.click(); } catch { /* блок пропал */ } }
-    }, Math.max(0, at - performance.now()));
+      if (el) { this.lastNavAt = performance.now(); try { el.click(); } catch { /* блок пропал */ } return; }
+      if (performance.now() < until) this.clickTimer = window.setTimeout(tryClick, 250);
+    };
+    this.clickTimer = window.setTimeout(tryClick, Math.max(0, at - performance.now()));
   }
 
   /** Какие реплики экрана звучат: реплика-переход — только если следующий шаг именно туда; на уже рассказанном экране

@@ -23,6 +23,7 @@ import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // под�
 import { NeedFileNote, NeedFileUpload, type NeedFileInfo } from "./NeedFile";  // Ф5: потребность из файла вакансии
 import { needPreset } from "../../lib/jury";  // Я9: заготовка своей потребности из проводника
 import { DictateNeed } from "../../components/VoiceNeed";  // «Надиктовать» (VOICE_NEED_ENABLED)
+import { VoiceBrief } from "../../components/elena/VoiceBrief";  // бриф голосом с Настей (Аватар, 21.10)
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -364,6 +365,7 @@ export function Needs() {
         </Field>
         {file && text.slice(0, 40) === file.text.slice(0, 40) && <NeedFileNote info={file} edited={text !== file.text} />}
         <DictateNeed fieldId="need" disabled={busy} onText={(t) => { setText((x) => (x.trim() ? `${x.trimEnd()} ${t}` : t)); setReq(null); fp.reset(); }} />
+        <VoiceBrief />
         {!req && (
           <div className="flex flex-wrap gap-4 text-sm">
             <button type="button" data-testid="sample-need" className="font-semibold text-brand hover:underline" onClick={() => setText(EXAMPLE)}>Подставить пример</button>

@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-21T12:17:56+00:00",
+ "generated_at": "2026-10-21T13:06:46+00:00",
  "command": "python3 tools/bank_diff_base.py --base-ref srv/integ/2010n --seeds 2",
  "base": {
   "ref": "srv/integ/2010n",
@@ -10,9 +10,9 @@
   "n_families_loaded": 1504
  },
  "head": {
-  "commit": "a526dc3ee",
-  "bank_tree": "91c96148f88b",
-  "n_families_loaded": 1644
+  "commit": "948ecb79b",
+  "bank_tree": "489ca0361a56",
+  "n_families_loaded": 1646
  },
  "added": {
   "n": 197,
@@ -245,16 +245,16 @@
   ]
  },
  "removed": {
-  "n": 57,
+  "n": 55,
   "groups": {
    "lp_v2": 0,
    "lp3": 0,
-   "other": 57
+   "other": 55
   },
   "by_direction": {
    "analyst": 5,
-   "backend": 11,
-   "common": 6,
+   "backend": 10,
+   "common": 5,
    "data_eng": 4,
    "data_ml": 5,
    "devops": 1,
@@ -264,16 +264,16 @@
    "security": 7
   },
   "by_format": {
-   "choose_fix": 41,
-   "mcq_concept": 16
+   "choose_fix": 40,
+   "mcq_concept": 15
   },
   "by_grade": {
    "intern": 3,
    "junior": 19,
-   "lead": 3,
-   "middle": 42,
+   "lead": 2,
+   "middle": 41,
    "principal": 2,
-   "senior": 22
+   "senior": 20
   },
   "ids": [
    "analyst.api.idempotency_contract_mcq",
@@ -289,10 +289,8 @@
    "backend.java.list_remove_loop_fix",
    "backend.java.session_registry_leak_fix",
    "backend.kafka.outbox_relay_fix",
-   "backend.py.concurrency_mcq",
    "backend.py.money_rounding_fix",
    "backend.time.add_months_fix",
-   "common.api.rest_idempotent_retry_fix",
    "common.docker.cache_order_fix",
    "common.ds.lru_cache_fix",
    "common.git.move_commits_mcq",
@@ -336,14 +334,14 @@
   ]
  },
  "common": {
-  "n": 1447,
+  "n": 1449,
   "changed_counts": {
-   "a": 1406,
+   "a": 1407,
    "b": 1034,
-   "basis": 1447,
+   "basis": 1449,
    "grades": 353,
    "time_limit_s": 975,
-   "variants": 1175
+   "variants": 1176
   },
   "a_transitions": {
    "0.8->1.3": 1,
@@ -358,7 +356,7 @@
    "1.4->1.3": 17,
    "1.45->1": 428,
    "1.5->1": 50,
-   "1.5->1.3": 2,
+   "1.5->1.3": 3,
    "3->1": 621
   },
   "b_delta": {
@@ -665,6 +663,7 @@
     "common.amdahl.senior_fwd_k5",
     "common.amdahl.senior_solve_n_k4",
     "common.amdahl.senior_solve_t_k3",
+    "common.api.rest_idempotent_retry_fix",
     "common.arch.availability_chain_mcq",
     "common.arch.consistency_tradeoff_open",
     "common.arch.design_review_open",
@@ -3053,6 +3052,7 @@
     "backend.pgpool.senior_solve_lam_k4",
     "backend.pgpool.senior_solve_t_k3",
     "backend.py.canary_comprehension",
+    "backend.py.concurrency_mcq",
     "backend.py.design_open",
     "backend.py.dict_get_default_output",
     "backend.py.idempotency_coarse_ob3",
@@ -3117,6 +3117,7 @@
     "common.amdahl.senior_fwd_k5",
     "common.amdahl.senior_solve_n_k4",
     "common.amdahl.senior_solve_t_k3",
+    "common.api.rest_idempotent_retry_fix",
     "common.arch.availability_chain_mcq",
     "common.arch.capacity_design_open",
     "common.arch.consistency_tradeoff_open",
@@ -5836,6 +5837,7 @@
     "common.amdahl.senior_fwd_k5",
     "common.amdahl.senior_solve_n_k4",
     "common.amdahl.senior_solve_t_k3",
+    "common.api.rest_idempotent_retry_fix",
     "common.arch.retry_amplification_mcq",
     "common.backup_window.intern_fwd_k2",
     "common.backup_window.junior_fwd_k3",
@@ -6813,9 +6815,9 @@
   "predict_output:1.3": 3
  },
  "head_prior_a": {
-  "choose_fix:1.3": 18,
+  "choose_fix:1.3": 19,
   "find_bug:1.3": 67,
-  "mcq_concept:1": 1218,
+  "mcq_concept:1": 1219,
   "open_answer:1.3": 57,
   "open_book_3step:1.3": 22,
   "predict_output:1.3": 262
