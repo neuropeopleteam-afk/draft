@@ -26,6 +26,7 @@
       .boot .boot-why{font-size:.85rem;color:#4A4B52;overflow-wrap:anywhere}
       .boot a{color:#520978;font-weight:600}
       .boot button:focus-visible{outline:3px solid #310F53;outline-offset:3px}
+      .boot-logo{display:inline-flex;align-items:center;gap:.55rem;font-weight:800;font-size:1.15rem;color:#310F53}
       .boot-spin{width:2rem;height:2rem;border-radius:50%;border:3px solid #FFD6E4;border-top-color:#E0004C;animation:boot-spin 1s linear infinite}
       @keyframes boot-spin{to{transform:rotate(360deg)}}
       @media (prefers-reduced-motion:reduce){.boot-spin{animation:none}}
@@ -137,7 +138,7 @@
     </script>
   </head>
   <body>
-    <div id="root"><main class="boot" id="boot" data-boot="loading"><div class="boot-spin" aria-hidden="true"></div><p role="status">Загружаем…</p></main></div>
+    <div id="root"><main class="boot" id="boot" data-boot="loading"><div class="boot-logo" aria-hidden="true"><svg width="36" height="36" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#310F53"/><circle cx="12.5" cy="16" r="7" fill="none" stroke="#FFD6E4" stroke-width="2.5"/><circle cx="19.5" cy="16" r="7" fill="none" stroke="#FF0053" stroke-width="2.5"/></svg><span>Драфт</span></div><div class="boot-spin" aria-hidden="true"></div><p role="status">Загружаем…</p></main></div>
     <noscript><p style="font-family:system-ui,sans-serif;padding:1.5rem;color:#310F53">Для работы сайта включите JavaScript в браузере.</p></noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -6,6 +6,7 @@ import { Alert, Field, Loading, Modal, dt, dtt, errText, useApi } from "../compo
 import { api, type TokenOut } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { scenario } from "../lib/jury";
+import { useDemoUi } from "../lib/juryMode";
 import { useProductName } from "../lib/meta";
 import { downloadCodes, pending } from "../lib/twofa";
 
@@ -168,6 +169,7 @@ function CodeModal({ open, title, text, cta, danger, onClose, onSubmit }: { open
 /* ------------------------------------------------------------------ страница кабинета «Безопасность входа» */
 export function TwoFactorSettings() {
   const { me } = useAuth();
+  const demoUi = useDemoUi();
   const { data: st, error, loading, reload } = useApi<Status>("/auth/2fa");
   const [mode, setMode] = useState<"view" | "enroll" | "codes">("view");
   const [rotationCode, setRotationCode] = useState<string | undefined>();
@@ -197,7 +199,7 @@ export function TwoFactorSettings() {
   return (
     <div className="max-w-3xl space-y-6">
       <PageTitle title="Безопасность входа" subtitle="Второй фактор: кроме пароля или персональной ссылки — код из приложения-аутентификатора на телефоне (TOTP, RFC 6238)." />
-      {st.demo_note && <Alert kind="info">{st.demo_note}</Alert>}
+      {demoUi && st.demo_note && <Alert kind="info">{st.demo_note}</Alert>}
 
       <section className="card space-y-4" aria-labelledby="twofa-state">
         <div className="flex flex-wrap items-center gap-3">
@@ -406,7 +408,7 @@ export function TwoFactorLogin() {
         <p className="text-center text-xs text-brand-ink/65" aria-live="polite">{expired ? <Link to="/login" className="font-semibold underline" onClick={() => pending.clear()}>К вводу пароля</Link> : `Код можно ввести в течение ${mm}`}</p>
       </form>
       {ch.persona && <p className="mt-5 rounded-lg bg-brand-blush/40 px-3 py-2 text-xs leading-relaxed text-brand-ink/80">
-        Это ваша демо-песочница: второй фактор здесь включили вы. Потеряли код — «Вернуть демо-данные» во вкладке <Link to="/expertise" className="font-semibold text-brand hover:text-brand-soft">«Экспертиза ФСП»</Link> пересоздаст учётки без него.
+        Это ваша демо-песочница: второй фактор здесь включили вы. Потеряли код — «Вернуть демо-данные» во вкладке <Link to="/demo" className="font-semibold text-brand hover:text-brand-soft">«Демо для жюри»</Link> пересоздаст учётки без него.
       </p>}
     </AuthShell>
   );

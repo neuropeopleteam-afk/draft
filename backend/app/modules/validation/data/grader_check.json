@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-07T11:04:14Z",
+ "generated_at": "2026-10-20T18:13:40Z",
  "dataset": {
   "file": "docs/validation/grader_set_panel_20261006.json.gz",
   "items": 29,
@@ -57,7 +57,7 @@
    }
   }
  },
- "model": "yandexgpt/latest (Yandex AI Studio), T = 0",
+ "model": "anthropic/claude-sonnet-5.5 + anthropic/claude-fable-5.1 (T = 0)",
  "reference": "gpt-oss-120b (low, T = 0), панель 06.10",
  "prompt_version": "v2",
  "disagree": 0.25,
@@ -438,15 +438,15 @@
    "errors": 0
   },
   "v2_1": {
-   "calls": 0,
-   "prompt_tokens": 0,
-   "completion_tokens": 0,
+   "calls": 60,
+   "prompt_tokens": 142496,
+   "completion_tokens": 15932,
    "errors": 0
   },
   "v2_2": {
-   "calls": 0,
-   "prompt_tokens": 0,
-   "completion_tokens": 0,
+   "calls": 3,
+   "prompt_tokens": 8014,
+   "completion_tokens": 3481,
    "errors": 0
   }
  },
@@ -465,6 +465,6 @@
   "adv_e3": 0,
   "adv_e5": 0
  },
- "llm_pending": true,
+ "llm_pending": false,
  "llm_how": "Прогон на YandexGPT — там, где есть ключ (сервер стенда): build → tools/grader_check/llm_runner.py → second → report; команды — в docstring модуля и в tools/grader_check/README.md."
 }

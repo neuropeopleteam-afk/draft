@@ -12,6 +12,7 @@ export type ContourStatus = "ok" | "warn" | "na" | "checked" | "recommended";
 export type IntegrityPassport = {
   level?: string | null; title?: string | null; verdict: "clean" | "attention" | "recommended" | "confirmed" | "discrepancies";
   verdict_title: string; recommended: boolean; why?: string | null; detailed: boolean;
+  honesty_index?: number | null; needs_followup_stage?: boolean; employer_reason_ru?: string | null;
   contours: { id: string; status: ContourStatus; value?: string | null }[];
 };
 type DefenseInfo = {
@@ -21,12 +22,12 @@ type DefenseInfo = {
 };
 
 /** Названия контуров: подробные — работодателю и жюри; общие — кандидату вне демо-режима (Р27). */
-export const CONTOURS: Record<string, { n: number; detailed: string; general: string }> = {
-  prior: { n: 1, detailed: "Канарейки и предзнание", general: "Самостоятельность знаний" },
-  fit: { n: 2, detailed: "Психометрический индекс l_z (согласованность ответов)", general: "Согласованность ответов с уровнем" },
-  origin: { n: 3, detailed: "Стеганографическая ИИ-метка (U+2063)", general: "Происхождение текста ответов" },
-  screen: { n: 4, detailed: "Экран и клавиатурная биометрия (фокус, вставка, ритм, скриншоты)", general: "Поведение во время теста" },
-  live: { n: 5, detailed: "Камера / устная защита с видеоаватаром", general: "Камера / устная защита с видеоаватаром" },
+export const CONTOURS: Record<string, { n: number; detailed: string; general: string; plain?: string }> = {
+  prior: { n: 1, detailed: "Канарейки и предзнание", general: "Самостоятельность знаний", plain: "контрольные задания и скорость чтения условия" },
+  fit: { n: 2, detailed: "Психометрический индекс l_z (согласованность ответов)", general: "Согласованность ответов с уровнем", plain: "нет ли провала на простых вопросах при решении сложных" },
+  origin: { n: 3, detailed: "Стеганографическая ИИ-метка (U+2063)", general: "Происхождение текста ответов", plain: "скрытая метка от копирования в ИИ и двойник при копировании условия" },
+  screen: { n: 4, detailed: "Экран и клавиатурная биометрия (фокус, вставка, ритм, скриншоты)", general: "Поведение во время теста", plain: "уходы со вкладки, вставки из буфера, ритм набора" },
+  live: { n: 5, detailed: "Камера / устная защита с видеоаватаром", general: "Камера / устная защита с видеоаватаром", plain: "проверка кадра по согласию и 3-минутная защита" },
 };
 const STATUS: Record<ContourStatus, { text: string; cls: string; mark: string }> = {
   ok: { text: "в норме", cls: "bg-emerald-50 text-emerald-800", mark: "✓" },
@@ -51,7 +52,17 @@ export function IntegrityPassportView({ p, compact = false, minutes = 3, onDefen
         <p className="font-bold text-brand-night">Паспорт честности попытки (5 контуров)</p>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${VERDICT_CLS[p.verdict]}`} data-testid="integrity-verdict">{p.verdict_title}</span>
       </div>
-      {p.title && <p className="text-xs text-brand-ink/70">Достоверность результата — {p.title}. Оценку уровня и грейд пометка не меняет; решение принимает человек.</p>}
+      {p.title && (
+        <p className="text-xs text-brand-ink/70">
+          Достоверность результата — {p.title}
+          {typeof p.honesty_index === "number" ? ` (индекс самостоятельности ${Math.round(p.honesty_index * 100)} %)` : ""}. Оценку уровня и грейд пометка не меняет; при сомнениях назначается короткий дополнительный этап.
+        </p>
+      )}
+      {p.detailed && p.employer_reason_ru && (
+        <p className="rounded-xl bg-brand-night/[0.03] px-3 py-2 text-xs text-brand-ink/80" data-testid="integrity-employer-reason">
+          {p.employer_reason_ru}
+        </p>
+      )}
       <ol className={`grid gap-1.5 ${compact ? "" : "sm:grid-cols-2"}`}>
         {p.contours.map((c) => {
           const meta = CONTOURS[c.id] ?? { n: 0, detailed: c.id, general: c.id };
@@ -62,6 +73,7 @@ export function IntegrityPassportView({ p, compact = false, minutes = 3, onDefen
               <span className="min-w-0">
                 <span className="font-semibold text-brand-night">{meta.n}. {p.detailed ? meta.detailed : meta.general}</span>
                 <span className="text-brand-ink/70"> — {c.id === "live" && c.status === "recommended" ? "устная защита рекомендована" : st.text}</span>
+                {p.detailed && meta.plain && !compact && <span className="block text-[11px] text-brand-ink/55">{meta.plain}</span>}
                 {p.detailed && c.value && <span className="block break-words text-xs text-brand-ink/65">{c.value}</span>}
                 {!p.detailed && c.id === "live" && c.value && <span className="block break-words text-xs text-brand-ink/65">{c.value}</span>}
               </span>

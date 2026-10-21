@@ -88,7 +88,7 @@ export function FspIdLinkButton({ linkedVia }: { linkedVia?: string | null }) {
       <button className="btn-primary gap-2" onClick={async () => { setErr(null); try { await start("link"); } catch (e) { setErr(errText(e)); } }}>
         <FspIdMark /> {linkedVia === "keycloak" ? "Обновить из ФСП ID" : "Связать через ФСП ID"}
       </button>
-      <p className="text-xs text-brand-ink/65">Достижения из ФСП ID попадут в паспорт с уровнем доказанности T2 — «подтверждено реестром».</p>
+      <p className="text-xs text-brand-ink/65">Достижения из ФСП ID попадут в паспорт со статусом «подтверждено реестром ФСП».</p>
       <Alert>{err}</Alert>
     </div>
   );

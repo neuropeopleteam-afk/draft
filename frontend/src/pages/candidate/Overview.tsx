@@ -9,6 +9,7 @@ import { launchLiveAvatar, minutes } from "../../components/Interview";
 import { useMeta } from "../../lib/meta";
 import SalaryAdvocate from "../../components/SalaryAdvocate";
 import FspRankConverter from "../../components/FspRankConverter";
+import { DemandGapBanner } from "./Feedback";
 
 export default function CandidateOverview() {
   const { me, signIn } = useAuth();
@@ -71,7 +72,7 @@ export default function CandidateOverview() {
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-night px-2.5 py-0.5 text-xs font-bold text-white">Шаг 2</span>
                 <span className="text-xs font-semibold text-emerald-700">{category ? `✓ ${catTitle(category)}` : "Ждёт старта"}</span>
               </div>
-              <p className="mt-2 font-bold text-brand-night">Адаптивный тест на грейд (2PL IRT)</p>
+              <p className="mt-2 font-bold text-brand-night">Адаптивный тест на грейд</p>
               <p className="mt-1 text-xs leading-relaxed text-brand-ink/75">
                 За 5 минут в экспресс-режиме подтвердите уровень: алгоритм подбирает сложность задач после каждого ответа.
               </p>
@@ -102,7 +103,7 @@ export default function CandidateOverview() {
                   <div>
                     <p className="font-bold text-brand-night">Живая устная защита кода с ИИ-аватаром</p>
                     <p className="mt-0.5 text-xs leading-relaxed text-brand-ink/80">
-                      После теста ведущая Елена задаёт 2 вопроса голосом по вашему коду и сама включает микрофон — это доказывает работодателю, что вы решили задачу без нейросетей.
+                      После теста ведущая Настя задаёт 2 вопроса голосом по вашему коду и сама включает микрофон — это доказывает работодателю, что вы решили задачу без нейросетей.
                     </p>
                   </div>
                 </div>
@@ -145,7 +146,7 @@ export default function CandidateOverview() {
               </div>
               <p className="mt-2 font-bold text-brand-night">Карта роста и приглашения с зарплатой</p>
               <p className="mt-1 text-xs leading-relaxed text-brand-ink/75">
-                Посмотрите шкалу способности θ на фоне 1 344 вакансий hh.ru и примите приглашения компаний с открытой вилкой.
+                Посмотрите ваш уровень подготовки на фоне реальных вакансий и примите приглашения компаний с открытой вилкой.
               </p>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -162,7 +163,7 @@ export default function CandidateOverview() {
       <section className="card mt-6 flex flex-wrap items-center justify-between gap-4" aria-label="Переговоры о зарплате" data-testid="candidate-salary-tools">
         <div className="min-w-0">
           <h2 className="font-bold text-brand-night">Переговоры о зарплате на фактах</h2>
-          <p className="mt-0.5 text-xs leading-relaxed text-brand-ink/75">Письмо-обоснование встречного оффера по θ, навыкам hh.ru и паспорту ФСП — и сколько стоит ваш разряд ФСП в ₽.</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-brand-ink/75">Письмо-обоснование встречного оффера по результатам теста, навыкам рынка и паспорту ФСП — и сколько стоит ваш разряд ФСП в ₽.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" className="btn-primary !px-3.5 !py-1.5 text-xs" onClick={() => setTool("salary")}>ИИ-Адвокат зарплаты</button>
@@ -171,6 +172,7 @@ export default function CandidateOverview() {
       </section>
       <Modal open={tool === "salary"} onClose={() => setTool(null)} title="ИИ-Адвокат зарплаты"><SalaryAdvocate embedded /></Modal>
       <Modal open={tool === "fsp"} onClose={() => setTool(null)} title="Конвертер разряда ФСП"><FspRankConverter embedded /></Modal>
+      <div className="mt-6"><DemandGapBanner /></div>
       <div className="mt-6"><InterestCard /></div>
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         <Stat label="Категория" value={catTitle(category)} hint="Только по результатам теста" />

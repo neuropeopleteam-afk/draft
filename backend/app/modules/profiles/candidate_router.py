@@ -97,8 +97,20 @@ def revoke_consent(kind: Literal["processing", "publication"], user: User = Depe
         c.revoked_at = utcnow()
     db.flush()
     _sync_visibility(db, db.get(CandidateProfile, user.id))
+    # А2 (P0): при отзыве согласия в «Моих данных» открытые контакты в принятых приглашениях тоже скрываются + событие в журнал ATS
+    from app.core.enums import InvitationStatus
+    from app.modules.contact import service as contact_svc
+    from app.modules.invitations.models import Invitation
+
+    open_invs = db.scalars(select(Invitation).where(
+        Invitation.candidate_user_id == user.id,
+        Invitation.status == InvitationStatus.accepted,
+        Invitation.contacts_revealed_at.is_not(None),
+    )).all()
+    for inv in open_invs:
+        contact_svc.revoke_contacts(db, inv, user.id)
     db.commit()
-    return {"kind": kind, "granted": False}
+    return {"kind": kind, "granted": False, "contacts_revoked": len(open_invs)}
 
 
 # ------------------------------------------------------------------ опрос после регистрации
@@ -294,18 +306,30 @@ def set_jury_mode(data: JuryIn, user: User = Depends(candidate), db: Session = D
 @router.get("/fsp", summary="Паспорт ФСП: статус связи и достижения (T2)", responses=AUTH)
 def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     from app.integrations.settings import get_isettings
+    from app.modules.fsp.protocols import load_index
 
     integration = get_isettings()
     b = load_bundles(db, [user.id])[user.id]
     c = card(b, {}, include_hidden=True)
+    prot_ok, prot_items = load_index()
     return {
         "fsp_id_claimed": b.profile.fsp_id_claimed,
+        "full_name": b.profile.full_name,
+        "show_fsp": bool(b.privacy.get("show_fsp", True)),
+        "protocols_available": prot_ok,
+        "protocols_indexed": len(prot_items) if prot_ok else 0,
         "linked": b.passport is not None,
         "link_source": b.passport.link_source.value if b.passport else None,
         "achievements": [{"text": achievement_text(a), "discipline": a.discipline, "verified": a.verified,
                           "event_id": a.event_id, "place": a.place, "date": a.event_date.isoformat() if a.event_date else None,
                           "evsk_code": a.evsk_code, "sport_rank": a.sport_rank, "team": a.team_name,
-                          "team_result": a.team_result}
+                          "team_result": a.team_result,
+                          "protocol_verified": bool((a.team_result or {}).get("protocol_verified")),
+                          "status_title": (a.team_result or {}).get("status_title"),
+                          "ekp_no": (a.team_result or {}).get("ekp_no") or a.evsk_code,
+                          "pdf_url": (a.team_result or {}).get("pdf_url"),
+                          "page": (a.team_result or {}).get("page"),
+                          "region": (a.team_result or {}).get("region")}
                          for a in b.achievements if a.verified],
         "rating": c["fsp"]["rating"],
         "sport_rank": b.passport.sport_rank if b.passport else None,
@@ -315,11 +339,11 @@ def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> di
         "identity_linked": bool(user.fsp_subject),
         "registry_sync_available": bool(b.passport and (b.passport.raw or {}).get("fsp_id")),
         "keycloak_ready": integration.fsp_enabled,
-        "note": ((("Свяжите профиль через ФСП ID (демо-стенд Keycloak, OIDC)" if integration.fsp_id_demo
-                   else "Свяжите профиль через ФСП ID (OIDC)") + ": достижения придут с уровнем T2. ")
+        "note": ("Свяжите профиль через ФСП ID или подтвердите результат по официальным протоколам ФСП. "
                  if integration.fsp_enabled else
-                 "Связь через ФСП ID (OIDC, Keycloak) появится после подключения реестра. ")
-                + NO_FSP + ".", "origin": fsp_origin(b.passport.link_source.value, b.passport.raw) if b.passport else None,
+                 "Реестр ФСП подключается по договору с федерацией; подтвердить достижения можно по официальным итоговым протоколам ФСП. ")
+                + NO_FSP + ".",
+        "origin": fsp_origin(b.passport.link_source.value, b.passport.raw) if b.passport else None,
     }
 
 
@@ -372,6 +396,36 @@ def link_fsp(data: FspLinkIn, user: User = Depends(candidate), db: Session = Dep
     db.commit()
     return {"fsp_id_claimed": p.fsp_id_claimed, "status": "pending_registry",
             "message": "ФСП ID сохранён. Достижения подтянутся из реестра после подключения ФСП ID."}
+
+
+class ProtocolSearchIn(BaseModel):
+    fio: str | None = Field(None, max_length=200, description="ФИО (по умолчанию берётся из профиля кандидата)")
+    birth_date: str | None = Field(None, max_length=32, description="Дата рождения (необязательно)")
+    team: str | None = Field(None, max_length=200, description="Название команды (необязательно)")
+
+
+class ProtocolConfirmIn(BaseModel):
+    key_hashes: list[str] = Field(min_length=1, max_length=25)
+    consent_employers: bool = Field(True, description="Показывать подтверждённые достижения работодателям в карточке")
+
+
+@router.post("/fsp/protocols/search", summary="Поиск достижений кандидата в индексе официальных протоколов ФСП",
+             responses=AUTH)
+def search_fsp_protocols(data: ProtocolSearchIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    from app.modules.fsp.protocols import search_protocols
+
+    p = db.get(CandidateProfile, user.id)
+    fio = (data.fio or (p.full_name if p else "") or "").strip()
+    return search_protocols(fio, birth_date=data.birth_date, team=data.team)
+
+
+@router.post("/fsp/protocols/confirm", summary="Подтвердить выбранные достижения из официальных протоколов ФСП",
+             responses=AUTH)
+def confirm_fsp_protocols(data: ProtocolConfirmIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    from app.modules.fsp.protocols import confirm_protocol_matches
+
+    res = confirm_protocol_matches(db, user.id, data.key_hashes, consent_employers=data.consent_employers)
+    return {**res, "fsp": my_fsp(user, db)}
 
 
 # ------------------------------------------------------------------ резюме PDF или DOCX

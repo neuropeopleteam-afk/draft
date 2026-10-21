@@ -49,7 +49,7 @@ def ice_servers() -> list[dict] | None:
 
 def avatar_token(persona_name: str | None = None, director_notes: dict | None = None,
                  avatar_id: str | None = None) -> AvatarToken:
-    """avatar_id — своё лицо (Елена-проводник); по умолчанию — ANAM_AVATAR_ID (интервьюер)."""
+    """avatar_id — своё лицо (Настя-проводник); по умолчанию — ANAM_AVATAR_ID (интервьюер)."""
     s = get_interview_settings()
     name = persona_name or s.interviewer_name
     if not s.interview_anam_enabled:

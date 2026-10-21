@@ -6,6 +6,7 @@ export class PcmPlayer {
   private analyser: AnalyserNode | null = null;
   private sources = new Set<AudioBufferSourceNode>();
   private next = 0;  // время контекста, когда закончится последний запланированный кусок
+  private nextWall = 0;  // то же по часам страницы (performance.now), когда контекст не идёт (звук заблокирован)
   private buf: Uint8Array<ArrayBuffer> = new Uint8Array(512);
 
   /** Создать/разбудить контекст — звать из обработчика нажатия (правило автозапуска звука). */
@@ -31,6 +32,14 @@ export class PcmPlayer {
     if (!ctx || !this.gain) return performance.now();
     const n = Math.floor(bytes.byteLength / 2);
     if (!n) return this.untilMs();
+    if (ctx.state !== "running") {
+      // контекст не идёт (автозапуск звука запрещён, нет жеста): его часы стоят, поэтому считаем по часам страницы —
+      // реплики идут в реальном темпе и не накапливают задержку; звук в это время не ставим (иначе при пробуждении
+      // всё накопленное прозвучит разом)
+      const startMs = Math.max(performance.now() + 30, this.nextWall);
+      this.nextWall = startMs + (n / rate) * 1000;
+      return this.untilMs();
+    }
     const view = new DataView(bytes.buffer, bytes.byteOffset, n * 2);
     const ab = ctx.createBuffer(1, n, rate);
     const ch = ab.getChannelData(0);
@@ -48,8 +57,9 @@ export class PcmPlayer {
 
   untilMs(): number {
     const ctx = this.ctx;
-    if (!ctx || this.next <= ctx.currentTime) return 0;
-    return performance.now() + (this.next - ctx.currentTime) * 1000;
+    const wall = this.nextWall > performance.now() ? this.nextWall : 0;
+    if (!ctx || this.next <= ctx.currentTime) return wall;
+    return Math.max(wall, performance.now() + (this.next - ctx.currentTime) * 1000);
   }
 
   playing(): boolean { return this.untilMs() > performance.now(); }
@@ -60,6 +70,7 @@ export class PcmPlayer {
     for (const s of this.sources) { try { s.stop(); } catch { /* уже остановлен */ } }
     this.sources.clear();
     this.next = 0;
+    this.nextWall = 0;
   }
 
   level(): number {

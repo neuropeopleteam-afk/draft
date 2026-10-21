@@ -79,6 +79,7 @@ class Settings(BaseSettings):
 
     mail_backend: str = Field(default="auto", description="auto | dev | postbox")
     mail_from: str = "noreply@neuropeople.pro"
+    support_email: str = "<форма обратной связи>"
     # Yandex Cloud Postbox (SESv2-совместимый HTTPS API). Ключи — только из env_file на сервере.
     postbox_access_key_id: str | None = None
     postbox_secret_access_key: str | None = None

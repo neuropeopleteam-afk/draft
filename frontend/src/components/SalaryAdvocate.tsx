@@ -22,9 +22,9 @@ const FACTS = {
 function letter(ask: number, offer: number, company: string, category: string): string {
   const target = Math.round((offer * (1 + ask / 100)) / 5000) * 5000;
   const args = [
-    `Подтверждённый уровень. Адаптивный тест (2PL IRT) дал θ = +${FACTS.theta.toLocaleString("ru-RU")} — это ${FACTS.percentile}-й перцентиль категории «${category}»: сильнее меня тест прошли ${100 - FACTS.percentile} % кандидатов.`,
-    `Дефицитные навыки рынка. Я закрыл тестом навыки, которые hh.ru отмечает как дефицитные: ${FACTS.skills.map((s) => `${s.name} (в ${s.share} % вакансий)`).join(", ")}. Это сокращает мою адаптацию в вашей команде.`,
-    ask >= 15 && `Спортивный паспорт ФСП (уровень доказательства T2): ${FACTS.fsp}. Это опыт решения задач в команде под жёстким дедлайном, подтверждённый федерацией, а не самооценкой.`,
+    `Подтверждённый уровень. Адаптивный тест на платформе подтвердил ${FACTS.percentile}-й перцентиль категории «${category}»: сильнее меня тест прошли ${100 - FACTS.percentile} % кандидатов.`,
+    `Дефицитные навыки рынка. Я закрыл тестом навыки, которые работодатели отмечают как дефицитные: ${FACTS.skills.map((s) => `${s.name} (в ${s.share} % вакансий)`).join(", ")}. Это сокращает мою адаптацию в вашей команде.`,
+    ask >= 15 && `Спортивный паспорт ФСП (подтверждено реестром ФСП): ${FACTS.fsp}. Это опыт решения задач в команде под жёстким дедлайном, подтверждённый федерацией, а не самооценкой.`,
     ask >= 20 && `Проверяемость. Результаты подписаны ключом ${FACTS.key} — вы можете проверить паспорт за минуту без запроса ко мне, а итог устной защиты кода подтверждает, что задачи решены без нейросетей.`,
     ask >= 25 && `Рынок. Верхний квартиль предложений для этой категории — ${rub(FACTS.marketP75)}; запрошенная сумма остаётся внутри рыночного коридора для кандидатов моего перцентиля.`,
   ].filter(Boolean).map((a, i) => `${i + 1}. ${a}`);
@@ -81,9 +81,9 @@ export default function SalaryAdvocate({ embedded = false }: { embedded?: boolea
         <Seg label="Желаемая прибавка" value={ask} onChange={(v) => { setAsk(v); setCopied(false); }} options={ASKS} />
       </div>
       <div className="flex flex-wrap gap-2 text-xs">
-        <span className="chip">θ +{FACTS.theta.toLocaleString("ru-RU")} · {FACTS.percentile}-й перцентиль</span>
-        <span className="chip">hh.ru: {FACTS.skills.length} дефицитных навыка</span>
-        <span className="chip">ФСП · T2</span>
+        <span className="chip">{FACTS.percentile}-й перцентиль категории</span>
+        <span className="chip">Рынок: {FACTS.skills.length} дефицитных навыка</span>
+        <span className="chip">Паспорт ФСП</span>
         <span className="chip">Ed25519 ✓</span>
       </div>
       <div>

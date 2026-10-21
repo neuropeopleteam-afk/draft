@@ -7,7 +7,7 @@ import { DecisionProofStrip } from "../../components/UnderTheHood";
 import { NeedScope, scopeOptions } from "../../components/NeedScope";  // Я10: что проверено тестом по потребности
 import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, plural, range, useApi } from "../../components/ui";
+import { Alert, Empty, Field, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, isSyntheticProfile, plural, range, useApi } from "../../components/ui";
 import { useGrades } from "../../lib/grades";
 import { api } from "../../lib/api";
 import { useDirectionEntries } from "../../lib/meta";
@@ -348,8 +348,8 @@ export function Needs() {
             <p className="mt-0.5 text-brand-ink/70">Система выделит стек, сверит вилку с hh.ru и уберёт нарушения ст. 64 ТК РФ.</p>
           </li>
           <li className="rounded-xl bg-[#FBF8FC] p-3">
-            <span className="font-bold text-brand-night">3. Подборка 2PL IRT + ФСП</span>
-            <p className="mt-0.5 text-brand-ink/70">Кандидаты ранжируются по формуле 45 / 35 / 10 / 5 / 5 и сравниваются с ИИ-советником.</p>
+            <span className="font-bold text-brand-night">3. Подборка по фактам и ФСП</span>
+            <p className="mt-0.5 text-brand-ink/70">Кандидаты ранжируются по подтверждённым навыкам и сравниваются с ИИ-советником.</p>
           </li>
           <li className="rounded-xl bg-[#FBF8FC] p-3">
             <span className="font-bold text-brand-night">4. Приглашение с вилкой</span>
@@ -434,7 +434,7 @@ function Conditions({ c, busy, onToggle }: { c?: any; busy: boolean; onToggle: (
   );
   return (
     <p className="mt-1 flex flex-wrap items-center gap-2 text-sm">
-      <span className="chip" title="Формат и город — заявленные кандидатом (T0): только сужают подборку, баллов не добавляют">Условия: {c.text}{c.hidden ? ` · скрыто условиями: ${c.hidden}` : ""}</span>
+      <span className="chip" title="Формат и город — самозаявленные кандидатом условия: только сужают подборку, баллов и грейда не добавляют">Условия: {c.text}{c.hidden ? ` · скрыто условиями: ${c.hidden}` : ""}</span>
       {c.hidden > 0 && <button type="button" disabled={busy} className="font-semibold text-brand hover:underline" onClick={() => onToggle(true)}>Показать всех</button>}
     </p>
   );
@@ -463,13 +463,14 @@ export function Selection() {
   const [invited, setInvited] = useState<string | null>(null);
   const [sentRefs, setSentRefs] = useState<string[]>([]);  // аудит №2: кому приглашение ушло только что
   const [expandAll, setExpandAll] = useState(false);
+  const [realOnly, setRealOnly] = useState(false);
   const [focus, setFocus] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [wErr, setWErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   // FIX7 п. 10: стаж из потребности подставляется в «Стаж от, лет», если версия его не задала — уходит в следующую версию
-  useEffect(() => { if (sel.data) { setFilters(withNeedExperience(sel.data.filters ?? {}, sel.data.requirements)); setPicked([]); setShown(TOP); setOpen({}); setActive(null); } }, [sel.data]);
+  useEffect(() => { if (sel.data) { setFilters(withNeedExperience(sel.data.filters ?? {}, sel.data.requirements)); setRealOnly(!!sel.data.filters?.real_only); setPicked([]); setShown(TOP); setOpen({}); setActive(null); } }, [sel.data]);
   // Я10: первые TOP — компактно, остальные свёрнуты («Показать ещё»); на широком блоке (≥ 1000 px) доказательства — справа
   const [shown, setShown] = useState(TOP);
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -529,13 +530,15 @@ export function Selection() {
   const condOn = !!s?.conditions && !s.conditions.off && !!s.conditions.text;
   const toggleArr = (k: string, t: string) => { const cur: string[] = filters[k] ?? []; setFilters({ ...filters, [k]: cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t] }); };
 
-  const ordered: any[] = s ? mutual.sorted<any>(s.results) : [];
+  const allOrdered: any[] = s ? mutual.sorted<any>(s.results) : [];
+  const ordered: any[] = realOnly ? allOrdered.filter((r) => !isSyntheticProfile(r)) : allOrdered;
+  const syntheticCount = allOrdered.filter((r) => isSyntheticProfile(r)).length;
   const visible = ordered.slice(0, Math.max(TOP, shown));
   const rest = ordered.length - visible.length;
   const askRefs = picked.length ? picked : ordered.slice(0, 3).map((r) => r.ref);
   const activeRow = ordered.find((r) => r.ref === active) ?? visible[0];
   const expMin = s?.requirements?.experience_years_min ?? null;  // FIX7 п. 10
-  const evidence = (r: any) => <CandidateCard bare c={r.card} reasons={r.reasons} must={r.must} compact
+  const evidence = (r: any) => <CandidateCard bare c={r.card} explain={r.explain} score={r.score} reasons={r.reasons} must={r.must} core={r.core} compact
     mutual={<MutualCardBlock needId={id!} version={s!.version} cref={r.ref} mutual={mutual} />} />;
   const togglePick = (ref: string) => setPicked(picked.includes(ref) ? picked.filter((x) => x !== ref) : [...picked, ref]);
   const hasBias = !!reqOf?.bias?.length;
@@ -575,7 +578,22 @@ export function Selection() {
                   <h2 id="top-picks-h" className="text-lg font-bold text-brand-night">{ordered.length ? `Кого пригласить первым: ${Math.min(TOP, ordered.length)} из ${s.total}` : "Кандидаты"}</h2>
                   <p className="text-sm text-brand-ink/70">версия {s.version}{s.parent_version ? ` (из версии ${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}{ordered.length > 0 && !wide && <> · {expandBtn}</>}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  {syntheticCount > 0 && (
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-brand-night/15 bg-white px-3 py-1.5 text-xs font-semibold text-brand-night shadow-sm" data-testid="real-only-toggle">
+                      <input
+                        type="checkbox"
+                        className="accent-brand"
+                        checked={realOnly}
+                        onChange={(e) => {
+                          const v = e.target.checked;
+                          setRealOnly(v);
+                          setFilters((f: any) => ({ ...f, real_only: v || undefined }));
+                        }}
+                      />
+                      <span>Только реальные кандидаты</span>
+                    </label>
+                  )}
                   {ordered.length >= 2 && (
                     <Link className="btn-primary !px-4 !py-2 text-xs sm:text-sm" to={`/employer/needs/${id}/compare?v=${s.version}`} data-testid="compare-top3-btn">
                       Сравнить топ-3 с ИИ-советником
@@ -663,12 +681,14 @@ export function Selection() {
             </section>
             <section className="card space-y-3">
               <h2 className="text-sm font-bold text-brand-night">Уточнить</h2>
+              <Toggle checked={realOnly} onChange={(x) => { setRealOnly(x); setFilters({ ...filters, real_only: x || undefined }); }} label="Только реальные кандидаты"
+                hint="Скрыть модельные демо-профили стенда. По умолчанию показаны все кандидаты с пометкой «демо-профиль»." />
               <Toggle checked={!!filters.fsp_only} onChange={(x) => setFilters({ ...filters, fsp_only: x })} label="Только с паспортом ФСП" />
               <Toggle checked={!!filters.confirmed_only} onChange={(x) => setFilters({ ...filters, confirmed_only: x || undefined })} label="Только подтверждённый грейд"
-                hint="Убрать «Junior (предварительно)» и кандидатов без подтверждённого грейда. По умолчанию они показаны со статусом ниже подтверждённых." />
+                hint="Убрать «Junior (предварительно)» и кандидатов без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждённым грейдом." />
               {reqTags.length > 0 && (
                 <div>
-                  <p className="label">Навык подтверждён тестом (T1)</p>
+                  <p className="label">Навык подтверждён платформой</p>
                   <button type="button" className="mb-2 text-left text-xs font-semibold text-brand hover:underline"
                     onClick={() => setFilters({ ...filters, stack_t1: s.requirements.stack_required.map((x: StackItem) => x.tag) })}>
                     Подставить все обязательные навыки
@@ -681,14 +701,14 @@ export function Selection() {
                   </div>
                 </div>
               )}
-              <Field label="Формат (заявленный, T0)" htmlFor="fwf">
+              <Field label="Формат (самозаявлено, только фильтр)" htmlFor="fwf">
                 <select id="fwf" className="input" value={formatKey(filters.work_formats, filters.work_format)} onChange={(e) => { const x = formatValue(e.target.value); setFilters({ ...filters, work_format: x.work_formats ? undefined : x.work_format || undefined, work_formats: x.work_formats || undefined }); }}>
                   {FORMAT_OPTIONS.map(([k, t]) => <option key={k} value={k}>{k === "" && condOn ? `как в потребности: ${s.conditions?.text ?? "любой"}` : t}</option>)}
                 </select>
               </Field>
               <Field label="Город (или готов к переезду)" htmlFor="fcity"><input id="fcity" className="input" placeholder={condOn && s.conditions?.applied?.city ? `как в потребности: ${s.conditions.applied.city}` : undefined} value={filters.city ?? ""} onChange={(e) => setFilters({ ...filters, city: e.target.value || undefined })} /></Field>
               <p className="text-xs text-brand-ink/65">{condOn ? "Формат и город из потребности уже применены к подборке; здесь их можно заменить." : "Условия потребности в этой версии не применены — показаны все."}</p>
-              <Field label="Стаж от, лет (T0)" htmlFor="fexp"><input id="fexp" type="number" min={0} className="input" value={filters.experience_min ?? ""} onChange={(e) => setFilters({ ...filters, experience_min: e.target.value ? Number(e.target.value) : undefined })} />
+              <Field label="Стаж от, лет (самозаявлено)" htmlFor="fexp"><input id="fexp" type="number" min={0} className="input" value={filters.experience_min ?? ""} onChange={(e) => setFilters({ ...filters, experience_min: e.target.value ? Number(e.target.value) : undefined })} />
                 {s.requirements?.experience_years_min != null && <p className="mt-1 text-xs text-brand-ink/70" data-testid="exp-from-need">
                   Из потребности: от {String(s.requirements.experience_years_min).replace(".", ",")} лет{s.filters?.experience_min == null
                     ? ` — в этой версии стаж не применялся (у кандидатов с меньшим стажем — пометка в карточке); применится в v${(last ?? 0) + 1}.`

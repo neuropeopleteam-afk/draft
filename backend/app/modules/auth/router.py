@@ -1,17 +1,22 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.errors import api_error, err
+from app.core.ratelimit import SlidingWindow, client_ip, hit
 from app.modules.auth import service, twofa
 from app.modules.auth.schemas import (
+    ForgotPasswordIn,
+    ForgotPasswordOut,
     LoginIn,
     RegisterIn,
     RegisterOut,
     ResendCodeIn,
     ResendCodeOut,
+    ResetPasswordIn,
+    ResetPasswordOut,
     TokenOut,
     TwoFactorChallengeOut,
     VerifyEmailIn,
@@ -53,6 +58,35 @@ def verify_email(data: VerifyEmailIn, db: Session = Depends(get_db)) -> TokenOut
 def resend_code(data: ResendCodeIn, db: Session = Depends(get_db)) -> ResendCodeOut:
     code = service.resend_code(db, data.email)
     return ResendCodeOut(dev_verification_code=code if get_settings().effective_dev_mode else None)
+
+
+_forgot_ip_rl = SlidingWindow(10, 900)
+_forgot_email_rl = SlidingWindow(3, 900)
+
+
+@router.post(
+    "/forgot",
+    response_model=ForgotPasswordOut,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Запрос кода восстановления пароля по почте (15 минут, без раскрытия наличия адреса)",
+    responses={429: err("Слишком частые запросы")},
+)
+def forgot_password(request: Request, data: ForgotPasswordIn, db: Session = Depends(get_db)) -> ForgotPasswordOut:
+    hit(_forgot_ip_rl, client_ip(request), "too_many_requests", "Слишком частые запросы. Повторите попытку позже")
+    hit(_forgot_email_rl, service.normalize_email(data.email), "too_many_requests", "Слишком частые запросы. Повторите попытку позже")
+    code = service.forgot_password(db, data.email)
+    return ForgotPasswordOut(dev_reset_code=code if get_settings().effective_dev_mode else None)
+
+
+@router.post(
+    "/reset",
+    response_model=ResetPasswordOut,
+    summary="Установка нового пароля по 6-значному коду из письма (до 5 попыток)",
+    responses={400: err("Неверный или просроченный код"), 429: err("Превышено число попыток ввода кода")},
+)
+def reset_password(data: ResetPasswordIn, db: Session = Depends(get_db)) -> ResetPasswordOut:
+    service.reset_password(db, data.email, data.code, data.new_password)
+    return ResetPasswordOut(ok=True)
 
 
 @router.post(

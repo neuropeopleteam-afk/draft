@@ -25,9 +25,12 @@ def invitation_sent(inv_id: uuid.UUID) -> None:
         if i is None:
             return
         c = db.get(Company, i.company_id)
-        send_to_user(db, i.candidate_user_id, f"Новое приглашение: {c.name if c else 'компания'}",
-                     f"«{i.position_title}», {_rub(i.salary_from)} – {_rub(i.salary_to)}",
-                     "/candidate/invitations", f"inv-{i.id}")
+        title = f"Новое приглашение: {c.name if c else 'компания'}"
+        body = f"«{i.position_title}», {_rub(i.salary_from)} – {_rub(i.salary_to)}"
+        send_to_user(db, i.candidate_user_id, title, body, "/candidate/invitations", f"inv-{i.id}")
+        from app.modules.telegram.service import send_to_user as send_telegram
+
+        send_telegram(db, i.candidate_user_id, title, body, "/candidate/invitations", f"inv-{i.id}")
     except Exception:  # noqa: BLE001
         log.exception("push invitation_sent failed")
     finally:
@@ -47,10 +50,12 @@ def invitation_answered(inv_id: uuid.UUID, accepted: bool) -> None:
             return
         ref = db.get(CandidateProfile, i.candidate_user_id).public_ref
         if i.employer_user_id:
-            send_to_user(db, i.employer_user_id,
-                         f"Кандидат {ref} {'принял' if accepted else 'отклонил'} приглашение",
-                         f"«{i.position_title}»" + (" — контакты открыты" if accepted else ""),
-                         "/employer/invitations", f"inv-{i.id}")
+            title = f"Кандидат {ref} {'принял' if accepted else 'отклонил'} приглашение"
+            body = f"«{i.position_title}»" + (" — контакты открыты" if accepted else "")
+            send_to_user(db, i.employer_user_id, title, body, "/employer/invitations", f"inv-{i.id}")
+            from app.modules.telegram.service import send_to_user as send_telegram
+
+            send_telegram(db, i.employer_user_id, title, body, "/employer/invitations", f"inv-{i.id}")
         if accepted:
             # Строки настроек у новой компании ещё нет (её создаёт первый заход в кабинет ATS), а «Поток» или Talantix
             # уже могут быть подключены: company_settings создаёт её с auto_push=True — как в кабинете по умолчанию
