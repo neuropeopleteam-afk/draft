@@ -319,13 +319,13 @@ export default function Landing() {
           ))}
         </dl>
 
-        {/* Блок точности в двух режимах: стандартные условия (S-T / S-M) и проверка на прочность в жёстких условиях */}
+        {/* Блок точности в двух режимах: стандартные условия и проверка на прочность в жёстких условиях */}
         <div className="mt-6 np-glass p-5 sm:p-6" data-testid="landing-top5-dual">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div>
               <p className="np-eyebrow">Протокол честного сравнения · выбор заголовка зафиксирован до прогонов</p>
               <h3 className="mt-1 text-lg font-extrabold np-text">
-                Точность ядра: стандартные условия (S-T / S-M) и проверка на прочность
+                Точность ядра: стандартные условия и проверка на прочность в жёстких условиях
               </h3>
             </div>
             <Link to="/validation#headline" className="text-xs font-semibold np-accent hover:underline">
@@ -335,7 +335,7 @@ export default function Landing() {
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-4" data-testid="landing-top5-standard">
               <p className="text-xs font-bold uppercase tracking-wider text-indigo-300">
-                1. Стандартные условия, принятые в аналогичных решениях (S-T / S-M)
+                1. Стандартные условия, принятые в аналогичных решениях
               </p>
               <p className="mt-1 text-xs np-muted">
                 {top5Meta?.standard_condition_ru ?? "Единая шкала для сопоставления с другими командами; точный грейд — среди тех, кому продукт определяет уровень."}
@@ -357,7 +357,7 @@ export default function Landing() {
             </div>
             <div className="rounded-2xl border border-[color:var(--np-line)] bg-[color:var(--np-surface)] p-4" data-testid="landing-top5-hard">
               <p className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                2. Проверка на прочность в наших жёстких условиях (стресс-режим)
+                2. Проверка на прочность в жёстких условиях
               </p>
               <p className="mt-1 text-xs np-muted">
                 {top5Meta?.hard_condition_ru ?? "Угадывание, завышение заявок на грейд, пограничные кандидаты у порогов, погрешность параметров заданий и неточные резюме."}
@@ -373,7 +373,7 @@ export default function Landing() {
                 </dl>
               ) : (
                 <p className="mt-2 text-xs font-semibold np-muted" data-testid="landing-top5-hard-pending">
-                  Показатели стресс-режима: пересчитывается
+                  Показатели в жёстких условиях: пересчитывается
                 </p>
               )}
             </div>

@@ -53,8 +53,8 @@ function Top5Snapshot({ prov }: { prov?: any }) {
   const how = meta?.how_obtained_ru ?? meta?.how_ru ?? meta?.source_ru;
   const nVal = meta?.n ?? meta?.n_candidates;
   const famVal = meta?.bank_families ?? NUMBERS.bank?.families;
-  const stdCond = meta?.standard_condition_ru ?? "Стандартные условия, принятые в аналогичных решениях (единая шкала S-T / S-M, сопоставимая с другими командами; точный грейд — среди тех, кому продукт определяет уровень)";
-  const hardCond = meta?.hard_condition_ru ?? "Проверка на прочность в наших жёстких условиях: случайное угадывание, завышение заявок на грейд, пограничные кандидаты у порогов, погрешность параметров заданий и неточные резюме";
+  const stdCond = meta?.standard_condition_ru ?? "Стандартные условия, принятые в аналогичных решениях (единая шкала, сопоставимая с другими командами; точный грейд — среди тех, кому продукт определяет уровень)";
+  const hardCond = meta?.hard_condition_ru ?? "Проверка на прочность в жёстких условиях: случайное угадывание, завышение заявок на грейд, пограничные кандидаты у порогов, погрешность параметров заданий и неточные резюме";
   return (
     <div className="mt-4" data-testid="validation-snapshot-5">
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#F3F2FB] px-3.5 py-2.5 text-sm text-brand-night">
@@ -71,11 +71,11 @@ function Top5Snapshot({ prov }: { prov?: any }) {
         {prov && <ProvenanceLine p={prov} />}
       </div>
 
-      {/* Строка 1: Заголовок — стандартные условия (S-T / S-M) */}
+      {/* Строка 1: Заголовок — стандартные условия */}
       <div className="mt-4 rounded-2xl border border-brand-night/10 bg-white p-4" data-testid="validation-top5-standard">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-base font-extrabold text-brand-night">
-            Стандартные условия, принятые в аналогичных решениях (S-T / S-M)
+            Стандартные условия, принятые в аналогичных решениях
           </h3>
           <span className="rounded-full bg-[#F3F2FB] px-2.5 py-0.5 text-xs font-semibold text-brand-plum">
             Основной ряд для сопоставления решений
@@ -119,10 +119,10 @@ function Top5Snapshot({ prov }: { prov?: any }) {
       <div className="mt-3 rounded-2xl border border-brand-night/10 bg-white p-4" data-testid="validation-top5-hard">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-base font-extrabold text-brand-night">
-            Проверка на прочность в наших жёстких условиях (стресс-режим)
+            Проверка на прочность в жёстких условиях
           </h3>
           <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-900 ring-1 ring-amber-200">
-            Стресс-проверка устойчивости
+            Проверка запаса прочности
           </span>
         </div>
         <p className="mt-1 text-xs leading-relaxed text-brand-ink/75" data-testid="top5-hard-cond">
@@ -166,7 +166,7 @@ function Top5Snapshot({ prov }: { prov?: any }) {
         </p>
         <details className="mt-1.5 text-brand-ink/75">
           <summary className="cursor-pointer font-semibold text-brand-plum hover:underline">
-            Подробно о протоколе двух режимов измерения (S-T / S-M и стресс-режим)
+            Подробно о протоколе двух режимов измерения
           </summary>
           <p className="mt-1">
             По решению владельца продукт публикует обе планки одновременно, и выбор заголовочного ряда зафиксирован в протоколах до запуска расчётов. В стандартных условиях точный грейд считается среди кандидатов, которым вынесен вердикт (с выводом доли по всему пулу в подсказке), а также рассчитываются совпадение в пределах ±1 ступени, повторяемость, доля прошедших завышений и метрики ранжирования (P@5, nDCG@10, MRR). В жёстких условиях добавлены шум параметров заданий, завышенные и заниженные самооценки и «раздутые» резюме.
