@@ -1,0 +1,2350 @@
+{
+ "generated_at": "2026-10-21T10:10:24+00:00",
+ "code_commit": "249443367",
+ "algorithm": "match-v1.3",
+ "label_note": "тексты — реальные вакансии hh.ru, кандидаты — модельные (модель, не люди)",
+ "corpus_collected_at": "2026-10-21",
+ "n_corpus": 336,
+ "n": 336,
+ "n_missing": 0,
+ "limit": 10,
+ "catalog_directions": [
+  "analyst",
+  "backend",
+  "data_eng",
+  "data_ml",
+  "devops",
+  "frontend",
+  "mobile",
+  "qa",
+  "security"
+ ],
+ "method": "Текст вакансии (название + описание) → разбор потребности путём правил (parse_need, без LLM) → подборка (build_selection, настройки по умолчанию) на демо-пуле: модельные кандидаты с результатами теста (модель, не люди). Метки — из полей hh.ru: направление — роль и слова названия, грейд — слово в названии, навыки — «Ключевые навыки» → теги справочника (разбору не даются). «Подтверждённые» — кандидаты, у которых грейд подтверждён тестом. Покрытие требований — доля обязательных навыков потребности, подтверждённых тестом (T1), у лучшего из первых пяти; подтверждённый фреймворк засчитывается как подтверждение базового языка (FastAPI/Django → Python, React/Vue → JavaScript, Spring → Java, PostgreSQL → SQL, Docker/Kubernetes → Linux; балл × 0,9; флаг MATCH_IMPLIED, matching/implied.py). Нормированные метрики (поля *_testable и ceiling): проверяемое ядро — обязательные навыки, которые банк направления подтверждает тестом напрямую или через implied; ceiling — средняя по вакансиям доля таких навыков среди всех обязательных (максимум сырого покрытия при идеальном пуле); req_coverage_best_top5_testable — доля навыков ядра, подтверждённых у лучшего из пяти; req_full_top5_testable — в пятёрке есть кандидат со всем ядром.",
+ "implied": "1",
+ "overall": {
+  "n": 336,
+  "direction_ok": {
+   "k": 286,
+   "n": 336,
+   "share": 0.851
+  },
+  "grade_ok": {
+   "k": 103,
+   "n": 103,
+   "share": 1.0
+  },
+  "req_coverage_mean_top5": {
+   "mean": 0.616,
+   "n": 301
+  },
+  "grade_above_applied": {
+   "k": 7,
+   "n": 336,
+   "share": 0.021
+  },
+  "top5_above_share": {
+   "k": 13,
+   "n": 1679,
+   "share": 0.008
+  },
+  "grade_above_off": null,
+  "with_required": {
+   "k": 301,
+   "n": 336,
+   "share": 0.896
+  },
+  "key_skills_recall": {
+   "k": 461,
+   "n": 541,
+   "share": 0.852
+  },
+  "selection_nonempty": {
+   "k": 336,
+   "n": 336,
+   "share": 1.0
+  },
+  "confirmed_any": {
+   "k": 336,
+   "n": 336,
+   "share": 1.0
+  },
+  "confirmed_exact": {
+   "k": 230,
+   "n": 336,
+   "share": 0.685
+  },
+  "confirmed_right_direction": {
+   "k": 293,
+   "n": 336,
+   "share": 0.872
+  },
+  "req_coverage_best_top5": {
+   "mean": 0.708,
+   "n": 301
+  },
+  "req_full_top5": {
+   "k": 122,
+   "n": 301,
+   "share": 0.405
+  },
+  "req_full_top5_confirmed": {
+   "k": 122,
+   "n": 301,
+   "share": 0.405
+  },
+  "required_mean": 6.8,
+  "req_coverage_best_top5_testable": {
+   "mean": 0.889,
+   "n": 297
+  },
+  "req_full_top5_testable": {
+   "k": 154,
+   "n": 297,
+   "share": 0.519
+  },
+  "ceiling": {
+   "mean": 0.932,
+   "n": 301
+  },
+  "req_coverage_best_top5_raw_to_ceiling": 0.76
+ },
+ "no_fsp": {
+  "top5": {
+   "k": 801,
+   "n": 1679,
+   "share": 0.477
+  },
+  "pool": {
+   "k": 1914,
+   "n": 2734,
+   "share": 0.7
+  },
+  "what": "Доля кандидатов без учтённых достижений ФСП: в первых пятёрках подборок (top5) и в видимом пуле подтверждённых кандидатов (pool). Отсутствие ФСП — штраф 0, ФСП — 10 % балла."
+ },
+ "catalog_only": {
+  "n": 336,
+  "direction_ok": {
+   "k": 286,
+   "n": 336,
+   "share": 0.851
+  },
+  "grade_ok": {
+   "k": 103,
+   "n": 103,
+   "share": 1.0
+  },
+  "req_coverage_mean_top5": {
+   "mean": 0.616,
+   "n": 301
+  },
+  "grade_above_applied": {
+   "k": 7,
+   "n": 336,
+   "share": 0.021
+  },
+  "top5_above_share": {
+   "k": 13,
+   "n": 1679,
+   "share": 0.008
+  },
+  "grade_above_off": null,
+  "with_required": {
+   "k": 301,
+   "n": 336,
+   "share": 0.896
+  },
+  "key_skills_recall": {
+   "k": 461,
+   "n": 541,
+   "share": 0.852
+  },
+  "selection_nonempty": {
+   "k": 336,
+   "n": 336,
+   "share": 1.0
+  },
+  "confirmed_any": {
+   "k": 336,
+   "n": 336,
+   "share": 1.0
+  },
+  "confirmed_exact": {
+   "k": 230,
+   "n": 336,
+   "share": 0.685
+  },
+  "confirmed_right_direction": {
+   "k": 293,
+   "n": 336,
+   "share": 0.872
+  },
+  "req_coverage_best_top5": {
+   "mean": 0.708,
+   "n": 301
+  },
+  "req_full_top5": {
+   "k": 122,
+   "n": 301,
+   "share": 0.405
+  },
+  "req_full_top5_confirmed": {
+   "k": 122,
+   "n": 301,
+   "share": 0.405
+  },
+  "required_mean": 6.8,
+  "req_coverage_best_top5_testable": {
+   "mean": 0.889,
+   "n": 297
+  },
+  "req_full_top5_testable": {
+   "k": 154,
+   "n": 297,
+   "share": 0.519
+  },
+  "ceiling": {
+   "mean": 0.932,
+   "n": 301
+  },
+  "req_coverage_best_top5_raw_to_ceiling": 0.76
+ },
+ "grade_above": {
+  "compare": false,
+  "flag": "MATCH_GRADE_ABOVE",
+  "min_exact": 30,
+  "keep": 2,
+  "note": "«до» — тот же код и разбор с MATCH_GRADE_ABOVE=0 (match-v1.2), «после» — продукт по умолчанию (match-v1.3): в точной категории меньше 30 подтверждённых — добор категории на ступень выше, первые 2 места — лучшие точного уровня"
+ },
+ "directions": {
+  "analyst": {
+   "title": "Системный / бизнес-аналитик",
+   "in_catalog": true,
+   "n": 48,
+   "parsed_direction": {
+    "analyst": 39,
+    "—": 4,
+    "backend": 3,
+    "devops": 1,
+    "qa": 1
+   },
+   "direction_ok": {
+    "k": 39,
+    "n": 48,
+    "share": 0.812
+   },
+   "grade_ok": {
+    "k": 15,
+    "n": 15,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 36,
+    "n": 48,
+    "share": 0.75
+   },
+   "key_skills_recall": {
+    "k": 9,
+    "n": 15,
+    "share": 0.6
+   },
+   "selection_nonempty": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 30,
+    "n": 48,
+    "share": 0.625
+   },
+   "confirmed_right_direction": {
+    "k": 42,
+    "n": 48,
+    "share": 0.875
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.76,
+    "n": 36
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.685,
+    "n": 36
+   },
+   "req_coverage_best_top5_off": {
+    "mean": null,
+    "n": 0
+   },
+   "req_full_top5": {
+    "k": 22,
+    "n": 36,
+    "share": 0.611
+   },
+   "req_full_top5_confirmed": {
+    "k": 22,
+    "n": 36,
+    "share": 0.611
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.874,
+    "n": 34
+   },
+   "req_full_top5_testable": {
+    "k": 24,
+    "n": 34,
+    "share": 0.706
+   },
+   "ceiling": {
+    "mean": 0.896,
+    "n": 36
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "postgresql",
+     "n": 2
+    },
+    {
+     "tag": "sql",
+     "n": 1
+    },
+    {
+     "tag": "python",
+     "n": 1
+    },
+    {
+     "tag": "javascript",
+     "n": 1
+    },
+    {
+     "tag": "test-design",
+     "n": 1
+    }
+   ]
+  },
+  "backend": {
+   "title": "Backend",
+   "in_catalog": true,
+   "n": 46,
+   "parsed_direction": {
+    "backend": 43,
+    "frontend": 2,
+    "data_ml": 1
+   },
+   "direction_ok": {
+    "k": 43,
+    "n": 46,
+    "share": 0.935
+   },
+   "grade_ok": {
+    "k": 27,
+    "n": 27,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 46,
+    "n": 46,
+    "share": 1.0
+   },
+   "key_skills_recall": {
+    "k": 101,
+    "n": 121,
+    "share": 0.835
+   },
+   "selection_nonempty": {
+    "k": 46,
+    "n": 46,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 46,
+    "n": 46,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 39,
+    "n": 46,
+    "share": 0.848
+   },
+   "confirmed_right_direction": {
+    "k": 43,
+    "n": 46,
+    "share": 0.935
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.64,
+    "n": 46
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.504,
+    "n": 46
+   },
+   "req_coverage_best_top5_off": {
+    "mean": null,
+    "n": 0
+   },
+   "req_full_top5": {
+    "k": 15,
+    "n": 46,
+    "share": 0.326
+   },
+   "req_full_top5_confirmed": {
+    "k": 15,
+    "n": 46,
+    "share": 0.326
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.845,
+    "n": 46
+   },
+   "req_full_top5_testable": {
+    "k": 19,
+    "n": 46,
+    "share": 0.413
+   },
+   "ceiling": {
+    "mean": 0.965,
+    "n": 46
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "linux",
+     "n": 3
+    },
+    {
+     "tag": "rest-api",
+     "n": 2
+    },
+    {
+     "tag": "kubernetes",
+     "n": 2
+    },
+    {
+     "tag": "http",
+     "n": 2
+    },
+    {
+     "tag": "sql",
+     "n": 1
+    }
+   ]
+  },
+  "data_eng": {
+   "title": "Инженер данных",
+   "in_catalog": true,
+   "n": 35,
+   "parsed_direction": {
+    "data_eng": 29,
+    "analyst": 2,
+    "data_ml": 2,
+    "backend": 1,
+    "qa": 1
+   },
+   "direction_ok": {
+    "k": 29,
+    "n": 35,
+    "share": 0.829
+   },
+   "grade_ok": {
+    "k": 1,
+    "n": 1,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 35,
+    "n": 35,
+    "share": 1.0
+   },
+   "key_skills_recall": {
+    "k": 49,
+    "n": 51,
+    "share": 0.961
+   },
+   "selection_nonempty": {
+    "k": 35,
+    "n": 35,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 35,
+    "n": 35,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 16,
+    "n": 35,
+    "share": 0.457
+   },
+   "confirmed_right_direction": {
+    "k": 29,
+    "n": 35,
+    "share": 0.829
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.727,
+    "n": 35
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.642,
+    "n": 35
+   },
+   "req_coverage_best_top5_off": {
+    "mean": null,
+    "n": 0
+   },
+   "req_full_top5": {
+    "k": 11,
+    "n": 35,
+    "share": 0.314
+   },
+   "req_full_top5_confirmed": {
+    "k": 11,
+    "n": 35,
+    "share": 0.314
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.902,
+    "n": 35
+   },
+   "req_full_top5_testable": {
+    "k": 16,
+    "n": 35,
+    "share": 0.457
+   },
+   "ceiling": {
+    "mean": 0.942,
+    "n": 35
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "airflow",
+     "n": 1
+    },
+    {
+     "tag": "postgresql",
+     "n": 1
+    }
+   ]
+  },
+  "data_ml": {
+   "title": "Data/ML",
+   "in_catalog": true,
+   "n": 36,
+   "parsed_direction": {
+    "data_ml": 32,
+    "backend": 2,
+    "mobile": 1,
+    "devops": 1
+   },
+   "direction_ok": {
+    "k": 32,
+    "n": 36,
+    "share": 0.889
+   },
+   "grade_ok": {
+    "k": 12,
+    "n": 12,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 36,
+    "n": 36,
+    "share": 1.0
+   },
+   "key_skills_recall": {
+    "k": 70,
+    "n": 77,
+    "share": 0.909
+   },
+   "selection_nonempty": {
+    "k": 36,
+    "n": 36,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 36,
+    "n": 36,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 25,
+    "n": 36,
+    "share": 0.694
+   },
+   "confirmed_right_direction": {
+    "k": 32,
+    "n": 36,
+    "share": 0.889
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.702,
+    "n": 36
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.602,
+    "n": 36
+   },
+   "req_coverage_best_top5_off": {
+    "mean": null,
+    "n": 0
+   },
+   "req_full_top5": {
+    "k": 14,
+    "n": 36,
+    "share": 0.389
+   },
+   "req_full_top5_confirmed": {
+    "k": 14,
+    "n": 36,
+    "share": 0.389
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.903,
+    "n": 36
+   },
+   "req_full_top5_testable": {
+    "k": 19,
+    "n": 36,
+    "share": 0.528
+   },
+   "ceiling": {
+    "mean": 0.942,
+    "n": 36
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "pytorch",
+     "n": 2
+    },
+    {
+     "tag": "git",
+     "n": 1
+    },
+    {
+     "tag": "linux",
+     "n": 1
+    },
+    {
+     "tag": "python",
+     "n": 1
+    },
+    {
+     "tag": "mlops",
+     "n": 1
+    }
+   ]
+  },
+  "devops": {
+   "title": "DevOps / SRE",
+   "in_catalog": true,
+   "n": 36,
+   "parsed_direction": {
+    "devops": 22,
+    "backend": 4,
+    "qa": 3,
+    "security": 3,
+    "—": 1,
+    "data_ml": 1,
+    "data_eng": 1,
+    "frontend": 1
+   },
+   "direction_ok": {
+    "k": 22,
+    "n": 36,
+    "share": 0.611
+   },
+   "grade_ok": {
+    "k": 10,
+    "n": 10,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 35,
+    "n": 36,
+    "share": 0.972
+   },
+   "key_skills_recall": {
+    "k": 47,
+    "n": 57,
+    "share": 0.825
+   },
+   "selection_nonempty": {
+    "k": 36,
+    "n": 36,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 36,
+    "n": 36,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 21,
+    "n": 36,
+    "share": 0.583
+   },
+   "confirmed_right_direction": {
+    "k": 23,
+    "n": 36,
+    "share": 0.639
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.693,
+    "n": 35
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.609,
+    "n": 35
+   },
+   "req_coverage_best_top5_off": {
+    "mean": null,
+    "n": 0
+   },
+   "req_full_top5": {
+    "k": 11,
+    "n": 35,
+    "share": 0.314
+   },
+   "req_full_top5_confirmed": {
+    "k": 11,
+    "n": 35,
+    "share": 0.314
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.885,
+    "n": 35
+   },
+   "req_full_top5_testable": {
+    "k": 16,
+    "n": 35,
+    "share": 0.457
+   },
+   "ceiling": {
+    "mean": 0.94,
+    "n": 35
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "http",
+     "n": 2
+    },
+    {
+     "tag": "linux",
+     "n": 2
+    },
+    {
+     "tag": "git",
+     "n": 1
+    },
+    {
+     "tag": "ci-cd",
+     "n": 1
+    },
+    {
+     "tag": "kafka",
+     "n": 1
+    }
+   ]
+  },
+  "frontend": {
+   "title": "Frontend",
+   "in_catalog": true,
+   "n": 23,
+   "parsed_direction": {
+    "frontend": 23
+   },
+   "direction_ok": {
+    "k": 23,
+    "n": 23,
+    "share": 1.0
+   },
+   "grade_ok": {
+    "k": 1,
+    "n": 1,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 23,
+    "n": 23,
+    "share": 1.0
+   },
+   "key_skills_recall": {
+    "k": 97,
+    "n": 101,
+    "share": 0.96
+   },
+   "selection_nonempty": {
+    "k": 23,
+    "n": 23,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 23,
+    "n": 23,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 16,
+    "n": 23,
+    "share": 0.696
+   },
+   "confirmed_right_direction": {
+    "k": 23,
+    "n": 23,
+    "share": 1.0
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.678,
+    "n": 23
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.586,
+    "n": 23
+   },
+   "req_coverage_best_top5_off": {
+    "mean": null,
+    "n": 0
+   },
+   "req_full_top5": {
+    "k": 10,
+    "n": 23,
+    "share": 0.435
+   },
+   "req_full_top5_confirmed": {
+    "k": 10,
+    "n": 23,
+    "share": 0.435
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.917,
+    "n": 23
+   },
+   "req_full_top5_testable": {
+    "k": 10,
+    "n": 23,
+    "share": 0.435
+   },
+   "ceiling": {
+    "mean": 0.975,
+    "n": 23
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "rest-api",
+     "n": 2
+    },
+    {
+     "tag": "git",
+     "n": 1
+    },
+    {
+     "tag": "javascript",
+     "n": 1
+    }
+   ]
+  },
+  "mobile": {
+   "title": "Мобильная разработка",
+   "in_catalog": true,
+   "n": 18,
+   "parsed_direction": {
+    "mobile": 17,
+    "backend": 1
+   },
+   "direction_ok": {
+    "k": 17,
+    "n": 18,
+    "share": 0.944
+   },
+   "grade_ok": {
+    "k": 4,
+    "n": 4,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 18,
+    "n": 18,
+    "share": 1.0
+   },
+   "key_skills_recall": {
+    "k": 11,
+    "n": 11,
+    "share": 1.0
+   },
+   "selection_nonempty": {
+    "k": 18,
+    "n": 18,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 18,
+    "n": 18,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 16,
+    "n": 18,
+    "share": 0.889
+   },
+   "confirmed_right_direction": {
+    "k": 17,
+    "n": 18,
+    "share": 0.944
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.791,
+    "n": 18
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.687,
+    "n": 18
+   },
+   "req_coverage_best_top5_off": {
+    "mean": null,
+    "n": 0
+   },
+   "req_full_top5": {
+    "k": 6,
+    "n": 18,
+    "share": 0.333
+   },
+   "req_full_top5_confirmed": {
+    "k": 6,
+    "n": 18,
+    "share": 0.333
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.903,
+    "n": 18
+   },
+   "req_full_top5_testable": {
+    "k": 7,
+    "n": 18,
+    "share": 0.389
+   },
+   "ceiling": {
+    "mean": 0.975,
+    "n": 18
+   },
+   "missed_key_skills_top": []
+  },
+  "qa": {
+   "title": "QA",
+   "in_catalog": true,
+   "n": 46,
+   "parsed_direction": {
+    "qa": 45,
+    "—": 1
+   },
+   "direction_ok": {
+    "k": 45,
+    "n": 46,
+    "share": 0.978
+   },
+   "grade_ok": {
+    "k": 19,
+    "n": 19,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 39,
+    "n": 46,
+    "share": 0.848
+   },
+   "key_skills_recall": {
+    "k": 61,
+    "n": 85,
+    "share": 0.718
+   },
+   "selection_nonempty": {
+    "k": 46,
+    "n": 46,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 46,
+    "n": 46,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 39,
+    "n": 46,
+    "share": 0.848
+   },
+   "confirmed_right_direction": {
+    "k": 46,
+    "n": 46,
+    "share": 1.0
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.673,
+    "n": 39
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.586,
+    "n": 39
+   },
+   "req_coverage_best_top5_off": {
+    "mean": null,
+    "n": 0
+   },
+   "req_full_top5": {
+    "k": 14,
+    "n": 39,
+    "share": 0.359
+   },
+   "req_full_top5_confirmed": {
+    "k": 14,
+    "n": 39,
+    "share": 0.359
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.908,
+    "n": 39
+   },
+   "req_full_top5_testable": {
+    "k": 21,
+    "n": 39,
+    "share": 0.538
+   },
+   "ceiling": {
+    "mean": 0.92,
+    "n": 39
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "test-design",
+     "n": 5
+    },
+    {
+     "tag": "rest-api",
+     "n": 4
+    },
+    {
+     "tag": "sql",
+     "n": 2
+    },
+    {
+     "tag": "allure",
+     "n": 2
+    },
+    {
+     "tag": "load-testing",
+     "n": 2
+    }
+   ]
+  },
+  "security": {
+   "title": "Информационная безопасность",
+   "in_catalog": true,
+   "n": 48,
+   "parsed_direction": {
+    "security": 36,
+    "—": 4,
+    "devops": 4,
+    "analyst": 2,
+    "backend": 1,
+    "frontend": 1
+   },
+   "direction_ok": {
+    "k": 36,
+    "n": 48,
+    "share": 0.75
+   },
+   "grade_ok": {
+    "k": 14,
+    "n": 14,
+    "share": 1.0
+   },
+   "with_required": {
+    "k": 33,
+    "n": 48,
+    "share": 0.688
+   },
+   "key_skills_recall": {
+    "k": 16,
+    "n": 23,
+    "share": 0.696
+   },
+   "selection_nonempty": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_any": {
+    "k": 48,
+    "n": 48,
+    "share": 1.0
+   },
+   "confirmed_exact": {
+    "k": 28,
+    "n": 48,
+    "share": 0.583
+   },
+   "confirmed_right_direction": {
+    "k": 38,
+    "n": 48,
+    "share": 0.792
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.764,
+    "n": 33
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.709,
+    "n": 33
+   },
+   "req_coverage_best_top5_off": {
+    "mean": null,
+    "n": 0
+   },
+   "req_full_top5": {
+    "k": 19,
+    "n": 33,
+    "share": 0.576
+   },
+   "req_full_top5_confirmed": {
+    "k": 19,
+    "n": 33,
+    "share": 0.576
+   },
+   "req_coverage_best_top5_testable": {
+    "mean": 0.893,
+    "n": 31
+   },
+   "req_full_top5_testable": {
+    "k": 22,
+    "n": 31,
+    "share": 0.71
+   },
+   "ceiling": {
+    "mean": 0.856,
+    "n": 33
+   },
+   "missed_key_skills_top": [
+    {
+     "tag": "siem-soc",
+     "n": 2
+    },
+    {
+     "tag": "git",
+     "n": 1
+    },
+    {
+     "tag": "postgresql",
+     "n": 1
+    },
+    {
+     "tag": "sql",
+     "n": 1
+    },
+    {
+     "tag": "rabbitmq",
+     "n": 1
+    }
+   ]
+  }
+ },
+ "errors_top": [
+  {
+   "id": "138640929",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "frontend"
+  },
+  {
+   "id": "137715097",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138701571",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "frontend"
+  },
+  {
+   "id": "138561510",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138548694",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137415362",
+   "field": "direction",
+   "expected": "qa",
+   "actual": null
+  },
+  {
+   "id": "137415362",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138674071",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138670008",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138511043",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138509992",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "backend"
+  },
+  {
+   "id": "138420031",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "mobile"
+  },
+  {
+   "id": "137924141",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "devops"
+  },
+  {
+   "id": "138397406",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "backend"
+  },
+  {
+   "id": "138658168",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138636496",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "138636496",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138624791",
+   "field": "direction",
+   "expected": "security",
+   "actual": "devops"
+  },
+  {
+   "id": "138624791",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138623571",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138613984",
+   "field": "direction",
+   "expected": "security",
+   "actual": "backend"
+  },
+  {
+   "id": "138604721",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "138604721",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137455973",
+   "field": "direction",
+   "expected": "security",
+   "actual": "frontend"
+  },
+  {
+   "id": "138674888",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137328061",
+   "field": "direction",
+   "expected": "security",
+   "actual": "devops"
+  },
+  {
+   "id": "137328061",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138674466",
+   "field": "direction",
+   "expected": "security",
+   "actual": "devops"
+  },
+  {
+   "id": "138673996",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138669411",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138669184",
+   "field": "direction",
+   "expected": "security",
+   "actual": "devops"
+  },
+  {
+   "id": "138678549",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "138678549",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138666291",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138665521",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138665477",
+   "field": "direction",
+   "expected": "security",
+   "actual": "analyst"
+  },
+  {
+   "id": "138660135",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138660038",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "131029631",
+   "field": "direction",
+   "expected": "security",
+   "actual": "analyst"
+  },
+  {
+   "id": "138661735",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "backend"
+  },
+  {
+   "id": "138661607",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "qa"
+  },
+  {
+   "id": "136889137",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "backend"
+  },
+  {
+   "id": "137534781",
+   "field": "direction",
+   "expected": "devops",
+   "actual": null
+  },
+  {
+   "id": "137534781",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138644915",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "security"
+  },
+  {
+   "id": "137960380",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "backend"
+  },
+  {
+   "id": "137247348",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138674065",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "backend"
+  },
+  {
+   "id": "138669358",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "security"
+  },
+  {
+   "id": "137427920",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "security"
+  },
+  {
+   "id": "138606030",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "data_eng"
+  },
+  {
+   "id": "135410394",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "qa"
+  },
+  {
+   "id": "138581211",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "qa"
+  },
+  {
+   "id": "138523979",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "frontend"
+  },
+  {
+   "id": "138484393",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "analyst"
+  },
+  {
+   "id": "138420317",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "backend"
+  },
+  {
+   "id": "138556212",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138664236",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138622411",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "analyst"
+  },
+  {
+   "id": "138527615",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "qa"
+  },
+  {
+   "id": "134602118",
+   "field": "direction",
+   "expected": "mobile",
+   "actual": "backend"
+  },
+  {
+   "id": "138649953",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138628693",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": "devops"
+  },
+  {
+   "id": "138599132",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "128540300",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": null
+  },
+  {
+   "id": "128540300",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137710363",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": null
+  },
+  {
+   "id": "137710363",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138473948",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137941800",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138693635",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "136791353",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": null
+  },
+  {
+   "id": "136791353",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "138278828",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": null
+  },
+  {
+   "id": "138678560",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137652541",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": "backend"
+  },
+  {
+   "id": "138204668",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": "backend"
+  },
+  {
+   "id": "138204668",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "137678325",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
+   "id": "135819418",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": "backend"
+  }
+ ],
+ "errors_by_field": {
+  "direction": 50,
+  "stack": 31
+ },
+ "disputed": [
+  {
+   "id": "138640929",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "frontend"
+  },
+  {
+   "id": "137715097",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138701571",
+   "field": "direction",
+   "expected": "backend",
+   "actual": "frontend"
+  },
+  {
+   "id": "137415362",
+   "field": "direction",
+   "expected": "qa",
+   "actual": null
+  },
+  {
+   "id": "138509992",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "backend"
+  },
+  {
+   "id": "138420031",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "mobile"
+  },
+  {
+   "id": "137924141",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "devops"
+  },
+  {
+   "id": "138397406",
+   "field": "direction",
+   "expected": "data_ml",
+   "actual": "backend"
+  },
+  {
+   "id": "138636496",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "138624791",
+   "field": "direction",
+   "expected": "security",
+   "actual": "devops"
+  },
+  {
+   "id": "138613984",
+   "field": "direction",
+   "expected": "security",
+   "actual": "backend"
+  },
+  {
+   "id": "138604721",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "137455973",
+   "field": "direction",
+   "expected": "security",
+   "actual": "frontend"
+  },
+  {
+   "id": "137328061",
+   "field": "direction",
+   "expected": "security",
+   "actual": "devops"
+  },
+  {
+   "id": "138674466",
+   "field": "direction",
+   "expected": "security",
+   "actual": "devops"
+  },
+  {
+   "id": "138669184",
+   "field": "direction",
+   "expected": "security",
+   "actual": "devops"
+  },
+  {
+   "id": "138678549",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "138665477",
+   "field": "direction",
+   "expected": "security",
+   "actual": "analyst"
+  },
+  {
+   "id": "138660038",
+   "field": "direction",
+   "expected": "security",
+   "actual": null
+  },
+  {
+   "id": "131029631",
+   "field": "direction",
+   "expected": "security",
+   "actual": "analyst"
+  },
+  {
+   "id": "138661735",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "backend"
+  },
+  {
+   "id": "138661607",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "qa"
+  },
+  {
+   "id": "136889137",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "backend"
+  },
+  {
+   "id": "137534781",
+   "field": "direction",
+   "expected": "devops",
+   "actual": null
+  },
+  {
+   "id": "138644915",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "security"
+  },
+  {
+   "id": "137960380",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "backend"
+  },
+  {
+   "id": "137247348",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138674065",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "backend"
+  },
+  {
+   "id": "138669358",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "security"
+  },
+  {
+   "id": "137427920",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "security"
+  },
+  {
+   "id": "138606030",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "data_eng"
+  },
+  {
+   "id": "135410394",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "qa"
+  },
+  {
+   "id": "138581211",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "qa"
+  },
+  {
+   "id": "138523979",
+   "field": "direction",
+   "expected": "devops",
+   "actual": "frontend"
+  },
+  {
+   "id": "138484393",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "analyst"
+  },
+  {
+   "id": "138420317",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "backend"
+  },
+  {
+   "id": "138556212",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138664236",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "data_ml"
+  },
+  {
+   "id": "138622411",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "analyst"
+  },
+  {
+   "id": "138527615",
+   "field": "direction",
+   "expected": "data_eng",
+   "actual": "qa"
+  },
+  {
+   "id": "134602118",
+   "field": "direction",
+   "expected": "mobile",
+   "actual": "backend"
+  },
+  {
+   "id": "138628693",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": "devops"
+  },
+  {
+   "id": "128540300",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": null
+  },
+  {
+   "id": "137710363",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": null
+  },
+  {
+   "id": "136791353",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": null
+  },
+  {
+   "id": "138278828",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": null
+  },
+  {
+   "id": "137652541",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": "backend"
+  },
+  {
+   "id": "138204668",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": "backend"
+  },
+  {
+   "id": "135819418",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": "backend"
+  },
+  {
+   "id": "137593887",
+   "field": "direction",
+   "expected": "analyst",
+   "actual": "qa"
+  }
+ ],
+ "direction_control": {
+  "flag": "NEED_TITLE_ROLE=0",
+  "direction_ok": {
+   "k": 280,
+   "n": 336,
+   "share": 0.833
+  },
+  "by_direction": {
+   "analyst": {
+    "k": 39,
+    "n": 48,
+    "share": 0.812
+   },
+   "backend": {
+    "k": 39,
+    "n": 46,
+    "share": 0.848
+   },
+   "data_eng": {
+    "k": 29,
+    "n": 35,
+    "share": 0.829
+   },
+   "data_ml": {
+    "k": 31,
+    "n": 36,
+    "share": 0.861
+   },
+   "devops": {
+    "k": 21,
+    "n": 36,
+    "share": 0.583
+   },
+   "frontend": {
+    "k": 23,
+    "n": 23,
+    "share": 1.0
+   },
+   "mobile": {
+    "k": 17,
+    "n": 18,
+    "share": 0.944
+   },
+   "qa": {
+    "k": 45,
+    "n": 46,
+    "share": 0.978
+   },
+   "security": {
+    "k": 36,
+    "n": 48,
+    "share": 0.75
+   }
+  },
+  "disputed": [
+   {
+    "id": "138640929",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "frontend"
+   },
+   {
+    "id": "136624461",
+    "field": "direction",
+    "expected": "backend",
+    "actual": null
+   },
+   {
+    "id": "137715097",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "data_ml"
+   },
+   {
+    "id": "138701571",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "frontend"
+   },
+   {
+    "id": "137576259",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "security"
+   },
+   {
+    "id": "136831842",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "frontend"
+   },
+   {
+    "id": "138658988",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "frontend"
+   },
+   {
+    "id": "137415362",
+    "field": "direction",
+    "expected": "qa",
+    "actual": null
+   },
+   {
+    "id": "138509992",
+    "field": "direction",
+    "expected": "data_ml",
+    "actual": "backend"
+   },
+   {
+    "id": "137372651",
+    "field": "direction",
+    "expected": "data_ml",
+    "actual": "backend"
+   },
+   {
+    "id": "138420031",
+    "field": "direction",
+    "expected": "data_ml",
+    "actual": "mobile"
+   },
+   {
+    "id": "137924141",
+    "field": "direction",
+    "expected": "data_ml",
+    "actual": "devops"
+   },
+   {
+    "id": "138397406",
+    "field": "direction",
+    "expected": "data_ml",
+    "actual": "backend"
+   },
+   {
+    "id": "138636496",
+    "field": "direction",
+    "expected": "security",
+    "actual": null
+   },
+   {
+    "id": "138624791",
+    "field": "direction",
+    "expected": "security",
+    "actual": "devops"
+   },
+   {
+    "id": "138613984",
+    "field": "direction",
+    "expected": "security",
+    "actual": "backend"
+   },
+   {
+    "id": "138604721",
+    "field": "direction",
+    "expected": "security",
+    "actual": null
+   },
+   {
+    "id": "137455973",
+    "field": "direction",
+    "expected": "security",
+    "actual": "frontend"
+   },
+   {
+    "id": "137328061",
+    "field": "direction",
+    "expected": "security",
+    "actual": "data_ml"
+   },
+   {
+    "id": "138674466",
+    "field": "direction",
+    "expected": "security",
+    "actual": "devops"
+   },
+   {
+    "id": "138669184",
+    "field": "direction",
+    "expected": "security",
+    "actual": "devops"
+   },
+   {
+    "id": "138678549",
+    "field": "direction",
+    "expected": "security",
+    "actual": null
+   },
+   {
+    "id": "138665477",
+    "field": "direction",
+    "expected": "security",
+    "actual": "analyst"
+   },
+   {
+    "id": "138660038",
+    "field": "direction",
+    "expected": "security",
+    "actual": null
+   },
+   {
+    "id": "131029631",
+    "field": "direction",
+    "expected": "security",
+    "actual": "analyst"
+   },
+   {
+    "id": "138661735",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "backend"
+   },
+   {
+    "id": "138661607",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "qa"
+   },
+   {
+    "id": "136889137",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "backend"
+   },
+   {
+    "id": "137534781",
+    "field": "direction",
+    "expected": "devops",
+    "actual": null
+   },
+   {
+    "id": "138644915",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "security"
+   },
+   {
+    "id": "137960380",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "backend"
+   },
+   {
+    "id": "137247348",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "data_ml"
+   },
+   {
+    "id": "138674065",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "backend"
+   },
+   {
+    "id": "138669358",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "security"
+   },
+   {
+    "id": "137427920",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "security"
+   },
+   {
+    "id": "137740205",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "data_ml"
+   },
+   {
+    "id": "138606030",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "data_eng"
+   },
+   {
+    "id": "135410394",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "qa"
+   },
+   {
+    "id": "138581211",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "qa"
+   },
+   {
+    "id": "138523979",
+    "field": "direction",
+    "expected": "devops",
+    "actual": "frontend"
+   },
+   {
+    "id": "138484393",
+    "field": "direction",
+    "expected": "data_eng",
+    "actual": "analyst"
+   },
+   {
+    "id": "138420317",
+    "field": "direction",
+    "expected": "data_eng",
+    "actual": "backend"
+   },
+   {
+    "id": "138556212",
+    "field": "direction",
+    "expected": "data_eng",
+    "actual": "data_ml"
+   },
+   {
+    "id": "138664236",
+    "field": "direction",
+    "expected": "data_eng",
+    "actual": "data_ml"
+   },
+   {
+    "id": "138622411",
+    "field": "direction",
+    "expected": "data_eng",
+    "actual": "analyst"
+   },
+   {
+    "id": "138527615",
+    "field": "direction",
+    "expected": "data_eng",
+    "actual": "qa"
+   },
+   {
+    "id": "134602118",
+    "field": "direction",
+    "expected": "mobile",
+    "actual": "backend"
+   },
+   {
+    "id": "138628693",
+    "field": "direction",
+    "expected": "analyst",
+    "actual": "devops"
+   },
+   {
+    "id": "128540300",
+    "field": "direction",
+    "expected": "analyst",
+    "actual": null
+   },
+   {
+    "id": "137710363",
+    "field": "direction",
+    "expected": "analyst",
+    "actual": null
+   },
+   {
+    "id": "136791353",
+    "field": "direction",
+    "expected": "analyst",
+    "actual": null
+   },
+   {
+    "id": "138278828",
+    "field": "direction",
+    "expected": "analyst",
+    "actual": null
+   },
+   {
+    "id": "137652541",
+    "field": "direction",
+    "expected": "analyst",
+    "actual": "backend"
+   },
+   {
+    "id": "138204668",
+    "field": "direction",
+    "expected": "analyst",
+    "actual": "backend"
+   },
+   {
+    "id": "135819418",
+    "field": "direction",
+    "expected": "analyst",
+    "actual": "backend"
+   },
+   {
+    "id": "137593887",
+    "field": "direction",
+    "expected": "analyst",
+    "actual": "qa"
+   }
+  ],
+  "what": "Контроль: тот же код и тот же набор, направление разобрано с NEED_TITLE_ROLE=0 (без правила роли в названии, dir-v2) — для сравнения «до/после» на одном прогоне."
+ },
+ "holdout": {
+  "freeze": {
+   "frozen_at": "2026-10-21T09:28:36+00:00",
+   "corpus": "docs/realdata/hh_holdout2_corpus.json",
+   "n": 336,
+   "manifest_sha256": "2bb77a1cd8d79a87bea0600086de16c07857245e3997b32bb69399e5831b5e4f",
+   "manifest_rule": "SHA-256 строк «id<TAB>text_sha256<TAB>bucket», отсортированных, через \\n",
+   "corpus_file_sha256": "18ee2e675442757676bb7d76abb05e1bb219f7e3fc88dc2f57743dc18c431b73",
+   "code_before_run": "e4e294ca46f33e8e79c744d0ffc704a1400e5692",
+   "protocol": "docs/realdata/hh_holdout2_PROTOCOL.md",
+   "protocol_sha256": "e8502bdc6c05d1f17bc55e61c300ab2e0ba4c8ae98e794e2c01248df98f610ac",
+   "rule": "Зафиксировано до прогона. Прогон один (hh_holdout.py run); словарь, синонимы, классификатор и ранжирование после прогона на этом наборе не настраиваются."
+  },
+  "manifest_sha256_checked": "2bb77a1cd8d79a87bea0600086de16c07857245e3997b32bb69399e5831b5e4f",
+  "run_started_at": "2026-10-21T09:47:13+00:00",
+  "code": "24944336764ca5e1396e6f9cb9da3511965ef0d5"
+ }
+}
