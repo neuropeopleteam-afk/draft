@@ -201,6 +201,8 @@ class BankEngine:
                 "select_at": s.assessment_select_at, "ext_own_first": s.assessment_extension_own_first,
                 "subpools": max(1, s.assessment_subpools),
                 "exposure": s.assessment_exposure,
+                # randomesque: k пишется в состояние сессии только в этом режиме — прежние сессии не меняются
+                **({"randomesque_k": max(1, int(s.assessment_randomesque_k))} if s.assessment_exposure == "randomesque" else {}),
                 "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer},
                 # частичный балл 0–4 (GPCM) — ключ только при флаге: сессии без него и прежние — как раньше
                 **({"partial_credit": True, "partial_credit_select": bool(s.assessment_partial_credit_select)}
@@ -708,7 +710,8 @@ class BankEngine:
         kw = dict(max_per_format=cfg.get("max_per_format", {}), max_item_time_s=cfg.get("max_item_time_s"),
                   code_open_share=cfg.get("code_open_share", 0.0 if state.get("mode") == "express" else 1.0 / 3.0),
                   exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl,
-                  seen=state.get("seen"), ext_lru=state.get("mode") in ("confirm", "refine"))
+                  seen=state.get("seen"), ext_lru=state.get("mode") in ("confirm", "refine"),
+                  randomesque_k=int(cfg.get("randomesque_k") or 0) if cfg.get("exposure") == "randomesque" else 0)
         if cfg.get("sprt"):  # поправка №2: SPRT у заявленного порога, угадывание по фактическому варианту
             from app.modules.assessment.sprt import public_guess
 
