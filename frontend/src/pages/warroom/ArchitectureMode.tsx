@@ -40,6 +40,17 @@ const SAMPLE_JUSTIFICATIONS: Record<string, string> = {
     "Первопричина паралича конвейера: параллельные воркеры автотестов мутируют общую базу данных без изоляции и зависят от нестабильной внешней песочницы, что вызывает гонки состояния и ложные падения flaky. Выделяем изолированную схему или вложенную транзакцию с откатом rollback на каждый worker_id и заменяем внешние вызовы детерминированным контрактным стабом. Отключаем слепые перезапуски, вводим карантин и мониторинг времени прохождения очереди.",
 };
 
+const DEMO_RECOMMENDED_MEASURES: Record<string, string[]> = {
+  payment: ["idem", "cb", "pgb"],
+  kafka: ["outbox", "dedup", "dlq"],
+  k8s: ["k8s_mem", "probe", "jitter"],
+  ai: ["guard", "budget"],
+  frontend_ssr: ["ssr_scope", "swr"],
+  mobile_sync: ["sync_batch", "jitter"],
+  ml_drift: ["feat_warm", "cb"],
+  qa_flaky: ["tx_iso", "stub_ext"],
+};
+
 const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 
 export default function ArchitectureMode({
@@ -200,7 +211,7 @@ export default function ArchitectureMode({
 
   const fillOptimalDemo = () => {
     if (!demoMode) return;
-    const reqIds = s.required ?? ["idem", "cb", "pgb"];
+    const reqIds = DEMO_RECOMMENDED_MEASURES[s.id] ?? ["idem", "cb", "pgb"];
     const opt: Record<string, Record<string, number>> = {};
     reqIds.forEach((id) => {
       const spec = measuresCatalog.find((m) => m.id === id);

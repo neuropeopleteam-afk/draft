@@ -22,7 +22,7 @@ from app.modules.assessment import grader, integrity
 from app.modules.interview import service as interview_service
 from app.modules.proctor import rules as proctor_rules
 
-CANARY_SERVER_WORD = "Бергамот"
+CANARY_SERVER_WORD = "Гелиос"
 
 CONTOURS_SPEC: list[dict[str, Any]] = [
     {
@@ -30,7 +30,7 @@ CONTOURS_SPEC: list[dict[str, Any]] = [
         "id": "prior",
         "name": "Самостоятельность и темп ответов",
         "color": "#f59e0b",
-        "description": "Сверка времени чтения и решения заданий по часам сервера, контрольные задания.",
+        "description": "Сверка времени чтения и решения заданий по часам сервера, опорные проверочные позиции.",
     },
     {
         "n": 2,
@@ -51,7 +51,7 @@ CONTOURS_SPEC: list[dict[str, Any]] = [
         "id": "screen",
         "name": "Рабочее окно и среда прохождения",
         "color": "#22d3ee",
-        "description": "Переключения вкладок, полноэкранный режим, копирование условия и снимки экрана.",
+        "description": "Переключения вкладок, развёрнутое рабочее окно, копирование условия и снимки экрана.",
     },
     {
         "n": 5,
@@ -67,40 +67,40 @@ SIGNALS_SPEC: list[dict[str, Any]] = [
     {
         "n": 1,
         "c": 1,
-        "code": "canary_fast",
-        "name": "Контрольные задания решены быстрее типичного темпа",
+        "code": "ctrl_pace",
+        "name": "Опорные задачи решены быстрее типичного темпа",
         "pts": 1,
-        "how_it_works": "Сравнение времени ответа на контрольных позициях с медианным темпом кандидата по сессии.",
+        "how_it_works": "Сравнение времени ответа на опорных позициях с медианным темпом кандидата по сессии.",
     },
     {
         "n": 2,
         "c": 1,
-        "code": "preknowledge_flagged",
+        "code": "prior_familiarity",
         "name": "Признак предварительного знакомства с вариантами",
         "pts": 3,
-        "how_it_works": "Совокупная оценка скорости и точности на контрольных вариантах.",
+        "how_it_works": "Совокупная оценка скорости и точности на проверочных вариантах.",
     },
     {
         "n": 3,
         "c": 1,
-        "code": "fast_correct",
-        "name": "Аномально быстрые верные ответы на сложных вопросах",
+        "code": "rapid_complex_hit",
+        "name": "Сверхбыстрые верные решения на сложных вопросах",
         "pts": 2,
         "how_it_works": "Сопоставление времени ответа с длиной условия и уровнем трудности задания.",
     },
     {
         "n": 4,
         "c": 1,
-        "code": "instant_correct",
-        "name": "Мгновенные верные ответы без чтения условия",
+        "code": "unread_correct",
+        "name": "Верное решение отправлено до прочтения условия",
         "pts": 2,
         "how_it_works": "Ответ отправлен быстрее времени, минимально необходимого для чтения формулировки.",
     },
     {
         "n": 5,
         "c": 1,
-        "code": "fast_wrong",
-        "name": "Серия мгновенных неверных ответов (случайный перебор)",
+        "code": "rapid_guess_streak",
+        "name": "Серия поспешных ошибочных ответов (случайный перебор)",
         "pts": 1,
         "how_it_works": "Серия неверных ответов, отправленных без прочтения условия.",
     },
@@ -115,7 +115,7 @@ SIGNALS_SPEC: list[dict[str, Any]] = [
     {
         "n": 7,
         "c": 3,
-        "code": "ai_mark_hit",
+        "code": "copy_twin_marker",
         "name": "Решение по скопированному двойнику или скрытый маркер условия",
         "pts": 3,
         "how_it_works": "При копировании условия в буфер подставляется вариант-двойник с изменённым опорным числом и контрольным маркером.",
@@ -131,7 +131,7 @@ SIGNALS_SPEC: list[dict[str, Any]] = [
     {
         "n": 9,
         "c": 3,
-        "code": "meta_claims",
+        "code": "self_grade_claim",
         "name": "Самооценка и служебные приписки для проверяющего",
         "pts": 1,
         "how_it_works": "Очистка утверждений кандидата о том, что ответ уже проверен и заслуживает высшего балла.",
@@ -147,7 +147,7 @@ SIGNALS_SPEC: list[dict[str, Any]] = [
     {
         "n": 11,
         "c": 3,
-        "code": "not_typed",
+        "code": "no_keystrokes",
         "name": "Длинный ответ появился без клавиатурного набора",
         "pts": 2,
         "how_it_works": "Доля символов, введённых нажатиями клавиш, существенно ниже длины развёрнутого ответа.",
@@ -155,7 +155,7 @@ SIGNALS_SPEC: list[dict[str, Any]] = [
     {
         "n": 12,
         "c": 3,
-        "code": "even_rhythm",
+        "code": "uniform_cadence",
         "name": "Механически ровный ритм печати (программный ввод)",
         "pts": 1,
         "how_it_works": "Анализ вариативности пауз между нажатиями клавиш на длинной серии ввода.",
@@ -163,7 +163,7 @@ SIGNALS_SPEC: list[dict[str, Any]] = [
     {
         "n": 13,
         "c": 3,
-        "code": "fast_text",
+        "code": "rapid_burst",
         "name": "Скорость появления текста выше темпа ручного набора",
         "pts": 2,
         "how_it_works": "Соотношение длины развёрнутого ответа и активного времени работы по часам сервера.",
@@ -171,7 +171,7 @@ SIGNALS_SPEC: list[dict[str, Any]] = [
     {
         "n": 14,
         "c": 4,
-        "code": "focus_lost",
+        "code": "tab_switch",
         "name": "Переключение на другие вкладки или окна",
         "pts": 2,
         "how_it_works": "Учет числа потерь фокуса и суммарного времени отсутствия на вкладке задания.",
@@ -179,10 +179,10 @@ SIGNALS_SPEC: list[dict[str, Any]] = [
     {
         "n": 15,
         "c": 4,
-        "code": "fs_exit",
-        "name": "Выход из полноэкранного режима во время теста",
+        "code": "window_minimize",
+        "name": "Сворачивание развёрнутого рабочего окна во время теста",
         "pts": 1,
-        "how_it_works": "Сворачивание полноэкранного окна во время выполнения задания.",
+        "how_it_works": "Выход из развёрнутого на весь экран окна во время выполнения задания.",
     },
     {
         "n": 16,
@@ -487,7 +487,7 @@ def inspect_anticheat_live(payload: dict[str, Any], *, demo_mode: bool = True) -
     decoy_hit = bool(decoy_check.get("triggered") or telemetry.get("decoy_hit"))
 
     has_zw = any(ch in answer_text for ch in ("\u2063", "\u200b", "\u200c", "\u200d", "\u2060"))
-    has_canary_word = bool(canary_word.lower() in answer_text.lower())
+    has_canary_word = any(w in answer_text.lower() for w in (canary_word.lower(), "гелиос", "бергамот"))
     ai_mark_hit = bool(has_zw or has_canary_word or decoy_hit or telemetry.get("ai_mark_hit"))
 
     # 3. Клавиатурная динамика и телеметрия интерфейса (безопасное приведение типов)
@@ -611,7 +611,7 @@ def inspect_anticheat_live(payload: dict[str, Any], *, demo_mode: bool = True) -
             severe=True,
         )
     if bool(telemetry.get("fast_wrong")):
-        _hit([5], "Серия мгновенных неверных ответов без прочтения условия")
+        _hit([5], "Серия поспешных неверных ответов без прочтения условия")
 
     if lz_val is not None and lz_val < -2.0:
         _hit(
@@ -631,7 +631,7 @@ def inspect_anticheat_live(payload: dict[str, Any], *, demo_mode: bool = True) -
     if grader_report["meta_removed"]:
         _hit([9], f"Вырезаны служебные приписки и самооценка из ответа ({len(grader_report['meta_removed'])} шт.)")
     if paste_count > 0 or paste_chars > 0:
-        _hit([10], f"Вставка готового текста из буфера обмена ({paste_chars or len(answer_text)} знаков)")
+        _hit([10], f"Вставка фрагмента из буфера обмена ({paste_chars or len(answer_text)} знаков)")
     if not_typed:
         _hit([11], f"Длинный ответ ({len(answer_text)} знаков) появился при малом числе нажатий клавиш ({typed_chars})")
     if even_rhythm:
@@ -641,13 +641,13 @@ def inspect_anticheat_live(payload: dict[str, Any], *, demo_mode: bool = True) -
     if focus_lost > 0 or hidden_ms >= 5_000:
         _hit([14], f"Потеря фокуса окна теста ({round(hidden_ms / 1000.0, 1)} с вне вкладки)")
     if fs_exit > 0 or fs_out_ms > 0:
-        _hit([15], f"Выход из полноэкранного режима во время выполнения задания ({fs_exit} раз)")
+        _hit([15], f"Сворачивание развёрнутого рабочего окна во время выполнения задания ({fs_exit} раз)")
     if copy_count > 0:
         _hit([16], "Перехвачена попытка скопировать условие задания (в буфер обмена подставлен вариант-двойник)")
     if printscreen > 0:
         _hit([17], "Зафиксирована системная комбинация снимка экрана")
     if api_bypass:
-        _hit([18], "Ответы отправлены в обход штатного интерфейса без клиентской телеметрии")
+        _hit([18], "Ответы отправлены мимо клиентской формы без телеметрии")
 
     for ev in cam_events:
         k = ev.get("kind")
@@ -689,10 +689,22 @@ def inspect_anticheat_live(payload: dict[str, Any], *, demo_mode: bool = True) -
         },
     }
     followup = call_integrity_followup(integ_dict, decoy_hits=1 if decoy_hit else 0)
+    if not demo_mode:
+        followup = {
+            **followup,
+            "triggered_factors": [
+                f"Зафиксировано событие контура проверки (#{e['signals'][0]})" for e in events_log[:5]
+            ],
+            "employer_reason_ru": (
+                "Рекомендована устная верификация самостоятельности выполнения"
+                if followup.get("needs_followup_stage")
+                else "Замечаний к самостоятельности прохождения нет"
+            ),
+        }
     rec_defense, rec_why, _ = interview_service.defense_recommendation(integ_dict)
     if grader_report["signals"] or risk_points >= 2 or followup["needs_followup_stage"]:
         rec_defense = True
-        if not rec_why:
+        if not rec_why or not demo_mode:
             rec_why = followup["employer_reason_ru"]
 
     # Полный паспорт отдаём только в демо-режиме для жюри; для обычного режима — без раскрытия внутренних порогов (Р27)
@@ -720,8 +732,8 @@ def inspect_anticheat_live(payload: dict[str, Any], *, demo_mode: bool = True) -
             "matched_markers": decoy_check.get("matched_markers", []),
         },
         "integrity_followup": followup,
-        "canary_detected": ai_mark_hit,
-        "canary_word": canary_word if (has_zw or has_canary_word) else None,
+        "marker_detected": ai_mark_hit,
+        "marker_word": canary_word if (has_zw or has_canary_word) else None,
         "keystroke_cv": cv_val,
         "person_fit_lz": lz_val,
         "lz_items": used_lz_items if check_lz else [],
