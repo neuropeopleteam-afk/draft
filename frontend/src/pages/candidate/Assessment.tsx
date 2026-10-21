@@ -67,12 +67,26 @@ const EXPRESS_DEFAULT: Record<string, ExpressParams> = {
   junior: { min_items: 5, max_items: 7, item_time_s: 240, max_minutes: 20 }, middle: { min_items: 5, max_items: 7, item_time_s: 240, max_minutes: 20 },
   senior: { min_items: 8, max_items: 12, item_time_s: 360, max_minutes: 45 },
 };
+/** Длина теста — из настроек движка (/api/meta → rules.test_len), а не текстом (А19 №2: «8–16 + до 6» против 23 в среднем). */
+function testLenText(meta: any): string {
+  const L = meta?.rules?.test_len;
+  if (!L) return "адаптивный: основной блок, у спорного порога — продление, затем при необходимости короткий доп. этап.";
+  return `адаптивный: основной блок — от ${L.min_items} до ${L.max_items} заданий (до ${L.max_minutes} минут); если решение у порога ещё ` +
+    `не надёжно — продление до ${L.contested_max_items} заданий (до ${L.contested_max_minutes} минут); при необходимости — ` +
+    `доп. этап до ${L.two_stage_items} коротких заданий (до ${L.two_stage_minutes} минут).`;
+}
+
+function testLenShort(meta: any): string {
+  const L = meta?.rules?.test_len;
+  return L ? `${L.min_items}–${L.max_items} (у спорного порога до ${L.contested_max_items}) + доп. этап до ${L.two_stage_items}` : "адаптивный";
+}
+
 function expressFor(status: any, grade: string): ExpressParams {
   return status?.express?.by_grade?.[grade] ?? EXPRESS_DEFAULT[grade] ?? EXPRESS_DEFAULT.middle;
 }
-function modes(ex: ExpressParams, seniorMax: number): { id: Mode; title: string }[] {
+function modes(ex: ExpressParams, seniorMax: number, meta?: any): { id: Mode; title: string }[] {
   const span = `${ex.min_items}–${ex.max_items} заданий`;
-  return [{ id: "full", title: "Полный тест · 8–16 + до 6 у порога" }, { id: "express", title: ex.max_items >= seniorMax ? `Экспресс · ${span}` : `Экспресс · ${span} (за Senior — до ${seniorMax})` }];
+  return [{ id: "full", title: `Полный тест · ${testLenShort(meta)}` }, { id: "express", title: ex.max_items >= seniorMax ? `Экспресс · ${span}` : `Экспресс · ${span} (за Senior — до ${seniorMax})` }];
 }
 
 /** Ф6 (Н8): длина полного теста — лимиты конфигурации + доля дотестирования и среднее число заданий в симуляции
@@ -521,7 +535,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         <div className="card mt-4 text-sm" data-testid="mode-choice">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="font-semibold text-brand-night">Режим теста</p>
-            <Seg value={mode} onChange={setMode} options={modes(ex, exSenior.max_items)} label="Режим теста" />
+            <Seg value={mode} onChange={setMode} options={modes(ex, exSenior.max_items, meta)} label="Режим теста" />
           </div>
           {/* Ф6 (В7, Н8) + Ф4: на первом экране — коротко; правило остановки и погрешность — под «Подробнее» */}
           <p className="mt-2 text-brand-ink/75">
@@ -537,15 +551,15 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
               ? (grade === "senior"
                 ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ 80 %), оценка менее точная, чем у полного (± 0,6 против ± 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
                 : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но оценка заметно менее точная (± 0,65 против ± 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
-              : `Полный тест: грейд подтверждается, если вероятность уровня не ниже заявленного ≥ ${meta?.rules?.confirm_pct ?? 60} %. С 5-го задания информация собирается у ближайшего порога грейда, который ещё не определён (порог внутри θ ± 1,28·SE); если после основного блока порог всё ещё внутри интервала — до 6 коротких заданий у этого порога. Подробнее и с цифрами симуляции — на странице «Валидация».`}
+              : `Полный тест: решение по заявленному грейду принимается последовательной проверкой у его порога — тест останавливается, как только решение надёжно; ${testLenText(meta)} Итог — «подтверждён», «не подтверждён» или «нужен доп. этап»; принудительного понижения нет.`}
             </p>
           </details>
         </div>
       )}
       <details className="mt-4 text-sm">
-        <summary className="cursor-pointer text-brand-ink/75">{expressOk ? <b className="text-brand-night">Как устроен тест</b> : <><b className="text-brand-night">Как устроен тест:</b> адаптивный, основной блок 8–16 заданий до 60 минут, у порога грейда — ещё до 6 коротких (до 20 минут).</>}</summary>
+        <summary className="cursor-pointer text-brand-ink/75">{expressOk ? <b className="text-brand-night">Как устроен тест</b> : <><b className="text-brand-night">Как устроен тест:</b> {testLenText(meta)}</>}</summary>
       <div className="card mt-2 space-y-3 text-sm text-brand-ink/75">
-        <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления: найти дефект в коде, предсказать вывод, выбрать исправление, разобрать задачу по шагам, ответить развёрнуто. Тест адаптивный: следующее задание подбирается по ответам. Основной блок — 8–16 заданий, до 60 минут; если результат у самого порога грейда — ещё до 6 коротких заданий (до 20 минут), чтобы грейд не зависел от случайности. Дотестирование — обычная часть пути, а не исключение: <FullLength len={len.data} short /> Повторная попытка — из другого набора заданий.</p>
+        <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления: найти дефект в коде, предсказать вывод, выбрать исправление, разобрать задачу по шагам, ответить развёрнуто. Тест адаптивный: следующее задание подбирается по ответам. Длина: {testLenText(meta)} Так грейд не зависит от случайности. Дотестирование — обычная часть пути, а не исключение: <FullLength len={len.data} short /> Повторная попытка — из другого набора заданий.</p>
         <p>Результат — оценка уровня с указанием точности и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои.</p>
         <p><b>Грейд — уровень навыков, а не стаж.</b> Уровень выбираете вы сами, подтверждает его только тест. Стаж в годах остаётся в профиле как справка для работодателя и в подборе не участвует; подсказки «обычно столько-то лет» — лишь ориентир, с какого уровня начать.</p>
         <p>Если грейд не подтвердится, текущая категория не понизится. Смена подтверждённого грейда — не чаще раза в {status?.grade_change_interval_days ?? 90} дней. Повторить тест на тот же грейд после неподтверждённой попытки можно через {status?.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу; если тест уверенно показал уровень ниже, его можно принять без нового теста.</p>
