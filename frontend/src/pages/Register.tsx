@@ -304,7 +304,8 @@ function RegisterFspId({
               {data.demo_accounts.map((a) => <li key={a.username}><code className="rounded bg-white px-1.5 py-0.5 font-semibold">{a.username}</code> — {a.title}</li>)}
             </ul>
             {data.demo_password && <p className="mt-2">Пароль для всех демо-учёток: <code className="rounded bg-white px-1.5 py-0.5 font-semibold">{data.demo_password}</code></p>}
-            <p className="mt-2 text-brand-ink/65">{data.note}</p>
+            <p className="mt-2 font-semibold text-amber-900">Демо-стенд: учётные данные показаны здесь вместо письма. В рабочей системе вход идёт через ФСП ID.</p>
+            <p className="mt-1 text-brand-ink/65">{data.note}</p>
           </div>
         </details>
       )}
