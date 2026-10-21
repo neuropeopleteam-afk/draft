@@ -44,7 +44,6 @@ TABLES = {
         ("match_p5", "Подбор: доля подходящих в первой пятёрке (0–1)"),
         ("match_bm25", "Для сравнения: поиск по тексту резюме"),
         ("hh_direction", "Реальные вакансии hh.ru: направление определено верно"),
-        ("hh_grade", "Реальные вакансии hh.ru: грейд определён верно"),
         ("ac_filter", "Атаки на проверку ответов, перехваченные фильтром"),
         ("ac_chain_pierced", "Атаки, прошедшие всю цепочку защиты"),
         ("fsp_documents", "Официальных протоколов ФСП в индексе"),
@@ -66,7 +65,7 @@ TABLES = {
         ("match_no_test", ""), ("match_no_fsp", ""),
     ],
     "hh": [
-        ("hh_site", ""), ("hh_direction", ""), ("hh_direction_adj", ""), ("hh_grade", ""), ("hh_skills", ""),
+        ("hh_site", ""), ("hh_direction", ""), ("hh_direction_adj", ""), ("hh_skills", ""),
         ("hh_confirmed_pool", ""), ("no_fsp_top5", ""), ("no_fsp_pool", ""),
     ],
     "ac": [
@@ -113,7 +112,7 @@ def numbers_table(facts: dict, name: str, *, with_key: bool = False) -> str:
 
 # ---------- библиотеки ----------
 def libs_table() -> str:
-    lines = []
+    lines = ["<!-- lint:off -->", ""]
     req = (ROOT / "backend/requirements.txt").read_text(encoding="utf-8").splitlines()
     py = [l.split("#")[0].strip() for l in req if l.strip() and not l.strip().startswith("#")]
     lock = json.loads((ROOT / "frontend/package-lock.json").read_text(encoding="utf-8"))
@@ -148,6 +147,7 @@ def libs_table() -> str:
         lines.append(f"| `{f}` | `{im}` |")
     for im in imgs:
         lines.append(f"| `docker-compose.yml` | `{im}` |")
+    lines += ["", "<!-- lint:on -->"]
     return "\n".join(lines)
 
 
@@ -176,9 +176,20 @@ def render(tpl: str, facts: dict, repo: dict, *, src: str) -> str:
             return numbers_table(facts, arg.replace(",key", ""), with_key=arg.endswith(",key"))
         if name == "libs_table":
             return libs_table()
+        if name in ("numbers_generated_at", "recompute_all", "numbers_git_commit"):
+            v = repo.get("_top", {}).get(name)
+            if not v:
+                raise BuildError(f"{src}: в NUMBERS.json нет поля {name}")
+            return _n.date_ru(v) if name == "numbers_generated_at" else str(v)
+        if name == "api_tags_table":
+            rows = ["| Группа (тег OpenAPI) | Что делает | Операций |", "|---|---|---|"]
+            for t in repo.get("api_tags", []):
+                d = re.split(r"(?<=[.!?])\s", t["description"].strip())[0] if t["description"] else ""
+                rows.append(f"| `{t['tag']}` | {md_cell(d)} | {_n.fint(t['ops'])} |")
+            return "\n".join(rows)
         if name.startswith("repo."):
             k = name[5:]
-            if k not in repo:
+            if k not in repo or isinstance(repo[k], (dict, list)):
                 raise BuildError(f"{src}: нет сведения repo.{k}")
             v = repo[k]
             return _n.fint(v) if isinstance(v, (int, float)) else str(v)
@@ -195,8 +206,45 @@ def render(tpl: str, facts: dict, repo: dict, *, src: str) -> str:
     return TOKEN.sub(sub, tpl)
 
 
+def github_md(doc: str) -> str:
+    """Версия для просмотра в репозитории: без YAML-шапки и атрибутов заголовков pandoc, с номерами разделов."""
+    meta = {}
+    m = re.match(r"---\n(.*?)\n---\n", doc, re.S)
+    if m:
+        for line in m.group(1).splitlines():
+            k, _, v = line.partition(":")
+            meta[k.strip()] = v.strip().strip('"')
+        doc = doc[m.end():]
+    head = f"# {meta.get('title', '')}\n\n**{meta.get('subtitle', '')}**\n\n{meta.get('author', '')}. {meta.get('date', '')}.\n\n" \
+           "PDF и Word: [DOCUMENTATION.pdf](DOCUMENTATION.pdf), [DOCUMENTATION.docx](DOCUMENTATION.docx).\n"
+    out, n1, n2, in_code = [], 0, 0, False
+    for line in doc.splitlines():
+        if line.startswith("```"):
+            in_code = not in_code
+        if not in_code and re.match(r"^#{1,2} ", line):
+            unnum = ".unnumbered" in line
+            title = re.sub(r"\s*\{[^}]*\}\s*$", "", line.lstrip("#").strip())
+            if line.startswith("# "):
+                if unnum:
+                    line = f"## {title}"
+                else:
+                    n1 += 1
+                    n2 = 0
+                    line = f"## {n1}. {title}"
+            else:
+                n2 += 1
+                line = f"### {n1}.{n2}. {title}" if n1 else f"### {title}"
+        elif not in_code and line.startswith("### "):
+            line = "#" + line
+        out.append(line)
+    body = "\n".join(out)
+    body = re.sub(r"\[([^\]]+)\]\(#[a-z]+\)", r"\1", body)  # внутренние ссылки pandoc → текст
+    return head + body + "\n"
+
+
 def build_texts(res: dict) -> list[Path]:
-    facts, repo = res["facts"], res["repo"]
+    facts, repo = res["facts"], dict(res["repo"])
+    repo["_top"] = {k: res.get(k) for k in ("numbers_generated_at", "recompute_all", "numbers_git_commit")}
     targets = [
         (HERE / "src/README.md", ROOT / "README.md"),
         (HERE / "src/DOCUMENTATION.md", HERE / "DOCUMENTATION.md"),
@@ -207,9 +255,48 @@ def build_texts(res: dict) -> list[Path]:
         if not src.exists():
             continue
         txt = render(src.read_text(encoding="utf-8"), facts, repo, src=str(src.relative_to(ROOT)))
+        if dst.name == "DOCUMENTATION.md":
+            (OUT / "DOCUMENTATION.pandoc.md").write_text(txt, encoding="utf-8")
+            txt = github_md(txt)
         dst.write_text(txt, encoding="utf-8")
         written.append(dst)
     return written
+
+
+# Слова, которых не должно быть в материалах для жюри (правило владельца: без поставщиков и соперников)
+BANNED = re.compile(r"(?i)\b(open ?router|eleven ?labs|anam|deepgram|webrtc|heygen|claude|sonnet|haiku|gpt|chatgpt|openai|"
+                    r"deepseek|grok|kimi|moonshot|qwen|yandex ?gpt|gigachat|llama|mistral|gemini|anthropic|снотр\w*|"
+                    r"postbox)\b")
+
+
+def lint(path: Path) -> list[str]:
+    bad = []
+    off = False  # таблица библиотек (ТЗ 3.4: «библиотеки с версиями») — имена пакетов как в манифестах, без проверки
+    for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if "<!-- lint:off -->" in line:
+            off = True
+        if "<!-- lint:on -->" in line:
+            off = False
+        if off:
+            continue
+        for m in BANNED.finditer(line):
+            bad.append(f"{path.relative_to(ROOT)}:{i}: «{m.group(0)}»")
+    return bad
+
+
+API_REF = re.compile(r"`(GET|POST|PUT|PATCH|DELETE) (/api/[^`\s]+)`")
+
+
+def check_api(path: Path) -> list[str]:
+    """Каждый метод вида `POST /api/...` в тексте должен существовать в docs/api/openapi.json."""
+    spec = json.loads((ROOT / "docs/api/openapi.json").read_text(encoding="utf-8")).get("paths", {})
+    bad = []
+    for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        for m in API_REF.finditer(line):
+            meth, p = m.group(1).lower(), m.group(2)
+            if meth not in spec.get(p, {}):
+                bad.append(f"{path.relative_to(ROOT)}:{i}: нет в OpenAPI «{m.group(1)} {p}»")
+    return bad
 
 
 def run(cmd: list[str], **kw) -> None:
@@ -229,8 +316,12 @@ def main() -> int:
     (OUT / "facts.json").write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"цифр из NUMBERS.json: {len(res['facts'])}; нет в NUMBERS.json: {', '.join(res['missing']) or '—'}")
     try:
+        bad = []
         for p in build_texts(res):
             print("  записано", p.relative_to(ROOT))
+            bad += lint(p) + check_api(p)
+        if bad:
+            raise BuildError("проверка текста не пройдена (поставщики/соперники, методы API):\n  " + "\n  ".join(bad))
     except BuildError as e:
         print("ОШИБКА СБОРКИ:", e, file=sys.stderr)
         return 2

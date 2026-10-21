@@ -26,3 +26,6 @@ junit*.xml
 backend/app/modules/validation/data/grade_sweep_raw_last.json
 # кэш голоса постоянных фраз проводника (docker-compose: api → /srv/cache/concierge)
 cache/
+# материалы сдачи: временные файлы сборки
+docs/submission/__pycache__/
+docs/submission/_*

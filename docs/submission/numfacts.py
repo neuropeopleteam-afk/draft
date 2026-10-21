@@ -241,8 +241,8 @@ def build(numbers: dict) -> dict:
                     cond=cond_h + "; спорные метки hh.ru перепроверены двумя независимыми моделями-арбитрами (не люди)",
                     recompute=rc, label="направление после проверки спорных меток", group="hh",
                     basis="реальные вакансии, арбитры — модели")
-        F.share("hh_grade", "hh_match.grade_ok", cond=cond_h + "; только вакансии со словом грейда в названии",
-                recompute=rc, label="верно определён грейд вакансии", group="hh", basis="реальные вакансии")
+        # hh_match.grade_ok не публикуем: грейд берётся из слова в названии вакансии, и «метка» берётся из того же
+        # слова — совпадение тавтологично (решение оркестратора 21.10).
         F.share("hh_skills", "hh_match.key_skills_recall", cond=cond_h, recompute=rc,
                 label="ключевых навыков вакансии найдено разбором", group="hh", basis="реальные вакансии")
         if site and (site.get("value") is not None or site.get("direction_ok")):
@@ -385,12 +385,37 @@ def describe_repo() -> dict:
         mm = re.search(rf"^\s*{k}: int = ([0-9 *]+)", cfg, re.M)
         if mm:
             out[k] = int(eval(mm.group(1), {"__builtins__": {}}))  # «15 * 60» — простое выражение из конфигурации
+    if "probe_time_limit_s" in out:
+        out["probe_minutes"] = out["probe_time_limit_s"] // 60
+    rk = ROOT / "backend/app/modules/matching/ranking.py"
+    if rk.exists():
+        mm = re.search(r"^WEIGHTS\s*=\s*(\{[^}]*\})", rk.read_text(encoding="utf-8"), re.M)
+        if mm:
+            import ast
+            w = ast.literal_eval(mm.group(1))
+            out["w"] = {k: round(v * 100) for k, v in w.items()}  # доли скора подбора, % (из кода ranking.py)
+            for k, v in out["w"].items():
+                out[f"w_{k}"] = v
+    sp = ROOT / "backend/app/modules/assessment/sprt.py"
+    if sp.exists():
+        mm = re.search(r"^DEFAULT_ALPHA\s*(?::\s*float)?\s*=\s*([0-9.]+)", sp.read_text(encoding="utf-8"), re.M)
+        if mm:
+            out["sprt_alpha_pct"] = f"{fdec(float(mm.group(1)) * 100, 0)}{NBSP}%"  # уровень ошибки ранней остановки (код)
     oa = ROOT / "docs/api/openapi.json"
     if oa.exists():
         d = json.loads(oa.read_text(encoding="utf-8"))
         out["api_paths"] = len(d.get("paths", {}))
-        out["api_operations"] = sum(1 for p in d.get("paths", {}).values() for m in p
-                                    if m in ("get", "post", "put", "patch", "delete"))
+        ops = [(o.get("tags") or ["—"])[0] for p in d.get("paths", {}).values() for m, o in p.items()
+               if m in ("get", "post", "put", "patch", "delete")]
+        out["api_operations"] = len(ops)
+        desc = {t["name"]: t.get("description", "") for t in d.get("tags", [])}
+        cnt: dict[str, int] = {}
+        for t in ops:
+            cnt[t] = cnt.get(t, 0) + 1
+        out["api_tags"] = [{"tag": t, "ops": c, "description": desc.get(t, "")} for t, c in
+                           sorted(cnt.items(), key=lambda x: -x[1])]
+        out["api_tag_count"] = len(cnt)
+        out["api_version"] = d.get("info", {}).get("version", "")
     return out
 
 
