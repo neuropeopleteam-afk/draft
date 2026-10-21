@@ -45,7 +45,7 @@ export default function StudyAbout() {
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Статистика прохождения</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night">Статистика прохождения без личных данных, чтобы улучшать продукт</h1>
         <p className="mt-3 leading-relaxed text-brand-ink/75" data-testid="study-h1-lead">
-          Это страница управления обезличенной статистикой удобства: посмотрите ниже, какие шаги учитываются без личных данных, или отключите и снова включите своё участие одной кнопкой.
+          Посмотрите ниже, какие шаги учитываются без личных данных, или отключите и снова включите своё участие одной кнопкой.
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <section className="card" aria-labelledby="st-yes"><h2 id="st-yes" className="text-base font-bold text-brand-night">Что собираем</h2>

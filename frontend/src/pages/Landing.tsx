@@ -115,7 +115,7 @@ export default function Landing() {
             <span className="fsp-laser-node -bottom-1 !bg-[#FF4D6D]" aria-hidden="true" />
             <p className="np-eyebrow">Платформа обратного ИТ-найма · Работодателям · Кандидатам · ФСП</p>
             <h1 className="mt-3 text-[1.95rem] font-extrabold leading-[1.08] tracking-tight np-text sm:text-[2.45rem] xl:text-[2.75rem]">
-              <span className="np-hero-shimmer">Найм IT-специалистов с </span>
+              <span className="np-hero-shimmer">Найм ИТ-специалистов с </span>
               <span className="fsp-serif-italic">подтверждённым грейдом</span>
               <span className="np-hero-shimmer">: компания сама приглашает проверенных кандидатов</span>
             </h1>
@@ -192,7 +192,7 @@ export default function Landing() {
                 href="#fsp-ecosystem"
                 data-tour="hero-fsp-btn"
                 data-testid="hero-cta-fsp"
-                className="np-btn-grad-crimson mt-3.5 w-full justify-center whitespace-normal px-3 py-2.5 text-center text-xs font-bold leading-tight"
+                className="np-btn-grad-cyan mt-3.5 w-full justify-center whitespace-normal px-3 py-2.5 text-center text-xs font-bold leading-tight"
               >
                 Кабинет и кубки ФСП
               </a>
@@ -340,21 +340,21 @@ export default function Landing() {
             </p>
           </div>
         </div>
-        <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-label="Цифры математического ядра под капотом" data-testid="landing-numbers-grid">
+        <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-6" aria-label="Цифры математического ядра под капотом" data-testid="landing-numbers-grid">
           {cards.map((c) => (
-            <div key={c.id} className="np-glass flex flex-col justify-between px-4 py-4" data-testid={`landing-number-${c.id}`}>
+            <div key={c.id} className={`np-glass flex flex-col justify-between px-5 py-4 ${c.pair ? "lg:col-span-3" : "lg:col-span-2"}`} data-testid={`landing-number-${c.id}`}>
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wider np-faint">{plainMetricText(c.eyebrow)}</dt>
+                <dt className="text-xs font-semibold uppercase tracking-wider np-faint [overflow-wrap:normal] [word-break:normal]">{plainMetricText(c.eyebrow)}</dt>
                 <dd className="mt-1 tabular-nums np-text">
                   {c.pair ? (
                     <LandingPair card={c} />
                   ) : (
-                    <span className="text-2xl font-extrabold">
+                    <span className="whitespace-nowrap text-2xl font-extrabold">
                       {c.value} <span className="text-sm font-semibold np-accent">{plainMetricText(c.accent)}</span>
                     </span>
                   )}
                 </dd>
-                <p className="mt-2 text-[13px] leading-relaxed np-muted">{plainMetricText(c.subtext)}</p>
+                <p className="mt-2 text-[13px] leading-relaxed np-muted [overflow-wrap:normal] [word-break:normal]">{plainMetricText(c.subtext)}</p>
               </div>
               <p
                 className="mt-3 border-t border-white/10 pt-2 text-xs leading-snug np-faint cursor-help"
@@ -391,8 +391,8 @@ export default function Landing() {
                 <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
                   {top5.slice(0, 5).map((m) => (
                     <div key={m.id} className="rounded-xl bg-white/[0.04] p-2.5">
-                      <dt className="text-[11px] leading-tight np-faint">{m.label_ru ?? m.id}</dt>
-                      <dd className="mt-1 text-lg font-extrabold tabular-nums np-text">{m.display_ru ?? "пересчитывается"}</dd>
+                      <dt className="text-[11px] leading-tight np-faint hyphens-auto [overflow-wrap:normal] [word-break:normal]">{m.label_ru ?? m.id}</dt>
+                      <dd className="mt-1 whitespace-nowrap text-lg font-extrabold tabular-nums np-text">{m.display_ru ?? "пересчитывается"}</dd>
                     </div>
                   ))}
                 </dl>
@@ -413,8 +413,8 @@ export default function Landing() {
                 <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
                   {top5Hard.slice(0, 5).map((m) => (
                     <div key={m.id} className="rounded-xl bg-white/[0.04] p-2.5">
-                      <dt className="text-[11px] leading-tight np-faint">{m.label_ru ?? m.id}</dt>
-                      <dd className="mt-1 text-lg font-extrabold tabular-nums np-text">{m.display_ru ?? "пересчитывается"}</dd>
+                      <dt className="text-[11px] leading-tight np-faint hyphens-auto [overflow-wrap:normal] [word-break:normal]">{m.label_ru ?? m.id}</dt>
+                      <dd className="mt-1 whitespace-nowrap text-lg font-extrabold tabular-nums np-text">{m.display_ru ?? "пересчитывается"}</dd>
                     </div>
                   ))}
                 </dl>
@@ -471,7 +471,7 @@ function getRadarStages() {
     {
       id: "passport",
       code: "02",
-      badge: "Крипто-щит",
+      badge: "Защищённый паспорт",
       title: "Паспорт грейда + реестр ФСП",
       desc: "Категория «направление · грейд» и достижения официальных протоколов ФСП закрепляются электронной подписью платформы.",
       metric: `${getFspFacts()?.regions ?? 89} регионов · ${fp?.value ?? 18} протоколов`,

@@ -83,7 +83,8 @@ export function MatchingPair({ className = "" }: { className?: string }) {
   const mm = getMatchingMetrics();
   if (!mm?.p5 || !mm?.hard) return null;
   const fr = (x: any): Frac | null => (x?.mean != null ? ({ value: x.mean, ci95: x.lo != null ? [x.lo, x.hi] : null } as unknown as Frac) : null);
-  const nd = (x: any) => (x?.mean != null ? fmtNum(x.mean, 3) : "—");
+  // nDCG — три знака, половина вверх (0,6595 → 0,660), как в NUMBERS (gen_numbers.nd3) и материалах
+  const nd = (x: any) => (x?.mean != null ? fmtNum(Math.round(x.mean * 1000 + 1e-6) / 1000, 3) : "—");
   return (
     <div className={`rounded-xl bg-brand-cream/40 p-4 ring-1 ring-brand-night/10 ${className}`} data-testid="v-hl-matching-pair">
       <div className="text-[11px] font-bold uppercase tracking-wide text-brand-ink/70">Подбор: подходящих в первой пятёрке (P@5)</div>
@@ -206,7 +207,10 @@ export default function Headline() {
   }
   const m = gv.main;
   const sv: any = (gv as any).st?.view ?? null;  // стандартные условия (S-T) — заголовок; m — жёсткие условия
-  const mm = m.minutes_main, mt = m.minutes_total;
+  // время и число заданий — в той же колонке, что подпись блока (стандарт), иначе — строгая колонка с её подписью (А21 P1)
+  const tv: any = sv?.minutes_main ? sv : m;
+  const tCol = sv?.minutes_main ? COL_ST : COL_HARD;
+  const mm = tv.minutes_main, mt = tv.minutes_total;
   const rows = Object.entries(m.by_claim || {});
   return (
     <div data-testid="validation-headline">
@@ -221,7 +225,7 @@ export default function Headline() {
         аналогичных решениях» — те же допущения, что у других решений, и «проверка на прочность — строже» (почему строже —
         ниже); в каждой колонке
         {" "}{nint(sv?.n ?? m.n)} модельных кандидатов с известным истинным уровнем. Настройки подбирались на одних
-        зёрнах, цифры — на других, отложенных. Людей в этом расчёте нет: пилот с людьми ещё впереди.
+        зёрнах, цифры — на других, отложенных. Людей в этом расчёте нет — модельные кандидаты; калибровка на ответах людей — в плане, не проводилась.
       </p>
       <FinalRun />
       <WhyStricter className="mt-3" />
@@ -240,9 +244,9 @@ export default function Headline() {
       <MatchingPair className="mt-3" />
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl bg-brand-cream/40 p-3 text-xs text-brand-ink/75 ring-1 ring-brand-night/10" data-testid="v-hl-time">
-          <b className="text-brand-night">Время ({COL_ST.toLowerCase()}).</b> Основная часть — в среднем {mm ? fmtNum(mm.mean, 0) : "—"} мин (у 90 % — до{" "}
+          <b className="text-brand-night">Время ({tCol.toLowerCase()}).</b> Основная часть — в среднем {mm ? fmtNum(mm.mean, 0) : "—"} мин (у 90 % — до{" "}
           {mm ? fmtNum(mm.p90, 0) : "—"}), вместе со вторым этапом — {mt ? fmtNum(mt.mean, 0) : "—"} мин; лимит основной части — 60 мин.
-          {m.items_main ? ` Заданий — в среднем ${fmtNum(m.items_main.mean, 1)}.` : ""}
+          {tv.items_main ? ` Заданий — в среднем ${fmtNum(tv.items_main.mean, 1)}.` : ""}
         </div>
         <div className="rounded-xl bg-brand-cream/40 p-3 text-xs text-brand-ink/75 ring-1 ring-brand-night/10" data-testid="v-hl-practice">
           <b className="text-brand-night">Практика.</b> Код и развёрнутые ответы с автопроверкой — в среднем{" "}

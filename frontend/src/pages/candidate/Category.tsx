@@ -193,15 +193,19 @@ export default function Category() {
           {s.sessions.length ? (
             <ul className="mt-3 space-y-3 text-sm">
               {s.sessions.map((t: any) => (
-                <li key={t.id} className="flex items-start justify-between gap-3 border-l-2 border-brand-blush pl-3">
-                  <div>
+                <li key={t.id} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 border-l-2 border-brand-blush pl-3">
+                  <div className="min-w-0 flex-1 basis-48">
                     <p className="font-semibold">{DIRECTION_TITLES[t.direction]} · {GRADE_TITLE_ALL[t.claimed_grade]}{MODE[t.mode] ? ` · ${MODE[t.mode]}` : ""}{t.is_sandbox ? " · проверка жюри" : ""}</p>
                     <p className="text-brand-ink/65">{SESSION[t.status] ?? t.status} · {dtt(t.finished_at ?? t.started_at)}</p>
-                    {t.theta != null && <p className="text-brand-ink/65">уровень по шкале теста {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : t.accepted_lower ? `не подтверждён, принят ${GRADE_TITLE_ALL[t.accepted_lower] ?? t.accepted_lower}` : t.provisional ? "предварительно" : "не подтверждён"}</p>}
+                    {t.theta != null && (
+                      <p className="text-brand-ink/65" title={`Как считается: оценка уровня по шкале теста ${signed(t.theta)} ± ${num(t.se)}`}>
+                        Результат: {t.confirmed ? "грейд подтверждён" : t.accepted_lower ? `не подтверждён, принят ${GRADE_TITLE_ALL[t.accepted_lower] ?? t.accepted_lower}` : t.provisional ? "предварительно" : "не подтверждён"}
+                      </p>
+                    )}
                   </div>
                   {t.status === "in_progress" && <Link className="text-sm font-semibold text-brand" to={`/candidate/assessment/test/${t.id}`}>Продолжить</Link>}
                   {t.status === "finished" && (
-                    <div className="flex shrink-0 items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <Link className="text-sm font-semibold text-brand" to={`/candidate/feedback?session=${t.id}`}>Разбор</Link>
                       <TaskAppealButton sessionId={t.id} direction={t.direction} grade={t.claimed_grade} compact />
                     </div>

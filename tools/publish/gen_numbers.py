@@ -103,6 +103,19 @@ def num(v: float | None, d: int = 2) -> str:
     return "—" if v is None else f"{float(v):.{d}f}".replace(".", ",")
 
 
+def nd3(v: float | None) -> str:
+    """nDCG — три знака, округление половины вверх (0,6595 → 0,660), одинаково на главной, в /validation и в материалах."""
+    from decimal import ROUND_HALF_UP, Decimal
+    return "—" if v is None else str(Decimal(str(float(v))).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)).replace(".", ",")
+
+
+def _plain_set(t: str | None) -> str:
+    """Подпись набора без технических меток (SHA-256, коммит) — для лицевой стороны карточки."""
+    t = re.sub(r"SHA-256 [0-9a-f]+…?,\s*", "", t or "")
+    t = re.sub(r",\s*код [0-9a-f]{7,}\s*$", "", t).strip()
+    return t.replace("без LLM", "без языковой модели")
+
+
 def int_ru(v: int | None) -> str:
     return "—" if v is None else f"{int(v):,}".replace(",", "\u202f")
 
@@ -751,11 +764,11 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
         p5, mrr = matching["p5"], matching.get("mrr") or {}
         cards.append({
             "id": "matching_p5", "eyebrow": "Точность топ-5 подбора (P@5)", "value": pct(p5.get("mean")), "accent": "%",
-            "subtext": ((f"95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} %, качество порядка {num((matching.get('ndcg10') or {}).get('mean'))} · "
+            "subtext": ((f"95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} %, качество порядка {nd3((matching.get('ndcg10') or {}).get('mean'))} · "
                          f"стандартные условия: {matching.get('n_needs')} потребностей в {matching.get('n_worlds')} отложенных мирах × "
                          f"{int_ru(matching.get('n_candidates'))} кандидатов"
                          + (f"; жёсткие: {pct(((matching.get('hard') or {}).get('p5') or {}).get('mean'))} %, качество порядка "
-                            f"{num(((matching.get('hard') or {}).get('ndcg10') or {}).get('mean'))}" if matching.get("hard") else "")
+                            f"{nd3(((matching.get('hard') or {}).get('ndcg10') or {}).get('mean'))}" if matching.get("hard") else "")
                          + " · один прогон, модели, не люди")
                         if matching.get("n_worlds") else
                         (f"MRR {num(mrr.get('mean'))} · 95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} % · бенчмарк: "
@@ -801,7 +814,9 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
                          f"пересекаются); точность — только по №2: " if (hh.get("corpus") or {}).get("in_checks") else "")
                         + f"направление вакансии определено верно в {pct(d.get('value'))} % ({d.get('k')} из {d.get('n')})"
                         + (f", грейд — в {pct(g.get('value'))} % ({g.get('k')} из {g.get('n')})" if g.get("value") is not None else "")
-                        + f"; {hh.get('set') or ''}").rstrip("; "),
+                        + f"; {_plain_set(hh.get('set'))}").rstrip("; "),
+            # на лицевой стороне — без хэшей и кода (А21 P1); полная строка набора — в set_tech_ru («Как считается»)
+            "set_tech_ru": hh.get("set"),
             "provenance": "разбор вакансий hh.ru",
             "recompute": hh["recompute"], "code_ref": hh["code_ref"]})
     return cards
@@ -828,9 +843,9 @@ def recompute_table(bank, gv, cheat, matching, hh, anticheat, fsp, load) -> list
                      "artifact": "backend/app/modules/validation/data/cheat_bots.json"})
     if matching and isinstance(matching.get("p5"), dict):
         rows.append({"section": "Подбор под потребность (бенчмарк)",
-                     "metric": (f"P@5 {pct(matching['p5'].get('mean'))} %, nDCG@10 {num((matching.get('ndcg10') or {}).get('mean'))}; "
+                     "metric": (f"P@5 {pct(matching['p5'].get('mean'))} %, nDCG@10 {nd3((matching.get('ndcg10') or {}).get('mean'))}; "
                                 f"жёсткие — P@5 {pct(((matching.get('hard') or {}).get('p5') or {}).get('mean'))} %, nDCG@10 "
-                                f"{num(((matching.get('hard') or {}).get('ndcg10') or {}).get('mean'))}") if matching.get("hard") else
+                                f"{nd3(((matching.get('hard') or {}).get('ndcg10') or {}).get('mean'))}") if matching.get("hard") else
                                f"P@5 {pct(matching['p5'].get('mean'))} %, MRR {num((matching.get('mrr') or {}).get('mean'))}",
                      "sample": (f"{matching.get('n_needs')} потребностей, {matching.get('n_worlds')} отложенных мира × "
                                 f"{int_ru(matching.get('n_candidates'))}, один прогон, модели" if matching.get("n_worlds")

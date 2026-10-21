@@ -134,14 +134,14 @@ export function Compare() {
   const cols = `minmax(12rem,16rem) repeat(${cs.length}, minmax(15rem,1fr))`;
 
   return (
-    <div className="min-w-0 max-w-6xl space-y-5">
+    <div className="w-full min-w-0 max-w-6xl space-y-5 overflow-x-hidden">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageTitle title="Сравнение кандидатов" subtitle={`«${data.need.title}»${data.need.version ? `, подборка, версия ${data.need.version}` : ""}. Рядом — только факты по требованиям потребности; сказанное кандидатом о себе в балл не входит. Кандидаты обезличены.`} />
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           {(allNeeds.data?.length ?? 0) > 1 && (
             <select
               aria-label="Потребность для сравнения"
-              className="rounded-xl border border-brand-night/15 bg-white px-3 py-2 text-xs font-semibold text-brand-night"
+              className="w-full max-w-full truncate rounded-xl border border-brand-night/15 bg-white px-3 py-2 text-xs font-semibold text-brand-night sm:w-auto sm:max-w-xs"
               value={id}
               onChange={(e) => navigate(`/employer/needs/${e.target.value}/compare`)}
             >
