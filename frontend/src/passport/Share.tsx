@@ -61,7 +61,7 @@ export function PassportShare() {
               <a className="btn-ghost" href={`/verify/${a.id}`} target="_blank" rel="noreferrer">Открыть страницу проверки</a>
               <button className="btn-ghost" disabled={busy} onClick={() => void act("/me/passport/revoke", "Отозвать ссылку? Страница проверки по ней покажет «Отозван». Новую ссылку можно выпустить сразу.")}>Отозвать ссылку</button>
             </div>
-            <p className="text-xs text-brand-ink/65" data-testid="passport-kid">Подпись Ed25519 · ключ <span className="break-all font-mono">{a.signature.kid}</span> · проверяется любым по открытому ключу JWKS</p>
+            <p className="text-xs text-brand-ink/65" data-testid="passport-kid" title="Как устроено: асимметричная цифровая подпись Ed25519 по открытому ключу JWKS">Цифровая подпись платформы · ключ <span className="break-all font-mono">{a.signature.kid}</span> · проверяется любым по открытому ключу</p>
             {a.status.test_key && <p className="text-xs text-brand-ink/65">Стенд подписывает тестовым ключом — страница проверки честно это показывает.</p>}
           </div>
         </div>

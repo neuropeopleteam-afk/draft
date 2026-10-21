@@ -161,12 +161,17 @@ def _by_name(db: Session, inv: Invitation, code: str, stage: str, details: str) 
 
 
 def _webhook(db: Session, st: AtsSettings, inv: Invitation, stage: str, hiring_stage: str, delivery_id: str) -> dict:
+    from app.core.db import as_aware
+
     secret = decrypt(st.webhook_secret_enc)
     if not st.webhook_url or not secret:
         raise AtsError("Вебхук: не заданы адрес или секрет")
     cp = db.get(CandidateProfile, inv.candidate_user_id)
+    has_consent = bool(inv.status == InvitationStatus.accepted and inv.contacts_revealed_at is not None and cp and cp.deleted_at is None)
+    consent_at = as_aware(inv.contacts_revealed_at).isoformat() if (has_consent and inv.contacts_revealed_at) else None
     ev = "candidate.hiring_stage"
     payload = {"event": ev, "delivery_id": delivery_id, "candidate_ref": cp.public_ref if cp else None,
+               "consent": has_consent, "consent_at": consent_at,
                "invitation_id": str(inv.id), "position_title": inv.position_title, "stage": stage,
                "stage_title": PLATFORM_STAGES[stage], "hiring_stage": hiring_stage, "at": utcnow().isoformat()}
     return {"http_status": post_webhook(st.webhook_url, secret, ev, delivery_id, payload), "stage": stage,

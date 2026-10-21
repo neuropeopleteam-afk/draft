@@ -100,17 +100,9 @@ export default function EmployerOverview() {
       <PageTitle title={demoName ? `Кабинет компании «${demoName.replace(/^«(.*)»$/, "$1")}»` : cleanCompanyName(company?.name) || "Кабинет работодателя"}
         subtitle={demoName ? "Демо-компания для проверки" : "Проверенные кандидаты по категории — выходите на контакт первым."} />
       <div className="mt-3"><InvitesLeft compact /></div>
-      {/* 1 → 2 → 4 колонки по ширине блока (index.css .stat-grid): в режиме жюри справа открыт проводник, и в 4 узкие
-          колонки подписи рвались посреди слова («ПОТРЕБНОСТ-И») — теперь подпись переносится только между словами */}
-      <div className="stat-grid mt-8"><div>
-        <Stat label="Потребности" value={needs.data?.length ?? "…"} />
-        <Stat label="Приглашения" value={inv.data?.length ?? "…"} hint={inv.data ? `принято: ${accepted}` : undefined} />
-        <Stat label="Задания с вилкой" value={probes.data?.length ?? "…"} hint={probes.data ? `на оценке: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
-        <Link to="needs" className="block"><Stat label="Новых подходящих" value={subs.data?.new_total ?? "…"} hint={subs.data ? `подписок: ${subs.data.items.filter((x: any) => x.enabled).length}` : undefined} /></Link>
-      </div></div>
       {/* Командный Драфт ФСП: сборка сыгранного звена из 4 человек под проект в 1 клик с 3D-ядром верификации */}
       <Link to="/employer/squad" data-testid="employer-squad-card"
-        className="fsp-stage-card group mt-8 flex flex-col items-center justify-between gap-5 rounded-3xl p-5 transition-transform hover:-translate-y-0.5 sm:flex-row sm:p-6">
+        className="fsp-stage-card group mt-5 flex flex-col items-center justify-between gap-4 rounded-3xl p-5 transition-transform hover:-translate-y-0.5 sm:flex-row sm:p-6">
         <div className="min-w-0 flex-1 space-y-2">
           <p className="inline-flex items-center gap-2 font-mono text-xs font-extrabold uppercase tracking-[0.14em] text-[#B8B4FF]">
             <i className="fsp-pulse-dot" aria-hidden="true" />
@@ -128,6 +120,14 @@ export default function EmployerOverview() {
         </div>
         <FspCabinet3DStage kind="core" badge="Команда из 4 ролей" sub="Подбор под бюджет ФОТ" />
       </Link>
+      {/* 1 → 2 → 4 колонки по ширине блока (index.css .stat-grid): в режиме жюри справа открыт проводник, и в 4 узкие
+          колонки подписи рвались посреди слова («ПОТРЕБНОСТ-И») — теперь подпись переносится только между словами */}
+      <div className="stat-grid mt-6"><div>
+        <Stat label="Потребности" value={needs.data?.length ?? "…"} />
+        <Stat label="Приглашения" value={inv.data?.length ?? "…"} hint={inv.data ? `принято: ${accepted}` : undefined} />
+        <Stat label="Задания с вилкой" value={probes.data?.length ?? "…"} hint={probes.data ? `на оценке: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
+        <Link to="needs" className="block"><Stat label="Новых подходящих" value={subs.data?.new_total ?? "…"} hint={subs.data ? `подписок: ${subs.data.items.filter((x: any) => x.enabled).length}` : undefined} /></Link>
+      </div></div>
       <InvitationFunnelWidget invitations={inv.data ?? []} />
       <section className="mt-8 space-y-3" data-testid="employer-overview-roi">
         <div className="flex flex-wrap items-baseline justify-between gap-2">

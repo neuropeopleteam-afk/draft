@@ -591,4 +591,142 @@ def test_index_v5_place_status_shared_range_and_unverified(client, tmp_path, mon
     assert any("место не подтверждено" in t for t in emp_texts), emp_texts
 
 
+def test_ats_webhook_no_contacts_before_consent_and_contacts_after_consent(client):
+    """А2 (21.10): до согласия кандидата событие/карточка вебхука содержит только candidate_ref (consent=False, contacts=None);
+    после принятия приглашения в вебхук ТОЛЬКО пригласившей компании уходят раскрытые кандидатом контакты
+    (name/full_name, email, phone — с учётом shared_contacts), consent=True с временем согласия consent_at и валидной HMAC-подписью."""
+    import json
+    import uuid
+    from app.core.db import SessionLocal
+    from app.integrations.ats import clients as ats_clients
+    from app.integrations.ats.service import export_payload
+    from app.modules.invitations.models import Invitation
+    from app.modules.profiles.models import Company
+
+    orig_send = ats_clients._send
+    ats_clients._send = lambda method, url, **kw: client.request(
+        method, url.split("testserver", 1)[-1] if "testserver" in url else url, **kw
+    )
+    try:
+        tc = candidate_with_category(client, "webhook_consent_cand@example.com")
+        client.patch(
+            "/api/me/candidate-profile",
+            json={"full_name": "Соколова Анна Павловна", "phone": "+7 999 555-44-33", "telegram": "@anna_sokolova"},
+            headers=H(tc),
+        )
+        ref = my_ref(client, tc)
+
+        te1 = employer(client, "hr_inviter@corp1.ru", "1111111111")
+        te2 = employer(client, "hr_other@corp2.ru", "2222222222")
+        assert client.post("/api/employer/ats/stub/connect", headers=H(te1)).status_code == 200
+        assert client.post("/api/employer/ats/stub/connect", headers=H(te2)).status_code == 200
+
+        inv = client.post(
+            "/api/employer/invitations",
+            json={**INVITE, "candidate_ref": ref},
+            headers=H(te1),
+        ).json()
+
+        # 1. До согласия кандидата: в ATS ничего не доставлено, а payload до согласия содержит ТОЛЬКО candidate_ref (без ПДн)
+        assert client.get("/api/employer/ats/stub/records", headers=H(te1)).json() == []
+        with SessionLocal() as db:
+            inv_row = db.get(Invitation, uuid.UUID(inv["id"]))
+            comp1 = db.get(Company, inv_row.company_id)
+            pre = export_payload(db, comp1, invitation=inv_row)
+        assert pre["candidate_ref"] == ref
+        assert pre["consent"] is False
+        assert pre["consent_at"] is None
+        assert pre["contacts"] is None
+        assert pre["candidate"]["contacts"] is None
+        assert "Соколова" not in json.dumps(pre, ensure_ascii=False)
+        assert "555-44-33" not in json.dumps(pre, ensure_ascii=False)
+        assert "webhook_consent_cand@example.com" not in json.dumps(pre, ensure_ascii=False)
+
+        # 2. Кандидат принимает приглашение и раскрывает имя, почту и телефон (без telegram)
+        r_acc = client.post(
+            f"/api/candidate/invitations/{inv['id']}/accept",
+            json={"shared_contacts": ["full_name", "email", "phone"]},
+            headers=H(tc),
+        )
+        assert r_acc.status_code == 200, r_acc.text
+
+        # 3. В ATS пригласившей компании (te1) ушёл подписанный вебхук с контактами, consent=True и consent_at
+        recs1 = client.get("/api/employer/ats/stub/records", headers=H(te1)).json()
+        wh = next(r for r in recs1 if r["kind"] == "webhook")
+        assert wh["signature_valid"] is True
+        p = wh["payload"]
+        assert p["event"] == "candidate.accepted_invitation"
+        assert p["candidate_ref"] == ref
+        assert p["consent"] is True
+        assert isinstance(p["consent_at"], str) and len(p["consent_at"]) >= 19
+        assert p["contacts"]["name"] == "Соколова Анна Павловна"
+        assert p["contacts"]["full_name"] == "Соколова Анна Павловна"
+        assert p["contacts"]["email"] == "webhook_consent_cand@example.com"
+        assert p["contacts"]["phone"] == "+7 999 555-44-33"
+        assert p["contacts"]["telegram"] is None  # кандидат не раскрывал telegram
+        assert p["candidate"]["consent"] is True
+        assert p["candidate"]["consent_at"] == p["consent_at"]
+        assert p["candidate"]["contacts"]["phone"] == "+7 999 555-44-33"
+
+        # 4. Вторая компания (te2), которая не приглашала / не получала согласия, вебхук и контакты НЕ получает
+        recs2 = client.get("/api/employer/ats/stub/records", headers=H(te2)).json()
+        assert recs2 == []
+        with SessionLocal() as db:
+            inv_row = db.get(Invitation, uuid.UUID(inv["id"]))
+            comp2 = next(c for c in db.query(Company).all() if c.id != inv_row.company_id and c.name == "2222222222")
+            other_payload = export_payload(db, comp2, invitation=inv_row)
+        assert other_payload["consent"] is False
+        assert other_payload["contacts"] is None
+        assert "Соколова" not in json.dumps(other_payload, ensure_ascii=False)
+    finally:
+        ats_clients._send = orig_send
+
+
+def test_candidate_experience_years_bounds_and_age_minus_14(client):
+    """А2 (21.10): коммерческий стаж в профиле и опросе ограничен 0..45 лет и не больше (возраст − 14) -> 422 в API."""
+    from tests.conftest import register_and_verify
+    from tests.test_day2_rules import ONBOARDING
+
+    tc = register_and_verify(client, "exp_bounds_cand@example.com")
+
+    # 1. В опросе и профиле стаж 50 лет (и < 0) отклоняется с 422 и понятным сообщением
+    r_50_onb = client.put("/api/me/onboarding", json={**ONBOARDING, "experience_years": 50}, headers=H(tc))
+    assert r_50_onb.status_code == 422, r_50_onb.text
+    assert "45" in r_50_onb.text
+
+    r_50_prof = client.patch("/api/me/candidate-profile", json={"experience_years": 50}, headers=H(tc))
+    assert r_50_prof.status_code == 422, r_50_prof.text
+    assert "45" in r_50_prof.text
+
+    r_neg = client.patch("/api/me/candidate-profile", json={"experience_years": -1}, headers=H(tc))
+    assert r_neg.status_code == 422
+
+    # 2. Допустимый стаж 45 лет для 18+ сохраняется
+    r_45 = client.put("/api/me/onboarding", json={**ONBOARDING, "experience_years": 45}, headers=H(tc))
+    assert r_45.status_code == 200, r_45.text
+
+    # 3. Если передан числовой возраст (например, age=20), стаж > (20 - 14 = 6) отклоняется с 422
+    r_age_num = client.patch("/api/me/candidate-profile", json={"age": 20, "experience_years": 8}, headers=H(tc))
+    assert r_age_num.status_code == 422, r_age_num.text
+    assert "возраста минус 14" in r_age_num.text
+
+    r_age_ok = client.patch("/api/me/candidate-profile", json={"age": 20, "experience_years": 6}, headers=H(tc))
+    assert r_age_ok.status_code == 200, r_age_ok.text
+
+    # 4. Если у кандидата установлена возрастная группа 16-17 (макс. стаж 17 - 14 = 3 г.) или 14-15 (макс. 1 г.):
+    assert client.patch("/api/me/candidate-profile", json={"age_group": "16-17", "parental_consent": True}, headers=H(tc)).status_code == 200
+    r_youth_bad = client.patch("/api/me/candidate-profile", json={"experience_years": 5}, headers=H(tc))
+    assert r_youth_bad.status_code == 422, r_youth_bad.text
+    assert "возраста минус 14" in r_youth_bad.text
+
+    r_youth_onb_bad = client.put("/api/me/onboarding", json={**ONBOARDING, "experience_years": 4}, headers=H(tc))
+    assert r_youth_onb_bad.status_code == 422, r_youth_onb_bad.text
+    assert "возраста минус 14" in r_youth_onb_bad.text
+
+    r_youth_ok = client.patch("/api/me/candidate-profile", json={"experience_years": 3}, headers=H(tc))
+    assert r_youth_ok.status_code == 200, r_youth_ok.text
+
+
+
+
 

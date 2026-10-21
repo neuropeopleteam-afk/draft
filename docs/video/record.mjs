@@ -176,7 +176,7 @@ const esc = (t) => t.replace(/\\/g, '\\\\').replace(/:/g, '\\:').replace(/'/g, '
 const font = process.env.CAPTION_FONT || '/usr/share/fonts/truetype/montserrat/Montserrat-SemiBold.ttf';
 const fontArg = fs.existsSync(font) ? `fontfile='${font}':` : "font='Montserrat':";
 const filters = caps.map((c) => `drawtext=${fontArg}text='${esc(c.title)}':x=48:y=h-96:fontsize=30:fontcolor=white:box=1:boxcolor=0x0A0B1F@0.78:boxborderw=18:enable='between(t,${c.a.toFixed(2)},${c.b.toFixed(2)})'`);
-filters.push(`drawtext=${fontArg}text='Черновик · без голоса · fsp-draft.ru':x=w-tw-36:y=28:fontsize=18:fontcolor=white@0.85:box=1:boxcolor=0x402FFF@0.6:boxborderw=8`);
+filters.push(`drawtext=${fontArg}text='Черновик · без голоса · fsp-draft.ru':x=w-tw-36:y=h-th-40:fontsize=18:fontcolor=white@0.85:box=1:boxcolor=0x402FFF@0.6:boxborderw=8`);
 const out = path.join(OUT, 'draft_video.mp4');
 const graph = parts.join(';') + ';' + marks.map((_, i) => `[v${i}]`).join('') + `concat=n=${marks.length}:v=1:a=0[cat];`
   + `[cat]fps=25,` + filters.join(',') + '[out]';

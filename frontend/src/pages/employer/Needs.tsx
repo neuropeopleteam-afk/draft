@@ -447,6 +447,41 @@ const REL: Record<string, string> = { exact: "точное совпадение"
 
 const TOP = 5, MORE = 10, WIDE_PX = 1000;  // Я10: первый экран подборки — 5 компактных карточек
 
+const GRADE_ORDER_LIST = ["junior", "middle", "senior", "lead", "principal"];
+const GRADE_CUTS_MAP: Record<string, number> = { junior: -1.0, middle: 0.0, senior: 1.0, lead: 1.6, principal: 2.1 };
+
+function stdNormCdf(x: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989422804014327 * Math.exp((-x * x) / 2);
+  const p = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + 1.330274429 * t))));
+  return x >= 0 ? 1 - p : p;
+}
+
+/** Определяет кандидатов в подборке, чей подтверждённый тестом уровень находится у верхней границы запрошенного грейда (или выше),
+ *  и которых режим «Строго запрошенный грейд» переставляет ниже точного попадания в полосу грейда. */
+function isUpperBoundaryCandidate(r: any, req?: { direction?: string | null; grade?: string | null }): boolean {
+  const exactReason = (r?.reasons ?? []).find((x: any) => x.requirement === "Строго запрошенный грейд");
+  if (exactReason) {
+    if (exactReason.status === "partial") return true;
+    if (typeof exactReason.p_exact === "number" && exactReason.p_exact < 0.78) return true;
+  }
+  const g = req?.grade ?? "";
+  const idx = GRADE_ORDER_LIST.indexOf(g);
+  if (idx < 0) return false;
+  const candGrade = r?.card?.grade ?? (typeof r?.category_id === "string" && r.category_id.includes(".") ? r.category_id.split(".")[1] : null);
+  if (candGrade && GRADE_ORDER_LIST.indexOf(candGrade) > idx) return true;
+  const theta = r?.card?.test?.theta;
+  const se = Math.max(0.05, Number(r?.card?.test?.se ?? 0.45));
+  const cut = GRADE_CUTS_MAP[g];
+  const nextGrade = idx + 1 < GRADE_ORDER_LIST.length ? GRADE_ORDER_LIST[idx + 1] : null;
+  const nextCut = nextGrade ? GRADE_CUTS_MAP[nextGrade] : null;
+  if (typeof theta !== "number" || cut == null || nextCut == null) return false;
+  const lo = 1 - stdNormCdf((cut - theta) / se);
+  const hi = 1 - stdNormCdf((nextCut - theta) / se);
+  const pExact = Math.max(0, lo - hi);
+  return theta >= (cut + nextCut) / 2 && pExact < 0.78;
+}
+
 /** Подборка по потребности: категории, карточки с объяснениями, уточнение без потери версий. */
 export function Selection() {
   const { id, version } = useParams();
@@ -540,6 +575,21 @@ export function Selection() {
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
 
+  /** А2/А5 (21.10): переключение «Строго запрошенный грейд» сразу сохраняет новую версию подборки с filters.grade_exact. */
+  async function toggleGradeExact(exact: boolean) {
+    const nextFilters = { ...filters, grade_exact: exact || undefined };
+    setFilters(nextFilters);
+    setErr(null); setBusy(true);
+    try {
+      const { relaxation: _r, ...f } = nextFilters;
+      const body: any = { parent_version: v, filters: { ...f, grade_exact: exact || undefined } };
+      if (refineReq) body.requirements = reqBody(refineReq);
+      const r = await api<any>(`/employer/needs/${id}/selections`, { body });
+      await need.reload(); setRefineReq(null);
+      navigate(`/employer/needs/${id}/v/${r.version}${exact ? "?grade_exact=1" : ""}`);
+    } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  }
+
   if (need.loading && !need.data) return <Loading />;
   if (need.error || !need.data) return <Alert>{need.error}</Alert>;
   const s = sel.data;
@@ -552,6 +602,8 @@ export function Selection() {
 
   const allOrdered: any[] = s ? mutual.sorted<any>(s.results) : [];
   const ordered: any[] = realOnly ? allOrdered.filter((r) => !isSyntheticProfile(r)) : allOrdered;
+  // Без useMemo: хук после ранних return (Loading/Alert) менял число хуков между рендерами — React #310 при открытии подборки.
+  const upperBoundaryCount = ordered.filter((r) => isUpperBoundaryCandidate(r, reqOf)).length;
   const syntheticCount = allOrdered.filter((r) => isSyntheticProfile(r)).length;
   const visible = ordered.slice(0, Math.max(TOP, shown));
   const rest = ordered.length - visible.length;
@@ -630,7 +682,7 @@ export function Selection() {
               )}
               {(s.grade_exact?.on || s.filters?.grade_exact) && (
                 <p className="rounded-xl border border-brand-night/10 bg-white px-3 py-2 text-xs font-medium text-brand-night" data-testid="grade-exact-note">
-                  <b className="font-semibold text-brand-plum">Строго запрошенный грейд:</b> Только кандидаты с подтверждённым грейдом, равным запрошенному. По умолчанию показываем и тех, кто сильнее запроса.
+                  <b className="font-semibold text-brand-plum">Строго запрошенный грейд:</b> По умолчанию в подборке есть и кандидаты, чей подтверждённый уровень у верхней границы запрошенного; строгий режим оставляет только точное совпадение.
                 </p>
               )}
               {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
@@ -653,6 +705,7 @@ export function Selection() {
                           picked={picked.includes(r.ref)} pickDisabled={picked.length >= 3} onPick={() => togglePick(r.ref)}
                           onInvite={() => { setInvited(null); setInvite(r); }} sent={sentRefs.includes(r.ref)}
                           badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
+                          upperBoundary={isUpperBoundaryCandidate(r, reqOf)}
                           side={side} active={side && activeRow?.ref === r.ref}
                           open={!side && isOpen} onToggle={() => (side ? setActive(r.ref) : setOpen({ ...open, [r.ref]: !isOpen }))}
                           details={evidence(r)} />
@@ -725,19 +778,18 @@ export function Selection() {
                 hint="Оставить только кандидатов с достижениями, подтверждёнными официальным протоколом ФСП (ЕКП, ЕВСК, ссылка на PDF)." />
               <Toggle checked={!!filters.confirmed_only} onChange={(x) => setFilters({ ...filters, confirmed_only: x || undefined })} label="Только подтверждённый грейд"
                 hint="Убрать кандидатов со статусом «нужен доп. этап» и без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждённым грейдом." />
-              <div data-testid="grade-exact-toggle">
+              <div data-testid="grade-exact-toggle" className="space-y-1">
                 <Toggle
                   checked={!!filters.grade_exact}
                   onChange={(x) => {
-                    setFilters({ ...filters, grade_exact: x || undefined });
-                    const next = new URLSearchParams(searchParams);
-                    if (x) next.set("grade_exact", "1");
-                    else next.delete("grade_exact");
-                    setSearchParams(next, { replace: true });
+                    void toggleGradeExact(x);
                   }}
                   label="Строго запрошенный грейд"
-                  hint="Только кандидаты с подтверждённым грейдом, равным запрошенному. По умолчанию показываем и тех, кто сильнее запроса."
+                  hint="По умолчанию в подборке есть и кандидаты, чей подтверждённый уровень у верхней границы запрошенного; строгий режим оставляет только точное совпадение."
                 />
+                <p className="text-xs font-medium text-brand-plum" data-testid="grade-exact-count">
+                  В этой подборке у верхней границы грейда (сильнее запроса): {upperBoundaryCount}
+                </p>
               </div>
               <Toggle checked={!!filters.learn_from_company} onChange={(x) => setFilters({ ...filters, learn_from_company: x || undefined })} label="Учитывать решения компании"
                 hint="Скорректировать веса навыков по истории приглашений, собеседований и офферов вашей компании (по умолчанию выключено)." />

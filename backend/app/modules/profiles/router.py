@@ -17,6 +17,7 @@ from app.modules.profiles.schemas import (
     EmployerOut,
     FspStatusOut,
     MeOut,
+    validate_experience_years,
 )
 
 router = APIRouter(prefix="/api/me", tags=["profiles"])
@@ -77,7 +78,14 @@ def update_candidate_profile(
 ) -> MeOut:
     profile = db.get(CandidateProfile, user.id) or CandidateProfile(user_id=user.id)
     db.add(profile)
-    for k, v in data.model_dump(exclude_unset=True).items():
+    payload_fields = data.model_dump(exclude_unset=True)
+    if "experience_years" in payload_fields and payload_fields["experience_years"] is not None:
+        eff_age_group = payload_fields.get("age_group") or profile.age_group
+        try:
+            validate_experience_years(payload_fields["experience_years"], age_group=eff_age_group)
+        except ValueError as e:
+            raise api_error(422, "invalid_experience_years", str(e)) from None
+    for k, v in payload_fields.items():
         if k in ("age_group", "parental_consent") and v is None:
             raise api_error(422, "age_group_required", "Возрастная группа и отметка согласия не могут быть пустыми")
         setattr(profile, k, v)

@@ -32,10 +32,12 @@ VALUES: list[bytes] = C.load_values(os.environ.get("PUBLISH_VALUES") or None)
 # замены по правилам check_public_tree: (название правила, регэксп всей «опасной» подстроки, замена)
 SUBS = [
     ("путь рабочего места", re.compile(r"/home/user/|/workspace/"), "/srv/work/"),
-    ("путь рабочего места", re.compile(r"\.secrets\b"), ".private"),
+    ("путь рабочего места", re.compile(r"(?<![\w.])\.secrets\b"), ".private"),
     ("ссылка на внутренний отчёт или передачу дел",
      re.compile(r"[\w./-]*(?:reports_0\d{3}|tasks_0\d{3}|HANDOVER|handover/|PLAN_0\d{3})[\w./-]*"), "<внутренний документ>"),
-    ("внутренний жаргон процесса", re.compile(r"(?<![а-яё])(?:штаб|слиянщик)[а-яё]*", re.I), "команда"),
+    ("хэш ФИО (152-ФЗ)", re.compile(r"(?<=_hash)(\"?\s*[:=]\s*\"?)[0-9a-f]{64}"), r"\1<sha256>"),
+    ("название другого решения", re.compile(r"[Сс]нотр[а-яё]*|[Ss]notra\w*"), "другое решение"),
+    ("адрес стенда другого решения", re.compile(r"\b\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}\.sslip\.io\b[^\s\"')>]*", re.I), "<адрес стенда>"),
     ("закрытая ссылка Google Drive", re.compile(r"\S*drive\.google\.com/file\S*"), "<закрытая ссылка>"),
 ]
 STATS = {"dropped": 0, "rewritten": 0, "messages": 0}
@@ -83,6 +85,24 @@ def violates(path: str, data: bytes) -> bool:
         if any(rule not in allow and rx.search(line) for rule, rx in C.RULES):
             return True
     return False
+
+
+def head_rules(path: str, data: bytes) -> set[str]:
+    """Нарушенные правила (имена) — для проверки «голова = исходной, кроме намеренных замен»."""
+    if path in C.IGNORE_SELF or C.SKIP.search(path):
+        return set()
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return set()
+    allow, out = C.ALLOW.get(path, ()), set()
+    for line in text.splitlines():
+        if any(not C.IP_OK.match(m.group(1)) for m in C.IPV4.finditer(line)):
+            out.add("публичный IPv4-адрес")
+        out |= {rule for rule, rx in C.RULES if rule not in allow and rx.search(line)}
+    if any(v in data for v in VALUES):
+        out.add("значение секрета")
+    return out
 
 
 def file_info(filename: bytes, mode: bytes, blob_id, value):

@@ -1212,7 +1212,9 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
     clean_text = redact(masked, use_ner=True, ner_min_tokens=2, contact_cues=True, header=False).text  # П1: шапка не ищется
     res = _call_llm(clean_text, rules, full)  # И27: вызов модели вынесен (кэш, фон)
     if not res.ok or not isinstance(res.data, dict):
-        rules["llm"] = {"used": False, "reason": res.error, "attempts": res.attempts}
+        from app.modules.llm.client import public_attempts
+
+        rules["llm"] = {"used": False, "reason": res.error, "attempts": public_attempts(res.attempts)}
         return rules
     raw, dropped = _llm_requirements(res.data, masked)
     llm = normalize(raw, method="llm")
@@ -1270,6 +1272,6 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
     # Кто фактически ответил (цепочка провайдеров llm/client.py) — подпись в интерфейсе
     merged["llm"] = {"used": True, "latency_ms": res.latency_ms, "dropped_without_quote": dropped,
                      "same_fragment": same_fragment,
-                     "provider": res.provider, "model": res.model, "model_label": res.label,
+                     "model_label": res.label,  # провайдер и id модели — только в журнале «llm» (обход А19 №10)
                      "fallback": len(res.attempts) > 1}
     return merged

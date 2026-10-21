@@ -26,9 +26,11 @@ export const JURY: { id: Persona; title: string; text: string }[] = [
 
 // SIMPLIFY п.9: одно главное действие и компактный ряд входов; остальные роли, сброс демо и проводник с регистрации —
 // под «Ещё роли» (ничего не удалено, только убрано с первого экрана).
-export const MAIN_ROLES: { id: Persona; label: string }[] = [
-  { id: "candidate", label: "Кандидат" }, { id: "candidate_new", label: "Пройти тест с нуля" },
-  { id: "employer", label: "Работодатель" }, { id: "fsp", label: "Федерация (ФСП)" },
+export const MAIN_ROLES: { id: Persona; label: string; grad: string }[] = [
+  { id: "candidate", label: "Кандидат", grad: "np-btn-grad-sapphire" },
+  { id: "candidate_new", label: "Пройти тест с нуля", grad: "np-btn-grad-violet" },
+  { id: "employer", label: "Работодатель", grad: "np-btn-grad-cyan" },
+  { id: "fsp", label: "Федерация (ФСП)", grad: "np-btn-grad-crimson" },
 ];
 const isMain = (p: Persona) => MAIN_ROLES.some((m) => m.id === p);
 
@@ -65,10 +67,10 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
   const roles = (
     <div className="min-w-0 flex-1">
       <p className="text-sm font-semibold np-text">Или войдите сами:</p>
-      <div className="mt-2 flex flex-wrap gap-2" data-testid="jury-roles">
+      <div className="mt-2.5 flex flex-wrap gap-2.5" data-testid="jury-roles">
         {MAIN_ROLES.map((m) => (
           <button key={m.id} type="button" onClick={() => enter(m.id)} disabled={!!busy} title={text(m.id)}
-            aria-label={`Войти как: ${m.label}`} className="np-btn-ghost px-4 py-2 text-sm disabled:opacity-60">
+            aria-label={`Войти как: ${m.label}`} className={`${m.grad} px-4 py-2.5 text-sm disabled:opacity-60`}>
             {busy === m.id ? "Входим…" : m.label}
           </button>
         ))}
@@ -133,7 +135,7 @@ function plainClaim(s: string): string {
   const passportBtn = (  // KF1 «Паспорт-щит»: QR демо-кандидата на экран — эксперт сканирует телефоном и видит проверку подписи
     <button
       type="button"
-      className="np-btn-ghost px-4 py-2 text-sm disabled:opacity-60"
+      className="np-btn-grad-emerald px-4 py-2.5 text-sm disabled:opacity-60"
       disabled={off}
       onClick={() => setQr(true)}
       data-testid="jury-passport-qr"
@@ -147,65 +149,103 @@ function plainClaim(s: string): string {
   const claimLines = Array.isArray(banner.claims_ru)
     ? banner.claims_ru
     : Object.values(banner.claims_ru ?? {});
+  const headlineParts = String(banner.headline_ru ?? "")
+    .split(" · ")
+    .map((s) => s.trim())
+    .filter(Boolean);
   const splitTracks = (
     <div className="mt-5 grid gap-4 border-t pt-5 np-border md:grid-cols-2" data-testid="jury-split-tracks">
-      <div className="rounded-2xl border border-indigo-400/30 bg-indigo-950/20 p-4">
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-indigo-300">Маршрут А · Продуктовое и бизнес-жюри (3–5 мин)</span>
+      <div className="rounded-2xl border border-indigo-400/35 bg-gradient-to-br from-indigo-950/45 via-[#101436]/60 to-indigo-900/20 p-4 shadow-[0_14px_34px_-18px_rgba(64,47,255,0.6)]">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-300">Маршрут А · Продуктовое и бизнес-жюри (3–5 мин)</span>
         <h3 className="mt-1 text-base font-extrabold np-text">Продукт, подбор с объяснением, торг по зарплате и ФСП</h3>
-        <p className="mt-1 text-xs leading-relaxed np-muted">
+        <p className="mt-1 text-[13px] leading-relaxed np-muted">
           Разбор вакансии, приглашение с зарплатной вилкой и встречным торгом в защищённом чате, сборка команды от 2 до 10 человек и передача в кадровую систему «Поток Рекрутмент».
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/needs", "prod_needs")} className="np-btn-primary px-3 py-1.5 text-xs">
+        <div className="mt-3.5 flex flex-wrap gap-2">
+          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/needs", "prod_needs")} className="np-btn-grad-sapphire px-3.5 py-2 text-xs">
             1. Подборка и требования
           </button>
-          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/squad", "prod_squad")} className="np-btn-ghost px-3 py-1.5 text-xs">
+          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/squad", "prod_squad")} className="np-btn-grad-violet px-3.5 py-2 text-xs">
             2. Командный Драфт (2–10 чел.)
           </button>
-          <button type="button" disabled={!!busy} onClick={() => enter("fsp", "/fsp", "prod_fsp")} className="np-btn-ghost px-3 py-1.5 text-xs">
+          <button type="button" disabled={!!busy} onClick={() => enter("fsp", "/fsp", "prod_fsp")} className="np-btn-grad-crimson px-3.5 py-2 text-xs">
             3. Кабинет ФСП
           </button>
-          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/ats", "prod_ats")} className="np-btn-ghost px-3 py-1.5 text-xs">
+          <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/ats", "prod_ats")} className="np-btn-grad-cyan px-3.5 py-2 text-xs">
             4. Кадровая система «Поток»
           </button>
         </div>
       </div>
-      <div className="rounded-2xl border border-rose-400/30 bg-rose-950/20 p-4">
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-rose-300">Маршрут Б · Техническое и научное жюри (3–5 мин)</span>
+      <div className="rounded-2xl border border-rose-400/35 bg-gradient-to-br from-rose-950/40 via-[#1A102A]/60 to-indigo-950/30 p-4 shadow-[0_14px_34px_-18px_rgba(236,29,53,0.5)]">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-rose-300">Маршрут Б · Техническое и научное жюри (3–5 мин)</span>
         <h3 className="mt-1 text-base font-extrabold np-text">Математика теста, {NUMBERS.bank.families.toLocaleString("ru-RU")} семейств и проверка античита в 1 клик</h3>
-        <p className="mt-1 text-xs leading-relaxed np-muted">
+        <p className="mt-1 text-[13px] leading-relaxed np-muted">
           Запустите проверку защиты оценщика, валидацию банка заданий и протоколы подтверждения грейда с открытыми командами пересчёта.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link to="/demo/warroom" className="np-btn-primary px-3 py-1.5 text-xs">
+        <div className="mt-3.5 flex flex-wrap gap-2">
+          <Link to="/demo/warroom" className="np-btn-grad-crimson px-3.5 py-2 text-xs">
             1. Боевой ИИ-Полигон
           </Link>
-          <Link to="/validation" className="np-btn-ghost px-3 py-1.5 text-xs">
+          <Link to="/validation" className="np-btn-grad-sapphire px-3.5 py-2 text-xs">
             2. Валидация банка
           </Link>
-          <Link to="/criteria" className="np-btn-ghost px-3 py-1.5 text-xs">
+          <Link to="/criteria" className="np-btn-grad-violet px-3.5 py-2 text-xs">
             3. Сверка с ТЗ
           </Link>
           <button
             type="button"
             disabled={off}
             onClick={() => setQr(true)}
-            className="np-btn-ghost px-3 py-1.5 text-xs"
+            className="np-btn-grad-emerald px-3.5 py-2 text-xs"
             title="Как устроено: асимметричная подпись Ed25519"
           >
             4. Цифровой паспорт грейда
           </button>
         </div>
       </div>
-      <div className="rounded-xl border border-emerald-400/25 bg-emerald-950/15 px-4 py-3 text-xs leading-relaxed np-muted md:col-span-2" data-testid="jury-numbers-banner">
-        <b className="np-text">{banner.headline_ru}</b>
-        <ul className="mt-1.5 list-disc space-y-1 pl-4">
-          {claimLines.map((c) => (
-            <li key={String(c)} title={`Точная формулировка метрик: ${String(c)}`}>
-              {plainClaim(String(c))}
-            </li>
-          ))}
-        </ul>
+      <div className="rounded-2xl border border-indigo-400/30 bg-gradient-to-r from-[#0E132E]/90 via-[#13183A]/90 to-[#181234]/90 p-4 text-sm leading-relaxed np-muted md:col-span-2" data-testid="jury-numbers-banner">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-300">
+            Проверенные метрики стенда · единый артефакт docs/NUMBERS.json
+          </span>
+          <Link to="/validation" className="text-xs font-semibold text-indigo-300 hover:text-white hover:underline">
+            Открыть протоколы проверки →
+          </Link>
+        </div>
+        <b className="sr-only">{banner.headline_ru}</b>
+        <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+          {headlineParts.map((part) => {
+            const idx = part.indexOf(":");
+            const k = idx > 0 ? part.slice(0, idx).trim() : "Показатель";
+            const v = idx > 0 ? part.slice(idx + 1).trim() : part;
+            return (
+              <div key={part} className="rounded-xl border border-white/10 bg-white/[0.045] px-3.5 py-2.5 shadow-inner">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-indigo-200/80">{k}</p>
+                <p className="mt-1 text-sm font-extrabold leading-snug text-white">{v}</p>
+              </div>
+            );
+          })}
+        </div>
+        <details className="mt-3 group">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-lg border border-indigo-400/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-semibold text-indigo-200 transition hover:border-indigo-300/60 hover:bg-indigo-500/20 hover:text-white">
+            <span>Подробная сводка протоколов проверки и античита ({claimLines.length})</span>
+            <span className="transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
+          </summary>
+          <ul className="mt-3 grid gap-2.5 md:grid-cols-2">
+            {claimLines.map((c, idx) => (
+              <li
+                key={String(c)}
+                title={`Точная формулировка метрик: ${String(c)}`}
+                className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-xs leading-relaxed text-[#E2E5FF]/90"
+              >
+                <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/30 font-mono text-[10px] font-bold text-indigo-200">
+                  0{idx + 1}
+                </span>
+                {plainClaim(String(c))}
+              </li>
+            ))}
+          </ul>
+        </details>
       </div>
     </div>
   );

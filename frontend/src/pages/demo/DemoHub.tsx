@@ -232,10 +232,10 @@ const CRITERIA_3MIN: {
     id: "c5",
     weight: "6 %",
     title: "5. Полнота реализации и документация",
-    summary: "Что увидите: профиль кандидата без соревновательной истории ФСП, который честно ранжируется по результатам теста без занижения позиции.",
-    hint: "Как считается: при отсутствии записей ФСП вес спортивного контура перераспределяется в пользу практического теста без штрафа кандидату.",
+    summary: "Что увидите: матрицу выполнения всех разделов ТЗ, интерактивную схему архитектуры, документацию по развёртыванию (README) и живую спецификацию OpenAPI (/api/docs).",
+    hint: "Как устроено: пошаговая документация по всем 7 критериям ТЗ, архитектура сервисов, профиль кандидата без истории ФСП (без штрафа) и спецификация /api/docs.",
     actions: [
-      { label: "Открыть профиль без истории ФСП", persona: "candidate_nofsp", to: "/candidate/invitations", testid: "c3m-nofsp", primary: true },
+      { label: "Архитектура, ТЗ и документация", to: "/demo/criteria", testid: "c3m-nofsp", primary: true },
     ],
   },
   {
@@ -556,7 +556,7 @@ export default function DemoHub() {
                     <p className="mt-2 text-xs leading-relaxed np-muted">{c.summary}</p>
                     <p className="mt-1.5 font-mono text-[11px] np-faint">Где открыть: {primaryAction.to ?? "/demo"}</p>
                   </div>
-                  <div className="mt-4 pt-2">
+                  <div className="mt-4 space-y-2 pt-2">
                     <button
                       type="button"
                       disabled={!!busy}
@@ -566,6 +566,16 @@ export default function DemoHub() {
                     >
                       {busy === primaryAction.testid ? "Открываем…" : primaryAction.label}
                     </button>
+                    {c.id === "c5" && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] font-semibold np-accent">
+                        <a href="/api/docs" target="_blank" rel="noreferrer" className="hover:underline" data-testid="c3m-api-docs">
+                          Спецификация /api/docs ↗
+                        </a>
+                        <Link to="/expertise#arch" className="hover:underline" data-testid="c3m-arch-readme">
+                          Архитектура и README →
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </article>
               );

@@ -1,7 +1,7 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T15:38:58Z",
-  "git_commit": "464d57655",
+  "generated_at": "2026-10-21T17:46:14Z",
+  "git_commit": "72e9d124d",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
     "code_and_open_families": 416,
@@ -11037,24 +11037,24 @@
   "matching": {
     "algorithm": "match-v2",
     "p5": {
-      "mean": 0.76,
-      "lo": 0.7276,
-      "hi": 0.7933
+      "mean": 0.7714,
+      "lo": 0.74,
+      "hi": 0.8029
     },
     "p10": {
-      "mean": 0.7214,
-      "lo": 0.69,
-      "hi": 0.7514
+      "mean": 0.7419,
+      "lo": 0.7138,
+      "hi": 0.7695
     },
     "ndcg10": {
-      "mean": 0.6575,
-      "lo": 0.6385,
-      "hi": 0.6762
+      "mean": 0.6595,
+      "lo": 0.6412,
+      "hi": 0.6779
     },
     "mrr": {
-      "mean": 0.8946,
-      "lo": 0.8652,
-      "hi": 0.9251
+      "mean": 0.8636,
+      "lo": 0.8287,
+      "hi": 0.8975
     },
     "top5_any": {
       "mean": 0.981,
@@ -11062,161 +11062,161 @@
       "hi": 0.9952
     },
     "over10": {
-      "mean": 0.0248,
-      "lo": 0.0162,
-      "hi": 0.0343
+      "mean": 0.0281,
+      "lo": 0.0195,
+      "hi": 0.0376
     },
     "ndcg10_linear": {
-      "mean": 0.7755,
-      "lo": 0.7623,
-      "hi": 0.7885
+      "mean": 0.7785,
+      "lo": 0.7663,
+      "hi": 0.7912
     },
     "n_needs": 210,
     "n_worlds": 3,
     "n_candidates": 900,
     "seeds": [
-      77021131,
-      77021132,
-      77021135
+      77021171,
+      77021172,
+      77021173
     ],
     "by_world": [
       {
-        "seed": 77021131,
+        "seed": 77021171,
         "n": 70,
         "m": 900,
-        "p5": 0.7057,
-        "p10": 0.6771,
-        "ndcg10": 0.6431,
-        "mrr": 0.855
+        "p5": 0.76,
+        "p10": 0.7271,
+        "ndcg10": 0.6461,
+        "mrr": 0.8655
       },
       {
-        "seed": 77021132,
+        "seed": 77021172,
         "n": 70,
         "m": 900,
-        "p5": 0.7714,
-        "p10": 0.7329,
-        "ndcg10": 0.6598,
-        "mrr": 0.9167
+        "p5": 0.7629,
+        "p10": 0.7229,
+        "ndcg10": 0.6514,
+        "mrr": 0.8506
       },
       {
-        "seed": 77021135,
+        "seed": 77021173,
         "n": 70,
         "m": 900,
-        "p5": 0.8029,
-        "p10": 0.7543,
-        "ndcg10": 0.6697,
-        "mrr": 0.912
+        "p5": 0.7914,
+        "p10": 0.7757,
+        "ndcg10": 0.6809,
+        "mrr": 0.8748
       }
     ],
     "gain": {
       "bm25": {
         "ndcg10": {
-          "mean": 0.1613,
-          "lo": 0.1371,
-          "hi": 0.1862
+          "mean": 0.1713,
+          "lo": 0.1468,
+          "hi": 0.1952
         },
         "p10": {
-          "mean": 0.261,
-          "lo": 0.231,
-          "hi": 0.2924
+          "mean": 0.2824,
+          "lo": 0.2533,
+          "hi": 0.3124
         },
         "p5": {
-          "mean": 0.2657,
-          "lo": 0.2248,
-          "hi": 0.3067
+          "mean": 0.2724,
+          "lo": 0.2333,
+          "hi": 0.3114
         },
         "mrr": {
-          "mean": 0.193,
-          "lo": 0.1433,
-          "hi": 0.2426
+          "mean": 0.1669,
+          "lo": 0.1162,
+          "hi": 0.2178
         }
       },
       "words_grade": {
         "ndcg10": {
-          "mean": 0.0719,
-          "lo": 0.0436,
-          "hi": 0.1011
+          "mean": 0.1056,
+          "lo": 0.0748,
+          "hi": 0.1368
         },
         "p10": {
-          "mean": 0.1786,
-          "lo": 0.1486,
-          "hi": 0.209
+          "mean": 0.221,
+          "lo": 0.19,
+          "hi": 0.2543
         },
         "p5": {
-          "mean": 0.1324,
-          "lo": 0.0943,
-          "hi": 0.1733
+          "mean": 0.1762,
+          "lo": 0.1371,
+          "hi": 0.2162
         },
         "mrr": {
-          "mean": 0.0469,
-          "lo": 0.0023,
-          "hi": 0.0913
+          "mean": 0.0794,
+          "lo": 0.0323,
+          "hi": 0.1266
         }
       },
       "tfidf_filter": {
         "ndcg10": {
-          "mean": 0.0908,
-          "lo": 0.0694,
-          "hi": 0.1131
+          "mean": 0.1051,
+          "lo": 0.0824,
+          "hi": 0.1271
         },
         "p10": {
-          "mean": 0.1914,
-          "lo": 0.1671,
-          "hi": 0.2176
+          "mean": 0.2057,
+          "lo": 0.181,
+          "hi": 0.2314
         },
         "p5": {
-          "mean": 0.1971,
-          "lo": 0.1581,
-          "hi": 0.2381
+          "mean": 0.2048,
+          "lo": 0.1676,
+          "hi": 0.2429
         },
         "mrr": {
-          "mean": 0.1052,
-          "lo": 0.0587,
-          "hi": 0.1523
+          "mean": 0.11,
+          "lo": 0.0615,
+          "hi": 0.1587
         }
       },
       "random": {
         "ndcg10": {
-          "mean": 0.6188,
-          "lo": 0.5987,
-          "hi": 0.6379
+          "mean": 0.6203,
+          "lo": 0.6,
+          "hi": 0.6399
         },
         "p10": {
-          "mean": 0.6862,
-          "lo": 0.6557,
-          "hi": 0.7171
+          "mean": 0.7129,
+          "lo": 0.6848,
+          "hi": 0.7405
         },
         "p5": {
-          "mean": 0.7257,
-          "lo": 0.6914,
-          "hi": 0.761
+          "mean": 0.7448,
+          "lo": 0.7114,
+          "hi": 0.7781
         },
         "mrr": {
-          "mean": 0.7856,
-          "lo": 0.7478,
-          "hi": 0.8245
+          "mean": 0.7731,
+          "lo": 0.729,
+          "hi": 0.8129
         }
       },
       "match_v13": {
         "ndcg10": {
-          "mean": 0.0541,
-          "lo": 0.0394,
-          "hi": 0.0687
+          "mean": 0.066,
+          "lo": 0.0503,
+          "hi": 0.0814
         },
         "p10": {
-          "mean": 0.0524,
-          "lo": 0.0352,
-          "hi": 0.0695
+          "mean": 0.0757,
+          "lo": 0.0571,
+          "hi": 0.0938
         },
         "p5": {
-          "mean": 0.059,
-          "lo": 0.0333,
-          "hi": 0.0848
+          "mean": 0.0743,
+          "lo": 0.0447,
+          "hi": 0.1038
         },
         "mrr": {
-          "mean": 0.0349,
-          "lo": -0.0022,
-          "hi": 0.0712
+          "mean": 0.014,
+          "lo": -0.024,
+          "hi": 0.0501
         }
       }
     },
@@ -11231,92 +11231,92 @@
     "set": "отложенные миры, один прогон после FREEZE (модели, не люди)",
     "hard": {
       "p5": {
-        "mean": 0.7665,
-        "lo": 0.7425,
-        "hi": 0.79
+        "mean": 0.7595,
+        "lo": 0.7375,
+        "hi": 0.782
       },
       "p10": {
-        "mean": 0.767,
-        "lo": 0.7448,
-        "hi": 0.7868
+        "mean": 0.7235,
+        "lo": 0.703,
+        "hi": 0.7423
       },
       "ndcg10": {
-        "mean": 0.5923,
-        "lo": 0.5738,
-        "hi": 0.6112
+        "mean": 0.5714,
+        "lo": 0.5552,
+        "hi": 0.5877
       },
       "mrr": {
-        "mean": 0.8689,
-        "lo": 0.8441,
-        "hi": 0.8934
+        "mean": 0.8791,
+        "lo": 0.8537,
+        "hi": 0.9031
       },
       "top5_any": {
-        "mean": 0.98,
-        "lo": 0.965,
-        "hi": 0.9925
+        "mean": 0.985,
+        "lo": 0.9725,
+        "hi": 0.995
       },
       "over10": {
-        "mean": 0.0143,
-        "lo": 0.01,
-        "hi": 0.0187
+        "mean": 0.0398,
+        "lo": 0.033,
+        "hi": 0.0468
       },
       "n_needs": 400,
       "condition_ru": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди"
     },
     "with_followup": {
       "p5": {
-        "mean": 0.7838,
-        "lo": 0.7514,
-        "hi": 0.8171
+        "mean": 0.8019,
+        "lo": 0.7714,
+        "hi": 0.8324
       },
       "p10": {
-        "mean": 0.7286,
-        "lo": 0.6981,
-        "hi": 0.76
+        "mean": 0.7471,
+        "lo": 0.7195,
+        "hi": 0.7748
       },
       "ndcg10": {
-        "mean": 0.6647,
-        "lo": 0.6474,
-        "hi": 0.6818
+        "mean": 0.6701,
+        "lo": 0.6524,
+        "hi": 0.6879
       },
       "mrr": {
-        "mean": 0.9039,
-        "lo": 0.8705,
-        "hi": 0.9333
+        "mean": 0.9017,
+        "lo": 0.8691,
+        "hi": 0.9308
       },
       "top5_any": {
-        "mean": 0.9857,
-        "lo": 0.9667,
+        "mean": 0.9952,
+        "lo": 0.9857,
         "hi": 1.0
       },
       "over10": {
-        "mean": 0.0238,
-        "lo": 0.0157,
-        "hi": 0.0338
+        "mean": 0.0286,
+        "lo": 0.02,
+        "hi": 0.039
       },
       "n_needs": 210,
       "condition_ru": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, 9 направлений; тест у всех (погрешность 0,363 — средняя SE нашего теста), в 35 % резюме по 4 ложных навыка; метка 0–3 (точный грейд и ≥ 75 % обязательных навыков — 3); модели, не люди; сценарий: работодатель отправил короткие задания первым 20 с неподтверждёнными навыками, ответили 50 %"
     },
     "hard_with_followup": {
       "p5": {
-        "mean": 0.8135,
-        "lo": 0.7905,
-        "hi": 0.836
+        "mean": 0.7995,
+        "lo": 0.7775,
+        "hi": 0.8205
       },
       "p10": {
-        "mean": 0.7863,
-        "lo": 0.7647,
-        "hi": 0.806
+        "mean": 0.7525,
+        "lo": 0.7323,
+        "hi": 0.7712
       },
       "ndcg10": {
-        "mean": 0.628,
-        "lo": 0.6098,
-        "hi": 0.6469
+        "mean": 0.6103,
+        "lo": 0.5928,
+        "hi": 0.6271
       },
       "mrr": {
-        "mean": 0.8968,
-        "lo": 0.8748,
-        "hi": 0.9191
+        "mean": 0.9083,
+        "lo": 0.8852,
+        "hi": 0.9304
       },
       "top5_any": {
         "mean": 0.9875,
@@ -11324,21 +11324,43 @@
         "hi": 0.9975
       },
       "over10": {
-        "mean": 0.0145,
-        "lo": 0.0102,
-        "hi": 0.019
+        "mean": 0.0308,
+        "lo": 0.0248,
+        "hi": 0.0367
       },
       "n_needs": 400,
       "condition_ru": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди; с дозапросом, ответили 50 %"
     },
-    "freeze_sha256": "991271d5dc87435c12bcaa8e751bdbecde583b9cbee02d219488351c69f896d7",
-    "git_head": "9a00160668978273d81e6809ec6c3449be6c8c00",
-    "protocol": "docs/realdata/bench_holdout2_PROTOCOL.md",
-    "generated_at": "2026-10-21T14:38:56+00:00",
+    "freeze_sha256": "dcfffef39515db49abe457d8fca8d5c3b01a4099c354eceaf4b6c528c5f1af1c",
+    "git_head": "4d104eb4e0bd23054e1a2ff6f5fc12d8510a3ba7",
+    "protocol": "docs/realdata/bench_holdout4_PROTOCOL.md",
+    "generated_at": "2026-10-21T16:20:00+00:00",
     "what": "Бенчмарк подбора match-v2 на отложенных мирах (один прогон после FREEZE)",
-    "recompute": "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
-    "code_ref": "tools/realdata/bench_holdout2.py",
-    "artifact": "docs/realdata/bench_holdout2.json → docs/realdata/numbers_matching.json"
+    "recompute": "python3 tools/realdata/bench_holdout4.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
+    "code_ref": "tools/realdata/bench_holdout4.py",
+    "artifact": "docs/realdata/bench_holdout4.json → docs/realdata/numbers_matching.json",
+    "history": [
+      {
+        "cycle": 3,
+        "git_head": "9a00160668978273d81e6809ec6c3449be6c8c00",
+        "run_at": "2026-10-21T14:38:56+00:00",
+        "p5": {
+          "mean": 0.76,
+          "lo": 0.7276,
+          "hi": 0.7933
+        },
+        "ndcg10": {
+          "mean": 0.6575,
+          "lo": 0.6385,
+          "hi": 0.6762
+        },
+        "mrr": {
+          "mean": 0.8946,
+          "lo": 0.8652,
+          "hi": 0.9251
+        }
+      }
+    ]
   },
   "external_benchmarks": {
     "djinni": {
@@ -11459,147 +11481,289 @@
       "claim_ru": "Внешний открытый набор вакансий и анкет (не наши данные, метки-посредники, не люди): nDCG@10 0,585 [0,525; 0,643], выше BM25 на 0,253 — один прогон после фиксации протокола"
     },
     "devdev_1to1": {
-      "condition_ru": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3",
+      "condition_ru": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код 4d104eb4e, FREEZE 85636ffa",
       "note_ru": "exact — только при выборе работодателем «строго запрошенный грейд» (опция API, создана и выбрана на зёрнах разработки 1–3 этого генератора); главная строка — main",
       "main": {
         "ndcg10": {
-          "ours": 0.7808,
+          "ours": 0.7904,
           "ours_ci95": [
-            0.7667,
-            0.7944
+            0.7743,
+            0.8067
           ],
-          "other": 0.8415,
-          "diff": -0.0608,
+          "other": 0.8405,
+          "diff": -0.0502,
           "diff_ci95": [
-            -0.0757,
-            -0.0467
+            -0.0655,
+            -0.0352
           ]
         },
         "p5": {
-          "ours": 0.6842,
+          "ours": 0.6883,
           "ours_ci95": [
-            0.6567,
-            0.7108
+            0.6608,
+            0.7158
           ],
-          "other": 0.7525,
-          "diff": -0.0683,
+          "other": 0.7558,
+          "diff": -0.0675,
           "diff_ci95": [
-            -0.0967,
-            -0.0408
+            -0.0958,
+            -0.0375
           ]
         },
         "p10": {
-          "ours": 0.6754,
+          "ours": 0.6825,
           "ours_ci95": [
-            0.6571,
-            0.6954
+            0.6617,
+            0.7042
           ],
-          "other": 0.7617,
-          "diff": -0.0863,
+          "other": 0.7575,
+          "diff": -0.075,
           "diff_ci95": [
-            -0.1046,
-            -0.0683
+            -0.0933,
+            -0.0563
           ]
         },
         "rr": {
-          "ours": 0.8278,
+          "ours": 0.7757,
           "ours_ci95": [
-            0.7941,
-            0.8608
+            0.7413,
+            0.8125
           ],
-          "other": 0.8424,
-          "diff": -0.0146,
+          "other": 0.8264,
+          "diff": -0.0507,
           "diff_ci95": [
-            -0.0618,
-            0.0347
+            -0.0934,
+            -0.0069
           ]
         },
         "overrated10": {
-          "ours": 0.0638,
+          "ours": 0.0646,
           "ours_ci95": [
-            0.0467,
-            0.0829
+            0.0492,
+            0.0817
           ],
-          "other": 0.0658,
-          "diff": -0.0021,
+          "other": 0.0875,
+          "diff": -0.0229,
           "diff_ci95": [
-            -0.0125,
-            0.0079
+            -0.0321,
+            -0.0146
           ]
         }
       },
       "exact_option_api": {
         "ndcg10": {
-          "ours": 0.8628,
+          "ours": 0.8679,
           "ours_ci95": [
-            0.8491,
-            0.8752
+            0.8554,
+            0.8803
           ],
-          "other": 0.8415,
-          "diff": 0.0213,
+          "other": 0.8405,
+          "diff": 0.0274,
           "diff_ci95": [
-            0.0057,
-            0.0364
+            0.016,
+            0.0385
           ]
         },
         "p5": {
-          "ours": 0.835,
+          "ours": 0.8133,
           "ours_ci95": [
-            0.815,
-            0.8558
+            0.79,
+            0.835
           ],
-          "other": 0.7525,
-          "diff": 0.0825,
+          "other": 0.7558,
+          "diff": 0.0575,
           "diff_ci95": [
-            0.055,
-            0.11
+            0.0317,
+            0.0842
           ]
         },
         "p10": {
-          "ours": 0.7829,
+          "ours": 0.7762,
           "ours_ci95": [
-            0.7642,
-            0.8021
+            0.7554,
+            0.7963
           ],
-          "other": 0.7617,
-          "diff": 0.0213,
+          "other": 0.7575,
+          "diff": 0.0187,
           "diff_ci95": [
-            0.0038,
-            0.0387
+            0.0042,
+            0.0333
           ]
         },
         "rr": {
-          "ours": 0.9101,
+          "ours": 0.8955,
           "ours_ci95": [
-            0.8833,
-            0.9344
+            0.8681,
+            0.9226
           ],
-          "other": 0.8424,
-          "diff": 0.0677,
+          "other": 0.8264,
+          "diff": 0.0691,
           "diff_ci95": [
-            0.0316,
-            0.1059
+            0.0271,
+            0.109
           ]
         },
         "overrated10": {
-          "ours": 0.0913,
+          "ours": 0.0979,
           "ours_ci95": [
-            0.0737,
-            0.1087
+            0.0817,
+            0.1154
           ],
-          "other": 0.0658,
-          "diff": 0.0254,
+          "other": 0.0875,
+          "diff": 0.0104,
           "diff_ci95": [
-            0.015,
-            0.0358
+            0.0008,
+            0.0196
           ]
         }
       },
       "exact_is_api_option": true,
-      "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+      "recompute": "python3 tools/realdata/devdev/devdev_1to1_4.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
       "source": "docs/realdata/numbers_devdev.json ← docs/realdata/devdev_1to1.json",
-      "checked_by": "А15, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
-      "claim_ru": "На открытом генераторе другого решения (MIT; его тест, его метки, синтетика — модели, не люди; отложенные зёрна, один прогон после FREEZE): наш подбор по умолчанию — nDCG@10 0,781 [0,767; 0,794] против 0,842 у его ранжировщика (разность −0,061 [−0,076; −0,047]) — ниже. В режиме «строго запрошенный грейд» (опция API, выбрана на зёрнах разработки этого генератора) — 0,863 (+0,021 [0,006; 0,036]); цена — переоценённых в топ-10 9,1 % против 6,6 %."
+      "checked_by": "А15, пересчёт в чистом клоне FREEZE 4d104eb4e0 — 0 расхождений",
+      "claim_ru": "На открытом генераторе другого решения (MIT; его тест, его метки, синтетика — модели, не люди; отложенные зёрна, один прогон после FREEZE): наш подбор по умолчанию — nDCG@10 0,790 [0,774; 0,807] против 0,841 у его ранжировщика (разность −0,050 [−0,066; −0,035]) — ниже; переоценённых в топ-10 — 6,5 % против 8,8 %. В режиме «строго запрошенный грейд» (опция API, выбрана на зёрнах разработки этого генератора) — 0,868 (+0,027 [0,016; 0,038]); цена — переоценённых в топ-10 9,8 % против 8,8 %.",
+      "cycle": 4,
+      "on_screen": false,
+      "history": [
+        {
+          "cycle": 3,
+          "main": {
+            "ndcg10": {
+              "ours": 0.7808,
+              "ours_ci95": [
+                0.7667,
+                0.7944
+              ],
+              "other": 0.8415,
+              "diff": -0.0608,
+              "diff_ci95": [
+                -0.0757,
+                -0.0467
+              ]
+            },
+            "p5": {
+              "ours": 0.6842,
+              "ours_ci95": [
+                0.6567,
+                0.7108
+              ],
+              "other": 0.7525,
+              "diff": -0.0683,
+              "diff_ci95": [
+                -0.0967,
+                -0.0408
+              ]
+            },
+            "p10": {
+              "ours": 0.6754,
+              "ours_ci95": [
+                0.6571,
+                0.6954
+              ],
+              "other": 0.7617,
+              "diff": -0.0863,
+              "diff_ci95": [
+                -0.1046,
+                -0.0683
+              ]
+            },
+            "rr": {
+              "ours": 0.8278,
+              "ours_ci95": [
+                0.7941,
+                0.8608
+              ],
+              "other": 0.8424,
+              "diff": -0.0146,
+              "diff_ci95": [
+                -0.0618,
+                0.0347
+              ]
+            },
+            "overrated10": {
+              "ours": 0.0638,
+              "ours_ci95": [
+                0.0467,
+                0.0829
+              ],
+              "other": 0.0658,
+              "diff": -0.0021,
+              "diff_ci95": [
+                -0.0125,
+                0.0079
+              ]
+            }
+          },
+          "exact_option_api": {
+            "ndcg10": {
+              "ours": 0.8628,
+              "ours_ci95": [
+                0.8491,
+                0.8752
+              ],
+              "other": 0.8415,
+              "diff": 0.0213,
+              "diff_ci95": [
+                0.0057,
+                0.0364
+              ]
+            },
+            "p5": {
+              "ours": 0.835,
+              "ours_ci95": [
+                0.815,
+                0.8558
+              ],
+              "other": 0.7525,
+              "diff": 0.0825,
+              "diff_ci95": [
+                0.055,
+                0.11
+              ]
+            },
+            "p10": {
+              "ours": 0.7829,
+              "ours_ci95": [
+                0.7642,
+                0.8021
+              ],
+              "other": 0.7617,
+              "diff": 0.0213,
+              "diff_ci95": [
+                0.0038,
+                0.0387
+              ]
+            },
+            "rr": {
+              "ours": 0.9101,
+              "ours_ci95": [
+                0.8833,
+                0.9344
+              ],
+              "other": 0.8424,
+              "diff": 0.0677,
+              "diff_ci95": [
+                0.0316,
+                0.1059
+              ]
+            },
+            "overrated10": {
+              "ours": 0.0913,
+              "ours_ci95": [
+                0.0737,
+                0.1087
+              ],
+              "other": 0.0658,
+              "diff": 0.0254,
+              "diff_ci95": [
+                0.015,
+                0.0358
+              ]
+            }
+          },
+          "condition_ru": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3"
+        }
+      ]
     }
   },
   "fsp_facts": {
@@ -11610,6 +11774,570 @@
     "checked_at": "2026-10-21",
     "what": "внешний факт (сайт ФСП), не измерение платформы",
     "artifact": "docs/validation/fsp_facts.json"
+  },
+  "hh_demand": {
+    "as_of": "2026-10-10T17:24:37+00:00",
+    "source": "api.hh.ru GET /vacancies (found)",
+    "method": "Число открытых вакансий в поиске hh.ru на дату: профессиональная роль + слова направления в названии (backend/app/modules/hh/directions.py); грейд — слово грейда в названии; «без опыта» — experience=noExperience. Для общих ролей («Программист, разработчик» и др.) это нижняя оценка: вакансия считается, только если слово направления есть в названии. Направления пересекаются мало (слова-исключения), но не нулём. Это поиск API hh.ru для приложения; на сайте hh.ru число может отличаться.",
+    "directions": {
+      "backend": {
+        "title": "Backend",
+        "russia": 1344,
+        "moscow": 781,
+        "spb": 195,
+        "with_salary_russia": 404,
+        "no_experience": 63,
+        "by_grade_title": {
+          "intern": 27,
+          "junior": 53,
+          "middle": 115,
+          "senior": 413
+        }
+      },
+      "frontend": {
+        "title": "Frontend",
+        "russia": 199,
+        "moscow": 123,
+        "spb": 19,
+        "with_salary_russia": 76,
+        "no_experience": 15,
+        "by_grade_title": {
+          "intern": 12,
+          "junior": 3,
+          "middle": 13,
+          "senior": 47
+        }
+      },
+      "qa": {
+        "title": "QA",
+        "russia": 956,
+        "moscow": 560,
+        "spb": 114,
+        "with_salary_russia": 237,
+        "no_experience": 76,
+        "by_grade_title": {
+          "intern": 38,
+          "junior": 45,
+          "middle": 55,
+          "senior": 156
+        }
+      },
+      "data_ml": {
+        "title": "Data/ML",
+        "russia": 377,
+        "moscow": 297,
+        "spb": 27,
+        "with_salary_russia": 51,
+        "no_experience": 9,
+        "by_grade_title": {
+          "intern": 6,
+          "junior": 7,
+          "middle": 28,
+          "senior": 126
+        }
+      },
+      "security": {
+        "title": "Информационная безопасность",
+        "russia": 1953,
+        "moscow": 886,
+        "spb": 188,
+        "with_salary_russia": 750,
+        "no_experience": 119,
+        "by_grade_title": {
+          "intern": 10,
+          "junior": 38,
+          "middle": 13,
+          "senior": 523
+        }
+      },
+      "devops": {
+        "title": "DevOps / SRE",
+        "russia": 679,
+        "moscow": 445,
+        "spb": 73,
+        "with_salary_russia": 152,
+        "no_experience": 27,
+        "by_grade_title": {
+          "intern": 12,
+          "junior": 22,
+          "middle": 23,
+          "senior": 130
+        }
+      },
+      "data_eng": {
+        "title": "Инженер данных",
+        "russia": 249,
+        "moscow": 197,
+        "spb": 15,
+        "with_salary_russia": 39,
+        "no_experience": 11,
+        "by_grade_title": {
+          "intern": 3,
+          "junior": 5,
+          "middle": 10,
+          "senior": 39
+        }
+      },
+      "mobile": {
+        "title": "Мобильная разработка",
+        "russia": 117,
+        "moscow": 79,
+        "spb": 14,
+        "with_salary_russia": 32,
+        "no_experience": 4,
+        "by_grade_title": {
+          "intern": 0,
+          "junior": 0,
+          "middle": 12,
+          "senior": 25
+        }
+      },
+      "analyst": {
+        "title": "Системный / бизнес-аналитик",
+        "russia": 1713,
+        "moscow": 1112,
+        "spb": 189,
+        "with_salary_russia": 457,
+        "no_experience": 88,
+        "by_grade_title": {
+          "intern": 29,
+          "junior": 43,
+          "middle": 25,
+          "senior": 309
+        }
+      }
+    },
+    "artifact": "backend/app/modules/hh/data/demand.json",
+    "recompute": "python tools/realdata/hh_plus.py demand"
+  },
+  "history": {
+    "matching_dev_bench_v1": {
+      "what": "прежний бенчмарк разработки v1 (набор разработки; заголовок подбора — отложенная проверка, блок matching)",
+      "metrics": {
+        "platform": {
+          "p@5": 0.751,
+          "p@10": 0.725,
+          "mrr": 0.896,
+          "ndcg@10": 0.566,
+          "recall@30": 0.24
+        },
+        "bm25": {
+          "p@5": 0.441,
+          "p@10": 0.432,
+          "mrr": 0.658,
+          "ndcg@10": 0.399,
+          "recall@30": 0.133
+        },
+        "keywords_grade": {
+          "p@5": 0.34,
+          "p@10": 0.359,
+          "mrr": 0.507,
+          "ndcg@10": 0.389,
+          "recall@30": 0.151
+        },
+        "random": {
+          "p@5": 0.052,
+          "p@10": 0.053,
+          "mrr": 0.158,
+          "ndcg@10": 0.049,
+          "recall@30": 0.015
+        },
+        "no_test": {
+          "p@5": 0.314,
+          "p@10": 0.36,
+          "mrr": 0.474,
+          "ndcg@10": 0.385,
+          "recall@30": 0.149
+        },
+        "grade_only": {
+          "p@5": 0.553,
+          "p@10": 0.556,
+          "mrr": 0.719,
+          "ndcg@10": 0.425,
+          "recall@30": 0.204
+        },
+        "no_fsp": {
+          "p@5": 0.768,
+          "p@10": 0.73,
+          "mrr": 0.892,
+          "ndcg@10": 0.574,
+          "recall@30": 0.241
+        },
+        "no_theta": {
+          "p@5": 0.72,
+          "p@10": 0.698,
+          "mrr": 0.88,
+          "ndcg@10": 0.549,
+          "recall@30": 0.236
+        },
+        "no_stack": {
+          "p@5": 0.741,
+          "p@10": 0.718,
+          "mrr": 0.879,
+          "ndcg@10": 0.559,
+          "recall@30": 0.24
+        },
+        "no_tier": {
+          "p@5": 0.507,
+          "p@10": 0.472,
+          "mrr": 0.696,
+          "ndcg@10": 0.404,
+          "recall@30": 0.144
+        },
+        "no_guard": {
+          "p@5": 0.819,
+          "p@10": 0.779,
+          "mrr": 0.904,
+          "ndcg@10": 0.648,
+          "recall@30": 0.257
+        }
+      },
+      "groups": {
+        "fsp": {
+          "platform": {
+            "with_fsp_percentile": 0.1238,
+            "without_fsp_percentile": 0.1437,
+            "without_fsp_share_of_relevant_top10": 0.552
+          },
+          "no_fsp": {
+            "with_fsp_percentile": 0.1363,
+            "without_fsp_percentile": 0.1368,
+            "without_fsp_share_of_relevant_top10": 0.66
+          },
+          "bm25": {
+            "with_fsp_percentile": 0.1124,
+            "without_fsp_percentile": 0.1056,
+            "without_fsp_share_of_relevant_top10": 0.667
+          },
+          "no_test": {
+            "with_fsp_percentile": 0.1095,
+            "without_fsp_percentile": 0.0974,
+            "without_fsp_share_of_relevant_top10": 0.721
+          },
+          "without_fsp_share_of_all_relevant": 0.664
+        },
+        "inflated": {
+          "platform": {
+            "irrelevant_inflated_top10": 0.069,
+            "inflated_top10": 0.203
+          },
+          "bm25": {
+            "irrelevant_inflated_top10": 0.3195,
+            "inflated_top10": 0.421
+          },
+          "keywords_grade": {
+            "irrelevant_inflated_top10": 0.5895,
+            "inflated_top10": 0.646
+          },
+          "no_test": {
+            "irrelevant_inflated_top10": 0.584,
+            "inflated_top10": 0.64
+          },
+          "no_guard": {
+            "irrelevant_inflated_top10": 0.1715,
+            "inflated_top10": 0.4985
+          },
+          "population_share": 0.198
+        },
+        "modest": {
+          "platform": {
+            "relevant_modest_percentile": 0.1288
+          },
+          "bm25": {
+            "relevant_modest_percentile": 0.1995
+          },
+          "keywords_grade": {
+            "relevant_modest_percentile": 0.2032
+          },
+          "no_test": {
+            "relevant_modest_percentile": 0.1961
+          },
+          "no_guard": {
+            "relevant_modest_percentile": 0.1276
+          }
+        }
+      },
+      "paired_platform_minus": {
+        "bm25": {
+          "p@5": {
+            "mean": 0.31,
+            "lo": 0.265,
+            "hi": 0.357
+          },
+          "p@10": {
+            "mean": 0.294,
+            "lo": 0.258,
+            "hi": 0.33
+          },
+          "ndcg@10": {
+            "mean": 0.168,
+            "lo": 0.138,
+            "hi": 0.196
+          },
+          "mrr": {
+            "mean": 0.238,
+            "lo": 0.181,
+            "hi": 0.293
+          },
+          "recall@30": {
+            "mean": 0.107,
+            "lo": 0.09,
+            "hi": 0.127
+          }
+        },
+        "keywords_grade": {
+          "p@5": {
+            "mean": 0.411,
+            "lo": 0.358,
+            "hi": 0.464
+          },
+          "p@10": {
+            "mean": 0.367,
+            "lo": 0.318,
+            "hi": 0.415
+          },
+          "ndcg@10": {
+            "mean": 0.177,
+            "lo": 0.141,
+            "hi": 0.213
+          },
+          "mrr": {
+            "mean": 0.389,
+            "lo": 0.338,
+            "hi": 0.438
+          },
+          "recall@30": {
+            "mean": 0.09,
+            "lo": 0.074,
+            "hi": 0.106
+          }
+        },
+        "random": {
+          "p@5": {
+            "mean": 0.699,
+            "lo": 0.664,
+            "hi": 0.732
+          },
+          "p@10": {
+            "mean": 0.673,
+            "lo": 0.644,
+            "hi": 0.701
+          },
+          "ndcg@10": {
+            "mean": 0.518,
+            "lo": 0.491,
+            "hi": 0.543
+          },
+          "mrr": {
+            "mean": 0.738,
+            "lo": 0.705,
+            "hi": 0.769
+          },
+          "recall@30": {
+            "mean": 0.226,
+            "lo": 0.205,
+            "hi": 0.249
+          }
+        },
+        "no_test": {
+          "p@5": {
+            "mean": 0.437,
+            "lo": 0.38,
+            "hi": 0.492
+          },
+          "p@10": {
+            "mean": 0.366,
+            "lo": 0.318,
+            "hi": 0.415
+          },
+          "ndcg@10": {
+            "mean": 0.182,
+            "lo": 0.143,
+            "hi": 0.22
+          },
+          "mrr": {
+            "mean": 0.422,
+            "lo": 0.359,
+            "hi": 0.479
+          },
+          "recall@30": {
+            "mean": 0.091,
+            "lo": 0.076,
+            "hi": 0.107
+          }
+        },
+        "grade_only": {
+          "p@5": {
+            "mean": 0.198,
+            "lo": 0.17,
+            "hi": 0.224
+          },
+          "p@10": {
+            "mean": 0.17,
+            "lo": 0.15,
+            "hi": 0.189
+          },
+          "ndcg@10": {
+            "mean": 0.142,
+            "lo": 0.127,
+            "hi": 0.157
+          },
+          "mrr": {
+            "mean": 0.178,
+            "lo": 0.149,
+            "hi": 0.207
+          },
+          "recall@30": {
+            "mean": 0.036,
+            "lo": 0.032,
+            "hi": 0.041
+          }
+        },
+        "no_fsp": {
+          "p@5": {
+            "mean": -0.017,
+            "lo": -0.032,
+            "hi": -0.003
+          },
+          "p@10": {
+            "mean": -0.005,
+            "lo": -0.013,
+            "hi": 0.004
+          },
+          "ndcg@10": {
+            "mean": -0.008,
+            "lo": -0.014,
+            "hi": -0.001
+          },
+          "mrr": {
+            "mean": 0.004,
+            "lo": -0.02,
+            "hi": 0.026
+          },
+          "recall@30": {
+            "mean": -0.001,
+            "lo": -0.002,
+            "hi": 0.001
+          }
+        },
+        "no_theta": {
+          "p@5": {
+            "mean": 0.031,
+            "lo": 0.011,
+            "hi": 0.053
+          },
+          "p@10": {
+            "mean": 0.028,
+            "lo": 0.014,
+            "hi": 0.041
+          },
+          "ndcg@10": {
+            "mean": 0.017,
+            "lo": 0.008,
+            "hi": 0.026
+          },
+          "mrr": {
+            "mean": 0.017,
+            "lo": -0.009,
+            "hi": 0.042
+          },
+          "recall@30": {
+            "mean": 0.004,
+            "lo": 0.002,
+            "hi": 0.006
+          }
+        },
+        "no_stack": {
+          "p@5": {
+            "mean": 0.01,
+            "lo": -0.004,
+            "hi": 0.025
+          },
+          "p@10": {
+            "mean": 0.007,
+            "lo": -0.001,
+            "hi": 0.017
+          },
+          "ndcg@10": {
+            "mean": 0.007,
+            "lo": 0.0,
+            "hi": 0.014
+          },
+          "mrr": {
+            "mean": 0.017,
+            "lo": -0.007,
+            "hi": 0.042
+          },
+          "recall@30": {
+            "mean": 0.0,
+            "lo": -0.001,
+            "hi": 0.002
+          }
+        },
+        "no_tier": {
+          "p@5": {
+            "mean": 0.244,
+            "lo": 0.198,
+            "hi": 0.289
+          },
+          "p@10": {
+            "mean": 0.253,
+            "lo": 0.213,
+            "hi": 0.294
+          },
+          "ndcg@10": {
+            "mean": 0.163,
+            "lo": 0.134,
+            "hi": 0.191
+          },
+          "mrr": {
+            "mean": 0.2,
+            "lo": 0.151,
+            "hi": 0.25
+          },
+          "recall@30": {
+            "mean": 0.097,
+            "lo": 0.081,
+            "hi": 0.115
+          }
+        },
+        "no_guard": {
+          "p@5": {
+            "mean": -0.068,
+            "lo": -0.097,
+            "hi": -0.038
+          },
+          "p@10": {
+            "mean": -0.054,
+            "lo": -0.075,
+            "hi": -0.032
+          },
+          "ndcg@10": {
+            "mean": -0.082,
+            "lo": -0.1,
+            "hi": -0.065
+          },
+          "mrr": {
+            "mean": -0.008,
+            "lo": -0.043,
+            "hi": 0.024
+          },
+          "recall@30": {
+            "mean": -0.017,
+            "lo": -0.021,
+            "hi": -0.013
+          }
+        }
+      },
+      "world": {
+        "n_needs": 200,
+        "n_candidates": 2000,
+        "relevant_per_need_mean": 106.7
+      },
+      "generated_at": "2026-10-20T07:41:58+00:00",
+      "artifact": "backend/app/modules/validation/data/matching_bench.json",
+      "recompute": "cd backend && python -m app.modules.validation.matching_bench"
+    }
   },
   "hh_match": {
     "direction_ok": {
@@ -11734,9 +12462,9 @@
       },
       "place_unverified": 4,
       "what": "Официальные протоколы ФСП России 2025–2026 (fsp-russia.ru/about/documents): результаты, привязанные к соревнованиям; судьи, тренеры и строки справок исключены; норматив ЕВСК — по месту, числу субъектов РФ и составу судейской коллегии.",
-      "generated_at": "2026-10-21T11:39:47+00:00",
-      "index": "index_v6.json",
-      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "generated_at": "2026-10-21T14:26:19+00:00",
+      "index": "index_v7.json",
+      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/build_index_v2.py, backend/app/modules/fsp/evsk.py, backend/app/modules/fsp/protocol_stats.py"
     },
     "ocr_audit": {
@@ -11855,7 +12583,7 @@
       },
       "results_needing_second_result": 84
     },
-    "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+    "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
     "code_ref": "tools/fsp_protocols/"
   },
   "mutation_testing": {
@@ -12163,33 +12891,33 @@
     {
       "id": "matching_p5",
       "eyebrow": "Точность топ-5 подбора (P@5)",
-      "value": "76,0",
+      "value": "77,1",
       "accent": "%",
-      "subtext": "95 % ДИ 72,8–79,3 %, nDCG@10 0,66 · стандартные условия: 210 потребностей в 3 отложенных мирах × 900 кандидатов; жёсткие: P@5 76,6 %, nDCG@10 0,59 · один прогон, модели, не люди",
+      "subtext": "95 % ДИ 74,0–80,3 %, качество порядка 0,66 · стандартные условия: 210 потребностей в 3 отложенных мирах × 900 кандидатов; жёсткие: 75,9 %, качество порядка 0,57 · один прогон, модели, не люди",
       "pair": {
         "st": {
           "label_ru": "Как в аналогичных решениях",
-          "value": "76,0",
+          "value": "77,1",
           "accent": "%"
         },
         "hard": {
           "label_ru": "Проверка на прочность — строже",
-          "value": "76,6",
+          "value": "75,9",
           "accent": "%"
         }
       },
       "provenance": "бенчмарк подбора, 2026-10-21",
-      "recompute": "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
-      "code_ref": "tools/realdata/bench_holdout2.py"
+      "recompute": "python3 tools/realdata/bench_holdout4.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
+      "code_ref": "tools/realdata/bench_holdout4.py"
     },
     {
       "id": "fsp_protocols",
       "eyebrow": "Официальные протоколы ФСП",
       "value": "18",
       "accent": "документов",
-      "subtext": "2 908 результатов · 2 232 спортсменов · 69 регионов · норматив разряда по ЕВСК подтверждён протоколом у 130 · проверка распознавания: ошибок в ФИО — 1 из 155, в местах — 0 из 149, в датах рождения — 0 из 133 — кандидат находит своё достижение в официальном протоколе, подтверждение — через ФСП",
+      "subtext": "2 908 результатов · 2 232 спортсменов · 69 регионов · норматив разряда по ЕВСК подтверждён протоколом у 130 · проверка распознавания (аудит индекса v5, найденные ошибки исправлены в следующих версиях): ошибок в ФИО — 1 из 155, в местах — 0 из 149, в датах рождения — 0 из 133 — кандидат находит своё достижение в официальном протоколе, подтверждение — через ФСП",
       "provenance": "индекс протоколов, 2026-10-21",
-      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/"
     },
     {
@@ -12394,7 +13122,7 @@
     },
     {
       "id": "retest_kappa_w",
-      "label_ru": "Повтор теста (κw)",
+      "label_ru": "Повтор теста: согласие двух попыток (взвешенная каппа)",
       "value": 0.8515,
       "display_ru": "0,85",
       "ci95": [
@@ -12658,7 +13386,7 @@
     },
     {
       "id": "retest_kappa_w",
-      "label_ru": "Повтор теста (κw)",
+      "label_ru": "Повтор теста: согласие двух попыток (взвешенная каппа)",
       "value": 0.9057,
       "display_ru": "0,91",
       "ci95": [
@@ -12797,8 +13525,10 @@
       "git_commit": "b94a01e93+a3",
       "condition_ru": "жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, консервативные параметры банка (a = 1,0 / 1,3); модельные кандидаты, не люди; N = 3 000, зёрна 4401…4410; время — в среднем 45 мин (p90 81); банк ab16d27 (913ad19f6a259aff), 2026-10-21"
     },
-    "standard_condition_ru": "стандартные условия (как в аналогичных решениях): a = 1,5 в движке, истинные a × U(0,825; 1,175) и b + N(0; 0,3), угадывание 0,25 в вопросах с выбором и 0,02 в остальных, θ ~ N(0,5; 1,0), заявки: 65 % точные, 25 % завышены, 10 % занижены; модельные кандидаты, не люди; N = 3 000, зёрна 5501…5510; время — в среднем 43 мин (p90 69); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
-    "hard_condition_ru": "жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, консервативные параметры банка (a = 1,0 / 1,3); модельные кандидаты, не люди; N = 3 000, зёрна 4401…4410; время — в среднем 45 мин (p90 81); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+    "standard_condition_ru": "Как в аналогичных решениях: те же допущения о заданиях и кандидатах, что у других решений, часть заявок завышена на ступень; модельные кандидаты, не люди; N = 3 000; время — в среднем 43 мин (у 90 % — до 69).",
+    "hard_condition_ru": "Проверка на прочность — строже: угадывание в вопросах с выбором, больше завышенных и заниженных заявок, кандидаты у самых порогов, осторожные параметры заданий; модельные кандидаты, не люди; N = 3 000; время — в среднем 45 мин (у 90 % — до 81).",
+    "standard_condition_tech_ru": "стандартные условия (как в аналогичных решениях): a = 1,5 в движке, истинные a × U(0,825; 1,175) и b + N(0; 0,3), угадывание 0,25 в вопросах с выбором и 0,02 в остальных, θ ~ N(0,5; 1,0), заявки: 65 % точные, 25 % завышены, 10 % занижены; модельные кандидаты, не люди; N = 3 000, зёрна 5501…5510; время — в среднем 43 мин (p90 69); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+    "hard_condition_tech_ru": "жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, консервативные параметры банка (a = 1,0 / 1,3); модельные кандидаты, не люди; N = 3 000, зёрна 4401…4410; время — в среднем 45 мин (p90 81); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
     "bank_hash": "913ad19f6a259aff",
     "bank_commit": "ab16d27",
     "bank_families": 1646,
@@ -12807,7 +13537,7 @@
     "rule_ru": "Заголовок — стандартные условия (как в аналогичных решениях), рядом — те же метрики в жёстких условиях; обе строки всегда вместе (решение владельца 21.10, записано до прогонов)."
   },
   "jury_banner": {
-    "headline_ru": "Банк заданий: 1 646 семейств · Точность уверенного вердикта по грейду: 88,1 % · Точность топ-5 подбора (P@5): 76,0 % · Официальные протоколы ФСП: 18 документов · Реальные вакансии hh.ru: 336 отложенных из 1 289 собранных вакансий hh.ru",
+    "headline_ru": "Банк заданий: 1 646 семейств · Точность уверенного вердикта по грейду: 88,1 % · Точность топ-5 подбора (P@5): 77,1 % · Официальные протоколы ФСП: 18 документов · Реальные вакансии hh.ru: 336 отложенных из 1 289 собранных вакансий hh.ru",
     "claims_ru": {
       "provenance": "Каждая цифра на сайте — из JSON-артефакта с командой пересчёта и ссылкой на код (docs/NUMBERS.json).",
       "grade": "Симуляция продукта — тот же движок и банк, что на стенде; модельные кандидаты, не люди; один прогон на отложенных зёрнах после выбора настроек на обучающих. Стандартные условия (как в аналогичных решениях, N = 3 000): точность уверенного вердикта 88,1 % при доле уверенных 95,5 % (верный вердикт по всем, включая «нужен доп. этап», — 84,8 %), ложное подтверждение 2,1 % всех кандидатов, точный грейд 77,6 % по 6 ступеням (80,8 % по 4), ±1 ступень — 99,9 %; время — в среднем 43 мин (p90 69). Жёсткие условия (угадывание, завышенные заявки, осторожные параметры заданий, N = 3 000): точность уверенного вердикта 89,6 % при доле уверенных 91,0 % (верный вердикт по всем, включая «нужен доп. этап», — 84,7 %), ложное подтверждение 2,7 % всех кандидатов, точный грейд 75,4 % по 6 ступеням (82,5 % по 4), ±1 ступень — 99,9 %; время — в среднем 45 мин (p90 81).",
@@ -12842,11 +13572,11 @@
     },
     {
       "section": "Подбор под потребность (бенчмарк)",
-      "metric": "P@5 76,0 %, nDCG@10 0,66; жёсткие — P@5 76,6 %, nDCG@10 0,59",
+      "metric": "P@5 77,1 %, nDCG@10 0,66; жёсткие — P@5 75,9 %, nDCG@10 0,57",
       "sample": "210 потребностей, 3 отложенных мира × 900, один прогон, модели",
-      "command": "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
-      "code_ref": "tools/realdata/bench_holdout2.py",
-      "artifact": "docs/realdata/bench_holdout2.json → docs/realdata/numbers_matching.json"
+      "command": "python3 tools/realdata/bench_holdout4.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
+      "code_ref": "tools/realdata/bench_holdout4.py",
+      "artifact": "docs/realdata/bench_holdout4.json → docs/realdata/numbers_matching.json"
     },
     {
       "section": "Реальные вакансии hh.ru",
@@ -12868,7 +13598,7 @@
       "section": "Протоколы ФСП",
       "metric": "18 документов, 2 908 результатов",
       "sample": "официальные протоколы с сайта ФСП",
-      "command": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "command": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/",
       "artifact": "docs/realdata/fsp_protocols/index_stats.json"
     }

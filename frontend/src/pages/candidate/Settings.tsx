@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, Level, Loading, Toggle, dt, errText, num, useApi } from "../../components/ui";
+import { Alert, Empty, Field, Level, Loading, Toggle, dt, errText, num, plainText, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { NO_FSP, OriginTag } from "../../components/Origin";
 import { FspIdLinkButton } from "../../integrations/FspId";
@@ -64,7 +64,7 @@ export function Fsp() {
       <PageTitle title="Паспорт ФСП" subtitle="Достижения в соревнованиях по дисциплинам спортивного программирования (ЕВСК) — факты, подтверждённые реестром и официальными протоколами Федерации." />
       <section className="card space-y-4">
         <div className="flex flex-wrap items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p>{data.origin && <OriginTag o={data.origin} />}</div>
-        <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром ФСП.` : data.note}</p>
+        <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром ФСП.` : plainText(data.note)}</p>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl bg-[#F3F2FB] p-4 text-center text-sm" data-testid="fsp-identity-link">
           <div className="min-w-0">
             <p className="font-bold text-brand-night">ФСП ID</p>
@@ -76,7 +76,7 @@ export function Fsp() {
             )}
           </div>
           <span className="text-brand-plum" aria-label="Связь">↔</span>
-          <div><p className="font-bold text-brand-night">Ваш профиль</p><p className="mt-1 text-xs text-brand-ink/70">{data.identity_linked ? "Вход подтверждён OIDC" : data.linked ? "Реестр ФСП подключается по договору с федерацией" : "Ожидает связи"}</p></div>
+          <div><p className="font-bold text-brand-night">Ваш профиль</p><p className="mt-1 text-xs text-brand-ink/70" title={data.identity_linked ? "Как устроено: протокол единого входа OIDC через ФСП ID" : undefined}>{data.identity_linked ? "Вход подтверждён через ФСП ID" : data.linked ? "Реестр ФСП подключается по договору с федерацией" : "Ожидает связи"}</p></div>
         </div>
         {data.registry?.demo && <Alert kind="info">Реестр ФСП подключается по договору с федерацией. На демонстрационном стенде показаны тестовые достижения для проверки сценария.</Alert>}
         {data.registry_warning && <Alert kind="info">{data.registry_warning}</Alert>}
@@ -214,7 +214,7 @@ export function Fsp() {
           <div className="h-2.5 w-full overflow-hidden rounded-full bg-brand-night/10" aria-hidden="true">
             <div className="h-full rounded-full bg-brand-strong" style={{ width: `${Math.max(4, Math.min(100, Math.round((Number(data.rating.strength) || 0) * 100)))}%` }} />
           </div>
-          <p className="text-sm text-brand-ink/70">{data.rating.policy}</p>
+          <p className="text-sm text-brand-ink/70" title="Как устроено: учитываются только достижения, подтверждённые реестром или официальным протоколом ФСП">{plainText(data.rating.policy)}</p>
           <p className="text-xs text-brand-ink/65">Учтено соревнований: {num(data.rating.competitions, 0)}. Даёт приоритет внутри своей категории и виден компаниям как подтверждённый факт.</p>
         </section>
       )}

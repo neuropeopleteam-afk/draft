@@ -111,7 +111,8 @@ function CandidateCard({ c, onTry, onLiveAvatar, busyLive }: { c: DemoCandidate;
           {flow === "accepted" ? "Открыть подборку в кабинете" : "Попробовать пригласить"}
         </button>
         {onLiveAvatar && (
-          <button type="button" className="np-btn-ghost px-3.5 py-2 text-xs font-semibold" onClick={onLiveAvatar} disabled={busyLive} data-testid="demo-live-avatar">
+          <button type="button" className="np-btn-grad-violet px-4 py-2.5 text-xs font-bold" onClick={onLiveAvatar} disabled={busyLive} data-testid="demo-live-avatar">
+            <span className="h-2 w-2 rounded-full bg-rose-300 shadow-[0_0_8px_#fda4af]" aria-hidden="true" />
             {busyLive ? "Подключаем…" : "Устная защита с ИИ-аватаром"}
           </button>
         )}

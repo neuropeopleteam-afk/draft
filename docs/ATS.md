@@ -189,6 +189,8 @@
 ## 6. Универсальный вебхук
 
 `POST <URL>` с телом JSON (схема `draft.candidate.v1`, см. п. 7) и заголовками:
+- **До согласия кандидата** (пока приглашение не принято или после отзыва согласия): в теле передаётся только обезличенный `candidate_ref` (`consent: false`, `consent_at: null`, `contacts: null`) — без имени, почты и телефона.
+- **После согласия кандидата** (принятие приглашения конкретной компании или самостоятельный отклик на её вакансию): только в ATS пригласившей компании уходит событие с раскрытыми кандидатом контактами (`contacts: {name, full_name, email, phone, telegram}` с учётом выбранных кандидатом полей `shared_contacts`), флагом `consent: true` и временем согласия `consent_at` (ISO 8601).
 
 | Заголовок | Значение |
 |---|---|
@@ -224,13 +226,19 @@ def verify(secret: str, body: bytes, header: str, tolerance_s: int = 300) -> boo
   "exported_at": "2026-10-05T15:00:00+00:00",
   "source": {"platform": "Драфт (спецтрек ФСП)", "url": "https://fsp.neuropeople.pro"},
   "company": {"id": "…", "name": "…", "inn": "<реквизит>"},
+  "candidate_ref": "C-7Q2K9M",
+  "consent": true,
+  "consent_at": "2026-10-05T15:00:00+00:00",
+  "contacts": {"name": "…", "full_name": "…", "email": "…", "phone": "…", "telegram": "…"},
   "candidate": {
-    "ref": "C-7Q2K9M", "category_id": "backend.middle", "category_title": "Backend · Middle",
-    "contacts": {"full_name": "…", "email": "…", "phone": "…", "telegram": "…"},
+    "ref": "C-7Q2K9M", "fsp_id": "FSP-770012", "category_id": "backend.middle", "category_title": "Backend · Middle",
+    "consent": true, "consent_at": "2026-10-05T15:00:00+00:00",
+    "contacts": {"name": "…", "full_name": "…", "email": "…", "phone": "…", "telegram": "…"},
     "card": {"test": {…}, "skills_confirmed": […], "fsp": {"achievements": […]}, "…": "обезличенная карточка"}
   },
   "context": {"type": "invitation", "id": "…", "status": "accepted", "position_title": "…",
-              "salary_from": 200000, "salary_to": 280000, "accepted_at": "…", "evidence": […]},
+              "salary_from": 200000, "salary_to": 280000, "accepted_at": "…",
+              "consent": true, "consent_at": "2026-10-05T15:00:00+00:00", "evidence": […]},
   "links": {"pdf": "https://fsp.neuropeople.pro/api/ats/profile/<token>.pdf",
             "card": "https://fsp.neuropeople.pro/employer/candidates/C-7Q2K9M"},
   "evidence_levels": {"T0": "заявлено кандидатом", "T1": "подтверждено тестом/зондом", "T2": "подтверждено реестром ФСП"}

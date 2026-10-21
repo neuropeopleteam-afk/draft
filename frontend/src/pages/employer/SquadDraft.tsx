@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Modal, NB, Seg, Toggle, rub } from "../../components/ui";
+import { Alert, Modal, NB, Seg, Toggle, fmtHours, rub } from "../../components/ui";
 
 type Tab = "squad" | "roi" | "dna";
 const TABS: { id: Tab; title: string }[] = [
@@ -438,7 +438,7 @@ export function HireRoi() {
       <details className="card text-sm text-brand-ink/80">
         <summary className="cursor-pointer font-semibold text-brand-night">Как считаем</summary>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 marker:text-brand">
-          <li>Классика: {M.interviewsPerHire} техсобеседований на найм × {M.seniorsPerInterview} Senior × {M.hoursPerInterview.toLocaleString("ru-RU")} ч; «Драфт»: {M.draftFinalists} финалиста × {M.draftHours} ч. Час Senior — {rub(M.seniorHourRate)} с налогами.</li>
+          <li>Классика: {M.interviewsPerHire} техсобеседований на найм × {M.seniorsPerInterview} Senior × {fmtHours(M.hoursPerInterview)}; «Драфт»: {M.draftFinalists} финалиста × {fmtHours(M.draftHours)}. Час Senior — {rub(M.seniorHourRate)} с налогами.</li>
           <li>Доля «раздутых» резюме в топ-10 — по стенду проверки подборки (58 % у ранжирования по резюме, 6,9 % у «Драфта»); до оффера доходит каждое {Math.round(1 / M.slipToOffer)}-е. Цена ошибки — {M.badHireMonths} месяцев ФОТ × {M.payroll.toLocaleString("ru-RU")} (налоги, адаптация, повторный поиск).</li>
           <li>Срок закрытия вакансии: 42 дня на рынке против 3 дней от подборки до принятия приглашения; день пустого места — месячный ФОТ / 30.</li>
           <li>Агентство: {Math.round(M.agencyFee * 100)} % годового дохода за каждого найденного специалиста.</li>

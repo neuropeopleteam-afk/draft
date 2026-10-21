@@ -30,6 +30,9 @@ import { useMeta } from "../lib/meta";
 import { ScrollX } from "../components/A11y";
 import { Fold, FoldAllButton, FoldGroup, FoldProvider } from "../components/validation/Fold";  // SIMPLIFY п.3: разделы свёрнуты
 import { makeModelAlias, noVendor } from "../components/validation/noVendor";
+import { getMatchingMetrics } from "../lib/numbers";
+
+const fmtPct1 = (x: number) => (x * 100).toFixed(1).replace(".", ",");
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
@@ -54,7 +57,20 @@ export default function Validation() {
         </p>
         <Headline />
         {/* KF4: «Арена метрик» — Драфт против поиска по резюме и точность грейда, сразу под «5 числами», над «Красной кнопкой» */}
-        <MatchingArena />
+        {/* А19 №1 (обход 2): арена — прежний бенчмарк разработки v1 (набор разработки, не отложенный); заголовок подбора —
+            отложенная проверка v2 из NUMBERS (карточка «Подбор» в Headline выше и на главной) */}
+        <Fold>
+          <section className="mt-6" data-testid="v-arena-v1">
+            <h2 className="text-lg font-bold text-brand-night">Прежний бенчмарк разработки v1 (история)</h2>
+            <p className="mt-1 text-sm text-brand-ink/75">
+              Это набор разработки первой версии подбора — на нём подбор настраивался, поэтому его цифры не заголовок.
+              Заголовок — отложенная проверка текущей версии
+              {(() => { const mm = getMatchingMetrics(); return mm?.p5?.mean != null ? `: из первых пяти подходят ${fmtPct1(mm.p5.mean)} %` : ""; })()}
+              {" "}(карточка «Подбор» выше).
+            </p>
+            <MatchingArena />
+          </section>
+        </Fold>
         <div className="mt-8">
           <CheatChallenge />
         </div>
@@ -260,6 +276,8 @@ const dist = (d?: Record<string, number>) => d ? Object.entries(d).sort((a, b) =
 function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string; text: string }[]; max_n: number; directions: string[] } }) {
   const { me, signIn } = useAuth();
   const meta = useMeta();
+  // длина полного теста — из настроек движка (/api/meta → rules.test_len), как на экране теста; проверка идёт тем же BankEngine
+  const testLen = (meta as any)?.rules?.test_len as { min_items: number; max_items: number; contested_max_items: number } | undefined;
   const [f, setF] = useState({ strategy: "level_middle", theta: 0.5, direction: "backend", claimed_grade: "middle", n: 10, repeat: true, mode: "full" });
   const [res, setRes] = useState<any>(null);
   const [busy, setBusy] = useState(false);
@@ -294,7 +312,7 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
           <label><span className={lab}>Кандидатов (до {maxN})</span>
             <input className={sel} type="number" min={1} max={maxN} value={f.n} onChange={(e) => setF({ ...f, n: Number(e.target.value) })} /></label>
           <label><span className={lab}>Режим теста</span>
-            <select className={sel} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })}><option value="full">Полный · 8–16 заданий</option><option value="express">Экспресс · 5–7 заданий (Senior: 8–12)</option></select></label>
+            <select className={sel} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })}><option value="full">{testLen ? `Полный · ${testLen.min_items}–${testLen.max_items} заданий (у спорного порога до ${testLen.contested_max_items})` : "Полный · адаптивный"}</option><option value="express">Экспресс · 5–7 заданий (Senior: 8–12)</option></select></label>
           <label className="flex items-center gap-2 self-end pb-2 text-sm text-brand-ink/80"><input type="checkbox" className="h-4 w-4 accent-brand" checked={f.repeat} onChange={(e) => setF({ ...f, repeat: e.target.checked })} />Повторить каждого (согласие попыток)</label>
         </div>
         {oneClick && <p className="mt-3 text-xs text-brand-ink/65">Запуск доступен после входа: по нажатию кнопки вы войдёте как демо-работодатель жюри (своя копия демо) и проверка сразу запустится.</p>}

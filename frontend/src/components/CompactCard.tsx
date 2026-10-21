@@ -88,9 +88,9 @@ function Line({ label, tone, children, testid }: { label: string; tone: string; 
 }
 
 /** Компактная карточка: шапка, 4–5 строк и действия; «Подробнее» раскрывает доказательства под карточкой. */
-export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, sent = false, needId, version, badge, open, onToggle, details, side = false, active = false }: {
+export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, sent = false, needId, version, badge, upperBoundary, open, onToggle, details, side = false, active = false }: {
   r: any; rank: number; fit?: Fit | null; picked: boolean; onPick: () => void; pickDisabled?: boolean; onInvite: () => void; sent?: boolean;
-  needId?: string; /** FIX7 п. 12: версия подборки — карточка кандидата считается по её требованиям */ version?: number; badge?: ReactNode; open: boolean; onToggle: () => void; details?: ReactNode;
+  needId?: string; /** FIX7 п. 12: версия подборки — карточка кандидата считается по её требованиям */ version?: number; badge?: ReactNode; upperBoundary?: boolean; open: boolean; onToggle: () => void; details?: ReactNode;
   side?: boolean; active?: boolean;  // side — подробности в панели справа (широкий экран); active — эта карточка сейчас в ней
 }) {
   const c = r.card ?? {};
@@ -127,6 +127,11 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
             <GradeBadge s={c.status} claimed={c.claimed} />
+            {upperBoundary && (
+              <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="upper-boundary-badge" title="Подтверждённый результат теста у верхней границы запрошенного грейда">
+                у верхней границы {gradeTitle}
+              </span>
+            )}
             <DemoProfileBadge c={c} />
             {demoUi && c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
             {badge}

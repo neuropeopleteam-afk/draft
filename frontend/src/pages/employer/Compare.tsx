@@ -36,27 +36,39 @@ function WhyBlock({ why }: { why: Why[] }) {
       {/* аудит №1: колонки по ширине блока, а не экрана — при узкой колонке (панель проводника) уровни не наезжают на текст */}
       {/* D3 п. 2: при открытой панели проводника (1440 px) пары не сжимаются уже 20rem — блок прокручивается по горизонтали */}
       <div className="-mx-1 overflow-x-auto px-1 pb-1" data-testid="why-scroll">
-      <ul className="grid min-w-[20rem] grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] gap-3">
+      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {why.map((w) => (
-          <li key={`${w.higher}-${w.lower}`} className="rounded-xl bg-[#F7F6FB] p-4 text-sm">
-            <p className="font-semibold text-brand-night">{ruText(w.summary)}</p>
+          <li key={`${w.higher}-${w.lower}`} className="min-w-0 rounded-xl bg-[#F7F6FB] p-4 text-sm">
+            <p className="font-semibold text-brand-night">{nowrapRefs(ruText(w.summary))}</p>
             {w.pro.length > 0 && (
-              <ul className="mt-2 space-y-1.5">
+              <ul className="mt-2.5 space-y-2">
                 {w.pro.map((f, i) => (
-                  <li key={i} className="flex flex-wrap items-start gap-x-2 gap-y-1"><span className="shrink-0"><Level level={f.level} /></span><span className="min-w-0 flex-1 break-words">{ruText(f.text)}</span><span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-emerald-700">+{pts(f.points)}</span></li>
+                  <li key={i} className="rounded-lg bg-white/80 px-3 py-2 shadow-sm ring-1 ring-brand-night/5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="shrink-0"><Level level={f.level} /></span>
+                      <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-emerald-700">+{pts(f.points)}</span>
+                    </div>
+                    <p className="mt-1 min-w-0 text-brand-night/90 [overflow-wrap:anywhere]">{nowrapRefs(ruText(f.text).replace(/уровень\s+([+-]?\d+[.,]\d+\s*±\s*\d+[.,]\d+)\s+против\s+уровень\s+/gi, "оценка теста $1 против "))}</p>
+                  </li>
                 ))}
               </ul>
             )}
             {w.con.map((f, i) => (
-              <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><span className="shrink-0"><Level level={f.level} /></span><span className="min-w-0 flex-1 break-words">В пользу {w.lower}: {ruText(f.text)}</span><span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-brand-plum">−{pts(f.points)}</span></p>
+              <div key={i} className="mt-2 rounded-lg bg-white/60 px-3 py-2 text-brand-ink/75 ring-1 ring-brand-night/5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="shrink-0"><Level level={f.level} /></span>
+                  <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-brand-plum">−{pts(f.points)}</span>
+                </div>
+                <p className="mt-1 min-w-0 [overflow-wrap:anywhere]">В пользу <span className="whitespace-nowrap font-medium">{w.lower}</span>: {nowrapRefs(ruText(f.text).replace(/уровень\s+([+-]?\d+[.,]\d+\s*±\s*\d+[.,]\d+)\s+против\s+уровень\s+/gi, "оценка теста $1 против "))}</p>
+              </div>
             ))}
             {(() => {  // FIX7 п. 11: показаны топ-3 «за» и главный «против» — остаток разницы виден отдельной строкой
               const rest = w.diff - w.pro.reduce((t, f) => t + f.points, 0) - w.con.reduce((t, f) => t + f.points, 0);
-              return Math.abs(rest) >= 0.1 ? <p className="mt-2 flex items-start gap-2 text-brand-ink/70" data-testid="why-rest">
-                <span className="flex-1">Прочие сигналы — факторы меньшего веса и округление</span>
-                <span className="whitespace-nowrap font-semibold">{rest > 0 ? "+" : "−"}{pts(rest)}</span></p> : null;
+              return Math.abs(rest) >= 0.1 ? <p className="mt-2 flex items-center justify-between gap-2 text-brand-ink/70" data-testid="why-rest">
+                <span className="min-w-0 flex-1">Прочие сигналы — факторы меньшего веса и округление</span>
+                <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums">{rest > 0 ? "+" : "−"}{pts(rest)}</span></p> : null;
             })()}
-            {w.core_note && <p className="mt-2 border-t border-brand-ink/10 pt-2 font-semibold text-amber-900" data-testid="why-core-note">{nowrapRefs(w.core_note)}.</p>}
+            {w.core_note && <p className="mt-2 border-t border-brand-ink/10 pt-2 font-semibold text-amber-900" data-testid="why-core-note">{nowrapRefs(w.core_note.replace(/в скор не входит/gi, "в балл не входит"))}.</p>}
           </li>
         ))}
       </ul>

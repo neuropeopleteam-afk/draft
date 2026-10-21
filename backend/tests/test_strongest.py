@@ -33,7 +33,7 @@ def test_pipe_alternative_takes_over_on_failure(monkeypatch, net):
     net.on("or.test", SONNET, lambda req, body: reply(json.dumps({"stack_required": [
         {"tag": "grpc", "weight": 0.7, "quote": "межсервисное взаимодействие"}]}), body["model"]))
     r = parse_need(NEED_TEXT)
-    assert r["llm"]["used"] and r["llm"]["model"] == SONNET
+    assert r["llm"]["used"] and "model" not in r["llm"]  # провайдер и id модели в ответе API не отдаются (обход А19 №10) — кто ответил, видно по сети
     assert [c["model"] for c in net.calls] == [GLM, SONNET]
 
 
@@ -51,7 +51,7 @@ def test_api_strongest(client):
     assert not d.get("missing")
     assert set(d["cells"]) == {"needs_delta", "needs_jury", "resume", "grade"}
     for f, cells in d["cells"].items():
-        assert "anthropic/claude-sonnet-5.5" in cells, f
+        assert "stand" in cells, f  # модель стенда — нейтральный код на экранном API (no_vendor.py)
         for m, c in cells.items():
             if m != "rules" and c.get("calls"):
                 assert c["ok"] <= c["calls"]
@@ -59,7 +59,9 @@ def test_api_strongest(client):
     for f, r in d["recommendation"].items():
         assert r["main"] in d["cells"][f] and r["then"] == "правила"
         assert r["best_open"] is None or d["models"][r["best_open"]]["open_weights"]
-    assert any(x["model"].startswith("YandexGPT") for x in d["not_measured"])  # честно: не мерили и почему
+    # честно: не мерили и почему — список не пуст; имена моделей на экранном API нейтральные (no_vendor)
+    assert d["not_measured"] and all(x.get("model") for x in d["not_measured"])
+    assert not any("yandex" in str(x["model"]).lower() for x in d["not_measured"])
     text = " ".join(d["conditions"])
     assert "модели, не люди" in text
     raw = json.dumps(d, ensure_ascii=False)

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { DIRECTION_TITLES, GRADE_TITLE_ALL, NB, dtt, num, pct, ruText, signed, useApi } from "./ui";
+import { DIRECTION_TITLES, GRADE_TITLE_ALL, NB, dtt, num, pct, plainText, signed, useApi } from "./ui";
 import { IntegrityBadge } from "./IntegrityBadge";  // KF2: паспорт честности попытки (5 контуров)
 
 /** Две попытки теста рядом (И26): кандидату — /candidate/attempts, работодателю — в карточке кандидата.
@@ -99,9 +99,9 @@ export function AttemptsCompare({ cmp, audience = "candidate", level = 3, refId,
         <H className="font-bold text-brand-night">Что изменилось и почему</H>
         <ul className="mt-2 space-y-2 text-sm">
           {cmp.changes.map((x) => (
-            <li key={x.id} className="border-l-2 border-brand-blush pl-3">
-              <p className="font-semibold text-brand-night">{x.title}</p>
-              <p className="text-brand-ink/75">{ruText(x.text)}</p>
+            <li key={x.id} className="border-l-2 border-brand-blush pl-3" title="Как устроено: сравнение оценок уровня и точности по шкале адаптивного теста">
+              <p className="font-semibold text-brand-night">{plainText(x.title)}</p>
+              <p className="text-brand-ink/75">{plainText(x.text)}</p>
             </li>
           ))}
         </ul>

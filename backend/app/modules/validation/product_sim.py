@@ -76,12 +76,16 @@ STAND_ENV = {
     "ASSESSMENT_CONTESTED_MAX_MINUTES": "105",
 }
 
-TRAIN_SEEDS = tuple(range(1101, 1111))   # подбор настроек
+# подбор настроек: 1101–1110 (раунды 1–3), 1201–1210 — правило решения v2 (сетка 21.10 вечер, до FINAL №3)
+TRAIN_SEEDS = tuple(range(1101, 1111)) + tuple(range(1201, 1211)) + tuple(range(1301, 1311))  # 1301–1310 — раунд 2 v2
 TEST_SEEDS = tuple(range(2201, 2211))    # отчёт прежней механики (T1–T3 на 603474f — запасной набор)
 # Итоговый прогон на замороженном банке стенда: новые зёрна, один прогон, хэш банка — в коммит до прогона.
-FINAL_SEEDS = tuple(range(4401, 4411))
+FINAL_SEEDS = tuple(range(4401, 4411))  # FINAL №1–№2 (использованы)
+# FINAL №3 (правило решения v2): свои фазы final3/st3 и свои зёрна — по умолчанию не попадают на использованные (замечание А15 P1-1)
+FINAL3_SEEDS = tuple(range(4601, 4611))
 # «Стандартные условия» (S-T, протокол А15, решение штаба 21.10): свои зёрна, один прогон, публикуется при любом исходе
-ST_SEEDS = tuple(range(5501, 5511))
+ST_SEEDS = tuple(range(5501, 5511))  # FINAL №2 (использованы)
+ST3_SEEDS = tuple(range(5601, 5611))  # FINAL №3
 # S-T (поправка №3, приложение А рецензии А15 — окончательные параметры): θ ~ N(0,5; 1,0), ниже порога Стажёра (−1,75)
 # — перевыбор; заявки: 65 % точные, 25 % на ступень выше, 10 % на ступень ниже (на краях шкалы — точные)
 ST_MEAN, ST_SD = 0.5, 1.0
@@ -891,10 +895,10 @@ def settings_snapshot() -> dict:
     return {k: getattr(s, k) for k in sorted(keys)}
 
 
-def check_final_bank(seeds: tuple[int, ...], expect_hash: str) -> None:
-    """Итоговый прогон: только зёрна из FINAL_SEEDS и только на банке с хэшем, зафиксированным в коммите до прогона."""
-    if not set(seeds) <= set(FINAL_SEEDS):
-        raise SystemExit("итоговый прогон — только на FINAL_SEEDS")
+def check_final_bank(seeds: tuple[int, ...], expect_hash: str, allowed: tuple[int, ...] = FINAL_SEEDS) -> None:
+    """Итоговый прогон: только зёрна из своего набора и только на банке с хэшем, зафиксированным в коммите до прогона."""
+    if not set(seeds) <= set(allowed):
+        raise SystemExit("итоговый прогон — только на зёрнах своего набора (FINAL_SEEDS / FINAL3_SEEDS)")
     if not expect_hash:
         raise SystemExit("итоговый прогон: нужен --expect-bank-hash (хэш банка из коммита до прогона)")
     from app.modules.assessment.bank_engine import BankEngine
@@ -973,7 +977,7 @@ def main(argv=None) -> int:
         a = ap.parse_args(argv[1:])
         return merge(a.files, a.out)
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--phase", choices=("train", "test", "final", "st"), required=True)
+    ap.add_argument("--phase", choices=("train", "test", "final", "st", "final3", "st3"), required=True)
     ap.add_argument("--population", choices=("hard", "st"), default="hard")
     ap.add_argument("--expect-bank-hash", type=str, default="",
                     help="для --phase final: content_hash банка из BANK_SYNC.json, зафиксированный в коммите до прогона")
@@ -989,15 +993,16 @@ def main(argv=None) -> int:
     ap.add_argument("--seeds", type=str, default="")
     ap.add_argument("--out", type=str, required=True)
     a = ap.parse_args(argv)
-    default_seeds = {"train": TRAIN_SEEDS, "test": TEST_SEEDS, "final": FINAL_SEEDS, "st": ST_SEEDS}[a.phase]
+    default_seeds = {"train": TRAIN_SEEDS, "test": TEST_SEEDS, "final": FINAL_SEEDS, "st": ST_SEEDS,
+                     "final3": FINAL3_SEEDS, "st3": ST3_SEEDS}[a.phase]
     seeds = tuple(int(x) for x in a.seeds.split(",")) if a.seeds else default_seeds
     if a.phase != "train" and set(seeds) & set(TRAIN_SEEDS):
         raise SystemExit("отчёт — не на зёрнах обучения")
-    if a.phase == "final":
-        check_final_bank(seeds, a.expect_bank_hash)
-    if a.phase == "st":
-        if not set(seeds) <= set(ST_SEEDS):
-            raise SystemExit("стандартные условия — только на ST_SEEDS")
+    if a.phase in ("final", "final3"):
+        check_final_bank(seeds, a.expect_bank_hash, FINAL_SEEDS if a.phase == "final" else FINAL3_SEEDS)
+    if a.phase in ("st", "st3"):
+        if not set(seeds) <= set(ST_SEEDS if a.phase == "st" else ST3_SEEDS):
+            raise SystemExit("стандартные условия — только на ST_SEEDS / ST3_SEEDS своей фазы")
         # поправка №3: S-T — ровно условия А15 (не подбираются)
         if a.population != "st" or a.world != "st" or a.bank_a.replace(" ", "") != f"mcq={ST_A},code={ST_A}":
             raise SystemExit(f"S-T: нужны --population st --world st --bank-a mcq={ST_A},code={ST_A}")
@@ -1021,4 +1026,7 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     for k, v in STAND_ENV.items():
         os.environ.setdefault(k, v)
+    # INTEGRITY_ORAL (флаг продукта, по умолчанию выкл., на стенде не включён — решение штаба 21.10 по рецензии А15):
+    # симуляция всегда без него — переменная окружения не может молча поменять прогон, цифры FINAL №2 описывают код с 0
+    os.environ["INTEGRITY_ORAL"] = "false"
     raise SystemExit(main())
