@@ -9,6 +9,7 @@ import { PageTitle } from "./CabinetLayout";
 import { Alert, Loading, dt, errText, useApi } from "./ui";
 import { AnamAvatar, InterviewerAvatar, VoiceAnswerButton, VoiceRecordButton, VoiceWave, postAudio, useSpeechPlayer, voiceSupported, type AnamHandle, type WaveState } from "./voice";
 import { LiveInterview, liveInterviewSupported, type LiveView } from "./voice/live/interview";
+import { Voice } from "./voice/live/voice";
 
 /** Запуск живого разговора с ИИ-аватаром в 1 клик (с главной, из Экспертизы ФСП или из кабинета кандидата). */
 export async function launchLiveAvatar(
@@ -189,6 +190,63 @@ function LiveDefenseHero({ st, name, busy, limited, onGo }: {
 /** Кандидат: на результате попытки — «Подтвердите авторство ответа». sessionId — попытка теста.
  *  live (Н1): "auto" — сразу после теста живой интервьюер обращается голосом и зовёт в разговор; "manual" — тот же
  *  живой вход без автоприветствия (страницы категории и попыток). */
+/** Настя голосом объясняет итог теста по тому, что кандидат видит на экране результата (уровень, разбор, что
+ *  подтянуть): текст экрана → короткий пересказ моделью строго по нему → голос по фразам. */
+function ExplainResult() {
+  const [state, setState] = useState<"idle" | "busy" | "speaking" | "done" | "error">("idle");
+  const [said, setSaid] = useState("");
+  const vref = useRef<Voice | null>(null);
+  useEffect(() => () => { vref.current?.stop(); }, []);
+  async function go() {
+    const v = vref.current ?? new Voice(() => null);
+    vref.current = v;
+    v.unlock();   // жест нажатия — звук разрешён
+    v.stop();
+    setState("busy"); setSaid("");
+    const main = document.querySelector("main");
+    const text = (main?.innerText ?? "").replace(/\n{2,}/g, "\n").slice(0, 5000);
+    try {
+      const r = await fetch(apiUrl("/interview/concierge/explain-result"), {
+        method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ text }),
+      });
+      if (!r.ok || !r.body) throw new Error(String(r.status));
+      const rd = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "", all = "";
+      let u: ReturnType<Voice["begin"]> | null = null;
+      for (;;) {
+        const { value, done } = await rd.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let k: number;
+        while ((k = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, k); buf = buf.slice(k + 1);
+          if (!line.trim()) continue;
+          const it = JSON.parse(line) as { t: string; text?: string; b64?: string };
+          if (it.t === "say" && it.text) { all = all ? `${all} ${it.text}` : it.text; setSaid(all); if (u) u.append(it.text); }
+          else if (it.t === "pcm" && it.b64) {
+            if (!u) { u = v.begin(all, 24000); setState("speaking"); }
+            const s2 = atob(it.b64); const b = new Uint8Array(s2.length);
+            for (let i = 0; i < s2.length; i++) b[i] = s2.charCodeAt(i);
+            u.push(b);
+          }
+        }
+      }
+      if (u) await u.end();
+      setState("done");
+    } catch { setState("error"); }
+  }
+  return (
+    <div className="space-y-1" data-testid="explain-result">
+      <button type="button" className="btn-ghost !py-1.5 text-sm" disabled={state === "busy" || state === "speaking"} onClick={() => void go()}>
+        {state === "busy" ? "Настя смотрит итог…" : state === "speaking" ? "Настя объясняет…" : state === "done" ? "Объяснить ещё раз" : "Настя объяснит итог голосом"}
+      </button>
+      {said && <p className="text-sm text-brand-ink/80" aria-live="polite">{said}</p>}
+      {state === "error" && <p className="text-xs text-red-700">Не получилось — итог и разбор на экране; попробуйте ещё раз.</p>}
+    </div>
+  );
+}
+
 /** Финальный этап теста (решение владельца 21.10): разговор с Настей для каждого — сразу на экране результата, над
  *  итогом. Обычная панель защиты той же попытки ниже на странице при этом не показывается. */
 const FINAL_SHOWN = new Set<string>();
@@ -238,6 +296,7 @@ export function DefensePanel({ sessionId, live, final = false }: { sessionId: st
           ? <>Финальный этап теста: разговор с Настей, ≈{minutes(st.minutes)}</>
           : <>Подтвердите авторство ответа: устная защита {minutes(st.minutes)}, по желанию</>}</h2>
       </div>
+      {final && <ExplainResult />}
       {final && !fb ? (
         <p className="text-sm text-brand-ink/75" data-testid="final-oral-text">
           Настя задаст {st.max_questions} коротких вопроса по вашим же ответам и решениям — объясните своими словами, как решали.

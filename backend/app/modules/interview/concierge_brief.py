@@ -10,18 +10,50 @@
 """
 from __future__ import annotations
 
+import json
 import logging
+import os
 import re
 import secrets
 import threading
 import time
+from pathlib import Path
 
 log = logging.getLogger("interview.concierge")
 
 TTL_S = 1800
 MAX_Q = 6
-_SESS: dict[str, dict] = {}
 _LOCK = threading.Lock()
+
+
+def _dir() -> Path:
+    """Состояние брифа — файлом в общем кэше: у api несколько процессов, запросы одного брифа попадают в разные."""
+    from app.modules.interview import concierge as cg
+
+    d = Path(cg._CACHE) / "briefs"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _path(sid: str) -> Path | None:
+    return _dir() / f"{sid}.json" if re.fullmatch(r"[A-Za-z0-9_-]{8,40}", sid or "") else None
+
+
+def _load(sid: str) -> dict | None:
+    p = _path(sid)
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p and p.exists() else None
+    except (OSError, ValueError):
+        return None
+
+
+def _save(sid: str, s: dict) -> None:
+    p = _path(sid)
+    if not p:
+        return
+    tmp = p.with_suffix(f".{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(s, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, p)
 
 FIRST = ("Здравствуйте, я Настя. Соберём вакансию голосом — пять коротких вопросов. Кого ищете: направление и уровень? "
          "Например, бэкенд-разработчик уровня Middle.")
@@ -52,23 +84,26 @@ SYSTEM = """Ты Настя, ИИ-проводник платформы «Дра
 
 def _gc() -> None:
     now = time.time()
-    for k in [k for k, v in _SESS.items() if now - v["at"] > TTL_S]:
-        _SESS.pop(k, None)
+    try:
+        for f in _dir().glob("*.json"):
+            if now - f.stat().st_mtime > TTL_S:
+                f.unlink(missing_ok=True)
+    except OSError:
+        pass
 
 
 def start(owner: str) -> dict:
     sid = secrets.token_urlsafe(12)
     with _LOCK:
         _gc()
-        _SESS[sid] = {"owner": owner, "at": time.time(), "history": [{"who": "nastya", "text": FIRST}],
-                      "question": FIRST, "done": False, "vacancy": "", "n": 1, "live": False}
+        _save(sid, {"owner": owner, "at": time.time(), "history": [{"who": "nastya", "text": FIRST}],
+                    "question": FIRST, "done": False, "vacancy": "", "n": 1, "live": False})
     return {"id": sid, "question": FIRST, "max_questions": MAX_Q}
 
 
 def get(sid: str, owner: str) -> dict | None:
-    with _LOCK:
-        s = _SESS.get(sid)
-        return s if s and s["owner"] == owner else None
+    s = _load(sid)
+    return s if s and s.get("owner") == owner else None
 
 
 def _fallback_vacancy(s: dict) -> str:
@@ -116,6 +151,7 @@ def answer(sid: str, owner: str, text: str) -> dict:
     s["question"] = say
     s["n"] += 1
     s["history"].append({"who": "nastya", "text": say})
+    _save(sid, s)
     log.info("concierge brief %s: ход %d, %s, %d мс%s", sid[:6], s["n"] - 1, model, int((time.monotonic() - t0) * 1000),
              ", готово" if done else "")
     return {"question": say, "done": done, "vacancy": vacancy if done else "", "n": s["n"] - 1}

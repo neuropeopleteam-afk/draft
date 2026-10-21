@@ -732,6 +732,25 @@ def concierge_brief_speech(sid: str, request: Request, user: User = Depends(empl
     return StreamingResponse(body(), media_type="application/octet-stream", headers={"Cache-Control": "no-store"})
 
 
+class ExplainIn(BaseModel):
+    text: str = Field(min_length=20, max_length=6000)
+
+
+@router.post("/concierge/explain-result", summary="Настя голосом объясняет итог теста по тексту экрана результата (NDJSON)")
+def concierge_explain_result(body: ExplainIn, request: Request, user: User = Depends(candidate)):
+    from app.modules.interview import concierge_budget as budget
+    from app.modules.interview import concierge_explain as ce
+
+    ip = budget.client_ip(request)
+    if not budget.burst_ok(ip, 2):
+        raise api_error(429, "rate_limited", "Слишком много запросов — подождите минуту")
+    ok, _why = budget.take("turns", ip, 1)
+    if not ok:
+        raise api_error(429, "rate_limited", "Лимит на сегодня исчерпан")
+    return StreamingResponse(ce.explain_stream(body.text), media_type="application/x-ndjson",
+                             headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+
+
 @router.post("/concierge/brief/{sid}/answer", summary="Бриф голосом: ответ работодателя → следующий вопрос или текст вакансии")
 def concierge_brief_answer(sid: str, body: BriefAnswerIn, request: Request, user: User = Depends(employer)) -> dict:
     from app.modules.interview import concierge_brief as cb
