@@ -1,27 +1,53 @@
 family_id: common.db.tx_isolation_mcq
 title: Транзакции и уровни изоляции PostgreSQL — потерянное обновление, снимки, блокировки
 direction: common
-skills: [sql, transactions, isolation_levels, postgresql, mvcc]
-target_grades: [middle, senior]
+skills:
+- sql
+- transactions
+- isolation_levels
+- postgresql
+- mvcc
+target_grades:
+- middle
+- senior
 format: mcq_concept
 language: sql
 invariants:
-  code_lines: [6, 8]
-  operations: [2, 8]
+  code_lines:
+  - 6
+  - 8
+  operations:
+  - 2
+  - 8
   n_options: 4
   extra:
-    scenarios: [rmw_t1_first, rmw_t2_first, atomic_blocked, for_update, late_snapshot, non_repeatable, first_stmt_snapshot, dirty, phantom]
-    levels: [READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE]
+    scenarios:
+    - rmw_t1_first
+    - rmw_t2_first
+    - atomic_blocked
+    - for_update
+    - late_snapshot
+    - non_repeatable
+    - first_stmt_snapshot
+    - dirty
+    - phantom
+    levels:
+    - READ UNCOMMITTED
+    - READ COMMITTED
+    - REPEATABLE READ
+    - SERIALIZABLE
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.6
-  a: 1.1
+  a: 1.0
   sigma_variant: 0.45
-  basis: "6–8 шагов двух сессий; нужно знать семантику PostgreSQL: снимок на оператор в READ COMMITTED и при первом операторе в REPEATABLE READ, перечитывание строки после ожидания, ошибку 40001, отсутствие грязного чтения и фантомов; разброс по сценариям большой (Middle/Senior)"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). 6–8 шагов двух сессий; нужно знать семантику PostgreSQL:
+    снимок на оператор в READ COMMITTED и при первом операторе в REPEATABLE READ, перечитывание строки после ожидания,
+    ошибку 40001, отсутствие грязного чтения и фантомов; разброс по сценариям большой (Middle/Senior)'
 generator: assessment_bank.families.common.db_tx_isolation_mcq
 version: 2
-description: >
-  Две транзакции чередуют команды; спросить итоговое значение и исход транзакций или
-  результат отмеченного SELECT. Ключ — таблица правил PostgreSQL, проверка — независимая
-  пошаговая MVCC-модель.
+description: 'Две транзакции чередуют команды; спросить итоговое значение и исход транзакций или результат отмеченного
+  SELECT. Ключ — таблица правил PostgreSQL, проверка — независимая пошаговая MVCC-модель.
+
+  '

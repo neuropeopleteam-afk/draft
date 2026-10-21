@@ -54,7 +54,7 @@ def _min_n(p: float, alpha: float, k: int) -> int:
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx = rng.choice(CONTEXTS)
-    n_below = rng.choice([1, 2, 3])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный; недостающие — контрольные значения
     fmt, fmt_src = formatter("int")
     for _ in range(3000):
         p_pct = rng.choice([1, 1.5, 2, 2.5, 3, 4, 5])

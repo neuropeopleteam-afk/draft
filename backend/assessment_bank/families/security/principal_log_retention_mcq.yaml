@@ -1,23 +1,34 @@
 family_id: security.principal.log_retention_mcq
-title: Минимальный срок хранения журналов под долю расследуемых вторжений — хвост времени обнаружения (Principal, короткое)
+title: Минимальный срок хранения журналов под долю расследуемых вторжений — хвост времени обнаружения (Principal,
+  короткое)
 direction: security
-skills: [security_logging, incident_response, evidence_preservation, monitoring]
-target_grades: [principal]
+skills:
+- security_logging
+- incident_response
+- evidence_preservation
+- monitoring
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    distractors: "три из шести моделей ошибок: ignore_lag, mean_only, quantile_wrong, linear (ниже ключа); markov, log2 (выше); меньше ключа 1–3 равновероятно"
+    distractors: 'три из шести моделей ошибок: ignore_lag, mean_only, quantile_wrong, linear (ниже ключа); markov,
+      log2 (выше); меньше ключа 1–3 равновероятно'
 time_limit_s: 360
 canary: false
 prior_difficulty:
   b: 2.5
-  a: 1.3
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: политика хранения журналов по доле расследуемых вторжений. Нужен квантиль экспоненциального распределения времени обнаружения плюс задержка начала расследования. Senior и Lead обычно берут «среднее + задержка» или забывают задержку; Principal считает по хвосту. Ловушки с обеих сторон от ключа"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Короткое расчётное задание у границы Lead/Principal: политика
+    хранения журналов по доле расследуемых вторжений. Нужен квантиль экспоненциального распределения времени обнаружения
+    плюс задержка начала расследования. Senior и Lead обычно берут «среднее + задержка» или забывают задержку; Principal
+    считает по хвосту. Ловушки с обеих сторон от ключа'
 generator: assessment_bank.families.security.principal_log_retention_mcq
 version: 1
-description: >
-  Минимальный срок хранения журналов, чтобы от начала можно было расследовать долю X вторжений при экспоненциальном
+description: 'Минимальный срок хранения журналов, чтобы от начала можно было расследовать долю X вторжений при экспоненциальном
   времени до обнаружения и задержке расследования. Ключ — программа: перебор дней и численное интегрирование.
+
+  '

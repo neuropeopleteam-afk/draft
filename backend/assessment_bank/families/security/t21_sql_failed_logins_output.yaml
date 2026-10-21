@@ -1,0 +1,35 @@
+family_id: security.audit.t21_sql_failed_logins_output
+title: Неудачные входы из журнала — WHERE с границей по времени-строке, ORDER BY ts DESC и LIMIT
+direction: security
+skills:
+- sql
+- security
+target_grades:
+- intern
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 5
+  - 6
+  extra:
+    rows:
+    - 8
+    - 10
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Отобрать из журнала 8–10
+    входов неудачные (ok = 0) с ts >= границы, упорядочить по убыванию времени и взять n строк; ловушки — граница >=
+    на строке ISO (записи дня-границы входят, запись накануне — нет), порядок DESC и LIMIT после сортировки.
+    Уровень Стажёра: WHERE, ORDER BY и LIMIT без группировки; поправка вверх от порога — три условия чтения в одном
+    запросе. Набор t21 (21.10) у порога Стажёра (b = −1,6)'
+generator: assessment_bank.families.security.t21_sql_failed_logins_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Журнал входов (онлайн-банк, VPN, админка, SSH,
+  почта) и запрос SELECT … WHERE ok = 0 AND ts >= ''<граница>'' ORDER BY ts DESC LIMIT n; предсказать строки
+  результата. Ключ — независимая модель (сравнение времени и сортировка в генераторе), проверка — исполнение
+  показанного запроса в песочнице sqlite.'

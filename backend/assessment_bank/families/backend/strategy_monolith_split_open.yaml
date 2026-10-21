@@ -1,23 +1,41 @@
 family_id: backend.strategy.monolith_split_open
 title: Дробить ли монолит — решение от движущих сил, границы данных, порядок с контрольными точками и цена
 direction: backend
-skills: [technical_strategy, system_design, migrations, distributed_systems, architecture]
-target_grades: [principal]
+skills:
+- technical_strategy
+- system_design
+- migrations
+- distributed_systems
+- architecture
+target_grades:
+- principal
 format: open_answer
 language: text
 invariants:
   extra:
-    pains: [release, scaling, ownership]
-    criteria: [decision, data, sequencing, cost, metrics]
+    pains:
+    - release
+    - scaling
+    - ownership
+    criteria:
+    - decision
+    - data
+    - sequencing
+    - cost
+    - metrics
 time_limit_s: 1800
 canary: false
 prior_difficulty:
   b: 2.7
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Априорная трудность (не по людям). Вопрос «переходим на микросервисы?» с конкретной болью (релизный поезд, масштабирование модуля, владение) — нужно решение от боли (часто «сначала модульный монолит»), границы данных и перенос без простоя, пилот с критерием остановки, цена платформы и метрики. Lead обычно отвечает верным, но общим планом strangler без решения «не дробить» и без цены — граница Lead/Principal (θ ≈ 2,75); σ 0,35"
+  basis: Априорная, до калибровки на людях (a = 1,3). Вопрос «переходим на микросервисы?» с конкретной болью (релизный
+    поезд, масштабирование модуля, владение) — нужно решение от боли (часто «сначала модульный монолит»), границы
+    данных и перенос без простоя, пилот с критерием остановки, цена платформы и метрики. Lead обычно отвечает верным,
+    но общим планом strangler без решения «не дробить» и без цены — граница Lead/Principal (θ ≈ 2,75); σ 0,35
 generator: assessment_bank.families.backend.strategy_monolith_split_open
 version: 1
-description: >
-  Principal: позиция по разделению монолита при заданной боли и бизнес-цели — что выделять первым, границы
+description: 'Principal: позиция по разделению монолита при заданной боли и бизнес-цели — что выделять первым, границы
   данных, порядок и обратимость, цена, метрики успеха. Оценка с цитатами-доказательствами.
+
+  '

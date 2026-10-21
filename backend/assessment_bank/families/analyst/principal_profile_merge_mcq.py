@@ -39,7 +39,7 @@ print(fmt(float(clients_A + clients_B - true_pairs)))
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     org, sa, sb = rng.choice(CONTEXTS)
-    n_below = rng.choice([0, 1, 2])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный; недостающие — контрольные значения
     fmt, fmt_src = formatter("int", "тыс.")
     for _ in range(8000):
         NA, NB = rng.choice([300, 400, 500, 600, 700]), rng.choice([150, 200, 250, 300, 350])

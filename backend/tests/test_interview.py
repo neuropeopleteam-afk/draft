@@ -140,7 +140,10 @@ def test_defense_stub_flow_badge_and_pii(client, on):
     assert client.get(f"/api/interview/candidates/{ref}", headers=H(te)).json()["defense"] is None
 
 
-def test_defense_discrepancies_and_not_eligible(client, on):
+def test_defense_discrepancies_and_not_eligible(client, on, monkeypatch):
+    from app.modules.interview import context as cx
+
+    monkeypatch.setattr(cx, "ORAL_REQUIRED", False)   # прежнее правило «короткий ответ — защищать нечего»
     t = candidate_with_category(client)
     ts = _with_open_answers(client, t)
     sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
@@ -475,6 +478,9 @@ def _express_only(email: str) -> str:
 
 
 def test_jury_express_without_open_answers_live_by_last_task(client, on, monkeypatch):
+    from app.modules.interview import context as cx
+
+    monkeypatch.setattr(cx, "ORAL_REQUIRED", False)   # прежнее правило: без развёрнутых ответов — только живой запуск жюри
     t = candidate_with_category(client, email="jx@example.com")
     ts = _express_only("jx@example.com")
     # обычный кандидат: защищать нечего — как раньше, без живого запуска
@@ -499,7 +505,10 @@ def test_jury_express_without_open_answers_live_by_last_task(client, on, monkeyp
 
 
 def test_jury_express_without_open_answers_live_by_example(client, on, monkeypatch):
+    from app.modules.interview import context as cx
     from app.modules.interview.demo import seed_jury_defense
+
+    monkeypatch.setattr(cx, "ORAL_REQUIRED", False)   # прежнее правило: без развёрнутых ответов — только живой запуск жюри
     from app.modules.profiles.models import CandidateProfile
 
     tm = candidate_with_category(client)  # модельный кандидат песочницы с развёрнутыми ответами

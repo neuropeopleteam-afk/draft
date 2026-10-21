@@ -219,10 +219,13 @@ def test_jury_persona_candidate_junior(client):
     assert r.json()["landing"] == "/candidate/category"
     tok = r.json()["access_token"]
     me = client.get("/api/me", headers=H(tok)).json()
-    assert me["email"] == "candidate-junior@jury.example.com" and me["candidate"]["current_category_id"] == "backend.junior"
+    # 21.10 (решение штаба): по правилу SPRT статуса «Junior (предварительно)» нет — персона «Junior — нужен доп. этап»:
+    # у порога решения нет, категория не присвоена, предложен второй этап у этого порога
+    assert me["email"] == "candidate-junior@jury.example.com" and me["candidate"]["current_category_id"] is None
     st = client.get("/api/assessment/status", headers=H(tok)).json()
-    # исход демо-теста случаен; сид делает до 12 попыток получить «предварительно» (jury/seed._candidate) — при падении
-    # здесь виден фактический исход, а не просто False
-    assert st["current"]["provisional"] and st["grade_status"]["status"] == "provisional", \
-        f"персона candidate_junior не предварительная: current={st['current']}, grade_status={st['grade_status']}"
-    assert st["provisional"]["attempts_left"] == 2 and st["claimed_grade"] == "junior"
+    last = max((s for s in st["sessions"] if s["status"] == "finished"), key=lambda s: s.get("started_at") or "")
+    v = last.get("verdict") or {}
+    # исход демо-теста случаен; сид делает до 12 попыток получить «нужен доп. этап» (jury/seed._candidate)
+    assert v.get("status") == "needs_followup" and (v.get("followup") or {}).get("needed"), \
+        f"персона candidate_junior не «нужен доп. этап»: verdict={v}"
+    assert st["claimed_grade"] == "junior" and not st["current"]["provisional"] and last["claimed_grade"] == "junior"

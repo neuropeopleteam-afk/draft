@@ -1,26 +1,50 @@
 family_id: common.db.index_plan_mcq
 title: Составной индекс и план запроса — правило левого префикса
 direction: common
-skills: [databases, indexes, query_planning, sql]
-target_grades: [middle, senior]
+skills:
+- databases
+- indexes
+- query_planning
+- sql
+target_grades:
+- middle
+- senior
 format: mcq_concept
 language: sql
 invariants:
-  code_lines: [3, 3]
-  operations: [3, 3]
+  code_lines:
+  - 3
+  - 3
+  operations:
+  - 3
+  - 3
   n_options: 4
   extra:
-    cases: [both_eq_range, both_reordered, both_in, scan_second, scan_func, scan_or, first_other, first_range, first_func, covering]
+    cases:
+    - both_eq_range
+    - both_reordered
+    - both_in
+    - scan_second
+    - scan_func
+    - scan_or
+    - first_other
+    - first_range
+    - first_func
+    - covering
 time_limit_s: 150
 canary: false
 prior_difficulty:
   b: 0.5
-  a: 1.1
+  a: 1.0
   sigma_variant: 0.45
-  basis: "3 строки (индекс + запрос), 4 фиксированных класса плана; десять случаев: условие только на второй столбец и равенство+диапазон проще, диапазон по первому столбцу, OR и покрывающий индекс труднее → σ высокая; Middle/Senior. Калибровка 05.10: класс «both» как ключ решался в 0,66 против 0,19–0,31 у остальных — как ключ исключён, остаётся дистрактором"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). 3 строки (индекс + запрос), 4 фиксированных класса плана;
+    десять случаев: условие только на второй столбец и равенство+диапазон проще, диапазон по первому столбцу, OR
+    и покрывающий индекс труднее → σ высокая; Middle/Senior. Калибровка 05.10: класс «both» как ключ решался в 0,66
+    против 0,19–0,31 у остальных — как ключ исключён, остаётся дистрактором'
 generator: assessment_bank.families.common.db_index_plan_mcq
 version: 2
-description: >
-  Составной индекс (a, b) и запрос с условием; выбрать, как СУБД выполнит запрос. Ключ
-  проверяется исполнением: DDL и запрос выполняются в SQLite, класс плана — по EXPLAIN QUERY PLAN.
-  Версия 2: ключом бывают только классы scan, first, covering; «оба столбца» — только дистрактор.
+description: 'Составной индекс (a, b) и запрос с условием; выбрать, как СУБД выполнит запрос. Ключ проверяется исполнением:
+  DDL и запрос выполняются в SQLite, класс плана — по EXPLAIN QUERY PLAN. Версия 2: ключом бывают только классы
+  scan, first, covering; «оба столбца» — только дистрактор.
+
+  '

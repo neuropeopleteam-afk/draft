@@ -22,12 +22,15 @@ class RegistryError(RuntimeError):
     pass
 
 
+_YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
 @lru_cache(maxsize=1)
 def load_specs() -> dict[str, FamilySpec]:
     specs: dict[str, FamilySpec] = {}
     for path in sorted(FAMILIES_DIR.glob("*/*.yaml")):
         with open(path, encoding="utf-8") as fh:
-            data = yaml.safe_load(fh)
+            data = yaml.load(fh, Loader=_YAML_LOADER)  # noqa: S506 — CSafeLoader идентичен safe_load, в 20× быстрее
         try:
             spec = FamilySpec(**data)
         except Exception as exc:  # pydantic.ValidationError и ошибки YAML
@@ -96,3 +99,8 @@ def canary_published_seeds(family_id: str) -> list[int]:
     if not spec.canary:
         return []
     return list(range(1, (spec.canary_pool_size or 0) + 1))
+
+
+def reload_registry() -> None:
+    load_specs.cache_clear()
+    _module.cache_clear()

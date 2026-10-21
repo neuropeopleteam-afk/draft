@@ -1,24 +1,44 @@
 family_id: backend.strategy.principal_data_freshness_mcq
 title: Свежесть данных по годовой цене — ночные пакеты, ежечасные, поток или CDC
 direction: backend
-skills: [data_pipelines, distributed_systems, architecture, technical_strategy, capacity_planning]
-target_grades: [principal]
+skills:
+- data_pipelines
+- distributed_systems
+- architecture
+- technical_strategy
+- capacity_planning
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    plans: [nightly, hourly, stream, cdc]
-    traps: [max_freshness, cheapest, without_on_call]
+    plans:
+    - nightly
+    - hourly
+    - stream
+    - cdc
+    traps:
+    - max_freshness
+    - cheapest
+    - without_on_call
 time_limit_s: 420
 canary: false
 prior_difficulty:
   b: 2.6
-  a: 1.4
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: конвейер обновления данных выбирается по годовой цене — инфраструктура и дежурства плюс потери от задержки (средняя задержка = половина периода запусков + обработка, у потоковых — их задержка) × число событий × цена часа. Верный вариант распределён поровну; ловушки — «максимальная свежесть», «дешевле всего» и расчёт без цены дежурств — отличаются от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном). Lead обычно выбирает поток «ради свежести» или оставляет ночную загрузку; Principal переводит задержку в деньги — граница Lead/Principal (θ ≈ 2,9); σ 0,3"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Короткое расчётное задание у границы Lead/Principal: конвейер
+    обновления данных выбирается по годовой цене — инфраструктура и дежурства плюс потери от задержки (средняя задержка
+    = половина периода запусков + обработка, у потоковых — их задержка) × число событий × цена часа. Верный вариант
+    распределён поровну; ловушки — «максимальная свежесть», «дешевле всего» и расчёт без цены дежурств — отличаются
+    от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном). Lead обычно выбирает поток «ради
+    свежести» или оставляет ночную загрузку; Principal переводит задержку в деньги — граница Lead/Principal (θ ≈
+    2,9); σ 0,3'
 generator: assessment_bank.families.backend.principal_data_freshness_mcq
 version: 1
-description: >
-  Principal (короткое, 7 мин): какой конвейер обновления данных даёт минимальную годовую цену. Ключ — исполнением:
-  события суток по минутам и момент их попадания в данные.
+description: 'Principal (короткое, 7 мин): какой конвейер обновления данных даёт минимальную годовую цену. Ключ
+  — исполнением: события суток по минутам и момент их попадания в данные.
+
+  '

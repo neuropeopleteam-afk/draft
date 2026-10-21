@@ -1,0 +1,38 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: analyst.principal_v2.read_repair_monotonic_ob3
+title: 'Системный и бизнес-анализ: Немонотонное чтение при неполном кворуме и гонке read-repair (3 шага)'
+direction: analyst
+skills:
+- requirements
+- api_contracts
+- bpmn
+- er_modeling
+- state_machines
+target_grades:
+- principal
+format: open_book_3step
+language: python
+invariants:
+  defect_type: non_monotonic_quorum_read
+  extra:
+    wave: LP-v2
+    slot: 22
+    direction_ru: Системный и бизнес-анализ
+  n_options: 4
+time_limit_s: 720
+canary: false
+prior_difficulty:
+  b: 2.89
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Системный и бизнес-анализ: немонотонное чтение
+    при неполном кворуме и гонке read-repair (3 шага); формат open_book_3step, целевые грейды principal (b = 2,89
+    у порога старшего грейда).'
+  step_offsets:
+  - -0.35
+  - 0.0
+  - 0.35
+generator: assessment_bank.families_retired.lp_v2_2010.analyst.lp2_22_read_repair_monotonic_ob3
+version: 1
+description: 'Системный и бизнес-анализ (principal): Немонотонное чтение при неполном кворуме и гонке read-repair
+  (3 шага). Проверка исполнением и рубрикой.'

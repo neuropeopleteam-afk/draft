@@ -144,7 +144,7 @@ def generate(seed: int):
                    f"с хоста клиент к `localhost:{db_host_port}` подключается.")
         why = (f"Строка {key}: `api` обращается к `{db[0]}` внутри сети compose, где доступен порт контейнера "
                f"{db[2]}. Порт {db_host_port} опубликован только на хосте. Нужно `{db[0]}:{db[2]}`.")
-    stem = (f"docker-compose.yml, {ctx}. {symptom} Укажите номер строки с ошибкой.")
+    stem = (f"docker-compose.yml, {ctx}. {symptom} Укажите номер строки, которую достаточно исправить одной правкой, чтобы ошибка ушла.")
     ak = AnswerKey(kind="line", value=key, explanation=why)
     return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="published_port_in_network",

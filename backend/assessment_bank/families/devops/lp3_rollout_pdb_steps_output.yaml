@@ -1,0 +1,33 @@
+# Волна LP-3 (tools/bank_lp3_yaml.py): расчётная задача старшего грейда с вводом ответа.
+family_id: devops.k8s.lp3_rollout_pdb_steps_output
+title: Сколько волн займёт выкатка с maxSurge, PDB и ёмкостью узлов
+direction: devops
+skills:
+- kubernetes
+- deployment
+- reliability
+- capacity_planning
+- sre
+target_grades:
+- senior
+- lead
+format: predict_output
+language: text
+invariants:
+  extra:
+    wave: LP-3
+    answer: typed
+    key_varies: true
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.7
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3: ввод ответа, угадывание исключено). Уровень senior, lead:
+    одновременная замена ограничена maxSurge, свободными местами, maxUnavailable и PodDisruptionBudget; наивный
+    подход даёт другой ответ, формула в условии не названа.'
+generator: assessment_bank.families.devops.lp3_rollout_pdb_steps_output
+version: 1
+description: 'Волна LP-3: сколько волн займёт выкатка с maxsurge, pdb и ёмкостью узлов. Ответ вводится; программа-модель
+  разбирает показанные данные и считает ключ, ключ меняется от варианта к варианту.'

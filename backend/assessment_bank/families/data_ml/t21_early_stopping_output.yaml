@@ -1,0 +1,33 @@
+family_id: data_ml.train.t21_early_stopping_output
+title: Ранняя остановка объектом с состоянием — min_delta, patience и два запуска подряд
+direction: data_ml
+skills:
+- python
+- ml
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 17
+  - 17
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо проследить автомат
+    ранней остановки (best, best_epoch, wait) на двух кривых потерь по 5–7 эпох: улучшение только при loss < best −
+    min_delta, сброс wait при улучшении, остановка при wait == patience; объект создаётся один раз на оба запуска
+    (состояние переходит во второй, wait может перескочить patience, и == больше не срабатывает) или заново на каждый.
+    Уровень Senior: время жизни изменяемого состояния объекта и точная логика колбэка обучения. Набор t21 (21.10) у
+    порога Senior (b = 1,1)'
+generator: assessment_bank.families.data_ml.t21_early_stopping_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Колбэк ранней остановки (класс с best, best_epoch,
+  wait) на двух запусках обучения подряд; предсказать лучшую эпоху, эпоху остановки и best после каждого запуска.
+  Ключ — независимая модель автомата состояний в генераторе, проверка — исполнение показанного кода в песочнице
+  Python.'

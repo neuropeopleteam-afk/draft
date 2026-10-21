@@ -1,0 +1,34 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: devops.principal_v2.hierarchical_tenant_quota_fix
+title: 'DevOps и SRE: Двухуровневое квотирование: лимит тенанта и защищённый резерв критичного трафика'
+direction: devops
+skills:
+- kubernetes
+- sre
+- monitoring
+- terraform
+- ci_cd
+target_grades:
+- principal
+format: choose_fix
+language: python
+invariants:
+  defect_type: priority_quota_starvation
+  extra:
+    wave: LP-v2
+    slot: 13
+    direction_ru: DevOps и SRE
+  n_options: 4
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 3.23
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). DevOps и SRE: двухуровневое квотирование: лимит
+    тенанта и защищённый резерв критичного трафика; формат choose_fix, целевые грейды principal (b = 3,23 у порога
+    старшего грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.devops.lp2_13_hierarchical_tenant_quota_fix
+version: 1
+description: 'DevOps и SRE (principal): Двухуровневое квотирование: лимит тенанта и защищённый резерв критичного
+  трафика. Проверка исполнением и рубрикой.'

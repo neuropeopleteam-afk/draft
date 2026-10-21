@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from functools import lru_cache
 import json
 from pathlib import Path
 
@@ -200,6 +201,7 @@ def _norm_protocol_region(raw_reg: str | None) -> tuple[str | None, str]:
     return s, "ПФО"
 
 
+@lru_cache(maxsize=4)
 def _load_hh_real_data() -> dict:
     here = Path(__file__).resolve()
     app_dir = here.parents[1]
@@ -499,18 +501,7 @@ def real_protocols_vs_hh_demand(k_min: int = 3) -> dict:
 def build_regions_map(db: Session, days: int | None = None, d: Data | None = None, include_demo: bool = True) -> dict:
     if d is None:
         d = load(db, days, include_demo=include_demo)
-    pq = (
-        select(CandidateProfile)
-        .join(User, User.id == CandidateProfile.user_id)
-        .where(
-            CandidateProfile.current_category_id.is_not(None),
-            User.email.not_like(f"%@{jury_scope.DOMAIN}"),
-        )
-    )
-    if not include_demo:
-        pq = pq.where(User.is_demo.is_(False), CandidateProfile.is_synthetic.is_(False))
-    profiles = db.scalars(pq).all()
-    companies = {c.id: c for c in db.scalars(select(Company)).all()}
+    companies = d.companies_by_id or {c.id: c for c in db.scalars(select(Company)).all()}
 
     dist_stats: dict[str, dict] = {
         info["id"]: {
@@ -529,16 +520,13 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
         for info in DISTRICTS
     }
 
-    for idx, p in enumerate(profiles):
-        cand = d.cands.get(p.user_id)
-        if not cand:
-            continue
-        cat = p.current_category_id or ""
-        direction = p.current_direction_id or (cat.split(".")[0] if "." in cat else "backend")
-        grade = p.current_grade_id or (cat.split(".")[1] if "." in cat else "middle")
-        dist_id, reg_title = resolve_geo(p.city, idx)
+    cand_list = list(d.cands.values())
+    for idx, cand in enumerate(cand_list):
+        direction = cand.direction or (cand.category.split(".")[0] if "." in cand.category else "backend")
+        grade = cand.grade or (cand.category.split(".")[1] if "." in cand.category else "middle")
+        dist_id, reg_title = resolve_geo(cand.city, idx)
         st = dist_stats[dist_id]
-        is_syn = bool(getattr(p, "is_synthetic", False) or getattr(p, "is_demo", False))
+        is_syn = bool(cand.is_synthetic)
         st["confirmed_raw"] += 1
         if is_syn:
             st["synthetic_raw"] += 1
@@ -568,12 +556,12 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
             st["demand_by_direction"][n_dir] += 1
         st["regions"][reg_title]["demand"] += 1
 
-    prof_by_uid = {p.user_id: (idx, p) for idx, p in enumerate(profiles)}
+    cand_idx_by_uid = {c.user_id: (idx, c) for idx, c in enumerate(cand_list)}
     for inv in d.invs:
-        entry = prof_by_uid.get(inv.candidate_user_id)
+        entry = cand_idx_by_uid.get(inv.candidate_user_id)
         if entry:
-            idx, p = entry
-            dist_id, reg_title = resolve_geo(p.city, idx)
+            idx, cand = entry
+            dist_id, reg_title = resolve_geo(cand.city, idx)
         else:
             comp = companies.get(inv.company_id)
             dist_id, reg_title = resolve_geo(getattr(comp, "city", None) if comp else None, 0)

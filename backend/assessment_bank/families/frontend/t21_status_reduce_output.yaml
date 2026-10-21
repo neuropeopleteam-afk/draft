@@ -1,0 +1,34 @@
+family_id: frontend.state.t21_status_reduce_output
+title: Счётчики по статусам — reduce в объект, filter и порядок ключей Object.entries
+direction: frontend
+skills:
+- javascript
+- state_management
+target_grades:
+- intern
+- junior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra:
+    items:
+    - 5
+    - 7
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две конструкции вместе:
+    reduce с подсчётом в объекте ((acc[k] || 0) + 1) и обход Object.entries в порядке первого появления ключа;
+    в части вариантов перед подсчётом filter. Уровень Junior: map/filter/reduce и подсчёт в словаре. Набор t21
+    (21.10) у порога Junior (b = −0,9)'
+generator: assessment_bank.families.frontend.t21_status_reduce_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Карточки сворачиваются reduce в счётчики по
+  статусам, пары печатаются через Object.entries; предсказать вывод. Ключ — независимый подсчёт в генераторе,
+  проверка — исполнение показанного кода в Node.js.'

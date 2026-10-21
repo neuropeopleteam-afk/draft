@@ -1,0 +1,27 @@
+family_id: qa.retry.t21_retry_loop_output
+title: Политика повторов запроса — цикл с continue и break
+direction: qa
+skills:
+- python
+- testing
+- http
+target_grades:
+- intern
+- junior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 9
+  - 9
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.95
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две конструкции вместе: цикл enumerate с началом 1 и ветки continue/break по кодам ответа (429 — continue, < 500 — break, 5xx — счётчик); после цикла нужны последние значения переменных. Уровень Junior: управление циклом. Набор t21 (21.10) у порога Junior (b = −0,95)'
+generator: assessment_bank.families.qa.t21_retry_loop_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Автотест перебирает записанные ответы сервера по попыткам: повтор, пропуск или выход; предсказать номер последней попытки, число ретраев и последний код. Ключ — независимая модель в генераторе, проверка — исполнение показанного кода в песочнице Python.'

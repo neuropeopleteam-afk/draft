@@ -1,0 +1,32 @@
+family_id: data_ml.metrics.t21_threshold_labels_output
+title: Вероятности модели в метки по порогу — if / else и равенство порогу
+direction: data_ml
+skills:
+- python
+- classification_metrics
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra:
+    n_scores:
+    - 5
+    - 7
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл по 5–7 оценкам
+    с if / else и сравнением с порогом; одна ловушка — оценка, равная порогу (>= или >). Уровень Стажёра: одна
+    базовая конструкция (if / else в цикле) без библиотек. Набор t21 (21.10) у порога Стажёра (b = −1,9)'
+generator: assessment_bank.families.data_ml.t21_threshold_labels_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Программа переводит вероятности модели в метки 0/1
+  по порогу и печатает список меток и их сумму; предсказать вывод print. Ключ — независимый расчёт на целых сотых
+  в генераторе, проверка — исполнение показанного кода в песочнице Python.'

@@ -1,0 +1,31 @@
+family_id: mobile.forms.t21_submit_finally_output
+title: Отправка форм через async try / catch / finally — порядок строк и подмена return
+direction: mobile
+skills:
+- javascript
+- async_await
+- error_handling
+target_grades:
+- senior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 17
+  - 18
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.85
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две параллельные отправки на
+    таймерах, async-функция с try / catch / finally и then снаружи; в части вариантов return в finally. Нужно проследить
+    синхронную часть до await, порядок catch → finally → then микрозадачами после каждого таймера и подмену результата return
+    в finally. Уровень Senior: async/await, микро- и макрозадачи. Набор t21 (21.10) у порога Senior (b = +0,85)'
+generator: assessment_bank.families.mobile.t21_submit_finally_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). React Native-экран отправляет две формы параллельно, submit
+  обрабатывает ответ в try / catch / finally; предсказать порядок строк и результаты промисов. Ключ — независимая модель
+  в генераторе на Python, проверка — исполнение показанного кода в песочнице Node.js.

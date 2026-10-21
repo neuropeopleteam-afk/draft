@@ -1,0 +1,34 @@
+family_id: security.token.t21_ttl_expiry_output
+title: Срок действия токена — exp = iat + ttl_min * 60 и строгое < на границе
+direction: security
+skills:
+- python
+- security
+- token_validation
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra:
+    times:
+    - 3
+    - 4
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.85
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Посчитать
+    exp = iat + ttl_min * 60 (умножение раньше сложения) и проверить 3–4 момента условием now < exp; ловушки —
+    приоритет операций и строгое сравнение в момент ровно exp. Уровень Стажёра: арифметика, цикл и if / else.
+    Набор t21 (21.10) у порога Стажёра (b = −1,85)'
+generator: assessment_bank.families.security.t21_ttl_expiry_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Сервис авторизации считает время истечения
+  токена и проверяет его в несколько моментов; предсказать вывод print. Ключ — независимый расчёт в генераторе,
+  проверка — исполнение показанного кода в песочнице Python.'

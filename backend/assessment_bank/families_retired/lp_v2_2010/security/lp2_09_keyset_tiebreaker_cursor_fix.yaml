@@ -1,0 +1,34 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: security.lead_v2.keyset_tiebreaker_cursor_fix
+title: 'Информационная безопасность: Курсорная пагинация без потери записей с совпадающей меткой времени'
+direction: security
+skills:
+- secure_code_review
+- authorization
+- aead
+- token_validation
+- incident_response
+target_grades:
+- lead
+format: choose_fix
+language: python
+invariants:
+  defect_type: cursor_tie_loss
+  extra:
+    wave: LP-v2
+    slot: 9
+    direction_ru: Информационная безопасность
+  n_options: 4
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.24
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Информационная безопасность: курсорная пагинация
+    без потери записей с совпадающей меткой времени; формат choose_fix, целевые грейды lead (b = 2,24 у порога старшего
+    грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.security.lp2_09_keyset_tiebreaker_cursor_fix
+version: 1
+description: 'Информационная безопасность (lead): Курсорная пагинация без потери записей с совпадающей меткой времени.
+  Проверка исполнением и рубрикой.'

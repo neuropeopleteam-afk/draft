@@ -1,23 +1,42 @@
 family_id: data_eng.strategy.principal_platform_open
-title: Стратегия платформы данных — хранилище или lakehouse по боли, контракты и владение доменами, миграция со сверкой
+title: Стратегия платформы данных — хранилище или lakehouse по боли, контракты и владение доменами, миграция со
+  сверкой
 direction: data_eng
-skills: [lakehouse, dwh, data_contracts, data_modeling, data_quality]
-target_grades: [principal]
+skills:
+- lakehouse
+- dwh
+- data_contracts
+- data_modeling
+- data_quality
+target_grades:
+- principal
 format: open_answer
 language: text
 invariants:
   extra:
-    pains: [cost, trust, freshness]
-    criteria: [decision, ownership, migration, tradeoffs, metrics]
+    pains:
+    - cost
+    - trust
+    - freshness
+    criteria:
+    - decision
+    - ownership
+    - migration
+    - tradeoffs
+    - metrics
 time_limit_s: 1800
 canary: false
 prior_difficulty:
   b: 2.7
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Априорная трудность (не по людям). Стратегия для всей компании на годы: решение от боли варианта (стоимость, доверие, свежесть), а не «lakehouse целиком», владение доменами и контракты на границе поставщика, миграция по витринам с параллельным прогоном и сверкой, цена двойного контура, метрики с базовой линией. Lead обычно предлагает полный переезд или data mesh без цены и порядка — граница Lead/Principal (θ ≈ 2,75); σ 0,35"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Стратегия для всей компании на годы: решение от боли варианта
+    (стоимость, доверие, свежесть), а не «lakehouse целиком», владение доменами и контракты на границе поставщика,
+    миграция по витринам с параллельным прогоном и сверкой, цена двойного контура, метрики с базовой линией. Lead
+    обычно предлагает полный переезд или data mesh без цены и порядка — граница Lead/Principal (θ ≈ 2,75); σ 0,35'
 generator: assessment_bank.families.data_eng.principal_platform_open
 version: 1
-description: >
-  Principal: стратегия платформы данных на 1–2 года при заданной боли. Пять критериев рубрики; оценка с
-  цитатами-доказательствами.
+description: 'Principal: стратегия платформы данных на 1–2 года при заданной боли. Пять критериев рубрики; оценка
+  с цитатами-доказательствами.
+
+  '

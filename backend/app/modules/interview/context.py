@@ -11,6 +11,7 @@ KF2 (20.10, мост «подозрение античита → устная з
 """
 from __future__ import annotations
 
+import os
 import re
 
 from sqlalchemy.orm import Session
@@ -20,6 +21,9 @@ from app.modules.assessment.models import TestSession
 from app.modules.catalog.seed_data import DIRECTIONS, tag_title
 
 TEXT_PARTS = {"open_answer": (0,), "open_book_3step": (2,)}
+# Обязательная устная часть (решение владельца 21.10): после последнего задания — разговор с Настей для каждого, 2–3
+# вопроса. Развёрнутых ответов нет — защищаются код и выбранные решения (как в KF2), без рекомендации по достоверности.
+ORAL_REQUIRED = os.environ.get("INTERVIEW_ORAL_REQUIRED", "1") == "1"
 _HIDDEN = re.compile("\u2063[^\u2063]*\u2063")  # скрытые фрагменты ИИ-метки (assessment/ai_mark) — не ответ кандидата
 
 
@@ -93,7 +97,7 @@ def eligible(ts: TestSession) -> tuple[list[dict], str | None]:
         return good, None
     from app.modules.interview.service import defense_recommendation  # service импортирует context — здесь лениво
 
-    if defense_recommendation(integrity_of(ts))[0]:
+    if ORAL_REQUIRED or defense_recommendation(integrity_of(ts))[0]:
         tasks = choice_tasks(ts)
         if tasks:
             return tasks, None
@@ -108,11 +112,21 @@ def _done_items(ts: TestSession) -> list[dict]:
 
 
 def choice_tasks(ts: TestSession, limit: int | None = None) -> list[dict]:
-    """KF2: задания сессии для устной защиты по коду и выбранным решениям — сначала задания с кодом, затем остальные,
-    свежие первыми; до interview_defense_max_tasks. Порядок результата — как в тесте."""
+    """KF2: задания сессии для устной защиты по коду и выбранным решениям — сначала задания с сигналами честности
+    (вставка текста, слишком быстрый ответ, ИИ-метка), затем с кодом, затем самые трудные, свежие первыми; до
+    interview_defense_max_tasks. Порядок результата — как в тесте."""
     lim = limit or get_settings().interview_defense_max_tasks
     done = _done_items(ts)
-    pick = sorted(done, key=lambda it: (not bool((it.get("public") or {}).get("code")), -(it.get("position") or 0)))[:lim]
+
+    def hard(it: dict) -> float:
+        for k in ("b", "difficulty", "item_b"):
+            v = it.get(k)
+            if isinstance(v, (int, float)):
+                return float(v)
+        return 0.0
+
+    pick = sorted(done, key=lambda it: (not _item_flags(it), not bool((it.get("public") or {}).get("code")), -hard(it),
+                                        -(it.get("position") or 0)))[:lim]
     out = [_choice_task(it) for it in sorted(pick, key=lambda it: it.get("position") or 0)]
     return [{**t, "basis": "code"} for t in out]
 
@@ -125,6 +139,19 @@ def last_task(ts: TestSession) -> dict | None:
     if not done:
         return None
     return _choice_task(max(done, key=lambda x: x.get("position") or 0))
+
+
+def _item_flags(it: dict) -> list[str]:
+    """Сигналы честности задания (те же, что у развёрнутых ответов)."""
+    flags = []
+    sig = it.get("signals") or {}
+    if (sig.get("paste_chars") or 0) >= 30:
+        flags.append("paste")
+    if it.get("fast_text"):
+        flags.append("fast_text")
+    if it.get("ai_mark_hit"):
+        flags.append("ai_mark")
+    return flags + [f for f in it.get("typing") or [] if isinstance(f, str)]
 
 
 def _choice_task(it: dict) -> dict:
@@ -149,7 +176,7 @@ def _choice_task(it: dict) -> dict:
     topics = [tag_title(t) for t in it.get("skills") or []]
     return {"id": f"t{it.get('position')}", "position": it.get("position"), "kind": it.get("format"),
             "stem": _clean(pub.get("stem") or ""), "code": pub.get("code"), "step_prompt": None,
-            "answer": answer, "topics": [t for t in topics if t][:8], "score": None, "integrity_flags": []}
+            "answer": answer, "topics": [t for t in topics if t][:8], "score": None, "integrity_flags": _item_flags(it)}
 
 
 def _title(a: dict) -> str:
@@ -160,7 +187,9 @@ def _title(a: dict) -> str:
 def defense_context(ts: TestSession, good: list[dict]) -> tuple[dict, dict]:
     """(context для сервиса, context_meta для БД). Берутся до max_tasks самых длинных ответов, порядок — как в тесте."""
     s = get_settings()
-    pick = sorted(sorted(good, key=lambda a: -len(a["answer"]))[: s.interview_defense_max_tasks], key=lambda a: a["position"])
+    # сначала задания с сигналами честности, затем самые развёрнутые ответы; порядок — как в тесте
+    pick = sorted(sorted(good, key=lambda a: (not a.get("integrity_flags"), -len(a["answer"])))[: s.interview_defense_max_tasks],
+                  key=lambda a: a["position"])
     tasks = []
     for a in pick:
         prompt = a["stem"] + (f"\n\nШаг: {a['step_prompt']}" if a["step_prompt"] else "")

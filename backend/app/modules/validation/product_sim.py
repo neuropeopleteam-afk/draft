@@ -66,6 +66,14 @@ STAND_ENV = {
     "CATALOG_EXT_ENABLED": "1",
     "LLM_DISABLED": "true",
     "ASSESSMENT_AI_MARK": "false",
+    # выбор на TRAIN-раунде 3 (поправка №3а, tools/publish/train_choice.py → docs/validation/TRAIN_CHOICE_2110b.json):
+    # T9 — без ротации субпулов, второй этап 12 заданий / 20 мин, δ SPRT 0,45, продление у спорного порога 36 / 105 мин
+    "ASSESSMENT_SUBPOOLS": "1",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "12",
+    "ASSESSMENT_TWO_STAGE_MINUTES": "20",
+    "ASSESSMENT_SPRT_DELTA": "0.45",
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "36",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "105",
 }
 
 TRAIN_SEEDS = tuple(range(1101, 1111))   # подбор настроек

@@ -1,23 +1,37 @@
 family_id: data_ml.ml.design_open
 title: Решения Data/ML — переобучение, дисбаланс, воспроизводимость, A/B-тест модели, мониторинг
 direction: data_ml
-skills: [overfitting, class_imbalance, reproducibility, ab_testing, model_monitoring]
-target_grades: [senior]
+skills:
+- overfitting
+- class_imbalance
+- reproducibility
+- ab_testing
+- model_monitoring
+target_grades:
+- senior
 format: open_answer
 language: text
 invariants:
   extra:
-    topics: [overfit, imbalance, repro, ab_design, delayed_labels]
+    topics:
+    - overfit
+    - imbalance
+    - repro
+    - ab_design
+    - delayed_labels
 time_limit_s: 1200
 canary: false
 prior_difficulty:
   b: 1.3
-  a: 0.9
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Развёрнутый ответ по ситуации с числами; рубрика из 3 критериев с весами и эталонами; сильный ответ требует отделить близкие причины (переобучение и сдвиг во времени, дрейф данных и дрейф зависимости) и предложить проверки, а не только меры (Senior)"
+  basis: Априорная, до калибровки на людях (a = 1,3). Развёрнутый ответ по ситуации с числами; рубрика из 3 критериев
+    с весами и эталонами; сильный ответ требует отделить близкие причины (переобучение и сдвиг во времени, дрейф
+    данных и дрейф зависимости) и предложить проверки, а не только меры (Senior)
 generator: assessment_bank.families.data_ml.ml_design_open
 version: 1
-description: >
-  Открытые вопросы Senior-уровня по Data/ML: диагностика переобучения и разрыва
-  офлайн/онлайн, работа с сильным дисбалансом, воспроизводимость обучения, дизайн
-  A/B-теста модели, мониторинг при отложенных метках. Оценка по рубрике.
+description: 'Открытые вопросы Senior-уровня по Data/ML: диагностика переобучения и разрыва офлайн/онлайн, работа
+  с сильным дисбалансом, воспроизводимость обучения, дизайн A/B-теста модели, мониторинг при отложенных метках.
+  Оценка по рубрике.
+
+  '

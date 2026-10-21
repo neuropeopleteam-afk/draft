@@ -141,13 +141,13 @@ export function Search() {
               hint="Только кандидаты с достижением из официального итогового протокола ФСП (ЕКП Минспорта РФ / ЕВСК), подтверждённым ФСП ID или представителем ФСП." />
           </div>
           <Toggle checked={confirmed} onChange={(v) => { setConfirmed(v); setPage(0); }} label="Только подтверждённый грейд"
-            hint="Без «Junior (предварительно)» и без кандидатов, чей грейд не подтверждён тестом. По умолчанию они показаны со статусом ниже подтверждённых." />
+            hint="Без кандидатов со статусом «нужен доп. этап» и без кандидатов, чей грейд не подтверждён тестом. По умолчанию они показаны со статусом ниже подтверждённых." />
           {cats.data && (
             <div className="hidden border-t border-brand-night/10 pt-3 text-xs text-brand-ink/65 lg:block">
               <p className="mb-1 font-semibold text-brand-night">Кандидатов по категориям</p>
               <ul className="grid grid-cols-1 gap-0.5">{cats.data.filter((c) => !direction || c.direction === direction).map((c) => (
                 <li key={c.id} className="flex justify-between gap-2"><span>{c.title}</span>
-                  <span title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, предварительно ${c.provisional}` : ""}${c.unconfirmed ? `, грейд не подтверждён ${c.unconfirmed}` : ""}`}>
+                  <span title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, нужен доп. этап ${c.provisional}` : ""}${c.unconfirmed ? `, грейд не подтверждён ${c.unconfirmed}` : ""}`}>
                     {c.count}{c.unconfirmed ? <span className="text-brand-ink/65"> +{c.unconfirmed}</span> : null}
                   </span>
                 </li>

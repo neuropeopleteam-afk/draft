@@ -1,0 +1,141 @@
+{
+ "method": "модель решает вариант, не видя ключа; сравнение ответа с ключом; выборка стратифицирована по (направление, формат), seed и SHA-256 списка — до прогона",
+ "model": "openai/gpt-5.6-luna",
+ "sample_seed": 20261021,
+ "variant_seed": 7,
+ "share": 0.1,
+ "sample_sha256": "8ac4348a23c4ba78f51702d9a2ee48aec7f64ae0a976c1b3ed28f36c0c4d5de2",
+ "n_sampled": 154,
+ "n_bank_auto_formats": 1445,
+ "n_match": 144,
+ "n_no_answer": 1,
+ "match_rate": 0.9351,
+ "by_format": {
+  "choose_fix": {
+   "n": 11,
+   "match": 11,
+   "no_answer": 0
+  },
+  "find_bug": {
+   "n": 10,
+   "match": 8,
+   "no_answer": 0
+  },
+  "mcq_concept": {
+   "n": 123,
+   "match": 115,
+   "no_answer": 1
+  },
+  "predict_output": {
+   "n": 10,
+   "match": 10,
+   "no_answer": 0
+  }
+ },
+ "mismatches": [
+  {
+   "family_id": "analyst.er_table_growth.senior_solve_ev_k3",
+   "format": "mcq_concept",
+   "direction": "analyst",
+   "key": "E",
+   "got": "B",
+   "match": false,
+   "no_answer": false,
+   "tail": " а накладные расходы — 10% от размера таблицы:\n\n\\[\n1 + 0{,}5 + 0{,}1 = 1{,}6\n\\]\n\nИтоговый множитель:\n\n\\[\n1{,}5 \\times 1{,}6 = 2{,}4\n\\]\n\nРазмер в МБ:\n\n\\[\n\\frac{4{,}704{,}000{,}000 \\times X \\times 2{,}4}{1{,}048{,}576}\n\\approx 10{,}766{,}6X\\text{ МБ}\n\\]\n\nПроверим предельные значения:\n\n- \\(X=53\\): примерно \\(570{,}630\\) МБ — помещается;\n- \\(X=54\\): примерно \\(581{,}397\\) МБ — не помещается.\n\nОТВЕТ: B"
+  },
+  {
+   "family_id": "data_ml.features.lag_window_leak_bug",
+   "format": "find_bug",
+   "direction": "data_ml",
+   "key": 8,
+   "got": "7",
+   "match": false,
+   "no_answer": false,
+   "tail": "Ошибка в строке 7: текущее значение `returns` добавляется в `seen` до вычисления `mean_last`. Поэтому признак включает целевое значение текущей строки, вызывая утечку данных. Нужно вычислять `recent` до добавления текущего `returns`, а затем добавлять его в `seen`.\n\nОТВЕТ: 7"
+  },
+  {
+   "family_id": "devops.db_iops.middle_solve_tps_k3",
+   "format": "mcq_concept",
+   "direction": "devops",
+   "key": "E",
+   "got": "D",
+   "match": false,
+   "no_answer": false,
+   "tail": "ции.\n\nИтого обычная запись с WAL: \\(3 + 1{,}5 = 4{,}5\\) операции. С учётом всплеска чекпойнтов:\n\n\\[\n4{,}5 \\times 1{,}5 = 6{,}75\n\\]\n\nОбщая нагрузка на транзакцию:\n\n\\[\n0{,}4 + 6{,}75 = 7{,}15 \\text{ IOPS}\n\\]\n\nМаксимальный теоретический поток:\n\n\\[\nX \\leq \\frac{206366}{7{,}15} \\approx 28862 \\text{ TPS}\n\\]\n\nИз заданного ряда максимальное значение, не превышающее этот предел, — **28 850 TPS**.\n\nОТВЕТ: D"
+  },
+  {
+   "family_id": "devops.k8s_nodes.senior_solve_nc_k3",
+   "format": "mcq_concept",
+   "direction": "devops",
+   "key": "A",
+   "got": "B",
+   "match": false,
+   "no_answer": false,
+   "tail": "Суммарная потребность подов:\n\n\\[\n530 \\times 1000\\text{ mCPU} = 530\\text{ vCPU}\n\\]\n\nНа одном узле для pod requests доступно:\n\n\\[\nX \\times (1 - 0{,}15) \\times 0{,}75 = 0{,}6375X\n\\]\n\nТребование по квоте:\n\n\\[\n\\frac{530}{0{,}6375X} \\le 18{,}44\n\\]\n\nОтсюда:\n\n\\[\nX \\ge \\frac{530}{18{,}44 \\times 0{,}6375} \\approx 45{,}08\n\\]\n\nИз ряда с шагом 2 минимальное подходящее значение — 46 vCPU.\n\nОТВЕТ: B"
+  },
+  {
+   "family_id": "frontend.bundle_load.principal_solve_bw_k5",
+   "format": "mcq_concept",
+   "direction": "frontend",
+   "key": "B",
+   "got": null,
+   "match": false,
+   "no_answer": true,
+   "tail": ""
+  },
+  {
+   "family_id": "mobile.js.version_gate_bug",
+   "format": "find_bug",
+   "direction": "mobile",
+   "key": 9,
+   "got": "10",
+   "match": false,
+   "no_answer": false,
+   "tail": "Ошибка в строке 10: компоненты версий сравниваются как строки, поэтому `'17' < '6'` даёт `true`. Компоненты нужно преобразовать в числа; аналогично это относится к сравнению в строке 11.\n\nОТВЕТ: 10"
+  },
+  {
+   "family_id": "mobile.offline_sync_batch.senior_solve_bs_k3",
+   "format": "mcq_concept",
+   "direction": "mobile",
+   "key": "B",
+   "got": "E",
+   "match": false,
+   "no_answer": false,
+   "tail": " среднее число попыток:\n\n\\[\n\\frac{N}{0{,}85}\n\\]\n\nВремя одной попытки с учётом SQLite:\n\n\\[\n0{,}4 \\times 1{,}1=0{,}44\\text{ с}\n\\]\n\nДля \\(X=110\\):\n\n\\[\nN=\\left\\lceil\\frac{1960}{110}\\right\\rceil=18\n\\]\n\n\\[\nT=\\frac{18}{0{,}85}\\times0{,}44\\approx9{,}318\\text{ с}\n\\]\n\nЭто укладывается в окно \\(9{,}32\\) с. Предыдущее значение \\(X=100\\) даёт 20 пачек и время около \\(10{,}35\\) с, то есть не подходит.\n\nОТВЕТ: E"
+  },
+  {
+   "family_id": "qa.bug_backlog.senior_solve_inc_k3",
+   "format": "mcq_concept",
+   "direction": "qa",
+   "key": "D",
+   "got": "C",
+   "match": false,
+   "no_answer": false,
+   "tail": "тельность за 28 дней:\n\n\\[\n19\\times \\frac{28}{1{,}15}\\approx 462{,}61\n\\]\n\nС учётом переоткрытий исходный бэклог требует:\n\n\\[\n325\\times1{,}05=341{,}25\n\\]\n\nОстаётся на новые баги:\n\n\\[\n462{,}61-341{,}25=121{,}36\n\\]\n\nТогда:\n\n\\[\n0{,}7875X\\times28\\le121{,}36\n\\]\n\n\\[\nX\\le5{,}50\n\\]\n\nИз проверяемого ряда наибольшее целое значение — 5. При \\(X=5\\) бэклог разбирается вовремя, а при \\(X=6\\) — уже нет.\n\nОТВЕТ: C"
+  },
+  {
+   "family_id": "security.deps_audit.middle_solve_wk_k2",
+   "format": "mcq_concept",
+   "direction": "security",
+   "key": "E",
+   "got": "B",
+   "match": false,
+   "no_answer": false,
+   "tail": "воркерах длительность составляет:\n\n\\[\n\\left\\lceil \\frac{160}{X} \\right\\rceil \\times 1{,}5\n\\]\n\nДля \\(X=19\\):\n\n\\[\n\\left\\lceil \\frac{160}{19} \\right\\rceil \\times 1{,}5\n= 9 \\times 1{,}5 = 13{,}5\\text{ мин}\n\\]\n\nЭто больше лимита 13,44 мин.\n\nДля \\(X=20\\):\n\n\\[\n\\left\\lceil \\frac{160}{20} \\right\\rceil \\times 1{,}5\n= 8 \\times 1{,}5 = 12\\text{ мин}\n\\]\n\nМинимальное подходящее значение — 20 воркеров.\n\nОТВЕТ: B"
+  },
+  {
+   "family_id": "security.hmac_webhook.lead_solve_wh_k5",
+   "format": "mcq_concept",
+   "direction": "security",
+   "key": "E",
+   "got": "C",
+   "match": false,
+   "no_answer": false,
+   "tail": "авок:\n\n\\[\nX \\cdot (1{,}5+0{,}1)=1{,}6X\n\\]\n\nCPU на сообщение с учётом nonce и разбора JSON:\n\n\\[\n200\\ \\text{мкс}\\cdot1{,}3=260\\ \\text{мкс}=0{,}00026\\ \\text{с}\n\\]\n\nС учётом допустимой загрузки CPU в 70% максимальный базовый поток:\n\n\\[\n\\frac{(45{,}32-2)\\cdot0{,}7}{1{,}6\\cdot0{,}00026}\n\\approx 72\\,894\\ \\text{сообщ./с}\n\\]\n\nИз ряда с шагом 1000 подходит наибольшее значение \\(72\\,500\\) сообщ./с.\n\nОТВЕТ: C"
+  }
+ ],
+ "elapsed_s": 205.7,
+ "generated_at": "2026-10-21 07:21:35",
+ "recompute": "PYTHONPATH=. python3 ../tools/bank_blind_solve.py --share 0.1 --sample-seed 20261021 --model openai/gpt-5.6-luna --jobs 6 --out ../docs/bank/blind_solve_2110.json",
+ "rescored_at": "2026-10-21 07:26:29"
+}

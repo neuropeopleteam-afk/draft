@@ -931,10 +931,10 @@ def submit_item_appeal(db: Session, ts: TestSession, item_id: str, reason: str, 
     eng = get_engine(st.get("engine"))
     fn = getattr(eng, "submit_appeal", None)
     if not callable(fn):
-        raise AppError(409, "appeals_unsupported", "Движок сессии не поддерживает апелляции по заданиям")
+        raise api_error(409, "appeals_unsupported", "Движок сессии не поддерживает апелляции по заданиям")
     rec = fn(st, item_id=item_id, reason=reason, actor=actor)
     if rec is None:
-        raise AppError(404, "item_not_found", "Задание в этой сессии не найдено")
+        raise api_error(404, "item_not_found", "Задание в этой сессии не найдено")
     res_obj["state"] = st
     recomp = rec.get("recomputed_without_item") or {}
     if recomp.get("verdict") and isinstance(res_obj.get("engine_result"), dict):

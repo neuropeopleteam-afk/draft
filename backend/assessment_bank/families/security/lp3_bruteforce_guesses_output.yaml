@@ -1,0 +1,32 @@
+# Волна LP-3 (tools/bank_lp3_yaml.py): расчётная задача старшего грейда с вводом ответа.
+family_id: security.auth.lp3_bruteforce_guesses_output
+title: Сколько паролей атакующий проверит за сутки при лимитах и блокировке
+direction: security
+skills:
+- authentication
+- threat_modeling
+- rate_limiting
+- secure_design
+- account_security
+target_grades:
+- lead
+format: predict_output
+language: text
+invariants:
+  extra:
+    wave: LP-3
+    answer: typed
+    key_varies: true
+time_limit_s: 480
+canary: false
+prior_difficulty:
+  b: 2.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3: ввод ответа, угадывание исключено). Уровень lead: меньшее
+    из лимита по IP и циклов «серия попыток + блокировка» по учётным записям; наивный подход даёт другой ответ,
+    формула в условии не названа.'
+generator: assessment_bank.families.security.lp3_bruteforce_guesses_output
+version: 1
+description: 'Волна LP-3: сколько паролей атакующий проверит за сутки при лимитах и блокировке. Ответ вводится;
+  программа-модель разбирает показанные данные и считает ключ, ключ меняется от варианта к варианту.'

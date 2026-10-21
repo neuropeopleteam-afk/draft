@@ -1,0 +1,32 @@
+family_id: frontend.state.t21_batch_flush_output
+title: Буфер событий аналитики — отправка пакета по размеру или по таймеру, clearTimeout и микрозадачи
+direction: frontend
+skills:
+- javascript
+target_grades:
+- senior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 17
+  - 18
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проследить, в какой пакет
+    попадает каждое событие: синхронные и события из микрозадач приходят раньше таймера отправки, таймер-событие,
+    поставленное до таймера отправки, успевает в тот же пакет, отправка по размеру отменяет таймер (clearTimeout), и
+    следующее событие заводит новый. Микро- и макрозадачи вместе с отменой таймера — глубокая семантика цикла
+    событий, уровень Senior. Набор t21 (21.10) у порога Senior (b = 0,9)'
+generator: assessment_bank.families.frontend.t21_batch_flush_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Интерфейс копит события аналитики в буфере: track
+  отправляет пакет сразу при достижении порога размера, иначе заводит таймер setTimeout(…, 0); flush снимает таймер и
+  печатает пакет. События приходят синхронно, из Promise.then / queueMicrotask и из таймеров; предсказать вывод.
+  Каркас отличается от пакетной перерисовки через флаг и queueMicrotask (mobile.state.t21_render_batch_output). Ключ —
+  модель очередей и таймеров в генераторе, проверка — исполнение показанного кода в Node.js.'

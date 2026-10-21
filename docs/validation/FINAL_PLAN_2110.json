@@ -1,0 +1,237 @@
+{
+ "phase": "final",
+ "n_per_seed": 100,
+ "seeds": [
+  4401,
+  4402,
+  4403,
+  4404,
+  4405,
+  4406,
+  4407,
+  4408,
+  4409,
+  4410
+ ],
+ "common_args": [],
+ "note": "FINAL (поправки №3–3а): один прогон после заморозки банка А3 (ag/a3-bank 78651e7495, дерево банка a526dc3ee, content_hash c6755c46ddb79f86, 1 644 семейства); настройки — STAND_ENV с выбором T9 TRAIN-раунда 3; F_* — жёсткие условия на FINAL_SEEDS 4401–4410, S_T — стандартные условия на ST_SEEDS 5501–5510, B_* — боты на FINAL_SEED 4501 (n = 400 на стратегию)",
+ "a3_head": "78651e7495c2e0b05dff0fb6daca9211091175b1",
+ "bank_hash": "c6755c46ddb79f86",
+ "configs": {
+  "F_calibrated": {
+   "n_per_seed": 300,
+   "args": [
+    "--retest",
+    "--fixed",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86"
+   ],
+   "out_name": "product_sim_final_calibrated.json"
+  },
+  "F_misspec": {
+   "n_per_seed": 200,
+   "args": [
+    "--world",
+    "misspec",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86"
+   ],
+   "out_name": "product_sim_final_misspec.json"
+  },
+  "F_rater": {
+   "n_per_seed": 150,
+   "args": [
+    "--rater-noise",
+    "0.1",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86"
+   ],
+   "out_name": "product_sim_final_rater.json"
+  },
+  "F_amult07": {
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "amult",
+    "--a-mult",
+    "0.7",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86"
+   ],
+   "out_name": "product_sim_final_amult07.json"
+  },
+  "F_amult14": {
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "amult",
+    "--a-mult",
+    "1.4",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86"
+   ],
+   "out_name": "product_sim_final_amult14.json"
+  },
+  "F_testlet": {
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "testlet",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86"
+   ],
+   "out_name": "product_sim_final_testlet.json"
+  },
+  "F_fatigue": {
+   "n_per_seed": 100,
+   "args": [
+    "--world",
+    "fatigue",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86"
+   ],
+   "out_name": "product_sim_final_fatigue.json"
+  },
+  "S_T": {
+   "phase": "st",
+   "seeds": [
+    5501,
+    5502,
+    5503,
+    5504,
+    5505,
+    5506,
+    5507,
+    5508,
+    5509,
+    5510
+   ],
+   "n_per_seed": 300,
+   "args": [
+    "--population",
+    "st",
+    "--world",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--retest",
+    "--fixed",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86"
+   ],
+   "out_name": "product_sim_st.json"
+  },
+  "B_ctl": {
+   "module_args": [
+    "app.modules.validation.cheat_bots",
+    "--final",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86",
+    "--n",
+    "400",
+    "--strategies",
+    "control,single_form",
+    "--k",
+    "",
+    "--out",
+    "{out}"
+   ]
+  },
+  "B_guess1": {
+   "module_args": [
+    "app.modules.validation.cheat_bots",
+    "--final",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86",
+    "--n",
+    "400",
+    "--strategies",
+    "random,position_A,position_B",
+    "--k",
+    "",
+    "--out",
+    "{out}"
+   ]
+  },
+  "B_guess2": {
+   "module_args": [
+    "app.modules.validation.cheat_bots",
+    "--final",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86",
+    "--n",
+    "400",
+    "--strategies",
+    "position_C,position_D,longest",
+    "--k",
+    "",
+    "--out",
+    "{out}"
+   ]
+  },
+  "B_heur": {
+   "module_args": [
+    "app.modules.validation.cheat_bots",
+    "--final",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86",
+    "--n",
+    "400",
+    "--strategies",
+    "median_number,overlap",
+    "--k",
+    "",
+    "--out",
+    "{out}"
+   ]
+  },
+  "B_leak10": {
+   "module_args": [
+    "app.modules.validation.cheat_bots",
+    "--final",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86",
+    "--n",
+    "400",
+    "--strategies",
+    "",
+    "--k",
+    "10",
+    "--out",
+    "{out}"
+   ]
+  },
+  "B_leak100": {
+   "module_args": [
+    "app.modules.validation.cheat_bots",
+    "--final",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86",
+    "--n",
+    "400",
+    "--strategies",
+    "",
+    "--k",
+    "100",
+    "--out",
+    "{out}"
+   ]
+  },
+  "B_leak1000": {
+   "module_args": [
+    "app.modules.validation.cheat_bots",
+    "--final",
+    "--expect-bank-hash",
+    "c6755c46ddb79f86",
+    "--n",
+    "400",
+    "--strategies",
+    "",
+    "--k",
+    "1000",
+    "--out",
+    "{out}"
+   ]
+  }
+ }
+}

@@ -11,7 +11,7 @@ t = max(lag_i) / (c − p). Дистракторы — фиксированны�
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, make_options, make_rng, plural
+from assessment_bank.gen_utils import build_variant, make_options, make_rng, pick_ranked, plural
 from assessment_bank.schema import AnswerKey, Check
 
 from ..devops._yaml_model import program
@@ -31,6 +31,12 @@ print(f"{minutes:.1f}".replace(".", ",") + " мин")
 '''
 
 
+_LAG_ERR = {"sum": "сумма отставаний, как будто одна партиция", "group_rate": "скорость c − p на всю группу, а не на "
+            "каждую партицию", "seconds": "секунды вместо минут", "no_produce": "деление на скорость обработки — "
+            "входящий поток забыт", "avg": "среднее отставание вместо худшей партиции", "c_plus_p": "деление на c + p",
+            "hours": "часы вместо минут"}
+
+
 def _fmt(x: float) -> str:
     return f"{x:.1f}".replace(".", ",") + " мин"
 
@@ -38,6 +44,7 @@ def _fmt(x: float) -> str:
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, topic, group = rng.choice(CTX)
+    n_below = rng.randrange(4)  # ранг ключа среди вариантов — равномерный (аудит 21.10: ключ всегда был медианой)
     for _ in range(5000):
         P = rng.randint(3, 6)
         produce = rng.choice([20, 40, 50, 80, 100, 150])
@@ -51,10 +58,21 @@ def generate(seed: int):
         lags[hot] = max(lags) + rng.randint(10, 60) * net * 6
         leo = [c + lg for c, lg in zip(cur, lags)]
         right = max(lags) / net / 60
-        wrong = [sum(lags) / net / 60, max(lags) / consume / 60, sum(lags) / P / net / 60]
-        texts = [_fmt(right)] + [_fmt(w) for w in wrong]
-        if len(set(texts)) == 4 and right <= 240:
+        if right > 240:
+            continue
+        # Типовые ошибки (по обе стороны от ключа): сумма отставаний — «один поток»; скорость c − p на всю группу,
+        # а не на партицию (×P); секунды вместо минут; деление на c — входящий поток забыт; среднее отставание;
+        # деление на c + p; часы вместо минут.
+        pool = {"sum": sum(lags) / net / 60, "group_rate": P * max(lags) / net / 60, "seconds": max(lags) / net,
+                "no_produce": max(lags) / consume / 60, "avg": sum(lags) / P / net / 60,
+                "c_plus_p": max(lags) / (consume + produce) / 60, "hours": max(lags) / net / 3600}
+        pool = {k: v for k, v in pool.items() if 0.1 <= v <= 50_000}
+        picked = pick_ranked(rng, right, pool, n_below, fmt=_fmt)
+        if picked:
+            texts = [_fmt(right)] + [_fmt(pool[n]) for n in picked]
             break
+    else:  # pragma: no cover
+        raise RuntimeError("не удалось подобрать параметры")
     wg, wt = max(len(group), 5) + 2, max(len(topic), 5) + 2
     head = f"{'GROUP':<{wg}}{'TOPIC':<{wt}}{'PARTITION':<11}{'CURRENT-OFFSET':<16}LOG-END-OFFSET"
     lines = [head] + [f"{group:<{wg}}{topic:<{wt}}{i:<11}{cur[i]:<16}{leo[i]}" for i in range(P)]
@@ -67,8 +85,8 @@ def generate(seed: int):
             "станет нулевым по всем партициям?")
     expl = (f"Отставание партиции — LOG-END-OFFSET − CURRENT-OFFSET; максимум — {max(lags)} у партиции {hot}. Каждая "
             f"партиция догоняет независимо со скоростью {consume} − {produce} = {net} сообщений/с, поэтому время "
-            f"определяет худшая: {max(lags)} / {net} / 60 = {texts[0]}. Сумма отставаний на {net} — это как будто "
-            f"одна партиция; деление на {consume} забывает входящий поток; среднее не учитывает самую отстающую.")
+            f"определяет худшая: {max(lags)} / {net} / 60 = {texts[0]}. Дистракторы — типовые ошибки: "
+            + "; ".join(f"{_fmt(pool[n])} — {_LAG_ERR[n]}" for n in picked) + ".")
     prog = program(f"PRODUCE, CONSUME = {produce}, {consume}\n" + MODEL, TABLE=table)
     checks = [Check(name="lag_model", runner="python", program=prog, expect="stdout_equals",
                     expected_stdout=texts[0], embeds_display_code=False)]
@@ -77,4 +95,4 @@ def generate(seed: int):
                          verification="execution", checks=checks, language="text",
                          display_code_note="Показан вывод kafka-consumer-groups; исполняется модель отставания по "
                                            "показанной таблице",
-                         params={"P": P, "produce": produce, "consume": consume, "hot": hot})
+                         params={"P": P, "produce": produce, "consume": consume, "hot": hot, "traps": picked})

@@ -1,0 +1,33 @@
+family_id: data_eng.sql.t21_partition_range_output
+title: SQL — дневные партиции в диапазоне дат (границы WHERE) и ORDER BY DESC
+direction: data_eng
+skills:
+- sql
+- partitioning
+- etl
+target_grades:
+- intern
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 4
+  - 4
+  extra:
+    days:
+    - 7
+    - 9
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Отобрать 2–4 из 7–9 дневных партиций
+    по диапазону дат с границами >= / > и < / <= и записать их в порядке DESC; ловушки — включена ли граница и обратный
+    порядок. Уровень Стажёра: базовые WHERE и ORDER BY. Набор t21 (21.10) у порога Стажёра (b = −1,6)'
+generator: assessment_bank.families.data_eng.t21_partition_range_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Таблица дневных партиций и запрос, выбирающий дни для перезагрузки
+  по диапазону дат с сортировкой по убыванию; предсказать строки результата. Ключ — независимый отбор в генераторе, проверка
+  — исполнение запроса в sqlite.

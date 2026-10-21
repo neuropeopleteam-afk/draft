@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: backend.principal_v2.cross_domain_isolation_blast_oa
+title: 'Backend-разработка: Ограничение радиуса поражения (cell-based архитектура и сброс нагрузки)'
+direction: backend
+skills:
+- fastapi
+- postgresql
+- asyncio
+- rest_api
+- caching
+target_grades:
+- principal
+format: open_answer
+language: text
+invariants:
+  defect_type: blast_radius_isolation
+  extra:
+    wave: LP-v2
+    slot: 31
+    direction_ru: Backend-разработка
+time_limit_s: 780
+canary: false
+prior_difficulty:
+  b: 3.19
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Backend-разработка: ограничение радиуса поражения
+    (cell-based архитектура и сброс нагрузки); формат open_answer, целевые грейды principal (b = 3,19 у порога старшего
+    грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.backend.lp2_31_cross_domain_isolation_blast_oa
+version: 1
+description: 'Backend-разработка (principal): Ограничение радиуса поражения (cell-based архитектура и сброс нагрузки).
+  Проверка исполнением и рубрикой.'
