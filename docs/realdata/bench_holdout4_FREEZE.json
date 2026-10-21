@@ -1,7 +1,7 @@
 {
  "what": "FREEZE отложенного бенчмарка подбора match-v2 (до прогона)",
- "frozen_at": "2026-10-21T16:15:39+00:00",
- "git_head_before_freeze_commit": "503ca3e943259f604a0f82c38615b700a2e0ed7e",
+ "frozen_at": "2026-10-21T16:17:26+00:00",
+ "git_head_before_freeze_commit": "3da2d199fd83e1f06fc575249a1282c714dc3de3",
  "worlds": {
   "sm": [
    77021171,
@@ -43,7 +43,7 @@
   "seed": 7702113
  },
  "files_sha256": {
-  "docs/realdata/bench_holdout4_PROTOCOL.md": "2b1dae12e62288ba74965967ee5d867c7bfa727cf9fd1c6c59c5e54736b088e5",
+  "docs/realdata/bench_holdout4_PROTOCOL.md": "cf18d5f2e37a0a937c5ca6998897231bc7a590900e65ad45e15aef09e4e7f495",
   "tools/realdata/bench_holdout4.py": "3317137a84a4ab6980aff6871c1bb214fd8310db78e0a2991c6990856bf04440",
   "tools/realdata/bench2.py": "4bcd12ed718d9eeb2ffb60e8e6a30bbd894655a3eaf37f04be2f941fe256c101",
   "backend/app/modules/matching/ranking.py": "6ef061d9e6a242473098f59bd72ed656b6ad7aa745862efd36fb2f02e1332907",

@@ -1,7 +1,7 @@
 {
  "what": "FREEZE сравнения «один в один» на генераторе Dev_dev (до прогона)",
- "frozen_at": "2026-10-21T16:15:39+00:00",
- "git_head_before_freeze_commit": "503ca3e943259f604a0f82c38615b700a2e0ed7e",
+ "frozen_at": "2026-10-21T16:17:26+00:00",
+ "git_head_before_freeze_commit": "3da2d199fd83e1f06fc575249a1282c714dc3de3",
  "their_repo": "https://github.com/LaimOr127/Digital-platform-aggregator-of-IT-vacancies-FSP-",
  "their_commit": "dec3f95449d2f89972bd99f5b6fb661ddd836cea",
  "holdout_seeds": [
@@ -48,7 +48,7 @@
   "tools/realdata/devdev/rank_ours.py": "82e610f50ba454baca352b15d6cf559a2a540306fe0b4417dff0428069a5a3c5",
   "tools/realdata/devdev/devdev_1to1_4.py": "c592c7db549056a7400d3df20bd1bedc34ce59250115361fc50c6213dff2c4dc",
   "tools/realdata/bench2.py": "4bcd12ed718d9eeb2ffb60e8e6a30bbd894655a3eaf37f04be2f941fe256c101",
-  "docs/realdata/DEVDEV_PROTOCOL_4.md": "823486eef5bef9d6cfe1fb15d92c9c91491df3dd0e2e98776bca354c6411ca12"
+  "docs/realdata/DEVDEV_PROTOCOL_4.md": "242a2228365f1c17236b05ce01b9cdb97997a0709574c2240cac054b800d922a"
  },
  "dirs_sha256": {
   "backend/app/modules/matching": "57675639aa0f330da9749a9ae65715146f1b34dfef0c329c2bb927e4c3c0b24d",
