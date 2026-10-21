@@ -141,7 +141,10 @@ def test_api_ru_llm(client):
                 assert c["ok"] <= c["n"] and c["p50_s"] <= c["p95_s"]
     if any(f["rows"]["ru"]["status"] == "pending" for f in d["functions"]):
         assert "ещё не замерена" in d["pending_note"]  # честно: нет прогона — нет числа
-    assert d["how_to_enable"]["env"][0] == "LLM_CHAIN=yandex"
+    # экранный API без имён поставщиков (no_vendor, правило владельца): переменная окружения LLM_CHAIN=yandex заменена
+    # понятным названием режима; само переключение описано в docs/LLM.md
+    env0 = d["how_to_enable"]["env"][0]
+    assert env0 and "yandex" not in env0.lower() and "российск" in env0
     text = " ".join(d["conditions"])
     assert "не экспертная" in text and "модель" in text
     raw = json.dumps(d, ensure_ascii=False)

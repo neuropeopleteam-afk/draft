@@ -162,3 +162,8 @@ product-sim: ## Симуляция продукта (А4): итоговый пр
 
 cheat-bots: ## «Обмани тест» (А4): боты-стратегии, единая форма и утечка K = 10/100/1000 через движок (n = 400 на стратегию)
 	cd backend && python -m app.modules.validation.cheat_bots --n 400 --k 10,100,1000 --strategies control,single_form,random,position_A,position_B,position_C,position_D,longest,median_number,overlap --out ../out/cheat_bots.json
+
+numbers: ## Единый источник цифр (А4): docs/NUMBERS.json + копии во frontend/backend и docs/validation/VALIDATION_REPORT.md из JSON-артефактов (--check — только проверка актуальности)
+	python3 tools/publish/gen_numbers.py
+
+.PHONY: product-sim cheat-bots numbers

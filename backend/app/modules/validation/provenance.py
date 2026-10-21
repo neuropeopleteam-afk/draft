@@ -78,7 +78,7 @@ SOURCES: dict[str, dict] = {
              "title": "Повтор всего пути, точность к истине, D и r_pb", "sections": ["headline", "path-retest", "discrimination"]},
     "accuracy": {"file": "accuracy_views.json", "command": "make accuracy-views", "kind": "synthetic",
                  "title": "Точность грейда: вдали от порога, без занижения заявки, строго", "sections": ["headline"]},
-    "numbers": {"file": "numbers.json", "command": "python3 tools/publish/gen_numbers.py", "kind": "synthetic",
+    "numbers": {"file": "numbers.json", "command": "make numbers", "kind": "synthetic",
                 "title": "Единый источник цифр сайта (копия docs/NUMBERS.json): подбор — отложенная проверка",
                 "sections": ["headline"]},
     "bench": {"file": "matching_bench.json", "command": "make bench", "kind": "synthetic",
