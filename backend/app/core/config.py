@@ -272,6 +272,8 @@ class Settings(BaseSettings):
     assessment_two_stage_floor: bool = False
     # А4 (21.10): квота ≥ 1/3 практических заданий и в дотестировании у порога / втором этапе (assessment/exposure.py)
     assessment_code_quota_ext: bool = False
+    # А4 (21.10): оценка уровня с угадыванием c = 1/4 в частях с выбором варианта (assessment/exposure.py)
+    assessment_guessing_3pl: bool = False
     # Я22: чистка пула — 26 семейств, слабых по калибровке панелью моделей (assessment/weak_pool.py), не выдаются ни в
     # основной части, ни в дотестировании. false — пул как раньше. По умолчанию выключено: на симуляции повтор (κw)
     # с исключением ниже (docs/validation/GRADE_ACCURACY.md, «Чистка пула»)

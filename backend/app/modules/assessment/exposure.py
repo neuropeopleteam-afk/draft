@@ -22,6 +22,8 @@
 """
 from __future__ import annotations
 
+import numpy as np
+
 from functools import lru_cache
 import json
 from pathlib import Path
@@ -163,6 +165,57 @@ class AppCATSession(CATSession):
         oldest = [i for common in (True, False) for i in self._oldest([r for r in reserve if (r.block == "common") == common])]
         return self._apply_format_quota(oldest)
 
+    # --- А4 (21.10): угадывание в вопросах с выбором ответа (3PL с известным c = 1/K) -----------------------------
+    # Банк задаёт части 2PL без угадывания, а у 621 семейства вопросов с выбором априорная различающая сила a = 3,0.
+    # Тогда несколько удачных угадываний подряд у границы дают уверенное «подтверждён»: бот со случайными ответами
+    # получал подтверждение Junior (боты через движок, cheat_bots.py). Оценка уровня с угадыванием c = 1/K для частей с
+    # выбором варианта (K = 4 — минимальное число вариантов банка; код, строка, вывод и текст — c = 0) убирает этот
+    # эффект и честнее для людей (они тоже угадывают). Настройка ASSESSMENT_GUESSING_3PL.
+    _OPTION_PART_FORMATS = {"mcq_concept": None, "choose_fix": None, "open_book_3step": (0, 1), "incident_sim": (0, 1)}
+
+    def _guess_c(self, it: PoolItem) -> np.ndarray:
+        n = len(np.atleast_1d(it.b))
+        c = np.zeros(n)
+        parts = self._OPTION_PART_FORMATS.get(it.format, ())
+        if parts is None:
+            c[:] = 0.25
+        else:
+            for j in parts:
+                if j < n:
+                    c[j] = 0.25
+        return c
+
+    def _estimate(self, exclude: set[int] | None = None, prior_mean: float = 0.0, prior_sd: float | None = None):
+        if self.cfg.partial_credit or not _guessing_on():
+            return super()._estimate(exclude, prior_mean=prior_mean, prior_sd=prior_sd)
+        from assessment_bank.psychometrics.irt import GRID, ThetaEstimate
+        from scipy import stats
+
+        sd = self.cfg.prior_sd if prior_sd is None else prior_sd
+        xs, aa, bb, cc = [], [], [], []
+        for k, adm in enumerate(self.administered):
+            if adm.canary or (exclude and k in exclude):
+                continue
+            it = self.items[adm.family_id]
+            xs.append(np.asarray(adm.x, dtype=float))
+            aa.append(np.asarray(it.a_eff, dtype=float))
+            bb.append(np.asarray(it.b, dtype=float))
+            cc.append(self._guess_c(it))
+        if not xs:
+            return ThetaEstimate(prior_mean, sd, "eap", 0)
+        x, a, b, c = (np.concatenate(v) for v in (xs, aa, bb, cc))
+        m = ~np.isnan(x)
+        x, a, b, c = x[m], a[m], b[m], c[m]
+        if not len(x):
+            return ThetaEstimate(prior_mean, sd, "eap", 0)
+        p = c[None, :] + (1.0 - c[None, :]) / (1.0 + np.exp(-np.clip(a[None, :] * (GRID[:, None] - b[None, :]), -30, 30)))
+        p = np.clip(p, 1e-12, 1 - 1e-12)
+        lp = (x[None, :] * np.log(p) + (1.0 - x[None, :]) * np.log1p(-p)).sum(axis=1) + stats.norm.logpdf(GRID, prior_mean, sd)
+        w = np.exp(lp - lp.max())
+        w /= w.sum()
+        mu = float(np.dot(w, GRID))
+        return ThetaEstimate(mu, float(np.sqrt(np.dot(w, (GRID - mu) ** 2))), "eap", int(len(x)))
+
     def _ext_candidates(self) -> list[PoolItem]:
         return self._ext_quota(self._ext_candidates_raw())
 
@@ -194,6 +247,12 @@ class AppCATSession(CATSession):
             return []
         m = max(self.seen[i.family_id] for i in old)
         return [i for i in old if self.seen[i.family_id] == m]
+
+
+def _guessing_on() -> bool:
+    from app.core.config import get_settings
+
+    return bool(getattr(get_settings(), "assessment_guessing_3pl", False))
 
 
 def _ext_quota_on() -> bool:

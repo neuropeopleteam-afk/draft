@@ -104,7 +104,7 @@ class World:
 
 
 class Sim:
-    def __init__(self, world: World, rater_noise: float = 0.0):
+    def __init__(self, world: World, rater_noise: float = 0.0, guessing: bool = True):
         from app.modules.assessment import bank_engine as be
         from app.modules.assessment import two_stage
         from app.modules.assessment.bank_engine import BankEngine
@@ -113,6 +113,7 @@ class Sim:
         self.be, self.two_stage, self.levels = be, two_stage, levels
         self.world = world
         self.rater_noise = float(rater_noise)
+        self.guessing = bool(guessing)
         if not getattr(be, "_SIM_CACHE_PATCHED", False):  # генерация варианта на оценку не влияет — кэш по семейству
             orig = be.generate
             cache: dict[str, object] = {}
@@ -178,6 +179,15 @@ class Sim:
             a = np.asarray(snap["a"], dtype=float) * am
             b = np.asarray(snap["b"], dtype=float) + bs + self.r_resp.normal(0.0, np.asarray(snap["sigma"], dtype=float))
             pr = 1.0 / (1.0 + np.exp(-a * (p["theta"] - b)))
+            if self.guessing:  # люди угадывают: в части с выбором варианта c = 1/K (K — число вариантов этого шага)
+                c = np.zeros(len(pr))
+                for j in range(len(pr)):
+                    if self.be.BankEngine._answer_kind(cur, j + 1) == "option":
+                        opts = self.be.BankEngine._step_options(cur, j + 1) or []
+                        c[j] = 1.0 / max(2, len(opts)) if opts else 0.0
+                    elif self.be.BankEngine._answer_kind(cur, j + 1) == "line":
+                        c[j] = 1.0 / max(2, int(cur["public"].get("code_lines") or 10))
+                pr = c + (1.0 - c) * pr
             x = (self.r_resp.random(len(pr)) < pr).astype(float)
             if self.rater_noise > 0:
                 for j in self.be.BankEngine.text_parts(cur):
@@ -243,7 +253,12 @@ class Sim:
                        families=out["families"] + [i["family_id"] for i in new])
             for i in new:
                 out["seeds"][i["family_id"]] = i["seed"]
-        out["confirmed_final"] = _rank(out["grade_final"]) >= _rank(p["claim"])
+        # «подтверждён» — только строгое подтверждение продукта: категория по основной части (confirmed) или итог второго
+        # этапа не ниже заявки. «Junior (предварительно)» — НЕ подтверждение (работодатель видит пометку), считается отдельно
+        out["provisional_main"] = bool(res.provisional)
+        out["confirmed_final"] = (_rank(out["grade_final"]) >= _rank(p["claim"])) if out["refined"] else bool(res.confirmed)
+        if out["provisional_main"] and not out["refined"]:
+            out["grade_final_note"] = "provisional_junior"
         return out
 
 
@@ -276,6 +291,8 @@ def summarize(rows: list[dict]) -> dict:
     items = np.array([r["n_main"] for r in rows]) if rows else np.zeros(1)
     co = np.array([r["code_open_main"] / max(1, r["n_main"]) for r in rows]) if rows else np.zeros(1)
     refined = sum(1 for r in rows if r["refined"])
+    prov = sum(1 for r in rows if r.get("provisional_main") and not r["refined"])
+    prov_over = sum(1 for r in over if r.get("provisional_main") and not r["refined"])
     oral = sum(1 for r in rows if r["oral"])
     low_integ = sum(1 for r in rows if r.get("integrity_level") == "low")
 
@@ -290,6 +307,8 @@ def summarize(rows: list[dict]) -> dict:
         "confident_share_main": frac(len(conf_main), n),
         "confident_accuracy_main": frac(conf_ok, len(conf_main)),
         "followup_share": frac(refined, n),
+        "provisional_junior_share": frac(prov, n),
+        "provisional_among_overclaim": frac(prov_over, len(over)),
         "exact_grade_final": frac(exact, n),
         "exact_grade_final_not_above_claim": frac(exact_c, len(capped)),
         "gross_error_2plus": frac(gross, n),
@@ -414,6 +433,7 @@ def main(argv=None) -> int:
         "what": "симуляция продукта: движок стенда на реальном банке, модельные кандидаты (не люди)",
         "phase": a.phase, "world": a.world, "seeds": list(seeds), "n_requested": a.n,
         "rater_noise_text_parts": a.rater_noise, "two_stage": not a.no_two_stage,
+        "responses": "2PL с истинными параметрами + угадывание c = 1/K в частях с выбором варианта (K — число вариантов шага), 1/строк для выбора строки",
         "population": {"theta": f"N(0; {THETA_SD})", "claim_shift": list(CLAIM_SHIFT), "stack": "1–3 тега направления, вероятность ∝ числу семейств банка с этим тегом"},
         "bank": {"n_families": e.n_families, "manifest": getattr(e, "manifest", None)},
         "settings": settings_snapshot(), "git_commit": _git_commit(),

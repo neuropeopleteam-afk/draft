@@ -257,7 +257,10 @@ class Bots:
             g = ((res2.details or {}).get("two_stage") or {}).get("final_grade") or "none"
             out.update(refined=True, items=out["items"] + sum(1 for i in st2["items"] if i.get("done") and not i.get("canary")))
         out["grade_final"] = g
-        out["false_confirmed"] = _rank(g) >= _rank(claim)
+        out["provisional"] = bool(res.provisional) and not out["refined"]
+        # строгое подтверждение: категория по основной части или итог второго этапа не ниже заявки;
+        # «Junior (предварительно)» — не подтверждение (считается отдельно: provisional)
+        out["false_confirmed"] = (_rank(g) >= _rank(claim)) if out["refined"] else bool(res.confirmed)
         return out
 
 
@@ -304,6 +307,8 @@ def main(argv=None) -> int:
         fc = sum(r["false_confirmed"] for r in rs)
         table[s] = {"n": n, "false_confirmed": {"k": fc, "value": round(fc / n, 4), "ci95": wilson(fc, n)},
                     "needs_followup_main": round(sum(r["verdict_main"] == "needs_followup" for r in rs) / n, 4),
+                    "provisional_junior": {"k": sum(r.get("provisional", False) for r in rs),
+                                           "value": round(sum(r.get("provisional", False) for r in rs) / n, 4)},
                     "oral_defense": round(sum(r["oral"] for r in rs) / n, 4),
                     "preknowledge_flag": round(sum(r["preknowledge"] for r in rs) / n, 4),
                     "integrity_low": round(sum(r["integrity"] == "low" for r in rs) / n, 4),
