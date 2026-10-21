@@ -27,6 +27,17 @@ from assessment_bank.gen_utils import (
 from assessment_bank.schema import AnswerKey, Check, Option, Variant
 
 
+def _slot(fid: str, seed: int, n: int, salt: str) -> int:
+    """Номер 0…n−1: в каждом блоке из n подряд идущих зёрен — каждый ровно один раз; перестановка блока — от
+    sha256(семейство, блок, salt). Аудит 21.10: видимые числа и подписи были остатками зерна (seed mod 113,
+    seed mod 127, seed mod 6 …) — по нескольким остаткам открытый код позволял восстановить зерно (китайская теорема об
+    остатках + перебор нескольких тысяч кандидатов) и сгенерировать ключ, а буква ключа ((3·slot + seed) mod n) и
+    сюжет (services[seed mod L]) были связаны. Перестановки с разными salt независимы и не раскрывают остатков."""
+    if n <= 1:
+        return 0
+    return make_rng(fid, seed // n, f"lpv2:{salt}").sample(range(n), n)[seed % n]
+
+
 def _stratified_options(
     rng,
     slot_idx: int,
@@ -34,9 +45,10 @@ def _stratified_options(
     correct: tuple[str, str | None],
     distractors: list[tuple[str, str | None]],
     step: int | None = None,
+    fid: str = "",
 ) -> tuple[list[Option], str]:
     n_tot = 1 + len(distractors)
-    key_idx = (slot_idx * 3 + seed + (step or 0) * 2) % n_tot
+    key_idx = _slot(fid or f"lpv2-slot-{slot_idx}", seed, n_tot, f"keypos:{step or 0}")
     dists = list(distractors)
     rng.shuffle(dists)
     opts: list[Option] = []
@@ -378,11 +390,11 @@ def _gen_find_bug(fid: str, direction: str, slot_idx: int, seed: int) -> Variant
     _, slug, _, _grades, _b, _tm, defect, title_ru = SLOT_SPECS[slot_idx]
     dm = DIR_META[direction]
     rng = make_rng(fid, seed)
-    svc_ru, svc_id, entity_ru = dm["services"][seed % len(dm["services"])]
-    id_p = _IDENT_POOLS[(seed // 2 + slot_idx) % len(_IDENT_POOLS)]
+    svc_ru, svc_id, entity_ru = dm["services"][_slot(fid, seed, len(dm["services"]), "svc")]
+    id_p = _IDENT_POOLS[_slot(fid, seed, len(_IDENT_POOLS), "ident")]
     k = slot_idx  # 0..5
-    v_a = 12 + (seed % 113) * 3 + rng.randint(0, 2)
-    v_b = 60 + (seed % 127) * 4 + rng.randint(0, 3)
+    v_a = 12 + _slot(fid, seed, 113, "v_a") * 3 + rng.randint(0, 2)
+    v_b = 60 + _slot(fid, seed, 127, "v_b") * 4 + rng.randint(0, 3)
     v_c = rng.randint(3, 9)
 
     if k == 0:
@@ -563,11 +575,11 @@ def _gen_choose_fix(fid: str, direction: str, slot_idx: int, seed: int) -> Varia
     _, slug, _, _grades, _b, _tm, defect, title_ru = SLOT_SPECS[slot_idx]
     dm = DIR_META[direction]
     rng = make_rng(fid, seed)
-    svc_ru, svc_id, entity_ru = dm["services"][seed % len(dm["services"])]
-    id_p = _IDENT_POOLS[(seed // 2 + slot_idx) % len(_IDENT_POOLS)]
+    svc_ru, svc_id, entity_ru = dm["services"][_slot(fid, seed, len(dm["services"]), "svc")]
+    id_p = _IDENT_POOLS[_slot(fid, seed, len(_IDENT_POOLS), "ident")]
     k = slot_idx - 6  # 0..7
-    ttl = 20 + (seed % 109) * 2 + rng.randint(0, 1)
-    cap_v = 80 + (seed % 131) * 3 + rng.randint(0, 2)
+    ttl = 20 + _slot(fid, seed, 109, "ttl") * 2 + rng.randint(0, 1)
+    cap_v = 80 + _slot(fid, seed, 131, "cap") * 3 + rng.randint(0, 2)
     lim_v = rng.randint(4, 12)
 
     if k == 0:
@@ -797,7 +809,7 @@ def _gen_choose_fix(fid: str, direction: str, slot_idx: int, seed: int) -> Varia
     assert len(ch) == 1, (fid, k, ch)
     line_no = next(iter(ch))
     label = f"Заменить строку {line_no} на:"
-    opts, key = _stratified_options(rng, slot_idx, seed, (label, fix_line), [(label, b) for b in bad_lines])
+    opts, key = _stratified_options(rng, slot_idx, seed, (label, fix_line), [(label, b) for b in bad_lines], fid=fid)
     checks = []
     for o in opts:
         patched = "\n".join(blines[: line_no - 1] + [o.code or ""] + blines[line_no:])
@@ -827,10 +839,10 @@ def _gen_predict_output(fid: str, direction: str, slot_idx: int, seed: int) -> V
     _, slug, _, _grades, _b, _tm, defect, title_ru = SLOT_SPECS[slot_idx]
     dm = DIR_META[direction]
     rng = make_rng(fid, seed)
-    svc_ru, svc_id, entity_ru = dm["services"][seed % len(dm["services"])]
-    id_p = _IDENT_POOLS[(seed // 2 + slot_idx) % len(_IDENT_POOLS)]
+    svc_ru, svc_id, entity_ru = dm["services"][_slot(fid, seed, len(dm["services"]), "svc")]
+    id_p = _IDENT_POOLS[_slot(fid, seed, len(_IDENT_POOLS), "ident")]
     k = slot_idx - 14  # 0..5
-    seq_tag = 100 + (seed % 173) * 3 + rng.randint(0, 2)
+    seq_tag = 100 + _slot(fid, seed, 173, "seq") * 3 + rng.randint(0, 2)
 
     if k == 0:
         cap_b = rng.randint(8, 15)
@@ -987,11 +999,11 @@ def _gen_ob3_or_incident(fid: str, direction: str, slot_idx: int, seed: int, is_
     _, slug, fmt, _grades, _b, _tm, defect, title_ru = SLOT_SPECS[slot_idx]
     dm = DIR_META[direction]
     rng = make_rng(fid, seed)
-    svc_ru, svc_id, entity_ru = dm["services"][seed % len(dm["services"])]
-    id_p = _IDENT_POOLS[(seed // 2 + slot_idx) % len(_IDENT_POOLS)]
-    ttl = 20 + (seed % 97) * 2 + rng.randint(0, 1)
-    amt1 = (2 + (seed % 23)) * 100
-    amt2 = (9 + ((seed * 3) % 29)) * 100
+    svc_ru, svc_id, entity_ru = dm["services"][_slot(fid, seed, len(dm["services"]), "svc")]
+    id_p = _IDENT_POOLS[_slot(fid, seed, len(_IDENT_POOLS), "ident")]
+    ttl = 20 + _slot(fid, seed, 97, "ttl") * 2 + rng.randint(0, 1)
+    amt1 = (2 + _slot(fid, seed, 23, "amt1")) * 100
+    amt2 = (9 + _slot(fid, seed, 29, "amt2")) * 100
 
     buggy_code = (
         f"def process_events(events: list[tuple[str, int, int]], lease_ttl: int = {ttl}) -> int:\n"
@@ -1033,7 +1045,7 @@ def _gen_ob3_or_incident(fid: str, direction: str, slot_idx: int, seed: int, is_
         rng, slot_idx, seed,
         (fmt_evs(repro_evs), None),
         [(fmt_evs(c), None) for c in (clean_1, clean_2, clean_3)],
-        step=1,
+        step=1, fid=fid,
     )
 
     bad_fix_1 = buggy_code.replace("if op_id in seen and seen[op_id] > epoch:", "if op_id in seen and seen[op_id] == epoch:")
@@ -1043,7 +1055,7 @@ def _gen_ob3_or_incident(fid: str, direction: str, slot_idx: int, seed: int, is_
         rng, slot_idx, seed,
         ("Заменить функцию process_events на:", good_code),
         [("Заменить функцию process_events на:", b) for b in (bad_fix_1, bad_fix_2, bad_fix_3)],
-        step=2,
+        step=2, fid=fid,
     )
 
     checks: list[Check] = []
@@ -1114,7 +1126,7 @@ def _gen_ob3_or_incident(fid: str, direction: str, slot_idx: int, seed: int, is_
         p95_deg = rng.randint(1450, 2400)
         params["incident"] = {
             "service": svc_id,
-            "release": f"2026.10.{20 + (seed % 5)}-rc{1 + (seed % 4)}",
+            "release": f"2026.10.{20 + _slot(fid, seed, 5, 'rel_day')}-rc{1 + _slot(fid, seed, 4, 'rel_rc')}",
             "slo": {"metric": "p95_ms", "limit": 250, "unit": "мс"},
             "series": [
                 {"id": "p95_ms", "label": "Латентность p95", "unit": "мс", "baseline": p95_base, "degraded": p95_deg, "recovered": p95_base + 10},
@@ -1151,9 +1163,9 @@ def _gen_open_answer(fid: str, direction: str, slot_idx: int, seed: int) -> Vari
     _, slug, _fmt, grades, _b, _tm, defect, title_ru = SLOT_SPECS[slot_idx]
     dm = DIR_META[direction]
     rng = make_rng(fid, seed)
-    svc_ru, svc_id, entity_ru = dm["services"][seed % len(dm["services"])]
-    id_p = _IDENT_POOLS[(seed // 2 + slot_idx) % len(_IDENT_POOLS)]
-    rps = 1500 + (seed % 83) * 150 + rng.choice([0, 50, 100])
+    svc_ru, svc_id, entity_ru = dm["services"][_slot(fid, seed, len(dm["services"]), "svc")]
+    id_p = _IDENT_POOLS[_slot(fid, seed, len(_IDENT_POOLS), "ident")]
+    rps = 1500 + _slot(fid, seed, 83, "rps") * 150 + rng.choice([0, 50, 100])
     slo_ms = rng.choice([80, 110, 140, 180, 220, 260])
     rpo_s = rng.choice([0, 5, 10, 15, 30, 60])
     cells = rng.choice([4, 6, 8, 12, 16])
