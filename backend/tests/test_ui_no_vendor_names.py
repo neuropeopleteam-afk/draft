@@ -40,6 +40,20 @@ def leaks(obj, path="") -> list[str]:
     return out
 
 
+def ids_in_public(obj, path="") -> list[str]:
+    """Поля provider/model/model_reported с идентификатором модели или именем поставщика в ответе API (обход А19 №10)."""
+    out: list[str] = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k in ("provider", "model", "model_reported") and isinstance(v, str) and (ID.match(v) or VENDOR.search(v)):
+                out.append(f"{path}.{k}: {v}")
+            out += ids_in_public(v, f"{path}.{k}")
+    elif isinstance(obj, (list, tuple)):
+        for i, v in enumerate(obj):
+            out += ids_in_public(v, f"{path}[{i}]")
+    return out
+
+
 def test_labels_are_neutral_names_stay_internal():
     assert llm.model_label("anthropic/claude-sonnet-5.5") == "языковая модель"
     assert llm.model_label("anthropic/claude-fable-5.1", second=True) == "вторая модель"
@@ -75,7 +89,8 @@ def test_need_parse_need_and_selection_have_no_vendor_names(client, monkeypatch,
         s = client.get(f"/api/employer/needs/{need['id']}/selections/{v}", headers=H(t))
         assert s.status_code == 200, s.text
         sel = s.json()
-    found = leaks({"parse": first, "job": job, "full": full, "need": need, "need_get": got.json(), "selection": sel})
+    pub = {"parse": first, "job": job, "full": full, "need": need, "need_get": got.json(), "selection": sel}
+    found = leaks(pub) + ids_in_public(pub)
     assert not found, "\n".join(found)
 
 

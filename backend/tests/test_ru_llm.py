@@ -45,7 +45,8 @@ def test_ru_only_need_delta_fenced_reply(monkeypatch, net):
         "direction": None, "grade": None, "experience_years_min": None, "work_format": None,
         "quotes": {"direction": None, "grade": None, "experience_years_min": None, "work_format": None}}), body["model"]))
     r = parse_need(NEED_TEXT)
-    assert r["method"] == "llm+rules" and r["llm"]["provider"] == "yandex" and r["llm"]["model_label"] == "языковая модель"
+    assert r["method"] == "llm+rules" and "provider" not in r["llm"] and r["llm"]["model_label"] == "языковая модель"  # провайдер и id модели в ответе API не отдаются (обход А19 №10) — кто ответил, видно по сети
+    assert net.calls and all(c["host"] == "ya.test" for c in net.calls)
     grpc = next(i for i in r["stack_required"] if i["tag"] == "grpc")
     assert grpc["evidence"]["model"] == "языковая модель"
     (c,) = net.calls
@@ -101,7 +102,8 @@ def test_ru_only_resume_on_yandex(monkeypatch, net):
         {"stack": ["grpc", "kubernetes"], "roles": ["developer"], "soft_skills": [], "experience_years": 4}),
         body["model"]))
     o = extract("[ФИО]\nBackend. Опыт: 4 года. Сервисы на Go, межсервисное взаимодействие, деплой в кубер.")
-    assert o["method"] == "llm+rules" and o["llm"]["provider"] == "yandex" and o["llm"]["model_label"] == "языковая модель"
+    assert o["method"] == "llm+rules" and "provider" not in o["llm"] and o["llm"]["model_label"] == "языковая модель"  # провайдер и id модели в ответе API не отдаются (обход А19 №10) — кто ответил, видно по сети
+    assert net.calls and all(c["host"] == "ya.test" for c in net.calls)
     by_llm = {s["tag"] for s in o["stack"] if s.get("by") == "llm"}
     assert "grpc" in by_llm and "kubernetes" in {x["tag"] for x in o["stack"]} and o["experience_years"] == 4.0
     assert all(c["host"] == "ya.test" for c in net.calls)
