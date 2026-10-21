@@ -35,8 +35,11 @@ from app.modules.assessment.sprt import (
     DEFAULT_CODE_OPEN_SHARE,
     DEFAULT_DELTA,
     filter_code_open_pool,
+    guess_parts,
+    llr3,
     select_target_cut,
     sprt_bound,
+    sprt_bounds,
     step_llr,
 )
 from app.modules.catalog.seed_data import ALL_GRADE_CUTS as GRADE_CUTS
@@ -55,7 +58,8 @@ class AppCATSession(CATSession):
     def __init__(self, *args, max_per_format: dict[str, int] | None = None, max_item_time_s: float | None = None,
                  seen: dict[str, int] | None = None, ext_lru: bool = False,
                  code_open_share: float | None = None, sprt_alpha: float = DEFAULT_ALPHA,
-                 sprt_delta: float = DEFAULT_DELTA, **kwargs):
+                 sprt_delta: float = DEFAULT_DELTA, sprt: dict | None = None, guess: dict | None = None,
+                 **kwargs):
         self.max_per_format = dict(DEFAULT_FORMAT_LIMITS if max_per_format is None else max_per_format)
         self.max_item_time_s = max_item_time_s
         # По умолчанию в полном тесте (без жёсткого ограничения времени одного задания экспресс-режима) доля кода/открытых ≥ 1/3
@@ -66,6 +70,13 @@ class AppCATSession(CATSession):
         self.sprt_alpha = float(sprt_alpha)
         self.sprt_delta = float(sprt_delta)
         self.sprt_llr: float = 0.0
+        # Поправка №2 (21.10 вечер): sprt — {"alpha", "beta", "delta", "soft_max_items", "soft_max_time_s",
+        # "time_weight", "actual_k"}; None — прежние правила выбора, остановки и угадывания (c = 1/4)
+        self.sprt = dict(sprt) if sprt else None
+        if self.sprt:
+            self.sprt_alpha = float(self.sprt.get("alpha", self.sprt_alpha))
+            self.sprt_delta = float(self.sprt.get("delta", self.sprt_delta))
+        self.guess = {str(k): np.asarray(v, dtype=float) for k, v in (guess or {}).items()}
         super().__init__(*args, **kwargs)
         self._fmt = {fid: i.format for fid, i in self.items.items()}
         self.seen = {str(k): int(v) for k, v in (seen or {}).items()}
@@ -84,10 +95,37 @@ class AppCATSession(CATSession):
                 out[f] = out.get(f, 0) + 1
         return out
 
+    # --- поправка №2: SPRT у заявленного порога ----------------------------------------------------------------
+    def claim_status(self) -> str:
+        """Решение SPRT по заявленному грейду на текущий момент: confirmed | not_confirmed | needs_followup."""
+        up, lo = sprt_bounds(self.sprt_alpha, float((self.sprt or {}).get("beta", self.sprt_alpha)))
+        if self.sprt_llr >= up:
+            return "confirmed"
+        if self.sprt_llr <= lo:
+            return "not_confirmed"
+        return "needs_followup"
+
+    def claim_cut(self) -> float:
+        return float(GRADE_CUTS.get(self.claimed_grade, 0.0))
+
+    def other_uncertain(self) -> list[float]:
+        """Неопределённые пороги (θ̂ ± z·SE), кроме заявленного, когда по нему SPRT уже решил."""
+        unc = self.uncertain_cuts()
+        if self.claim_status() != "needs_followup":
+            unc = [c for c in unc if abs(c - self.claim_cut()) > 1e-9]
+        return unc
+
     def _target(self) -> float:
         """Целевая точка максимальной информации: в режиме ``select_at="cut"`` после ``cut_after`` шагов
         выбирает порог заявленного/ближайшего неопределённого грейда через ``sprt.select_target_cut``.
+        Поправка №2: пока SPRT по заявленному грейду не решил — его порог; затем — ближайший неопределённый порог
+        («уровень по ответам»), иначе — текущая оценка.
         """
+        if self.sprt and self.cfg.select_at == "cut" and self.n_scored >= self.cfg.cut_after:
+            if self.claim_status() == "needs_followup":
+                return self.claim_cut()
+            unc = self.other_uncertain()
+            return unc[0] if unc else self.theta
         if self.cfg.select_at == "cut" and self.n_scored >= self.cfg.cut_after:
             return select_target_cut(
                 self.theta, self.se, self.claimed_grade, self.cfg.cuts, self.uncertain_cuts()
@@ -98,9 +136,15 @@ class AppCATSession(CATSession):
         super().record(item, x, log_t=log_t, time_s=time_s)
         if not item.canary:
             cut = float(GRADE_CUTS.get(self.claimed_grade, 0.0))
-            self.sprt_llr += step_llr(x, item.a_eff, item.b, cut, fmt=item.format, delta=self.sprt_delta)
+            if self.sprt:
+                xs = np.asarray(list(x), dtype=float)
+                self.sprt_llr += llr3(xs, item.a_eff, item.b, self._guess_c(item), cut, self.sprt_delta)
+            else:
+                self.sprt_llr += step_llr(x, item.a_eff, item.b, cut, fmt=item.format, delta=self.sprt_delta)
 
     def is_finished(self) -> bool:
+        if self.sprt:
+            return self._finished_sprt()
         if (
             self.n_scored >= self.cfg.min_items
             and self.cfg.stop_rule == "classification"
@@ -110,6 +154,49 @@ class AppCATSession(CATSession):
             self.stop_reason = "classified"
             return True
         return super().is_finished()
+
+    def _finished_sprt(self) -> bool:
+        """Остановка основной части (поправка №2). Жёсткие пределы — cfg.max_items / cfg.max_time_s (продление у
+        спорного порога, до 30 заданий / 90 минут); обычные — soft_max_items / soft_max_time_s: после них тест идёт
+        дальше, только пока SPRT по заявленному грейду не решил. Досрочно — когда решение принято и «уровень по
+        ответам» определён (ни один другой порог не внутри θ̂ ± z·SE), но не раньше min_items."""
+        c, n = self.cfg, self.n_scored
+        soft_n = int(self.sprt.get("soft_max_items", c.max_items))
+        soft_t = float(self.sprt.get("soft_max_time_s", c.max_time_s))
+        undecided = self.claim_status() == "needs_followup"
+        if n >= c.max_items:
+            self.stop_reason = "max_items"
+            return True
+        if self.time_used >= c.max_time_s:
+            self.stop_reason = "time"
+            return True
+        if (n >= soft_n or self.time_used >= soft_t) and not undecided:
+            self.stop_reason = "max_items" if n >= soft_n else "time"
+            return True
+        if n >= c.min_items and not undecided and not self.other_uncertain():
+            self.stop_reason = "classified"
+            return True
+        if not self._candidates():
+            self.stop_reason = "pool_exhausted"
+            return True
+        return False
+
+    def _score(self, item: PoolItem, target: float) -> float:
+        """Поправка №2: информация 3PL (с угадыванием этого задания) в целевой точке на единицу ожидаемого времени
+        в степени time_weight; без поправки — как в CATSession (2PL, time_weight из конфигурации)."""
+        if not self.sprt or (self.cfg.partial_credit and self.cfg.partial_credit_select):
+            return super()._score(item, target)
+        a = np.asarray(item.a_eff, dtype=float)
+        b = np.asarray(item.b, dtype=float)
+        cc = self._guess_c(item)
+        sg = 1.0 / (1.0 + np.exp(-np.clip(a * (target - b), -30, 30)))
+        p = np.clip(cc + (1 - cc) * sg, 1e-9, 1 - 1e-9)
+        d = (1 - cc) * a * sg * (1 - sg)
+        info = float(np.sum(d * d / (p * (1 - p))))
+        w = float(self.sprt.get("time_weight", 0.0))
+        if w:
+            info /= (float(np.exp(item.beta_time)) / 120.0) ** w
+        return info
 
     def _limit(self, cands: list[PoolItem]) -> list[PoolItem]:
         if self.max_item_time_s is not None:
@@ -175,6 +262,12 @@ class AppCATSession(CATSession):
 
     def _guess_c(self, it: PoolItem) -> np.ndarray:
         n = len(np.atleast_1d(it.b))
+        if self.sprt and self.sprt.get("actual_k"):
+            g = self.guess.get(it.family_id)
+            if g is None:
+                g = family_guess(it.family_id, it.format, n)
+                self.guess[it.family_id] = g
+            return g
         c = np.zeros(n)
         parts = self._OPTION_PART_FORMATS.get(it.format, ())
         if parts is None:
@@ -247,6 +340,27 @@ class AppCATSession(CATSession):
             return []
         m = max(self.seen[i.family_id] for i in old)
         return [i for i in old if self.seen[i.family_id] == m]
+
+
+@lru_cache(maxsize=8192)
+def _family_guess_t(fid: str, fmt: str, n_parts: int) -> tuple[float, ...]:
+    """Угадывание по частям для семейства до выдачи: число вариантов шага и строк кода — по варианту с фиксированным
+    зерном (у семейства они от варианта не зависят); ошибка генерации — c = 1/4 у частей с выбором."""
+    from app.modules.assessment.sprt import public_guess
+
+    try:
+        from assessment_bank import generate
+
+        pv = generate(fid, 1).public_view()
+        pub = {"options": pv.get("options") or [], "code": pv.get("code"),
+               "code_lines": len((pv.get("code") or "").splitlines())}
+        return tuple(float(v) for v in public_guess(fmt, n_parts, pub, actual=True))
+    except Exception:  # noqa: BLE001
+        return tuple(float(v) for v in guess_parts(fmt, n_parts, None, None, actual=False))
+
+
+def family_guess(fid: str, fmt: str, n_parts: int) -> np.ndarray:
+    return np.asarray(_family_guess_t(fid, fmt, int(n_parts)), dtype=float)
 
 
 def _guessing_on() -> bool:

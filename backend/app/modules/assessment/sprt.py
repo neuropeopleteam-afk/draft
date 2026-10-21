@@ -162,6 +162,216 @@ def filter_code_open_pool(
     return co if co else cands
 
 
+# ---------------------------------------------------------------------------------------------------------------
+# Поправка №2 протокола (А4, 21.10 вечер): решение по заявленному грейду — SPRT по ответам, без априорного
+# стягивания; угадывание — по фактическому числу вариантов; оценка уровня для «уровня по ответам» — WLE (Уорм).
+# Одна реализация для продукта (bank_engine, exposure.AppCATSession, two_stage) и симуляции продукта.
+
+OPTION_STEPS: dict[str, tuple[int, ...] | None] = {"mcq_concept": None, "choose_fix": None,
+                                                   "open_book_3step": (0, 1), "incident_sim": (0, 1)}
+
+
+def verdict_params() -> dict:
+    """Параметры решения по заявленному грейду из настроек (app.core.config)."""
+    from app.core.config import get_settings
+
+    s = get_settings()
+    return {"rule": str(getattr(s, "assessment_verdict_rule", "posterior") or "posterior"),
+            "delta": float(getattr(s, "assessment_sprt_delta", DEFAULT_DELTA)),
+            "alpha": float(getattr(s, "assessment_sprt_alpha", DEFAULT_ALPHA)),
+            "beta": float(getattr(s, "assessment_sprt_beta", 0.10)),
+            "actual_k": bool(getattr(s, "assessment_guess_actual_k", False)),
+            "point_estimator": str(getattr(s, "assessment_point_estimator", "wle") or "wle"),
+            "upgrade_rule": str(getattr(s, "assessment_upgrade_rule", "sprt") or "sprt")}
+
+
+def sprt_on() -> bool:
+    return verdict_params()["rule"] == "sprt"
+
+
+def guess_parts(fmt: str, n_parts: int, step_options: Sequence[int] | None = None, code_lines: int | None = None,
+                actual: bool = True) -> np.ndarray:
+    """Угадывание c по частям задания. Части с выбором варианта — 1/K (K — число вариантов шага; без данных — 4);
+    «строка с ошибкой» — 1/число строк кода (actual); вывод программы и развёрнутый ответ — 0.
+    actual=False — прежнее правило: c = 1/4 у частей с выбором, 0 у остальных."""
+    n = max(1, int(n_parts))
+    c = np.zeros(n)
+    steps = OPTION_STEPS.get(fmt, ())
+    idx = range(n) if steps is None else [j for j in steps if j < n]
+    for j in idx:
+        k = 4
+        if actual and step_options is not None and j < len(step_options) and step_options[j]:
+            k = int(step_options[j])
+        c[j] = 1.0 / max(2, k)
+    if actual and fmt == "find_bug" and code_lines:
+        c[:] = 1.0 / max(2, int(code_lines))
+    return c
+
+
+def public_guess(fmt: str, n_parts: int, public: dict | None, actual: bool = True) -> np.ndarray:
+    """c по частям для выданного варианта (публичная часть задания: варианты по шагам, строки кода)."""
+    pub = public or {}
+    opts = pub.get("options") or []
+    if fmt in ("open_book_3step", "incident_sim"):
+        per = [sum(1 for o in opts if int(o.get("step", 0) or 0) == j + 1) for j in range(max(1, int(n_parts)))]
+    else:
+        per = [len(opts)] * max(1, int(n_parts))
+    lines = pub.get("code_lines")
+    if lines is None and pub.get("code"):
+        lines = len(str(pub.get("code")).splitlines())
+    return guess_parts(fmt, n_parts, per, lines, actual=actual)
+
+
+def llr3(x: Sequence[float], a: Sequence[float], b: Sequence[float], c: Sequence[float], cut: float,
+         delta: float = DEFAULT_DELTA, a_cap: float = HONEST_A_CAP) -> float:
+    """Вклад задания в LLR у порога cut (3PL с угадыванием c по частям): H₁ θ = cut + δ против H₀ θ = cut − δ."""
+    xs = np.atleast_1d(np.asarray(x, dtype=float))
+    aa = np.clip(np.atleast_1d(np.asarray(a, dtype=float)), 0.2, a_cap)
+    bb = np.atleast_1d(np.asarray(b, dtype=float))
+    cc = np.atleast_1d(np.asarray(c, dtype=float))
+    n = min(len(xs), len(aa), len(bb))
+    if len(cc) < n:
+        cc = np.concatenate([cc, np.zeros(n - len(cc))])
+    total = 0.0
+    for j in range(n):
+        xj = float(xs[j])
+        if not math.isfinite(xj):
+            continue
+        p1 = float(np.clip(p_item(cut + delta, aa[j], bb[j], float(cc[j])), 1e-6, 1 - 1e-6))
+        p0 = float(np.clip(p_item(cut - delta, aa[j], bb[j], float(cc[j])), 1e-6, 1 - 1e-6))
+        total += xj * math.log(p1 / p0) + (1.0 - xj) * math.log((1.0 - p1) / (1.0 - p0))
+    return float(total)
+
+
+def sprt_bounds(alpha: float, beta: float) -> tuple[float, float]:
+    """Границы Вальда: верхняя ln((1 − β)/α) — «подтверждён», нижняя ln(β/(1 − α)) — «не подтверждён»."""
+    a = min(max(float(alpha), 1e-4), 0.45)
+    b = min(max(float(beta), 1e-4), 0.45)
+    return float(math.log((1.0 - b) / a)), float(math.log(b / (1.0 - a)))
+
+
+def sprt_status(llr: float, alpha: float, beta: float) -> str:
+    up, lo = sprt_bounds(alpha, beta)
+    if llr >= up:
+        return "confirmed"
+    if llr <= lo:
+        return "not_confirmed"
+    return "needs_followup"
+
+
+_WLE_GRID = np.linspace(-5.0, 6.0, 1101)
+
+
+def wle(x: Sequence[float], a: Sequence[float], b: Sequence[float], c: Sequence[float]) -> tuple[float, float]:
+    """Оценка уровня Уорма (WLE) для 3PL по частям: корень S(θ) + H(θ)/(2I(θ)) = 0 (S — производная логарифма
+    правдоподобия, I — информация, H = Σ P'P''/(PQ)); без априорного распределения, конечна и при всех верных /
+    всех неверных. Несколько корней — с наибольшим ℓ(θ) + ½ ln I(θ). SE = 1/√I(θ̂)."""
+    xs = np.asarray(x, dtype=float)
+    m = np.isfinite(xs)
+    xs = xs[m]
+    if not len(xs):
+        return 0.0, 1.0
+    aa = np.asarray(a, dtype=float)[m]
+    bb = np.asarray(b, dtype=float)[m]
+    cc = np.asarray(c, dtype=float)[m]
+    t = _WLE_GRID[:, None]
+    sg = 1.0 / (1.0 + np.exp(-np.clip(aa[None, :] * (t - bb[None, :]), -30, 30)))
+    p = np.clip(cc[None, :] + (1 - cc[None, :]) * sg, 1e-9, 1 - 1e-9)
+    q = 1.0 - p
+    d1 = (1 - cc[None, :]) * aa[None, :] * sg * (1 - sg)
+    d2 = d1 * aa[None, :] * (1 - 2 * sg)
+    info = (d1 * d1 / (p * q)).sum(axis=1)
+    score = ((xs[None, :] - p) * d1 / (p * q)).sum(axis=1)
+    h = (d1 * d2 / (p * q)).sum(axis=1)
+    f = score + h / (2.0 * np.maximum(info, 1e-12))
+    ll = (xs[None, :] * np.log(p) + (1 - xs[None, :]) * np.log(q)).sum(axis=1) + 0.5 * np.log(np.maximum(info, 1e-12))
+    roots = np.where((f[:-1] > 0) & (f[1:] <= 0))[0]
+    if len(roots):
+        k = int(max(roots, key=lambda i: ll[i]))
+        f0, f1 = f[k], f[k + 1]
+        th = float(_WLE_GRID[k] + (_WLE_GRID[k + 1] - _WLE_GRID[k]) * (f0 / (f0 - f1) if f0 != f1 else 0.5))
+    else:
+        th = float(_WLE_GRID[int(np.argmax(ll))])
+    sgv = 1.0 / (1.0 + np.exp(-np.clip(aa * (th - bb), -30, 30)))
+    pv = np.clip(cc + (1 - cc) * sgv, 1e-9, 1 - 1e-9)
+    d1v = (1 - cc) * aa * sgv * (1 - sgv)
+    iv = float((d1v * d1v / (pv * (1 - pv))).sum())
+    return th, float(1.0 / math.sqrt(iv)) if iv > 1e-9 else 9.99
+
+
+def point_grade(theta: float, order: Sequence[str]) -> str:
+    """«Уровень по ответам»: наивысший уровень шкалы направления, порог которого не выше θ̂."""
+    out = "none"
+    for g in order:
+        cut = GRADE_CUTS.get(g)
+        if cut is not None and float(theta) >= float(cut):
+            out = g
+    return out
+
+
+def product_grade(status: str, point: str, claimed: str, order: Sequence[str], *, upgrade: str = "point",
+                  next_up: bool = False) -> str:
+    """Уровень, который продукт показывает по итогам теста: «уровень по ответам», согласованный с вердиктом —
+    подтверждён → заявленный, выше — по правилу upgrade (point — по оценке уровня; sprt — на ступень выше, только если
+    SPRT у следующего порога уверенно «выше» (next_up); none — не выше заявленного); не подтверждён → уровень по
+    ответам, но ниже заявленного; доп. этап — уровень по ответам как есть (с пометкой «предварительно»)."""
+    seq = ["none"] + [g for g in order]
+    r = seq.index(point) if point in seq else 0
+    rc = seq.index(claimed) if claimed in seq else r
+    if status == "confirmed":
+        if upgrade == "none":
+            r = rc
+        elif upgrade == "sprt":
+            r = min(rc + 1, len(seq) - 1) if next_up else rc
+        else:
+            r = max(r, rc)
+    elif status == "not_confirmed":
+        r = min(r, max(0, rc - 1))
+    return seq[r]
+
+
+def next_grade(claimed: str, order: Sequence[str]) -> str | None:
+    seq = list(order)
+    return seq[seq.index(claimed) + 1] if claimed in seq and seq.index(claimed) + 1 < len(seq) else None
+
+
+def items_llr_wle(items: Iterable[dict], lookup: dict, cut: float, delta: float, actual: bool = True,
+                  extra_cuts: Sequence[float] = ()) -> tuple:
+    """LLR у порога cut и WLE по выполненным оцениваемым заданиям состояния сессии (те же a_eff, b и c, что в
+    отборе): (llr, θ̂_WLE, SE, число частей с ответом[, {доп. порог: llr}])."""
+    items = list(items)
+    if extra_cuts:
+        base = items_llr_wle(items, lookup, cut, delta, actual)
+        more = {float(c2): items_llr_wle(items, lookup, float(c2), delta, actual)[0] for c2 in extra_cuts}
+        return (*base, more)
+    llr = 0.0
+    X, A, B, C = [], [], [], []
+    for it in items:
+        if it.get("canary") or not it.get("done", True):
+            continue
+        if (it.get("appeal") or {}).get("status") in ("under_review", "excluded"):
+            continue
+        xs = [np.nan if v is None else float(v) for v in (it.get("x") or [])]
+        if not xs or all(not math.isfinite(v) for v in xs):
+            continue
+        pi = lookup.get(it.get("family_id"))
+        if pi is not None:
+            aa, bb = np.asarray(pi.a_eff, dtype=float), np.asarray(pi.b, dtype=float)
+        else:
+            snap = it.get("pool") or {}
+            aa = np.asarray(snap.get("a") or [1.0] * len(xs), dtype=float)
+            bb = np.asarray(snap.get("b") or [cut] * len(xs), dtype=float)
+        cc = public_guess(str(it.get("format") or ""), len(xs), it.get("public"), actual=actual)
+        n = min(len(xs), len(aa), len(bb))
+        llr += llr3(xs[:n], aa[:n], bb[:n], cc[:n], cut, delta)
+        X += xs[:n]
+        A += list(aa[:n])
+        B += list(bb[:n])
+        C += list(cc[:n])
+    th, se = wle(X, A, B, C) if X else (0.0, 9.99)
+    return float(llr), float(th), float(se), int(sum(1 for v in X if math.isfinite(v)))
+
+
 @dataclass(frozen=True)
 class ThreeValuedVerdict:
     status: str              # confirmed | not_confirmed | needs_followup
@@ -415,8 +625,13 @@ def compute_verdict(
     suspicious: bool | dict | None = None,
     followup_items: int = DEFAULT_FOLLOWUP_ITEMS,
     followup_minutes: int = DEFAULT_FOLLOWUP_MINUTES,
+    sprt_state: dict | None = None,
+    beta: float | None = None,
 ) -> ThreeValuedVerdict:
-    """Вычисляет статистику SPRT и трёхзначный вердикт по завершённым заданиям сессии (с учётом Боевого этапа А9 и сигналов античита А6)."""
+    """Вычисляет статистику SPRT и трёхзначный вердикт по завершённым заданиям сессии (с учётом Боевого этапа А9 и сигналов античита А6).
+
+    sprt_state (поправка №2, ASSESSMENT_VERDICT_RULE=sprt) — {"llr", "status", ...} из ``items_llr_wle`` по ответам
+    сессии (3PL, угадывание по варианту): решение — только SPRT, без апостериорной вероятности с априорным N(0; 1)."""
     cut = float(GRADE_CUTS.get(claimed_grade, 0.0))
     A = sprt_bound(alpha)
     # Исключаем задания, находящиеся на апелляции со статусом under_review или excluded
@@ -477,14 +692,20 @@ def compute_verdict(
                     + ("порог старшего грейда подтверждён." if passed_inc else "результат ниже порога старшего грейда.")
                 ),
             }
+    llr_inc_applied = 0.0
     if incident_stage is not None:
         theta, se, llr_inc, inc_norm = incident_theta_update(
             theta, se, claimed_grade, incident_stage, delta=delta
         )
         if inc_norm is not None:
             llr += llr_inc
+            llr_inc_applied = float(llr_inc)
             code_open += 1
 
+    sprt_rule = sprt_state is not None
+    if sprt_rule:  # поправка №2: LLR — 3PL по ответам сессии (+ вклад боевого этапа, если он был)
+        llr = float(sprt_state.get("llr", 0.0)) + llr_inc_applied
+        A = sprt_bounds(alpha, beta if beta is not None else alpha)[0]
     n_scored = len(scored) + (1 if (incident_stage is not None and inc_norm is not None) else 0)
     co_share = (code_open / n_scored) if n_scored > 0 else 0.0
     p_claim = float(p_at_least(theta, se, claimed_grade)) if claimed_grade in GRADE_CUTS else (1.0 if confirmed else 0.0)
@@ -537,7 +758,12 @@ def compute_verdict(
     # в решении не участвует. Второй этап, дотестирование и Боевой этап — решение окончательное (как у категории).
     # Сигналы античита (А6: разрыв форм, предзнание, person-fit, низкая достоверность) — не бан: доп. этап / устная защита.
     level = float(boundary_level)
-    if mode in ("refine", "confirm") or inc_norm is not None:
+    if sprt_rule:
+        status = sprt_status(llr, alpha, beta if beta is not None else alpha)
+        confirmed = status == "confirmed"
+        if status == "confirmed" and assigned_grade in ("none", None):
+            assigned_grade = claimed_grade
+    elif mode in ("refine", "confirm") or inc_norm is not None:
         status = "confirmed" if confirmed else "not_confirmed"
     elif confirmed and p_claim >= level:
         status = "confirmed"
@@ -546,6 +772,10 @@ def compute_verdict(
     else:
         status = "needs_followup"
     oral_required = bool(susp_flagged and status != "not_confirmed")
+    # поправка №2: после второго этапа (или боевого) решение по-прежнему не принято → устная защита, без монетки
+    final_stage_undecided = bool(sprt_rule and status == "needs_followup" and (mode in ("refine", "confirm") or inc_norm is not None))
+    if final_stage_undecided:
+        oral_required = True
     if oral_required:
         status = "needs_followup"
 
@@ -554,7 +784,24 @@ def compute_verdict(
     p_pct = round(100 * p_claim)
     lv_pct = round(100 * level)
     title_str = VERDICT_TITLES["needs_oral_defense"] if oral_required else VERDICT_TITLES[status]
-    if oral_required:
+    if sprt_rule and final_stage_undecided and not susp_flagged:
+        expl = (f"Даже после дополнительного этапа ответы остаются у самой границы уровня {g_title}: заданий "
+                "недостаточно для уверенного решения. Решение примет короткая устная защита — разговор по одному из "
+                "ваших ответов. Автоматического отказа нет.")
+    elif sprt_rule and status == "confirmed":
+        expl = (f"Уровень {g_title} подтверждён: ответы уверенно показывают уровень не ниже {g_title} (решение "
+                "принято, как только ответов стало достаточно).")
+    elif sprt_rule and status == "not_confirmed" and not oral_required:
+        expl = (f"Уровень {g_title} не подтверждён: ответы уверенно показывают уровень ниже {g_title}. "
+                "Принудительного понижения нет: уровень по ответам можно принять без нового теста или повторить тест "
+                "после подготовки.")
+    elif sprt_rule and status == "needs_followup" and not oral_required:
+        inc_hint = (" Для Senior и выше доп. этап может включать разбор инцидента."
+                    if claimed_grade in SENIOR_PLUS_GRADES else "")
+        expl = (f"Ответы — у самой границы уровня {g_title}: этой сессии мало для уверенного решения. Нужен короткий "
+                f"дополнительный этап у этой границы (до {followup_items} заданий, до {followup_minutes} минут); итог — "
+                f"по ответам обеих частей вместе.{inc_hint}")
+    elif oral_required:
         reasons_txt = f" ({'; '.join(susp_reasons)})" if susp_reasons else ""
         expl = (
             f"Нужен дополнительный этап по уровню {g_title}{reasons_txt}. Автоматических блокировок нет: чтобы снять "
