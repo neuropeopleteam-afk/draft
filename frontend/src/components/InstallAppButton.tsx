@@ -117,7 +117,6 @@ export function AndroidBetaButton() {
 }
 
 export function InstallDialog({ onClose }: { onClose: () => void }) {
-  const [showBeta, setShowBeta] = useState(false);
   const [, force] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -130,7 +129,7 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
     return () => document.removeEventListener("keydown", esc);
   }, [onClose]);
   const p = platform();
-  if (p === "android" || showBeta) {
+  if (p === "android") {
     return <AndroidBetaDialog onClose={onClose} />;
   }
   const installed = isStandalone();
@@ -194,7 +193,7 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
                 <p className="font-semibold text-brand-night">Бета-версия приложения для Android</p>
                 <p className="text-xs text-brand-ink/65">{rs ? `Версия ${rs.version} · ${rs.size_mb} МБ · Android ${rs.min_android ?? "7.0"} и новее` : "загрузка параметров пакета…"}</p>
               </div>
-              {rs ? <a href={rs.apk} download onClick={(e) => { e.preventDefault(); setShowBeta(true); }} className="btn-primary inline-flex min-h-[44px] shrink-0 items-center !px-4 !py-2 text-sm" data-testid="rustore-apk">Скачать APK</a>
+              {rs ? <a href={rs.apk} download className="btn-primary inline-flex min-h-[44px] shrink-0 items-center !px-4 !py-2 text-sm" data-testid="rustore-apk">Скачать APK</a>
                 : <span className="shrink-0 text-xs text-brand-ink/60">готовится</span>}
             </div>
             {rs && <p className="mt-2 text-[11px] leading-relaxed text-brand-ink/60">{rs.status}</p>}

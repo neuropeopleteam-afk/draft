@@ -9,6 +9,7 @@ import { launchLiveAvatar, minutes } from "../../components/Interview";
 import { useMeta } from "../../lib/meta";
 import SalaryAdvocate from "../../components/SalaryAdvocate";
 import FspRankConverter from "../../components/FspRankConverter";
+import { FspCabinet3DStage } from "../../components/Fsp3DShowcase";
 import { DemandGapBanner } from "./Feedback";
 
 export default function CandidateOverview() {
@@ -40,58 +41,46 @@ export default function CandidateOverview() {
       <PageTitle title={name ? `Здравствуйте, ${name}` : "Кабинет кандидата"} subtitle={category ? (c?.visible_to_employers ? "Ваш профиль виден работодателям: ниже — ваша пошаговая дорожная карта от подтверждения навыков до оффера с зарплатой." : "Категория присвоена. Дайте согласие на публикацию профиля, чтобы работодатели могли вас найти.") : "Пройдите опрос и тест — после этого работодатели смогут найти вас и прислать приглашение с зарплатой."} />
       {err && <div className="mt-4"><Alert>{err}</Alert></div>}
 
-      {/* Объёмный цифровой паспорт грейда и статус спортсмена ФСП */}
+      {/* Объёмный цифровой паспорт грейда и статус спортсмена ФСП с левитирующим 3D-медальоном */}
       <section
-        className="fsp-hero-banner mt-5 p-5 sm:p-6"
+        className="fsp-stage-card mt-5 overflow-hidden rounded-3xl p-5 sm:p-6"
         data-testid="candidate-passport-banner"
         aria-label="Цифровой паспорт грейда и статус ФСП"
       >
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-4">
-            <span
-              className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/20 shadow-lg"
-              style={{
-                background: "linear-gradient(145deg, #2B1CE0 0%, #402FFF 55%, #161B42 100%)",
-                boxShadow: "0 12px 28px -10px rgba(64, 47, 255, 0.85), inset 0 1px 0 rgba(255,255,255,0.35)",
-              }}
-              aria-hidden="true"
-            >
-              <svg viewBox="0 0 40 40" className="h-8 w-8" fill="none">
-                <polygon points="20,4 34,12 34,28 20,36 6,28 6,12" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" fill="rgba(255,255,255,0.08)" />
-                <path d="M14 20l4 4 8-8" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="20" cy="4" r="2.2" fill="#EDEDED" />
-                <circle cx="34" cy="12" r="2.2" fill="#402FFF" />
-                <circle cx="6" cy="28" r="2.2" fill="#EC1D35" />
-              </svg>
-            </span>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[#A59DFF]" title="Как устроено: защищённая асимметричная подпись Ed25519">
-                  Цифровой паспорт грейда
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white">
-                  <span className={`h-1.5 w-1.5 rounded-full ${c?.visible_to_employers ? "bg-emerald-400" : "bg-amber-300"}`} />
-                  {c?.visible_to_employers ? "Открыт для офферов с вилкой" : "Скрыт до публикации"}
-                </span>
-              </div>
-              <p className="mt-1 text-lg font-extrabold tracking-tight text-white sm:text-xl">
-                {catTitle(category)}
-              </p>
-              <p className="mt-0.5 text-xs text-white/75">
-                {me?.fsp?.linked
-                  ? `Профиль ФСП подтверждён · достижений в реестре: ${me.fsp.achievements_count || 1}`
-                  : "Подключите ФСП ID в профиле, чтобы добавить спортивные разряды и кубки к паспорту грейда"}
-              </p>
+        <div className="flex flex-col items-center justify-between gap-5 sm:flex-row">
+          <div className="min-w-0 flex-1 space-y-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#B8B4FF]" title="Как устроено: защищённая асимметричная подпись Ed25519">
+                <i className="fsp-pulse-dot" aria-hidden="true" />
+                Цифровой паспорт грейда · Контур ФСП
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                <span className={`h-1.5 w-1.5 rounded-full ${c?.visible_to_employers ? "bg-emerald-400" : "bg-amber-300"}`} />
+                {c?.visible_to_employers ? "Открыт для офферов с вилкой" : "Скрыт до публикации"}
+              </span>
+            </div>
+            <p className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+              <span className="fsp-serif-italic">{catTitle(category)}</span>
+            </p>
+            <p className="max-w-xl text-xs leading-relaxed text-white/80 sm:text-sm">
+              {me?.fsp?.linked
+                ? `Профиль спортсмена ФСП подтверждён в реестре · верифицированных достижений: ${me.fsp.achievements_count || 1}. Работодатели видят доказанный уровень без субъективного отбора по резюме.`
+                : "Подключите ФСП ID в профиле, чтобы добавить спортивные разряды и кубки России к цифровому паспорту грейда."}
+            </p>
+            <div className="flex flex-wrap items-center gap-2.5 pt-1">
+              <Link to="/candidate/category" className="btn-primary !px-4 !py-2.5 text-xs font-bold">
+                Открыть паспорт и категорию
+              </Link>
+              <Link to="/candidate/invitations" className="btn-light !px-4 !py-2.5 text-xs font-bold">
+                Приглашения с вилкой ({inv.data?.length ?? 0})
+              </Link>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link to="/candidate/category" className="btn-light !px-3.5 !py-2 text-xs font-bold">
-              Паспорт и категория
-            </Link>
-            <Link to="/candidate/invitations" className="btn-primary !px-3.5 !py-2 text-xs">
-              Приглашения ({inv.data?.length ?? 0})
-            </Link>
-          </div>
+          <FspCabinet3DStage
+            kind="medallion"
+            badge={catTitle(category)}
+            sub={me?.fsp?.linked ? "Реестр ФСП · подтверждён" : "Паспорт грейда"}
+          />
         </div>
       </section>
 

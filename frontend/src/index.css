@@ -319,6 +319,250 @@ html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg,
 .np details summary::marker { color: var(--np-indigo-t); }
 }
 
+/* ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ * WOW-СЦЕНА ФСП: Полоса телеметрии, Левитирующий 3D-Монолит / Медальон, радиоволны и орбитальные стеклянные капсулы
+ * ─────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
+@keyframes fspWave {
+  0% { transform: translate(-50%, -50%) scale(0.42); opacity: 0; }
+  16% { opacity: 0.78; }
+  100% { transform: translate(-50%, -50%) scale(1.32); opacity: 0; }
+}
+
+@keyframes fspLevitate {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(-1.5deg); }
+}
+
+@keyframes fspSheen {
+  0% { background-position: 100% 0; }
+  55%, 100% { background-position: 0% 0; }
+}
+
+.fsp-serif-italic {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: linear-gradient(100deg, #8B80FF 0%, #C8C3FF 24%, #FFFFFF 44%, #FF7588 64%, #8B80FF 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: fspSheen 7s ease-in-out infinite;
+}
+html[data-theme="light"] .np .fsp-serif-italic {
+  background-image: linear-gradient(100deg, #1F12A6 0%, #402FFF 32%, #7A6BFF 52%, #D41430 76%, #1F12A6 100%);
+}
+
+.fsp-pulse-bar {
+  position: relative;
+  z-index: 35;
+  background: linear-gradient(90deg, #070814 0%, #101432 50%, #070814 100%);
+  border-bottom: 1px solid rgba(165, 157, 255, 0.2);
+  color: #E2E5FF;
+}
+
+.fsp-pulse-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #4BE3A3;
+  box-shadow: 0 0 10px rgba(75, 227, 163, 0.9);
+}
+
+.fsp-stage-card {
+  background:
+    radial-gradient(95% 95% at 50% 48%, rgba(64, 47, 255, 0.34) 0%, rgba(236, 29, 53, 0.14) 44%, rgba(8, 10, 24, 0.96) 100%),
+    linear-gradient(145deg, #080A18 0%, #111534 55%, #1A1026 100%);
+  border: 1px solid rgba(165, 157, 255, 0.34);
+  box-shadow: 0 28px 68px -26px rgba(14, 17, 48, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  color: #F3F4FF;
+}
+
+.fsp-hero-visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 270px;
+}
+
+.fsp-core-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.fsp-core-glow::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(62vw, 340px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(64, 47, 255, 0.56) 0%,
+    rgba(236, 29, 53, 0.24) 42%,
+    transparent 72%
+  );
+  filter: blur(14px);
+}
+
+.fsp-rings {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.fsp-rings i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(52vw, 290px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(165, 157, 255, 0.55);
+  box-shadow: 0 0 18px rgba(64, 47, 255, 0.32);
+  transform: translate(-50%, -50%) scale(0.42);
+  opacity: 0;
+  animation: fspWave 6.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+.fsp-rings--sm i {
+  width: 155px;
+}
+.fsp-rings i:nth-child(2) { animation-delay: 1.6s; border-color: rgba(236, 29, 53, 0.45); }
+.fsp-rings i:nth-child(3) { animation-delay: 3.2s; }
+.fsp-rings i:nth-child(4) { animation-delay: 4.8s; }
+
+.fsp-core-shadow {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 4%;
+  width: 52%;
+  height: 22px;
+  margin-left: -26%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0));
+  pointer-events: none;
+}
+
+.fsp-float {
+  position: relative;
+  display: block;
+  animation: fspLevitate 5.8s ease-in-out infinite;
+}
+.fsp-float img {
+  filter: drop-shadow(0 30px 44px rgba(0, 0, 0, 0.78));
+}
+.fsp-float-delayed {
+  animation: fspLevitate 6.6s ease-in-out -2.4s infinite;
+}
+
+.fsp-orbit-pill {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 13px;
+  border-radius: 14px;
+  background: rgba(10, 12, 28, 0.86);
+  border: 1px solid rgba(165, 157, 255, 0.4);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.6);
+  color: #F3F4FF;
+  font-size: 11.5px;
+  line-height: 1.25;
+  text-decoration: none;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s;
+}
+.fsp-orbit-pill:hover {
+  transform: translateY(-3px);
+  border-color: rgba(165, 157, 255, 0.9);
+}
+.fsp-orbit-pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #7C70FF, #402FFF);
+  box-shadow: 0 0 10px rgba(64, 47, 255, 0.95);
+  flex-shrink: 0;
+}
+.fsp-orbit-pill__dot--red {
+  background: linear-gradient(135deg, #FF5C72, #EC1D35);
+  box-shadow: 0 0 10px rgba(236, 29, 53, 0.95);
+}
+.fsp-orbit-pill b {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+.fsp-orbit-pill small {
+  display: block;
+  font-size: 10.5px;
+  color: rgba(226, 229, 255, 0.76);
+  margin-top: 1px;
+}
+.fsp-orbit-pill--top { top: 4%; right: 0; }
+.fsp-orbit-pill--left { bottom: 18%; left: 0; }
+.fsp-orbit-pill--bottom { bottom: 2%; right: 2%; }
+
+@media (max-width: 639.98px) {
+  .fsp-orbit-pill {
+    padding: 6px 10px;
+    font-size: 10.5px;
+  }
+  .fsp-orbit-pill small { display: none; }
+}
+
+.fsp-mini-orbit-pill {
+  position: absolute;
+  bottom: 2px;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border-radius: 12px;
+  background: rgba(10, 12, 28, 0.88);
+  border: 1px solid rgba(165, 157, 255, 0.42);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.55);
+  color: #F3F4FF;
+  line-height: 1.15;
+}
+.fsp-mini-orbit-pill b {
+  display: block;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+.fsp-mini-orbit-pill small {
+  display: block;
+  font-size: 9.5px;
+  color: #B8B4FF;
+}
+
+/* Контрастный обсидианово-титановый сайдбар Личных кабинетов на десктопе */
+@media (min-width: 768px) {
+  .fsp-cabinet-sidebar {
+    background:
+      radial-gradient(120% 80% at 10% 0%, rgba(64, 47, 255, 0.28) 0%, transparent 55%),
+      radial-gradient(90% 70% at 90% 100%, rgba(236, 29, 53, 0.14) 0%, transparent 55%),
+      linear-gradient(180deg, #090B1A 0%, #0E1229 55%, #090B1A 100%) !important;
+    border-right: 1px solid rgba(165, 157, 255, 0.18) !important;
+    color: #F3F4FF;
+  }
+}
+
 /* Защита таблицы сравнения кандидатов (/employer/needs/:id/compare) от посимвольного сжатия текста рядом со значком уровня */
 [data-testid="compare-scroll"] [role="cell"] > div.flex.items-start.gap-2,
 [data-testid="why-scroll"] li.flex.items-start.gap-2,
