@@ -33,7 +33,7 @@ prior_difficulty:
     именами; ключ — исполнением на четырёх сценариях с поддельными часами. Lead обычно ограничивает число повторов
     на вызов (MAX_RETRIES) и считает шторм решённым; Principal видит перемножение по уровням и связывает таймаут
     с дедлайном — граница Lead/Principal (θ ≈ 2,9); σ 0,3'
-generator: assessment_bank.families.backend.principal_retry_policy_fix
+generator: assessment_bank.families_retired.form_leak_2110.backend.principal_retry_policy_fix
 version: 1
 description: 'Principal (короткое, 7 мин): какая замена общей обёртки повторов выполняет три принципа архитектурного
   совета. Ключ — исполнением: замены исполняются в составе модуля на четырёх сценариях.

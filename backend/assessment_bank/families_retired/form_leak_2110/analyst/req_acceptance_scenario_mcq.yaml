@@ -30,7 +30,7 @@ prior_difficulty:
   basis: Априорная, до калибровки на людях (a = 1,0). Правило из 2–3 условий с порогом и исключением, четыре сценария
     одной формы; верные сценарии тоже бывают на границах, поэтому нужно проверить каждый. Тип ошибки (граница, приоритет
     исключения, «и»/«или») меняет трудность → σ повышена. Junior (b ≈ −0,6)
-generator: assessment_bank.families.analyst.req_acceptance_scenario_mcq
+generator: assessment_bank.families_retired.form_leak_2110.analyst.req_acceptance_scenario_mcq
 version: 1
 description: 'Бизнес-правило и четыре сценария приёмки в стиле Gherkin; нужно найти сценарий, противоречащий правилу.
   Ключ: программа на Python разбирает показанные сценарии и вычисляет правило.

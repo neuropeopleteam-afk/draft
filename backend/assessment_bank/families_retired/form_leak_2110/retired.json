@@ -1,5 +1,5 @@
 {
- "rule": "form attack >= 0.9",
+ "rule": "form attack >= 0.9 | form attack >= 0.75",
  "attacks": [
   "len_rank",
   "text",
@@ -7,7 +7,78 @@
   "text_x_letter",
   "ctx_x_text"
  ],
- "source": "/tmp/pos_after_rp.json",
+ "rounds": [
+  {
+   "rule": "form attack >= 0.9",
+   "source": "/tmp/pos_after_rp.json",
+   "families": [
+    "analyst.lead.metric_definition_fix",
+    "analyst.sql.join_fanout_fix",
+    "analyst.sql.retention_cohort_fix",
+    "backend.db.keyset_pagination_fix",
+    "backend.db.transaction_fix",
+    "backend.django.on_commit_fix",
+    "backend.go.map_race_fix",
+    "backend.java.list_remove_loop_fix",
+    "backend.java.session_registry_leak_fix",
+    "backend.kafka.outbox_relay_fix",
+    "backend.py.money_rounding_fix",
+    "backend.time.add_months_fix",
+    "common.ds.lru_cache_fix",
+    "common.sql.aggregate_filter_fix",
+    "data_eng.dwh.lead_scd2_merge_fix",
+    "data_eng.dwh.scd2_rerun_fix",
+    "data_eng.etl.partition_overwrite_fix",
+    "data_eng.etl.upsert_fix",
+    "data_ml.ml.purged_split_fix",
+    "data_ml.sql.latest_record_fix",
+    "data_ml.stats.ztest_fix",
+    "devops.bash.pipefail_fix",
+    "frontend.forms.int_validation_fix",
+    "frontend.js.abort_fetch_fix",
+    "frontend.js.async_foreach_fix",
+    "frontend.js.listener_leak_fix",
+    "frontend.state.optimistic_rollback_fix",
+    "mobile.js.deeplink_route_fix",
+    "mobile.js.double_submit_fix",
+    "mobile.js.offline_queue_fix",
+    "mobile.js.token_refresh_fix",
+    "security.auth.password_storage_fix",
+    "security.sql.parameter_fix",
+    "security.supply.dependency_patch_fix",
+    "security.web.html_escape_fix",
+    "security.web.ssrf_allowlist_fix",
+    "backend.py.concurrency_mcq",
+    "common.git.move_commits_mcq",
+    "common.git.undo_mcq",
+    "data_ml.metrics.invariance_mcq",
+    "mobile.android.state_survival_mcq",
+    "mobile.ios.appearance_mcq",
+    "mobile.push.fcm_message_mcq",
+    "mobile.security.secret_storage_mcq",
+    "qa.load.percentile_merge_mcq",
+    "qa.triage.severity_priority_mcq",
+    "security.web.cookie_policy_mcq",
+    "security.web.cors_csrf_mcq"
+   ]
+  },
+  {
+   "rule": "form attack >= 0.75",
+   "source": "docs/bank/position_attack_2110f_1413.json",
+   "families": [
+    "backend.arch.principal_retry_policy_fix",
+    "common.api.rest_idempotent_retry_fix",
+    "common.docker.cache_order_fix",
+    "data_ml.fe.onehot_serving_fix",
+    "qa.sql.reconciliation_fix",
+    "analyst.api.idempotency_contract_mcq",
+    "analyst.req.acceptance_scenario_mcq",
+    "mobile.kotlin.flow_lifecycle_mcq",
+    "mobile.principal.rollout_segments_mcq"
+   ]
+  }
+ ],
+ "source": "docs/bank/position_attack_2110f_1413.json",
  "families": [
   {
    "family_id": "analyst.lead.metric_definition_fix",
@@ -748,6 +819,140 @@
     "ctx_x_text": 1.0
    },
    "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/security/cors_csrf_mcq.yaml"
+  },
+  {
+   "family_id": "backend.arch.principal_retry_policy_fix",
+   "format": "choose_fix",
+   "yaml": "backend/assessment_bank/families/backend/principal_retry_policy_fix.yaml",
+   "generator": "assessment_bank.families.backend.principal_retry_policy_fix",
+   "attack": "text",
+   "acc": 0.8431,
+   "chance": 0.25,
+   "all_form_hits": {
+    "text": 0.8431
+   },
+   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/backend/principal_retry_policy_fix.yaml",
+   "round": 2
+  },
+  {
+   "family_id": "common.api.rest_idempotent_retry_fix",
+   "format": "choose_fix",
+   "yaml": "backend/assessment_bank/families/common/rest_idempotent_retry_fix.yaml",
+   "generator": "assessment_bank.families.common.rest_idempotent_retry_fix",
+   "attack": "letter_x_len_rank",
+   "acc": 0.7733,
+   "chance": 0.25,
+   "all_form_hits": {
+    "len_rank": 0.7717,
+    "letter_x_len_rank": 0.7733
+   },
+   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/common/rest_idempotent_retry_fix.yaml",
+   "round": 2
+  },
+  {
+   "family_id": "common.docker.cache_order_fix",
+   "format": "choose_fix",
+   "yaml": "backend/assessment_bank/families/common/docker_cache_order_fix.yaml",
+   "generator": "assessment_bank.families.common.docker_cache_order_fix",
+   "attack": "text",
+   "acc": 0.8225,
+   "chance": 0.25,
+   "all_form_hits": {
+    "text": 0.8225,
+    "ctx_x_text": 0.8225
+   },
+   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/common/docker_cache_order_fix.yaml",
+   "round": 2
+  },
+  {
+   "family_id": "data_ml.fe.onehot_serving_fix",
+   "format": "choose_fix",
+   "yaml": "backend/assessment_bank/families/data_ml/fe_onehot_serving_fix.yaml",
+   "generator": "assessment_bank.families.data_ml.fe_onehot_serving_fix",
+   "attack": "len_rank",
+   "acc": 0.7667,
+   "chance": 0.25,
+   "all_form_hits": {
+    "len_rank": 0.7667,
+    "letter_x_len_rank": 0.7667
+   },
+   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/data_ml/fe_onehot_serving_fix.yaml",
+   "round": 2
+  },
+  {
+   "family_id": "qa.sql.reconciliation_fix",
+   "format": "choose_fix",
+   "yaml": "backend/assessment_bank/families/qa/sql_reconciliation_fix.yaml",
+   "generator": "assessment_bank.families.qa.sql_reconciliation_fix",
+   "attack": "text",
+   "acc": 0.8625,
+   "chance": 0.25,
+   "all_form_hits": {
+    "text": 0.8625,
+    "ctx_x_text": 0.8625
+   },
+   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/qa/sql_reconciliation_fix.yaml",
+   "round": 2
+  },
+  {
+   "family_id": "analyst.api.idempotency_contract_mcq",
+   "format": "mcq_concept",
+   "yaml": "backend/assessment_bank/families/analyst/api_idempotency_contract_mcq.yaml",
+   "generator": "assessment_bank.families.analyst.api_idempotency_contract_mcq",
+   "attack": "text",
+   "acc": 0.8833,
+   "chance": 0.25,
+   "all_form_hits": {
+    "text": 0.8833,
+    "text_x_letter": 0.87,
+    "ctx_x_text": 0.83
+   },
+   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/analyst/api_idempotency_contract_mcq.yaml",
+   "round": 2
+  },
+  {
+   "family_id": "analyst.req.acceptance_scenario_mcq",
+   "format": "mcq_concept",
+   "yaml": "backend/assessment_bank/families/analyst/req_acceptance_scenario_mcq.yaml",
+   "generator": "assessment_bank.families.analyst.req_acceptance_scenario_mcq",
+   "attack": "text",
+   "acc": 0.8089,
+   "chance": 0.25,
+   "all_form_hits": {
+    "text": 0.8089,
+    "ctx_x_text": 0.7639
+   },
+   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/analyst/req_acceptance_scenario_mcq.yaml",
+   "round": 2
+  },
+  {
+   "family_id": "mobile.kotlin.flow_lifecycle_mcq",
+   "format": "mcq_concept",
+   "yaml": "backend/assessment_bank/families/mobile/kotlin_flow_lifecycle_mcq.yaml",
+   "generator": "assessment_bank.families.mobile.kotlin_flow_lifecycle_mcq",
+   "attack": "text",
+   "acc": 0.83,
+   "chance": 0.25,
+   "all_form_hits": {
+    "text": 0.83,
+    "ctx_x_text": 0.83
+   },
+   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/mobile/kotlin_flow_lifecycle_mcq.yaml",
+   "round": 2
+  },
+  {
+   "family_id": "mobile.principal.rollout_segments_mcq",
+   "format": "mcq_concept",
+   "yaml": "backend/assessment_bank/families/mobile/principal_rollout_segments_mcq.yaml",
+   "generator": "assessment_bank.families.mobile.principal_rollout_segments_mcq",
+   "attack": "text",
+   "acc": 0.8328,
+   "chance": 0.25,
+   "all_form_hits": {
+    "text": 0.8328
+   },
+   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/mobile/principal_rollout_segments_mcq.yaml",
+   "round": 2
   }
  ]
 }

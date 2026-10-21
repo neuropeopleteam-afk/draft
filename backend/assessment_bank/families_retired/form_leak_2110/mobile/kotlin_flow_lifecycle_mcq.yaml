@@ -29,7 +29,7 @@ prior_difficulty:
     поток, два «почти верных» (launchWhenStarted приостанавливает сборщик, но не производителя; repeatOnLifecycle(CREATED)
     активен в фоне) требуют понимать разницу между приостановкой и отменой; варианты одной длины. Middle/Senior
     (b ≈ 0,7)'
-generator: assessment_bank.families.mobile.kotlin_flow_lifecycle_mcq
+generator: assessment_bank.families_retired.form_leak_2110.mobile.kotlin_flow_lifecycle_mcq
 version: 1
 description: 'Выбор способа сбора callbackFlow в Activity/Fragment, при котором в фоне снимается подписка на источник.
   Ключ — справочная таблица по документации Android (исполнение невозможно).
