@@ -196,8 +196,10 @@ def synth_stream(text: str, fmt: str = "pcm24", live: bool = False) -> Iterator[
 
     path = f"/v1/text-to-speech/{voice}/stream?output_format={out_fmt}"
     r = relay.route(TTS_HOST, path, {"xi-api-key": key, "Content-Type": "application/json", "Accept": "*/*"})
+    from app.modules.interview.concierge_numsay import spoken as _numsay
+
     body = {
-        "text": clean,
+        "text": _numsay(clean),   # числа — словами по-русски детерминированно (модель пишет цифрами, как в фактах)
         "model_id": TTS_LIVE_MODEL if live else TTS_MODEL,
         "language_code": "ru",
         "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "style": 0.0, "use_speaker_boost": True,
