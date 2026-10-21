@@ -251,7 +251,7 @@ def test_delete_erases_personal_data_and_anonymizes_employer_records(client, wor
                          "invitation_complaints.candidate_user_id", "invitation_counters.candidate_user_id",
                          "vacancy_applications.candidate_user_id", "invitation_events.actor_user_id",
                          "hiring_interviews.candidate_user_id", "hiring_offers.candidate_user_id",
-                         "hiring_outcomes.candidate_user_id"}, left
+                         "hiring_outcomes.candidate_user_id", "ats_deliveries.candidate_user_id"}, left
     # 3. надгробие: профиль без личных данных, ref сохранён
     with SessionLocal() as db:
         p = db.get(CandidateProfile, uid)

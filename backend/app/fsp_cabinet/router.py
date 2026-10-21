@@ -5,8 +5,13 @@ import csv
 import io
 import logging
 
+from typing import Literal
+import uuid
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
+from pydantic import BaseModel, Field
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -29,6 +34,16 @@ def _audit(user: User, what: str, days: int | None) -> None:
     log.info("fsp_cabinet access user=%s role=%s section=%s days=%s", user.id, user.role.value, what, days)
 
 
+def _inc_demo(db: Session, user: User) -> bool:
+    """Включать ли общие демо-данные платформы в кабинет ФСП:
+    - для демо-персон и жюри — всегда True;
+    - для тестов аналитики ФСП, где засеяно демо, но ещё не вызывался /api/jury/login (нет @jury.example.com) — True;
+    - в рыночном режиме при живой работе стенда (когда есть песочницы жюри) для реального аналитика — False."""
+    from app.modules.jury import scope as jury_scope
+
+    return not jury_scope.real_default(user, db=db)
+
+
 @router.get("/report", summary="Вся аналитика кабинета одним ответом", responses=AUTH)
 def report(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     from app.cup import tournament
@@ -36,11 +51,12 @@ def report(days: int | None = Days, user: User = Depends(analyst), db: Session =
     from app.modules.jury import scope as jury_scope
 
     _audit(user, "report", days)
+    inc_demo = _inc_demo(db, user)
     # Н5: турниры «Компания × ФСП» под вакансии — отдельным списком (платформы и своей песочницы жюри, агрегаты)
     return {
-        **an.report(db, days),
-        "regions_map": build_regions_map(db, days),
-        "tournaments": tournament.cabinet_list(db, jury_scope.key_of(user.email)),
+        **an.report(db, days, include_demo=inc_demo),
+        "regions_map": build_regions_map(db, days, include_demo=inc_demo),
+        "tournaments": tournament.cabinet_list(db, jury_scope.key_of(user.email), include_demo=inc_demo),
     }
 
 
@@ -49,44 +65,44 @@ def regions(days: int | None = Days, user: User = Depends(analyst), db: Session 
     from app.fsp_cabinet.regions import build_regions_map
 
     _audit(user, "regions", days)
-    return build_regions_map(db, days)
+    return build_regions_map(db, days, include_demo=_inc_demo(db, user))
 
 
 @router.get("/overview", summary="Ключевые показатели", responses=AUTH)
 def overview(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     _audit(user, "overview", days)
-    return an.overview(an.load(db, days))
+    return an.overview(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/demand", summary="Спрос работодателей по категориям и навыкам", responses=AUTH)
 def demand(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     _audit(user, "demand", days)
-    return an.demand(an.load(db, days))
+    return an.demand(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/fsp-effect", summary="Какие дисциплины, разряды и результаты ФСП ведут к приглашениям и принятиям",
             responses=AUTH)
 def fsp_effect(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     _audit(user, "fsp_effect", days)
-    return an.fsp_effect(an.load(db, days))
+    return an.fsp_effect(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/salaries", summary="Реальные зарплатные вилки из приглашений по категориям", responses=AUTH)
 def salaries(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     _audit(user, "salaries", days)
-    return an.salaries(an.load(db, days))
+    return an.salaries(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/funnel", summary="Воронки «соревнование → приглашение → принятие»", responses=AUTH)
 def funnel(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     _audit(user, "funnel", days)
-    return an.funnel(an.load(db, days))
+    return an.funnel(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/cups", summary="Кубки работодателей как мероприятия", responses=AUTH)
 def cups(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> list[dict]:
     _audit(user, "cups", days)
-    return an.cups_section(an.load(db, days), db)
+    return an.cups_section(an.load(db, days, include_demo=_inc_demo(db, user)), db)
 
 
 def _cell(v) -> str:
@@ -120,7 +136,7 @@ def export(section: str, days: int | None = Days, user: User = Depends(analyst),
         raise api_error(404, "export_not_found", "Нет такого раздела выгрузки")
     _audit(user, f"export:{section}", days)
     rows_of, cols = EXPORTS[section]
-    rep = an.report(db, days)
+    rep = an.report(db, days, include_demo=_inc_demo(db, user))
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
     w.writerow(cols)
@@ -132,3 +148,151 @@ def export(section: str, days: int | None = Days, user: User = Depends(analyst),
         w.writerow([_cell(row.get(c)) for c in cols])
     return Response(content="\ufeff" + buf.getvalue(), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="fsp_{section}.csv"'})
+
+
+class ProtocolClaimDecideIn(BaseModel):
+    action: Literal["approve", "reject"]
+    note: str | None = Field(None, max_length=500)
+
+
+@router.get("/protocol-claims", summary="Очередь заявок кандидатов на подтверждение достижений по официальным протоколам ФСП",
+            responses=AUTH)
+def list_protocol_claims(
+    status: Literal["all", "pending_fsp", "verified"] = Query("all"),
+    user: User = Depends(analyst),
+    db: Session = Depends(get_db),
+) -> dict:
+    from app.modules.catalog.constants import FSP_DISCIPLINES
+    from app.modules.fsp.models import FspAchievement, FspPassport
+    from app.modules.profiles.facts import achievement_text
+    from app.modules.profiles.models import CandidateProfile
+
+    _audit(user, "protocol-claims", None)
+    disc_titles = {d["id"]: d["title"] for d in FSP_DISCIPLINES}
+    rows = db.scalars(
+        select(FspAchievement)
+        .where(
+            or_(
+                FspAchievement.source_ref.like("protocol:%"),
+                FspAchievement.protocol_status.in_(("pending_fsp", "verified")),
+            )
+        )
+        .order_by(FspAchievement.created_at.desc())
+    ).all()
+    pids = list({r.passport_id for r in rows})
+    passports = {p.id: p for p in db.scalars(select(FspPassport).where(FspPassport.id.in_(pids))).all()} if pids else {}
+    uids = list({p.user_id for p in passports.values()})
+    profiles = {p.user_id: p for p in db.scalars(select(CandidateProfile).where(CandidateProfile.user_id.in_(uids))).all()} if uids else {}
+    users_by_id = {u.id: u for u in db.scalars(select(User).where(User.id.in_(uids))).all()} if uids else {}
+    inc_demo = _inc_demo(db, user)
+
+    items = []
+    pending_cnt = 0
+    verified_cnt = 0
+    for a in rows:
+        pp = passports.get(a.passport_id)
+        prof = profiles.get(pp.user_id) if pp else None
+        cand_u = users_by_id.get(pp.user_id) if pp else None
+        if not inc_demo and ((cand_u and cand_u.is_demo) or (prof and getattr(prof, "is_synthetic", False))):
+            continue
+        tr = a.team_result or {}
+        pref = a.protocol_ref or {}
+        st = a.protocol_status or tr.get("protocol_status") or ("verified" if tr.get("protocol_verified") else "pending_fsp")
+        if st == "pending_fsp":
+            pending_cnt += 1
+        elif st == "verified":
+            verified_cnt += 1
+        if status != "all" and st != status:
+            continue
+        ekp_no = a.ekp_no or pref.get("ekp_no") or tr.get("ekp_no")
+        evsk_rank = a.evsk_rank or tr.get("evsk_rank") or a.sport_rank
+        evsk_basis = a.evsk_basis or tr.get("evsk_basis")
+        pdf_url = pref.get("url") or tr.get("pdf_url")
+        page = pref.get("page") or tr.get("page")
+        doc_id = pref.get("doc_id") or tr.get("doc_id") or a.event_id
+        items.append({
+            "id": str(a.id),
+            "candidate_ref": prof.public_ref if prof else None,
+            "event_name": a.event_name,
+            "event_date": a.event_date.isoformat() if a.event_date else None,
+            "discipline": a.discipline,
+            "discipline_title": disc_titles.get(a.discipline, a.discipline),
+            "place": a.place,
+            "place_status": tr.get("place_status"),
+            "place_range": tr.get("place_range"),
+            "place_text": tr.get("place_text"),
+            "evsk_status": tr.get("evsk_status"),
+            "result_title": a.result_title,
+            "team_name": a.team_name,
+            "region": tr.get("region"),
+            "ekp_no": ekp_no,
+            "evsk_rank": evsk_rank,
+            "evsk_basis": evsk_basis,
+            "protocol_ref": {"doc_id": doc_id, "ekp_no": ekp_no, "page": page, "url": pdf_url},
+            "pdf_url": pdf_url,
+            "page": page,
+            "protocol_status": st,
+            "status_title": (
+                "Подтверждено протоколом ФСП" if st == "verified"
+                else "Найдено в протоколе — ожидает подтверждения ФСП" if st == "pending_fsp"
+                else tr.get("status_title") or "Отклонено"
+            ),
+            "fsp_note": tr.get("fsp_note"),
+            "formatted_text": achievement_text(a),
+            "created_at": a.created_at.isoformat() if a.created_at else None,
+        })
+    items.sort(key=lambda x: (0 if x["protocol_status"] == "pending_fsp" else 1))
+    return {
+        "counts": {"pending_fsp": pending_cnt, "verified": verified_cnt, "total": len(rows)},
+        "items": items,
+    }
+
+
+@router.post("/protocol-claims/{achievement_id}/decide",
+             summary="Подтвердить или отклонить заявку кандидата по официальному протоколу ФСП",
+             responses={**AUTH, 404: err("Заявка не найдена")})
+def decide_protocol_claim(
+    achievement_id: uuid.UUID,
+    data: ProtocolClaimDecideIn,
+    user: User = Depends(analyst),
+    db: Session = Depends(get_db),
+) -> dict:
+    from app.modules.fsp.models import FspAchievement, FspPassport
+    from app.modules.profiles.facts import achievement_text, refresh_rating
+
+    a = db.get(FspAchievement, achievement_id)
+    if a is None:
+        raise api_error(404, "claim_not_found", "Заявка на подтверждение протокола не найдена")
+    pp = db.get(FspPassport, a.passport_id)
+    tr = dict(a.team_result or {})
+    if data.action == "approve":
+        a.protocol_status = "verified"
+        a.verified = True
+        tr["protocol_verified"] = True
+        tr["protocol_status"] = "verified"
+        tr["status_title"] = "Подтверждено представителем ФСП по официальному протоколу"
+        if data.note:
+            tr["fsp_note"] = data.note
+        a.team_result = tr
+        if a.evsk_rank and pp and not pp.sport_rank:
+            pp.sport_rank = a.evsk_rank
+    else:
+        a.protocol_status = "none"
+        a.verified = False
+        tr["protocol_verified"] = False
+        tr["protocol_status"] = "rejected"
+        tr["status_title"] = "Отклонено представителем ФСП"
+        if data.note:
+            tr["fsp_note"] = data.note
+        a.team_result = tr
+    db.flush()
+    if pp is not None:
+        refresh_rating(db, pp.user_id)
+    db.commit()
+    return {
+        "id": str(a.id),
+        "protocol_status": a.protocol_status,
+        "verified": a.verified,
+        "status_title": tr.get("status_title"),
+        "formatted_text": achievement_text(a),
+    }

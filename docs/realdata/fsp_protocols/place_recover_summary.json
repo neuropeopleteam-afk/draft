@@ -1,0 +1,119 @@
+{
+ "models": [
+  "google/gemini-2.5-pro",
+  "anthropic/claude-sonnet-5.5"
+ ],
+ "tokens": {
+  "a": 146325,
+  "b": 133784
+ },
+ "docs": {
+  "cfo_2026_prod": {
+   "pages": 4,
+   "rows": 51,
+   "rows_v2": 51,
+   "confirmed": 51,
+   "unverified": 0,
+   "geometry_pages": 4,
+   "place_status": {
+    "placed": 51
+   },
+   "place_check": {
+    "geometry+two_providers": 51
+   }
+  },
+  "chr_2025_prod_final": {
+   "pages": 2,
+   "rows": 53,
+   "rows_v2": 53,
+   "confirmed": 53,
+   "unverified": 0,
+   "geometry_pages": 2,
+   "place_status": {
+    "placed": 42,
+    "shared_range": 11
+   },
+   "place_check": {
+    "geometry+two_providers": 47,
+    "sequence": 6
+   }
+  },
+  "kf_2026_final": {
+   "pages": 13,
+   "rows": 260,
+   "rows_v2": 260,
+   "confirmed": 260,
+   "unverified": 0,
+   "geometry_pages": 13,
+   "place_status": {
+    "placed": 56,
+    "no_place": 204
+   },
+   "place_check": {
+    "geometry+two_providers": 256,
+    "sequence": 4
+   }
+  },
+  "kr_2025_prod_final": {
+   "pages": 1,
+   "rows": 17,
+   "rows_v2": 17,
+   "confirmed": 15,
+   "unverified": 2,
+   "geometry_pages": 1,
+   "place_status": {
+    "placed": 17
+   },
+   "place_check": {
+    "None": 2,
+    "geometry+two_providers": 15
+   }
+  },
+  "kr_2026_prod_otbor": {
+   "pages": 3,
+   "rows": 50,
+   "rows_v2": 50,
+   "confirmed": 50,
+   "unverified": 0,
+   "geometry_pages": 2,
+   "place_status": {
+    "placed": 50
+   },
+   "place_check": {
+    "geometry+two_providers": 35,
+    "two_providers": 15
+   }
+  },
+  "kr_2026_robo_otbor": {
+   "pages": 3,
+   "rows": 68,
+   "rows_v2": 68,
+   "confirmed": 68,
+   "unverified": 0,
+   "geometry_pages": 0,
+   "place_status": {
+    "placed": 30,
+    "shared_range": 38
+   },
+   "place_check": {
+    "two_providers": 68
+   }
+  },
+  "pfo_2026_prod": {
+   "pages": 2,
+   "rows": 17,
+   "rows_v2": 17,
+   "confirmed": 14,
+   "unverified": 3,
+   "geometry_pages": 2,
+   "place_status": {
+    "placed": 13,
+    "no_place": 4
+   },
+   "place_check": {
+    "None": 3,
+    "geometry+two_providers": 14
+   }
+  }
+ }
+}

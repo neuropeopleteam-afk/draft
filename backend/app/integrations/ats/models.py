@@ -27,10 +27,12 @@ class AtsSettings(Timestamps, Base):
     huntflow_vacancy_id: Mapped[int | None]
     huntflow_status_id: Mapped[int | None]
     huntflow_token_enc: Mapped[str | None] = mapped_column(sa.Text)  # Fernet
+    huntflow_token_expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     # Универсальный вебхук: POST JSON, подпись HMAC-SHA256 в заголовке X-Draft-Signature
     webhook_enabled: Mapped[bool] = mapped_column(default=False)
     webhook_url: Mapped[str | None] = mapped_column(sa.String(500))
     webhook_secret_enc: Mapped[str | None] = mapped_column(sa.Text)  # Fernet
+    webhook_secret_expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     # Тестовая ATS-заглушка (демо): ключ входящего ящика, по нему заглушка относит записи к компании
     stub_key: Mapped[str | None] = mapped_column(sa.String(64), unique=True)
 

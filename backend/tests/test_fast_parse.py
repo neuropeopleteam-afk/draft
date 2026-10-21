@@ -57,18 +57,45 @@ def poll(client, t, job_id, timeout=15.0) -> dict:
 
 
 def test_rules_answer_is_immediate_while_model_is_slow(client, monkeypatch, net):
-    """Ответ словарём не ждёт модель (мок отвечает через 2,5 с); итог модели появляется в задаче сам."""
+    """Ответ словарём не ждёт модель; итог модели появляется в задаче сам.
+
+    Проверка причинная, а не по секундомеру: модель-заглушка держится на «затворе», который тест открывает только
+    ПОСЛЕ получения ответа (не дольше GATE_S). Если бы ответ ждал модель, он пришёл бы после её завершения (через
+    GATE_S) — тогда `model_done` уже установлен и проверка падает при любой нагрузке. Модель после затвора работает
+    не меньше MODEL_S от начала вызова — так проверяется и честный учёт её времени в задаче (total_ms).
+    """
+    import threading
+
+    GATE_S, MODEL_S = 30.0, 2.5
+    gate, model_started, model_done = threading.Event(), threading.Event(), threading.Event()
+
+    def slow_model(req, body):
+        t_start = time.monotonic()
+        model_started.set()
+        gate.wait(GATE_S)
+        time.sleep(max(0.0, MODEL_S - (time.monotonic() - t_start)))
+        model_done.set()
+        return delta_reply(req, body)
+
     configure(monkeypatch, LLM_CHAIN="openrouter")
-    net.on("or.test", None, lambda req, body: (time.sleep(2.5), delta_reply(req, body))[1])
+    net.on("or.test", None, slow_model)
     t = employer(client)
     t0 = time.monotonic()
-    r = parse(client, t)
-    took = time.monotonic() - t0
-    assert took < 1.0, took  # на сервере ≈ 0,05 с; запас — на общую песочницу
+    try:
+        r = parse(client, t)
+        took = time.monotonic() - t0
+        done_before_answer = model_done.is_set()
+    finally:
+        gate.set()  # отпустить модель в любом случае (иначе фоновый поток висит до GATE_S)
+    assert not done_before_answer, "ответ словарём пришёл только после завершения модели"
+    # Секундомер — только грубая страховка от зависания (под нагрузкой общей песочницы ответ доходил до 1,13 с;
+    # на сервере ≈ 0,05 с). Смысл «не ждёт модель» проверяется строкой выше и не зависит от нагрузки.
+    assert took < GATE_S / 3, took
     assert r["method"] == "rules" and r["llm"] == {"used": False, "pending": True}
     assert r["parse_job"]["status"] == "pending" and {"python", "docker"} <= {i["tag"] for i in r["stack_required"]}
     assert all(i["evidence"]["source"] == "rules" for i in r["stack_required"])
     j = poll(client, t, r["parse_job"]["id"])
+    assert model_started.is_set() and model_done.is_set()
     assert j["status"] == "done", j
     assert j["result"]["method"] == "llm+rules" and j["llm"]["model_label"] == "Claude Sonnet 5.5"
     assert j["llm"]["total_ms"] >= 2400

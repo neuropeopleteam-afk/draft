@@ -12,6 +12,8 @@ import { MutualPrefs } from "../mutual/Candidate";  // интересы для �
 
 export function Fsp() {
   const { data, loading, error, reload } = useApi<any>("/me/fsp");
+  const { me } = useAuth();
+  const isDemoStand = Boolean((me as any)?.is_demo || data?.registry?.demo || data?.origin?.kind === "model" || data?.origin?.kind === "stub");
   const [id, setId] = useState("");
   const [msg, setMsg] = useState<{ k: "ok" | "error"; t: string } | null>(null);
   const [fio, setFio] = useState("");
@@ -64,7 +66,15 @@ export function Fsp() {
         <div className="flex flex-wrap items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p>{data.origin && <OriginTag o={data.origin} />}</div>
         <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром ФСП.` : data.note}</p>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl bg-[#F3F2FB] p-4 text-center text-sm" data-testid="fsp-identity-link">
-          <div className="min-w-0"><p className="font-bold text-brand-night">ФСП ID</p><p className="mt-1 break-all text-xs text-brand-ink/70">{data.fsp_id_claimed || "Не указан"}</p></div>
+          <div className="min-w-0">
+            <p className="font-bold text-brand-night">ФСП ID</p>
+            <p className="mt-1 break-all text-xs text-brand-ink/70">{data.fsp_id_claimed || "Не указан"}</p>
+            {data.fsp_id_claimed && isDemoStand && (
+              <p className="mt-1 text-[11px] font-medium text-amber-900" data-testid="fsp-demo-code-note">
+                Демо-стенд: код показан здесь вместо письма
+              </p>
+            )}
+          </div>
           <span className="text-brand-plum" aria-label="Связь">↔</span>
           <div><p className="font-bold text-brand-night">Ваш профиль</p><p className="mt-1 text-xs text-brand-ink/70">{data.identity_linked ? "Вход подтверждён OIDC" : data.linked ? "Реестр ФСП подключается по договору с федерацией" : "Ожидает связи"}</p></div>
         </div>
@@ -95,10 +105,15 @@ export function Fsp() {
               Поиск по индексу 18 официальных итоговых протоколов соревнований ФСП и списку кандидатов в сборную РФ 2026 (fsp-russia.ru). Работодатели увидят подтверждённый результат только с вашего согласия.
             </p>
           </div>
-          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${data.protocols_available ? "bg-emerald-50 text-emerald-800" : "bg-gray-100 text-gray-600"}`}>
-            {data.protocols_available ? `Протоколы подключены (${num(data.protocols_indexed, 0)} записей)` : "Индекс не подключён"}
+          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${data.protocols_available ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}>
+            {data.protocols_available ? `Протоколы подключены (${num(data.protocols_indexed, 0)} записей)` : "Сверка временно недоступна"}
           </span>
         </div>
+        {data.protocols_available === false && (
+          <div className="rounded-xl border border-amber-300/70 bg-amber-50/70 p-3 text-xs text-amber-950" data-testid="fsp-protocols-unavailable-note">
+            Сверка по официальным протоколам ФСП временно недоступна на этом окружении. Ранее привязанные достижения паспорта и вход через ФСП ID работают в штатном режиме.
+          </div>
+        )}
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="ФИО спортсмена" htmlFor="pfio">
             <input id="pfio" className="input" value={fio} onChange={(e) => setFio(e.target.value)} placeholder="Фамилия Имя Отчество" />
@@ -135,17 +150,29 @@ export function Fsp() {
                           />
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800">
-                                {m.status_title ?? "Подтверждено по официальному протоколу ФСП"}
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                  m.protocol_status === "verified"
+                                    ? "bg-emerald-50 text-emerald-800"
+                                    : "bg-amber-50 text-amber-900"
+                                }`}
+                                data-testid="fsp-search-match-status"
+                              >
+                                {m.status_title ?? "Найдено в протоколе — ожидает подтверждения ФСП"}
                               </span>
-                              {m.rank && <span className="chip">Разряд/звание: {m.rank}</span>}
-                              {m.place != null && <span className="chip">Место: {m.place}</span>}
+                              {m.evsk_rank && <span className="chip">Разряд по ЕВСК: {m.evsk_rank}</span>}
+                              {m.place_display ? (
+                                <span className="chip" data-testid="fsp-search-match-place">{m.place_display}</span>
+                              ) : m.place != null ? (
+                                <span className="chip" data-testid="fsp-search-match-place">Место: {m.place}</span>
+                              ) : null}
                             </div>
                             <p className="font-semibold text-brand-night">{m.event_title}</p>
                             <p className="text-xs text-brand-ink/70">
                               {[
                                 m.discipline_title ? `Дисциплина: ${m.discipline_title}` : null,
                                 m.ekp_no ? `ЕКП № ${m.ekp_no}` : null,
+                                m.evsk_basis ? `Основание ЕВСК: ${m.evsk_basis}` : null,
                                 m.date ? `Дата: ${m.date}` : null,
                                 m.team ? `Команда: ${m.team}` : null,
                                 m.region ? `Регион: ${m.region}` : null,
@@ -201,19 +228,30 @@ export function Fsp() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p>{a.text}</p>
-                    {a.protocol_verified && (
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
-                        {a.status_title ?? "Подтверждено по официальному протоколу ФСП"}
+                    {(a.protocol_status === "verified" || a.protocol_verified) && (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800" data-testid="fsp-passport-status-badge">
+                        {a.status_title ?? "Подтверждено протоколом ФСП"}
+                      </span>
+                    )}
+                    {a.protocol_status === "pending_fsp" && (
+                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-900" data-testid="fsp-passport-status-badge">
+                        {a.status_title ?? "Найдено в протоколе — ожидает подтверждения ФСП"}
                       </span>
                     )}
                   </div>
-                  {(a.team || a.evsk_code || a.ekp_no || a.sport_rank || a.region) && (
+                  {(a.team || a.evsk_code || a.ekp_no || a.evsk_rank || a.sport_rank || a.region) && (
                     <p className="mt-1 text-xs text-brand-ink/65">
                       {[
                         a.team ? `Команда: ${a.team}` : null,
-                        a.team_result?.place ? `командное место: ${num(a.team_result.place, 0)}` : null,
-                        a.ekp_no ? `ЕКП № ${a.ekp_no}` : a.evsk_code ? `ЕВСК: ${a.evsk_code}` : null,
-                        a.sport_rank ? `разряд: ${a.sport_rank}` : null,
+                        a.evsk_status === "place_unverified" || a.place_status === "not_recognized" || a.place_status === "place_unverified"
+                          ? "место не подтверждено"
+                          : a.team_result?.place != null
+                            ? `командное место: ${num(a.team_result.place, 0)}`
+                            : Array.isArray(a.place_range ?? a.team_result?.place_range) && (a.place_range ?? a.team_result?.place_range).length === 2
+                              ? `место: ${(a.place_range ?? a.team_result?.place_range)[0]}–${(a.place_range ?? a.team_result?.place_range)[1]} место`
+                              : null,
+                        a.ekp_no ? `ЕКП № ${a.ekp_no}` : null,
+                        a.evsk_rank ? `разряд по ЕВСК: ${a.evsk_rank}${a.evsk_basis ? ` (${a.evsk_basis})` : ""}` : a.sport_rank ? `разряд: ${a.sport_rank}` : null,
                         a.region ? `регион: ${a.region}` : null,
                       ].filter(Boolean).join(" · ")}
                     </p>

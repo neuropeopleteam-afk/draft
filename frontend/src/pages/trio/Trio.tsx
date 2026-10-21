@@ -172,6 +172,151 @@ function NewThread({ role, initialInv, initialTopic, initialBody, onCreated }: {
   );
 }
 
+/** Очередь заявок кандидатов на подтверждение достижений по официальным протоколам ФСП (для роли fsp). */
+function ProtocolClaimsQueue() {
+  const { data, loading, error, reload } = useApi<any>("/fsp-cabinet/protocol-claims");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ k: "ok" | "error"; t: string } | null>(null);
+
+  async function decide(id: string, action: "approve" | "reject") {
+    setBusyId(id);
+    setMsg(null);
+    try {
+      await api(`/fsp-cabinet/protocol-claims/${id}/decide`, {
+        method: "POST",
+        body: {
+          action,
+          note: action === "approve" ? "Сверено представителем ФСП с официальным PDF-протоколом" : "Не подтверждено при сверке",
+        },
+      });
+      await reload();
+      setMsg({
+        k: "ok",
+        t: action === "approve"
+          ? "Достижение подтверждено по официальному протоколу ФСП. Статус в паспорте и карточке работодателя обновлён."
+          : "Заявка отклонена.",
+      });
+    } catch (e) {
+      setMsg({ k: "error", t: errText(e) });
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const items: any[] = data?.items ?? [];
+  const counts = data?.counts ?? { pending_fsp: 0, verified: 0, total: 0 };
+
+  return (
+    <section className="card space-y-4" data-testid="fsp-protocol-claims-queue">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-bold text-brand-night">Очередь заявок на подтверждение по официальным протоколам ФСП</h2>
+          <p className="mt-1 text-sm text-brand-ink/70">
+            Защита от присвоения однофамильцем чужого результата: совпадение ФИО с протоколом создаёт заявку «ожидает подтверждения ФСП». После сверки с PDF протокола (или входа через ФСП ID) достижение получает статус «Подтверждено протоколом ФСП» и полный вес в подборе.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 text-xs font-semibold">
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-900">
+            Ожидают подтверждения: {counts.pending_fsp ?? 0}
+          </span>
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-900">
+            Подтверждено: {counts.verified ?? 0}
+          </span>
+        </div>
+      </div>
+      {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
+      {loading && !data ? (
+        <Loading text="Загрузка очереди заявок по протоколам…" />
+      ) : error ? (
+        <Alert>{error}</Alert>
+      ) : items.length === 0 ? (
+        <div className="rounded-xl bg-[#F7F6FB] p-4 text-sm text-brand-ink/75">
+          Новых заявок на ручную сверку по протоколам ФСП сейчас нет. Когда кандидат отметит свою запись в индексе официальных протоколов ФСП без входа через ФСП ID, заявка появится здесь со ссылкой на страницу PDF.
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {items.map((it) => {
+            const isPending = it.protocol_status === "pending_fsp";
+            return (
+              <li key={it.id} className="rounded-xl border border-brand-night/10 bg-[#FBF8FC] p-3.5 text-sm" data-testid="fsp-protocol-claim-item">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {it.candidate_ref && (
+                        <span className="text-xs font-bold uppercase tracking-wider text-brand-lavender">
+                          Кандидат {it.candidate_ref}
+                        </span>
+                      )}
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          isPending ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"
+                        }`}
+                        data-testid="fsp-claim-status-badge"
+                      >
+                        {it.status_title}
+                      </span>
+                      {it.evsk_rank && <span className="chip">Разряд по ЕВСК: {it.evsk_rank}</span>}
+                      {(it.evsk_status === "place_unverified" || it.place_status === "not_recognized" || it.place_status === "place_unverified") ? (
+                        <span className="chip bg-amber-50 text-amber-900">место не подтверждено</span>
+                      ) : Array.isArray(it.place_range) && it.place_range.length === 2 && it.place == null ? (
+                        <span className="chip">{it.place_range[0]}–{it.place_range[1]} место</span>
+                      ) : it.place != null ? (
+                        <span className="chip">{it.place} место</span>
+                      ) : null}
+                    </div>
+                    <p className="font-semibold text-brand-night">{it.formatted_text}</p>
+                    <p className="text-xs text-brand-ink/70">
+                      {[
+                        it.ekp_no ? `ЕКП № ${it.ekp_no}` : null,
+                        it.evsk_basis ? `Норма ЕВСК: ${it.evsk_basis}` : null,
+                        it.team_name ? `Команда: ${it.team_name}` : null,
+                        it.region ? `Регион: ${it.region}` : null,
+                      ].filter(Boolean).join(" · ")}
+                    </p>
+                    {it.pdf_url && (
+                      <p className="text-xs">
+                        <a href={it.pdf_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">
+                          Открыть официальный протокол PDF (fsp-russia.ru){it.page ? `, стр. ${it.page}` : ""} ↗
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    {isPending ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn-primary !py-1.5 !text-xs"
+                          disabled={busyId === it.id}
+                          onClick={() => decide(it.id, "approve")}
+                          data-testid="fsp-claim-approve-btn"
+                        >
+                          Подтвердить результат
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-ghost !py-1.5 !text-xs"
+                          disabled={busyId === it.id}
+                          onClick={() => decide(it.id, "reject")}
+                          data-testid="fsp-claim-reject-btn"
+                        >
+                          Отклонить
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs font-semibold text-emerald-800">Проверено ФСП</span>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 /** Раздел «Связь с ФСП» — в кабинетах кандидата, работодателя и ФСП. */
 export function TrioPage({ role }: { role: "candidate" | "employer" | "fsp" }) {
   const { data, loading, error, reload } = useApi<TrioThread[]>("/trio/threads");
@@ -203,6 +348,7 @@ export function TrioPage({ role }: { role: "candidate" | "employer" | "fsp" }) {
           {(meta?.rules ?? []).map((r) => <li key={r} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />{r}</li>)}
         </ul>
       </section>
+      {role === "fsp" && <ProtocolClaimsQueue />}
       {role !== "fsp" && <NewThread role={role} initialInv={invParam} initialTopic={topicParam} initialBody={bodyParam} onCreated={(id) => { reload(); open(id); }} />}
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Каналов пока нет" text={role === "fsp" ? "Когда работодатель или кандидат подключит ФСП к приглашению, канал появится здесь." : "Откройте канал по приглашению — форма выше."} />

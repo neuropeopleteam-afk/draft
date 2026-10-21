@@ -2,11 +2,12 @@
 import { useState } from "react";
 import { Link, Outlet, useOutletContext } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, DIRECTION_TITLES, GRADES, Loading, Seg, Stat, dt, errText, range, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, DIRECTION_TITLES, GRADES, Loading, Seg, Stat, cleanCompanyName, dt, errText, range, useApi } from "../../components/ui";
 import { apiDownload } from "../../lib/api";
 import { BarList, Donut, Funnel, Heatmap, Legend, PairBars, RangeChart, StackBar, fk, fpct, ftr, fx, type Stage } from "../charts";
 import { MODE_SHORT, Phase } from "../shared";
 import { CameraStats } from "../../proctor/CameraStats";
+import { useDemoUi } from "../../lib/juryMode";
 import FspRankConverter from "../../components/FspRankConverter";
 import { TalentMap } from "./TalentMap";
 
@@ -87,7 +88,8 @@ function Card({ title, sub, children, more }: { title: string; sub?: string; chi
 }
 
 function DemoNote({ rep }: { rep: Rep }) {
-  if (!(rep.overview.demo_share >= 0.99)) return null;
+  const demoUi = useDemoUi();
+  if (!demoUi || !(rep.overview.demo_share >= 0.99)) return null;
   return (
     <Alert kind="info">
       Сейчас в данных только демо-компании и демо-кандидаты стенда: история приглашений для аналитики сгенерирована по модели
@@ -411,12 +413,13 @@ export function FspFunnel() {
 // ------------------------------------------------------------------ кубки
 
 export function FspCups() {
+  const demoUi = useDemoUi();
   return (
     <div className="max-w-6xl space-y-6">
       <Head title="Кубки работодателей" subtitle="Кубок — публичное мероприятие платформы: компания и условия открыты, участники — только числом. Места записываются в паспорт ФСП (уровень «платформа», T1)." />
       <Body>{(rep) => {
-        const cups: any[] = rep.cups;
-        const tours: any[] = rep.tournaments ?? [];
+        const cups: any[] = (rep.cups ?? []).filter((c: any) => demoUi || (!c.is_demo && !/^Демо(?:\s+жюри)?:/i.test(c.company ?? "")));
+        const tours: any[] = (rep.tournaments ?? []).filter((t: any) => demoUi || (!t.is_demo && !/^Демо(?:\s+жюри)?:/i.test(t.company ?? "")));
         return (
           <>
           {tours.length > 0 && <Tournaments items={tours} k={rep.k} />}
@@ -428,7 +431,7 @@ export function FspCups() {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{c.category_title} · {MODE_SHORT[c.mode] ?? c.mode}</p>
                     <h2 className="mt-1 text-lg font-bold text-brand-night">{c.title}</h2>
-                    <p className="text-sm text-brand-ink/65">{c.company}</p>
+                    <p className="text-sm text-brand-ink/65">{cleanCompanyName(c.company)}</p>
                   </div>
                   <Phase p={c.phase} />
                 </div>
@@ -474,7 +477,7 @@ function Tournaments({ items, k }: { items: any[]; k: number }) {
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{t.discipline} · {t.category_title}</p>
                 <h3 className="mt-1 text-base font-bold text-brand-night">{t.title}</h3>
-                <p className="text-sm text-brand-ink/65">{t.company} · {t.position_title}</p>
+                <p className="text-sm text-brand-ink/65">{cleanCompanyName(t.company)} · {t.position_title}</p>
               </div>
               <Phase p={t.phase} />
             </div>

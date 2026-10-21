@@ -90,6 +90,11 @@ services:
       # нет файла или флага — импорт с hh.ru и «Рынок по hh.ru» скрыты, остальное работает.
       - path: ${HH_ENV_FILE:-./secrets/hh.env}
         required: false
+      # Индекс протоколов ФСП (А8): FSP_INDEX_HMAC_KEY — ключ HMAC-SHA256 для хэшей ФИО в индексе и статистике
+      # (fsp/protocols.py::_person_hash). Нет файла — хэш SHA-256 без ключа, сверка по нормализованному ФИО работает.
+      # На стенде: FSP_INDEX_ENV_FILE=/opt/spectrek_fsp/secrets/fsp_index.env в .env.
+      - path: ${FSP_INDEX_ENV_FILE:-./secrets/fsp_index.env}
+        required: false
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fsp}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fsp}
       # Пусто — кнопка «Войти через ФСП ID» скрыта. Прод: https://fsp.neuropeople.pro/auth/realms/fsp
