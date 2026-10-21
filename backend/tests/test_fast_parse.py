@@ -97,7 +97,7 @@ def test_rules_answer_is_immediate_while_model_is_slow(client, monkeypatch, net)
     j = poll(client, t, r["parse_job"]["id"])
     assert model_started.is_set() and model_done.is_set()
     assert j["status"] == "done", j
-    assert j["result"]["method"] == "llm+rules" and j["llm"]["model_label"] == "Claude Sonnet 5.5"
+    assert j["result"]["method"] == "llm+rules" and j["llm"]["model_label"] == "языковая модель"
     assert j["llm"]["total_ms"] >= 2400
 
 
@@ -120,9 +120,9 @@ def test_background_delta_provenance_and_suggestions(client, monkeypatch, net):
     res = j["result"]
     tags = {i["tag"]: i for i in res["stack_required"] + res["stack_desired"]}
     # новое от модели — с цитатой и подписью модели; тег словаря, подтверждённый моделью, — confirmed_by
-    assert tags["grpc"]["evidence"]["source"] == "llm" and tags["grpc"]["evidence"]["model"] == "Claude Sonnet 5.5"
+    assert tags["grpc"]["evidence"]["source"] == "llm" and tags["grpc"]["evidence"]["model"] == "языковая модель"
     assert tags["grpc"]["evidence"]["quote"] == "межсервисное взаимодействие"
-    assert tags["python"]["evidence"]["source"] == "rules" and tags["python"]["evidence"]["confirmed_by"] == "Claude Sonnet 5.5"
+    assert tags["python"]["evidence"]["source"] == "rules" and tags["python"]["evidence"]["confirmed_by"] == "языковая модель"
     # «убрать docker» и «грейд senior» — только предложения: требования словаря не тронуты
     assert "docker" in tags and res["grade"] == "middle"
     kinds = {d["id"]: d for d in j["delta"]}
@@ -132,7 +132,7 @@ def test_background_delta_provenance_and_suggestions(client, monkeypatch, net):
     assert rm["auto"] is False and rm["kind"] == "remove_tag" and rm["evidence"]["quote"] == "для локального запуска"
     sg = kinds["suggest:grade"]
     assert sg["auto"] is False and (sg["value"], sg["current"]) == ("senior", "middle")
-    assert sg["evidence"]["quote"] == "ведущий разработчик проекта" and sg["evidence"]["model"] == "Claude Sonnet 5.5"
+    assert sg["evidence"]["quote"] == "ведущий разработчик проекта" and sg["evidence"]["model"] == "языковая модель"
 
 
 def test_cache_same_text_is_instant_and_offline(client, monkeypatch, net):
@@ -251,7 +251,7 @@ def test_saved_need_keeps_model_provenance(client, monkeypatch, net):
     r = client.post("/api/employer/needs", json={"text": TEXT, "requirements": req}, headers=H(t))
     assert r.status_code == 201, r.text
     saved = {i["tag"]: i["evidence"] for i in r.json()["requirements"]["stack_required"]}
-    assert saved["grpc"]["model"] == "Claude Sonnet 5.5" and saved["python"]["confirmed_by"] == "Claude Sonnet 5.5"
+    assert saved["grpc"]["model"] == "языковая модель" and saved["python"]["confirmed_by"] == "языковая модель"
 
 
 @pytest.mark.parametrize("bad", [{"evidence": {"quote": "x", "model": "m" * 61}}])
