@@ -67,6 +67,8 @@ export interface ElenaDeps {
   noVideo?: boolean;
   /** Проверки без микрофона: считать микрофон включённым, реплики человека — текстом через injectUser(). */
   fakeMic?: boolean;
+  /** Сравнение губ (?elena_lips=1): мелкая ровная подача звука в поток — куски 100 мс, опережение 1,2 с. */
+  lips?: boolean;
 }
 
 interface Bridge { first?: string; first_named?: string; next?: string }
@@ -97,6 +99,10 @@ interface Meta {
   kind?: string;
   phrase?: string | null;
   dir?: string | null;
+  /** start_tour: регистрацию первым актом пропустить (явное «кабинет», «сразу», вторая роль в разговоре). */
+  skip_reg?: boolean | null;
+  /** resume со стоящей регистрации — к следующему шагу (кабинет). */
+  skip_now?: boolean | null;
 }
 
 interface Pos { ids: string[]; track: TourTrack | null; i: number; b: number }
@@ -134,8 +140,9 @@ const SOFT_STOP_MAX_MS = 2600;     // перебили — договарива�
 const USER_NAV_GRACE_MS = 1800;    // переход по сайту позже этого после её собственного перехода — сделал человек
 const POINT_HOLD_MS = 6000;
 const REPEAT_IF_HEARD_LESS = 0.6;
-const NAME_KEY = "draft.elena.name";
+const NAME_KEY = "draft.elena.name";          // прежнее хранение имени между визитами — больше не используется, только чистим
 const OLD_NAME_KEY = "draft.concierge.name";
+let nameInTab: string | null = null;           // имя собеседника — до перезагрузки страницы
 
 const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 
@@ -368,9 +375,9 @@ export class ElenaEngine {
   private copilotHinted = false;        // подсказка «скажите «дальше» — продолжу» в режиме «ведёте вы» — один раз
 
   constructor(private d: ElenaDeps) {
-    this.voice = new Voice(d.avatar, { lookaheadMs: LOOKAHEAD_MS });
+    this.voice = new Voice(d.avatar, d.lips ? { lookaheadMs: 1200, chunkBytes: 4800 } : { lookaheadMs: LOOKAHEAD_MS });
     try {
-      this.userName = localStorage.getItem(NAME_KEY) || sessionStorage.getItem(OLD_NAME_KEY) || null;
+      this.userName = nameInTab;   // имя живёт только до перезагрузки страницы (решение владельца 21.10)
     } catch { this.userName = null; }
   }
 
@@ -442,7 +449,7 @@ export class ElenaEngine {
   private setName(name: string) {
     if (!name || name === this.userName) return;
     this.userName = name;
-    try { localStorage.setItem(NAME_KEY, name); } catch { /* ignore */ }
+    nameInTab = name;
   }
 
   private named(text: string | undefined): string {
@@ -638,8 +645,8 @@ export class ElenaEngine {
       // имя с прошлого визита не похоже на имя («Сразу») — знакомимся заново; похоже — в правильной форме
       this.userName = sc.name_ok || null;
       try {
-        if (this.userName) localStorage.setItem(NAME_KEY, this.userName);
-        else { localStorage.removeItem(NAME_KEY); sessionStorage.removeItem(OLD_NAME_KEY); }
+        nameInTab = this.userName;
+        try { localStorage.removeItem(NAME_KEY); sessionStorage.removeItem(OLD_NAME_KEY); } catch { /* старые записи */ }
       } catch { /* ignore */ }
     }
     const greetText = this.greetingText(sc);
@@ -1192,7 +1199,8 @@ export class ElenaEngine {
   private prepare(meta: Meta, ep: number): Promise<boolean> | null {
     if (meta.action === "point" && meta.point) { this.showPoint(meta.point, ep); return null; }  // рамка — сразу с ответом
     const ns = meta.action === "next_section" ? this.nextSectionPos() : null;
-    const step = meta.action === "start_tour" ? TRACKS[this.roleOf(meta)][0]
+    const first = meta.action === "start_tour" ? TRACKS[this.roleOf(meta)] : null;
+    const step = first ? (first[meta.skip_reg && first[0]?.endsWith("-register") ? 1 : 0] ?? first[0])
       : meta.action === "goto" && meta.step && STEPS[meta.step] ? meta.step
       : ns ? ns.ids[ns.i] : null;
     if (!step) return null;
@@ -1211,6 +1219,13 @@ export class ElenaEngine {
       this.pendingBridge = null;
       if (nav) await nav;
       if (!this.alive(ep)) return;
+      if (meta.skip_reg && TRACKS[role][0]?.endsWith("-register")) {
+        // «сразу кабинет», «без регистрации», вторая роль в разговоре — с экрана кабинета
+        // связка «начнём с регистрации…» тут не к месту — ответ «открываю кабинет…» уже прозвучал
+        this.lastCabinet = null;
+        void this.runTour({ ids: TRACKS[role], track: role, i: 1, b: 0 }, ep, { bridge: false });
+        return;
+      }
       void this.runTour({ ids: TRACKS[role], track: role, i: 0, b: 0 }, ep, { bridge: true, named: false });
       return;
     }
@@ -1219,7 +1234,7 @@ export class ElenaEngine {
       if (nav) await nav;
       if (!this.alive(ep)) return;
       this.paused = false;
-      if (fwd) { void this.runTour(fwd, ep, { bridge: true }); return; }
+      if (fwd) { this.pendingBridge = null; void this.runTour(fwd, ep, { bridge: true }); return; }
       // экран не по порядку обзора (или обзора нет) — показать его одного; уже показывали — открыть и подсветить,
       // реплики сценария второй раз не звучат (ответ по существу уже прозвучал)
       if (this.shownSteps.has(meta.step)) { void this.showOnly(STEPS[meta.step], ep); return; }
@@ -1274,6 +1289,10 @@ export class ElenaEngine {
       this.paused = !!this.tourTrack;
       this.waitFor(null, ep, this.paused ? null : null);
       return;
+    }
+    if (a === "resume" && meta.skip_now && this.resumeAt && this.resumeAt.ids[this.resumeAt.i]?.endsWith("-register")) {
+      this.resumeAt = { ...this.resumeAt, i: this.resumeAt.i + 1, b: 0 };
+      this.pendingBridge = null;
     }
     if (a === "resume") {
       this.paused = false;
@@ -1785,7 +1804,7 @@ export class ElenaEngine {
     const moved = Math.abs(window.scrollY - y0) > 8;
     let text = reply.trim();
     if (!text) {
-      if (fresh.length) text = (this.phrase("scroll_more") || "Ниже — {items}.").replace("{items}", fresh.map((t) => `«${t}»`).join(", "));
+      if (fresh.length) text = (this.phrase("scroll_more") || "Вот {items}.").replace("{items}", fresh.map((t) => `«${t}»`).join(", "));
       else if (!moved && (dir === "down" || dir === "bottom")) text = this.phrase("scroll_end");
       else if (!moved) text = this.phrase("scroll_top");
     }
@@ -1801,22 +1820,27 @@ export class ElenaEngine {
     this.waitFor(null, ep, null);
   }
 
-  /** После реплик сценария — долистать экран: назвать блоки ниже, о которых сценарий не сказал («Ниже ещё …»). */
+  /** После реплик сценария — долистать экран: назвать блоки ниже, о которых сценарий не сказал («Ещё на этом экране — …»).
+   *  Говорит сначала, прокручивает по ходу фразы; блоки, уже описанные сценарием другими словами, не называет. */
   private async walkRest(step: TourStep, ep: number): Promise<boolean> {
     const h = window.innerHeight;
     const floor = h - tabbarInset();
-    const below = sectionHeads().filter((x) => x.top >= floor - 4).slice(0, 3);
+    const below = sectionHeads().filter((x) => x.top >= floor - 4).slice(0, 4);
     if (!below.length) return true;
     const said = this.linesOf(step.id).join(" ").toLowerCase();
-    const fresh = below.filter((x) => !said.includes(x.text.toLowerCase().slice(0, 18)));
+    const stems = (t: string) => words(t.toLowerCase()).filter((w) => w.length >= 4).map((w) => w.slice(0, 5));
+    const saidStems = new Set(stems(said));
+    const covered = (t: string) => { const st = stems(t); return st.length > 0 && st.filter((w) => saidStems.has(w)).length / st.length >= 0.5; };
+    const fresh = below.filter((x) => !covered(x.text)).slice(0, 3);
     if (!fresh.length) return true;
-    this.set({ target: `text:${fresh[0].text}` });
-    void this.bringIntoView(`text:${fresh[0].text}`, ep);
-    await sleep(500);
-    if (!this.alive(ep)) return false;
-    const text = (this.phrase("scroll_more_tour") || "Ниже на этом экране ещё {items}.")
+    const text = (this.phrase("scroll_more_tour") || "Ещё на этом экране — {items}.")
       .replace("{items}", fresh.map((x) => `«${x.text}»`).join(", "));
-    const res = await this.sayText(text, ep, (u) => { this.stepUtter = u; });
+    const sel = `text:${fresh[0].text}`;
+    const res = await this.sayText(text, ep, (u, total) => {
+      this.stepUtter = u;
+      window.setTimeout(() => { if (this.alive(ep)) { this.set({ target: sel }); void this.bringIntoView(sel, ep); } },
+        Math.min(1400, Math.max(400, total * 0.3)));
+    });
     this.stepUtter = null;
     if (res === "aborted" || !this.alive(ep)) return false;
     this.remember("elena", text);

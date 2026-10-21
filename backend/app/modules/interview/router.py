@@ -533,7 +533,8 @@ class ConciergeChatOut(BaseModel):
 
 @router.post("/concierge/avatar-token", response_model=AvatarTokenOut,
              summary="Живой аватар ИИ-проводника Насти: токен сессии видеопотока с движением губ")
-def concierge_avatar_token(request: Request, sid: str | None = Query(None, max_length=64)) -> dict:
+def concierge_avatar_token(request: Request, sid: str | None = Query(None, max_length=64),
+                           expr: float | None = Query(None, ge=0.0, le=1.0, description="Выразительность лица 0…1 (сравнение губ)")) -> dict:
     # У Насти — своё лицо (у интервьюера защиты — прежнее). Минуты видеопотока стоят денег: лимиты в сутки на всех,
     # на один адрес и на один разговор (concierge_budget); сверх лимита — 429, браузер переходит на голос без видео.
     from app.modules.interview import concierge as cg
@@ -549,7 +550,7 @@ def concierge_avatar_token(request: Request, sid: str | None = Query(None, max_l
     try:
         from app.modules.interview.engine.providers import avatar as av
 
-        t = av.avatar_token(persona_name="Настя", director_notes=cg.anam_director_notes(),
+        t = av.avatar_token(persona_name="Настя", director_notes=cg.anam_director_notes(expr),
                             avatar_id=cg.ANAM_AVATAR_ID or None)
         return t.model_dump(mode="json") if hasattr(t, "model_dump") else dict(t)
     except ImportError:
