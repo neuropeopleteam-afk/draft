@@ -279,7 +279,7 @@ function ConnectionPanel({ p, onSaved, setMsg }: { p: Provider; onSaved: (p: Pro
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.enabled ? "bg-emerald-50 text-emerald-700" : "bg-[#F3F2FB] text-brand-ink/65"}`}>{p.enabled ? (p.mode === "demo" ? "подключено к демо-заглушке на нашем сервере" : "подключено к вашему аккаунту") : "выключено"}</span>
         {p.mode !== "demo" && <OriginTag o={p.origin} kind="unverified" />}<span><code className="text-xs">{p.base_url}</code></span>
         {p.token_set && <span>токен {p.token_masked}{tx && p.refresh_set ? " + refresh" : ""}</span>}
-        {tx && p.token_expires_at && <span>access до {dtt(p.token_expires_at)}{p.token_refreshed_at ? `, обновлён ${dtt(p.token_refreshed_at)}` : ""}</span>}
+        {p.token_set && p.token_expires_at && <span data-testid="ats-provider-token-expires">действует до {dtt(p.token_expires_at)} (90 дн.)</span>}
         {tx && p.refresh_expires_at && <span>refresh до {dtt(p.refresh_expires_at)}</span>}
         {p.candidates_linked > 0 && <span>кандидатов связано: {p.candidates_linked}</span>}
       </div>
@@ -316,6 +316,57 @@ function ConnectionPanel({ p, onSaved, setMsg }: { p: Provider; onSaved: (p: Pro
         {f.mode === "demo" && p.mode !== "demo" ? <button className="btn-primary" disabled={busy} onClick={demo}>Включить демо</button>
           : <button className="btn-primary" disabled={busy} onClick={() => save()}>Сохранить</button>}
         {f.mode === "demo" && p.mode === "demo" && <button className="btn-ghost" disabled={busy} onClick={demo}>Выпустить новые демо-токены</button>}
+        {p.token_set && (
+          <>
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={busy}
+              data-testid={`ats-${p.code}-rotate-btn`}
+              onClick={async () => {
+                setMsg(null); setBusy(true);
+                try {
+                  const np = await api<Provider>(`/employer/ats/providers/${p.code}`, {
+                    method: "PUT",
+                    body: {
+                      enabled: f.enabled, mode: f.mode, base_url: f.base_url || null, token: null, refresh_token: null,
+                      vacancy_id: f.vacancy.id, vacancy_title: f.vacancy.title, stage_id: f.stage.id, stage_title: f.stage.title,
+                      vacancy_map: p.vacancy_map, rotate: true,
+                    },
+                  });
+                  onSaved(np);
+                  setMsg({ k: "ok", t: `${p.title}: ключ перевыпущен со сроком действия 90 дней.` });
+                } catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(false); }
+              }}
+            >
+              Перевыпустить ключ (90 дн.)
+            </button>
+            <button
+              type="button"
+              className="btn-ghost text-brand-plum"
+              disabled={busy}
+              data-testid={`ats-${p.code}-revoke-btn`}
+              onClick={async () => {
+                setMsg(null); setBusy(true);
+                try {
+                  const np = await api<Provider>(`/employer/ats/providers/${p.code}`, {
+                    method: "PUT",
+                    body: {
+                      enabled: false, mode: f.mode, base_url: f.base_url || null, token: null, refresh_token: null,
+                      vacancy_id: f.vacancy.id, vacancy_title: f.vacancy.title, stage_id: f.stage.id, stage_title: f.stage.title,
+                      vacancy_map: p.vacancy_map, revoke: true,
+                    },
+                  });
+                  onSaved(np);
+                  setF({ ...f, enabled: false, token: "", refresh_token: "" });
+                  setMsg({ k: "info", t: `${p.title}: ключ отозван, интеграция отключена.` });
+                } catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(false); }
+              }}
+            >
+              Отозвать ключ
+            </button>
+          </>
+        )}
         <button className="btn-ghost" disabled={busy || !p.token_set || f.mode !== p.mode} aria-describedby={blocked ? `${p.code}-check-why` : undefined} onClick={check}>Проверить подключение</button>
       </div>
       {blocked && <p id={`${p.code}-check-why`} className="text-xs text-brand-ink/70" data-testid="ats-check-why">{blocked}</p>}
@@ -374,23 +425,25 @@ function SettingsPanel({ tab, s, hf, onSaved, setMsg }: { tab: "huntflow" | "web
                 <div>
                   <p className="font-semibold text-brand-night">Срок действия ключа вебхука: 90 дней по умолчанию</p>
                   <p className="text-brand-ink/65">
-                    {f.webhook.secret_set ? "Ключ активен (ротация каждые 90 дней). При компрометации перевыпустите или отзовите ключ." : "Ключ ещё не выпущен или отозван."}
+                    {f.webhook.secret_set
+                      ? `Ключ активен${f.webhook.secret_expires_at ? ` до ${dtt(f.webhook.secret_expires_at)}` : ""} (ротация каждые 90 дней). При компрометации перевыпустите или отзовите ключ.`
+                      : "Ключ ещё не выпущен или отозван."}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     className="btn-ghost !px-3 !py-1.5 text-xs"
+                    data-testid="webhook-rotate-btn"
                     onClick={async () => {
-                      const rnd = `whsec_${Math.random().toString(36).slice(2, 12)}${Date.now().toString(36)}`;
-                      set("webhook", "secret", rnd);
+                      setSecret(null);
                       try {
                         const ns = await api<Settings>("/employer/ats/settings", {
                           method: "PUT",
                           body: {
                             auto_push: f.auto_push,
                             huntflow: { ...f.huntflow, token: null },
-                            webhook: { enabled: true, url: f.webhook.url || "https://ats.example.ru/hooks/draft", secret: rnd },
+                            webhook: { enabled: true, url: f.webhook.url || "https://example.com/hooks/draft", secret: null, rotate: true },
                           },
                         });
                         onSaved(ns);
@@ -404,6 +457,7 @@ function SettingsPanel({ tab, s, hf, onSaved, setMsg }: { tab: "huntflow" | "web
                   <button
                     type="button"
                     className="btn-ghost !px-3 !py-1.5 text-xs text-brand-plum"
+                    data-testid="webhook-revoke-btn"
                     onClick={async () => {
                       set("webhook", "enabled", false);
                       setSecret(null);
@@ -413,7 +467,7 @@ function SettingsPanel({ tab, s, hf, onSaved, setMsg }: { tab: "huntflow" | "web
                           body: {
                             auto_push: f.auto_push,
                             huntflow: { ...f.huntflow, token: null },
-                            webhook: { enabled: false, url: f.webhook.url || null, secret: null },
+                            webhook: { enabled: false, url: f.webhook.url || null, secret: null, revoke: true },
                           },
                         });
                         onSaved(ns);

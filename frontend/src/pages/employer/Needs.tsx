@@ -684,8 +684,12 @@ export function Selection() {
               <Toggle checked={realOnly} onChange={(x) => { setRealOnly(x); setFilters({ ...filters, real_only: x || undefined }); }} label="Только реальные кандидаты"
                 hint="Скрыть модельные демо-профили стенда. По умолчанию показаны все кандидаты с пометкой «демо-профиль»." />
               <Toggle checked={!!filters.fsp_only} onChange={(x) => setFilters({ ...filters, fsp_only: x })} label="Только с паспортом ФСП" />
+              <Toggle checked={!!filters.fsp_protocol_only} onChange={(x) => setFilters({ ...filters, fsp_protocol_only: x || undefined })} label="Подтверждено протоколом ФСП"
+                hint="Оставить только кандидатов с достижениями, подтверждёнными официальным протоколом ФСП (ЕКП, ЕВСК, ссылка на PDF)." />
               <Toggle checked={!!filters.confirmed_only} onChange={(x) => setFilters({ ...filters, confirmed_only: x || undefined })} label="Только подтверждённый грейд"
-                hint="Убрать «Junior (предварительно)» и кандидатов без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждённым грейдом." />
+                hint="Убрать «Junior (предварительно)» и кандидатов без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждёным грейдом." />
+              <Toggle checked={!!filters.learn_from_company} onChange={(x) => setFilters({ ...filters, learn_from_company: x || undefined })} label="Учитывать решения компании"
+                hint="Скорректировать веса навыков по истории приглашений, собеседований и офферов вашей компании (по умолчанию выключено)." />
               {reqTags.length > 0 && (
                 <div>
                   <p className="label">Навык подтверждён платформой</p>
@@ -724,6 +728,9 @@ export function Selection() {
             <Alert>{wErr}</Alert>
             {s.must_first && (s.requirements?.stack_required?.length ?? 0) > 0 && <p className="text-xs leading-relaxed text-brand-ink/70">
               Порядок: {s.core?.on && s.core?.active ? `сначала кандидаты, у которых ${s.core.label.toLowerCase()} (${s.core.title}) заявлен или подтверждён, затем — остальные. Внутри групп — сначала те, у кого` : "сначала кандидаты, у которых"} всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и задания поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
+            </p>}
+            {s.learning?.text && <p className="rounded-xl border border-brand-night/10 bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/80" data-testid="company-learning-note">
+              <b className="font-semibold text-brand-night">Обучение на решениях компании:</b> {s.learning.text}
             </p>}
             {s.grade_above?.applied && <p className="text-xs leading-relaxed text-brand-ink/70" data-testid="grade-above-note">
               <b className="font-semibold text-brand-night">Добор уровнем выше.</b> {s.grade_above.text}

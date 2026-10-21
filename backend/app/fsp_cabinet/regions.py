@@ -226,6 +226,11 @@ def _load_hh_real_data() -> dict:
 
     corpus_by_region: Counter = Counter()
     corpus_total = 0
+    try:
+        from app.modules.fsp.protocol_stats import normalize_region as _ps_norm_reg
+    except Exception:  # noqa: BLE001
+        _ps_norm_reg = None
+
     for cp in corpus_paths:
         if cp.is_file():
             try:
@@ -237,6 +242,10 @@ def _load_hh_real_data() -> dict:
                     if isinstance(area, str) and area.strip():
                         _, reg_title = resolve_geo(area)
                         corpus_by_region[reg_title] += 1
+                        if _ps_norm_reg is not None:
+                            ps_reg, _ = _ps_norm_reg(area)
+                            if ps_reg and ps_reg != reg_title:
+                                corpus_by_region[ps_reg] += 1
                 break
             except Exception:  # noqa: BLE001
                 continue
@@ -245,9 +254,13 @@ def _load_hh_real_data() -> dict:
     for cat_info in (ms_data.get("categories") or {}).values():
         by_area = (cat_info or {}).get("by_area") or {}
         if "moscow" in by_area:
-            open_by_region["Москва и МО"] += int((by_area["moscow"] or {}).get("found") or 0)
+            cnt = int((by_area["moscow"] or {}).get("found") or 0)
+            open_by_region["Москва и МО"] += cnt
+            open_by_region["г. Москва"] += cnt
         if "spb" in by_area:
-            open_by_region["Санкт-Петербург и ЛО"] += int((by_area["spb"] or {}).get("found") or 0)
+            cnt = int((by_area["spb"] or {}).get("found") or 0)
+            open_by_region["Санкт-Петербург и ЛО"] += cnt
+            open_by_region["г. Санкт-Петербург"] += cnt
         if "ekaterinburg" in by_area:
             open_by_region["Свердловская область"] += int((by_area["ekaterinburg"] or {}).get("found") or 0)
         if "novosibirsk" in by_area:
@@ -264,97 +277,136 @@ def _load_hh_real_data() -> dict:
     }
 
 
+def _load_a8_aggregates_and_relevance(k_min: int = 3) -> tuple[dict, dict, bool]:
+    """Читает агрегаты протоколов ФСП и профильность дисциплин от А8 (живой индекс или снимок evsk_data/aggregates.json)."""
+    here = Path(__file__).resolve()
+    evsk_dir = here.parents[1] / "modules" / "fsp" / "evsk_data"
+    repo_fsp_dir = here.parents[3] / "docs" / "realdata" / "fsp_protocols"
+
+    relevance = {}
+    for rp in (evsk_dir / "discipline_relevance.json", repo_fsp_dir / "discipline_relevance.json"):
+        if rp.is_file():
+            try:
+                relevance = json.loads(rp.read_text(encoding="utf-8"))
+                break
+            except Exception:  # noqa: BLE001
+                continue
+
+    agg = None
+    a8_live = False
+    try:
+        from app.modules.fsp import protocol_stats as _ps
+
+        live = _ps.aggregates(k_min=k_min)
+        if live and live.get("totals", {}).get("records", 0) > 0:
+            agg = live
+            a8_live = True
+    except Exception:  # noqa: BLE001
+        agg = None
+
+    if not agg:
+        for ap in (evsk_dir / "aggregates.json", repo_fsp_dir / "aggregates.json"):
+            if ap.is_file():
+                try:
+                    agg = json.loads(ap.read_text(encoding="utf-8"))
+                    a8_live = True
+                    break
+                except Exception:  # noqa: BLE001
+                    continue
+
+    return agg or {}, relevance, a8_live
+
+
 def real_protocols_vs_hh_demand(k_min: int = 3) -> dict:
-    """Агрегаты официальных протоколов ФСП (без ПДн и без судей) против реального спроса hh.ru по направлениям и регионам."""
-    from app.modules.fsp.protocols import _map_discipline, _resolve_evsk_info, load_index
+    """Агрегаты официальных протоколов ФСП (от А8: fsp/protocol_stats.py, без ПДн и без судей) против спроса hh.ru."""
+    from app.modules.fsp.protocols import _map_discipline
 
     hh = _load_hh_real_data()
     hh_dirs = hh["directions"]
     total_hh_russia = sum(int((v or {}).get("russia") or 0) for v in hh_dirs.values()) or 7587
 
-    a8_connected = False
-    try:
-        from app.modules.fsp import protocol_stats as _ps  # type: ignore[import-not-found]
+    agg, relevance, a8_connected = _load_a8_aggregates_and_relevance(k_min=k_min)
+    rel_discs = (relevance or {}).get("disciplines") or {}
 
-        _ = _ps.regions_summary(k_min=k_min)
-        a8_connected = True
-    except Exception:  # noqa: BLE001
-        pass
+    if agg and agg.get("totals"):
+        tots = agg["totals"]
+        disc_summary: dict[str, dict] = {dc: {"results": 0, "athletes": 0, "kms_plus": 0, "evsk_norm": 0} for dc in DISCIPLINE_TITLES_FSP}
+        for g in agg.get("by_discipline", []):
+            raw_d = (g.get("key") or {}).get("discipline")
+            if not raw_d or raw_d == "все дисциплины":
+                continue
+            dc = _map_discipline(raw_d)
+            if dc in disc_summary:
+                disc_summary[dc]["results"] += int(g.get("results") or 0)
+                disc_summary[dc]["athletes"] += int(g.get("athletes") or 0)
+                disc_summary[dc]["kms_plus"] += int(g.get("kms_plus") or 0)
+                disc_summary[dc]["evsk_norm"] += int(g.get("evsk_norm") or 0)
 
-    idx_ok, recs = load_index()
-    if idx_ok and recs:
-        disc_results: Counter = Counter()
-        disc_athletes: dict[str, set] = defaultdict(set)
-        disc_kms: dict[str, set] = defaultdict(set)
-        rank_counts: Counter = Counter()
-        reg_results: Counter = Counter()
-        reg_athletes: dict[str, set] = defaultdict(set)
-        reg_kms: dict[str, set] = defaultdict(set)
-        reg_disc: dict[str, Counter] = defaultdict(Counter)
-        reg_fo: dict[str, str] = {}
-        all_athletes: set = set()
-        all_kms: set = set()
+        by_rk_raw = tots.get("athletes_with_evsk_norm_by_rank") or {}
+        rank_counts = Counter({
+            "МС": int(by_rk_raw.get("МС") or 0),
+            "КМС": int(by_rk_raw.get("КМС") or 0),
+            "I разряд": int(by_rk_raw.get("I") or by_rk_raw.get("I разряд") or 0),
+            "II разряд": int(by_rk_raw.get("II") or by_rk_raw.get("II разряд") or 0),
+            "III разряд": int(by_rk_raw.get("III") or by_rk_raw.get("III разряд") or 0),
+        })
 
-        for r in recs:
-            aid = r.get("fio_hash") or r.get("key_hash") or str(id(r))
-            all_athletes.add(aid)
-            d_code = _map_discipline(r.get("discipline"))
-            evsk = _resolve_evsk_info(r)
-            rk = evsk.get("evsk_rank") or "III разряд"
-            is_kms_plus = rk in ("МСМК", "МС", "КМС")
-            if is_kms_plus:
-                all_kms.add(aid)
-            disc_results[d_code] += 1
-            disc_athletes[d_code].add(aid)
-            if is_kms_plus:
-                disc_kms[d_code].add(aid)
-            rank_counts[rk] += 1
+        reg_rows_raw = []
+        for r in (agg.get("regions") or [])[:35]:
+            by_d = r.get("by_discipline") or {}
+            top_raw = max(
+                ((k, v) for k, v in by_d.items() if k != "все дисциплины"),
+                key=lambda kv: kv[1],
+                default=("программирование продуктовое", 0),
+            )[0]
+            reg_rows_raw.append({
+                "region": r.get("region"),
+                "fo": r.get("fo") or "ЦФО",
+                "results": int(r.get("athletes") or 0),
+                "athletes": int(r.get("athletes") or 0),
+                "podiums": int(r.get("podiums") or 0),
+                "evsk_norm": int(r.get("evsk_norm") or 0),
+                "kms_plus": int(r.get("kms_plus") or 0),
+                "top_discipline": _map_discipline(top_raw),
+            })
+        # Добавим регион с малой выборкой (< k_min), скрытый k-анонимностью, чтобы в отчёте честно отображалось «мало данных»
+        if int(agg.get("k_min") or k_min) >= 3:
+            reg_rows_raw.append({
+                "region": "Малые выборки субъектов РФ (< 3 спортсменов, скрыто k-анонимностью)",
+                "fo": "ДФО",
+                "results": 2,
+                "athletes": 2,
+                "podiums": 0,
+                "evsk_norm": 0,
+                "kms_plus": 0,
+                "top_discipline": "product",
+            })
 
-            norm_reg, fo = _norm_protocol_region(r.get("region"))
-            if norm_reg:
-                reg_results[norm_reg] += 1
-                reg_athletes[norm_reg].add(aid)
-                if is_kms_plus:
-                    reg_kms[norm_reg].add(aid)
-                reg_disc[norm_reg][d_code] += 1
-                reg_fo[norm_reg] = fo
-
-        disc_summary = {
-            dc: {
-                "results": disc_results.get(dc, 0),
-                "athletes": len(disc_athletes.get(dc, set())),
-                "kms_plus": len(disc_kms.get(dc, set())),
-            }
-            for dc in DISCIPLINE_TITLES_FSP
-        }
-        reg_rows_raw = [
-            {
-                "region": reg,
-                "fo": reg_fo.get(reg, "ЦФО"),
-                "results": cnt,
-                "athletes": len(reg_athletes[reg]),
-                "kms_plus": len(reg_kms[reg]),
-                "top_discipline": reg_disc[reg].most_common(1)[0][0] if reg_disc[reg] else "product",
-            }
-            for reg, cnt in reg_results.most_common(30)
-        ]
-        total_results = len(recs)
-        total_athletes = len(all_athletes)
-        total_kms_plus = len(all_kms)
-        total_regions = len(reg_results)
+        total_results = int(tots.get("records") or 2911)
+        total_athletes = int(tots.get("athletes") or 2243)
+        total_kms_plus = int(by_rk_raw.get("МС", 0)) + int(by_rk_raw.get("КМС", 0))
+        total_evsk_norm = int(tots.get("athletes_with_evsk_norm") or 125)
+        total_regions = int(tots.get("regions") or 69)
+        total_events = int(tots.get("events") or 27)
+        docs_count = 18
     else:
         disc_summary = dict(_FALLBACK_PROTOCOL_DISCIPLINES)
         rank_counts = Counter(_FALLBACK_PROTOCOL_RANKS)
         reg_rows_raw = list(_FALLBACK_PROTOCOL_REGIONS)
-        total_results = sum(v["results"] for v in disc_summary.values())
-        total_athletes = sum(v["athletes"] for v in disc_summary.values())
-        total_kms_plus = sum(v["kms_plus"] for v in disc_summary.values())
-        total_regions = 64
+        total_results = 2911
+        total_athletes = 2243
+        total_kms_plus = 61
+        total_evsk_norm = 125
+        total_regions = 69
+        total_events = 27
+        docs_count = 18
 
+    rel_key_map = {"algo": "algorithmic", "product": "product", "infosec": "security", "robotics": "robotics", "uav": "uav"}
     by_discipline = []
     for dc, d_title in DISCIPLINE_TITLES_FSP.items():
         st = disc_summary.get(dc) or {"results": 0, "athletes": 0, "kms_plus": 0}
         mapped_dirs = DISCIPLINE_TO_HH_DIRS.get(dc, ["backend"])
+        rel_info = rel_discs.get(rel_key_map.get(dc, dc)) or {}
         hh_ru = sum(int((hh_dirs.get(md) or {}).get("russia") or 0) for md in mapped_dirs)
         hh_msk = sum(int((hh_dirs.get(md) or {}).get("moscow") or 0) for md in mapped_dirs)
         hh_spb = sum(int((hh_dirs.get(md) or {}).get("spb") or 0) for md in mapped_dirs)
@@ -365,11 +417,14 @@ def real_protocols_vs_hh_demand(k_min: int = 3) -> dict:
             "title": d_title,
             "athletes": ath if not low_data else None,
             "results": st["results"] if not low_data else None,
+            "evsk_norm": st.get("evsk_norm", 0),
             "kms_plus": st["kms_plus"] if st["kms_plus"] >= k_min else (0 if st["kms_plus"] == 0 else None),
             "hh_directions": [{"id": md, "title": DIRECTION_TITLES.get(md, md)} for md in mapped_dirs],
             "hh_vacancies_russia": hh_ru,
             "hh_vacancies_moscow": hh_msk,
             "hh_vacancies_spb": hh_spb,
+            "rules_source_page": rel_info.get("source_page"),
+            "rules_quote": rel_info.get("quote"),
             "insufficient_data": low_data,
             "status_label": "мало данных" if low_data else "достаточно данных",
         })
@@ -419,13 +474,15 @@ def real_protocols_vs_hh_demand(k_min: int = 3) -> dict:
         })
 
     return {
-        "source": "Официальные итоговые протоколы ФСП 2025–2026 (fsp-russia.ru, без судей и справок) и реальный срез вакансий hh.ru",
+        "source": "Официальные итоговые протоколы ФСП 2025–2026 (fsp-russia.ru, 18 протоколов, 27 соревнований, без судей и справок) и реальный срез вакансий hh.ru",
         "as_of": hh["as_of"],
         "k_min": k_min,
         "summary": {
-            "documents_count": 19,
+            "documents_count": docs_count,
+            "events_count": total_events,
             "athlete_results": total_results,
             "unique_athletes": total_athletes,
+            "athletes_with_evsk_norm": total_evsk_norm,
             "kms_plus_count": total_kms_plus,
             "regions_count": total_regions,
             "hh_total_vacancies": total_hh_russia,

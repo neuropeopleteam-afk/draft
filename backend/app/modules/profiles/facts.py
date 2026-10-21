@@ -386,10 +386,12 @@ VERDICT_TITLES = {
 
 
 def _extract_verdict(b: "Bundle") -> dict | None:
-    """А2/А4 (21.10): извлекает трёхзначный вердикт SPRT (`confirmed` | `not_confirmed` | `needs_followup`), если он есть."""
+    """А2/А4 (21.10): извлекает трёхзначный вердикт SPRT (`confirmed` | `not_confirmed` | `needs_followup`) и поля доп. этапа."""
     t = b.test.value if b.test else None
     v = None
+    stage = None
     if isinstance(t, dict):
+        stage = t.get("stage") if isinstance(t.get("stage"), dict) else None
         v = (t.get("details") or {}).get("verdict") if isinstance(t.get("details"), dict) else None
         if not isinstance(v, dict):
             v = t.get("verdict") if isinstance(t.get("verdict"), dict) else None
@@ -397,6 +399,8 @@ def _extract_verdict(b: "Bundle") -> dict | None:
         for attr in ("result", "details", "summary"):
             raw = getattr(b.last_attempt, attr, None)
             if isinstance(raw, dict):
+                if stage is None and isinstance(raw.get("stage"), dict):
+                    stage = raw.get("stage")
                 cand = (raw.get("details") or {}).get("verdict") if isinstance(raw.get("details"), dict) else raw.get("verdict")
                 if isinstance(cand, dict):
                     v = cand
@@ -404,14 +408,22 @@ def _extract_verdict(b: "Bundle") -> dict | None:
     if not isinstance(v, dict) or v.get("status") not in VERDICT_TITLES:
         return None
     st = v["status"]
+    if stage is None and isinstance(v.get("stage"), dict):
+        stage = v.get("stage")
+    has_stage_attempt = bool(stage and stage.get("attempt_id"))
+    default_title = "Подтверждён тестом и практическим этапом" if (st == "confirmed" and has_stage_attempt) else VERDICT_TITLES[st]
     return {
         "status": st,
-        "title": v.get("title") or VERDICT_TITLES[st],
+        "title": ("Подтверждён тестом и практическим этапом" if (st == "confirmed" and has_stage_attempt) else (v.get("title") or default_title)),
         "explanation_ru": v.get("explanation_ru") or "",
         "p_claimed": v.get("p_claimed"),
         "oral_defense_required": bool(v.get("oral_defense_required", False)),
+        "followup_kind": v.get("followup_kind"),
+        "followup_url": v.get("followup_url"),
         "followup_items": v.get("followup_items"),
         "followup_minutes": v.get("followup_minutes"),
+        "followup_incident_title": v.get("followup_incident_title"),
+        "stage": stage,
     }
 
 

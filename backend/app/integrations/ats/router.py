@@ -67,7 +67,7 @@ def settings_out(st: AtsSettings) -> dict:
                      or get_isettings().huntflow_default_base_url, "account_id": st.huntflow_account_id,
                      "vacancy_id": st.huntflow_vacancy_id, "status_id": st.huntflow_status_id,
                      "token_set": hf_set, "token_masked": mask(decrypt(st.huntflow_token_enc)),
-                     "token_expires_at": _exp90(getattr(st, "huntflow_token_expires_at", None), base_dt) if hf_set else None,
+                     "expires_at": _exp90(getattr(st, "huntflow_token_expires_at", None), base_dt) if hf_set else None,
                      "ttl_days": KEY_TTL_DAYS},
         "webhook": {"enabled": st.webhook_enabled, "url": st.webhook_url, "secret_set": wh_set,
                     "secret_masked": mask(decrypt(st.webhook_secret_enc)),

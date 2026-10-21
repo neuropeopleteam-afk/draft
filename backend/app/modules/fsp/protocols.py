@@ -27,8 +27,11 @@ from app.modules.profiles.models import CandidateProfile
 
 DEFAULT_PATHS = (
     os.environ.get("FSP_PROTOCOLS_INDEX") or "",
+    "/opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json",
+    "/data_local/fsp_protocols/index_v2.json",
     "/data_local/fsp_protocols/index.json",
     "/opt/spectrek_fsp/data_local/fsp_protocols/index.json",
+    "/tmp/fsp_protocols/index_v2.json",
     "/tmp/fsp_protocols/index.json",
 )
 
@@ -79,10 +82,12 @@ def fio_sha256(fio: str) -> str:
 
 
 def is_judge_or_non_athlete(rec: dict) -> bool:
-    """Возвращает True, если запись относится к спортивному судье или технической справке, а не к результату спортсмена."""
+    """Возвращает True, если запись относится к спортивному судье, командной строке без человека или технической справке."""
     if not isinstance(rec, dict):
         return True
-    if rec.get("role") == "judge" or rec.get("is_judge") is True:
+    if rec.get("person") is False:
+        return True
+    if rec.get("role") in ("judge", "coach") or rec.get("is_judge") is True:
         return True
     doc_id = str(rec.get("event_id") or rec.get("doc_id") or "").strip().lower()
     if doc_id in NON_ATHLETE_DOC_IDS:
@@ -105,14 +110,20 @@ def _index_path() -> Path | None:
     for raw in paths:
         if not raw:
             continue
-        p = Path(raw)
-        if p.is_file():
-            return p
+        try:
+            p = Path(raw)
+            if p.is_file() and os.access(p, os.R_OK):
+                return p
+        except Exception:  # noqa: BLE001 — PermissionError на закрытом каталоге не должен ронять /api/me/fsp
+            continue
     return None
 
 
 def _load_index() -> dict:
-    p = _index_path()
+    try:
+        p = _index_path()
+    except Exception:  # noqa: BLE001
+        p = None
     if p is None:
         return {"records": [], "by_key": {}, "sources_by_url": {}, "stats": {}, "available": False}
     try:

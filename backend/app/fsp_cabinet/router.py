@@ -238,7 +238,6 @@ def decide_protocol_claim(
     db: Session = Depends(get_db),
 ) -> dict:
     from app.modules.fsp.models import FspAchievement, FspPassport
-    from app.modules.notifications import service as notif_svc
     from app.modules.profiles.facts import achievement_text, refresh_rating
 
     a = db.get(FspAchievement, achievement_id)
@@ -269,21 +268,6 @@ def decide_protocol_claim(
     db.flush()
     if pp is not None:
         refresh_rating(db, pp.user_id)
-        try:
-            notif_svc.notify(
-                db,
-                pp.user_id,
-                kind="fsp_protocol_decided",
-                title=(
-                    "Достижение подтверждено представителем ФСП"
-                    if data.action == "approve"
-                    else "Заявка по протоколу ФСП отклонена"
-                ),
-                body=achievement_text(a) + (f" · Комментарий ФСП: {data.note}" if data.note else ""),
-                link="/candidate/profile",
-            )
-        except Exception:  # noqa: BLE001
-            pass
     db.commit()
     return {
         "id": str(a.id),

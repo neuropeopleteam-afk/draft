@@ -486,3 +486,16 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
 def short(t: dict) -> dict:
     return {k: t.get(k) for k in ("score", "level", "level_title", "preliminary", "critical", "summary", "offer_salary", "demo",
                                   "origin", "response_badge")}
+
+
+def company_trust(
+    db: Session,
+    company: Company,
+    *,
+    short: bool = False,
+    invitation: Invitation | None = None,
+    vacancy: Vacancy | None = None,
+) -> dict:
+    t = compute(db, company, invitation=invitation, vacancy=vacancy)
+    return globals()["short"](t) if short else t
+

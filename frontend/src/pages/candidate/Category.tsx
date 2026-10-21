@@ -73,6 +73,23 @@ export default function Category() {
             </div>
           ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTION_TITLES[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADE_TITLE_ALL[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
           <ThetaScale theta={s.sessions?.[0]?.theta} se={s.sessions?.[0]?.se} grade={c.grade} confirmed={gs?.status === "confirmed"} compact className="mt-4" />
+          {(gs?.verdict || s.verdict) && (() => {
+            const vd = gs?.verdict || s.verdict;
+            const fUrl = vd.followup_url || (vd.followup_kind === "incident" ? `/warroom?direction=${encodeURIComponent(c.direction ?? "backend")}` : null);
+            return (
+              <div className="mt-3 rounded-xl border border-brand-night/10 bg-[#F7F6FB] p-3 text-sm" data-testid="candidate-verdict-box">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-bold text-brand-night">{vd.title || (vd.status === "needs_followup" ? "Нужен доп. этап" : "Вердикт теста")}</span>
+                  {vd.status === "needs_followup" && fUrl && (
+                    <Link to={fUrl} className="btn-primary !px-3.5 !py-1.5 text-xs" data-testid="verdict-followup-btn">
+                      Пройти доп. этап{vd.followup_incident_title ? `: ${vd.followup_incident_title}` : ""}{vd.followup_minutes ? ` (≈ ${vd.followup_minutes} мин)` : ""}
+                    </Link>
+                  )}
+                </div>
+                {vd.explanation_ru && <p className="mt-1 text-xs leading-relaxed text-brand-ink/75">{vd.explanation_ru}</p>}
+              </div>
+            );
+          })()}
           {(gs?.status === "unconfirmed" || gs?.pending_review) && <GradeStatusNote s={gs} className="mt-2" />}
           <ExtPreliminaryNote x={gs?.ext_preliminary} stage={s.two_stage} direction={c.direction} className="mt-3" />
           {!gs?.ext_preliminary && <TwoStageNote t={s.two_stage} direction={c.direction} className="mt-3" />}
