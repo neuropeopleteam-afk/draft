@@ -985,6 +985,8 @@ def devdev_block() -> dict | None:
             "checked_by": ("А15, пересчёт в чистом клоне FREEZE 4d104eb4e0 — 0 расхождений" if x is not x3 else
                            "А15, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений"), "claim_ru": claim,
             "cycle": 4 if x is not x3 else 3,
+            # решение владельца 21.10: блок снят с экранов целиком (обе строки и цена); здесь — только для документов
+            "on_screen": False,
             "history": ([{"cycle": 3, "main": view(x3["main"]), "exact_option_api": view(x3.get("exact_option_api") or {}),
                           "condition_ru": _anon_other(x3.get("condition"))}] if x3 and x is not x3 else [])}
 
