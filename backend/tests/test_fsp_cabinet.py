@@ -352,10 +352,10 @@ def test_report_single_load_cache_60s_invalidation_and_byte_for_byte_equivalence
     assert client.get("/api/fsp-cabinet/report", headers=H(ta)).status_code == 200
     assert load_calls == 2
 
-    # 5. Вход пользователя (обновление last_login_at, создание RefreshSession / AuditEvent / вход жюри) НЕ сбрасывает кэш
+    # 5. Вход пользователя (обновление last_login_at, создание RefreshSession / AuditEvent / вход жюри в существующую песочницу) НЕ сбрасывает кэш
     calls_before_login = load_calls
-    f_shared = _login(client, "candidate", None)
-    assert f_shared.get("access_token")
+    f_cand_login = _login(client, "candidate", f_a["scenario"])
+    assert f_cand_login.get("access_token")
     r_after_login = client.get("/api/fsp-cabinet/report", headers=H(ta))
     assert r_after_login.status_code == 200
     assert load_calls == calls_before_login
