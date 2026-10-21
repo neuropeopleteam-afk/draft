@@ -247,7 +247,9 @@ def list_protocol_claims(
             verified_cnt += 1
         if status != "all" and st != status:
             continue
-        ekp_no = a.ekp_no or pref.get("ekp_no") or tr.get("ekp_no")
+        from app.modules.fsp.protocols import resolve_achievement_ekp_no
+
+        ekp_no = resolve_achievement_ekp_no(a)
         evsk_rank = a.evsk_rank or tr.get("evsk_rank") or a.sport_rank
         evsk_basis = a.evsk_basis or tr.get("evsk_basis")
         pdf_url = pref.get("url") or tr.get("pdf_url")

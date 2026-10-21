@@ -255,6 +255,19 @@ def test_fsp_protocols_two_step_status_judges_filter_and_fsp_claims_queue(client
     assert rc.json()["pending_count"] == 1
     assert rc.json()["verified_count"] == 0
 
+    # Проверяем паспорт кандидата и карточку у работодателя до подтверждения ФСП: ekp_no отдельно от evsk_code (evsk_code = None)
+    me_fsp = client.get("/api/me/fsp", headers=H(tc)).json()
+    assert me_fsp["achievements"][0]["ekp_no"] == "2025120001001477"
+    assert me_fsp["achievements"][0]["evsk_code"] is None
+    assert me_fsp["achievements"][0]["evsk_rank"] == "КМС"
+    from app.integrations.fsp_id.mapping import parse_achievements
+    parsed_legacy = parse_achievements([{
+        "discipline": "product", "level": "national", "event": "Кубок России 2025",
+        "evsk_code": "2101000020035559", "sport_rank": "КМС",
+    }])
+    assert parsed_legacy[0]["ekp_no"] == "2101000020035559"
+    assert parsed_legacy[0]["evsk_code"] is None
+
     # Проверяем карточку кандидата у работодателя до подтверждения ФСП
     card_before = client.get(f"/api/employer/candidates/{ref}", headers=H(te)).json()
     ach_before = card_before["fsp"]["achievements"][0]

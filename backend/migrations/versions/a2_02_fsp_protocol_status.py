@@ -28,6 +28,24 @@ def upgrade() -> None:
     if not _has_col("fsp_achievements", "evsk_basis"):
         op.add_column("fsp_achievements", sa.Column("evsk_basis", sa.String(255), nullable=True))
 
+    # А8/А2: перенос старых номеров ЕКП, ошибочно записанных в evsk_code, в отдельное поле ekp_no
+    if _has_col("fsp_achievements", "ekp_no") and _has_col("fsp_achievements", "evsk_code"):
+        op.execute(
+            sa.text(
+                "UPDATE fsp_achievements SET ekp_no = evsk_code, evsk_code = NULL "
+                "WHERE ekp_no IS NULL AND evsk_code IS NOT NULL AND ("
+                "source_ref LIKE 'protocol:%' OR evsk_code LIKE '2101%' OR evsk_code LIKE '1101%' "
+                "OR evsk_code LIKE '2025%' OR evsk_code LIKE '2026%' OR evsk_code LIKE 'СБОРНАЯ%' "
+                "OR evsk_code LIKE 'КР-%' OR evsk_code LIKE 'КФ-%' OR evsk_code LIKE 'ПФО-%' OR evsk_code LIKE 'ЦФО-%')"
+            )
+        )
+        op.execute(
+            sa.text(
+                "UPDATE fsp_achievements SET evsk_code = NULL "
+                "WHERE source_ref LIKE 'protocol:%' AND evsk_code IS NOT NULL"
+            )
+        )
+
     if not _has_col("ats_settings", "huntflow_token_expires_at"):
         op.add_column("ats_settings", sa.Column("huntflow_token_expires_at", sa.DateTime(timezone=True), nullable=True))
     if not _has_col("ats_settings", "webhook_secret_expires_at"):
