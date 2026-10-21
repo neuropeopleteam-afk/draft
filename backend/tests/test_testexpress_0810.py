@@ -312,7 +312,9 @@ def test_python_formatter_matches_ui_tsx(tmp_path):
     try:
         entry.write_text(NUMS, encoding="utf-8")
         subprocess.run([str(FRONT / "node_modules/.bin/esbuild"), str(entry), "--bundle", "--platform=node",
-                        "--format=cjs", "--jsx=automatic", "--log-level=error", f"--outfile={out}"],
+                        "--format=cjs", "--jsx=automatic", "--log-level=error", "--define:import.meta.env={}",
+                        "--define:import.meta.glob=__viteGlob", "--banner:js=var __viteGlob = () => ({});",
+                        f"--outfile={out}"],
                        cwd=FRONT, check=True, timeout=120, env={**os.environ, "NODE_PATH": str(FRONT / "node_modules")})
     finally:
         entry.unlink(missing_ok=True)
@@ -329,7 +331,20 @@ def test_express_result_rounded_once_and_explanation_matches(bank):
     for claimed, seed in (("middle", 3), ("junior", 5), ("senior", 9)):
         _, res = _run(bank, claimed, times=lambda it: 60.0, seed=seed)
         assert res.theta == round_half(res.theta) and res.se == round_half(res.se)
-        assert f"θ = {theta_se(res.theta, res.se)}" in res.explanation, res.explanation
+        # Пояснение кандидату — простыми словами, без внутренних оценок (f76ae447c, вердикт по SPRT: «без внутренних
+        # оценок»; правило владельца — без θ/IRT в основном интерфейсе). Прежнее ожидание «θ = … в тексте» устарело.
+        # Проверяем строже, чем раньше: в тексте нет ни θ, ни сырых чисел оценки; текст называет заявленный грейд
+        # и согласован с решением (подтверждён / не подтверждён / нужен доп. этап).
+        ex = res.explanation
+        assert ex and "θ" not in ex and theta_se(res.theta, res.se) not in ex, ex
+        assert repr(res.theta) not in ex and repr(res.se) not in ex, ex
+        g = be.GRADE_RU[claimed]
+        assert g in ex, ex
+        if res.confirmed:
+            assert "подтвержд" in ex and "не подтвержд" not in ex.split(".")[0], ex
+        else:
+            assert ("не подтвержд" in ex) or ("границ" in ex) or ("дополнительн" in ex), ex
+        assert "Экспресс-тест" in ex, ex  # режим назван
 
 
 def test_live_snapshot_same_numbers_everywhere(client, monkeypatch):

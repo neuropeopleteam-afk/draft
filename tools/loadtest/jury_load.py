@@ -442,6 +442,22 @@ class Employer(JuryUser):
         self.client.get("/api/employer/invitations", name="работодатель: приглашения")
         self.client.get("/api/employer/categories", name="работодатель: категории с рынком")
 
+    @task(2)
+    def search(self):
+        """Поиск по базе (/employer/search): направление + один из фильтров — грейд, стек или «есть ФСП»."""
+        if not self.ensure_login():
+            return
+        d = random.choice(("backend", "frontend", "data_ml", "qa", "security"))
+        params: dict = {"direction": d, "limit": 30}
+        x = random.random()
+        if x < 0.4:
+            params["grade"] = random.choice(("junior", "middle", "senior"))
+        elif x < 0.7:
+            params["stack"] = random.choice(("python", "postgresql", "docker", "react", "typescript"))
+        elif x < 0.85:
+            params["fsp"] = "true"
+        self.client.get("/api/employer/candidates", params=params, name="поиск по базе")
+
 
 class PublicVisitor(JuryUser):
     weight = 2
