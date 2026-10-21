@@ -612,7 +612,7 @@ class BankEngine:
             # показывает это рядом (как и до поправки: категория присваивалась, удержание — в вердикте)
             conf = g_sprt["status"] == "confirmed"
             gba = details["grade_by_answers"]
-            explanation = self._explain_sprt(vd, gba, claimed, details)
+            explanation = self._explain_sprt(vd, gba, claimed, details, theta_r, se_r)
             return EngineResult(
                 engine=self.name, theta=theta_r, se=se_r, claimed_grade=claimed,
                 point_grade=gba["point_grade"], confirmed=conf,
@@ -1057,9 +1057,13 @@ class BankEngine:
         )
 
     @staticmethod
-    def _explain_sprt(vd: dict, gba: dict, claimed: str, details: dict) -> str:
-        """Пояснение итога простыми словами (поправка №2): вердикт по заявленному грейду и уровень по ответам."""
+    def _explain_sprt(vd: dict, gba: dict, claimed: str, details: dict, theta: float | None = None,
+                      se: float | None = None) -> str:
+        """Пояснение итога простыми словами (поправка №2): вердикт по заявленному грейду и уровень по ответам;
+        оценка θ — то же округлённое один раз значение, что в итоге, фактах и подборке (fmt.theta_round)."""
         s = vd.get("explanation") or ""
+        if theta is not None and se is not None:
+            s += f" Оценка по ответам: θ = {theta_se(theta, se)}."
         pg = gba.get("product_grade")
         if pg and pg != claimed and vd.get("status") == "confirmed":
             s += f" По ответам ваш уровень — {GRADE_RU.get(pg, pg)}: выше заявленного; его можно подтвердить отдельно."
@@ -1072,8 +1076,13 @@ class BankEngine:
         if (details.get("preknowledge") or {}).get("rescored"):
             s += " Часть ответов не учтена в оценке уровня: по ним есть признаки, что ответы были известны заранее."
         if details.get("mode") == "express":
-            s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий — решение принимается только при "
-                  "достаточной уверенности, иначе нужен полный тест.")
+            s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без дотестирования, поэтому интервал θ "
+                  "шире, чем у полного теста; правило решения то же — последовательная проверка у порога заявленного "
+                  "грейда: решение принимается только при достаточной уверенности, иначе нужен полный тест.")
+            if claimed == "senior":
+                mx = (details.get("length") or {}).get("max_items", 12)
+                s += (f" За Senior экспресс длиннее (до {mx} заданий): крайняя категория подтверждается при почти всех "
+                      "верных ответах.")
         return s
 
     @staticmethod
