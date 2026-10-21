@@ -66,9 +66,9 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
   const cta = premium ? "np-btn-primary" : dark ? "btn-light" : "btn-primary";
   return (
     <header className={premium ? "np-header" : dark ? "bg-brand-night" : "border-b border-brand-night/10 bg-white"}>
-      <div className="mx-auto flex max-w-content items-center justify-between gap-2 px-3 py-3.5 sm:gap-4 sm:px-6 xl:gap-3">
+      <div className="mx-auto flex max-w-content items-center justify-between gap-2 px-3 py-3.5 sm:gap-3 sm:px-5 xl:gap-2.5">
         <Link to="/" aria-label="На главную" className="shrink-0"><Logo light={onDark} /></Link>
-        <nav className="hidden items-center gap-3.5 whitespace-nowrap text-[13px] font-medium xl:flex 2xl:gap-5 2xl:text-sm" aria-label="Основная навигация">
+        <nav className="hidden items-center gap-3 whitespace-nowrap text-xs font-semibold xl:flex 2xl:gap-5 2xl:text-sm" aria-label="Основная навигация">
           {NAV.map(([to, t]) =>
             to.startsWith("/#") ? (
               <a key={to} href={to} className={link}>{t}</a>
@@ -147,7 +147,7 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
               <Link to="/login" className={`hidden rounded-lg px-2.5 py-2 text-sm font-semibold sm:inline-flex ${link}`}>
                 Войти
               </Link>
-              <Link to="/register?role=employer" className={`${cta} whitespace-nowrap px-3.5 sm:px-5`} data-testid="header-cta-employer">
+              <Link to="/register?role=employer" className={`${cta} whitespace-nowrap px-3 sm:px-4 2xl:px-5 text-xs sm:text-sm`} data-testid="header-cta-employer">
                 <span className="sm:hidden">Начать</span>
                 <span className="hidden sm:inline">Создать вакансию</span>
               </Link>
