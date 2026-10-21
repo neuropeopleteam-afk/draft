@@ -103,7 +103,8 @@ export default function Category() {
           {Object.keys(s.retake_locks ?? {}).length > 0 && (
             <p className="mt-1 text-brand-ink/75">Повтор после неподтверждённой попытки: {Object.entries(s.retake_locks as Record<string, string>).map(([g, at]) => `${GRADE_TITLE_ALL[g]} — с ${dt(at).replace(/ г\.$/, "")}`).join(", ")}. Тест на грейд ниже — сразу.</p>
           )}
-          <p className="mt-1 text-xs text-brand-ink/65">Смена подтверждённого грейда — не чаще раза в {s.grade_change_interval_days ?? 90} дней; повтор на тот же грейд после неудачи — через {s.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу.</p>
+          <p className="mt-1 text-xs text-brand-ink/65">Смена подтверждённого грейда — не чаще раза в {s.grade_change_interval_days ?? 90} дней; неудачная попытка повысить грейд не снижает уже подтверждённый грейд. Повтор на тот же грейд после неудачи — через {s.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу.</p>
+          <p className="mt-1.5 text-xs text-brand-ink/70" data-testid="no-fsp-rule-note">Без истории соревнований ФСП вы участвуете в выдаче наравне со всеми: фактор ФСП равен 0 без какого-либо штрафа к результату теста.</p>
           {s.jury_mode_available && s.jury_mode_allowed && (
             <div className="mt-3 border-t border-brand/10 pt-2">
               <Toggle checked={s.jury_mode} onChange={jury} label="Режим проверки для жюри" hint={`Только для учёток жюри. Снимает ограничение ${s.grade_change_interval_days ?? 90} дней для показа; в истории такие смены помечаются.`} />

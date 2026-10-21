@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { ApiError, api } from "../lib/api";
+import { useDemoUi } from "../lib/juryMode";
 
 /** Неразрывный пробел: между числом и «₽»/«%», внутри «220 000». */
 export const NB = "\u00A0";
@@ -371,9 +372,10 @@ export function isSyntheticProfile(c: any): boolean {
   );
 }
 
-/** А2: бейдж «демо-профиль» у синтетического кандидата в карточке, подборке, поиске, сравнении и приглашении. */
+/** А2: бейдж «демо-профиль» у синтетического кандидата — показывается только в режиме демо жюри. */
 export function DemoProfileBadge({ c, className = "" }: { c: any; className?: string }) {
-  if (!isSyntheticProfile(c)) return null;
+  const demoUi = useDemoUi();
+  if (!demoUi || !isSyntheticProfile(c)) return null;
   return (
     <span
       data-testid="demo-profile-badge"

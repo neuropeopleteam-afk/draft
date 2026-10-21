@@ -419,6 +419,32 @@ def _build_protocol_ref(rec: dict, sources_by_url: dict[str, dict]) -> dict:
     }
 
 
+def format_place_display(
+    *,
+    place: int | None = None,
+    place_status: str | None = None,
+    place_range: list | tuple | None = None,
+    place_text: str | None = None,
+    evsk_status: str | None = None,
+    result_title: str | None = None,
+) -> str:
+    """Форматирует место для паспорта и карточки (index_v5):
+    - для поделённого места (shared_range / place_range [a, b]) при place=None → «14–24 место»;
+    - для place_unverified → «место не подтверждено»;
+    - для обычного места → «N место»."""
+    if evsk_status == "place_unverified" or place_status in ("not_recognized", "place_unverified"):
+        return "место не подтверждено"
+    if place is not None:
+        return f"{place} место"
+    if isinstance(place_range, (list, tuple)) and len(place_range) == 2 and place_range[0] is not None and place_range[1] is not None:
+        a, b = place_range[0], place_range[1]
+        return f"{a} место" if a == b else f"{a}–{b} место"
+    if place_text and str(place_text).strip():
+        pt = str(place_text).strip()
+        return pt if "мест" in pt.lower() else f"{pt} место"
+    return result_title or "участник"
+
+
 def format_protocol_achievement_text(
     *,
     event_name: str | None,
@@ -430,13 +456,24 @@ def format_protocol_achievement_text(
     evsk_rank: str | None,
     evsk_basis: str | None,
     page: int | None,
+    place_status: str | None = None,
+    place_range: list | tuple | None = None,
+    place_text: str | None = None,
+    evsk_status: str | None = None,
 ) -> str:
-    """Форматирует строку достижения для карточки работодателя по стандарту P0-2:
+    """Форматирует строку достижения для карточки работодателя по стандарту P0-2 / index_v5:
     «Кубок России 2025, продуктовое программирование, 2 место, ЕКП №…, разряд по ЕВСК: КМС (п. …), стр. 3»
     """
     short_ev = _short_event_title(event_name, event_date)
     disc_h = DISCIPLINE_HUMAN.get(discipline or "", discipline or "спортивное программирование")
-    place_str = f"{place} место" if place is not None else (result_title or "участник")
+    place_str = format_place_display(
+        place=place,
+        place_status=place_status,
+        place_range=place_range,
+        place_text=place_text,
+        evsk_status=evsk_status,
+        result_title=result_title,
+    )
     parts = [short_ev, disc_h, place_str]
     if ekp_no:
         parts.append(f"ЕКП № {ekp_no}")
@@ -473,6 +510,17 @@ def _public_record(rec: dict, sources_by_url: dict[str, dict], *, is_fsp_verifie
         evsk_rank=evsk["evsk_rank"],
         evsk_basis=evsk["evsk_basis"],
         page=pref.get("page"),
+        place_status=rec.get("place_status"),
+        place_range=rec.get("place_range"),
+        place_text=rec.get("place_text"),
+        evsk_status=evsk["evsk_status"],
+    )
+    place_display = format_place_display(
+        place=rec.get("place"),
+        place_status=rec.get("place_status"),
+        place_range=rec.get("place_range"),
+        place_text=rec.get("place_text"),
+        evsk_status=evsk["evsk_status"],
     )
     return {
         "key_hash": rec.get("key_hash") or rec.get("record_id"),
@@ -485,9 +533,15 @@ def _public_record(rec: dict, sources_by_url: dict[str, dict], *, is_fsp_verifie
         "evsk_rank": evsk["evsk_rank"],
         "evsk_basis": evsk["evsk_basis"],
         "evsk_status": evsk["evsk_status"],
+        "evsk_place_basis": rec.get("evsk_place_basis"),
         "protocol_ref": pref,
         "date": rec.get("date"),
         "place": rec.get("place"),
+        "place_status": rec.get("place_status"),
+        "place_range": rec.get("place_range"),
+        "place_text": rec.get("place_text"),
+        "place_check": rec.get("place_check"),
+        "place_display": place_display,
         "rank": raw_sport_rank or evsk["evsk_rank"],
         "team": rec.get("team"),
         "region": rec.get("region"),
@@ -687,6 +741,13 @@ def confirm_protocol_matches(
             r_kind = "participant"
 
         evsk = _resolve_evsk_info(rec)
+        if evsk.get("evsk_status") == "place_unverified" or rec.get("place_status") in ("not_recognized", "place_unverified"):
+            r_title = "место не подтверждено"
+            r_kind = "participant"
+        elif place_int is None and isinstance(rec.get("place_range"), (list, tuple)) and len(rec.get("place_range")) == 2:
+            a, b = rec["place_range"][0], rec["place_range"][1]
+            r_title = f"{a} место" if a == b else f"{a}–{b} место"
+            r_kind = "finalist" if (isinstance(a, int) and a <= 10) else "participant"
         pref = _build_protocol_ref(rec, sources_by_url)
         ekp_no = pref.get("ekp_no")
         rec_fio_norm = normalize_fio(rec.get("fio_norm") or rec.get("fio") or "")
@@ -727,6 +788,11 @@ def confirm_protocol_matches(
                 evsk_basis=(str(evsk["evsk_basis"])[:255] if evsk["evsk_basis"] else None),
                 team_result={
                     "place": place_int,
+                    "place_status": rec.get("place_status"),
+                    "place_range": rec.get("place_range"),
+                    "place_text": rec.get("place_text"),
+                    "place_check": rec.get("place_check"),
+                    "evsk_place_basis": rec.get("evsk_place_basis"),
                     "region": rec.get("region"),
                     "pdf_url": pref.get("url"),
                     "page": pref.get("page"),
@@ -734,6 +800,7 @@ def confirm_protocol_matches(
                     "doc_id": pref.get("doc_id"),
                     "evsk_rank": evsk["evsk_rank"],
                     "evsk_basis": evsk["evsk_basis"],
+                    "evsk_status": evsk["evsk_status"],
                     "protocol_verified": is_fsp_verified,
                     "protocol_status": p_status,
                     "status_title": status_title,

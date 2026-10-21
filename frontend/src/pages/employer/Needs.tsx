@@ -9,6 +9,7 @@ import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, isSyntheticProfile, plural, range, useApi } from "../../components/ui";
 import { useGrades } from "../../lib/grades";
+import { useDemoUi } from "../../lib/juryMode";
 import { api } from "../../lib/api";
 import { useDirectionEntries } from "../../lib/meta";
 import { LlmOff } from "../../components/LlmOff";
@@ -448,6 +449,7 @@ const TOP = 5, MORE = 10, WIDE_PX = 1000;  // Я10: первый экран по
 export function Selection() {
   const { id, version } = useParams();
   const navigate = useNavigate();
+  const demoUi = useDemoUi();
   const need = useApi<any>(`/employer/needs/${id}`);
   const last = need.data?.versions?.at(-1)?.version;
   const v = version ? Number(version) : last;
@@ -579,7 +581,7 @@ export function Selection() {
                   <p className="text-sm text-brand-ink/70">версия {s.version}{s.parent_version ? ` (из версии ${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}{ordered.length > 0 && !wide && <> · {expandBtn}</>}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  {syntheticCount > 0 && (
+                  {demoUi && syntheticCount > 0 && (
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-brand-night/15 bg-white px-3 py-1.5 text-xs font-semibold text-brand-night shadow-sm" data-testid="real-only-toggle">
                       <input
                         type="checkbox"
@@ -604,7 +606,7 @@ export function Selection() {
               </div>
               {ordered.length > 0 && <DecisionProofStrip totalCandidates={s.total} version={s.version} />}
               {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
-                <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Балл — доля требований, подтверждённых тестом; порядок подборки не меняется. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
+                <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Место внутри категории определяют результат теста и достижения ФСП (отдельной осью); навыки вакансии, подтверждённые тестом, показаны строкой совпадения и ярусом покрытия. Самоописание в балл не входит. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
               </div>}
               {invited && <Alert kind="ok">{invited}</Alert>}
               {!ordered.length ? (
@@ -686,8 +688,10 @@ export function Selection() {
             </section>
             <section className="card space-y-3">
               <h2 className="text-sm font-bold text-brand-night">Уточнить</h2>
-              <Toggle checked={realOnly} onChange={(x) => { setRealOnly(x); setFilters({ ...filters, real_only: x || undefined }); }} label="Только реальные кандидаты"
-                hint="Скрыть модельные демо-профили стенда. По умолчанию показаны все кандидаты с пометкой «демо-профиль»." />
+              {demoUi && (
+                <Toggle checked={realOnly} onChange={(x) => { setRealOnly(x); setFilters({ ...filters, real_only: x || undefined }); }} label="Только реальные кандидаты"
+                  hint="Скрыть тренировочные профили песочницы и оставить только живых кандидатов." />
+              )}
               <Toggle checked={!!filters.fsp_only} onChange={(x) => setFilters({ ...filters, fsp_only: x })} label="Только с паспортом ФСП" />
               <Toggle checked={!!filters.fsp_protocol_only} onChange={(x) => setFilters({ ...filters, fsp_protocol_only: x || undefined })} label="Подтверждено протоколом ФСП"
                 hint="Оставить только кандидатов с достижениями, подтверждёнными официальным протоколом ФСП (ЕКП, ЕВСК, ссылка на PDF)." />

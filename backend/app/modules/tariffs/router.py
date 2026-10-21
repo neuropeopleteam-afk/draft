@@ -135,7 +135,7 @@ def benefit(days: int | None = Days, user: User = Depends(analyst), db: Session 
 
     svc.need_on()
     log.info("fsp_cabinet access user=%s role=%s section=benefit days=%s", user.id, user.role.value, days)
-    return benefit_mod.compute(db, days, include_demo=jury_scope.sees_demo(user))
+    return benefit_mod.compute(db, days, include_demo=not jury_scope.real_default(user, db=db))
 
 
 @fsp_router.get("/benefit/export.csv", summary="«Польза для ФСП» в CSV (те же агрегаты, малые группы скрыты)",
@@ -145,7 +145,7 @@ def benefit_csv(days: int | None = Days, user: User = Depends(analyst), db: Sess
 
     svc.need_on()
     log.info("fsp_cabinet access user=%s role=%s section=export:benefit days=%s", user.id, user.role.value, days)
-    rep = benefit_mod.compute(db, days, include_demo=jury_scope.sees_demo(user))
+    rep = benefit_mod.compute(db, days, include_demo=not jury_scope.real_default(user, db=db))
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
     w.writerow(benefit_mod.CSV_COLS)

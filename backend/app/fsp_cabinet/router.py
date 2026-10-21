@@ -34,6 +34,16 @@ def _audit(user: User, what: str, days: int | None) -> None:
     log.info("fsp_cabinet access user=%s role=%s section=%s days=%s", user.id, user.role.value, what, days)
 
 
+def _inc_demo(db: Session, user: User) -> bool:
+    """Включать ли общие демо-данные платформы в кабинет ФСП:
+    - для демо-персон и жюри — всегда True;
+    - для тестов аналитики ФСП, где засеяно демо, но ещё не вызывался /api/jury/login (нет @jury.example.com) — True;
+    - в рыночном режиме при живой работе стенда (когда есть песочницы жюри) для реального аналитика — False."""
+    from app.modules.jury import scope as jury_scope
+
+    return not jury_scope.real_default(user, db=db)
+
+
 @router.get("/report", summary="Вся аналитика кабинета одним ответом", responses=AUTH)
 def report(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     from app.cup import tournament
@@ -41,7 +51,8 @@ def report(days: int | None = Days, user: User = Depends(analyst), db: Session =
     from app.modules.jury import scope as jury_scope
 
     _audit(user, "report", days)
-    inc_demo = jury_scope.sees_demo(user)
+    inc_demo = _inc_demo(db, user)
+    # Н5: турниры «Компания × ФСП» под вакансии — отдельным списком (платформы и своей песочницы жюри, агрегаты)
     return {
         **an.report(db, days, include_demo=inc_demo),
         "regions_map": build_regions_map(db, days, include_demo=inc_demo),
@@ -52,59 +63,46 @@ def report(days: int | None = Days, user: User = Depends(analyst), db: Session =
 @router.get("/regions", summary="Карта талантов по регионам и федеральным округам РФ", responses=AUTH)
 def regions(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     from app.fsp_cabinet.regions import build_regions_map
-    from app.modules.jury import scope as jury_scope
 
     _audit(user, "regions", days)
-    return build_regions_map(db, days, include_demo=jury_scope.sees_demo(user))
+    return build_regions_map(db, days, include_demo=_inc_demo(db, user))
 
 
 @router.get("/overview", summary="Ключевые показатели", responses=AUTH)
 def overview(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
-    from app.modules.jury import scope as jury_scope
-
     _audit(user, "overview", days)
-    return an.overview(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
+    return an.overview(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/demand", summary="Спрос работодателей по категориям и навыкам", responses=AUTH)
 def demand(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
-    from app.modules.jury import scope as jury_scope
-
     _audit(user, "demand", days)
-    return an.demand(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
+    return an.demand(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/fsp-effect", summary="Какие дисциплины, разряды и результаты ФСП ведут к приглашениям и принятиям",
             responses=AUTH)
 def fsp_effect(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
-    from app.modules.jury import scope as jury_scope
-
     _audit(user, "fsp_effect", days)
-    return an.fsp_effect(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
+    return an.fsp_effect(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/salaries", summary="Реальные зарплатные вилки из приглашений по категориям", responses=AUTH)
 def salaries(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
-    from app.modules.jury import scope as jury_scope
-
     _audit(user, "salaries", days)
-    return an.salaries(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
+    return an.salaries(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/funnel", summary="Воронки «соревнование → приглашение → принятие»", responses=AUTH)
 def funnel(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
-    from app.modules.jury import scope as jury_scope
-
     _audit(user, "funnel", days)
-    return an.funnel(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
+    return an.funnel(an.load(db, days, include_demo=_inc_demo(db, user)))
 
 
 @router.get("/cups", summary="Кубки работодателей как мероприятия", responses=AUTH)
 def cups(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> list[dict]:
-    from app.modules.jury import scope as jury_scope
-
     _audit(user, "cups", days)
-    return an.cups_section(an.load(db, days, include_demo=jury_scope.sees_demo(user)), db)
+    return an.cups_section(an.load(db, days, include_demo=_inc_demo(db, user)), db)
 
 
 def _cell(v) -> str:
@@ -137,10 +135,8 @@ def export(section: str, days: int | None = Days, user: User = Depends(analyst),
     if section not in EXPORTS:
         raise api_error(404, "export_not_found", "Нет такого раздела выгрузки")
     _audit(user, f"export:{section}", days)
-    from app.modules.jury import scope as jury_scope
-
     rows_of, cols = EXPORTS[section]
-    rep = an.report(db, days, include_demo=jury_scope.sees_demo(user))
+    rep = an.report(db, days, include_demo=_inc_demo(db, user))
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
     w.writerow(cols)
@@ -187,11 +183,18 @@ def list_protocol_claims(
     passports = {p.id: p for p in db.scalars(select(FspPassport).where(FspPassport.id.in_(pids))).all()} if pids else {}
     uids = list({p.user_id for p in passports.values()})
     profiles = {p.user_id: p for p in db.scalars(select(CandidateProfile).where(CandidateProfile.user_id.in_(uids))).all()} if uids else {}
+    users_by_id = {u.id: u for u in db.scalars(select(User).where(User.id.in_(uids))).all()} if uids else {}
+    inc_demo = _inc_demo(db, user)
 
     items = []
     pending_cnt = 0
     verified_cnt = 0
     for a in rows:
+        pp = passports.get(a.passport_id)
+        prof = profiles.get(pp.user_id) if pp else None
+        cand_u = users_by_id.get(pp.user_id) if pp else None
+        if not inc_demo and ((cand_u and cand_u.is_demo) or (prof and getattr(prof, "is_synthetic", False))):
+            continue
         tr = a.team_result or {}
         pref = a.protocol_ref or {}
         st = a.protocol_status or tr.get("protocol_status") or ("verified" if tr.get("protocol_verified") else "pending_fsp")
@@ -201,8 +204,6 @@ def list_protocol_claims(
             verified_cnt += 1
         if status != "all" and st != status:
             continue
-        pp = passports.get(a.passport_id)
-        prof = profiles.get(pp.user_id) if pp else None
         ekp_no = a.ekp_no or pref.get("ekp_no") or tr.get("ekp_no")
         evsk_rank = a.evsk_rank or tr.get("evsk_rank") or a.sport_rank
         evsk_basis = a.evsk_basis or tr.get("evsk_basis")
