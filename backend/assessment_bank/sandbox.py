@@ -354,7 +354,8 @@ def _run_batch(kind: str, sources: list[str], timeout: float) -> list[RunResult]
             runner = os.path.join(tmp, "runner.js")
             with open(runner, "w", encoding="utf-8") as fh:
                 fh.write(_NODE_RUNNER)
-            cmd = ["node", "--max-old-space-size=256", "--disallow-code-generation-from-strings",
+            # абсолютный путь: у программы PATH урезан (_base_env), а node бывает вне /usr/local/bin (под RunPod — /opt/node/bin)
+            cmd = [shutil.which("node") or "node", "--max-old-space-size=256", "--disallow-code-generation-from-strings",
                    runner, jobs_path]
             mem = None  # V8 резервирует большое адресное пространство; лимит — через heap
         out, err, code, timed_out = _exec(cmd, tmp, total, _base_env(tmp), mem)
@@ -390,7 +391,7 @@ def _run_shell(check: Check, timeout: float) -> RunResult:
                         "GIT_TERMINAL_PROMPT": "0", "GIT_ADVICE": "0"})
         with open(script, "w", encoding="utf-8") as fh:
             fh.write(body)
-        out, err, code, timed_out = _exec(["bash", "--noprofile", "--norc", script], tmp,
+        out, err, code, timed_out = _exec([shutil.which("bash") or "bash", "--noprofile", "--norc", script], tmp,
                                           timeout, env, 1024 * 1024 * 1024)
         if timed_out:
             return RunResult(out, "timeout")
