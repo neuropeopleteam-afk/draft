@@ -134,6 +134,17 @@ export interface MatchExplainProps {
   /** Компактный режим для карточки в списке подборки (по умолчанию false — полный блок). */
   compact?: boolean;
   className?: string;
+  /** Совместимость с карточками кабинетов (CandidateCard, CompactCard): старые поля карточки. */
+  candidate?: any;
+  score?: number | null;
+  reasons?: any[];
+  must?: any;
+  core?: any;
+  components?: Record<string, number> | null;
+  needId?: string;
+  candidateRef?: string;
+  version?: number;
+  defaultOpen?: boolean;
 }
 
 const GRADE_BADGE_STYLES: Record<string, string> = {
@@ -238,8 +249,15 @@ export function MatchExplain({
   onCreateProbe,
   compact = false,
   className = "",
+  candidate,
+  score,
+  reasons,
+  must,
+  core,
+  components,
 }: MatchExplainProps) {
-  const data = explainProp || buildFallbackExplain(item);
+  const legacyItem = item ?? (candidate || reasons || must || core ? { ...(candidate || {}), candidate, score, reasons, must, core, components } : undefined);
+  const data = explainProp || buildFallbackExplain(legacyItem);
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   if (!data) return null;
@@ -612,12 +630,18 @@ export function SalaryCalibrationBanner({
  * Плашка защиты от фиктивных вакансий, проверки ЕГРЮЛ по ИНН и индекса ответственности работодателя.
  */
 export function VacancyGuardBadge({
-  guard,
+  guard: guardProp,
+  vacancy,
   className = "",
 }: {
   guard?: VacancyGuardData | null;
   className?: string;
+  /** Совместимость с карточками вакансий кандидата: признаки берутся из vacancy.vacancy_guard. */
+  vacancy?: any;
+  trust?: any;
+  compact?: boolean;
 }) {
+  const guard: VacancyGuardData | null | undefined = guardProp ?? vacancy?.vacancy_guard ?? null;
   if (!guard) return null;
 
   const egrulBadge = guard.egrul?.badge;

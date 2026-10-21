@@ -132,9 +132,9 @@ const LEVEL_HINT: Record<string, string> = {
 
 /** SIMPLIFY п.5: рядом с кодом уровня — слова (код без слов работодателю ничего не говорит); words={false} — только код
  *  (легенда, где слова стоят рядом полным текстом). */
-export const LEVEL_WORDS: Record<string, string> = { T0: "указано кандидатом", T1: "подтверждено тестом", T2: "подтверждено ФСП" };
+export const LEVEL_WORDS: Record<string, string> = { T0: "самозаявлено", T1: "подтверждено платформой", T2: "подтверждено реестром ФСП" };
 /** КУХНЯ: на экранах — только слова, без внутренних кодов T0/T1/T2; words={false} — короткая метка для легенды. */
-const LEVEL_SHORT: Record<string, string> = { T0: "указано", T1: "тест", T2: "ФСП", none: "нет данных" };
+const LEVEL_SHORT: Record<string, string> = { T0: "самозаявлено", T1: "платформа", T2: "реестр ФСП", none: "нет данных" };
 
 export function Level({ level, words = true }: { level?: string | null; words?: boolean }) {
   const l = level ?? "none";
@@ -356,3 +356,52 @@ export function years(v: number | string | null | undefined): string {
   const w = d10 === 1 && d100 !== 11 ? "год" : d10 >= 2 && d10 <= 4 && (d100 < 12 || d100 > 14) ? "года" : "лет";
   return `${n} ${w}`;
 }
+
+/** А2: признак синтетического (модельного) профиля из общей демо-базы. */
+export function isSyntheticProfile(c: any): boolean {
+  if (!c) return false;
+  return Boolean(
+    c.is_synthetic || c.is_demo || c.candidate_synthetic || c.candidate_demo ||
+    c.card?.is_synthetic || c.card?.is_demo || c.model_note || c.card?.model_note
+  );
+}
+
+/** А2: бейдж «демо-профиль» у синтетического кандидата в карточке, подборке, поиске, сравнении и приглашении. */
+export function DemoProfileBadge({ c, className = "" }: { c: any; className?: string }) {
+  if (!isSyntheticProfile(c)) return null;
+  return (
+    <span
+      data-testid="demo-profile-badge"
+      title="Синтетический модельный профиль стенда для проверки подбора и аналитики"
+      className={`inline-flex items-center rounded-full border border-amber-300/80 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold leading-none text-amber-900 ${className}`.trim()}
+    >
+      демо-профиль
+    </span>
+  );
+}
+
+/** А2 (PR-05): очистка технических префиксов «Демо жюри: » и «Демо: » из названия компании на витрине. */
+export function cleanCompanyName(name?: string | null): string {
+  if (!name) return "";
+  return name.replace(/^(?:Демо(?:\s+жюри)?:\s*)/i, "").trim();
+}
+
+export function isDemoCompanyName(name?: string | null): boolean {
+  return /^(?:Демо(?:\s+жюри)?:\s*)/i.test(name ?? "");
+}
+
+export function CompanyTitle({ name, isDemo, showBadge = false }: { name?: string | null; isDemo?: boolean | null; showBadge?: boolean }) {
+  const clean = cleanCompanyName(name);
+  const demo = Boolean(isDemo || isDemoCompanyName(name));
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <span>{clean || "Компания"}</span>
+      {showBadge && demo && (
+        <span className="rounded-full bg-brand-blush/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand-plum">
+          демо
+        </span>
+      )}
+    </span>
+  );
+}
+

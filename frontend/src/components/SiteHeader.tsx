@@ -6,12 +6,20 @@ import { useTheme } from "../lib/theme";
 import { Logo } from "./Logo";
 import { InstallAppButton } from "./InstallAppButton";
 
-// W2: в шапке — только разделы продукта. Всё для экспертов (проверка за 12 минут, критерии ТЗ, валидация, атаки,
-// свой набор данных) — в одной вкладке «Экспертиза ФСП» (/expertise) справа, со значком щита (флаг VITE_JURY_TAB).
-const NAV: [string, string][] = [["/#laws", "Почему Драфт"], ["/#how", "Как это работает"],
-  ["/#candidates", "Кандидатам"], ["/#employers", "Работодателям"]];
-// в меню до 1024 px — те же разделы и документация API (на широком экране API — в подвале)
-const MOBILE_NAV: [string, string][] = [...NAV, ["/pricing", "Тарифы и пакеты ФСП"], ["/install", "Приложение на телефон"], ["/api/docs", "API"]];
+const NAV: [string, string][] = [
+  ["/#employers", "Работодателям"],
+  ["/#candidates", "Кандидатам"],
+  ["/#fsp-ecosystem", "Федерации ФСП"],
+  ["/pricing", "Тарифы"],
+  ["/support", "Поддержка"],
+];
+
+const MOBILE_NAV: [string, string][] = [
+  ...NAV,
+  ["/install", "На телефон / RuStore"],
+  ["/api/docs", "Документация API"],
+];
+
 const item = "rounded-lg px-3 py-2 hover:bg-brand-blush/40";
 
 export function ShieldIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -35,8 +43,6 @@ function ThemeIcon({ dark }: { dark: boolean }) {
   );
 }
 
-/** Шапка публичных страниц. premium — главная и «Экспертиза ФСП» (стеклянная шапка, тёмная/светлая тема, .np);
- *  dark оставлен для совместимости (тёмная шапка без переключателя темы). */
 export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; premium?: boolean }) {
   const { me, signOut } = useAuth();
   const juryTab = useJuryTab();
@@ -55,24 +61,39 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
   }, [open]);
   const onDark = premium ? theme === "dark" : dark;
   const link = premium ? "np-navlink" : dark ? "text-white/80 hover:text-white" : "text-brand-ink/70 hover:text-brand-night";
-  const onExpertise = loc.pathname === "/expertise";
+  const onDemo = loc.pathname === "/demo" || loc.pathname.startsWith("/demo/");
   const themeLabel = theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему";
   const cta = premium ? "np-btn-primary" : dark ? "btn-light" : "btn-primary";
   return (
     <header className={premium ? "np-header" : dark ? "bg-brand-night" : "border-b border-brand-night/10 bg-white"}>
-      <div className="mx-auto flex max-w-content items-center justify-between gap-2 px-3 py-3.5 sm:gap-6 sm:px-6 xl:gap-4">
+      <div className="mx-auto flex max-w-content items-center justify-between gap-2 px-3 py-3.5 sm:gap-5 sm:px-6 xl:gap-4">
         <Link to="/" aria-label="На главную" className="shrink-0"><Logo light={onDark} /></Link>
-        <nav className="hidden items-center gap-5 whitespace-nowrap text-sm font-medium xl:flex xl:gap-5" aria-label="Основная навигация">
-          {NAV.map(([to, t]) => <a key={to} href={to} className={link}>{t}</a>)}
+        <nav className="hidden items-center gap-5 whitespace-nowrap text-sm font-medium xl:flex" aria-label="Основная навигация">
+          {NAV.map(([to, t]) =>
+            to.startsWith("/#") ? (
+              <a key={to} href={to} className={link}>{t}</a>
+            ) : (
+              <Link key={to} to={to} className={link}>{t}</Link>
+            )
+          )}
         </nav>
-        <div className="flex items-center gap-1 sm:gap-2.5 xl:gap-2">
-          <InstallAppButton premium={premium} />
+        <div className="flex items-center gap-1.5 sm:gap-2.5 xl:gap-2">
           {juryTab && (
-            <Link to="/expertise" aria-label="Экспертиза ФСП" aria-current={onExpertise ? "page" : undefined} data-testid="expertise-tab"
-              className={premium ? `max-sm:!hidden np-shield ${onExpertise ? "np-shield-on" : ""}`
-                : `max-sm:!hidden inline-flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm font-semibold ring-1 transition-colors sm:px-3 ${dark ? "text-white ring-white/25 hover:bg-white/10" : "text-brand-plum ring-brand-night/15 hover:bg-brand-blush/40"}`}>
+            <Link
+              to="/demo"
+              aria-label="Демо для жюри"
+              aria-current={onDemo ? "page" : undefined}
+              data-testid="expertise-tab"
+              className={
+                premium
+                  ? `max-sm:!hidden np-shield ${onDemo ? "np-shield-on" : ""}`
+                  : `max-sm:!hidden inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-semibold ring-1 transition-colors sm:px-3 ${
+                      dark ? "text-white ring-white/25 hover:bg-white/10" : "text-brand-plum ring-brand-night/15 hover:bg-brand-blush/40"
+                    }`
+              }
+            >
               <ShieldIcon />
-              <span className="hidden whitespace-nowrap lg:inline xl:hidden">Экспертиза ФСП</span>
+              <span className="hidden whitespace-nowrap lg:inline">Демо для жюри</span>
             </Link>
           )}
           {premium && (
@@ -80,7 +101,6 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
               <ThemeIcon dark={theme === "dark"} />
             </button>
           )}
-          {/* С2 №10: до 1280 px — кнопка «Меню» с теми же ссылками (на телефоне в ней и «Войти», и тема) */}
           <div ref={box} className="relative xl:hidden" data-testid="site-menu">
             <button ref={btn} type="button" aria-expanded={open} aria-controls="site-menu-nav" onClick={() => setOpen(!open)}
               className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold ${premium ? "np-iconbtn" : link}`}>
@@ -90,8 +110,18 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
             {open && (
               <nav id="site-menu-nav" aria-label="Меню сайта" onClick={() => setOpen(false)}
                 className="absolute right-0 z-50 mt-2 flex w-64 max-w-[calc(100vw-2rem)] flex-col rounded-xl bg-white p-2 text-sm font-medium text-brand-night shadow-xl ring-1 ring-brand-night/10">
-                {MOBILE_NAV.map(([to, t]) => <a key={to} href={to} className={item}>{t}</a>)}
-                {juryTab && <Link to="/expertise" className={`${item} inline-flex items-center gap-2 font-semibold text-brand-plum`}><ShieldIcon />Экспертиза ФСП</Link>}
+                {MOBILE_NAV.map(([to, t]) =>
+                  to.startsWith("/#") || to.startsWith("/api/") ? (
+                    <a key={to} href={to} className={item}>{t}</a>
+                  ) : (
+                    <Link key={to} to={to} className={item}>{t}</Link>
+                  )
+                )}
+                {juryTab && (
+                  <Link to="/demo" className={`${item} inline-flex items-center gap-2 font-semibold text-brand-plum`}>
+                    <ShieldIcon />Демо для жюри
+                  </Link>
+                )}
                 {premium && <button type="button" className={`${item} text-left sm:hidden`} onClick={toggleTheme}>{theme === "dark" ? "Светлая тема" : "Тёмная тема"}</button>}
                 {!me && <Link to="/login" className={`${item} sm:hidden`}>Войти</Link>}
               </nav>
@@ -99,7 +129,10 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
           </div>
           {me ? (
             <div className="flex items-center gap-2">
-              <Link to={cabinetPath(me.role)} className={`${cta} whitespace-nowrap px-3.5 sm:px-5`}><span className="sm:hidden">Кабинет</span><span className="hidden sm:inline">Личный кабинет</span></Link>
+              <Link to={cabinetPath(me.role)} className={`${cta} whitespace-nowrap px-3.5 sm:px-5`}>
+                <span className="sm:hidden">Кабинет</span>
+                <span className="hidden sm:inline">Личный кабинет</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => signOut()}
@@ -110,8 +143,13 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
             </div>
           ) : (
             <>
-              <Link to="/login" className={`hidden rounded-lg px-2 py-2 text-sm font-semibold sm:inline-flex ${link}`}>Войти</Link>
-              <Link to="/register" className={`${cta} px-3 sm:px-5`}>Регистрация</Link>
+              <Link to="/login" className={`hidden rounded-lg px-2.5 py-2 text-sm font-semibold sm:inline-flex ${link}`}>
+                Войти
+              </Link>
+              <Link to="/register?role=employer" className={`${cta} whitespace-nowrap px-3.5 sm:px-5`} data-testid="header-cta-employer">
+                <span className="sm:hidden">Начать</span>
+                <span className="hidden sm:inline">Создать вакансию</span>
+              </Link>
             </>
           )}
         </div>
@@ -125,24 +163,28 @@ export function SiteFooter({ premium = false }: { premium?: boolean }) {
   const a = premium ? "np-navlink" : "hover:text-brand-night";
   return (
     <footer className={premium ? "np-footer" : "border-t border-brand-night/10 bg-white"}>
-      <div className={`mx-auto flex max-w-content flex-col gap-3 px-6 py-8 text-sm md:flex-row md:items-center md:justify-between ${premium ? "" : "text-brand-ink/70"}`}>
-        <p>Драфт — платформа обратного найма ИТ-специалистов (команда Neuropeople). Открытый код, лицензия MIT.</p>
-        <p className="flex flex-wrap gap-x-5 gap-y-2">
-          <a className={a} href="/pricing">Тарифы и пакеты ФСП</a>
-          <a className={a} href="/install">Приложение</a>
-          {juryTab && <a className={a} href="/expertise">Экспертиза ФСП</a>}
-          <a className={a} href="/validation">Как мы проверяем себя</a>
+      <div className={`mx-auto flex max-w-content flex-col gap-4 px-6 py-8 text-sm md:flex-row md:items-center md:justify-between ${premium ? "" : "text-brand-ink/70"}`}>
+        <div className="space-y-1">
+          <p className="font-semibold">Драфт — платформа подтверждённого найма ИТ-специалистов.</p>
+          <p className="text-xs opacity-75">Работодателям — готовые подборки по проверенным навыкам. Кандидатам — бесплатно.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <Link className={a} to="/pricing">Тарифы</Link>
+          <Link className={a} to="/support">Помощь и поддержка</Link>
+          <Link className={a} to="/install">На телефон / RuStore</Link>
+          <InstallAppButton premium={premium} />
+          {juryTab && <Link className={a} to="/demo">Демо для жюри</Link>}
           <a className={a} href="/api/docs">Документация API</a>
           <a className={a} href="/api/health">Статус сервиса</a>
-        </p>
+        </div>
       </div>
       <div className={`mx-auto max-w-content border-t px-6 py-4 text-xs leading-relaxed ${premium ? "border-white/10" : "border-brand-night/10 text-brand-ink/60"}`} data-testid="footer-legal">
         <p className="flex flex-wrap gap-x-4 gap-y-1">
-          <a className={a} href="/privacy">Политика обработки персональных данных</a>
-          <a className={a} href="/consent">Согласие на обработку данных</a>
-          <a className={a} href="/terms">Пользовательское соглашение</a>
-          <a className={a} href="/cookies">Cookie</a>
-          <a className={a} href="/recommendations">На платформе применяются рекомендательные технологии</a>
+          <Link className={a} to="/privacy">Политика обработки персональных данных</Link>
+          <Link className={a} to="/consent">Согласие на обработку данных</Link>
+          <Link className={a} to="/terms">Пользовательское соглашение</Link>
+          <Link className={a} to="/cookies">Cookie</Link>
+          <Link className={a} to="/recommendations">Правила рекомендательных технологий</Link>
         </p>
         <p className="mt-2">© 2026 команда Neuropeople · ИНН <реквизит> · ОГРН <реквизит> · <адрес> · Реестр операторов персональных данных Роскомнадзора, рег. № <реквизит> · <a className={a} href="mailto:<форма обратной связи>"><форма обратной связи></a></p>
       </div>

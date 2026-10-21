@@ -62,19 +62,19 @@ export default function FspRankConverter({ embedded = false }: { embedded?: bool
           </button>
         ))}
       </div>
-      <p className="text-xs text-brand-ink/65">{r.title} · подтверждается в паспорте ФСП как уровень доказательства <b>T2</b>.</p>
+      <p className="text-xs text-brand-ink/65">{r.title} · подтверждается в паспорте ФСП по официальному реестру федерации.</p>
 
       <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-lavender">1 · Байесовский старт теста</p>
-          <p className="mt-1.5 text-2xl font-extrabold tabular-nums text-brand-night">θ₀ {t(r.theta0)}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-lavender">1 · Адаптивный старт теста</p>
+          <p className="mt-1.5 text-2xl font-extrabold tabular-nums text-brand-night" title={`Смещение стартовой оценки θ₀ = ${t(r.theta0)}`}>Старт {r.start}</p>
           <Prior shift={r.theta0} />
           <p className="text-xs leading-relaxed text-brand-ink/75">
             Тест сразу начинает с задач уровня <b>{r.start}</b>: <b>{BASE_MINUTES} → {r.minutes}{NB}мин</b> (−{saved}{NB}мин, меньше лёгких вопросов).
           </p>
         </div>
         <div className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-lavender">2 · Вес T2 в ранжировании</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-lavender">2 · Вес ФСП в ранжировании</p>
           <p className="mt-1.5 text-2xl font-extrabold tabular-nums text-brand-night">+{r.weight}{NB}%</p>
           <div className="mt-2 h-2 rounded-full bg-brand-night/10" aria-hidden="true">
             <div className="h-2 rounded-full bg-brand-strong transition-all" style={{ width: `${r.weight * 10}%` }} />
@@ -96,7 +96,7 @@ export default function FspRankConverter({ embedded = false }: { embedded?: bool
           </p>
         </div>
       </div>
-      <p className="text-[11px] text-brand-ink/55">Буст сдвигает только старт теста: итоговый θ считается по ответам, разряд не заменяет проверку.</p>
+      <p className="text-[11px] text-brand-ink/55">Разряд сдвигает только старт теста: итоговый уровень считается по ответам, достижение не заменяет проверку.</p>
     </>
   );
   if (embedded) return <div className="space-y-4" data-testid="fsp-rank-converter">{body}</div>;

@@ -54,8 +54,10 @@ def fsp_origin(link_source: str | None, raw: dict | None = None, *, fsp_id_demo:
     if not link_source:
         return None
     reg = (raw or {}).get("registry") or {}
+    if reg.get("mode") == "protocol":
+        return tag("real", "Подтверждено по официальному протоколу ФСП (fsp-russia.ru)")
     if link_source == "demo":
-        return tag("model", "демо-паспорт ФСП: реестр ФСП на хакатоне недоступен")
+        return tag("model", "Реестр ФСП подключается по договору с федерацией")
     if reg.get("demo") or reg.get("mode") == "mock":
         return tag("stub", "демо-реестр ФСП по спецификации API реестра")
     if link_source == "keycloak":

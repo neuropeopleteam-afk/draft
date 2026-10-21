@@ -59,7 +59,7 @@ KEEP = {"probes", "invitations", "invitation_complaints", "invitation_counters",
         "invitation_events",
         "hiring_interviews", "hiring_offers", "hiring_outcomes"}  # этапы найма (Н8): история работодателя, тексты кандидата стираются
 # Таблицы, которые чистятся отдельными правилами ниже (SET NULL / переписка); статистика прохождения (У1) — отвязка от учётки
-HANDLED = {"contact_messages", "grade_passports", "sus_responses", "study_participants"}
+HANDLED = {"contact_messages", "grade_passports", "sus_responses", "study_participants", "support_tickets", "tariff_requests"}
 
 # Понятные названия категорий для кандидата (по таблицам); остальное — «Прочие данные учётной записи»
 LABELS: dict[str, str] = {
@@ -327,6 +327,15 @@ def erase(db: Session, user: User, *, reason: str = "user_request") -> Result:
     study_n = db.execute(update(StudyParticipant).where(StudyParticipant.user_id == uid).values(user_id=None)).rowcount
     if study_n:
         anonymized["Статистика прохождения — без привязки к учётной записи"] = study_n
+    # 4б. обращения в службу поддержки и заявки на тарифы (152-ФЗ): удаляем персональные данные пользователя
+    from app.modules.admin.models import SupportTicket, TariffRequest
+
+    sup_n = db.execute(delete(SupportTicket).where(or_(SupportTicket.user_id == uid, SupportTicket.email == email))).rowcount
+    if sup_n:
+        counts["support_tickets"] = sup_n
+    treq_n = db.execute(delete(TariffRequest).where(or_(TariffRequest.user_id == uid, TariffRequest.contact_email == email))).rowcount
+    if treq_n:
+        counts["tariff_requests"] = treq_n
     # 5. всё остальное по схеме БД — от листьев к корню
     owned = owned_tables(uid)
     for t in reversed(metadata.sorted_tables):

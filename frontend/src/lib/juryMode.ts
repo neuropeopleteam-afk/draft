@@ -2,30 +2,33 @@ import { useAuth } from "./auth";
 import { guide, isJury, scenario } from "./jury";
 import { useMeta } from "./meta";
 
-/** W2: вкладка «Экспертиза ФСП» в шапке. По умолчанию включена; VITE_JURY_TAB=false при сборке — скрыта
- *  (коммерческая выкладка без конкурсного хаба). */
+/** Вкладка «Демо для жюри» (/demo). По умолчанию включена; VITE_JURY_TAB=false при сборке — скрыта. */
 export const JURY_TAB = import.meta.env.VITE_JURY_TAB !== "false";
 
-/** Живой переключатель вкладки «Экспертиза ФСП» без пересборки: управляется одной командой на сервере (/opt/spectrek_fsp/ops/jury-tab off|on). */
+/** Показывать ли ссылку на раздел «Демо для жюри» (/demo) в навигации и подвале. */
 export function useJuryTab(): boolean {
   const meta = useMeta();
+  if (import.meta.env.VITE_JURY_DEMO === "true") return true;
   if (!JURY_TAB) return false;
-  if (meta && meta.jury_tab_enabled === false) return false;
+  if (meta && meta.jury_tab_enabled === false && meta.jury_mode_available === false) return false;
   return true;
+}
+
+/** Доступен ли маршрут /demo/* (meta.jury_mode_available || meta.jury_tab_enabled || VITE_JURY_DEMO, иначе 404). */
+export function useDemoAccess(): boolean {
+  const meta = useMeta();
+  if (import.meta.env.VITE_JURY_DEMO === "true") return true;
+  if (!meta) return JURY_TAB;
+  return Boolean(meta.jury_mode_available || meta.jury_tab_enabled);
 }
 
 const KEY = "jury_mode";
 
-/** Признак «на главную пришёл эксперт жюри или включён демо-режим жюри»: тогда на главной — компактная плашка
- *  быстрого старта проводника (section#jury), иначе главная — чистая витрина продукта.
- *  Признаки: демо-режим жюри на сервере (/api/meta jury_mode_available — стенд закрыт для всех, кроме экспертов
- *  по личной ссылке /x/<токен>: nginx ставит HttpOnly-cookie и уводит на «/», из JS её не видно), своя песочница
- *  жюри в браузере (jury_scenario), включённый проводник, вход демо-учёткой жюри, адрес /?jury или /#jury,
- *  сборка с VITE_JURY_DEMO=true. Адрес с ?jury запоминается в браузере. */
+/** Признак доступности демо-режима жюри на стенде. */
 export function useJuryMode(): boolean {
   const meta = useMeta();
   const { me } = useAuth();
-  if (meta && meta.jury_mode_available === false) {
+  if (meta && meta.jury_mode_available === false && import.meta.env.VITE_JURY_DEMO !== "true") {
     try {
       localStorage.removeItem(KEY);
       localStorage.removeItem("jury_scenario");
@@ -39,6 +42,17 @@ export function useJuryMode(): boolean {
     const q = new URLSearchParams(window.location.search);
     if (q.has("jury") || window.location.hash === "#jury") localStorage.setItem(KEY, "1");
     remembered = localStorage.getItem(KEY) === "1" || !!scenario.get() || guide.on();
-  } catch { /* localStorage недоступен — решаем по серверу и учётке */ }
+  } catch { /* ignore */ }
   return remembered || !!meta?.jury_mode_available || isJury(me?.email);
+}
+
+/**
+ * Хук изоляции демо-интерфейса:
+ * возвращает true ТОЛЬКО для демо-персон жюри (*@jury.example.com) при включённом демо-режиме.
+ * Обычный зарегистрированный работодатель, кандидат, аналитик ФСП или администратор не видит демо-панелей в кабинетах.
+ */
+export function useDemoUi(): boolean {
+  const { me } = useAuth();
+  const juryMode = useJuryMode();
+  return Boolean(isJury(me?.email) && juryMode);
 }

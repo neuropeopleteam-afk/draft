@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../components/CabinetLayout";
-import { Alert, Empty, Field, Level, Loading, Modal, Seg, Toggle, catTitle, dt, dtt, errText, rub, useApi } from "../components/ui";
+import { Alert, Empty, Field, Level, Loading, Modal, Seg, Toggle, catTitle, cleanCompanyName, dt, dtt, errText, rub, useApi } from "../components/ui";
 import { InlineThread } from "../components/Chat";
 import { BasisSeg, MarketNote, SalaryLine, otherBasis, salaryText, type Basis } from "../components/Salary";
 import { api, apiDownload, type Catalog } from "../lib/api";
 import { SusPrompt } from "./Sus";
 import { TrustBadge, TrustPanel, type Trust, type TrustShort } from "./Trust";
+import { VacancyGuardBadge } from "../components/MatchExplain";
 import { AtsStageBadge, atsPushText } from "./Ats";
 import { HhImportButton } from "./HhImport";  // Я12: своя вакансия с hh.ru → черновик (только при HH_ENABLED)
 import { AssignmentButton } from "../pages/assignments/Employer";  // задание к вакансии (И7)
@@ -95,10 +96,11 @@ function VacancyList() {
                   <p className="font-bold text-brand-night">{v.title}</p>
                   {v.my_application && <AppStatus s={v.my_application.status} />}
                 </div>
-                <p className="text-sm text-brand-ink/65">{v.company.name}{v.city ? ` · ${v.city}` : ""} · {FORMAT[v.work_format]}</p>
+                <p className="text-sm text-brand-ink/65">{cleanCompanyName(v.company.name)}{v.city ? ` · ${v.city}` : ""} · {FORMAT[v.work_format]}</p>
                 <p className="text-lg font-extrabold text-brand-night">{salaryText(v.salary_from, v.salary_to, v.salary_basis)}</p>
                 <div className="mt-auto flex flex-wrap items-center gap-2">
                   {v.category_title && <span className="rounded-full bg-[#F3F2FB] px-2.5 py-1 text-xs font-semibold text-brand-night">{v.category_title}</span>}
+                  <VacancyGuardBadge vacancy={v} trust={v.trust} guard={(v as any).vacancy_guard} compact />
                   <TrustBadge t={v.trust} compact />
                   {v.is_demo && <span className="text-xs text-brand-ink/65">демо</span>}
                 </div>
@@ -128,8 +130,9 @@ function VacancyModal({ v, onClose, onApplied }: { v: Vacancy | null; onClose: (
     <Modal open={!!v} onClose={() => { setDone(false); setLetter(""); setConsent(false); setErr(null); onClose(); }} title={v?.title ?? ""}>
       {!d ? <Loading /> : (
         <div className="space-y-4 text-sm">
-          <p className="text-brand-ink/65"><Link to={`/candidate/companies/${d.company.id}`} className="font-semibold text-brand hover:underline">{d.company.name}</Link>{d.company.industry ? ` · ${d.company.industry}` : ""}{d.city ? ` · ${d.city}` : ""} · {FORMAT[d.work_format]}</p>
+          <p className="text-brand-ink/65"><Link to={`/candidate/companies/${d.company.id}`} className="font-semibold text-brand hover:underline">{cleanCompanyName(d.company.name)}</Link>{d.company.industry ? ` · ${d.company.industry}` : ""}{d.city ? ` · ${d.city}` : ""} · {FORMAT[d.work_format]}</p>
           <SalaryLine big from={d.salary_from} to={d.salary_to} basis={d.salary_basis} />
+          <VacancyGuardBadge vacancy={d} trust={d.trust} guard={(d as any).vacancy_guard} />
           <MarketNote m={d.market_range} title={`Рынок категории «${d.category_title}»`} />
           <p className="whitespace-pre-line text-brand-ink/80">{d.description}</p>
           {d.stack.length > 0 && <div className="flex flex-wrap gap-1.5">{d.stack.map((s) => <span key={s.tag} className="rounded-full bg-brand-blush/50 px-2.5 py-1 text-xs font-semibold text-brand-plum">{s.title}</span>)}</div>}
@@ -166,7 +169,7 @@ function MyApplications() {
       {data.map((a) => (
         <article key={a.id} className="card space-y-3">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><p className="font-bold text-brand-night">{a.vacancy_title}</p><p className="text-sm text-brand-ink/65">{a.company.name} · {salaryText(a.salary_from, a.salary_to, a.salary_basis)} · отклик {dt(a.created_at)}</p></div>
+            <div><p className="font-bold text-brand-night">{a.vacancy_title}</p><p className="text-sm text-brand-ink/65">{cleanCompanyName(a.company.name)} · {salaryText(a.salary_from, a.salary_to, a.salary_basis)} · отклик {dt(a.created_at)}</p></div>
             <div className="flex flex-wrap items-center gap-2">
               {a.thread?.unread > 0 && <span className="rounded-full bg-brand-strong px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {a.thread.unread}</span>}
               <AtsStageBadge s={a.ats_stage} /><AppStatus s={a.status} />

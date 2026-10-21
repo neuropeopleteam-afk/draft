@@ -1,28 +1,31 @@
-// Елена — живой проводник «как по видеосвязи». Один микрофон на весь разговор (LiveListener), голос — в видеопоток
-// аватара (Voice), решения по ходу разговора — сервер (/api/interview/concierge/turn, поток NDJSON: сильная модель
-// с базой знаний, памятью разговора и фоновым наставником), постоянные фразы и реплики обзора — из кэша, заранее
-// загруженные в память (переходы без пауз).
+// Настя — живой проводник «как по видеосвязи». Один микрофон на весь разговор (LiveListener), голос — в видеопоток
+// аватара (Voice), решения по ходу разговора — сервер (/api/interview/concierge/turn, поток NDJSON: модель с базой
+// знаний, памятью разговора и фоновым наставником), постоянные фразы и реплики обзора — из кэша, заранее загруженные
+// в память (переходы без пауз).
 //
-// Правила разговора:
-//  • знакомство: спрашивает, как обращаться, запоминает имя (и в следующий визит здоровается по имени; имя с прошлого
-//    визита сервер проверяет — служебное слово вроде «Сразу» не имя);
-//  • Елену не перебивают: фразу она всегда договаривает; сказанное поверх неё слышит и отвечает, договорив (эхо и
-//    «угу» — не реплики); обзор при этом дальше не идёт;
-//  • она не перебивает человека: конец хода — только после паузы (длиннее для незаконченной мысли, короче для команд),
-//    пока человек говорит — новую реплику не начинает;
-//  • спросила — ждёт ответа и сама дальше не идёт (одно короткое напоминание через 25 с, потом просто ждёт);
-//  • между разделами обзора (кандидат → работодатель → Федерация → жюри) спрашивает, есть ли вопросы, и ждёт;
-//    после ответа на вопрос посреди обзора спрашивает «Продолжаем?»; «пропусти» — к следующему разделу;
-//  • модель думает дольше 0,45 с — короткая связка («Секунду.»), ответ встаёт сразу за ней;
+// Устройство разговора — полудуплекс, как у работающих живых стендов:
+//  • пока Настя думает или говорит, микрофон закрыт (в распознавание идёт тишина) и открывается через ~0,45 с после
+//    конца её фразы — нет эха, фантомных реплик и перебивания; её не перебивают голосом, только кнопкой паузы;
+//  • микрофон открыт ровно в двух состояниях — «слушаю» (listening) и «пауза» (paused): после её вопроса, в окне между
+//    экранами обзора и когда обзор остановлен; индикатор на кнопке микрофона показывает, слышит ли она сейчас;
+//  • конец хода собеседника — по паузе в речи (поставщик ждёт 0,7 с; дальше своя пауза по виду фразы: команда — быстро,
+//    незаконченная мысль — дольше); пока человек говорит, новую реплику Настя не начинает;
+//  • спросила — ждёт ответа и сама дальше не идёт (одно короткое напоминание через 25 с; долгое молчание — прощается
+//    и уходит в угол, чтобы не жечь минуты видеопотока);
 //  • обзор: шаг = экран, на каждую короткую реплику — свой блок (подсветка, прокрутка, «нажатие» в нужный момент);
+//    после каждого экрана — короткое окно для реплики человека; между разделами (кандидат → работодатель → Федерация →
+//    жюри) — вопрос «Есть вопросы?» и ожидание; после ответа на вопрос посреди обзора — «Продолжаем?»;
 //  • «покажи …» посреди обзора — экран дальше по обзору: идём вперёд с него; другой экран — показать и спросить,
-//    вернуться ли к обзору;
+//    вернуться ли к обзору; «пропусти» — к следующему разделу;
 //  • каждая встреча пишется в стенограмму на сервере (реплики, шаги, решения).
+//
+// Один «эпизод» (ep) — одна линия действий (ход, обзор, пауза): новая линия обрывает старую, поэтому состояний мало:
+// pos — где обзор говорит сейчас, resumeAt — где его продолжить после вопроса/паузы/отхода, awaiting — чего Настя ждёт.
 import { apiUrl, tokenStore, type MeOut } from "../../lib/api";
 import type { Persona } from "../../lib/jury";
 import type { AnamHandle } from "../voice/AnamAvatar";
 import { LiveListener, liveSttSupported, type MicState, type SttEvent } from "../voice/live/listener";
-import { SpeechBuffer, isBackchannel, isEcho, words } from "../voice/live/turns";
+import { SpeechBuffer, hasStopWord, isBackchannel, isEcho, words } from "../voice/live/turns";
 import { Voice, type SayResult, type Utterance } from "../voice/live/voice";
 import { fetchPhrasePcm } from "../voice/live/decode";
 import { STEPS, TRACKS, type Beat, type Cabinet, type TourStep, type TourTrack } from "./steps";
@@ -35,6 +38,8 @@ export interface ElenaUi {
   mic: MicState;
   speaking: boolean;
   userTalking: boolean;
+  /** Микрофон открыт — Настя слышит собеседника (между экранами, после своего вопроса, на паузе). */
+  hearing: boolean;
   track: TourTrack | null;
   /** Номер шага обзора (с 1); 0 — обзор не идёт. */
   stepNo: number;
@@ -56,6 +61,10 @@ export interface ElenaDeps {
   login: (p: Persona, next: string) => Promise<string>;
   onUi: (ui: ElenaUi) => void;
   onClose: () => void;
+  /** Без видеопотока (проверки, экономия минут): голос — через Web Audio, портрет статичный. */
+  noVideo?: boolean;
+  /** Проверки без микрофона: считать микрофон включённым, реплики человека — текстом через injectUser(). */
+  fakeMic?: boolean;
 }
 
 interface Bridge { first?: string; first_named?: string; next?: string }
@@ -72,6 +81,8 @@ interface Script {
   fillers: string[];
   beats?: Record<string, string[]>;
   steps: Record<string, string>;
+  /** Потолок одного разговора, минут (минуты видеопотока платные): по истечении Настя прощается и закрывается. */
+  max_minutes?: number;
 }
 
 interface Meta {
@@ -82,6 +93,7 @@ interface Meta {
   user_name?: string | null;
   text?: string;
   kind?: string;
+  phrase?: string | null;
 }
 
 interface Pos { ids: string[]; track: TourTrack | null; i: number; b: number }
@@ -90,12 +102,22 @@ const RATE = 24000;
 const BYTES_PER_MS = (RATE * 2) / 1000;
 const PIPE_MS = 650;               // звук из видеопотока звучит примерно через столько после отправки
 const REMIND_AFTER_MS = 25000;     // спросила и ждёт: одно короткое напоминание, потом просто ждёт
-const FILLER_AFTER_MS = 450;
+const IDLE_CLOSE_MS = 120000;      // после напоминания никто не ответил — прощается и закрывается (минуты видеопотока)
+const IDLE_FREE_MS = 180000;       // свободное ожидание без вопроса (обзор закончен) — дольше
+const FILLER_AFTER_MS = 1500;      // модель думает дольше — короткая связка («Секунду.»), быстрые ответы без неё
 const STALE_INTERIM_MS = 2600;     // промежуточный текст не меняется — считаем фразу законченной
 const LOOKAHEAD_MS = 4500;         // звук в видеопоток — с запасом: подвисание страницы при переходе не рвёт фразу
-const REPEAT_IF_HEARD_LESS = 0.6;
-const BEAT_GAP_MS = 420;           // пауза между репликами обзора — спокойный темп без «провалов»
+const GATE_AFTER_SPEECH_MS = 450;  // микрофон открывается через столько после конца её фразы (хвост из динамиков)
+const GATE_TAIL_IGNORE_MS = 250;   // текст, пришедший сразу после открытия микрофона, — хвост её голоса
+const WINDOW_MS = 2300;            // окно для реплики человека после экрана обзора (с учётом GATE_AFTER_SPEECH_MS)
+const WINDOW_MAX_WAIT_MS = 7000;   // речь началась, а слов нет (шум) — обзор продолжается
+const BEAT_GAP_MS = 650;           // пауза между репликами обзора — спокойный темп, не «тараторит»
+const BARGE_MIN_WORDS = 3;         // перебивание: столько слов подряд не из её текста — Настя замолкает и слушает
+const BARGE_FINAL_WORDS = 2;       // законченный сегмент распознавания из стольких слов — тоже перебивание
+const SOFT_ASK_EVERY = 3;          // каждые столько экранов раздела — короткий вопрос («Продолжаем или показать что-то конкретное?»)
+const ALL_TRACK_MAX_BEATS = 3;     // обзор всего сайта — не больше стольких реплик на экран (подробно — обзор роли)
 const POINT_HOLD_MS = 6000;
+const REPEAT_IF_HEARD_LESS = 0.6;
 const NAME_KEY = "draft.elena.name";
 const OLD_NAME_KEY = "draft.concierge.name";
 
@@ -105,7 +127,7 @@ type Awaiting = "start" | "checkin" | "continue" | "detour" | "answer" | null;
 
 // Конец хода собеседника: сколько ждать тишины после окончательного сегмента распознавания (поставщик уже выждал
 // ~0,7 с). Незаконченная мысль («и», «а можно», «потому что») — долго; короткая команда — быстро.
-const UNFINISHED_END = /(?:^|\s)(и|а|но|или|что|чтобы|потому|поэтому|если|когда|как|это|ну|вот|например|то есть|типа|в|на|с|по|для|из|от|к|у|о|об|про|за|который|которая|которые|можно|мне|я|так|значит|подожди|подождите|слушай|смотри|э+|м+)$/u;
+const UNFINISHED_END = /(?:^|\s)(и|а|но|или|что|чтобы|потому|поэтому|если|когда|как|это|ну|вот|например|то есть|типа|в|на|с|по|для|из|от|к|у|о|об|про|за|который|которая|которые|можно|мне|я|так|значит|подожди|подождите|слушай|смотри|тут|здесь|там|сейчас|допустим|скажи|скажите|пожалуйста|вот тут|смотрите|э+|м+)$/u;
 const COMMAND = /^(стоп|стой|дальше|да|нет|неа|пауза|назад|повтори|повторите|давай|давайте|продолжай|продолжаем|продолжим|поехали|хорошо|ага|угу|нету|нет вопросов|вопросов нет|да давай|давай дальше|нет дальше|пропусти|пропустим|спасибо|понятно|ясно)$/u;
 
 export function guideDelay(text: string): number {
@@ -173,7 +195,15 @@ export function topInset(): number {
   return Math.round(inset || 64);
 }
 
-/** Что сейчас на экране — заголовок и видимые надписи (Елена отвечает «по экрану» и может показать элемент). */
+/** Высота нижней панели навигации кабинетов на телефоне (--mobile-tabbar-h на documentElement; 0 — панели нет). */
+export function tabbarInset(): number {
+  try {
+    const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--mobile-tabbar-h").trim());
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+  } catch { return 0; }
+}
+
+/** Что сейчас на экране — заголовок и видимые надписи (Настя отвечает «по экрану» и может показать элемент). */
 function screenSnapshot(): { title: string; items: string[] } {
   const root = document.querySelector("main") ?? document.body;
   const title = norm(root.querySelector("h1")?.textContent) || document.title;
@@ -228,47 +258,55 @@ export class ElenaEngine {
   private queue: string[] = [];
   private loading = 0;
   private ui: ElenaUi = {
-    phase: "idle", mic: "off", speaking: false, userTalking: false, track: null, stepNo: 0, stepTotal: 0,
-    target: null, click: null, canPause: false, stage: "corner",
+    phase: "idle", mic: "off", speaking: false, userTalking: false, hearing: false, track: null, stepNo: 0, stepTotal: 0,
+    target: null, click: null, canPause: false, stage: "large",   // знакомство — большое окно по центру, обзор — в углу
   };
   private closed = false;
   private ep = 0;                       // текущая «линия» действий; новая линия (ход, пауза, закрытие) обрывает старую
   private buf = new SpeechBuffer();
-  private carry = "";                   // ход, отправленный, но ещё без ответа, — склеивается с продолжением фразы
-  private pendingText = "";
   private turnCtl: AbortController | null = null;
-  private replyStarted = false;
   private endTimer = 0;
   private staleTimer = 0;
+  private remindTimer = 0;
   private idleTimer = 0;
-  private resumeTimer = 0;
   private clickTimer = 0;
   private pointTimer = 0;
-  private speakTick = 0;
+  private tick = 0;
   private history: { who: "elena" | "user"; text: string }[] = [];
   private userName: string | null = null;
+  // микрофон
+  private thinking = false;             // ход ушёл на сервер, ответ ещё не зазвучал — микрофон закрыт
+  private gateUntil = 0;                // микрофон закрыт до этого момента после конца её фразы
+  private gateOpenedAt = 0;
+  private gated = true;
+  private wasSpeaking = false;
+  private lastSpeechStart = 0;          // человек начал говорить (событие поставщика) при открытом микрофоне
   // обзор
-  private pos: Pos | null = null;       // где обзор сейчас (шаг и реплика)
-  private touring = false;              // идёт обзор (реплика или переход к ней)
-  private paused = false;               // пауза по просьбе человека
-  private resumePending = false;        // обзор прерван вопросом — продолжить после ответа
-  private detour: Pos | null = null;    // «покажи …» посреди обзора — куда вернуться
-  private heard = 1;                    // какая доля прерванной реплики прозвучала
-  private stepUtter: Utterance | null = null;
-  private lastCabinet: Cabinet | null = null;
-  private lastTrack: TourTrack | null = null;
+  private pos: Pos | null = null;       // где обзор говорит сейчас (реплика)
+  private lastBeat: Pos | null = null;  // последняя прозвучавшая реплика обзора («повтори», «назад»)
+  private resumeAt: Pos | null = null;  // где продолжить прерванный обзор (вопрос, пауза, отход)
+  private tourTrack: TourTrack | null = null;   // обзор начат и не закончен (идёт, ждёт или на паузе)
+  private paused = false;               // пауза по просьбе человека или кнопкой
+  private curStep: string | null = null;        // последний открытый экран обзора (для сервера)
+  private lastCabinet: Cabinet | null = null;   // связка этого раздела уже звучала
+  private lastTrack: TourTrack | null = null;   // последний завершённый обзор («дальше» после конца)
+  private shownSteps = new Set<string>();
+  private doneSteps = new Set<string>();     // экраны, рассказанные до конца: при повторном обзоре — коротко, одной репликой
+  private sinceAsk = 0;                      // экранов раздела с последнего вопроса человеку
+  private softIdx = 0;
+  private ducked = false;
   private lastSaid = "";
+  private lastAsked = false;            // ответ закончился вопросом — Настя ждёт ответа
   private lastFiller = "";
+  private stepUtter: Utterance | null = null;
+  private awaiting: Awaiting = null;    // чего ждёт после своей реплики (уходит на сервер вместе с ходом)
+  private noMic = false;                // микрофона нет — ведёт сама, без окон и вопросов между разделами
+  private pendingBridge: string | null = null;  // короткая связка перед продолжением обзора («Продолжаю.»)
+  private timeUpTimer = 0;              // потолок разговора
+  private startedAt = performance.now();
   private micKnown: Promise<MicState> | null = null;
   private lastMicLogged: MicState | null = null;
   private viewSeq = 0;
-  private submitWait = 0;               // реплика человека ждёт, пока Елена договорит фразу
-  private replyBusy = false;            // ответ прозвучал, но его действие (обзор, переход) ещё не началось
-  private shownSteps = new Set<string>();
-  private lastAsked = false;            // ответ закончился вопросом — Елена ждёт ответа
-  private awaiting: Awaiting = null;    // чего ждёт после своей реплики (уходит на сервер вместе с ходом)
-  private reminded = false;             // напоминание в этом ожидании уже звучало
-  private noMic = false;                // микрофона нет — ведёт сама, без вопросов между разделами
 
   constructor(private d: ElenaDeps) {
     this.voice = new Voice(d.avatar, { lookaheadMs: LOOKAHEAD_MS });
@@ -282,31 +320,54 @@ export class ElenaEngine {
   private set(p: Partial<ElenaUi>) {
     if (this.closed) return;
     this.ui = { ...this.ui, ...p };
-    this.ui.canPause = this.touring || this.paused || this.resumePending;
+    this.ui.canPause = !!this.tourTrack;
     this.d.onUi(this.ui);
   }
 
   getUi(): ElenaUi { return this.ui; }
-  micLevel(): number { return this.listener?.level() ?? 0; }
+  micLevel(): number { return this.gated ? 0 : this.listener?.level() ?? 0; }
   isMuted(): boolean { return this.listener?.isMuted() ?? false; }
   /** Кнопка «развернуть / в угол». */
   setStage(stage: Stage) { this.set({ stage }); }
 
-  /** Индикатор «Елена говорит» — по фактическому звуку (видеопоток или запасной голос). */
-  private watchSpeaking() {
-    window.clearInterval(this.speakTick);
-    this.speakTick = window.setInterval(() => {
+  /** Микрофон закрыт: Настя думает, только что договорила (хвост из динамиков) или занята переходом. Открыт — когда
+   *  слушает, и пока она говорит в обзоре или отвечает: несколько слов не из её текста — перебивание (эхо и «угу» отсекаются). */
+  private micGated(): boolean {
+    if (this.closed || this.thinking) return true;
+    if (performance.now() < this.gateUntil && !this.buf.read()) return true;   // человек уже говорит — не закрываем
+    const ph = this.ui.phase;
+    if (ph === "listening" || ph === "paused") return false;
+    if (this.voice.speaking() && (ph === "touring" || ph === "answering")) return false;
+    return true;
+  }
+
+  /** Такт 100 мс: индикатор «говорит», открытие микрофона после её фразы, сброс накопленного при закрытом микрофоне. */
+  private watch() {
+    window.clearInterval(this.tick);
+    this.tick = window.setInterval(() => {
+      if (this.closed) return;
       const s = this.voice.speaking();
       if (s !== this.ui.speaking) this.set({ speaking: s });
-    }, 150);
+      if (this.wasSpeaking && !s) this.gateUntil = performance.now() + GATE_AFTER_SPEECH_MS;
+      this.wasSpeaking = s;
+      const g = this.micGated();
+      if (g !== this.gated) {
+        this.gated = g;
+        if (!g) { this.buf.reset(); this.gateOpenedAt = performance.now(); }
+        else if (this.ui.userTalking) this.set({ userTalking: false });
+      }
+      const hearing = !g && this.ui.mic === "on";
+      if (hearing !== this.ui.hearing) this.set({ hearing });
+      if (this.ducked && (!s || !this.buf.read())) { this.ducked = false; this.voice.duck(false); }
+    }, 100);
   }
 
   // ------------------------------------------------------------------ стенограмма
 
-  private post(type: "open" | "say" | "step" | "close" | "mic" | "point", extra: { text?: string; step?: string | null } = {}) {
+  private post(type: "open" | "say" | "step" | "close" | "mic" | "point" | "barge", extra: { text?: string; step?: string | null } = {}) {
     const body = JSON.stringify({
       session_id: this.sid, type, text: (extra.text ?? "").slice(0, 1200), step: extra.step ?? null,
-      path: this.d.path().slice(0, 200), name: this.userName, role: this.pos?.track ?? null,
+      path: this.d.path().slice(0, 200), name: this.userName, role: this.tourTrack ?? null,
     });
     const url = apiUrl("/interview/concierge/event");
     try {
@@ -326,6 +387,12 @@ export class ElenaEngine {
 
   private named(text: string | undefined): string {
     return (text ?? "").replace("{name}", this.userName ?? "").trim();
+  }
+
+  private remember(who: "elena" | "user", text: string) {
+    if (!text) return;
+    this.history.push({ who, text });
+    if (this.history.length > 12) this.history.splice(0, this.history.length - 12);
   }
 
   // ------------------------------------------------------------------ голос
@@ -378,7 +445,7 @@ export class ElenaEngine {
     const pcm = await this.pcm(text);
     if (!this.alive(ep)) return "aborted";
     this.lastSaid = text;
-    if (log) this.post("say", { text, step: this.pos ? this.pos.ids[this.pos.i] : null });
+    if (log) this.post("say", { text, step: this.pos ? this.pos.ids[this.pos.i] : this.curStep });
     if (!pcm) {
       onStart?.({ text, startedAt: performance.now(), durationMs: 0, push: () => undefined, end: async () => "done", progress: () => 1 } as Utterance, 0);
       await sleep(Math.min(6000, 900 + text.length * 45));
@@ -388,15 +455,35 @@ export class ElenaEngine {
     return this.voice.say(text, pcm, RATE, (u) => onStart?.(u, total));
   }
 
+  private phrase(key: string): string {
+    const sc = this.script;
+    if (!sc) return "";
+    const n = sc.phrases_named?.[key];
+    return n && this.userName ? this.named(n) : sc.phrases[key] ?? "";
+  }
+
+  private bridgeText(cab: Cabinet, first: boolean, withName: boolean): string | null {
+    const b = this.script?.bridges[cab];
+    if (!b) return null;
+    if (typeof b === "string") return first ? null : b;
+    if (first) return (withName && this.userName && b.first_named ? this.named(b.first_named) : b.first) || null;
+    return b.next || null;
+  }
+
   // ------------------------------------------------------------------ запуск и закрытие
 
   /** Вызывать прямо из обработчика нажатия: звук и микрофон разрешаются жестом пользователя. */
   start(track?: TourTrack, stepIndex = 0) {
     this.voice.unlock();
-    this.watchSpeaking();
-    if (liveSttSupported()) {
+    this.watch();
+    if (track) this.set({ stage: "corner" });   // запуск сразу с обзора — без большого окна
+    if (this.d.fakeMic) {
+      this.set({ mic: "on" });
+      this.micKnown = Promise.resolve<MicState>("on");
+    } else if (liveSttSupported()) {
       this.listener = new LiveListener({
         path: "/api/interview/live/stt?p=guide",
+        gate: () => this.micGated(),
         onEvent: (e) => this.onStt(e),
         onState: (s) => {
           this.set({ mic: s });
@@ -431,6 +518,7 @@ export class ElenaEngine {
   }
 
   private async waitAvatar(ms: number): Promise<boolean> {
+    if (this.d.noVideo) return false;
     const t0 = performance.now();
     while (!this.d.avatar() && performance.now() - t0 < 600) await sleep(30);
     const a = this.d.avatar();
@@ -443,29 +531,15 @@ export class ElenaEngine {
     return sc.greeting;
   }
 
-  private bridgeText(cab: Cabinet, first: boolean, withName: boolean): string | null {
-    const b = this.script?.bridges[cab];
-    if (!b) return null;
-    if (typeof b === "string") return first ? null : b;
-    if (first) return (withName && this.userName && b.first_named ? this.named(b.first_named) : b.first) || null;
-    return b.next || null;
-  }
-
-  private phrase(key: string): string {
-    const sc = this.script;
-    if (!sc) return "";
-    const n = sc.phrases_named?.[key];
-    return n && this.userName ? this.named(n) : sc.phrases[key] ?? "";
-  }
-
   private async boot(track?: TourTrack, stepIndex = 0) {
     const ep = ++this.ep;
     this.set({ phase: "connecting" });
-    this.d.avatar()?.connect();
+    if (!this.d.noVideo) this.d.avatar()?.connect();
     const sc = await this.loadScript();
     if (!this.alive(ep)) return;
     if (!sc) { this.close(); return; }
     this.script = sc;
+    this.armTimeUp(sc.max_minutes);
     if (this.userName && sc.name_ok !== undefined && sc.name_ok !== this.userName) {
       // имя с прошлого визита не похоже на имя («Сразу») — знакомимся заново; похоже — в правильной форме
       this.userName = sc.name_ok || null;
@@ -478,40 +552,47 @@ export class ElenaEngine {
     const greet = track ? Promise.resolve(null) : this.pcm(greetText);
     const firstIds = TRACKS[track ?? "all"];
     // остальное — в фоне после приветствия: на медленной связи приветствие не делит канал с предзагрузкой
-    const rest = [sc.nudge, sc.nudge_role, ...sc.fillers.slice(0, 3), ...this.linesOf(firstIds[stepIndex] ?? ""),
+    const rest = [sc.nudge, sc.nudge_role, ...this.linesOf(firstIds[stepIndex] ?? ""),
       this.bridgeText("candidate", true, false), sc.phrases.ask_role, sc.phrases.pause, sc.phrases.goto,
       sc.phrases.continue, sc.phrases.listen, sc.phrases.checkin_candidate, sc.phrases.continue_employer,
-      ...this.linesOf(firstIds[stepIndex + 1] ?? ""), ...sc.fillers.slice(3), sc.phrases.nomic, sc.phrases.back_to_tour,
-      sc.phrases.remind_start, sc.phrases.no_more];
+      ...this.linesOf(firstIds[stepIndex + 1] ?? ""), ...sc.fillers.slice(0, 2), sc.phrases.nomic, sc.phrases.back_to_tour,
+      sc.phrases.remind_start, sc.phrases.no_more, sc.phrases.idle_bye, sc.phrases.sorry, sc.phrases.resume_tour,
+      sc.phrases.back_tour, sc.phrases.time_up];
     void Promise.race([greet, sleep(2500)]).then(() => { if (!this.closed) this.prefetch(rest); });
     // поток аватара и звук приветствия — параллельно; ждём не дольше 6 с, иначе говорим запасным голосом
     await Promise.race([Promise.all([this.waitAvatar(6000), greet]), sleep(6500)]);
     if (!this.alive(ep)) return;
-    if (track) { void this.runTour(track, stepIndex, 0, ep, { bridge: true, named: true }); return; }
-    const mic = this.listener?.getState() ?? "error";
+    if (track) {
+      this.tourTrack = track;
+      void this.runTour({ ids: TRACKS[track], track, i: stepIndex, b: 0 }, ep, { bridge: true, named: true });
+      return;
+    }
+    const mic: MicState = this.d.fakeMic ? "on" : this.listener?.getState() ?? "error";
     if (mic === "denied" || mic === "nodevice" || mic === "error") {
       this.noMic = true;
       this.set({ phase: "greeting" });
       if ((await this.sayText(sc.phrases.nomic, ep)) !== "done") return;
-      void this.runTour("all", 0, 0, ep, { bridge: true, named: true });
+      this.tourTrack = "all";
+      void this.runTour({ ids: TRACKS.all, track: "all", i: 0, b: 0 }, ep, { bridge: true, named: true });
       return;
     }
     this.set({ phase: "greeting" });
     const r = await this.sayText(greetText, ep);
     if (r !== "done" || !this.alive(ep)) return;
     this.remember("elena", greetText);
-    this.set({ phase: "listening" });
     // разрешение на микрофон ещё не дано — ждём решения (до 10 с), потом решаем, слушать или вести самой
     const st = await Promise.race([this.micKnown ?? Promise.resolve<MicState>("error"), sleep(10000).then(() => "connecting" as MicState)]);
     if (!this.alive(ep)) return;
-    const nudge = this.userName ? (sc.nudge_role ?? sc.nudge) : sc.nudge;
     if (st !== "on" && st !== "muted") {
       this.noMic = true;
+      const nudge = this.userName ? (sc.nudge_role ?? sc.nudge) : sc.nudge;
       if ((await this.sayText(nudge, ep)) !== "done") return;
-      void this.runTour("all", 0, 0, ep, { bridge: true, named: true });
+      this.tourTrack = "all";
+      void this.runTour({ ids: TRACKS.all, track: "all", i: 0, b: 0 }, ep, { bridge: true, named: true });
       return;
     }
     // спросила (имя или что показать) — ждёт ответа; сама обзор не начинает
+    this.lastAsked = true;
     this.waitFor("start", ep, "remind_start");
   }
 
@@ -519,12 +600,13 @@ export class ElenaEngine {
     if (this.closed) return;
     this.post("close");
     this.ep++;
-    this.clearAll();
+    this.clearTimers();
+    window.clearTimeout(this.timeUpTimer);
     this.turnCtl?.abort();
     this.voice.close();
     this.listener?.stop();
-    window.clearInterval(this.speakTick);
-    this.set({ phase: "idle", target: null, click: null, stepNo: 0, speaking: false });
+    window.clearInterval(this.tick);
+    this.set({ phase: "idle", target: null, click: null, stepNo: 0, speaking: false, hearing: false });
     this.closed = true;
     this.d.onClose();
   }
@@ -535,57 +617,119 @@ export class ElenaEngine {
     this.set({ mic: this.listener.getState() });
   }
 
-  /** Кнопка паузы: остановить обзор / продолжить с того же места. */
+  /** Кнопка паузы: остановить обзор (и её фразу) сейчас же / продолжить с того же места. */
   togglePause() {
     if (this.paused) {
       this.paused = false;
       const ep = ++this.ep;
-      void this.resumeTour(ep);
+      this.clearTimers();
+      this.pendingBridge = this.phrase("resume_tour") || null;
+      if (this.resumeAt) void this.runTour(this.resumeAt, ep, { bridge: true });
+      else if (this.tourTrack) void this.finishTour(this.tourTrack, ep);
+      else this.waitFor(null, ep, null);
       return;
     }
-    if (!this.touring && !this.resumePending) return;
-    this.heard = this.stepUtter ? this.stepUtter.progress() : 1;
+    if (!this.tourTrack) return;
+    const heard = this.stepUtter ? this.stepUtter.progress() : 1;
     this.ep++;
-    this.clearAll();
+    this.clearTimers();
     this.turnCtl?.abort();
+    this.turnCtl = null;
+    this.thinking = false;
     this.voice.stop();
-    this.touring = false;
-    this.resumePending = false;
+    if (this.pos) this.resumeAt = this.advance(this.pos, heard);
+    this.pos = null;
+    this.stepUtter = null;
     this.paused = true;
+    this.awaiting = null;
     this.set({ phase: "paused", click: null });
   }
 
-  // ------------------------------------------------------------------ таймеры
-
-  private clearAll() {
-    for (const t of [this.endTimer, this.staleTimer, this.idleTimer, this.resumeTimer, this.clickTimer, this.pointTimer]) window.clearTimeout(t);
-    window.clearInterval(this.submitWait);
-    this.endTimer = this.staleTimer = this.idleTimer = this.resumeTimer = this.clickTimer = this.pointTimer = this.submitWait = 0;
+  /** Для проверок без микрофона (window.__elena.say): реплика собеседника текстом. */
+  injectUser(text: string) {
+    if (this.closed || !text.trim()) return;
+    this.buf.reset();
+    void this.runTurn(text.trim());
   }
 
-  private armIdle(ep: number, ms: number, fn: () => void) {
-    window.clearTimeout(this.idleTimer);
-    this.idleTimer = window.setTimeout(() => {
-      this.idleTimer = 0;
-      if (!this.alive(ep) || this.buf.read() || this.voice.speaking() || this.turnCtl) return;
-      fn();
-    }, ms);
+  /** Для проверок: событие распознавания как от микрофона (перебивание, эхо, окна между экранами). */
+  injectStt(e: SttEvent) { this.onStt(e); }
+
+  /** Для проверок (window.__elena.hear): «произнести» фразу как собеседник — слово за словом, как присылает распознавание. */
+  async hear(text: string, wordMs = 220) {
+    const w = text.trim().split(/\s+/).filter(Boolean);
+    if (!w.length) return;
+    this.onStt({ type: "speech_started" });
+    for (let i = 1; i <= w.length; i++) { await sleep(wordMs); this.onStt({ type: "interim", text: w.slice(0, i).join(" ") }); }
+    await sleep(wordMs);
+    this.onStt({ type: "final", text: w.join(" "), speech_final: true });
   }
 
-  private clearIdle() { window.clearTimeout(this.idleTimer); this.idleTimer = 0; window.clearTimeout(this.resumeTimer); this.resumeTimer = 0; }
+  // ------------------------------------------------------------------ таймеры и ожидание
 
-  /** Елена спросила и ждёт ответа: сама дальше не идёт; одно короткое напоминание, если человек долго молчит. */
+  /** Потолок разговора: минуты видеопотока платные — по истечении Настя договаривает фразу, прощается и закрывается. */
+  private armTimeUp(minutes: number | undefined) {
+    window.clearTimeout(this.timeUpTimer);
+    const m = Number(minutes) || 0;
+    if (m <= 0) return;   // без потолка (по умолчанию): разговор длится, сколько нужно; долгое молчание закрывает само
+    const ms = m * 60000 - (performance.now() - this.startedAt);
+    this.timeUpTimer = window.setTimeout(() => void this.timeUp(), Math.max(1000, ms));
+  }
+
+  private async timeUp() {
+    if (this.closed) return;
+    // дождаться конца текущей фразы (не рвём её), потом попрощаться
+    const t0 = performance.now();
+    while (!this.closed && (this.voice.speaking() || this.thinking) && performance.now() - t0 < 15000) await sleep(150);
+    if (this.closed) return;
+    const ep = ++this.ep;
+    this.clearTimers();
+    this.turnCtl?.abort();
+    this.turnCtl = null;
+    this.thinking = false;
+    this.pos = null;
+    this.set({ phase: "answering", click: null, target: null });
+    await this.sayText(this.phrase("time_up"), ep);
+    if (this.alive(ep)) this.close();
+  }
+
+  private clearTimers() {
+    for (const t of [this.endTimer, this.staleTimer, this.remindTimer, this.idleTimer, this.clickTimer, this.pointTimer]) window.clearTimeout(t);
+    this.endTimer = this.staleTimer = this.remindTimer = this.idleTimer = this.clickTimer = this.pointTimer = 0;
+  }
+
+  private clearWait() {
+    window.clearTimeout(this.remindTimer); window.clearTimeout(this.idleTimer);
+    this.remindTimer = this.idleTimer = 0;
+  }
+
+  /** Человек что-то говорит или его ход в работе — Настя сама ничего не начинает. */
+  private userBusy(): boolean {
+    return !!this.buf.read() || this.ui.userTalking || this.thinking || this.voice.speaking()
+      || performance.now() - this.lastSpeechStart < 1500;
+  }
+
+  /** Настя сказала своё и ждёт: микрофон открыт. kind — чего ждёт (уходит на сервер). Одно напоминание через 25 с,
+   *  при долгом молчании — прощается и закрывается. */
   private waitFor(kind: Awaiting, ep: number, remindKey: string | null) {
     this.awaiting = kind;
-    this.reminded = false;
+    this.clearWait();
     this.set({ phase: this.paused ? "paused" : "listening", click: null });
-    if (!remindKey || this.noMic) return;
-    this.armIdle(ep, REMIND_AFTER_MS, () => {
-      if (this.reminded || this.userBusy()) return;
-      this.reminded = true;
-      const t = this.phrase(remindKey);
-      if (t) void this.sayText(t, ep);
-    });
+    if (this.noMic) return;
+    if (remindKey) {
+      this.remindTimer = window.setTimeout(() => {
+        this.remindTimer = 0;
+        if (!this.alive(ep) || this.userBusy()) return;
+        const t = this.phrase(remindKey);
+        if (t) void this.sayText(t, ep).then(() => { if (this.alive(ep)) this.set({ phase: this.paused ? "paused" : "listening" }); });
+      }, REMIND_AFTER_MS);
+    }
+    this.idleTimer = window.setTimeout(async () => {
+      this.idleTimer = 0;
+      if (!this.alive(ep) || this.userBusy()) return;
+      await this.sayText(this.phrase("idle_bye"), ep);
+      if (this.alive(ep)) this.close();
+    }, kind ? IDLE_CLOSE_MS : IDLE_FREE_MS);
   }
 
   // ------------------------------------------------------------------ распознавание: ход собеседника
@@ -593,67 +737,83 @@ export class ElenaEngine {
   private onStt(e: SttEvent) {
     if (this.closed) return;
     if (e.type === "ready") return;
+    if (e.type === "error") { this.set({ mic: "error" }); return; }
+    if (this.micGated()) return;       // микрофон закрыт — всё пришедшее не реплика (хвосты её голоса)
     if (e.type === "speech_started") {
-      // человек снова заговорил, пока ждём конца хода, — подождать ещё (Елену при этом не перебивают и не приглушают)
-      if (this.endTimer && !this.voice.speaking() && this.buf.read()) this.armEnd(false, 900);
+      this.lastSpeechStart = performance.now();
+      this.clearWait();
+      // человек снова заговорил, пока ждём конца хода, — подождать ещё
+      if (this.endTimer && this.buf.read()) this.armEnd(900);
       return;
     }
-    if (e.type === "error") { this.set({ mic: "error" }); return; }
     if (e.type === "interim" || e.type === "final") {
       const text = e.text.trim();
       if (!text) return;
-      const her = this.voice.echoText();
-      if (her && isEcho(text, her)) return;       // её голос из динамиков
-      if (this.voice.speaking() && !this.buf.read() && isBackchannel(text)) return;   // «угу», «ага» поверх её фразы
-      this.clearIdle();
-      if (this.turnCtl && !this.replyStarted) {   // человек продолжил мысль, пока Елена ещё не ответила, — склеиваем
-        this.turnCtl.abort();
-        this.turnCtl = null;
-        this.carry = (this.carry + " " + this.pendingText).trim();
-        this.pendingText = "";
+      if (performance.now() - this.gateOpenedAt < GATE_TAIL_IGNORE_MS && !this.buf.read()) return;
+      const hers = this.voice.echoText();
+      if (hers && !this.buf.read()) {
+        // под её речь (и сразу после): её же слова из динамиков — эхо; «угу», «ага» — поддакивание, не реплика
+        if (isEcho(text, hers)) return;
+        if (isBackchannel(text) && !hasStopWord(text)) return;
       }
+      this.clearWait();
       if (this.buf.accept(e)) {
         if (!this.ui.userTalking) this.set({ userTalking: true });
         window.clearTimeout(this.endTimer);
         this.endTimer = 0;
         this.armStale();
       }
-      if (e.type === "final") this.armEnd(false, e.speech_final ? 0 : 700);
+      if (this.voice.speaking()) this.maybeBargeIn(e.type === "final");
+      if (e.type === "final") this.armEnd(e.speech_final ? 0 : 700);
       return;
     }
     if (e.type === "speech_final_empty" || e.type === "utterance_end") {
       // тишина уже выждана поставщиком — конец хода, но незаконченную мысль всё равно даём договорить
-      if (this.buf.read()) this.armEnd(false, e.type === "utterance_end" ? -1200 : 0);
+      if (this.buf.read()) this.armEnd(e.type === "utterance_end" ? -1200 : 0);
     }
   }
 
-  /** Человек что-то сказал или ждёт ответа — обзор дальше не идёт. */
-  private userBusy(): boolean {
-    return !!this.buf.read() || this.ui.userTalking || !!this.submitWait || !!this.turnCtl || !!this.carry;
-  }
-
-  /** Обзор встаёт и ждёт: реплика человека будет обработана, потом обзор продолжится со следующей реплики. */
-  private holdForUser(heard = 1) {
-    this.touring = false;
-    this.resumePending = true;
-    this.heard = heard;
+  /** Человек заговорил, пока Настя говорит: с первого слова — голос тише; с нескольких слов (или «стоп», имя) — замолкает
+   *  и слушает. Её текущая линия (обзор, ответ) обрывается; обзор продолжится после его хода с той же реплики. */
+  private maybeBargeIn(final: boolean) {
+    const heard = this.buf.read();
+    const n = words(heard).length;
+    if (!n) return;
+    if (!this.ducked) { this.ducked = true; this.voice.duck(true); }
+    const stop = hasStopWord(heard) || n >= BARGE_MIN_WORDS || (final && n >= BARGE_FINAL_WORDS);
+    if (!stop) return;
+    const ep = ++this.ep;
+    this.clearWait();
+    window.clearTimeout(this.clickTimer); window.clearTimeout(this.pointTimer);
+    this.clickTimer = this.pointTimer = 0;
+    if (this.pos) this.resumeAt = this.advance(this.pos, this.stepUtter ? this.stepUtter.progress() : 1);
+    this.pos = null;
+    this.stepUtter = null;
+    this.turnCtl?.abort();
+    this.turnCtl = null;
+    this.thinking = false;
+    this.ducked = false;
+    this.voice.duck(false);
+    this.voice.stop();
     this.set({ phase: "listening", click: null });
+    this.post("barge", { text: heard });
+    void ep;
   }
 
   private armStale() {
     window.clearTimeout(this.staleTimer);
     const v = this.buf.version;
     this.staleTimer = window.setTimeout(() => {
-      if (this.buf.version === v && this.buf.read() && !this.endTimer) this.armEnd(false, -600);
+      if (this.buf.version === v && this.buf.read() && !this.endTimer) this.armEnd(-600);
     }, STALE_INTERIM_MS);
   }
 
-  private armEnd(force: boolean, extra = 0) {
+  private armEnd(extra = 0) {
     const text = this.buf.read();
     if (!text) return;
     window.clearTimeout(this.endTimer);
     const v = this.buf.version;
-    const delay = force ? 120 : Math.max(250, guideDelay(text) + extra);
+    const delay = Math.max(250, guideDelay(text) + extra);
     this.endTimer = window.setTimeout(() => {
       this.endTimer = 0;
       if (this.buf.version === v) this.submit();
@@ -661,66 +821,51 @@ export class ElenaEngine {
   }
 
   private submit() {
-    // Елена договаривает фразу — реплика ждёт её конца (её не перебивают), потом сразу ответ
-    if (this.voice.speaking()) {
-      if (!this.submitWait) {
-        let quiet = 0;   // два тихих такта подряд: Елена договорила, следующий шаг (обзор, переход) уже начался
-        this.submitWait = window.setInterval(() => {
-          if (this.closed) return;
-          if (this.voice.speaking() || this.replyBusy) { quiet = 0; return; }
-          if (++quiet < 2) return;
-          window.clearInterval(this.submitWait);
-          this.submitWait = 0;
-          if (this.touring) this.holdForUser(this.stepUtter ? this.stepUtter.progress() : this.heard);
-          this.submit();
-        }, 120);
-      }
-      return;
-    }
     window.clearTimeout(this.staleTimer);
-    const said = this.buf.take();
-    const text = (this.carry + " " + said).trim();
-    this.carry = "";
+    const text = this.buf.take();
     this.set({ userTalking: false });
     if (!text) return;
-    // «угу» посреди обзора, когда Елена ни о чём не спрашивала, — не реплика: обзор продолжается; на вопрос
-    // («Есть вопросы?», «Продолжаем?») любой ответ решает сервер
-    if (isBackchannel(text) && words(text).length <= 1 && !this.awaiting) {
-      if (this.resumePending) { const ep = ++this.ep; this.scheduleResume(ep, 200); return; }
-      const asked = /[?]\s*$/.test(this.lastSaid.trim());
-      if (!asked) { this.set({ phase: this.paused ? "paused" : "listening" }); return; }
-    }
+    // «угу» в окне между экранами, когда Настя ни о чём не спрашивала, — не реплика
+    if (isBackchannel(text) && words(text).length <= 1 && !this.awaiting && !this.paused) return;
+    // одно случайное слово под её речь (не «стоп», не имя) — не перебивание и не ход
+    if (this.voice.speaking() && words(text).length < BARGE_FINAL_WORDS && !hasStopWord(text)) return;
     void this.runTurn(text);
   }
 
-  private remember(who: "elena" | "user", text: string) {
-    if (!text) return;
-    this.history.push({ who, text });
-    if (this.history.length > 12) this.history.splice(0, this.history.length - 12);
-  }
+  // ------------------------------------------------------------------ ход: сервер решает, Настя отвечает
 
-  // ------------------------------------------------------------------ ход: сервер решает, Елена отвечает
-
-  private stepNow(): string | null {
-    return this.pos ? this.pos.ids[this.pos.i] ?? null : null;
+  /** Следующая реплика после прерванной: та же, если прозвучало мало, иначе следующая; null — обзор закончен. */
+  private advance(p: Pos, heard: number): Pos | null {
+    let { i, b } = p;
+    if (heard >= REPEAT_IF_HEARD_LESS) b += 1;
+    if (b >= this.linesOf(p.ids[i]).length) { i += 1; b = 0; }
+    return i < p.ids.length ? { ...p, i, b } : null;
   }
 
   private async runTurn(text: string) {
     const ep = ++this.ep;
-    this.clearIdle();
-    window.clearTimeout(this.clickTimer);
-    this.pendingText = text;
-    this.replyStarted = false;
+    this.clearTimers();
+    this.thinking = true;
+    if (this.pos) this.resumeAt = this.advance(this.pos, this.stepUtter ? this.stepUtter.progress() : 1);
+    this.pos = null;
+    this.stepUtter = null;
+    this.voice.stop();
     const ctl = new AbortController();
     this.turnCtl = ctl;
     // ответ сервера завис (связь) — не ждём вечно: через 10 с без решения — короткая просьба повторить
     let timedOut = false;
     const killer = window.setTimeout(() => { timedOut = true; ctl.abort(); }, 10000);
-    this.set({ phase: "thinking", click: null });
+    this.set({ phase: "thinking", click: null, userTalking: false });
     let filler = 0;
     let utter: Utterance | null = null;
     let meta: Meta | null = null;
     let nav: Promise<boolean> | null = null;
+    const finish = () => {
+      window.clearTimeout(filler);
+      window.clearTimeout(killer);
+      if (this.turnCtl === ctl) this.turnCtl = null;
+      this.thinking = false;
+    };
     try {
       const token = tokenStore.get();
       const r = await fetch(apiUrl("/interview/concierge/turn"), {
@@ -728,8 +873,8 @@ export class ElenaEngine {
         signal: ctl.signal,
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
-          message: text, user_name: this.userName, role: this.pos?.track ?? this.lastTrack, current_path: this.d.path(),
-          step_id: this.stepNow(), touring: this.touring || this.resumePending, paused: this.paused,
+          message: text, user_name: this.userName, role: this.tourTrack ?? this.lastTrack, current_path: this.d.path(),
+          step_id: this.curStep, touring: !!this.tourTrack && !this.paused, paused: this.paused,
           history: this.history.slice(-8), session_id: this.sid, screen: screenSnapshot(), last_said: this.lastSaid.slice(0, 600),
           awaiting: this.awaiting,
         }),
@@ -741,68 +886,86 @@ export class ElenaEngine {
         } else if (item.t === "meta") {
           window.clearTimeout(killer);
           meta = item as Meta;
-          this.awaiting = null;              // ответ на вопрос Елены получен — дальше решает действие
-          this.replyBusy = true;
+          this.awaiting = null;              // ответ на вопрос Насти получен — дальше решает действие
           this.remember("user", text);
-          this.pendingText = "";
           if (meta.user_name) this.setName(meta.user_name);
-          nav = this.prepare(meta, ep);      // экран начинает открываться, пока Елена говорит ответ
+          nav = this.prepare(meta, ep);      // экран начинает открываться, пока Настя говорит ответ
         } else if (item.t === "pcm" && typeof item.b64 === "string") {
           if (!utter) {
             window.clearTimeout(filler);
-            this.replyStarted = true;
             utter = this.voice.begin(meta?.text ?? "", RATE);
             this.lastSaid = meta?.text ?? "";
             this.set({ phase: "answering" });
           }
           utter.push(b64bytes(item.b64));
+          this.thinking = false;             // звук пошёл — микрофон держит закрытым сама речь
         } else if (item.t === "end") {
           break;
         }
       }
     } catch (e) {
-      this.replyBusy = false;
-      window.clearTimeout(filler);
-      window.clearTimeout(killer);
-      if (this.turnCtl === ctl) this.turnCtl = null;
+      finish();
       if (((e as { name?: string })?.name === "AbortError" && !timedOut) || !this.alive(ep)) return;
-      // сеть или сервер подвели — короткая просьба повторить, обзор (если шёл) продолжится
+      // сеть или сервер подвели — короткая просьба повторить; обзор (если шёл) продолжится после ответа
       this.remember("user", text);
-      this.pendingText = "";
-      await this.sayText(this.script?.phrases.sorry ?? "", ep);
+      this.set({ phase: "answering" });
+      await this.sayText(this.phrase("sorry"), ep);
       this.lastAsked = true;
       if (this.alive(ep)) this.afterAnswer(ep);
       return;
     }
-    window.clearTimeout(filler);
-    window.clearTimeout(killer);
-    if (this.turnCtl === ctl) this.turnCtl = null;
-    if (!this.alive(ep) || !meta) { this.replyBusy = false; return; }
+    finish();
+    if (!this.alive(ep) || !meta) return;
     if (meta.text) this.remember("elena", meta.text);
     if (utter) {
       const res = await utter.end();
-      if (res === "aborted" || !this.alive(ep)) { this.replyBusy = false; return; }
+      if (res === "aborted" || !this.alive(ep)) return;
     } else if (meta.text) {
       // голос ответа не пришёл потоком — пробуем обычной загрузкой
+      this.set({ phase: "answering" });
       const res = await this.sayText(meta.text, ep, undefined, false);
-      if (res === "aborted" || !this.alive(ep)) { this.replyBusy = false; return; }
+      if (res === "aborted" || !this.alive(ep)) return;
     }
     this.lastAsked = /\?\s*$/.test(meta.text ?? "");
-    const acting = this.act(meta, ep, nav);
-    this.replyBusy = false;          // действие запущено синхронно (обзор уже «начат») — отложенная реплика может идти
-    await acting;
+    await this.act(meta, ep, nav);
   }
 
   private playFiller(ep: number) {
     const fl = this.script?.fillers ?? [];
-    if (!this.alive(ep) || this.replyStarted || this.voice.speaking() || !fl.length) return;
+    if (!this.alive(ep) || !this.thinking || this.voice.speaking() || !fl.length) return;
     const pool = fl.filter((f) => f !== this.lastFiller);
     const f = pool[Math.floor(Math.random() * pool.length)] ?? fl[0];
     this.lastFiller = f;
     void this.pcm(f).then((pcm) => {
-      if (!pcm || !this.alive(ep) || this.replyStarted) return;
+      if (!pcm || !this.alive(ep) || !this.thinking) return;
       void this.voice.say(f, pcm, RATE);
     });
+  }
+
+  private roleOf(meta: Meta): TourTrack {
+    return (meta.role && meta.role in TRACKS ? meta.role : "all") as TourTrack;
+  }
+
+  /** Начало следующего раздела обзора (другой кабинет) относительно последнего открытого экрана; null — его нет. */
+  private nextSectionPos(): Pos | null {
+    const track = this.tourTrack;
+    const cur = this.curStep;
+    if (!track || !cur) return null;
+    const ids = TRACKS[track];
+    const k = ids.indexOf(cur);
+    if (k < 0) return null;
+    const cab = STEPS[cur]?.cabinet;
+    let j = k + 1;
+    while (j < ids.length && STEPS[ids[j]]?.cabinet === cab) j++;
+    return j < ids.length ? { ids, track, i: j, b: 0 } : null;
+  }
+
+  /** Куда ведёт «goto» посреди обзора: вперёд по обзору (продолжаем с этого экрана) или в сторону (показать и вернуться). */
+  private forwardPos(step: string): Pos | null {
+    const r = this.resumeAt;
+    if (!r || !r.track) return null;
+    const k = r.ids.indexOf(step);
+    return k >= r.i ? { ...r, i: k, b: 0 } : null;
   }
 
   /** По решению сервера — сразу начать переход (вход в роль, открытие экрана), не дожидаясь конца ответа. */
@@ -815,77 +978,31 @@ export class ElenaEngine {
     if (!step) return null;
     this.set({ stage: "corner" });
     this.prefetch(this.linesOf(step));
-    return this.enter(STEPS[step], ep, null, false);
-  }
-
-  private roleOf(meta: Meta): TourTrack {
-    return (meta.role && meta.role in TRACKS ? meta.role : "all") as TourTrack;
-  }
-
-  /** Начало следующего раздела обзора (другой кабинет) или null — раздел последний / обзора нет. */
-  private nextSectionPos(): Pos | null {
-    const p = this.pos;
-    if (!p || !p.track) return null;
-    const cab = STEPS[p.ids[p.i]]?.cabinet;
-    let j = p.i + 1;
-    while (j < p.ids.length && STEPS[p.ids[j]]?.cabinet === cab) j++;
-    return j < p.ids.length ? { ...p, i: j, b: 0 } : null;
-  }
-
-  /** Где продолжить прерванный обзор: та же реплика, если прозвучало мало, иначе следующая. */
-  private resumePos(): Pos | null {
-    const p = this.pos;
-    if (!p) return null;
-    let { i, b } = p;
-    if (this.heard >= REPEAT_IF_HEARD_LESS) b += 1;
-    if (b >= this.linesOf(p.ids[i]).length) { i += 1; b = 0; }
-    if (i >= p.ids.length) return null;
-    return { ...p, i, b };
+    return this.enter(STEPS[step], ep, null);
   }
 
   private async act(meta: Meta, ep: number, nav: Promise<boolean> | null) {
     const a = meta.action ?? "answer";
     if (a === "start_tour") {
       const role = this.roleOf(meta);
-      // обзор уже «начат»: если человек заговорит, пока открывается экран, — обзор подождёт и продолжится с начала
-      this.pos = { ids: TRACKS[role], track: role, i: 0, b: 0 };
-      this.heard = 0;
-      this.touring = true;
+      this.tourTrack = role;
+      this.resumeAt = null;
       this.paused = false;
-      this.detour = null;
+      this.pendingBridge = null;
       if (nav) await nav;
       if (!this.alive(ep)) return;
-      void this.runTour(role, 0, 0, ep, { bridge: true, named: false });
+      void this.runTour({ ids: TRACKS[role], track: role, i: 0, b: 0 }, ep, { bridge: true, named: false });
       return;
     }
     if (a === "goto" && meta.step && STEPS[meta.step]) {
-      // посреди обзора: этот же экран — просто продолжаем; экран дальше по обзору — идём вперёд с него;
-      // экран не из обзора или уже пройденный — показать и вернуться. Без обзора — показать и слушать дальше.
-      const p = this.pos;
-      if (p && (this.resumePending || this.paused || this.touring)) {
-        const k = p.track ? p.ids.indexOf(meta.step) : -1;
-        if (k === p.i) {
-          if (nav) await nav;
-          if (!this.alive(ep)) return;
-          this.paused = false;
-          void this.resumeTour(ep);
-          return;
-        }
-        if (k > p.i) {
-          if (nav) await nav;
-          if (!this.alive(ep)) return;
-          void this.runSteps({ ...p, i: k, b: 0 }, ep, { bridge: true });
-          return;
-        }
-        if (p.track) this.detour = this.resumePos();   // идёт обзор — вернёмся к нему; показ одного экрана — нет
-      }
+      const fwd = this.forwardPos(meta.step);
       if (nav) await nav;
       if (!this.alive(ep)) return;
       this.paused = false;
-      this.resumePending = false;
-      // этот экран уже показывали — без вступительной реплики
+      if (fwd) { void this.runTour(fwd, ep, { bridge: true }); return; }
+      // экран не по порядку обзора (или обзора нет) — показать его одного; этот экран уже показывали — без вступления
       const b0 = this.shownSteps.has(meta.step) && this.linesOf(meta.step).length > 1 ? 1 : 0;
-      void this.runSteps({ ids: [meta.step], track: null, i: 0, b: b0 }, ep, { bridge: false, single: true });
+      void this.runTour({ ids: [meta.step], track: null, i: 0, b: b0 }, ep, { bridge: false, single: true });
       return;
     }
     if (a === "point" && meta.point) {
@@ -896,18 +1013,28 @@ export class ElenaEngine {
     if (a === "next_section") {
       // «пропусти» — к следующему разделу без вопросов (связку уже сказала в ответе)
       const ns = this.nextSectionPos();
-      if (!ns) {
-        this.touring = false;
-        this.resumePending = false;
-        this.paused = false;
-        this.pos = null;
-        this.set({ phase: "listening", target: null, click: null, stepNo: 0 });
-        return;
-      }
       if (nav) await nav;
       if (!this.alive(ep)) return;
-      this.lastCabinet = STEPS[ns.ids[ns.i]]?.cabinet ?? this.lastCabinet;
-      void this.runSteps(ns, ep, { bridge: true });
+      if (ns) {
+        this.lastCabinet = STEPS[ns.ids[ns.i]]?.cabinet ?? this.lastCabinet;
+        void this.runTour(ns, ep, { bridge: true });
+        return;
+      }
+      // в этом обзоре следующего раздела нет (обзор одной роли) — по связке сервера идём в другой обзор
+      const nextTrack: TourTrack | null = meta.phrase === "skip_employer" ? "employer" : meta.phrase === "skip_fsp" ? "fsp"
+        : meta.phrase === "skip_public" ? "all" : null;
+      this.tourTrack = null;
+      this.resumeAt = null;
+      this.paused = false;
+      if (nextTrack) {
+        this.tourTrack = nextTrack;
+        const from = nextTrack === "all" ? TRACKS.all.indexOf("warroom") : 0;
+        this.lastCabinet = STEPS[TRACKS[nextTrack][from]]?.cabinet ?? null;
+        void this.runTour({ ids: TRACKS[nextTrack], track: nextTrack, i: from, b: 0 }, ep, { bridge: true });
+        return;
+      }
+      this.set({ target: null, click: null, stepNo: 0, stepTotal: 0 });
+      this.waitFor(null, ep, null);
       return;
     }
     if (a === "listen") {
@@ -916,40 +1043,39 @@ export class ElenaEngine {
       return;
     }
     if (a === "pause") {
-      this.paused = this.paused || this.touring || this.resumePending || !!this.pos;
-      this.resumePending = false;
-      this.touring = false;
-      this.awaiting = null;
-      this.set({ phase: this.paused ? "paused" : "listening" });
+      this.paused = !!this.tourTrack;
+      this.waitFor(null, ep, this.paused ? null : null);
       return;
     }
     if (a === "resume") {
-      const wasPaused = this.paused;
       this.paused = false;
-      if (!this.pos) { this.startNext(ep); return; }
-      if (!wasPaused && !this.resumePending) this.heard = 1;   // «дальше» посреди реплики — следующая реплика
-      if (meta.text) await sleep(200);
-      if (!this.alive(ep)) return;
-      void this.resumeTour(ep);
+      if (this.resumeAt) {
+        if (meta.text) await sleep(150);
+        else this.pendingBridge = this.phrase("resume_tour") || null;   // «дальше» без ответа — короткое «Продолжаю.»
+        if (!this.alive(ep)) return;
+        void this.runTour(this.resumeAt, ep, { bridge: true });
+        return;
+      }
+      if (this.tourTrack) { void this.finishTour(this.tourTrack, ep); return; }
+      this.startNext(ep);
       return;
     }
     if (a === "repeat") {
-      if (this.pos && (this.resumePending || this.touring || this.paused)) {
+      const lb = this.lastBeat;
+      if (this.tourTrack && lb) {
         this.paused = false;
-        this.heard = 0;
-        void this.resumeTour(ep);
+        void this.runTour({ ...lb }, ep, { bridge: false, detailed: true });
         return;
       }
-      if (this.lastSaid) await this.sayText(this.lastSaid, ep, undefined, false);
+      if (this.lastSaid) { this.set({ phase: "answering" }); await this.sayText(this.lastSaid, ep, undefined, false); }
       if (this.alive(ep)) this.afterAnswer(ep);
       return;
     }
     if (a === "prev") {
-      if (this.pos) {
+      const base = this.lastBeat ?? this.resumeAt;
+      if (this.tourTrack && base && base.track) {
         this.paused = false;
-        this.resumePending = false;
-        const p = { ...this.pos, i: Math.max(0, this.pos.i - 1), b: 0 };
-        void this.runSteps(p, ep, { bridge: true });
+        void this.runTour({ ...base, i: Math.max(0, base.i - 1), b: 0 }, ep, { bridge: true, detailed: true });
         return;
       }
       this.afterAnswer(ep);
@@ -962,10 +1088,11 @@ export class ElenaEngine {
     }
     if (a === "ask_role") {
       // новый вопрос «что показать?» — прежний недосмотренный обзор не продолжаем сами; ждём ответа
-      this.resumePending = false;
-      this.touring = false;
-      this.pos = null;
-      this.set({ stepNo: 0, stepTotal: 0 });
+      this.tourTrack = null;
+      this.resumeAt = null;
+      this.paused = false;
+      this.set({ stepNo: 0, stepTotal: 0, target: null });
+      this.lastAsked = true;
       this.waitFor("start", ep, "remind_start");
       return;
     }
@@ -979,11 +1106,7 @@ export class ElenaEngine {
     this.set({ stage: "corner", target: sel, click: null });
     this.post("point", { text: label });
     void this.bringIntoView(sel, ep);
-    window.clearTimeout(this.pointTimer);
-    this.pointTimer = window.setTimeout(() => {
-      this.pointTimer = 0;
-      if (this.ui.target === sel && !this.touring) this.set({ target: null });
-    }, POINT_HOLD_MS);
+    this.holdPoint();
   }
 
   /** Рамка вокруг показанного элемента держится ещё несколько секунд после ответа. */
@@ -993,88 +1116,75 @@ export class ElenaEngine {
     window.clearTimeout(this.pointTimer);
     this.pointTimer = window.setTimeout(() => {
       this.pointTimer = 0;
-      if (this.ui.target === sel && !this.touring) this.set({ target: null });
+      if (this.ui.target === sel && !this.pos) this.set({ target: null });
     }, POINT_HOLD_MS);
   }
 
-  /** После ответа: Елена сама дальше не идёт. Спросила — ждёт ответа; посреди обзора — спрашивает «Продолжаем?». */
+  /** После ответа: Настя сама дальше не идёт. Спросила — ждёт ответа; посреди обзора — спрашивает «Продолжаем?». */
   private afterAnswer(ep: number) {
-    if (this.paused) { this.set({ phase: "paused" }); return; }
-    if (this.lastAsked) { this.waitFor("answer", ep, this.resumePending ? "remind" : null); return; }
-    if (this.resumePending) { void this.askContinue(ep); return; }
-    this.awaiting = null;
-    this.set({ phase: "listening" });
+    if (this.paused) { this.waitFor(null, ep, null); return; }
+    if (this.lastAsked) { this.waitFor("answer", ep, this.resumeAt ? "remind" : null); return; }
+    if (this.resumeAt) { void this.askContinue(ep); return; }
+    if (this.tourTrack) { void this.finishTour(this.tourTrack, ep); return; }
+    this.waitFor(null, ep, null);
   }
 
   /** «Продолжаем обзор?» / «Переходим к работодателю?» — и ждать ответа. */
   private async askContinue(ep: number) {
-    const next = this.resumePos();
+    const next = this.resumeAt;
     const cab = next ? STEPS[next.ids[next.i]]?.cabinet : null;
     const key = cab && this.lastCabinet && cab !== this.lastCabinet ? `continue_${cab}` : "continue";
     const q = this.phrase(key) || this.phrase("continue");
-    this.set({ phase: "listening", click: null });
-    await sleep(350);
-    if (!this.alive(ep) || this.userBusy()) return;
+    this.set({ phase: "answering", click: null });
+    await sleep(300);
+    if (!this.alive(ep)) return;
     if (q && (await this.sayText(q, ep)) !== "done") return;
     if (!this.alive(ep)) return;
     this.remember("elena", q);
     this.lastAsked = true;
+    this.sinceAsk = 0;
+    this.waitFor("continue", ep, "remind");
+  }
+
+  /** Каждые несколько экранов — короткий вопрос («Продолжаем, или показать что-то конкретное?»): напоминает, что Настю
+   *  можно попросить открыть любой раздел, и даёт понятную паузу для разговора. Ждёт ответа. */
+  private async askSoft(ep: number) {
+    const q = this.phrase(`ask_soft_${1 + (this.softIdx++ % 3)}`) || this.phrase("continue");
+    this.set({ phase: "answering", click: null });
+    await sleep(250);
+    if (!this.alive(ep)) return;
+    if (q && (await this.sayText(q, ep)) !== "done") return;
+    if (!this.alive(ep)) return;
+    this.remember("elena", q);
+    this.lastAsked = true;
+    this.sinceAsk = 0;
     this.waitFor("continue", ep, "remind");
   }
 
   /** Посмотрели экран не по порядку обзора — спросить, вернуться ли к обзору, и ждать. */
-  private async askDetourBack(back: Pos, ep: number) {
-    this.pos = back;
-    this.heard = 0;
-    this.touring = false;
-    this.resumePending = true;
-    this.lastCabinet = STEPS[back.ids[back.i]]?.cabinet ?? this.lastCabinet;   // возврат — без связки раздела
-    this.set({ phase: "listening", click: null });
+  private async askDetourBack(ep: number) {
     const q = this.phrase("back_to_tour");
+    this.set({ phase: "answering", click: null });
     if (q && (await this.sayText(q, ep)) !== "done") return;
     if (!this.alive(ep)) return;
     this.remember("elena", q);
     this.lastAsked = true;
+    this.pendingBridge = this.phrase("back_tour") || null;
     this.waitFor("detour", ep, "remind");
   }
 
-  /** «Дальше», когда обзор роли уже закончен: следующая сторона платформы. */
+  /** «Дальше», когда обзора нет: следующая сторона платформы после законченной — или весь сайт с начала. */
   private startNext(ep: number) {
     const last = this.lastTrack;
-    if (last === "candidate") void this.runTour("employer", 0, 0, ep, { bridge: true });
-    else if (last === "employer") void this.runTour("fsp", 0, 0, ep, { bridge: true });
-    else if (last === "fsp") void this.runTour("all", TRACKS.all.indexOf("warroom"), 0, ep, { bridge: true });
-    else if (!last) void this.runTour("all", 0, 0, ep, { bridge: true, named: false });
-    else this.set({ phase: "listening" });
-  }
-
-  private scheduleResume(ep: number, ms: number) {
-    this.set({ phase: "listening" });
-    window.clearTimeout(this.resumeTimer);
-    this.resumeTimer = window.setTimeout(() => {
-      this.resumeTimer = 0;
-      if (!this.alive(ep) || this.buf.read() || this.voice.speaking() || this.turnCtl || this.paused) return;
-      void this.resumeTour(ep);
-    }, ms);
-  }
-
-  private async resumeTour(ep: number) {
-    this.resumePending = false;
-    const p = this.resumePos();
-    if (!p) {
-      if (this.pos && this.pos.track) { void this.finishTour(this.pos.track, ep); return; }
-      const back = this.detour;
-      if (back) {   // «покажи …» досмотрен — спросить, вернуться ли к обзору
-        this.detour = null;
-        void this.askDetourBack(back, ep);
-        return;
-      }
-      this.pos = null;
-      this.touring = false;
-      this.set({ phase: "listening", target: null, stepNo: 0 });
-      return;
-    }
-    void this.runSteps(p, ep, { bridge: true });
+    const go = (track: TourTrack, from = 0) => {
+      this.tourTrack = track;
+      void this.runTour({ ids: TRACKS[track], track, i: from, b: 0 }, ep, { bridge: true, named: false });
+    };
+    if (last === "candidate") go("employer");
+    else if (last === "employer") go("fsp");
+    else if (last === "fsp") go("all", TRACKS.all.indexOf("warroom"));
+    else if (!last) go("all");
+    else this.waitFor(null, ep, null);
   }
 
   // ------------------------------------------------------------------ обзор
@@ -1104,7 +1214,7 @@ export class ElenaEngine {
   }
 
   /** Открыть экран шага: вход в нужную роль, переход, ожидание нужного блока; связка звучит, пока экран грузится. */
-  private async enter(step: TourStep, ep: number, bridge: string | null, scroll = true): Promise<boolean> {
+  private async enter(step: TourStep, ep: number, bridge: string | null): Promise<boolean> {
     const bridgeDone = bridge ? this.sayText(bridge, ep) : Promise.resolve<SayResult>("done");
     if (!this.onScreen(step)) {
       try {
@@ -1127,15 +1237,24 @@ export class ElenaEngine {
         this.d.navigate(step.path);
       }
     }
-    const el = await this.waitEl(step.selector, ep, 2500);
+    await this.waitEl(step.selector, ep, 2500);
     const b = await bridgeDone;
-    if (!this.alive(ep) || b === "aborted") return false;
-    if (el && scroll) await this.bringIntoView(step.selector, ep);
-    return this.alive(ep);
+    return this.alive(ep) && b !== "aborted";
+  }
+
+  /** После реплики-перехода («Открою …» с нажатием) — дать странице перейти; не перешла — откроет следующий шаг. */
+  private async settleLead(leadId: string, ep: number) {
+    const lead = STEPS[leadId];
+    if (!lead) return;
+    const t0 = performance.now();
+    while (this.alive(ep) && performance.now() - t0 < 1500) {
+      if (this.onScreen(lead)) return;
+      await sleep(90);
+    }
   }
 
   /** Блок — в кадр: ждём, пока раскладка устоится (над блоком догружаются карточки), и ставим блок в верхнюю часть
-   *  экрана под закреплённой шапкой (внизу справа — окно Елены). Новый вызов отменяет прошлый (без «перетягивания»). */
+   *  экрана под закреплённой шапкой (внизу справа — окно Насти). Новый вызов отменяет прошлый (без «перетягивания»). */
   private async bringIntoView(selector: string, ep: number) {
     const my = ++this.viewSeq;
     const live = () => this.alive(ep) && my === this.viewSeq;
@@ -1153,7 +1272,8 @@ export class ElenaEngine {
       if (!el || !live()) return;
       const inset = topInset();
       const r = el.getBoundingClientRect();
-      const fits = r.top >= inset + 8 && r.top <= window.innerHeight * 0.5 && r.bottom <= window.innerHeight - 24;
+      const floor = window.innerHeight - tabbarInset();   // над нижней панелью навигации на телефоне
+      const fits = r.top >= inset + 8 && r.top <= floor * 0.5 && r.bottom <= floor - 24;
       if (fits) return;
       const dy = r.top - (inset + 20);
       if (Math.abs(dy) < 4) return;
@@ -1177,42 +1297,71 @@ export class ElenaEngine {
     }, Math.max(0, at - performance.now()));
   }
 
-  private runTour(track: TourTrack, from: number, beat: number, ep: number, opts: { bridge: boolean; named?: boolean }) {
-    this.detour = null;
-    return this.runSteps({ ids: TRACKS[track], track, i: from, b: beat }, ep, opts);
+  /** Окно между экранами: микрофон открыт ~1 с; человек заговорил — ждём его ход (новая линия обрывает обзор). */
+  private async listenWindow(ep: number) {
+    this.set({ phase: "listening", click: null });
+    const t0 = performance.now();
+    for (;;) {
+      if (!this.alive(ep)) return;
+      const el = performance.now() - t0;
+      const busy = !!this.buf.read() || this.ui.userTalking || performance.now() - this.lastSpeechStart < 1500;
+      if (el >= WINDOW_MS && !busy) return;
+      if (el >= WINDOW_MS + WINDOW_MAX_WAIT_MS && !this.buf.read()) return;   // речь без слов (шум) — идём дальше
+      await sleep(60);
+    }
   }
 
-  /** Основной цикл обзора: шаг за шагом, реплика за репликой. single — показать один экран («покажи …»). */
-  private async runSteps(start: Pos, ep: number, opts: { bridge: boolean; named?: boolean; single?: boolean }) {
+  /** Какие реплики экрана звучат: реплика-переход — только если следующий шаг именно туда; на уже рассказанном экране
+   *  (brief) — одна первая; в обзоре всего сайта — не больше ALL_TRACK_MAX_BEATS (подробности — в обзоре роли). */
+  private beatPlan(step: TourStep, nextId: string | undefined, o: { single?: boolean; brief: boolean; cap: number }): number[] {
+    const lines = this.linesOf(step.id);
+    const plain: number[] = [];
+    const leads: number[] = [];
+    for (let b = 0; b < lines.length; b++) {
+      const beat = step.beats[b];
+      if (beat?.lead) { if (!o.single && !o.brief && nextId === beat.lead) leads.push(b); continue; }
+      plain.push(b);
+    }
+    return [...plain.slice(0, o.brief ? 1 : o.cap), ...leads].sort((x, y) => x - y);
+  }
+
+  /** Основной цикл обзора: шаг за шагом, реплика за репликой. single — показать один экран («покажи …»);
+   *  detailed — все реплики даже на уже рассказанном экране («повтори», «назад»). */
+  private async runTour(start: Pos, ep: number, opts: { bridge: boolean; named?: boolean; single?: boolean; detailed?: boolean }) {
     const sc = this.script;
     if (!sc || !this.alive(ep)) return;
     const { ids, track } = start;
     this.paused = false;
-    this.resumePending = false;
     this.awaiting = null;
-    this.touring = true;
+    this.clearWait();
+    if (!opts.single) { this.resumeAt = null; this.tourTrack = track; }
     window.clearTimeout(this.pointTimer);
     this.set({ stage: "corner" });
     let prevCab: Cabinet | null = opts.bridge ? this.lastCabinet : STEPS[ids[start.i]]?.cabinet ?? null;
     let firstBridge = opts.bridge && !this.lastCabinet;
+    const cap = track === "all" ? ALL_TRACK_MAX_BEATS : 99;
+    // новый обзор уже рассказанного раздела — предупредить, что пройдём коротко
+    if (!opts.single && !opts.detailed && start.b === 0 && this.doneSteps.has(ids[start.i]) && !this.pendingBridge
+        && ids.slice(start.i, start.i + 3).every((id) => this.doneSteps.has(id))) {
+      this.pendingBridge = this.phrase("again_brief") || null;
+    }
     for (let i = Math.max(0, start.i); i < ids.length; i++) {
       if (!this.alive(ep)) return;
       const step = STEPS[ids[i]];
       if (!step) continue;
       const lines = this.linesOf(step.id);
       const b0 = i === start.i ? Math.min(start.b, Math.max(0, lines.length - 1)) : 0;
+      const brief = !opts.single && !opts.detailed && this.doneSteps.has(step.id) && b0 === 0;
+      const plan = this.beatPlan(step, ids[i + 1], { single: opts.single, brief, cap }).filter((b) => b >= b0);
       if (i > start.i && track && !opts.single && !this.noMic && prevCab && step.cabinet !== prevCab) {
         // раздел закончился — спросить, есть ли вопросы, и ждать ответа (дальше — только после ответа)
         const q = this.phrase(`checkin_${prevCab}`);
         if (q) {
-          this.pos = { ids, track, i, b: 0 };
-          this.heard = 0;
-          this.touring = false;
-          this.resumePending = true;
-          this.set({ phase: "listening", target: null, click: null });
-          await sleep(300);
+          this.resumeAt = { ids, track, i, b: 0 };
+          this.pos = null;
+          this.set({ phase: "answering", target: null, click: null });
+          await sleep(250);
           if (!this.alive(ep)) return;
-          if (this.userBusy()) return;
           if ((await this.sayText(q, ep)) !== "done" || !this.alive(ep)) return;
           this.remember("elena", q);
           this.lastAsked = true;
@@ -1221,26 +1370,31 @@ export class ElenaEngine {
         }
       }
       this.pos = { ids, track, i, b: b0 };
-      this.heard = 0;
+      this.curStep = step.id;
       this.prefetchFrom(ids, i + 1);
-      this.set({ phase: "touring", track, stepNo: track ? i + 1 : 0, stepTotal: track ? ids.length : 0 });
-      const bridge = prevCab !== step.cabinet ? this.bridgeText(step.cabinet, firstBridge, !!opts.named) : null;
-      firstBridge = false;
-      const ok = await this.enter(step, ep, bridge, false);
+      this.set({ phase: "touring", track, stepNo: track ? i + 1 : 0, stepTotal: track ? ids.length : 0, target: null, click: null });
+      let bridge = prevCab !== step.cabinet ? this.bridgeText(step.cabinet, firstBridge, !!opts.named) : null;
+      if (bridge) firstBridge = false;   // главная без связки — «Начнём со стороны кандидата» звучит на первом кабинете
+      if (i === start.i) {
+        // «Продолжаю.» / «Возвращаюсь к обзору.» — если связки раздела нет; «уже смотрели — пройду коротко» — вместо неё
+        if (!opts.single && this.pendingBridge && (!bridge || this.pendingBridge === this.phrase("again_brief"))) bridge = this.pendingBridge;
+        this.pendingBridge = null;
+      }
+      const cabChanged = prevCab !== step.cabinet;
+      const ok = await this.enter(step, ep, bridge);
       if (!this.alive(ep) || !ok) return;
       prevCab = step.cabinet;
       this.lastCabinet = step.cabinet;     // связка раздела прозвучала — при продолжении не повторяется
-      if (this.userBusy()) { this.holdForUser(); return; }
       if (b0 === 0) this.post("step", { step: step.id });
       this.shownSteps.add(step.id);
-      for (let b = b0; b < lines.length; b++) {
+      if (cabChanged) this.sinceAsk = 0;
+      for (let k = 0; k < plan.length; k++) {
+        const b = plan[k];
         if (!this.alive(ep)) return;
         const beat = step.beats[b] ?? step.beats[step.beats.length - 1] ?? { target: step.selector };
-        // реплика-переход («Открою …» с нажатием) — только если следующий шаг обзора именно туда
-        if (beat.lead && (opts.single || ids[i + 1] !== beat.lead)) continue;
         const target = beat.target ?? step.selector;
         this.pos = { ids, track, i, b };
-        this.heard = 0;
+        this.lastBeat = this.pos;
         this.set({ target, click: null });
         void this.bringIntoView(target, ep);   // прокрутка идёт вместе с началом реплики — без пауз
         await sleep(140);
@@ -1248,41 +1402,51 @@ export class ElenaEngine {
         const res = await this.sayText(lines[b], ep, (u, total) => { this.stepUtter = u; this.planClick(beat, u, total, ep); });
         this.stepUtter = null;
         if (res === "aborted" || !this.alive(ep)) return;
-        this.heard = 1;
-        await sleep(b < lines.length - 1 ? BEAT_GAP_MS : 260);
+        if (beat.lead) await this.settleLead(beat.lead, ep);
         if (!this.alive(ep)) return;
-        if (this.userBusy()) { this.holdForUser(); return; }
+        await sleep(k < plan.length - 1 ? BEAT_GAP_MS : 200);
       }
+      this.doneSteps.add(step.id);
       if (opts.single) break;
+      // между экранами одного раздела: каждые несколько экранов — короткий вопрос и ожидание ответа, иначе — окно для реплики
+      const nextStep = STEPS[ids[i + 1] ?? ""];
+      if (!this.noMic && track && nextStep && nextStep.cabinet === step.cabinet) {
+        this.resumeAt = { ids, track, i: i + 1, b: 0 };
+        this.pos = null;
+        this.sinceAsk += 1;
+        if (this.sinceAsk >= SOFT_ASK_EVERY && !brief) { void this.askSoft(ep); return; }
+        await this.listenWindow(ep);
+        if (!this.alive(ep)) return;           // человек заговорил — его ход в работе, обзор продолжится с resumeAt
+        this.resumeAt = null;
+      }
     }
     if (!this.alive(ep)) return;
-    if (!track) {
-      const back = this.detour;
-      this.detour = null;
-      if (back) {
-        void this.askDetourBack(back, ep);
-        return;
-      }
-      this.touring = false;
-      this.pos = null;
-      this.set({ phase: "listening", click: null, stepNo: 0, stepTotal: 0 });
+    this.pos = null;
+    if (opts.single) {
+      this.set({ stepNo: 0, stepTotal: 0, click: null });
+      if (this.resumeAt) { void this.askDetourBack(ep); return; }
       window.clearTimeout(this.pointTimer);
-      this.pointTimer = window.setTimeout(() => { this.pointTimer = 0; if (!this.touring) this.set({ target: null }); }, 2500);
+      this.pointTimer = window.setTimeout(() => { this.pointTimer = 0; if (!this.pos) this.set({ target: null }); }, 2500);
+      if (this.tourTrack) { void this.finishTour(this.tourTrack, ep); return; }
+      this.waitFor(null, ep, null);
       return;
     }
     if (track) await this.finishTour(track, ep);
   }
 
   private async finishTour(track: TourTrack, ep: number) {
-    this.touring = false;
-    this.set({ phase: "listening", target: null, click: null, stepNo: 0 });
+    this.tourTrack = null;
+    this.resumeAt = null;
+    this.pos = null;
+    this.paused = false;
+    this.set({ phase: "answering", target: null, click: null, stepNo: 0, stepTotal: 0 });
     const done = this.phrase(`done_${track}`) || this.phrase("done_all");
     await this.sayText(done, ep);
-    if (this.alive(ep)) {
-      this.remember("elena", done);
-      this.pos = null;
-      this.lastTrack = track;
-      this.set({ phase: "listening", track: null });
-    }
+    if (!this.alive(ep)) return;
+    this.remember("elena", done);
+    this.lastTrack = track;
+    this.lastAsked = false;
+    this.set({ track: null });
+    this.waitFor(null, ep, null);
   }
 }

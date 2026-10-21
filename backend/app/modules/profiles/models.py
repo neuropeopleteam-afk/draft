@@ -54,6 +54,8 @@ class CandidateProfile(Timestamps, Base):
     parental_consent_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     # Учётная запись удалена кандидатом (md01): запись остаётся обезличенной — только public_ref для истории работодателей
     deleted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    # А2: признак синтетического (модельного) кандидата из демо-базы (demo.seed): для бейджа «демо-профиль» и фильтра real_only
+    is_synthetic: Mapped[bool] = mapped_column(default=False, server_default=sa.false(), index=True)
 
 
 class CandidateSpecialization(Timestamps, Base):

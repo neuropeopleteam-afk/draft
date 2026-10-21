@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../components/CabinetLayout";
 import { Thread, type ThreadKind } from "../components/Chat";
-import { Alert, Empty, Loading, Status, dtt, useApi } from "../components/ui";
+import { Alert, Empty, Loading, Status, cleanCompanyName, dtt, useApi } from "../components/ui";
 
 interface ThreadRow {
   kind: ThreadKind; id: string; title: string; counterpart: string; status: string; mode: "qa" | "chat";
@@ -41,7 +41,7 @@ export function Messages({ role }: { role: "candidate" | "employer" }) {
                   <button onClick={() => open(t)} aria-current={active ? "true" : undefined}
                     className={`card w-full !p-3 text-left transition-colors hover:border-brand/40 ${active ? "border-brand/50 bg-brand-blush/30" : ""}`}>
                     <div className="flex items-start justify-between gap-2">
-                      <p className="min-w-0 font-semibold text-brand-night">{t.counterpart}</p>
+                      <p className="min-w-0 font-semibold text-brand-night">{cleanCompanyName(t.counterpart)}</p>
                       {t.unread > 0 && <span className="shrink-0 rounded-full bg-brand-strong px-2 py-0.5 text-xs font-bold text-white" aria-label={`Непрочитанных: ${t.unread}`}>{t.unread}</span>}
                     </div>
                     <p className="truncate text-xs text-brand-ink/65">{t.kind === "invitation" ? "Приглашение" : "Отклик"} · {t.title}</p>
@@ -58,10 +58,17 @@ export function Messages({ role }: { role: "candidate" | "employer" }) {
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <button className="mb-1 text-sm font-semibold text-brand-plum hover:underline lg:hidden" onClick={back}>Все переписки</button>
-                    <p className="font-bold text-brand-night">{cur.counterpart}</p>
+                    <p className="font-bold text-brand-night">{cleanCompanyName(cur.counterpart)}</p>
                     <p className="text-sm text-brand-ink/65">{cur.kind === "invitation" ? "Приглашение" : "Отклик на вакансию"} «{cur.title}»</p>
                   </div>
-                  {cur.kind === "invitation" ? <Status s={cur.revoked ? "contacts_revoked" : cur.status} /> : <span className="rounded-full bg-[#ECEAF8] px-2.5 py-1 text-xs font-semibold text-brand-night">{APP_STATUS[cur.status] ?? cur.status}</span>}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {cur.kind === "invitation" && (
+                      <Link className="btn-ghost !px-3 !py-1.5 text-xs" to={`${base}/trio?invitation=${cur.id}`} data-testid="trio-from-messages">
+                        Подключить ФСП
+                      </Link>
+                    )}
+                    {cur.kind === "invitation" ? <Status s={cur.revoked ? "contacts_revoked" : cur.status} /> : <span className="rounded-full bg-[#ECEAF8] px-2.5 py-1 text-xs font-semibold text-brand-night">{APP_STATUS[cur.status] ?? cur.status}</span>}
+                  </div>
                 </div>
                 <Thread key={`${cur.kind}:${cur.id}`} kind={cur.kind} id={cur.id} onUpdate={reload} />
                 <Link className="inline-block text-sm font-semibold text-brand hover:underline" to={`${base}/${cur.kind === "invitation" ? "invitations" : "vacancies"}`}>

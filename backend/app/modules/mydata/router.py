@@ -65,6 +65,23 @@ def _consents(db: Session, uid) -> list[dict]:
     return out
 
 
+CONTACT_FIELD_NAMES = {
+    "full_name": "имя",
+    "email": "почта",
+    "phone": "телефон",
+    "telegram": "Telegram",
+    "github": "GitHub",
+}
+
+
+def _shared_what(inv) -> str:
+    sh = (inv.employment_terms or {}).get("shared_contacts")
+    if isinstance(sh, list) and sh:
+        labels = [CONTACT_FIELD_NAMES.get(x, x) for x in sh]
+        return ", ".join(labels) + " (выборочное согласие)"
+    return "телефон, Telegram и почта из профиля"
+
+
 def _contacts_open(db: Session, uid) -> list[dict]:
     from app.modules.invitations.models import Invitation
     from app.modules.profiles.models import Company
@@ -74,7 +91,8 @@ def _contacts_open(db: Session, uid) -> list[dict]:
         Invitation.contacts_revealed_at.is_not(None)).order_by(Invitation.contacts_revealed_at.desc())).all()
     return [{"invitation_id": str(i.id), "company": name, "position_title": i.position_title,
              "since": i.contacts_revealed_at.isoformat(),
-             "what": "телефон, Telegram и почта из профиля"} for i, name in rows]
+             "shared_contacts": (i.employment_terms or {}).get("shared_contacts") or ["full_name", "email", "phone", "telegram", "github"],
+             "what": _shared_what(i)} for i, name in rows]
 
 
 def overview(db: Session, user: User) -> dict:

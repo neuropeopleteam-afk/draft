@@ -370,6 +370,62 @@ function SettingsPanel({ tab, s, hf, onSaved, setMsg }: { tab: "huntflow" | "web
               <p className="text-xs text-brand-ink/65 sm:col-span-2">Заголовок <code>{s.webhook.signature_header}</code>. Проверка на стороне получателя — в docs/ATS.md.{" "}
                 {f.webhook.secret_set && <button className="font-semibold text-brand hover:underline" onClick={async () => setSecret((await api<any>("/employer/ats/webhook-secret")).secret)}>Показать секрет</button>}
                 {secret && <code className="ml-2 break-all rounded bg-[#F3F2FB] px-1.5 py-0.5">{secret}</code>}</p>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-night/10 bg-[#F7F6FB] p-3 text-xs sm:col-span-2" data-testid="webhook-token-lifecycle">
+                <div>
+                  <p className="font-semibold text-brand-night">Срок действия ключа вебхука: 90 дней по умолчанию</p>
+                  <p className="text-brand-ink/65">
+                    {f.webhook.secret_set ? "Ключ активен (ротация каждые 90 дней). При компрометации перевыпустите или отзовите ключ." : "Ключ ещё не выпущен или отозван."}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="btn-ghost !px-3 !py-1.5 text-xs"
+                    onClick={async () => {
+                      const rnd = `whsec_${Math.random().toString(36).slice(2, 12)}${Date.now().toString(36)}`;
+                      set("webhook", "secret", rnd);
+                      try {
+                        const ns = await api<Settings>("/employer/ats/settings", {
+                          method: "PUT",
+                          body: {
+                            auto_push: f.auto_push,
+                            huntflow: { ...f.huntflow, token: null },
+                            webhook: { enabled: true, url: f.webhook.url || "https://ats.example.ru/hooks/draft", secret: rnd },
+                          },
+                        });
+                        onSaved(ns);
+                        setF({ ...f, webhook: { ...ns.webhook, secret: "" } });
+                        setMsg({ k: "ok", t: "Ключ подписи вебхука перевыпущен со сроком действия 90 дней." });
+                      } catch (e) { setMsg({ k: "error", t: errText(e) }); }
+                    }}
+                  >
+                    Перевыпустить
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-ghost !px-3 !py-1.5 text-xs text-brand-plum"
+                    onClick={async () => {
+                      set("webhook", "enabled", false);
+                      setSecret(null);
+                      try {
+                        const ns = await api<Settings>("/employer/ats/settings", {
+                          method: "PUT",
+                          body: {
+                            auto_push: f.auto_push,
+                            huntflow: { ...f.huntflow, token: null },
+                            webhook: { enabled: false, url: f.webhook.url || null, secret: null },
+                          },
+                        });
+                        onSaved(ns);
+                        setF({ ...f, webhook: { ...ns.webhook, secret: "" } });
+                        setMsg({ k: "info", t: "Вебхук отключён, активный ключ отозван." });
+                      } catch (e) { setMsg({ k: "error", t: errText(e) }); }
+                    }}
+                  >
+                    Отозвать
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

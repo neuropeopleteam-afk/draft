@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import InterestCard from "../../components/InterestCard";
-import { Alert, Empty, Field, Loading, Modal, dt, errText, num, useApi } from "../../components/ui";
+import { Alert, Empty, Field, Loading, Modal, cleanCompanyName, dt, errText, num, useApi } from "../../components/ui";
 import { api, apiDownload } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 
@@ -51,6 +51,15 @@ export default function MyData() {
       const r = await api<any>("/me/data/contacts/revoke", { method: "POST", body: {} });
       await reload();
       setMsg({ k: "ok", t: r.revoked ? `Доступ к контактам закрыт у работодателей: ${num(r.revoked, 0)}. Уже полученные контакты вернуть нельзя.` : "Открытых контактов нет." });
+    } catch (e) { setMsg({ k: "error", t: errText(e) }); }
+    finally { setBusy(""); }
+  }
+  async function revokeSingleContact(invId: string) {
+    setMsg(null); setBusy(`inv:${invId}`);
+    try {
+      await api(`/candidate/invitations/${invId}/contacts/revoke`, { method: "POST" });
+      await reload();
+      setMsg({ k: "ok", t: "Доступ к контактам по выбранному приглашению закрыт: у работодателя карточка снова обезличена, событие записано в журнал ATS." });
     } catch (e) { setMsg({ k: "error", t: errText(e) }); }
     finally { setBusy(""); }
   }
@@ -105,10 +114,25 @@ export default function MyData() {
         {open.length ? (
           <>
             <ul className="divide-y divide-brand-night/5 text-sm" data-testid="mydata-contacts">
-              {open.map((o) => <li key={o.invitation_id} className="py-2"><p className="font-semibold">{o.company}</p><p className="text-brand-ink/65">{o.position_title} · с {dt(o.since)} · {o.what}</p></li>)}
+              {open.map((o) => (
+                <li key={o.invitation_id} className="flex flex-wrap items-center justify-between gap-3 py-2">
+                  <div>
+                    <p className="font-semibold">{cleanCompanyName(o.company)}</p>
+                    <p className="text-brand-ink/65">{o.position_title} · с {dt(o.since)} · {o.what}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-ghost !px-3 !py-1.5 text-xs"
+                    disabled={busy === `inv:${o.invitation_id}`}
+                    onClick={() => revokeSingleContact(o.invitation_id)}
+                  >
+                    Отозвать доступ
+                  </button>
+                </li>
+              ))}
             </ul>
             <button className="btn-ghost" disabled={busy === "contacts"} onClick={revokeContacts}>Закрыть доступ у всех</button>
-            <p className="text-xs text-brand-ink/65">Карточка снова станет обезличенной. То, что работодатель уже получил, вернуть нельзя; по каждому приглашению доступ можно вернуть в разделе «Приглашения».</p>
+            <p className="text-xs text-brand-ink/65">Карточка снова станет обезличенной у работодателя, в журнал ATS добавится запись об отзыве. По каждому приглашению доступ можно вернуть в разделе «Приглашения».</p>
           </>
         ) : <Empty title="Контакты никому не открыты" text="Они открываются работодателю только после того, как вы приняли его приглашение." />}
       </Block>

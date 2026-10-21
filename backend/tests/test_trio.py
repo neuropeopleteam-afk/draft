@@ -45,3 +45,14 @@ def test_trio_candidate_creates_active(client):
     assert t["status"] == "active" and t["participants"][2]["joined"] is True
     again = client.post("/api/trio/threads", json={"invitation_id": inv["id"]}, headers=H(te))
     assert again.json()["id"] == t["id"]
+
+
+def test_trio_role_guards(client):
+    from app.core.enums import UserRole
+    from tests.test_access_matrix import _real_user
+
+    ta = analyst_token(client)
+    tx = _real_user("trio-expert@example.org", UserRole.expert)
+    assert client.get("/api/trio/threads", headers=H(tx)).status_code == 403
+    assert client.get("/api/trio/eligible", headers=H(ta)).status_code == 403
+    assert client.post("/api/trio/threads", json={}, headers=H(ta)).status_code == 403
