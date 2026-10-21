@@ -84,8 +84,6 @@ export default function Support() {
     }
   }
 
-  const _ = meta;
-
   return (
     <div className="min-h-screen bg-[#F4F6FC]">
       <SiteHeader />
@@ -209,10 +207,6 @@ export default function Support() {
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wider text-brand-lavender">Вопросы по персональным данным (152-ФЗ)</dt>
                   <dd className="font-semibold text-brand-night">Форма обратной связи на этой странице</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-brand-lavender">Оператор платформы</dt>
-                  <dd className="text-xs leading-relaxed text-brand-ink/75">Оператор платформы — команда Neuropeople (конкурсный прототип)</dd>
                 </div>
               </dl>
             </section>
