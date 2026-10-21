@@ -132,11 +132,14 @@ test("рыночный режим: ни на одной странице App.tsx
       pages += 1;
       const found = await scanPage(page, p, markers);
       if (found.length) findings.push({ role, page: p, found });
+      // промежуточный отчёт после каждой страницы: прерванный прогон не теряет находок
+      fs.mkdirSync("reports", { recursive: true });
+      fs.writeFileSync("reports/market_mode.json", JSON.stringify({ pages, routes: all.length, done: false, findings }, null, 2));
     }
     await ctx.close();
   }
   fs.mkdirSync("reports", { recursive: true });
-  fs.writeFileSync("reports/market_mode.json", JSON.stringify({ pages, routes: all.length, findings }, null, 2));
+  fs.writeFileSync("reports/market_mode.json", JSON.stringify({ pages, routes: all.length, done: true, findings }, null, 2));
   console.log(`[e2e] рыночный режим: страниц ${pages}, находок ${findings.length}`);
   expect(findings, findings.map((f) => `${f.page} [${f.role}]: ${f.found.join(", ")}`).join("\n")).toEqual([]);
 });
