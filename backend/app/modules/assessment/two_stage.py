@@ -435,6 +435,29 @@ def refine_result(state: dict, theta: float, se: float, n_new: int) -> dict:
             "confirm_up": rf.get("confirm_up")}
 
 
+def explain_sprt(o: dict, claimed: str | None) -> str:
+    """Текст итога второго этапа по правилу SPRT — совпадает с тем, что делает as_result."""
+    f, v = o.get("final_grade") or "none", o.get("verdict")
+    c = TITLE.get(claimed or "", claimed or "")
+    s = (f"Второй этап ({o.get('label')}): к ответам основного теста добавлено новых заданий — {o.get('new_items')}, "
+         f"решение принято по ответам обеих сессий вместе. ")
+    if v == "confirmed":
+        s += f"Заявленный уровень {c} подтверждён."
+        if f in GRADE_ORDER and claimed in GRADE_ORDER and _rank(f) > _rank(claimed):
+            s += f" По ответам — {TITLE.get(f, f)}: этот уровень можно подтвердить отдельно."
+    elif v == "not_confirmed":
+        s += f"Заявленный уровень {c} не подтверждён."
+        if f in GRADE_ORDER and claimed in GRADE_ORDER and _rank(f) < _rank(claimed):
+            s += (f" По ответам — {TITLE.get(f, f)}: этот уровень можно принять или пересдать тест позже; "
+                  "принудительного понижения нет.")
+        else:
+            s += " Принудительного понижения нет: тест можно пересдать позже."
+    else:
+        s += (f"Решения по уровню {c} пока нет: по ответам — {TITLE.get(f, f)} (предварительно). Категория не "
+              "присваивается до короткой устной защиты.")
+    return s
+
+
 def explain(o: dict) -> str:
     """Текст итога уточнения для кандидата."""
     f, before = o.get("final_grade"), o.get("grade_before")
@@ -457,9 +480,15 @@ def fact_payload(db, ts) -> dict | None:
         o = outcome(ts)
         if not o:
             return None
-        return {"status": "passed" if o["passed"] else "failed", "label": o["label"], "cut_grade": o["cut_grade"],
-                "lower": o["lower"], "kind": o["kind"], "grade_before": o["grade_before"], "final_grade": o["final_grade"],
-                "new_items": o["new_items"]}
+        out = {"status": "passed" if o["passed"] else "failed", "label": o["label"], "cut_grade": o["cut_grade"],
+               "lower": o["lower"], "kind": o["kind"], "grade_before": o["grade_before"], "final_grade": o["final_grade"],
+               "new_items": o["new_items"]}
+        if o.get("rule") == "sprt":  # P0-1: уровень второго этапа — только при «подтверждён»; иначе — предложение / предварительно
+            v = o.get("verdict")
+            out.update(verdict=v, final_grade=o["final_grade"] if v == "confirmed" else None,
+                       offered_grade=o["final_grade"] if v == "not_confirmed" else None,
+                       preliminary_grade=o["final_grade"] if v == "needs_followup" else None)
+        return out
     off = offer(db, ts)
     if not off:
         return None
@@ -512,12 +541,29 @@ def oral_mark(value: dict | None) -> tuple[str | None, str | None]:
 
 
 def as_result(ts, res):
-    """Итог движка для сессии уточнения → итог продукта: заявленным становится уровень по двум сессиям (если он
-    есть), дальше — обычные правила записи категории (apply_engine_result). Исходный заявленный — в details."""
+    """Итог движка для сессии уточнения → итог продукта.
+
+    Правило SPRT (поправка №2, исправление P0-1 рецензии А15 от 21.10): решение второго этапа — то же SPRT по ответам
+    обеих сессий, и категория присваивается ТОЛЬКО при «подтверждён» (заявленный уровень не меняется). «Нужен доп.
+    этап» — без категории: уровень по ответам — предварительно, решение — после устной защиты. «Не подтверждён» —
+    нижний уровень по ответам только ПРЕДЛАГАЕТСЯ (retake_lower), не присваивается: принудительного понижения нет.
+    Прежнее правило (уровень по двум сессиям становится заявленным) — для сессий без SPRT."""
     from dataclasses import replace
 
     o = (res.details or {}).get("two_stage") or {}
     f = o.get("final_grade") or "none"
+    if o.get("rule") == "sprt":
+        claimed = res.claimed_grade or getattr(ts, "claimed_grade_id", None)
+        v = o.get("verdict")
+        text = explain_sprt(o, claimed)
+        if v == "confirmed":
+            up = bool(f in GRADE_ORDER and claimed in GRADE_ORDER and _rank(f) > _rank(claimed))
+            return replace(res, confirmed=True, provisional=False, provisional_reason=None, upgrade_available=up,
+                           retake_lower=None, explanation=text)
+        lower = f if (v == "not_confirmed" and f in GRADE_ORDER and claimed in GRADE_ORDER
+                      and _rank(f) < _rank(claimed)) else None
+        return replace(res, confirmed=False, provisional=False, provisional_reason=None, upgrade_available=False,
+                       retake_lower=lower, explanation=text)
     text = explain(o)
     if f == "none":
         return replace(res, confirmed=False, provisional=False, provisional_reason=None, upgrade_available=False,
@@ -536,8 +582,9 @@ def view(db, ts) -> dict | None:
         o = outcome(ts)
         if not o:
             return None
+        text = explain_sprt(o, getattr(ts, "claimed_grade_id", None)) if o.get("rule") == "sprt" else explain(o)
         return {"status": "passed" if o["passed"] else "failed", "label": o["label"], "refine": o,
-                "text": explain(o), "source_session_id": o.get("source_session_id")}
+                "text": text, "source_session_id": o.get("source_session_id")}
     return offer(db, ts)
 
 
