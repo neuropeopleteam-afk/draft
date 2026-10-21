@@ -4,12 +4,13 @@
 граница, `+Inf` — всего наблюдений), ранг = q × total; берётся первая корзина, где накопленное число ≥ ранга;
 результат — линейная интерполяция внутри неё: нижняя граница + (верхняя − нижняя) × (ранг − накоплено до
 корзины) / (число в корзине); нижняя граница первой корзины — 0. Подтип один: ответ внутри конечной корзины
-(не в +Inf). Дистракторы — фиксированный состав: верхняя граница найденной корзины, нижняя граница и середина
-корзины. Ключ — исполнение модели алгоритма в песочнице Python над показанными значениями корзин.
+(не в +Inf). Дистракторы — типичные ошибки расчёта квантиля по кумулятивным корзинам с обеих сторон от верного
+ответа; ранг ключа задаётся по seed до подбора чисел. Ключ — исполнение модели алгоритма в песочнице Python
+над показанными значениями корзин.
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, make_options, make_rng
+from assessment_bank.gen_utils import build_variant, make_options, make_rng, spread_pick
 from assessment_bank.schema import AnswerKey, Check
 
 FAMILY_ID = "devops.mon.histogram_quantile_mcq"
@@ -17,8 +18,8 @@ FAMILY_ID = "devops.mon.histogram_quantile_mcq"
 CTX = [("API заказов", "http_request_duration_seconds"), ("шлюз платежей", "gateway_latency_seconds"),
        ("поиск", "search_query_duration_seconds"), ("очередь фоновых задач", "job_duration_seconds"),
        ("сервис профилей", "rpc_latency_seconds")]
-BOUNDS = [[0.05, 0.1, 0.25, 0.5, 1.0, 2.5], [0.1, 0.2, 0.4, 0.8, 1.6], [0.025, 0.05, 0.1, 0.2, 0.4, 0.8],
-          [0.25, 0.5, 1.0, 2.0, 4.0]]
+BOUNDS = [[0.1, 0.2, 0.4, 0.6, 0.9], [0.12, 0.24, 0.48, 0.72, 0.96], [0.15, 0.3, 0.5, 0.75, 0.95],
+          [0.2, 0.35, 0.55, 0.75, 0.95]]
 
 MODEL = '''
 bounds = {bounds!r}
@@ -33,6 +34,17 @@ v = start + (bounds[b] - start) * (rank - below) / (counts[b] - below)
 print(f"≈ {{v * 1000:.0f}} мс")
 '''
 
+WHY = {
+    "lower_bound": "взята нижняя граница корзины без интерполяции",
+    "upper_bound": "взята верхняя граница корзины (le) без интерполяции",
+    "midpoint": "взята середина корзины вместо линейной интерполяции по числу наблюдений",
+    "no_offset": "посчитан сдвиг внутри корзины, но не прибавлена нижняя граница",
+    "cum_ratio": "вместо доли внутри корзины взято отношение кумулятивных значений rank / counts[b]",
+    "add_to_upper": "интерполяционный сдвиг прибавлен к верхней границе корзины вместо нижней",
+    "prev_bucket": "интерполяция выполнена по ширине соседней младшей корзины",
+    "next_bucket": "интерполяция выполнена по ширине соседней старшей корзины",
+}
+
 
 def ms(x: float) -> str:
     return f"≈ {x * 1000:.0f} мс"
@@ -41,34 +53,74 @@ def ms(x: float) -> str:
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, metric = rng.choice(CTX)
-    for _ in range(2000):
+    n_below = make_rng(FAMILY_ID, seed // 4, "rank").sample(range(4), 4)[seed % 4]
+    for _ in range(3000):
         bounds = rng.choice(BOUNDS)
-        q = rng.choice([0.5, 0.9, 0.95, 0.99])
-        per = [rng.randint(5, 400) for _ in bounds] + [rng.randint(0, 30)]
+        q = rng.choice([0.5, 0.75, 0.8, 0.9, 0.95])
+        per = [rng.randint(15, 250) for _ in bounds] + [rng.randint(5, 40)]
         counts, acc = [], 0
         for c in per:
             acc += c
             counts.append(acc)
         rank = q * counts[-1]
         b = next(i for i, c in enumerate(counts) if c >= rank)
-        if b >= len(bounds) or b == 0:
+        if b == 0 or b >= len(bounds) - 1:
             continue
         start, end = bounds[b - 1], bounds[b]
-        v = start + (end - start) * (rank - counts[b - 1]) / (counts[b] - counts[b - 1])
-        texts = [ms(v), ms(end), ms(start), ms((start + end) / 2)]
-        if len(set(texts)) == 4 and abs(v - (start + end) / 2) > 0.08 * (end - start):
+        in_b = counts[b] - counts[b - 1]
+        frac = (rank - counts[b - 1]) / in_b
+        if not (0.18 <= frac <= 0.82):
+            continue
+        v = start + (end - start) * frac
+        good_ms = round(v * 1000)
+        if not (150 <= good_ms <= 850):
+            continue
+        prev_w = start - (0.0 if b == 1 else bounds[b - 2])
+        next_w = bounds[b + 1] - end
+        cand_s = {
+            "lower_bound": start,
+            "upper_bound": end,
+            "midpoint": (start + end) / 2,
+            "no_offset": (end - start) * frac,
+            "cum_ratio": start + (end - start) * (rank / counts[b]),
+            "add_to_upper": end + (end - start) * frac,
+            "prev_bucket": max(0.11, start - prev_w * (1 - frac)),
+            "next_bucket": end + next_w * frac,
+        }
+        cand = {k: round(val * 1000) for k, val in cand_s.items() if 105 <= round(val * 1000) <= 985}
+        below = [k for k, val in cand.items() if val < good_ms - 15]
+        above = [k for k, val in cand.items() if val > good_ms + 15]
+        if len(below) < n_below or len(above) < 3 - n_below:
+            continue
+
+        def fits(tvals: list[int]) -> bool:
+            all_v = sorted([good_ms, *tvals])
+            if len(set(all_v)) != 4 or any(len(str(x)) != 3 for x in all_v):
+                return False
+            return all(y - x >= max(18, round(0.08 * y)) for x, y in zip(all_v, all_v[1:]))
+
+        rng.shuffle(below)
+        rng.shuffle(above)
+        picked = spread_pick(rng, good_ms, below, above, n_below, 3 - n_below, cand.__getitem__, fits, min_step=0.10)
+        if picked is not None:
             break
-    correct, wrong = texts[0], texts[1:]
+    else:
+        raise RuntimeError("не удалось подобрать параметры")
+
+    correct = f"≈ {good_ms} мс"
+    wrong = [f"≈ {val} мс" for _, val in picked]
+    trap_names = [k for k, _ in picked]
     opts, key = make_options(rng, (correct, None), [(w, None) for w in wrong])
     rows = [f'{metric}_bucket{{le="{bd:g}"}}  {c}' for bd, c in zip(bounds, counts)]
     rows.append(f'{metric}_bucket{{le="+Inf"}}  {counts[-1]}')
     code = (f"histogram_quantile({q:g}, sum by (le) (increase({metric}_bucket[5m])))\n\n"
             "# increase(...) за последние 5 минут по корзинам:\n" + "\n".join(rows))
     dec = lambda x: f"{x:g}".replace(".", ",")  # noqa: E731
+    why_str = "; ".join(f"≈ {cand[k]} мс — {WHY[k]}" for k in trap_names)
     expl = (f"Всего {counts[-1]} наблюдений, ранг = {dec(q)} × {counts[-1]} = {dec(round(rank, 2))}. Первая корзина с "
             f"накопленным ≥ ранга — le={dec(end)} ({counts[b]}); до неё {counts[b - 1]}. Интерполяция: {dec(start)} + "
             f"({dec(end)} − {dec(start)}) × ({dec(round(rank, 2))} − {counts[b - 1]}) / {counts[b] - counts[b - 1]} = "
-            f"{dec(round(v, 4))} с, то есть {correct}.")
+            f"{dec(round(v, 4))} с, то есть {correct}. Дистракторы: {why_str}.")
     stem = (f"Сервис «{ctx}». Что вернёт запрос PromQL ниже по показанным приростам корзин гистограммы "
             "(округлите до миллисекунд)?")
     checks = [Check(name="quantile_model", runner="python",
@@ -78,4 +130,4 @@ def generate(seed: int):
     return build_variant(FAMILY_ID, seed, stem=stem, code=code, options=opts, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, language="text",
                          display_code_note="Исполняется модель histogram_quantile над показанными значениями корзин",
-                         params={"q": q, "bucket": b})
+                         params={"q": q, "bucket": b, "n_below": n_below, "traps": trap_names})

@@ -22,9 +22,14 @@ invariants:
     - 99,5
     - 99,9
     distractors:
-    - same_as_backend
-    - union_bound
+    - half_fanout
+    - sqrt_fanout
+    - q_half
+    - harmonic
     - complement
+    - union_bound
+    - double_fanout
+    - q_double
 time_limit_s: 240
 canary: false
 prior_difficulty:
