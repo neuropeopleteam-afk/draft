@@ -863,6 +863,11 @@ def _live_numbers_cached(_key: tuple) -> dict:
         ac = nums.get("anticheat") or {}
         if isinstance(ac.get("claim_ru"), str) and ac["claim_ru"].strip():
             out["anticheat_claim"] = ac["claim_ru"].strip()
+        bf = ac.get("behavioral_followup") or {}
+        if isinstance(bf, dict) and bf.get("rule") == "2_or_more_signals_or_direct_evidence" and bf.get("auto_ban") is False:
+            ks = ("honest_false_followup", "honest_simulated_total", "bot_flagged_followup", "bot_simulated_total")
+            if all(isinstance(bf.get(k), int) and not isinstance(bf.get(k), bool) for k in ks):
+                out["followup"] = {k: bf[k] for k in ks}
         bk = nums.get("bank") or {}
         for k in ("families", "variants_20seeds", "checks", "checks_failed", "directions"):
             if isinstance(bk.get(k), int) and not isinstance(bk.get(k), bool):
@@ -935,6 +940,18 @@ def _spoken_claim(t: str) -> str:
     return re.sub(r"\s{2,}", " ", t).strip()
 
 
+def _followup_sentence(n: dict) -> str:
+    """Правило античита (anticheat.behavioral_followup в NUMBERS.json): нет ключа — правило и цифры не называем."""
+    f = n.get("followup")
+    if not isinstance(f, dict):
+        return ""
+    sp = lambda v: f"{v:,}".replace(",", "\u00a0")  # noqa: E731
+    return (f"Правило античита: два и больше независимых признака или прямая улика — результат пока не окончательный, "
+            f"решает устный этап; автоблокировок нет. На симуляции честных кандидатов отправлено на устный этап зря — "
+            f"{sp(f['honest_false_followup'])} из {sp(f['honest_simulated_total'])}, ботов отправлено на устный этап — "
+            f"{sp(f['bot_flagged_followup'])} из {sp(f['bot_simulated_total'])}. ")
+
+
 def _bank_sentence(n: dict) -> str:
     if not isinstance(n.get("bank_families"), int):
         return ""
@@ -952,7 +969,8 @@ def _bank_sentence(n: dict) -> str:
 # Когда в контекст модели нужен блок цифр: вопрос про цифры/проверку/банк — или уточнение к ответу с процентами
 # («а в жёстких условиях?»): без блока модель додумывала («точность падает»), хотя в жёстких она выше.
 _NUMBERS_Q = re.compile(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак|банк|семейств|вариант|сколько задан|"
-                        r"жёстк|жестк|стандартн|услови|вердикт|грейд|оценщик|интервал|ложн|списыв|утечк|симуляц")
+                        r"жёстк|жестк|стандартн|услови|вердикт|грейд|оценщик|интервал|ложн|списыв|утечк|симуляц|античит|\bбот|честн|"
+                        r"блокир|бан\b|улик")
 
 
 def numbers_chunk() -> dict[str, str]:
@@ -971,6 +989,7 @@ def numbers_chunk() -> dict[str, str]:
         body += anti.rstrip(".") + ". "
     else:
         body += "Цифры по защите от списывания — на экране «Проверка» (/validation). "
+    body += _followup_sentence(n)
     body += _bank_sentence(n)
     body += "Это синтетика: проверяется механика, а не люди."
     return {
