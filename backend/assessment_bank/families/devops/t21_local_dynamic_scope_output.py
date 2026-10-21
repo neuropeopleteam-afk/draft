@@ -17,8 +17,10 @@ FAMILY_ID = "devops.bash.t21_local_dynamic_scope_output"
 
 CTX = ["воркер очереди писем", "синхронизатор каталога", "клиент платёжного шлюза", "индексатор поиска",
        "агент выкладки", "сборщик метрик", "экспортёр CRM"]
-NAMES = [("retries", "bump", "job"), ("attempts", "inc", "task"), ("failures", "count_fail", "sync"),
+NAMES = [("retries", "bump", "job"), ("attempts", "inc", "task"), ("failures", "count_fail", "sync_job"),
          ("errors", "note_error", "deploy")]
+# хотя бы один local есть всегда: (local в функции задачи, local во вспомогательной функции)
+MODES = [(True, False), (True, False), (False, True), (True, True)]
 
 
 def generate(seed: int):
@@ -28,8 +30,7 @@ def generate(seed: int):
     g0 = rng.randint(0, 3)
     l0 = rng.randint(5, 20)
     step = rng.choice([1, 1, 2, 3])
-    job_local = rng.random() < 0.7
-    bump_local = rng.random() < 0.3
+    job_local, bump_local = rng.choice(MODES)
     k_in = rng.randint(1, 3)
     k_out = rng.randint(1, 2)
     if bump_local:

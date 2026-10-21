@@ -12,7 +12,7 @@ from __future__ import annotations
 from fnmatch import fnmatchcase
 
 from assessment_bank.families._t21_kit import output_variant
-from assessment_bank.gen_utils import make_rng
+from assessment_bank.gen_utils import make_rng, plural
 
 FAMILY_ID = "devops.bash.t21_unquoted_split_glob_output"
 
@@ -48,14 +48,16 @@ def generate(seed: int):
              f'for f in "${kv}"; do echo "{lab2} $f"; done',
              f"set -- ${fv}",
              'echo "args=$#"',
-             "printf '[%s]\\n' \"$@\""]
+             "printf '[%s]' \"$@\"; echo"]
     code = "\n".join(lines)
-    outs = [f"{lab1} {f}" for f in matched] + [f"{lab2} {pat}", f"args={len(words)}"] + [f"[{w}]" for w in words]
+    outs = [f"{lab1} {f}" for f in matched] + [f"{lab2} {pat}", f"args={len(words)}", "".join(f"[{w}]" for w in words)]
     out = "\n".join(outs)
     expl = (f"Без кавычек ${kv} проходит подстановку имён файлов: «{pat}» раскрывается в подходящие файлы каталога по "
             f"алфавиту — {', '.join(matched)}. В кавычках \"${kv}\" — одно слово «{pat}» без подстановки. Кавычки "
-            f"внутри значения ${fv} — обычные символы, разбиение идёт по пробелам: {len(words)} слов — "
-            + " ".join(f"[{w}]" for w in words) + ". Вывод по строкам: " + " / ".join(f"«{x}»" for x in outs) + ".")
+            f"внутри значения ${fv} — обычные символы, разбиение идёт по пробелам: {len(words)} "
+            f"{plural(len(words), 'слово', 'слова', 'слов')} — "
+            + " ".join(f"[{w}]" for w in words) + " (printf повторяет формат для каждого аргумента, echo в конце "
+            "переводит строку). Вывод по строкам: " + " / ".join(f"«{x}»" for x in outs) + ".")
     stem = (f"Скрипт ({ctx}) берёт шаблон файлов и флаги из переменных. В текущем каталоге лежат файлы: "
             + ", ".join(f"`{f}`" for f in present) + " — и больше ничего.")
     files = {f: "x\n" for f in present}
