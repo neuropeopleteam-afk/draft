@@ -36,6 +36,10 @@ stats = {
     "years": f"{years[0]}–{years[-1]}" if years else None,
     "athletes_with_evsk_norm": agg["totals"]["athletes_with_evsk_norm"],
     "athletes_with_evsk_norm_by_rank": agg["totals"]["athletes_with_evsk_norm_by_rank"],
+    # v5: почему у записи нет места — по построению документа (список сборной, «б/м», DSQ, поделённое место)
+    # или место не подтверждено по скану (place_unverified); счёт по записям спортсменов
+    "place_status_counts": dict(sorted(__import__("collections").Counter(r.get("place_status") or "unknown" for r in persons).items())),
+    "place_unverified": sum(1 for r in persons if r.get("place_uncertain")),
     "what": "Официальные протоколы ФСП России 2025–2026 (fsp-russia.ru/about/documents): результаты, привязанные к соревнованиям; "
             "судьи, тренеры и строки справок исключены; норматив ЕВСК — по месту, числу субъектов РФ и составу судейской коллегии.",
     "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
