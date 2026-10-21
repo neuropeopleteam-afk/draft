@@ -131,10 +131,11 @@ export function JuryGuide() {
   // Д4: живое интервью (/candidate/interview/*) — без проводника: в центре только аватар и «Ответить», без «Шаг 1 из 9»
   if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/") || loc.pathname === "/login/2fa"
     || loc.pathname.startsWith("/candidate/interview/")
-    || ["/login", "/register", "/forgot", "/reset", "/criteria", "/demo/criteria", "/jury/live", "/demo/live"].includes(loc.pathname)) return null;
+    || ["/login", "/register", "/demo/register", "/forgot", "/reset", "/500", "/criteria", "/demo/criteria", "/jury/live", "/demo/live"].includes(loc.pathname)) return null;
   if (!hidden && folded) return (
     <button ref={setBox} type="button" data-testid="guide-continue" onClick={() => setPeek(true)} aria-label="Развернуть проводник для жюри"
-      className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm">
+      style={{ bottom: "calc(0.75rem + var(--mobile-tabbar-h, 0px))" }}
+      className="fixed left-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:left-4 sm:px-4 sm:py-2.5 sm:text-sm">
       {mode === "quick" ? `Продолжить проверку: шаг ${q + 1} из ${QUICK_LEN}` : `Продолжить проверку: шаг ${step + 1} из ${STEPS.length}`}
     </button>
   );
@@ -148,7 +149,9 @@ export function JuryGuide() {
           : slot === slots.sidebar ? `Проводник жюри · шаг ${step + 1}/${STEPS.length}` : `Проводник ${step + 1}/${STEPS.length}`}
       </button>, slot);
     return (
-      <button ref={setBox} className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm"
+      <button ref={setBox}
+        style={{ bottom: "calc(0.75rem + var(--mobile-tabbar-h, 0px))" }}
+        className="fixed left-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:left-4 sm:px-4 sm:py-2.5 sm:text-sm"
         onClick={() => guide.show()} aria-label="Показать проводник для жюри">
         <span className="sm:hidden">{mode === "quick" ? `12 минут · ${q + 1}/${QUICK_LEN}` : `Проводник · ${step + 1}/${STEPS.length}`}</span>
         <span className="hidden sm:inline">{mode === "quick" ? `Проводник жюри · 12 минут · шаг ${q + 1}/${QUICK_LEN}` : `Проводник жюри · шаг ${step + 1}/${STEPS.length}`}</span>

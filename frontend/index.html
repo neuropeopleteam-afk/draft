@@ -12,9 +12,22 @@
     <meta name="apple-mobile-web-app-title" content="Драфт" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="Драфт — компании выбирают подтверждённых. Платформа подбора ИТ-специалистов: работодатель сам находит проверенного кандидата и приглашает с зарплатой." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:site_name" content="Драфт" />
+    <meta property="og:title" content="Драфт — компании выбирают подтверждённых" />
+    <meta property="og:description" content="Драфт — компании выбирают подтверждённых. Платформа подбора ИТ-специалистов: работодатель сам находит проверенного кандидата и приглашает с зарплатой." />
+    <meta property="og:image" content="/favicon-og-1200x630.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Драфт — платформа подтверждённого найма ИТ-специалистов" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Драфт — компании выбирают подтверждённых" />
+    <meta name="twitter:description" content="Драфт — компании выбирают подтверждённых. Платформа подбора ИТ-специалистов: работодатель сам находит проверенного кандидата и приглашает с зарплатой." />
+    <meta name="twitter:image" content="/favicon-og-1200x630.png" />
     <title>Драфт — компании выбирают подтверждённых</title>
-    <!-- Я16: экран до запуска — встроен (docs/BOOT.md) -->
-    <style>
+        <style>
       .boot{box-sizing:border-box;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:1.5rem;text-align:center;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#310F53;background:#fff}
       .boot h1{margin:0;font-size:1.25rem;line-height:1.35;font-weight:700;outline:none}
       .boot p{margin:0;max-width:30rem;font-size:1rem;line-height:1.5;color:#1C1D22}
@@ -31,111 +44,7 @@
       @keyframes boot-spin{to{transform:rotate(360deg)}}
       @media (prefers-reduced-motion:reduce){.boot-spin{animation:none}}
     </style>
-    <!-- Я16 + FIX7: сторож загрузки (встроенный, без внешних запросов) — описание в docs/BOOT.md -->
-    <script>
-      (function () {
-        var W = window, D = document, KEY = "fsp_boot_retry", WAIT_MS = 9000, GAP_MS = 120000;
-        var state = "wait";
-        var shown = false, timer = 0, bad = "";
-        function now() { return new Date().getTime(); }
-        function hasR() { return /[?&]r=\d/.test(location.search); }
-        function lastRetry() { try { return Number(sessionStorage.getItem(KEY)) || 0; } catch (e) { return -1; } }
-        function canAuto() { var l = lastRetry(); return l < 0 ? !hasR() : now() - l > GAP_MS; }
-        function mark() { try { sessionStorage.setItem(KEY, String(now())); } catch (e) { } }
-        function withR() {
-          var q = location.search.replace(/^\?/, "").split("&").filter(function (p) { return p && p.indexOf("r=") !== 0; });
-          q.push("r=" + now());
-          return location.pathname + "?" + q.join("&") + location.hash;
-        }
-        function dropR() {
-          if (!hasR() || !W.history || !history.replaceState) return;
-          var q = location.search.replace(/^\?/, "").split("&").filter(function (p) { return p && p.indexOf("r=") !== 0; });
-          try { history.replaceState(history.state, "", location.pathname + (q.length ? "?" + q.join("&") : "") + location.hash); } catch (e) { }
-        }
-        function reload() {
-          mark();
-          var done = false;
-          function go() { if (!done) { done = true; location.replace(withR()); } }
-          W.setTimeout(go, 1500);
-          try {
-            var sw = navigator.serviceWorker, jobs = [];
-            if (sw && sw.controller && sw.getRegistrations) {
-              jobs.push(sw.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
-              if (W.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
-            }
-            Promise.all(jobs).then(go, go);
-          } catch (e) { go(); }
-        }
-        function clear() {
-          var go = function () { location.replace(withR()); }, sw = navigator.serviceWorker, jobs = [];
-          mark();
-          try {
-            if (sw && sw.getRegistrations) jobs.push(sw.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
-            if (W.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
-          } catch (e) { }
-          W.setTimeout(go, 2000);
-          Promise.all(jobs).then(go, go);
-        }
-        function base(u) { return String(u || "").split("?")[0].replace(/^.*\//, ""); }
-        function stuck() {
-          var out = [], els = D.querySelectorAll('script[src*="/assets/"],link[href*="/assets/"]');
-          for (var i = 0; i < els.length; i++) {
-            var u = els[i].src || els[i].href, e = W.performance && performance.getEntriesByName ? performance.getEntriesByName(u) : [1];
-            if (!e.length || !(e[0].responseEnd > 0)) out.push(base(u));
-          }
-          return out.join(", ");
-        }
-        var VPN = "Если включён VPN — отключите его и обновите страницу.";
-        function text(kind) {
-          if (kind === "slow") return ["Страница не загрузилась", "Связь с сервером медленная или прервалась. " + VPN];
-          if (kind === "error") return ["Не удалось запустить страницу", "При запуске произошла ошибка. Обычно помогает обновление страницы."];
-          return ["Страница не загрузилась", "Часть файлов не дошла: связь прервалась или вышла новая версия сайта. " + VPN];
-        }
-        function fail(kind) {
-          if (state === "mounted" || shown) return;
-          shown = true;
-          W.clearTimeout(timer);
-          var auto = canAuto(), t = text(kind), root = D.getElementById("root"), f = bad || (kind === "slow" ? stuck() : "");
-          var why = "Код: BOOT-" + kind.toUpperCase() + (f ? (kind === "slow" ? " · не дождались файла: " : " · не загрузился файл: ") + f : "");
-          if (root) {
-            root.innerHTML = '<main class="boot" id="boot" aria-labelledby="boot-h" data-boot="' + kind + '">' +
-              '<h1 id="boot-h" tabindex="-1">' + t[0] + "</h1><p>" + t[1] + "</p>" +
-              '<p class="boot-why" id="boot-why"></p><div class="boot-row"><button type="button" id="boot-reload">Обновить</button>' +
-              '<button type="button" class="boot-alt" id="boot-clear">Очистить кэш и открыть заново</button></div>' +
-              '<p><a href="/status">Состояние сервиса и проверка связи</a></p>' +
-              '<p class="boot-note" id="boot-note" role="status">' + (auto ? "Пробуем загрузить ещё раз…" : "") + "</p></main>";
-            D.getElementById("boot-why").textContent = why;
-            D.getElementById("boot-reload").onclick = reload;
-            D.getElementById("boot-clear").onclick = clear;
-            try { D.getElementById("boot-h").focus(); } catch (e) { }
-          }
-          if (auto) W.setTimeout(function () { if (state === "wait") reload(); }, 1200);
-        }
-        function isAsset(t) { return t && t !== W && (t.tagName === "SCRIPT" || t.tagName === "LINK") && /\/assets\//.test(t.src || t.href || ""); }
-        W.addEventListener("error", function (e) {
-          if (state === "mounted") return;
-          if (isAsset(e.target)) { bad = base(e.target.src || e.target.href); return fail("chunk"); }
-          if (e.target && e.target !== W) return;
-          if (!/\/(assets|src)\//.test(e.filename || "")) return;
-          var cut = /SyntaxError|Unexpected end|Invalid or unexpected|missing \) after|unterminated/i.test(e.message || "");
-          W.setTimeout(function () { if (state !== "mounted") fail(cut ? "chunk" : "error"); }, 1500);
-        }, true);
-        W.addEventListener("vite:preloadError", function () { if (state !== "mounted") fail("chunk"); });
-        W.addEventListener("unhandledrejection", function (e) {
-          var m = String((e.reason && (e.reason.message || e.reason)) || "");
-          if (state !== "mounted" && /dynamically imported module|Importing a module script failed|Unable to preload CSS/i.test(m)) fail("chunk");
-        });
-        timer = W.setTimeout(function () { if (state !== "mounted") fail("slow"); }, WAIT_MS);
-        W.__fspBoot = {
-          started: function () { if (state === "wait") state = "started"; dropR(); },
-          mounted: function () { state = "mounted"; W.clearTimeout(timer); dropR(); },
-          canAuto: canAuto,
-          retry: function () { if (!canAuto()) return false; reload(); return true; },
-          reload: reload,
-          clear: clear
-        };
-      })();
-    </script>
+        <script>(function(){var W=window,D=document,KEY="fsp_boot_retry",WAIT_MS=9000,GAP_MS=120000;var state="wait";var shown=false,timer=0,bad="";function now(){return new Date().getTime();}function hasR(){return /[?&]r=\d/.test(location.search);}function lastRetry(){try{return Number(sessionStorage.getItem(KEY))||0;}catch(e){return -1;}}function canAuto(){var l=lastRetry();return l < 0?!hasR():now()- l > GAP_MS;}function mark(){try{sessionStorage.setItem(KEY,String(now()));}catch(e){}}function withR(){var q=location.search.replace(/^\?/,"").split("&").filter(function(p){return p&&p.indexOf("r=")!==0;});q.push("r=" + now());return location.pathname + "?" + q.join("&")+ location.hash;}function dropR(){if(!hasR()||!W.history||!history.replaceState)return;var q=location.search.replace(/^\?/,"").split("&").filter(function(p){return p&&p.indexOf("r=")!==0;});try{history.replaceState(history.state,"",location.pathname +(q.length?"?" + q.join("&"):"")+ location.hash);}catch(e){}}function reload(){mark();var done=false;function go(){if(!done){done=true;location.replace(withR());}}W.setTimeout(go,1500);try{var sw=navigator.serviceWorker,jobs=[];if(sw&&sw.controller&&sw.getRegistrations){jobs.push(sw.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister();}));}));if(W.caches&&caches.keys)jobs.push(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));}));}Promise.all(jobs).then(go,go);}catch(e){go();}}function clear(){var go=function(){location.replace(withR());},sw=navigator.serviceWorker,jobs=[];mark();try{if(sw&&sw.getRegistrations)jobs.push(sw.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister();}));}));if(W.caches&&caches.keys)jobs.push(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));}));}catch(e){}W.setTimeout(go,2000);Promise.all(jobs).then(go,go);}function base(u){return String(u||"").split("?")[0].replace(/^.*\//, ""); } function stuck() { var out = [], els = D.querySelectorAll('script[src*="/assets/"],link[href*="/assets/"]'); for (var i = 0; i < els.length; i++) { var u = els[i].src || els[i].href, e = W.performance && performance.getEntriesByName ? performance.getEntriesByName(u) : [1]; if (!e.length || !(e[0].responseEnd > 0)) out.push(base(u)); } return out.join(", "); } var VPN = "Если включён VPN — отключите его и обновите страницу."; function text(kind) { if (kind === "slow") return ["Страница не загрузилась", "Связь с сервером медленная или прервалась. " + VPN]; if (kind === "error") return ["Не удалось запустить страницу", "При запуске произошла ошибка. Обычно помогает обновление страницы."]; return ["Страница не загрузилась", "Часть файлов не дошла: связь прервалась или вышла новая версия сайта. " + VPN]; } function fail(kind) { if (state === "mounted" || shown) return; shown = true; W.clearTimeout(timer); var auto = canAuto(), t = text(kind), root = D.getElementById("root"), f = bad || (kind === "slow" ? stuck() : ""); var why = "Код: BOOT-" + kind.toUpperCase() + (f ? (kind === "slow" ? " · не дождались файла: " : " · не загрузился файл: ") + f : ""); if (root) { root.innerHTML = '<main class="boot" id="boot" aria-labelledby="boot-h" data-boot="' + kind + '">' + '<h1 id="boot-h" tabindex="-1">' + t[0] + "</h1><p>" + t[1] + "</p>" + '<p class="boot-why" id="boot-why"></p><div class="boot-row"><button type="button" id="boot-reload">Обновить</button>' + '<button type="button" class="boot-alt" id="boot-clear">Очистить кэш и открыть заново</button></div>' + '<p><a href="/status">Состояние сервиса и проверка связи</a></p>' + '<p class="boot-note" id="boot-note" role="status">' + (auto ? "Пробуем загрузить ещё раз…" : "") + "</p></main>"; D.getElementById("boot-why").textContent = why; D.getElementById("boot-reload").onclick = reload; D.getElementById("boot-clear").onclick = clear; try { D.getElementById("boot-h").focus(); } catch (e) { } } if (auto) W.setTimeout(function () { if (state === "wait") reload(); }, 1200); } function isAsset(t) { return t && t !== W && (t.tagName === "SCRIPT" || t.tagName === "LINK") && /\/assets\//.test(t.src || t.href || ""); } W.addEventListener("error", function (e) { if (state === "mounted") return; if (isAsset(e.target)) { bad = base(e.target.src || e.target.href); return fail("chunk"); } if (e.target && e.target !== W) return; if (!/\/(assets|src)\//.test(e.filename || "")) return; var cut = /SyntaxError|Unexpected end|Invalid or unexpected|missing \) after|unterminated/i.test(e.message || ""); W.setTimeout(function () { if (state !== "mounted") fail(cut ? "chunk" : "error"); }, 1500); }, true); W.addEventListener("vite:preloadError", function () { if (state !== "mounted") fail("chunk"); }); W.addEventListener("unhandledrejection", function (e) { var m = String((e.reason && (e.reason.message || e.reason)) || ""); if (state !== "mounted" && /dynamically imported module|Importing a module script failed|Unable to preload CSS/i.test(m)) fail("chunk"); }); timer = W.setTimeout(function () { if (state !== "mounted") fail("slow"); }, WAIT_MS); W.__fspBoot = { started: function () { if (state === "wait") state = "started"; dropR(); }, mounted: function () { state = "mounted";W.clearTimeout(timer);dropR();},canAuto:canAuto,retry:function(){if(!canAuto())return false;reload();return true;},reload:reload,clear:clear};})();</script>
   </head>
   <body>
     <div id="root"><main class="boot" id="boot" data-boot="loading"><div class="boot-logo" aria-hidden="true"><svg width="36" height="36" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#310F53"/><circle cx="12.5" cy="16" r="7" fill="none" stroke="#FFD6E4" stroke-width="2.5"/><circle cx="19.5" cy="16" r="7" fill="none" stroke="#FF0053" stroke-width="2.5"/></svg><span>Драфт</span></div><div class="boot-spin" aria-hidden="true"></div><p role="status">Загружаем…</p></main></div>

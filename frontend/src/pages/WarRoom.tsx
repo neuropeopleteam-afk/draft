@@ -141,8 +141,8 @@ export default function WarRoom() {
               <NavBtn to="/employer" testid="wr-nav-employer">
                 Кабинет работодателя
               </NavBtn>
-              <NavBtn to="/expertise" testid="wr-nav-expertise">
-                Экспертиза ФСП
+              <NavBtn to="/demo" testid="wr-nav-expertise">
+                Демо для жюри
               </NavBtn>
             </>
           )}
@@ -219,9 +219,9 @@ export default function WarRoom() {
               Режим А
             </span>
             <p className="mt-1 text-lg font-extrabold md:text-xl">
-              Живой Архитектурный Полигон
+              Живой архитектурный полигон
             </p>
-            <p className="mt-1 text-xs text-white/65">
+            <p className="mt-1 text-xs text-white/75">
               8 боевых инцидентов по направлениям · настройка численных параметров и бюджета ·
               рубрика с дословными цитатами
             </p>
@@ -242,9 +242,9 @@ export default function WarRoom() {
               Режим Б · Демонстрационный стенд
             </span>
             <p className="mt-1 text-lg font-extrabold md:text-xl">
-              Полигон Перехвата Нечестных Попыток
+              Полигон перехвата нечестных попыток
             </p>
-            <p className="mt-1 text-xs text-white/65">
+            <p className="mt-1 text-xs text-white/75">
               Демонстрация на подготовленных примерах · фильтр оценщика, вариант-двойник и 5 контуров честности
             </p>
           </button>
@@ -269,7 +269,7 @@ export default function WarRoom() {
           )}
         </div>
 
-        <p className="mt-10 text-center text-[11px] text-white/40">
+        <p className="mt-10 text-center text-[11px] text-white/60">
           Расчёт метрик, бюджета, рубрики с цитатами и фильтрации текста выполняется на сервере
           (/api/warroom/*). В демонстрационном режиме попытки не сохраняются в профиль кандидата.
         </p>

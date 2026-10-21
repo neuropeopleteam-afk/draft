@@ -1,14 +1,16 @@
 /* Service worker «Драфт»: оболочка приложения офлайн, API с персональными данными — только сеть, уведомления. MIT.
  *
- * Выкладка без пустой страницы:
+ * Выкладка без пустой страницы и без «застрявшей» старой версии:
  * - VERSION подставляется при сборке (vite.config.ts, плагин sw-build-version): новый sw.js на каждую сборку,
  *   кэши прежней версии удаляются при активации;
  * - skipWaiting + clients.claim: новая версия берёт управление сразу, без закрытия вкладок;
- * - index.html (навигация) — сначала сеть; кэш — только при обрыве сети или 5xx во время выкладки;
+ * - index.html (навигация) — сначала сеть (cache: "no-store"); кэш — только при обрыве сети или 5xx во время выкладки;
  *   в кэш кладутся только успешные ответы (502 и страница ошибки не становятся «оболочкой»);
+ * - для /assets/*.js и *.css проверяется Content-Type (ответ text/html никогда не кэшируется как скрипт/стиль),
+ *   при 404 удалённого чанка старой выкладки инициируется обновление SW и уведомление вкладки;
  * - 401 (базовая авторизация стенда) — SW снимается и страница перезагружается: браузер сам покажет окно входа;
  * - после активации SW сообщает версию вкладкам — устаревшая вкладка перезагружается (src/integrations/pwa.ts);
- * - FIX7: версия по запросу (message get-version) — страница сверяет свою сборку с SW при старте; /status — мимо SW.
+ * - версия по запросу (message get-version) и принудительная активация (skip-waiting).
  */
 const VERSION = "__BUILD_ID__";
 const SHELL = `shell-${VERSION}`;
@@ -43,7 +45,7 @@ self.addEventListener("install", (e) => {
   // Предзагрузка — по возможности: ошибка сети не должна мешать установке новой версии
   e.waitUntil(caches.open(SHELL).then((c) => Promise.all([
     cacheShell(c).catch(() => undefined),
-    ...STATIC.map((u) => fetch(u, { credentials: "same-origin" }).then((r) => (r.ok ? c.put(u, r) : undefined)).catch(() => undefined)),
+    ...STATIC.map((u) => fetch(u, { cache: "no-cache", credentials: "same-origin" }).then((r) => (r.ok ? c.put(u, r) : undefined)).catch(() => undefined)),
   ])));
 });
 
@@ -86,8 +88,16 @@ async function navigate(req) {
     }
     return res;
   } catch (_) {
-    return (await caches.match("/")) || (await caches.match("/offline.html")) || new Response(OFFLINE, { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } });
+    return (await caches.match("/offline.html")) || (await caches.match("/")) || new Response(OFFLINE, { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } });
   }
+}
+
+async function notifyAssetStale() {
+  try {
+    await self.registration.update();
+  } catch (_) { /* ignore */ }
+  const list = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  for (const c of list) c.postMessage({ type: "sw-asset-stale", version: VERSION });
 }
 
 self.addEventListener("fetch", (e) => {
@@ -108,10 +118,19 @@ self.addEventListener("fetch", (e) => {
     return;
   }
   if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/icons/") || url.pathname === "/manifest.webmanifest" || url.pathname === "/favicon.svg" || url.pathname === "/app/qr.svg") {
-    // Файлы статики и иконки: кэш, затем сеть; в кэш — только успешные ответы
+    // Файлы статики и иконки: кэш, затем сеть; в кэш — только успешные ответы правильного типа (не HTML-фоллбэк)
     e.respondWith(
       caches.match(req).then((hit) => hit || fetch(req).then((res) => {
-        if (res.ok && res.type === "basic") { const copy = res.clone(); caches.open(ASSETS).then((c) => c.put(req, copy)); }
+        const ct = (res.headers.get("Content-Type") || "").toLowerCase();
+        const isCodeAsset = url.pathname.endsWith(".js") || url.pathname.endsWith(".mjs") || url.pathname.endsWith(".css");
+        if (isCodeAsset && (!res.ok || ct.includes("text/html"))) {
+          notifyAssetStale();
+          return res;
+        }
+        if (res.ok && res.type === "basic") {
+          const copy = res.clone();
+          caches.open(ASSETS).then((c) => c.put(req, copy)).catch(() => undefined);
+        }
         return res;
       })),
     );
@@ -121,7 +140,12 @@ self.addEventListener("fetch", (e) => {
 // FIX7: версия сборки по запросу страницы (src/integrations/pwa.ts, /status): сверка «страница ↔ service worker» —
 // устаревшая вкладка или закэшированная оболочка прежней выкладки распознаются без ожидания события активации.
 self.addEventListener("message", (e) => {
-  if (e.data && e.data.type === "get-version" && e.ports && e.ports[0]) e.ports[0].postMessage({ type: "version", version: VERSION });
+  if (!e.data) return;
+  if (e.data.type === "get-version" && e.ports && e.ports[0]) {
+    e.ports[0].postMessage({ type: "version", version: VERSION });
+  } else if (e.data.type === "skip-waiting") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("push", (e) => {

@@ -40,6 +40,17 @@ const SAMPLE_JUSTIFICATIONS: Record<string, string> = {
     "Первопричина паралича конвейера: параллельные воркеры автотестов мутируют общую базу данных без изоляции и зависят от нестабильной внешней песочницы, что вызывает гонки состояния и ложные падения flaky. Выделяем изолированную схему или вложенную транзакцию с откатом rollback на каждый worker_id и заменяем внешние вызовы детерминированным контрактным стабом. Отключаем слепые перезапуски, вводим карантин и мониторинг времени прохождения очереди.",
 };
 
+const DEMO_RECOMMENDED_MEASURES: Record<string, string[]> = {
+  payment: ["idem", "cb", "pgb"],
+  kafka: ["outbox", "dedup", "dlq"],
+  k8s: ["k8s_mem", "probe", "jitter"],
+  ai: ["guard", "budget"],
+  frontend_ssr: ["ssr_scope", "swr"],
+  mobile_sync: ["sync_batch", "jitter"],
+  ml_drift: ["feat_warm", "cb"],
+  qa_flaky: ["tx_iso", "stub_ext"],
+};
+
 const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 
 export default function ArchitectureMode({
@@ -198,9 +209,8 @@ export default function ArchitectureMode({
     setCode(s.patches[idx]?.code ?? "");
   };
 
-  const fillOptimalDemo = () => {
-    if (!demoMode) return;
-    const reqIds = s.required ?? ["idem", "cb", "pgb"];
+  const buildOptimalMeasures = () => {
+    const reqIds = DEMO_RECOMMENDED_MEASURES[s.id] ?? ["idem", "cb", "pgb"];
     const opt: Record<string, Record<string, number>> = {};
     reqIds.forEach((id) => {
       const spec = measuresCatalog.find((m) => m.id === id);
@@ -210,14 +220,27 @@ export default function ArchitectureMode({
       });
       opt[id] = defaults;
     });
+    return opt;
+  };
+
+  const fillOptimalDemo = () => {
+    if (!demoMode) return;
+    const opt = buildOptimalMeasures();
     setSelectedMeasures(opt);
     setPatchIdx(0);
     setCode(s.patches[0]?.code ?? "");
     setJustification(SAMPLE_JUSTIFICATIONS[s.id] ?? SAMPLE_JUSTIFICATIONS.payment);
   };
 
-  const applyHotfix = async () => {
+  const applyHotfix = async (override?: {
+    measuresMap?: Record<string, Record<string, number>>;
+    codePatch?: string;
+    justText?: string;
+  }) => {
     if (phase === "deploying") return;
+    const effMeasures = override?.measuresMap ?? selectedMeasures;
+    const effCode = override?.codePatch ?? code;
+    const effJust = override?.justText ?? justification;
     setPhase("deploying");
     setEvalResult(null);
     setDeployLog([]);
@@ -230,9 +253,9 @@ export default function ArchitectureMode({
         body: {
           scenario_id: s.id,
           seed: demoMode ? s.seed : undefined,
-          measures: buildMeasuresPayload(selectedMeasures),
-          code_patch: code,
-          justification,
+          measures: buildMeasuresPayload(effMeasures),
+          code_patch: effCode,
+          justification: effJust,
           elapsed_s: Math.max(30, sec),
           save: !demoMode,
           demo: demoMode,
@@ -240,9 +263,9 @@ export default function ArchitectureMode({
       });
       for (const line of res.feedback.deploy_log) {
         setDeployLog((l) => [...l, line]);
-        await sleep(220);
+        await sleep(140);
       }
-      setAppliedMeasures({ ...selectedMeasures });
+      setAppliedMeasures({ ...effMeasures });
       setEvalResult(res);
       setSimPreview(res);
       setPhase("applied");
@@ -251,6 +274,18 @@ export default function ArchitectureMode({
       setPhase("incident");
       setErr(errText(e));
     }
+  };
+
+  const quickRunDemo = async () => {
+    if (!demoMode || phase === "deploying") return;
+    const opt = buildOptimalMeasures();
+    const optCode = s.patches[0]?.code ?? "";
+    const optJust = SAMPLE_JUSTIFICATIONS[s.id] ?? SAMPLE_JUSTIFICATIONS.payment;
+    setSelectedMeasures(opt);
+    setPatchIdx(0);
+    setCode(optCode);
+    setJustification(optJust);
+    await applyHotfix({ measuresMap: opt, codePatch: optCode, justText: optJust });
   };
 
   const goDefense = async () => {
@@ -366,6 +401,14 @@ export default function ArchitectureMode({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
+              onClick={() => void quickRunDemo()}
+              data-testid="wr-quick-run"
+              className="rounded-lg bg-emerald-500 px-3 py-1 text-xs font-extrabold text-slate-950 shadow hover:bg-emerald-400"
+            >
+              Быстрый прогон примера (1 клик)
+            </button>
+            <button
+              type="button"
               onClick={fillOptimalDemo}
               data-testid="wr-fill-optimal"
               className="rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-200 hover:bg-emerald-500/25"
@@ -382,6 +425,22 @@ export default function ArchitectureMode({
             </button>
           </div>
         )}
+      </div>
+
+      {/* Полоса быстрого старта без лишних экранов */}
+      <div
+        className="grid gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs text-white/80 sm:grid-cols-3"
+        data-testid="wr-quickstart"
+      >
+        <div>
+          <strong className="text-indigo-200">Шаг 1.</strong> Включите инженерные меры и настройте их параметры в рамках бюджета.
+        </div>
+        <div>
+          <strong className="text-indigo-200">Шаг 2.</strong> Выберите верный патч кода или исправьте его вручную.
+        </div>
+        <div>
+          <strong className="text-indigo-200">Шаг 3.</strong> Опишите первопричину и контроль метрик и нажмите «Применить хотфикс».
+        </div>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
@@ -402,7 +461,7 @@ export default function ArchitectureMode({
               </p>
             </div>
             <div className="overflow-x-auto px-2 pt-2">
-              <div className="min-w-[600px] md:min-w-0">
+              <div className="min-w-[520px] md:min-w-0">
                 <ArchDiagram
                   scenario={s}
                   measuresCatalog={measuresCatalog}
@@ -558,7 +617,7 @@ export default function ArchitectureMode({
                                   data-testid={`wr-param-${m.id}-${p.key}`}
                                   className="h-1.5 w-full cursor-pointer accent-indigo-400"
                                 />
-                                <p className="text-[10px] text-white/45">{p.hint}</p>
+                                <p className="text-[10.5px] text-white/65">{p.hint}</p>
                               </div>
                             );
                           })}
@@ -796,17 +855,60 @@ export default function ArchitectureMode({
                       </span>
                     </div>
                     {c.quote ? (
-                      <p className="mt-1 text-[10.5px] italic text-emerald-100/85">
+                      <p className="mt-1 text-[10.5px] text-emerald-100/90">
                         Цитата: «{c.quote}»
                       </p>
                     ) : (
-                      <p className="mt-1 text-[10px] text-white/45">
+                      <p className="mt-1 text-[10.5px] text-white/65">
                         Дословная цитата по критерию в тексте не найдена
                       </p>
                     )}
                   </div>
                 ))}
               </div>
+
+              {evalResult.sprt_preview && (
+                <div
+                  className="mt-3 rounded-xl border border-indigo-400/35 bg-indigo-950/35 p-3 text-[11px]"
+                  data-testid="wr-verdict-impact"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-bold uppercase tracking-wider text-indigo-200">
+                      Влияние на итоговый вердикт грейда
+                    </span>
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                        evalResult.sprt_preview.verdict_status === "confirmed"
+                          ? "bg-emerald-500/20 text-emerald-200"
+                          : evalResult.sprt_preview.verdict_status === "needs_followup"
+                            ? "bg-amber-500/20 text-amber-200"
+                            : "bg-rose-500/20 text-rose-200"
+                      }`}
+                    >
+                      {evalResult.sprt_preview.verdict_title_ru ??
+                        (evalResult.passed
+                          ? `Подтверждён ${evalResult.confirmed_grade.toUpperCase()}`
+                          : "Требуется доработка")}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 leading-relaxed text-white/85">
+                    {evalResult.sprt_preview.explanation_ru ??
+                      `Практический этап оценён на ${evalResult.points_gpcm} из 4 баллов (${nf(evalResult.total_score * 100)} %).`}
+                  </p>
+                  <details className="mt-1.5 text-[10.5px] text-white/65">
+                    <summary className="cursor-pointer font-semibold text-indigo-200 hover:underline">
+                      Как считается вклад в вердикт
+                    </summary>
+                    <p className="mt-1 leading-relaxed">
+                      Результат разбора инцидента учитывается у порога старшего грейда как независимое практическое
+                      свидетельство ({evalResult.points_gpcm} из 4 баллов): сдвиг логарифмического отношения
+                      правдоподобия {evalResult.sprt_preview.llr_delta >= 0 ? "+" : ""}
+                      {nf(evalResult.sprt_preview.llr_delta, 2)}, погрешность оценки снижается с{" "}
+                      {nf(evalResult.sprt_preview.se_before ?? 0.38, 2)} до {nf(evalResult.sprt_preview.se_post, 2)}.
+                    </p>
+                  </details>
+                </div>
+              )}
 
               <div className="mt-3 flex flex-col gap-2">
                 <div

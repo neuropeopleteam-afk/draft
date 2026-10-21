@@ -1,1 +1,55 @@
-{"id":"/","name":"Драфт — компании выбирают подтверждённых","short_name":"Драфт","description":"Платформа подбора ИТ-специалистов с подтверждённым грейдом: работодатель получает точную подборку инженеров и приглашает с прозрачной вилкой зарплаты.","lang":"ru","dir":"ltr","start_url":"/?source=twa","scope":"/","display":"standalone","display_override":["standalone","minimal-ui"],"orientation":"portrait","background_color":"#FBF8FC","theme_color":"#310F53","categories":["business","productivity","education"],"icons":[{"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"/icons/maskable-192.png","sizes":"192x192","type":"image/png","purpose":"maskable"},{"src":"/icons/maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}],"shortcuts":[{"name":"Подборка","short_name":"Подборка","url":"/employer/needs?source=twa-shortcut","icons":[{"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png"}]},{"name":"Мой грейд","short_name":"Мой грейд","url":"/candidate/assessment?source=twa-shortcut","icons":[{"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png"}]},{"name":"Приглашения","short_name":"Приглашения","url":"/candidate/invitations?source=twa-shortcut","icons":[{"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png"}]}]}
+{
+  "id": "/",
+  "name": "Драфт — компании выбирают подтверждённых",
+  "short_name": "Драфт",
+  "description": "Платформа подбора ИТ-специалистов с подтверждённым грейдом: работодатель получает точную подборку инженеров и приглашает с прозрачной вилкой зарплаты.",
+  "lang": "ru",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#FBF8FC",
+  "theme_color": "#310F53",
+  "categories": ["business", "productivity", "education"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/badge-72.png", "sizes": "72x72", "type": "image/png", "purpose": "monochrome" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Потребности и подборки",
+      "short_name": "Подборка",
+      "description": "Потребности, вакансии и ранжированные подборки специалистов",
+      "url": "/employer/needs?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Тест и грейд",
+      "short_name": "Мой грейд",
+      "description": "Адаптивный тест, подтверждённая категория и паспорт навыков",
+      "url": "/candidate/assessment?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Приглашения и вакансии",
+      "short_name": "Приглашения",
+      "description": "Приглашения с вилкой зарплаты, открытые вакансии и переписка",
+      "url": "/candidate/invitations?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Аналитика и спрос ФСП",
+      "short_name": "Спрос ФСП",
+      "description": "Карта талантов по регионам России и спрос работодателей",
+      "url": "/fsp/demand?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

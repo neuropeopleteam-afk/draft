@@ -16,12 +16,13 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import math
 from typing import Any
 import uuid
 
 from fastapi import APIRouter, Depends, Query, Request
 import jwt
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -182,16 +183,24 @@ class CameraEventIn(BaseModel):
 class AntiCheatInspectIn(BaseModel):
     answer_text: str = Field(default="", max_length=12_000)
     attack_preset: str | None = Field(default=None, max_length=32)
-    telemetry: TelemetryIn = Field(default_factory=TelemetryIn)
+    telemetry: dict[str, Any] = Field(default_factory=dict)
     camera_events: list[CameraEventIn] = Field(default_factory=list, max_length=30)
     check_lz: bool = Field(default=False)
     lz_theta: float = Field(default=1.2, ge=-4.0, le=4.5)
     lz_items: list[LzItemIn] | None = Field(default=None, max_length=40)
     demo: bool = Field(default=True)
 
+    @field_validator("telemetry")
+    @classmethod
+    def _validate_telemetry(cls, v: Any) -> dict[str, Any]:
+        if not isinstance(v, dict):
+            raise ValueError("telemetry must be an object")
+        return TelemetryIn.model_validate(v).model_dump(by_alias=True)
 
-def _public_measures_list(*, demo_mode: bool) -> list[dict[str, Any]]:
-    """В боевом режиме скрывает поля `opt_min`, `opt_max`, `trap`, `heals` (ключ решения)."""
+
+def _public_measures_list(*, demo_mode: bool = False) -> list[dict[str, Any]]:
+    """Не отдаёт клиенту ключи решения (`opt_min`, `opt_max`, `trap`, `heals`) ни в одном режиме."""
+    _ = demo_mode
     out: list[dict[str, Any]] = []
     for m in MEASURES:
         params_out: list[dict[str, Any]] = []
@@ -207,9 +216,6 @@ def _public_measures_list(*, demo_mode: bool) -> list[dict[str, Any]]:
                 "unit": p["unit"],
                 "hint": p["hint"],
             }
-            if demo_mode:
-                p_item["opt_min"] = p["opt_min"]
-                p_item["opt_max"] = p["opt_max"]
             params_out.append(p_item)
         item: dict[str, Any] = {
             "id": m["id"],
@@ -220,28 +226,20 @@ def _public_measures_list(*, demo_mode: bool) -> list[dict[str, Any]]:
             "base_cost_rub": m["base_cost_rub"],
             "params": params_out,
         }
-        if demo_mode:
-            item["heals"] = m["heals"]
-            item["trap"] = m["trap"]
         out.append(item)
     return out
 
 
 def _public_scenario_dict(scn: dict[str, Any], *, demo_mode: bool) -> dict[str, Any]:
-    """В боевом режиме (`demo_mode=False`) не отдаёт ключи (`required/helpful/harmful/reference/sim_effect`)
-    и перемешивает варианты патчей под нейтральными названиями.
+    """Не отдаёт клиенту ключи (`required/helpful/harmful/reference/sim_effect/win/deploy`)
+    и в боевом режиме перемешивает варианты патчей под нейтральными названиями.
     """
     inc = copy.deepcopy(scn["incident"])
-    if not demo_mode:
-        for act in inc.get("actions", []):
-            act.pop("sim_effect", None)
+    for act in inc.get("actions", []):
+        act.pop("sim_effect", None)
 
     if demo_mode:
         patches_out = scn["patches"]
-        rubric_out = [
-            {"id": r["id"], "title": r["title"], "weight": r["weight"], "reference": r["reference"]}
-            for r in scn["rubric"]
-        ]
     else:
         # Детерминированная перестановка патчей по (id, seed) с нейтральными заголовками
         raw_patches = list(scn["patches"])
@@ -255,10 +253,11 @@ def _public_scenario_dict(scn: dict[str, Any], *, demo_mode: bool) -> dict[str, 
             }
             for idx, p in enumerate(rotated)
         ]
-        rubric_out = [
-            {"id": r["id"], "title": r["title"], "weight": r["weight"]}
-            for r in scn["rubric"]
-        ]
+
+    rubric_out = [
+        {"id": r["id"], "title": r["title"], "weight": r["weight"]}
+        for r in scn["rubric"]
+    ]
 
     res: dict[str, Any] = {
         "id": scn["id"],
@@ -282,12 +281,6 @@ def _public_scenario_dict(scn: dict[str, Any], *, demo_mode: bool) -> dict[str, 
         "incident": inc,
         "demo_mode": demo_mode,
     }
-    if demo_mode:
-        res["required"] = scn["required"]
-        res["helpful"] = scn["helpful"]
-        res["harmful"] = scn["harmful"]
-        res["deploy"] = scn["deploy"]
-        res["win"] = scn["win"]
     return res
 
 
@@ -332,6 +325,100 @@ def get_candidate_incident_stage(
     stmt = stmt.order_by(WarRoomAttempt.total_score.desc(), WarRoomAttempt.created_at.desc()).limit(1)
     row = db.scalar(stmt)
     return dict(row.incident_stage) if row and row.incident_stage else None
+
+
+_GRADE_CUTS: dict[str, float] = {
+    "junior": -1.0,
+    "middle": 0.0,
+    "senior": 1.0,
+    "lead": 1.8,
+    "principal": 2.4,
+}
+
+
+def _compute_sprt_preview(
+    res: dict[str, Any],
+    latest_ts: TestSession | None = None,
+) -> dict[str, Any]:
+    """Рассчитывает вклад практического этапа в вердикт грейда (через sprt.incorporate_incident_stage А4 или совместимую формулу)."""
+    target_g = str(res.get("target_grade") or "senior")
+    cut = float(_GRADE_CUTS.get(target_g, 1.0))
+    th0 = cut
+    se0 = 0.38
+    claimed_g = target_g
+    if latest_ts is not None and isinstance(latest_ts.result, dict) and "theta" in latest_ts.result:
+        try:
+            th0 = float(latest_ts.result.get("theta") or cut)
+            se0 = max(0.10, float(latest_ts.result.get("se") or 0.38))
+            claimed_g = str(latest_ts.result.get("claimed_grade") or target_g)
+        except (TypeError, ValueError):
+            th0, se0, claimed_g = cut, 0.38, target_g
+
+    th1: float | None = None
+    se1: float | None = None
+    llr_d: float | None = None
+    try:
+        from app.modules.assessment import sprt as sprt_mod  # type: ignore
+
+        inc_fn = getattr(sprt_mod, "incorporate_incident_stage", None)
+        if callable(inc_fn):
+            t_post, s_post, l_delta, _ = inc_fn(th0, se0, claimed_g, res["incident_stage"])
+            th1, se1, llr_d = float(t_post), float(s_post), float(l_delta)
+    except Exception:
+        th1 = None
+
+    score = max(0.0, min(1.0, float(res.get("total_score") or 0.0)))
+    if th1 is None or se1 is None or llr_d is None:
+        a_inc = 1.45
+        delta = 0.35
+        p_exp = 1.0 / (1.0 + math.exp(-a_inc * (th0 - cut)))
+        info = max(a_inc * a_inc * p_exp * (1.0 - p_exp), 0.25)
+        prec0 = 1.0 / (se0 * se0)
+        prec1 = prec0 + info
+        th1 = max(-4.0, min(4.5, th0 + (a_inc * (score - p_exp)) / prec1))
+        se1 = math.sqrt(1.0 / prec1)
+        p1 = 1.0 / (1.0 + math.exp(-a_inc * ((cut + delta / 2.0) - cut)))
+        p0 = 1.0 / (1.0 + math.exp(-a_inc * ((cut - delta / 2.0) - cut)))
+        llr_d = score * math.log(p1 / p0) + (1.0 - score) * math.log((1.0 - p1) / (1.0 - p0))
+
+    passed = bool(res.get("passed"))
+    pts = int(res.get("points_gpcm") or 0)
+    conf_g = str(res.get("confirmed_grade") or "middle")
+    if passed:
+        v_status = "confirmed"
+        v_title = f"Подтверждён уровень {conf_g.upper()}"
+        expl = (
+            f"Практический этап оценён на {pts} из 4 баллов ({round(score * 100)} %): "
+            f"показатели надёжности достигнуты в рамках бюджета, дословные цитаты проверены — "
+            f"результат даёт достаточное основание для вердикта «Подтверждён {conf_g.upper()}»."
+        )
+    elif score >= 0.45:
+        v_status = "needs_followup"
+        v_title = "Нужен дополнительный этап у порога"
+        expl = (
+            f"Практический этап оценён на {pts} из 4 баллов ({round(score * 100)} %): "
+            f"результат в пограничной зоне для уровня {target_g.upper()}, рекомендуется доработка решения или короткий уточняющий этап."
+        )
+    else:
+        v_status = "not_confirmed"
+        v_title = f"Уровень {target_g.upper()} не подтверждён"
+        expl = (
+            f"Практический этап оценён на {pts} из 4 баллов ({round(score * 100)} %): "
+            f"целевые показатели надёжности не восстановлены (текущий ориентир — {conf_g.upper()})."
+        )
+
+    return {
+        "verdict_status": v_status,
+        "verdict_title_ru": v_title,
+        "stage_points": pts,
+        "max_stage_points": 4,
+        "explanation_ru": expl,
+        "theta_before": round(th0, 3),
+        "theta_post": round(th1, 3),
+        "se_before": round(se0, 3),
+        "se_post": round(se1, 3),
+        "llr_delta": round(llr_d, 3),
+    }
 
 
 @router.get("/scenarios", summary="Каталог 8 боевых инцидентов, архитектурных мер и контуров античита")
@@ -436,7 +523,15 @@ def evaluate_endpoint(
 
     attempt_id: str | None = None
     saved_to_db = False
-    sprt_preview: dict[str, Any] | None = None
+    latest_ts: TestSession | None = None
+    if user is not None:
+        latest_ts = db.scalar(
+            select(TestSession)
+            .where(TestSession.user_id == user.id)
+            .order_by(TestSession.created_at.desc())
+            .limit(1)
+        )
+    sprt_preview = _compute_sprt_preview(res, latest_ts)
 
     if combat_mode and body.save and user is not None:
         existing_cnt = int(
@@ -455,31 +550,7 @@ def evaluate_endpoint(
                 f"Достигнут лимит боевых попыток по этому сценарию ({MAX_COMBAT_ATTEMPTS_PER_SCENARIO})",
             )
 
-        # Находим последнюю сессию теста кандидата по этому направлению (только для FK-связи, без записи в чужое поле TestSession.result)
-        latest_ts = db.scalar(
-            select(TestSession)
-            .where(TestSession.user_id == user.id)
-            .order_by(TestSession.created_at.desc())
-            .limit(1)
-        )
         ts_id = latest_ts.id if latest_ts is not None else None
-
-        # Вызов функции методики А4 (sprt.incorporate_incident_stage) только в режиме чтения для предпросмотра вклада
-        if latest_ts is not None and isinstance(latest_ts.result, dict):
-            try:
-                from app.modules.assessment import sprt as sprt_mod  # type: ignore
-
-                inc_fn = getattr(sprt_mod, "incorporate_incident_stage", None)
-                if callable(inc_fn) and "theta" in latest_ts.result:
-                    th1, se1, llr_d, _ = inc_fn(
-                        float(latest_ts.result.get("theta") or 0.0),
-                        float(latest_ts.result.get("se") or 0.5),
-                        str(latest_ts.result.get("claimed_grade") or res["target_grade"]),
-                        res["incident_stage"],
-                    )
-                    sprt_preview = {"theta_post": round(th1, 3), "se_post": round(se1, 3), "llr_delta": round(llr_d, 3)}
-            except Exception:
-                sprt_preview = None
 
         row = WarRoomAttempt(
             user_id=user.id,
