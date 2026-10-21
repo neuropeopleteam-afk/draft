@@ -1,20 +1,20 @@
 {
  "weights": {
-  "test": 0.1679,
+  "test": 0.1449,
   "margin": 0.0,
   "fsp": 0.1,
   "required": 0.0,
   "desired": 0.0,
-  "probe": 0.2006,
+  "probe": 0.2136,
   "failed": 0.0,
   "provisional": 0.0,
-  "in_band": 0.2197,
-  "level_ok": 0.3118
+  "in_band": 0.2069,
+  "level_ok": 0.3346
  },
  "meta": {
   "source": "tools/realdata/ltr_train.py",
   "version": "match-v2",
-  "trained_at": "2026-10-21T12:17:11+00:00",
+  "trained_at": "2026-10-21T13:21:17+00:00",
   "dev_seeds": {
    "sm": [
     "20261006",
@@ -66,54 +66,54 @@
    "in_band",
    "level_ok"
   ],
-  "features_sha256": "f85d1fc3a468be41d386631281edcd6627a08ec8572df4788a44b68e86f93107",
+  "features_sha256": "1df7d5eb801e20a456b1fbcf7640a5a58ff16fd7ddb68726620e841d11a40736",
   "filter": "каскад стека (ltr.THRESHOLDS)",
   "objective": "попарная логистическая, вес пары — разность 2^метка − 1, условия с равным весом, L2 1e-3",
   "cv_by_worlds": {
    "joint_cascade": {
     "sm": {
-     "ndcg10": 0.63,
-     "p5": 0.7261,
-     "p10": 0.705,
-     "mrr": 0.8289,
-     "pool_rel_share": 0.7035
+     "ndcg10": 0.633,
+     "p5": 0.7211,
+     "p10": 0.7014,
+     "mrr": 0.83,
+     "pool_rel_share": 0.7011
     },
     "sm_doz": {
-     "ndcg10": 0.6334,
-     "p5": 0.7453,
-     "p10": 0.7117,
-     "mrr": 0.8943,
-     "pool_rel_share": 0.7035
+     "ndcg10": 0.638,
+     "p5": 0.7479,
+     "p10": 0.7132,
+     "mrr": 0.8932,
+     "pool_rel_share": 0.7011
     },
     "hard": {
-     "ndcg10": 0.5648,
-     "p5": 0.7398,
-     "p10": 0.7342,
-     "mrr": 0.8537,
+     "ndcg10": 0.5655,
+     "p5": 0.7421,
+     "p10": 0.734,
+     "mrr": 0.8584,
      "pool_rel_share": 0.5235
     },
     "hard_doz": {
-     "ndcg10": 0.626,
-     "p5": 0.828,
-     "p10": 0.7742,
-     "mrr": 0.9288,
+     "ndcg10": 0.6266,
+     "p5": 0.8271,
+     "p10": 0.7759,
+     "mrr": 0.93,
      "pool_rel_share": 0.5235
     }
    },
    "now_threshold": {
     "sm": {
-     "ndcg10": 0.5617,
-     "p5": 0.706,
-     "p10": 0.6905,
-     "mrr": 0.8176,
-     "pool_rel_share": 0.7035
+     "ndcg10": 0.5674,
+     "p5": 0.7114,
+     "p10": 0.6946,
+     "mrr": 0.8224,
+     "pool_rel_share": 0.7011
     },
     "sm_doz": {
-     "ndcg10": 0.576,
-     "p5": 0.7296,
-     "p10": 0.7018,
-     "mrr": 0.8443,
-     "pool_rel_share": 0.7035
+     "ndcg10": 0.5844,
+     "p5": 0.7364,
+     "p10": 0.7082,
+     "mrr": 0.8593,
+     "pool_rel_share": 0.7011
     },
     "hard": {
      "ndcg10": 0.6058,
@@ -132,76 +132,76 @@
    },
    "joint_cascade_fixed": {
     "sm": {
-     "ndcg10": 0.6104,
-     "p5": 0.7247,
-     "p10": 0.701,
-     "mrr": 0.8509,
-     "pool_rel_share": 0.7035
+     "ndcg10": 0.6157,
+     "p5": 0.7293,
+     "p10": 0.7009,
+     "mrr": 0.8487,
+     "pool_rel_share": 0.7011
     },
     "sm_doz": {
-     "ndcg10": 0.6204,
-     "p5": 0.7496,
-     "p10": 0.7106,
-     "mrr": 0.8847,
-     "pool_rel_share": 0.7035
+     "ndcg10": 0.6266,
+     "p5": 0.7514,
+     "p10": 0.7119,
+     "mrr": 0.8909,
+     "pool_rel_share": 0.7011
     },
     "hard": {
      "ndcg10": 0.581,
-     "p5": 0.7608,
+     "p5": 0.7615,
      "p10": 0.7488,
      "mrr": 0.8677,
      "pool_rel_share": 0.5235
     },
     "hard_doz": {
-     "ndcg10": 0.6303,
-     "p5": 0.824,
-     "p10": 0.7823,
-     "mrr": 0.9335,
+     "ndcg10": 0.6305,
+     "p5": 0.8245,
+     "p10": 0.7824,
+     "mrr": 0.9345,
      "pool_rel_share": 0.5235
     }
    }
   },
   "fit_on_all_dev": {
    "sm": {
-    "ndcg10": 0.6111,
-    "p5": 0.725,
+    "ndcg10": 0.6168,
+    "p5": 0.7307,
     "p10": 0.7004,
-    "mrr": 0.8499,
-    "pool_rel_share": 0.7035
+    "mrr": 0.8498,
+    "pool_rel_share": 0.7011
    },
    "sm_doz": {
-    "ndcg10": 0.6219,
-    "p5": 0.7504,
-    "p10": 0.7114,
-    "mrr": 0.8879,
-    "pool_rel_share": 0.7035
+    "ndcg10": 0.628,
+    "p5": 0.7511,
+    "p10": 0.712,
+    "mrr": 0.8932,
+    "pool_rel_share": 0.7011
    },
    "hard": {
-    "ndcg10": 0.5802,
-    "p5": 0.7591,
-    "p10": 0.7487,
-    "mrr": 0.8656,
+    "ndcg10": 0.5808,
+    "p5": 0.7612,
+    "p10": 0.7491,
+    "mrr": 0.8655,
     "pool_rel_share": 0.5235
    },
    "hard_doz": {
-    "ndcg10": 0.6311,
-    "p5": 0.8246,
-    "p10": 0.7834,
-    "mrr": 0.9346,
+    "ndcg10": 0.6314,
+    "p5": 0.8244,
+    "p10": 0.7836,
+    "mrr": 0.9335,
     "pool_rel_share": 0.5235
    }
   },
   "learned_before_fixed": {
-   "test": 0.1866,
+   "test": 0.161,
    "margin": 0.0,
    "fsp": 0.0,
    "required": 0.0,
    "desired": 0.0,
-   "probe": 0.2229,
+   "probe": 0.2373,
    "failed": 0.0,
    "provisional": 0.0,
-   "in_band": 0.2441,
-   "level_ok": 0.3464
+   "in_band": 0.2299,
+   "level_ok": 0.3718
   },
   "fixed": {
    "fsp": 0.1

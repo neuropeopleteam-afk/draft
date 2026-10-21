@@ -97,6 +97,7 @@ def aggregate(worlds: list[dict], label: str) -> dict:
         for m in METHODS:
             per[m] += L["per_need"][m]
         by_world.append({"seed": w["seed"], "digest": w["digest"], "n": w["n"], "m": w["m"], "doz_cost": L.get("doz_cost"),
+                         "config": w.get("config"),
                          "summary": {m: L["summary"][m] for m in METHODS},
                          "parse": {"direction_ok": round(sum(x["dir_ok"] for x in L["info"]) / len(L["info"]), 4),
                                    "grade_ok": round(sum(x["grade_ok"] for x in L["info"]) / len(L["info"]), 4)}})

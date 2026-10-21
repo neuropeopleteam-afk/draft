@@ -6,7 +6,8 @@
 
 Миры:
   sm        — «стандартные условия, принятые в аналогичных решениях» (А15): 9 направлений (каталог-расширение включён,
-              как на стенде), 70 потребностей × 900 кандидатов; тест у 100 %, только выборочная ошибка σ = SE = 0,413;
+              как на стенде), 70 потребностей × 900 кандидатов; тест у 100 %, только выборочная ошибка σ = SE = 0,363
+              (средняя SE нашего теста в мире S-T, А4);
               угадывание 0,25; шум резюме: 35 % — по 4 ложных навыка, 10 % настоящих не указаны, грейд +1 у 25 %,
               −1 у 10 %; метка 0–3 по А15; формата и города у потребностей нет.
   sm_ideal  — то же, θ̂ = θ* (σ = 0) — опорная строка «идеальный тест».
@@ -86,7 +87,10 @@ EXTRA_DISC = {"devops": (("product", 0.7), ("algorithmic", 0.3)), "mobile": (("p
               "analyst": (("product", 0.8), ("algorithmic", 0.2)), "data_eng": (("algorithmic", 0.5), ("product", 0.5))}
 DIRS9 = ("backend", "frontend", "data_ml", "qa", "security", "devops", "mobile", "analyst", "data_eng")
 
-SM_PARAMS = dict(n_needs=70, n_candidates=900, theta_sigma=0.413, se_reported=0.413, guess=0.25, t0_model="claims",
+# σ теста S-M = средняя SE итоговой оценки нашего теста в мире S-T без расхождения параметров (А4, TRAIN-зёрна,
+# ag/a4-method 8c0bd6040, docs/validation/train_2110c/Z9_se_for_a5.json: 0,363) — правило А15 от 21.10
+SM_SIGMA = 0.363
+SM_PARAMS = dict(n_needs=70, n_candidates=900, theta_sigma=SM_SIGMA, se_reported=SM_SIGMA, guess=0.25, t0_model="claims",
                  claim_over=0.25, claim_under=0.10, claim_stuff=0.35, claim_stuff_n=(4, 4), claim_omit=0.10)
 
 
@@ -592,8 +596,11 @@ def run_world(cond: str, seed: int, labels: tuple[str, ...] = ("rel", "l2")) -> 
     """Один мир: генерация один раз, оценка по каждой шкале меток. Для tools/realdata/bench_holdout2.py."""
     init(cond)
     w = make_world(cond, seed)
+    c = w.cfg
     out = {"cond": cond, "seed": seed, "digest": w.digest(), "resampled": w.resampled, "n": len(w.needs),
-           "m": len(w.cands), "labels": {}}
+           "m": len(w.cands), "labels": {},
+           "config": {"theta_sigma": c.theta_sigma, "se_reported": c.se_reported, "guess": c.guess, "t0_model": c.t0_model,
+                      "dirs": list(c.dirs), "n_needs": c.n_needs, "n_candidates": c.n_candidates}}
     for lb in labels:
         r = evaluate_world(w, label=lb)
         out["labels"][lb] = {"per_need": r["per_need"], "info": r["info"], "doz_cost": r["doz_cost"],
