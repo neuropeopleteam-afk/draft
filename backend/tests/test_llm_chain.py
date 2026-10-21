@@ -326,7 +326,8 @@ def test_need_parser_reports_actual_model(monkeypatch, net):
     net.on("or.test", None, _need_reply)
     r = parse_need(NEED_TEXT)
     assert r["method"] == "llm+rules"
-    assert (r["llm"]["provider"], r["llm"]["model"], r["llm"]["model_label"]) == ("openrouter", SONNET, "языковая модель")
+    assert r["llm"]["model_label"] == "языковая модель" and not {"provider", "model"} & set(r["llm"])  # провайдер и id модели в ответе API не отдаются (обход А19 №10) — кто ответил, видно по сети
+    assert net.calls[-1]["host"] == "or.test" and net.calls[-1]["model"] == SONNET
     grpc = next(i for i in r["stack_required"] if i["tag"] == "grpc")
     assert grpc["evidence"]["source"] == "llm" and grpc["evidence"]["model"] == "языковая модель"
     # основная модель недоступна → ответила запасная, подпись — её

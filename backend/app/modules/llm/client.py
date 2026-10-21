@@ -135,6 +135,11 @@ MODEL_UI = "языковая модель"  # подпись в интерфей
 SECOND_UI = "вторая модель"  # вторая независимая оценка спорных ответов (grade_second)
 
 
+def public_attempts(attempts: list[dict] | None) -> list[dict]:
+    """Попытки цепочки для ответа API: исход и задержка, без провайдера и идентификатора модели (они — в журнале «llm»)."""
+    return [{"ok": a.get("ok"), "error": a.get("error"), "latency_ms": a.get("latency_ms")} for a in (attempts or [])]
+
+
 def model_label(model: str | None, second: bool = False) -> str:
     """Подпись для интерфейса (ответы API, которые рисует экран): нейтральная, без имени модели и поставщика.
     Имя модели для журналов и служебных мест — model_name()."""

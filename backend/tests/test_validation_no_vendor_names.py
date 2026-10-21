@@ -41,10 +41,11 @@ def test_scrub_keeps_links_and_roles():
     assert not leaks(s), leaks(s)
     keys = [m["key"] for m in s["models"]]
     assert set(keys) == set(s["rows"])  # ключи в значениях и в словаре переименованы одинаково
-    assert keys[0] == "российская модель" and keys[1] == "модель стенда" and keys[2] == "rules"
-    assert s["list"][0] == s["list"][2] != s["list"][1]
+    assert keys == ["ru", "stand", "rules"]  # контракт API — латиница (нейтральные коды), подписи — по-русски
+    assert [m["label"] for m in s["models"]][:2] == ["российская модель", "модель стенда"]
+    assert s["list"][0] == s["list"][2] != s["list"][1] and s["list"][0].startswith("model_")
     assert "две компании" in s["note"] and "вторая модель в трёх ролях" in s["note"] and "только российская модель" in s["note"]
-    assert s["vendors"] == ["компания А", "компания Б"]
+    assert s["vendors"] == ["company_a", "company_b"]
 
 
 @pytest.mark.parametrize("path", ["/api/validation/headline", "/api/validation/criteria", "/api/validation/llm-models",

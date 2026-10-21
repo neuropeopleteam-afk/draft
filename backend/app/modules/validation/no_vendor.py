@@ -42,26 +42,36 @@ _SUBS = [
 _COMPANY = re.compile(r"^(?:anthropic|openai|google|x-ai|xai|moonshot(?:ai)?|deepseek|alibaba|qwen|yandex|zhipu|z-ai)$", re.I)
 
 
+_CODES = [(re.compile(r"sonnet", re.I), "stand"), (re.compile(r"fable", re.I), "second"),
+          (re.compile(r"yandex", re.I), "ru"), (re.compile(r"gpt-oss", re.I), "ref_open"),
+          (re.compile(r"qwen|llm-local", re.I), "local")]
+_LAT = "abcdefghijklmnopqrstuvwxyz"
+
+
 class _Alias:
+    """Идентификаторы и ключи (без пробелов) → нейтральные латинские коды, одинаково в ключах и значениях
+    (контракт API — латиница): stand, ru, local, ref_open, second, model_a…, company_a…; подписи по-русски даёт фронтенд
+    (noVendor.ts makeModelAlias) или замена текста (text())."""
+
     def __init__(self) -> None:
         self.seen: dict[str, str] = {}
         self.n_model = 0
         self.n_company = 0
 
     def token(self, s: str) -> str:
-        base, _, variant = s.partition("@")
+        base, sep, variant = s.partition("@")
         key = base.lower()
         if key not in self.seen:
-            role = next((r for rx, r in _ROLES if rx.search(s)), None)
-            if role is None and _COMPANY.match(base):
-                role = f"компания {LETTERS[self.n_company % len(LETTERS)]}"
+            code = next((c for rx, c in _CODES if rx.search(base)), None)
+            if code is None and _COMPANY.match(base):
+                code = f"company_{_LAT[self.n_company % 26]}"
                 self.n_company += 1
-            if role is None:
-                role = f"модель {LETTERS[self.n_model % len(LETTERS)]}"
+            if code is None:
+                code = f"model_{_LAT[self.n_model % 26]}"
                 self.n_model += 1
-            self.seen[key] = role
-        v = {"noreason15": "без рассуждений"}.get(variant, "")
-        return self.seen[key] + (f" ({v})" if v else "")
+            self.seen[key] = code
+        v = variant if variant and not VENDOR.search(variant) else ""
+        return self.seen[key] + (f"@{v}" if v else "")
 
 
 _PRE = [(r"режим\w* LLM_CHAIN=yandex|LLM_CHAIN=yandex", "режим «только российская модель»"),

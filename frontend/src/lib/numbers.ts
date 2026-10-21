@@ -248,8 +248,3 @@ export interface FspFacts {
 export function getFspFacts(): FspFacts | null {
   return (ANY.fsp_facts as FspFacts | undefined) ?? null;
 }
-
-/** Подбор «один в один» на открытом генераторе другого решения (А5, проверено А15): main — заголовок, exact — опция API. */
-export function getDevdev1to1(): any {
-  return ANY.external_benchmarks?.devdev_1to1 ?? null;
-}
