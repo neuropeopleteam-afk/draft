@@ -309,6 +309,7 @@ def build_texts(res: dict) -> list[Path]:
     repo["_top"] = {k: res.get(k) for k in ("numbers_generated_at", "recompute_all", "numbers_git_commit")}
     targets = [
         (HERE / "src/README.md", ROOT / "README.md"),
+        (HERE / "src/README_2.md", ROOT / "README_2.md"),
         (HERE / "src/DOCUMENTATION.md", HERE / "DOCUMENTATION.md"),
         (ROOT / "docs/video/src/SCRIPT.md", ROOT / "docs/video/SCRIPT.md"),
         (ROOT / "docs/presentation/src/PITCH.md", ROOT / "docs/presentation/PITCH.md"),
