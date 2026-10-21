@@ -30,6 +30,8 @@ DATA = ROOT / "backend" / "app" / "modules" / "validation" / "data"
 BANK_SYNC = ROOT / "backend" / "assessment_bank" / "BANK_SYNC.json"
 OUT = ROOT / "docs" / "NUMBERS.json"
 FRONTEND_OUT = ROOT / "frontend" / "src" / "data" / "numbers.json"
+# копия для API (/api/validation/criteria читает цифры подбора отсюда — в образе бэкенда нет docs/)
+BACKEND_OUT = ROOT / "backend" / "app" / "modules" / "validation" / "data" / "numbers.json"
 A5_MATCHING = ROOT / "docs" / "realdata" / "numbers_matching.json"
 A6_ANTICHEAT = DATA / "grader_numbers.json"
 A3_MUTATION = ROOT / "docs" / "bank" / "mutation_report.json"
@@ -52,7 +54,8 @@ PS_FINAL = {"hard": DATA / "product_sim_final_calibrated.json", "misspec": DATA 
 PS_ST = {"st": DATA / "product_sim_st.json"}
 DJINNI = ROOT / "docs" / "realdata" / "djinni" / "external_djinni.json"  # А17: внешний открытый набор (подбор)
 FSP_FACTS = ROOT / "docs" / "validation" / "fsp_facts.json"  # внешние факты ФСП с источником (плашка А18)
-DEVDEV = ROOT / "docs" / "realdata" / "numbers_devdev.json"  # А5: «один в один» на открытом генераторе другого решения
+DEVDEV = ROOT / "docs" / "realdata" / "numbers_devdev.json"
+DEVDEV4 = ROOT / "docs" / "realdata" / "numbers_devdev_4.json"  # цикл №4 (заголовок), №3 — в журнале  # А5: «один в один» на открытом генераторе другого решения
 TRAIN_CHOICE = ROOT / "docs" / "validation" / "TRAIN_CHOICE_2110b.json"  # выбор конфигурации на TRAIN (поправка №3)
 # Пятёрка первого экрана (поправка №3): точность уверенного — всегда парой с долей уверенных; точный грейд — по всем
 # кандидатам и 6 ступеням, рядом строки 5 и 4 ступеней (сопоставимость) и «среди тех, кому продукт его определяет»;
@@ -61,7 +64,7 @@ TOP5 = (("confident_accuracy", "Точность уверенного верди
         ("false_confirm_all", "Ложное подтверждение (от всех)", "false_confirm_all"),
         ("exact_grade", "Точный грейд (6 ступеней, все кандидаты)", "exact_grade_final"),
         ("within_one", "Грейд ±1 ступень", "within_one_final"),
-        ("retest_kappa_w", "Повтор теста (κw)", None))
+        ("retest_kappa_w", "Повтор теста: согласие двух попыток (взвешенная каппа)", None))
 TOP5_PAIRS = {"confident_accuracy": {"confident_share": "confident_share_final"},
               "false_confirm_all": {"among_overclaim": "false_confirm_among_overclaim"},
               "exact_grade": {"grades_5": "exact_grade_final_5", "grades_4": "exact_grade_final_4",
@@ -506,7 +509,9 @@ def top5_meta(hard: dict, st: dict) -> dict:
     man = (((hard or st or {}).get("meta") or {}).get("bank") or {}).get("manifest") or {}
     return {"st": a, "hard": b,
             # плоские поля для главной (Landing.tsx: standard_condition_ru / hard_condition_ru, Top5Meta)
-            "standard_condition_ru": (a or {}).get("condition_ru"), "hard_condition_ru": (b or {}).get("condition_ru"),
+            # простыми словами (А19 №7: на главной без a × U(…), θ ~ N(…)); полное условие — st/hard.condition_ru
+            "standard_condition_ru": _plain_cond(st, hard=False), "hard_condition_ru": _plain_cond(hard, hard=True),
+            "standard_condition_tech_ru": (a or {}).get("condition_ru"), "hard_condition_tech_ru": (b or {}).get("condition_ru"),
             "bank_hash": man.get("content_hash"), "bank_commit": man.get("commit"),
             "bank_families": man.get("n_families") or (len(man.get("families") or []) or None),
             "n": (b or a or {}).get("n"), "generated_at": (b or a or {}).get("date"),
@@ -603,7 +608,14 @@ def matching_block() -> dict | None:
             "freeze_sha256": v2.get("freeze_sha256"), "git_head": v2.get("git_head"), "protocol": v2.get("protocol"),
             "generated_at": v2.get("run_at") or a5.get("generated_at"),
             "what": v2.get("what"), "recompute": h.get("recompute"),
-            "code_ref": "tools/realdata/bench_holdout2.py", "artifact": "docs/realdata/bench_holdout2.json → docs/realdata/numbers_matching.json",
+            "code_ref": (re.search(r"tools/realdata/[\w./]+\.py", h.get("recompute") or "") or [None])[0] or "tools/realdata/numbers_matching.py",
+            "artifact": (str(v2.get("protocol") or "").replace("_PROTOCOL.md", ".json") or "docs/realdata/bench_holdout*.json")
+                        + " → docs/realdata/numbers_matching.json",
+            # журнал прогонов: прежний цикл подбора (заголовок — последний при любом исходе, объявлено до прогона)
+            "history": [{"cycle": 3, "git_head": (a5.get("matching_v2_cycle3") or {}).get("git_head"),
+                         "run_at": (a5.get("matching_v2_cycle3") or {}).get("run_at"),
+                         **{k: _ci(((a5.get("matching_v2_cycle3") or {}).get("site") or {}).get("headline", {}).get(k))
+                            for k in ("p5", "ndcg10", "mrr")}}] if a5.get("matching_v2_cycle3") else [],
         }
     if a5.get("matching"):
         return a5["matching"]
@@ -739,10 +751,10 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
         p5, mrr = matching["p5"], matching.get("mrr") or {}
         cards.append({
             "id": "matching_p5", "eyebrow": "Точность топ-5 подбора (P@5)", "value": pct(p5.get("mean")), "accent": "%",
-            "subtext": ((f"95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} %, nDCG@10 {num((matching.get('ndcg10') or {}).get('mean'))} · "
+            "subtext": ((f"95 % ДИ {pct(p5.get('lo'))}–{pct(p5.get('hi'))} %, качество порядка {num((matching.get('ndcg10') or {}).get('mean'))} · "
                          f"стандартные условия: {matching.get('n_needs')} потребностей в {matching.get('n_worlds')} отложенных мирах × "
                          f"{int_ru(matching.get('n_candidates'))} кандидатов"
-                         + (f"; жёсткие: P@5 {pct(((matching.get('hard') or {}).get('p5') or {}).get('mean'))} %, nDCG@10 "
+                         + (f"; жёсткие: {pct(((matching.get('hard') or {}).get('p5') or {}).get('mean'))} %, качество порядка "
                             f"{num(((matching.get('hard') or {}).get('ndcg10') or {}).get('mean'))}" if matching.get("hard") else "")
                          + " · один прогон, модели, не люди")
                         if matching.get("n_worlds") else
@@ -842,6 +854,19 @@ def recompute_table(bank, gv, cheat, matching, hh, anticheat, fsp, load) -> list
     return rows
 
 
+def _plain_cond(d: dict | None, hard: bool) -> str | None:
+    """Условие прогона простыми словами — для главной; числа (N, минуты) — из того же JSON прогона."""
+    if not d:
+        return None
+    s = d.get("summary") or {}
+    mt = s.get("minutes_total") or {}
+    head = (f"{COL_HARD_RU}: угадывание в вопросах с выбором, больше завышенных и заниженных заявок, кандидаты у самых "
+            "порогов, осторожные параметры заданий" if hard else
+            f"{COL_ST_RU}: те же допущения о заданиях и кандидатах, что у других решений, часть заявок завышена на ступень")
+    return (f"{head}; модельные кандидаты, не люди; N = {int_ru(s.get('n'))}; время — в среднем {num(mt.get('mean'), 0)} мин "
+            f"(у 90 % — до {num(mt.get('p90'), 0)}).")
+
+
 def final_blocks() -> tuple[dict, dict, dict]:
     """Итоговые прогоны поправки №2: (жёсткий основной, S-T заголовок, все артефакты по ключам)."""
     arts = {k: _load(p) for k, p in {**PS_FINAL, **PS_ST}.items()}
@@ -885,6 +910,38 @@ def _anon_other(s):
     return s
 
 
+HH_DEMAND = ROOT / "backend" / "app" / "modules" / "hh" / "data" / "demand.json"
+
+
+def dev_bench_v1_block() -> dict | None:
+    """Прежний бенчмарк разработки подбора v1 (арена /validation, «история»): все цифры арены — из
+    validation/data/matching_bench.json как есть (набор разработки, на нём подбор настраивался; не заголовок)."""
+    b = _load(DATA / "matching_bench.json")
+    if not b:
+        return None
+    keep = ("p@5", "p@10", "mrr", "ndcg@10", "recall@30")
+    mt = {m: {k: (v.get(k) or {}).get("mean") if isinstance(v.get(k), dict) else v.get(k) for k in keep if k in v}
+          for m, v in (b.get("metrics") or {}).items() if isinstance(v, dict)}
+    w = b.get("world") or {}
+    return {"what": "прежний бенчмарк разработки v1 (набор разработки; заголовок подбора — отложенная проверка, блок matching)",
+            "metrics": mt, "groups": b.get("groups"), "paired_platform_minus": b.get("paired_platform_minus"),
+            "world": {"n_needs": w.get("n_needs"), "n_candidates": w.get("n_candidates"),
+                      "relevant_per_need_mean": (w.get("relevant_per_need") or {}).get("mean")},
+            "generated_at": b.get("generated_at"), "artifact": "backend/app/modules/validation/data/matching_bench.json",
+            "recompute": "cd backend && python -m app.modules.validation.matching_bench"}
+
+
+def hh_demand_block() -> dict | None:
+    """Спрос hh.ru по направлениям (/validation, блок hh): открытые вакансии на дату снимка — из hh/data/demand.json."""
+    d = _load(HH_DEMAND)
+    if not d.get("directions"):
+        return None
+    return {"as_of": d.get("as_of"), "source": d.get("source"), "method": d.get("method"),
+            "directions": {k: {f: v.get(f) for f in ("title", "russia", "moscow", "spb", "with_salary_russia", "no_experience",
+                                                       "by_grade_title")} for k, v in d["directions"].items()},
+            "artifact": str(HH_DEMAND.relative_to(ROOT)), "recompute": "python tools/realdata/hh_plus.py demand"}
+
+
 def fsp_facts_block() -> dict | None:
     """Внешние факты о ФСП (не наши измерения): значение, цитата и источник — из docs/validation/fsp_facts.json."""
     f = _load(FSP_FACTS) or {}
@@ -899,7 +956,8 @@ def fsp_facts_block() -> dict | None:
 def devdev_block() -> dict | None:
     """«Один в один» (А5, проверено А15): их генератор, их тест, их метки, их ранжировщик — и наш подбор четвёртой выдачей.
     Заголовок — main (настройка по умолчанию), рядом — опция API «строго запрошенный грейд» и её цена."""
-    x = (_load(DEVDEV) or {}).get("devdev_1to1")
+    x3 = (_load(DEVDEV) or {}).get("devdev_1to1")
+    x = (_load(DEVDEV4) or {}).get("devdev_1to1_4") or x3
     if not x or not x.get("main"):
         return None
 
@@ -916,14 +974,19 @@ def devdev_block() -> dict | None:
     claim = (f"На открытом генераторе другого решения (MIT; его тест, его метки, синтетика — модели, не люди; отложенные "
              f"зёрна, один прогон после FREEZE): наш подбор по умолчанию — nDCG@10 {num(m.get('ours'), 3)} "
              f"{ci(m.get('ours_ci95'))} против {num(m.get('other'), 3)} у его ранжировщика (разность {sg(m.get('diff'))} "
-             f"{ci(m.get('diff_ci95'))}) — ниже." + (
+             f"{ci(m.get('diff_ci95'))}) — ниже; переоценённых в топ-10 — {pct((mv.get('overrated10') or {}).get('ours'))} % "
+             f"против {pct((mv.get('overrated10') or {}).get('other'))} %." + (
              f" В режиме «строго запрошенный грейд» (опция API, выбрана на зёрнах разработки этого генератора) — "
              f"{num(e.get('ours'), 3)} ({sg(e.get('diff'))} {ci(e.get('diff_ci95'))}); цена — переоценённых в топ-10 "
              f"{pct(eo.get('ours'))} % против {pct(eo.get('other'))} %." if e else ""))
     return {"condition_ru": _anon_other(x.get("condition")), "note_ru": _anon_other(x.get("note")),
             "main": mv, "exact_option_api": ev, "exact_is_api_option": True,
             "recompute": x.get("recompute"), "source": "docs/realdata/numbers_devdev.json ← " + str(x.get("source")),
-            "checked_by": "А15, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений", "claim_ru": claim}
+            "checked_by": ("А15, пересчёт в чистом клоне FREEZE 4d104eb4e0 — 0 расхождений" if x is not x3 else
+                           "А15, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений"), "claim_ru": claim,
+            "cycle": 4 if x is not x3 else 3,
+            "history": ([{"cycle": 3, "main": view(x3["main"]), "exact_option_api": view(x3.get("exact_option_api") or {}),
+                          "condition_ru": _anon_other(x3.get("condition"))}] if x3 and x is not x3 else [])}
 
 
 def external_block() -> dict | None:
@@ -988,6 +1051,8 @@ def build() -> dict:
         "matching": matching,
         "external_benchmarks": external_block(),
         "fsp_facts": fsp_facts_block(),
+        "hh_demand": hh_demand_block(),
+        "history": {"matching_dev_bench_v1": dev_bench_v1_block()},
         "hh_match": hh,
         "anticheat": anticheat,
         "fsp_protocols": fsp,
@@ -1219,6 +1284,7 @@ def main() -> int:
     OUT.write_text(txt, encoding="utf-8")
     FRONTEND_OUT.parent.mkdir(parents=True, exist_ok=True)
     FRONTEND_OUT.write_text(txt, encoding="utf-8")
+    BACKEND_OUT.write_text(txt, encoding="utf-8")
     REPORT_MD.parent.mkdir(parents=True, exist_ok=True)
     REPORT_MD.write_text(report_md(new), encoding="utf-8")
     print(f"Записано {OUT.relative_to(ROOT)}, {FRONTEND_OUT.relative_to(ROOT)} и {REPORT_MD.relative_to(ROOT)}")

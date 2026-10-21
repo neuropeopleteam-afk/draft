@@ -59,7 +59,8 @@ class AppCATSession(CATSession):
                  seen: dict[str, int] | None = None, ext_lru: bool = False,
                  code_open_share: float | None = None, sprt_alpha: float = DEFAULT_ALPHA,
                  sprt_delta: float = DEFAULT_DELTA, sprt: dict | None = None, guess: dict | None = None,
-                 **kwargs):
+                 randomesque_k: int = 0, **kwargs):
+        self.randomesque_k = int(randomesque_k or 0)
         self.max_per_format = dict(DEFAULT_FORMAT_LIMITS if max_per_format is None else max_per_format)
         self.max_item_time_s = max_item_time_s
         # По умолчанию в полном тесте (без жёсткого ограничения времени одного задания экспресс-режима) доля кода/открытых ≥ 1/3
@@ -234,6 +235,16 @@ class AppCATSession(CATSession):
             n_co = sum(v for k, v in cnt.items() if k in CODE_OPEN_FORMATS)
             out = filter_code_open_pool(out, self.n_scored, n_co, self.code_open_share)
         return out
+
+    def _pick(self, cands: list[PoolItem], target: float) -> PoolItem:
+        """Правило v2 (TRAIN): randomesque — случайное из k лучших по информации (на минуту) у целевой точки.
+        Контроль частоты показа без таблицы K_f: при k ≥ 2 ни одно задание не выдаётся детерминированно.
+        В остальных режимах — прежний выбор (Симпсон — Хеттер или лучшее)."""
+        k = self.randomesque_k
+        if k >= 2 and cands:
+            top = sorted(cands, key=lambda i: -self._score(i, target))[:k]
+            return top[int(self.rng.integers(len(top)))]
+        return super()._pick(cands, target)
 
     def _candidates(self) -> list[PoolItem]:
         base = self._limit(super()._candidates())

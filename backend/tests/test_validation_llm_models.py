@@ -12,13 +12,14 @@ def test_api_llm_models(client):
     d = r.json()
     assert not d.get("missing") and d["how"] == "make llm-local"
     models = [x["model"] for x in d["rows"]]
-    assert models[0] == "Правила и словари" and any(m.startswith("Qwen3.5-9B") for m in models)
-    assert any("Sonnet" in m for m in models) and any("YandexGPT" in m for m in models)
+    # на экран — роли, без названий моделей и поставщиков (решение штаба 21.10; имена — в data/llm_models.json и docs/)
+    assert models[0] == "Правила и словари" and any(m.startswith("открытая модель") for m in models)
+    assert "модель стенда" in models and "российская модель" in models
     for x in d["rows"]:
         n = x["needs"]
         assert 0 < n["p"] <= 1 and 0 < n["r"] <= 1 and n["date"]
         assert x["grader"] or x.get("grader_none")
-    qwen = next(x for x in d["rows"] if x["model"].startswith("Qwen"))
+    qwen = next(x for x in d["rows"] if x["model"].startswith("открытая модель"))
     assert "облако" in qwen["needs"]["note"]  # время облачного прогона не выдаётся за время на CPU
     assert d["cpu"]["median_s"] > 10 and d["cpu"]["ram_gib"] > 5
     assert "не эксперты" in d["caveat"] and "модель" in d["caveat"]
