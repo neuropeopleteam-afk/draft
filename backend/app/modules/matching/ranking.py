@@ -713,11 +713,19 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
         scored.append((s, b, comps, reasons))
     scored, sf = ltr.stack_filter(scored, req, filters, first_tier=lambda b: tier(b) == 0)
     steps = sf.get("steps") or {}
+    exact_on = bool(filters.get("grade_exact"))
+    pex: dict[int, float] = {}
+    if exact_on:  # «строго запрошенный грейд»: порядок по вероятности, что уровень именно запрошенный (по тесту)
+        for x in scored:
+            p = p_exact(x[1], req)
+            if p is not None:
+                pex[id(x[1])] = p
+                x[3].append(exact_reason(p, req))
 
-    def key(x):  # ярус статуса грейда → ступень фильтра стека → [добор выше] → балл → рейтинг → ref
-        b = x[1]
-        return (tier(b), steps.get(id(b), 0), int(bool(above_id) and b.category_id == above_id), -x[0],
-                -(b.rating or 0), b.profile.public_ref or "")
+    def key(x):  # ярус статуса грейда → ступень фильтра стека → [«строго этот грейд»: P(уровень именно этот)] →
+        b = x[1]  # [добор выше] → балл → рейтинг → ref
+        return (tier(b), steps.get(id(b), 0), -pex.get(id(b), 0.0), int(bool(above_id) and b.category_id == above_id),
+                -x[0], -(b.rating or 0), b.profile.public_ref or "")
 
     if above_id:
         exact = [x for x in scored if x[1].category_id != above_id]
@@ -726,7 +734,36 @@ def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: 
     else:
         scored = sorted(scored, key=key)
     return scored, {"effective": effective, "before_conditions": before_conditions, "after_conditions": len(kept),
-                    "stack_filter": ltr.public_meta(sf), "weights": W}
+                    "stack_filter": ltr.public_meta(sf), "weights": W,
+                    "grade_exact": {"on": exact_on, "with_test": len(pex),
+                                    "below_half": sum(1 for p in pex.values() if p < 0.5)}}
+
+
+# «Строго запрошенный грейд» (выбор работодателя, по умолчанию выключен; match-v2). Внутри яруса статуса грейда и
+# ступени стека кандидаты идут по вероятности, что их уровень именно запрошенный — не ниже порога этого грейда и ниже
+# порога следующего: P = (1 − Φ((порог − θ)/SE)) − (1 − Φ((порог следующего − θ)/SE)), в процентах (округление до
+# 1 %); при равной вероятности — балл match-v2. Никто не скрывается. Без результата теста вероятности нет (ярус
+# «не подтверждён» и так ниже). Обычный режим (выключено) — порядок match-v2 без изменений.
+def p_exact(b: Bundle, req: dict) -> float | None:
+    from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
+
+    t = (b.test.value or {}) if b.test else {}
+    th, se, g = t.get("theta"), t.get("se"), req.get("grade")
+    if th is None or g not in GRADE_ORDER:
+        return None
+    i = GRADE_ORDER.index(g)
+    nxt = GRADE_CUTS.get(GRADE_ORDER[i + 1]) if i + 1 < len(GRADE_ORDER) else None
+    lo = ltr.level_ok_of(th, se, GRADE_CUTS.get(g))
+    hi = ltr.level_ok_of(th, se, nxt) if nxt is not None else 0.0
+    return round(max(0.0, lo - hi), 2)
+
+
+def exact_reason(p: float, req: dict) -> dict:
+    g = GRADES.get(req.get("grade")) or req.get("grade")
+    return {"requirement": "Строго запрошенный грейд", "level": "T1", "status": "ok" if p >= 0.5 else "partial",
+            "p_exact": p,
+            "text": f"По результату теста уровень именно {g} с вероятностью {round(p * 100)} % — по вашему выбору "
+                    "«строго этот грейд» порядок по этой вероятности"}
 
 
 def selection_order(scored: list, must: dict, core: dict, policy: str | None = None, above_id: str | None = None) -> list:

@@ -141,6 +141,8 @@ class Filters(BaseModel):
                                                        "протоколе и ждёт подтверждения ФСП или подтверждено ФСП)")
     learn_from_company: bool = Field(False, description="Учитывать решения компании: ограниченная объяснимая подстройка "
                                                         "весов по «подходит»/«не подходит» и приглашениям (learn-v1)")
+    grade_exact: bool = Field(False, description="Строго запрошенный грейд: кандидаты с результатом теста выше полосы "
+                                                 "запрошенного грейда идут после точного уровня (не скрываются)")
     confirmed_only: bool = Field(False, description="Только подтверждённый грейд: без «Junior (предварительно)» и без "
                                                     "кандидатов со статусом «грейд не подтверждён»")
     work_format: Literal["office", "hybrid", "remote"] | None = None
