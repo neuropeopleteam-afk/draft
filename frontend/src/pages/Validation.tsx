@@ -204,7 +204,7 @@ function Report({ r, before }: { r: any; before?: ReactNode }) {
         <div className="mt-4"><Alert kind="info">
           <b>Калибровка: </b>
           {r.calibration?.status === "ready"
-            ? `предварительная, на панели моделей (${r.calibration.panels?.length ? `${r.calibration.panels.length} прогонов, последний ${r.calibration.panel}` : r.calibration.panel}) — ${cal.n_families ?? r.calibration.n_families} из ${cal.of_families ?? r.bank?.n_families} семейств банка; людей в ней нет, в решение по грейду её параметры не переносятся. Решение принимается по экспертной предкалибровке; калибровка на людях — после пилота.`
+            ? `предварительная, на панели моделей (${r.calibration.panels?.length ? `${r.calibration.panels.length} прогонов, последний ${r.calibration.panel}` : r.calibration.panel}) — ${cal.n_families ?? r.calibration.n_families} из ${cal.of_families ?? r.bank?.n_families} семейств банка; людей в ней нет, в решение по грейду её параметры не переносятся. Решение принимается по экспертной предкалибровке; калибровка на ответах людей (план, не проведена).`
             : r.calibration?.note}
         </Alert></div>
       </Section>
