@@ -1,0 +1,2057 @@
+{
+ "generated_at": "2026-10-21T10:26:46+00:00",
+ "freeze": {
+  "frozen_at": "2026-10-21T10:12:02+00:00",
+  "protocol": "docs/realdata/hh_holdout2_AGREE_PROTOCOL.md",
+  "protocol_sha256": "9da31cb3d1a80164c0e018bc3f5f3af021d10cae79cf0a6a610440fcee94d8bd",
+  "tool_sha256": "9436903f92c32aed8d484e73970814e4fcf9f64491416d858bd0c0bd9dbd93eb",
+  "code_before_check": "7abab0829cc5cb7f6bea3889a16353e169f26260",
+  "seed": 733444636,
+  "n_agree": 80,
+  "n_grade_max": 120,
+  "rule": "Зафиксировано до проверки; проверка одна; на этом наборе после неё ничего не настраивается."
+ },
+ "run": {
+  "run_started_at": "2026-10-21T09:47:13+00:00",
+  "manifest_sha256": "2bb77a1cd8d79a87bea0600086de16c07857245e3997b32bb69399e5831b5e4f",
+  "code": "24944336764ca5e1396e6f9cb9da3511965ef0d5",
+  "result": "backend/app/modules/validation/data/hh_match_holdout2.json"
+ },
+ "arbiters": [
+  "anthropic/claude-sonnet-5.5",
+  "openai/gpt-6.1-sol"
+ ],
+ "code": "4fe16dbe34193b1d74cdd3c6e16fa5f7198b47bf",
+ "direction_agreements": {
+  "what": "Слепая проверка случайных совпадений разбора и метки hh.ru двумя моделями (не люди)",
+  "n_labelled": 336,
+  "n_agree": 286,
+  "n_disputed": 50,
+  "sample": 80,
+  "seed": 733444636,
+  "both_wrong": 2,
+  "unresolved": 1,
+  "both_wrong_share": {
+   "k": 2,
+   "n": 80,
+   "share": 0.025,
+   "ci95": [
+    0.0069,
+    0.0866
+   ]
+  },
+  "raw": {
+   "k": 286,
+   "n": 336,
+   "share": 0.8512,
+   "ci95": [
+    0.8092,
+    0.8853
+   ]
+  },
+  "parser_right_in_disputes": 13,
+  "adjusted": {
+   "share": 0.8686,
+   "ci95": [
+    0.8161,
+    0.884
+   ],
+   "k": 291.8,
+   "n": 336
+  },
+  "worst_case": {
+   "share": 0.858,
+   "note": "«не решено» засчитано как «оба неверны»"
+  },
+  "rows": [
+   {
+    "id": "137438402",
+    "label_and_parser": "mobile",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "mobile",
+     "openai/gpt-6.1-sol": "mobile"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138675098",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "not_it",
+     "openai/gpt-6.1-sol": "not_it"
+    },
+    "verdict": "both_wrong"
+   },
+   {
+    "id": "130639502",
+    "label_and_parser": "frontend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "frontend",
+     "openai/gpt-6.1-sol": "frontend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138136045",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138660614",
+    "label_and_parser": "backend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "backend",
+     "openai/gpt-6.1-sol": "backend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138528715",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "136183093",
+    "label_and_parser": "security",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "security",
+     "openai/gpt-6.1-sol": "security"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138596034",
+    "label_and_parser": "qa",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "qa",
+     "openai/gpt-6.1-sol": "qa"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "132670934",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138420508",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138701466",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138359824",
+    "label_and_parser": "data_eng",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_eng",
+     "openai/gpt-6.1-sol": "data_eng"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138701374",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "137731826",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138478741",
+    "label_and_parser": "frontend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "frontend",
+     "openai/gpt-6.1-sol": "frontend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138695353",
+    "label_and_parser": "mobile",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "mobile",
+     "openai/gpt-6.1-sol": "mobile"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "137533841",
+    "label_and_parser": "mobile",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "mobile",
+     "openai/gpt-6.1-sol": "mobile"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "137740205",
+    "label_and_parser": "devops",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "both_wrong"
+   },
+   {
+    "id": "136930708",
+    "label_and_parser": "data_eng",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_eng",
+     "openai/gpt-6.1-sol": "data_eng"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138546705",
+    "label_and_parser": "data_eng",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_eng",
+     "openai/gpt-6.1-sol": "data_eng"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138601619",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138051739",
+    "label_and_parser": "mobile",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "mobile",
+     "openai/gpt-6.1-sol": "mobile"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138052100",
+    "label_and_parser": "security",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "security",
+     "openai/gpt-6.1-sol": "security"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138665521",
+    "label_and_parser": "security",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "security",
+     "openai/gpt-6.1-sol": "security"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138563533",
+    "label_and_parser": "backend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "backend",
+     "openai/gpt-6.1-sol": "backend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "137490334",
+    "label_and_parser": "data_eng",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_eng",
+     "openai/gpt-6.1-sol": "data_eng"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138292016",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138700620",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138556114",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138563812",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138530373",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138487022",
+    "label_and_parser": "data_eng",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_eng",
+     "openai/gpt-6.1-sol": "data_eng"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138567863",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "not_it"
+    },
+    "verdict": "unresolved"
+   },
+   {
+    "id": "138352383",
+    "label_and_parser": "frontend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "frontend",
+     "openai/gpt-6.1-sol": "frontend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "135900421",
+    "label_and_parser": "frontend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "frontend",
+     "openai/gpt-6.1-sol": "frontend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138425260",
+    "label_and_parser": "backend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "backend",
+     "openai/gpt-6.1-sol": "backend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "136869371",
+    "label_and_parser": "security",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "security",
+     "openai/gpt-6.1-sol": "security"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138612423",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "129605311",
+    "label_and_parser": "security",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "security",
+     "openai/gpt-6.1-sol": "security"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "137675912",
+    "label_and_parser": "devops",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "devops",
+     "openai/gpt-6.1-sol": "devops"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138678320",
+    "label_and_parser": "devops",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "devops",
+     "openai/gpt-6.1-sol": "devops"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138563920",
+    "label_and_parser": "backend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "backend",
+     "openai/gpt-6.1-sol": "backend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138659144",
+    "label_and_parser": "devops",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "devops",
+     "openai/gpt-6.1-sol": "devops"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138680799",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138678560",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138693635",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "137563415",
+    "label_and_parser": "mobile",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "mobile",
+     "openai/gpt-6.1-sol": "mobile"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "137517783",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138603184",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138524826",
+    "label_and_parser": "qa",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "qa",
+     "openai/gpt-6.1-sol": "qa"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "137576259",
+    "label_and_parser": "backend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "backend",
+     "openai/gpt-6.1-sol": "backend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138664210",
+    "label_and_parser": "devops",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "devops",
+     "openai/gpt-6.1-sol": "devops"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138382226",
+    "label_and_parser": "backend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "backend",
+     "openai/gpt-6.1-sol": "backend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138611604",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138532119",
+    "label_and_parser": "qa",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "qa",
+     "openai/gpt-6.1-sol": "qa"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138233926",
+    "label_and_parser": "security",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "security",
+     "openai/gpt-6.1-sol": "security"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138141987",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138568753",
+    "label_and_parser": "data_eng",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_eng",
+     "openai/gpt-6.1-sol": "data_eng"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "136180537",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138660018",
+    "label_and_parser": "qa",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "qa",
+     "openai/gpt-6.1-sol": "qa"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138675138",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138004880",
+    "label_and_parser": "data_eng",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_eng",
+     "openai/gpt-6.1-sol": "data_eng"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138611543",
+    "label_and_parser": "devops",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "devops",
+     "openai/gpt-6.1-sol": "devops"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "137577287",
+    "label_and_parser": "qa",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "qa",
+     "openai/gpt-6.1-sol": "qa"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138699857",
+    "label_and_parser": "qa",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "qa",
+     "openai/gpt-6.1-sol": "qa"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138668562",
+    "label_and_parser": "security",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "security",
+     "openai/gpt-6.1-sol": "security"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138675147",
+    "label_and_parser": "devops",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "devops",
+     "openai/gpt-6.1-sol": "devops"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138620531",
+    "label_and_parser": "security",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "security",
+     "openai/gpt-6.1-sol": "security"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138156215",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138491786",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138355826",
+    "label_and_parser": "data_ml",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_ml",
+     "openai/gpt-6.1-sol": "data_ml"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "136327960",
+    "label_and_parser": "data_eng",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_eng",
+     "openai/gpt-6.1-sol": "data_eng"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138615719",
+    "label_and_parser": "devops",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "devops",
+     "openai/gpt-6.1-sol": "devops"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138663063",
+    "label_and_parser": "backend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "backend",
+     "openai/gpt-6.1-sol": "backend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138665349",
+    "label_and_parser": "qa",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "qa",
+     "openai/gpt-6.1-sol": "qa"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138164585",
+    "label_and_parser": "backend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "backend",
+     "openai/gpt-6.1-sol": "backend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138527970",
+    "label_and_parser": "frontend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "frontend",
+     "openai/gpt-6.1-sol": "frontend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "136967546",
+    "label_and_parser": "data_eng",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "data_eng",
+     "openai/gpt-6.1-sol": "data_eng"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "135159464",
+    "label_and_parser": "backend",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "backend",
+     "openai/gpt-6.1-sol": "backend"
+    },
+    "verdict": "ok"
+   },
+   {
+    "id": "138628928",
+    "label_and_parser": "analyst",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "analyst",
+     "openai/gpt-6.1-sol": "analyst"
+    },
+    "verdict": "ok"
+   }
+  ]
+ },
+ "no_role_in_title": {
+  "what": "Вакансии без роли в названии (правило dir-v2 не сработало, разбор — по тексту)",
+  "n": 303,
+  "raw": {
+   "k": 256,
+   "n": 303,
+   "share": 0.8449,
+   "ci95": [
+    0.7998,
+    0.8813
+   ]
+  },
+  "after_disputes": {
+   "k": 266,
+   "n": 303,
+   "share": 0.8779,
+   "ci95": [
+    0.8362,
+    0.9101
+   ]
+  }
+ },
+ "grade_without_title_word": {
+  "what": "Грейд на вакансиях без слова грейда в названии: разбор против слепой разметки двух моделей",
+  "n_no_grade_word": 233,
+  "checked": 120,
+  "with_reference": 17,
+  "exact": {
+   "k": 12,
+   "n": 17,
+   "share": 0.7059,
+   "ci95": [
+    0.4687,
+    0.8672
+   ]
+  },
+  "within_one_step": {
+   "k": 15,
+   "n": 17,
+   "share": 0.8824,
+   "ci95": [
+    0.6566,
+    0.9671
+   ]
+  },
+  "parser_no_grade": {
+   "k": 49,
+   "n": 120,
+   "share": 0.4083,
+   "ci95": [
+    0.3246,
+    0.4978
+   ]
+  },
+  "experience_concordance": {
+   "k": 63,
+   "n": 71,
+   "share": 0.8873,
+   "ci95": [
+    0.7931,
+    0.9418
+   ]
+  },
+  "rows": [
+   {
+    "id": "137987481",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "138699513",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138548694",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "138664392",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "middle",
+     "openai/gpt-6.1-sol": "middle"
+    },
+    "reference": "middle",
+    "experience": "between3And6"
+   },
+   {
+    "id": "138661607",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "136624461",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "junior",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "136318567",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138649953",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "136791353",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138674234",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138478741",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "137485958",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "junior",
+     "openai/gpt-6.1-sol": "junior"
+    },
+    "reference": "junior",
+    "experience": "noExperience"
+   },
+   {
+    "id": "136352960",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "137490334",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138665349",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138425260",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "junior",
+     "openai/gpt-6.1-sol": "junior"
+    },
+    "reference": "junior",
+    "experience": "noExperience"
+   },
+   {
+    "id": "136827984",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138599132",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "138674065",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138509992",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138566033",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "middle",
+     "openai/gpt-6.1-sol": "middle"
+    },
+    "reference": "middle",
+    "experience": "between3And6"
+   },
+   {
+    "id": "138668562",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "senior",
+     "openai/gpt-6.1-sol": "senior"
+    },
+    "reference": "senior",
+    "experience": "between3And6"
+   },
+   {
+    "id": "138701571",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "137533841",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "moreThan6"
+   },
+   {
+    "id": "138474574",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "137577287",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138530373",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "middle",
+     "openai/gpt-6.1-sol": "middle"
+    },
+    "reference": "middle",
+    "experience": "between1And3"
+   },
+   {
+    "id": "127057371",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138555629",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "138528715",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "137704879",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "senior",
+     "openai/gpt-6.1-sol": "senior"
+    },
+    "reference": "senior",
+    "experience": "moreThan6"
+   },
+   {
+    "id": "138660034",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138484393",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "129605311",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138528651",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "senior",
+     "openai/gpt-6.1-sol": "senior"
+    },
+    "reference": "senior",
+    "experience": "between1And3"
+   },
+   {
+    "id": "136967546",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138678479",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "136928312",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138516486",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "moreThan6"
+   },
+   {
+    "id": "137585507",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138670008",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "134675324",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "senior",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "137740205",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138491786",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138475207",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138670126",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138678320",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138675138",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "132670934",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138673011",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138085615",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "138527615",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "middle",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "moreThan6"
+   },
+   {
+    "id": "137786847",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "middle",
+     "openai/gpt-6.1-sol": "middle"
+    },
+    "reference": "middle",
+    "experience": "between3And6"
+   },
+   {
+    "id": "136831842",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "136264790",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "moreThan6"
+   },
+   {
+    "id": "137959956",
+    "parser": "intern",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "intern",
+     "openai/gpt-6.1-sol": "intern"
+    },
+    "reference": "intern",
+    "experience": "noExperience"
+   },
+   {
+    "id": "138142870",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138661567",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "128540300",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "junior",
+     "openai/gpt-6.1-sol": "junior"
+    },
+    "reference": "junior",
+    "experience": "noExperience"
+   },
+   {
+    "id": "138613984",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "136557515",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138546705",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138678606",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "137247348",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "137977724",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138605181",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "senior",
+     "openai/gpt-6.1-sol": "senior"
+    },
+    "reference": "senior",
+    "experience": "between1And3"
+   },
+   {
+    "id": "138680799",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138662576",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138676246",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138701654",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138420317",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138665477",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138610009",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138669411",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138622411",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "moreThan6"
+   },
+   {
+    "id": "138661735",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138292016",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "middle",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138666291",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138226239",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "137563415",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "moreThan6"
+   },
+   {
+    "id": "137576259",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138059907",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138136045",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138009086",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138654485",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138420508",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "136889137",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138681960",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138664236",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "moreThan6"
+   },
+   {
+    "id": "138591254",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138636496",
+    "parser": "intern",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "137735154",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "137578424",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138563812",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "senior",
+     "openai/gpt-6.1-sol": "senior"
+    },
+    "reference": "senior",
+    "experience": "moreThan6"
+   },
+   {
+    "id": "138555051",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138695353",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "moreThan6"
+   },
+   {
+    "id": "138142457",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138629497",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "138670046",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "senior",
+     "openai/gpt-6.1-sol": "senior"
+    },
+    "reference": "senior",
+    "experience": "between1And3"
+   },
+   {
+    "id": "138556212",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138700888",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138702707",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138624791",
+    "parser": "intern",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "137924141",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "137609459",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "135237472",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138527970",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "middle",
+     "openai/gpt-6.1-sol": "middle"
+    },
+    "reference": "middle",
+    "experience": "between3And6"
+   },
+   {
+    "id": "138611264",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "137534781",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138606930",
+    "parser": "intern",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "intern",
+     "openai/gpt-6.1-sol": "intern"
+    },
+    "reference": "intern",
+    "experience": "noExperience"
+   },
+   {
+    "id": "138676543",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138611604",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "junior",
+     "openai/gpt-6.1-sol": "junior"
+    },
+    "reference": "junior",
+    "experience": "noExperience"
+   },
+   {
+    "id": "138675098",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "middle",
+     "openai/gpt-6.1-sol": "senior"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138520242",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between1And3"
+   },
+   {
+    "id": "138659144",
+    "parser": "senior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138413898",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "137367811",
+    "parser": "junior",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "138244674",
+    "parser": null,
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "noExperience"
+   },
+   {
+    "id": "138141987",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   },
+   {
+    "id": "138699857",
+    "parser": "middle",
+    "arbiters": {
+     "anthropic/claude-sonnet-5.5": "none",
+     "openai/gpt-6.1-sol": "none"
+    },
+    "reference": null,
+    "experience": "between3And6"
+   }
+  ]
+ },
+ "label": "модели, не люди",
+ "recompute": "cd backend && python ../tools/realdata/hh_agree.py --tag 2 run (один раз; повтор запрещён)"
+}

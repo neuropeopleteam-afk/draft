@@ -1096,7 +1096,7 @@ def second_opinion(*, stem: str, code: str | None, step_prompt: str | None, rubr
                          model=None, deadline=time.monotonic() + s.llm_grading_budget_s, s=s)
         out.update({k: p2.get(k) for k in ("score", "criteria", "level", "manipulation", "error")})
         out.update(latency_ms=res2.latency_ms, model=res2.model, provider=res2.provider,
-                   model_label=model_label(res2.model) if res2.model else None)
+                   model_label=model_label(res2.model, second=True) if res2.model else None)
         verdict, extra = combine(first, p2, rubric, s.llm_grading_disagree)
     except Exception as e:  # noqa: BLE001 — фоновая задача: ошибка = «вторая оценка не получена»
         out["error"] = type(e).__name__
@@ -1174,7 +1174,7 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
     out.latency_ms += res2.latency_ms
     out.second = {k: p2.get(k) for k in ("score", "criteria", "level", "manipulation", "error")}
     out.second.update(latency_ms=res2.latency_ms, model=res2.model, provider=res2.provider,
-                      model_label=model_label(res2.model) if res2.model else None)
+                      model_label=model_label(res2.model, second=True) if res2.model else None)
     if p2.get("ok"):
         out.scores.append(p2["score"])
     verdict, extra = combine(p, p2, rubric, s.llm_grading_disagree)

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NB, num, pct, useApi } from "./ui";
 import { ScrollX } from "./A11y";
 import { MatchExplain, type MatchExplainData } from "./MatchExplain";
+import * as Numbers from "../lib/numbers";
 
 /** KF4 «Арена метрик»: первый экран /validation — Драфт против поиска по резюме на одном мире со скрытой истиной
  *  (backend: app/modules/validation/matching_bench.py → data/matching_bench.json, пересчёт make bench) и точность
@@ -20,17 +21,22 @@ const ROWS: { key: string; title: string; hint: string }[] = [
 ];
 const COLS: [string, string][] = [["p@5", "Топ-5 (P@5)"], ["p@10", "Топ-10 (P@10)"], ["ndcg@10", "Порядок топ-10"], ["mrr", "Место 1-го верного"], ["recall@30", "Полнота в топ-30"]];
 
-/** Точность грейда: снимок docs/NUMBERS.json → grade_accuracy и validation/data/accuracy_views.json (банк 4d44, 19.10.2026);
- *  карточки «вдали от границы» и «без занижения» берутся из /validation/headline, если расчёт доступен. */
-const GRADE_FALLBACK = {
-  one_session_within1: 0.9936, // accuracy_views.one_session_metrics.within_1
-  retest_within1: 0.998, // accuracy_views.views.strict_pool.within_1 — при повторе
-  far_from_cut: 0.8338, // accuracy_views.views.far_from_cut.exact
-  no_under_claim: 0.8215, // accuracy_views.views.no_under_claim.exact
-  two_stage: 0.694, // accuracy_views.two_stage_metrics.exact
-  attacks_n: 116, // llm_models.json: grader, атак на оценщика
-  attacks_passed: 0,
-};
+/** Точность грейда — только из расчёта: getGradeVerdict() (lib/numbers.ts, блок main из docs/NUMBERS.json, ведёт
+ *  методика); защита оценщика — в своём разделе (античит). Запасных чисел нет (21.10: прежние 0,9936 / 0,8338 / 0,8215 /
+ *  0,694 отбракованы проверкой); нет блока — вкладка честно пишет, что пересчёт идёт. */
+type GradeVerdict = { verdict_accuracy?: number | null; false_confirm?: number | null; confident_share?: number | null;
+  exact_grade?: number | null; retest?: number | null; n?: number | null; what?: string | null };
+function gradeVerdict(): GradeVerdict | null {
+  const fn = (Numbers as any).getGradeVerdict as (() => any) | undefined;
+  const v = typeof fn === "function" ? fn() : null;
+  if (!v || typeof v !== "object") return null;
+  const num1 = (x: any): number | null => (typeof x === "number" ? x : typeof x?.value === "number" ? x.value
+    : typeof x?.mean === "number" ? x.mean : typeof x?.share === "number" ? x.share : null);
+  const out: GradeVerdict = { verdict_accuracy: num1(v.verdict_accuracy), false_confirm: num1(v.false_confirm),
+    confident_share: num1(v.confident_share), exact_grade: num1(v.exact_grade), retest: num1(v.retest),
+    n: typeof v.n === "number" ? v.n : null, what: typeof v.what === "string" ? v.what : null };
+  return Object.values(out).some((x) => typeof x === "number") ? out : null;
+}
 
 const pp = (v?: number | null) => {
   if (v == null) return "—";
@@ -256,20 +262,22 @@ function HhRadar() {
 }
 
 function GradeArena() {
-  const { data } = useApi<any>("/validation/headline", []);
-  const acc: any[] = data?.accuracy?.items || [];
-  const pick = (id: string): number | undefined => acc.find((x: any) => x?.id === id)?.value ?? undefined;
-  const g = GRADE_FALLBACK;
-  const far = pick("acc_far") ?? g.far_from_cut;
-  const noUnder = pick("acc_no_under") ?? g.no_under_claim;
-  const kpis: { v: string; t: string; s: string }[] = [
-    { v: p1(g.one_session_within1), t: "в пределах ±1 ступени за одну сессию", s: "грейд почти никогда не «улетает» на две ступени" },
-    { v: p1(g.retest_within1), t: "в пределах ±1 ступени при повторе", s: "повторная сессия подтверждает уровень" },
-    { v: p1(far), t: "точный грейд вдали от границы", s: "кандидат не на стыке двух уровней" },
-    { v: p1(noUnder), t: "точный грейд без занижения заявки", s: "кандидат не просит уровень ниже своего" },
-    { v: p1(g.two_stage), t: "точный грейд при двухэтапном подтверждении", s: "короткий добор заданий у границы" },
-    { v: g.attacks_n ? pct((g.attacks_n - g.attacks_passed) / g.attacks_n, 0) : "—", t: `защита оценщика — ${g.attacks_passed} из ${g.attacks_n} атак прошли`, s: "промпт-инъекции и «сливы» ответов в открытых заданиях" },
-  ];
+  const g = gradeVerdict();
+  if (!g) {
+    return (
+      <p className="rounded-2xl bg-brand-night/5 p-4 text-sm leading-snug text-brand-ink/80" data-testid="arena-grade-pending">
+        Точность грейда пересчитывается на реальном банке заданий тем же движком, что работает у кандидатов. Цифры появятся
+        здесь, как только расчёт пройдёт проверку, — до этого мы их не показываем.
+      </p>
+    );
+  }
+  const kpis: { v: string; t: string; s: string }[] = [];
+  const add = (v: number | null | undefined, t: string, s2: string) => { if (typeof v === "number") kpis.push({ v: p1(v), t, s: s2 }); };
+  add(g.verdict_accuracy, "уверенный вердикт верен", "«подтверждён» или «не подтверждён» совпадает с истинным грейдом");
+  add(g.confident_share, "вердикт уверенный сразу", "остальным — короткий доп. этап у спорного порога");
+  add(g.false_confirm, "ложное подтверждение", "кандидат ниже заявленного уровня получил «подтверждён»");
+  add(g.exact_grade, "точный грейд", "по всему пулу кандидатов");
+  add(g.retest, "совпадение при повторе", "повторная сессия даёт тот же вердикт");
   return (
     <div>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="arena-grade-kpis">
@@ -283,11 +291,11 @@ function GradeArena() {
       </ul>
       <details className="mt-3 text-xs leading-snug text-brand-ink/65">
         <summary className="cursor-pointer font-medium text-brand-plum/85 hover:underline">
-          Модель симуляции пути и двухконтурный оценщик открытых ответов
+          Как устроена симуляция пути кандидата
         </summary>
         <p className="mt-1">
-          Симуляция всего пути кандидата на банке заданий (психометрическая модель ответов 2PL, истинный грейд известен): проверяется механика теста, а не люди.
-          Атаки на оценщика — замер двухконтурного оценщика открытых ответов. Подробности — в разделах ниже.
+          {g.what || "Симуляция пути кандидата на банке заданий тем же движком, что в продукте (истинный грейд известен): проверяется механика теста, а не люди."}
+          {g.n ? ` Кандидатов в симуляции: ${num(g.n, 0)}.` : ""}
         </p>
       </details>
     </div>

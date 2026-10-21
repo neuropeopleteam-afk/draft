@@ -1,0 +1,522 @@
+{
+ "what": "Диагностика потолка мира match-v2 — только миры разработки (зёрна 31000001–31000006, 20261006, 20261007; отложенные не читались)",
+ "method": "tools/realdata/bench2_feats.py → tools/realdata/bench2_diag.py; перекрёстная проверка по мирам (2 половины зёрен); nDCG@10: выигрыш 2^метка−1, идеал по всем кандидатам мира, отсечка 10",
+ "rows_ru": {
+  "product_now": "продукт сейчас (запасные веса, фильтр стека с порогом)",
+  "cascade_now": "те же веса, фильтр стека каскадом (никого не прячем)",
+  "lin_cascade": "линейная модель на разрешённых признаках (тест, ФСП, задания) + каскад",
+  "gbm_allowed_cascade": "LambdaMART на разрешённых признаках + каскад",
+  "gbm_all_ceiling": "потолок по ВСЕМ наблюдаемым признакам, включая самоописание (в продукт нельзя)",
+  "oracle_pool": "пул подборки по истинной метке (потолок при данном пуле)"
+ },
+ "conditions": {
+  "sm": {
+   "seeds": [
+    "20261006",
+    "20261007",
+    "31000001",
+    "31000002",
+    "31000003",
+    "31000004",
+    "31000005",
+    "31000006"
+   ],
+   "rows": {
+    "product_now": {
+     "ndcg10": 0.5617,
+     "p5": 0.706,
+     "p10": 0.6905,
+     "mrr": 0.8176,
+     "pool_rel_share": 0.7035
+    },
+    "cascade_now": {
+     "ndcg10": 0.5792,
+     "p5": 0.7278,
+     "p10": 0.6977,
+     "mrr": 0.835,
+     "pool_rel_share": 0.7035
+    },
+    "nofilter_now": {
+     "ndcg10": 0.5233,
+     "p5": 0.6632,
+     "p10": 0.6418,
+     "mrr": 0.7872,
+     "pool_rel_share": 0.7035
+    },
+    "lin_threshold": {
+     "ndcg10": 0.6053,
+     "p5": 0.6843,
+     "p10": 0.6741,
+     "mrr": 0.8085,
+     "pool_rel_share": 0.7035
+    },
+    "lin_cascade": {
+     "ndcg10": 0.637,
+     "p5": 0.6975,
+     "p10": 0.6787,
+     "mrr": 0.8284,
+     "pool_rel_share": 0.7035
+    },
+    "gbm_allowed_cascade": {
+     "ndcg10": 0.6136,
+     "p5": 0.704,
+     "p10": 0.6907,
+     "mrr": 0.7999,
+     "pool_rel_share": 0.7035
+    },
+    "gbm_allowed_threshold": {
+     "ndcg10": 0.5981,
+     "p5": 0.6807,
+     "p10": 0.6784,
+     "mrr": 0.778,
+     "pool_rel_share": 0.7035
+    },
+    "gbm_all_ceiling": {
+     "ndcg10": 0.7478,
+     "p5": 0.83,
+     "p10": 0.7998,
+     "mrr": 0.9175,
+     "pool_rel_share": 0.7035
+    },
+    "oracle_pool": {
+     "ndcg10": 0.9131,
+     "p5": 0.9829,
+     "p10": 0.9382,
+     "mrr": 0.9929,
+     "pool_rel_share": 0.7035
+    }
+   },
+   "lin_weights": {
+    "threshold": [
+     {
+      "test": 0.5642,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.4171,
+      "desired": 0.0187,
+      "probe": 0.0,
+      "failed": -0.4295,
+      "provisional": -0.1701,
+      "over": -0.5772
+     },
+     {
+      "test": 0.4877,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.5085,
+      "desired": 0.0037,
+      "probe": 0.0,
+      "failed": -0.5695,
+      "provisional": -0.109,
+      "over": -0.7079
+     }
+    ],
+    "cascade": [
+     {
+      "test": 0.9999,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.0,
+      "desired": 0.0,
+      "probe": 0.0001,
+      "failed": 0.0,
+      "provisional": -0.3852,
+      "over": -1.7284
+     },
+     {
+      "test": 1.0,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.0,
+      "desired": 0.0,
+      "probe": 0.0,
+      "failed": 0.0,
+      "provisional": -0.5075,
+      "over": -2.4852
+     }
+    ]
+   }
+  },
+  "sm_ideal": {
+   "seeds": [
+    "20261006",
+    "20261007",
+    "31000001",
+    "31000002",
+    "31000003",
+    "31000004",
+    "31000005",
+    "31000006"
+   ],
+   "rows": {
+    "product_now": {
+     "ndcg10": 0.5928,
+     "p5": 0.7315,
+     "p10": 0.7196,
+     "mrr": 0.8421,
+     "pool_rel_share": 0.7177
+    },
+    "cascade_now": {
+     "ndcg10": 0.6118,
+     "p5": 0.7557,
+     "p10": 0.73,
+     "mrr": 0.8604,
+     "pool_rel_share": 0.7177
+    },
+    "nofilter_now": {
+     "ndcg10": 0.5529,
+     "p5": 0.685,
+     "p10": 0.6769,
+     "mrr": 0.814,
+     "pool_rel_share": 0.7177
+    },
+    "lin_threshold": {
+     "ndcg10": 0.6357,
+     "p5": 0.7122,
+     "p10": 0.7029,
+     "mrr": 0.827,
+     "pool_rel_share": 0.7177
+    },
+    "lin_cascade": {
+     "ndcg10": 0.6609,
+     "p5": 0.7243,
+     "p10": 0.7034,
+     "mrr": 0.8417,
+     "pool_rel_share": 0.7177
+    },
+    "gbm_allowed_cascade": {
+     "ndcg10": 0.6679,
+     "p5": 0.741,
+     "p10": 0.7151,
+     "mrr": 0.8579,
+     "pool_rel_share": 0.7177
+    },
+    "gbm_allowed_threshold": {
+     "ndcg10": 0.6511,
+     "p5": 0.7128,
+     "p10": 0.702,
+     "mrr": 0.8412,
+     "pool_rel_share": 0.7177
+    },
+    "gbm_all_ceiling": {
+     "ndcg10": 0.805,
+     "p5": 0.8629,
+     "p10": 0.8313,
+     "mrr": 0.9387,
+     "pool_rel_share": 0.7177
+    },
+    "oracle_pool": {
+     "ndcg10": 0.9413,
+     "p5": 0.9846,
+     "p10": 0.9487,
+     "mrr": 0.9929,
+     "pool_rel_share": 0.7177
+    }
+   },
+   "lin_weights": {
+    "threshold": [
+     {
+      "test": 0.5589,
+      "margin": 0.0,
+      "fsp": 0.0038,
+      "required": 0.4372,
+      "desired": 0.0,
+      "probe": 0.0,
+      "failed": -0.5634,
+      "provisional": -0.7925,
+      "over": -0.7409
+     },
+     {
+      "test": 0.5226,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.4217,
+      "desired": 0.0555,
+      "probe": 0.0003,
+      "failed": -0.4733,
+      "provisional": -0.4696,
+      "over": -0.6573
+     }
+    ],
+    "cascade": [
+     {
+      "test": 1.0,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.0,
+      "desired": 0.0,
+      "probe": 0.0,
+      "failed": 0.0,
+      "provisional": -1.3891,
+      "over": -1.9442
+     },
+     {
+      "test": 0.9931,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.0,
+      "desired": 0.0069,
+      "probe": 0.0,
+      "failed": 0.0,
+      "provisional": -1.2966,
+      "over": -2.3318
+     }
+    ]
+   }
+  },
+  "sm_label_0_2": {
+   "seeds": [
+    "20261006",
+    "20261007",
+    "31000001",
+    "31000002",
+    "31000003",
+    "31000004",
+    "31000005",
+    "31000006"
+   ],
+   "rows": {
+    "product_now": {
+     "ndcg10": 0.5567,
+     "p5": 0.3514,
+     "p10": 0.4243,
+     "mrr": 0.4236,
+     "pool_rel_share": 0.7395
+    },
+    "cascade_now": {
+     "ndcg10": 0.5705,
+     "p5": 0.38,
+     "p10": 0.4363,
+     "mrr": 0.4511,
+     "pool_rel_share": 0.7395
+    },
+    "nofilter_now": {
+     "ndcg10": 0.511,
+     "p5": 0.3111,
+     "p10": 0.3629,
+     "mrr": 0.3853,
+     "pool_rel_share": 0.7395
+    },
+    "lin_threshold": {
+     "ndcg10": 0.7994,
+     "p5": 0.7458,
+     "p10": 0.6752,
+     "mrr": 0.8887,
+     "pool_rel_share": 0.7395
+    },
+    "lin_cascade": {
+     "ndcg10": 0.7854,
+     "p5": 0.7253,
+     "p10": 0.6566,
+     "mrr": 0.8761,
+     "pool_rel_share": 0.7395
+    },
+    "gbm_allowed_cascade": {
+     "ndcg10": 0.7759,
+     "p5": 0.7093,
+     "p10": 0.6475,
+     "mrr": 0.8565,
+     "pool_rel_share": 0.7395
+    },
+    "gbm_allowed_threshold": {
+     "ndcg10": 0.7912,
+     "p5": 0.7332,
+     "p10": 0.6687,
+     "mrr": 0.8662,
+     "pool_rel_share": 0.7395
+    },
+    "gbm_all_ceiling": {
+     "ndcg10": 0.8921,
+     "p5": 0.8593,
+     "p10": 0.8125,
+     "mrr": 0.9438,
+     "pool_rel_share": 0.7395
+    },
+    "oracle_pool": {
+     "ndcg10": 0.9804,
+     "p5": 0.9829,
+     "p10": 0.942,
+     "mrr": 0.9929,
+     "pool_rel_share": 0.7396
+    }
+   },
+   "lin_weights": {
+    "threshold": [
+     {
+      "test": 0.0953,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.7863,
+      "desired": 0.1184,
+      "probe": 0.0,
+      "failed": -1.2333,
+      "provisional": -2.4668,
+      "over": -10.7948
+     },
+     {
+      "test": 0.0,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 1.0,
+      "desired": 0.0,
+      "probe": 0.0,
+      "failed": -2.0084,
+      "provisional": -4.5015,
+      "over": -20.3754
+     }
+    ],
+    "cascade": [
+     {
+      "test": 0.0,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.0,
+      "desired": 1.0,
+      "probe": 0.0,
+      "failed": 0.0,
+      "provisional": -11.7077,
+      "over": -61.4253
+     },
+     {
+      "test": 0.0,
+      "margin": 0.0,
+      "fsp": 0.0,
+      "required": 0.0,
+      "desired": 0.0,
+      "probe": 0.0,
+      "failed": 0.0,
+      "provisional": -1.0596,
+      "over": -5.0402
+     }
+    ]
+   }
+  },
+  "hard": {
+   "seeds": [
+    "20261006",
+    "20261007",
+    "31000001",
+    "31000002",
+    "31000003",
+    "31000004",
+    "31000005",
+    "31000006"
+   ],
+   "rows": {
+    "product_now": {
+     "ndcg10": 0.6058,
+     "p5": 0.7874,
+     "p10": 0.7751,
+     "mrr": 0.8839,
+     "pool_rel_share": 0.5235
+    },
+    "cascade_now": {
+     "ndcg10": 0.6079,
+     "p5": 0.7899,
+     "p10": 0.7766,
+     "mrr": 0.8883,
+     "pool_rel_share": 0.5235
+    },
+    "nofilter_now": {
+     "ndcg10": 0.535,
+     "p5": 0.7197,
+     "p10": 0.7124,
+     "mrr": 0.8398,
+     "pool_rel_share": 0.5235
+    },
+    "lin_threshold": {
+     "ndcg10": 0.5918,
+     "p5": 0.7818,
+     "p10": 0.7663,
+     "mrr": 0.8743,
+     "pool_rel_share": 0.5235
+    },
+    "lin_cascade": {
+     "ndcg10": 0.6136,
+     "p5": 0.7981,
+     "p10": 0.7824,
+     "mrr": 0.8836,
+     "pool_rel_share": 0.5235
+    },
+    "gbm_allowed_cascade": {
+     "ndcg10": 0.5919,
+     "p5": 0.7797,
+     "p10": 0.7632,
+     "mrr": 0.87,
+     "pool_rel_share": 0.5235
+    },
+    "gbm_allowed_threshold": {
+     "ndcg10": 0.5905,
+     "p5": 0.7775,
+     "p10": 0.7628,
+     "mrr": 0.8661,
+     "pool_rel_share": 0.5235
+    },
+    "gbm_all_ceiling": {
+     "ndcg10": 0.7976,
+     "p5": 0.9295,
+     "p10": 0.902,
+     "mrr": 0.9765,
+     "pool_rel_share": 0.5235
+    },
+    "oracle_pool": {
+     "ndcg10": 0.9476,
+     "p5": 0.993,
+     "p10": 0.9905,
+     "mrr": 0.9931,
+     "pool_rel_share": 0.5235
+    }
+   },
+   "lin_weights": {
+    "threshold": [
+     {
+      "test": 0.4196,
+      "margin": 0.0373,
+      "fsp": 0.0871,
+      "required": 0.2679,
+      "desired": 0.0365,
+      "probe": 0.0014,
+      "failed": -0.297,
+      "provisional": -0.0041,
+      "over": 0.1502
+     },
+     {
+      "test": 0.2492,
+      "margin": 0.2078,
+      "fsp": 0.0704,
+      "required": 0.2922,
+      "desired": 0.0083,
+      "probe": 0.0,
+      "failed": -0.3804,
+      "provisional": -0.065,
+      "over": 0.1721
+     }
+    ],
+    "cascade": [
+     {
+      "test": 0.6029,
+      "margin": 0.0548,
+      "fsp": 0.1393,
+      "required": 0.0,
+      "desired": 0.0226,
+      "probe": 0.0007,
+      "failed": -0.0117,
+      "provisional": -0.0352,
+      "over": 0.1797
+     },
+     {
+      "test": 0.3688,
+      "margin": 0.3266,
+      "fsp": 0.1077,
+      "required": 0.0,
+      "desired": 0.0,
+      "probe": 0.0,
+      "failed": -0.0524,
+      "provisional": -0.0719,
+      "over": 0.1969
+     }
+    ]
+   }
+  }
+ }
+}

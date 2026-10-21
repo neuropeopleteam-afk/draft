@@ -1,0 +1,11 @@
+{
+ "frozen_at": "2026-10-21T10:12:02+00:00",
+ "protocol": "docs/realdata/hh_holdout2_AGREE_PROTOCOL.md",
+ "protocol_sha256": "9da31cb3d1a80164c0e018bc3f5f3af021d10cae79cf0a6a610440fcee94d8bd",
+ "tool_sha256": "9436903f92c32aed8d484e73970814e4fcf9f64491416d858bd0c0bd9dbd93eb",
+ "code_before_check": "7abab0829cc5cb7f6bea3889a16353e169f26260",
+ "seed": 733444636,
+ "n_agree": 80,
+ "n_grade_max": 120,
+ "rule": "Зафиксировано до проверки; проверка одна; на этом наборе после неё ничего не настраивается."
+}

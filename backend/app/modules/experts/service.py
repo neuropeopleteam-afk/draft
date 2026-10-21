@@ -294,7 +294,7 @@ def source_summary(panel: list[dict]) -> dict | None:
 
 def model_role_note(models: list[str]) -> str:
     """Модель разметки по протоколу ≠ модель продукта — одной строкой, из конфигурации LLM (находка С3-8)."""
-    from app.modules.llm.client import OPENROUTER_DEFAULTS, model_label
+    from app.modules.llm.client import OPENROUTER_DEFAULTS, model_name as model_label  # служебное имя: разметка панели ≠ модель продукта
 
     main, second = model_label(OPENROUTER_DEFAULTS["grade"]), model_label(OPENROUTER_DEFAULTS["grade_second"])
     who = ", ".join(models) or "Языковая модель"

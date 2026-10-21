@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { NB, num, pct } from "../ui";
 import { ProvenanceLine } from "./Provenance";
 import { ScrollX } from "../A11y";
-import { fmtNum, getGradeVerdict, getTop5Run, type Frac, type Top5Item } from "../../lib/numbers";
+import { fmtNum, getGradeVerdict, getMatchingMetrics, getTop5Run, type Frac, type Top5Item } from "../../lib/numbers";
 
 /** Первый экран /validation: точность решения по грейду — симуляция продукта (docs/NUMBERS.json → grade_verdict).
  *  Каждое число — из расчёта с подписью мира; нет расчёта — нет числа. */
@@ -31,15 +31,67 @@ function ci(f?: Frac | null) {
 
 /** Карточка: заголовок — стандартные условия (S-T), рядом всегда «проверка на прочность» (жёсткие условия) —
  * правило владельца 21.10; если S-T нет — жёсткие условия как есть. */
+export const COL_ST = "Как в аналогичных решениях";
+export const COL_HARD = "Проверка на прочность — строже";
+
+function Col({ title, f, testid, strong }: { title: string; f?: Frac | null; testid?: string; strong?: boolean }) {
+  return (
+    <div className={`min-w-0 rounded-lg p-2.5 ${strong ? "bg-white ring-1 ring-brand-plum/25" : "bg-white/70 ring-1 ring-brand-night/10"}`} data-testid={testid}>
+      <div className="text-[11px] font-semibold leading-snug text-brand-ink/75">{title}</div>
+      <div className="mt-0.5 text-2xl font-extrabold tabular-nums text-brand-night">{f ? `${pc(f.value)} %` : "—"}</div>
+      {f && <div className="text-[11px] leading-snug text-brand-ink/70">{[f.k != null && f.n != null ? `${f.k} из ${f.n}` : "", ci(f)].filter(Boolean).join(" · ")}</div>}
+    </div>
+  );
+}
+
+/** Карточка: две равные колонки (решение владельца 21.10) — «как в аналогичных решениях» (S-T) и «проверка на прочность —
+ *  строже» (жёсткие условия). Один набор условий — одна колонка как есть. */
 function Big({ label, f, hard, sub, testid }: { label: string; f?: Frac | null; hard?: Frac | null; sub: string; testid: string }) {
-  const main = f ?? hard;
   return (
     <div className="rounded-xl bg-brand-cream/40 p-4 ring-1 ring-brand-night/10" data-testid={testid}>
       <div className="text-[11px] font-bold uppercase tracking-wide text-brand-ink/70">{label}</div>
-      <div className="mt-1 text-2xl font-extrabold text-brand-night">{main ? `${pc(main.value)} %` : "—"}</div>
-      {f && hard && <div className="text-[11px] font-semibold text-brand-ink/75" data-testid={`${testid}-pair`}>стандартные условия · в жёстких — {pc(hard.value)} %</div>}
-      <div className="mt-1 text-xs text-brand-ink/70">{sub}</div>
-      {main && <div className="mt-1 text-[11px] text-brand-ink/70">{[main.k != null && main.n != null ? `${main.k} из ${main.n}` : "", ci(main)].filter(Boolean).join(" · ")}</div>}
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <Col title={COL_ST} f={f} />
+        <Col title={COL_HARD} f={hard} testid={`${testid}-pair`} strong />
+      </div>
+      <div className="mt-2 text-xs text-brand-ink/70">{sub}</div>
+    </div>
+  );
+}
+
+/** «Почему вторая колонка строже» — только то, что записано в протоколах прогонов (условия в NUMBERS → top5_meta, matching). */
+export function WhyStricter({ className = "" }: { className?: string }) {
+  return (
+    <div className={`rounded-xl bg-white p-3.5 text-sm ring-1 ring-brand-plum/20 ${className}`} data-testid="v-why-stricter">
+      <p className="font-bold text-brand-night">Почему вторая колонка строже</p>
+      <ul className="mt-1.5 list-disc space-y-1 pl-5 text-brand-ink/80">
+        <li>Грейд — по шести ступеням (от Стажёра до Principal); по пяти и четырём ступеням — рядом, для сравнения.</li>
+        <li>Тест: кандидаты угадывают в вопросах с выбором, чаще завышают и занижают заявку, больше людей у самых порогов, а
+          параметры заданий взяты осторожнее, чем в стандартных условиях.</li>
+        <li>Подбор: часть анкет завышает грейд и стек, погрешность теста больше, больше людей у порогов, кандидатов в мире больше.</li>
+        <li>Обе колонки — один прогон на отложенных данных: настройки выбраны на других зёрнах, протокол и хэш зафиксированы до
+          прогона, результат пересчитан независимо.</li>
+      </ul>
+    </div>
+  );
+}
+
+/** Подбор — те же две колонки (S-M | жёсткие), из NUMBERS → matching (отложенная проверка). */
+export function MatchingPair({ className = "" }: { className?: string }) {
+  const mm = getMatchingMetrics();
+  if (!mm?.p5 || !mm?.hard) return null;
+  const fr = (x: any): Frac | null => (x?.mean != null ? ({ value: x.mean, ci95: x.lo != null ? [x.lo, x.hi] : null } as unknown as Frac) : null);
+  const nd = (x: any) => (x?.mean != null ? fmtNum(x.mean, 3) : "—");
+  return (
+    <div className={`rounded-xl bg-brand-cream/40 p-4 ring-1 ring-brand-night/10 ${className}`} data-testid="v-hl-matching-pair">
+      <div className="text-[11px] font-bold uppercase tracking-wide text-brand-ink/70">Подбор: подходящих в первой пятёрке (P@5)</div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <Col title={COL_ST} f={fr(mm.p5)} />
+        <Col title={COL_HARD} f={fr(mm.hard.p5)} strong />
+      </div>
+      <div className="mt-2 text-xs text-brand-ink/70">
+        Качество порядка (nDCG@10): {nd(mm.ndcg10)} | {nd(mm.hard.ndcg10)} · модели, не люди, один прогон на отложенных мирах
+      </div>
     </div>
   );
 }
@@ -84,17 +136,16 @@ function FinalRun() {
     <div className="mt-4" data-testid="v-hl-final">
       <h3 className="text-base font-bold text-brand-night">Итоговый прогон: одни настройки, два набора условий</h3>
       <p className="mt-1 text-sm text-brand-ink/70">
-        Настройки выбраны на обучающих зёрнах, цифры — один прогон на отложенных. «Стандартные условия» — такие же
-        допущения, как в аналогичных решениях; «жёсткие» — угадывание, завышенные заявки, кандидаты у порогов и
-        осторожные параметры заданий. Модельные кандидаты, не люди.
+        Настройки выбраны на обучающих зёрнах, цифры — один прогон на отложенных. Левая колонка — те же допущения, что в
+        аналогичных решениях; правая — проверка на прочность, условия строже (почему — ниже). Модельные кандидаты, не люди.
       </p>
-      <ScrollX label="Итоговый прогон: стандартные и жёсткие условия">
+      <ScrollX label="Итоговый прогон: как в аналогичных решениях и проверка на прочность" className="overflow-x-auto">
         <table className="mt-2 w-full min-w-[560px] text-sm" data-testid="v-hl-final-table">
           <thead>
             <tr className="text-left text-xs text-brand-ink/70">
               <th className="py-1 pr-3">Метрика</th>
-              <th className="pr-3">Стандартные условия</th>
-              <th>Жёсткие условия</th>
+              <th className="pr-3">{COL_ST}</th>
+              <th>{COL_HARD}</th>
             </tr>
           </thead>
           <tbody>
@@ -164,14 +215,15 @@ export default function Headline() {
       </div>
       <p className="mt-2 text-sm text-brand-ink/70">
         Тот же движок, что у кандидата: выбор заданий у порога грейда, остановка, дотестирование, вердикт и второй этап у
-        границы — на реальном банке из {nint(m.bank_families ?? 0)} семейств. Крупная цифра — стандартные условия (как в
-        аналогичных решениях: каждая четвёртая заявка завышена на ступень), подпись под ней — проверка на прочность в
-        жёстких условиях (угадывание, треть заявок завышена, осторожные параметры заданий); в каждой строке
+        границы — на реальном банке из {nint(m.bank_families ?? 0)} семейств. У каждой цифры две равные колонки: «как в
+        аналогичных решениях» — те же допущения, что у других решений, и «проверка на прочность — строже» (почему строже —
+        ниже); в каждой колонке
         {" "}{nint(sv?.n ?? m.n)} модельных кандидатов с известным истинным уровнем. Настройки подбирались на одних
         зёрнах, цифры — на других, отложенных. Людей в этом расчёте нет: пилот с людьми ещё впереди.
       </p>
       <FinalRun />
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <WhyStricter className="mt-3" />
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
         {/* Один заголовок на главной, здесь и в claim_ru (замечание «Аватара» 21.10): точность уверенного вердикта;
             верный вердикт по всем — рядом одной строкой */}
         <Big testid="v-hl-verdict" label="Точность уверенного вердикта" f={sv?.confident_accuracy_final} hard={m.confident_accuracy_final}
@@ -183,6 +235,7 @@ export default function Headline() {
         <Big testid="v-hl-exact" label="Точный грейд" f={sv?.exact_grade} hard={m.exact_grade}
           sub={`присвоенный уровень равен истинному; ошибок на 2+ ступени — ${(sv ?? m).gross_error ? pc((sv ?? m).gross_error.value) : "—"} %`} />
       </div>
+      <MatchingPair className="mt-3" />
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl bg-brand-cream/40 p-3 text-xs text-brand-ink/75 ring-1 ring-brand-night/10" data-testid="v-hl-time">
           <b className="text-brand-night">Время.</b> Основная часть — в среднем {mm ? fmtNum(mm.mean, 0) : "—"} мин (у 90 % — до{" "}

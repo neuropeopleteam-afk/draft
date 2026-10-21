@@ -1,0 +1,10 @@
+{
+  "name": "draft-submission-tools",
+  "private": true,
+  "description": "Сборка презентации и диаграмм документации «Драфт» (docs/submission/build.py)",
+  "dependencies": {
+    "mermaid": "^11.4.0",
+    "playwright": "^1.49.0",
+    "pptxgenjs": "^3.12.0"
+  }
+}

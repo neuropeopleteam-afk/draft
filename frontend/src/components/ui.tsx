@@ -91,11 +91,24 @@ export const GRADE_EXT: Record<string, string> = { lead: "Lead", principal: "Pri
 export const GRADE_TITLE_ALL: Record<string, string> = { ...GRADES, ...GRADE_EXT };
 export const catTitle = (id?: string | null) => {
   if (!id) return "Не присвоена";
-  const [d, g] = id.split(".");
+  const sep = id.includes(".") ? "." : id.includes("-") ? "-" : "_";
+  const [d, g] = id.split(sep);
   return `${DIRECTION_TITLES[d] ?? d} · ${GRADE_TITLE_ALL[g] ?? g}`;
 };
 
 /** Загрузка данных с повтором. */
+// А4 (/validation, замечание А19 №10): отчёты валидации статичны — один запрос на путь за 5 минут вместо 2–3 одинаковых
+// от разных блоков страницы (matching-bench ×3, headline ×2, hh-match ×2, provenance ×2). Ошибка из кэша не залипает.
+const VALIDATION_CACHE = new Map<string, { at: number; p: Promise<unknown> }>();
+function apiShared<T>(path: string): Promise<T> {
+  if (!path.startsWith("/validation/")) return api<T>(path);
+  const hit = VALIDATION_CACHE.get(path);
+  if (hit && Date.now() - hit.at < 300_000) return hit.p as Promise<T>;
+  const p = api<T>(path).catch((e) => { VALIDATION_CACHE.delete(path); throw e; });
+  VALIDATION_CACHE.set(path, { at: Date.now(), p });
+  return p;
+}
+
 export function useApi<T>(path: string | null, deps: unknown[] = []) {
   // Быстрая смена направления/грейда: запоздавший ответ старого запроса не заменяет новую выдачу.
   const requestSeq = useRef(0);
@@ -107,7 +120,7 @@ export function useApi<T>(path: string | null, deps: unknown[] = []) {
     const seq = ++requestSeq.current;
     setLoading(true);
     try {
-      const result = await api<T>(path);
+      const result = await apiShared<T>(path);
       if (seq === requestSeq.current) { setData(result); setError(null); }
     }
     catch (e) { if (seq === requestSeq.current) setError(errText(e)); }
@@ -260,9 +273,9 @@ export function Toggle({ checked, onChange, label, hint }: { checked: boolean; o
 
 export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
-    <div className="card min-w-0 break-words">
-      <p className="stat-label text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{label}</p>
-      <p className="mt-2 text-xl font-bold tabular-nums text-brand-night">{value}</p>
+    <div className="card relative min-w-0 overflow-hidden break-words before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#2B1CE0] before:via-[#402FFF] before:to-[#7062FF]">
+      <p className="stat-label text-[11px] font-bold uppercase tracking-[0.06em] text-brand-lavender [overflow-wrap:normal] [word-break:normal] sm:text-xs sm:tracking-[0.11em]">{label}</p>
+      <p className="mt-2 font-mono text-2xl font-extrabold tabular-nums tracking-tight text-brand-night">{value}</p>
       {hint && <p className="mt-1 text-xs leading-relaxed text-brand-ink/65">{hint}</p>}
     </div>
   );

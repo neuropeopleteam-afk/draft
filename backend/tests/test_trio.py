@@ -56,3 +56,28 @@ def test_trio_role_guards(client):
     assert client.get("/api/trio/threads", headers=H(tx)).status_code == 403
     assert client.get("/api/trio/eligible", headers=H(ta)).status_code == 403
     assert client.post("/api/trio/threads", json={}, headers=H(ta)).status_code == 403
+
+
+def test_trio_orphan_thread_hidden_from_fsp(client, engine):
+    """spec 20 на стенде 2б-1 (sqlite, 21.10): после удаления песочницы жюри каналы её Марии остались без кандидата и
+    компании (SQLite без PRAGMA foreign_keys — каскад не сработал) и показывались настоящему представителю ФСП на
+    /fsp/trio. Канал без кандидата или компании ФСП не показывается — независимо от каскада БД."""
+    from sqlalchemy import text
+
+    tc, te, ta = candidate_with_category(client), employer(client), analyst_token(client)
+    inv = _invite(client, tc, te)
+    tid = client.post("/api/trio/threads", json={"invitation_id": inv["id"]}, headers=H(tc)).json()["id"]
+    assert any(x["id"] == tid for x in client.get("/api/trio/threads", headers=H(ta)).json())
+    with engine.connect() as conn:  # как на стенде sqlite: удаление без каскада
+        if conn.dialect.name == "sqlite":
+            conn.exec_driver_sql("PRAGMA foreign_keys=OFF")
+        hexid = tid.replace("-", "")
+        row = conn.execute(text("SELECT candidate_user_id FROM trio_threads WHERE id IN (:a, :b)"),
+                           {"a": tid, "b": hexid}).first()
+        assert row is not None
+        conn.execute(text("DELETE FROM users WHERE id = :u"), {"u": row[0]})
+        conn.commit()
+        if conn.dialect.name == "sqlite":
+            conn.exec_driver_sql("PRAGMA foreign_keys=ON")
+    assert all(x["id"] != tid for x in client.get("/api/trio/threads", headers=H(ta)).json())
+    assert client.get(f"/api/trio/threads/{tid}", headers=H(ta)).status_code == 404
