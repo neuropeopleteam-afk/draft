@@ -448,15 +448,15 @@ def build_explain_from_result(
         st = r.get("status")
         via = r.get("implied_by") or r.get("implied_via")
         via_title = tag_title(via) if via else None
-        raw_text = str(r.get("text") or "")
-        pct_val = confirmed_scores.get(skill_name.lower()) or _extract_pct(raw_text)
+        reason_text = str(r.get("text") or "")
+        pct_val = confirmed_scores.get(skill_name.lower()) or _extract_pct(reason_text)
 
         if st == "confirmed" or via_title:
             source_label = (
                 f"Подтверждено косвенно через {via_title}"
                 if via_title
                 else "Подтверждено заданием работодателя"
-                if "заданием работодателя" in raw_text.lower()
+                if "заданием работодателя" in reason_text.lower()
                 else "Подтверждено заданиями теста"
             )
             skills_tested.append({
@@ -465,7 +465,7 @@ def build_explain_from_result(
                 "score_pct": pct_val,
                 "via": via_title,
                 "source": source_label,
-                "text": _clean_jargon(raw_text),
+                "text": _clean_jargon(reason_text),
             })
         else:
             if st == "mismatch":
@@ -482,7 +482,7 @@ def build_explain_from_result(
                 "required": is_req,
                 "state": state_code,
                 "state_title": state_title,
-                "text": _clean_jargon(raw_text),
+                "text": _clean_jargon(reason_text),
                 "action": f"Проверить коротким заданием по навыку «{skill_name}» (10–15 мин)",
             })
 
