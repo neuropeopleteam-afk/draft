@@ -54,8 +54,16 @@ def date_ru(s: str | None) -> str:
 
 
 def get(d, path: str):
+    """Путь вида a.b.0.c или a.top5[id=exact_grade].value (элемент списка по полю)."""
     cur = d
     for p in path.split("."):
+        m = re.match(r"^([^\[]+)\[(\w+)=([^\]]+)\]$", p)
+        if m:
+            lst = cur.get(m.group(1)) if isinstance(cur, dict) else None
+            cur = next((x for x in (lst or []) if isinstance(x, dict) and str(x.get(m.group(2))) == m.group(3)), None)
+            if cur is None:
+                return None
+            continue
         if isinstance(cur, dict) and p in cur:
             cur = cur[p]
         elif isinstance(cur, list) and p.isdigit() and int(p) < len(cur):
@@ -365,6 +373,9 @@ def build(numbers: dict) -> dict:
     else:
         F.miss("mutation")
 
+    # ---------- пары «стандартные условия / проверка на прочность» ----------
+    pairs = build_pairs(n, F.facts)
+
     # ---------- описательные сведения из репозитория ----------
     desc = describe_repo()
     return {
@@ -374,8 +385,92 @@ def build(numbers: dict) -> dict:
         "recompute_all": n.get("recompute_all"),
         "facts": F.facts,
         "missing": F.missing,
+        "pairs": pairs,
         "repo": desc,
     }
+
+
+def _fmt_val(v, fmt: str):
+    """Значение из NUMBERS.json любого из принятых видов → (текст, число, «k из n», ДИ)."""
+    if isinstance(v, dict):
+        if v.get("value") is not None:
+            num = v["value"]
+            kn = f"{fint(v['k'])} из {fint(v['n'])}" if v.get("k") is not None and v.get("n") else ""
+            ci = ""
+            if v.get("ci95"):
+                lo, hi = v["ci95"]
+                ci = (f"95{NBSP}% ДИ {fdec(lo * 100, 1)}–{fpct(hi)}" if fmt == "pct" else f"95{NBSP}% ДИ {fdec(lo)}–{fdec(hi)}")
+        elif v.get("mean") is not None:
+            num, kn = v["mean"], ""
+            ci = f"95{NBSP}% ДИ {fdec(v['lo'])}–{fdec(v['hi'])}" if v.get("lo") is not None else ""
+        else:
+            return None
+    elif isinstance(v, (int, float)):
+        num, kn, ci = v, "", ""
+    else:
+        return None
+    return {"text": fpct(num) if fmt == "pct" else fdec(num), "value": num, "kn": kn, "ci": ci}
+
+
+def _meta_cond(m: dict) -> str:
+    """Условие прогона одной строкой из блока top5_meta.* (А4)."""
+    if not isinstance(m, dict):
+        return ""
+    parts = []
+    if m.get("population"):
+        parts.append(str(m["population"]))
+    if m.get("n"):
+        parts.append(f"N{NBSP}={NBSP}{fint(m['n'])}")
+    if m.get("seeds"):
+        parts.append(f"зёрна {m['seeds']}")
+    if m.get("bank_content_hash"):
+        parts.append(f"банк {str(m['bank_content_hash'])[:8]}")
+    if m.get("date"):
+        parts.append(date_ru(m["date"]))
+    return "; ".join(parts)
+
+
+def _side(n: dict, facts: dict, spec: dict | None, fmt: str):
+    if not spec:
+        return None
+    paths = spec.get("paths") or ([spec["path"]] if spec.get("path") else [])
+    for pth in paths:
+        v = get(n, pth)
+        out = _fmt_val(v, fmt) if v is not None else None
+        if not out:
+            continue
+        cond = ""
+        if isinstance(v, dict) and v.get("condition_ru"):
+            cond = str(v["condition_ru"])
+        if spec.get("meta"):
+            cond = _meta_cond(get(n, spec["meta"])) or cond
+        for cp in ([spec["cond"]] if isinstance(spec.get("cond"), str) else spec.get("cond") or []):
+            c = get(n, cp)
+            if c and not cond:
+                cond = str(c)
+        rc = (v.get("recompute") if isinstance(v, dict) else None) or (get(n, spec["meta"] + ".command") if spec.get("meta") else None)
+        out.update(key=pth, cond=cond, recompute=rc or "")
+        return out
+    if spec.get("fact") and spec["fact"] in facts:
+        f = facts[spec["fact"]]
+        return {"text": f["text"], "value": f["value"], "kn": f["kn"], "ci": f["ci"], "key": f["key"], "cond": f["cond"],
+                "recompute": f["recompute"]}
+    return None
+
+
+def build_pairs(n: dict, facts: dict) -> dict:
+    cfg_p = ROOT / "docs/submission/numbers_pairs.json"
+    if not cfg_p.exists():
+        return {"pairs": [], "real": []}
+    cfg = json.loads(cfg_p.read_text(encoding="utf-8"))
+    out = {"pairs": [], "real": []}
+    for p in cfg.get("pairs", []):
+        out["pairs"].append({"id": p["id"], "label": p["label"], "hint": p.get("hint", ""),
+                             "standard": _side(n, facts, p.get("standard"), p.get("fmt", "pct")),
+                             "hard": _side(n, facts, p.get("hard"), p.get("fmt", "pct"))})
+    for r in cfg.get("real", []):
+        out["real"].append({"id": r["id"], "label": r["label"], "value": _side(n, facts, r, r.get("fmt", "pct"))})
+    return out
 
 
 def describe_repo() -> dict:

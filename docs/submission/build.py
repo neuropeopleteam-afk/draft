@@ -37,17 +37,13 @@ TABLES = {
     "readme": [
         ("verdict_accuracy", "Верный итог проверки заявленного грейда (подтверждён / не подтверждён)"),
         ("confident_share", "Кандидатов получают уверенный ответ по основному тесту"),
-        ("confident_accuracy", "Точность уверенного ответа"),
-        ("false_confirm_all", "Ложное подтверждение грейда (от всех кандидатов)"),
-        ("retest_verdict", "Тот же итог при повторном прохождении на других заданиях"),
         ("minutes_mean", "Среднее время теста"),
-        ("match_p5", "Подбор: доля подходящих в первой пятёрке (0–1)"),
-        ("match_bm25", "Для сравнения: поиск по тексту резюме"),
-        ("hh_direction", "Реальные вакансии hh.ru: направление определено верно"),
+        ("match_bm25", "Подбор, для сравнения: поиск по тексту резюме (P@5)"),
+        ("hh_direction_adj", "Вакансии hh.ru: направление после проверки спорных меток"),
         ("ac_filter", "Атаки на проверку ответов, перехваченные фильтром"),
         ("ac_chain_pierced", "Атаки, прошедшие всю цепочку защиты"),
-        ("fsp_documents", "Официальных протоколов ФСП в индексе"),
-        ("fsp_results", "Результатов спортсменов в индексе"),
+        ("ac_honest_false", "Честные кандидаты, ошибочно отправленные на проверку"),
+        ("fsp_athletes", "Спортсменов в индексе протоколов ФСП"),
         ("bank_checks_failed", "Ошибок автоматической проверки банка заданий"),
     ],
     "grade": [
@@ -110,6 +106,40 @@ def numbers_table(facts: dict, name: str, *, with_key: bool = False) -> str:
     return "\n".join(out)
 
 
+def pairs_table(pairs: dict) -> str:
+    """Две колонки рядом: «стандартные условия» (заголовок) и «проверка на прочность»; обе всегда видны."""
+    rows = pairs.get("pairs") or []
+    if not rows:
+        return ""
+    conds: list[tuple[str, str]] = []
+
+    def cell(v):
+        if not v:
+            return "пересчитывается"
+        c = (v.get("cond") or "", v.get("recompute") or "")
+        if c not in conds:
+            conds.append(c)
+        t = v["text"] + (f" ({v['kn']})" if v.get("kn") else "")
+        return f"{t} [{conds.index(c) + 1}]"
+
+    out = ["| Метрика | Стандартные условия (как в аналогичных решениях) | Проверка на прочность (наши жёсткие условия) |",
+           "|---|---|---|"]
+    for p in rows:
+        lab = p["label"] + (f" — {p['hint']}" if p.get("hint") else "")
+        out.append(f"| {md_cell(lab)} | {md_cell(cell(p.get('standard')))} | {md_cell(cell(p.get('hard')))} |")
+    real = [r for r in pairs.get("real") or [] if r.get("value")]
+    if real:
+        out += ["", "| Реальные данные | Значение |", "|---|---|"]
+        for r in real:
+            out.append(f"| {md_cell(r['label'])} | {md_cell(cell(r['value']))} |")
+    if conds:
+        out.append("")
+        for i, (c, rc) in enumerate(conds, 1):
+            c = c or "условие — в docs/NUMBERS.json"
+            out.append(f"{i}. {c[:1].upper() + c[1:]}." + (f" Пересчёт: `{rc}`." if rc else ""))
+    return "\n".join(out)
+
+
 # ---------- библиотеки ----------
 def libs_table() -> str:
     lines = ["<!-- lint:off -->", ""]
@@ -152,7 +182,7 @@ def libs_table() -> str:
 
 
 # ---------- шаблоны ----------
-TOKEN = re.compile(r"\{\{\s*([#^/]?)([a-zA-Z0-9_.:,]+)\s*\}\}")
+TOKEN = re.compile(r"\{\{\s*([#^/]?)([a-zA-Z0-9_.:,]+)\s*\}\}")  # noqa
 
 
 def render(tpl: str, facts: dict, repo: dict, *, src: str) -> str:
@@ -176,6 +206,8 @@ def render(tpl: str, facts: dict, repo: dict, *, src: str) -> str:
             return numbers_table(facts, arg.replace(",key", ""), with_key=arg.endswith(",key"))
         if name == "libs_table":
             return libs_table()
+        if name == "pairs_table":
+            return pairs_table(repo.get("_pairs") or {})
         if name in ("numbers_generated_at", "recompute_all", "numbers_git_commit"):
             v = repo.get("_top", {}).get(name)
             if not v:
@@ -244,6 +276,7 @@ def github_md(doc: str) -> str:
 
 def build_texts(res: dict) -> list[Path]:
     facts, repo = res["facts"], dict(res["repo"])
+    repo["_pairs"] = res.get("pairs") or {}
     repo["_top"] = {k: res.get(k) for k in ("numbers_generated_at", "recompute_all", "numbers_git_commit")}
     targets = [
         (HERE / "src/README.md", ROOT / "README.md"),
@@ -320,6 +353,7 @@ def main() -> int:
         for p in build_texts(res):
             print("  записано", p.relative_to(ROOT))
             bad += lint(p) + check_api(p)
+        bad += lint(HERE / "CHANGELOG.md")  # не шаблон, но тоже для жюри
         if bad:
             raise BuildError("проверка текста не пройдена (поставщики/соперники, методы API):\n  " + "\n  ".join(bad))
     except BuildError as e:
