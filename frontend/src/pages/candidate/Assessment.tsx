@@ -980,6 +980,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
   return (
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
+      {/* финальный этап теста — разговор с Настей для каждого (решение владельца 21.10); нижняя панель защиты скрывается сама */}
+      <DefensePanel sessionId={sessionId} live="auto" final />
       <ExtPreliminaryNote x={r.grade_preliminary} stage={extStage} direction={r.direction} className="mt-4" />
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · оценка менее точная, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (

@@ -189,7 +189,17 @@ function LiveDefenseHero({ st, name, busy, limited, onGo }: {
 /** Кандидат: на результате попытки — «Подтвердите авторство ответа». sessionId — попытка теста.
  *  live (Н1): "auto" — сразу после теста живой интервьюер обращается голосом и зовёт в разговор; "manual" — тот же
  *  живой вход без автоприветствия (страницы категории и попыток). */
-export function DefensePanel({ sessionId, live }: { sessionId: string; live?: "auto" | "manual" }) {
+/** Финальный этап теста (решение владельца 21.10): разговор с Настей для каждого — сразу на экране результата, над
+ *  итогом. Обычная панель защиты той же попытки ниже на странице при этом не показывается. */
+const FINAL_SHOWN = new Set<string>();
+export function FinalOralStage({ testSessionId }: { testSessionId: string }) {
+  return <DefensePanel sessionId={testSessionId} live="auto" final />;
+}
+
+export function DefensePanel({ sessionId, live, final = false }: { sessionId: string; live?: "auto" | "manual"; final?: boolean }) {
+  if (final) FINAL_SHOWN.add(sessionId);
+  useEffect(() => (final ? () => { FINAL_SHOWN.delete(sessionId); } : undefined), [final, sessionId]);
+  const hidden = !final && FINAL_SHOWN.has(sessionId);
   const on = useInterviewOn();
   const { data: st, reload } = useApi<DefenseState>(on ? `/interview/defense/${sessionId}` : null, [on]);
   // ?defense=open — с карточки «ИИ-интервьюер» на обзоре кандидата: форма согласия сразу раскрыта
@@ -202,15 +212,15 @@ export function DefensePanel({ sessionId, live }: { sessionId: string; live?: "a
   const [limited, setLimited] = useState(false);  // С2 №1: лимит живых запусков песочницы (429) — кнопка неактивна, пример раскрыт
   const navigate = useNavigate();
   useEffect(() => { if (st?.name_hint && !name) setName(st.name_hint); }, [st?.name_hint]);  // eslint-disable-line react-hooks/exhaustive-deps
-  if (!on || !st?.enabled) return null;
+  if (hidden || !on || !st?.enabled) return null;
   if (!st.eligible && !st.session && !st.example && !st.fallback) return null;
   const fb = !st.eligible ? st.fallback ?? null : null;  // живой разговор жюри без своих развёрнутых ответов
   const s = st.session;
   const active = s && (s.status === "created" || s.status === "in_progress");
-  async function start(voice = false) {
+  async function start(voice = false, byClick = false) {
     setBusy(true); setErr(null);
     try {
-      const r = await api<IvSession>(`/interview/defense/${sessionId}`, { body: { name: name.trim() || "кандидат", consent: voice || agree } });
+      const r = await api<IvSession>(`/interview/defense/${sessionId}`, { body: { name: name.trim() || "кандидат", consent: voice || agree || byClick } });
       navigate(`/candidate/interview/${r.id}${voice ? "?start=voice&autolisten=1" : ""}`);  // голосом — комната сама начинает разговор
     }
     catch (e) { if (e instanceof ApiError && e.status === 429) setLimited(true); setErr(errText(e)); } finally { setBusy(false); }
@@ -224,9 +234,17 @@ export function DefensePanel({ sessionId, live }: { sessionId: string; live?: "a
     <section id="defense" className="card mt-4 space-y-3 scroll-mt-24" aria-labelledby={`defense-h-${sessionId}`} data-testid="defense-panel">
       <div className="flex items-center gap-3">
         <img src="/avatar/interviewer.webp" alt="ИИ-интервьюер" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover" data-testid="defense-avatar" />
-        <h2 id={`defense-h-${sessionId}`} className="font-bold text-brand-night">Подтвердите авторство ответа: устная защита {minutes(st.minutes)}, по желанию</h2>
+        <h2 id={`defense-h-${sessionId}`} className="font-bold text-brand-night">{final
+          ? <>Финальный этап теста: разговор с Настей, ≈{minutes(st.minutes)}</>
+          : <>Подтвердите авторство ответа: устная защита {minutes(st.minutes)}, по желанию</>}</h2>
       </div>
-      {fb ? (
+      {final && !fb ? (
+        <p className="text-sm text-brand-ink/75" data-testid="final-oral-text">
+          Настя задаст {st.max_questions} коротких вопроса по вашим же ответам и решениям — объясните своими словами, как решали.
+          Это дополнительная проверка: уровень по тесту не меняется, работодатель увидит «ответ подтверждён устно» или «есть
+          расхождения». Нет микрофона — ответьте текстом; голос пропадёт — разговор сам продолжится текстом.
+        </p>
+      ) : fb ? (
         <p className="text-sm text-brand-ink/75" data-testid="defense-fallback">
           В экспресс-тесте жюри нет развёрнутых ответов, поэтому живой разговор пойдёт {fb.title}{fb.source === "example" ? " (развёрнутые ответы модельного кандидата, не человека)" : ""}.
           ИИ-интервьюер задаст до {st.max_questions} вопросов — голосом или в чате; можно поговорить с аватаром прямо сейчас. Грейд не меняется; оценивает модель, решение — за людьми.
@@ -239,6 +257,12 @@ export function DefensePanel({ sessionId, live }: { sessionId: string; live?: "a
       )}
       {live && st.can_start && !active && !open && (
         <LiveDefenseHero st={st} auto={live === "auto"} name={name} setName={setName} busy={busy} limited={limited} onGo={() => void start(true)} />
+      )}
+      {final && st.can_start && !active && !open && (
+        <div className="flex flex-wrap items-center gap-2" data-testid="final-oral-text-start">
+          <button className="btn-ghost !py-2" disabled={busy || limited} onClick={() => void start(false, true)}>Ответить текстом</button>
+          <span className="text-xs text-brand-ink/65">Нажимая «Начать разговор» или «Ответить текстом», вы соглашаетесь на запись и оценку ответов моделью — подробнее в «Условиях согласия».</span>
+        </div>
       )}
       {live && active && (
         <Link to={`/candidate/interview/${s!.id}?start=voice`} data-testid="live-defense-room"
@@ -476,6 +500,8 @@ export function InterviewRoom() {
   const autoStart = useRef(new URLSearchParams(loc.search).get("start"));  // Н1: ?start=voice — вход из «живого» приветствия
   // живой режим «как по видеосвязи»: микрофон один раз, ответ уходит сам по паузе; e2e (webdriver) — прежняя кнопка
   const lv = useRef<LiveInterview | null>(null);
+  const spokeRef = useRef(false);   // голос текущего вопроса начал звучать
+  const voiceWd = useRef(0);        // голос молчит дольше 10 с — разговор продолжается текстом
   const [lview, setLview] = useState<LiveView | null>(null);
   const [liveOff, setLiveOff] = useState(false);
   const qRef = useRef<string | null>(null);
@@ -544,14 +570,14 @@ export function InterviewRoom() {
       avatar: () => anam.current,
       speechUrl: () => apiUrl(`/interview/sessions/${id}/speech?format=pcm24`),
       headers: authHeaders,
-      onView: (v) => { if (lv.current === L) setLview(v); },
+      onView: (v) => { if (lv.current === L) { setLview(v); if (v.phase === "speaking") spokeRef.current = true; } },
       onAnswer: async (answer) => { const ok = await post(answer, true); if (ok) setHeard(answer); return ok; },
       onRepeat: () => { const qq = qRef.current; if (qq && lv.current === L) void L.ask(qq); },
       onUnavailable: () => {
         if (lv.current !== L) return;
         stopLive();
         setLiveOff(true);
-        setNote("Микрофон недоступен — отвечайте кнопкой «Ответить» или текстом в чате.");
+        void fallback("text", "Микрофона нет — продолжаем текстом: вопрос на экране, ответ — в поле ниже.");
       },
     });
     lv.current = L;
@@ -561,7 +587,18 @@ export function InterviewRoom() {
   }
   function stopLive() { lv.current?.stop(); lv.current = null; setLview(null); }
   async function say(question: string, again = false) {
-    if (ch === "voice" && lv.current) { await lv.current.ask(question); return; }
+    if (ch === "voice" && lv.current) {
+      const L = lv.current;
+      spokeRef.current = false;
+      window.clearTimeout(voiceWd.current);
+      voiceWd.current = window.setTimeout(() => {
+        if (lv.current !== L || spokeRef.current) return;
+        stopLive(); setLiveOff(true);
+        void fallback("text", "Голос не отвечает — продолжаем текстом: вопрос на экране, ответ — в поле ниже.");
+      }, 10000);
+      await L.ask(question);
+      return;
+    }
     if (ch === "voice" && anam.current) {  // параллельно тянем pcm-голос и ждём готовности видеопотока (до 4.5 с)
       try {
         const [pcmRes, isLive] = await Promise.all([
