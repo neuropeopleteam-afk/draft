@@ -204,6 +204,8 @@ def freeze() -> None:
            "manifest_rule": "SHA-256 строк «id<TAB>text_sha256<TAB>bucket», отсортированных, через \\n",
            "corpus_file_sha256": hashlib.sha256(HOLDOUT.read_bytes()).hexdigest(),
            "code_before_run": git_head(),
+           **({"protocol": str(PROTOCOL.relative_to(ROOT)),
+               "protocol_sha256": hashlib.sha256(PROTOCOL.read_bytes()).hexdigest()} if TAG and PROTOCOL.exists() else {}),
            "rule": "Зафиксировано до прогона. Прогон один (hh_holdout.py run); словарь, синонимы, классификатор и "
                    "ранжирование после прогона на этом наборе не настраиваются."}
     FREEZE.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
