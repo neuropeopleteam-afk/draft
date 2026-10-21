@@ -27,9 +27,9 @@ SOURCES = {  # источник → файл расчёта и команда п
     "path": (DATA / "path_retest.json", "make path-retest"),
     "report": (DATA / "report.json", "make validate"),
     # А4 (21.10): симуляция продукта (движок стенда на реальном банке) и боты через движок
-    "product": (DATA / "product_sim_test_calibrated.json",
-                "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest"),
-    "cheat": (DATA / "cheat_bots.json", "cd backend && python -m app.modules.validation.cheat_bots --n 100 --k 10,100"),
+    # итоговый прогон №2 (поправки №3–4): жёсткие условия, FINAL_SEEDS 4401–4410, N = 3 000, повтор и фиксированная форма
+    "product": (DATA / "product_sim_final_calibrated.json", "make product-sim"),
+    "cheat": (DATA / "cheat_bots.json", "make cheat-bots"),
 }
 PERSONAS = {"candidate", "candidate_nofsp", "candidate_junior", "candidate_new", "employer", "expert", "fsp"}
 PERSONA_TITLE = {"candidate": "кандидат с ФСП", "candidate_nofsp": "кандидат без ФСП", "candidate_new": "кандидат без категории",

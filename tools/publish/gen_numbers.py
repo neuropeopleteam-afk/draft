@@ -948,7 +948,18 @@ def report_md(n: dict) -> str:
                          f"{pct((x.get('false_confirm') or {}).get('value'))} %, точный грейд {pct((x.get('exact_grade') or {}).get('value'))} % "
                          f"(N = {x.get('n')}).")
         sel = gv.get("selection") or {}
-        if sel.get("rows"):
+        if sel.get("rows") and "L" in (sel["rows"][0] or {}):  # поправка №3: выбор скриптом train_choice.py
+            L += ["", f"Выбор настроек на обучающих зёрнах: {sel.get('rule_ru')} Выбрано {sel.get('chosen')} — "
+                      f"{sel.get('reason_ru')}. Испробовано конфигураций: {len(sel['rows'])}.", "",
+                  "| Конфигурация | L = 3·FC + FR | Ложное подтв. | Ложный отказ | Точный грейд | Тот же грейд при повторе | "
+                  "Минуты всего (p90) | Ограничения |", "|---|---|---|---|---|---|---|---|"]
+            for r in sel["rows"]:
+                env = ", ".join(f"{k.replace('ASSESSMENT_', '')}={v}" for k, v in (r.get("env") or {}).items())
+                L.append(f"| {r['config']} ({env}) | {num(r.get('L'), 4)} | {pct(r.get('FC'))} % | {pct(r.get('FR'))} % | "
+                         f"{pct(r.get('exact_grade_final'))} % | {pct(r.get('retest_exact'))} % | "
+                         f"{num(r.get('minutes_total_mean'), 1)} ({num(r.get('minutes_total_p90'), 1)}) | "
+                         f"{'да' if r.get('passes') else '; '.join(r.get('fails') or [])} |")
+        elif sel.get("rows"):
             L += ["", f"Выбор настроек на обучающих зёрнах ({sel.get('rule')}); выбрано {sel.get('chosen')}:", "",
                   "| Конфигурация | Верный вердикт | Ложное подтв. | p90 основной, мин |", "|---|---|---|---|"]
             for r in sel["rows"]:
