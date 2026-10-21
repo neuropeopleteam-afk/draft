@@ -13,7 +13,6 @@
 """
 from __future__ import annotations
 
-import os
 import re
 
 VERSION = "djinni-adapter-v1"
@@ -166,7 +165,7 @@ def years(text: str) -> float | None:
     vals = [v for v in vals if 0 < v <= 25]
     if vals:
         return max(vals)
-    return range_years(text) if os.environ.get("A17_RANGE_YEARS", "1") == "1" else None
+    return range_years(text)  # интервалы дат включены: решение по dev×3 (nDCG@10 0.527 против 0.5258), DEV_LOG.md
 
 
 def grade(title: str, body: str) -> str | None:
