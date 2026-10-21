@@ -47,7 +47,26 @@ FROZEN_FILES = (
     "backend/app/modules/validation/matching_bench.py",
     "backend/app/modules/catalog/ext.py",
     "backend/app/modules/profiles/facts.py",
+    "backend/app/modules/validation/matching_eval.py",
+    "backend/app/modules/assessment/skill_map.py",
 )
+# каталоги целиком (код продукта, который вызывает бенч: подбор, задания, каталог, ФСП, банк заданий)
+FROZEN_DIRS = (
+    "backend/app/modules/matching",
+    "backend/app/modules/assignments",
+    "backend/app/modules/catalog",
+    "backend/app/modules/fsp",
+    "backend/assessment_bank",
+)
+
+
+def sha_dir(rel: str) -> str:
+    h = hashlib.sha256()
+    base = ROOT / rel
+    for f in sorted(x for x in base.rglob("*") if x.is_file() and "__pycache__" not in x.parts and x.suffix != ".pyc"):
+        h.update(str(f.relative_to(base)).encode())
+        h.update(sha(f).encode())
+    return h.hexdigest()
 METHODS = ("match_v2", "match_v2_doz", "match_v2_doz70", "match_v13", "bm25", "words_grade", "tfidf_filter", "random",
            "oracle_pool")
 
@@ -65,10 +84,11 @@ def git_head() -> str:
 
 def cmd_freeze(a) -> None:
     files = {f: sha(ROOT / f) for f in FROZEN_FILES}
+    dirs = {d: sha_dir(d) for d in FROZEN_DIRS}
     doc = {"what": "FREEZE отложенного бенчмарка подбора match-v2 (до прогона)", "frozen_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "git_head_before_freeze_commit": git_head(), "worlds": {k: list(v) for k, v in WORLDS.items()},
            "labels": list(LABELS), "methods": list(METHODS), "bootstrap": {"reps": 2000, "seed": 7702113},
-           "files_sha256": files, "dev_seeds_never_these": "31000001–31000006, 20261006, 20261007 (обучение весов)",
+           "files_sha256": files, "dirs_sha256": dirs, "dev_seeds_never_these": "31000001–31000006, 20261006, 20261007 (обучение весов)",
            "rule": "один прогон: run отказывается при несовпадении любого хэша и при уже существующем результате"}
     FREEZE.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     h = sha(FREEZE)
@@ -113,6 +133,7 @@ def cmd_run(a) -> None:
             sys.exit(f"ОТКАЗ: {RESULT.relative_to(ROOT)} уже есть — прогон на отложенных один")
         fr = json.loads(FREEZE.read_text(encoding="utf-8"))
         bad = {f: (h, sha(ROOT / f)) for f, h in fr["files_sha256"].items() if sha(ROOT / f) != h}
+        bad.update({d: (h, sha_dir(d)) for d, h in (fr.get("dirs_sha256") or {}).items() if sha_dir(d) != h})
         if bad:
             sys.exit("ОТКАЗ: файлы изменены после FREEZE: " + ", ".join(bad))
     tmp = Path(a.tmp)

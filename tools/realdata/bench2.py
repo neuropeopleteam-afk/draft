@@ -600,7 +600,7 @@ def run_world(cond: str, seed: int, labels: tuple[str, ...] = ("rel", "l2")) -> 
     out = {"cond": cond, "seed": seed, "digest": w.digest(), "resampled": w.resampled, "n": len(w.needs),
            "m": len(w.cands), "labels": {},
            "config": {"theta_sigma": c.theta_sigma, "se_reported": c.se_reported, "guess": c.guess, "t0_model": c.t0_model,
-                      "dirs": list(c.dirs), "n_needs": c.n_needs, "n_candidates": c.n_candidates}}
+                      "dirs": list(c.dirs) if c.dirs else None, "n_needs": c.n_needs, "n_candidates": c.n_candidates}}
     for lb in labels:
         r = evaluate_world(w, label=lb)
         out["labels"][lb] = {"per_need": r["per_need"], "info": r["info"], "doz_cost": r["doz_cost"],
