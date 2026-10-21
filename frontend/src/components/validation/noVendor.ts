@@ -9,8 +9,13 @@
 
 const LETTERS = "АБВГДЕЖИКЛМНПРСТУФХЦ";
 
+const LAT = "abcdefghijklmnopqrstuvwxyz";
+
 const ROLE: [RegExp, string][] = [
   [/^rules$|правил/i, "Правила и словари (без модели)"],
+  // нейтральные коды сервера (validation/no_vendor.py): ключи API — латиница
+  [/^stand$/, "Модель стенда"], [/^second$/, "Вторая модель оценщика"], [/^ru$/, "Российская модель"],
+  [/^ref_open$/, "Открытая модель-эталон"], [/^local$/, "Открытая модель на нашем сервере"],
   [/sonnet/i, "Модель стенда"],
   [/fable/i, "Вторая модель оценщика"],
   [/yandex/i, "Российская модель"],
@@ -29,7 +34,9 @@ export function makeModelAlias(): (keyOrName: string | null | undefined) => stri
     // уже нейтральная подпись с сервера (validation/no_vendor.py): «модель стенда», «модель А» — как есть
     if (/[а-яё]/i.test(s)) return s.charAt(0).toUpperCase() + s.slice(1);
     const [base, variant] = s.split("@");
-    let name = ROLE.find(([re]) => re.test(s))?.[1];
+    const code = /^(model|company)_([a-z])$/.exec(base);
+    let name = code ? `${code[1] === "model" ? "Модель" : "Компания"} ${LETTERS[LAT.indexOf(code[2]) % LETTERS.length]}`
+      : ROLE.find(([re]) => re.test(base))?.[1];
     if (!name) {
       const k = base.toLowerCase();
       if (!seen.has(k)) seen.set(k, `Модель ${LETTERS[seen.size % LETTERS.length]}`);

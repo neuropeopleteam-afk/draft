@@ -125,18 +125,19 @@ def test_ru_only_yandex_down_falls_to_rules(monkeypatch, net):
 def test_api_ru_llm(client):
     d = client.get("/api/validation/ru-llm").json()
     assert not d.get("missing")
-    assert [m["key"] for m in d["models"]] == ["sonnet", "yandex", "rules"]
+    # ключи моделей на экранном API — нейтральные коды (поставщики не называются, validation/no_vendor.py)
+    assert [m["key"] for m in d["models"]] == ["stand", "ru", "rules"]
     keys = [f["key"] for f in d["functions"]]
     assert keys == ["needs_delta", "needs_full", "needs_jury", "resume", "grade"]
     for f in d["functions"]:
-        assert f["rows"]["sonnet"]["status"] == "done" and f["rows"]["rules"]["status"] == "done"
-        y = f["rows"]["yandex"]
+        assert f["rows"]["stand"]["status"] == "done" and f["rows"]["rules"]["status"] == "done"
+        y = f["rows"]["ru"]
         assert y["status"] in ("done", "pending")
-        for m in ("sonnet", "yandex"):
+        for m in ("stand", "ru"):
             c = f["rows"][m]
             if c["status"] == "done":
                 assert c["ok"] <= c["n"] and c["p50_s"] <= c["p95_s"]
-    if any(f["rows"]["yandex"]["status"] == "pending" for f in d["functions"]):
+    if any(f["rows"]["ru"]["status"] == "pending" for f in d["functions"]):
         assert "ещё не замерена" in d["pending_note"]  # честно: нет прогона — нет числа
     assert d["how_to_enable"]["env"][0] == "LLM_CHAIN=yandex"
     text = " ".join(d["conditions"])
