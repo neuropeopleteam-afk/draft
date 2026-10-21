@@ -1,0 +1,33 @@
+# Волна LP-3 (tools/bank_lp3_yaml.py): расчётная задача старшего грейда с вводом ответа.
+family_id: qa.strategy.lp3_risk_regression_budget_output
+title: Максимум покрытого риска регресса в бюджет времени
+direction: qa
+skills:
+- test_strategy
+- risk_based_testing
+- regression
+- qa_process
+- release_management
+target_grades:
+- lead
+- principal
+format: predict_output
+language: text
+invariants:
+  extra:
+    wave: LP-3
+    answer: typed
+    key_varies: true
+time_limit_s: 720
+canary: false
+prior_difficulty:
+  b: 2.3
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3: ввод ответа, угадывание исключено). Уровень lead, principal:
+    перебор наборов с учётом дублирующих областей против жадного выбора; наивный подход даёт другой ответ, формула
+    в условии не названа.'
+generator: assessment_bank.families.qa.lp3_risk_regression_budget_output
+version: 1
+description: 'Волна LP-3: максимум покрытого риска регресса в бюджет времени. Ответ вводится; программа-модель разбирает
+  показанные данные и считает ключ, ключ меняется от варианта к варианту.'
