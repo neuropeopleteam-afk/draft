@@ -84,9 +84,11 @@ export function endDelay(text: string, mode: "guide" | "answer" = "guide"): numb
   const t = text.trim().toLowerCase();
   const n = words(t).length;
   if (mode === "answer") {
+    // устный тест: кандидат думает вслух — пауза 2 с не конец ответа. Конец — «я закончил» (сразу) или тишина 3,5 с;
+    // незаконченная мысль («потому что», «и») — 5 с (разбор 21.10: при 1,9 с ответы уходили обрубками)
     if (END_MARKERS.test(t)) return 250;
-    if (UNFINISHED.test(t)) return 3200;
-    return n < 4 ? 2600 : 1900;
+    if (UNFINISHED.test(t)) return 5000;
+    return n < 4 ? 3500 : 3500;
   }
   if (UNFINISHED.test(t)) return 1500;
   if (/[?]$/.test(t)) return 200;

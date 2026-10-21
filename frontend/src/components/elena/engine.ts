@@ -139,7 +139,7 @@ const START_DEFAULT_MS = 20000;    // после напоминания молч
 const SOFT_STOP_MAX_MS = 2600;     // перебили — договаривает до ближайшей границы предложения, если она не дальше этого
 const USER_NAV_GRACE_MS = 1800;    // переход по сайту позже этого после её собственного перехода — сделал человек
 const POINT_HOLD_MS = 6000;
-const REPEAT_IF_HEARD_LESS = 0.6;
+const REPEAT_IF_HEARD_LESS = 0.35;   // перебили позже трети фразы — продолжаем со следующей, не повторяем
 const NAME_KEY = "draft.elena.name";          // прежнее хранение имени между визитами — больше не используется, только чистим
 const OLD_NAME_KEY = "draft.concierge.name";
 let nameInTab: string | null = null;           // имя собеседника — до перезагрузки страницы
@@ -719,6 +719,7 @@ export class ElenaEngine {
 
   close() {
     if (this.closed) return;
+    this.clearTyped();
     this.post("close");
     this.ep++;
     this.clearTimers();
@@ -762,6 +763,7 @@ export class ElenaEngine {
     this.pos = null;
     this.stepUtter = null;
     this.paused = true;
+    this.clearTyped();
     this.awaiting = null;
     this.set({ phase: "paused", click: null });
   }
@@ -1226,7 +1228,9 @@ export class ElenaEngine {
         void this.runTour({ ids: TRACKS[role], track: role, i: 1, b: 0 }, ep, { bridge: false });
         return;
       }
-      void this.runTour({ ids: TRACKS[role], track: role, i: 0, b: 0 }, ep, { bridge: true, named: false });
+      // ответ уже прозвучал («Покажу кабинет работодателя, начнём с регистрации») — связка раздела не дублирует его
+      if (meta.text) this.lastCabinet = STEPS[TRACKS[role][0]]?.cabinet ?? this.lastCabinet;
+      void this.runTour({ ids: TRACKS[role], track: role, i: 0, b: 0 }, ep, { bridge: !meta.text, named: false });
       return;
     }
     if (a === "goto" && meta.step && STEPS[meta.step]) {
@@ -1550,9 +1554,24 @@ export class ElenaEngine {
   }
 
   /** Показ регистрации: набирает текст в поле по буквам в такт реплике (форма не отправляется). */
+  private typed: HTMLInputElement[] = [];
+
+  /** Очистить поля, в которые Настя печатала пример (регистрация): форма не уйдёт с примером почты. */
+  private clearTyped() {
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    for (const el of this.typed.splice(0)) {
+      try {
+        if (!el.isConnected) continue;
+        if (setter) setter.call(el, ""); else el.value = "";
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      } catch { /* поле пропало */ }
+    }
+  }
+
   private async typeInto(t: { selector: string; text: string }, ep: number, totalMs: number) {
     const el = findTarget(t.selector) as HTMLInputElement | null;
     if (!el || typeof el.value !== "string") return;
+    if (!this.typed.includes(el)) this.typed.push(el);
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
     const put = (v: string) => {
       if (setter) setter.call(el, v); else el.value = v;
@@ -1707,10 +1726,12 @@ export class ElenaEngine {
         this.pendingBridge = null;
       }
       const cabChanged = prevCab !== step.cabinet;
+      // связка раздела считается прозвучавшей с момента, как начала звучать: перебили на ней — при продолжении она
+      // не повторяется «впервые» (стенограмма 21.10 11:13 — «Начнём с регистрации» дважды)
+      prevCab = step.cabinet;
+      this.lastCabinet = step.cabinet;
       const ok = await this.enter(step, ep, bridge);
       if (!this.alive(ep) || !ok) return;
-      prevCab = step.cabinet;
-      this.lastCabinet = step.cabinet;     // связка раздела прозвучала — при продолжении не повторяется
       if (b0 === 0) this.post("step", { step: step.id });
       this.shownSteps.add(step.id);
       if (cabChanged) this.sinceAsk = 0;
