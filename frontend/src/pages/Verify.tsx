@@ -64,7 +64,13 @@ function EmailVerify({ params }: { params: URLSearchParams }) {
     setError(null); setInfo(null);
     try {
       const r = await api<{ sent: boolean; dev_verification_code: string | null }>("/auth/resend-code", { auth: false, body: { email } });
-      if (r.dev_verification_code) { sessionStorage.setItem("fsp_dev_code", r.dev_verification_code); setDevCode(r.dev_verification_code); }
+      if (r.dev_verification_code) {
+        sessionStorage.setItem("fsp_dev_code", r.dev_verification_code);
+        setDevCode(r.dev_verification_code);
+      } else {
+        sessionStorage.removeItem("fsp_dev_code");
+        setDevCode(null);
+      }
       setInfo(r.dev_verification_code ? "Новый код — на экране." : "Если адрес зарегистрирован и не подтверждён, мы отправили новый код.");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Не удалось связаться с сервером");
@@ -74,12 +80,13 @@ function EmailVerify({ params }: { params: URLSearchParams }) {
   return (
     <AuthShell
       title="Подтверждение почты"
-      subtitle={devCode ? "Демо-режим: письмо не отправляется, код — на экране." : email ? `Мы отправили 6-значный код на ${email}.` : "Введите почту и код из письма."}
+      subtitle={devCode ? "Код показан для проверки, в рабочем режиме приходит письмом." : email ? `Мы отправили 6-значный код на ${email}.` : "Введите почту и код из письма."}
       footer={<>Уже подтвердили? <Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Войти</Link></>}
     >
       {devCode && (
-        <div className="mb-6 rounded-xl border border-dashed border-brand-lavender bg-brand-lavender/10 px-4 py-3 text-sm text-brand-night">
-          <p>Нажмите на код, чтобы подставить: <button type="button" className="font-mono text-base font-bold tracking-widest text-brand" onClick={() => setCode(devCode)}>{devCode}</button></p>
+        <div className="mb-6 rounded-xl border border-dashed border-brand-lavender bg-brand-lavender/10 px-4 py-3 text-sm text-brand-night" data-testid="dev-code-banner">
+          <p className="text-xs text-brand-ink/75">Код показан для проверки, в рабочем режиме приходит письмом.</p>
+          <p className="mt-1">Нажмите на код, чтобы подставить: <button type="button" className="font-mono text-base font-bold tracking-widest text-brand" onClick={() => setCode(devCode)}>{devCode}</button></p>
         </div>
       )}
       <form onSubmit={submit} className="space-y-4" noValidate>
