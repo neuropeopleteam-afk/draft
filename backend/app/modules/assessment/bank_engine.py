@@ -411,10 +411,13 @@ class BankEngine:
             else:
                 clean.append(tr)
                 clean_idx.append(k)
-        det = CanaryDetector().statistic(clean, canary)
+        detector = CanaryDetector()
+        det = detector.statistic(clean, canary)
         rescored, excluded = False, 0
         if det.flagged:
-            mask = det.suspicious_mask(clean, det.tau_clean)
+            # маска — метод детектора, не результата (было det.suspicious_mask → AttributeError и 500 на завершении
+            # теста у каждого, у кого сработал детектор предзнания; найдено симуляцией продукта 21.10)
+            mask = detector.suspicious_mask(clean, det.tau_clean)
             excl = {clean_idx[i] for i, m in enumerate(mask) if m}
             if excl and len(excl) < len(clean_idx):
                 theta, se = (float(v) for v in sess.rescore(excl))

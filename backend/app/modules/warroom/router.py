@@ -21,7 +21,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query, Request
 import jwt
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -182,16 +182,24 @@ class CameraEventIn(BaseModel):
 class AntiCheatInspectIn(BaseModel):
     answer_text: str = Field(default="", max_length=12_000)
     attack_preset: str | None = Field(default=None, max_length=32)
-    telemetry: TelemetryIn = Field(default_factory=TelemetryIn)
+    telemetry: dict[str, Any] = Field(default_factory=dict)
     camera_events: list[CameraEventIn] = Field(default_factory=list, max_length=30)
     check_lz: bool = Field(default=False)
     lz_theta: float = Field(default=1.2, ge=-4.0, le=4.5)
     lz_items: list[LzItemIn] | None = Field(default=None, max_length=40)
     demo: bool = Field(default=True)
 
+    @field_validator("telemetry")
+    @classmethod
+    def _validate_telemetry(cls, v: Any) -> dict[str, Any]:
+        if not isinstance(v, dict):
+            raise ValueError("telemetry must be an object")
+        return TelemetryIn.model_validate(v).model_dump(by_alias=True)
 
-def _public_measures_list(*, demo_mode: bool) -> list[dict[str, Any]]:
-    """В боевом режиме скрывает поля `opt_min`, `opt_max`, `trap`, `heals` (ключ решения)."""
+
+def _public_measures_list(*, demo_mode: bool = False) -> list[dict[str, Any]]:
+    """Не отдаёт клиенту ключи решения (`opt_min`, `opt_max`, `trap`, `heals`) ни в одном режиме."""
+    _ = demo_mode
     out: list[dict[str, Any]] = []
     for m in MEASURES:
         params_out: list[dict[str, Any]] = []
@@ -207,9 +215,6 @@ def _public_measures_list(*, demo_mode: bool) -> list[dict[str, Any]]:
                 "unit": p["unit"],
                 "hint": p["hint"],
             }
-            if demo_mode:
-                p_item["opt_min"] = p["opt_min"]
-                p_item["opt_max"] = p["opt_max"]
             params_out.append(p_item)
         item: dict[str, Any] = {
             "id": m["id"],
@@ -220,28 +225,20 @@ def _public_measures_list(*, demo_mode: bool) -> list[dict[str, Any]]:
             "base_cost_rub": m["base_cost_rub"],
             "params": params_out,
         }
-        if demo_mode:
-            item["heals"] = m["heals"]
-            item["trap"] = m["trap"]
         out.append(item)
     return out
 
 
 def _public_scenario_dict(scn: dict[str, Any], *, demo_mode: bool) -> dict[str, Any]:
-    """В боевом режиме (`demo_mode=False`) не отдаёт ключи (`required/helpful/harmful/reference/sim_effect`)
-    и перемешивает варианты патчей под нейтральными названиями.
+    """Не отдаёт клиенту ключи (`required/helpful/harmful/reference/sim_effect/win/deploy`)
+    и в боевом режиме перемешивает варианты патчей под нейтральными названиями.
     """
     inc = copy.deepcopy(scn["incident"])
-    if not demo_mode:
-        for act in inc.get("actions", []):
-            act.pop("sim_effect", None)
+    for act in inc.get("actions", []):
+        act.pop("sim_effect", None)
 
     if demo_mode:
         patches_out = scn["patches"]
-        rubric_out = [
-            {"id": r["id"], "title": r["title"], "weight": r["weight"], "reference": r["reference"]}
-            for r in scn["rubric"]
-        ]
     else:
         # Детерминированная перестановка патчей по (id, seed) с нейтральными заголовками
         raw_patches = list(scn["patches"])
@@ -255,10 +252,11 @@ def _public_scenario_dict(scn: dict[str, Any], *, demo_mode: bool) -> dict[str, 
             }
             for idx, p in enumerate(rotated)
         ]
-        rubric_out = [
-            {"id": r["id"], "title": r["title"], "weight": r["weight"]}
-            for r in scn["rubric"]
-        ]
+
+    rubric_out = [
+        {"id": r["id"], "title": r["title"], "weight": r["weight"]}
+        for r in scn["rubric"]
+    ]
 
     res: dict[str, Any] = {
         "id": scn["id"],
@@ -282,12 +280,6 @@ def _public_scenario_dict(scn: dict[str, Any], *, demo_mode: bool) -> dict[str, 
         "incident": inc,
         "demo_mode": demo_mode,
     }
-    if demo_mode:
-        res["required"] = scn["required"]
-        res["helpful"] = scn["helpful"]
-        res["harmful"] = scn["harmful"]
-        res["deploy"] = scn["deploy"]
-        res["win"] = scn["win"]
     return res
 
 
