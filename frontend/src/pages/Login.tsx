@@ -49,7 +49,7 @@ export default function Login() {
   return (
     <AuthShell
       title="Вход"
-      subtitle="Это страница входа в личный кабинет: введите почту и пароль или войдите через единый профиль ФСП — ваш рабочий кабинет откроется автоматически."
+      subtitle="Введите почту и пароль или войдите через единый профиль ФСП — ваш рабочий кабинет откроется автоматически."
       lead={<>Нет аккаунта? <Link to="/register" className="font-semibold text-brand hover:text-brand-soft">Зарегистрироваться</Link></>}
       footer={<>Нет аккаунта? <Link to="/register" className="font-semibold text-brand hover:text-brand-soft">Зарегистрироваться</Link> · <Link to="/support" className="font-semibold text-brand-plum hover:underline">Поддержка</Link></>}
     >

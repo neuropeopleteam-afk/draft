@@ -89,7 +89,7 @@ export function FspBenefit() {
             <Stat label="Участников ФСП" value={fk(t.candidates_fsp)} hint="с подтверждённым достижением в реестре ФСП, с категорией" />
             <Stat label="Приглашены" value={fk(t.invited_fsp)} hint={`участников ФСП · доля ${fpct(t.invite_rate_fsp)}`} />
             <Stat label="Наняты" value={fk(t.hired_fsp)} hint={`участников ФСП · приняли приглашение ${fk(t.accepted_fsp)}`} />
-            <Stat label="С ФСП-бонусом" value={fpct(rep.fsp_bonus_share)} hint={`приглашений участникам ФСП: ${rep.invitations_with_fsp_bonus ?? "< 5"} из ${rep.invitations}`} />
+            <Stat label="Приглашены с учётом ФСП" value={fpct(rep.fsp_bonus_share)} hint={`приглашений участникам ФСП: ${rep.invitations_with_fsp_bonus ?? "< 5"} из ${rep.invitations}`} />
           </div>
           <section className="card min-w-0 space-y-4">
             <div>

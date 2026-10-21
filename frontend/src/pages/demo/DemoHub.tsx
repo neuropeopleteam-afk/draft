@@ -488,7 +488,7 @@ export default function DemoHub() {
                   Экспресс-знакомство за 3 минуты (3 роли без проводника)
                 </h2>
               </div>
-              <span className="np-chip">Вход в 1 клик · ниже — пошаговый проводник на 12 минут</span>
+              <span className="np-chip !whitespace-normal text-left">Вход в 1 клик · ниже — пошаговый проводник на 12 минут</span>
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               {STEPS_3MIN.map((s) => (

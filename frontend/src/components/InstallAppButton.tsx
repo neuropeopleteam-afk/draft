@@ -52,7 +52,7 @@ export function AndroidBetaDialog({ onClose }: { onClose: () => void }) {
             <div>
               <h2 id="android-beta-title" className="text-lg font-extrabold text-brand-night">Бета-версия приложения</h2>
               <p className="font-mono text-xs text-brand-ink/65">
-                {rs ? `Версия ${rs.version} · ${rs.size_mb} МБ · Android ${rs.min_android ?? "7.0"} и новее` : "Загружаем параметры пакета…"}
+                {rs ? `Версия ${rs.version} · ${String(rs.size_mb).replace(".", ",")} МБ · Android ${rs.min_android ?? "7.0"} и новее` : "Загружаем параметры пакета…"}
               </p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export function AndroidBetaDialog({ onClose }: { onClose: () => void }) {
         </p>
 
         <div className="mt-4 rounded-2xl border border-brand-night/10 bg-[#F4F6FC] px-4 py-3 text-xs text-brand-ink/75" data-testid="android-beta-meta">
-          {rs ? `Версия ${rs.version} · ${rs.size_mb} МБ · Android ${rs.min_android ?? "7.0"} и новее` : "Версия … · … МБ · Android … и новее"}
+          {rs ? `Пакет ${rs.package} · ${String(rs.size_mb).replace(".", ",")} МБ · Android ${rs.min_android ?? "7.0"} и новее` : "Версия … · … МБ · Android … и новее"}
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-end gap-2.5">

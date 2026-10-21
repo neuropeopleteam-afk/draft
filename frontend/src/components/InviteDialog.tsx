@@ -175,8 +175,8 @@ export function InviteDialog({ cref, needId, needTitle, market, needSalary, onDo
           <BasisSeg value={basis} onChange={setBasis} />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="От, ₽ в месяц" htmlFor="kf3-from"><input id="kf3-from" type="number" min={1} step={5000} className="input" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
-          <Field label="До, ₽ в месяц" htmlFor="kf3-to"><input id="kf3-to" type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
+          <Field label={fromN > 0 ? `От, ₽ в месяц (${rub(fromN)})` : "От, ₽ в месяц"} htmlFor="kf3-from"><input id="kf3-from" type="number" min={1} step={5000} className="input" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
+          <Field label={toN > 0 ? `До, ₽ в месяц (${rub(toN)})` : "До, ₽ в месяц"} htmlFor="kf3-to"><input id="kf3-to" type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
         </div>
         <p className={`text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/65"}`}>{wide ? "Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от»." : otherBasis(fromN, toN, basis) ?? "«До» — не больше чем в 1,5 раза выше «от»."}</p>
         {market?.median ? <p className="text-xs text-brand-ink/75" data-testid="kf3-median">Ориентир рынка: медиана категории {rub(market.median)} в месяц{toN && market.median ? ` · ваш верх вилки ${toN >= market.median ? "выше" : "ниже"} медианы на ${Math.abs(Math.round((toN / market.median - 1) * 100))}${NB}%` : ""}.</p> : <MarketNote m={market} short />}
@@ -191,7 +191,7 @@ export function InviteDialog({ cref, needId, needTitle, market, needSalary, onDo
         </div>
         {fit ? <>
           <p className="mt-1 text-sm font-semibold">{fit.salary_status === "bad" ? "С такой вилкой кандидат, вероятно, откажет" : fit.hint || fit.title}</p>
-          <p className="mt-1 text-sm opacity-85">{fit.line}</p>
+          <p className="mt-1 text-sm opacity-85">{fit.hint && fit.line?.startsWith(`${fit.hint} · `) ? fit.line.slice(fit.hint.length + 3) : fit.line}</p>
           <p className="mt-1 text-xs opacity-70">Минимум кандидата не раскрывается: сравнивается только верх вилки.{fit.checks_left != null ? ` Проверок вилки на сегодня: ${fit.checks_left}.` : " Лимит проверок вилки на сегодня исчерпан."}</p>
         </> : <p className="mt-1 text-sm opacity-75">{fitErr ?? (fitKey ? "Считаем по интересам кандидата…" : "Укажите вилку — покажем, насколько предложение подходит кандидату.")}</p>}
       </section>

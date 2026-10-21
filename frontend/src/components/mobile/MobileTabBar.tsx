@@ -73,7 +73,7 @@ const ROLE_LABELS: Record<string, Record<string, string>> = {
     compare: "Сравнение",
     search: "Подбор",
     squad: "Команда",
-    invitations: "Приглашения",
+    invitations: "Офферы",
     messages: "Сообщения",
     trio: "Связь с ФСП",
     cups: "Кубки",

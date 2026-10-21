@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import fspCrystalCore from "../assets/fsp-crystal-core.webp";
 import fspMedallion3d from "../assets/fsp-medallion-3d.webp";
 import { getFspFacts, NUMBERS } from "../lib/numbers";
@@ -72,21 +72,12 @@ export function FspPulseBar() {
 /** Правая 3D-сцена первого экрана главной страницы: левитирующий 3D-кристалл верификации ФСП,
  *  расходящиеся радиоволны, медальон грейда и 3 парящие стеклянные орбитальные капсулы с параллаксом. */
 export function FspHeroMonolithStage({ mobile = false }: { mobile?: boolean }) {
-  const [par, setPar] = useState({ x: 0, y: 0 });
+  const par = { x: 0, y: 0 };
   const regions = getRegionsCount();
-
-  function onMove(e: MouseEvent<HTMLDivElement>) {
-    const r = e.currentTarget.getBoundingClientRect();
-    const nx = ((e.clientX - r.left) / Math.max(1, r.width) - 0.5) * 18;
-    const ny = ((e.clientY - r.top) / Math.max(1, r.height) - 0.5) * 14;
-    setPar({ x: Math.round(nx * 10) / 10, y: Math.round(ny * 10) / 10 });
-  }
 
   return (
     <div
       className="fsp-stage-card relative overflow-hidden rounded-3xl p-3.5 sm:p-5"
-      onMouseMove={onMove}
-      onMouseLeave={() => setPar({ x: 0, y: 0 })}
       data-testid={mobile ? "hero-fsp-showcase-mobile" : "hero-fsp-showcase"}
       aria-label="3D-ядро верификации Федерации спортивного программирования"
     >

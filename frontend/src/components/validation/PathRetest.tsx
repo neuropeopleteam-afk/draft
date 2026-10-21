@@ -126,7 +126,7 @@ function Discrimination({ d }: { d: any }) {
   return (
     <div className="mt-6" id="discrimination">
       <h3 className="font-bold text-brand-night">Дискриминативность семейств: D и r_pb</h3>
-      <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">Симулированный пилот: {num(d.n_pilot, 0)} человек на направление, θ ~ N(0; 1), все семейства общего блока и блока направления, авторские параметры. D — доля верных у верхних 27{NB}% минус у нижних 27{NB}% по сумме остальных заданий; r_pb — корреляция «задание — сумма остальных». Рядом — r_pb на панели моделей.</p>
+      <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">Симуляция калибровки (модельные кандидаты, не люди): {num(d.n_pilot, 0)} человек на направление, θ ~ N(0; 1), все семейства общего блока и блока направления, авторские параметры. D — доля верных у верхних 27{NB}% минус у нижних 27{NB}% по сумме остальных заданий; r_pb — корреляция «задание — сумма остальных». Рядом — r_pb на панели моделей.</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <K label="D, среднее" value={num(s.D_mean, 2)} hint={<>D{NB}≥{NB}0,3 — {pct(s.share_D_ge_03)}, D{NB}&lt;{NB}0,2 — {pct(s.share_D_lt_02)}</>} />
         <K label="r_pb, среднее" value={num(s.r_pb_mean, 2)} hint={<>r_pb{NB}&gt;{NB}0,2 — {pct(s.share_r_pb_gt_02)}</>} />
@@ -143,13 +143,13 @@ function Discrimination({ d }: { d: any }) {
 export function CalibrationCard() {
   return (
     <section id="calibration" className="mt-12 scroll-mt-20" aria-labelledby="calibration-t">
-      <h2 id="calibration-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Калибровка: что есть до пилота и что будет на людях</h2>
+      <h2 id="calibration-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Калибровка: что есть сейчас и что будет на ответах людей</h2>
       <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         {[
           ["Выбор заданий", "Адаптивный тест выбирает задания по авторской трудности и крутизне (экспертная предкалибровка) — это шкала, на которой принимается решение до калибровки на людях."],
           ["Панель моделей", "Ответы нескольких моделей — независимая проверка: ключи, неизоморфные варианты, слабая дискриминация. Флаги панели ведут к переделке задания, а не к подгонке θ."],
           ["Шкала моделей ≠ шкала людей", "Трудность для модели не равна трудности для человека: корреляция авторской и модельной дискриминативности близка к нулю (см. «Повтор всего пути»). Поэтому параметры из панели в решение не переносятся."],
-          ["Калибровка на людях", "После хакатона: пилот на живых кандидатах, оценка a и b по ответам людей, проверка D и r_pb, пересчёт всех чисел этой страницы на новой шкале."],
+          ["Калибровка на людях", "Калибровка на ответах людей (план, не проведена): оценка a и b по ответам людей, проверка D и r_pb, пересчёт всех чисел этой страницы на новой шкале."],
         ].map(([t, x]) => <div key={t} className="card"><p className="font-bold text-brand-night">{t}</p><p className="mt-1 text-sm leading-relaxed text-brand-ink/80">{x}</p></div>)}
       </div>
     </section>

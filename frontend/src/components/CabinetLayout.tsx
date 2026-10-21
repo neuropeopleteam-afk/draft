@@ -73,6 +73,7 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
   const activeMore = moreS.some((s) => secPaths(s).some(on));
   const activeSec = sections.find((s) => secPaths(s).some(on)) ?? null;
   const activeTabs = (activeSec?.tabs ?? []).filter((t) => !t.flag || !!meta?.[t.flag]?.enabled);
+  const isActiveTestRun = /^\/candidate\/assessment\/test\/[^/]+/.test(loc.pathname);
   const badgeFor = (s: Section) => {
     const ps = secPaths(s);
     let b = 0;
@@ -141,7 +142,7 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
         </div>
       </aside>
       <div className="min-w-0 flex flex-col">
-        {demoUi ? (
+        {isActiveTestRun ? null : demoUi ? (
           <>
             <div
               data-testid="cabinet-top-bar"
@@ -203,9 +204,9 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
                   to="/demo/warroom"
                   data-testid="cabinet-warroom"
                   title="Боевой ИИ-Полигон: живая проверка ИИ-аватара, подборки и паспорта на одном экране"
-                  className="ml-1 inline-flex items-center gap-1.5 rounded-lg bg-brand-night px-2.5 py-1 text-xs font-bold text-white transition hover:bg-brand-plum"
+                  className="ml-1 inline-flex items-center gap-2 rounded-xl border border-[#FF6B88]/60 bg-gradient-to-r from-[#D91B38] via-[#9E1B66] to-[#402FFF] px-3.5 py-1.5 text-xs font-extrabold text-white shadow-[0_6px_18px_-4px_rgba(217,27,56,0.75)] ring-2 ring-[#FF4D6D]/30 transition hover:brightness-110"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-blush" aria-hidden="true" />
+                  <span className="h-2 w-2 rounded-full bg-white shadow-[0_0_8px_#fff] animate-pulse" aria-hidden="true" />
                   Боевой ИИ-Полигон
                 </Link>
               </div>
@@ -235,7 +236,7 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
           </nav>
         )}
         <main id="main" tabIndex={-1} className="min-w-0 flex-1 px-4 pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] pt-4 outline-none sm:px-6 md:px-10 md:py-8">
-          {activeTabs.length > 1 && (
+          {!isActiveTestRun && activeTabs.length > 1 && (
             <nav
               aria-label={`Разделы: ${activeSec?.title ?? ""}`}
               data-testid="cabinet-subtabs"
@@ -291,16 +292,16 @@ interface RouteStep { to: string; title: string; match: (p: string) => boolean }
 const under = (p: string, ...bases: string[]) => bases.some((b) => p === b || p.startsWith(`${b}/`));
 const ROUTES: Partial<Record<Role, RouteStep[]>> = {
   candidate: [
-    { to: "/candidate/profile", title: "Профиль и резюме", match: (p) => under(p, "/candidate/profile") },
-    { to: "/candidate/assessment", title: "Адаптивный тест / Экспресс", match: (p) => under(p, "/candidate/assessment", "/candidate/express", "/candidate/category") },
-    { to: "/candidate/attempts", title: "Устная защита с ИИ-аватаром", match: (p) => under(p, "/candidate/attempts", "/candidate/interview") },
-    { to: "/candidate/invitations", title: "Цифровой паспорт и офферы с вилкой", match: (p) => under(p, "/candidate/invitations", "/candidate/fsp", "/candidate/messages") },
+    { to: "/candidate/profile", title: "Профиль", match: (p) => under(p, "/candidate/profile") },
+    { to: "/candidate/assessment", title: "Тест на грейд", match: (p) => under(p, "/candidate/assessment", "/candidate/express", "/candidate/category") },
+    { to: "/candidate/attempts", title: "Устная защита", match: (p) => under(p, "/candidate/attempts", "/candidate/interview") },
+    { to: "/candidate/invitations", title: "Паспорт и офферы", match: (p) => under(p, "/candidate/invitations", "/candidate/fsp", "/candidate/messages") },
   ],
   employer: [
-    { to: "/employer/needs", title: "Создать вакансию (текст/голос)", match: (p) => p === "/employer/needs" || under(p, "/employer/vacancies") },
-    { to: "/employer/compare", title: "Ранжированная подборка и сравнение", match: (p) => p.startsWith("/employer/needs/") || under(p, "/employer/compare", "/employer/search", "/employer/candidates", "/employer/mutual") },
-    { to: "/employer/invitations", title: "Оффер в 1 клик со слотами", match: (p) => under(p, "/employer/invitations", "/employer/messages") },
-    { to: "/employer/ats", title: "Экспорт в ATS Поток / Кубок ФСП", match: (p) => under(p, "/employer/ats", "/employer/cups") },
+    { to: "/employer/needs", title: "Потребность", match: (p) => p === "/employer/needs" || under(p, "/employer/vacancies") },
+    { to: "/employer/compare", title: "Подборка и сравнение", match: (p) => p.startsWith("/employer/needs/") || under(p, "/employer/compare", "/employer/search", "/employer/candidates", "/employer/mutual") },
+    { to: "/employer/invitations", title: "Оффер со слотами", match: (p) => under(p, "/employer/invitations", "/employer/messages") },
+    { to: "/employer/ats", title: "Передача в ATS и кубки", match: (p) => under(p, "/employer/ats", "/employer/cups") },
   ],
 };
 

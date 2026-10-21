@@ -183,18 +183,18 @@ html[data-theme="light"] .np {
 .np-border { border-color: var(--np-line); }
 .np-warn { background: rgba(236, 29, 53, 0.12); color: var(--np-red-t); }
 
-/* фон: архитектурная сетка ФСП и объёмная световая дымка (Volumetric Aurora) */
-.np-backdrop { position: absolute; inset: 0 0 auto 0; height: 1350px; pointer-events: none; overflow: hidden; }
+/* фон: архитектурная сетка ФСП и объёмная световая дымка (без покадрового пересчёта blur при прокрутке — плавные 60 FPS) */
+.np-backdrop { position: absolute; inset: 0 0 auto 0; height: 1350px; pointer-events: none; overflow: hidden; transform: translateZ(0); }
 .np-gridlines { position: absolute; inset: 0;
   background-image: linear-gradient(var(--np-grid) 1px, transparent 1px), linear-gradient(90deg, var(--np-grid) 1px, transparent 1px);
   background-size: 64px 64px; background-position: -1px -1px;
   -webkit-mask-image: radial-gradient(ellipse 82% 70% at 52% 24%, #000 38%, transparent 84%); mask-image: radial-gradient(ellipse 82% 70% at 52% 24%, #000 38%, transparent 84%); }
-.np-backdrop-low { position: absolute; inset: 1100px 0 0 0; pointer-events: none; overflow: hidden; }
+.np-backdrop-low { position: absolute; inset: 1100px 0 0 0; pointer-events: none; overflow: hidden; transform: translateZ(0); }
 .np-glow-indigo-low { width: 48rem; height: 34rem; left: -12rem; top: 6rem; background: radial-gradient(closest-side, rgba(64, 47, 255, calc(var(--np-glow-a) * 0.78)), transparent); }
 .np-glow-red-low { width: 40rem; height: 28rem; right: -10rem; top: 68rem; background: radial-gradient(closest-side, rgba(91, 75, 255, calc(var(--np-glow-a) * 0.65)), rgba(236, 29, 53, calc(var(--np-glow-b) * 0.45)), transparent); }
-.np-glow { position: absolute; border-radius: 9999px; filter: blur(88px); animation: npSmokeDrift 20s ease-in-out infinite; }
+.np-glow { position: absolute; border-radius: 9999px; filter: blur(72px); transform: translateZ(0); }
 .np-glow-indigo { width: 54rem; height: 38rem; right: -8rem; top: -10rem; background: radial-gradient(closest-side, rgba(64, 47, 255, var(--np-glow-a)), rgba(95, 78, 255, calc(var(--np-glow-a) * 0.45)), transparent); }
-.np-glow-red { width: 38rem; height: 28rem; left: -8rem; top: 18rem; animation-delay: -9s; background: radial-gradient(closest-side, rgba(64, 47, 255, calc(var(--np-glow-a) * 0.55)), rgba(236, 29, 53, calc(var(--np-glow-b) * 0.65)), transparent); }
+.np-glow-red { width: 38rem; height: 28rem; left: -8rem; top: 18rem; background: radial-gradient(closest-side, rgba(64, 47, 255, calc(var(--np-glow-a) * 0.55)), rgba(236, 29, 53, calc(var(--np-glow-b) * 0.5)), transparent); }
 
 /* шапка */
 .np-header { position: sticky; top: 0; z-index: 40; background: var(--np-header); border-bottom: 1px solid var(--np-line);
@@ -230,7 +230,7 @@ html[data-theme="light"] .np {
 .np-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; filter: none; }
 .np-btn-primary:disabled::after { display: none; }
 
-/* Палитра разноцветных градиентных кнопок в фирменных тонах сайта (сапфир, аметист, лазурь, рубин ФСП, изумрудно-бирюзовый) */
+/* Единая спокойная градиентная палитра кнопок сайта (сапфир / индиго / обсидиан) без пестроты + выделенный стиль Боевого ИИ-Полигона */
 .np-btn-grad-sapphire,
 .np-btn-grad-violet,
 .np-btn-grad-cyan,
@@ -245,33 +245,18 @@ html[data-theme="light"] .np {
   border-radius: 0.85rem;
   padding: 0.65rem 1.15rem;
   font-size: 0.85rem;
-  font-weight: 700;
-  color: #ffffff;
-  background-size: 200% 200%;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, filter 0.2s, background-position 0.3s;
-}
-.np-btn-grad-sapphire::after,
-.np-btn-grad-violet::after,
-.np-btn-grad-cyan::after,
-.np-btn-grad-crimson::after,
-.np-btn-grad-emerald::after {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 -35%;
-  width: 42%;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
-  transform: translateX(-140%) skewX(-22deg);
-  animation: btnSheen 6.2s ease-in-out infinite;
+  font-weight: 600;
+  color: #F3F4FF;
+  transition: transform 0.16s ease, box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
 }
 .np-btn-grad-sapphire:hover,
 .np-btn-grad-violet:hover,
 .np-btn-grad-cyan:hover,
 .np-btn-grad-crimson:hover,
 .np-btn-grad-emerald:hover {
-  background-position: 100% 50%;
-  filter: brightness(1.09);
-  transform: translateY(-1.5px);
+  transform: translateY(-1px);
+  border-color: rgba(165, 157, 255, 0.75);
+  box-shadow: 0 10px 24px -10px rgba(64, 47, 255, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 .np-btn-grad-sapphire:disabled,
 .np-btn-grad-violet:disabled,
@@ -282,33 +267,27 @@ html[data-theme="light"] .np {
   cursor: not-allowed;
   transform: none;
 }
+/* Спокойный сапфировый градиент для главных кнопок выбора */
 .np-btn-grad-sapphire {
-  background-image: linear-gradient(135deg, #2617C8 0%, #402FFF 50%, #6C5CE7 100%);
-  border: 1px solid rgba(165, 157, 255, 0.5);
-  box-shadow: 0 10px 26px -10px rgba(64, 47, 255, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  background: linear-gradient(135deg, #2717D1 0%, #402FFF 55%, #5B4BFF 100%);
+  border: 1px solid rgba(165, 157, 255, 0.45);
+  box-shadow: 0 8px 22px -10px rgba(64, 47, 255, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  font-weight: 700;
 }
-.np-btn-grad-violet {
-  background-image: linear-gradient(135deg, #5319E8 0%, #7C2AE8 50%, #B05CFF 100%);
-  border: 1px solid rgba(210, 170, 255, 0.5);
-  box-shadow: 0 10px 26px -10px rgba(138, 58, 252, 0.82), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-.np-btn-grad-violet::after { animation-delay: -1.5s; }
-.np-btn-grad-cyan {
-  background-image: linear-gradient(135deg, #1E3A8A 0%, #2563EB 48%, #06B6D4 100%);
-  border: 1px solid rgba(125, 211, 252, 0.5);
-  box-shadow: 0 10px 26px -10px rgba(37, 99, 235, 0.82), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-.np-btn-grad-cyan::after { animation-delay: -3s; }
-.np-btn-grad-crimson {
-  background-image: linear-gradient(135deg, #9F1239 0%, #E11D48 48%, #7C2AE8 100%);
-  border: 1px solid rgba(255, 140, 168, 0.5);
-  box-shadow: 0 10px 26px -10px rgba(225, 29, 72, 0.82), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-.np-btn-grad-crimson::after { animation-delay: -4.2s; }
+/* Благородный тёмно-сапфировый градиент для остальных кнопок в единой палитре сайта */
+.np-btn-grad-violet,
+.np-btn-grad-cyan,
 .np-btn-grad-emerald {
-  background-image: linear-gradient(135deg, #0F766E 0%, #0284C7 52%, #4F46E5 100%);
-  border: 1px solid rgba(110, 231, 183, 0.48);
-  box-shadow: 0 10px 26px -10px rgba(14, 165, 233, 0.78), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  background: linear-gradient(135deg, rgba(64, 47, 255, 0.26) 0%, rgba(91, 75, 255, 0.16) 55%, rgba(18, 22, 52, 0.92) 100%);
+  border: 1px solid rgba(165, 157, 255, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 6px 18px -10px rgba(10, 12, 32, 0.7);
+}
+/* Акцентная кнопка для Боевого ИИ-Полигона */
+.np-btn-grad-crimson {
+  background: linear-gradient(135deg, #D91B38 0%, #9E1B66 48%, #402FFF 100%);
+  border: 1px solid rgba(255, 130, 158, 0.55);
+  box-shadow: 0 10px 26px -8px rgba(236, 29, 53, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  font-weight: 700;
 }
 .np-btn-ghost { position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border-radius: 0.85rem; padding: 0.75rem 1.25rem;
   font-size: 0.875rem; font-weight: 600; color: var(--np-text); background: linear-gradient(180deg, var(--np-surface-2), var(--np-surface)); border: 1px solid var(--np-line-2);
@@ -318,14 +297,12 @@ html[data-theme="light"] .np {
 .np-link { font-weight: 600; color: var(--np-indigo-t); text-underline-offset: 3px; }
 .np-link:hover { text-decoration: underline; }
 
-/* стекло с тонкой градиентной гранью */
-.np-glass { position: relative; border-radius: 1.5rem; background: linear-gradient(165deg, var(--np-surface-2) 0%, var(--np-surface) 100%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), var(--np-shadow); isolation: isolate; }
-.np-glass::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: -1;
-  background: linear-gradient(150deg, var(--np-line-2), var(--np-edge-mid) 40%, var(--np-edge-mid) 70%, var(--np-line-2));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-.np-glass-accent::before { background: linear-gradient(150deg, var(--np-edge-a), var(--np-edge-mid) 42%, var(--np-edge-mid) 68%, var(--np-edge-b)); }
+/* карточки без тяжёлого backdrop-filter на каждом блоке — плавная прокрутка без фризов */
+.np-glass { position: relative; border-radius: 1.5rem; background: linear-gradient(165deg, rgba(22, 26, 58, 0.92) 0%, rgba(12, 15, 34, 0.96) 100%);
+  border: 1px solid var(--np-line-2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 20px 50px -32px rgba(64, 47, 255, 0.45); }
+html[data-theme="light"] .np .np-glass { background: linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(242, 245, 255, 0.96) 100%); }
+.np-glass-accent { border-color: rgba(165, 157, 255, 0.38); }
 .np-card { position: relative; border-radius: 1.15rem; background: linear-gradient(180deg, var(--np-bg-2) 0%, rgba(16, 19, 44, 0.88) 100%); border: 1px solid var(--np-line-2); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 34px -22px rgba(8, 10, 28, 0.75); }
 html[data-theme="light"] .np .np-card { background: linear-gradient(180deg, #FFFFFF 0%, #F6F8FF 100%); border-color: rgba(64, 47, 255, 0.16); box-shadow: 0 14px 34px -20px rgba(28, 32, 110, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95); }
 .np-tile { border-radius: 1rem; background: var(--np-tile); border: 1px solid var(--np-line); }
@@ -334,45 +311,31 @@ html[data-theme="light"] .np .np-card { background: linear-gradient(180deg, #FFF
 .np-linkcard .np-arrow { color: var(--np-indigo-t); transition: transform .2s; }
 .np-linkcard:hover .np-arrow { transform: translateX(4px); }
 
-/* типографика и голографический перелив заголовков */
+/* типографика: чёткий читаемый шрифт Montserrat вместо мелкого пиксельного моноширинного */
 @keyframes npTextIridescence {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-.np-eyebrow { display: inline-flex; align-items: center; gap: 0.75rem; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-  background: linear-gradient(90deg, #A59DFF 0%, #70E1FF 35%, #FF7588 70%, #A59DFF 100%);
-  background-size: 240% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: npTextIridescence 6s ease-in-out infinite; }
-.np-eyebrow::before { content: ""; width: 2.1rem; height: 2px; flex-shrink: 0; border-radius: 9999px;
-  background: linear-gradient(90deg, #402FFF, #38BDF8, #EC1D35);
-  box-shadow: 0 0 12px rgba(64, 47, 255, 0.95), 0 0 6px rgba(56, 189, 248, 0.8); }
+.np-eyebrow { display: inline-flex; align-items: center; gap: 0.65rem;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: #B8B2FF; }
+.np-eyebrow::before { content: ""; width: 1.75rem; height: 2px; flex-shrink: 0; border-radius: 9999px;
+  background: linear-gradient(90deg, #402FFF, #8B80FF); }
 .np-grad {
-  background: linear-gradient(95deg, #FFFFFF 0%, #B8B0FF 24%, #67E8F9 48%, #FF7588 74%, #E0DCFF 100%);
-  background-size: 260% 100%;
+  background: linear-gradient(95deg, #FFFFFF 0%, #B8B0FF 32%, #8375FF 68%, #E0DCFF 100%);
+  background-size: 220% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: npTextIridescence 5.5s ease-in-out infinite;
+  animation: npTextIridescence 6s ease-in-out infinite;
 }
-html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg, #2415BA 0%, #402FFF 38%, #0284C7 68%, #D41430 100%); }
+html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg, #2415BA 0%, #402FFF 55%, #6557FF 100%); }
 .np-hero-shimmer {
-  background: linear-gradient(105deg, #FFFFFF 0%, #F0EEFF 28%, #C4D4FF 48%, #FFFFFF 66%, #E4DFFF 85%, #FFFFFF 100%);
-  background-size: 240% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: npTextIridescence 7s ease-in-out infinite;
-  filter: drop-shadow(0 6px 28px rgba(64, 47, 255, 0.28));
-}
-html[data-theme="light"] .np .np-hero-shimmer {
-  background: none;
   color: var(--np-text);
-  filter: none;
 }
-.np-chip { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.2rem 0.6rem; font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-  font-size: 0.7rem; font-weight: 600; color: var(--np-muted); border: 1px solid var(--np-line-2); background: var(--np-surface); white-space: nowrap; }
+.np-chip { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.25rem 0.7rem;
+  font-size: 0.75rem; font-weight: 600; color: #DCE2FF; border: 1px solid var(--np-line-2); background: var(--np-surface); white-space: nowrap; }
 .np-chip-sm { font-size: 0.68rem; padding: 0.12rem 0.5rem; }
 .np-fact { display: flex; align-items: center; gap: 0.75rem; border-radius: 0.9rem; padding: 0.65rem 0.8rem; border: 1px solid var(--np-line-2); background: linear-gradient(180deg, var(--np-surface-2), var(--np-surface)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); }
 .np-fact-k { flex-shrink: 0; display: inline-flex; min-width: 2.4rem; height: 2rem; padding: 0 0.45rem; align-items: center; justify-content: center; border-radius: 0.6rem;
@@ -458,15 +421,14 @@ html[data-theme="light"] .np .np-hero-shimmer {
 }
 
 @keyframes fspLaserSweep {
-  0% { transform: translateX(-100%); opacity: 0.35; }
-  50% { opacity: 1; }
-  100% { transform: translateX(220%); opacity: 0.35; }
+  0% { transform: translate3d(-100%, 0, 0); }
+  100% { transform: translate3d(220%, 0, 0); }
 }
 
 @keyframes fspLaserVert {
-  0% { top: -22%; opacity: 0.2; }
+  0% { transform: translate3d(0, -40px, 0); opacity: 0.25; }
   50% { opacity: 1; }
-  100% { top: 102%; opacity: 0.2; }
+  100% { transform: translate3d(0, 260px, 0); opacity: 0.25; }
 }
 
 .fsp-serif-italic {
@@ -474,20 +436,18 @@ html[data-theme="light"] .np .np-hero-shimmer {
   font-style: italic;
   font-weight: 700;
   letter-spacing: -0.01em;
-  background: linear-gradient(100deg, #9B90FF 0%, #67E8F9 22%, #FFFFFF 44%, #FF6B88 68%, #C4B5FD 86%, #9B90FF 100%);
-  background-size: 280% 100%;
+  background: linear-gradient(100deg, #A59DFF 0%, #E0DCFF 28%, #FFFFFF 50%, #FF8598 74%, #A59DFF 100%);
+  background-size: 240% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: fspSheen 4.6s ease-in-out infinite;
-  filter: drop-shadow(0 0 18px rgba(103, 232, 249, 0.32)) drop-shadow(0 0 28px rgba(64, 47, 255, 0.45));
+  animation: fspSheen 5.5s ease-in-out infinite;
 }
 html[data-theme="light"] .np .fsp-serif-italic {
-  background-image: linear-gradient(100deg, #1F12A6 0%, #402FFF 28%, #0284C7 52%, #D41430 78%, #1F12A6 100%);
-  filter: none;
+  background-image: linear-gradient(100deg, #1F12A6 0%, #402FFF 32%, #7A6BFF 58%, #D41430 82%, #1F12A6 100%);
 }
 
-/* Вертикальный лазерный луч слева от главного заголовка (image-4) */
+/* Вертикальная лазерная полоса слева от главного заголовка + горизонтальная лазерная полоса под шапкой (чистый GPU transform без пересечения букв) */
 .fsp-laser-spine {
   position: relative;
   padding-left: 1.35rem;
@@ -496,33 +456,35 @@ html[data-theme="light"] .np .fsp-serif-italic {
   content: "";
   position: absolute;
   left: 0;
-  top: 0.25rem;
-  bottom: 0.25rem;
+  top: 0.2rem;
+  bottom: 0.2rem;
   width: 2px;
   border-radius: 9999px;
-  background: linear-gradient(180deg, #38BDF8 0%, #402FFF 42%, #A855F7 74%, #EC1D35 100%);
-  box-shadow: 0 0 12px rgba(64, 47, 255, 0.9), 0 0 22px rgba(56, 189, 248, 0.65);
+  background: linear-gradient(180deg, #38BDF8 0%, #402FFF 45%, #8B80FF 78%, #EC1D35 100%);
+  box-shadow: 0 0 12px rgba(64, 47, 255, 0.9), 0 0 20px rgba(56, 189, 248, 0.65);
 }
 .fsp-laser-spine-photon {
   position: absolute;
-  left: -2px;
-  width: 6px;
-  height: 54px;
+  left: -1.5px;
+  top: 0;
+  width: 5px;
+  height: 56px;
   border-radius: 9999px;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent 0%, #67E8F9 40%, #FFFFFF 55%, #FF5C72 85%, transparent 100%);
-  box-shadow: 0 0 16px 2px rgba(103, 232, 249, 0.95), 0 0 28px 4px rgba(64, 47, 255, 0.85);
-  animation: fspLaserVert 3.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+  background: linear-gradient(180deg, transparent 0%, #67E8F9 38%, #FFFFFF 55%, #A59DFF 82%, transparent 100%);
+  box-shadow: 0 0 14px 2px rgba(103, 232, 249, 0.95), 0 0 24px 4px rgba(64, 47, 255, 0.85);
+  animation: fspLaserVert 3.6s ease-in-out infinite;
 }
 .fsp-laser-node {
   position: absolute;
-  left: -4px;
-  width: 10px;
-  height: 10px;
+  left: -3.5px;
+  width: 9px;
+  height: 9px;
   border-radius: 9999px;
   background: #67E8F9;
   border: 2px solid #FFFFFF;
-  box-shadow: 0 0 14px 3px rgba(103, 232, 249, 0.95), 0 0 24px 6px rgba(64, 47, 255, 0.85);
+  box-shadow: 0 0 12px 2px rgba(103, 232, 249, 0.95), 0 0 20px 4px rgba(64, 47, 255, 0.85);
 }
 
 .fsp-pulse-bar {
@@ -530,21 +492,31 @@ html[data-theme="light"] .np .fsp-serif-italic {
   z-index: 35;
   overflow: hidden;
   background: linear-gradient(90deg, #060814 0%, #11163A 35%, #19123E 65%, #060814 100%);
-  border-bottom: 1px solid rgba(125, 211, 252, 0.28);
-  box-shadow: 0 8px 28px -12px rgba(64, 47, 255, 0.7);
+  border-bottom: 1px solid rgba(103, 232, 249, 0.38);
+  box-shadow: 0 8px 28px -10px rgba(64, 47, 255, 0.85);
   color: #E2E5FF;
+}
+.fsp-pulse-bar::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(64, 47, 255, 0.25) 0%, #402FFF 25%, #38BDF8 50%, #EC1D35 78%, rgba(64, 47, 255, 0.25) 100%);
+  box-shadow: 0 0 12px rgba(64, 47, 255, 0.9);
 }
 .fsp-pulse-bar::after {
   content: "";
   position: absolute;
   left: 0;
   bottom: 0;
-  height: 2px;
-  width: 45%;
+  height: 2.5px;
+  width: 42%;
   pointer-events: none;
+  will-change: transform;
   background: linear-gradient(90deg, transparent 0%, #38BDF8 28%, #FFFFFF 50%, #EC1D35 78%, transparent 100%);
-  box-shadow: 0 0 14px rgba(56, 189, 248, 0.95), 0 0 22px rgba(236, 29, 53, 0.8);
-  animation: fspLaserSweep 4.8s ease-in-out infinite;
+  box-shadow: 0 0 16px 2px rgba(56, 189, 248, 0.95), 0 0 24px 3px rgba(236, 29, 53, 0.85);
+  animation: fspLaserSweep 4.2s linear infinite;
 }
 
 .fsp-pulse-dot {
@@ -609,10 +581,10 @@ html[data-theme="light"] .np .fsp-serif-italic {
   width: min(52vw, 290px);
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 1px solid rgba(165, 157, 255, 0.55);
-  box-shadow: 0 0 18px rgba(64, 47, 255, 0.32);
+  border: 1px solid rgba(165, 157, 255, 0.5);
   transform: translate(-50%, -50%) scale(0.42);
   opacity: 0;
+  will-change: transform, opacity;
   animation: fspWave 6.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
 }
 .fsp-rings--sm i {
@@ -638,12 +610,14 @@ html[data-theme="light"] .np .fsp-serif-italic {
 .fsp-float {
   position: relative;
   display: block;
+  will-change: transform;
   animation: fspLevitate 5.8s ease-in-out infinite;
 }
 .fsp-float img {
-  filter: drop-shadow(0 30px 44px rgba(0, 0, 0, 0.78));
+  transform: translateZ(0);
 }
 .fsp-float-delayed {
+  will-change: transform;
   animation: fspLevitate 6.6s ease-in-out -2.4s infinite;
 }
 
@@ -655,16 +629,14 @@ html[data-theme="light"] .np .fsp-serif-italic {
   gap: 9px;
   padding: 8px 13px;
   border-radius: 14px;
-  background: rgba(10, 12, 28, 0.86);
-  border: 1px solid rgba(165, 157, 255, 0.4);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.6);
+  background: rgba(12, 15, 34, 0.95);
+  border: 1px solid rgba(165, 157, 255, 0.42);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.55);
   color: #F3F4FF;
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 1.25;
   text-decoration: none;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 .fsp-orbit-pill:hover {
   transform: translateY(-3px);
@@ -765,5 +737,22 @@ html[data-theme="light"] .np .fsp-serif-italic {
 [data-testid="compare-scroll"] [role="cell"] > div.flex.items-start.gap-2 > p {
   flex: 1 1 100%;
   min-width: 100%;
+}
+
+[data-testid="exec-advisor"] ul[aria-label="Кандидаты в разговоре"] li {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: auto;
+}
+
+[data-testid="landing-numbers-grid"] [data-testid$="-st"] > p:nth-child(2),
+[data-testid="landing-numbers-grid"] [data-testid$="-hard"] > p:nth-child(2) {
+  white-space: nowrap;
+}
+[data-testid="landing-numbers-grid"] [data-testid$="-st"] > p:first-child,
+[data-testid="landing-numbers-grid"] [data-testid$="-hard"] > p:first-child {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: auto;
 }
 
