@@ -17,6 +17,8 @@ score = 0,45·тест + 0,35·покрытие обязательного ст�
 """
 from __future__ import annotations
 
+import os
+
 from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import Session
 
@@ -41,7 +43,7 @@ from app.modules.profiles.facts import (
 )
 from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
-from app.modules.matching import core_skill, explain as explain_mod, grade_above, implied, must_have
+from app.modules.matching import core_skill, explain as explain_mod, grade_above, implied, ltr, must_have
 from app.core.origin import NO_FSP
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
@@ -56,6 +58,8 @@ CORE_ALGORITHM = "match-v1.2"  # Я1: match-v1.1 + ядро роли (основ
 def algorithm() -> str:
     from app.modules.matching import core_skill
 
+    if ltr.enabled():  # match-v2: стек — фильтр, место — тест и ФСП (правило экспертов 20.10), веса — ltr_weights.json
+        return ltr.VERSION + ("+above" if grade_above.enabled() else "")
     if must_have.enabled():
         if core_skill.enabled():
             return grade_above.ALGORITHM if grade_above.enabled() else CORE_ALGORITHM
@@ -148,10 +152,43 @@ def visible_pool(db: Session, direction: str | None = None, grades: list[str] | 
     return [p for p in rows if not is_synthetic_profile(p)] if real_only else rows
 
 
+def _score_part(t: dict) -> str:
+    """«8 из 10 верно, » — только если числа есть в факте теста (внешний набор жюри может их не дать)."""
+    if t.get("correct") is None or t.get("answered") is None:
+        return ""
+    return f"{t.get('correct')} из {t.get('answered')} верно, "
+
+
+def unconfirmed_by_claim() -> bool:
+    """Правило экспертов жюри (20.10): категория и фильтр грейда — только по тесту, самооценка не подмешивается.
+    По умолчанию (MATCH_UNCONFIRMED_BY_CLAIM=0) заявленный грейд кандидата без подтверждения НЕ используется ни как
+    фильтр, ни в баллах: такие кандидаты попадают в выдачу только по направлению из опроса (его выбирает сам кандидат
+    по ТЗ — отрасль и специализация), отдельным ярусом ниже подтверждённых, с пометкой «грейд не подтверждён».
+    При фильтре грейда в поиске их нет — у них нет проверенного грейда. =1 — прежнее поведение (по заявленному)."""
+    return os.environ.get("MATCH_UNCONFIRMED_BY_CLAIM", "0").lower() in ("1", "true", "yes", "on")
+
+
 def unconfirmed_pool(db: Session, direction: str | None = None, grades: list[str] | None = None,
-                     category_ids: list[str] | None = None, real_only: bool = False) -> list[tuple[CandidateProfile, str, str]]:
+                     category_ids: list[str] | None = None, by_claim: bool | None = None,
+                     real_only: bool = False) -> list[tuple[CandidateProfile, str, str]]:
     """Кандидаты без подтверждённого грейда (опрос пройден, категории нет), видимые работодателю, с заявленными
-    направлением и грейдом из последнего опроса: [(профиль, направление, грейд)]. Фильтры — по заявленному."""
+    направлением и грейдом из последнего опроса: [(профиль, направление, грейд)].
+    by_claim=False (по умолчанию, см. unconfirmed_by_claim): заявленный грейд не фильтрует — grades игнорируются,
+    category_ids сводятся к их направлениям. by_claim=True — фильтры по заявленной категории (прежнее поведение)."""
+    if by_claim is None:
+        by_claim = unconfirmed_by_claim()
+    if not by_claim:
+        grades = None
+        if category_ids:
+            dirs = {c.split(".", 1)[0] for c in category_ids}
+            category_ids = None
+            if direction and direction not in dirs:
+                return []
+            if len(dirs) == 1:
+                direction = direction or next(iter(dirs))
+            else:
+                return [x for x in unconfirmed_pool(db, direction=direction, by_claim=False, real_only=real_only)
+                        if x[1] in dirs]
     from app.modules.assessment.models import SurveyResponse
 
     profiles = list(db.scalars(_pool_query(confirmed=False, real_only=real_only)).all())
@@ -181,7 +218,8 @@ def unconfirmed_pool(db: Session, direction: str | None = None, grades: list[str
 def unconfirmed_counts(db: Session, real_only: bool = False) -> dict[str, int]:
     """Сколько кандидатов без подтверждённого грейда заявили каждую категорию."""
     out: dict[str, int] = {}
-    for _, d, g in unconfirmed_pool(db, real_only=real_only):
+    # справка «+n заявили категорию» — не фильтр и не балл; real_only — рыночный режим (без демо-профилей)
+    for _, d, g in unconfirmed_pool(db, by_claim=True, real_only=real_only):
         out[f"{d}.{g}"] = out.get(f"{d}.{g}", 0) + 1
     return out
 
@@ -238,7 +276,7 @@ def _mr(c: Category) -> dict:
             "source": c.market_source, "as_of": c.market_as_of.isoformat() if c.market_as_of else None}
 
 
-def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
+def score_candidate(b: Bundle, req: dict, weights: dict | None = None) -> tuple[float, dict, list[dict]]:
     """Скор и объяснение по каждому требованию. Возвращает (score, компоненты, reasons)."""
     p = b.profile
     reasons: list[dict] = []
@@ -255,7 +293,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "partial",
             "text": f"Экспресс-категория {cat_title} по мини-тесту {b.test.created_at:%d.%m.%Y}: "
-                    f"{t.get('correct')} из {t.get('answered')} верно, θ = {theta_se(t.get('theta', 0), t.get('se'))}"
+                    f"{_score_part(t)}θ = {theta_se(t.get('theta', 0), t.get('se'))}"
                     " — предварительно, полный тест уточнит грейд",
         })
     elif b.test and b.provisional:
@@ -275,7 +313,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "confirmed",
             "text": f"Категория {cat_title} подтверждена тестом {b.test.created_at:%d.%m.%Y}{how}: "
-                    f"{t.get('correct')} из {t.get('answered')} верно, θ = {theta_se(t.get('theta', 0), t.get('se'))}",
+                    f"{_score_part(t)}θ = {theta_se(t.get('theta', 0), t.get('se'))}",
         })
     else:
         reasons.append({"requirement": "Специализация и грейд", "level": "none", "status": "missing",
@@ -286,6 +324,8 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         step = {1: "на ступень", 2: "на две ступени"}.get(distance, "на три ступени")
         reasons[-1]["text"] += f" — грейд {step} {rel} запрошенного"
         reasons[-1]["status"] = "partial"
+
+    failed_w = {"Обязательно": 0.0, "Желательно": 0.0}  # match-v2: тест проверил навык и не подтвердил
 
     def stack_part(items: list[dict], label: str) -> float:
         if not items:
@@ -307,11 +347,13 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                                 "implied_by": imp[0],
                                 "text": f"Подтверждён через {tag_title(imp[0])}: {skill_evidence_text(imp[1])}"})
             elif f is not None:  # И18: тест проверял навык, порог не набран — это не «нет данных» (как в сравнении)
+                failed_w[label] += w / total
                 reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "mismatch", "weight": w,
                                 "text": skill_check_text(f)})  # Ф6 (Н5): тест и задание работодателя — раздельно
             elif tag in b.stack_t0:
                 reasons.append({"requirement": f"{label}: {title}", "level": "T0", "status": "declared", "weight": w,
-                                "text": "Заявлено кандидатом — не влияет на ранжирование, можно проверить коротким заданием"})
+                                "text": "Заявлено кандидатом — проходит фильтр стека, на место не влияет; можно "
+                                        "проверить коротким заданием"})
             else:
                 reasons.append({"requirement": f"{label}: {title}", "level": "none", "status": "missing", "weight": w,
                                 "text": "Не подтверждено: тест кандидата этот навык не проверял, в профиле он не заявлен — "
@@ -320,27 +362,40 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
 
     sreq = stack_part(req.get("stack_required") or [], "Обязательно")
     sdes = stack_part(req.get("stack_desired") or [], "Желательно")
-    fsp = b.fsp
-    verified = [a for a in b.achievements if a.verified]
-    if verified:
-        best = min(verified, key=lambda a: a.place or 99)
-        from app.modules.fsp.rating import details
-        from app.modules.profiles.facts import DISCIPLINE_TITLES, fsp_relevance_on
+    # fsp-v3 (matching/fsp_factor.py): вес статуса — подтверждено ФСП 1,0; найдено в официальном протоколе и ждёт
+    # подтверждения ФСП 0,5; заявлено без документа 0; судьи и записи без мероприятия — не достижения. Нет ФСП — штраф 0.
+    from app.modules.matching import fsp_factor
+    from app.modules.profiles.facts import DISCIPLINE_TITLES
 
-        rel_on = fsp_relevance_on()  # И23: флаг FSP_DISCIPLINE_RELEVANCE, по умолчанию выкл. — текст прежний
-        rating = details(verified, direction=b.direction if rel_on else None, relevance=rel_on)
-        rb = (rating.get("relevance") or {}).get("best") or {}
-        rel_text = (f"Соревнования по «{DISCIPLINE_TITLES.get(rb['discipline'], rb['discipline'])}» — {rb['title']} кандидата "
-                    f"(коэффициент {str(rb['coef']).replace('.', ',')})" if rb.get("title") else "")
-        reasons.append({"requirement": "Достижения ФСП", "level": "T2", "status": "confirmed",
-                        "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")
-                        + f". Сила ФСП {ru_num(fsp, 3)}, соревнований: {rating['competitions']}"  # формула — в карточке (И18, Ф6 В5)
-                        + (f". {rel_text}" if rel_text else "")})  # И23: релевантность дисциплины — только при флаге
+    fd = fsp_factor.details(b.achievements, direction=b.direction or req.get("direction"))
+    fsp = fd["strength"]
+    if fd["best"]:
+        best = fd["best"]["a"]
+        st = fd["best"]["status"]
+        cnt = fd["counted"]
+        others = cnt["verified"] + cnt["pending_fsp"] - 1
+        pr = fsp_factor.protocol_ref(best)
+        head = fsp_factor.protocol_citation(best) if pr else achievement_text(best)
+        how = (" — официальный протокол ФСП, подтверждено ФСП" if st == "verified" and pr else
+               " — официальный протокол ФСП, ждёт подтверждения ФСП (вес 0,5)" if st == "pending_fsp" else "")
+        rel_text = ""
+        if fd["relevance"]:
+            from app.modules.fsp import relevance as fsp_rel
+
+            c = fd["best"]["coef"]
+            rel_text = (f". Соревнования по «{DISCIPLINE_TITLES.get(best.discipline, best.discipline)}» — "
+                        f"{fsp_rel.title(c)} кандидата (коэффициент {str(c).replace('.', ',')}; "
+                        f"{fd['best']['coef_source']})")
+        reasons.append({"requirement": "Достижения ФСП", "level": "T2" if st == "verified" else "T1",
+                        "status": "confirmed" if st == "verified" else "partial", "fsp_status": st,
+                        **({"protocol": pr} if pr else {}),
+                        "text": f"{head}{how}" + (f" и ещё {others}" if others > 0 else "")
+                        + f". Сила ФСП {ru_num(fsp, 3)}, соревнований: {fd['competitions']}" + rel_text})
     else:
-        # Неподтверждённые реестром записи (значок «из анкеты») — не T2: ни бонуса, ни пометки «подтверждено»
-        extra = len(b.achievements)
+        # заявленное без документа — не T2: ни бонуса, ни пометки «подтверждено» (самоописание не входит в балл)
+        extra = fd["counted"]["declared"]
         reasons.append({"requirement": "Достижения ФСП", "level": "T0" if extra else "none", "status": "neutral",
-                        "text": (f"Заявлено достижений ФСП без подтверждения реестром: {extra} — в ранжирование не входит"
+                        "text": (f"Заявлено достижений ФСП без подтверждения: {extra} — в ранжирование не входит"
                                  if extra else NO_FSP)})  # Я8: одна фраза о без-ФСП (core/origin.py)
     integ = (t or {}).get("integrity")
     if integ:
@@ -379,11 +434,36 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     comps = {"test": test, "stack_required": round(sreq, 3), "stack_desired": round(sdes, 3), "fsp": fsp,
              "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0,
              "grade_status": b.grade_status}
+    if ltr.enabled() and not (weights and "stack_required" in weights):
+        # match-v2: признаки только из теста, заданий и ФСП; балл — линейная модель (ltr_weights.json).
+        # Явно переданные веса формы v1 (ranking.WEIGHTS: исторический бенчмарк v1.x, learn-v1) — формула v1.
+        from app.modules.catalog.seed_data import GRADE_ORDER
+        from app.modules.profiles.facts import GRADE_CUTS
+
+        g = req.get("grade") or b.grade
+        has_test = bool(b.test) and not b.unconfirmed
+        th = t.get("theta") if has_test else None
+        nxt = GRADE_ORDER[GRADE_ORDER.index(g) + 1] if g in GRADE_ORDER and GRADE_ORDER.index(g) + 1 < len(GRADE_ORDER) else None
+        x = {"test": test, "margin": ltr.margin_of(th, GRADE_CUTS.get(g)) if has_test else 0.0,
+             "fsp": fsp, "required": round(sreq, 3), "desired": round(sdes, 3),
+             # задания работодателя: больше половины верно — плюс, меньше — минус, заданий нет — 0 (нейтрально:
+             # проваленное задание не должно поднимать над тем, кто его не получал)
+             "probe": round(2.0 * probe - 1.0, 4) if b.probes_t1 else 0.0,
+             "failed": round(failed_w["Обязательно"], 3), "provisional": 1.0 if b.provisional else 0.0,
+             "in_band": ltr.in_band_of(th, GRADE_CUTS.get(nxt) if nxt else None) if has_test else 0.0,
+             "level_ok": ltr.level_ok_of(th, t.get("se"), GRADE_CUTS.get(g)) if has_test else 0.0}
+        W2 = weights if (weights and "margin" in weights) else ltr.weights()
+        comps.update({"margin": x["margin"], "required": x["required"], "desired": x["desired"],
+                      "failed": x["failed"], "provisional_flag": x["provisional"], "in_band": x["in_band"],
+                      "level_ok": x["level_ok"], "probe_v2": x["probe"],
+                      "contrib": ltr.contributions(x, W2)})
+        return ltr.score(x, W2), comps, reasons
+    W = weights or WEIGHTS  # learn-v1 («учитывать решения компании», по умолчанию выкл.) — matching/learn.py
     if not req.get("stack_required"):
         # Нет обязательного стека — вес переносим на тест
-        comps_w = dict(WEIGHTS, test=WEIGHTS["test"] + WEIGHTS["stack_required"], stack_required=0.0)
+        comps_w = dict(W, test=W["test"] + W["stack_required"], stack_required=0.0)
     else:
-        comps_w = WEIGHTS
+        comps_w = W
     score = sum(comps_w[k] * comps[k] for k in WEIGHTS) - comps["provisional"]
     return round(score, 4), comps, reasons
 
@@ -471,6 +551,11 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
             continue
         if f.get("fsp_only") and not b.achievements:
             continue
+        if f.get("fsp_protocol_only"):  # только с результатом из официального протокола ФСП (ждёт ФСП или подтверждено)
+            from app.modules.matching import fsp_factor
+
+            if not fsp_factor.has_protocol(b.achievements):
+                continue
         if f.get("confirmed_only") and (b.provisional or b.unconfirmed):  # только подтверждённый грейд
             continue
         if f.get("stack_t1") and not all(skill_confirmed(b.skills_t1.get(t)) for t in f["stack_t1"]):
@@ -505,35 +590,49 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     pool = visible_pool(db, category_ids=pool_ids, real_only=real_only)
     ids = [p.user_id for p in pool]
     if not filters.get("confirmed_only"):
-        # без подтверждённого грейда — по заявленной категории, отдельным ярусом ниже (видео №6: показывать, не скрывать);
-        # добор ступенью выше их не касается — только точный уровень
+        # без подтверждённого грейда — отдельным ярусом ниже (видео №6: показывать, не скрывать); по правилу экспертов
+        # (unconfirmed_by_claim) — по направлению из опроса, заявленный грейд не фильтрует и не даёт баллов;
+        # добор ступенью выше их не касается; real_only — рыночный режим (без демо-профилей)
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids, real_only=real_only)]
     bundles = list(load_bundles(db, ids, direction=req.get("direction"), category_ids=pool_ids).values())
-    # Ф2: условия потребности (формат, город — T0) применяются по умолчанию, только сужают выдачу и не дают баллов;
-    # сколько скрыто условиями — в ответе (чип «скрыто условиями: N», отмена — filters.conditions_off)
-    effective = condition_filters(req, filters)
-    before_conditions = len(apply_filters(bundles, {k: v for k, v in filters.items() if k != "conditions_off"}))
-    bundles = apply_filters(bundles, effective)
-    scored = []
-    for b in bundles:
-        s, comps, reasons = score_candidate(b, req)
-        if filters.get("min_score") and s < float(filters["min_score"]):
-            continue
-        scored.append((s, b, comps, reasons))
-    # Ф2: ярус статуса грейда → ярус обязательного (0, 1, ≥ 2 непокрытых; must_have) → балл → рейтинг → ref
-    levels = must_have.declared_levels(db, [b.profile.user_id for _, b, _, _ in scored]) \
-        if must_have.declared_counts() else {}
-    must = must_have.tiers_for([b for _, b, _, _ in scored], req, levels)
-    core = core_skill.assess_pool([b for _, b, _, _ in scored], req)  # Я1: ядро роли (порядок — флаг RANK_CORE_SKILL)
-    if above:
-        # первые места — лучшие точного уровня по прежнему порядку (ярус обязательного — по пулу точного уровня),
-        # дальше — общий порядок, при равном ярусе обязательного точный уровень раньше
-        exact = [x for x in scored if x[1].category_id != above_id]
-        must_e = must_have.tiers_for([b for _, b, _, _ in exact], req, levels)
-        head = [x for x in selection_order(exact, must_e, core)[:grade_above.KEEP] if tier(x[1]) == 0]
-        scored = grade_above.merge(head, selection_order(scored, must, core, above_id=above_id))
+    stack_meta = None
+    if ltr.enabled():
+        # match-v2: условия (формат, город) и стек вакансии — фильтры; место — тест и ФСП (тот же код — в бенчмарке)
+        scored, info = order_bundles(bundles, req, filters, above_id=above_id)
+        effective, before_conditions, stack_meta = info["effective"], info["before_conditions"], info["stack_filter"]
+        n_after_conditions, W = info["after_conditions"], info["weights"]
+        levels = must_have.declared_levels(db, [b.profile.user_id for _, b, _, _ in scored]) \
+            if must_have.declared_counts() else {}
+        must = must_have.tiers_for([b for _, b, _, _ in scored], req, levels)  # только строка объяснения
+        core = core_skill.assess_pool([b for _, b, _, _ in scored], req)  # только строка объяснения
     else:
-        scored = selection_order(scored, must, core)
+        # Ф2: условия потребности (формат, город — T0) применяются по умолчанию, только сужают выдачу и не дают баллов;
+        # сколько скрыто условиями — в ответе (чип «скрыто условиями: N», отмена — filters.conditions_off)
+        effective = condition_filters(req, filters)
+        before_conditions = len(apply_filters(bundles, {k: v for k, v in filters.items() if k != "conditions_off"}))
+        bundles = apply_filters(bundles, effective)
+        scored = []
+        W = filters.get("_weights") or WEIGHTS  # подстроенные по решениям компании (router: learn_from_company)
+        for b in bundles:
+            s, comps, reasons = score_candidate(b, req, W)
+            if filters.get("min_score") and s < float(filters["min_score"]):
+                continue
+            scored.append((s, b, comps, reasons))
+        # Ф2: ярус статуса грейда → ярус обязательного (0, 1, ≥ 2 непокрытых; must_have) → балл → рейтинг → ref
+        levels = must_have.declared_levels(db, [b.profile.user_id for _, b, _, _ in scored]) \
+            if must_have.declared_counts() else {}
+        must = must_have.tiers_for([b for _, b, _, _ in scored], req, levels)
+        core = core_skill.assess_pool([b for _, b, _, _ in scored], req)  # Я1: ядро роли (порядок — флаг RANK_CORE_SKILL)
+        if above:
+            # первые места — лучшие точного уровня по прежнему порядку (ярус обязательного — по пулу точного уровня),
+            # дальше — общий порядок, при равном ярусе обязательного точный уровень раньше
+            exact = [x for x in scored if x[1].category_id != above_id]
+            must_e = must_have.tiers_for([b for _, b, _, _ in exact], req, levels)
+            head = [x for x in selection_order(exact, must_e, core)[:grade_above.KEEP] if tier(x[1]) == 0]
+            scored = grade_above.merge(head, selection_order(scored, must, core, above_id=above_id))
+        else:
+            scored = selection_order(scored, must, core)
+        n_after_conditions = len(bundles)
     results = []
     for rank, (s, b, comps, reasons) in enumerate(scored, start=1):
         if rank > limit and b.profile.public_ref not in include_refs:
@@ -543,9 +642,9 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         item = {"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
                 "reasons": rs, "category_id": b.category_id, "must": must[b.profile.user_id], "core": ci,
                 "grade_status": b.grade_status, "card": card(b, cats)}
-        item["explain"] = explain_mod.build_explain_from_result(item, req, WEIGHTS)
+        item["explain"] = explain_mod.build_explain_from_result(item, req, W)
         results.append(item)
-    explain_mod.annotate_selection_neighbors(results, req, WEIGHTS)
+    explain_mod.annotate_selection_neighbors(results, req, W)
     unc = unconfirmed_counts(db, real_only=real_only)
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)
@@ -554,7 +653,7 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     applied = {k: effective[k] for k in ("work_formats", "work_format", "city") if effective.get(k)}
     conditions = {"applied": applied, "text": conditions_text(applied), "off": bool(filters.get("conditions_off")),
                   "from_need": need_conditions(req)["work_formats"] is not None,
-                  "hidden": max(0, before_conditions - len(bundles))}
+                  "hidden": max(0, before_conditions - n_after_conditions)}
     core_meta = core_meta_of(req, core)
     above_meta = grade_above.meta(above, results)
     confirmed_n = sum(1 for _, b, _, _ in scored if b.grade_status == "confirmed")
@@ -570,17 +669,64 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         if excl
         else None
     )
-    meta = {"categories": recs, "conditions": conditions, "must_first": must_have.enabled(),
+    v2 = ltr.enabled()
+    stack = None
+    if stack_meta is not None:
+        stack = {**stack_meta, "text": ltr.threshold_text(stack_meta),
+                 "tag_titles": [tag_title(t) for t in stack_meta.get("tags") or []]}
+    meta = {"categories": recs, "conditions": conditions, "must_first": must_have.enabled() and not v2,
             "total_matched": len(scored), "core": core_meta, "grade_above": above_meta,
-            "salary_calibration": salary_cal, "rerank_diff": rerank_diff,
-            "t0_in_score": False, "ranking_basis_ru": explain_mod.RANKING_BASIS_RU}
+            "salary_calibration": salary_cal, "rerank_diff": rerank_diff, "stack_filter": stack,
+            "t0_in_score": False,
+            "ranking_basis_ru": explain_mod.RANKING_BASIS_V2_RU if v2 else explain_mod.RANKING_BASIS_RU,
+            "formula": explain_mod.formula_v2(W) if v2 else None}
     return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": algorithm(),
-            "conditions": conditions, "must_first": must_have.enabled(), "core": core_meta, "meta": meta,
+            "conditions": conditions, "must_first": must_have.enabled() and not v2, "core": core_meta, "meta": meta,
+            "stack_filter": stack,
             "grade_above": above_meta, "salary_calibration": salary_cal, "rerank_diff": rerank_diff,
-            "weights": WEIGHTS, "provisional_penalty": PROVISIONAL_PENALTY,
+            "weights": W, "provisional_penalty": PROVISIONAL_PENALTY,
             "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional),
             "unconfirmed_matched": sum(1 for _, b, _, _ in scored if b.unconfirmed),
             "confirmed_matched": confirmed_n}
+
+
+def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: str | None = None,
+                  weights: dict | None = None) -> tuple[list, dict]:
+    """match-v2: порядок подборки — ОДИН код для продукта (build_selection) и бенчмарка (tools/realdata/bench_holdout2).
+
+    1) условия потребности (формат, город) и фильтры работодателя — только сужают выдачу (Ф2);
+    2) стек вакансии — фильтр каскадом (ltr.stack_filter): сначала все обязательные навыки заявлены или подтверждены,
+       затем часть; никто не скрыт;
+    3) порядок: ярус статуса грейда (подтверждён/предварительно → не подтверждён) → ступень фильтра стека → [добор
+       ступенью выше: первые 2 места — лучшие точного уровня, дальше точный уровень раньше] → балл match-v2 (тест,
+       задания, ФСП) → рейтинг → ref.
+    Возвращает ([(балл, Bundle, comps, reasons)], info)."""
+    W = weights or filters.get("_weights") or ltr.weights()
+    effective = condition_filters(req, filters)
+    before_conditions = len(apply_filters(bundles, {k: v for k, v in filters.items() if k != "conditions_off"}))
+    kept = apply_filters(bundles, effective)
+    scored = []
+    for b in kept:
+        s, comps, reasons = score_candidate(b, req, W)
+        if filters.get("min_score") and s < float(filters["min_score"]):
+            continue
+        scored.append((s, b, comps, reasons))
+    scored, sf = ltr.stack_filter(scored, req, filters, first_tier=lambda b: tier(b) == 0)
+    steps = sf.get("steps") or {}
+
+    def key(x):  # ярус статуса грейда → ступень фильтра стека → [добор выше] → балл → рейтинг → ref
+        b = x[1]
+        return (tier(b), steps.get(id(b), 0), int(bool(above_id) and b.category_id == above_id), -x[0],
+                -(b.rating or 0), b.profile.public_ref or "")
+
+    if above_id:
+        exact = [x for x in scored if x[1].category_id != above_id]
+        head = [x for x in sorted(exact, key=key)[:grade_above.KEEP] if tier(x[1]) == 0]
+        scored = grade_above.merge(head, sorted(scored, key=key))
+    else:
+        scored = sorted(scored, key=key)
+    return scored, {"effective": effective, "before_conditions": before_conditions, "after_conditions": len(kept),
+                    "stack_filter": ltr.public_meta(sf), "weights": W}
 
 
 def selection_order(scored: list, must: dict, core: dict, policy: str | None = None, above_id: str | None = None) -> list:
@@ -621,18 +767,22 @@ def core_meta_of(req: dict, core: dict) -> dict | None:
 
 def search(db: Session, *, direction=None, grade=None, category=None, stack: list[str] | None = None,
            stack_level: str = "any", fsp_only: bool = False, limit: int = 50, offset: int = 0,
-           confirmed_only: bool = False, real_only: bool = False) -> dict:
+           confirmed_only: bool = False, real_only: bool = False, fsp_protocol_only: bool = False) -> dict:
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     pool = visible_pool(db, direction=direction, grades=[grade] if grade else None,
                         category_ids=[category] if category else None, real_only=real_only)
     wanted = [category] if category else [c.id for c in cats.values() if c.grade_id == grade] if grade else None
     ids = [p.user_id for p in pool]
-    if not confirmed_only:  # без подтверждённого грейда — по заявленному, ярусом ниже
+    # без подтверждённого грейда — ярусом ниже. Правило экспертов: фильтр грейда/категории — только по тесту, поэтому
+    # при фильтре грейда или категории их нет (проверенного грейда у них нет); без него — по направлению из опроса
+    strict = not unconfirmed_by_claim()
+    if not confirmed_only and not (strict and (grade or category)):
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, direction=direction, grades=[grade] if grade else None,
                                                              category_ids=[category] if category else None,
                                                              real_only=real_only)]
     bundles = list(load_bundles(db, ids, direction=direction, category_ids=wanted).values())
-    f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only, "real_only": real_only}
+    f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only, "real_only": real_only,
+         "fsp_protocol_only": fsp_protocol_only}
     if stack:
         f["stack_t1" if stack_level == "t1" else "stack_any"] = stack
     bundles = apply_filters(bundles, f)

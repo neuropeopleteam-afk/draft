@@ -26,3 +26,5 @@ junit*.xml
 backend/app/modules/validation/data/grade_sweep_raw_last.json
 # кэш голоса постоянных фраз проводника (docker-compose: api → /srv/cache/concierge)
 cache/
+.holdout_disputed.jsonl
+.holdout_run/

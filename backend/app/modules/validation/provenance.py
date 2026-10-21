@@ -66,9 +66,12 @@ KINDS = {"synthetic": "синтетика", "model": "модель, не люд�
 # источник → файл расчёта, чем пересчитать, кто «размечал», какие блоки /validation он кормит
 SOURCES: dict[str, dict] = {
     # А4 (21.10): симуляция продукта — движок стенда на реальном банке; боты «Обмани тест» через движок
-    "product": {"file": "product_sim_test_calibrated.json", "command": "make product-sim", "kind": "synthetic",
+    "product": {"file": "product_sim_final_calibrated.json", "command": "make product-sim", "kind": "synthetic",
                 "title": "Симуляция продукта: вердикт по грейду, точный грейд, повтор (движок стенда, реальный банк)",
                 "sections": ["product-sim"]},
+    "product_st": {"file": "product_sim_st.json", "command": "make product-sim", "kind": "synthetic",
+                   "title": "Симуляция продукта в стандартных условиях (как в аналогичных решениях)",
+                   "sections": ["product-sim-st"]},
     "cheat": {"file": "cheat_bots.json", "command": "make cheat-bots", "kind": "synthetic",
               "title": "«Обмани тест»: боты-стратегии и утечка вариантов через движок", "sections": ["cheat"]},
     "path": {"file": "path_retest.json", "command": "make path-retest", "kind": "synthetic",
