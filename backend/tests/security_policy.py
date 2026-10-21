@@ -416,6 +416,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/fsp-cabinet/cups"): "fsp",
     ("GET", "/api/fsp-cabinet/report"): "fsp",
     ("GET", "/api/fsp-cabinet/regions"): "fsp",  # А2: карта талантов по регионам РФ
+    ("GET", "/api/fsp-cabinet/protocol-claims"): "fsp",  # А2: очередь заявок на сверку протоколов ФСП
+    ("POST", "/api/fsp-cabinet/protocol-claims/{achievement_id}/decide"): "fsp",  # А2: решение по заявке
     ("GET", "/api/fsp-cabinet/export/{section}.csv"): "fsp",
     ("GET", "/api/admin/sus"): "admin",
     ("POST", "/api/admin/passports/{pid}/revoke"): ("admin", {"admin": OK404}),  # feat/passport; паспорт не создаётся
