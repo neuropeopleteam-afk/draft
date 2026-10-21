@@ -1,0 +1,72 @@
+{
+ "generated_at": "2026-10-21T07:12:07+00:00",
+ "code": "c54006180730f44014bb5a2ac84e16995f332237",
+ "set": "набор разработки (414 вакансий hh.ru, 2026-10-10; на нём настраивались словарь, синонимы и классификатор — оптимистично)",
+ "corpus_collected_at": "2026-10-10",
+ "direction_ok": {
+  "value": 0.9372,
+  "k": 388,
+  "n": 414
+ },
+ "grade_ok": {
+  "value": 0.9971,
+  "k": 347,
+  "n": 348
+ },
+ "by_direction": {
+  "analyst": [
+   45,
+   48
+  ],
+  "backend": [
+   46,
+   48
+  ],
+  "data_eng": [
+   41,
+   45
+  ],
+  "data_ml": [
+   41,
+   45
+  ],
+  "devops": [
+   42,
+   47
+  ],
+  "frontend": [
+   45,
+   47
+  ],
+  "mobile": [
+   37,
+   38
+  ],
+  "qa": [
+   48,
+   48
+  ],
+  "security": [
+   43,
+   48
+  ]
+ },
+ "confusion": {
+  "security→None": 4,
+  "data_eng→data_ml": 4,
+  "data_ml→backend": 3,
+  "devops→security": 3,
+  "frontend→backend": 2,
+  "backend→data_ml": 1,
+  "backend→qa": 1,
+  "data_ml→data_eng": 1,
+  "security→backend": 1,
+  "devops→data_ml": 1,
+  "devops→data_eng": 1,
+  "mobile→backend": 1,
+  "analyst→frontend": 1,
+  "analyst→None": 1,
+  "analyst→qa": 1
+ },
+ "recompute": "cd backend && CATALOG_EXT_ENABLED=1 HH_CORPUS_DIR=<сырьё> python ../tools/realdata/hh_parse_eval.py --out ../docs/realdata/hh_dev_parse.json"
+}

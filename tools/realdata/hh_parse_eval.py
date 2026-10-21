@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT / "tools/realdata"))
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--errors", action="store_true")
+    ap.add_argument("--out", help="записать JSON-артефакт (docs/realdata/hh_dev_parse.json)")
     a = ap.parse_args()
     if "holdout" in (os.environ.get("HH_MATCH_CORPUS") or ""):
         sys.exit("отложенный набор здесь не разбирается — только hh_holdout.py run (один раз)")
@@ -66,6 +67,17 @@ def main() -> None:
            "by_direction": {d: [c[f"dir_ok.{d}"], c[f"dir_n.{d}"]] for d in sorted(DIRECTIONS) if c[f"dir_n.{d}"]},
            "confusion": {f"{a}→{b}": n for (a, b), n in conf.most_common()}}
     print(json.dumps(out, ensure_ascii=False, indent=1))
+    if a.out:
+        from datetime import datetime, timezone
+
+        art = {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+               "code": os.environ.get("CODE_COMMIT") or "unknown", "set": "набор разработки (414 вакансий hh.ru, 2026-10-10; "
+               "на нём настраивались словарь, синонимы и классификатор — оптимистично)", "corpus_collected_at": corpus["collected_at"],
+               "direction_ok": {"value": out["direction_ok"][2], "k": out["direction_ok"][0], "n": out["direction_ok"][1]},
+               "grade_ok": {"value": out["grade_ok"][2], "k": out["grade_ok"][0], "n": out["grade_ok"][1]},
+               "by_direction": out["by_direction"], "confusion": out["confusion"],
+               "recompute": "cd backend && CATALOG_EXT_ENABLED=1 HH_CORPUS_DIR=<сырьё> python ../tools/realdata/hh_parse_eval.py --out ../docs/realdata/hh_dev_parse.json"}
+        Path(a.out).write_text(json.dumps(art, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if a.errors:
         for e in errs:
             print("\t".join(str(x) for x in e))
