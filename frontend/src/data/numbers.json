@@ -1,7 +1,7 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T06:55:23Z",
-  "git_commit": "870b71358",
+  "generated_at": "2026-10-21T09:05:14Z",
+  "git_commit": "38f8572e6",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
     "code_and_open_families": 259,
@@ -25,7 +25,1800 @@
     "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
     "code_ref": "backend/assessment_bank/BANK_SYNC.json"
   },
-  "grade_verdict": null,
+  "grade_verdict": {
+    "what": "Симуляция продукта: тот же движок, что на стенде (выбор заданий, остановка, дотестирование, вердикт, второй этап), на реальном банке; кандидаты — модельные, не люди.",
+    "main": {
+      "n": 3000,
+      "verdict_accuracy": {
+        "value": 0.8793,
+        "k": 2638,
+        "n": 3000,
+        "ci95": [
+          0.8672,
+          0.8905
+        ]
+      },
+      "false_confirm_all": {
+        "value": 0.0627,
+        "k": 188,
+        "n": 3000,
+        "ci95": [
+          0.0545,
+          0.0719
+        ]
+      },
+      "false_confirm": {
+        "value": 0.1603,
+        "k": 188,
+        "n": 1173,
+        "ci95": [
+          0.1404,
+          0.1824
+        ]
+      },
+      "false_reject": {
+        "value": 0.0952,
+        "k": 174,
+        "n": 1827,
+        "ci95": [
+          0.0826,
+          0.1096
+        ]
+      },
+      "confident_share": {
+        "value": 0.7783,
+        "k": 2335,
+        "n": 3000,
+        "ci95": [
+          0.7631,
+          0.7928
+        ]
+      },
+      "confident_accuracy": {
+        "value": 0.9409,
+        "k": 2197,
+        "n": 2335,
+        "ci95": [
+          0.9306,
+          0.9498
+        ]
+      },
+      "followup_share": {
+        "value": 0.311,
+        "k": 933,
+        "n": 3000,
+        "ci95": [
+          0.2947,
+          0.3278
+        ]
+      },
+      "exact_grade": {
+        "value": 0.7103,
+        "k": 2131,
+        "n": 3000,
+        "ci95": [
+          0.6938,
+          0.7263
+        ]
+      },
+      "exact_grade_not_above_claim": {
+        "value": 0.8158,
+        "k": 2131,
+        "n": 2612,
+        "ci95": [
+          0.8005,
+          0.8302
+        ]
+      },
+      "gross_error": {
+        "value": 0.0,
+        "k": 0,
+        "n": 3000,
+        "ci95": [
+          0.0,
+          0.0013
+        ]
+      },
+      "minutes_main": {
+        "mean": 34.8,
+        "p90": 52.2
+      },
+      "minutes_total": {
+        "mean": 37.9,
+        "p90": 58.9
+      },
+      "items_main": {
+        "mean": 19.1,
+        "min": 8,
+        "max": 26
+      },
+      "code_open_share": {
+        "mean": 0.315,
+        "share_sessions_ge_one_third": 0.2787
+      },
+      "integrity_low_share_honest": {
+        "value": 0.1477,
+        "k": 443,
+        "n": 3000,
+        "ci95": [
+          0.1354,
+          0.1608
+        ]
+      },
+      "engine_errors": 0,
+      "by_claim": {
+        "intern": {
+          "n": 704,
+          "verdict_accuracy_final": {
+            "k": 606,
+            "n": 704,
+            "value": 0.8608,
+            "ci95": [
+              0.8333,
+              0.8844
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 77,
+            "n": 287,
+            "value": 0.2683,
+            "ci95": [
+              0.2203,
+              0.3224
+            ]
+          },
+          "confident_share_main": {
+            "k": 500,
+            "n": 704,
+            "value": 0.7102,
+            "ci95": [
+              0.6756,
+              0.7425
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 472,
+            "n": 500,
+            "value": 0.944,
+            "ci95": [
+              0.9203,
+              0.961
+            ]
+          },
+          "exact_grade_final": {
+            "k": 462,
+            "n": 704,
+            "value": 0.6562,
+            "ci95": [
+              0.6204,
+              0.6904
+            ]
+          },
+          "minutes_total": {
+            "mean": 29.9,
+            "p90": 48.9
+          }
+        },
+        "junior": {
+          "n": 729,
+          "verdict_accuracy_final": {
+            "k": 650,
+            "n": 729,
+            "value": 0.8916,
+            "ci95": [
+              0.867,
+              0.9122
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 45,
+            "n": 147,
+            "value": 0.3061,
+            "ci95": [
+              0.2373,
+              0.3848
+            ]
+          },
+          "confident_share_main": {
+            "k": 584,
+            "n": 729,
+            "value": 0.8011,
+            "ci95": [
+              0.7706,
+              0.8285
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 554,
+            "n": 584,
+            "value": 0.9486,
+            "ci95": [
+              0.9276,
+              0.9638
+            ]
+          },
+          "exact_grade_final": {
+            "k": 470,
+            "n": 729,
+            "value": 0.6447,
+            "ci95": [
+              0.6093,
+              0.6786
+            ]
+          },
+          "minutes_total": {
+            "mean": 38.5,
+            "p90": 59.0
+          }
+        },
+        "middle": {
+          "n": 746,
+          "verdict_accuracy_final": {
+            "k": 663,
+            "n": 746,
+            "value": 0.8887,
+            "ci95": [
+              0.8642,
+              0.9093
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 40,
+            "n": 267,
+            "value": 0.1498,
+            "ci95": [
+              0.112,
+              0.1976
+            ]
+          },
+          "confident_share_main": {
+            "k": 590,
+            "n": 746,
+            "value": 0.7909,
+            "ci95": [
+              0.7602,
+              0.8185
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 556,
+            "n": 590,
+            "value": 0.9424,
+            "ci95": [
+              0.9206,
+              0.9585
+            ]
+          },
+          "exact_grade_final": {
+            "k": 568,
+            "n": 746,
+            "value": 0.7614,
+            "ci95": [
+              0.7295,
+              0.7906
+            ]
+          },
+          "minutes_total": {
+            "mean": 37.3,
+            "p90": 55.0
+          }
+        },
+        "senior": {
+          "n": 504,
+          "verdict_accuracy_final": {
+            "k": 433,
+            "n": 504,
+            "value": 0.8591,
+            "ci95": [
+              0.826,
+              0.8868
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 21,
+            "n": 268,
+            "value": 0.0784,
+            "ci95": [
+              0.0518,
+              0.1168
+            ]
+          },
+          "confident_share_main": {
+            "k": 385,
+            "n": 504,
+            "value": 0.7639,
+            "ci95": [
+              0.7249,
+              0.7989
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 355,
+            "n": 385,
+            "value": 0.9221,
+            "ci95": [
+              0.8909,
+              0.9449
+            ]
+          },
+          "exact_grade_final": {
+            "k": 390,
+            "n": 504,
+            "value": 0.7738,
+            "ci95": [
+              0.7353,
+              0.8082
+            ]
+          },
+          "minutes_total": {
+            "mean": 40.9,
+            "p90": 60.8
+          }
+        },
+        "lead": {
+          "n": 250,
+          "verdict_accuracy_final": {
+            "k": 225,
+            "n": 250,
+            "value": 0.9,
+            "ci95": [
+              0.8565,
+              0.9313
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 4,
+            "n": 157,
+            "value": 0.0255,
+            "ci95": [
+              0.01,
+              0.0637
+            ]
+          },
+          "confident_share_main": {
+            "k": 215,
+            "n": 250,
+            "value": 0.86,
+            "ci95": [
+              0.8115,
+              0.8976
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 202,
+            "n": 215,
+            "value": 0.9395,
+            "ci95": [
+              0.8993,
+              0.9643
+            ]
+          },
+          "exact_grade_final": {
+            "k": 192,
+            "n": 250,
+            "value": 0.768,
+            "ci95": [
+              0.7119,
+              0.816
+            ]
+          },
+          "minutes_total": {
+            "mean": 49.2,
+            "p90": 71.7
+          }
+        },
+        "principal": {
+          "n": 67,
+          "verdict_accuracy_final": {
+            "k": 61,
+            "n": 67,
+            "value": 0.9104,
+            "ci95": [
+              0.8181,
+              0.9583
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 1,
+            "n": 47,
+            "value": 0.0213,
+            "ci95": [
+              0.0038,
+              0.1111
+            ]
+          },
+          "confident_share_main": {
+            "k": 61,
+            "n": 67,
+            "value": 0.9104,
+            "ci95": [
+              0.8181,
+              0.9583
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 58,
+            "n": 61,
+            "value": 0.9508,
+            "ci95": [
+              0.8651,
+              0.9831
+            ]
+          },
+          "exact_grade_final": {
+            "k": 49,
+            "n": 67,
+            "value": 0.7313,
+            "ci95": [
+              0.6148,
+              0.8228
+            ]
+          },
+          "minutes_total": {
+            "mean": 54.6,
+            "p90": 83.2
+          }
+        }
+      },
+      "world": "calibrated",
+      "seeds": [
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210
+      ],
+      "bank_families": 1504,
+      "bank_commit": "603474f",
+      "bank_content_hash": "82a05fdbacf00481",
+      "bank_synced_at": "2026-10-20",
+      "settings": {
+        "assessment_ai_mark": false,
+        "assessment_classify_z": 1.28,
+        "assessment_code_quota_ext": true,
+        "assessment_confirm_level": 0.8,
+        "assessment_engine": "bank",
+        "assessment_exposure": "sympson_hetter",
+        "assessment_express_item_time_s": 240,
+        "assessment_express_max_items": 7,
+        "assessment_express_max_minutes": 20,
+        "assessment_express_min_items": 5,
+        "assessment_express_senior_item_time_s": 360,
+        "assessment_express_senior_max_items": 12,
+        "assessment_express_senior_max_minutes": 45,
+        "assessment_express_senior_min_items": 8,
+        "assessment_extension_items": 6,
+        "assessment_extension_minutes": 20,
+        "assessment_extension_own_first": true,
+        "assessment_guessing_3pl": true,
+        "assessment_max_items": 20,
+        "assessment_max_minutes": 60,
+        "assessment_max_open_answer": 1,
+        "assessment_max_open_book": 2,
+        "assessment_min_items": 8,
+        "assessment_partial_credit_enabled": false,
+        "assessment_partial_credit_select": true,
+        "assessment_se_target": 0.35,
+        "assessment_select_at": "cut",
+        "assessment_stop_rule": "classification",
+        "assessment_subpool_quarantine": "",
+        "assessment_subpools": 2,
+        "assessment_two_stage_above": 0.0,
+        "assessment_two_stage_confirm": 0.5,
+        "assessment_two_stage_confirm_up": 0.9,
+        "assessment_two_stage_enabled": true,
+        "assessment_two_stage_floor": false,
+        "assessment_two_stage_items": 8,
+        "assessment_two_stage_level": 0.8,
+        "assessment_two_stage_minutes": 15,
+        "assessment_weak_exclude": false,
+        "grades_ext_enabled": true,
+        "grades_ext_max_se": 0.6,
+        "grades_ext_min_items": 8,
+        "grades_ext_min_own": 1,
+        "grades_ext_min_total": 3,
+        "grades_ext_no_subpool": true,
+        "grades_ext_preliminary": true,
+        "grades_ext_prior_sd": 1.5,
+        "grades_ext_refine_item_time_s": 420.0,
+        "grades_ext_refine_items": 10,
+        "grades_ext_refine_minutes": 25
+      },
+      "git_commit": null,
+      "date": "2026-10-21",
+      "command": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+      "retest": {
+        "n_pairs": 3000,
+        "kappa_w": 0.9333,
+        "exact_agreement": {
+          "value": 0.7953,
+          "k": 2386,
+          "n": 3000,
+          "ci95": [
+            0.7805,
+            0.8094
+          ]
+        },
+        "verdict_agreement": {
+          "value": 0.838,
+          "k": 2514,
+          "n": 3000,
+          "ci95": [
+            0.8244,
+            0.8508
+          ]
+        },
+        "shared_families_mean": 0.0
+      }
+    },
+    "misspec": {
+      "n": 2000,
+      "verdict_accuracy": {
+        "value": 0.8665,
+        "k": 1733,
+        "n": 2000,
+        "ci95": [
+          0.8509,
+          0.8807
+        ]
+      },
+      "false_confirm_all": {
+        "value": 0.0805,
+        "k": 161,
+        "n": 2000,
+        "ci95": [
+          0.0694,
+          0.0932
+        ]
+      },
+      "false_confirm": {
+        "value": 0.2035,
+        "k": 161,
+        "n": 791,
+        "ci95": [
+          0.1769,
+          0.233
+        ]
+      },
+      "false_reject": {
+        "value": 0.0877,
+        "k": 106,
+        "n": 1209,
+        "ci95": [
+          0.073,
+          0.105
+        ]
+      },
+      "confident_share": {
+        "value": 0.7665,
+        "k": 1533,
+        "n": 2000,
+        "ci95": [
+          0.7475,
+          0.7845
+        ]
+      },
+      "confident_accuracy": {
+        "value": 0.9159,
+        "k": 1404,
+        "n": 1533,
+        "ci95": [
+          0.9009,
+          0.9287
+        ]
+      },
+      "followup_share": {
+        "value": 0.3185,
+        "k": 637,
+        "n": 2000,
+        "ci95": [
+          0.2984,
+          0.3393
+        ]
+      },
+      "exact_grade": {
+        "value": 0.7015,
+        "k": 1403,
+        "n": 2000,
+        "ci95": [
+          0.6811,
+          0.7212
+        ]
+      },
+      "exact_grade_not_above_claim": {
+        "value": 0.8045,
+        "k": 1403,
+        "n": 1744,
+        "ci95": [
+          0.7852,
+          0.8224
+        ]
+      },
+      "gross_error": {
+        "value": 0.0005,
+        "k": 1,
+        "n": 2000,
+        "ci95": [
+          0.0001,
+          0.0028
+        ]
+      },
+      "minutes_main": {
+        "mean": 35.4,
+        "p90": 53.4
+      },
+      "minutes_total": {
+        "mean": 38.6,
+        "p90": 60.1
+      },
+      "items_main": {
+        "mean": 19.3,
+        "min": 8,
+        "max": 26
+      },
+      "code_open_share": {
+        "mean": 0.315,
+        "share_sessions_ge_one_third": 0.28
+      },
+      "integrity_low_share_honest": {
+        "value": 0.1665,
+        "k": 333,
+        "n": 2000,
+        "ci95": [
+          0.1508,
+          0.1835
+        ]
+      },
+      "engine_errors": 0,
+      "by_claim": {
+        "intern": {
+          "n": 471,
+          "verdict_accuracy_final": {
+            "k": 392,
+            "n": 471,
+            "value": 0.8323,
+            "ci95": [
+              0.7959,
+              0.8633
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 72,
+            "n": 196,
+            "value": 0.3673,
+            "ci95": [
+              0.303,
+              0.4368
+            ]
+          },
+          "confident_share_main": {
+            "k": 329,
+            "n": 471,
+            "value": 0.6985,
+            "ci95": [
+              0.6556,
+              0.7382
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 295,
+            "n": 329,
+            "value": 0.8967,
+            "ci95": [
+              0.8591,
+              0.9251
+            ]
+          },
+          "exact_grade_final": {
+            "k": 292,
+            "n": 471,
+            "value": 0.62,
+            "ci95": [
+              0.5753,
+              0.6627
+            ]
+          },
+          "minutes_total": {
+            "mean": 31.1,
+            "p90": 52.7
+          }
+        },
+        "junior": {
+          "n": 478,
+          "verdict_accuracy_final": {
+            "k": 412,
+            "n": 478,
+            "value": 0.8619,
+            "ci95": [
+              0.8281,
+              0.89
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 43,
+            "n": 104,
+            "value": 0.4135,
+            "ci95": [
+              0.3235,
+              0.5095
+            ]
+          },
+          "confident_share_main": {
+            "k": 383,
+            "n": 478,
+            "value": 0.8013,
+            "ci95": [
+              0.7631,
+              0.8346
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 351,
+            "n": 383,
+            "value": 0.9164,
+            "ci95": [
+              0.8844,
+              0.9402
+            ]
+          },
+          "exact_grade_final": {
+            "k": 307,
+            "n": 478,
+            "value": 0.6423,
+            "ci95": [
+              0.5983,
+              0.6839
+            ]
+          },
+          "minutes_total": {
+            "mean": 38.1,
+            "p90": 56.1
+          }
+        },
+        "middle": {
+          "n": 491,
+          "verdict_accuracy_final": {
+            "k": 439,
+            "n": 491,
+            "value": 0.8941,
+            "ci95": [
+              0.8637,
+              0.9183
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 30,
+            "n": 179,
+            "value": 0.1676,
+            "ci95": [
+              0.12,
+              0.2292
+            ]
+          },
+          "confident_share_main": {
+            "k": 382,
+            "n": 491,
+            "value": 0.778,
+            "ci95": [
+              0.7392,
+              0.8125
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 353,
+            "n": 382,
+            "value": 0.9241,
+            "ci95": [
+              0.8931,
+              0.9466
+            ]
+          },
+          "exact_grade_final": {
+            "k": 376,
+            "n": 491,
+            "value": 0.7658,
+            "ci95": [
+              0.7263,
+              0.8011
+            ]
+          },
+          "minutes_total": {
+            "mean": 38.2,
+            "p90": 57.7
+          }
+        },
+        "senior": {
+          "n": 349,
+          "verdict_accuracy_final": {
+            "k": 305,
+            "n": 349,
+            "value": 0.8739,
+            "ci95": [
+              0.835,
+              0.9047
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 12,
+            "n": 179,
+            "value": 0.067,
+            "ci95": [
+              0.0388,
+              0.1135
+            ]
+          },
+          "confident_share_main": {
+            "k": 271,
+            "n": 349,
+            "value": 0.7765,
+            "ci95": [
+              0.7299,
+              0.8171
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 249,
+            "n": 271,
+            "value": 0.9188,
+            "ci95": [
+              0.8801,
+              0.9458
+            ]
+          },
+          "exact_grade_final": {
+            "k": 277,
+            "n": 349,
+            "value": 0.7937,
+            "ci95": [
+              0.7482,
+              0.8328
+            ]
+          },
+          "minutes_total": {
+            "mean": 40.4,
+            "p90": 59.8
+          }
+        },
+        "lead": {
+          "n": 164,
+          "verdict_accuracy_final": {
+            "k": 145,
+            "n": 164,
+            "value": 0.8841,
+            "ci95": [
+              0.8261,
+              0.9246
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 2,
+            "n": 101,
+            "value": 0.0198,
+            "ci95": [
+              0.0054,
+              0.0693
+            ]
+          },
+          "confident_share_main": {
+            "k": 130,
+            "n": 164,
+            "value": 0.7927,
+            "ci95": [
+              0.7243,
+              0.8477
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 121,
+            "n": 130,
+            "value": 0.9308,
+            "ci95": [
+              0.8737,
+              0.9632
+            ]
+          },
+          "exact_grade_final": {
+            "k": 118,
+            "n": 164,
+            "value": 0.7195,
+            "ci95": [
+              0.6463,
+              0.7826
+            ]
+          },
+          "minutes_total": {
+            "mean": 52.1,
+            "p90": 74.9
+          }
+        },
+        "principal": {
+          "n": 47,
+          "verdict_accuracy_final": {
+            "k": 40,
+            "n": 47,
+            "value": 0.8511,
+            "ci95": [
+              0.7231,
+              0.9259
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 2,
+            "n": 32,
+            "value": 0.0625,
+            "ci95": [
+              0.0173,
+              0.2015
+            ]
+          },
+          "confident_share_main": {
+            "k": 38,
+            "n": 47,
+            "value": 0.8085,
+            "ci95": [
+              0.6746,
+              0.8958
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 35,
+            "n": 38,
+            "value": 0.9211,
+            "ci95": [
+              0.792,
+              0.9728
+            ]
+          },
+          "exact_grade_final": {
+            "k": 33,
+            "n": 47,
+            "value": 0.7021,
+            "ci95": [
+              0.5602,
+              0.8135
+            ]
+          },
+          "minutes_total": {
+            "mean": 61.7,
+            "p90": 81.5
+          }
+        }
+      },
+      "world": "misspec",
+      "seeds": [
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210
+      ],
+      "bank_families": 1504,
+      "bank_commit": "603474f",
+      "bank_content_hash": "82a05fdbacf00481",
+      "bank_synced_at": "2026-10-20",
+      "settings": {
+        "assessment_ai_mark": false,
+        "assessment_classify_z": 1.28,
+        "assessment_code_quota_ext": true,
+        "assessment_confirm_level": 0.8,
+        "assessment_engine": "bank",
+        "assessment_exposure": "sympson_hetter",
+        "assessment_express_item_time_s": 240,
+        "assessment_express_max_items": 7,
+        "assessment_express_max_minutes": 20,
+        "assessment_express_min_items": 5,
+        "assessment_express_senior_item_time_s": 360,
+        "assessment_express_senior_max_items": 12,
+        "assessment_express_senior_max_minutes": 45,
+        "assessment_express_senior_min_items": 8,
+        "assessment_extension_items": 6,
+        "assessment_extension_minutes": 20,
+        "assessment_extension_own_first": true,
+        "assessment_guessing_3pl": true,
+        "assessment_max_items": 20,
+        "assessment_max_minutes": 60,
+        "assessment_max_open_answer": 1,
+        "assessment_max_open_book": 2,
+        "assessment_min_items": 8,
+        "assessment_partial_credit_enabled": false,
+        "assessment_partial_credit_select": true,
+        "assessment_se_target": 0.35,
+        "assessment_select_at": "cut",
+        "assessment_stop_rule": "classification",
+        "assessment_subpool_quarantine": "",
+        "assessment_subpools": 2,
+        "assessment_two_stage_above": 0.0,
+        "assessment_two_stage_confirm": 0.5,
+        "assessment_two_stage_confirm_up": 0.9,
+        "assessment_two_stage_enabled": true,
+        "assessment_two_stage_floor": false,
+        "assessment_two_stage_items": 8,
+        "assessment_two_stage_level": 0.8,
+        "assessment_two_stage_minutes": 15,
+        "assessment_weak_exclude": false,
+        "grades_ext_enabled": true,
+        "grades_ext_max_se": 0.6,
+        "grades_ext_min_items": 8,
+        "grades_ext_min_own": 1,
+        "grades_ext_min_total": 3,
+        "grades_ext_no_subpool": true,
+        "grades_ext_preliminary": true,
+        "grades_ext_prior_sd": 1.5,
+        "grades_ext_refine_item_time_s": 420.0,
+        "grades_ext_refine_items": 10,
+        "grades_ext_refine_minutes": 25
+      },
+      "git_commit": null,
+      "date": "2026-10-21",
+      "command": "cd backend && python -m app.modules.validation.product_sim --phase test --world misspec --n 2000 --out /w/out/product_sim_test_misspec.json"
+    },
+    "rater_noise": {
+      "n": 1500,
+      "verdict_accuracy": {
+        "value": 0.8853,
+        "k": 1328,
+        "n": 1500,
+        "ci95": [
+          0.8682,
+          0.9005
+        ]
+      },
+      "false_confirm_all": {
+        "value": 0.0593,
+        "k": 89,
+        "n": 1500,
+        "ci95": [
+          0.0485,
+          0.0725
+        ]
+      },
+      "false_confirm": {
+        "value": 0.1501,
+        "k": 89,
+        "n": 593,
+        "ci95": [
+          0.1236,
+          0.1811
+        ]
+      },
+      "false_reject": {
+        "value": 0.0915,
+        "k": 83,
+        "n": 907,
+        "ci95": [
+          0.0744,
+          0.112
+        ]
+      },
+      "confident_share": {
+        "value": 0.7587,
+        "k": 1138,
+        "n": 1500,
+        "ci95": [
+          0.7364,
+          0.7796
+        ]
+      },
+      "confident_accuracy": {
+        "value": 0.9473,
+        "k": 1078,
+        "n": 1138,
+        "ci95": [
+          0.9327,
+          0.9588
+        ]
+      },
+      "followup_share": {
+        "value": 0.326,
+        "k": 489,
+        "n": 1500,
+        "ci95": [
+          0.3027,
+          0.3501
+        ]
+      },
+      "exact_grade": {
+        "value": 0.724,
+        "k": 1086,
+        "n": 1500,
+        "ci95": [
+          0.7008,
+          0.746
+        ]
+      },
+      "exact_grade_not_above_claim": {
+        "value": 0.8322,
+        "k": 1086,
+        "n": 1305,
+        "ci95": [
+          0.8109,
+          0.8515
+        ]
+      },
+      "gross_error": {
+        "value": 0.0,
+        "k": 0,
+        "n": 1500,
+        "ci95": [
+          0.0,
+          0.0026
+        ]
+      },
+      "minutes_main": {
+        "mean": 34.9,
+        "p90": 53.3
+      },
+      "minutes_total": {
+        "mean": 38.3,
+        "p90": 59.3
+      },
+      "items_main": {
+        "mean": 19.0,
+        "min": 8,
+        "max": 26
+      },
+      "code_open_share": {
+        "mean": 0.315,
+        "share_sessions_ge_one_third": 0.2813
+      },
+      "integrity_low_share_honest": {
+        "value": 0.1567,
+        "k": 235,
+        "n": 1500,
+        "ci95": [
+          0.1392,
+          0.1759
+        ]
+      },
+      "engine_errors": 0,
+      "by_claim": {
+        "intern": {
+          "n": 362,
+          "verdict_accuracy_final": {
+            "k": 305,
+            "n": 362,
+            "value": 0.8425,
+            "ci95": [
+              0.8014,
+              0.8764
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 47,
+            "n": 153,
+            "value": 0.3072,
+            "ci95": [
+              0.2396,
+              0.3843
+            ]
+          },
+          "confident_share_main": {
+            "k": 258,
+            "n": 362,
+            "value": 0.7127,
+            "ci95": [
+              0.6641,
+              0.7569
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 241,
+            "n": 258,
+            "value": 0.9341,
+            "ci95": [
+              0.897,
+              0.9585
+            ]
+          },
+          "exact_grade_final": {
+            "k": 226,
+            "n": 362,
+            "value": 0.6243,
+            "ci95": [
+              0.5734,
+              0.6726
+            ]
+          },
+          "minutes_total": {
+            "mean": 29.6,
+            "p90": 49.0
+          }
+        },
+        "junior": {
+          "n": 337,
+          "verdict_accuracy_final": {
+            "k": 298,
+            "n": 337,
+            "value": 0.8843,
+            "ci95": [
+              0.8457,
+              0.9142
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 20,
+            "n": 72,
+            "value": 0.2778,
+            "ci95": [
+              0.1876,
+              0.3905
+            ]
+          },
+          "confident_share_main": {
+            "k": 254,
+            "n": 337,
+            "value": 0.7537,
+            "ci95": [
+              0.705,
+              0.7967
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 240,
+            "n": 254,
+            "value": 0.9449,
+            "ci95": [
+              0.9096,
+              0.9669
+            ]
+          },
+          "exact_grade_final": {
+            "k": 231,
+            "n": 337,
+            "value": 0.6855,
+            "ci95": [
+              0.634,
+              0.7327
+            ]
+          },
+          "minutes_total": {
+            "mean": 39.1,
+            "p90": 59.0
+          }
+        },
+        "middle": {
+          "n": 392,
+          "verdict_accuracy_final": {
+            "k": 358,
+            "n": 392,
+            "value": 0.9133,
+            "ci95": [
+              0.8812,
+              0.9373
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 14,
+            "n": 145,
+            "value": 0.0966,
+            "ci95": [
+              0.0584,
+              0.1555
+            ]
+          },
+          "confident_share_main": {
+            "k": 309,
+            "n": 392,
+            "value": 0.7883,
+            "ci95": [
+              0.7451,
+              0.8258
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 299,
+            "n": 309,
+            "value": 0.9676,
+            "ci95": [
+              0.9415,
+              0.9823
+            ]
+          },
+          "exact_grade_final": {
+            "k": 306,
+            "n": 392,
+            "value": 0.7806,
+            "ci95": [
+              0.737,
+              0.8187
+            ]
+          },
+          "minutes_total": {
+            "mean": 38.0,
+            "p90": 57.6
+          }
+        },
+        "senior": {
+          "n": 257,
+          "verdict_accuracy_final": {
+            "k": 230,
+            "n": 257,
+            "value": 0.8949,
+            "ci95": [
+              0.8515,
+              0.9268
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 7,
+            "n": 127,
+            "value": 0.0551,
+            "ci95": [
+              0.027,
+              0.1094
+            ]
+          },
+          "confident_share_main": {
+            "k": 200,
+            "n": 257,
+            "value": 0.7782,
+            "ci95": [
+              0.7235,
+              0.8247
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 187,
+            "n": 200,
+            "value": 0.935,
+            "ci95": [
+              0.892,
+              0.9616
+            ]
+          },
+          "exact_grade_final": {
+            "k": 205,
+            "n": 257,
+            "value": 0.7977,
+            "ci95": [
+              0.7443,
+              0.8422
+            ]
+          },
+          "minutes_total": {
+            "mean": 41.0,
+            "p90": 62.3
+          }
+        },
+        "lead": {
+          "n": 120,
+          "verdict_accuracy_final": {
+            "k": 108,
+            "n": 120,
+            "value": 0.9,
+            "ci95": [
+              0.8333,
+              0.9419
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 0,
+            "n": 75,
+            "value": 0.0,
+            "ci95": [
+              0.0,
+              0.0487
+            ]
+          },
+          "confident_share_main": {
+            "k": 89,
+            "n": 120,
+            "value": 0.7417,
+            "ci95": [
+              0.6567,
+              0.8116
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 84,
+            "n": 89,
+            "value": 0.9438,
+            "ci95": [
+              0.8751,
+              0.9758
+            ]
+          },
+          "exact_grade_final": {
+            "k": 94,
+            "n": 120,
+            "value": 0.7833,
+            "ci95": [
+              0.7015,
+              0.8476
+            ]
+          },
+          "minutes_total": {
+            "mean": 52.4,
+            "p90": 75.8
+          }
+        },
+        "principal": {
+          "n": 32,
+          "verdict_accuracy_final": {
+            "k": 29,
+            "n": 32,
+            "value": 0.9062,
+            "ci95": [
+              0.7578,
+              0.9676
+            ]
+          },
+          "false_confirm_among_overclaim": {
+            "k": 1,
+            "n": 21,
+            "value": 0.0476,
+            "ci95": [
+              0.0085,
+              0.2267
+            ]
+          },
+          "confident_share_main": {
+            "k": 28,
+            "n": 32,
+            "value": 0.875,
+            "ci95": [
+              0.7193,
+              0.9503
+            ]
+          },
+          "confident_accuracy_main": {
+            "k": 27,
+            "n": 28,
+            "value": 0.9643,
+            "ci95": [
+              0.8229,
+              0.9937
+            ]
+          },
+          "exact_grade_final": {
+            "k": 24,
+            "n": 32,
+            "value": 0.75,
+            "ci95": [
+              0.5789,
+              0.8675
+            ]
+          },
+          "minutes_total": {
+            "mean": 56.9,
+            "p90": 81.3
+          }
+        }
+      },
+      "world": "calibrated",
+      "seeds": [
+        2201,
+        2202,
+        2203,
+        2204,
+        2205,
+        2206,
+        2207,
+        2208,
+        2209,
+        2210
+      ],
+      "bank_families": 1504,
+      "bank_commit": "603474f",
+      "bank_content_hash": "82a05fdbacf00481",
+      "bank_synced_at": "2026-10-20",
+      "settings": {
+        "assessment_ai_mark": false,
+        "assessment_classify_z": 1.28,
+        "assessment_code_quota_ext": true,
+        "assessment_confirm_level": 0.8,
+        "assessment_engine": "bank",
+        "assessment_exposure": "sympson_hetter",
+        "assessment_express_item_time_s": 240,
+        "assessment_express_max_items": 7,
+        "assessment_express_max_minutes": 20,
+        "assessment_express_min_items": 5,
+        "assessment_express_senior_item_time_s": 360,
+        "assessment_express_senior_max_items": 12,
+        "assessment_express_senior_max_minutes": 45,
+        "assessment_express_senior_min_items": 8,
+        "assessment_extension_items": 6,
+        "assessment_extension_minutes": 20,
+        "assessment_extension_own_first": true,
+        "assessment_guessing_3pl": true,
+        "assessment_max_items": 20,
+        "assessment_max_minutes": 60,
+        "assessment_max_open_answer": 1,
+        "assessment_max_open_book": 2,
+        "assessment_min_items": 8,
+        "assessment_partial_credit_enabled": false,
+        "assessment_partial_credit_select": true,
+        "assessment_se_target": 0.35,
+        "assessment_select_at": "cut",
+        "assessment_stop_rule": "classification",
+        "assessment_subpool_quarantine": "",
+        "assessment_subpools": 2,
+        "assessment_two_stage_above": 0.0,
+        "assessment_two_stage_confirm": 0.5,
+        "assessment_two_stage_confirm_up": 0.9,
+        "assessment_two_stage_enabled": true,
+        "assessment_two_stage_floor": false,
+        "assessment_two_stage_items": 8,
+        "assessment_two_stage_level": 0.8,
+        "assessment_two_stage_minutes": 15,
+        "assessment_weak_exclude": false,
+        "grades_ext_enabled": true,
+        "grades_ext_max_se": 0.6,
+        "grades_ext_min_items": 8,
+        "grades_ext_min_own": 1,
+        "grades_ext_min_total": 3,
+        "grades_ext_no_subpool": true,
+        "grades_ext_preliminary": true,
+        "grades_ext_prior_sd": 1.5,
+        "grades_ext_refine_item_time_s": 420.0,
+        "grades_ext_refine_items": 10,
+        "grades_ext_refine_minutes": 25
+      },
+      "git_commit": null,
+      "date": "2026-10-21",
+      "command": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 1500 --rater-noise 0.1 --out /w/out/product_sim_test_rater_noise.json",
+      "noise": 0.1
+    },
+    "selection": {
+      "rule": "max точность итогового вердикта; p90 основной ≤ 60 мин, всего ≤ 85; при равенстве (0,5 п.п.) — меньше ложных подтверждений",
+      "phase": "train (TRAIN_SEEDS)",
+      "rounds_note": "раунд 1 — мир без угадывания (выбрано C8); раунд 2 — поправка 21.10: мир с угадыванием, строгий критерий подтверждения (сравнение только внутри раунда)",
+      "rows": [
+        {
+          "config": "C0",
+          "desc": "настройки стенда",
+          "env": {},
+          "n": 800,
+          "admissible": true,
+          "verdict_accuracy": 0.9075,
+          "false_confirm": 0.1366,
+          "false_reject": 0.0628,
+          "confident_share": 0.685,
+          "exact_grade": 0.7612,
+          "minutes_main_p90": 34.7,
+          "minutes_total_p90": 38.5,
+          "minutes_total_mean": 24.5,
+          "code_open_share": 0.215,
+          "round": 1
+        },
+        {
+          "config": "C1",
+          "desc": "квота практических заданий и в дотестировании",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true"
+          },
+          "n": 800,
+          "admissible": true,
+          "verdict_accuracy": 0.9125,
+          "false_confirm": 0.0994,
+          "false_reject": 0.0795,
+          "confident_share": 0.6775,
+          "exact_grade": 0.765,
+          "minutes_main_p90": 36.8,
+          "minutes_total_p90": 42.0,
+          "minutes_total_mean": 26.5,
+          "code_open_share": 0.296,
+          "round": 1
+        },
+        {
+          "config": "C2",
+          "desc": "C1 + порог подтверждения 0,8",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true",
+            "ASSESSMENT_CONFIRM_LEVEL": "0.8"
+          },
+          "n": 800,
+          "admissible": true,
+          "verdict_accuracy": 0.9125,
+          "false_confirm": 0.0994,
+          "false_reject": 0.0795,
+          "confident_share": 0.6775,
+          "exact_grade": 0.765,
+          "minutes_main_p90": 36.8,
+          "minutes_total_p90": 42.0,
+          "minutes_total_mean": 26.5,
+          "code_open_share": 0.296,
+          "round": 1
+        },
+        {
+          "config": "C3",
+          "desc": "C2 + z 1,64",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true",
+            "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+            "ASSESSMENT_CLASSIFY_Z": "1.64"
+          },
+          "n": 800,
+          "admissible": true,
+          "verdict_accuracy": 0.9062,
+          "false_confirm": 0.1025,
+          "false_reject": 0.0879,
+          "confident_share": 0.65,
+          "exact_grade": 0.7662,
+          "minutes_main_p90": 39.9,
+          "minutes_total_p90": 45.6,
+          "minutes_total_mean": 30.7,
+          "code_open_share": 0.305,
+          "round": 1
+        },
+        {
+          "config": "C4",
+          "desc": "C2 + SE-стоп 0,25",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true",
+            "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+            "ASSESSMENT_SE_TARGET": "0.25"
+          },
+          "n": 800,
+          "admissible": true,
+          "verdict_accuracy": 0.8925,
+          "false_confirm": 0.1366,
+          "false_reject": 0.0879,
+          "confident_share": 0.7225,
+          "exact_grade": 0.76,
+          "minutes_main_p90": 47.7,
+          "minutes_total_p90": 53.1,
+          "minutes_total_mean": 31.5,
+          "code_open_share": 0.306,
+          "round": 1
+        },
+        {
+          "config": "C5",
+          "desc": "C2 + до 20 заданий",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true",
+            "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+            "ASSESSMENT_MAX_ITEMS": "20"
+          },
+          "n": 800,
+          "admissible": true,
+          "verdict_accuracy": 0.9213,
+          "false_confirm": 0.0901,
+          "false_reject": 0.0711,
+          "confident_share": 0.6625,
+          "exact_grade": 0.7738,
+          "minutes_main_p90": 36.3,
+          "minutes_total_p90": 41.9,
+          "minutes_total_mean": 26.4,
+          "code_open_share": 0.295,
+          "round": 1
+        },
+        {
+          "config": "C6",
+          "desc": "C2 + порог второго этапа 0,5",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true",
+            "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+            "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5"
+          },
+          "n": 800,
+          "admissible": true,
+          "verdict_accuracy": 0.91,
+          "false_confirm": 0.087,
+          "false_reject": 0.0921,
+          "confident_share": 0.6775,
+          "exact_grade": 0.7625,
+          "minutes_main_p90": 36.8,
+          "minutes_total_p90": 42.0,
+          "minutes_total_mean": 26.5,
+          "code_open_share": 0.296,
+          "round": 1
+        },
+        {
+          "config": "C7",
+          "desc": "C2 + второй этап до 10 заданий",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true",
+            "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+            "ASSESSMENT_TWO_STAGE_ITEMS": "10"
+          },
+          "n": 800,
+          "admissible": true,
+          "verdict_accuracy": 0.905,
+          "false_confirm": 0.1149,
+          "false_reject": 0.0816,
+          "confident_share": 0.6863,
+          "exact_grade": 0.765,
+          "minutes_main_p90": 36.8,
+          "minutes_total_p90": 42.3,
+          "minutes_total_mean": 26.7,
+          "code_open_share": 0.296,
+          "round": 1
+        },
+        {
+          "config": "C8",
+          "desc": "комбинация лучших одиночных изменений",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true",
+            "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+            "ASSESSMENT_MAX_ITEMS": "20",
+            "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5"
+          },
+          "n": 800,
+          "admissible": true,
+          "verdict_accuracy": 0.9187,
+          "false_confirm": 0.0776,
+          "false_reject": 0.0837,
+          "confident_share": 0.6637,
+          "exact_grade": 0.7712,
+          "minutes_main_p90": 36.3,
+          "minutes_total_p90": 41.9,
+          "minutes_total_mean": 26.4,
+          "code_open_share": 0.295,
+          "round": 1
+        },
+        {
+          "config": "G8",
+          "desc": "C8 в мире с угадыванием (оценка уровня без угадывания)",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true",
+            "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+            "ASSESSMENT_MAX_ITEMS": "20",
+            "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5",
+            "ASSESSMENT_GUESSING_3PL": "false"
+          },
+          "n": 1000,
+          "admissible": true,
+          "verdict_accuracy": 0.799,
+          "false_confirm": 0.4543,
+          "false_reject": 0.0286,
+          "confident_share": 0.847,
+          "exact_grade": 0.678,
+          "minutes_main_p90": 38.0,
+          "minutes_total_p90": 41.6,
+          "minutes_total_mean": 26.3,
+          "code_open_share": 0.297,
+          "round": 2
+        },
+        {
+          "config": "G9",
+          "desc": "C8 + оценка уровня с угадыванием (3PL, c = 1/4)",
+          "env": {
+            "ASSESSMENT_CODE_QUOTA_EXT": "true",
+            "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+            "ASSESSMENT_MAX_ITEMS": "20",
+            "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5",
+            "ASSESSMENT_GUESSING_3PL": "true"
+          },
+          "n": 1000,
+          "admissible": true,
+          "verdict_accuracy": 0.891,
+          "false_confirm": 0.1259,
+          "false_reject": 0.0975,
+          "confident_share": 0.77,
+          "exact_grade": 0.743,
+          "minutes_main_p90": 53.5,
+          "minutes_total_p90": 59.7,
+          "minutes_total_mean": 38.9,
+          "code_open_share": 0.316,
+          "round": 2
+        }
+      ],
+      "chosen": "G9",
+      "chosen_env": {
+        "ASSESSMENT_CODE_QUOTA_EXT": "true",
+        "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+        "ASSESSMENT_MAX_ITEMS": "20",
+        "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5",
+        "ASSESSMENT_GUESSING_3PL": "true"
+      }
+    },
+    "claim_ru": "Симуляция продукта (движок стенда на банке 603474f из 1 504 семейств; модельные кандидаты, не люди; N = 3 000, отложенные зёрна): итоговый вердикт «соответствует заявленному грейду» верен в 87,9 % (95 % ДИ 86,7–89,0 %); ложное подтверждение — 16,0 % у завысивших заявку (6,3 % всех кандидатов); после основной части уверенное решение у 77,8 % кандидатов, из них верных 94,1 %; остальным предлагается короткий второй этап у порога. Точный грейд по всему пулу — 71,0 %, ошибок на 2+ ступени — 0,0 %. Время основной части — в среднем 35 мин (p90 52), всего — 38 мин; повторная независимая попытка даёт тот же грейд в 79,5 %, тот же вердикт — в 83,8 % (пар 3 000).",
+    "bank_condition_ru": "Прогон — на банке 603474f (1 504 семейств, снимок 82a05fdbacf00481 от 2026-10-20); банк сайта тот же.",
+    "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+    "code_ref": "backend/app/modules/validation/product_sim.py",
+    "protocol": "docs/validation/PRODUCT_SIM_PROTOCOL.md"
+  },
   "cheat_bots": null,
   "matching": {
     "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
@@ -147,7 +1940,33 @@
       "seed": 20261021
     }
   },
-  "fsp_protocols": null,
+  "fsp_protocols": {
+    "index": {
+      "documents": 18,
+      "events": 27,
+      "results": 2911,
+      "person_results": 2834,
+      "athletes": 2243,
+      "regions": 69,
+      "years": "2025–2026",
+      "athletes_with_evsk_norm": 125,
+      "athletes_with_evsk_norm_by_rank": {
+        "КМС": 61,
+        "I": 55,
+        "II": 5,
+        "III": 4
+      },
+      "what": "Официальные протоколы ФСП России 2025–2026 (fsp-russia.ru/about/documents): результаты, привязанные к соревнованиям; судьи, тренеры и строки справок исключены; норматив ЕВСК — по месту, числу субъектов РФ и составу судейской коллегии.",
+      "generated_at": "2026-10-21T06:47:53+00:00",
+      "index": "index_v2.json",
+      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "code_ref": "tools/fsp_protocols/build_index_v2.py, backend/app/modules/fsp/evsk.py, backend/app/modules/fsp/protocol_stats.py"
+    },
+    "ocr_audit": null,
+    "aggregates_totals": null,
+    "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+    "code_ref": "tools/fsp_protocols/"
+  },
   "mutation_testing": null,
   "load": null,
   "demo": null,
@@ -163,6 +1982,16 @@
       "code_ref": "backend/assessment_bank/BANK_SYNC.json"
     },
     {
+      "id": "grade_verdict",
+      "eyebrow": "Вердикт по заявленному грейду",
+      "value": "87,9",
+      "accent": "%",
+      "subtext": "верных решений «подтверждён / не подтверждён» · ложное подтверждение у завысивших — 16,0 % · уверенно после основной части — 77,8 %, остальным — короткий второй этап · симуляция продукта, N = 3 000, модельные кандидаты",
+      "provenance": "симуляция продукта, 2026-10-21",
+      "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+      "code_ref": "backend/app/modules/validation/product_sim.py"
+    },
+    {
       "id": "matching_p5",
       "eyebrow": "Точность топ-5 подбора (P@5)",
       "value": "75,1",
@@ -171,6 +2000,16 @@
       "provenance": "бенчмарк подбора, 2026-10-20",
       "recompute": "cd backend && python -m app.modules.validation.matching_bench",
       "code_ref": "backend/app/modules/validation/matching_bench.py"
+    },
+    {
+      "id": "fsp_protocols",
+      "eyebrow": "Официальные протоколы ФСП",
+      "value": "18",
+      "accent": "документов",
+      "subtext": "2 911 результатов · 2 243 спортсменов · 69 регионов · норматив разряда по ЕВСК подтверждён протоколом у 125 — кандидат находит своё достижение в официальном протоколе, подтверждение — через ФСП",
+      "provenance": "индекс протоколов, 2026-10-21",
+      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "code_ref": "tools/fsp_protocols/"
     },
     {
       "id": "hh_real",
@@ -184,9 +2023,10 @@
     }
   ],
   "jury_banner": {
-    "headline_ru": "Банк заданий: 1 504 семейств · Точность топ-5 подбора (P@5): 75,1 % · Реальные вакансии hh.ru: 414 вакансий",
+    "headline_ru": "Банк заданий: 1 504 семейств · Вердикт по заявленному грейду: 87,9 % · Точность топ-5 подбора (P@5): 75,1 % · Официальные протоколы ФСП: 18 документов · Реальные вакансии hh.ru: 414 вакансий",
     "claims_ru": {
       "provenance": "Каждая цифра на сайте — из JSON-артефакта с командой пересчёта и ссылкой на код (docs/NUMBERS.json).",
+      "grade": "Симуляция продукта (движок стенда на банке 603474f из 1 504 семейств; модельные кандидаты, не люди; N = 3 000, отложенные зёрна): итоговый вердикт «соответствует заявленному грейду» верен в 87,9 % (95 % ДИ 86,7–89,0 %); ложное подтверждение — 16,0 % у завысивших заявку (6,3 % всех кандидатов); после основной части уверенное решение у 77,8 % кандидатов, из них верных 94,1 %; остальным предлагается короткий второй этап у порога. Точный грейд по всему пулу — 71,0 %, ошибок на 2+ ступени — 0,0 %. Время основной части — в среднем 35 мин (p90 52), всего — 38 мин; повторная независимая попытка даёт тот же грейд в 79,5 %, тот же вердикт — в 83,8 % (пар 3 000).",
       "anticheat": "На слепом отложенном наборе из 176 атак в 16 семействах, составленном независимыми моделями (DeepSeek V4 Flash, xAI Grok 4.7, Moonshot Kimi K2.5; SHA-256 71c375aebb94…) после фиксации кода фильтра и проверенном одним прогоном без донастройки, детерминированный фильтр перехватывает 137 из 176 (77.8 %) атак до вызова LLM при 2 из 176 (1.14 %) ложных срабатываний на новых честных ответах (0 из 261 на ответах панели); пробитие полной цепочки (фильтр + изоляция маркерами + проверка дословных цитат + вторая оценка Claude Sonnet 5.5 / Fable 5.1) составило 0 из 176 (0.00 %, устойчивость цепочки 100.00 %). На наборе разработки (Claude + GPT, 320 атак) перехват фильтра — 290 из 320 (90.6 %), на известных шаблонах панели — 1160 из 1160 (100 %)."
     }
   },
@@ -198,6 +2038,14 @@
       "command": "cd backend && python -m assessment_bank validate --seeds 20",
       "code_ref": "backend/assessment_bank/BANK_SYNC.json",
       "artifact": "backend/assessment_bank/BANK_SYNC.json"
+    },
+    {
+      "section": "Вердикт по грейду (симуляция продукта)",
+      "metric": "верный вердикт 87,9 %, ложное подтверждение 16,0 %, точный грейд 71,0 %",
+      "sample": "N = 3 000, отложенные зёрна [2201, 2202, 2203, 2204, 2205, 2206, 2207, 2208, 2209, 2210], модельные кандидаты",
+      "command": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+      "code_ref": "backend/app/modules/validation/product_sim.py",
+      "artifact": "backend/app/modules/validation/data/product_sim_test_calibrated.json"
     },
     {
       "section": "Подбор под потребность (бенчмарк)",
@@ -222,6 +2070,14 @@
       "command": "python3 tools/grader_check/run_holdout_eval.py --offline",
       "code_ref": "backend/app/modules/assessment/grader.py",
       "artifact": "backend/app/modules/validation/data/grader_numbers.json"
+    },
+    {
+      "section": "Протоколы ФСП",
+      "metric": "18 документов, 2 911 результатов",
+      "sample": "официальные протоколы с сайта ФСП",
+      "command": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "code_ref": "tools/fsp_protocols/",
+      "artifact": "docs/realdata/fsp_protocols/index_stats.json"
     }
   ]
 }
