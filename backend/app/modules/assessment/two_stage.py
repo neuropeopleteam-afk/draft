@@ -182,7 +182,11 @@ class RefineSession(AppCATSession):
         if self.n_new >= self.n_new_max:
             self.stop_reason = "refine_done"
             return None
-        if self.n_new >= self.min_new and abs(self.theta - self.cut) >= self.z_stop * self.se:
+        if self.sprt:  # поправка №2: продолжение того же SPRT у заявленного порога (ответы обеих сессий)
+            if self.n_new >= self.min_new and self.claim_status() != "needs_followup":
+                self.stop_reason = "refine_classified"
+                return None
+        elif self.n_new >= self.min_new and abs(self.theta - self.cut) >= self.z_stop * self.se:
             self.stop_reason = "refine_classified"
             return None
         cands = self._ext_candidates()
@@ -268,6 +272,9 @@ def session_grade(ts) -> str:
     acc = (r.get("outcome") or {}).get("accepted_lower")
     if acc:
         return acc
+    gba = (er.get("details") or {}).get("grade_by_answers") or r.get("grade_by_answers")
+    if gba and gba.get("rule") == "sprt":  # поправка №2: уровень, который продукт показывает по итогам сессии
+        return gba.get("product_grade") or "none"
     if er.get("confirmed"):
         return ts.claimed_grade_id
     if er.get("provisional"):
@@ -290,6 +297,15 @@ def session_boundary(ts, p: dict | None = None) -> Boundary | None:
         return None
     er = r.get("engine_result") or {}
     g = session_grade(ts)
+    det = er.get("details") or {}
+    if (det.get("grade_by_answers") or {}).get("rule") == "sprt":
+        # поправка №2: второй этап — только когда SPRT по заявленному грейду не принял решения (или правило А6
+        # перевело попытку на доп. этап); порог — заявленного грейда, итог — продолжение того же SPRT
+        v = det.get("verdict") or {}
+        claimed = ts.claimed_grade_id
+        if v.get("status") != "needs_followup" or claimed not in GRADE_CUTS:
+            return None
+        return Boundary(g, claimed, float(GRADE_CUTS[claimed]), float(v.get("p_claimed") or 0.5), "sprt")
     return boundary(er.get("theta"), er.get("se"), g, ts.claimed_grade_id, level=p["level"], above=p["above"],
                     order=_order(ts.direction_id), ext=_ext(g) or (_ext(ts.claimed_grade_id) and g not in EXT_GRADE_ORDER))
 

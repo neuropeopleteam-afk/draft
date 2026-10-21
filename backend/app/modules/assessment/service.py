@@ -276,6 +276,8 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
         minutes = st_.assessment_two_stage_minutes + 10
     elif mode == "express":
         minutes = express_params(st_, claimed_grade)["max_minutes"]
+    elif (state.get("cfg") or {}).get("sprt"):  # поправка №2: продление у спорного порога до 90 минут + запас
+        minutes = int(st_.assessment_contested_max_minutes) + 15
     else:
         minutes = st_.assessment_max_minutes + max(30, st_.assessment_extension_minutes + 10)
     ts = TestSession(
@@ -479,6 +481,10 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
                                                      "extension", "pending_review", "n_families_in_bank", "mode",
                                                      "verdict", "sprt")},
         "verdict": (res.details or {}).get("verdict"),
+        # поправка №2: «уровень по ответам», согласованный с вердиктом (без внутренних оценок)
+        "grade_by_answers": {k: ((res.details or {}).get("grade_by_answers") or {}).get(k)
+                             for k in ("rule", "product_grade", "point_grade", "preliminary")}
+        if (res.details or {}).get("grade_by_answers") else None,
         "integrity": candidate_view((res.details or {}).get("integrity")),
     }
     _ext_preliminary(result, specialization)
