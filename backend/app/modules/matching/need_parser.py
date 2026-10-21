@@ -15,6 +15,7 @@ req["bias"] с предложением переписать; перед раз�
 """
 from __future__ import annotations
 
+import os
 import re
 
 from app.modules.catalog.dictionary import (
@@ -609,10 +610,65 @@ _TITLE_LANG_DEV = re.compile(r"(?:Python|Go|Golang|Java|Kotlin|PHP|C#|C\+\+|С\+
 _TITLE_DATA_ENG = re.compile(r"data[ -]?инженер|etl\b|\bdwh\b", re.I)
 
 
+# Роль, прямо названная в названии вакансии (21.10, dir-v2): общие правила профессий, а не отдельные вакансии.
+# Настройка — на наборе разработки и первом отложенном наборе (после его единственного отчёта), проверка — на новом
+# отложенном наборе. Правило срабатывает, только если роль — главное слово названия и НИКАКАЯ другая роль в названии не
+# названа (конфликт → прежний разбор). Порядок: MLOps → DevOps; «инженер данных / качество данных» → инженерия данных
+# (выше ML); «LLM/AI/ML-инженер», data scientist → ML; мониторинг/виртуализация/ITSM/DevOps → DevOps; бизнес- и
+# системный аналитик → аналитика; C/C++/Qt/встраиваемые/Node.js/fullstack → серверная; «программист JavaScript» → веб.
+_ROLE_WORDS = {
+    "backend": re.compile(r"backend|бэкенд|бекенд|серверн", re.I),
+    "frontend": re.compile(r"frontend|front-end|фронтенд|фронт-энд", re.I),
+    "mobile": re.compile(r"android|\bios\b|flutter|\bmobile\b|мобильн|react native", re.I),
+    "devops": re.compile(r"devops|\bsre\b", re.I),
+    "data_eng": re.compile(r"data\s*engineer|инженер\w*\s+данных|дата[- ]?инженер", re.I),
+    "analyst": re.compile(r"аналитик|analyst", re.I),
+    "data_ml": re.compile(r"\bml\b|machine\s+learning|data\s*scientist|\bllm\b|\bai\b|\bии\b", re.I),
+}
+_TITLE_ROLE_RULES = (
+    ("devops", re.compile(r"\b(?:ml|llm|ai)\s*-?\s*ops\b", re.I), ("backend", "frontend", "mobile", "data_ml", "analyst")),
+    ("data_eng", re.compile(r"data[ -]?(?:quality|governance|reliability)|datagov|качеств\w*\s+данных|"
+                            r"data\s*analyst\s*/\s*engineer|data\s*engineer|инженер\w*\s+данных|дата[- ]?инженер", re.I),
+     ("backend", "frontend", "mobile", "devops")),
+    ("data_ml", re.compile(r"\b(?:llm|ai|ml)[ -]?(?:engineer|инженер|разработчик|developer)|data\s*scientist|"
+                           r"machine\s+learning\s+engineer|computer\s+vision|компьютерн\w*\s+зрени", re.I),
+     ("backend", "frontend", "mobile", "devops", "data_eng", "analyst")),
+    ("devops", re.compile(r"мониторинг|виртуализац|\bitsm\b|\bsre\b|devops|системн\w*\s+администратор|"
+                          r"\bit[- ]инженер", re.I), ("backend", "frontend", "mobile", "data_eng", "analyst")),
+    ("analyst", re.compile(r"бизнес[- ]?аналитик|системн\w*\s+аналитик|business\s+analyst|system\s+analyst", re.I),
+     ("backend", "frontend", "mobile", "devops", "data_eng")),
+    ("backend", re.compile(r"(?:программист|разработчик|developer|engineer|инженер)\w*[^\n]{0,40}?(?:c\+\+|с\+\+|"
+                           r"c[\\/]c\+\+|\bqt\b|встраиваем|embedded|node\.?js)|(?:c\+\+|с\+\+|\bqt\b|node\.?js)[^\n]{0,20}?"
+                           r"(?:программист|разработчик|developer)|fullstack|full[- ]stack|фулстек", re.I),
+     ("frontend", "mobile", "devops", "data_eng", "analyst", "data_ml")),
+    ("frontend", re.compile(r"(?:программист|разработчик)\w*\s+javascript|javascript[ -]*(?:программист|разработчик|"
+                            r"developer)", re.I), ("backend", "mobile", "devops", "data_eng", "analyst", "data_ml")),
+)
+_TITLE_ROLE_SKIP = re.compile(r"тестиров|\bqa\b|\bsdet\b|безопасност|security|защит\w*\s+информац|pentest|пентест|"
+                              r"фрод|fraud", re.I)
+
+
+def title_role_direction(line: str) -> str | None:
+    """dir-v2: направление по роли, прямо названной в названии; None — роль не названа, названо несколько ролей
+    (конфликт) или это QA/ИБ (своя роль, прежний разбор)."""
+    if _TITLE_ROLE_SKIP.search(line):
+        return None
+    vis = set(catalog_ext.visible_ext())
+    for d, rx, conflicts in _TITLE_ROLE_RULES:
+        if not (d in DIRECTIONS or d in vis) or not rx.search(line):
+            continue
+        if any(_ROLE_WORDS[c].search(line) for c in conflicts):
+            continue
+        return d
+    return None
+
+
 def _title_line_dirs(dtext: str, dkw: dict[str, list[str]]) -> dict[str, int]:
     """Направления по первой строке текста (название вакансии): ключевые слова и правила названия расширения."""
     line = dtext.split("\n", 1)[0][:200]
     main_part = line.split("(", 1)[0].strip()
+    if os.environ.get("NEED_TITLE_ROLE", "1") != "0" and (role := title_role_direction(line)):
+        return {role: 3}
     found = find_keys(line, dkw)
     vis = catalog_ext.visible_ext()
     if "data_eng" in vis and _TITLE_DATA_ENG.search(line):
