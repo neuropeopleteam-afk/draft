@@ -4,15 +4,15 @@
     1
   ],
   "mutants_per_variant_max": 8,
-  "n_families": 107,
-  "n_ref_ok": 107,
+  "n_families": 108,
+  "n_ref_ok": 108,
   "n_mutants": 316,
   "n_killed": 218,
   "mutation_kill_rate": 0.6899,
-  "n_known_bad": 183,
-  "n_known_bad_rejected": 183,
+  "n_known_bad": 186,
+  "n_known_bad_rejected": 186,
   "known_bad_reject_rate": 1.0,
-  "unsupported_runner_families": 55,
+  "unsupported_runner_families": 56,
   "by_format": {
     "find_bug": {
       "families": 67,
@@ -24,11 +24,11 @@
       "known_bad_reject_rate": 1.0
     },
     "choose_fix": {
-      "families": 18,
+      "families": 19,
       "mutants": 95,
       "killed": 61,
-      "known_bad": 54,
-      "known_bad_rejected": 54,
+      "known_bad": 57,
+      "known_bad_rejected": 57,
       "kill_rate": 0.6421,
       "known_bad_reject_rate": 1.0
     },
@@ -261,7 +261,7 @@
     }
   ],
   "families_ref_failed": [],
-  "elapsed_s": 23.3,
-  "generated_at": "2026-10-21 12:20:38",
+  "elapsed_s": 22.7,
+  "generated_at": "2026-10-21 13:04:09",
   "recompute": "python3 tools/bank_mutation_check.py --seeds 1 --limit 8"
 }

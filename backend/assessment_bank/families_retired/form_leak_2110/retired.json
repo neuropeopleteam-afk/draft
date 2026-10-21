@@ -641,21 +641,6 @@
    "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/security/ssrf_allowlist_fix.yaml"
   },
   {
-   "family_id": "backend.py.concurrency_mcq",
-   "format": "mcq_concept",
-   "yaml": "backend/assessment_bank/families/backend/py_concurrency_mcq.yaml",
-   "generator": "assessment_bank.families.backend.py_concurrency_mcq",
-   "attack": "text",
-   "acc": 1.0,
-   "chance": 0.25,
-   "all_form_hits": {
-    "text": 1.0,
-    "text_x_letter": 0.99,
-    "ctx_x_text": 0.91
-   },
-   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/backend/py_concurrency_mcq.yaml"
-  },
-  {
    "family_id": "common.git.move_commits_mcq",
    "format": "mcq_concept",
    "yaml": "backend/assessment_bank/families/common/git_move_commits_mcq.yaml",
@@ -835,21 +820,6 @@
    "round": 2
   },
   {
-   "family_id": "common.api.rest_idempotent_retry_fix",
-   "format": "choose_fix",
-   "yaml": "backend/assessment_bank/families/common/rest_idempotent_retry_fix.yaml",
-   "generator": "assessment_bank.families.common.rest_idempotent_retry_fix",
-   "attack": "letter_x_len_rank",
-   "acc": 0.7733,
-   "chance": 0.25,
-   "all_form_hits": {
-    "len_rank": 0.7717,
-    "letter_x_len_rank": 0.7733
-   },
-   "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/common/rest_idempotent_retry_fix.yaml",
-   "round": 2
-  },
-  {
    "family_id": "common.docker.cache_order_fix",
    "format": "choose_fix",
    "yaml": "backend/assessment_bank/families/common/docker_cache_order_fix.yaml",
@@ -953,6 +923,28 @@
    },
    "retired_to": "backend/assessment_bank/families_retired/form_leak_2110/mobile/principal_rollout_segments_mcq.yaml",
    "round": 2
+  }
+ ],
+ "returned": [
+  {
+   "family_id": "backend.py.concurrency_mcq",
+   "format": "mcq_concept",
+   "attack": "text",
+   "acc": 1.0,
+   "chance": 0.25,
+   "round": 1,
+   "reason": "единственный источник тега «fastapi» направления backend",
+   "decision": "штаб 21.10 ~16:00 (P0 подбора: tests/test_compactpick_scope); содержание не менялось; leak_resistance: low"
+  },
+  {
+   "family_id": "common.api.rest_idempotent_retry_fix",
+   "format": "choose_fix",
+   "attack": "letter_x_len_rank",
+   "acc": 0.7733,
+   "chance": 0.25,
+   "round": 2,
+   "reason": "единственный источник тега «rest-api» общего блока (все направления, кроме backend/frontend/mobile)",
+   "decision": "штаб 21.10 ~16:00 (P0 подбора: tests/test_compactpick_scope); содержание не менялось; leak_resistance: low"
   }
  ]
 }
