@@ -1,7 +1,9 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import fspCrystalCore from "../assets/fsp-crystal-core.webp";
 import fspMedallion3d from "../assets/fsp-medallion-3d.webp";
-import { fmtInt, NUMBERS } from "../lib/numbers";
+import { NUMBERS } from "../lib/numbers";
+
+const fmtInt = (n: number): string => Number(n).toLocaleString("ru-RU");
 
 const getRegionsCount = (): number => (NUMBERS as any)?.fsp_facts?.regions ?? 89;
 const getRegionsClaim = (): string =>
