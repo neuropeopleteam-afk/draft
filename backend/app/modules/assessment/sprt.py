@@ -188,6 +188,8 @@ class ThreeValuedVerdict:
     suspicious_reasons: tuple[str, ...] = ()
     oral_defense_required: bool = False
     integrity_followup: dict | None = None
+    theta: float | None = None
+    se: float | None = None
 
     def as_dict(self) -> dict:
         out = {
@@ -204,6 +206,8 @@ class ThreeValuedVerdict:
             "delta": self.delta,
             "cut": round(self.cut, 3),
             "p_claimed": round(self.p_claimed, 4),
+            "theta": round(self.theta, 4) if self.theta is not None else None,
+            "se": round(self.se, 4) if self.se is not None else None,
             "n_scored": self.n_scored,
             "code_open_count": self.code_open_count,
             "code_open_share": round(self.code_open_share, 3),
@@ -326,7 +330,7 @@ def evaluate_integrity_followup(
     return res
 
 
-def incorporate_incident_stage(
+def incident_theta_update(
     theta: float,
     se: float,
     claimed_grade: str,
@@ -474,7 +478,7 @@ def compute_verdict(
                 ),
             }
     if incident_stage is not None:
-        theta, se, llr_inc, inc_norm = incorporate_incident_stage(
+        theta, se, llr_inc, inc_norm = incident_theta_update(
             theta, se, claimed_grade, incident_stage, delta=delta
         )
         if inc_norm is not None:
@@ -574,6 +578,8 @@ def compute_verdict(
         expl += " " + str(inc_norm["summary_ru"])
 
     return ThreeValuedVerdict(
+        theta=float(theta),
+        se=float(se),
         status=status,
         title=title_str,
         confident=(status != "needs_followup"),
@@ -599,3 +605,134 @@ def compute_verdict(
         oral_defense_required=oral_required,
         integrity_followup=ifrel,
     )
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Инцидент «Полигона» как доп. этап у спорного порога Senior / Lead / Principal (решение владельца 21.10; интерфейс
+# согласован с А9). Правило объединения записано заранее и объяснимо: инцидент — три независимые оцениваемые части
+# (меры, код, обоснование), каждая — как практическое задание у порога проверяемого грейда с различающей силой
+# INCIDENT_STAGE_A (априорная, как у практических заданий банка; на людях не откалибрована). Байесовское обновление
+# оценки уровня из основной части (нормальное априорное N(θ̂, SE)) на сетке; итог — «подтверждён», если вероятность
+# уровня не ниже проверяемого после обновления ≥ порога итога второго этапа (ASSESSMENT_TWO_STAGE_CONFIRM — то же
+# правило, что у короткого второго этапа заданиями). Признаки обмана в инциденте (правило А6: 2+ сигнала или ловушка)
+# → «нужна устная защита», не бан.
+INCIDENT_GRADES: frozenset[str] = frozenset({"senior", "lead", "principal"})
+INCIDENT_FOLLOWUP_MINUTES_DEFAULT: int = 30
+INCIDENT_RULE_RU = ("Вклад практического этапа — по заранее записанному правилу (три части: меры, код, обоснование — "
+                    "как три практических задания у порога); на людях ещё не откалиброван.")
+
+
+def incident_for_direction(direction: str | None) -> dict | None:
+    """Шаблон инцидента «Полигона» для направления (каталог А9, только чтение)."""
+    if not direction:
+        return None
+    try:
+        from app.modules.warroom.catalog import BASE_SCENARIOS
+    except Exception:
+        return None
+    for scn in BASE_SCENARIOS:
+        if scn.get("direction") == direction:
+            return scn
+    return None
+
+
+def attach_incident_followup(verdict: dict | None, *, attempt_id: str, direction: str | None) -> dict | None:
+    """П. 1 интерфейса: вердикт «нужен доп. этап» у порога Senior+ при наличии инцидента направления → доп. этап —
+    инцидент «Полигона» (followup_kind="incident", followup_url). Иначе — как раньше: короткий блок заданий."""
+    if not isinstance(verdict, dict) or verdict.get("status") != "needs_followup":
+        return verdict
+    v = dict(verdict)
+    if v.get("oral_defense_required"):
+        v.setdefault("followup_kind", "oral_defense")
+        return v
+    grade = v.get("followup_cut_grade") or v.get("claimed_grade")
+    scn = incident_for_direction(direction) if grade in INCIDENT_GRADES else None
+    if scn is None:
+        v["followup_kind"] = "stage2"
+        return v
+    v.update(followup_kind="incident", followup_url=f"/warroom?followup={attempt_id}#architecture",
+             followup_minutes=int(scn.get("minutes") or INCIDENT_FOLLOWUP_MINUTES_DEFAULT),
+             followup_incident_id=scn.get("id"), followup_incident_title=scn.get("title"))
+    return v
+
+
+def _incident_parts(stage: dict) -> list[float]:
+    parts = [stage.get(k) for k in ("measures_ok", "code_ok", "justification_ok")]
+    if all(p is None for p in parts):
+        sc = stage.get("score")
+        return [float(np.clip(float(sc), 0.0, 1.0))] * 3 if sc is not None else []
+    return [1.0 if bool(p) else 0.0 for p in parts if p is not None]
+
+
+def _posterior_on_grid(theta: float, se: float, xs: list[float], a: float, cut: float) -> tuple[float, float, float]:
+    grid = np.linspace(-5.0, 5.5, 421)
+    logp = -0.5 * ((grid - theta) / max(se, 0.10)) ** 2
+    pr = 1.0 / (1.0 + np.exp(-a * (grid - cut)))
+    for x in xs:
+        logp = logp + x * np.log(pr + 1e-12) + (1.0 - x) * np.log(1.0 - pr + 1e-12)
+    w = np.exp(logp - logp.max())
+    w /= w.sum()
+    m = float((w * grid).sum())
+    sd = float(math.sqrt(max(1e-9, (w * (grid - m) ** 2).sum())))
+    p_ge = float(w[grid >= cut].sum())
+    return m, sd, p_ge
+
+
+def _incorporate_incident_verdict(verdict: dict, stage: dict) -> dict:
+    from app.core.config import get_settings
+
+    v = dict(verdict or {})
+    st = dict(stage or {})
+    grade = v.get("followup_cut_grade") or v.get("claimed_grade") or "senior"
+    cut = float(GRADE_CUTS.get(grade, v.get("cut", 1.0)))
+    theta = float(v.get("theta", cut) if v.get("theta") is not None else cut)
+    se = float(v.get("se", 0.4) if v.get("se") is not None else 0.4)
+    p0 = float(v.get("p_claimed") if v.get("p_claimed") is not None else 0.5)
+    xs = _incident_parts(st)
+    th1, se1, p1 = _posterior_on_grid(theta, se, xs, INCIDENT_STAGE_A, cut)
+    level = float(get_settings().assessment_two_stage_confirm)
+    integ = st.get("integrity") if isinstance(st.get("integrity"), dict) else {}
+    ifrel = evaluate_integrity_followup(integ, None) if integ else {"needs_followup_stage": False}
+    g_title = GRADE_RU.get(grade, grade)
+    title_inc = st.get("title") or v.get("followup_incident_title") or "разбор инцидента"
+    ok = lambda k: ("да" if st.get(k) else "нет") if st.get(k) is not None else "—"  # noqa: E731
+    parts_ru = f"меры — {ok('measures_ok')}, код — {ok('code_ok')}, обоснование — {ok('justification_ok')}"
+    if ifrel.get("needs_followup_stage"):
+        status = "needs_followup"
+        expl = (f"Нужна устная защита по уровню {g_title}: в практическом этапе «{title_inc}» есть признаки "
+                "несамостоятельной работы. Автоматической блокировки нет — короткий разговор об этом решении снимет вопрос.")
+    elif p1 >= level:
+        status = "confirmed"
+        expl = (f"Подтверждён: тест у порога {g_title} был спорным (вероятность {round(100 * p0)} %), практический этап "
+                f"«{title_inc}»: {parts_ru}; итог по обоим этапам — {round(100 * p1)} % (решение — от "
+                f"{round(100 * level)} %). {INCIDENT_RULE_RU}")
+    else:
+        status = "not_confirmed"
+        expl = (f"Не подтверждён: тест у порога {g_title} был спорным (вероятность {round(100 * p0)} %), практический "
+                f"этап «{title_inc}»: {parts_ru}; итог по обоим этапам — {round(100 * p1)} % (решение — от "
+                f"{round(100 * level)} %). Принудительного понижения нет. {INCIDENT_RULE_RU}")
+    title = VERDICT_TITLES["needs_oral_defense"] if status == "needs_followup" else VERDICT_TITLES[status]
+    v.update(status=status, title=title, confident=status != "needs_followup", explanation=expl, explanation_ru=expl,
+             p_before=round(p0, 4), p_claimed=round(p1, 4), theta_after=round(th1, 4), se_after=round(se1, 4),
+             mode="refine", followup_needed=status == "needs_followup", followup_applied=True,
+             oral_defense_required=status == "needs_followup", rule_ru=INCIDENT_RULE_RU,
+             followup_kind="oral_defense" if status == "needs_followup" else None,
+             incident_stage={"incident_id": st.get("incident_id"), "score": st.get("score"), "passed": st.get("passed"),
+                             "measures_ok": st.get("measures_ok"), "code_ok": st.get("code_ok"),
+                             "justification_ok": st.get("justification_ok"), "minutes": st.get("minutes"),
+                             "attempt_id": st.get("attempt_id"), "parts_scored": xs,
+                             "summary_ru": f"Практический этап «{title_inc}»: {parts_ru}.",
+                             "integrity_followup": ifrel if integ else None})
+    return v
+
+
+def incorporate_incident_stage(*args, **kwargs):
+    """Две формы (совместимость):
+    - incorporate_incident_stage(verdict: dict, stage: dict) -> dict — итог доп. этапа-инцидента (интерфейс 21.10);
+    - incorporate_incident_stage(theta, se, claimed_grade, incident) -> (θ, SE, ΔLLR, норм. словарь) — прежняя форма
+      (предпросмотр «Полигона»), то же, что incident_theta_update."""
+    if len(args) == 2 and isinstance(args[0], dict) and isinstance(args[1], dict):
+        return _incorporate_incident_verdict(args[0], args[1])
+    if "verdict" in kwargs and "stage" in kwargs:
+        return _incorporate_incident_verdict(kwargs["verdict"], kwargs["stage"])
+    return incident_theta_update(*args, **kwargs)

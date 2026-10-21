@@ -440,6 +440,13 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
         from app.modules.assessment import two_stage
 
         res = two_stage.as_result(ts, res)
+    elif isinstance(res.details, dict) and isinstance(res.details.get("verdict"), dict):
+        # А4/А9 (21.10): спорный порог Senior+ при наличии инцидента направления → доп. этап — инцидент «Полигона»
+        from app.modules.assessment import sprt as _sprt
+
+        res.details["verdict"] = _sprt.attach_incident_followup(res.details["verdict"], attempt_id=str(ts.id),
+                                                                direction=ts.direction_id)
+        res.details["sprt"] = res.details["verdict"]
     from app.modules.proctor.service import apply_to_result  # камера по согласию (И16): итог — в достоверность
 
     apply_to_result(db, ts, res.details)
@@ -936,3 +943,44 @@ def submit_item_appeal(db: Session, ts: TestSession, item_id: str, reason: str, 
     db.commit()
     return {"session_id": str(ts.id), "appeal": rec, "appeals": list_session_appeals(db, ts)["appeals"]}
 
+
+
+def apply_followup_stage(db: Session, attempt_id, stage: dict) -> dict:
+    """Итог доп. этапа-инцидента «Полигона» (А9 → А4, интерфейс 21.10): вердикт попытки теста «нужен доп. этап» у
+    порога Senior+ → confirmed / not_confirmed (или «нужна устная защита» при признаках обмана) по правилу
+    sprt.incorporate_incident_stage. Одна попытка доп. этапа на тест. При «подтверждён» грейд присваивается тем же
+    путём, что у обычного итога (apply_engine_result: история, специализация, паспорт)."""
+    import uuid as _uuid
+
+    from app.modules.assessment import sprt as _sprt
+    from app.modules.assessment.engine import EngineResult
+
+    ts = db.get(TestSession, _uuid.UUID(str(attempt_id)))
+    if ts is None:
+        raise api_error(404, "attempt_not_found", "Попытка теста не найдена")
+    if ts.status != TestSessionStatus.finished:
+        raise api_error(409, "test_not_finished", "Тест ещё не завершён")
+    res_obj = dict(ts.result or {})
+    er = dict(res_obj.get("engine_result") or {})
+    det = dict(er.get("details") or {})
+    v = det.get("verdict") or {}
+    if v.get("followup_applied"):
+        raise api_error(409, "followup_already_applied", "Доп. этап по этой попытке уже учтён")
+    if v.get("status") != "needs_followup" or v.get("followup_kind") != "incident":
+        raise api_error(409, "followup_not_available", "Для этой попытки доп. этап-инцидент не назначен")
+    nv = _sprt.incorporate_incident_stage(v, dict(stage or {}))
+    det["verdict"] = nv
+    det["sprt"] = nv
+    det["incident_followup"] = {"applied_at": utcnow().isoformat(), "stage": nv.get("incident_stage")}
+    confirmed = nv.get("status") == "confirmed"
+    fields = {k: er[k] for k in EngineResult.__dataclass_fields__ if k in er}
+    fields.update(details=det, confirmed=confirmed, theta=float(nv.get("theta_after", er.get("theta", 0.0))),
+                  se=float(nv.get("se_after", er.get("se", 0.5))), p_claimed=nv.get("p_claimed"),
+                  provisional=False if confirmed else bool(er.get("provisional")))
+    res = EngineResult(**fields)
+    profile = db.get(CandidateProfile, ts.user_id)
+    outcome = apply_engine_result(db, ts, res, profile, utcnow(), after_review=True)
+    ts.result = {**ts.result, "followup_stage": {"kind": "incident", "status": nv.get("status")}}
+    flag_modified(ts, "result")
+    db.commit()
+    return {"attempt_id": str(ts.id), "verdict": nv, "grade": outcome.new_grade, "changed": outcome.changed}
