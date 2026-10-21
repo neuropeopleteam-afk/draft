@@ -22,6 +22,10 @@ _TEEN_G = ["десяти", "одиннадцати", "двенадцати", "т
 _TENS_G = ["", "", "двадцати", "тридцати", "сорока", "пятидесяти", "шестидесяти", "семидесяти", "восьмидесяти", "девяноста"]
 _HUND_G = ["", "ста", "двухсот", "трёхсот", "четырёхсот", "пятисот", "шестисот", "семисот", "восьмисот", "девятисот"]
 
+_U_D = ["нулю", "одному", "двум", "трём", "четырём", "пяти", "шести", "семи", "восьми", "девяти"]
+_HUND_D = ["", "ста", "двумстам", "трёмстам", "четырёмстам", "пятистам", "шестистам", "семистам", "восьмистам", "девятистам"]
+DAT_PREP = {"по", "к", "ко", "согласно", "благодаря", "вопреки"}
+
 GEN_PREP = {"у", "от", "до", "из", "около", "более", "менее", "свыше", "с", "без", "для", "кроме", "после", "порядка",
             "больше", "меньше", "выше", "ниже", "среди", "вместо"}
 
@@ -33,26 +37,28 @@ def plural(n: int, one: str, few: str, many: str) -> str:
     return one if n % 10 == 1 else few if 2 <= n % 10 <= 4 else many
 
 
-def _w999(n: int, gen: bool, fem: bool) -> list[str]:
+def _w999(n: int, gen: bool, fem: bool, dat: bool = False) -> list[str]:
     parts: list[str] = []
     h, r = divmod(n, 100)
     if h:
-        parts.append((_HUND_G if gen else _HUND)[h])
+        parts.append((_HUND_D if dat else _HUND_G if gen else _HUND)[h])
     if 10 <= r < 20:
-        parts.append((_TEEN_G if gen else _TEEN)[r - 10])
+        parts.append((_TEEN_G if gen or dat else _TEEN)[r - 10])
     else:
         tn, u = divmod(r, 10)
         if tn:
-            parts.append((_TENS_G if gen else _TENS)[tn])
+            parts.append((_TENS_G if gen or dat else _TENS)[tn])
         if u:
-            if gen:
+            if dat:
+                parts.append("одной" if fem and u == 1 else _U_D[u])
+            elif gen:
                 parts.append("одной" if fem and u == 1 else _U_G[u])
             else:
                 parts.append(_U_F.get(u, _U[u]) if fem else _U[u])
     return parts
 
 
-def int_words(n: int, *, gen: bool = False, fem: bool = False) -> str:
+def int_words(n: int, *, gen: bool = False, fem: bool = False, dat: bool = False) -> str:
     """0 … 999 999 999 словами; «тысяча», а не «одна тысяча» (замечание владельца)."""
     n = int(n)
     if n < 0:
@@ -74,7 +80,7 @@ def int_words(n: int, *, gen: bool = False, fem: bool = False) -> str:
             out += _w999(th, gen, True)
             out.append("тысяч" if gen else plural(th, "тысяча", "тысячи", "тысяч"))
     if low:
-        out += _w999(low, gen, fem)
+        out += _w999(low, gen, fem, dat and not mil and not th)
     return " ".join(out)
 
 
@@ -95,7 +101,7 @@ def _frac_words(i: int, frac: str, gen: bool) -> str:
 _NUM = r"\d{1,3}(?:[  ]\d{3})+|\d+"
 _RX = re.compile(
     rf"(?<![A-Za-z0-9\-_/.])(?P<pm>±\s?)?(?P<n>{_NUM})(?:,(?P<f>\d{{1,3}}))?"
-    rf"(?:\s?(?P<pct>%)|\s?(?P<unit>тыс\.|тыс\b|млн\.?|млрд\.?))?(?:\s?(?P<rub>₽))?(?![A-Za-z0-9_])")
+    rf"(?:\s?(?P<pct>%|процент(?:ов|а|ам|ах|ами|е|у|ом)?(?![а-яё]))|\s?(?P<unit>тыс\.|тыс\b|млн\.?|млрд\.?))?(?:\s?(?P<rub>₽))?(?![A-Za-z0-9_])")
 _PREV = re.compile(r"([А-Яа-яЁё]+)\s*$")
 
 
@@ -117,6 +123,7 @@ def _say(m: re.Match, before: str, after: str) -> str:
     if not f and 1900 <= i <= 2100 and nw.startswith("год"):   # «2026 год» — порядковое, оставляем цифрами
         return m.group(0)
     gen = bool(prev and prev.group(1).lower() in GEN_PREP)
+    dat = bool(prev and prev.group(1).lower() in DAT_PREP) and not m.group("pct") and not f
     pct, unit, rub, pm = m.group("pct"), m.group("unit"), m.group("rub"), m.group("pm")
     if f:
         words = _frac_words(i, f, gen)
@@ -130,7 +137,7 @@ def _say(m: re.Match, before: str, after: str) -> str:
                 fem = bool(_FEM_NOUN.match(nw)) and not _NEUT_NOUN.match(nw) or nw.startswith(("ступен", "част", "рол", "модел"))
             elif d == 2:   # «две минуты», «две попытки»; «два задания», «два балла»
                 fem = nw.endswith(("ы", "и"))
-        words = int_words(i, gen=gen, fem=fem)
+        words = int_words(i, gen=gen, fem=fem, dat=dat)
         if not unit and not pct and not gen and d == 1 and dd != 11 and nw and re.search(r"(?:ие|ье|о|е)$", nw):
             words = re.sub(r"один$", "одно", words)
         if pct:

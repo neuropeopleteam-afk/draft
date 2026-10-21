@@ -17,3 +17,9 @@ def test_ranges_money_gender():
 def test_codes_untouched():
     for t in ("C-88QTWX", "индекс v6", "ISO 27001", "2026 год"):
         assert spoken(t) == t
+
+
+def test_word_percent_and_dative():
+    assert spoken("77,6 процентов по 6 ступеням") == "семьдесят семь и шесть десятых процента по шести ступеням"
+    assert spoken("к 2 кандидатам, по 21 баллу") == "к двум кандидатам, по двадцати одному баллу"
+    assert spoken("5 процентов, 1 процент") == "пять процентов, один процент"
