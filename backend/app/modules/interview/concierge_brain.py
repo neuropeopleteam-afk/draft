@@ -387,8 +387,8 @@ SYSTEM_STATIC = """Ты — Настя, живой голосовой прово
 6. Человек растерян, просит медленнее или проще — отвечай проще и предложи показать по шагам.
 7. Не повторяй дословно то, что уже говорила; не начинай каждую реплику с одного и того же слова.
 8. Осторожные формулировки: устная защита — «дополнительная проверка», не доказательство работы без нейросетей; экспресс-тест — \
-до семи коротких заданий (для Senior — до двенадцати), интервал шире, правило то же: грейд подтверждается, если \
-вероятность уровня не ниже выбранного не меньше 80 %, иначе — «нужен дополнительный этап»; слов «предварительно» и \
+интервал шире, правило то же: грейд подтверждается, если вероятность уровня не ниже выбранного не меньше \
+порога, иначе — «нужен дополнительный этап»; число заданий и порог — только из «Параметров теста на стенде»; слов «предварительно» и \
 «тета» не говори; пилота на людях не было — не упоминай; метод — «байесовская \
 последовательная классификация с остановкой по SPRT». Не извиняйся и не рассказывай о себе («я сбилась», «я торопилась», «я перебила вас», «я запуталась») — просто \
 отвечай по делу. На резкие слова, мат и раздражение не реагируй и не делай замечаний — спокойно сделай, что просят. \
@@ -460,7 +460,7 @@ user_name — только если человек прямо назвал св�
 {steps}
 
 Примеры:
-— «Сколько длится тест?» → «Зависит от ответов: полный режим — от восьми до шестнадцати заданий, экспресс — до семи коротких заданий. \
+— «Сколько длится тест?» → «Зависит от ответов: полный режим — от … до … заданий, экспресс — до … коротких (числа — из «Параметров теста на стенде»). \
 Показать, где выбирают режим?» (action answer, offer {{"action": "goto", "step": "cand-assessment"}} — покажешь, если \
 человек согласится)
 — «А как работодатель поймёт, что я не списал?» → «Задания каждый раз генерируются заново, а у попытки есть паспорт \
@@ -480,9 +480,41 @@ role, user_name, dir, offer, full (true — показать экран цели
 {site_map}"""
 
 
+def test_params() -> str:
+    """Параметры теста — из тех же настроек, что у движка и /api/meta (rules.confirm_pct, rules.test_len): после
+    смены EXTRA_ENV Настя называет то, что на стенде. Нет настройки — эту часть не называет."""
+    try:
+        from app.core.config import get_settings
+        s = get_settings()
+    except Exception:  # noqa: BLE001
+        return ""
+    g = lambda k: getattr(s, k, None)  # noqa: E731
+    ok = lambda v: isinstance(v, int) and not isinstance(v, bool) and v > 0  # noqa: E731
+    parts = []
+    if ok(g("assessment_min_items")) and ok(g("assessment_max_items")):
+        p = f"полный режим — от {g('assessment_min_items')} до {g('assessment_max_items')} заданий"
+        if ok(g("assessment_contested_max_items")):
+            p += f", у спорного порога грейда — до {g('assessment_contested_max_items')}"
+        parts.append(p)
+    if ok(g("assessment_two_stage_items")) and g("assessment_two_stage_enabled") is not False:
+        parts.append(f"если уверенности не хватает — второй этап из {g('assessment_two_stage_items')} заданий")
+    if ok(g("assessment_express_max_items")):
+        p = f"экспресс — до {g('assessment_express_max_items')} коротких заданий"
+        if ok(g("assessment_express_senior_max_items")):
+            p += f" (для Senior — до {g('assessment_express_senior_max_items')})"
+        parts.append(p)
+    lvl = g("assessment_confirm_level")
+    if isinstance(lvl, (int, float)) and 0 < float(lvl) < 1:
+        parts.append(f"грейд подтверждается, если вероятность уровня не ниже выбранного не меньше {round(100 * float(lvl))} %")
+    if not parts:
+        return ""
+    return "\n\nПараметры теста на стенде (из настроек движка; называй только эти числа; про длительность — «зависит от ответов» и число заданий, без минут и без «не могу»): " + \
+        "; ".join(parts) + "."
+
+
 def _static_prompt() -> str:
     steps = "\n".join(f"- {k}: {v}" for k, v in STEP_TITLES.items())
-    return SYSTEM_STATIC.format(steps=steps, site_map=rag.site_map())
+    return SYSTEM_STATIC.format(steps=steps, site_map=rag.site_map()) + test_params()
 
 
 def _dynamic(s: Session | None, *, message: str, name: str | None, role: str | None, path: str, step: str | None,
