@@ -913,6 +913,12 @@ def _bank_sentence(n: dict) -> str:
     return ", ".join(parts) + ". "
 
 
+# Когда в контекст модели нужен блок цифр: вопрос про цифры/проверку/банк — или уточнение к ответу с процентами
+# («а в жёстких условиях?»): без блока модель додумывала («точность падает»), хотя в жёстких она выше.
+_NUMBERS_Q = re.compile(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак|банк|семейств|вариант|сколько задан|"
+                        r"жёстк|жестк|стандартн|услови|вердикт|грейд|оценщик|интервал|ложн|списыв|утечк|симуляц")
+
+
 def numbers_chunk() -> dict[str, str]:
     n = live_numbers()
     grade = _spoken_claim(_grade_sentence(n))
@@ -1573,8 +1579,8 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     msgs = brain.build_messages(msg, sid=session_id, name=name, role=cur_role, path=current_path, step=step_id,
                                 touring=touring, paused=paused, screen=screen, history=history, awaiting=awaiting,
                                 last_said=last_said, accepted=accepted,
-                                numbers=numbers_chunk() if re.search(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак|банк|семейств|вариант|сколько задан",
-                                                                     msg.lower()) or current_path.startswith("/validation") else None)
+                                numbers=numbers_chunk() if _NUMBERS_Q.search(msg.lower()) or current_path.startswith("/validation")
+                                or "процент" in (last_said or "").lower() else None)
     ctx = {"msg": msg, "name": name, "cur_role": cur_role, "touring": touring, "paused": paused, "step_id": step_id,
            "current_path": current_path, "first_tour": first_tour, "sid": session_id}
     if defer_llm:
