@@ -69,6 +69,8 @@ export function WhyStricter({ className = "" }: { className?: string }) {
         <li>Тест: кандидаты угадывают в вопросах с выбором, чаще завышают и занижают заявку, больше людей у самых порогов, а
           параметры заданий взяты осторожнее, чем в стандартных условиях.</li>
         <li>Подбор: часть анкет завышает грейд и стек, погрешность теста больше, больше людей у порогов, кандидатов в мире больше.</li>
+        <li>«Строже» не значит, что справа каждая цифра ниже: в жёстких условиях тест чаще отправляет спорные случаи на
+          доп. этап — уверенных вердиктов меньше, а точность среди уверенных бывает даже выше.</li>
         <li>Обе колонки — один прогон на отложенных данных: настройки выбраны на других зёрнах, протокол и хэш зафиксированы до
           прогона, результат пересчитан независимо.</li>
       </ul>
@@ -238,7 +240,7 @@ export default function Headline() {
       <MatchingPair className="mt-3" />
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl bg-brand-cream/40 p-3 text-xs text-brand-ink/75 ring-1 ring-brand-night/10" data-testid="v-hl-time">
-          <b className="text-brand-night">Время.</b> Основная часть — в среднем {mm ? fmtNum(mm.mean, 0) : "—"} мин (у 90 % — до{" "}
+          <b className="text-brand-night">Время ({COL_ST.toLowerCase()}).</b> Основная часть — в среднем {mm ? fmtNum(mm.mean, 0) : "—"} мин (у 90 % — до{" "}
           {mm ? fmtNum(mm.p90, 0) : "—"}), вместе со вторым этапом — {mt ? fmtNum(mt.mean, 0) : "—"} мин; лимит основной части — 60 мин.
           {m.items_main ? ` Заданий — в среднем ${fmtNum(m.items_main.mean, 1)}.` : ""}
         </div>
@@ -250,7 +252,7 @@ export default function Headline() {
         <div className="rounded-xl bg-brand-cream/40 p-3 text-xs text-brand-ink/75 ring-1 ring-brand-night/10" data-testid="v-hl-retest">
           <b className="text-brand-night">Повторяемость.</b>{" "}
           {m.retest
-            ? `Две независимые попытки одного кандидата (без общих семейств заданий): тот же грейд — ${m.retest.exact_agreement ? pc(m.retest.exact_agreement.value) : "—"} %, тот же вердикт — ${m.retest.verdict_agreement ? pc(m.retest.verdict_agreement.value) : "—"} %, взвешенная каппа ${m.retest.kappa_w != null ? fmtNum(m.retest.kappa_w, 2) : "—"} (пар: ${nint(m.retest.n_pairs)}).`
+            ? `Две независимые попытки одного кандидата (без общих семейств заданий): тот же грейд — ${m.retest.exact_agreement ? pc(m.retest.exact_agreement.value) : "—"} %, тот же вердикт из трёх исходов («подтверждён / не подтверждён / нужен доп. этап»; в таблице «то же решение» — из двух: подтверждён или нет) — ${m.retest.verdict_agreement ? pc(m.retest.verdict_agreement.value) : "—"} %, взвешенная каппа ${m.retest.kappa_w != null ? fmtNum(m.retest.kappa_w, 2) : "—"} (пар: ${nint(m.retest.n_pairs)}).`
             : "Расчёт ещё не опубликован."}
         </div>
       </div>

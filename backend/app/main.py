@@ -245,7 +245,15 @@ def create_app() -> FastAPI:
                           "retake_same_grade_days": get_settings().retake_same_grade_days,
                           "invitation_cooldown_days": get_settings().invitation_cooldown_days,
                           # Я22: порог уверенности решения по грейду, % (подтверждение и «уровень ниже»)
-                          "confirm_pct": round(100 * get_settings().assessment_confirm_level)},
+                          "confirm_pct": round(100 * get_settings().assessment_confirm_level),
+                          # А4 (А19 №2): длина теста на экране — из тех же настроек, что у движка
+                          "test_len": {"min_items": get_settings().assessment_min_items,
+                                       "max_items": get_settings().assessment_max_items,
+                                       "max_minutes": get_settings().assessment_max_minutes,
+                                       "contested_max_items": get_settings().assessment_contested_max_items,
+                                       "contested_max_minutes": get_settings().assessment_contested_max_minutes,
+                                       "two_stage_items": get_settings().assessment_two_stage_items,
+                                       "two_stage_minutes": get_settings().assessment_two_stage_minutes}},
                 "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes, avatar}
                 "interview_enabled": interview.svc.enabled(),  # то же одним флагом — шаг проводника «12 минут» (Я9)
                 "hh": hh_api.meta(),  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
