@@ -200,6 +200,9 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/assessment/sessions/{session_id}/result"): "candidate_own",
     ("GET", "/api/assessment/sessions/{session_id}/evidence"): "candidate_own",  # feat/evidence-grade
     ("POST", "/api/assessment/sessions/{session_id}/accept-lower"): "candidate_own",
+    # А4: апелляция по заданию теста (только кандидат — владелец своей сессии; токен задания не из мира теста → OK404)
+    ("GET", "/api/assessment/sessions/{session_id}/appeals"): "candidate_own",
+    ("POST", "/api/assessment/sessions/{session_id}/appeals"): "candidate_own404",
     # камера по согласию (feat/proctor, pc01): только кандидат; сессия — своя (чужая → 404); работодателю API нет,
     # агрегат ФСП — аналитик и администратор (в песочнице жюри — персона «Федерация»)
     ("GET", "/api/proctor/consent"): "candidate",
@@ -416,6 +419,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/fsp-cabinet/cups"): "fsp",
     ("GET", "/api/fsp-cabinet/report"): "fsp",
     ("GET", "/api/fsp-cabinet/regions"): "fsp",  # А2: карта талантов по регионам РФ
+    ("GET", "/api/fsp-cabinet/protocol-claims"): "fsp",  # А2: очередь заявок на сверку протоколов ФСП
+    ("POST", "/api/fsp-cabinet/protocol-claims/{achievement_id}/decide"): "fsp",  # А2: решение по заявке
     ("GET", "/api/fsp-cabinet/export/{section}.csv"): "fsp",
     ("GET", "/api/admin/sus"): "admin",
     ("POST", "/api/admin/passports/{pid}/revoke"): ("admin", {"admin": OK404}),  # feat/passport; паспорт не создаётся
@@ -456,6 +461,12 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/closed-set/template/{format}"): "open",  # feat/realdata
     ("POST", "/api/validation/closed-set/evaluate"): "sandbox_employer",
     ("POST", "/api/validation/closed-set/export"): "sandbox_employer",
+    # А4: методика грейда SPRT, утечка K вариантов, вызов «Обмани тест», кросс-вендорный протокол экспертов
+    ("GET", "/api/validation/sprt-verdict"): "open",
+    ("GET", "/api/validation/leak-k-variants"): "open",
+    ("GET", "/api/validation/cheat-challenge"): "open",
+    ("POST", "/api/validation/cheat-challenge/attempt"): "open",
+    ("GET", "/api/validation/expert-surrogate"): "open",
     # подписка на потребность, уведомления, напоминания (И25, Н6 — feat/subs)
     ("GET", "/api/employer/subscriptions"): "employer",
     ("GET", "/api/employer/needs/{need_id}/subscription"): "employer_own",
@@ -591,6 +602,8 @@ PARAM_OVERRIDES: dict[tuple[str, str], dict[str, object]] = {
     ("GET", "/api/employer/needs/parse/{job_id}"): {"job_id": "00000000-0000-4000-8000-000000000027"},  # И27
     # А9: Боевой ИИ-Полигон
     ("GET", "/api/warroom/scenarios/{scenario_id}"): {"scenario_id": "payment"},
+    # А2: решение по заявке на сверку протокола ФСП — несуществующая заявка (без тела аналитик получает 422, чужие роли — 401/403)
+    ("POST", "/api/fsp-cabinet/protocol-claims/{achievement_id}/decide"): {"achievement_id": "00000000-0000-4000-8000-0000000000a2"},
 }
 
 # Маршруты, меняющие состояние так, что дальнейшие проверки могут сломаться (сброс песочницы отзывает токены,

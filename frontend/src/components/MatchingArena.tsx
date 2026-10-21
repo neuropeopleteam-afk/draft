@@ -15,10 +15,10 @@ const ROWS: { key: string; title: string; hint: string }[] = [
   { key: "no_fsp", title: "Без ФСП", hint: "та же модель без сигнала соревнований" },
   { key: "no_test", title: "Без теста — только резюме", hint: "навыки только со слов кандидата (T0)" },
   { key: "keywords_grade", title: "Теги резюме + заявленный грейд", hint: "как фильтр в типичном поиске по резюме" },
-  { key: "bm25", title: "BM25 по тексту резюме", hint: "классический полнотекстовый поиск" },
+  { key: "bm25", title: "Поиск по тексту резюме", hint: "классический полнотекстовый поиск без проверки навыков" },
   { key: "random", title: "Случайно", hint: "нижняя граница" },
 ];
-const COLS: [string, string][] = [["p@5", "P@5"], ["p@10", "P@10"], ["ndcg@10", "nDCG@10"], ["mrr", "MRR"], ["recall@30", "Recall@30"]];
+const COLS: [string, string][] = [["p@5", "Топ-5 (P@5)"], ["p@10", "Топ-10 (P@10)"], ["ndcg@10", "Порядок топ-10"], ["mrr", "Место 1-го верного"], ["recall@30", "Полнота в топ-30"]];
 
 /** Точность грейда: снимок docs/NUMBERS.json → grade_accuracy и validation/data/accuracy_views.json (банк 4d44, 19.10.2026);
  *  карточки «вдали от границы» и «без занижения» берутся из /validation/headline, если расчёт доступен. */
@@ -81,10 +81,10 @@ function RankingArena() {
   return (
     <div>
       <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4" data-testid="arena-lead">
-        <Lead big={pp(pm.bm25?.["p@5"]?.mean)} label={`P@5 против BM25`} sub={`P@10: ${pp(pm.bm25?.["p@10"]?.mean)} · ${p1(plat["p@10"]?.mean)} против ${p1(bm["p@10"]?.mean)}`} />
-        <Lead big={p1(plat.mrr?.mean)} label="MRR — первый подходящий почти всегда на 1-м месте" sub={`BM25: ${p1(bm.mrr?.mean)}`} />
-        <Lead big={p1(plat["recall@30"]?.mean)} label="Recall@30 — доля всех подходящих в первых 30" sub={`BM25: ${p1(bm["recall@30"]?.mean)}${ceil ? ` · потолок ${p1(ceil)}` : ""}`} />
-        <Lead big={inflPlat == null ? "—" : pct(1 - inflPlat, 0)} label="чистота топ-10 от раздутых резюме" sub={`раздутых в топ-10: ${p1(inflPlat)} у Драфта, ${p1(inflBm)} у BM25, ${p1(inflKw)} у фильтра по тегам`} />
+        <Lead big={pp(pm.bm25?.["p@5"]?.mean)} label="Точность топ-5 против поиска по резюме" sub={`Топ-10: ${pp(pm.bm25?.["p@10"]?.mean)} · ${p1(plat["p@10"]?.mean)} против ${p1(bm["p@10"]?.mean)}`} />
+        <Lead big={p1(plat.mrr?.mean)} label="Первый подходящий почти всегда на 1-м месте" sub={`Поиск по тексту резюме: ${p1(bm.mrr?.mean)}`} />
+        <Lead big={p1(plat["recall@30"]?.mean)} label="Доля всех подходящих в первых 30" sub={`Поиск по тексту резюме: ${p1(bm["recall@30"]?.mean)}${ceil ? ` · потолок ${p1(ceil)}` : ""}`} />
+        <Lead big={inflPlat == null ? "—" : pct(1 - inflPlat, 0)} label="чистота топ-10 от раздутых резюме" sub={`раздутых в топ-10: ${p1(inflPlat)} у Драфта, ${p1(inflBm)} у поиска по тексту, ${p1(inflKw)} у фильтра по тегам`} />
       </div>
       <ScrollX label="Таблица методов арены ранжирования" className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[46rem] text-left text-sm" data-testid="arena-table">
@@ -115,11 +115,16 @@ function RankingArena() {
           </tbody>
         </table>
       </ScrollX>
-      <p className="mt-2 text-xs leading-snug text-brand-ink/65">
-        Мир со скрытой истиной: {w.n_needs ?? data.config?.n_needs ?? "—"} потребностей × {w.n_candidates ?? data.config?.n_candidates ?? "—"} кандидатов; в среднем {num(w.relevant_per_need?.mean, 1)} подходящих на потребность,
-        поэтому Recall@30 не может превысить {ceil ? p1(ceil) : "30 / R"}. «Драфт +N п.п.» — парная разница по тем же потребностям. Синтетика: проверяется механика ранжирования, а не люди.
-        Пересчёт: <code>{data.command ?? "make bench"}</code>{data.generated_at ? ` · ${String(data.generated_at).slice(0, 10)}` : ""}.
-      </p>
+      <details className="mt-2 text-xs leading-snug text-brand-ink/65">
+        <summary className="cursor-pointer font-medium text-brand-plum/85 hover:underline">
+          Методика сравнения и формулы метрик (P@5, nDCG@10, MRR, BM25)
+        </summary>
+        <p className="mt-1">
+          Мир со скрытой истиной: {w.n_needs ?? data.config?.n_needs ?? "—"} потребностей × {w.n_candidates ?? data.config?.n_candidates ?? "—"} кандидатов; в среднем {num(w.relevant_per_need?.mean, 1)} подходящих на потребность,
+          поэтому полнота в топ-30 (Recall@30) не может превысить {ceil ? p1(ceil) : "30 / R"}. Поиск по тексту резюме использует классическую формулу BM25. «Драфт +N п.п.» — парная разница по тем же потребностям. Синтетика: проверяется механика ранжирования, а не люди.
+          Пересчёт: <code>{data.command ?? "make bench"}</code>{data.generated_at ? ` · ${String(data.generated_at).slice(0, 10)}` : ""}.
+        </p>
+      </details>
       <HhRadar />
       <ExplainPreview />
     </div>
@@ -276,10 +281,15 @@ function GradeArena() {
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-xs leading-snug text-brand-ink/65">
-        Симуляция всего пути кандидата на банке заданий (модель ответов 2PL, истинный грейд известен): проверяется механика теста, а не люди.
-        Атаки на оценщика — замер двухконтурного оценщика открытых ответов. Подробности — в разделах ниже.
-      </p>
+      <details className="mt-3 text-xs leading-snug text-brand-ink/65">
+        <summary className="cursor-pointer font-medium text-brand-plum/85 hover:underline">
+          Модель симуляции пути и двухконтурный оценщик открытых ответов
+        </summary>
+        <p className="mt-1">
+          Симуляция всего пути кандидата на банке заданий (психометрическая модель ответов 2PL, истинный грейд известен): проверяется механика теста, а не люди.
+          Атаки на оценщика — замер двухконтурного оценщика открытых ответов. Подробности — в разделах ниже.
+        </p>
+      </details>
     </div>
   );
 }

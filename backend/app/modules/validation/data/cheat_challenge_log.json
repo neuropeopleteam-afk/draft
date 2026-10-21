@@ -1,0 +1,74 @@
+{
+ "updated_at": "2026-10-20T17:43:44+00:00",
+ "demo_attempts_total": 3,
+ "demo_false_confirmations": 0,
+ "demo_caught_or_rejected": 3,
+ "sim_benchmark": {
+  "n_attempts": 2000,
+  "k_published": 1000,
+  "false_confirm_rate_protected": 0.0,
+  "false_confirm_rate_fixed_bank": 1.0,
+  "canary_caught_rate": 1.0
+ },
+ "why_code_does_not_help": [
+  {
+   "id": "server_csprng_seed",
+   "title": "1. Секретное серверное зерно (2,15 млрд вариантов на семейство)",
+   "detail": "Клиент получает только непрозрачный одноразовый токен item_id (secrets.token_urlsafe), а не номер варианта и не seed. Само зерно выбирается на сервере через криптостойкий генератор secrets.randbelow(2³¹ − 2). Зная весь код генератора на Python, невозможно угадать, какие именно числа, строки кода, имена переменных и правильный ответ сгенерированы на сервере в этой сессии."
+  },
+  {
+   "id": "parametric_code_execution",
+   "title": "2. Изоморфные мутации кода и 3-шаговые инциденты у порога грейда",
+   "detail": "В заданиях find_bug, predict_output, choose_fix и incident_sim меняются не просто числа в тексте, а граничные условия, операторы сравнения, порядок вызовов и метрики телеметрии. Чтобы вычислить ответ для нового варианта по коду генератора, нужно фактически выполнить алгоритм задачи — то есть обладать проверяемым навыком."
+  },
+  {
+   "id": "canary_and_sprt_oral",
+   "title": "3. Канареечные ловушки + перевод в устную защиту вместо бана",
+   "detail": "На позициях 2, 6 и 10 подмешиваются канареечные задания из известного списка опубликованных зёрен. Если кандидат или скрипт пробивает ответы по базе слитых вариантов, возникает статистический разрыв между мгновенными верными ответами на канарейках и заминками на свежих зёрнах. Система пересчитывает θ без скомпрометированных заданий и переводит вердикт в статус «Нужен доп. этап / устная защита»."
+  }
+ ],
+ "attempts": [
+  {
+   "attempt_id": "demo-seed-01",
+   "at": "2026-10-20T14:10:00+00:00",
+   "actor": "Бот: поиск по дампу K = 1 000 вариантов + угадывание",
+   "claimed_grade": "senior",
+   "true_level_hint": "junior",
+   "strategy": "dump_lookup_1000",
+   "theta_est": -0.42,
+   "verdict": "needs_followup",
+   "verdict_title": "Нужен доп. этап / устная защита",
+   "canary_flagged": true,
+   "false_confirmed": false,
+   "note": "Сработал детектор предзнания на канареечных позициях 2, 6, 10 (разрыв времени 4,8 с против 62 с на свежих зёрнах)."
+  },
+  {
+   "attempt_id": "demo-seed-02",
+   "at": "2026-10-20T14:22:00+00:00",
+   "actor": "Скрипт: анализ открытого кода шаблонов + случайный выбор",
+   "claimed_grade": "senior",
+   "true_level_hint": "middle",
+   "strategy": "generator_source_analysis",
+   "theta_est": 0.18,
+   "verdict": "not_confirmed",
+   "verdict_title": "Не подтверждён",
+   "canary_flagged": false,
+   "false_confirmed": false,
+   "note": "Токен item_id не содержит seed; на кодовых заданиях и 3-шаговом инциденте у порога Senior (b = 1,0) индекс LLR = −4,12."
+  },
+  {
+   "attempt_id": "demo-seed-03",
+   "at": "2026-10-20T14:35:00+00:00",
+   "actor": "Копирование текста заданий во внешнюю LLM в обход буфера",
+   "claimed_grade": "senior",
+   "true_level_hint": "junior",
+   "strategy": "external_llm_copy",
+   "theta_est": 0.64,
+   "verdict": "needs_followup",
+   "verdict_title": "Нужен доп. этап / устная защита",
+   "canary_flagged": true,
+   "false_confirmed": false,
+   "note": "Обнаружена скрытая ИИ-метка («Бергамот») в развёрнутом ответе и расхождение person-fit l_z = −2,41; назначена 3-минутная устная защита."
+  }
+ ]
+}

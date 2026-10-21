@@ -93,11 +93,11 @@ def _suppress(rows: list[dict], total: dict) -> None:
             return
 
 
-def compute(db: Session, days: int | None = None, d: Data | None = None) -> dict:
+def compute(db: Session, days: int | None = None, d: Data | None = None, include_demo: bool = True) -> dict:
     from app.modules.tariffs import plans as P
     from app.modules.tariffs import service as tariffs
 
-    d = d or load(db, days)
+    d = d or load(db, days, include_demo=include_demo)
     fsp_inv = {i.id for i in d.invs if (c := d.cands.get(i.candidate_user_id)) is not None and c.has_fsp}
     inv_ids = [i.id for i in d.invs]
     hired = set(db.scalars(select(HiringOutcome.invitation_id).where(HiringOutcome.invitation_id.in_(inv_ids),
@@ -140,7 +140,7 @@ def compute(db: Session, days: int | None = None, d: Data | None = None) -> dict
     from app.fsp_cabinet.analytics import _jury
     from app.modules.tariffs.models import CompanyTariff
 
-    _, allowed = _jury(db)  # без песочниц жюри; партнёры без активности за период — тоже в списке (нули)
+    _, allowed = _jury(db, include_demo=include_demo)  # без песочниц жюри; партнёры без активности за период — тоже в списке (нули)
     partner_ids = {cid for cid in companies if tariffs.is_partner(db, cid)} | (
         set(db.scalars(select(CompanyTariff.company_id).where(CompanyTariff.fsp_partner.is_(True))).all()) & allowed)
     partners = []

@@ -7530,6 +7530,16 @@
             "description": "Talantix: refresh-токен (если не в JSON)",
             "title": "Refresh Token"
           },
+          "revoke": {
+            "default": false,
+            "title": "Revoke",
+            "type": "boolean"
+          },
+          "rotate": {
+            "default": false,
+            "title": "Rotate",
+            "type": "boolean"
+          },
           "stage_id": {
             "anyOf": [
               {
@@ -12629,10 +12639,16 @@
             "title": "Min Score"
           },
           "real_only": {
-            "default": false,
-            "description": "Исключить модельные и синтетические профили (profiles.is_synthetic)",
-            "title": "Real Only",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Исключить модельные и синтетические профили (для реальных учёток true по умолчанию)",
+            "title": "Real Only"
           },
           "relaxation": {
             "anyOf": [
@@ -15758,6 +15774,16 @@
           "enabled": {
             "default": false,
             "title": "Enabled",
+            "type": "boolean"
+          },
+          "revoke": {
+            "default": false,
+            "title": "Revoke",
+            "type": "boolean"
+          },
+          "rotate": {
+            "default": false,
+            "title": "Rotate",
             "type": "boolean"
           },
           "status_id": {
@@ -21491,6 +21517,35 @@
         "title": "ProposedSlot",
         "type": "object"
       },
+      "ProtocolClaimDecideIn": {
+        "properties": {
+          "action": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "ProtocolClaimDecideIn",
+        "type": "object"
+      },
       "ProtocolConfirmIn": {
         "properties": {
           "consent_employers": {
@@ -23423,13 +23478,17 @@
           "huntflow": {
             "$ref": "#/components/schemas/HuntflowIn",
             "default": {
-              "enabled": false
+              "enabled": false,
+              "revoke": false,
+              "rotate": false
             }
           },
           "webhook": {
             "$ref": "#/components/schemas/WebhookIn",
             "default": {
-              "enabled": false
+              "enabled": false,
+              "revoke": false,
+              "rotate": false
             }
           }
         },
@@ -29732,6 +29791,16 @@
           "enabled": {
             "default": false,
             "title": "Enabled",
+            "type": "boolean"
+          },
+          "revoke": {
+            "default": false,
+            "title": "Revoke",
+            "type": "boolean"
+          },
+          "rotate": {
+            "default": false,
+            "title": "Rotate",
             "type": "boolean"
           },
           "secret": {
@@ -45162,7 +45231,7 @@
                 }
               }
             },
-            "description": "Некорректный формат набора данных. Коды `detail.code`: `invalid_dataset`; `empty_dataset` — Передан пустой набор данных. Загрузите файл JSON или CSV либо используйте образец.; `invalid_json_root` — Корнем JSON должен быть объект с полями needs (или vacancies) и candidates.; `empty_csv` — В CSV-файле нет строк данных.; `invalid_json` — Ошибка разбора JSON: проверьте синтаксис файла (…).; `invalid_csv` — Не удалось прочитать CSV: …; `invalid_csv_row` — Строка …: укажите столбец kind (need / candidate / label) или плоские столбцы need_id и candidate_id.; `no_needs` — В наборе должна быть хотя бы одна вакансия (поле needs или vacancies).; ещё 6."
+            "description": "Некорректный формат набора данных. Коды `detail.code`: `invalid_dataset`; `empty_dataset` — Передан пустой набор данных. Загрузите файл JSON или CSV либо используйте образец.; `invalid_json_root`; `empty_csv` — В CSV-файле нет строк данных.; `invalid_json` — Ошибка разбора JSON: проверьте синтаксис файла (…).; `invalid_csv` — Не удалось прочитать CSV: …; `invalid_csv_row` — Строка …: укажите столбец kind (need / candidate / label) или плоские столбцы need_id и candidate_id. Образец: /api/employer/benchmark/sample?format=csv.; `no_needs`; ещё 6."
           }
         },
         "security": [
@@ -45301,15 +45370,21 @@
             }
           },
           {
-            "description": "Исключить модельные и синтетические профили (profiles.is_synthetic)",
+            "description": "Исключить модельные и синтетические профили (для реальных учёток true по умолчанию)",
             "in": "query",
             "name": "real_only",
             "required": false,
             "schema": {
-              "default": false,
-              "description": "Исключить модельные и синтетические профили (profiles.is_synthetic)",
-              "title": "Real Only",
-              "type": "boolean"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Исключить модельные и синтетические профили (для реальных учёток true по умолчанию)",
+              "title": "Real Only"
             }
           },
           {
@@ -46357,6 +46432,26 @@
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "categories_api_employer_categories_get",
+        "parameters": [
+          {
+            "description": "Исключить модельные и синтетические профили",
+            "in": "query",
+            "name": "real_only",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Исключить модельные и синтетические профили",
+              "title": "Real Only"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -46420,6 +46515,16 @@
               }
             },
             "description": "company_required — сначала заполните профиль компании"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
           }
         },
         "security": [
@@ -58113,6 +58218,151 @@
           }
         ],
         "summary": "Выдать или снять метку «Партнёр ФСП»",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
+    "/api/fsp-cabinet/protocol-claims": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "list_protocol_claims_api_fsp_cabinet_protocol_claims_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "pending_fsp",
+                "verified"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Protocol Claims Api Fsp Cabinet Protocol Claims Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Очередь заявок кандидатов на подтверждение достижений по официальным протоколам ФСП",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
+    "/api/fsp-cabinet/protocol-claims/{achievement_id}/decide": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "decide_protocol_claim_api_fsp_cabinet_protocol_claims__achievement_id__decide_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "achievement_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Achievement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtocolClaimDecideIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Decide Protocol Claim Api Fsp Cabinet Protocol Claims  Achievement Id  Decide Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "claim_not_found",
+                    "message": "Заявка на подтверждение протокола не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Заявка не найдена. Коды `detail.code`: `claim_not_found` — Заявка на подтверждение протокола не найдена."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Подтвердить или отклонить заявку кандидата по официальному протоколу ФСП",
         "tags": [
           "fsp-cabinet"
         ]

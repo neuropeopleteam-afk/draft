@@ -20,8 +20,8 @@ const LINKS: { to: string; n: string; title: string; text: string; cta: string; 
     text: "Метрики подбора и теста с подписью расчёта: синтетика, модельная разметка, повтор теста, калибровка и ограничения.", cta: "Открыть протоколы" },
   { to: "/validation#red-button", n: "03", title: "Красная кнопка: атаки на ИИ и античит", testid: "exp-security",
     text: "Атакуйте сами на живых демо-данных в памяти: инъекции в оценщик, утечка банка заданий, завышение ответов.", cta: "Запустить атаку" },
-  { to: "/validation#evaluate", n: "04", title: "Проверка на своём JSON/CSV-наборе", testid: "exp-evaluate",
-    text: "Свои анонимные потребности и профили (до 50 и 500) — выдача и p@k/nDCG@k на ваших данных; данные живут только в памяти запроса.", cta: "Загрузить набор" },
+  { to: "/validation#evaluate", n: "04", title: "Проверка на своём наборе пар", testid: "exp-evaluate",
+    text: "Свои анонимные потребности и профили (до 50 и 500) — выдача и метрики точности на ваших данных; данные живут только в памяти запроса.", cta: "Загрузить набор" },
 ];
 
 export default function Expertise() {
@@ -94,12 +94,12 @@ export default function Expertise() {
             <span className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-rose-500/25 blur-3xl" aria-hidden="true" />
             <span className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-indigo-500/25 blur-3xl" aria-hidden="true" />
             <span className="relative flex flex-wrap items-center gap-2 font-mono text-xs font-bold uppercase tracking-[0.2em] text-rose-300">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-rose-400" />Инновация 00 · супер-фишка · war room live
+              <span className="h-2 w-2 animate-pulse rounded-full bg-rose-400" />Интерактивный стенд · проверка вживую
             </span>
             <span className="relative mt-3 block text-2xl font-black leading-tight md:text-3xl">Боевой ИИ-Полигон: Архитектура, Аватар и Античит вживую</span>
             <span className="relative mt-3 grid gap-3 text-sm text-white/75 md:grid-cols-2">
-              <span><b className="text-white">Режим А.</b> Живая схема микросервисов в огне (Payment Storm, Kafka Lag, Kubernetes OOM, Prompt Injection): включаете паттерны, правите патч, жмёте «Применить хотфикс в продакшн» — p99 падает с 4 400 до 32 мс, а ИИ-архитектор голосом двигает шкалу IRT θ.</span>
-              <span><b className="text-white">Режим Б.</b> Split-screen «нечестный кандидат vs радар 21 сигнала»: канарейка U+2063, клавиатурная биометрия, индекс l_z = −3,42 и автоматический вызов на 3-минутную устную защиту с видеоаватаром.</span>
+              <span><b className="text-white">Режим А.</b> Живая схема микросервисов под нагрузкой: включайте режимы отказоустойчивости, правьте конфигурацию и проверяйте реакцию системы в реальном времени.</span>
+              <span><b className="text-white">Режим Б.</b> Сравнение «нечестный кандидат против контроля самостоятельности»: скрытая метка задания, темп набора и автоматический вызов на устную защиту.</span>
             </span>
             <span className="relative mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-[#1a1240] transition group-hover:bg-rose-50">Открыть Боевой ИИ-Полигон <span aria-hidden="true">→</span></span>
           </Link>

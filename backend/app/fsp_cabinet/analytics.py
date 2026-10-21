@@ -123,9 +123,16 @@ class Data:
     demo_companies: set = field(default_factory=set)
 
 
-def _jury(db: Session) -> tuple[set, set]:
+def _jury(db: Session, include_demo: bool = True) -> tuple[set, set]:
     """Учётки демо жюри (общее демо и все песочницы) и компании, которые в аналитику входят: все, кроме компаний
-    жюри (строки удалённых компаний, если БД не удалила их каскадом, тоже не входят)."""
+    жюри (а при include_demo=False — и кроме всех демо-компаний и демо-пользователей)."""
+    if not include_demo:
+        users = set(db.scalars(select(User.id).where(User.is_demo.is_(True))).all())
+        cond = Company.is_demo.is_(True)
+        if users:
+            cond = or_(cond, Company.created_by.in_(users))
+        companies = set(db.scalars(select(Company.id)).all())
+        return users, companies - set(db.scalars(select(Company.id).where(cond)).all())
     users = set(db.scalars(select(User.id).where(User.email.like(f"%@{jury_scope.DOMAIN}"))).all())
     cond = and_(Company.is_demo.is_(True), Company.name.like("Демо жюри%"))
     if users:
@@ -134,12 +141,16 @@ def _jury(db: Session) -> tuple[set, set]:
     return users, companies - set(db.scalars(select(Company.id).where(cond)).all())
 
 
-def load(db: Session, days: int | None = None) -> Data:
+def load(db: Session, days: int | None = None, include_demo: bool = True) -> Data:
     since = utcnow() - timedelta(days=days) if days else None
-    jury_users, companies = _jury(db)
+    jury_users, companies = _jury(db, include_demo=include_demo)
     cands: dict[uuid.UUID, Cand] = {}
-    for p in db.scalars(select(CandidateProfile).join(User, User.id == CandidateProfile.user_id).where(
-            CandidateProfile.current_category_id.is_not(None), User.email.not_like(f"%@{jury_scope.DOMAIN}"))).all():
+    pq = select(CandidateProfile).join(User, User.id == CandidateProfile.user_id).where(
+        CandidateProfile.current_category_id.is_not(None), User.email.not_like(f"%@{jury_scope.DOMAIN}")
+    )
+    if not include_demo:
+        pq = pq.where(User.is_demo.is_(False), CandidateProfile.is_synthetic.is_(False))
+    for p in db.scalars(pq).all():
         cands[p.user_id] = Cand(p.user_id, p.current_category_id, p.current_direction_id or p.current_category_id.split(".")[0])
     pp = {p.id: p for p in db.scalars(select(FspPassport).where(FspPassport.user_id.in_(list(cands)))).all()} if cands else {}
     for p in pp.values():
@@ -181,6 +192,8 @@ def load(db: Session, days: int | None = None) -> Data:
         nq = nq.where(EmployerNeed.created_at >= since)
     needs = [n for n in db.scalars(nq).all() if n.company_id in companies]
     cq = select(Cup).where(Cup.status != "cancelled", Cup.jury_scope.is_(None))
+    if not include_demo:
+        cq = cq.where(Cup.is_demo.is_(False))
     if since:
         cq = cq.where(Cup.ends_at >= since)
     cups = [c for c in db.scalars(cq).all() if c.company_id in companies]
@@ -442,8 +455,8 @@ def cups_section(d: Data, db: Session) -> list[dict]:
     return out
 
 
-def report(db: Session, days: int | None = None) -> dict:
-    d = load(db, days)
+def report(db: Session, days: int | None = None, include_demo: bool = True) -> dict:
+    d = load(db, days, include_demo=include_demo)
     return {"generated_at": utcnow().isoformat(), "k": K, "period_days": days, "overview": overview(d),
             "demand": demand(d), "fsp_effect": fsp_effect(d), "salaries": salaries(d), "funnel": funnel(d),
             "cups": cups_section(d, db), "methodology": METHODOLOGY}

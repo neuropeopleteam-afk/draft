@@ -7,13 +7,14 @@ need_id — только потребность своей компании; с�
 from __future__ import annotations
 
 from functools import lru_cache
+import datetime as dt
 import json
 from pathlib import Path
 import threading
 import time
 import uuid
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
@@ -400,3 +401,85 @@ def attempts_repeat(db: Session = Depends(get_db)):
     from app.modules.validation import attempts_repeat as ar
 
     return {"synthetic": ar.load(), "live": ar.live(db)}
+
+
+# --- А4 (21.10): прежние блоки «SPRT-симуляция», «утечка K», «согласие с экспертами» сняты — проверка 20.10 показала,
+# что они считались не на продукте (синтетический пул, множитель D = 1,7, константы). Замена — симуляция продукта
+# (product_sim.py → docs/NUMBERS.json grade_verdict) и настоящие боты через движок (cheat_bots.py). Адреса оставлены,
+# чтобы старые ссылки получали честный ответ, а не 404.
+_RETIRED = {
+    "retired": True,
+    "reason_ru": "Расчёт снят 21.10: он был не на движке продукта. Актуальные цифры — docs/NUMBERS.json → grade_verdict "
+                 "(симуляция продукта) и cheat_bots (боты через движок).",
+}
+CHEAT_JSON = Path(__file__).resolve().parent / "data" / "cheat_bots.json"
+_CHEAT_LIVE: list[dict] = []
+_CHEAT_LOCK = threading.Lock()
+_CHEAT_TIMES: list[float] = []
+CHEAT_LIVE_PER_HOUR = 40
+_CHEAT_BOTS = None
+
+
+@router.get("/sprt-verdict", summary="Снято 21.10 (не на продукте) — см. NUMBERS.json → grade_verdict")
+def get_sprt_verdict():
+    return _RETIRED
+
+
+@router.get("/leak-k-variants", summary="Снято 21.10 (формула, а не прогон) — см. NUMBERS.json → cheat_bots")
+def get_leak_k_variants():
+    return _RETIRED
+
+
+@router.get("/cheat-challenge", summary="«Обмани тест»: отчётный прогон ботов через движок и последние живые попытки")
+def get_cheat_challenge():
+    rep = json.loads(CHEAT_JSON.read_text(encoding="utf-8")) if CHEAT_JSON.exists() else {}
+    return {"table": rep.get("table"), "meta": rep.get("meta"), "attempts": list(reversed(_CHEAT_LIVE[-20:]))}
+
+
+class CheatAttemptIn(BaseModel):
+    strategy: str = "longest"
+
+
+_LIVE_STRATEGIES = {"random", "longest", "median_number", "overlap", "position_A", "position_B", "position_C",
+                    "position_D", "leak_10", "control"}
+
+
+@router.post("/cheat-challenge/attempt", summary="Живая попытка бота: настоящий тест через движок (реальные варианты и проверка)")
+def post_cheat_attempt(body: CheatAttemptIn | None = None):
+    import time as _time
+
+    from app.modules.validation import cheat_bots
+
+    b = body or CheatAttemptIn()
+    if b.strategy not in _LIVE_STRATEGIES:
+        raise HTTPException(status_code=400, detail="Неизвестная стратегия")
+    now = _time.time()
+    while _CHEAT_TIMES and now - _CHEAT_TIMES[0] > 3600:
+        _CHEAT_TIMES.pop(0)
+    if len(_CHEAT_TIMES) >= CHEAT_LIVE_PER_HOUR:
+        raise HTTPException(status_code=429, detail="Лимит живых попыток на час исчерпан — смотрите отчётный прогон")
+    if not _CHEAT_LOCK.acquire(blocking=False):
+        raise HTTPException(status_code=429, detail="Другой бот уже проходит тест — попробуйте через полминуты")
+    try:
+        global _CHEAT_BOTS
+        if _CHEAT_BOTS is None:
+            _CHEAT_BOTS = cheat_bots.Bots(seed=int(now) % (2**31 - 1))
+        _CHEAT_TIMES.append(now)
+        t0 = _time.time()
+        k = 10 if b.strategy == "leak_10" else 0
+        r = _CHEAT_BOTS.attempt(b.strategy, k)
+        entry = {"at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "strategy": b.strategy,
+                 "claim": r["claim"], "direction": r["direction"], "verdict_main": r["verdict_main"],
+                 "grade_final": r["grade_final"], "refined": r["refined"], "false_confirmed": bool(r["false_confirmed"]),
+                 "items": int(r.get("items") or 0), "elapsed_s": round(_time.time() - t0, 1)}
+        _CHEAT_LIVE.append(entry)
+        del _CHEAT_LIVE[:-200]
+        return {"latest": entry, "attempts": list(reversed(_CHEAT_LIVE[-20:]))}
+    finally:
+        _CHEAT_LOCK.release()
+
+
+@router.get("/expert-surrogate", summary="Снято 21.10 (числа без источника) — разметка E1–E3 была модельной")
+def get_expert_surrogate():
+    return _RETIRED
+

@@ -181,6 +181,16 @@ function useViewport() {
   return vp;
 }
 
+/** ?pitch=1 — нажатие на Настю запускает показ для жюри (флаг живёт в вкладке; ?pitch=0 снимает). */
+function pitchFlag(): boolean {
+  try {
+    const q = new URLSearchParams(window.location.search).get("pitch");
+    if (q === "1") sessionStorage.setItem("draft.elena.pitch", "1");
+    if (q === "0") sessionStorage.removeItem("draft.elena.pitch");
+    return sessionStorage.getItem("draft.elena.pitch") === "1";
+  } catch { return false; }
+}
+
 /** Флаги проверок (адрес ?elena_debug=1 / ?elena_novideo=1 или localStorage draft.elena.debug / draft.elena.novideo). */
 function flag(name: string): boolean {
   try {
@@ -293,6 +303,18 @@ export function InteractiveAvatarTour() {
     else { setOpen(false); setUi(null); }
   }, []);
 
+  // показ для жюри (2 минуты): скрытый запуск — Ctrl+Alt+P на любой странице, или ?pitch=1 и нажатие на Настю
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.altKey && (e.code === "KeyP" || e.key.toLowerCase() === "p" || e.key.toLowerCase() === "з")) {
+        e.preventDefault();
+        begin("pitch", 0);   // синхронно в обработчике клавиши: звук и микрофон разрешаются этим жестом
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [begin]);
+
   // внешний запуск (кнопки «Пройти обзор» на страницах)
   useEffect(() => {
     const onEv = (e: Event) => {
@@ -363,7 +385,7 @@ export function InteractiveAvatarTour() {
   if (!open || !ui) {
     return (
       <div className="fixed right-5 z-40 print:hidden" style={{ bottom: "calc(1.25rem + var(--mobile-tabbar-h, 0px))" }}>
-        <button type="button" onClick={() => begin()} data-testid="floating-avatar-concierge"
+        <button type="button" onClick={() => begin(pitchFlag() ? "pitch" : undefined)} data-testid="floating-avatar-concierge"
           className="group flex items-center gap-3 rounded-full bg-[#120E24]/95 py-2 pl-2 pr-4 text-left text-white shadow-xl ring-1 ring-white/15 backdrop-blur transition hover:-translate-y-0.5 hover:ring-white/30">
           <span className="relative h-12 w-12 shrink-0">
             <img src="/avatar/guide.webp" alt="" aria-hidden="true" className="h-12 w-12 rounded-full object-cover" />
@@ -394,13 +416,18 @@ export function InteractiveAvatarTour() {
     : micOn && ui.speaking ? "Говорю"
     : listening ? (large && !f.small ? lbl.long : lbl.short)
     : micOn ? "Думаю…" : lbl.short;
-  // подсказка «ваша очередь»: в паузах обзора и когда Настя спросила — чтобы было видно, что можно говорить
-  const turnHint = listening && (ui.phase === "listening" || ui.phase === "paused")
-    ? (ui.phase === "paused" ? (large ? "Пауза. Скажите «дальше» или спросите" : "Пауза — скажите «дальше»")
-      : !large ? "Можно говорить"
-      : ui.awaiting === "start" ? "Скажите или нажмите: кандидат, работодатель, Федерация"
-      : ui.track ? "Можно говорить: вопрос, «дальше», «ниже» или «покажи …»" : "Говорите: назовите раздел или задайте вопрос")
-    : null;
+  // подсказка: перебивают по имени («Настя, покажи …»), когда она спросила — отвечают как обычно, после перебивания —
+  // «дальше» продолжает показ (решение владельца 21.10)
+  const wakeMode = ui.listen === "wake";
+  const turnHint = !micOn || ui.userTalking || ui.phase === "connecting" || ui.phase === "idle" || ui.phase === "thinking" ? null
+    : ui.speaking || ui.phase === "touring" ? (large ? "Скажите «Настя», чтобы перебить" : "Скажите «Настя»")
+    : !listening ? null
+    : ui.phase === "paused" ? (large ? "Пауза. Скажите «дальше» или «Настя» и вопрос" : "Пауза — «дальше»")
+    : !wakeMode ? (ui.awaiting === "start" && large ? "Скажите или нажмите: кандидат, работодатель, Федерация" : "Слушаю")
+    : ui.awaiting === "continue" || ui.awaiting === "detour" ? (large ? "Скажите «дальше» — продолжу, или «Настя» и вопрос" : "Скажите «дальше»")
+    : (large ? "Скажите «Настя» и вопрос или раздел" : "Скажите «Настя»");
+  // пока говорит — подсказка тихая (тёмная, без пульса); слушает — зелёная
+  const quietHint = !!turnHint && (ui.speaking || ui.phase === "touring");
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
 
@@ -451,10 +478,11 @@ export function InteractiveAvatarTour() {
 
           {turnHint && !ui.userTalking && (
             <div className={`pointer-events-none absolute inset-x-0 flex justify-center ${large ? "bottom-[4.6rem]" : f.small ? "bottom-[3.1rem]" : "bottom-[3.4rem]"}`} aria-live="polite" data-testid="elena-turn-hint">
-              <span className={`flex items-center gap-2 whitespace-nowrap rounded-full bg-emerald-600/85 px-3 py-1 font-medium text-white shadow-lg backdrop-blur ${large ? "text-sm" : "text-[11px]"}`}>
+              <span className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1 font-medium text-white shadow-lg backdrop-blur ${quietHint ? "bg-black/55" : "bg-emerald-600/85"} ${large ? "text-sm" : "text-[11px]"}`}
+                data-mode={quietHint ? "wake" : "open"}>
                 <span className="relative flex h-2 w-2" aria-hidden="true">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                  {!quietHint && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />}
+                  <span className={`relative inline-flex h-2 w-2 rounded-full ${quietHint ? "bg-white/70" : "bg-white"}`} />
                 </span>
                 {turnHint}
               </span>

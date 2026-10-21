@@ -19,6 +19,15 @@
   input[type="checkbox"], input[type="radio"] { accent-color: #FF0053; width: 1rem; height: 1rem; flex-shrink: 0; }
   /* Таблицы: числа в столбцах одинаковой ширины */
   td, th { font-variant-numeric: tabular-nums; }
+  /* Выпадающие списки и полосы прокрутки (аккуратная отрисовка на Windows и во всех браузерах) */
+  select, option { background-color: #ffffff; color: #1B1340; }
+  .np select, .np option { background-color: var(--np-bg-2); color: var(--np-text); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(49, 15, 83, 0.25) transparent; }
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background-color: rgba(49, 15, 83, 0.25); border-radius: 9999px; }
+  .np * { scrollbar-color: rgba(165, 157, 255, 0.35) transparent; }
+  .np *::-webkit-scrollbar-thumb { background-color: rgba(165, 157, 255, 0.35); }
   @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }

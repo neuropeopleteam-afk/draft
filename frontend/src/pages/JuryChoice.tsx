@@ -33,8 +33,8 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
       <main id="main" className="mx-auto max-w-content px-4 py-10 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night md:text-4xl">Как будете проверять?</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-brand-ink/75">
-          У каждого эксперта своя копия демо: ваши действия и сброс не видны другим. Режим можно сменить в любой момент в шапке проводника.
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-brand-ink/75" data-testid="jury-choice-lead">
+          Это экран выбора маршрута проверки для жюри: выберите быстрый сценарий на 12 минут или полный пошаговый справочник, чтобы пройти продукт в собственной изолированной песочнице.
         </p>
         {err && <div className="mt-4"><Alert>{err}</Alert></div>}
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
@@ -60,7 +60,7 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
           <section className="card flex flex-col p-5 sm:p-6" aria-labelledby="full-t" data-testid="choice-full">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{STEPS.length} шагов · справочник</p>
             <h2 id="full-t" className="mt-1 text-xl font-extrabold text-brand-night">Полный справочник</h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-brand-ink/75">Все функции по порядку с подробными объяснениями: регистрация, полный тест, паспорт грейда, статусы грейда, «Что если», подписки, кубки, переписка, передача в ATS, кабинет ФСП, второй фактор, живая демонстрация по QR.</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-brand-ink/75">Все функции по порядку с подробными объяснениями: регистрация, полный тест, паспорт грейда, статусы грейда, «Что если», подписки, кубки, переписка, передача в кадровую систему, кабинет ФСП, двухэтапный вход, живая демонстрация по QR.</p>
             <p className="mt-2 text-xs leading-relaxed text-brand-ink/65">Полный тест на грейд — 8–16 заданий и дотестирование у порога, планируйте до 80 минут; в проверке за 12 минут вместо него — экспресс-тест краткого режима жюри.</p>
             <div className="mt-auto flex flex-wrap gap-2 pt-5">
               <button type="button" className="btn-ghost" disabled={busy} onClick={startFull}>Начать справочник с регистрации</button>
