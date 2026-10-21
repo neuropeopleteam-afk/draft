@@ -105,13 +105,9 @@ def test_open_answer_grade_and_second_have_no_vendor_names(monkeypatch, net):
     assert not found, "\n".join(found)
 
 
-A4_TEXTS = pytest.mark.xfail(strict=True, reason="тексты методики А4 называют модели и поставщиков (expert_surrogate, "
-                              "критерий «Техника»): правка — в зоне А4 по решению штаба; после неё xfail снять")
-
-
-@pytest.mark.parametrize("path", ["/api/validation/report",
-                                  pytest.param("/api/validation/headline", marks=A4_TEXTS),
-                                  pytest.param("/api/validation/criteria", marks=A4_TEXTS)])
+# 21.10 (Финал-2): тексты методики А4 больше не называют модели и поставщиков (ag/a4-method 5b1c8fb71e,
+# «без имён поставщиков в /api/validation/*») — xfail strict снят: headline/criteria давали XPASS → FAILED.
+@pytest.mark.parametrize("path", ["/api/validation/report", "/api/validation/headline", "/api/validation/criteria"])
 def test_validation_first_screen_has_no_vendor_names(client, path):
     r = client.get(path)
     assert r.status_code == 200, r.text
