@@ -1199,7 +1199,8 @@ export class ElenaEngine {
   private prepare(meta: Meta, ep: number): Promise<boolean> | null {
     if (meta.action === "point" && meta.point) { this.showPoint(meta.point, ep); return null; }  // рамка — сразу с ответом
     const ns = meta.action === "next_section" ? this.nextSectionPos() : null;
-    const step = meta.action === "start_tour" ? TRACKS[this.roleOf(meta)][0]
+    const first = meta.action === "start_tour" ? TRACKS[this.roleOf(meta)] : null;
+    const step = first ? (first[meta.skip_reg && first[0]?.endsWith("-register") ? 1 : 0] ?? first[0])
       : meta.action === "goto" && meta.step && STEPS[meta.step] ? meta.step
       : ns ? ns.ids[ns.i] : null;
     if (!step) return null;
@@ -1220,8 +1221,9 @@ export class ElenaEngine {
       if (!this.alive(ep)) return;
       if (meta.skip_reg && TRACKS[role][0]?.endsWith("-register")) {
         // «сразу кабинет», «без регистрации», вторая роль в разговоре — с экрана кабинета
+        // связка «начнём с регистрации…» тут не к месту — ответ «открываю кабинет…» уже прозвучал
         this.lastCabinet = null;
-        void this.runTour({ ids: TRACKS[role], track: role, i: 1, b: 0 }, ep, { bridge: true, named: !!meta.user_name });
+        void this.runTour({ ids: TRACKS[role], track: role, i: 1, b: 0 }, ep, { bridge: false });
         return;
       }
       void this.runTour({ ids: TRACKS[role], track: role, i: 0, b: 0 }, ep, { bridge: true, named: false });

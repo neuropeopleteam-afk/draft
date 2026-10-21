@@ -681,7 +681,7 @@ def warm_async() -> None:
         n = 0
         # постоянные фразы, реплики шагов и типовые ответы на выбор роли (звучат сразу, без синтеза)
         texts = script_texts()
-        extra = [_start_reply(None, r, False, ft) for r in ROLES for ft in (True, False)]
+        extra = [_start_reply(None, r, False, ft, skip_reg=sk) for r in ROLES for ft in (True, False) for sk in (True, False)]
         try:
             # только PCM 24 кГц: Настя говорит им и в видеопоток, и запасным голосом; mp3 грел бы вдвое больше знаков синтеза
             for text in [*texts, *extra]:
@@ -1208,15 +1208,20 @@ def _drop_repeats(reply: str, said: list[str]) -> str:
     return " ".join(keep)
 
 
-def _start_reply(name: str | None, role: Role, first_time: bool, first_tour: bool = False) -> str:
+def _start_reply(name: str | None, role: Role, first_time: bool, first_tour: bool = False, skip_reg: bool = False) -> str:
     who = {"candidate": "путь кандидата — от регистрации до приглашений", "employer": "кабинет работодателя — от регистрации до найма",
            "fsp": "кабинет Федерации", "all": "весь сайт по шагам"}[role]
+    verb = "показываю"
+    if skip_reg and role != "all":
+        # без регистрации — сразу кабинет, и в ответе про регистрацию ни слова
+        who = {"candidate": "кабинет кандидата", "employer": "кабинет работодателя", "fsp": "кабинет Федерации"}[role]
+        verb = "открываю"
     tail = " Перебивайте и спрашивайте в любой момент." if first_tour else ""
     if name and first_time:
-        return f"Очень приятно, {name}. Показываю {who}.{tail}"
+        return f"Очень приятно, {name}. {verb.capitalize()} {who}.{tail}"
     if name:
-        return f"{name}, показываю {who}.{tail}"
-    return f"Хорошо, показываю {who}.{tail}"
+        return f"{name}, {verb} {who}.{tail}"
+    return f"Хорошо, {verb} {who}.{tail}"
 
 
 def _clean_reply(text: str) -> str:
@@ -1305,7 +1310,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         act = offer.get("action")
         if act == "start_tour":
             r = offer.get("role") if offer.get("role") in ROLES else (cur_role or "all")
-            return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": r, "reply": _start_reply(name, r, False, first_tour)}
+            return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": r, "reply": _start_reply(name, r, False, first_tour, skip_reg=_skip_reg(msg, s))}
         if act == "goto" and offer.get("step") in STEP_IDS:
             return {**base, "kind": "instant", "action": "goto", "step": offer["step"], "phrase": "goto"}
         if act == "point" and offer.get("point"):
@@ -1331,7 +1336,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
                 return {**base, "kind": "instant", "action": "resume"}
             if cur_role:
                 return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": cur_role,
-                        "reply": _start_reply(name, cur_role, False, first_tour)}
+                        "reply": _start_reply(name, cur_role, False, first_tour, skip_reg=_skip_reg(msg, s))}
             return {**base, "kind": "instant", "action": "ask_role", "reply": f"Хорошо. {PHRASES['ask_role']}"}
         if awaiting == "checkin" and words_n <= 6:
             if CHECKIN_NO.search(t_norm):
@@ -1362,7 +1367,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
                 if cab_role and re.search(r"кабинет|путь|сторон|раздел", t_norm) and not (touring and cur_role == cab_role):
                     # «открой кабинет работодателя» — обзор этого кабинета (уже смотрели — браузер пройдёт коротко)
                     return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": cab_role,
-                            "reply": _start_reply(name, cab_role, False, first_tour)}
+                            "reply": _start_reply(name, cab_role, False, first_tour, skip_reg=_skip_reg(msg, s))}
                 return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto"}
         quick = classify(msg, touring=touring, paused=paused)
         if quick:
@@ -1375,13 +1380,13 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         if not touring and not paused and not is_q and words_n <= 5 and GO_BARE.search(_norm(msg)):
             r = cur_role or "all"   # «сразу покажи», «поехали» без уточнения — обзор (своей роли или всего сайта)
             ack("instant")
-            return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": r, "reply": _start_reply(name, r, first_time, first_tour)}
+            return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": r, "reply": _start_reply(name, r, first_time, first_tour, skip_reg=_skip_reg(msg, s))}
         if not touring and not paused and not is_q and words_n <= 6:
             det = detect_role(msg)
             if det:
                 ack("instant")
                 return {**base, "kind": "instant", "action": "start_tour", "role": det, "skip_reg": _skip_reg(msg, s),
-                        "reply": _start_reply(name, det, first_time, first_tour)}
+                        "reply": _start_reply(name, det, first_time, first_tour, skip_reg=_skip_reg(msg, s))}
             if HELLO.search(_norm(msg)) and words_n <= 3 and not first_time:
                 ack("instant")
                 return {**base, "kind": "instant", "action": "ask_role",
@@ -1390,7 +1395,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
                 r = cur_role or "all"
                 ack("instant")
                 return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": r,
-                        "reply": _start_reply(name, r, False, first_tour)}
+                        "reply": _start_reply(name, r, False, first_tour, skip_reg=_skip_reg(msg, s))}
             if first_time and words_n <= 4:
                 ack("instant")
                 return {**base, "kind": "instant", "action": "ask_role", "reply": f"Очень приятно, {name}. {PHRASES['ask_role']}"}
@@ -1449,7 +1454,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         # «покажи кабинет кандидата» — экскурсовод ведёт по кабинету, а не показывает один экран
         action, llm_role = "start_tour", {"cand-overview": "candidate", "emp-home": "employer", "fsp-cabinet": "fsp"}[step]
         if not reply or reply.rstrip().endswith("?"):
-            reply = _start_reply(name, llm_role, False, first_tour)
+            reply = _start_reply(name, llm_role, False, first_tour, skip_reg=_skip_reg(msg, s))
     if action == "point" and not point:
         action = "answer"
     if action == "start_tour" and not (llm_role or cur_role):
