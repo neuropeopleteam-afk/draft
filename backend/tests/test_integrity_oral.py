@@ -161,5 +161,6 @@ def test_api_end_to_end_integrity_oral(client, monkeypatch, stand, flag):  # noq
         assert v["title"] == sprt.VERDICT_TITLES["needs_oral_defense"]
         assert v["integrity_oral"] is True and v["followup"]["kind"] == "oral_defense"
         assert "устный разговор с Настей" in v["explanation"]
-        assert not res["confirmed"]  # грейд не подтверждён сразу — решает устный этап
+        # как и путь правила А6: категория — по решению SPRT, удержание — в вердикте; уровень по ответам — предварительный
+        assert res["grade_by_answers"]["preliminary"] is True
         assert out["result"]["details"]["verdict"]["status"] == "needs_followup"
