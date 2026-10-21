@@ -157,26 +157,25 @@ _FALLBACK_PROTOCOL_RANKS = {
 }
 
 
-def resolve_geo(city: str | None, fallback_idx: int = 0) -> tuple[str, str]:
+CITY_UNSPECIFIED_TITLE = "Город не указан"
+
+
+def resolve_geo(city: str | None, fallback_idx: int = 0) -> tuple[str | None, str]:
+    """Определяет (id федерального округа, субъект РФ) по названию города/региона.
+
+    Если город не указан или не входит в справочник городов РФ, возвращает ``(None, 'Город не указан')`` —
+    без искусственного распределения по округам.
+    """
+    _ = fallback_idx
     c = (city or "").strip().lower().replace("ё", "е")
+    if not c:
+        return None, CITY_UNSPECIFIED_TITLE
     if c in CITY_TO_GEO:
         return CITY_TO_GEO[c]
     for prefix, val in CITY_TO_GEO.items():
         if prefix in c:
             return val
-    hubs = [
-        ("cfo", "Москва и МО"),
-        ("szfo", "Санкт-Петербург и ЛО"),
-        ("pfo", "Республика Татарстан"),
-        ("ufo", "Свердловская область"),
-        ("sfo", "Новосибирская область"),
-        ("yufo", "Краснодарский край"),
-        ("pfo", "Нижегородская область"),
-        ("sfo", "Томская область"),
-        ("skfo", "Ставропольский край"),
-        ("dfo", "Приморский край"),
-    ]
-    return hubs[fallback_idx % len(hubs)]
+    return None, CITY_UNSPECIFIED_TITLE
 
 
 def _norm_protocol_region(raw_reg: str | None) -> tuple[str | None, str]:
@@ -242,8 +241,9 @@ def _load_hh_real_data() -> dict:
                 for it in items:
                     area = (it.get("labels") or {}).get("area") or it.get("area")
                     if isinstance(area, str) and area.strip():
-                        _, reg_title = resolve_geo(area)
-                        corpus_by_region[reg_title] += 1
+                        dist_id, reg_title = resolve_geo(area)
+                        if dist_id is not None:
+                            corpus_by_region[reg_title] += 1
                         if _ps_norm_reg is not None:
                             ps_reg, _ = _ps_norm_reg(area)
                             if ps_reg and ps_reg != reg_title:
@@ -520,13 +520,36 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
         for info in DISTRICTS
     }
 
+    unspecified = {
+        "confirmed_raw": 0,
+        "real_raw": 0,
+        "synthetic_raw": 0,
+        "fsp_raw": 0,
+        "demand_needs": 0,
+        "demand_invitations": 0,
+        "by_direction": defaultdict(int),
+        "by_grade": defaultdict(int),
+        "demand_by_direction": defaultdict(int),
+    }
+
     cand_list = list(d.cands.values())
     for idx, cand in enumerate(cand_list):
         direction = cand.direction or (cand.category.split(".")[0] if "." in cand.category else "backend")
         grade = cand.grade or (cand.category.split(".")[1] if "." in cand.category else "middle")
         dist_id, reg_title = resolve_geo(cand.city, idx)
-        st = dist_stats[dist_id]
         is_syn = bool(cand.is_synthetic)
+        if dist_id is None:
+            unspecified["confirmed_raw"] += 1
+            if is_syn:
+                unspecified["synthetic_raw"] += 1
+            else:
+                unspecified["real_raw"] += 1
+            if cand.has_fsp:
+                unspecified["fsp_raw"] += 1
+            unspecified["by_direction"][direction] += 1
+            unspecified["by_grade"][grade] += 1
+            continue
+        st = dist_stats[dist_id]
         st["confirmed_raw"] += 1
         if is_syn:
             st["synthetic_raw"] += 1
@@ -549,9 +572,14 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
         comp = companies.get(n.company_id)
         city = getattr(n, "city", None) or (getattr(comp, "city", None) if comp else None)
         dist_id, reg_title = resolve_geo(city, idx)
+        n_dir = getattr(n, "direction_id", None) or (n.requirements or {}).get("direction")
+        if dist_id is None:
+            unspecified["demand_needs"] += 1
+            if n_dir:
+                unspecified["demand_by_direction"][n_dir] += 1
+            continue
         st = dist_stats[dist_id]
         st["demand_needs"] += 1
-        n_dir = getattr(n, "direction_id", None) or (n.requirements or {}).get("direction")
         if n_dir:
             st["demand_by_direction"][n_dir] += 1
         st["regions"][reg_title]["demand"] += 1
@@ -565,18 +593,25 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
         else:
             comp = companies.get(inv.company_id)
             dist_id, reg_title = resolve_geo(getattr(comp, "city", None) if comp else None, 0)
-        st = dist_stats[dist_id]
-        st["demand_invitations"] += 1
         cat = d.cands.get(inv.candidate_user_id).category if inv.candidate_user_id in d.cands else ""
         direction = cat.split(".")[0] if "." in cat else "backend"
+        if dist_id is None:
+            unspecified["demand_invitations"] += 1
+            unspecified["demand_by_direction"][direction] += 1
+            continue
+        st = dist_stats[dist_id]
+        st["demand_invitations"] += 1
         st["demand_by_direction"][direction] += 1
         st["regions"][reg_title]["demand"] += 1
 
     out_districts = []
     recommendations = []
-    total_confirmed = sum(s["confirmed_raw"] for s in dist_stats.values())
-    total_syn = sum(s["synthetic_raw"] for s in dist_stats.values())
-    total_real = sum(s["real_raw"] for s in dist_stats.values())
+    mapped_confirmed = sum(s["confirmed_raw"] for s in dist_stats.values())
+    mapped_syn = sum(s["synthetic_raw"] for s in dist_stats.values())
+    mapped_real = sum(s["real_raw"] for s in dist_stats.values())
+    total_confirmed = mapped_confirmed + unspecified["confirmed_raw"]
+    total_syn = mapped_syn + unspecified["synthetic_raw"]
+    total_real = mapped_real + unspecified["real_raw"]
 
     for info in DISTRICTS:
         st = dist_stats[info["id"]]
@@ -603,7 +638,7 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
             priority = "normal"
 
         reg_rows = []
-        for r_title, r_val in sorted(st["regions"].items(), key=lambda kv: -(kv[1]["demand"] + kv[1]["confirmed_raw"])):
+        for r_title, r_val in sorted(st["regions"].items(), key=lambda kv: (-(kv[1]["demand"] + kv[1]["confirmed_raw"]), kv[0])):
             rc = r_val["confirmed_raw"]
             reg_rows.append({
                 "title": r_title,
@@ -652,16 +687,44 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
                 "priority": priority,
             })
 
-    recommendations.sort(key=lambda x: (0 if x["priority"] == "high" else 1, -(x["gap"] or 0)))
+    recommendations.sort(key=lambda x: (0 if x["priority"] == "high" else 1, -(x["gap"] or 0), x["district_id"]))
+    unspec_demand = unspecified["demand_needs"] * 3 + unspecified["demand_invitations"]
+    city_unspecified = {
+        "id": "unspecified",
+        "title": CITY_UNSPECIFIED_TITLE,
+        "confirmed": kc(unspecified["confirmed_raw"]),
+        "confirmed_raw": unspecified["confirmed_raw"],
+        "fsp_confirmed": kc(unspecified["fsp_raw"]),
+        "real_confirmed": kc(unspecified["real_raw"]),
+        "real_raw": unspecified["real_raw"],
+        "synthetic_confirmed": kc(unspecified["synthetic_raw"]),
+        "has_synthetic": unspecified["synthetic_raw"] > 0,
+        "demand_needs": unspecified["demand_needs"],
+        "demand_invitations": unspecified["demand_invitations"],
+        "demand_score": unspec_demand,
+        "gap": None,
+        "by_direction": {k: kc(v) for k, v in unspecified["by_direction"].items()},
+        "by_grade": {k: kc(v) for k, v in unspecified["by_grade"].items() if k in GRADE_ORDER},
+        "demand_by_direction": dict(unspecified["demand_by_direction"]),
+        "note": (
+            f"{CITY_UNSPECIFIED_TITLE}: кандидаты и потребности без указанного города (или вне справочника городов РФ) "
+            "вынесены отдельной строкой в итогах и не учитываются на карте и в расчёте разрыва федеральных округов."
+        ),
+    }
     return {
         "k": K,
         "total_confirmed": kc(total_confirmed),
         "total_real": kc(total_real),
         "total_synthetic": kc(total_syn),
+        "mapped_confirmed": kc(mapped_confirmed),
+        "mapped_real": kc(mapped_real),
         "has_synthetic": total_syn > 0,
+        "city_unspecified": city_unspecified,
+        "unspecified_note": city_unspecified["note"],
         "synthetic_note": (
             "Модельные (демо) профили стенда отмечены отдельно; переключатель «Только реальные кандидаты» "
-            "позволяет смотреть срез без синтетической популяции."
+            "позволяет смотреть срез без синтетической популяции. "
+            "Строка «Город не указан» учитывает профили и потребности без города в общих итогах (на карте и в разрыве округов они не учитываются)."
         ),
         "districts": out_districts,
         "recommendations": recommendations[:5],
