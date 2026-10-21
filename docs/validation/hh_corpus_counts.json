@@ -1,0 +1,30 @@
+{
+  "collected": 1289,
+  "collected_where": "data_local/hh_corpus/raw (вне git, 152-ФЗ не затрагивается: вакансии)",
+  "in_checks": 1131,
+  "sets": {
+    "dev": {
+      "n": 414,
+      "file": "docs/realdata/hh_match_corpus.json",
+      "collected_at": "2026-10-10"
+    },
+    "holdout1": {
+      "n": 381,
+      "file": "docs/realdata/hh_holdout_corpus.json",
+      "collected_at": "2026-10-21"
+    },
+    "holdout2": {
+      "n": 336,
+      "file": "docs/realdata/hh_holdout2_corpus.json",
+      "collected_at": "2026-10-21"
+    }
+  },
+  "overlap_by_id": {
+    "dev&holdout1": 0,
+    "dev&holdout2": 0,
+    "holdout1&holdout2": 0
+  },
+  "in_checks_found_in_raw": 1131,
+  "generated_at": "2026-10-21T15:38:31+00:00",
+  "recompute": "python3 tools/publish/hh_corpus_counts.py --raw /opt/spectrek_fsp/data_local/hh_corpus/raw"
+}

@@ -27,9 +27,11 @@ SOURCES = {  # источник → файл расчёта и команда п
     "path": (DATA / "path_retest.json", "make path-retest"),
     "report": (DATA / "report.json", "make validate"),
     # А4 (21.10): симуляция продукта (движок стенда на реальном банке) и боты через движок
-    "product": (DATA / "product_sim_test_calibrated.json",
-                "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest"),
-    "cheat": (DATA / "cheat_bots.json", "cd backend && python -m app.modules.validation.cheat_bots --n 100 --k 10,100"),
+    # итоговый прогон №2 (поправки №3–4): жёсткие условия, FINAL_SEEDS 4401–4410, N = 3 000, повтор и фиксированная форма
+    "product": (DATA / "product_sim_final_calibrated.json", "make product-sim"),
+    # стандартные условия S-T (поправка №3): заголовок; жёсткие («product») — рядом, как проверка на прочность
+    "product_st": (DATA / "product_sim_st.json", "make product-sim"),
+    "cheat": (DATA / "cheat_bots.json", "make cheat-bots"),
 }
 PERSONAS = {"candidate", "candidate_nofsp", "candidate_junior", "candidate_new", "employer", "expert", "fsp"}
 PERSONA_TITLE = {"candidate": "кандидат с ФСП", "candidate_nofsp": "кандидат без ФСП", "candidate_new": "кандидат без категории",
@@ -43,11 +45,13 @@ def go(label: str, to: str, persona: str | None = None, need: str | None = None)
 
 
 def metric(src: str, path: str, label: str, fmt: str, anchor: str, ci: str | None = None,
-           vs: tuple[str, ...] | None = None, note: str | None = None) -> dict:
+           vs: tuple[str, ...] | None = None, note: str | None = None, pair: tuple[str, str, str] | None = None) -> dict:
     """Число из JSON расчёта: path — поле через точку («metrics.platform.p@5.mean»), ci — поле с [lo, hi] или
-    префикс с .lo/.hi; vs — (подпись, поле[, формат]) для сравнения; fmt — pct, pct1, num1, num2, num3, signed3."""
+    префикс с .lo/.hi; vs — (подпись, поле[, формат]) для сравнения; fmt — pct, pct1, num1, num2, num3, signed3;
+    pair — (подпись, источник, поле): то же число в других условиях (правило владельца: стандартные условия —
+    заголовок, жёсткие — всегда рядом)."""
     return {"kind": "metric", "src": src, "path": path, "label": label, "fmt": fmt, "anchor": anchor, "ci": ci,
-            "vs": vs, "note": note}
+            "vs": vs, "note": note, "pair": pair}
 
 
 def link(label: str, anchor: str) -> dict:
@@ -86,23 +90,23 @@ CRITERIA: list[dict] = [
                  "фактам и вторая сторона — подойдёт ли предложение кандидату.",
           "proof": metric("bench", "groups.inflated.platform.irrelevant_inflated_top10",
                           "Неподходящие с раздутым резюме в топ-10", "pct1", "/validation#bench",
-                          vs=("у BM25", "groups.inflated.bm25.irrelevant_inflated_top10")),
+                          vs=("у поиска по словам резюме (BM25)", "groups.inflated.bm25.irrelevant_inflated_top10")),
           "limit": "Польза измерена на синтетическом мире; веса второй стороны заданы заранее, не обучены."},
          {"tz": "обоснованность ранжирования и объяснимость выдачи",
           "do": [go("Подборка с «почему»", "/employer/needs", "employer", need="платёжного шлюза"),
                  go("Абляции формулы", "/validation#ablations")],
-          "see": "У каждого кандидата — «почему» из подтверждённых фактов T1/T2; абляции показывают вклад каждой "
+          "see": "У каждого кандидата — «почему» из подтверждённых фактов (тестом или работой); абляции показывают вклад каждой "
                  "части формулы.",
           "proof": metric("bench", "paired_platform_minus.no_test.ndcg@10.mean",
-                          "Вклад теста: nDCG@10 падает без него", "signed3", "/validation#ablations",
+                          "Вклад теста: качество порядка выдачи (nDCG@10) падает без него", "signed3", "/validation#ablations",
                           ci="paired_platform_minus.no_test.ndcg@10"),
           "limit": "Веса формулы заданы экспертно и проверены на синтетике, а не обучены на найме."},
          {"tz": "Проверяется на тестовом наборе пар «вакансия – кандидат» (доля релевантных кандидатов в топе выдачи)",
           "do": [go("Бенчмарк со скрытой истиной", "/validation#bench"),
                  go("Свой закрытый набор", "/validation#closed-set")],
-          "see": "Доля релевантных в топ-5 с 95 % ДИ против BM25; свой JSON/CSV — метрики сразу, без сохранения.",
+          "see": "Доля релевантных в топ-5 с 95 % ДИ против поиска по словам резюме (BM25); свой JSON/CSV — метрики сразу, без сохранения.",
           "proof": metric("bench", "metrics.platform.p@5.mean", "Доля релевантных в топ-5 (P@5)", "pct1",
-                          "/validation#bench", ci="metrics.platform.p@5", vs=("у BM25", "metrics.bm25.p@5.mean")),
+                          "/validation#bench", ci="metrics.platform.p@5", vs=("у поиска по словам (BM25)", "metrics.bm25.p@5.mean")),
           "limit": "Истина бенчмарка — правила синтетического мира, не разметка людей."},
          {"tz": "на реальном сценарии (работодатель описывает потребность и получает подборку)",
           "do": [go("Написать свою потребность", "/employer/needs#need", "employer")],
@@ -135,9 +139,10 @@ CRITERIA: list[dict] = [
           "do": [go("Повторяемость", "/validation#headline"),
                  go("Пройти тест самому дважды", "/candidate/express", "candidate_new")],
           "see": "Две независимые попытки одного кандидата без общих семейств заданий: тот же грейд и тот же вердикт.",
-          "proof": metric("product", "retest.kappa_w_quadratic", "κ с весами, две независимые попытки", "num3",
+          "proof": metric("product_st", "retest.kappa_w_quadratic", "согласие двух независимых попыток (взвешенная каппа)", "num3",
                           "/validation#headline",
-                          vs=("тот же грейд", "retest.exact_agreement.value", "pct1")),
+                          vs=("тот же грейд", "retest.exact_agreement.value", "pct1"),
+                          pair=("в жёстких условиях", "product", "retest.kappa_w_quadratic")),
           "limit": "Симуляция продукта: модельные кандидаты, не люди; повтор на людях — после калибровки."},
          {"tz": "дискриминативность заданий (насколько они разделяют слабых и сильных кандидатов)",
           "do": [go("D и r_pb семейств", "/validation#discrimination")],
@@ -148,17 +153,19 @@ CRITERIA: list[dict] = [
          {"tz": "соответствие результата экспертной оценке или эталонной разметке команды",
           "do": [go("Модельная панель (не люди)", "/validation#experts"), go("Разметить самому", "/expert", "expert")],
           "see": "Эталон — истинный уровень модельного кандидата: верный ли итоговый вердикт по заявке; разметка людьми — в сборе.",
-          "proof": metric("product", "summary.verdict_accuracy_final.value", "Верный вердикт по заявке (эталон — истинный уровень)",
+          "proof": metric("product_st", "summary.verdict_accuracy_final.value", "Верный вердикт по заявке (эталон — истинный уровень)",
                           "pct1", "/validation#headline", ci="summary.verdict_accuracy_final.ci95",
-                          vs=("точный грейд", "summary.exact_grade_final.value", "pct1")),
+                          vs=("точный грейд", "summary.exact_grade_final.value", "pct1"),
+                          pair=("в жёстких условиях", "product", "summary.verdict_accuracy_final.value")),
           "limit": "Эталон — истина симуляции продукта; согласие с экспертами-людьми не измерено."},
          {"tz": "корректность категоризации кандидатов по стеку, специализации и пройденным тестам",
           "do": [go("Категории Марии", "/candidate/category", "candidate"),
                  go("Поиск по категории", "/employer/search", "employer")],
-          "see": "Категория «направление · грейд» только по тесту (T1); у Марии две специализации, у каждой свой тест.",
-          "proof": metric("product", "summary.false_confirm_among_overclaim.value", "Ложное подтверждение у завысивших заявку",
+          "see": "Категория «направление · грейд» только по тесту; у Марии две специализации, у каждой свой тест.",
+          "proof": metric("product_st", "summary.false_confirm_among_overclaim.value", "Ложное подтверждение у завысивших заявку",
                           "pct1", "/validation#headline", ci="summary.false_confirm_among_overclaim.ci95",
-                          vs=("ложный отказ у соответствующих", "summary.false_reject_among_true.value", "pct1")),
+                          vs=("ложный отказ у соответствующих", "summary.false_reject_among_true.value", "pct1"),
+                          pair=("в жёстких условиях", "product", "summary.false_confirm_among_overclaim.value")),
           "limit": "Симуляция продукта: модельные кандидаты, не люди."},
          {"tz": "качество предложенной командой процедуры валидации и приведённых ею результатов",
           "do": [go("Точность решения по грейду", "/validation#headline"),
@@ -181,7 +188,7 @@ CRITERIA: list[dict] = [
          {"tz": "логичная группировка блоков, читаемость, достаточный контраст",
           "do": [go("Сравнение кандидатов", "/employer/compare", "employer"),
                  go("Категория кандидата", "/candidate/category", "candidate")],
-          "see": "Палитра ФСП, Montserrat; уровни T0/T1/T2 цветом и словом; числа по-русски.",
+          "see": "Палитра ФСП, Montserrat; уровни доказанности («заявлено / подтверждено тестом / подтверждено работой») цветом и словом; числа по-русски.",
           "proof": doc("Проверка 390 px и доступности в e2e", "docs/testing.md"),
           "limit": "Контраст проверен на ключевых экранах, не на каждом."},
          {"tz": "аккуратная визуальная подача решения",
@@ -221,7 +228,7 @@ CRITERIA: list[dict] = [
                  go("Вход через ФСП ID", "/login")],
           "see": "Адаптеры Talantix, «Поток», Хантфлоу и вебхук; ФСП ID на Keycloak; API реестра ФСП описан.",
           "proof": doc("Интеграции с ATS: протоколы и проверки", "docs/ATS.md"),
-          "limit": "В демо ATS — двойники по опубликованным API; реестр ФСП — модельные данные."},
+          "limit": "В демо ATS — двойники по опубликованным API; реестр ФСП на стенде модельный, протоколы — реальные."},
      ]},
     {"n": 5, "title": "Полнота реализации и сопроводительная документация", "weight": 6, "short": "Полнота",
      "tz": ("Реализация обязательных этапов пути пользователя-соискателя, корректная обработка профиля кандидата без "
@@ -238,7 +245,7 @@ CRITERIA: list[dict] = [
                  go("Атака «Убрать историю ФСП»", "/validation#red-button")],
           "see": NO_FSP + ": категория и место — по тесту.",
           "proof": link("Атака «Убрать историю ФСП»: скор падает ровно на бонус", "/validation#red-button"),
-          "limit": "У участников ФСП бонус в выдаче, у остальных его нет; реестр — модельные данные."},
+          "limit": "У участников ФСП бонус в выдаче; реестр на стенде модельный, протоколы ФСП — реальные."},
          {"tz": "соответствие функциональным требованиям",
           "do": [go("Проводник по сценарию ТЗ", "/#jury")],
           "see": "Каждый этап п. 3.3 ТЗ — шаг проводника и экран продукта.",
@@ -270,7 +277,7 @@ CRITERIA: list[dict] = [
           "see": "«Почему это задание вам», рубрика на 100 баллов с оценкой подхода работодателем, лента раз в 7 дней; "
                  "кубки работодателя.",
           "proof": doc("Адресные задания: рубрика, расписание, права", "docs/ASSIGNMENTS.md"),
-          "limit": "Результат задания — факт T1 по навыку, грейд он не меняет."},
+          "limit": "Результат задания — подтверждённый факт по навыку, грейд он не меняет."},
          {"tz": "проработанная концепция защиты от фиктивных вакансий и интеграции с ATS",
           "do": [go("Пожаловаться на приглашение", "/candidate/invitations", "candidate_nofsp"),
                  go("Журнал передач в ATS", "/employer/ats", "employer")],
@@ -291,11 +298,11 @@ PITCH = {"n": 7, "title": "Презентация и выступление ко
 # ------------------------------------------------------------------------- «Что можно проверить только здесь»
 UNIQUE: list[dict] = [
     {"title": "Своя потребность → подборка",
-     "text": "Своими словами: требования с цитатами, подборка с доказанностью T0/T1/T2, «Что если», если подходящих мало.",
+     "text": "Своими словами: требования с цитатами, подборка с доказанностью каждого навыка, «Что если», если подходящих мало.",
      "do": [go("Написать потребность", "/employer/needs#need", "employer"),
             go("«Что если»", "/employer/needs#what-if", "employer", need="платёжного шлюза")]},
     {"title": "Свой закрытый набор пар",
-     "text": "JSON/CSV «вакансия — кандидат» с метками: P@k и nDCG в интерфейсе, данные не сохраняются.",
+     "text": "JSON/CSV «вакансия — кандидат» с метками: точность топа (P@k) и качество порядка (nDCG) в интерфейсе, данные не сохраняются.",
      "do": [go("Загрузить набор", "/validation#closed-set")]},
     {"title": "Вопрос → приглашение → встречное → контакты",
      "text": "Анонимный вопрос с маскированием контактов, приглашение с вилкой, встречная вилка, контакты после согласия.",
@@ -441,9 +448,19 @@ def resolve(spec: dict, db=None) -> dict:
         v = _get(d, spec["vs"][1])
         vs = ({"label": spec["vs"][0], "value": v, "fmt": spec["vs"][2] if len(spec["vs"]) > 2 else spec["fmt"]}
               if isinstance(v, (int, float)) else None)
-    return {"kind": "metric", "label": spec["label"], "fmt": spec["fmt"], "value": value, "ci": _ci(d, spec.get("ci")),
-            "vs": vs, "note": spec.get("note"), "anchor": spec["anchor"], "src": spec["src"], "path": spec["path"],
-            "signature": signature(spec["src"], d)}
+    pair = None
+    if spec.get("pair"):
+        lab, psrc, ppath = spec["pair"]
+        pd = _load(psrc)
+        pv = _get(pd, ppath) if pd and not pd.get("missing") else None
+        pair = ({"label": lab, "value": pv, "fmt": spec["fmt"], "src": psrc, "path": ppath,
+                 "signature": signature(psrc, pd)} if isinstance(pv, (int, float)) else None)
+    out = {"kind": "metric", "label": spec["label"], "fmt": spec["fmt"], "value": value, "ci": _ci(d, spec.get("ci")),
+           "vs": vs, "note": spec.get("note"), "anchor": spec["anchor"], "src": spec["src"], "path": spec["path"],
+           "signature": signature(spec["src"], d)}
+    if pair:
+        out["pair"] = pair
+    return out
 
 
 def _with_provenance(proof: dict) -> dict:
@@ -482,7 +499,7 @@ VOICE_UNIQUE = {"title": "Надиктовать потребность",
                 "do": [go("Надиктовать", "/employer/needs#need", "employer")]}
 VOICE_NOTE = ("Голосовой ввод потребности (флаг `VOICE_NEED_ENABLED`, по умолчанию выкл.; при включённом — пункт в "
               "«Что можно проверить только здесь»): «Надиктовать» у поля потребности, до 60 с, распознавание речи "
-              "функцией движка интервью (Deepgram через ретранслятор); текст появляется в поле для правки, разбор — "
+              "функцией движка интервью (через ретранслятор стенда); текст появляется в поле для правки, разбор — "
               "прежний и только по кнопке; ни запись, ни текст не сохраняются. Отказ микрофона, старый браузер, сбой "
               "распознавания — сообщение и ввод с клавиатуры. Механика, лимиты и проверка — `docs/VOICE.md`.")
 
@@ -543,6 +560,8 @@ def _proof_text(p: dict) -> str:
         s = f"{p['label']}: **{fmt(p['value'], p['fmt'])}**"
         if p.get("ci"):
             s += f" (95 % ДИ {fmt(p['ci'][0], p['fmt'])} … {fmt(p['ci'][1], p['fmt'])})"
+        if p.get("pair"):  # стандартные условия — заголовок, жёсткие — рядом (правило владельца 21.10)
+            s += f" (стандартные условия; {p['pair']['label']} — {fmt(p['pair']['value'], p['pair'].get('fmt') or p['fmt'])})"
         if p.get("vs"):
             s += f"; {p['vs']['label']} — {fmt(p['vs']['value'], p['vs'].get('fmt') or p['fmt'])}"
         if p.get("note"):

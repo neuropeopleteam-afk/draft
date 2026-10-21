@@ -207,6 +207,7 @@ def _selection(text: str):
 
 
 def test_selection_flag_off_keeps_order_flag_on_moves_absent_core_down(client, monkeypatch):
+    monkeypatch.setenv("MATCH_V2", "0")  # признак match-v1.x; в match-v2 порядок задают каскад стека и веса ltr (test_a5_match_v2)
     refs = _go_world(client)
     monkeypatch.setenv(C.FLAG, "0")
     off = _selection(GO_NEED)

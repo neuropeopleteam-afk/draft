@@ -99,39 +99,39 @@ function CryptoShield({ d }: { d: PassportPublic }) {
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/80">Паспорт-щит · криптографическая проверка</p>
           <p className="mt-1 text-2xl font-extrabold leading-tight sm:text-3xl">{ok ? "Подпись сходится" : "Подпись не сходится"}</p>
-          <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-sm font-semibold text-white/95">
-            <span>Ed25519</span><span className="hidden sm:inline" aria-hidden="true">·</span>
+          <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-sm font-semibold text-white/95" title="Как устроено: асимметричная цифровая подпись Ed25519 по открытому ключу JWKS">
+            <span>Защищённая цифровая подпись</span><span className="hidden sm:inline" aria-hidden="true">·</span>
             <span className="break-all font-mono text-xs leading-5">ключ {d.signature.kid}</span><span className="hidden sm:inline" aria-hidden="true">·</span>
             <span>0 обращений к серверу при офлайн-проверке</span>
           </p>
           <p className="mt-2 text-xs text-white/85" aria-live="polite">
             {local === undefined ? "Проверяем подпись в вашем браузере…"
-              : local === true ? "Подпись проверена в вашем браузере по открытому ключу JWKS (WebCrypto) — без запроса к серверу."
+              : local === true ? "Подпись проверена в вашем браузере по открытому ключу платформы — без запроса к серверу."
               : local === false ? "Браузер пересчитал подпись по открытому ключу — она не совпала с документом."
-              : "Ваш браузер не умеет Ed25519 — проверьте файл офлайн: tools/passport/verify.py или любая библиотека Ed25519."}
+              : "Ваш браузер не поддерживает встроенную проверку — проверьте файл офлайн скриптом tools/passport/verify.py."}
             {" "}Статус в реестре: <b>{s.title.toLowerCase()}</b>.
           </p>
         </div>
       </div>
       <dl className="mt-5 grid gap-2 sm:grid-cols-3" data-testid="passport-key-facts">
-        <Fact k="Грейд" v={`${p.category.grade_title}${p.grade_status === "confirmed" ? "" : " (предв.)"}`} />
+        <Fact k="Грейд" v={`${p.category.grade_title}${p.grade_status === "confirmed" ? "" : " (нужен доп. этап)"}`} />
         <Fact k="Направление" v={p.category.direction_title} />
-        <Fact k="θ, 95 % ДИ" v={thetaCi(p.assessment)} />
+        <Fact k="Оценка уровня, 95 % ДИ" v={thetaCi(p.assessment)} />
       </dl>
       <div className="mt-3 rounded-xl bg-white/15 px-3 py-2 text-sm" data-testid="passport-t2">
-        <span className="mr-2 rounded-md bg-white px-1.5 py-0.5 text-[11px] font-bold text-brand-night">T2</span>
+        <span className="mr-2 rounded-md bg-white px-1.5 py-0.5 text-[11px] font-bold text-brand-night">Реестр ФСП</span>
         {p.achievements_t2.length
           ? <>Достижения ФСП из реестра: <b>{p.achievements_t2.length}</b> — {p.achievements_t2.slice(0, 2).map((x) => x.event).join("; ")}{p.achievements_t2.length > 2 ? "…" : ""}</>
           : "Достижений ФСП в паспорте нет или они скрыты кандидатом (без штрафа)."}
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <a className="inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-bold text-brand-night hover:bg-white/90" href={`/api/passport/${encodeURIComponent(p.id)}/offline.json`} download={`passport-${p.id}.json`} data-testid="passport-offline">
-          Проверить офлайн: скачать JSON + открытый ключ JWKS
+          Проверить офлайн: скачать JSON + открытый ключ
         </a>
-        <a className="inline-flex items-center rounded-xl border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10" href={JWKS_HREF} target="_blank" rel="noreferrer">/.well-known/jwks.json</a>
+        <a className="inline-flex items-center rounded-xl border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10" href={JWKS_HREF} target="_blank" rel="noreferrer" title="Стандартный адрес открытого ключа JWKS">Открытый ключ</a>
       </div>
-      <p className="mt-4 rounded-xl bg-black/15 px-3 py-2 text-xs leading-relaxed text-white/90">
-        <b>Как это устроено:</b> HMAC-токен может проверить только выдавший сервер; асимметричную подпись Ed25519 проверяет любой по открытому ключу JWKS.
+      <p className="mt-4 rounded-xl bg-black/15 px-3 py-2 text-xs leading-relaxed text-white/90" title="Как устроено: асимметричная подпись Ed25519 проверяется по открытому ключу JWKS">
+        <b>Как это устроено:</b> симметричный токен может проверить только выдавший сервер; асимметричную цифровую подпись паспорта проверяет любой по открытому ключу платформы.
         Работодателю не нужно доверять нашему серверу: достаточно файла паспорта и открытого ключа.
       </p>
     </section>
@@ -158,7 +158,7 @@ function Body({ d }: { d: PassportPublic }) {
         <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-75">Статус паспорта</p>
         <h1 className="mt-1 text-3xl font-extrabold tracking-tight">{s.title}</h1>
         <p className="mt-2 text-sm">{STATE_HINT[s.state]}{s.reason_title ? ` Причина: ${s.reason_title}${s.revoked_at ? `, ${dt(s.revoked_at).replace(/ г\.$/, "")}` : ""}.` : ""}{s.state === "revoked" && REPLACED.has(s.reason ?? "") ? " Актуальный паспорт кандидат пришлёт новой ссылкой: старая ссылка на новый паспорт не ведёт." : ""}</p>
-        <p className="mt-2 text-xs opacity-80">Проверено {dtt(s.checked_at)} · подпись Ed25519 {s.signature_valid ? "верна" : "не сходится"}{s.kid_known ? "" : " · ключ подписи неизвестен"}</p>
+        <p className="mt-2 text-xs opacity-80">Проверено {dtt(s.checked_at)} · цифровая подпись {s.signature_valid ? "верна" : "не сходится"}{s.kid_known ? "" : " · ключ подписи неизвестен"}</p>
         {s.test_key && <p className="mt-2 rounded-lg bg-white/70 px-3 py-2 text-xs font-semibold">Подписано тестовым ключом стенда разработки: это демонстрация механизма, а не доказательство.</p>}
       </section>
 
@@ -174,14 +174,14 @@ function Body({ d }: { d: PassportPublic }) {
         {a && (
           <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
             <Row k="Тест пройден" v={dt(a.test_date)} />
-            <Row k="Оценка уровня θ" v={a.theta != null ? `${num(a.theta)} ± ${num(a.se)}` : "—"} />
+            <Row k="Оценка уровня по тесту" v={a.theta != null ? `${num(a.theta)} ± ${num(a.se)}` : "—"} />
             {a.p_grade_or_higher != null && <Row k={`Вероятность уровня не ниже ${p.category.grade_title}`} v={probText(a.p_grade_or_higher)} />}
             <Row k="Верных ответов" v={a.answered ? `${a.correct} из ${a.answered}` : "—"} />
             {a.integrity && <Row k="Достоверность результата" v={INTEGRITY[a.integrity] ?? a.integrity} />}
             <Row k="Действителен до" v={dt(p.valid_until)} />
           </dl>
         )}
-        <h3 className="mt-6 flex items-center gap-2 font-bold text-brand-night"><Lvl t="T1" /> Навыки, подтверждённые заданиями (T1)</h3>
+        <h3 className="mt-6 flex items-center gap-2 font-bold text-brand-night"><Lvl t="T1" /> Навыки, подтверждённые заданиями</h3>
         {/* FIX7 п. 11 / Я4-15: сюда входят и задания теста, и задания работодателя — подпись не сужает источник до «теста» */}
         <p className="mt-1 text-xs text-brand-ink/70" data-testid="passport-skills-source">Задания теста платформы и задания работодателя с автопроверкой; навык считается подтверждённым от 50 % верных.</p>
         {p.skills_t1.length ? (
@@ -206,7 +206,7 @@ function Body({ d }: { d: PassportPublic }) {
 
       <section className="card text-sm">
         <h2 className="font-bold text-brand-night">Как получен грейд</h2>
-        <p className="mt-2 text-brand-ink/80">Категорию присваивает только адаптивный тест платформы: задания банка подбираются под уровень кандидата, θ — оценка уровня по модели IRT, грейд подтверждается, если вероятность уровня не ниже заявленного достаточно высока. Самоописание (T0) в паспорт не входит. Признаки несамостоятельного прохождения только снижают «достоверность результата», автоматических наказаний нет.</p>
+        <p className="mt-2 text-brand-ink/80" title="Как считается: адаптивная психометрическая модель оценки уровня">Категорию присваивает только адаптивный тест платформы: задания банка подбираются под уровень кандидата, грейд подтверждается, если вероятность уровня не ниже заявленного достаточно высока. Самоописание в паспорт не входит. Признаки несамостоятельного прохождения только снижают «достоверность результата», автоматических наказаний нет.</p>
         <a className="mt-3 inline-block font-semibold text-brand underline-offset-4 hover:underline" href={p.methodology_url}>Методика и проверка качества теста</a>
       </section>
     </>
@@ -239,7 +239,7 @@ function Signature({ d }: { d: PassportPublic }) {
       <h2 className="font-bold text-brand-night">Подпись и проверка без нас</h2>
       <dl className="mt-3 grid gap-3 sm:grid-cols-2">
         <Row k="Издатель" v={p.issuer.name} />
-        <Row k="Алгоритм" v={`Ed25519 (${d.signature.alg})`} />
+        <Row k="Алгоритм" v={<span title={`Ed25519 (${d.signature.alg})`}>Асимметричная цифровая подпись</span>} />
         <Row k="Ключ (kid)" v={<span className="break-all font-mono text-xs">{d.signature.kid}</span>} />
         <Row k="Выпущен" v={dtt(p.issued_at)} />
       </dl>
@@ -248,7 +248,7 @@ function Signature({ d }: { d: PassportPublic }) {
       <div className="mt-4 flex flex-wrap gap-3">
         <button className="btn-ghost" onClick={download}>Скачать файл паспорта</button>
         <button className="btn-ghost" onClick={() => input.current?.click()}>Проверить файл</button>
-        <a className="btn-ghost" href={JWKS_HREF} target="_blank" rel="noreferrer">Открытые ключи (JWKS)</a>
+        <a className="btn-ghost" href={JWKS_HREF} target="_blank" rel="noreferrer" title="Открытые ключи проверки (JWKS)">Открытые ключи</a>
         <input ref={input} type="file" accept="application/json,.json" className="sr-only" aria-label="Файл паспорта для проверки" onChange={(e) => void onFile(e.target.files?.[0])} />
       </div>
       <div className="mt-3" aria-live="polite">
@@ -277,5 +277,5 @@ function Row({ k, v }: { k: string; v: ReactNode }) {
 }
 
 function Lvl({ t }: { t: "T1" | "T2" }) {
-  return <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold ${t === "T2" ? "bg-brand-night text-white" : "bg-[#E0004C] text-white"}`} title={t === "T2" ? "Подтверждено реестром ФСП" : "Подтверждено тестом на платформе"}>{t}</span>;
+  return <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold ${t === "T2" ? "bg-brand-night text-white" : "bg-[#402FFF] text-white"}`} title={t === "T2" ? "Подтверждено реестром ФСП" : "Подтверждено тестом на платформе"}>{t === "T2" ? "ФСП" : "Тест"}</span>;
 }

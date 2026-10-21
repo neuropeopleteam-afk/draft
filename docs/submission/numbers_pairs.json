@@ -1,0 +1,267 @@
+{
+ "$comment": "Подача цифр (решение владельца 21.10, фиксируется до прогонов): заголовок — «стандартные условия, как в аналогичных решениях» (тест — S-T, подбор — S-M); рядом всегда — те же метрики в наших жёстких условиях («проверка на прочность»); ни одну строку не скрывать. Здесь только сопоставление метрика → ключи docs/NUMBERS.json (ключи — от А4 и А5, 21.10). paths — ключи значения по порядку предпочтения; meta — блок условий прогона (population, n, seeds, bank_content_hash, date, command); cond — строка условия; fact — запасной факт из numfacts.py. Нет ключа — ячейка «пересчитывается». Пилота на людях нет — не упоминается (решение владельца 21.10).",
+ "pairs": [
+  {
+   "id": "confident_accuracy",
+   "label": "Точность уверенного ответа",
+   "fmt": "pct",
+   "standard": {
+    "paths": [
+     "top5[id=confident_accuracy]"
+    ],
+    "meta": "top5_meta.st"
+   },
+   "hard": {
+    "paths": [
+     "top5_hard[id=confident_accuracy]"
+    ],
+    "meta": "top5_meta.hard"
+   }
+  },
+  {
+   "id": "exact_grade",
+   "label": "Точный грейд — 6 ступеней, все кандидаты",
+   "fmt": "pct",
+   "standard": {
+    "paths": [
+     "top5[id=exact_grade]"
+    ],
+    "meta": "top5_meta.st"
+   },
+   "hard": {
+    "paths": [
+     "top5_hard[id=exact_grade]"
+    ],
+    "meta": "top5_meta.hard"
+   }
+  },
+  {
+   "id": "within_one",
+   "label": "Грейд с точностью ±1 ступень",
+   "fmt": "pct",
+   "standard": {
+    "paths": [
+     "top5[id=within_one]"
+    ],
+    "meta": "top5_meta.st"
+   },
+   "hard": {
+    "paths": [
+     "top5_hard[id=within_one]"
+    ],
+    "meta": "top5_meta.hard"
+   }
+  },
+  {
+   "id": "retest_kappa_w",
+   "label": "Повтор на других заданиях (взвешенная каппа)",
+   "fmt": "dec",
+   "standard": {
+    "paths": [
+     "top5[id=retest_kappa_w]"
+    ],
+    "meta": "top5_meta.st"
+   },
+   "hard": {
+    "paths": [
+     "top5_hard[id=retest_kappa_w]"
+    ],
+    "meta": "top5_meta.hard"
+   },
+   "no_kn": true
+  },
+  {
+   "id": "false_confirm_all",
+   "label": "Ложное подтверждение грейда (от всех)",
+   "fmt": "pct",
+   "lower_is_better": true,
+   "standard": {
+    "paths": [
+     "top5[id=false_confirm_all]"
+    ],
+    "meta": "top5_meta.st"
+   },
+   "hard": {
+    "paths": [
+     "top5_hard[id=false_confirm_all]"
+    ],
+    "meta": "top5_meta.hard"
+   }
+  },
+  {
+   "id": "overclaim_passed",
+   "label": "Завышенная заявка прошла",
+   "fmt": "pct",
+   "lower_is_better": true,
+   "standard": {
+    "paths": [
+     "grade_verdict.st.extra.overclaim_passed"
+    ],
+    "meta": "top5_meta.st",
+    "cond": [
+     "top5[id=false_confirm_all].condition_ru"
+    ]
+   },
+   "hard": {
+    "paths": [
+     "grade_verdict.hard.extra.overclaim_passed"
+    ],
+    "meta": "top5_meta.hard",
+    "cond": [
+     "top5_hard[id=false_confirm_all].condition_ru"
+    ]
+   }
+  },
+  {
+   "id": "p5",
+   "label": "Подбор: точность первой пятёрки (P@5)",
+   "fmt": "pct",
+   "standard": {
+    "paths": [
+     "matching.p5"
+    ],
+    "cond": [
+     "matching.condition_ru"
+    ]
+   },
+   "hard": {
+    "paths": [
+     "matching.hard.p5"
+    ],
+    "cond": [
+     "matching.hard.condition_ru"
+    ]
+   }
+  },
+  {
+   "id": "ndcg10",
+   "label": "Подбор: nDCG@10",
+   "fmt": "dec",
+   "standard": {
+    "paths": [
+     "matching.ndcg10"
+    ],
+    "cond": [
+     "matching.condition_ru"
+    ]
+   },
+   "hard": {
+    "paths": [
+     "matching.hard.ndcg10"
+    ],
+    "cond": [
+     "matching.hard.condition_ru"
+    ]
+   }
+  },
+  {
+   "id": "mrr",
+   "label": "Подбор: MRR",
+   "fmt": "dec",
+   "standard": {
+    "paths": [
+     "matching.mrr"
+    ],
+    "cond": [
+     "matching.condition_ru"
+    ]
+   },
+   "hard": {
+    "paths": [
+     "matching.hard.mrr"
+    ],
+    "cond": [
+     "matching.hard.condition_ru"
+    ]
+   }
+  },
+  {
+   "id": "top5_any",
+   "label": "Подбор: хотя бы один подходящий в первой пятёрке",
+   "fmt": "pct",
+   "standard": {
+    "paths": [
+     "matching.top5_any"
+    ],
+    "cond": [
+     "matching.condition_ru"
+    ]
+   },
+   "hard": {
+    "paths": [
+     "matching.hard.top5_any"
+    ],
+    "cond": [
+     "matching.hard.condition_ru"
+    ]
+   }
+  },
+  {
+   "id": "over10",
+   "label": "Подбор: переоценённых в первой десятке",
+   "fmt": "pct",
+   "lower_is_better": true,
+   "standard": {
+    "paths": [
+     "matching.over10"
+    ],
+    "cond": [
+     "matching.condition_ru"
+    ]
+   },
+   "hard": {
+    "paths": [
+     "matching.hard.over10"
+    ],
+    "cond": [
+     "matching.hard.condition_ru"
+    ]
+   }
+  }
+ ],
+ "real": [
+  {
+   "id": "hh",
+   "label": "Вакансии hh.ru: направление определено верно",
+   "fmt": "pct",
+   "paths": [
+    "matching.site.hh_match.direction_ok",
+    "site.hh_match.direction_ok",
+    "hh_match.direction_ok"
+   ],
+   "cond": [
+    "matching.site.hh_match.set",
+    "site.hh_match.set",
+    "hh_match.set"
+   ],
+   "fact": "hh_direction"
+  },
+  {
+   "id": "external",
+   "label": "Внешний открытый набор вакансий",
+   "fmt": "pct",
+   "paths": [
+    "matching.site.djinni.direction_ok",
+    "site.djinni.direction_ok",
+    "external_djinni.direction_ok",
+    "djinni.direction_ok"
+   ],
+   "cond": [
+    "matching.site.djinni.set",
+    "site.djinni.set",
+    "external_djinni.set",
+    "djinni.set"
+   ]
+  },
+  {
+   "id": "fsp",
+   "label": "Официальных протоколов ФСП в индексе",
+   "fact": "fsp_documents"
+  },
+  {
+   "id": "fsp_results",
+   "label": "Результатов спортсменов в индексе",
+   "fact": "fsp_results"
+  }
+ ]
+}

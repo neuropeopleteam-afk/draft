@@ -560,6 +560,13 @@ POLICY: dict[tuple[str, str], Policy] = {
     # Настя голосом объясняет итог теста по тексту экрана (av9): только кандидат (свой экран — текст из браузера,
     # объектов не читает); без тела — 422, модель в тесте не вызывается
     ("POST", "/api/interview/concierge/explain-result"): "candidate",
+    # Разговор с Настей о кандидатах на сравнении (av15): только работодатель и только своя потребность (my_company +
+    # _own_need, как у /employer/needs/{id}/advisor); разговор живёт 30 мин в файлах кэша, чужой или несуществующий id — 404
+    ("POST", "/api/interview/concierge/advisor"): "employer",
+    ("GET", "/api/interview/concierge/advisor/{sid}/speech"): "employer_own404",
+    ("POST", "/api/interview/concierge/advisor/{sid}/answer"): ("employer", {"employer": OK404, "employer_other": OK404,
+                                                                           "jury_employer": OK404,
+                                                                           "jury_other_employer": OK404}),
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
     # А5: режим «Принесите свой набор» для жюри (подбор, метрики P@5/P@10/nDCG@10/MRR, объяснение, выгрузка CSV)
@@ -605,6 +612,8 @@ PARAM_OVERRIDES: dict[tuple[str, str], dict[str, object]] = {
     ("POST", "/api/validation/attacks/{attack_id}"): {"attack_id": "nope"},
     ("GET", "/api/interview/concierge/brief/{sid}/speech"): {"sid": "brief0000matrix"},
     ("POST", "/api/interview/concierge/brief/{sid}/answer"): {"sid": "brief0000matrix"},
+    ("GET", "/api/interview/concierge/advisor/{sid}/speech"): {"sid": "advis0000matrix"},
+    ("POST", "/api/interview/concierge/advisor/{sid}/answer"): {"sid": "advis0000matrix"},
     ("DELETE", "/api/me/consents/{kind}"): {"kind": "processing"},  # 409 — профиль из подборок не пропадает
     ("POST", "/api/me/consents/{kind}"): {"kind": "publication"},
     ("GET", "/api/legal/consents/{kind}"): {"kind": "processing"},

@@ -1,0 +1,12 @@
+{
+ "frozen_at": "2026-10-21T09:28:36+00:00",
+ "corpus": "docs/realdata/hh_holdout2_corpus.json",
+ "n": 336,
+ "manifest_sha256": "2bb77a1cd8d79a87bea0600086de16c07857245e3997b32bb69399e5831b5e4f",
+ "manifest_rule": "SHA-256 строк «id<TAB>text_sha256<TAB>bucket», отсортированных, через \\n",
+ "corpus_file_sha256": "18ee2e675442757676bb7d76abb05e1bb219f7e3fc88dc2f57743dc18c431b73",
+ "code_before_run": "e4e294ca46f33e8e79c744d0ffc704a1400e5692",
+ "protocol": "docs/realdata/hh_holdout2_PROTOCOL.md",
+ "protocol_sha256": "e8502bdc6c05d1f17bc55e61c300ab2e0ba4c8ae98e794e2c01248df98f610ac",
+ "rule": "Зафиксировано до прогона. Прогон один (hh_holdout.py run); словарь, синонимы, классификатор и ранжирование после прогона на этом наборе не настраиваются."
+}

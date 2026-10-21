@@ -32,6 +32,7 @@ TAGS = [{"name": "hh", "description": "hh.ru: импорт своей вакан
                                       "токена приложения — 404 hh_disabled."}]
 DATA = Path(__file__).resolve().parents[1] / "validation" / "data" / "hh_parse.json"
 MATCH_DATA = DATA.with_name("hh_match.json")
+MATCH_HOLDOUT = DATA.with_name("hh_match_holdout2.json")
 E = {401: err("Не выполнен вход"), 403: err("Только для работодателя"), 404: err("Интеграция с hh.ru выключена "
                                                                                   "(hh_disabled) или вакансия не найдена"),
      409: err("Нет профиля компании"), 422: err("Неверная ссылка или номер вакансии"),
@@ -247,6 +248,23 @@ class HhMatchOut(BaseModel):
 def hh_match():
     from app.modules.hh import snapshot
 
-    out = json.loads(MATCH_DATA.read_text(encoding="utf-8")) if MATCH_DATA.exists() else {"missing": True}
+    # 21.10 вечер: на экран — прогон на ВТОРОМ отложенном наборе (проверка dir-v2, один прогон), если он есть; набор
+    # разработки (на нём настраивались словарь и классификатор) — только в отчёте и документации
+    src = MATCH_HOLDOUT if MATCH_HOLDOUT.exists() else MATCH_DATA
+    out = json.loads(src.read_text(encoding="utf-8")) if src.exists() else {"missing": True}
+    if src is MATCH_HOLDOUT:
+        fz = (out.get("holdout") or {}).get("freeze") or {}
+        out["set"] = "holdout2"
+        out["set_ru"] = (f"отложенный набор: {fz.get('n')} свежих вакансий hh.ru, на которых ничего не настраивалось "
+                         f"(заморожен {str(fz.get('frozen_at') or '')[:10]}, прогон один)")
+        out["corpus_collected_at"] = out.get("corpus_collected_at") or str(fz.get("frozen_at") or "")[:10]
+        out["code_commit"] = ((out.get("holdout") or {}).get("code") or out.get("code_commit") or "")[:9]
+        out["recompute"] = "cd backend && python ../tools/realdata/hh_holdout.py --tag 2 run (один раз)"
+        for k in ("disputed", "errors_top"):
+            out.pop(k, None)
+        if isinstance(out.get("direction_control"), dict):
+            out["direction_control"].pop("disputed", None)
+    else:
+        out.setdefault("set", "dev")
     out["demand"] = snapshot.demand_data()
     return out

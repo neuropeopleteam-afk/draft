@@ -303,6 +303,11 @@ PHRASES: dict[str, str] = {
     "time_up": "На этом моё время с вами заканчивается. Спасибо за разговор. Если понадоблюсь — нажмите на меня снова.",
     "resume_tour": "Продолжаю.",
     "back_tour": "Возвращаюсь к обзору.",
+    # экран, который попросили: Настя сама не уходит; тишина 20 с — один такой вопрос (замечание владельца 21.10 17:33)
+    "detour_nudge": "Рассказать про этот экран подробнее — или идём дальше?",
+    # разговор о кандидатах на сравнении (av15): пока готовится ответ — короткое «смотрю», не мёртвая тишина
+    "adv_wait1": "Сейчас посмотрю.",
+    "adv_wait2": "Так, смотрю в сравнение.",
     "sorry": "Не расслышала. Повторите, пожалуйста.",
     "back_to_tour": "Вернёмся к обзору?",
     # между разделами обзора — спросить, есть ли вопросы, и ждать ответа
@@ -657,6 +662,29 @@ STEP_BEATS: dict[str, list[str]] = {
 
 STEP_IDS = tuple(STEP_BEATS.keys())
 
+# Полный показ экрана — когда его просят («покажи Полигон», «подробнее», «полностью») не по порядку обзора: Настя сама
+# нажимает главные кнопки экрана. В STEP_IDS не входит (модель выбирает обычный шаг, браузер берёт «<шаг>-full»).
+# Замечание владельца 21.10 17:33: «покажи ИИ-Полигон» — три фразы, через 15 с ушла дальше сама.
+FULL_BEATS: dict[str, list[str]] = {
+    "warroom-full": [
+        "Боевой ИИ-Полигон — практический этап для старших уровней и витрина для технического жюри. Покажу оба "
+        "режима в работе.",
+        "Первый режим — живой архитектурный полигон: в высоконагруженной системе идёт авария, и кандидат её чинит — "
+        "выбирает меры, правит код и объясняет решение.",
+        "Запускаю инцидент: сама выберу меры в пределах бюджета, поправлю код и опишу, почему так.",
+        "Вот метрики под нагрузкой: успешный поток, время ответа, доля ошибок и потери бизнеса — видно, что "
+        "изменилось после исправления.",
+        "А это разбор: устранён ли инцидент, итоговый балл и уровень, который подтверждает решение. Он учитывается в "
+        "итоге проверки кандидата.",
+        "Второй режим — полигон перехвата ИИ-читера: слева приёмы нечестного кандидата, справа — что видит проверка.",
+        "Нажимаю «Показать перехват обмана»: кандидат копирует задание в нейросеть, но в буфер уходит вариант-двойник "
+        "с другими числами и невидимой меткой.",
+        "Ответ нейросети приходит с числами двойника — и проверка показывает, какие сигналы сработали и почему.",
+        "При этом попытку не аннулируют: назначается дополнительный этап или устная защита. Можно нажать любой "
+        "другой приём слева — разберу и его.",
+    ],
+}
+
 # Показ для жюри на 2 минуты (питч 24.10, текст — «Аватар — показ для жюри 2 минуты, текст по экранам»). Отдельный
 # маршрут «pitch»: в STEP_IDS не входит (модель туда не ведёт), реплики заранее озвучиваются и кэшируются.
 # Цифры — без точных чисел, которые меняет волна 2б (спортсменов — «больше двух тысяч»).
@@ -702,6 +730,7 @@ def beats() -> dict[str, list[str]]:
     out = {k: list(v) for k, v in STEP_BEATS.items()}
     out["val-arena"] = [*STEP_BEATS["val-arena"], *_arena_lines()]
     out.update({k: list(v) for k, v in PITCH_BEATS.items()})
+    out.update({k: list(v) for k, v in FULL_BEATS.items()})
     return out
 
 
@@ -911,6 +940,12 @@ def _bank_sentence(n: dict) -> str:
     if isinstance(n.get("bank_directions"), int):
         parts.append(f"{n['bank_directions']} ИТ-направлений")
     return ", ".join(parts) + ". "
+
+
+# Когда в контекст модели нужен блок цифр: вопрос про цифры/проверку/банк — или уточнение к ответу с процентами
+# («а в жёстких условиях?»): без блока модель додумывала («точность падает»), хотя в жёстких она выше.
+_NUMBERS_Q = re.compile(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак|банк|семейств|вариант|сколько задан|"
+                        r"жёстк|жестк|стандартн|услови|вердикт|грейд|оценщик|интервал|ложн|списыв|утечк|симуляц")
 
 
 def numbers_chunk() -> dict[str, str]:
@@ -1526,7 +1561,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
                     # «открой кабинет работодателя» — обзор этого кабинета (уже смотрели — браузер пройдёт коротко)
                     return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": cab_role,
                             "reply": _start_reply(name, cab_role, False, first_tour, skip_reg=_skip_reg(msg, s))}
-                return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto"}
+                return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto", "full": bool(FULL_ASK.search(_norm(msg)))}
         quick = classify(msg, touring=touring, paused=paused)
         if quick:
             ack("instant")
@@ -1560,7 +1595,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         goto = detect_goto(msg, path=current_path, step=step_id) if not is_q and words_n <= 7 and not (clause and words_n > 3) else None
         if goto:
             ack("instant")
-            return {**base, "kind": "instant", "action": "goto", "step": goto, "phrase": "goto"}
+            return {**base, "kind": "instant", "action": "goto", "step": goto, "phrase": "goto", "full": bool(FULL_ASK.search(_norm(msg)))}
 
     if no_llm:
         # дневной лимит ходов модели исчерпан — без модели: экран по словам реплики или ответ из базы знаний
@@ -1573,8 +1608,8 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     msgs = brain.build_messages(msg, sid=session_id, name=name, role=cur_role, path=current_path, step=step_id,
                                 touring=touring, paused=paused, screen=screen, history=history, awaiting=awaiting,
                                 last_said=last_said, accepted=accepted,
-                                numbers=numbers_chunk() if re.search(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак|банк|семейств|вариант|сколько задан",
-                                                                     msg.lower()) or current_path.startswith("/validation") else None)
+                                numbers=numbers_chunk() if _NUMBERS_Q.search(msg.lower()) or current_path.startswith("/validation")
+                                or "процент" in (last_said or "").lower() else None)
     ctx = {"msg": msg, "name": name, "cur_role": cur_role, "touring": touring, "paused": paused, "step_id": step_id,
            "current_path": current_path, "first_tour": first_tour, "sid": session_id}
     if defer_llm:
@@ -1664,7 +1699,14 @@ def _decide(d: dict, ctx: dict, base: dict) -> dict:
            "point": point.strip() if point and action == "point" else None, "phrase": None, "reply": ""}
     if action == "scroll":
         out["dir"] = scroll_dir
+    if action == "goto" and (d.get("full") is True or FULL_ASK.search(_norm(msg))):
+        out["full"] = True   # «подробнее», «полностью», «почему не рассказала» — экран целиком, а не молча
     return out
+
+
+# Просят экран целиком или недовольны коротким показом (стенограмма 21.10 17:33: «Почему ты дальше про него не
+# рассказала? Я хотел полностью»).
+FULL_ASK = re.compile(r"подробн|полност|целиком|до конца|детальн|всё про|все про|не рассказал|не показал|не дорассказ")
 
 
 LEAD_ROLE = "Подскажите, кто вы: кандидат, работодатель или из Федерации? Покажу именно ваш кабинет."
@@ -1678,6 +1720,15 @@ def _lead_on(res: dict, ctx: dict, text: str) -> str | None:
     if res.get("action") not in ("answer",) or "?" in (text or ""):
         return None
     return LEAD_ROLE
+
+
+# Сбой модели на числах словами (боевой 21.10 18:05, FINAL №2: «семьдесят seven и шесть десятых... Нет, скажу чисто:
+# …»): фраза с английским числительным — не в голос; самопоправка в начале фразы — срезается, суть остаётся.
+_EN_NUM = re.compile(r"\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|"
+                     r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|"
+                     r"hundred|thousand|percent)\b", re.I)
+_SELF_FIX = re.compile(r"^(?:нет|ой|вернее|точнее|то есть)[,.!]?\s+(?:скажу\s+(?:чисто|точнее|правильно|иначе|по-другому)|"
+                       r"поправлюсь|оговорилась|ошиблась|точнее)\s*[:,.—–-]*\s*", re.I)
 
 
 class _Shaper:
@@ -1702,6 +1753,13 @@ class _Shaper:
         t = _clean_reply(raw)
         if not t or t == "Хорошо." and raw.strip() != "Хорошо.":
             return None
+        if _EN_NUM.search(t) and re.search(r"[а-яё]", t, re.I):
+            return None
+        fixed = _SELF_FIX.sub("", t)
+        if fixed != t:
+            if len(fixed) < 3:
+                return None
+            t = fixed[:1].upper() + fixed[1:]
         if self.n == 0:
             t = _drop_self_talk(t)
             if self.name and self.name_recent and t.lower().startswith(self.name.lower() + ","):

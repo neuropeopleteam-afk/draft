@@ -131,7 +131,7 @@ function StubNote() {
 export default function TariffsPublic() {
   usePageTitle("Тарифы");
   return (
-    <div className="min-h-screen bg-[#FBF8FC]">
+    <div className="min-h-screen bg-[#F4F6FC]">
       <SiteHeader />
       <main id="main" className="mx-auto max-w-content space-y-8 px-4 py-10 sm:px-6">
         <PageTitle title="Тарифы" subtitle="Кандидатам — всегда бесплатно. Работодателю — бесплатный старт, тариф «Найм» для регулярного подбора и «Партнёр ФСП» для спонсоров федерации." />

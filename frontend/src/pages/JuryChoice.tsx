@@ -28,7 +28,7 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
   useEffect(() => { if (tour === "12") void startQ(); else if (tour === "full") startFull(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="min-h-screen bg-[#FBF8FC]">
+    <div className="min-h-screen bg-[#F4F6FC]">
       <SiteHeader />
       <main id="main" className="mx-auto max-w-content px-4 py-10 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>

@@ -764,6 +764,113 @@ def concierge_brief_answer(sid: str, body: BriefAnswerIn, request: Request, user
         raise api_error(404, "not_found", "Бриф не найден — начните заново")
     return r
 
+# ------------------------------------------------------------------ живой разговор о кандидатах (Настя, 21.10, av15)
+class AdvisorStartIn(BaseModel):
+    need_id: uuid.UUID
+    refs: list[str] = Field(default_factory=list, max_length=3)
+    version: int | None = Field(None, ge=1)
+
+
+class AdvisorAnswerIn(BaseModel):
+    text: str = Field(min_length=1, max_length=1000)
+
+
+def _advisor_need(db: Session, user: User, need_id: uuid.UUID, refs: list[str], version: int | None):
+    from sqlalchemy import select
+
+    from app.modules.matching import compare as compare_mod
+    from app.modules.matching.models import SelectionVersion
+    from app.modules.matching.router import _own_need, my_company
+
+    c = my_company(db, user)
+    n = _own_need(db, c, need_id)
+    if version is not None and db.scalar(select(SelectionVersion.id).where(
+            SelectionVersion.need_id == n.id, SelectionVersion.version == version)) is None:
+        raise api_error(404, "version_not_found", "Версия подборки не найдена")
+    refs = list(dict.fromkeys(r.strip() for r in refs if r and r.strip())) or compare_mod.default_refs(db, n, version)
+    if not compare_mod.MIN_REFS <= len(refs) <= compare_mod.MAX_REFS:
+        raise api_error(422, "compare_refs", "Для сравнения выберите от 2 до 3 кандидатов")
+    return c, n, refs
+
+
+@router.post("/concierge/advisor", summary="Разговор с Настей о сравниваемых кандидатах: начать (короткое главное вслух)")
+def concierge_advisor_start(body: AdvisorStartIn, request: Request, user: User = Depends(employer),
+                            db: Session = Depends(get_db)) -> dict:
+    from app.modules.interview import concierge_advisor as ca
+    from app.modules.interview import concierge_budget as budget
+
+    ip = budget.client_ip(request)
+    if not budget.burst_ok(ip, 2):
+        raise api_error(429, "rate_limited", "Слишком много запросов — подождите минуту")
+    ok, _why = budget.take("turns", ip, 1)
+    if not ok:
+        raise api_error(429, "rate_limited", "Лимит на сегодня исчерпан")
+    c, n, refs = _advisor_need(db, user, body.need_id, body.refs, body.version)
+    facts, cards, brief = ca.build_facts(db, c, n, refs, body.version)
+    return ca.start(str(user.id), facts, cards, brief, ctx={"need_id": str(n.id), "version": body.version})
+
+
+@router.get("/concierge/advisor/{sid}/speech", summary="Разговор о кандидатах: голос текущей реплики Насти (PCM 24 кГц потоком)")
+def concierge_advisor_speech(sid: str, request: Request, user: User = Depends(employer)):
+    from app.modules.interview import concierge as cg
+    from app.modules.interview import concierge_advisor as ca
+    from app.modules.interview import concierge_budget as budget
+
+    s = ca.get(sid, str(user.id))
+    if s is None:
+        raise api_error(404, "not_found", "Разговор не найден — начните заново")
+    text = s["say"]
+    ok, _why = budget.take("tts", budget.client_ip(request), len(text))
+    if not ok:
+        raise api_error(429, "tts_budget", "Голос на сегодня исчерпан — продолжите текстом")
+    gen = cg.synth_stream(text, "pcm24", live=True)
+    try:
+        first = next(gen)
+    except StopIteration:
+        first = b""
+    except cg.TtsError as e:
+        raise api_error(503, "tts_unavailable", str(e))
+
+    def body():
+        if first:
+            yield first
+        try:
+            yield from gen
+        except cg.TtsError:
+            return
+
+    return StreamingResponse(body(), media_type="application/octet-stream", headers={"Cache-Control": "no-store"})
+
+
+@router.post("/concierge/advisor/{sid}/answer", summary="Разговор о кандидатах: вопрос руководителя → короткий ответ Насти")
+def concierge_advisor_answer(sid: str, body: AdvisorAnswerIn, request: Request, user: User = Depends(employer),
+                             db: Session = Depends(get_db)) -> dict:
+    from app.modules.interview import concierge_advisor as ca
+    from app.modules.interview import concierge_budget as budget
+
+    ok, _why = budget.take("turns", budget.client_ip(request), 1)
+    if not ok:
+        raise api_error(429, "rate_limited", "Лимит ответов на сегодня исчерпан")
+    s = ca.get(sid, str(user.id))
+    if s is None:
+        raise api_error(404, "not_found", "Разговор не найден — начните заново")
+
+    def rules(q: str) -> str:   # модель недоступна — ответ правилами советника (как было)
+        from app.modules.matching import advisor as adv
+        from app.modules.matching.router import _own_need, my_company
+
+        ctx = s.get("ctx") or {}
+        c = my_company(db, user)
+        n = _own_need(db, c, uuid.UUID(ctx["need_id"]))
+        a = adv.advise(db, c, n, s["refs"], ctx.get("version"), q)
+        return a["speech"]
+
+    r = ca.answer(sid, str(user.id), body.text, rules_answer=rules)
+    if r.get("error"):
+        raise api_error(404, "not_found", "Разговор не найден — начните заново")
+    return r
+
+
 @router.get("/concierge/budget", summary="Сегодняшние расходы проводника Насти и лимиты (только администратор)")
 def concierge_budget_usage(_: User = Depends(require_role(UserRole.admin))) -> dict:
     from app.modules.interview import concierge_budget as budget

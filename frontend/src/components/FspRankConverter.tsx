@@ -33,13 +33,13 @@ function Prior({ shift }: { shift: number }) {
     return pts.join(" ");
   };
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-16 w-full" role="img" aria-label={`Старт теста смещён на θ₀ = ${t(shift)}`}>
-      <line x1={0} x2={W} y1={H - 8} y2={H - 8} stroke="#310F53" strokeOpacity={0.15} />
-      <polyline points={curve(0, 1)} fill="none" stroke="#8A83D1" strokeWidth={1.5} strokeDasharray="4 3" />
-      <polyline points={curve(shift, 0.8)} fill="none" stroke="#E0004C" strokeWidth={2.25} />
-      <line x1={x(shift)} x2={x(shift)} y1={6} y2={H - 8} stroke="#E0004C" strokeOpacity={0.4} />
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-16 w-full" role="img" aria-label={`Старт теста смещён на ${t(shift)}`}>
+      <line x1={0} x2={W} y1={H - 8} y2={H - 8} stroke="#0E1126" strokeOpacity={0.15} />
+      <polyline points={curve(0, 1)} fill="none" stroke="#5E6494" strokeWidth={1.5} strokeDasharray="4 3" />
+      <polyline points={curve(shift, 0.8)} fill="none" stroke="#402FFF" strokeWidth={2.25} />
+      <line x1={x(shift)} x2={x(shift)} y1={6} y2={H - 8} stroke="#402FFF" strokeOpacity={0.4} />
       <text x={x(0)} y={H} fontSize={8} textAnchor="middle" fill="#5F57B8">0</text>
-      <text x={Math.min(W - 14, x(shift))} y={H} fontSize={8} textAnchor="middle" fill="#E0004C">θ₀</text>
+      <text x={Math.min(W - 14, x(shift))} y={H} fontSize={8} textAnchor="middle" fill="#402FFF">старт</text>
     </svg>
   );
 }
@@ -65,15 +65,15 @@ export default function FspRankConverter({ embedded = false }: { embedded?: bool
       <p className="text-xs text-brand-ink/65">{r.title} · подтверждается в паспорте ФСП по официальному реестру федерации.</p>
 
       <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+        <div className="rounded-2xl border border-brand-night/10 bg-[#F4F6FC] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-lavender">1 · Адаптивный старт теста</p>
-          <p className="mt-1.5 text-2xl font-extrabold tabular-nums text-brand-night" title={`Смещение стартовой оценки θ₀ = ${t(r.theta0)}`}>Старт {r.start}</p>
+          <p className="mt-1.5 text-2xl font-extrabold tabular-nums text-brand-night" title={`Как считается: смещение стартовой оценки уровня на ${t(r.theta0)}`}>Старт {r.start}</p>
           <Prior shift={r.theta0} />
           <p className="text-xs leading-relaxed text-brand-ink/75">
             Тест сразу начинает с задач уровня <b>{r.start}</b>: <b>{BASE_MINUTES} → {r.minutes}{NB}мин</b> (−{saved}{NB}мин, меньше лёгких вопросов).
           </p>
         </div>
-        <div className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+        <div className="rounded-2xl border border-brand-night/10 bg-[#F4F6FC] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-lavender">2 · Вес ФСП в ранжировании</p>
           <p className="mt-1.5 text-2xl font-extrabold tabular-nums text-brand-night">+{r.weight}{NB}%</p>
           <div className="mt-2 h-2 rounded-full bg-brand-night/10" aria-hidden="true">
@@ -84,7 +84,7 @@ export default function FspRankConverter({ embedded = false }: { embedded?: bool
             {r.bypass ? <b className="text-emerald-700">Обход фильтра резюме: ✓</b> : <span>Фильтр резюме — на общих условиях.</span>}
           </p>
         </div>
-        <div className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+        <div className="rounded-2xl border border-brand-night/10 bg-[#F4F6FC] p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-lavender">3 · Прибавка к вилке</p>
           <p className="mt-1.5 text-xl font-extrabold tabular-nums text-brand-night">+{k(r.premium[0])} — +{k(r.premium[1])}</p>
           <div className="relative mt-2 h-2 rounded-full bg-brand-night/10" aria-hidden="true">

@@ -1,0 +1,223 @@
+{
+ "plan": {
+  "phase": "final",
+  "n_per_seed": 100,
+  "seeds": [
+   4401,
+   4402,
+   4403,
+   4404,
+   4405,
+   4406,
+   4407,
+   4408,
+   4409,
+   4410
+  ],
+  "common_args": [],
+  "note": "FINAL (поправки №3–3а): один прогон после заморозки банка А3 (ag/a3-bank 38707a52e1, дерево банка 948ecb79bb, content_hash 913ad19f6a259aff, 1 646 семейств); настройки — STAND_ENV с выбором T9 TRAIN-раунда 3; F_* — жёсткие условия на FINAL_SEEDS 4401–4410, S_T — стандартные условия на ST_SEEDS 5501–5510, B_* — боты на FINAL_SEED 4501 (n = 400 на стратегию); FINAL №2 (поправка №4): №1 аннулирован до просмотра, запечатан — docs/validation/FINAL1_SEALED.txt",
+  "a3_head": "38707a52e1 (дерево банка = ab16d27622 / 948ecb79bb)",
+  "bank_hash": "913ad19f6a259aff",
+  "configs": {
+   "S_T": {
+    "phase": "st",
+    "seeds": [
+     5501,
+     5502,
+     5503,
+     5504,
+     5505,
+     5506,
+     5507,
+     5508,
+     5509,
+     5510
+    ],
+    "n_per_seed": 300,
+    "args": [
+     "--population",
+     "st",
+     "--world",
+     "st",
+     "--bank-a",
+     "mcq=1.5,code=1.5",
+     "--retest",
+     "--fixed",
+     "--expect-bank-hash",
+     "913ad19f6a259aff"
+    ],
+    "out_name": "product_sim_st.json"
+   },
+   "B_ctl": {
+    "module_args": [
+     "app.modules.validation.cheat_bots",
+     "--final",
+     "--expect-bank-hash",
+     "913ad19f6a259aff",
+     "--n",
+     "400",
+     "--strategies",
+     "control,single_form",
+     "--k",
+     "",
+     "--out",
+     "{out}"
+    ]
+   },
+   "B_guess1": {
+    "module_args": [
+     "app.modules.validation.cheat_bots",
+     "--final",
+     "--expect-bank-hash",
+     "913ad19f6a259aff",
+     "--n",
+     "400",
+     "--strategies",
+     "random,position_A,position_B",
+     "--k",
+     "",
+     "--out",
+     "{out}"
+    ]
+   },
+   "B_guess2": {
+    "module_args": [
+     "app.modules.validation.cheat_bots",
+     "--final",
+     "--expect-bank-hash",
+     "913ad19f6a259aff",
+     "--n",
+     "400",
+     "--strategies",
+     "position_C,position_D,longest",
+     "--k",
+     "",
+     "--out",
+     "{out}"
+    ]
+   },
+   "B_heur": {
+    "module_args": [
+     "app.modules.validation.cheat_bots",
+     "--final",
+     "--expect-bank-hash",
+     "913ad19f6a259aff",
+     "--n",
+     "400",
+     "--strategies",
+     "median_number,overlap",
+     "--k",
+     "",
+     "--out",
+     "{out}"
+    ]
+   },
+   "B_leak10": {
+    "module_args": [
+     "app.modules.validation.cheat_bots",
+     "--final",
+     "--expect-bank-hash",
+     "913ad19f6a259aff",
+     "--n",
+     "400",
+     "--strategies",
+     "",
+     "--k",
+     "10",
+     "--out",
+     "{out}"
+    ]
+   },
+   "B_leak100": {
+    "module_args": [
+     "app.modules.validation.cheat_bots",
+     "--final",
+     "--expect-bank-hash",
+     "913ad19f6a259aff",
+     "--n",
+     "400",
+     "--strategies",
+     "",
+     "--k",
+     "100",
+     "--out",
+     "{out}"
+    ]
+   },
+   "B_leak1000": {
+    "module_args": [
+     "app.modules.validation.cheat_bots",
+     "--final",
+     "--expect-bank-hash",
+     "913ad19f6a259aff",
+     "--n",
+     "400",
+     "--strategies",
+     "",
+     "--k",
+     "1000",
+     "--out",
+     "{out}"
+    ]
+   }
+  }
+ },
+ "summary": {
+  "S_T": {
+   "n": 3000,
+   "confident_accuracy_main": 0.898,
+   "confident_share_main": 0.892,
+   "confident_accuracy_final": 0.8813,
+   "confident_share_final": 0.9547,
+   "false_confirm_all": 0.021,
+   "false_confirm_among_overclaim": 0.0882,
+   "false_reject_among_true": 0.1719,
+   "exact_grade_final": 0.7763,
+   "exact_grade_final_not_underclaim": 0.7968,
+   "within_one_final": 0.9987,
+   "gross_error_2plus": 0.0013,
+   "undecided_final": 0.0453,
+   "followup_share": 0.108,
+   "oral_share": 0.0,
+   "extended_share": 0.2837,
+   "false_reject_all": 0.131,
+   "exact_grade_final_5": 0.7803,
+   "exact_grade_final_4": 0.8077,
+   "exact_grade_main": 0.7743,
+   "loss_3fc_fr": 0.194,
+   "far_exact_grade_final": 0.8539,
+   "minutes_main": {
+    "mean": 41.1,
+    "p90": 63.0
+   },
+   "minutes_total": {
+    "mean": 43.2,
+    "p90": 69.4
+   },
+   "items_main": {
+    "mean": 21.6,
+    "min": 8,
+    "max": 36
+   },
+   "retest_kappa_w": 0.8515,
+   "retest_exact": 0.7017,
+   "retest_decision": 0.7993,
+   "engine_errors": 0,
+   "env": null,
+   "args": [
+    "--population",
+    "st",
+    "--world",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--retest",
+    "--fixed",
+    "--expect-bank-hash",
+    "913ad19f6a259aff"
+   ]
+  }
+ },
+ "fails": [],
+ "elapsed_s": 325.0
+}
