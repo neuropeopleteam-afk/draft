@@ -274,7 +274,7 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
         </main>
         <footer className="border-t border-brand-night/10 bg-white/60 px-4 py-3 text-xs text-brand-ink/60 sm:px-6 md:px-10 print:hidden">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span>© 2026 Платформа «Драфт»</span>
+            <span>© 2026 Платформа «Драфт» · команда Neuropeople (конкурсный прототип)</span>
             <div className="flex flex-wrap items-center gap-4">
               <Link to="/support" className="font-semibold text-brand-plum hover:underline">Помощь и поддержка</Link>
               <Link to="/pricing" className="hover:text-brand-night">Тарифы</Link>

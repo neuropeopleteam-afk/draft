@@ -186,7 +186,7 @@ export function SiteFooter({ premium = false }: { premium?: boolean }) {
           <Link className={a} to="/cookies">Cookie</Link>
           <Link className={a} to="/recommendations">Правила рекомендательных технологий</Link>
         </p>
-        <p className="mt-2">© 2026 Платформа «Драфт» · Подтверждённый найм ИТ-специалистов · <a className={a} href="mailto:support@fsp-draft.ru">support@fsp-draft.ru</a></p>
+        <p className="mt-2">© 2026 Платформа «Драфт» · Оператор платформы — команда Neuropeople (конкурсный прототип) · Контакт — <Link className={a} to="/support">форма обратной связи</Link></p>
       </div>
     </footer>
   );
