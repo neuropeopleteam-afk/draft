@@ -51,6 +51,7 @@ PS_FINAL = {"hard": DATA / "product_sim_final_calibrated.json", "misspec": DATA 
 # θ ~ N(0,5; 1,0); заявки 65/25/10)
 PS_ST = {"st": DATA / "product_sim_st.json"}
 DJINNI = ROOT / "docs" / "realdata" / "djinni" / "external_djinni.json"  # А17: внешний открытый набор (подбор)
+TRAIN_CHOICE = ROOT / "docs" / "validation" / "TRAIN_CHOICE_2110b.json"  # выбор конфигурации на TRAIN (поправка №3)
 # Пятёрка первого экрана (поправка №3): точность уверенного — всегда парой с долей уверенных; точный грейд — по всем
 # кандидатам и 6 ступеням, рядом строки 5 и 4 ступеней (сопоставимость) и «среди тех, кому продукт его определяет»;
 # ±1 — с числом грубых ошибок (2+ ступени); повтор — κw с ДИ, совпадение грейда и решения
@@ -264,13 +265,15 @@ def _ps_view(d: dict) -> dict:
 
 
 def grade_verdict_block() -> dict | None:
-    main = _load(PS["main"])
+    # итоговый прогон (поправки №2–3) заменяет прежний отчётный TEST: основной — жёсткие условия FINAL
+    fin = _load(PS_FINAL["hard"])
+    main = fin or _load(PS["main"])
     if not main:
         return None
     v = _ps_view(main)
-    mis = _load(PS["misspec"])
-    rater = _load(PS["rater"])
-    sel = _load(PS["selection"])
+    mis = _load(PS_FINAL["misspec"]) if fin else _load(PS["misspec"])
+    rater = _load(PS_FINAL["rater"]) if fin else _load(PS["rater"])
+    sel = _load(TRAIN_CHOICE) if fin else _load(PS["selection"])
     va, fc, cs, ca = v["verdict_accuracy"], v["false_confirm"], v["confident_share"], v["confident_accuracy"]
     ex = v["exact_grade"]
     mm, mt = v["minutes_main"] or {}, v["minutes_total"] or {}
@@ -392,6 +395,8 @@ def _extra(d: dict) -> dict | None:
             "outside_0_25": s.get("outside_0_25"), "outside_0_4": s.get("outside_0_4"),
             "fixed_vs_adaptive": s.get("fixed_vs_adaptive"), "minutes_total": s.get("minutes_total"),
             "far_from_cut_0_25": s.get("far_from_cut_0_25"),
+            "confident_accuracy_final": frac(s.get("confident_accuracy_final")),
+            "false_confirm_all": frac(s.get("false_confirm_all")), "within_one_final": frac(s.get("within_one_final")),
             "exact_grade_final_5": frac(s.get("exact_grade_final_5")), "exact_grade_final_4": frac(s.get("exact_grade_final_4")),
             "exact_grade_main_5": frac(s.get("exact_grade_main_5")), "exact_grade_main_4": frac(s.get("exact_grade_main_4")),
             "grade_above_true_final": frac(s.get("grade_above_true_final")),
@@ -543,7 +548,22 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
                         f"{bank.get('directions')} ИТ-направлений"),
             "provenance": f"валидатор банка, {_date(bank.get('synced_at'))}",
             "recompute": bank["recompute"], "code_ref": bank["code_ref"]})
-    if gv and gv["main"].get("verdict_accuracy"):
+    stx = ((gv or {}).get("st") or {}).get("extra") or {}
+    hx = ((gv or {}).get("hard") or {}).get("extra") or {}
+    if stx.get("confident_accuracy_final") and hx.get("confident_accuracy_final"):
+        # итоговый прогон: точность уверенного вердикта — всегда парой с долей уверенных; S-T и жёсткие рядом
+        a, sh, fc = stx["confident_accuracy_final"], stx.get("confident_share_final") or {}, stx.get("false_confirm_all") or {}
+        ha, hsh, hfc = hx["confident_accuracy_final"], hx.get("confident_share_final") or {}, hx.get("false_confirm_all") or {}
+        n_st = (stx.get("far_from_cut_0_25") or {}).get("n")
+        cards.append({
+            "id": "grade_verdict", "eyebrow": "Точность уверенного вердикта по грейду", "value": pct(a["value"]), "accent": "%",
+            "subtext": (f"уверенных — {pct(sh.get('value'))} %, ложное подтверждение — {pct(fc.get('value'))} % всех "
+                        f"кандидатов (стандартные условия); в жёстких — {pct(ha['value'])} %, уверенных "
+                        f"{pct(hsh.get('value'))} %, ложных подтверждений {pct(hfc.get('value'))} % · симуляция продукта, "
+                        f"модельные кандидаты, не люди"),
+            "provenance": f"итоговый прогон симуляции продукта, {(gv['main'] or {}).get('date')}",
+            "recompute": gv["recompute"], "code_ref": gv["code_ref"]})
+    elif gv and gv["main"].get("verdict_accuracy"):
         m = gv["main"]
         va, fc, cs = m["verdict_accuracy"], m["false_confirm"] or {}, m["confident_share"] or {}
         cards.append({
@@ -643,6 +663,28 @@ def final_blocks() -> tuple[dict, dict, dict]:
     return hard, st, arts
 
 
+def final_claim(st: dict | None, hard: dict | None) -> str | None:
+    """Формулировка для сайта и README по итоговому прогону — только из артефактов, S-T и жёсткие вместе."""
+    if not st or not hard or not st.get("extra") or not hard.get("extra"):
+        return None
+
+    def one(x: dict) -> str:
+        e = x["extra"]
+        g = lambda k: (e.get(k) or {}).get("value")
+        mt = e.get("minutes_total") or {}
+        return (f"точность уверенного вердикта {pct(g('confident_accuracy_final'))} % при доле уверенных "
+                f"{pct(g('confident_share_final'))} %, ложное подтверждение {pct(g('false_confirm_all'))} % всех кандидатов, "
+                f"точный грейд {pct(g('exact_grade_all'))} % по 6 ступеням ({pct(g('exact_grade_final_4'))} % по 4), "
+                f"±1 ступень — {pct(g('within_one_final'))} %; время — в среднем {num(mt.get('mean'), 0)} мин "
+                f"(p90 {num(mt.get('p90'), 0)})")
+    n_st = ((st.get("view") or {}).get("n"))
+    n_h = ((hard.get("view") or {}).get("n"))
+    return (f"Симуляция продукта — тот же движок и банк, что на стенде; модельные кандидаты, не люди; один прогон на "
+            f"отложенных зёрнах после выбора настроек на обучающих. Стандартные условия (как в аналогичных решениях, "
+            f"N = {int_ru(n_st)}): {one(st)}. Жёсткие условия (угадывание, завышенные заявки, осторожные параметры "
+            f"заданий, N = {int_ru(n_h)}): {one(hard)}.")
+
+
 def external_block() -> dict | None:
     """Внешний бенчмарк подбора (А17): открытый набор Djinni, один прогон после FREEZE — как есть из артефакта."""
     d = _load(DJINNI)
@@ -678,6 +720,9 @@ def build() -> dict:
         gv["st"] = {"extra": _extra(st), "view": _ps_view(st)} if st else None
         gv["sensitivity"] = {k: {"view": _ps_view(v), "condition_ru": _cond_ru(v)} for k, v in arts.items()
                              if k not in ("hard", "st")}
+        cl = final_claim(gv.get("st"), gv.get("hard"))
+        if cl:
+            gv["claim_ru"] = cl
     matching, hh, anticheat = matching_block(), hh_block(), anticheat_block()
     fsp, mutation, load = fsp_block(), mutation_block(), load_block()
     cards = landing_cards(bank, gv, matching, hh, fsp)
