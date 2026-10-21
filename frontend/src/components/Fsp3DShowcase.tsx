@@ -71,7 +71,7 @@ export function FspPulseBar() {
 
 /** Правая 3D-сцена первого экрана главной страницы: левитирующий 3D-кристалл верификации ФСП,
  *  расходящиеся радиоволны, медальон грейда и 3 парящие стеклянные орбитальные капсулы с параллаксом. */
-export function FspHeroMonolithStage() {
+export function FspHeroMonolithStage({ mobile = false }: { mobile?: boolean }) {
   const [par, setPar] = useState({ x: 0, y: 0 });
   const regions = getRegionsCount();
 
@@ -84,10 +84,10 @@ export function FspHeroMonolithStage() {
 
   return (
     <div
-      className="fsp-stage-card relative overflow-hidden rounded-3xl p-4 sm:p-5"
+      className="fsp-stage-card relative overflow-hidden rounded-3xl p-3.5 sm:p-5"
       onMouseMove={onMove}
       onMouseLeave={() => setPar({ x: 0, y: 0 })}
-      data-testid="hero-fsp-showcase"
+      data-testid={mobile ? "hero-fsp-showcase-mobile" : "hero-fsp-showcase"}
       aria-label="3D-ядро верификации Федерации спортивного программирования"
     >
       <div className="fsp-hero-visual">
@@ -102,7 +102,7 @@ export function FspHeroMonolithStage() {
 
         {/* Парящий 3D-медальон грейда в левом верхнем углу сцены */}
         <div
-          className="pointer-events-none absolute left-2 top-2 z-20 hidden sm:block"
+          className="pointer-events-none absolute left-1.5 top-1.5 z-20 sm:left-2 sm:top-2"
           style={{
             transform: `translate3d(${-par.x * 0.6}px, ${-par.y * 0.6}px, 0)`,
             transition: "transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -114,14 +114,14 @@ export function FspHeroMonolithStage() {
             width={76}
             height={76}
             alt=""
-            className="fsp-float-delayed h-[72px] w-[72px] object-contain drop-shadow-[0_16px_28px_rgba(64,47,255,0.65)]"
+            className="fsp-float-delayed h-[54px] w-[54px] object-contain drop-shadow-[0_14px_24px_rgba(64,47,255,0.65)] sm:h-[72px] sm:w-[72px]"
             decoding="async"
           />
         </div>
 
         {/* Центральная левитирующая 3D-скульптура «Ядро Драфта × ФСП» */}
         <div
-          className="relative z-10 grid place-items-center"
+          className="relative z-10 grid place-items-center py-1 sm:py-0"
           style={{
             transform: `translate3d(${par.x}px, ${par.y}px, 0)`,
             transition: "transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -133,41 +133,43 @@ export function FspHeroMonolithStage() {
               width={260}
               height={260}
               alt="3D-скульптура ядра верификации ИТ-специалистов и достижений ФСП из титана, сапфирового стекла и рубинового ядра"
-              className="h-[200px] w-[200px] object-contain sm:h-[235px] sm:w-[235px]"
+              className="h-[168px] w-[168px] object-contain sm:h-[235px] sm:w-[235px]"
               fetchPriority="high"
               decoding="async"
             />
           </span>
         </div>
 
-        {/* Три парящие стеклянные орбитальные плашки (Orbit Pills) */}
-        <a
-          href="#fsp-ecosystem"
-          className="fsp-orbit-pill fsp-orbit-pill--top"
-          title={getRegionsClaim()}
-        >
-          <span className="fsp-orbit-pill__dot" aria-hidden="true" />
-          <span>
-            <b>ФСП: {regions} региональных представительств</b>
-            <small>Спортивные разряды и кубки России</small>
-          </span>
-        </a>
+        {/* Три парящие стеклянные орбитальные плашки (Orbit Pills) — на десктопе парят вокруг, на мобильном строятся компактным каскадом */}
+        <div className="relative z-20 mt-2 grid w-full grid-cols-1 gap-1.5 sm:static sm:mt-0 sm:block">
+          <a
+            href="#fsp-ecosystem"
+            className="fsp-orbit-pill fsp-orbit-pill--top"
+            title={getRegionsClaim()}
+          >
+            <span className="fsp-orbit-pill__dot" aria-hidden="true" />
+            <span>
+              <b>ФСП: {regions} региональных представительств</b>
+              <small>Спортивные разряды и кубки России</small>
+            </span>
+          </a>
 
-        <a href="#candidates" className="fsp-orbit-pill fsp-orbit-pill--left">
-          <span className="fsp-orbit-pill__dot fsp-orbit-pill__dot--red" aria-hidden="true" />
-          <span>
-            <b>Банк · {NUMBERS.bank.directions} ИТ-направлений</b>
-            <small>{fmtInt(NUMBERS.bank.families)} семейств задач · устная защита</small>
-          </span>
-        </a>
+          <a href="#candidates" className="fsp-orbit-pill fsp-orbit-pill--left">
+            <span className="fsp-orbit-pill__dot fsp-orbit-pill__dot--red" aria-hidden="true" />
+            <span>
+              <b>Банк · {NUMBERS.bank.directions} ИТ-направлений</b>
+              <small>{fmtInt(NUMBERS.bank.families)} семейств задач · устная защита</small>
+            </span>
+          </a>
 
-        <a href="#employers" className="fsp-orbit-pill fsp-orbit-pill--bottom">
-          <span className="fsp-orbit-pill__dot" aria-hidden="true" />
-          <span>
-            <b>Цифровой паспорт грейда</b>
-            <small>Приглашение — только с вилкой зарплаты</small>
-          </span>
-        </a>
+          <a href="#employers" className="fsp-orbit-pill fsp-orbit-pill--bottom">
+            <span className="fsp-orbit-pill__dot" aria-hidden="true" />
+            <span>
+              <b>Цифровой паспорт грейда</b>
+              <small>Приглашение — только с вилкой зарплаты</small>
+            </span>
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -186,7 +188,7 @@ export function FspCabinet3DStage({
   const src = kind === "core" ? fspCrystalCore : fspMedallion3d;
   return (
     <div
-      className="relative flex h-[148px] w-[164px] shrink-0 items-center justify-center select-none sm:h-[164px] sm:w-[184px]"
+      className="relative flex h-[118px] w-full shrink-0 items-center justify-center select-none sm:h-[164px] sm:w-[184px]"
       aria-hidden="true"
     >
       <div className="fsp-core-glow" />
@@ -202,7 +204,7 @@ export function FspCabinet3DStage({
           width={148}
           height={148}
           alt=""
-          className="h-[124px] w-[124px] object-contain drop-shadow-[0_24px_36px_rgba(0,0,0,0.75)] sm:h-[142px] sm:w-[142px]"
+          className="h-[104px] w-[104px] object-contain drop-shadow-[0_20px_32px_rgba(0,0,0,0.75)] sm:h-[142px] sm:w-[142px]"
           decoding="async"
         />
       </span>

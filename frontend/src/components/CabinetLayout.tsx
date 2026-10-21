@@ -84,15 +84,15 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#EEF1FB] via-[#F5F7FE] to-[#E8ECFA] md:grid md:grid-cols-[17.5rem_minmax(0,1fr)]">
-      <aside aria-label="Меню кабинета" className="fsp-cabinet-sidebar sticky top-0 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:flex md:h-screen md:flex-col md:border-b-0 md:backdrop-blur-none">
+      <aside aria-label="Меню кабинета" className="fsp-cabinet-sidebar sticky top-0 z-30 border-b border-brand-night/10 bg-[#090B1A]/95 backdrop-blur md:flex md:h-screen md:flex-col md:border-b-0 md:backdrop-blur-none">
         <div className="flex h-12 items-center justify-between gap-2 px-4 md:block md:h-auto md:px-5 md:py-5">
-          <NavLink to="/" aria-label="На главную" className="md:[&_span]:text-white"><Logo /></NavLink>
+          <NavLink to="/" aria-label="На главную" className="[&_span]:text-white"><Logo light /></NavLink>
           {demoUi && <GuideSlot where="header" />}
-          <p className="ml-auto min-w-0 truncate peer-[:not(:empty)]:hidden text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-5 md:flex md:items-center md:gap-2 md:text-left md:font-mono md:text-[11px] md:font-bold md:uppercase md:tracking-[0.14em] md:text-[#A59DFF]">
-            <span className="hidden h-1.5 w-1.5 rounded-full bg-[#4BE3A3] shadow-[0_0_8px_#4BE3A3] md:inline-block" aria-hidden="true" />
+          <p className="ml-auto flex min-w-0 items-center gap-1.5 truncate peer-[:not(:empty)]:hidden text-right font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[#B8B4FF] md:ml-0 md:mt-5 md:gap-2 md:text-left md:tracking-[0.14em] md:text-[#A59DFF]">
+            <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[#4BE3A3] shadow-[0_0_8px_#4BE3A3]" aria-hidden="true" />
             <span className="md:hidden">{SHORT[role] ?? title}</span><span className="hidden md:inline">{title}</span>
           </p>
-          <button type="button" onClick={exit} className="shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold text-brand-plum hover:bg-brand-blush/50 hover:text-brand md:hidden">
+          <button type="button" onClick={exit} className="shrink-0 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-[#FF7A8A] hover:bg-white/15 hover:text-white md:hidden">
             Выйти
           </button>
         </div>

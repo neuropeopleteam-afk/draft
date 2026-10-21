@@ -774,7 +774,13 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
                  if ix.get("athletes_with_evsk_norm") is not None else None)]
         er = ((fsp.get("ocr_audit") or {}).get("errors") or {}) if isinstance(fsp.get("ocr_audit"), dict) else {}
         if all(isinstance(er.get(k), dict) for k in ("fio", "place", "birth_date")):
-            bits.append(f"проверка распознавания: ошибок в ФИО — {er['fio'].get('errors')} из {er['fio'].get('checked')}, "
+            # условие подписи (А15 P2): аудит распознавания делался на более ранней версии индекса, чем показанная
+            aud_ix, cur_ix = str((fsp.get("ocr_audit") or {}).get("index") or ""), str(ix.get("index") or "")
+            v_aud, v_cur = re.search(r"v(\d+)", aud_ix), re.search(r"v(\d+)", cur_ix)
+            older = bool(v_aud and v_cur and int(v_aud.group(1)) < int(v_cur.group(1)))
+            bits.append(f"проверка распознавания (аудит индекса v{v_aud.group(1)}, найденные ошибки исправлены в следующих "
+                        f"версиях): " if older else "проверка распознавания: ")
+            bits[-1] += (f"ошибок в ФИО — {er['fio'].get('errors')} из {er['fio'].get('checked')}, "
                         f"в местах — {er['place'].get('errors')} из {er['place'].get('checked')}, в датах рождения — "
                         f"{er['birth_date'].get('errors')} из {er['birth_date'].get('checked')}")
         cards.append({
@@ -985,6 +991,8 @@ def devdev_block() -> dict | None:
             "checked_by": ("А15, пересчёт в чистом клоне FREEZE 4d104eb4e0 — 0 расхождений" if x is not x3 else
                            "А15, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений"), "claim_ru": claim,
             "cycle": 4 if x is not x3 else 3,
+            # решение владельца 21.10: блок снят с экранов целиком (обе строки и цена); здесь — только для документов
+            "on_screen": False,
             "history": ([{"cycle": 3, "main": view(x3["main"]), "exact_option_api": view(x3.get("exact_option_api") or {}),
                           "condition_ru": _anon_other(x3.get("condition"))}] if x3 and x is not x3 else [])}
 

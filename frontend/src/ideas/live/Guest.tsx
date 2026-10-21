@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Alert, Level, catTitle, errText, range, rub, ruText } from "../../components/ui";
 import { isStandalone, platform, pushSupported, subscribePush } from "../../integrations/pwa";
-import { usePageTitle } from "../../lib/meta";
+import { useMeta, usePageTitle } from "../../lib/meta";
 import { Rich } from "../../pages/candidate/Assessment";
 import { chime, FORMAT_TITLE, type Guest, guestApi, guestToken, type LiveItem, num, plain, type RoomPublic, time, unlockAudio } from "./api";
 
@@ -284,6 +284,7 @@ function Step({ done, active, title, children }: { done: boolean; active: boolea
 }
 
 function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest; push: { on: boolean; note: string | null }; onUpdate: (g: Guest) => void; onAgain: () => void }) {
+  const meta = useMeta();
   const r = g.result;
   const sel = g.selection;
   const inv = g.invite;
@@ -344,7 +345,7 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
           </div>
         )}
         <p className="mt-2 text-xs leading-relaxed text-brand-ink/65">
-          {r?.capped ? "Ответы сильные, но за 3 задания категория — не выше Middle: Senior подтверждает полный тест (8–16 заданий) или экспресс (8–12). " : "За 3 задания категория — не выше Middle. "}
+          {r?.capped ? `Ответы сильные, но за 3 задания категория — не выше Middle: Senior подтверждает полный тест (${meta?.rules?.test_len ? `${meta.rules.test_len.min_items}–${meta.rules.test_len.max_items} заданий, у спорного порога до ${meta.rules.test_len.contested_max_items}` : "8–20 заданий, у спорного порога до 36"}) или экспресс (8–12). ` : "За 3 задания категория — не выше Middle. "}
           Погрешность велика — это предварительная оценка, полный тест уточняет грейд.
         </p>
       </div>

@@ -435,6 +435,11 @@ class ThreeValuedVerdict:
                 "kind": (self.integrity_followup or {}).get("followup_kind") or ("oral_defense" if self.oral_defense_required else ("stage2" if self.followup_needed else None)),
             },
             "explanation": self.explanation,
+            # плоские поля для карточки работодателя (profiles/facts.verdict_summary читает их с верхнего уровня):
+            # «рекомендована устная защита» и вид доп. этапа — те же значения, что в followup
+            "oral_defense_required": self.oral_defense_required,
+            "followup_kind": (self.integrity_followup or {}).get("followup_kind") or ("oral_defense" if self.oral_defense_required else ("stage2" if self.followup_needed else None)),
+            "integrity_oral": bool((self.integrity_followup or {}).get("integrity_oral")),
         }
         if self.incident_stage is not None:
             out["incident_stage"] = self.incident_stage
@@ -608,6 +613,15 @@ def incident_theta_update(
     return th1, se1, llr_delta, norm
 
 
+def _integrity_oral_on() -> bool:
+    try:
+        from app.core.config import get_settings
+
+        return bool(get_settings().integrity_oral)
+    except Exception:  # noqa: BLE001 — без настроек (чистая симуляция) флаг выключен
+        return False
+
+
 def compute_verdict(
     done_items: Iterable[dict],
     lookup: dict,
@@ -747,6 +761,17 @@ def compute_verdict(
         if not susp_reasons:
             susp_reasons.append("Признаки использования подсказок")
 
+    # Экспериментальный флаг INTEGRITY_ORAL (по умолчанию выкл., на стенде не включён): одиночная низкая достоверность
+    # (level «low», ≥ 3 балла; это НЕ правило А6 «2+ признака», см. config.integrity_oral) → грейд не подтверждается
+    # сразу, итог решает короткий устный этап (без бана). Симуляции продукта принудительно идут с флагом 0.
+    low_integrity_oral = False
+    if _integrity_oral_on() and str((integ_input or {}).get("level") or "") == "low":
+        low_integrity_oral = True
+        susp_flagged = True
+        ifrel["needs_followup_stage"] = True
+        ifrel["followup_kind"] = "oral_defense"
+        ifrel["integrity_oral"] = True
+
     # Трёхзначный вердикт (А4, 21.10) — то же правило, что у категории продукта и второго этапа, без отдельной логики:
     # P = P(θ ≥ порога заявленного грейда) по итоговой оценке и её погрешности; L — уровень уверенности второго этапа
     # (ASSESSMENT_TWO_STAGE_LEVEL, 0,8; полоса (1 − L; L) — граница, где предлагается второй этап, two_stage.boundary):
@@ -801,6 +826,9 @@ def compute_verdict(
         expl = (f"Ответы — у самой границы уровня {g_title}: этой сессии мало для уверенного решения. Нужен короткий "
                 f"дополнительный этап у этой границы (до {followup_items} заданий, до {followup_minutes} минут); итог — "
                 f"по ответам обеих частей вместе.{inc_hint}")
+    elif oral_required and low_integrity_oral:
+        expl = (f"Для подтверждения уровня {g_title} — короткий устный разговор с Настей: по ответам этой попытки "
+                "результат предварительный, итог решит устный этап. Автоматических блокировок и понижения нет.")
     elif oral_required:
         reasons_txt = f" ({'; '.join(susp_reasons)})" if susp_reasons else ""
         expl = (

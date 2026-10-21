@@ -4,7 +4,7 @@ import { DefensePanel } from "../../components/Interview";
 import { IncidentSandbox, isIncidentTask } from "../../components/IncidentSandbox";  // Н2: пульт инцидента к архитектурным заданиям  // Я15: устная защита ответа, по желанию
 import { ThetaScale } from "../../components/ThetaScale";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, signed, useApi, plainText } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, fmtHoursText, num, pct, signed, useApi, plainText } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
@@ -54,7 +54,7 @@ export default function Assessment({ express = false }: { express?: boolean }) {
       {showSurvey ? (
         <Survey data={onb.data} onDone={() => { setEditing(false); setQ({}); void onb.reload(); void status.reload(); }} />
       ) : (
-        <GradeChoice status={status.data} onEditSurvey={() => setEditing(true)} express={express} />
+        <GradeChoice status={status.data} onb={onb.data} onEditSurvey={() => setEditing(true)} express={express} />
       )}
     </div>
   );
@@ -95,15 +95,18 @@ interface TestLength { missing?: boolean; min_items: number; max_items: number; 
   sim_mean_items?: number; sim_extension_share?: number; generated_at?: string }
 /** brief — первый экран (Ф6 Н8 + Ф4 «до 600–900 знаков»): «планируйте до 80 минут» и доля дотестирования в модели;
  *  short — одна фраза о симуляции; полный текст (условия симуляции) — под «Подробнее». */
-function FullLength({ len, short = false, brief = false }: { len?: TestLength | null; short?: boolean; brief?: boolean }) {
+function FullLength({ len, meta, short = false, brief = false }: { len?: TestLength | null; meta?: any; short?: boolean; brief?: boolean }) {
   const ok = len && !len.missing && len.sim_extension_share != null && len.sim_mean_items != null;
   const sim = ok
     ? `в модельной симуляции (синтетические кандидаты, отчёт ${len.generated_at ? new Date(len.generated_at).toLocaleDateString("ru-RU") : "—"}) дотестирование было в ${Math.round(len.sim_extension_share! * 100)} % сессий, в среднем ${num(len.sim_mean_items, 0)} заданий; время реальных людей не измерялось.`
     : "как часто оно нужно реальным кандидатам, пока не измерено.";
   if (short) return <>{sim[0].toUpperCase() + sim.slice(1)}</>;
-  const c = len && !len.missing ? len : { min_items: 8, max_items: 16, max_minutes: 60, ext_items: 6, ext_minutes: 20 };
-  if (brief) return <>Планируйте до {c.max_minutes + c.ext_minutes} минут{ok ? `: в модельной симуляции дотестирование — в ${Math.round(len.sim_extension_share! * 100)} % сессий, в среднем ${num(len.sim_mean_items, 0)} заданий` : ""}.</>;
-  return <>Полный адаптивный тест: основной блок {c.min_items}–{c.max_items} заданий (до {c.max_minutes} минут), у порога грейда — ещё до {c.ext_items} коротких (до {c.ext_minutes} минут); планируйте до {c.max_minutes + c.ext_minutes} минут. {sim[0].toUpperCase() + sim.slice(1)} Именно этот тест присваивает категорию живым кандидатам.</>;
+  const L = meta?.rules?.test_len;
+  const c = L
+    ? { min_items: L.min_items, max_items: L.max_items, max_minutes: L.max_minutes, ext_items: L.two_stage_items, ext_minutes: L.two_stage_minutes, total_minutes: L.contested_max_minutes || (L.max_minutes + L.two_stage_minutes) }
+    : (len && !len.missing ? { ...len, total_minutes: len.max_minutes + len.ext_minutes } : { min_items: 8, max_items: 20, max_minutes: 60, ext_items: 12, ext_minutes: 20, total_minutes: 105 });
+  if (brief) return <>Планируйте до {c.total_minutes} минут{ok ? `: в модельной симуляции дотестирование — в ${Math.round(len.sim_extension_share! * 100)} % сессий, в среднем ${num(len.sim_mean_items, 0)} заданий` : ""}.</>;
+  return <>Полный адаптивный тест: {L ? testLenText(meta) : `основной блок ${c.min_items}–${c.max_items} заданий (до ${c.max_minutes} минут), у порога грейда — ещё до ${c.ext_items} коротких (до ${c.ext_minutes} минут); планируйте до ${c.total_minutes} минут.`} {sim[0].toUpperCase() + sim.slice(1)} Именно этот тест присваивает категорию живым кандидатам.</>;
 }
 
 interface Hint {
@@ -180,6 +183,10 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
     return () => { active = false; };
   }, [additionalDirection]);
   const groups = useMemo(() => ({ own: tags.filter((t) => t.direction_id), common: tags.filter((t) => !t.direction_id) }), [tags]);
+  const additionalOwnTags = useMemo(() => {
+    const commonIds = new Set(groups.common.map((c) => c.id));
+    return additionalTags.filter((t) => !!t.direction_id && !commonIds.has(t.id));
+  }, [additionalTags, groups.common]);
 
   const hasFullstack = dirEntries.some(([id]) => id === "backend") && dirEntries.some(([id]) => id === "frontend");
   const fullstack = direction === "backend" && additionalDirection === "frontend";
@@ -213,7 +220,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
 
   return (
     <>
-      <PageTitle title="Опрос" subtitle="Около трёх минут. Ответы — это самоописание (уровень T0): категорию присваивает только тест." />
+      <PageTitle title="Опрос" subtitle="Около трёх минут. Ответы — это самоописание: категорию присваивает только тест." />
       <ol className="mt-6 flex flex-wrap gap-2" aria-label="Шаги опроса">
         {STEPS.map((s, i) => (
           <li key={s}>
@@ -257,7 +264,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         )}
         {step === 1 && (
           <div className="space-y-5">
-            <p className="text-sm text-brand-ink/70">Отметьте технологии и оцените уровень. Навыки из вашего стека попадут в тест и станут подтверждёнными (T1).</p>
+            <p className="text-sm text-brand-ink/70">Отметьте технологии и оцените уровень. Навыки из вашего стека попадут в тест и станут подтверждёнными.</p>
             {[{ t: DIRECTION_TITLES[direction], list: groups.own }, { t: "Общий блок", list: groups.common }].map((g) => (
               <div key={g.t}>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{g.t}</p>
@@ -286,7 +293,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
               <div className="border-t border-brand-night/10 pt-4">
                 <p className="mb-2 text-sm font-semibold text-brand-night">Стек дополнительного направления · {DIRECTION_TITLES[additionalDirection]}</p>
                 <div className="flex flex-wrap gap-2">
-                  {additionalTags.map((tag) => (
+                  {additionalOwnTags.map((tag) => (
                     <button key={tag.id} type="button" aria-pressed={!!additionalStack[tag.id]}
                       className={`rounded-full border px-3 py-1.5 text-sm ${additionalStack[tag.id] ? "border-brand bg-brand-blush/40 font-semibold" : "border-brand-night/15"}`}
                       onClick={() => { const n = { ...additionalStack }; if (n[tag.id]) delete n[tag.id]; else n[tag.id] = 2; setAdditionalStack(n); }}>
@@ -416,7 +423,7 @@ function expText(id: string, levels: Record<string, string>): string {
   return GRADE_EXPERIENCE[id] ?? "";
 }
 
-function GradeChoice({ status, onEditSurvey, express = false }: { status: any; onEditSurvey: () => void; express?: boolean }) {
+function GradeChoice({ status, onb, onEditSurvey, express = false }: { status: any; onb?: Onb | null; onEditSurvey: () => void; express?: boolean }) {
   const navigate = useNavigate();
   const [q] = useSearchParams();
   const qGrade = q.get("grade");
@@ -449,6 +456,11 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
   // И16: экран камеры (по согласию) — до создания сессии, т. к. первое задание выдаётся при её создании; при выключенном флаге экрана нет
   const meta = useMeta();
   const [cam, setCam] = useState(false);
+  const allStackTags = [
+    ...(onb?.answers?.stack ?? []),
+    ...(onb?.answers?.additional_stack ?? []),
+  ].map((s) => String(s.tag || "").toLowerCase());
+  const hasPython = allStackTags.some((t) => t === "python" || t.includes("python"));
 
   async function start(camMode?: CamMode, reason?: string | null) {
     if (!camMode && !resume && meta?.proctor_camera) { setCam(true); return; }
@@ -503,6 +515,11 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           <div className="mb-3"><Alert kind="info">Повторить тест на {GRADE_TITLE_ALL[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
         )}
         {error && <div className="mb-3"><Alert>{error}</Alert></div>}
+        {!hasPython && (
+          <p className="mb-3 rounded-xl border border-brand/20 bg-white/85 px-3.5 py-2.5 text-xs leading-relaxed text-brand-night" data-testid="python-code-notice">
+            Задания с кодом — на Python: достаточно уметь читать код. Задания на Java, Kotlin и Go появятся в следующей версии банка.
+          </p>
+        )}
         {!resume && (
           <label className="flex cursor-pointer items-start gap-3 text-sm text-brand-ink/85">
             <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={ack} onChange={(e) => setAck(e.target.checked)} />
@@ -549,17 +566,17 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           {/* Ф6 (В7, Н8) + Ф4: на первом экране — коротко; правило остановки и погрешность — под «Подробнее» */}
           <p className="mt-2 text-brand-ink/75">
             {mode === "express"
-              ? <><span className="chip mr-1.5" data-testid="jury-brief">Экспресс-калибровка · 5 минут</span>{`Быстрая проверка уровня (5–7 адаптивных задач банка без дотестирования${grade === "senior" ? ", за Senior — до 12" : ""}) вместо полного 80-минутного теста.`}</>
-              : <FullLength len={len.data} brief />}
+              ? <><span className="chip mr-1.5" data-testid="jury-brief">Экспресс-калибровка · 5 минут</span>{`Быстрая проверка уровня (5–7 адаптивных задач банка без дотестирования${grade === "senior" ? ", за Senior — до 12" : ""}) вместо полного теста (до ${meta?.rules?.test_len?.contested_max_minutes ?? 105} мин).`}</>
+              : <FullLength len={len.data} meta={meta} brief />}
           </p>
           <details className="mt-2 text-xs text-brand-ink/70">
             <summary className="cursor-pointer font-semibold text-brand-plum">Подробнее</summary>
-            {mode !== "express" && <p className="mt-2 leading-relaxed"><FullLength len={len.data} /></p>}
+            {mode !== "express" && <p className="mt-2 leading-relaxed"><FullLength len={len.data} meta={meta} /></p>}
             <p className="mt-2 leading-relaxed"><b>Как считается.</b>{" "}
             {mode === "express"
               ? (grade === "senior"
-                ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ 80 %), оценка менее точная, чем у полного (± 0,6 против ± 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
-                : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но оценка заметно менее точная (± 0,65 против ± 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
+                ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ ${meta?.rules?.confirm_pct ?? 80} %), оценка менее точная, чем у полного (± 0,6 против ± 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
+                : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ ${meta?.rules?.confirm_pct ?? 80} %), но оценка заметно менее точная (± 0,65 против ± 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
               : `Полный тест: решение по заявленному грейду принимается последовательной проверкой у его порога — тест останавливается, как только решение надёжно; ${testLenText(meta)} Итог — «подтверждён», «не подтверждён» или «нужен доп. этап»; принудительного понижения нет.`}
             </p>
           </details>
@@ -603,10 +620,10 @@ export function Rich({ text }: { text: string }) {
       : <Rich key={i} text={p} />))}</>;
   }
   const parts = text.split("`");
-  if (parts.length < 3) return <>{text}</>;
+  if (parts.length < 3) return <>{fmtHoursText(text)}</>;
   return <>{parts.map((p, i) => (i % 2 === 1 && i < parts.length - 1
     ? <code key={i} className="rounded bg-brand-blush/50 px-1 font-mono text-[0.88em] font-medium">{p}</code>
-    : <span key={i}>{i % 2 === 1 ? "`" + p : p}</span>))}</>;
+    : <span key={i}>{fmtHoursText(i % 2 === 1 ? "`" + p : p)}</span>))}</>;
 }
 
 function fmtTime(sec: number) {
@@ -636,6 +653,7 @@ const INCIDENT_KEY = "draft.incident.sandbox";
 
 export function TestRun() {
   const llmOff = useLlmOff();
+  const meta = useMeta();
   const { id } = useParams();
   const navigate = useNavigate();
   const { refresh } = useAuth();
@@ -832,10 +850,11 @@ export function TestRun() {
         {it.adaptive && <span className="chip">{it.block === "common" ? "Общий блок" : `Блок «${DIRECTION_TITLES[s.direction]}»`}</span>}
         {it.extension && <span className="chip">Дотестирование у порога грейда</span>}
         {it.steps_total && <span className="chip">Шаг {it.step} из {it.steps_total}</span>}
-        <span className={`ml-auto font-mono ${left < 0 ? "text-brand-plum" : "text-brand-ink/65"}`} role="timer" aria-live="off">
-          {left >= 0 ? `Рекомендуемое время: ${fmtTime(left)}` : `Сверх рекомендуемого: ${fmtTime(-left)}`}
+        <span className="ml-auto text-brand-ink/65" role="timer" aria-live="off" data-testid="task-time-guide">
+          {`Ориентир ≈ ${Math.max(1, Math.round((it.time_limit_s || 120) / 60))} мин · это не ограничение`}
+          {it.adaptive ? ` · весь блок до ${s.mode === "express" ? (s.claimed_grade === "senior" ? 45 : 20) : s.mode === "refine" ? (meta?.rules?.test_len?.two_stage_minutes ?? 20) : (meta?.rules?.test_len?.max_minutes ?? 60)} мин` : ""}
         </span>
-        <span className="sr-only" aria-live="polite">{left < 0 ? "Рекомендуемое время задания вышло. Это ориентир: ответить можно и позже." : ""}</span>
+        <span className="sr-only" aria-live="polite">{left < 0 ? `Рекомендуемое время задания вышло (${fmtTime(-left)}). Это ориентир: ответить можно и позже.` : ""}</span>
       </div>
       <CameraIndicator sessionId={id!} />
       {fsOk && !fsOn && (
@@ -889,7 +908,7 @@ export function TestRun() {
                 <input type="radio" name="opt" className="mt-0.5 accent-brand" checked={value === o.id} onChange={() => setValue(o.id)} />
                 <span className="min-w-0 flex-1">
                   {it.adaptive && <b className="mr-2 text-brand-lavender">{o.id}</b>}
-                  <span className={o.code ? "" : "font-mono text-[13px]"}>{o.code ? <Rich text={o.text} /> : o.text}</span>
+                  <span className={o.code ? "" : "font-mono text-[13px]"}><Rich text={o.text} /></span>
                   {o.code && <pre className="mt-2 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{o.code}</code></pre>}
                 </span>
               </label>
@@ -1037,7 +1056,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · оценка менее точная, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
         <div className="mt-4"><Alert kind="info">
-          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от {meta?.rules?.confirm_pct ?? 60} %, «не доказанно ниже» — от 10 %).
+          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от {meta?.rules?.confirm_pct ?? 80} %, «не доказанно ниже» — от 10 %).
           {r.mode === "confirm" ? " Принудительного понижения нет; работодатели видят актуальную оценку. Подтвердить можно повторным тестом, заданием работодателя или кубком." : " Работодатели видят категорию с пометкой «предварительно» и ставят её чуть ниже подтверждённых. Подтвердить можно коротким дотестированием у порога, заданием работодателя или кубком."}
         </Alert></div>
       )}

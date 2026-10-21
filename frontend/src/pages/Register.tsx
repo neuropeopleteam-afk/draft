@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { AuthShell, FormError } from "../components/AuthShell";
+import { AuthShell, FormError, PasswordInput } from "../components/AuthShell";
 import { Alert, errText, useApi } from "../components/ui";
 import { FspIdMark } from "../integrations/FspId";
 import { api, ApiError, type RegisterOut, type Role } from "../lib/api";
@@ -54,6 +54,9 @@ export default function Register({ demoPreview = false }: { demoPreview?: boolea
       ? DEMO_PRESETS[initialRole === "employer" ? "employer" : "candidate"]
       : { email: "", password: "", full_name: "", company_name: "" }
   );
+  const [passwordConfirm, setPasswordConfirm] = useState(() =>
+    shouldAutofill ? DEMO_PRESETS[initialRole === "employer" ? "employer" : "candidate"].password : ""
+  );
   const [consent, setConsent] = useState(shouldAutofill);
   const [terms, setTerms] = useState(shouldAutofill);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +68,7 @@ export default function Register({ demoPreview = false }: { demoPreview?: boolea
     if (!shouldAutofill) return;
     const preset = DEMO_PRESETS[role === "employer" ? "employer" : "candidate"];
     setForm(preset);
+    setPasswordConfirm(preset.password);
     setConsent(true);
     setTerms(true);
   }, [shouldAutofill, role]);
@@ -89,6 +93,8 @@ export default function Register({ demoPreview = false }: { demoPreview?: boolea
     }
   }
 
+  const passwordMismatch = passwordConfirm.length > 0 && form.password !== passwordConfirm;
+
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -96,6 +102,10 @@ export default function Register({ demoPreview = false }: { demoPreview?: boolea
     if (!consent) { setError("Нужно согласие на обработку персональных данных"); return; }
     if (isTourMode || (demoAccess && isDemoTourEmail(form.email))) {
       await enterDemoRole(role === "employer" ? "employer" : "candidate");
+      return;
+    }
+    if (form.password !== passwordConfirm) {
+      setError("Пароли не совпадают");
       return;
     }
     setBusy(true);
@@ -169,6 +179,7 @@ export default function Register({ demoPreview = false }: { demoPreview?: boolea
                 next.delete("tour");
                 setParams(next, { replace: true });
                 setForm({ email: "", password: "", full_name: "", company_name: "" });
+                setPasswordConfirm("");
                 setConsent(false);
                 setTerms(false);
               }}
@@ -225,7 +236,26 @@ export default function Register({ demoPreview = false }: { demoPreview?: boolea
         </div>
         <div>
           <label className="label" htmlFor="password">Пароль</label>
-          <input id="password" type="password" required minLength={8} className="input" value={form.password} onChange={set("password")} autoComplete="new-password" placeholder="От 8 символов, буквы и цифры" />
+          <PasswordInput id="password" required minLength={8} className="input" value={form.password} onChange={set("password")} autoComplete="new-password" placeholder="От 8 символов, буквы и цифры" />
+        </div>
+        <div>
+          <label className="label" htmlFor="password_confirm">Повторите пароль</label>
+          <PasswordInput
+            id="password_confirm"
+            required
+            minLength={8}
+            className="input"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            autoComplete="new-password"
+            placeholder="Повторите пароль ещё раз"
+            aria-invalid={passwordMismatch || undefined}
+          />
+          {passwordMismatch && (
+            <p className="mt-1 text-xs font-semibold text-brand-plum" role="alert" data-testid="register-password-mismatch">
+              Пароли не совпадают
+            </p>
+          )}
         </div>
         {/* UX-2: контактное лицо работодателя — необязательно, свёрнуто */}
         {role === "employer" && (
