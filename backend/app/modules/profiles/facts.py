@@ -94,7 +94,7 @@ def fsp_strength(achievements: list[FspAchievement], direction: str | None) -> f
 
 
 def achievement_text(a: FspAchievement) -> str:
-    tr = a.team_result or {}
+    tr = getattr(a, "team_result", None) or {}
     pref = getattr(a, "protocol_ref", None) or {}
     ekp_no = getattr(a, "ekp_no", None) or pref.get("ekp_no") or tr.get("ekp_no")
     evsk_rank = getattr(a, "evsk_rank", None) or tr.get("evsk_rank")
