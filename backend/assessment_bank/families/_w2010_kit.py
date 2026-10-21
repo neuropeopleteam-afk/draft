@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import contextlib
 from fractions import Fraction
-import hashlib
 import io
 import itertools
 import re
@@ -11,7 +10,6 @@ import math
 import random
 import sqlite3
 from typing import Any, Callable, Sequence
-import zlib
 
 from assessment_bank.gen_utils import LETTERS, build_variant, make_options, make_rng, spread_pick
 from assessment_bank.schema import AnswerKey, Check, Option, Variant
@@ -37,8 +35,23 @@ def num(v: int | float | Fraction, nd: int = 0, *, decimals: int | None = None) 
     return s.replace(",", "\u00a0").replace(".", ",")
 
 
+def slot(family_id: str, seed: int, n: int, salt: str) -> int:
+    """Номер 0…n−1 для зерна: в каждом блоке из n подряд идущих зёрен каждый номер — ровно один раз; перестановка
+    блока — от sha256(семейство, блок, salt). У разных salt перестановки независимы.
+
+    Зачем (аудит 21.10, tools/bank_position_attack.py): раньше буква ключа ((crc32 + seed) mod n), ранг ключа по
+    величине (seed mod n, в волне S — 2·seed mod n), сюжет (contexts[seed mod L]), первая ловушка и верная
+    альтернатива ((7·seed + crc32) mod n) были функциями одного остатка зерна. Противник, изучивший открытый код
+    или несколько вариантов семейства, узнавал ключ по связке «буква ↔ ранг» или «сюжет ↔ буква» без знаний
+    (до 100 % при шансе 25 %). Теперь каждая величина равномерна сама по себе и не связана с остальными."""
+    if n <= 1:
+        return 0
+    return make_rng(family_id, seed // n, f"slot:{salt}").sample(range(n), n)[seed % n]
+
+
 def key_pos(family_id: str, seed: int, n: int = 4) -> int:
-    return (zlib.crc32(family_id.encode()) + seed) % n
+    """Буква ключа — равномерно и независимо от ранга, сюжета и ловушек (см. slot)."""
+    return slot(family_id, seed, n, "keypos")
 
 
 def place(
@@ -232,18 +245,15 @@ def numeric_variant(
 ) -> Variant:
     """Собрать расчётный вариант с гарантированным разбросом дистракторов и проверкой исполнением."""
     rng = make_rng(family_id, seed)
-    ctx = contexts[seed % len(contexts)] if len(contexts) >= 4 else rng.choice(list(contexts))
+    ctx = contexts[slot(family_id, seed, len(contexts), "ctx")] if len(contexts) >= 4 else rng.choice(list(contexts))
     ns = ns_cached if ns_cached is not None else load_model(model)
     fmt = ns["fmt"]
-    fam_h = int.from_bytes(hashlib.sha256(family_id.encode("utf-8")).digest()[:4], "big")
     choices_tup = tuple(n_above_choices)
-    if stratified:
-        target_na = choices_tup[(fam_h + seed) % len(choices_tup)]
-    else:
-        target_na = choices_tup[seed % len(choices_tup)]
+    # ранг ключа (сколько ловушек выше) — своя перестановка, не связанная с буквой ключа и сюжетом (см. slot)
+    target_na = choices_tup[slot(family_id, seed, len(choices_tup), "n_above")]
     trap_keys = sorted(trap_desc) if trap_desc else []
     if trap_first is None and trap_keys:
-        trap_first = trap_keys[seed % len(trap_keys)]
+        trap_first = trap_keys[slot(family_id, seed, len(trap_keys), "trap_first")]
 
     picked: list[tuple[str, str]] | None = None
     P: dict[str, Any] = {}
@@ -293,7 +303,7 @@ def numeric_variant(
     trap_dict = {n: raw_all[n] for n in trap_names if n in raw_all}
     if stratified:
         n_tot = n_distractors + 1
-        key_idx = (fam_h // 7 + seed * 2) % n_tot
+        key_idx = key_pos(family_id, seed, n_tot)  # не связана с рангом ключа и сюжетом (см. slot)
         dist_strs = [s for _, s in picked]
         rng.shuffle(dist_strs)
         opts: list[Option] = []
@@ -357,9 +367,10 @@ def choice_variant(
     trap_desc: dict[str, str] | None = None,
 ) -> Any:
     rng = make_rng(family_id, seed)
-    ctx = contexts[seed % len(contexts)] if len(contexts) >= 4 else rng.choice(list(contexts))
+    ctx = contexts[slot(family_id, seed, len(contexts), "ctx")] if len(contexts) >= 4 else rng.choice(list(contexts))
     order = list(alts)
-    target = order[(seed * 7 + zlib.crc32(family_id.encode())) % len(order)]
+    # верная альтернатива — своя перестановка, не связанная с буквой ключа и сюжетом (см. slot)
+    target = order[slot(family_id, seed, len(order), "target")]
     ns = load_model(model)
 
     def ok(P):
