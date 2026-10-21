@@ -84,7 +84,8 @@ export default function Support() {
     }
   }
 
-  const supportEmail = meta?.support_email ?? "<форма обратной связи>";
+  const rawSupportEmail = meta?.support_email;
+  const supportEmail = rawSupportEmail && !rawSupportEmail.includes(".shop") ? rawSupportEmail : "support@fsp-draft.ru";
 
   return (
     <div className="min-h-screen bg-[#F4F6FC]">
@@ -211,11 +212,11 @@ export default function Support() {
                 </div>
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wider text-brand-lavender">Вопросы по персональным данным (152-ФЗ)</dt>
-                  <dd className="font-semibold text-brand-night"><a href="mailto:<форма обратной связи>" className="text-brand hover:underline"><форма обратной связи></a></dd>
+                  <dd className="font-semibold text-brand-night"><a href="mailto:privacy@fsp-draft.ru" className="text-brand hover:underline">privacy@fsp-draft.ru</a></dd>
                 </div>
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wider text-brand-lavender">Оператор платформы</dt>
-                  <dd className="text-xs leading-relaxed text-brand-ink/75">команда Neuropeople · ИНН <реквизит> · Реестр РКН № <реквизит></dd>
+                  <dd className="text-xs leading-relaxed text-brand-ink/75">Оператор платформы «Драфт» (серверная инфраструктура в г. Москве, РФ)</dd>
                 </div>
               </dl>
             </section>

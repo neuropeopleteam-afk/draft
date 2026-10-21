@@ -223,12 +223,12 @@ export function InstallAppButton({ variant = "header", premium = false }: { vari
   if (variant === "header" && isStandalone()) return null;
   const cls = variant === "hero"
     ? `${premium ? "np-btn-ghost" : "btn-ghost"} inline-flex min-h-[44px] items-center gap-2 px-6 py-3.5 text-base`
-    : `inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-semibold ring-1 transition-colors ${premium ? "np-install" : "text-brand-plum ring-brand-night/15 hover:bg-brand-blush/40"}`;
+    : `max-sm:!hidden inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-2 text-xs font-semibold transition-colors ${premium ? "np-install" : "text-brand-plum ring-1 ring-brand-night/15 hover:bg-brand-blush/40"}`;
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={cls} data-testid={variant === "hero" ? "install-hero" : "install-header"} aria-haspopup="dialog" title="Установить «Драфт» на телефон (iOS, APK для Android)">
-        <PhoneIcon className={variant === "hero" ? "h-5 w-5" : "h-4 w-4"} />
-        {variant === "hero" ? <span>На телефон / APK для Android</span> : <><span className="hidden flex-col text-left leading-none sm:flex"><span className="text-[13px]">На телефон</span><span className="mt-0.5 text-[10px] font-semibold opacity-85">iOS · APK для Android</span></span><span className="sr-only sm:hidden">На телефон / APK для Android</span></>}
+      <button type="button" onClick={() => setOpen(true)} className={cls} data-testid={variant === "hero" ? "install-hero" : "install-header"} aria-haspopup="dialog" title="Мобильное приложение «Драфт» (iOS и Android)">
+        <PhoneIcon className={variant === "hero" ? "h-5 w-5" : "h-4 w-4 text-[#A59DFF]"} />
+        {variant === "hero" ? <span>Мобильное приложение</span> : <><span className="hidden whitespace-nowrap lg:inline">Мобильное приложение</span><span className="sr-only lg:hidden">Мобильное приложение</span></>}
       </button>
       {/* портал в body: у стеклянной шапки backdrop-filter, иначе fixed-окно привязывается к шапке */}
       {open && createPortal(<InstallDialog onClose={() => setOpen(false)} />, document.body)}

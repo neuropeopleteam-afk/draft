@@ -210,9 +210,10 @@ html[data-theme="light"] .np {
 @media (min-width: 640px) { .np-shield { padding: 0 0.85rem; } }
 .np-shield:hover, .np-shield-on { background: linear-gradient(135deg, rgba(64, 47, 255, 0.38), rgba(236, 29, 53, 0.18)); box-shadow: 0 0 0 3px rgba(64, 47, 255, 0.18); }
 .np-shield svg { color: var(--np-indigo-t); }
-.np-install { display: inline-flex; align-items: center; gap: 0.4rem; height: 2.25rem; padding: 0 0.6rem; border-radius: 0.75rem;
-  font-size: 0.875rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #EC1D35, #FF4D6D); box-shadow: 0 8px 22px -10px rgba(236, 29, 53, 0.8); transition: filter .15s, box-shadow .15s; }
-.np-install:hover { filter: brightness(1.07); box-shadow: 0 0 0 3px rgba(236, 29, 53, 0.22); }
+.np-install { display: inline-flex; align-items: center; gap: 0.45rem; height: 2.25rem; padding: 0 0.6rem; border-radius: 0.75rem;
+  font-size: 0.8125rem; font-weight: 600; color: var(--np-text); border: 1px solid rgba(165, 157, 255, 0.38);
+  background: linear-gradient(135deg, rgba(64, 47, 255, 0.24), rgba(99, 102, 241, 0.14)); transition: background .15s, box-shadow .15s, border-color .15s; }
+.np-install:hover { background: linear-gradient(135deg, rgba(64, 47, 255, 0.38), rgba(99, 102, 241, 0.24)); border-color: rgba(180, 174, 255, 0.65); box-shadow: 0 0 0 3px rgba(64, 47, 255, 0.18); }
 @media (min-width: 640px) { .np-install { padding: 0 0.85rem; } }
 .np-shield-xl { display: inline-flex; height: 3.25rem; width: 3.25rem; align-items: center; justify-content: center; border-radius: 1rem;
   color: #fff; background: linear-gradient(135deg, #402FFF, #EC1D35); box-shadow: 0 14px 40px -12px rgba(64, 47, 255, 0.7); }

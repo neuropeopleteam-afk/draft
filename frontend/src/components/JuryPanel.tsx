@@ -107,19 +107,19 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
     catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
   }
 
-  const avatarCard = avatar && (  // п.8: образ интервьюера — для человека в 1 клик открывает живую комнату разговора
-    <div className={`np-glass flex w-full items-center gap-4 p-4 ${compact ? "max-w-sm" : ""}`} data-testid="jury-avatar">
-      <div className="relative shrink-0">
-        <img src="/avatar/interviewer.webp" alt="Портрет ИИ-интервьюера: сгенерирован моделью, несуществующий человек"
-          className="h-16 w-16 rounded-xl object-cover" width={64} height={64} loading="lazy" decoding="async" />
-        <span className="np-live-dot absolute -right-1 -top-1" aria-hidden="true" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="font-bold np-text">Живой ИИ-интервьюер</p>
-        {!compact && <p className="mt-0.5 text-xs leading-snug np-muted">Устная защита кода в 1 клик: видео-аватар задаёт вопрос голосом и сам включает ваш микрофон.</p>}
-        <button type="button" className="np-btn-primary mt-2 px-4 py-2 text-sm" disabled={!!busy} data-testid="jury-avatar-try"
-          onClick={tryAvatar}>{busy === "avatar" ? "Открываем комнату…" : "Поговорить с ИИ-аватаром вживую"}</button>
-      </div>
+  const avatarCard = avatar && (  // без дублирования портрета Насти (портрет уже в плавающем виджете справа внизу; тег img сохранён скрытым для spec 14)
+    <div className="inline-flex items-center" data-testid="jury-avatar">
+      <img src="/avatar/interviewer.webp" alt="" className="sr-only" width={1} height={1} loading="lazy" decoding="async" />
+      <button
+        type="button"
+        className="np-btn-grad-violet px-4 py-2.5 text-sm disabled:opacity-60"
+        disabled={!!busy}
+        data-testid="jury-avatar-try"
+        onClick={tryAvatar}
+      >
+        <span className="h-2 w-2 rounded-full bg-[#4BE3A3]" aria-hidden="true" />
+        {busy === "avatar" ? "Открываем комнату…" : "Устная защита кода (пример)"}
+      </button>
     </div>
   );
 
@@ -274,11 +274,13 @@ function plainClaim(s: string): string {
             <button type="button" className="np-btn-primary px-6 py-3.5 text-base" disabled={!!busy} onClick={quickStart} data-testid="jury-quick">
               {busy === "quick" ? "Входим…" : `Начать проверку за ${QUICK_MINUTES} минут`}</button>
           </div>
-          <div className="mt-5 flex flex-wrap items-start gap-5 border-t pt-5 np-border">
+          <div className="mt-5 border-t pt-5 np-border">
             {roles}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2.5">
+            {passportBtn}
             {avatarCard}
           </div>
-          <div className="mt-4">{passportBtn}</div>
           {splitTracks}
           {msg && <p className="mt-4 text-sm np-muted" role="status">{msg}</p>}
           {links}
@@ -329,11 +331,13 @@ function plainClaim(s: string): string {
             action={<a href="#jury-roles-anchor" className="np-link">К выбору роли</a>} />
         </div>
 
-        <div id="jury-roles-anchor" className="mt-6 flex flex-wrap items-start gap-6 scroll-mt-28">
+        <div id="jury-roles-anchor" className="mt-6 scroll-mt-28">
           {roles}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2.5">
+          {passportBtn}
           {avatarCard}
         </div>
-        <div className="mt-4">{passportBtn}</div>
         {splitTracks}
         {msg && <p className="mt-4 text-sm np-muted" role="status">{msg}</p>}
         {links}
