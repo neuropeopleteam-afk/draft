@@ -45,8 +45,8 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Аналитика и спрос ФСП",
-      "short_name": "Спрос ФСП",
+      "name": "Аналитика спроса на таланты",
+      "short_name": "Спрос",
       "description": "Карта талантов по регионам России и спрос работодателей",
       "url": "/fsp/demand?source=pwa-shortcut",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
