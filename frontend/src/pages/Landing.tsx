@@ -99,7 +99,6 @@ export default function Landing() {
         <div className="np-gridlines" />
         <div className="np-glow np-glow-indigo" />
         <div className="np-glow np-glow-red" />
-        <FspBackdropCircuit />
       </div>
       <div className="np-backdrop-low" aria-hidden="true"><div className="np-glow np-glow-indigo-low" /><div className="np-glow np-glow-red-low" /></div>
       <SiteHeader premium />
@@ -109,10 +108,7 @@ export default function Landing() {
       {/* Первый экран: что это, для кого (кандидат / работодатель / ФСП) и одна главная кнопка на роль */}
       <section className="relative mx-auto grid max-w-content items-start gap-8 px-4 pb-14 pt-8 sm:px-6 md:pt-12 lg:grid-cols-[1.04fr_0.96fr] lg:gap-10 lg:pb-16">
         <div className="min-w-0 lg:pt-1">
-          <div className="fsp-laser-spine">
-            <span className="fsp-laser-node -top-1" aria-hidden="true" />
-            <span className="fsp-laser-spine-photon" aria-hidden="true" />
-            <span className="fsp-laser-node -bottom-1 !bg-[#FF4D6D]" aria-hidden="true" />
+          <div>
             <p className="np-eyebrow">Платформа обратного ИТ-найма · Работодателям · Кандидатам · ФСП</p>
             <h1 className="mt-3 text-[1.95rem] font-extrabold leading-[1.08] tracking-tight np-text sm:text-[2.45rem] xl:text-[2.75rem]">
               <span className="np-hero-shimmer">Найм ИТ-специалистов с </span>
@@ -594,32 +590,6 @@ function Fact({ k, t }: { k: string; t: string }) {
       <span className="np-fact-k" aria-hidden="true">{k}</span>
       <span className="text-xs font-medium text-[#E2E5FF]">{t}</span>
     </li>
-  );
-}
-
-/** Тонкая архитектурная линия справа (не пересекает заголовок и не нагружает видеокарту при прокрутке). */
-function FspBackdropCircuit() {
-  return (
-    <svg
-      viewBox="0 0 1440 900"
-      fill="none"
-      className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[900px] w-full max-w-[1440px] opacity-35"
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient id="fsp-circuit-grad" x1="900" y1="0" x2="1440" y2="600" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#402FFF" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#8B80FF" stopOpacity="0.25" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M1356 120 V290 Q1356 338 1308 338 H1080 Q1032 338 1032 386 V540"
-        stroke="url(#fsp-circuit-grad)"
-        strokeWidth="1.4"
-      />
-      <circle cx="1356" cy="120" r="4" fill="#402FFF" />
-      <circle cx="1032" cy="540" r="4" fill="#8B80FF" />
-    </svg>
   );
 }
 
