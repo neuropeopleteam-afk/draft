@@ -22,7 +22,7 @@ def check(event_id: str, place: int, birth: str | None = "2000-01-01") -> dict:
 
 
 def test_norm_files_are_the_same_in_backend_and_docs():
-    for name in ("evsk_norms.json", "events.json"):
+    for name in ("evsk_norms.json", "events.json", "discipline_relevance.json"):
         a = json.loads((evsk.DATA_DIR / name).read_text(encoding="utf-8"))
         b = json.loads((ROOT / "docs/realdata/fsp_protocols" / name).read_text(encoding="utf-8"))
         assert a == b, name
@@ -156,3 +156,17 @@ def test_best_result_prefers_fulfilled_higher_rank():
             {"place": 1, "event_id": "chr2025_prod", "date": "2025-11-20"}]
     best = evsk.best_evsk_for_athlete(recs, birth_date="2000-01-01")
     assert best["rank"] == "КМС" and best["status"] == "fulfilled"
+
+
+def test_discipline_relevance_from_rules_of_sport():
+    a = json.loads((evsk.DATA_DIR / "discipline_relevance.json").read_text(encoding="utf-8"))
+    b = json.loads((ROOT / "docs/realdata/fsp_protocols/discipline_relevance.json").read_text(encoding="utf-8"))
+    assert a == b
+    from app.modules.catalog.constants import FSP_DISCIPLINES
+    assert set(a["disciplines"]) == {d["id"] for d in FSP_DISCIPLINES}
+    for code, d in a["disciplines"].items():
+        assert d["quote"] and d["source_page"], code
+        vals = d["directions"].values()
+        assert 1.0 in vals, code                    # дисциплины равны: у каждой есть «близко»
+        assert min(vals) >= 0.8, code               # мягкий коэффициент
+        assert set(d["directions"]) == set(a["directions_all"]), code

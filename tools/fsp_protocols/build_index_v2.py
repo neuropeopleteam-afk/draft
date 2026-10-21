@@ -26,6 +26,9 @@ from pathlib import Path
 
 base = Path(sys.argv[1])
 code = Path(sys.argv[2])
+OUT_NAME = sys.argv[3] if len(sys.argv) > 3 and not sys.argv[3].startswith("--") else "index_v3.json"
+WRITE_W1 = "--w1" in sys.argv
+APP_UID = 10001  # пользователь api в контейнере — файл индекса должен быть его (600)
 
 
 def _load(name: str, path: Path):
@@ -208,11 +211,12 @@ w1["records"] = w1_keep
 w1["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
 w1["schema_version"] = "1.0+w1clean2"
 w1["stats"] = dict(v1["stats"], total_records=len(w1_keep), unique_athletes_count=len({r.get("fio_hash") for r in w1_keep}))
-t1 = base / "index_w1.json"
-(t1.with_suffix(".tmp")).write_text(json.dumps(w1, ensure_ascii=False), encoding="utf-8")
-os.chmod(t1.with_suffix(".tmp"), 0o600)
-t1.with_suffix(".tmp").replace(t1)
-print("index_w1.json:", len(w1_keep), "записей,", w1["stats"]["unique_athletes_count"], "уникальных ФИО")
+if WRITE_W1:
+    t1 = base / "index_w1.json"
+    (t1.with_suffix(".tmp")).write_text(json.dumps(w1, ensure_ascii=False), encoding="utf-8")
+    os.chmod(t1.with_suffix(".tmp"), 0o600)
+    t1.with_suffix(".tmp").replace(t1)
+    print("index_w1.json:", len(w1_keep), "записей,", w1["stats"]["unique_athletes_count"], "уникальных ФИО")
 
 persons = [r for r in final if r["person"]]
 st = collections.Counter(r.get("evsk_status") for r in persons)
@@ -251,13 +255,20 @@ stats = {
 idx = dict(v1)
 idx.update({"schema_version": "2.0", "generated_at": now, "stats": stats, "sources": sources, "records": final,
             "events_version": events_doc.get("version")})
-target = base / "index_v2.json"
+target = base / OUT_NAME
+if target.exists() and "--force" not in sys.argv:
+    sys.exit(f"{target} уже существует: выложенные версии индекса не перезаписываются (новое имя или --force)")
 tmp = target.with_suffix(".tmp")
 tmp.write_text(json.dumps(idx, ensure_ascii=False), encoding="utf-8")
 os.chmod(tmp, 0o600)
+try:
+    os.chown(tmp, APP_UID, APP_UID)
+except PermissionError:
+    pass
 tmp.replace(target)
 report = {"generated_at": now, "input_records_v1": len(v1["records"]), "output_records": len(final),
           "removed_by_reason": dict(removed), "stats": stats}
-(base / "index_v2_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
-os.chmod(base / "index_v2_report.json", 0o600)
+rep_path = base / (OUT_NAME.replace(".json", "") + "_report.json")
+rep_path.write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+os.chmod(rep_path, 0o600)
 print(json.dumps(report, ensure_ascii=False, indent=1))
