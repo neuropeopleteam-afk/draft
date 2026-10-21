@@ -157,6 +157,10 @@ def report(sample_path: Path, check_path: Path, adj_path: str, out: Path) -> Non
         "disagreements_model_vs_index": disagree, "adjudicated": sum(1 for v in final.values() if v["adjudicated"]),
         "not_found": sum(1 for v in final.values() if not v.get("found")),
         "error_rate_fio": rate("fio_ok"), "error_rate_place": rate("place_ok"), "error_rate_birth_date": rate("birth_ok"),
+        # полнота: место есть на скане, но отсутствует в индексе (не ошибка значения, а пропуск)
+        "place_missing_in_index": {"k": sum(1 for x in s["rows"] if x.get("place") is None and (c.get(x["i"]) or {}).get("place") is not None),
+                                   "n": len(s["rows"])},
+        "adjudication_notes": sorted({a.get("note", "") for a in adj.values() if a.get("note")}),
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "recompute": "python3 tools/fsp_protocols/ocr_audit.py plan|check|report (см. docs/realdata/fsp_protocols/README.md, раздел «Аудит распознавания»)",
     }
