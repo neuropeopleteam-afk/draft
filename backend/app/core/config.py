@@ -250,6 +250,9 @@ class Settings(BaseSettings):
     assessment_exposure: str = "sympson_hetter"
     # randomesque (правило v2, TRAIN): ASSESSMENT_EXPOSURE=randomesque — случайное из k лучших по информации заданий
     assessment_randomesque_k: int = 3
+    # Финал-2 (решение штаба 21.10): низкая достоверность итога (integrity level «low», points ≥ 3 — то же правило, что
+    # anticheat.behavioral_followup) → грейд не подтверждается сразу, итог решает короткий устный этап. По умолчанию выкл.
+    integrity_oral: bool = False
     # Я22: порог уверенности решения по грейду — подтверждение заявленного грейда и «принять уровень ниже»:
     # P(θ ≥ порога) ≥ значения. 0,6 — по перебору на симуляции всего пути (docs/validation/GRADE_ACCURACY.md): точно
     # истинный уровень 64 % против 57 % при 0,8, завышение 6,5 % (≤ 7 %), κw повтора 0,874 против 0,844, время то же.

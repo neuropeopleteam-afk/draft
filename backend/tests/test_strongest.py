@@ -51,7 +51,7 @@ def test_api_strongest(client):
     assert not d.get("missing")
     assert set(d["cells"]) == {"needs_delta", "needs_jury", "resume", "grade"}
     for f, cells in d["cells"].items():
-        assert "anthropic/claude-sonnet-5.5" in cells, f
+        assert "stand" in cells, f  # модель стенда — нейтральный код на экранном API (no_vendor.py)
         for m, c in cells.items():
             if m != "rules" and c.get("calls"):
                 assert c["ok"] <= c["calls"]
