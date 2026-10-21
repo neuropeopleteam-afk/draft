@@ -64,7 +64,7 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
             <h2 id="full-t" className="mt-1 text-xl font-extrabold text-brand-night">Полный справочник</h2>
             <p className="mt-1.5 text-sm leading-relaxed text-brand-ink/75">Все функции по порядку с подробными объяснениями: регистрация, полный тест, паспорт грейда, статусы грейда, «Что если», подписки, кубки, переписка, передача в кадровую систему, кабинет ФСП, двухэтапный вход, живая демонстрация по QR.</p>
             <p className="mt-2 text-xs leading-relaxed text-brand-ink/65">
-              Полный тест на грейд — {L ? `${L.min_items}–${L.max_items} заданий, у спорного порога до ${L.contested_max_items} (до ${L.contested_max_minutes} минут), при необходимости второй этап до ${L.two_stage_items} заданий (до ${L.two_stage_minutes} минут)` : "8–20 заданий, у спорного порога до 36 (до 105 минут), при необходимости второй этап до 12 заданий (до 20 минут)"}; в проверке за 12 минут вместо него — экспресс-тест краткого режима жюри.
+              Полный тест на грейд — {L ? `${L.min_items}–${L.max_items} заданий, у спорного порога до ${L.contested_max_items}` : "8–20 заданий, у спорного порога до 36"} (обычно до 80 минут, с продлением до {L ? L.contested_max_minutes : 105} минут) и при необходимости второй этап до {L ? L.two_stage_items : 12} заданий (до {L ? L.two_stage_minutes : 20} минут); в проверке за 12 минут вместо него — экспресс-тест краткого режима жюри.
             </p>
             <div className="mt-auto flex flex-wrap gap-2 pt-5">
               <button type="button" className="btn-ghost" disabled={busy} onClick={startFull}>Начать справочник с регистрации</button>

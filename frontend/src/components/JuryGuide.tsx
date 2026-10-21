@@ -24,7 +24,7 @@ export const whoAmI = (email: string) => {
 function useReserveSpace(el: HTMLElement | null, side: boolean) {
   useEffect(() => {
     const phone = window.matchMedia("(max-width: 639px)");
-    const wide = window.matchMedia("(min-width: 1280px)");
+    const wide = window.matchMedia("(min-width: 1440px)");
     const clear = () => { document.body.style.removeProperty("padding-bottom"); document.body.style.removeProperty("padding-right"); };
     if (!el) return clear;
     const set = () => {
