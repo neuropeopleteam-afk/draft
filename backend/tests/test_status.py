@@ -109,8 +109,9 @@ def test_unconfirmed_visible_below_confirmed_and_filterable(client, theta):
     for secret in ("none@example.com", "Иван", "250000"):
         assert secret not in str(c_none)
 
-    # фильтр по заявленному грейду и только подтверждённые
-    assert client.get("/api/employer/candidates", params={"grade": "middle"}, headers=H(e)).json()["total"] == 3
+    # фильтр грейда — только по тесту (правило экспертов жюри 20.10): заявившие Middle без подтверждения в фильтр
+    # грейда не попадают; без фильтра грейда они видны ярусом ниже (выше: direction=backend → 4)
+    assert client.get("/api/employer/candidates", params={"grade": "middle"}, headers=H(e)).json()["total"] == 1
     assert client.get("/api/employer/candidates", params={"grade": "junior"}, headers=H(e)).json()["total"] == 1
     only = client.get("/api/employer/candidates", params={"direction": "backend", "confirmed": True}, headers=H(e)).json()
     assert only["total"] == 1 and only["items"][0]["status"]["status"] == "confirmed"
@@ -206,9 +207,13 @@ def test_demo_seed_status_variants_do_not_shift_main_candidates(client):
     e = employer(client)
     found = client.get("/api/employer/candidates", params={"direction": "backend", "grade": "junior", "limit": 100},
                        headers=H(e)).json()
-    # 10 основных + 1 предварительный + 1 не подтверждён + расширение демо до 500 (И8)
-    assert found["provisional"] == 1 and found["unconfirmed"] == 1 and found["total"] >= 12
-    assert [c["status"]["status"] for c in found["items"]][-1] == "unconfirmed"
+    # 10 основных + 1 предварительный + расширение демо до 500 (И8); не подтверждённые в фильтр грейда не входят
+    # (правило экспертов: грейд — только по тесту), а без фильтра грейда идут последним ярусом
+    assert found["provisional"] == 1 and found["unconfirmed"] == 0 and found["total"] >= 11
+    by_dir = client.get("/api/employer/candidates", params={"direction": "backend", "limit": 1}, headers=H(e)).json()
+    last = client.get("/api/employer/candidates", params={"direction": "backend", "limit": 1,
+                                                          "offset": by_dir["total"] - 1}, headers=H(e)).json()
+    assert by_dir["unconfirmed"] >= 1 and last["items"][0]["status"]["status"] == "unconfirmed"
 
 
 def test_jury_persona_candidate_junior(client):

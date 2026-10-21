@@ -40,7 +40,8 @@ from app.modules.hh.directions import GRADE_WORDS, HH_DIRECTIONS, NEW_DIRECTIONS
 
 # сырьё корпуса (тексты вакансий) — только вне репозитория: HH_CORPUS_DIR, по умолчанию ../data_local/hh_corpus
 CACHE = Path(os.environ.get("HH_CORPUS_DIR") or ROOT.parent / "data_local/hh_corpus")
-CORPUS = ROOT / "docs/realdata/hh_match_corpus.json"
+# HH_MATCH_CORPUS — другой корпус (отложенный набор tools/realdata/hh_holdout.py); по умолчанию — набор разработки (414)
+CORPUS = Path(os.environ["HH_MATCH_CORPUS"]) if os.environ.get("HH_MATCH_CORPUS") else ROOT / "docs/realdata/hh_match_corpus.json"
 DATA = ROOT / "backend/app/modules/hh/data"
 # HH_MATCH_OUT — каталог для абляций (json и md туда, файлы репозитория не трогаются)
 _ABL = os.environ.get("HH_MATCH_OUT")
@@ -71,6 +72,8 @@ def client() -> HhClient:
 
 
 def code_commit() -> str:
+    if os.environ.get("CODE_COMMIT"):  # прогон на копии без .git (сервер «Москва»): коммит передаётся явно
+        return os.environ["CODE_COMMIT"][:9]
     try:
         return subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], text=True).strip()
     except (OSError, subprocess.CalledProcessError):
@@ -381,8 +384,21 @@ def match(limit: int) -> None:
     # implied) и потолок — какая доля обязательных навыков вакансии вообще может быть подтверждена тестом
     cov_best_t, ceil_v = defaultdict(list), defaultdict(list)
     compare = os.environ.get("HH_MATCH_COMPARE", "1") != "0"
+    # HH_MATCH_DIR_CONTROL=NEED_TITLE_ROLE — посчитать направление ещё и с выключенным флагом (только разбор, без подборки)
+    dir_control = os.environ.get("HH_MATCH_DIR_CONTROL") or ""
+    errors_ctrl: list[dict] = []
+    if os.environ.get("HH_MATCH_MAX"):  # только проверка скрипта на наборе разработки (отложенный — запрещено)
+        if "holdout" in str(CORPUS):
+            sys.exit("HH_MATCH_MAX с отложенным набором запрещён")
+        items = items[: int(os.environ["HH_MATCH_MAX"])]
     with SessionLocal() as db:
         cat_ids = {c.id for c in db.scalars(select(Category)).all()}
+        from app.modules.matching import fsp_factor
+        from app.modules.matching.ranking import load_bundles, visible_pool
+
+        vis = visible_pool(db, category_ids=sorted(cat_ids))
+        vb = load_bundles(db, [p.user_id for p in vis]).values()
+        pool_nofsp = _share(sum(1 for b in vb if fsp_factor.details(b.achievements)["strength"] == 0), len(vis))
         for i, it in enumerate(items, 1):
             v = raws.get(it["id"])
             if v is None:
@@ -411,6 +427,13 @@ def match(limit: int) -> None:
                 c["dir_ok"] += ok
                 if not ok:
                     errors.append({"id": it["id"], "field": "direction", "expected": d, "actual": r.get("direction")})
+                if dir_control:  # контроль, записанный в протоколе ДО прогона: тот же разбор без правила dir-v2
+                    rc = _parse_with(dir_control, text_of(v))
+                    okc = rc.get("direction") == d
+                    c["dir_ok_ctrl"] += okc
+                    if not okc:
+                        errors_ctrl.append({"id": it["id"], "field": "direction", "expected": d,
+                                            "actual": rc.get("direction")})
             gt = lb["grade_title"]
             if gt:
                 c["grade_labelled"] += 1
@@ -442,6 +465,9 @@ def match(limit: int) -> None:
                 above_id = (sel.get("grade_above") or {}).get("above")
                 c[pre + "top5_slots"] += len(top5)
                 c[pre + "top5_above"] += sum(1 for x in top5 if above_id and x["category_id"] == above_id)
+                if pre == "":  # нет истории ФСП — штраф 0: доля таких в пятёрках против доли в пуле (no_fsp_top5_share)
+                    c["top5_main_slots"] += len(top5)
+                    c["top5_nofsp"] += sum(1 for x in top5 if not (x["components"].get("fsp") or 0))
                 if req:
                     c[pre + "req_vac"] += 1
                     vals = [x["components"].get("stack_required") or 0 for x in top5]
@@ -511,6 +537,9 @@ def match(limit: int) -> None:
                      "у лучшего из пяти; req_full_top5_testable — в пятёрке есть кандидат со всем ядром.",
            "implied": os.environ.get("MATCH_IMPLIED", "1"),
            "overall": _summary(tot, allcv, covs(list(per))),
+           "no_fsp": {"top5": _share(tot["top5_nofsp"], tot["top5_main_slots"]), "pool": pool_nofsp,
+                      "what": "Доля кандидатов без учтённых достижений ФСП: в первых пятёрках подборок (top5) и в видимом "
+                              "пуле подтверждённых кандидатов (pool). Отсутствие ФСП — штраф 0, ФСП — 10 % балла."},
            "catalog_only": _summary(cat_tot, [x for d in catalog for x in cov_best[d]], covs(catalog)),
            "grade_above": {"compare": compare, "flag": grade_above.FLAG, "min_exact": grade_above.MIN_EXACT,
                            "keep": grade_above.KEEP,
@@ -518,11 +547,35 @@ def match(limit: int) -> None:
                                    "по умолчанию (match-v1.3): в точной категории меньше 30 подтверждённых — добор "
                                    "категории на ступень выше, первые 2 места — лучшие точного уровня"},
            "directions": dict(sorted(dirs.items())),
-           "errors_top": errors[:80], "errors_by_field": dict(Counter(e["field"] for e in errors))}
+           "errors_top": errors[:80], "errors_by_field": dict(Counter(e["field"] for e in errors)),
+           # все расхождения направления и грейда с метками hh.ru — для независимой проверки спорных меток
+           # (hh_holdout.py adjudicate, протокол docs/realdata/hh_holdout_PROTOCOL.md)
+           "disputed": [e for e in errors if e["field"] in ("direction", "grade")]}
+    if dir_control:
+        out["direction_control"] = {
+            "flag": f"{dir_control}=0", "direction_ok": _share(sum(c["dir_ok_ctrl"] for c in per.values()),
+                                                             sum(c["dir_labelled"] for c in per.values())),
+            "by_direction": {d: _share(c["dir_ok_ctrl"], c["dir_labelled"]) for d, c in sorted(per.items())
+                             if c["dir_labelled"]},
+            "disputed": errors_ctrl,
+            "what": f"Контроль: тот же код и тот же набор, направление разобрано с {dir_control}=0 (без правила "
+                    f"роли в названии, dir-v2) — для сравнения «до/после» на одном прогоне."}
     OUT_MATCH.parent.mkdir(parents=True, exist_ok=True)
     OUT_MATCH.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     MD_MATCH.write_text(render_match(out), encoding="utf-8")
     print(json.dumps({k: out[k] for k in ("n", "overall", "catalog_only")}, ensure_ascii=False, indent=1))
+
+
+def _parse_with(flag: str, text: str) -> dict:
+    """parse_need с выключенным флагом (flag=0) и восстановлением окружения."""
+    from app.modules.matching import need_parser
+
+    prev = os.environ.get(flag)
+    os.environ[flag] = "0"
+    try:
+        return need_parser.parse_need(text, use_llm=False)
+    finally:
+        os.environ.pop(flag) if prev is None else os.environ.__setitem__(flag, prev)
 
 
 def _share(a: int, b: int) -> dict:
