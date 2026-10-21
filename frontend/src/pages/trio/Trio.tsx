@@ -20,11 +20,11 @@ interface Meta { topics: { id: string; title: string }[]; rules: string[]; max_l
 
 const MASK = "[контакт скрыт до принятия приглашения]";
 const SIDE_STYLE: Record<Side, string> = {
-  employer: "bg-[#ECEAF8] text-brand-night", candidate: "bg-white text-brand-ink ring-1 ring-brand-night/10",
+  employer: "bg-[#E6EAFC] text-brand-night", candidate: "bg-white text-brand-ink ring-1 ring-brand-night/10",
   fsp: "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200", system: "bg-transparent text-brand-ink/65",
 };
 const DOT: Record<Side, string> = { employer: "bg-brand-lavender", candidate: "bg-brand", fsp: "bg-emerald-600", system: "bg-brand-ink/30" };
-const STATUS_STYLE = { pending: "bg-amber-50 text-amber-900 ring-amber-200", active: "bg-emerald-50 text-emerald-800 ring-emerald-200", closed: "bg-[#F3F2FB] text-brand-ink/70 ring-brand-night/10" };
+const STATUS_STYLE = { pending: "bg-amber-50 text-amber-900 ring-amber-200", active: "bg-emerald-50 text-emerald-800 ring-emerald-200", closed: "bg-[#EEF1FC] text-brand-ink/70 ring-brand-night/10" };
 
 function TriangleScheme({ t }: { t?: TrioThread | null }) {
   const p = t?.participants ?? [
@@ -88,8 +88,8 @@ function ThreadView({ id, onChange }: { id: string; onChange: () => void }) {
           </div>
         </div>
       )}
-      {!t.contacts_open && <p className="rounded-xl bg-[#F3F2FB] px-3 py-2 text-xs text-brand-night">До принятия приглашения телефоны, почты и мессенджеры в тексте скрываются у всех трёх сторон автоматически.</p>}
-      <div ref={box} className="max-h-[50vh] min-h-[12rem] space-y-2 overflow-y-auto overscroll-contain rounded-xl border border-brand-night/10 bg-[#FBF8FC] p-3" aria-live="polite">
+      {!t.contacts_open && <p className="rounded-xl bg-[#EEF1FC] px-3 py-2 text-xs text-brand-night">До принятия приглашения телефоны, почты и мессенджеры в тексте скрываются у всех трёх сторон автоматически.</p>}
+      <div ref={box} className="max-h-[50vh] min-h-[12rem] space-y-2 overflow-y-auto overscroll-contain rounded-xl border border-brand-night/10 bg-[#F4F6FC] p-3" aria-live="polite">
         {(t.messages ?? []).map((m) => m.side === "system" ? (
           <p key={m.id} className="py-1 text-center text-xs text-brand-ink/65">{m.body} · {dtt(m.at)}</p>
         ) : (
@@ -238,7 +238,7 @@ function ProtocolClaimsQueue() {
           {items.map((it) => {
             const isPending = it.protocol_status === "pending_fsp";
             return (
-              <li key={it.id} className="rounded-xl border border-brand-night/10 bg-[#FBF8FC] p-3.5 text-sm" data-testid="fsp-protocol-claim-item">
+              <li key={it.id} className="rounded-xl border border-brand-night/10 bg-[#F4F6FC] p-3.5 text-sm" data-testid="fsp-protocol-claim-item">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
