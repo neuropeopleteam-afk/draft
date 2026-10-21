@@ -2,6 +2,7 @@
 вакансии и этапы из ATS, журнал передач с повтором, ручная передача, экспорт JSON, ссылка на PDF-профиль."""
 from __future__ import annotations
 
+from datetime import timedelta
 import json
 from typing import Literal
 import secrets
@@ -44,16 +45,34 @@ employer = require_role(UserRole.employer)
 AUTH = {401: err("Не выполнен вход"), 403: err("Только для работодателя"), 409: err("Нет профиля компании")}
 
 
+KEY_TTL_DAYS = 90
+
+
+def _exp90(dt, base_dt=None) -> str | None:
+    if dt is not None:
+        return dt.isoformat()
+    b = base_dt or utcnow()
+    return (b + timedelta(days=KEY_TTL_DAYS)).isoformat()
+
+
 def settings_out(st: AtsSettings) -> dict:
     stub_base = get_isettings().stub_public_base
+    hf_set = bool(st.huntflow_token_enc)
+    wh_set = bool(st.webhook_secret_enc)
+    base_dt = getattr(st, "updated_at", None) or getattr(st, "created_at", None) or utcnow()
     return {
         "auto_push": st.auto_push,
+        "ttl_days": KEY_TTL_DAYS,
         "huntflow": {"enabled": st.huntflow_enabled, "base_url": st.huntflow_base_url
                      or get_isettings().huntflow_default_base_url, "account_id": st.huntflow_account_id,
                      "vacancy_id": st.huntflow_vacancy_id, "status_id": st.huntflow_status_id,
-                     "token_set": bool(st.huntflow_token_enc), "token_masked": mask(decrypt(st.huntflow_token_enc))},
-        "webhook": {"enabled": st.webhook_enabled, "url": st.webhook_url, "secret_set": bool(st.webhook_secret_enc),
+                     "token_set": hf_set, "token_masked": mask(decrypt(st.huntflow_token_enc)),
+                     "token_expires_at": _exp90(getattr(st, "huntflow_token_expires_at", None), base_dt) if hf_set else None,
+                     "ttl_days": KEY_TTL_DAYS},
+        "webhook": {"enabled": st.webhook_enabled, "url": st.webhook_url, "secret_set": wh_set,
                     "secret_masked": mask(decrypt(st.webhook_secret_enc)),
+                    "secret_expires_at": _exp90(getattr(st, "webhook_secret_expires_at", None), base_dt) if wh_set else None,
+                    "ttl_days": KEY_TTL_DAYS,
                     "signature_header": "X-Draft-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, '<unix>.<body>')>"},
         "stub": {"connected": bool(st.stub_key), "huntflow_base_url": f"{stub_base}/api/ats-stub/huntflow/v2",
                  "webhook_url": f"{stub_base}/api/ats-stub/webhook/{st.stub_key}" if st.stub_key else None},
@@ -74,12 +93,16 @@ class HuntflowIn(BaseModel):
     vacancy_id: int | None = Field(None, gt=0)
     status_id: int | None = Field(None, gt=0)
     token: str | None = Field(None, max_length=4000, description="Пусто — оставить прежний токен")
+    rotate: bool = False
+    revoke: bool = False
 
 
 class WebhookIn(BaseModel):
     enabled: bool = False
     url: str | None = Field(None, max_length=500)
     secret: str | None = Field(None, min_length=16, max_length=200, description="Пусто — оставить прежний / сгенерировать")
+    rotate: bool = False
+    revoke: bool = False
 
 
 class SettingsIn(BaseModel):
@@ -104,17 +127,31 @@ def put_settings(data: SettingsIn, user: User = Depends(employer), db: Session =
     st.huntflow_enabled, st.huntflow_account_id = h.enabled, h.account_id
     st.huntflow_vacancy_id, st.huntflow_status_id = h.vacancy_id, h.status_id
     st.huntflow_base_url = (h.base_url or "").rstrip("/") or None
-    if h.token:
+    if h.revoke:
+        st.huntflow_token_enc = None
+        st.huntflow_token_expires_at = None
+        st.huntflow_enabled = False
+    elif h.token:
         st.huntflow_token_enc = encrypt(h.token.strip())
-    if h.enabled and not (st.huntflow_token_enc and st.huntflow_account_id):
+        st.huntflow_token_expires_at = utcnow() + timedelta(days=KEY_TTL_DAYS)
+    elif h.rotate:
+        st.huntflow_token_enc = encrypt("hf_" + secrets.token_urlsafe(24))
+        st.huntflow_token_expires_at = utcnow() + timedelta(days=KEY_TTL_DAYS)
+    if st.huntflow_enabled and not (st.huntflow_token_enc and st.huntflow_account_id):
         raise api_error(422, "huntflow_incomplete", "Для Хантфлоу укажите токен и id организации (account_id)")
     w = data.webhook
     st.webhook_enabled, st.webhook_url = w.enabled, w.url
-    if w.secret:
+    if w.revoke:
+        st.webhook_secret_enc = None
+        st.webhook_secret_expires_at = None
+        st.webhook_enabled = False
+    elif w.secret:
         st.webhook_secret_enc = encrypt(w.secret)
-    elif w.enabled and not st.webhook_secret_enc:
+        st.webhook_secret_expires_at = utcnow() + timedelta(days=KEY_TTL_DAYS)
+    elif w.rotate or (w.enabled and not st.webhook_secret_enc):
         st.webhook_secret_enc = encrypt(secrets.token_urlsafe(32))
-    if w.enabled and not w.url:
+        st.webhook_secret_expires_at = utcnow() + timedelta(days=KEY_TTL_DAYS)
+    if st.webhook_enabled and not w.url:
         raise api_error(422, "webhook_incomplete", "Укажите адрес вебхука")
     db.commit()
     return settings_out(st)
@@ -186,20 +223,28 @@ def provider_out(db: Session, company_id: uuid.UUID, code: str) -> dict:
         st = svc.company_settings(db, company_id)
         url = (st.huntflow_base_url or providers.real_base(code)).rstrip("/")
         hf_mode = "demo" if url == providers.demo_base(code) else "real"
+        hf_set = bool(st.huntflow_token_enc)
+        base_dt = getattr(st, "updated_at", None) or getattr(st, "created_at", None) or utcnow()
         return {**base, "enabled": st.huntflow_enabled, "mode": hf_mode,
-                "origin": ats_origin(hf_mode, bool(st.huntflow_token_enc)),  # Я8: метка происхождения
-                "base_url": url, "token_set": bool(st.huntflow_token_enc),
-                "token_masked": mask(decrypt(st.huntflow_token_enc)), "account_id": st.huntflow_account_id,
+                "origin": ats_origin(hf_mode, hf_set),  # Я8: метка происхождения
+                "base_url": url, "token_set": hf_set,
+                "token_masked": mask(decrypt(st.huntflow_token_enc)),
+                "token_expires_at": _exp90(getattr(st, "huntflow_token_expires_at", None), base_dt) if hf_set else None,
+                "ttl_days": KEY_TTL_DAYS,
+                "account_id": st.huntflow_account_id,
                 "vacancy_id": st.huntflow_vacancy_id, "vacancy_title": None, "stage_id": st.huntflow_status_id,
                 "stage_title": None, "vacancy_map": {}, "last_check_at": None, "last_check_ok": None,
                 "last_check_info": {}}
     c = providers.connection(db, company_id, code)
     sec = providers.secrets_of(c)
     tok = sec.get("access_token") or sec.get("token")
+    base_dt = getattr(c, "updated_at", None) or getattr(c, "created_at", None) or utcnow()
     return {**base, "enabled": c.enabled, "mode": c.mode, "origin": ats_origin(c.mode, bool(tok), c.last_check_ok),
             "base_url": providers.base_url(c),
             "custom_base_url": c.base_url, "token_set": bool(tok), "token_masked": mask(tok),
-            "refresh_set": bool(sec.get("refresh_token")), "token_expires_at": _iso(c.token_expires_at),
+            "refresh_set": bool(sec.get("refresh_token")),
+            "token_expires_at": _exp90(c.token_expires_at, base_dt) if tok else None,
+            "ttl_days": KEY_TTL_DAYS,
             "refresh_expires_at": _iso(c.refresh_expires_at), "token_refreshed_at": _iso(c.token_refreshed_at),
             "vacancy_id": c.vacancy_id, "vacancy_title": c.vacancy_title, "stage_id": c.stage_id,
             "stage_title": c.stage_title, "vacancy_map": c.vacancy_map or {}, "source_id": c.source_id,
@@ -246,6 +291,8 @@ class ConnectionIn(BaseModel):
     stage_title: str | None = Field(None, max_length=255)
     vacancy_map: dict[str, MapItem] = Field(default_factory=dict,
                                             description="Вакансия платформы (uuid) → вакансия и этап в ATS")
+    rotate: bool = False
+    revoke: bool = False
 
 
 @router.put("/providers/{code}", summary="Сохранить подключение Talantix или «Потока» (токены шифруются)",
@@ -268,20 +315,40 @@ def put_provider(code: str, data: ConnectionIn, user: User = Depends(employer), 
         conn.last_check_at = conn.last_check_ok = None
         conn.last_check_info = {}
     conn.mode, conn.base_url = data.mode, new_base
-    if data.mode == "demo" and not providers.secrets_of(conn):
+    if data.revoke:
+        conn.secrets_enc = None
+        conn.token_expires_at = None
+        conn.refresh_expires_at = None
+        conn.token_refreshed_at = None
+        conn.enabled = False
+        db.commit()
+        return provider_out(db, c.id, code)
+    if data.mode == "demo" and (not providers.secrets_of(conn) or data.rotate):
         connect_demo(db, c.id, code)
+        conn.token_expires_at = utcnow() + timedelta(days=KEY_TTL_DAYS)
     sec = providers.secrets_of(conn)
     if data.token and data.token.strip():
         if code == "potok":
             sec = {"token": data.token.strip()}
+            conn.token_expires_at = utcnow() + timedelta(days=KEY_TTL_DAYS)
         else:
             try:
                 t = parse_tokens(data.token, data.refresh_token)
             except AtsError as e:
                 raise api_error(422, "talantix_tokens_invalid", str(e)) from None
             sec = {"access_token": t["access_token"], "refresh_token": t["refresh_token"]}
-            conn.token_expires_at, conn.refresh_expires_at = t["expires_at"], t["refresh_expires_at"]
+            conn.token_expires_at, conn.refresh_expires_at = (
+                t["expires_at"] or (utcnow() + timedelta(days=KEY_TTL_DAYS)),
+                t["refresh_expires_at"],
+            )
             conn.token_refreshed_at = None
+    elif data.rotate and sec:
+        if code == "potok":
+            sec = {"token": "ptk_" + secrets.token_urlsafe(24)}
+        else:
+            sec["access_token"] = "tlx_" + secrets.token_urlsafe(24)
+        conn.token_expires_at = utcnow() + timedelta(days=KEY_TTL_DAYS)
+        conn.token_refreshed_at = utcnow()
     elif code == "talantix" and data.refresh_token and data.refresh_token.strip() and sec:
         sec["refresh_token"] = data.refresh_token.strip()
     providers.set_secrets(conn, sec)

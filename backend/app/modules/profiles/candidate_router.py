@@ -320,17 +320,32 @@ def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> di
         "protocols_indexed": len(prot_items) if prot_ok else 0,
         "linked": b.passport is not None,
         "link_source": b.passport.link_source.value if b.passport else None,
-        "achievements": [{"text": achievement_text(a), "discipline": a.discipline, "verified": a.verified,
-                          "event_id": a.event_id, "place": a.place, "date": a.event_date.isoformat() if a.event_date else None,
-                          "evsk_code": a.evsk_code, "sport_rank": a.sport_rank, "team": a.team_name,
-                          "team_result": a.team_result,
-                          "protocol_verified": bool((a.team_result or {}).get("protocol_verified")),
-                          "status_title": (a.team_result or {}).get("status_title"),
-                          "ekp_no": (a.team_result or {}).get("ekp_no") or a.evsk_code,
-                          "pdf_url": (a.team_result or {}).get("pdf_url"),
-                          "page": (a.team_result or {}).get("page"),
-                          "region": (a.team_result or {}).get("region")}
-                         for a in b.achievements if a.verified],
+        "achievements": [
+            {
+                "id": str(a.id),
+                "text": achievement_text(a), "discipline": a.discipline,
+                "verified": bool(a.verified and (getattr(a, "protocol_status", "none") != "pending_fsp")),
+                "event_id": a.event_id, "place": a.place, "date": a.event_date.isoformat() if a.event_date else None,
+                "evsk_code": a.evsk_code,
+                "ekp_no": getattr(a, "ekp_no", None) or (getattr(a, "protocol_ref", None) or {}).get("ekp_no") or (a.team_result or {}).get("ekp_no"),
+                "evsk_rank": getattr(a, "evsk_rank", None) or (a.team_result or {}).get("evsk_rank") or a.sport_rank,
+                "evsk_basis": getattr(a, "evsk_basis", None) or (a.team_result or {}).get("evsk_basis"),
+                "protocol_ref": getattr(a, "protocol_ref", None),
+                "sport_rank": a.sport_rank, "team": a.team_name,
+                "team_result": a.team_result,
+                "protocol_status": getattr(a, "protocol_status", None) or (a.team_result or {}).get("protocol_status") or ("verified" if (a.team_result or {}).get("protocol_verified") else "none"),
+                "protocol_verified": bool(getattr(a, "protocol_status", None) == "verified" or (a.team_result or {}).get("protocol_verified")),
+                "status_title": (
+                    "Подтверждено протоколом ФСП" if getattr(a, "protocol_status", None) == "verified"
+                    else "Найдено в протоколе — ожидает подтверждения ФСП" if getattr(a, "protocol_status", None) == "pending_fsp"
+                    else (a.team_result or {}).get("status_title") or ("Подтверждено реестром ФСП" if a.verified else "На проверке")
+                ),
+                "pdf_url": (getattr(a, "protocol_ref", None) or {}).get("url") or (a.team_result or {}).get("pdf_url"),
+                "page": (getattr(a, "protocol_ref", None) or {}).get("page") or (a.team_result or {}).get("page"),
+                "region": (a.team_result or {}).get("region"),
+            }
+            for a in b.achievements if a.verified and not (a.source_ref or "").startswith("cup:")
+        ],
         "rating": c["fsp"]["rating"],
         "sport_rank": b.passport.sport_rank if b.passport else None,
         "synced_at": b.passport.synced_at.isoformat() if b.passport and b.passport.synced_at else None,
@@ -412,11 +427,20 @@ class ProtocolConfirmIn(BaseModel):
 @router.post("/fsp/protocols/search", summary="Поиск достижений кандидата в индексе официальных протоколов ФСП",
              responses=AUTH)
 def search_fsp_protocols(data: ProtocolSearchIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    from app.core.enums import FspLinkSource
+    from app.modules.fsp.models import FspPassport
     from app.modules.fsp.protocols import search_protocols
 
     p = db.get(CandidateProfile, user.id)
+    pp = db.scalar(select(FspPassport).where(FspPassport.user_id == user.id))
+    has_fsp_id = bool(user.fsp_subject) or (pp is not None and pp.link_source == FspLinkSource.keycloak)
     fio = (data.fio or (p.full_name if p else "") or "").strip()
-    return search_protocols(fio, birth_date=data.birth_date, team=data.team)
+    return search_protocols(
+        fio,
+        birth_date=data.birth_date,
+        team=data.team,
+        fsp_id_verified_fio=(p.full_name if (has_fsp_id and p) else None),
+    )
 
 
 @router.post("/fsp/protocols/confirm", summary="Подтвердить выбранные достижения из официальных протоколов ФСП",
