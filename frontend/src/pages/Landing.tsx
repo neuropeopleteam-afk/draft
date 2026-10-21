@@ -222,9 +222,9 @@ export default function Landing() {
             <p className="mt-1 text-sm np-muted">«Старт» — 0 ₽ (3 приглашения в месяц), «Найм» — по запросу (30 приглашений, передача в кадровую систему и автопроверка), «Партнёр ФСП» — 100 приглашений.</p>
           </Link>
           <Link to="/register?role=employer" className="np-glass block rounded-2xl p-5 transition-transform hover:-translate-y-0.5">
-            <p className="np-eyebrow">Командный Драфт · пример звена из 4 ролей</p>
+            <p className="np-eyebrow">Командный Драфт · интерактивный пример звена из 2–10 специалистов</p>
             <p className="mt-1 text-lg font-bold np-text">Пример сборки звена под проект</p>
-            <p className="mt-1 text-sm np-muted">Интерактивный пример расчёта звена из 4 инженеров под бюджет ФОТ с проверкой покрытия стека и оценкой экономики найма.</p>
+            <p className="mt-1 text-sm np-muted">Интерактивный пример расчёта звена из 2–10 специалистов под бюджет ФОТ с проверкой покрытия стека и оценкой экономики найма.</p>
           </Link>
           <Link to="/login" className="np-glass block rounded-2xl p-5 transition-transform hover:-translate-y-0.5">
             <p className="np-eyebrow">Трёхсторонняя связь</p>
