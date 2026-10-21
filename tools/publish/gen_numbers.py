@@ -196,7 +196,8 @@ def bank_block() -> dict | None:
         "directions": len(b.get("directions_verified") or []),
         "variants_20seeds": s.get("n_variants_generated"),
         "unique_variants_20seeds": s.get("n_unique_variants"),
-        "seeds": s.get("n_seeds"),
+        # число зёрен валидатора: summary.n_seeds (А3, b642953d1), в старых BANK_SYNC — уровнем выше (validation.seeds / n_seeds)
+        "seeds": s.get("n_seeds") or (b.get("validation") or {}).get("n_seeds") or (b.get("validation") or {}).get("seeds"),
         "fail": s.get("n_fail"),
         "checks": s.get("n_checks"),
         "checks_failed": s.get("n_checks_failed"),
