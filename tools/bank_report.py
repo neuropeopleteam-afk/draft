@@ -41,7 +41,14 @@ def main() -> None:
          f"{len(bs['directions_verified'])} ({', '.join(bs['directions_verified'])}).",
          f"- Выведены из выдачи до переработки: LP-v2 — {q['retired']['lp_v2_2010']} семейств "
          f"(`{q['retired']['readme']}`: почему).",
+         f"- Выведены 21.10 — ключ узнаётся по форме варианта: {q['retired'].get('form_leak_2110', 0)} семейств "
+         f"(`{q['retired'].get('form_leak_2110_readme', '')}`: таблица и правило; генераторы сохранены для переделки).",
          f"- Новая волна LP-3 (старшие грейды, ввод ответа, ключ меняется по вариантам): {len(q['lp3_families'])} семейств.",
+         *([f"- Набор t21 (21.10) — короткие практические у порогов грейдов по списку методики: "
+            f"{q['t21']['families']} семейств ({q['t21']['rule']}); по направлениям и ближайшему порогу — "
+            + "; ".join(f"{d}: " + ", ".join(f"{g} {c}" for g, c in sorted(gs.items()))
+                        for d, gs in q["t21"]["by_direction_nearest_cut"].items()) + "."]
+           if q.get("t21", {}).get("families") else []),
          f"- Lead: {q['lead_principal_mcq']['lead']['families']} семейств, из них выбор ответа "
          f"{pct(q['lead_principal_mcq']['lead']['share'])}; Principal: {q['lead_principal_mcq']['principal']['families']}, "
          f"выбор ответа {pct(q['lead_principal_mcq']['principal']['share'])}.",
@@ -74,9 +81,28 @@ def main() -> None:
               f"эвристика «{g['all_numeric_choice']['best_heuristic']}» — {pct(g['all_numeric_choice']['best_accuracy'])} "
               f"при шансе {pct(g['all_numeric_choice']['chance'])}; обратные задачи — "
               f"{pct(g['inverse']['best_accuracy'])} при шансе {pct(g['inverse']['chance'])}; старые 4-вариантные — "
-              f"{pct(g['other']['best_accuracy'])} при шансе {pct(g['other']['chance'])} (известный хвост, см. ниже).",
+              f"{pct(g['other']['best_accuracy'])} при шансе {pct(g['other']['chance'])}.",
               f"- Постоянство содержания ключа ≥ 0,8 по вариантам: {au['key_constancy']['n_families_at_or_above']} семейств "
               "— помечены `leak_resistance: low` (дефект один на семейство), чтобы движок ограничивал экспозицию.", ""]
+    pa = q.get("position_attack")
+    if pa:
+        def _row(tag: str, r: dict) -> str:
+            ba = r["by_attack"]
+            return (f"- {tag} ({r['tree']}; {n(r['n_families'])} семейств, {r['test_seeds']} проверочных зёрен): "
+                    f"«буква × ранг» {pct(ba['letter_x_value_rank']['acc'])} при шансе "
+                    f"{pct(ba['letter_x_value_rank']['chance'])}, «сюжет × буква» {pct(ba['ctx_x_letter']['acc'])} при "
+                    f"{pct(ba['ctx_x_letter']['chance'])}; семейств с позиционной подсказкой > +10 п. п. — "
+                    f"{r['positional']['n_families_excess_gt_0_10']}, ≥ 90 % — {r['positional']['n_families_acc_ge_0_90']}; "
+                    f"по форме варианта > +10 п. п. — {r['form']['n_families_excess_gt_0_10']}, ≥ 90 % — "
+                    f"{r['form']['n_families_acc_ge_0_90']}.")
+        L += ["## Атака «изучивший открытый код» (`docs/bank/position_attack_2110.json`)", "",
+              f"- Как считается: {pa['rule']}.",
+              _row("До правки", pa["before"]), _row("После правки", pa["after"]),
+              *([_row("Банк заморозки", pa["final"])] if pa.get("final") else []),
+              "- Что исправлено: в общем наборе _w2010_kit буква ключа, ранг ключа по величине, сюжет и первая ловушка "
+              "были функциями одного остатка зерна (seed mod n) — по букве угадывался ранг, по сюжету — буква. Теперь "
+              "это независимые перестановки по блокам зёрен. Семейства, где ключ узнаётся по форме (длина, текст), "
+              "выведены — см. «Состав».", ""]
     if mu:
         L += ["## Мутационный самоконтроль тестов (`docs/bank/mutation_report.json`)", "",
               f"- Мутанты эталонного решения, тесты задания без изменений: {n(mu['n_mutants'])} мутантов, отвергнуто "
@@ -93,12 +119,17 @@ def main() -> None:
               "`docs/bank/blind_solve_review.md`.", ""]
     L += ["## Что честно не сделано", "",
           "- Калибровки параметров на людях нет: a и b — априорные (подпись «до калибровки на людях»).",
-          "- Хвост угадываемости — старые 4-вариантные расчётные семейства (ловушки симметричны вокруг ключа).",
+          "- Семейства, выведенные 21.10 по форме варианта, не переделаны: нужно несколько верных форм исправления и "
+          "формулировок на семейство, ранг длины ключа — по зерну.",
+          "- Атака «по форме» на оставшихся семействах с одним дефектом на семейство остаётся выше случайного выбора "
+          "для того, кто уже видел семейство (утечкоустойчивость концептуальных заданий ниже, чем у расчётных).",
           "- Мутации решения для go/java/bash/sqlite/git не реализованы.", "",
           "## Пересчёт", "",
           "```", "cd backend && python -m assessment_bank validate --seeds 20 --out <каталог>",
           "PYTHONPATH=. python3 ../tools/bank_audit.py --seeds 20 --out ../docs/bank/audit_2110.json",
-          "cd .. && python3 tools/bank_mutation_check.py --seeds 1 --limit 8",
+          "PYTHONPATH=. python3 ../tools/bank_position_attack.py --train 100 --test 100 --out <pos.json>",
+          "cd .. && python3 tools/bank_position_report.py --before <до.json> --after <после.json> --final <pos.json>",
+          "python3 tools/bank_mutation_check.py --seeds 1 --limit 8",
           "cd backend && PYTHONPATH=. python3 ../tools/bank_blind_solve.py --share 0.1 --sample-seed 20261021 "
           "--model openai/gpt-5.6-luna --out ../docs/bank/blind_solve_2110.json",
           "cd .. && python3 tools/bank_manifest.py --validation-report <каталог>/validation_report.json",

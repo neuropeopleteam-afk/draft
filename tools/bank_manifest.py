@@ -75,8 +75,33 @@ def main() -> int:
         "leak_resistance_low": sorted(f for f, s in specs.items() if s.invariants.extra.get("leak_resistance") == "low"),
         "lp3_families": sorted(f for f in specs if ".lp3_" in f),
         "retired": {"lp_v2_2010": len(list((PKG / "families_retired" / "lp_v2_2010").glob("*/*.yaml"))),
-                    "readme": "backend/assessment_bank/families_retired/lp_v2_2010/README.md"},
+                    "readme": "backend/assessment_bank/families_retired/lp_v2_2010/README.md",
+                    "form_leak_2110": len(list((PKG / "families_retired" / "form_leak_2110").glob("*/*.yaml"))),
+                    "form_leak_2110_readme": "backend/assessment_bank/families_retired/form_leak_2110/README.md"},
     }
+    # набор t21 (21.10): короткие практические у порогов — по списку А4 BANK_INFO_CUTS
+    cuts = {"intern": -1.75, "junior": -1.0, "middle": 0.0, "senior": 1.0, "lead": 2.0, "principal": 3.0}
+    t21 = [s for s in specs.values() if ".t21_" in s.family_id]
+    by_dg: dict = collections.defaultdict(lambda: collections.Counter())
+    for s in t21:
+        g = min(cuts, key=lambda k: abs(cuts[k] - s.prior_difficulty.b))  # ближайший порог по b
+        by_dg[s.direction][g] += 1
+    quality["t21"] = {
+        "families": len(t21),
+        "rule": ("predict_output без вариантов ответа, лимит 120–150 с, a = 1,3, σ варианта 0,3, b — у порога "
+                 "грейда ±0,3 (Стажёр от −2,4); ключ — независимая модель генератора, проверка — исполнение показанного "
+                 "кода в песочнице"),
+        "by_direction_nearest_cut": {d: dict(c) for d, c in sorted(by_dg.items())},
+        "by_language": dict(collections.Counter(s.language for s in t21)),
+        "b_range": [min((s.prior_difficulty.b for s in t21), default=None),
+                    max((s.prior_difficulty.b for s in t21), default=None)],
+        "time_limit_s": sorted({s.time_limit_s for s in t21}),
+    }
+    pa = REPO / "docs" / "bank" / "position_attack_2110.json"
+    if pa.exists():
+        pj = json.loads(pa.read_text(encoding="utf-8"))
+        quality["position_attack"] = {"file": str(pa.relative_to(REPO)),
+                                      **{k: pj[k] for k in ("command", "rule", "before", "after") if k in pj}}
     ap_ = Path(a.audit)
     if ap_.exists():
         au = json.loads(ap_.read_text(encoding="utf-8"))
@@ -121,7 +146,13 @@ def main() -> int:
         "directions_verified": verified,
         "readiness": {"rule": {"min_families": sync_bank.READY_MIN_FAMILIES,
                                "min_per_grade": sync_bank.READY_MIN_PER_GRADE}, "by_direction": readiness},
-        "excluded": [],
+        "excluded": [{"path": p.get("retired_to"), "family_id": p["family_id"], "stage": "form_leak_2110",
+                      "reason": (f"ключ узнаётся по форме варианта: атака «{p['attack']}» угадывает "
+                                 f"{p['acc'] * 100:.0f} % при шансе {p['chance'] * 100:.0f} %"),
+                      "format": p["format"]}
+                     for p in (json.loads((PKG / "families_retired" / "form_leak_2110" / "retired.json")
+                                          .read_text(encoding="utf-8"))["families"]
+                               if (PKG / "families_retired" / "form_leak_2110" / "retired.json").exists() else [])],
         "validation": {"summary": summ, "seeds": rep.get("seeds") or summ.get("n_seeds") or 20,
                        "verify_seeds": rep.get("verify_seeds"), "where": a.where,
                        "commit": a.validated_commit or None,
