@@ -12,7 +12,7 @@ import difflib
 import hashlib
 import random
 import textwrap
-from typing import Any, Iterable, Sequence
+from typing import Any, Callable, Iterable, Sequence
 
 from .metrics import count_code_lines, count_operations
 from .schema import AnswerKey, Check, Option, Rubric, StepPrompt, Variant, VariantMeta, make_variant_id
@@ -148,3 +148,24 @@ def rubric_from(spec: dict[str, Any]) -> Rubric:
 def para(s: str) -> str:
     """Склеить многострочный текст эталона в один абзац."""
     return " ".join(s.split())
+
+
+def pick_ranked(rng: random.Random, good: Any, pool: dict[str, Any], n_below: int, k: int = 3,
+                fmt: Callable[[Any], str] = str) -> list[str] | None:
+    """Выбрать ``k`` ловушек из ``pool`` так, чтобы ровно ``n_below`` были меньше ключа (ранг ключа задан заранее).
+
+    Ранг ключа среди вариантов выбирается ДО подбора параметров (``n_below = rng.randrange(k + 1)``), генератор
+    перебирает параметры, пока ранг не станет достижим, — так ранг ключа равномерен и ключ не угадывается
+    медианой или «центром кластера» (аудит банка 21.10: у части семейств ключ всегда был вторым по величине).
+    Подписи должны различаться. None — при этих параметрах ранг недостижим.
+    """
+    below = [n for n, v in pool.items() if v is not None and v < good]
+    above = [n for n, v in pool.items() if v is not None and v > good]
+    if len(below) < n_below or len(above) < k - n_below:
+        return None
+    for _ in range(20):
+        picked = rng.sample(below, n_below) + rng.sample(above, k - n_below)
+        texts = [fmt(good)] + [fmt(pool[n]) for n in picked]
+        if len(set(texts)) == len(texts):
+            return picked
+    return None

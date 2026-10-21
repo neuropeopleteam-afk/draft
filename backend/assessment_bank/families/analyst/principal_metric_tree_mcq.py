@@ -50,7 +50,7 @@ print(fmt(float(after / before - 1)))
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, segA, segB = rng.choice(CONTEXTS)
-    n_below = rng.choice([1, 2, 3])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный (аудит 21.10: без крайнего ранга ключ угадывался)
     fmt, fmt_src = formatter("p0")
     for _ in range(6000):
         uA, rA = rng.choice([(30, 10), (40, 15), (35, 10), (50, 20), (45, 15)])
