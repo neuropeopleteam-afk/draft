@@ -62,6 +62,9 @@ STAND_ENV = {
 
 TRAIN_SEEDS = tuple(range(1101, 1111))   # подбор настроек
 TEST_SEEDS = tuple(range(2201, 2211))    # отчёт (до 21.10.2026 не использовались ни в одном прогоне)
+# Итоговый прогон на замороженном банке стенда (решение оркестратора 21.10, зафиксировано до результатов T1–T3 на
+# 603474f): новые зёрна, один прогон, хэш банка — в коммит до прогона (FINAL_BANK_HASH ниже, `--expect-bank-hash`).
+FINAL_SEEDS = tuple(range(4401, 4411))
 THETA_SD = 1.3
 CLAIM_SHIFT = (0, 0, 0, 1, 1, -1)
 ORDER_ALL = ("none", "intern", "junior", "middle", "senior", "lead", "principal")
@@ -411,9 +414,24 @@ def settings_snapshot() -> dict:
     return {k: getattr(s, k) for k in sorted(keys)}
 
 
+def check_final_bank(seeds: tuple[int, ...], expect_hash: str) -> None:
+    """Итоговый прогон: только FINAL_SEEDS и только на банке с хэшем, зафиксированным в коммите до прогона."""
+    if tuple(seeds) != FINAL_SEEDS:
+        raise SystemExit("итоговый прогон — только на FINAL_SEEDS")
+    if not expect_hash:
+        raise SystemExit("итоговый прогон: нужен --expect-bank-hash (хэш банка из коммита до прогона)")
+    from app.modules.assessment.bank_engine import BankEngine
+
+    got = (getattr(BankEngine(), "manifest", None) or {}).get("content_hash")
+    if got != expect_hash:
+        raise SystemExit(f"банк не тот: content_hash {got} ≠ ожидаемого {expect_hash}")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--phase", choices=("train", "test"), required=True)
+    ap.add_argument("--phase", choices=("train", "test", "final"), required=True)
+    ap.add_argument("--expect-bank-hash", type=str, default="",
+                    help="для --phase final: content_hash банка из BANK_SYNC.json, зафиксированный в коммите до прогона")
     ap.add_argument("--world", choices=("calibrated", "misspec"), default="calibrated")
     ap.add_argument("--n", type=int, default=3000)
     ap.add_argument("--rater-noise", type=float, default=0.0)
@@ -422,9 +440,12 @@ def main(argv=None) -> int:
     ap.add_argument("--seeds", type=str, default="")
     ap.add_argument("--out", type=str, required=True)
     a = ap.parse_args(argv)
-    seeds = tuple(int(x) for x in a.seeds.split(",")) if a.seeds else (TRAIN_SEEDS if a.phase == "train" else TEST_SEEDS)
+    default_seeds = {"train": TRAIN_SEEDS, "test": TEST_SEEDS, "final": FINAL_SEEDS}[a.phase]
+    seeds = tuple(int(x) for x in a.seeds.split(",")) if a.seeds else default_seeds
     if a.phase == "test" and set(seeds) & set(TRAIN_SEEDS):
         raise SystemExit("отчёт только на зёрнах TEST_SEEDS")
+    if a.phase == "final":
+        check_final_bank(seeds, a.expect_bank_hash)
     res = run(a.phase, a.world, a.n, seeds, rater_noise=a.rater_noise, retest=a.retest,
               two_stage_on=not a.no_two_stage)
     from app.modules.assessment.bank_engine import BankEngine

@@ -39,6 +39,7 @@ from app.modules.validation.product_sim import STAND_ENV, _finished, _git_commit
 
 CLAIMS = ("junior", "middle", "senior")
 SEED = 3301  # зерно ботов (не пересекается с TRAIN_SEEDS/TEST_SEEDS симуляции)
+FINAL_SEED = 4501  # итоговый прогон на замороженном банке стенда (один, хэш банка — в коммите до прогона)
 NUM_RE = re.compile(r"-?\d+(?:[.,]\d+)?")
 WORD_RE = re.compile(r"[\wа-яё]{4,}", re.I)
 
@@ -58,6 +59,7 @@ class Bots:
         self.e = BankEngine()
         self.cuts = ALL_GRADE_CUTS
         self.directions = list(visible_directions())
+        self.seed = seed
         self.rng = np.random.default_rng([seed, 1])
         self.leak: dict[str, list[tuple[str, str]]] = {}  # семейство → [(хэш условия, текст ключа)] на K_MAX вариантов
         self.k_max = 0
@@ -91,7 +93,7 @@ class Bots:
 
     def leaked(self, fid: str, k: int) -> list[tuple[str, str]]:
         have = self.leak.setdefault(fid, [])
-        r = np.random.default_rng([SEED, 9, int(_h(fid), 16) % (2**31)])
+        r = np.random.default_rng([self.seed, 9, int(_h(fid), 16) % (2**31)])
         while len(have) < k:
             s = int(r.integers(0, 2**31 - 1))
             try:
@@ -286,8 +288,16 @@ def main(argv=None) -> int:
     ap.add_argument("--k", type=str, default="10,100", help="K утёкших вариантов на семейство")
     ap.add_argument("--strategies", type=str, default="control,random,position_A,position_B,position_C,position_D,longest,median_number,overlap")
     ap.add_argument("--out", type=str, required=True)
+    ap.add_argument("--final", action="store_true", help="итоговый прогон: FINAL_SEED и проверка хэша банка")
+    ap.add_argument("--expect-bank-hash", type=str, default="")
     a = ap.parse_args(argv)
-    bots = Bots()
+    seed = SEED
+    if a.final:
+        from app.modules.validation.product_sim import FINAL_SEEDS, check_final_bank
+
+        check_final_bank(FINAL_SEEDS, a.expect_bank_hash)
+        seed = FINAL_SEED
+    bots = Bots(seed)
     plan = [(s, 0) for s in a.strategies.split(",") if s] + [(f"leak_{k}", int(k)) for k in a.k.split(",") if k]
     rows, t0 = [], time.time()
     errors: list[str] = []
@@ -316,7 +326,7 @@ def main(argv=None) -> int:
                                      "false_confirmed": sum(1 for r in rs if r["claim"] == c and r["false_confirmed"])}
                                  for c in CLAIMS}}
     meta = {"what": "боты-стратегии через движок продукта (реальные варианты и проверка ответа), не люди",
-            "n_per_strategy": a.n, "k_values": a.k, "seed": SEED, "claims": CLAIMS,
+            "n_per_strategy": a.n, "k_values": a.k, "seed": seed, "final": a.final, "claims": CLAIMS,
             "bot_theta": "порог заявленного грейда − 0,75 логита (для control и leak_K)",
             "text_answers": "без модели не засчитываются (в пользу бота — оценка сверху)",
             "settings": settings_snapshot(), "bank_families": bots.e.n_families, "git_commit": _git_commit(),
