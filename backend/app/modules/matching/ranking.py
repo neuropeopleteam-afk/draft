@@ -263,7 +263,7 @@ def _mr(c: Category) -> dict:
             "source": c.market_source, "as_of": c.market_as_of.isoformat() if c.market_as_of else None}
 
 
-def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
+def score_candidate(b: Bundle, req: dict, weights: dict | None = None) -> tuple[float, dict, list[dict]]:
     """Скор и объяснение по каждому требованию. Возвращает (score, компоненты, reasons)."""
     p = b.profile
     reasons: list[dict] = []
@@ -417,11 +417,12 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     comps = {"test": test, "stack_required": round(sreq, 3), "stack_desired": round(sdes, 3), "fsp": fsp,
              "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0,
              "grade_status": b.grade_status}
+    W = weights or WEIGHTS  # learn-v1 («учитывать решения компании», по умолчанию выкл.) — matching/learn.py
     if not req.get("stack_required"):
         # Нет обязательного стека — вес переносим на тест
-        comps_w = dict(WEIGHTS, test=WEIGHTS["test"] + WEIGHTS["stack_required"], stack_required=0.0)
+        comps_w = dict(W, test=W["test"] + W["stack_required"], stack_required=0.0)
     else:
-        comps_w = WEIGHTS
+        comps_w = W
     score = sum(comps_w[k] * comps[k] for k in WEIGHTS) - comps["provisional"]
     return round(score, 4), comps, reasons
 
@@ -557,8 +558,9 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     before_conditions = len(apply_filters(bundles, {k: v for k, v in filters.items() if k != "conditions_off"}))
     bundles = apply_filters(bundles, effective)
     scored = []
+    W = filters.get("_weights") or WEIGHTS  # подстроенные по решениям компании (router: learn_from_company)
     for b in bundles:
-        s, comps, reasons = score_candidate(b, req)
+        s, comps, reasons = score_candidate(b, req, W)
         if filters.get("min_score") and s < float(filters["min_score"]):
             continue
         scored.append((s, b, comps, reasons))
@@ -585,9 +587,9 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         item = {"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
                 "reasons": rs, "category_id": b.category_id, "must": must[b.profile.user_id], "core": ci,
                 "grade_status": b.grade_status, "card": card(b, cats)}
-        item["explain"] = explain_mod.build_explain_from_result(item, req, WEIGHTS)
+        item["explain"] = explain_mod.build_explain_from_result(item, req, W)
         results.append(item)
-    explain_mod.annotate_selection_neighbors(results, req, WEIGHTS)
+    explain_mod.annotate_selection_neighbors(results, req, W)
     unc = unconfirmed_counts(db)
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)
@@ -619,7 +621,7 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": algorithm(),
             "conditions": conditions, "must_first": must_have.enabled(), "core": core_meta, "meta": meta,
             "grade_above": above_meta, "salary_calibration": salary_cal, "rerank_diff": rerank_diff,
-            "weights": WEIGHTS, "provisional_penalty": PROVISIONAL_PENALTY,
+            "weights": W, "provisional_penalty": PROVISIONAL_PENALTY,
             "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional),
             "unconfirmed_matched": sum(1 for _, b, _, _ in scored if b.unconfirmed),
             "confirmed_matched": confirmed_n}

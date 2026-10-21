@@ -139,6 +139,8 @@ class Filters(BaseModel):
     fsp_only: bool = False
     fsp_protocol_only: bool = Field(False, description="Только с результатом из официального протокола ФСП (найдено в "
                                                        "протоколе и ждёт подтверждения ФСП или подтверждено ФСП)")
+    learn_from_company: bool = Field(False, description="Учитывать решения компании: ограниченная объяснимая подстройка "
+                                                        "весов по «подходит»/«не подходит» и приглашениям (learn-v1)")
     confirmed_only: bool = Field(False, description="Только подтверждённый грейд: без «Junior (предварительно)» и без "
                                                     "кандидатов со статусом «грейд не подтверждён»")
     work_format: Literal["office", "hybrid", "remote"] | None = None
@@ -214,7 +216,17 @@ def _make_version(db: Session, need: EmployerNeed, user: User, filters: dict, pa
                   req: dict | None = None) -> SelectionVersion:
     last = db.scalar(select(func.max(SelectionVersion.version)).where(SelectionVersion.need_id == need.id)) or 0
     req = req or need.requirements
-    sel = ranking.build_selection(db, req, filters)
+    learning = None
+    eff = filters
+    if filters.get("learn_from_company"):  # learn-v1: подстройка весов по решениям компании (по умолчанию выкл.)
+        from app.modules.matching import learn
+
+        learning = learn.company_weights(db, need.company_id, ranking.WEIGHTS)
+        if learning["status"] == "ok":
+            eff = {**filters, "_weights": learning["weights_after"]}
+    sel = ranking.build_selection(db, req, eff)
+    if learning:
+        sel["meta"]["learning"] = learning
     # Ф2: снимок версии (категории со счётчиками, условия, «скрыто условиями») — в filters["_meta"]: открытие
     # сохранённой версии отдаёт его без пересчёта
     v = SelectionVersion(need_id=need.id, version=last + 1, parent_version=parent,
@@ -297,7 +309,10 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         "t0_in_score": False,
         "ranking_basis_ru": explain_mod.RANKING_BASIS_RU,
         "scope": _scope_out(db, v),  # Я10: что тест проверяет / НЕ проверяет и зонды по потребности (не меняет порядок)
-        "weights": ranking.WEIGHTS, "levels": ranking.LEVELS, "provisional_penalty": ranking.PROVISIONAL_PENALTY,
+        "weights": (meta.get("learning") or {}).get("weights_after") if (meta.get("learning") or {}).get("status") == "ok"
+        else ranking.WEIGHTS, "levels": ranking.LEVELS, "provisional_penalty": ranking.PROVISIONAL_PENALTY,
+        # learn-v1: «учитывать решения компании» — какие веса и на сколько сдвинулись (None — выключено)
+        "learning": meta.get("learning"),
         "categories": recs,
         "total": len(enriched_results), "results": enriched_results,
         # единая модель статуса: сколько в выдаче подтверждённых / предварительных / не подтверждённых

@@ -13,7 +13,7 @@
 Отсутствие истории ФСП — штраф 0: компонент просто равен 0, как у всех без ФСП (метрика no_fsp_top5_share).
 
 Профильность дисциплины (флаг FSP_DISCIPLINE_RELEVANCE, по умолчанию выкл.): коэффициент «дисциплина →
-направление» из ``docs/realdata/fsp_protocols/discipline_relevance.json`` (А8: дословные определения дисциплин из
+направление» из ``fsp/evsk_data/discipline_relevance.json`` (А8: дословные определения дисциплин, п. 5.5.1–5.5.5
 правил вида спорта), запасной — fsp/relevance.AFFINITY. Коэффициент ограничен снизу 0,8: дисциплины равны (ответ
 организаторов E08), профильность лишь мягко уточняет.
 """
@@ -123,10 +123,16 @@ def protocol_citation(a: Any) -> str:
 # ---------------------------------------------------------------- профильность дисциплины
 
 def _relevance_path() -> Path:
+    """В рантайме — fsp/evsk_data/discipline_relevance.json (А8, входит в образ api); запас — копия в docs/."""
     env = os.environ.get("FSP_DISCIPLINE_RELEVANCE_JSON")
     if env:
         return Path(env)
-    return Path(__file__).resolve().parents[4] / "docs/realdata/fsp_protocols/discipline_relevance.json"
+    here = Path(__file__).resolve()
+    for p in (here.parents[1] / "fsp/evsk_data/discipline_relevance.json",
+              here.parents[4] / "docs/realdata/fsp_protocols/discipline_relevance.json"):
+        if p.exists():
+            return p
+    return here.parents[1] / "fsp/evsk_data/discipline_relevance.json"
 
 
 @lru_cache(maxsize=4)
