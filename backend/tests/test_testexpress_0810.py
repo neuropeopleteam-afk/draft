@@ -138,7 +138,7 @@ def test_same_plot_pairs(a, b):
 
 def test_different_plots():
     assert not mini.same_plot("backend.cache.invalidation_bug", "backend.async.missing_await_bug")
-    assert not mini.same_plot("backend.py.concurrency_mcq", "backend.async.missing_await_bug")  # разные темы
+    assert not mini.same_plot("common.http.status_codes", "backend.async.missing_await_bug")  # разные темы
 
 
 @pytest.mark.parametrize("direction", mini.DIRECTIONS)
