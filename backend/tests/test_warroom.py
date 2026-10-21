@@ -250,11 +250,12 @@ def test_warroom_demo_vs_combat_and_api_validation(client):
 
     # 3. Анонимный вызов /evaluate с save=True НЕ сохраняет запись в БД
     scn_demo = client.get("/api/warroom/scenarios?demo=true").json()["scenarios"][0]
+    req_ids = BASE_SCENARIOS[0]["required"]
     anon_ev = client.post(
         "/api/warroom/evaluate",
         json={
             "scenario_id": "payment",
-            "measures": [{"id": m, "params": {}} for m in scn_demo["required"]],
+            "measures": [{"id": m, "params": {}} for m in req_ids],
             "code_patch": scn_demo["patches"][0]["code"],
             "justification": REFERENCE_JUSTIFICATIONS["payment"],
             "save": True,
@@ -291,7 +292,7 @@ def test_warroom_demo_vs_combat_and_api_validation(client):
         "/api/warroom/evaluate",
         json={
             "scenario_id": "payment",
-            "measures": [{"id": m, "params": {}} for m in scn_demo["required"]],
+            "measures": [{"id": m, "params": {}} for m in req_ids],
             "code_patch": scn_demo["patches"][0]["code"],
             "justification": REFERENCE_JUSTIFICATIONS["payment"],
             "save": True,
@@ -307,7 +308,7 @@ def test_warroom_demo_vs_combat_and_api_validation(client):
         "/api/warroom/evaluate",
         json={
             "scenario_id": "payment",
-            "measures": [{"id": m, "params": {}} for m in scn_demo["required"]],
+            "measures": [{"id": m, "params": {}} for m in req_ids],
             "code_patch": scn_demo["patches"][0]["code"],
             "justification": REFERENCE_JUSTIFICATIONS["payment"],
             "elapsed_s": 210,
@@ -341,3 +342,93 @@ def test_every_warroom_route_has_security_policy(client):
     assert len(wr_routes) == 7
     missing = [r.key for r in wr_routes if r.key not in POLICY]
     assert not missing, f"Маршруты /api/warroom без политики: {missing}"
+
+
+def test_warroom_api_never_leaks_keys_or_mechanics(client):
+    """P0-1 (21.10): в ответах /api/warroom/* кандидату и анониму (включая demo=false и demo=true)
+    нет required/helpful/harmful/opt_*/trap/sim_effect/reference/answer/correct и нет слов из списков Р27.
+    """
+    from tests.test_integrity_r27 import assert_candidate_safe
+
+    reset_all()
+    cand_tok = register_and_verify(client, "wr_leak_cand@example.com", role="candidate")
+    assert client.put("/api/me/onboarding", json=ONBOARDING, headers=H(cand_tok)).status_code == 200
+
+    forbidden_keys = {
+        "required",
+        "helpful",
+        "harmful",
+        "trap",
+        "trap_count",
+        "sim_effect",
+        "reference",
+        "heals",
+        "win",
+        "answer",
+        "correct",
+    }
+
+    def _walk_keys(obj):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                yield str(k)
+                yield from _walk_keys(v)
+        elif isinstance(obj, list):
+            for it in obj:
+                yield from _walk_keys(it)
+
+    def _assert_no_leaks(payload, where: str) -> None:
+        assert_candidate_safe(payload, where)
+        for k in _walk_keys(payload):
+            assert k not in forbidden_keys and not k.startswith("opt_"), f"{where}: утечка ключа {k}"
+
+    for who, hdr in (("аноним", {}), ("кандидат", H(cand_tok))):
+        for demo_q in ("false", "true"):
+            r = client.get(f"/api/warroom/scenarios?demo={demo_q}", headers=hdr)
+            assert r.status_code == 200, r.text
+            _assert_no_leaks(r.json(), f"/api/warroom/scenarios?demo={demo_q} ({who})")
+
+            for s in BASE_SCENARIOS:
+                sid = s["id"]
+                rs = client.get(f"/api/warroom/scenarios/{sid}?demo={demo_q}", headers=hdr)
+                assert rs.status_code == 200, rs.text
+                _assert_no_leaks(rs.json(), f"/api/warroom/scenarios/{sid}?demo={demo_q} ({who})")
+
+        sim_r = client.post(
+            "/api/warroom/simulate",
+            json={"scenario_id": "payment", "measures": [{"id": "idem", "params": {}}], "demo": False},
+            headers=hdr,
+        )
+        assert sim_r.status_code == 200, sim_r.text
+        _assert_no_leaks(sim_r.json(), f"/api/warroom/simulate ({who})")
+
+        ev_r = client.post(
+            "/api/warroom/evaluate",
+            json={
+                "scenario_id": "payment",
+                "measures": [{"id": "idem", "params": {}}],
+                "justification": "Первопричина инцидента: синхронный вызов внешнего шлюза внутри транзакции БД.",
+                "save": False,
+                "demo": False,
+            },
+            headers=hdr,
+        )
+        assert ev_r.status_code == 200, ev_r.text
+        _assert_no_leaks(ev_r.json(), f"/api/warroom/evaluate ({who})")
+
+        ac_r = client.post(
+            "/api/warroom/anticheat/inspect",
+            json={
+                "answer_text": "Для кэша на 2 500 000 записей с TTL = 480 с делим на 64 сегмента. Гелиос.",
+                "telemetry": {"copy": 1, "paste": 1, "paste_chars": 75},
+                "demo": False,
+            },
+            headers=hdr,
+        )
+        assert ac_r.status_code == 200, ac_r.text
+        _assert_no_leaks(ac_r.json(), f"/api/warroom/anticheat/inspect ({who})")
+
+    my_r = client.get("/api/warroom/attempts/my", headers=H(cand_tok))
+    assert my_r.status_code == 200, my_r.text
+    _assert_no_leaks(my_r.json(), "/api/warroom/attempts/my (кандидат)")
+

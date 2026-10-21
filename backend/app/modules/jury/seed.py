@@ -168,9 +168,24 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
     обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений, кроме away_items — позиций, где
     «кандидат» уходил со вкладки (для демонстрации «достоверности результата»). Возвращает итог finish_session."""
     rng = np.random.default_rng(seed)
-    eng = DemoRespondentEngine(rng, theta, pending_left)
-    ts = assessment.start_session(db, user_id, claimed, engine_name="bank", direction=direction)
-    st = ts.result["state"]
+    # pending_left — для очереди эксперта нужен развёрнутый ответ «на проверке». Состав адаптивного теста зависит
+    # от seed сессии (криптостойкий ГСЧ), и в части вариантов развёрнутых заданий нет (банк по направлениям,
+    # 20.10: ~45 % тестов backend.middle) — тогда вариант без нужного числа ответов на проверке удаляется
+    # до завершения и тест проходится заново (не больше 8 раз; последний вариант остаётся как есть).
+    for attempt in range(8 if pending_left > 0 else 1):
+        eng = DemoRespondentEngine(rng, theta, pending_left)
+        ts = assessment.start_session(db, user_id, claimed, engine_name="bank", direction=direction)
+        _demo_answers(eng, ts.result["state"], theta, rng, away_items, copy_items)
+        if eng.pending_left <= 0 or attempt == 7:
+            break
+        db.delete(ts)
+        db.commit()
+    return _finish_demo_test(db, ts, eng, camera)
+
+
+def _demo_answers(eng: "DemoRespondentEngine", st: dict, theta: float, rng: np.random.Generator,
+                  away_items: tuple[int, ...], copy_items: tuple[int, ...]) -> None:
+    """Ответы демо-респондента на все задания сессии (без завершения)."""
     for _ in range(60):
         item = eng.next_item(st)
         if item is None:
@@ -188,6 +203,9 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
                                 "fs_ms": 60_000, "fs_out_ms": 0, "fs_exit": 0, "fs_na": 0})
             if step < it["parts"] and str(step) in it["answers"]:  # шаги тоже занимают время (часы сервера)
                 it["answers"][str(step)]["at"] = it["issued_at"] + (time.time() - it["issued_at"]) * step / it["parts"]
+
+
+def _finish_demo_test(db: Session, ts, eng: "DemoRespondentEngine", camera: bool) -> dict:
     assessment._drain_outbox(db, ts)
     from sqlalchemy.orm.attributes import flag_modified
 

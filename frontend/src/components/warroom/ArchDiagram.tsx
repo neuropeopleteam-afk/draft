@@ -117,17 +117,17 @@ export function ArchDiagram({
   const showPgb = activeSet.has("pgb");
   const visible = (Object.keys(NODES) as NodeId[]).filter((n) => n !== "pgb" || showPgb);
 
-  const badges: Record<string, { label: string; on: boolean; trap: boolean }[]> = {};
+  const badges: Record<string, { label: string; on: boolean }[]> = {};
   measuresCatalog.forEach((p) => {
     const isLive = applied && liveIds.has(p.id);
     const isStaged = stagedIds.has(p.id);
     if (!isLive && !isStaged) return;
     if (p.id === "pgb" && !showPgb) {
-      (badges.pg ??= []).push({ label: p.badge, on: false, trap: false });
+      (badges.pg ??= []).push({ label: p.badge, on: false });
       return;
     }
     if (p.id === "pgb") return;
-    (badges[p.at] ??= []).push({ label: p.badge, on: isLive, trap: Boolean(p.trap) });
+    (badges[p.at] ??= []).push({ label: p.badge, on: isLive });
   });
 
   const fast = applied && sloMet;
@@ -246,7 +246,7 @@ export function ArchDiagram({
             {(badges[id] ?? []).map((b, i) => {
               const by = n.y + NH / 2 + 6 + i * 17;
               const bw = Math.max(58, b.label.length * 6.4 + 14);
-              const col = b.trap ? "#fbbf24" : b.on ? "#34d399" : "rgba(255,255,255,0.65)";
+              const col = b.on ? "#34d399" : "rgba(255,255,255,0.65)";
               return (
                 <g key={b.label}>
                   <rect
@@ -255,7 +255,7 @@ export function ArchDiagram({
                     width={bw}
                     height={14}
                     rx={7}
-                    fill={b.on ? (b.trap ? "rgba(251,191,36,0.18)" : "rgba(52,211,153,0.18)") : "rgba(255,255,255,0.05)"}
+                    fill={b.on ? "rgba(52,211,153,0.18)" : "rgba(255,255,255,0.05)"}
                     stroke={col}
                     strokeDasharray={b.on ? undefined : "3 3"}
                   />

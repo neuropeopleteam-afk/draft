@@ -12,6 +12,15 @@ from tests.test_employer_matching import NEED
 from tests.test_fsp_cabinet import analyst_token
 
 
+def _bank_families() -> int:
+    """Размер банка — из самого банка: число семейств меняется вместе с банком (403 → 1504 на 20.10)."""
+    from assessment_bank import load_specs
+
+    n = len(load_specs())
+    assert n >= 403  # банк не должен уменьшаться ниже прежнего объёма
+    return n
+
+
 def _need(client, te, text=NEED) -> dict:
     r = client.post("/api/employer/needs", json={"text": text}, headers=H(te))
     assert r.status_code == 201, r.text
@@ -55,7 +64,7 @@ def test_tournament_from_need_flow(client):
     assert t["discipline"] == "Продуктовое программирование" and t["need_id"] == need["id"]
     assert "Прямой оффер в компанию с подтверждённой вилкой из потребности" in t["prize"]
     assert "топ-5 призёров" in t["prize"] and "очки в рейтинг ФСП" in t["prize"]
-    assert t["salary"]["source"] == "need" and len(t["tasks"]) == 3 and t["bank_size"] >= 403
+    assert t["salary"]["source"] == "need" and len(t["tasks"]) == 3 and t["bank_size"] == _bank_families()
     assert {"Python", "FastAPI", "PostgreSQL"} <= set(t["stack"])
     assert all("key" not in x and "seed" not in x for x in t["tasks"])
 
