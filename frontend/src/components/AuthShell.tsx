@@ -12,7 +12,7 @@ export function AuthShell({ title, subtitle, lead, children, footer }: { title: 
           <p className="text-3xl font-extrabold leading-tight">Категория по тесту, а не по резюме.</p>
           <p className="mt-4 text-white/70">Работодатель видит подтверждённые факты и приходит с конкретной зарплатой. Контакты — только с вашего согласия.</p>
         </div>
-        <p className="relative text-sm text-white/50">Платформа подтверждённого ИТ-найма · команда Neuropeople</p>
+        <p className="relative text-sm text-white/50">Платформа подтверждённого ИТ-найма «Драфт» · команда Neuropeople (конкурсный прототип)</p>
       </aside>
       <main id="main" className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">

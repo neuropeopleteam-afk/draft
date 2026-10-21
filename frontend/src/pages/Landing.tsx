@@ -223,7 +223,7 @@ export default function Landing() {
           </ul>
 
           {/* Интерактивный голографический радар контура верификации (заполняет левую колонку вровень с правой витриной) */}
-          <FspHeroLiveRadar onTryInvite={tryInvite} onLiveAvatar={tryLiveAvatar} busyRole={busyRole} />
+          <FspHeroLiveRadar onTryInvite={tryInvite} busyRole={busyRole} />
         </div>
         <div className="min-w-0 space-y-4">
           <div className="hidden lg:block">
@@ -349,8 +349,9 @@ export default function Landing() {
                   {c.pair ? (
                     <LandingPair card={c} />
                   ) : (
-                    <span className="whitespace-nowrap text-2xl font-extrabold">
-                      {c.value} <span className="text-sm font-semibold np-accent">{plainMetricText(c.accent)}</span>
+                    <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                      <span className="whitespace-nowrap text-2xl font-extrabold">{c.value}</span>
+                      <span className="text-sm font-semibold leading-snug np-accent">{plainMetricText(c.accent)}</span>
                     </span>
                   )}
                 </dd>
@@ -493,11 +494,9 @@ function getRadarStages() {
 
 function FspHeroLiveRadar({
   onTryInvite,
-  onLiveAvatar,
   busyRole,
 }: {
   onTryInvite: () => void;
-  onLiveAvatar: () => void;
   busyRole: string | null;
 }) {
   const [active, setActive] = useState<number>(0);
@@ -571,20 +570,15 @@ function FspHeroLiveRadar({
       <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
         <button
           type="button"
-          onClick={onLiveAvatar}
-          disabled={busyRole === "avatar"}
-          className="np-btn-grad-sapphire px-4 py-2 text-xs"
-        >
-          {busyRole === "avatar" ? "Запускаем…" : "Живой ИИ-аватар"}
-        </button>
-        <button
-          type="button"
           onClick={onTryInvite}
           disabled={busyRole === "employer"}
-          className="np-btn-grad-violet px-4 py-2 text-xs"
+          className="np-btn-grad-sapphire px-4 py-2 text-xs"
         >
           Подборка работодателя
         </button>
+        <Link to="/validation" className="np-btn-grad-violet px-4 py-2 text-xs">
+          Протоколы и метрики →
+        </Link>
         <Link to="/demo/warroom" className="np-btn-grad-crimson px-4 py-2 text-xs">
           <span className="h-2 w-2 rounded-full bg-white animate-pulse" aria-hidden="true" />
           Боевой ИИ-Полигон

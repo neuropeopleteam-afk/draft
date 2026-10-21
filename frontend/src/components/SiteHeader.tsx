@@ -16,7 +16,7 @@ const NAV: [string, string][] = [
 
 const MOBILE_NAV: [string, string][] = [
   ...NAV,
-  ["/install", "На телефон / APK для Android"],
+  ["/install", "Мобильное приложение"],
   ["/api/docs", "Документация API"],
 ];
 
@@ -78,6 +78,7 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
           )}
         </nav>
         <div className="flex items-center gap-1.5 sm:gap-2.5 xl:gap-2">
+          <InstallAppButton premium={premium} />
           {juryTab && (
             <Link
               to="/demo"
@@ -171,8 +172,7 @@ export function SiteFooter({ premium = false }: { premium?: boolean }) {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <Link className={a} to="/pricing">Тарифы</Link>
           <Link className={a} to="/support">Помощь и поддержка</Link>
-          <Link className={a} to="/install">На телефон / APK для Android</Link>
-          <InstallAppButton premium={premium} />
+          <Link className={a} to="/install">Мобильное приложение</Link>
           {juryTab && <Link className={a} to="/demo">Демо для жюри</Link>}
           <a className={a} href="/api/docs">Документация API</a>
           <a className={a} href="/api/health">Статус сервиса</a>
@@ -186,7 +186,7 @@ export function SiteFooter({ premium = false }: { premium?: boolean }) {
           <Link className={a} to="/cookies">Cookie</Link>
           <Link className={a} to="/recommendations">Правила рекомендательных технологий</Link>
         </p>
-        <p className="mt-2">© 2026 команда Neuropeople · ИНН <реквизит> · ОГРН <реквизит> · <адрес> · Реестр операторов персональных данных Роскомнадзора, рег. № <реквизит> · <a className={a} href="mailto:<форма обратной связи>"><форма обратной связи></a></p>
+        <p className="mt-2">© 2026 Платформа «Драфт» · Оператор платформы — команда Neuropeople (конкурсный прототип) · Контакт — <Link className={a} to="/support">форма обратной связи</Link></p>
       </div>
     </footer>
   );
