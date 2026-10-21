@@ -1,0 +1,128 @@
+{
+ "generated_at": "2026-10-21 07:35:20",
+ "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 2 --out ../docs/bank/audit_2110.json",
+ "n_families": 1524,
+ "n_seeds": 20,
+ "seconds": 119.4,
+ "formats": {
+  "mcq_concept": 1234,
+  "predict_output": 85,
+  "open_answer": 57,
+  "find_bug": 67,
+  "choose_fix": 59,
+  "open_book_3step": 22
+ },
+ "generation_errors": {
+  "n_families": 0,
+  "families": {}
+ },
+ "grade_in_stem": {
+  "n_families": 0,
+  "families": []
+ },
+ "public_leak": {
+  "n_families": 0,
+  "families": {}
+ },
+ "key_constancy": {
+  "threshold": 0.8,
+  "n_families_at_or_above": 17,
+  "n_families_measured": 1467,
+  "families": {
+   "backend.django.form_fields_bug": 1.0,
+   "backend.kafka.partition_key_bug": 1.0,
+   "common.dist.fencing_token_bug": 1.0,
+   "data_eng.etl.csv_parse_bug": 1.0,
+   "data_eng.etl.tz_partition_bug": 1.0,
+   "data_ml.metrics.auc_pairwise_ties_bug": 1.0,
+   "devops.bash.pipefail_fix": 1.0,
+   "frontend.ts.typeof_null_guard_bug": 1.0,
+   "mobile.js.cursor_pagination_bug": 1.0,
+   "mobile.js.version_gate_bug": 1.0,
+   "mobile.push.fcm_message_mcq": 1.0,
+   "security.auth.password_storage_fix": 1.0,
+   "security.crypto.nonce_lifecycle_bug": 1.0,
+   "security.input.json_parser_bug": 1.0,
+   "security.web.cors_csrf_mcq": 1.0,
+   "qa.load.percentile_merge_mcq": 0.85,
+   "mobile.ios.appearance_mcq": 0.8
+  },
+  "by_format_mean": {
+   "mcq_concept": 0.1134,
+   "predict_output": 0.1047,
+   "find_bug": 0.3657,
+   "choose_fix": 0.1881,
+   "open_book_3step": 0.0705
+  }
+ },
+ "guess_attack": {
+  "all_numeric_choice": {
+   "n_variants": 22412,
+   "chance": 0.2032,
+   "best_heuristic": "closest_to_mean",
+   "best_accuracy": 0.2189,
+   "by_heuristic": {
+    "chance": 0.2032,
+    "median": 0.2043,
+    "closest_to_mean": 0.2189,
+    "min": 0.2,
+    "max": 0.2005,
+    "roundest": 0.1902,
+    "longest": 0.1994,
+    "cluster_center": 0.2047,
+    "series_exclusion": 0.2,
+    "series_all_out": 0.0
+   }
+  },
+  "forward": {
+   "n_variants": 7080,
+   "chance": 0.2,
+   "best_heuristic": "median",
+   "best_accuracy": 0.2,
+   "by_heuristic": {
+    "chance": 0.2,
+    "median": 0.2,
+    "closest_to_mean": 0.1857,
+    "min": 0.2,
+    "max": 0.2,
+    "roundest": 0.1697,
+    "longest": 0.1469,
+    "cluster_center": 0.2
+   }
+  },
+  "inverse": {
+   "n_variants": 13900,
+   "chance": 0.2,
+   "best_heuristic": "closest_to_mean",
+   "best_accuracy": 0.2269,
+   "by_heuristic": {
+    "chance": 0.2,
+    "median": 0.2004,
+    "closest_to_mean": 0.2269,
+    "min": 0.1988,
+    "max": 0.2004,
+    "roundest": 0.1981,
+    "longest": 0.2238,
+    "cluster_center": 0.2004,
+    "series_exclusion": 0.2,
+    "series_all_out": 0.0
+   }
+  },
+  "other": {
+   "n_variants": 1432,
+   "chance": 0.25,
+   "best_heuristic": "closest_to_mean",
+   "best_accuracy": 0.3052,
+   "by_heuristic": {
+    "chance": 0.25,
+    "median": 0.264,
+    "closest_to_mean": 0.3052,
+    "min": 0.2109,
+    "max": 0.2046,
+    "roundest": 0.2154,
+    "longest": 0.2232,
+    "cluster_center": 0.2703
+   }
+  }
+ }
+}
