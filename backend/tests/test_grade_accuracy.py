@@ -190,7 +190,7 @@ def test_grade_accuracy_endpoint(client):
 # ------------------------------------------------------------------ чистка пула (ASSESSMENT_WEAK_EXCLUDE)
 
 def test_weak_exclude_flag(monkeypatch):
-    """Флаг выключен — пул как раньше; включён — 26 слабых по панели семейств не выдаются (один список с симуляцией)."""
+    """Флаг выключен — пул как раньше; включён — 21 слабое по панели семейство не выдаётся (один список с симуляцией)."""
     from types import SimpleNamespace as NS
 
     from app.modules.assessment import weak_pool
@@ -198,7 +198,8 @@ def test_weak_exclude_flag(monkeypatch):
     assert not get_settings().assessment_weak_exclude
     assert weak_pool.weak_excluded() == frozenset()
     assert weak_pool.weak_excluded(NS(assessment_weak_exclude=True)) == weak_pool.WEAK_FAMILIES
-    assert len(weak_pool.WEAK_FAMILIES) == 26 and gs.WEAK_FAMILIES is weak_pool.WEAK_FAMILIES
+    # 21 = 26 − 5 семейств, выведенных из банка по форме ключа 21.10 (А3): список — только семейства банка
+    assert len(weak_pool.WEAK_FAMILIES) == 21 and gs.WEAK_FAMILIES is weak_pool.WEAK_FAMILIES
     from app.modules.validation import sim
 
     ids = {i.family_id for i in sim.make_pool(1)}
