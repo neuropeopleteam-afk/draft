@@ -333,3 +333,150 @@ def audit_code_mutations(seed: int = 1, family_ids: list[str] | None = None) -> 
         "by_format": by_format,
         "families": [asdict(r) for r in fam_reports.values()],
     }
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Честный мутационный самоконтроль (А3, 21.10.2026).
+#
+# Прежний audit_code_mutations давал 100 % «убитых» по построению: мутант «пропуск ветки» заменял в обвязке
+# RESULT: PASS на RESULT: FAIL, мутант «порча вывода» дописывал лишнюю строку, выживший мутант «добивался строгим
+# искажением», а недоступный исполнитель считался убийством. Это проверка обвязки, а не силы тестов.
+#
+# Здесь мутируется ТОЛЬКО эталонное решение (часть программы до тестов), тесты не трогаются. Мутант убит, если
+# тесты задания его отвергли (ошибка исполнения, таймаут или RESULT: FAIL). Выживший мутант — либо слабый тест,
+# либо эквивалентный мутант (автоматически не отличить; считаем выжившим — консервативно). Недоступный исполнитель
+# исключается из знаменателя. Плюс две «настоящие» проверки ключа: код с известным дефектом (find_bug) и неверные
+# варианты исправления (choose_fix, шаг 2 open_book_3step) должны тестами отвергаться.
+# ---------------------------------------------------------------------------------------------------------------
+
+_SPLIT = {"python": "\n\n\ndef __bank_tests__():", "node": "\n\n;(async () => {", "javascript": "\n\n;(async () => {"}
+_OPS_PY = [(r"<=", "<"), (r">=", ">"), (r"(?<![<>=!])<(?![=<])", "<="), (r"(?<![<>=!-])>(?![=>])", ">="),
+           (r"==", "!="), (r"!=", "=="), (r" \+ ", " - "), (r" - ", " + "), (r" \* ", " // "),
+           (r"\band\b", "or"), (r"\bor\b", "and"), (r"\bTrue\b", "False"), (r"\bFalse\b", "True"),
+           (r"(?<![\w.])(\d+)(?![\w.])", None)]
+_OPS_JS = [(r"<=", "<"), (r">=", ">"), (r"(?<![<>=!])<(?![=<])", "<="), (r"(?<![<>=!-])>(?![=>])", ">="),
+           (r"===", "!=="), (r"!==", "==="), (r" \+ ", " - "), (r" - ", " + "), (r"&&", "||"), (r"\|\|", "&&"),
+           (r"\btrue\b", "false"), (r"\bfalse\b", "true"), (r"(?<![\w.])(\d+)(?![\w.])", None)]
+
+
+def _in_string(line: str, pos: int) -> bool:
+    before = line[:pos]
+    return before.count("'") % 2 == 1 or before.count('"') % 2 == 1 or before.lstrip().startswith(("#", "//"))
+
+
+def solution_mutants(code: str, runner: str, limit: int = 8) -> list[tuple[str, str]]:
+    """Мутанты эталонного решения: (описание, код). Только вне строк и комментариев, равномерно по коду."""
+    ops = _OPS_PY if runner == "python" else _OPS_JS
+    cands: list[tuple[str, str]] = []
+    lines = code.split("\n")
+    for li, line in enumerate(lines):
+        if not line.strip() or line.lstrip().startswith(("#", "//", "import ", "from ", "def ", "class ", "@")):
+            continue
+        for pat, rep in ops:
+            for m in re.finditer(pat, line):
+                if _in_string(line, m.start()):
+                    continue
+                if rep is None:
+                    new_tok = str(int(m.group(1)) + 1)
+                    desc = f"строка {li + 1}: {m.group(1)} → {new_tok}"
+                else:
+                    new_tok = rep
+                    desc = f"строка {li + 1}: «{m.group(0).strip()}» → «{rep.strip()}»"
+                nl = line[:m.start()] + new_tok + line[m.end():]
+                if nl != line:
+                    cands.append((desc, "\n".join(lines[:li] + [nl] + lines[li + 1:])))
+    if len(cands) <= limit:
+        return cands
+    step = len(cands) / limit
+    return [cands[int(i * step)] for i in range(limit)]
+
+
+def audit_solution_mutations(seeds: tuple[int, ...] = (1,), family_ids: list[str] | None = None,
+                             limit: int = 8) -> dict[str, Any]:
+    """Мутационный самоконтроль тестов кодовых заданий: мутанты решения, тесты без изменений."""
+    from .registry import generate, load_specs
+    specs = load_specs()
+    fids = family_ids or sorted(f for f, s in specs.items() if s.format in ("find_bug", "choose_fix", "open_book_3step"))
+    jobs: list[tuple[str, str, Check]] = []   # (fid, kind, check)
+    unsupported: dict[str, str] = {}
+    for fid in fids:
+        fmt = specs[fid].format
+        for seed in seeds:
+            v = generate(fid, seed)
+            checks = v.meta.checks
+            try:
+                if fmt == "find_bug":
+                    ref = next(c for c in checks if c.expect == "pass")
+                    bad = [c for c in checks if c.expect == "fail"]
+                else:
+                    prefix = "option:" if fmt == "choose_fix" else "step2:"
+                    kid = v.answer_key.value if fmt == "choose_fix" else v.answer_key.value["2"]
+                    ref = next(c for c in checks if c.name == f"{prefix}{kid}")
+                    bad = [c for c in checks if c.name.startswith(prefix) and c.name != f"{prefix}{kid}"]
+            except (StopIteration, KeyError, TypeError):
+                unsupported[fid] = "нет эталонной проверки"
+                continue
+            jobs.append((fid, "ref", ref))
+            for b in bad:  # известный дефект / неверное исправление — тестами должен отвергаться
+                jobs.append((fid, "known_bad", Check(name="known_bad", runner=b.runner, program=b.program,
+                                                     files=b.files, expect="pass", embeds_display_code=False)))
+            marker = _SPLIT.get(ref.runner)
+            if not marker or marker not in ref.program:
+                unsupported.setdefault(fid, f"мутации решения для исполнителя {ref.runner} не поддержаны")
+                continue
+            code, tests = ref.program.split(marker, 1)
+            for desc, mcode in solution_mutants(code, ref.runner, limit):
+                jobs.append((fid, "mutant:" + desc, Check(name="mutant", runner=ref.runner,
+                                                          program=mcode + marker + tests, files=ref.files,
+                                                          expect="pass", embeds_display_code=False)))
+    results = run_checks([c for _, _, c in jobs]) if jobs else []
+    fam: dict[str, dict[str, Any]] = {}
+    for (fid, kind, chk), res in zip(jobs, results):
+        f = fam.setdefault(fid, {"format": specs[fid].format, "ref_ok": True, "known_bad": 0, "known_bad_rejected": 0,
+                                 "mutants": 0, "killed": 0, "unavailable": 0, "survivors": []})
+        if res.status == "unavailable":
+            f["unavailable"] += 1
+            continue
+        passed = _is_ref_ok(chk, res.status, res.stdout)
+        if kind == "ref":
+            f["ref_ok"] = f["ref_ok"] and passed
+        elif kind == "known_bad":
+            f["known_bad"] += 1
+            f["known_bad_rejected"] += int(not passed)
+        else:
+            f["mutants"] += 1
+            if passed:
+                if len(f["survivors"]) < 3:
+                    f["survivors"].append(kind.split(":", 1)[1])
+            else:
+                f["killed"] += 1
+    tot_m = sum(f["mutants"] for f in fam.values())
+    tot_k = sum(f["killed"] for f in fam.values())
+    kb = sum(f["known_bad"] for f in fam.values())
+    kbr = sum(f["known_bad_rejected"] for f in fam.values())
+    by_format: dict[str, dict[str, Any]] = {}
+    for f in fam.values():
+        b = by_format.setdefault(f["format"], {"families": 0, "mutants": 0, "killed": 0, "known_bad": 0,
+                                               "known_bad_rejected": 0})
+        b["families"] += 1
+        for k in ("mutants", "killed", "known_bad", "known_bad_rejected"):
+            b[k] += f[k]
+    for b in by_format.values():
+        b["kill_rate"] = round(b["killed"] / b["mutants"], 4) if b["mutants"] else None
+        b["known_bad_reject_rate"] = round(b["known_bad_rejected"] / b["known_bad"], 4) if b["known_bad"] else None
+    weak = sorted(((fid, f["killed"] / f["mutants"]) for fid, f in fam.items() if f["mutants"]), key=lambda x: x[1])
+    return {
+        "method": ("мутанты эталонного решения (сравнения, ±1 к числу, + ↔ −, and ↔ or, True ↔ False) вне строк и "
+                   "комментариев, тесты задания без изменений; выживший мутант не «добивается»; недоступный "
+                   "исполнитель — вне знаменателя; эквивалентные мутанты не отделяются (оценка консервативная)"),
+        "seeds": list(seeds), "mutants_per_variant_max": limit,
+        "n_families": len(fam), "n_ref_ok": sum(f["ref_ok"] for f in fam.values()),
+        "n_mutants": tot_m, "n_killed": tot_k, "mutation_kill_rate": round(tot_k / tot_m, 4) if tot_m else None,
+        "n_known_bad": kb, "n_known_bad_rejected": kbr,
+        "known_bad_reject_rate": round(kbr / kb, 4) if kb else None,
+        "unsupported_runner_families": len({f for f, why in unsupported.items() if "исполнителя" in why}),
+        "by_format": by_format,
+        "weakest_families": [{"family_id": fid, "kill_rate": round(r, 3), "survivors": fam[fid]["survivors"]}
+                             for fid, r in weak[:25]],
+        "families_ref_failed": sorted(fid for fid, f in fam.items() if not f["ref_ok"]),
+    }

@@ -1,42 +1,274 @@
 {
-  "seed": 1,
-  "n_code_families": 493,
-  "n_ref_passed": 493,
-  "ref_pass_rate": 1.0,
-  "n_mutants": 1972,
-  "n_killed": 1972,
-  "mutation_kill_rate": 1.0,
+  "method": "мутанты эталонного решения (сравнения, ±1 к числу, + ↔ −, and ↔ or, True ↔ False) вне строк и комментариев, тесты задания без изменений; выживший мутант не «добивается»; недоступный исполнитель — вне знаменателя; эквивалентные мутанты не отделяются (оценка консервативная)",
+  "seeds": [
+    1
+  ],
+  "mutants_per_variant_max": 8,
+  "n_families": 148,
+  "n_ref_ok": 148,
+  "n_mutants": 448,
+  "n_killed": 307,
+  "mutation_kill_rate": 0.6853,
+  "n_known_bad": 294,
+  "n_known_bad_rejected": 294,
+  "known_bad_reject_rate": 1.0,
+  "unsupported_runner_families": 73,
   "by_format": {
-    "predict_output": {
-      "families": 125,
-      "mutants": 500,
-      "killed": 500,
-      "kill_rate": 1.0
-    },
     "find_bug": {
-      "families": 127,
-      "mutants": 508,
-      "killed": 508,
-      "kill_rate": 1.0
+      "families": 67,
+      "mutants": 180,
+      "killed": 117,
+      "known_bad": 63,
+      "known_bad_rejected": 63,
+      "kill_rate": 0.65,
+      "known_bad_reject_rate": 1.0
     },
     "choose_fix": {
-      "families": 139,
-      "mutants": 556,
-      "killed": 556,
-      "kill_rate": 1.0
+      "families": 59,
+      "mutants": 227,
+      "killed": 150,
+      "known_bad": 165,
+      "known_bad_rejected": 165,
+      "kill_rate": 0.6608,
+      "known_bad_reject_rate": 1.0
     },
     "open_book_3step": {
-      "families": 62,
-      "mutants": 248,
-      "killed": 248,
-      "kill_rate": 1.0
-    },
-    "incident_sim": {
-      "families": 40,
-      "mutants": 160,
-      "killed": 160,
-      "kill_rate": 1.0
+      "families": 22,
+      "mutants": 41,
+      "killed": 40,
+      "known_bad": 66,
+      "known_bad_rejected": 66,
+      "kill_rate": 0.9756,
+      "known_bad_reject_rate": 1.0
     }
   },
-  "elapsed_s": 50.72
+  "weakest_families": [
+    {
+      "family_id": "security.session.fixation_bug",
+      "kill_rate": 0.0,
+      "survivors": [
+        "строка 7: 32 → 33",
+        "строка 19: 16 → 17",
+        "строка 20: «True» → «False»"
+      ]
+    },
+    {
+      "family_id": "mobile.js.cursor_pagination_bug",
+      "kill_rate": 0.125,
+      "survivors": [
+        "строка 2: «+» → «-»",
+        "строка 2: 1000 → 1001",
+        "строка 6: «<» → «<=»"
+      ]
+    },
+    {
+      "family_id": "frontend.js.closure_var",
+      "kill_rate": 0.167,
+      "survivors": [
+        "строка 2: «===» → «!==»",
+        "строка 2: «||» → «&&»",
+        "строка 2: 0 → 1"
+      ]
+    },
+    {
+      "family_id": "security.auth.password_storage_fix",
+      "kill_rate": 0.167,
+      "survivors": [
+        "строка 6: 16384 → 16385",
+        "строка 7: 8 → 9",
+        "строка 7: 5 → 6"
+      ]
+    },
+    {
+      "family_id": "common.dist.outbox_fix",
+      "kill_rate": 0.2,
+      "survivors": [
+        "строка 10: 0 → 1",
+        "строка 13: 1 → 2",
+        "строка 14: «==» → «!=»"
+      ]
+    },
+    {
+      "family_id": "backend.arch.principal_retry_policy_fix",
+      "kill_rate": 0.25,
+      "survivors": [
+        "строка 3: 3 → 4",
+        "строка 5: 20 → 21",
+        "строка 28: «+» → «-»"
+      ]
+    },
+    {
+      "family_id": "frontend.js.abort_fetch_fix",
+      "kill_rate": 0.25,
+      "survivors": [
+        "строка 1: 0 → 1",
+        "строка 8: «!==» → «===»",
+        "строка 12: «||» → «&&»"
+      ]
+    },
+    {
+      "family_id": "mobile.js.background_timer_bug",
+      "kill_rate": 0.25,
+      "survivors": [
+        "строка 4: «-» → «+»",
+        "строка 4: 1 → 2",
+        "строка 20: 60 → 61"
+      ]
+    },
+    {
+      "family_id": "security.input.json_parser_bug",
+      "kill_rate": 0.25,
+      "survivors": [
+        "строка 3: 4096 → 4097",
+        "строка 6: «>» → «>=»",
+        "строка 11: «or» → «and»"
+      ]
+    },
+    {
+      "family_id": "security.crypto.hmac_canonical_bug",
+      "kill_rate": 0.333,
+      "survivors": [
+        "строка 6: 3600 → 3601",
+        "строка 10: «>» → «>=»",
+        "строка 12: «>» → «>=»"
+      ]
+    },
+    {
+      "family_id": "backend.arch.outbox_relay_fix",
+      "kill_rate": 0.375,
+      "survivors": [
+        "строка 11: 0 → 1",
+        "строка 17: 1 → 2",
+        "строка 18: «and» → «or»"
+      ]
+    },
+    {
+      "family_id": "backend.async.missing_await_bug",
+      "kill_rate": 0.375,
+      "survivors": [
+        "строка 3: 3 → 4",
+        "строка 5: 80 → 81",
+        "строка 9: 0 → 1"
+      ]
+    },
+    {
+      "family_id": "frontend.arch.lead_flag_rollout_fix",
+      "kill_rate": 0.375,
+      "survivors": [
+        "строка 4: «false» → «true»",
+        "строка 4: 50 → 51",
+        "строка 9: «+» → «-»"
+      ]
+    },
+    {
+      "family_id": "frontend.js.async_foreach_fix",
+      "kill_rate": 0.375,
+      "survivors": [
+        "строка 2: 0 → 1",
+        "строка 7: «<» → «<=»",
+        "строка 7: 0 → 1"
+      ]
+    },
+    {
+      "family_id": "mobile.js.offline_queue_fix",
+      "kill_rate": 0.375,
+      "survivors": [
+        "строка 2: 0 → 1",
+        "строка 5: «<» → «<=»",
+        "строка 5: 2 → 3"
+      ]
+    },
+    {
+      "family_id": "backend.arch.single_flight_fix",
+      "kill_rate": 0.4,
+      "survivors": [
+        "строка 14: «>» → «>=»",
+        "строка 15: 0 → 1",
+        "строка 23: «+» → «-»"
+      ]
+    },
+    {
+      "family_id": "backend.arch.lead_idempotency_fix",
+      "kill_rate": 0.5,
+      "survivors": [
+        "строка 5: 48 → 49",
+        "строка 6: 60 → 61",
+        "строка 21: «>» → «>=»"
+      ]
+    },
+    {
+      "family_id": "backend.db.transaction_fix",
+      "kill_rate": 0.5,
+      "survivors": [
+        "строка 8: «<» → «<=»",
+        "строка 8: 0 → 1"
+      ]
+    },
+    {
+      "family_id": "frontend.js.memoize_selector_bug",
+      "kill_rate": 0.5,
+      "survivors": [
+        "строка 2: «===» → «!==»",
+        "строка 2: «||» → «&&»",
+        "строка 2: 0 → 1"
+      ]
+    },
+    {
+      "family_id": "mobile.js.double_submit_fix",
+      "kill_rate": 0.5,
+      "survivors": [
+        "строка 2: «false» → «true»",
+        "строка 5: 0 → 1",
+        "строка 5: 3 → 4"
+      ]
+    },
+    {
+      "family_id": "mobile.js.token_refresh_fix",
+      "kill_rate": 0.5,
+      "survivors": [
+        "строка 5: «<» → «<=»",
+        "строка 11: «||» → «&&»",
+        "строка 12: 1 → 2"
+      ]
+    },
+    {
+      "family_id": "mobile.js.version_gate_bug",
+      "kill_rate": 0.5,
+      "survivors": [
+        "строка 5: «<» → «<=»",
+        "строка 6: 0 → 1",
+        "строка 7: 1 → 2"
+      ]
+    },
+    {
+      "family_id": "security.auth.token_audience_bug",
+      "kill_rate": 0.5,
+      "survivors": [
+        "строка 15: 1 → 2",
+        "строка 20: «<=» → «<»"
+      ]
+    },
+    {
+      "family_id": "backend.cache.invalidation_bug",
+      "kill_rate": 0.625,
+      "survivors": [
+        "строка 1: 12 → 13",
+        "строка 2: 31 → 32",
+        "строка 2: 5800 → 5801"
+      ]
+    },
+    {
+      "family_id": "backend.cache.key_params_bug",
+      "kill_rate": 0.625,
+      "survivors": [
+        "строка 1: 30 → 31",
+        "строка 2: 23 → 24",
+        "строка 2: 6100 → 6101"
+      ]
+    }
+  ],
+  "families_ref_failed": [],
+  "elapsed_s": 16.1,
+  "generated_at": "2026-10-21 07:08:24",
+  "recompute": "python3 tools/bank_mutation_check.py --seeds 1 --limit 8"
 }
