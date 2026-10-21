@@ -1,0 +1,87 @@
+{
+ "source": "docs/NUMBERS.json",
+ "numbers_generated_at": "2026-10-20T17:47:52Z",
+ "numbers_git_commit": "6229b82f",
+ "recompute_all": "python3 tools/publish/gen_numbers.py",
+ "facts": {
+  "bank_families": {
+   "text": "1 504",
+   "key": "bank.families",
+   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 1504,
+   "kn": "",
+   "ci": "",
+   "label": "семейств заданий в банке",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_variants": {
+   "text": "30 080",
+   "key": "bank.unique_variants_20seeds",
+   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 30080,
+   "kn": "",
+   "ci": "",
+   "label": "уникальных вариантов на проверке",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_checks": {
+   "text": "10 702",
+   "key": "bank.checks",
+   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 10702,
+   "kn": "",
+   "ci": "",
+   "label": "автоматических проверок ответов",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_checks_failed": {
+   "text": "0",
+   "key": "bank.checks_failed",
+   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 0,
+   "kn": "",
+   "ci": "",
+   "label": "проверок с ошибкой",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_directions": {
+   "text": "10",
+   "key": "bank.directions",
+   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 10,
+   "kn": "",
+   "ci": "",
+   "label": "направлений",
+   "group": "bank",
+   "basis": "проверка банка"
+  }
+ },
+ "missing": [
+  "bank_practical",
+  "bank_seeds",
+  "verdict_accuracy",
+  "cheat_bots_present",
+  "match_p5",
+  "hh_direction",
+  "ac_filter",
+  "fsp_documents",
+  "load_p95"
+ ],
+ "repo": {
+  "grade_change_interval_days": 90,
+  "retake_same_grade_days": 30,
+  "invitation_cooldown_days": 30,
+  "probe_time_limit_s": 900,
+  "api_paths": 394,
+  "api_operations": 422
+ }
+}
