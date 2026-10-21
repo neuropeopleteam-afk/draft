@@ -360,8 +360,8 @@ def cancel(cup_id: uuid.UUID, user: User = Depends(employer), db: Session = Depe
 # ------------------------------------------------------------------ кандидат
 
 def _sees(cup: Cup, user: User) -> bool:
-    """Кубок демо жюри виден только кандидатам своей песочницы; кубки платформы — всем."""
-    return cup.jury_scope is None or cup.jury_scope == jury_scope.key_of(user.email)
+    """Кубок демо жюри виден только кандидатам своей песочницы; демо-кубки — только демо-персонам."""
+    return jury_scope.demo_visible(cup, user)
 
 
 def _cand_cup(db: Session, user: User, cup_id: uuid.UUID) -> Cup:

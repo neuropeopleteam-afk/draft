@@ -121,9 +121,25 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
     </div>
   );
 
+function plainClaim(s: string): string {
+  return s
+    .replace(/\bP@5\b/g, "точность первых 5 кандидатов")
+    .replace(/\bnDCG@10\b/g, "качество порядка в топ-10")
+    .replace(/\bMRR\b/g, "позиция первого подходящего")
+    .replace(/\bSPRT\b/g, "последовательный критерий останова")
+    .replace(/\bIRT\b/g, "адаптивная модель");
+}
+
   const passportBtn = (  // KF1 «Паспорт-щит»: QR демо-кандидата на экран — эксперт сканирует телефоном и видит проверку подписи
-    <button type="button" className="np-btn-ghost px-4 py-2 text-sm disabled:opacity-60" disabled={off} onClick={() => setQr(true)} data-testid="jury-passport-qr">
-      Показать QR паспорта (Ed25519)
+    <button
+      type="button"
+      className="np-btn-ghost px-4 py-2 text-sm disabled:opacity-60"
+      disabled={off}
+      onClick={() => setQr(true)}
+      data-testid="jury-passport-qr"
+      title="Как устроено: асимметричная цифровая подпись паспорта грейда Ed25519 по открытому ключу JWKS"
+    >
+      Показать QR цифрового паспорта
     </button>
   );
 
@@ -135,9 +151,9 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
     <div className="mt-5 grid gap-4 border-t pt-5 np-border md:grid-cols-2" data-testid="jury-split-tracks">
       <div className="rounded-2xl border border-indigo-400/30 bg-indigo-950/20 p-4">
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-indigo-300">Маршрут А · Продуктовое и бизнес-жюри (3–5 мин)</span>
-        <h3 className="mt-1 text-base font-extrabold np-text">Продукт, подбор с объяснением, торг по ЗП, ФСП и ATS</h3>
+        <h3 className="mt-1 text-base font-extrabold np-text">Продукт, подбор с объяснением, торг по зарплате и ФСП</h3>
         <p className="mt-1 text-xs leading-relaxed np-muted">
-          Разбор вакансии, приглашение с зарплатной вилкой и встречным торгом в защищённом чате, сборка команды от 2 до 10 человек и боевая интеграция с «Поток Рекрутмент».
+          Разбор вакансии, приглашение с зарплатной вилкой и встречным торгом в защищённом чате, сборка команды от 2 до 10 человек и передача в кадровую систему «Поток Рекрутмент».
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/needs", "prod_needs")} className="np-btn-primary px-3 py-1.5 text-xs">
@@ -150,7 +166,7 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
             3. Кабинет ФСП
           </button>
           <button type="button" disabled={!!busy} onClick={() => enter("employer", "/employer/ats", "prod_ats")} className="np-btn-ghost px-3 py-1.5 text-xs">
-            4. ATS «Поток» и hh.ru
+            4. Кадровая система «Поток»
           </button>
         </div>
       </div>
@@ -162,23 +178,33 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link to="/demo/warroom" className="np-btn-primary px-3 py-1.5 text-xs">
-            1. Боевой ИИ-Полигон (/demo/warroom)
+            1. Боевой ИИ-Полигон
           </Link>
           <Link to="/validation" className="np-btn-ghost px-3 py-1.5 text-xs">
-            2. Валидация банка (/validation)
+            2. Валидация банка
           </Link>
           <Link to="/criteria" className="np-btn-ghost px-3 py-1.5 text-xs">
-            3. Сверка с ТЗ (/criteria)
+            3. Сверка с ТЗ
           </Link>
-          <button type="button" disabled={off} onClick={() => setQr(true)} className="np-btn-ghost px-3 py-1.5 text-xs">
-            4. Криптопаспорт Ed25519
+          <button
+            type="button"
+            disabled={off}
+            onClick={() => setQr(true)}
+            className="np-btn-ghost px-3 py-1.5 text-xs"
+            title="Как устроено: асимметричная подпись Ed25519"
+          >
+            4. Цифровой паспорт грейда
           </button>
         </div>
       </div>
       <div className="rounded-xl border border-emerald-400/25 bg-emerald-950/15 px-4 py-3 text-xs leading-relaxed np-muted md:col-span-2" data-testid="jury-numbers-banner">
         <b className="np-text">{banner.headline_ru}</b>
         <ul className="mt-1.5 list-disc space-y-1 pl-4">
-          {claimLines.map((c) => <li key={c}>{c}</li>)}
+          {claimLines.map((c) => (
+            <li key={String(c)} title={`Точная формулировка метрик: ${String(c)}`}>
+              {plainClaim(String(c))}
+            </li>
+          ))}
         </ul>
       </div>
     </div>
@@ -256,7 +282,7 @@ export function JuryPanel({ compact = false }: { compact?: boolean }) {
         <div className="mt-8 grid gap-4 border-t pt-6 np-border md:grid-cols-3" aria-label="Сценарии проверки">
           <Scenario n="01" title={`Проверка за ${QUICK_MINUTES} минут`} text={`${steps.length} шагов главного сценария с таймером-ориентиром и критерием ТЗ у каждого шага.`}
             action={<button type="button" className="np-link" disabled={!!busy} onClick={quickStart}>Запустить проводник</button>} />
-          <Scenario n="02" title="Полный справочник" text={`${STEPS.length} шагов: регистрация, полный тест, паспорт грейда, кубки, переписка, ATS, кабинет ФСП, второй фактор.`}
+          <Scenario n="02" title="Полный справочник" text={`${STEPS.length} шагов: регистрация, полный тест, паспорт грейда, кубки, переписка, передача в кадровую систему, кабинет ФСП, двухэтапный вход.`}
             action={<button type="button" className="np-link" onClick={startFull}>Начать с регистрации</button>} />
           <Scenario n="03" title="Своя роль" text="Войдите сразу кандидатом, работодателем, экспертом разметки или аналитиком ФСП — без регистрации."
             action={<a href="#jury-roles-anchor" className="np-link">К выбору роли</a>} />
@@ -328,9 +354,9 @@ function PassportQrModal({ onClose }: { onClose: () => void }) {
         className="max-h-[94vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 text-[#1B1340] shadow-2xl sm:p-8" data-testid="jury-passport-modal">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Паспорт-щит · подпись Ed25519</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-700" title="Как устроено: асимметричная подпись Ed25519">Паспорт-щит · защищённая цифровая подпись</p>
             <h2 id="jury-qr-title" className="mt-1 text-2xl font-extrabold tracking-tight">Наведите камеру телефона на QR</h2>
-            <p className="mt-1 text-sm text-[#1B1340]/70">Паспорт грейда демо-кандидата «Мария Королёва»: страница проверки откроется без входа и пароля, подпись проверяется по открытому ключу JWKS.</p>
+            <p className="mt-1 text-sm text-[#1B1340]/70" title="Как считается: проверка по открытому ключу JWKS">Паспорт грейда демо-кандидата «Мария Королёва»: страница проверки откроется без входа и пароля, подпись проверяется по открытому ключу платформы.</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Закрыть" className="-mr-2 -mt-2 flex h-10 w-10 items-center justify-center rounded-xl text-[#1B1340]/60 hover:bg-[#F3F2FB]">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -359,11 +385,11 @@ function PassportQrModal({ onClose }: { onClose: () => void }) {
               <div className="flex flex-wrap gap-2 pt-1">
                 {p && <button type="button" className="rounded-xl bg-[#E0004C] px-4 py-2 text-sm font-bold text-white hover:bg-[#c00042] disabled:opacity-60" disabled={!!busy || !token} onClick={() => void act("revoke")} data-testid="jury-passport-revoke">{busy === "revoke" ? "Отзываем…" : "Отозвать паспорт"}</button>}
                 <button type="button" className="rounded-xl bg-[#1B1340] px-4 py-2 text-sm font-bold text-white hover:bg-[#2a1f5c] disabled:opacity-60" disabled={!!busy || !token || (!p && !d.eligible)} onClick={() => void act("reissue")} data-testid="jury-passport-reissue">{busy === "reissue" ? "Выпускаем…" : "Выпустить заново"}</button>
-                <a className="rounded-xl border border-[#1B1340]/20 px-4 py-2 text-sm font-semibold hover:bg-[#F3F2FB]" href="/api/.well-known/jwks.json" target="_blank" rel="noreferrer">Открытый ключ JWKS</a>
+                <a className="rounded-xl border border-[#1B1340]/20 px-4 py-2 text-sm font-semibold hover:bg-[#F3F2FB]" href="/api/.well-known/jwks.json" target="_blank" rel="noreferrer" title="Технический адрес открытого ключа JWKS (Ed25519)">Открытый ключ проверки</a>
               </div>
-              <p className="rounded-xl bg-[#F3F2FB] px-3 py-2 text-xs leading-relaxed text-[#1B1340]/80">
-                HMAC-токен может проверить только выдавший сервер; асимметричную подпись Ed25519 проверяет любой по открытому ключу JWKS.
-                Отзыв виден сразу: старая ссылка показывает «Отозван», новая ссылка — новый паспорт с той же подписью платформы.
+              <p className="rounded-xl bg-[#F3F2FB] px-3 py-2 text-xs leading-relaxed text-[#1B1340]/80" title="Техническая деталь: асимметричная подпись Ed25519 и реестр ключей JWKS вместо симметричного HMAC">
+                Обычный внутренний токен может проверить только выдавший сервер; цифровую подпись паспорта проверяет любая внешняя система по открытому ключу платформы.
+                Отзыв виден сразу: старая ссылка показывает «Отозван», новая ссылка — новый паспорт с подписью платформы.
               </p>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { Alert, DIRECTION_TITLES, Empty, Loading, Seg, catTitle, dtt, errText, n
 import { api } from "../lib/api";
 
 type Mode = "pending" | "llm" | "reviewed";
-const FORMAT: Record<string, string> = { open_answer: "Развёрнутый ответ", open_book_3step: "Open book, шаг 3 — объяснение" };
+const FORMAT: Record<string, string> = { open_answer: "Развёрнутый ответ", open_book_3step: "Практический разбор кода, шаг 3 — объяснение" };
 const MARKS = [{ v: 0, t: "0 — нет" }, { v: 0.5, t: "0,5 — частично" }, { v: 1, t: "1 — полностью" }];
 
 /** Экран эксперта-методиста: развёрнутые ответы «на проверке» и выборочная проверка оценок ИИ — по рубрике. */
@@ -18,7 +18,7 @@ export default function Expert() {
     <div className="max-w-4xl">
       <PageTitle
         title="Проверка развёрнутых ответов"
-        subtitle="Ответ оценивается по каждому критерию рубрики: 0, 0,5 или 1 — с весами критериев. Оценка эксперта сразу входит в результат теста; грейд принудительно не понижается."
+        subtitle="Это очередь проверки развёрнутых ответов: оцените каждое решение по критериям рубрики (0, 0,5 или 1), чтобы уточнить результат теста кандидата."
       />
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <Seg label="Очередь" value={mode} onChange={setMode} options={[
@@ -112,7 +112,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
         <div className="mt-3"><Alert kind="ok">
           {res?.review?.applied || it.method === "expert" ? "Оценка эксперта вошла в результат теста." : "Оценка сохранена рядом с оценкой модели."}
           {(res?.review?.llm_score ?? it.llm?.score) != null && ` Балл ${it.llm?.model_label ?? "модели"}: ${num(Number(res?.review?.llm_score ?? it.llm?.score))}.`}
-          {res?.recomputed && ` Результат пересчитан: θ = ${signed(res.theta)}, грейд ${res.confirmed ? "подтверждён" : "не подтверждён"}.`}
+          {res?.recomputed && ` Результат пересчитан: индекс уровня ${signed(res.theta)}, грейд ${res.confirmed ? "подтверждён" : "не подтверждён"}.`}
           {res && <button className="ml-2 font-semibold underline" onClick={onDone}>Обновить очередь</button>}
         </Alert></div>
       )}

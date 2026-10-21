@@ -36,57 +36,70 @@ def report(days: int | None = Days, user: User = Depends(analyst), db: Session =
     from app.modules.jury import scope as jury_scope
 
     _audit(user, "report", days)
-    # Н5: турниры «Компания × ФСП» под вакансии — отдельным списком (платформы и своей песочницы жюри, агрегаты)
+    inc_demo = jury_scope.sees_demo(user)
     return {
-        **an.report(db, days),
-        "regions_map": build_regions_map(db, days),
-        "tournaments": tournament.cabinet_list(db, jury_scope.key_of(user.email)),
+        **an.report(db, days, include_demo=inc_demo),
+        "regions_map": build_regions_map(db, days, include_demo=inc_demo),
+        "tournaments": tournament.cabinet_list(db, jury_scope.key_of(user.email), include_demo=inc_demo),
     }
 
 
 @router.get("/regions", summary="Карта талантов по регионам и федеральным округам РФ", responses=AUTH)
 def regions(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     from app.fsp_cabinet.regions import build_regions_map
+    from app.modules.jury import scope as jury_scope
 
     _audit(user, "regions", days)
-    return build_regions_map(db, days)
+    return build_regions_map(db, days, include_demo=jury_scope.sees_demo(user))
 
 
 @router.get("/overview", summary="Ключевые показатели", responses=AUTH)
 def overview(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "overview", days)
-    return an.overview(an.load(db, days))
+    return an.overview(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
 
 
 @router.get("/demand", summary="Спрос работодателей по категориям и навыкам", responses=AUTH)
 def demand(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "demand", days)
-    return an.demand(an.load(db, days))
+    return an.demand(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
 
 
 @router.get("/fsp-effect", summary="Какие дисциплины, разряды и результаты ФСП ведут к приглашениям и принятиям",
             responses=AUTH)
 def fsp_effect(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "fsp_effect", days)
-    return an.fsp_effect(an.load(db, days))
+    return an.fsp_effect(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
 
 
 @router.get("/salaries", summary="Реальные зарплатные вилки из приглашений по категориям", responses=AUTH)
 def salaries(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "salaries", days)
-    return an.salaries(an.load(db, days))
+    return an.salaries(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
 
 
 @router.get("/funnel", summary="Воронки «соревнование → приглашение → принятие»", responses=AUTH)
 def funnel(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "funnel", days)
-    return an.funnel(an.load(db, days))
+    return an.funnel(an.load(db, days, include_demo=jury_scope.sees_demo(user)))
 
 
 @router.get("/cups", summary="Кубки работодателей как мероприятия", responses=AUTH)
 def cups(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> list[dict]:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "cups", days)
-    return an.cups_section(an.load(db, days), db)
+    return an.cups_section(an.load(db, days, include_demo=jury_scope.sees_demo(user)), db)
 
 
 def _cell(v) -> str:
@@ -119,8 +132,10 @@ def export(section: str, days: int | None = Days, user: User = Depends(analyst),
     if section not in EXPORTS:
         raise api_error(404, "export_not_found", "Нет такого раздела выгрузки")
     _audit(user, f"export:{section}", days)
+    from app.modules.jury import scope as jury_scope
+
     rows_of, cols = EXPORTS[section]
-    rep = an.report(db, days)
+    rep = an.report(db, days, include_demo=jury_scope.sees_demo(user))
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
     w.writerow(cols)

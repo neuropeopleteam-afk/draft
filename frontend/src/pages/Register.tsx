@@ -121,6 +121,11 @@ export default function Register({ demoPreview = false }: { demoPreview?: boolea
   return (
     <AuthShell
       title="Регистрация"
+      subtitle={
+        isTourMode
+          ? "Это безопасный демонстрационный режим регистрации: проверьте шаги анкеты и нажмите кнопку отправки, чтобы сразу войти в готовый демо-кабинет без создания тестовой записи."
+          : "Это страница создания учётной записи: выберите роль кандидата или работодателя, заполните анкету и подтвердите почту 6-значным кодом."
+      }
       lead={<>Уже есть аккаунт? <Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Войти</Link></>}
     >
       {isTourMode ? (
