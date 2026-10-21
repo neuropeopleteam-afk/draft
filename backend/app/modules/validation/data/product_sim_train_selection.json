@@ -1,0 +1,187 @@
+{
+ "rule": "max точность итогового вердикта; p90 основной ≤ 60 мин, всего ≤ 85; при равенстве (0,5 п.п.) — меньше ложных подтверждений",
+ "phase": "train (TRAIN_SEEDS)",
+ "rows": [
+  {
+   "config": "C0",
+   "desc": "настройки стенда",
+   "env": {},
+   "n": 800,
+   "admissible": true,
+   "verdict_accuracy": 0.9075,
+   "false_confirm": 0.1366,
+   "false_reject": 0.0628,
+   "confident_share": 0.685,
+   "exact_grade": 0.7612,
+   "minutes_main_p90": 34.7,
+   "minutes_total_p90": 38.5,
+   "minutes_total_mean": 24.5,
+   "code_open_share": 0.215
+  },
+  {
+   "config": "C1",
+   "desc": "квота практических заданий и в дотестировании",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true"
+   },
+   "n": 800,
+   "admissible": true,
+   "verdict_accuracy": 0.9125,
+   "false_confirm": 0.0994,
+   "false_reject": 0.0795,
+   "confident_share": 0.6775,
+   "exact_grade": 0.765,
+   "minutes_main_p90": 36.8,
+   "minutes_total_p90": 42.0,
+   "minutes_total_mean": 26.5,
+   "code_open_share": 0.296
+  },
+  {
+   "config": "C2",
+   "desc": "C1 + порог подтверждения 0,8",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8"
+   },
+   "n": 800,
+   "admissible": true,
+   "verdict_accuracy": 0.9125,
+   "false_confirm": 0.0994,
+   "false_reject": 0.0795,
+   "confident_share": 0.6775,
+   "exact_grade": 0.765,
+   "minutes_main_p90": 36.8,
+   "minutes_total_p90": 42.0,
+   "minutes_total_mean": 26.5,
+   "code_open_share": 0.296
+  },
+  {
+   "config": "C3",
+   "desc": "C2 + z 1,64",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+    "ASSESSMENT_CLASSIFY_Z": "1.64"
+   },
+   "n": 800,
+   "admissible": true,
+   "verdict_accuracy": 0.9062,
+   "false_confirm": 0.1025,
+   "false_reject": 0.0879,
+   "confident_share": 0.65,
+   "exact_grade": 0.7662,
+   "minutes_main_p90": 39.9,
+   "minutes_total_p90": 45.6,
+   "minutes_total_mean": 30.7,
+   "code_open_share": 0.305
+  },
+  {
+   "config": "C4",
+   "desc": "C2 + SE-стоп 0,25",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+    "ASSESSMENT_SE_TARGET": "0.25"
+   },
+   "n": 800,
+   "admissible": true,
+   "verdict_accuracy": 0.8925,
+   "false_confirm": 0.1366,
+   "false_reject": 0.0879,
+   "confident_share": 0.7225,
+   "exact_grade": 0.76,
+   "minutes_main_p90": 47.7,
+   "minutes_total_p90": 53.1,
+   "minutes_total_mean": 31.5,
+   "code_open_share": 0.306
+  },
+  {
+   "config": "C5",
+   "desc": "C2 + до 20 заданий",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+    "ASSESSMENT_MAX_ITEMS": "20"
+   },
+   "n": 800,
+   "admissible": true,
+   "verdict_accuracy": 0.9213,
+   "false_confirm": 0.0901,
+   "false_reject": 0.0711,
+   "confident_share": 0.6625,
+   "exact_grade": 0.7738,
+   "minutes_main_p90": 36.3,
+   "minutes_total_p90": 41.9,
+   "minutes_total_mean": 26.4,
+   "code_open_share": 0.295
+  },
+  {
+   "config": "C6",
+   "desc": "C2 + порог второго этапа 0,5",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+    "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5"
+   },
+   "n": 800,
+   "admissible": true,
+   "verdict_accuracy": 0.91,
+   "false_confirm": 0.087,
+   "false_reject": 0.0921,
+   "confident_share": 0.6775,
+   "exact_grade": 0.7625,
+   "minutes_main_p90": 36.8,
+   "minutes_total_p90": 42.0,
+   "minutes_total_mean": 26.5,
+   "code_open_share": 0.296
+  },
+  {
+   "config": "C7",
+   "desc": "C2 + второй этап до 10 заданий",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+    "ASSESSMENT_TWO_STAGE_ITEMS": "10"
+   },
+   "n": 800,
+   "admissible": true,
+   "verdict_accuracy": 0.905,
+   "false_confirm": 0.1149,
+   "false_reject": 0.0816,
+   "confident_share": 0.6863,
+   "exact_grade": 0.765,
+   "minutes_main_p90": 36.8,
+   "minutes_total_p90": 42.3,
+   "minutes_total_mean": 26.7,
+   "code_open_share": 0.296
+  },
+  {
+   "config": "C8",
+   "desc": "комбинация лучших одиночных изменений",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+    "ASSESSMENT_MAX_ITEMS": "20",
+    "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5"
+   },
+   "n": 800,
+   "admissible": true,
+   "verdict_accuracy": 0.9187,
+   "false_confirm": 0.0776,
+   "false_reject": 0.0837,
+   "confident_share": 0.6637,
+   "exact_grade": 0.7712,
+   "minutes_main_p90": 36.3,
+   "minutes_total_p90": 41.9,
+   "minutes_total_mean": 26.4,
+   "code_open_share": 0.295
+  }
+ ],
+ "chosen": "C8",
+ "chosen_env": {
+  "ASSESSMENT_CODE_QUOTA_EXT": "true",
+  "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+  "ASSESSMENT_MAX_ITEMS": "20",
+  "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5"
+ }
+}

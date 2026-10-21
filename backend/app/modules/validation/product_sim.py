@@ -42,10 +42,14 @@ import zlib
 
 import numpy as np
 
-# Настройки стенда fsp-draft.ru (/opt/spectrek_fsp/app/.env на 21.10.2026; остальные — значения по умолчанию
-# app/core/config.py). Подставляются до импорта приложения, если не заданы в окружении.
+# Профиль стенда fsp-draft.ru: /opt/spectrek_fsp/app/.env на 21.10.2026 + настройки, выбранные на обучающих зёрнах
+# (product_sim_select.py → data/product_sim_train_selection.json; в .env.example — тот же блок). Остальные — значения
+# по умолчанию app/core/config.py. Подставляются до импорта приложения, если не заданы в окружении.
 STAND_ENV = {
-    "ASSESSMENT_CONFIRM_LEVEL": "0.65",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+    "ASSESSMENT_MAX_ITEMS": "20",
+    "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5",
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
     "GRADES_EXT_ENABLED": "true",
     "ASSESSMENT_TWO_STAGE_ENABLED": "true",
     "GRADES_EXT_REFINE_ITEMS": "10",
