@@ -29,6 +29,8 @@ SOURCES = {  # источник → файл расчёта и команда п
     # А4 (21.10): симуляция продукта (движок стенда на реальном банке) и боты через движок
     # итоговый прогон №2 (поправки №3–4): жёсткие условия, FINAL_SEEDS 4401–4410, N = 3 000, повтор и фиксированная форма
     "product": (DATA / "product_sim_final_calibrated.json", "make product-sim"),
+    # стандартные условия S-T (поправка №3): заголовок; жёсткие («product») — рядом, как проверка на прочность
+    "product_st": (DATA / "product_sim_st.json", "make product-sim"),
     "cheat": (DATA / "cheat_bots.json", "make cheat-bots"),
 }
 PERSONAS = {"candidate", "candidate_nofsp", "candidate_junior", "candidate_new", "employer", "expert", "fsp"}
@@ -43,11 +45,13 @@ def go(label: str, to: str, persona: str | None = None, need: str | None = None)
 
 
 def metric(src: str, path: str, label: str, fmt: str, anchor: str, ci: str | None = None,
-           vs: tuple[str, ...] | None = None, note: str | None = None) -> dict:
+           vs: tuple[str, ...] | None = None, note: str | None = None, pair: tuple[str, str, str] | None = None) -> dict:
     """Число из JSON расчёта: path — поле через точку («metrics.platform.p@5.mean»), ci — поле с [lo, hi] или
-    префикс с .lo/.hi; vs — (подпись, поле[, формат]) для сравнения; fmt — pct, pct1, num1, num2, num3, signed3."""
+    префикс с .lo/.hi; vs — (подпись, поле[, формат]) для сравнения; fmt — pct, pct1, num1, num2, num3, signed3;
+    pair — (подпись, источник, поле): то же число в других условиях (правило владельца: стандартные условия —
+    заголовок, жёсткие — всегда рядом)."""
     return {"kind": "metric", "src": src, "path": path, "label": label, "fmt": fmt, "anchor": anchor, "ci": ci,
-            "vs": vs, "note": note}
+            "vs": vs, "note": note, "pair": pair}
 
 
 def link(label: str, anchor: str) -> dict:
@@ -135,9 +139,10 @@ CRITERIA: list[dict] = [
           "do": [go("Повторяемость", "/validation#headline"),
                  go("Пройти тест самому дважды", "/candidate/express", "candidate_new")],
           "see": "Две независимые попытки одного кандидата без общих семейств заданий: тот же грейд и тот же вердикт.",
-          "proof": metric("product", "retest.kappa_w_quadratic", "κ с весами, две независимые попытки", "num3",
+          "proof": metric("product_st", "retest.kappa_w_quadratic", "κ с весами, две независимые попытки", "num3",
                           "/validation#headline",
-                          vs=("тот же грейд", "retest.exact_agreement.value", "pct1")),
+                          vs=("тот же грейд", "retest.exact_agreement.value", "pct1"),
+                          pair=("в жёстких условиях", "product", "retest.kappa_w_quadratic")),
           "limit": "Симуляция продукта: модельные кандидаты, не люди; повтор на людях — после калибровки."},
          {"tz": "дискриминативность заданий (насколько они разделяют слабых и сильных кандидатов)",
           "do": [go("D и r_pb семейств", "/validation#discrimination")],
@@ -148,17 +153,19 @@ CRITERIA: list[dict] = [
          {"tz": "соответствие результата экспертной оценке или эталонной разметке команды",
           "do": [go("Модельная панель (не люди)", "/validation#experts"), go("Разметить самому", "/expert", "expert")],
           "see": "Эталон — истинный уровень модельного кандидата: верный ли итоговый вердикт по заявке; разметка людьми — в сборе.",
-          "proof": metric("product", "summary.verdict_accuracy_final.value", "Верный вердикт по заявке (эталон — истинный уровень)",
+          "proof": metric("product_st", "summary.verdict_accuracy_final.value", "Верный вердикт по заявке (эталон — истинный уровень)",
                           "pct1", "/validation#headline", ci="summary.verdict_accuracy_final.ci95",
-                          vs=("точный грейд", "summary.exact_grade_final.value", "pct1")),
+                          vs=("точный грейд", "summary.exact_grade_final.value", "pct1"),
+                          pair=("в жёстких условиях", "product", "summary.verdict_accuracy_final.value")),
           "limit": "Эталон — истина симуляции продукта; согласие с экспертами-людьми не измерено."},
          {"tz": "корректность категоризации кандидатов по стеку, специализации и пройденным тестам",
           "do": [go("Категории Марии", "/candidate/category", "candidate"),
                  go("Поиск по категории", "/employer/search", "employer")],
           "see": "Категория «направление · грейд» только по тесту (T1); у Марии две специализации, у каждой свой тест.",
-          "proof": metric("product", "summary.false_confirm_among_overclaim.value", "Ложное подтверждение у завысивших заявку",
+          "proof": metric("product_st", "summary.false_confirm_among_overclaim.value", "Ложное подтверждение у завысивших заявку",
                           "pct1", "/validation#headline", ci="summary.false_confirm_among_overclaim.ci95",
-                          vs=("ложный отказ у соответствующих", "summary.false_reject_among_true.value", "pct1")),
+                          vs=("ложный отказ у соответствующих", "summary.false_reject_among_true.value", "pct1"),
+                          pair=("в жёстких условиях", "product", "summary.false_confirm_among_overclaim.value")),
           "limit": "Симуляция продукта: модельные кандидаты, не люди."},
          {"tz": "качество предложенной командой процедуры валидации и приведённых ею результатов",
           "do": [go("Точность решения по грейду", "/validation#headline"),
@@ -441,9 +448,19 @@ def resolve(spec: dict, db=None) -> dict:
         v = _get(d, spec["vs"][1])
         vs = ({"label": spec["vs"][0], "value": v, "fmt": spec["vs"][2] if len(spec["vs"]) > 2 else spec["fmt"]}
               if isinstance(v, (int, float)) else None)
-    return {"kind": "metric", "label": spec["label"], "fmt": spec["fmt"], "value": value, "ci": _ci(d, spec.get("ci")),
-            "vs": vs, "note": spec.get("note"), "anchor": spec["anchor"], "src": spec["src"], "path": spec["path"],
-            "signature": signature(spec["src"], d)}
+    pair = None
+    if spec.get("pair"):
+        lab, psrc, ppath = spec["pair"]
+        pd = _load(psrc)
+        pv = _get(pd, ppath) if pd and not pd.get("missing") else None
+        pair = ({"label": lab, "value": pv, "fmt": spec["fmt"], "src": psrc, "path": ppath,
+                 "signature": signature(psrc, pd)} if isinstance(pv, (int, float)) else None)
+    out = {"kind": "metric", "label": spec["label"], "fmt": spec["fmt"], "value": value, "ci": _ci(d, spec.get("ci")),
+           "vs": vs, "note": spec.get("note"), "anchor": spec["anchor"], "src": spec["src"], "path": spec["path"],
+           "signature": signature(spec["src"], d)}
+    if pair:
+        out["pair"] = pair
+    return out
 
 
 def _with_provenance(proof: dict) -> dict:
@@ -543,6 +560,8 @@ def _proof_text(p: dict) -> str:
         s = f"{p['label']}: **{fmt(p['value'], p['fmt'])}**"
         if p.get("ci"):
             s += f" (95 % ДИ {fmt(p['ci'][0], p['fmt'])} … {fmt(p['ci'][1], p['fmt'])})"
+        if p.get("pair"):  # стандартные условия — заголовок, жёсткие — рядом (правило владельца 21.10)
+            s += f" (стандартные условия; {p['pair']['label']} — {fmt(p['pair']['value'], p['pair'].get('fmt') or p['fmt'])})"
         if p.get("vs"):
             s += f"; {p['vs']['label']} — {fmt(p['vs']['value'], p['vs'].get('fmt') or p['fmt'])}"
         if p.get("note"):
