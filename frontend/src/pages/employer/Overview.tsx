@@ -126,7 +126,7 @@ export default function EmployerOverview() {
             <span className="btn-primary inline-flex !px-5 !py-2.5 text-xs font-bold">Собрать звено под ФОТ →</span>
           </div>
         </div>
-        <FspCabinet3DStage kind="core" badge="Звено 4×ФСП" sub="Подбор под бюджет ФОТ" />
+        <FspCabinet3DStage kind="core" badge="Команда из 4 ролей" sub="Подбор под бюджет ФОТ" />
       </Link>
       <InvitationFunnelWidget invitations={inv.data ?? []} />
       <section className="mt-8 space-y-3" data-testid="employer-overview-roi">

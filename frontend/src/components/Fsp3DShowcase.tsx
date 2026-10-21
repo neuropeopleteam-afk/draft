@@ -1,42 +1,59 @@
-import { useState, type MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import fspCrystalCore from "../assets/fsp-crystal-core.webp";
 import fspMedallion3d from "../assets/fsp-medallion-3d.webp";
-import { NUMBERS } from "../lib/numbers";
+import { fmtInt, NUMBERS } from "../lib/numbers";
 
 const getRegionsCount = (): number => (NUMBERS as any)?.fsp_facts?.regions ?? 89;
 const getRegionsClaim = (): string =>
   (NUMBERS as any)?.fsp_facts?.claim_ru ?? "89 действующих региональных представительств ФСП в России";
 
-/** Живая полоса телеметрии под шапкой главной страницы (в духе командного центра соревнований ФСП). */
+/** Строка ключевых показателей и правил под шапкой главной страницы (все цифры — из NUMBERS, статус — из /api/health). */
 export function FspPulseBar() {
   const regions = getRegionsCount();
+  const [healthOk, setHealthOk] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/health")
+      .then((r) => {
+        if (alive) setHealthOk(r.ok);
+      })
+      .catch(() => {
+        if (alive) setHealthOk(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <div
       className="fsp-pulse-bar"
       role="region"
-      aria-label="Живая телеметрия платформы и контура ФСП"
+      aria-label="Ключевые показатели и правила платформы"
       data-testid="fsp-pulse-bar"
     >
       <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-6 gap-y-1.5 px-4 py-2 sm:px-6">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[11.5px] font-medium">
-          <span className="inline-flex items-center gap-2">
-            <i className="fsp-pulse-dot" aria-hidden="true" />
-            <strong className="font-mono font-bold tracking-wide text-white">КОНТУР РФ (152-ФЗ):</strong>{" "}
-            <span className="text-[#B8B4FF]">ONLINE</span>
-          </span>
+          {healthOk && (
+            <span className="inline-flex items-center gap-2">
+              <i className="fsp-pulse-dot" aria-hidden="true" />
+              <strong className="font-mono font-bold tracking-wide text-white">Стенд работает</strong>
+            </span>
+          )}
           <span title={getRegionsClaim()}>
-            <strong className="font-mono font-bold tracking-wide text-white">РЕЕСТР ФСП:</strong>{" "}
-            <span className="text-[#DCE2FF]">{regions} РЕГИОНОВ</span>
+            <strong className="font-mono font-bold tracking-wide text-white">ФСП:</strong>{" "}
+            <span className="text-[#DCE2FF]">{regions} региональных представительств</span>
           </span>
           <span className="hidden sm:inline">
-            <strong className="font-mono font-bold tracking-wide text-white">БАНК ВЕРИФИКАЦИИ:</strong>{" "}
+            <strong className="font-mono font-bold tracking-wide text-white">Банк заданий:</strong>{" "}
             <span className="text-[#DCE2FF]">
-              {NUMBERS.bank.directions} НАПРАВЛЕНИЙ · {NUMBERS.bank.families} СЕМЕЙСТВ ЗАДАЧ
+              {NUMBERS.bank.directions} направлений · {fmtInt(NUMBERS.bank.families)} семейств задач
             </span>
           </span>
           <span className="hidden lg:inline">
-            <strong className="font-mono font-bold tracking-wide text-white">ОФФЕРЫ:</strong>{" "}
-            <span className="text-[#DCE2FF]">100 % С ОТКРЫТОЙ ВИЛКОЙ ₽</span>
+            <strong className="font-mono font-bold tracking-wide text-white">Правило:</strong>{" "}
+            <span className="text-[#DCE2FF]">приглашение — только с вилкой зарплаты</span>
           </span>
         </div>
         <a
@@ -129,7 +146,7 @@ export function FspHeroMonolithStage() {
         >
           <span className="fsp-orbit-pill__dot" aria-hidden="true" />
           <span>
-            <b>Реестр ФСП · {regions} регионов</b>
+            <b>ФСП: {regions} региональных представительств</b>
             <small>Спортивные разряды и кубки России</small>
           </span>
         </a>
@@ -138,7 +155,7 @@ export function FspHeroMonolithStage() {
           <span className="fsp-orbit-pill__dot fsp-orbit-pill__dot--red" aria-hidden="true" />
           <span>
             <b>Банк · {NUMBERS.bank.directions} ИТ-направлений</b>
-            <small>{NUMBERS.bank.families} семейств задач · устная защита</small>
+            <small>{fmtInt(NUMBERS.bank.families)} семейств задач · устная защита</small>
           </span>
         </a>
 
@@ -146,7 +163,7 @@ export function FspHeroMonolithStage() {
           <span className="fsp-orbit-pill__dot" aria-hidden="true" />
           <span>
             <b>Цифровой паспорт грейда</b>
-            <small>Прямые офферы с открытой вилкой ₽</small>
+            <small>Приглашение — только с вилкой зарплаты</small>
           </span>
         </a>
       </div>
