@@ -1,0 +1,71 @@
+{
+ "what": "FREEZE отложенного бенчмарка подбора match-v2 (до прогона)",
+ "frozen_at": "2026-10-21T16:15:39+00:00",
+ "git_head_before_freeze_commit": "503ca3e943259f604a0f82c38615b700a2e0ed7e",
+ "worlds": {
+  "sm": [
+   77021171,
+   77021172,
+   77021173
+  ],
+  "sm_ideal": [
+   77021171,
+   77021172,
+   77021173
+  ],
+  "sm_s55": [
+   77021171,
+   77021172,
+   77021173
+  ],
+  "hard": [
+   77021181,
+   77021182
+  ]
+ },
+ "labels": [
+  "rel",
+  "l2"
+ ],
+ "methods": [
+  "match_v2",
+  "match_v2_doz",
+  "match_v2_doz70",
+  "match_v13",
+  "bm25",
+  "words_grade",
+  "tfidf_filter",
+  "random",
+  "oracle_pool"
+ ],
+ "bootstrap": {
+  "reps": 2000,
+  "seed": 7702113
+ },
+ "files_sha256": {
+  "docs/realdata/bench_holdout4_PROTOCOL.md": "2b1dae12e62288ba74965967ee5d867c7bfa727cf9fd1c6c59c5e54736b088e5",
+  "tools/realdata/bench_holdout4.py": "3317137a84a4ab6980aff6871c1bb214fd8310db78e0a2991c6990856bf04440",
+  "tools/realdata/bench2.py": "4bcd12ed718d9eeb2ffb60e8e6a30bbd894655a3eaf37f04be2f941fe256c101",
+  "backend/app/modules/matching/ranking.py": "6ef061d9e6a242473098f59bd72ed656b6ad7aa745862efd36fb2f02e1332907",
+  "backend/app/modules/matching/ltr.py": "7cbf159629bc2c06e15be7281d884f6c8ca32f76ff36ff3b567ea6eeb31925af",
+  "backend/app/modules/matching/ltr_weights.json": "9651a4ff3736233ff7bf452fdfe166dc14b6ecfbb6a6a5f95d90e089166ce4f7",
+  "backend/app/modules/matching/need_parser.py": "74200addceff6eb25dbcadacd30fc79c480f9d2bfc348e78321506a85b86da96",
+  "backend/app/modules/matching/grade_above.py": "934e06a8bf161cc6ab0a04a176242aac9ce95cc0526e93cf3e402a4c53781c67",
+  "backend/app/modules/matching/fsp_factor.py": "3d676ae1ed467a3cf30a1477bbf377426cc6895ad1c70732eed9a09eb2c29566",
+  "backend/app/modules/validation/bench_world.py": "6111882efa8f1965d3eda1895fe670d438e76f247c81a5a934f737cad3145167",
+  "backend/app/modules/validation/matching_bench.py": "6b222bc81ded321dd78e69bd202ac952df38bd0027ab7bcfc5fd3229eb1abee9",
+  "backend/app/modules/catalog/ext.py": "4f15351c8bd85830860c65d4ab85f7e346a10c7dc985505160b442e972dee2d2",
+  "backend/app/modules/profiles/facts.py": "80f00d5d108c4ca18e1366934d320d5823cdd6c355f548c0e9da03394a253bad",
+  "backend/app/modules/validation/matching_eval.py": "a1a963ee6417f3b45fa23d0f5390451c5daba57092fa0c45949d109e1d530f97",
+  "backend/app/modules/assessment/skill_map.py": "5d40bc360e6c62b8bb8587eb59a4a6ae42ad2885e504b776308ab390d914617e"
+ },
+ "dirs_sha256": {
+  "backend/app/modules/matching": "57675639aa0f330da9749a9ae65715146f1b34dfef0c329c2bb927e4c3c0b24d",
+  "backend/app/modules/assignments": "49bfa284d41487dead144bd9c9fa521f3845c2f31f4c5e9e5e8ec98ed111f0ea",
+  "backend/app/modules/catalog": "d84b8232114f6bdb890a3a9e136ac9c3dc018b55d11e936ee78da7444090f3d3",
+  "backend/app/modules/fsp": "92c30a864ca5410faf5c988d9f06892dca16832b5f710e1844acadefe0519f2a",
+  "backend/assessment_bank": "0c4a387061d18bcf2814195ebe77f30c82ee69b44c1bc359ba9eb6a5e114edff"
+ },
+ "dev_seeds_never_these": "31000001–31000006, 20261006, 20261007 (обучение весов); прежние отложенные 77021131/32/35/41/42 (FREEZE №3) — не эти",
+ "rule": "один прогон: run отказывается при несовпадении любого хэша и при уже существующем результате"
+}
