@@ -8,7 +8,7 @@ import { useAuth } from "../lib/auth";
 import { juryLogin } from "../lib/jury";
 import { useDemoUi, useJuryTab } from "../lib/juryMode";
 import { lazyNamed } from "../lib/lazyPage";
-import { daysText, getLandingCards, PRODUCT_TAGLINE, usePageTitle, useRules } from "../lib/meta";
+import { daysText, getLandingCards, usePageTitle, useRules } from "../lib/meta";
 
 const LazyJuryPanel = lazyNamed(() => import("../components/JuryPanel"), "JuryPanel");
 
@@ -21,24 +21,32 @@ const gradeRule = (r: Rules | null) => r
 const employerSteps = [
   ["Опишите вакансию своими словами", "Вставьте текст потребности или загрузите файл — платформа выделит стек, уровень, формат и проверит ст. 64 ТК РФ."],
   ["Получите ранжированную подборку", "Инженеры из нужной категории отсортированы по доказанным навыкам теста и достижениям ФСП — с объяснением по каждому пункту."],
-  ["Сравните кандидатов рядом", "Наглядная таблица подтверждённых компетенций, криптопаспорт грейда, достоверность результата и рыночная вилка."],
+  ["Сравните кандидатов рядом", "Наглядная таблица подтверждённых компетенций, цифровой паспорт грейда, достоверность результата и рыночная вилка."],
   ["Отправьте приглашение с вилкой", "Зарплатная вилка «от–до» в рублях обязательна. Контакты специалиста раскрываются сразу после его согласия."],
-  ["Передайте профиль в свою ATS", "Готовая интеграция с «Поток Рекрутмент», Хантфлоу, Talantix и вебхуками, а также трёхсторонняя связь с ФСП."],
+  ["Передайте профиль в кадровую систему", "Готовая интеграция с «Поток Рекрутмент», Хантфлоу, Talantix и уведомлениями, а также трёхсторонняя связь с ФСП."],
 ];
 
 const candidateSteps = (r: Rules | null) => [
   ["Регистрация за минуту", "Почта с подтверждением и согласие 152-ФЗ — без обязательного резюме на старте."],
   ["Профиль и стек", "Укажите специализацию и ключевые технологии. При наличии — привяжите достижения через ФСП ID."],
   ["Адаптивный тест на грейд", "Индивидуальный вариант задач с кодом и архитектурой: система подтверждает заявленный уровень без стресса."],
-  ["Подписанный паспорт грейда", `Категория «направление · грейд» с криптоподписью Ed25519. ${gradeRule(r)}`],
+  ["Подписанный паспорт грейда", `Категория «направление · грейд» с защищённой цифровой подписью. ${gradeRule(r)}`],
   ["Прямые офферы с зарплатой", "Компании сами выходят на контакт и сразу указывают вилку. Ваши контакты скрыты до вашего согласия."],
 ];
 
 const fspPillars = [
-  ["Аналитика спроса и зарплат", "Обезличенные срезы по регионам, направлениям и реальным вилкам офферов с выгрузкой в CSV."],
+  ["Аналитика спроса и зарплат", "Обезличенные срезы по регионам, направлениям и реальным вилкам офферов с выгрузкой таблиц."],
   ["Подтверждение результатов", "Трёхсторонний канал «Работодатель ↔ Кандидат ↔ ФСП» для верификации достижений и сопровождения стажировок."],
   ["Партнёрские кубки и отбор", "Компании-партнёры проводят отборочные турниры на платформе и приглашают призёров напрямую."],
 ];
+
+function plainMetricText(s: string): string {
+  return s
+    .replace(/\s*\(P@5\)/g, "")
+    .replace(/\bP@5\b/g, "Точность топ-5")
+    .replace(/\bMRR\b/g, "позиция первого подходящего")
+    .replace(/\bseed\s*=\s*(\d+)/gi, "фиксированная выборка №$1");
+}
 
 export default function Landing() {
   usePageTitle(
@@ -86,37 +94,80 @@ export default function Landing() {
       <SiteHeader premium />
       <main id="main" tabIndex={-1} className="relative outline-none">
 
-      {/* Первый экран — фокус на платящего клиента (B2B работодатель) */}
-      <section className="relative mx-auto grid max-w-content gap-10 px-4 pb-14 pt-10 sm:px-6 md:pt-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12 lg:pb-20">
-        <div className="min-w-0 lg:pt-4">
-          <p className="np-eyebrow">Платформа обратного ИТ-найма · Для работодателей, специалистов и ФСП</p>
-          <h1 className="mt-4 text-[2.05rem] font-extrabold leading-[1.08] tracking-tight np-text sm:text-[2.65rem] xl:text-[2.95rem]">
-            Получите подборку <span className="np-grad">подтверждённых инженеров</span> — без чтения резюме
+      {/* Первый экран: что это, для кого (кандидат / работодатель / ФСП) и одна главная кнопка на роль */}
+      <section className="relative mx-auto grid max-w-content gap-10 px-4 pb-14 pt-10 sm:px-6 md:pt-14 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:pb-20">
+        <div className="min-w-0 lg:pt-2">
+          <p className="np-eyebrow">Платформа обратного ИТ-найма · Работодателям · Кандидатам · ФСП</p>
+          <h1 className="mt-3 text-[1.95rem] font-extrabold leading-[1.1] tracking-tight np-text sm:text-[2.45rem] xl:text-[2.75rem]">
+            Найм IT-специалистов с <span className="np-grad">подтверждённым грейдом</span>: компания сама приглашает проверенных кандидатов
           </h1>
-          <p className="mt-4 text-lg font-semibold np-accent">{PRODUCT_TAGLINE}</p>
-          <p className="mt-3 max-w-xl text-base leading-relaxed np-muted md:text-lg">
-            Опишите задачу своими словами: платформа проверит требования, сопоставит их с результатами адаптивного теста и реестром ФСП и выдаст готовую подборку с прозрачным объяснением по каждому кандидату.
+          <p className="mt-3 max-w-2xl text-base leading-relaxed np-muted md:text-lg" data-testid="hero-subtitle">
+            Это платформа обратного найма без чтения сотен резюме: выберите свою роль ниже, чтобы получить готовую подборку проверенных инженеров, подтвердить свой уровень или открыть аналитику Федерации.
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link
-              to="/register?role=employer"
-              data-tour="hero-employer-btn"
-              data-testid="hero-cta-employer"
-              className="np-btn-primary px-7 py-3.5 text-base"
-            >
-              Создать вакансию бесплатно
-            </Link>
-            <Link
-              to="/register?role=candidate"
-              data-tour="hero-candidate-btn"
-              data-testid="hero-cta-candidate"
-              className="np-btn-ghost px-6 py-3.5 text-base"
-            >
-              Подтвердить свой грейд (0 ₽)
-            </Link>
+
+          {/* Для кого и что сделать — 3 карточки ролей с одной главной кнопкой на роль */}
+          <div
+            className="mt-6 grid gap-3 sm:grid-cols-3"
+            data-testid="hero-roles-grid"
+            aria-label="Для кого платформа и главное действие по роли"
+          >
+            <div className="np-card flex flex-col justify-between p-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-indigo-300">Работодателю</p>
+                <p className="mt-1 text-sm font-bold leading-snug np-text">Найти проверенного инженера</p>
+                <p className="mt-1 text-xs leading-relaxed np-muted">
+                  Опишите задачу — получите готовую подборку с доказанным грейдом и отправьте оффер с вилкой.
+                </p>
+              </div>
+              <Link
+                to="/register?role=employer"
+                data-tour="hero-employer-btn"
+                data-testid="hero-cta-employer"
+                className="np-btn-primary mt-3.5 w-full justify-center px-3 py-2.5 text-center text-xs font-bold"
+              >
+                Создать вакансию бесплатно
+              </Link>
+            </div>
+
+            <div className="np-card flex flex-col justify-between p-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">Кандидату · 0 ₽</p>
+                <p className="mt-1 text-sm font-bold leading-snug np-text">Получать офферы с вилкой</p>
+                <p className="mt-1 text-xs leading-relaxed np-muted">
+                  Один раз подтвердите уровень на задачах и турнирах ФСП — компании сами напишут вам.
+                </p>
+              </div>
+              <Link
+                to="/register?role=candidate"
+                data-tour="hero-candidate-btn"
+                data-testid="hero-cta-candidate"
+                className="np-btn-ghost mt-3.5 w-full justify-center px-3 py-2.5 text-center text-xs font-bold"
+              >
+                Подтвердить свой грейд (0 ₽)
+              </Link>
+            </div>
+
+            <div className="np-card flex flex-col justify-between p-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-amber-300">Федерации ФСП</p>
+                <p className="mt-1 text-sm font-bold leading-snug np-text">Связать турниры и карьеру</p>
+                <p className="mt-1 text-xs leading-relaxed np-muted">
+                  Смотрите спрос компаний по регионам, запускайте кубки и подтверждайте разряды.
+                </p>
+              </div>
+              <a
+                href="#fsp-ecosystem"
+                data-tour="hero-fsp-btn"
+                data-testid="hero-cta-fsp"
+                className="np-btn-ghost mt-3.5 w-full justify-center px-3 py-2.5 text-center text-xs font-bold"
+              >
+                Кабинет и кубки ФСП
+              </a>
+            </div>
           </div>
+
           <p className="mt-3 text-xs np-muted">
-            Тариф «Старт» — 0 ₽ (3 приглашения в месяц). Кандидатам платформа всегда бесплатна.
+            Тариф «Старт» для компаний — 0 ₽ (3 приглашения в месяц). Кандидатам и спортсменам ФСП — всегда 0 ₽.
             {juryTab && (
               <>
                 {" · "}
@@ -126,8 +177,8 @@ export default function Landing() {
               </>
             )}
           </p>
-          <ul className="mt-8 grid gap-3 text-[0.82rem] leading-snug sm:grid-cols-3" aria-label="Ключевые преимущества">
-            <Fact k="B2B" t="Подборка по доказанным навыкам вместо откликов" />
+          <ul className="mt-6 grid gap-3 text-[0.82rem] leading-snug sm:grid-cols-3" aria-label="Ключевые преимущества">
+            <Fact k="Навык" t="Подборка по доказанным задачам вместо откликов" />
             <Fact k="₽" t="Прозрачная вилка в каждом приглашении" />
             <Fact k="ФСП" t="Верификация достижений и кубки работодателей" />
           </ul>
@@ -146,10 +197,10 @@ export default function Landing() {
 
       <DraftLaws />
 
-      {/* Экран 1: Работодателям (ядро B2B) */}
+      {/* Экран 1: Работодателям */}
       <section id="employers" className="relative mx-auto max-w-content scroll-mt-24 px-4 py-14 sm:px-6" aria-labelledby="emp-sec-title">
         <div className="mb-6">
-          <p className="np-eyebrow">Ядро платформы · Для нанимающих команд, CTO и HR-директоров</p>
+          <p className="np-eyebrow">Ядро платформы · Для нанимающих руководителей и кадровых служб</p>
           <h2 id="emp-sec-title" className="mt-2 text-2xl font-extrabold tracking-tight np-text sm:text-3xl">Работодателям: от текста вакансии до оффера за 5 шагов</h2>
         </div>
         <StepList
@@ -165,7 +216,7 @@ export default function Landing() {
           <Link to="/pricing" className="np-glass block rounded-2xl p-5 transition-transform hover:-translate-y-0.5">
             <p className="np-eyebrow">Тарифы и монетизация</p>
             <p className="mt-1 text-lg font-bold np-text">Пакеты для работодателей и спонсоров</p>
-            <p className="mt-1 text-sm np-muted">«Старт» — 0 ₽ (3 приглашения/мес), «Найм» — по запросу (30 приглашений, ATS и автопроверка), «Партнёр ФСП» — 100 приглашений.</p>
+            <p className="mt-1 text-sm np-muted">«Старт» — 0 ₽ (3 приглашения в месяц), «Найм» — по запросу (30 приглашений, передача в кадровую систему и автопроверка), «Партнёр ФСП» — 100 приглашений.</p>
           </Link>
           <Link to="/register?role=employer" className="np-glass block rounded-2xl p-5 transition-transform hover:-translate-y-0.5">
             <p className="np-eyebrow">Командный Драфт 2–10 человек</p>
@@ -248,14 +299,17 @@ export default function Landing() {
           {cards.map((c) => (
             <div key={c.id} className="np-glass flex flex-col justify-between px-5 py-4" data-testid={`landing-number-${c.id}`}>
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wider np-faint">{c.eyebrow}</dt>
+                <dt className="text-xs font-semibold uppercase tracking-wider np-faint">{plainMetricText(c.eyebrow)}</dt>
                 <dd className="mt-1 text-2xl font-extrabold tabular-nums np-text">
-                  {c.value} <span className="text-sm font-semibold np-accent">{c.accent}</span>
+                  {c.value} <span className="text-sm font-semibold np-accent">{plainMetricText(c.accent)}</span>
                 </dd>
-                <p className="mt-1.5 text-xs leading-relaxed np-muted">{c.subtext}</p>
+                <p className="mt-1.5 text-xs leading-relaxed np-muted">{plainMetricText(c.subtext)}</p>
               </div>
-              <p className="mt-3 border-t border-white/10 pt-2 font-mono text-[10px] leading-snug np-faint">
-                {c.recompute} · {c.code_ref}
+              <p
+                className="mt-3 border-t border-white/10 pt-2 text-[11px] leading-snug np-faint cursor-help"
+                title={`Как считается: ${c.eyebrow}. Воспроизводимая проверка: ${c.recompute} · ${c.code_ref}`}
+              >
+                Как считается: наведите для формулы и источника ⓘ
               </p>
             </div>
           ))}
