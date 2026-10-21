@@ -174,6 +174,26 @@ function recordTiming(res: Response, fallbackMs: number) {
   _lastTimingMs = m ? Math.max(1, Math.round(Number(m[1]))) : Math.max(1, Math.round(fallbackMs));
 }
 
+/** Защита от показа старых реквизитов юрлица из ответов API (конкурсный прототип). */
+function sanitizeApiStrings<T>(val: T): T {
+  if (typeof val === "string") {
+    if (!/(\bИНН\s*\d{10}\b|\bОГРН\s*\d{13}\b|\b77-\d{2}-\d{6}\b|\.shop\b|105082)/i.test(val)) return val;
+    return val
+      .replace(/Обществ[а-яё]+\s+с\s+ограниченной\s+ответственностью\s+«[^»]+»(\s*\([^)]+\))?/gi, "команда Neuropeople (конкурсный прототип)")
+      .replace(/\bИНН\s*\d{10}[,;\s·]*(\bОГРН\s*\d{13}[,;\s·]*)?/gi, "")
+      .replace(/105082,?\s*г\.\s*Москва[^.;\n]*/gi, "")
+      .replace(/рег\.\s*№[^.;\n]*\b77-\d{2}-\d{6}\b[^.;\n]*/gi, "")
+      .replace(/[a-z0-9._+-]+@[a-z0-9.-]+\.shop/gi, "форма обратной связи (/support)") as unknown as T;
+  }
+  if (Array.isArray(val)) return val.map(sanitizeApiStrings) as unknown as T;
+  if (val && typeof val === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(val)) out[k] = sanitizeApiStrings(v);
+    return out as T;
+  }
+  return val;
+}
+
 export async function api<T>(path: string, opts: { method?: string; body?: unknown; auth?: boolean; token?: string } = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
@@ -194,7 +214,7 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
     errorHook?.(path, res.status, code);
     throw new ApiError(res.status, code, message, retryAfterOf(res));
   }
-  return body as T;
+  return sanitizeApiStrings(body) as T;
 }
 
 /** Загрузка файла (multipart). */
