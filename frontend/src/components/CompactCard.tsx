@@ -52,7 +52,7 @@ export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
   if (below.length) risks.push(`ниже порога теста: ${below.join(", ")}`);
   const st = c.status?.status;
   if (st === "unconfirmed") risks.push("грейд не подтверждён тестом");
-  else if (st === "provisional" || c.category?.preliminary) risks.push("грейд предварительный");
+  else if (st === "provisional" || c.category?.preliminary) risks.push("нужен доп. этап по грейду");
   else if (c.category?.ext_preliminary) risks.push(`${c.status?.grade_title ?? "Lead/Principal"} — предварительно`);  // Я25
   const grade = reasons.find((x) => x.requirement === "Специализация и грейд");
   const off = /грейд на (?:ступень|две ступени|три ступени) (?:выше|ниже) запрошенного/.exec(grade?.text ?? "");
@@ -88,9 +88,9 @@ function Line({ label, tone, children, testid }: { label: string; tone: string; 
 }
 
 /** Компактная карточка: шапка, 4–5 строк и действия; «Подробнее» раскрывает доказательства под карточкой. */
-export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, sent = false, needId, version, badge, open, onToggle, details, side = false, active = false }: {
+export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvite, sent = false, needId, version, badge, upperBoundary, open, onToggle, details, side = false, active = false }: {
   r: any; rank: number; fit?: Fit | null; picked: boolean; onPick: () => void; pickDisabled?: boolean; onInvite: () => void; sent?: boolean;
-  needId?: string; /** FIX7 п. 12: версия подборки — карточка кандидата считается по её требованиям */ version?: number; badge?: ReactNode; open: boolean; onToggle: () => void; details?: ReactNode;
+  needId?: string; /** FIX7 п. 12: версия подборки — карточка кандидата считается по её требованиям */ version?: number; badge?: ReactNode; upperBoundary?: boolean; open: boolean; onToggle: () => void; details?: ReactNode;
   side?: boolean; active?: boolean;  // side — подробности в панели справа (широкий экран); active — эта карточка сейчас в ней
 }) {
   const c = r.card ?? {};
@@ -102,7 +102,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
   const gradeLine = st === "confirmed"
     ? `Грейд ${gradeTitle} подтверждён тестом и совпадает с вакансией`
     : st === "provisional"
-      ? `Грейд ${gradeTitle} подтверждён предварительно (у границы уровня)`
+      ? `Грейд ${gradeTitle}: нужен доп. этап (у границы уровня)`
       : `Грейд не подтверждён тестом${c.claimed?.title ? ` (заявлено: ${c.claimed.title})` : ""}`;
   const testScore100 = r.components?.test != null
     ? Math.round(Number(r.components.test) * 100)
@@ -118,6 +118,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
     : fspAchs.length > 0
       ? `Соревнования ФСП: ${fspAchs[0].text}${fspAchs.length > 1 ? ` и ещё ${fspAchs.length - 1}` : ""}`
       : "Нет подтверждённых результатов соревнований ФСП (фактор ФСП = 0, без штрафа)";
+  const exactReason = (r.reasons ?? []).find((x: any) => x.requirement === "Строго запрошенный грейд");
   return (
     <article className={`card !p-4 sm:!p-5 ${active ? "ring-2 ring-brand/40" : ""}`} data-testid="candidate-card" data-compact="true" aria-label={`Кандидат ${r.ref}, место ${rank}`}>
       <div className="flex items-start justify-between gap-3">
@@ -126,6 +127,11 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
             <GradeBadge s={c.status} claimed={c.claimed} />
+            {upperBoundary && (
+              <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="upper-boundary-badge" title="Подтверждённый результат теста у верхней границы запрошенного грейда">
+                сильнее запроса
+              </span>
+            )}
             <DemoProfileBadge c={c} />
             {demoUi && c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
             {badge}
@@ -135,7 +141,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
         {r.score != null && <ScoreBox score={r.score} must={r.must} />}
       </div>
       <ul className="mt-2 space-y-1 text-sm" data-testid="compact-lines">
-        <Line label="Грейд и тест" tone="text-brand-night" testid="compact-grade-test">{gradeLine}. {testLine}.</Line>
+        <Line label="Грейд и тест" tone="text-brand-night" testid="compact-grade-test">{gradeLine}. {testLine}.{exactReason?.text ? ` Строго запрошенный грейд: ${exactReason.text}.` : ""}</Line>
         <Line label="Навыки" tone="text-emerald-800" testid="compact-matched">{f.matched.length || f.matchedTask.length
           ? [f.matched.length ? `навыки вакансии, подтверждённые тестом: ${f.matched.join(", ")}` : "",
              f.matchedTask.length ? `заданием работодателя: ${f.matchedTask.join(", ")}` : ""].filter(Boolean).join("; ")

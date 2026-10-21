@@ -1,6 +1,6 @@
 # Отчёт валидации «Драфт» (генерируется tools/publish/gen_numbers.py из docs/NUMBERS.json)
 
-Коммит 8679f8479f, 2026-10-21T17:11:04Z. Чисел, введённых руками, здесь нет.
+Коммит 2bc3e677, 2026-10-21T17:37:23Z. Чисел, введённых руками, здесь нет.
 
 ## Итоговый прогон симуляции продукта (один прогон на отложенных зёрнах)
 
@@ -186,4 +186,4 @@
 | Подбор под потребность (бенчмарк) | P@5 77,1 %, nDCG@10 0,66; жёсткие — P@5 75,9 %, nDCG@10 0,57 | 210 потребностей, 3 отложенных мира × 900, один прогон, модели | `python3 tools/realdata/bench_holdout4.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py` |
 | Реальные вакансии hh.ru | направление 85,1 % | N = 336; второй отложенный набор: 336 свежих вакансий hh.ru (SHA-256 2bb77a1cd8d7…, заморожен 2026-10-21, прогон один); метки — поля hh.ru (роль и слова названия), разбор текста правилами без LLM; прогон 2026-10-21, код 249443367 | `cd backend && python ../tools/realdata/hh_holdout.py --tag 2 run (один раз; новый прогон — новый отложенный набор: collect → freeze → run)` |
 | Античит оценщика развёрнутых ответов | слепой набор: фильтр 137/176, ложные 2/176, полная цепочка с моделью — пробитий 0/176 | атаки от моделей других поставщиков, хэш набора до прогона | `python3 tools/grader_check/run_holdout_eval.py --offline` |
-| Протоколы ФСП | 18 документов, 2 908 результатов | официальные протоколы с сайта ФСП | `python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp` |
+| Протоколы ФСП | 18 документов, 2 908 результатов | официальные протоколы с сайта ФСП | `python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp` |

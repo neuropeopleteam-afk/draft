@@ -43,7 +43,7 @@ function WhyBlock({ why }: { why: Why[] }) {
             {w.pro.length > 0 && (
               <ul className="mt-2 space-y-1.5">
                 {w.pro.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2"><span className="shrink-0"><Level level={f.level} /></span><span className="min-w-0 flex-1 break-words">{ruText(f.text)}</span><span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-emerald-700">+{pts(f.points)}</span></li>
+                  <li key={i} className="flex flex-wrap items-start gap-x-2 gap-y-1"><span className="shrink-0"><Level level={f.level} /></span><span className="min-w-0 flex-1 break-words">{ruText(f.text)}</span><span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-emerald-700">+{pts(f.points)}</span></li>
                 ))}
               </ul>
             )}
@@ -197,7 +197,7 @@ export function Compare() {
                     return (
                       <div key={c.ref} role="cell" className={`border-b border-l border-brand-night/10 p-4 text-sm ${cell?.best ? "bg-emerald-50/70" : ""}`}>
                         {!cell ? <span className="text-brand-ink/65">—</span> : (
-                          <div className="flex items-start gap-2">
+                          <div className="flex flex-col items-start gap-1.5">
                             {cell.level !== "market" && <ReasonLevel r={{ ...cell, weight: r.weight }} />}
                             <p className={`min-w-0 flex-1 break-words ${STATUS_TEXT[cell.status] ?? ""}`}>{ruText(cell.text)}{cell.best && <span className="ml-1 whitespace-nowrap text-xs font-semibold text-emerald-700">лучше в строке</span>}</p>
                           </div>

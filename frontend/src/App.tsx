@@ -322,6 +322,7 @@ export default function App() {
         <Route path="security" element={<TwoFactorSettings />} />
         <Route path="analytics" element={<Navigate to="/fsp/demand" replace />} />
         <Route path="regions" element={<Navigate to="/fsp/demand" replace />} />
+        <Route path="map" element={<Navigate to="/fsp/demand" replace />} />
       </Route>
       <Route path="/500" element={<ServerErrorPage />} />
       <Route path="*" element={<NotFound />} />
@@ -405,9 +406,9 @@ function NotFound() {
       <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 rounded-3xl border border-brand-night/10 bg-white p-7 shadow-sm sm:p-9">
         <div className="inline-flex items-center gap-2.5 text-sm font-extrabold text-brand-night">
           <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
-            <rect width="32" height="32" rx="8" fill="#310F53" />
-            <circle cx="12.5" cy="16" r="7" fill="none" stroke="#FFD6E4" strokeWidth="2.5" />
-            <circle cx="19.5" cy="16" r="7" fill="none" stroke="#FF0053" strokeWidth="2.5" />
+            <rect width="32" height="32" rx="8" fill="#0E1126" />
+            <circle cx="12.5" cy="16" r="7" fill="none" stroke="#DCE2FF" strokeWidth="2.5" />
+            <circle cx="19.5" cy="16" r="7" fill="none" stroke="#EC1D35" strokeWidth="2.5" />
           </svg>
           <span>Драфт</span>
           <span className="rounded-full bg-brand-blush/80 px-2.5 py-0.5 font-mono text-xs font-extrabold text-brand-night">404</span>
@@ -434,9 +435,9 @@ function ServerErrorPage() {
       <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 rounded-3xl border border-brand-night/10 bg-white p-7 shadow-sm sm:p-9">
         <div className="inline-flex items-center gap-2.5 text-sm font-extrabold text-brand-night">
           <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
-            <rect width="32" height="32" rx="8" fill="#310F53" />
-            <circle cx="12.5" cy="16" r="7" fill="none" stroke="#FFD6E4" strokeWidth="2.5" />
-            <circle cx="19.5" cy="16" r="7" fill="none" stroke="#FF0053" strokeWidth="2.5" />
+            <rect width="32" height="32" rx="8" fill="#0E1126" />
+            <circle cx="12.5" cy="16" r="7" fill="none" stroke="#DCE2FF" strokeWidth="2.5" />
+            <circle cx="19.5" cy="16" r="7" fill="none" stroke="#EC1D35" strokeWidth="2.5" />
           </svg>
           <span>Драфт</span>
           <span className="rounded-full bg-brand-blush/80 px-2.5 py-0.5 font-mono text-xs font-extrabold text-brand-night">500</span>

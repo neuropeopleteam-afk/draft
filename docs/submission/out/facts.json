@@ -1,0 +1,1354 @@
+{
+ "source": "docs/NUMBERS.json",
+ "numbers_generated_at": "2026-10-21T15:38:58Z",
+ "numbers_git_commit": "464d57655",
+ "recompute_all": "python3 tools/publish/gen_numbers.py",
+ "facts": {
+  "bank_families": {
+   "text": "1 646",
+   "key": "bank.families",
+   "cond": "автоматическая проверка банка: 20 вариантов-зёрен на каждое семейство, коммит банка ab16d27, 21.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 1646,
+   "kn": "",
+   "ci": "",
+   "label": "семейств заданий в банке",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_variants": {
+   "text": "32 896",
+   "key": "bank.unique_variants_20seeds",
+   "cond": "автоматическая проверка банка: 20 вариантов-зёрен на каждое семейство, коммит банка ab16d27, 21.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 32896,
+   "kn": "",
+   "ci": "",
+   "label": "уникальных вариантов на проверке",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_checks": {
+   "text": "38 131",
+   "key": "bank.checks",
+   "cond": "автоматическая проверка банка: 20 вариантов-зёрен на каждое семейство, коммит банка ab16d27, 21.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 38131,
+   "kn": "",
+   "ci": "",
+   "label": "автоматических проверок ответов",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_checks_failed": {
+   "text": "0",
+   "key": "bank.checks_failed",
+   "cond": "автоматическая проверка банка: 20 вариантов-зёрен на каждое семейство, коммит банка ab16d27, 21.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 0,
+   "kn": "",
+   "ci": "",
+   "label": "проверок с ошибкой",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_directions": {
+   "text": "10",
+   "key": "bank.directions",
+   "cond": "автоматическая проверка банка: 20 вариантов-зёрен на каждое семейство, коммит банка ab16d27, 21.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 10,
+   "kn": "",
+   "ci": "",
+   "label": "направлений",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_practical": {
+   "text": "416",
+   "key": "bank.code_and_open_families",
+   "cond": "автоматическая проверка банка: 20 вариантов-зёрен на каждое семейство, коммит банка ab16d27, 21.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 416,
+   "kn": "",
+   "ci": "",
+   "label": "семейств с кодом и развёрнутым ответом",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "bank_seeds": {
+   "text": "20",
+   "key": "bank.seeds",
+   "cond": "автоматическая проверка банка: 20 вариантов-зёрен на каждое семейство, коммит банка ab16d27, 21.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 20,
+   "kn": "",
+   "ci": "",
+   "label": "вариантов на семейство при проверке",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "verdict_accuracy": {
+   "text": "84,8 %",
+   "key": "grade_verdict.st.view.verdict_accuracy",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.848,
+   "kn": "2 544 из 3 000",
+   "ci": "95 % ДИ 83,5–86,0 %",
+   "label": "верный итог проверки заявленного грейда",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "confident_share": {
+   "text": "89,2 %",
+   "key": "grade_verdict.st.view.confident_share",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.892,
+   "kn": "2 676 из 3 000",
+   "ci": "95 % ДИ 88,0–90,3 %",
+   "label": "кандидатов получают уверенный ответ уже по основному тесту",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "confident_accuracy": {
+   "text": "89,8 %",
+   "key": "grade_verdict.st.view.confident_accuracy",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.898,
+   "kn": "2 403 из 2 676",
+   "ci": "95 % ДИ 88,6–90,9 %",
+   "label": "точность уверенного ответа",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "followup_share": {
+   "text": "10,8 %",
+   "key": "grade_verdict.st.view.followup_share",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.108,
+   "kn": "324 из 3 000",
+   "ci": "95 % ДИ 9,7–12,0 %",
+   "label": "кандидатов направляется на короткий дополнительный этап",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "exact_grade": {
+   "text": "77,6 %",
+   "key": "grade_verdict.st.view.exact_grade",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.7763,
+   "kn": "2 329 из 3 000",
+   "ci": "95 % ДИ 76,1–79,1 %",
+   "label": "грейд определён точно",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "false_confirm_all": {
+   "text": "2,1 %",
+   "key": "grade_verdict.st.view.false_confirm_all",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.021,
+   "kn": "63 из 3 000",
+   "ci": "95 % ДИ 1,6–2,7 %",
+   "label": "ложных подтверждений от всех кандидатов",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "gross_error": {
+   "text": "0,1 %",
+   "key": "grade_verdict.st.view.gross_error",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.0013,
+   "kn": "4 из 3 000",
+   "ci": "95 % ДИ 0,1–0,3 %",
+   "label": "ошибок больше чем на одну ступень",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "minutes_mean": {
+   "text": "43,2 мин",
+   "key": "grade_verdict.st.view.minutes_total.mean",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 43.2,
+   "kn": "",
+   "ci": "",
+   "label": "среднее время теста",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "minutes_p90": {
+   "text": "69,4 мин",
+   "key": "grade_verdict.st.view.minutes_total.p90",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 69.4,
+   "kn": "",
+   "ci": "",
+   "label": "время теста у 90 % кандидатов не больше",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "retest_verdict": {
+   "text": "72,9 %",
+   "key": "grade_verdict.main.retest.verdict_agreement",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026; повтор на другом наборе заданий",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.729,
+   "kn": "2 187 из 3 000",
+   "ci": "95 % ДИ 71,3–74,5 %",
+   "label": "совпадение итога при повторном прохождении",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "retest_exact": {
+   "text": "68,5 %",
+   "key": "grade_verdict.main.retest.exact_agreement",
+   "cond": "стандартные условия (как в аналогичных решениях), зёрна 5501–5510; симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк ab16d27 (1 646 семейств заданий); 21.10.2026; повтор на другом наборе заданий",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.6853,
+   "kn": "2 056 из 3 000",
+   "ci": "95 % ДИ 66,8–70,2 %",
+   "label": "совпадение грейда при повторном прохождении",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "verdict_misspec": {
+   "text": "84,4 %",
+   "key": "grade_verdict.misspec.verdict_accuracy",
+   "cond": "симуляция продукта, модельные кандидаты; N = 2 000; трудность и различающая сила заданий в «мире» сдвинуты случайно, движок об этом не знает; 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase final --n 200 --seeds 4401 --out /w/a4fin2/out/main/F_misspec__4401.json --world misspec --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.844,
+   "kn": "1 688 из 2 000",
+   "ci": "95 % ДИ 82,7–85,9 %",
+   "label": "верный итог при неточно известной трудности заданий",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "verdict_rater_noise": {
+   "text": "86,1 %",
+   "key": "grade_verdict.rater_noise.verdict_accuracy",
+   "cond": "симуляция продукта, модельные кандидаты; N = 1 500; проверка развёрнутых ответов ошибается случайно; 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase final --n 150 --seeds 4401 --out /w/a4fin2/out/main/F_rater__4401.json --rater-noise 0.1 --expect-bank-hash 913ad19f6a259aff",
+   "value": 0.8613,
+   "kn": "1 292 из 1 500",
+   "ci": "95 % ДИ 84,3–87,8 %",
+   "label": "верный итог при ошибках проверки развёрнутых ответов",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "cheat_bots_present": {
+   "text": "есть",
+   "key": "cheat_bots",
+   "cond": "",
+   "recompute": "cd backend && python -m app.modules.validation.cheat_bots --final --expect-bank-hash 913ad19f6a259aff --n 400 --strategies control,single_form --k  --out /w/a4fin2/out/b/B_ctl__0.json",
+   "value": null,
+   "kn": "",
+   "ci": "",
+   "label": "прогон ботов",
+   "group": "cheat",
+   "basis": "симуляция, боты"
+  },
+  "match_p5": {
+   "text": "0,76",
+   "key": "matching.p5.mean",
+   "cond": "модель: 210 потребностей × 900 модельных кандидатов на отложенных мирах (истина известна, не люди); миры заморожены до прогона, веса подбирались на других мирах; 21.10.2026",
+   "recompute": "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
+   "value": 0.76,
+   "kn": "",
+   "ci": "95 % ДИ 0,73–0,79",
+   "label": "доля подходящих в первой пятёрке подборки (P@5)",
+   "group": "match",
+   "basis": "модель"
+  },
+  "match_mrr": {
+   "text": "0,89",
+   "key": "matching.mrr.mean",
+   "cond": "модель: 210 потребностей × 900 модельных кандидатов на отложенных мирах (истина известна, не люди); миры заморожены до прогона, веса подбирались на других мирах; 21.10.2026",
+   "recompute": "python3 tools/realdata/bench_holdout2.py run (один раз после freeze; повтор запрещён) → python3 tools/realdata/numbers_matching.py",
+   "value": 0.8946,
+   "kn": "",
+   "ci": "",
+   "label": "MRR — насколько высоко первый подходящий кандидат",
+   "group": "match",
+   "basis": "модель"
+  },
+  "hh_direction": {
+   "text": "85,1 %",
+   "key": "hh_match.direction_ok",
+   "cond": "реальные вакансии hh.ru: второй отложенный набор: 336 свежих вакансий hh.ru (SHA-256 2bb77a1cd8d7…, заморожен 2026-10-21, прогон один); метки — поля hh.ru (роль и слова названия), разбор текста правилами без LLM; прогон 2026-10-21, код 249443367; N = 336; 21.10.2026",
+   "recompute": "cd backend && python ../tools/realdata/hh_holdout.py --tag 2 run (один раз; новый прогон — новый отложенный набор: collect → freeze → run)",
+   "value": 0.851,
+   "kn": "286 из 336",
+   "ci": "",
+   "label": "верно определено направление вакансии",
+   "group": "hh",
+   "basis": "реальные вакансии"
+  },
+  "ac_filter": {
+   "text": "77,8 %",
+   "key": "anticheat.holdout_offline.rate",
+   "cond": "отложенный набор атак на проверку ответов, составлен после фиксации кода фильтра (коммит 6b7c710c), один прогон без донастройки; N = 176 атак и 176 честных ответов; 20.10.2026",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 0.7784,
+   "kn": "137 из 176",
+   "ci": "",
+   "label": "атак перехвачено фильтром до оценки моделью",
+   "group": "ac",
+   "basis": "отложенный набор атак"
+  },
+  "ac_fp": {
+   "text": "1,1 %",
+   "key": "anticheat.holdout_offline.false_positive_rate",
+   "cond": "отложенный набор атак на проверку ответов, составлен после фиксации кода фильтра (коммит 6b7c710c), один прогон без донастройки; N = 176 атак и 176 честных ответов; 20.10.2026",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 0.0114,
+   "kn": "2 из 176",
+   "ci": "",
+   "label": "ложных срабатываний на честных ответах",
+   "group": "ac",
+   "basis": "отложенный набор"
+  },
+  "ac_chain_pierced": {
+   "text": "0 из 176",
+   "key": "anticheat.llm_chain.pierced",
+   "cond": "отложенный набор атак на проверку ответов, составлен после фиксации кода фильтра (коммит 6b7c710c), один прогон без донастройки; N = 176 атак и 176 честных ответов; 20.10.2026; полная цепочка проверки",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --llm --max-cost-usd 3.0",
+   "value": 0.0,
+   "kn": "",
+   "ci": "",
+   "label": "атак прошли всю цепочку защиты",
+   "group": "ac",
+   "basis": "отложенный набор атак"
+  },
+  "ac_honest_false": {
+   "text": "0 из 1 000",
+   "key": "anticheat.behavioral_followup.honest_false_followup",
+   "cond": "симуляция поведения: 1 000 модельных честных сессий и 500 модельных ботов; правило «два и больше сигнала или прямое доказательство», автоматической блокировки нет",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 0.0,
+   "kn": "",
+   "ci": "",
+   "label": "честных кандидатов ошибочно отправлено на проверку",
+   "group": "ac",
+   "basis": "симуляция"
+  },
+  "ac_bot_detect": {
+   "text": "100 %",
+   "key": "anticheat.behavioral_followup.bot_detection_rate",
+   "cond": "симуляция поведения: 1 000 модельных честных сессий и 500 модельных ботов; правило «два и больше сигнала или прямое доказательство», автоматической блокировки нет",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 1.0,
+   "kn": "500 из 500",
+   "ci": "",
+   "label": "модельных ботов отправлено на дополнительную проверку",
+   "group": "ac",
+   "basis": "симуляция"
+  },
+  "ac_signals": {
+   "text": "21",
+   "key": "anticheat.proctoring_signals_total",
+   "cond": "описание механики: число видов сигналов в коде",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 21,
+   "kn": "",
+   "ci": "",
+   "label": "видов сигналов честности прохождения",
+   "group": "ac",
+   "basis": "код"
+  },
+  "fsp_documents": {
+   "text": "18",
+   "key": "fsp_protocols.index.documents",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 18,
+   "kn": "",
+   "ci": "",
+   "label": "официальных протоколов в индексе",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_events": {
+   "text": "27",
+   "key": "fsp_protocols.index.events",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 27,
+   "kn": "",
+   "ci": "",
+   "label": "соревнований",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_results": {
+   "text": "2 908",
+   "key": "fsp_protocols.index.results",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 2908,
+   "kn": "",
+   "ci": "",
+   "label": "результатов",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_athletes": {
+   "text": "2 232",
+   "key": "fsp_protocols.index.athletes",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 2232,
+   "kn": "",
+   "ci": "",
+   "label": "спортсменов",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_regions": {
+   "text": "69",
+   "key": "fsp_protocols.index.regions",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 69,
+   "kn": "",
+   "ci": "",
+   "label": "субъектов РФ",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_evsk": {
+   "text": "130",
+   "key": "fsp_protocols.index.athletes_with_evsk_norm",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 130,
+   "kn": "",
+   "ci": "",
+   "label": "спортсменов с выполненным нормативом ЕВСК",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_years": {
+   "text": "2025–2026",
+   "key": "fsp_protocols.index.years",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": "2025–2026",
+   "kn": "",
+   "ci": "",
+   "label": "годы протоколов",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "ext_main_ndcg10": {
+   "text": "0,781",
+   "key": "external_benchmarks.devdev_1to1.main.ndcg10.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.7808,
+   "kn": "",
+   "ci": "95 % ДИ 0,767–0,794",
+   "label": "nDCG@10, наш подбор, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_main_ndcg10_diff": {
+   "text": "−0,061",
+   "key": "external_benchmarks.devdev_1to1.main.ndcg10.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": -0.0608,
+   "kn": "",
+   "ci": "95 % ДИ −0,076…−0,047",
+   "label": "nDCG@10: разность с другим решением, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_other_ndcg10": {
+   "text": "0,842",
+   "key": "external_benchmarks.devdev_1to1.main.ndcg10.other",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.8415,
+   "kn": "",
+   "ci": "",
+   "label": "nDCG@10, ранжирование другого решения его же кодом",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_main_p5": {
+   "text": "68,4 %",
+   "key": "external_benchmarks.devdev_1to1.main.p5.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.6842,
+   "kn": "",
+   "ci": "95 % ДИ 65,7 %–71,1 %",
+   "label": "точность в топ-5, наш подбор, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_main_p5_diff": {
+   "text": "−6,8 п. п.",
+   "key": "external_benchmarks.devdev_1to1.main.p5.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": -0.0683,
+   "kn": "",
+   "ci": "95 % ДИ −9,7 п. п.…−4,1 п. п.",
+   "label": "точность в топ-5: разность с другим решением, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_other_p5": {
+   "text": "75,2 %",
+   "key": "external_benchmarks.devdev_1to1.main.p5.other",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.7525,
+   "kn": "",
+   "ci": "",
+   "label": "точность в топ-5, ранжирование другого решения его же кодом",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_main_p10": {
+   "text": "67,5 %",
+   "key": "external_benchmarks.devdev_1to1.main.p10.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.6754,
+   "kn": "",
+   "ci": "95 % ДИ 65,7 %–69,5 %",
+   "label": "точность в топ-10, наш подбор, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_main_p10_diff": {
+   "text": "−8,6 п. п.",
+   "key": "external_benchmarks.devdev_1to1.main.p10.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": -0.0863,
+   "kn": "",
+   "ci": "95 % ДИ −10,5 п. п.…−6,8 п. п.",
+   "label": "точность в топ-10: разность с другим решением, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_other_p10": {
+   "text": "76,2 %",
+   "key": "external_benchmarks.devdev_1to1.main.p10.other",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.7617,
+   "kn": "",
+   "ci": "",
+   "label": "точность в топ-10, ранжирование другого решения его же кодом",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_main_rr": {
+   "text": "82,8 %",
+   "key": "external_benchmarks.devdev_1to1.main.rr.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.8278,
+   "kn": "",
+   "ci": "95 % ДИ 79,4 %–86,1 %",
+   "label": "первый подходящий — насколько высоко (MRR), наш подбор, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_main_rr_diff": {
+   "text": "−1,5 п. п.",
+   "key": "external_benchmarks.devdev_1to1.main.rr.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": -0.0146,
+   "kn": "",
+   "ci": "95 % ДИ −6,2 п. п.…+3,5 п. п.",
+   "label": "первый подходящий — насколько высоко (MRR): разность с другим решением, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_other_rr": {
+   "text": "84,2 %",
+   "key": "external_benchmarks.devdev_1to1.main.rr.other",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.8424,
+   "kn": "",
+   "ci": "",
+   "label": "первый подходящий — насколько высоко (MRR), ранжирование другого решения его же кодом",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_main_overrated10": {
+   "text": "6,4 %",
+   "key": "external_benchmarks.devdev_1to1.main.overrated10.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.0638,
+   "kn": "",
+   "ci": "95 % ДИ 4,7 %–8,3 %",
+   "label": "переоценённых в топ-10 (меньше — лучше), наш подбор, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_main_overrated10_diff": {
+   "text": "−0,2 п. п.",
+   "key": "external_benchmarks.devdev_1to1.main.overrated10.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": -0.0021,
+   "kn": "",
+   "ci": "95 % ДИ −1,2 п. п.…+0,8 п. п.",
+   "label": "переоценённых в топ-10 (меньше — лучше): разность с другим решением, режим по умолчанию",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_other_overrated10": {
+   "text": "6,6 %",
+   "key": "external_benchmarks.devdev_1to1.main.overrated10.other",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.0658,
+   "kn": "",
+   "ci": "",
+   "label": "переоценённых в топ-10 (меньше — лучше), ранжирование другого решения его же кодом",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_ndcg10": {
+   "text": "0,863",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.ndcg10.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.8628,
+   "kn": "",
+   "ci": "95 % ДИ 0,849–0,875",
+   "label": "nDCG@10, наш подбор, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_ndcg10_diff": {
+   "text": "+0,021",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.ndcg10.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.0213,
+   "kn": "",
+   "ci": "95 % ДИ +0,006…+0,036",
+   "label": "nDCG@10: разность с другим решением, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_p5": {
+   "text": "83,5 %",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.p5.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.835,
+   "kn": "",
+   "ci": "95 % ДИ 81,5 %–85,6 %",
+   "label": "точность в топ-5, наш подбор, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_p5_diff": {
+   "text": "+8,2 п. п.",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.p5.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.0825,
+   "kn": "",
+   "ci": "95 % ДИ +5,5 п. п.…+11,0 п. п.",
+   "label": "точность в топ-5: разность с другим решением, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_p10": {
+   "text": "78,3 %",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.p10.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.7829,
+   "kn": "",
+   "ci": "95 % ДИ 76,4 %–80,2 %",
+   "label": "точность в топ-10, наш подбор, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_p10_diff": {
+   "text": "+2,1 п. п.",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.p10.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.0213,
+   "kn": "",
+   "ci": "95 % ДИ +0,4 п. п.…+3,9 п. п.",
+   "label": "точность в топ-10: разность с другим решением, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_rr": {
+   "text": "91,0 %",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.rr.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.9101,
+   "kn": "",
+   "ci": "95 % ДИ 88,3 %–93,4 %",
+   "label": "первый подходящий — насколько высоко (MRR), наш подбор, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_rr_diff": {
+   "text": "+6,8 п. п.",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.rr.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.0677,
+   "kn": "",
+   "ci": "95 % ДИ +3,2 п. п.…+10,6 п. п.",
+   "label": "первый подходящий — насколько высоко (MRR): разность с другим решением, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_overrated10": {
+   "text": "9,1 %",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.overrated10.ours",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.0913,
+   "kn": "",
+   "ci": "95 % ДИ 7,4 %–10,9 %",
+   "label": "переоценённых в топ-10 (меньше — лучше), наш подбор, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  },
+  "ext_exact_overrated10_diff": {
+   "text": "+2,5 п. п.",
+   "key": "external_benchmarks.devdev_1to1.exact_option_api.overrated10.diff",
+   "cond": "синтетика (модель, не люди): открытый генератор другого решения (MIT, коммит dec3f954), 6 отложенных зёрен × 40 вакансий × 1000 кандидатов (240 вакансий), их тест и их метки; наш подбор — четвёртой выдачей в их процедуре; один прогон 2026-10-21, код e4a2da8d0, FREEZE 515460d3; проверка: независимый рецензент, пересчёт в чистом клоне FREEZE e4a2da8d0d — 0 расхождений",
+   "recompute": "python3 tools/realdata/devdev/devdev_1to1.py run --their <их repo>/backend --py <python с их зависимостями> (один раз; повтор — новые зёрна и новый FREEZE)",
+   "value": 0.0254,
+   "kn": "",
+   "ci": "95 % ДИ +1,5 п. п.…+3,6 п. п.",
+   "label": "переоценённых в топ-10 (меньше — лучше): разность с другим решением, режим «строго запрошенный грейд»",
+   "group": "ext",
+   "basis": "открытый генератор"
+  }
+ },
+ "missing": [
+  "hh_skills",
+  "load_p95"
+ ],
+ "pairs": {
+  "pairs": [
+   {
+    "id": "confident_accuracy",
+    "label": "Точность уверенного ответа",
+    "hint": "",
+    "standard": {
+     "text": "88,1 %",
+     "value": 0.8813,
+     "kn": "2 524 из 2 864",
+     "ci": "95 % ДИ 86,9–89,3 %",
+     "key": "top5[id=confident_accuracy]",
+     "cond": "стандартные условия (как в аналогичных решениях): a = 1,5 в движке, истинные a × U(0,825; 1,175) и b + N(0; 0,3), угадывание 0,25 в вопросах с выбором и 0,02 в остальных, θ ~ N(0,5; 1,0), заявки: 65 % точные, 25 % завышены, 10 % занижены; модельные кандидаты, не люди; N = 3 000, зёрна 5501…5510; время — в среднем 43 мин (p90 69); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    },
+    "hard": {
+     "text": "89,6 %",
+     "value": 0.8963,
+     "kn": "2 446 из 2 729",
+     "ci": "95 % ДИ 88,4–90,7 %",
+     "key": "top5_hard[id=confident_accuracy]",
+     "cond": "жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, консервативные параметры банка (a = 1,0 / 1,3); модельные кандидаты, не люди; N = 3 000, зёрна 4401…4410; время — в среднем 45 мин (p90 81); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase final --n 300 --seeds 4401 --out /w/a4fin2/out/main/F_calibrated__4401.json --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    }
+   },
+   {
+    "id": "exact_grade",
+    "label": "Точный грейд — 6 ступеней, все кандидаты",
+    "hint": "",
+    "standard": {
+     "text": "77,6 %",
+     "value": 0.7763,
+     "kn": "2 329 из 3 000",
+     "ci": "95 % ДИ 76,1–79,1 %",
+     "key": "top5[id=exact_grade]",
+     "cond": "стандартные условия (как в аналогичных решениях): a = 1,5 в движке, истинные a × U(0,825; 1,175) и b + N(0; 0,3), угадывание 0,25 в вопросах с выбором и 0,02 в остальных, θ ~ N(0,5; 1,0), заявки: 65 % точные, 25 % завышены, 10 % занижены; модельные кандидаты, не люди; N = 3 000, зёрна 5501…5510; время — в среднем 43 мин (p90 69); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    },
+    "hard": {
+     "text": "75,4 %",
+     "value": 0.754,
+     "kn": "2 262 из 3 000",
+     "ci": "95 % ДИ 73,8–76,9 %",
+     "key": "top5_hard[id=exact_grade]",
+     "cond": "жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, консервативные параметры банка (a = 1,0 / 1,3); модельные кандидаты, не люди; N = 3 000, зёрна 4401…4410; время — в среднем 45 мин (p90 81); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase final --n 300 --seeds 4401 --out /w/a4fin2/out/main/F_calibrated__4401.json --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    }
+   },
+   {
+    "id": "within_one",
+    "label": "Грейд с точностью ±1 ступень",
+    "hint": "",
+    "standard": {
+     "text": "99,9 %",
+     "value": 0.9987,
+     "kn": "2 996 из 3 000",
+     "ci": "95 % ДИ 99,7–100,0 %",
+     "key": "top5[id=within_one]",
+     "cond": "стандартные условия (как в аналогичных решениях): a = 1,5 в движке, истинные a × U(0,825; 1,175) и b + N(0; 0,3), угадывание 0,25 в вопросах с выбором и 0,02 в остальных, θ ~ N(0,5; 1,0), заявки: 65 % точные, 25 % завышены, 10 % занижены; модельные кандидаты, не люди; N = 3 000, зёрна 5501…5510; время — в среднем 43 мин (p90 69); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    },
+    "hard": {
+     "text": "99,9 %",
+     "value": 0.9987,
+     "kn": "2 996 из 3 000",
+     "ci": "95 % ДИ 99,7–100,0 %",
+     "key": "top5_hard[id=within_one]",
+     "cond": "жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, консервативные параметры банка (a = 1,0 / 1,3); модельные кандидаты, не люди; N = 3 000, зёрна 4401…4410; время — в среднем 45 мин (p90 81); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase final --n 300 --seeds 4401 --out /w/a4fin2/out/main/F_calibrated__4401.json --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    }
+   },
+   {
+    "id": "retest_kappa_w",
+    "label": "Повтор на других заданиях (взвешенная каппа)",
+    "hint": "",
+    "standard": {
+     "text": "0,85",
+     "value": 0.8515,
+     "kn": "",
+     "ci": "95 % ДИ 0,84–0,86",
+     "key": "top5[id=retest_kappa_w]",
+     "cond": "стандартные условия (как в аналогичных решениях): a = 1,5 в движке, истинные a × U(0,825; 1,175) и b + N(0; 0,3), угадывание 0,25 в вопросах с выбором и 0,02 в остальных, θ ~ N(0,5; 1,0), заявки: 65 % точные, 25 % завышены, 10 % занижены; модельные кандидаты, не люди; N = 3 000, зёрна 5501…5510; время — в среднем 43 мин (p90 69); банк ab16d27 (913ad19f6a259aff), 2026-10-21; пар повтора 3 000",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    },
+    "hard": {
+     "text": "0,91",
+     "value": 0.9057,
+     "kn": "",
+     "ci": "95 % ДИ 0,90–0,91",
+     "key": "top5_hard[id=retest_kappa_w]",
+     "cond": "жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, консервативные параметры банка (a = 1,0 / 1,3); модельные кандидаты, не люди; N = 3 000, зёрна 4401…4410; время — в среднем 45 мин (p90 81); банк ab16d27 (913ad19f6a259aff), 2026-10-21; пар повтора 3 000",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase final --n 300 --seeds 4401 --out /w/a4fin2/out/main/F_calibrated__4401.json --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    }
+   },
+   {
+    "id": "false_confirm_all",
+    "label": "Ложное подтверждение грейда (от всех)",
+    "hint": "",
+    "standard": {
+     "text": "2,1 %",
+     "value": 0.021,
+     "kn": "63 из 3 000",
+     "ci": "95 % ДИ 1,6–2,7 %",
+     "key": "top5[id=false_confirm_all]",
+     "cond": "стандартные условия (как в аналогичных решениях): a = 1,5 в движке, истинные a × U(0,825; 1,175) и b + N(0; 0,3), угадывание 0,25 в вопросах с выбором и 0,02 в остальных, θ ~ N(0,5; 1,0), заявки: 65 % точные, 25 % завышены, 10 % занижены; модельные кандидаты, не люди; N = 3 000, зёрна 5501…5510; время — в среднем 43 мин (p90 69); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    },
+    "hard": {
+     "text": "2,7 %",
+     "value": 0.0273,
+     "kn": "82 из 3 000",
+     "ci": "95 % ДИ 2,2–3,4 %",
+     "key": "top5_hard[id=false_confirm_all]",
+     "cond": "жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, консервативные параметры банка (a = 1,0 / 1,3); модельные кандидаты, не люди; N = 3 000, зёрна 4401…4410; время — в среднем 45 мин (p90 81); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase final --n 300 --seeds 4401 --out /w/a4fin2/out/main/F_calibrated__4401.json --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    }
+   },
+   {
+    "id": "overclaim_passed",
+    "label": "Завышенная заявка прошла",
+    "hint": "",
+    "standard": {
+     "text": "8,8 %",
+     "value": 0.0882,
+     "kn": "63 из 714",
+     "ci": "95 % ДИ 7,0–11,1 %",
+     "key": "grade_verdict.st.extra.overclaim_passed",
+     "cond": "стандартные условия (как в аналогичных решениях): a = 1,5 в движке, истинные a × U(0,825; 1,175) и b + N(0; 0,3), угадывание 0,25 в вопросах с выбором и 0,02 в остальных, θ ~ N(0,5; 1,0), заявки: 65 % точные, 25 % завышены, 10 % занижены; модельные кандидаты, не люди; N = 3 000, зёрна 5501…5510; время — в среднем 43 мин (p90 69); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase st --n 300 --seeds 5501 --out /w/a4fin2/out/b/S_T__5501.json --population st --world st --bank-a mcq=1.5,code=1.5 --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    },
+    "hard": {
+     "text": "7,1 %",
+     "value": 0.0707,
+     "kn": "82 из 1 160",
+     "ci": "95 % ДИ 5,7–8,7 %",
+     "key": "grade_verdict.hard.extra.overclaim_passed",
+     "cond": "жёсткие условия: угадывание в вопросах с выбором, завышение и занижение заявок, кандидаты у порогов, консервативные параметры банка (a = 1,0 / 1,3); модельные кандидаты, не люди; N = 3 000, зёрна 4401…4410; время — в среднем 45 мин (p90 81); банк ab16d27 (913ad19f6a259aff), 2026-10-21",
+     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase final --n 300 --seeds 4401 --out /w/a4fin2/out/main/F_calibrated__4401.json --retest --fixed --expect-bank-hash 913ad19f6a259aff"
+    }
+   },
+   {
+    "id": "p5",
+    "label": "Подбор: точность первой пятёрки (P@5)",
+    "hint": "",
+    "standard": {
+     "text": "76,0 %",
+     "value": 0.76,
+     "kn": "",
+     "ci": "95 % ДИ 72,8–79,3 %",
+     "key": "matching.p5",
+     "cond": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, 9 направлений; тест у всех (погрешность 0,363 — средняя SE нашего теста), в 35 % резюме по 4 ложных навыка; метка 0–3 (точный грейд и ≥ 75 % обязательных навыков — 3); модели, не люди",
+     "recompute": ""
+    },
+    "hard": {
+     "text": "76,6 %",
+     "value": 0.7665,
+     "kn": "",
+     "ci": "95 % ДИ 74,2–79,0 %",
+     "key": "matching.hard.p5",
+     "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
+     "recompute": ""
+    }
+   },
+   {
+    "id": "ndcg10",
+    "label": "Подбор: nDCG@10",
+    "hint": "",
+    "standard": {
+     "text": "0,66",
+     "value": 0.6575,
+     "kn": "",
+     "ci": "95 % ДИ 0,64–0,68",
+     "key": "matching.ndcg10",
+     "cond": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, 9 направлений; тест у всех (погрешность 0,363 — средняя SE нашего теста), в 35 % резюме по 4 ложных навыка; метка 0–3 (точный грейд и ≥ 75 % обязательных навыков — 3); модели, не люди",
+     "recompute": ""
+    },
+    "hard": {
+     "text": "0,59",
+     "value": 0.5923,
+     "kn": "",
+     "ci": "95 % ДИ 0,57–0,61",
+     "key": "matching.hard.ndcg10",
+     "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
+     "recompute": ""
+    }
+   },
+   {
+    "id": "mrr",
+    "label": "Подбор: MRR",
+    "hint": "",
+    "standard": {
+     "text": "0,89",
+     "value": 0.8946,
+     "kn": "",
+     "ci": "95 % ДИ 0,87–0,93",
+     "key": "matching.mrr",
+     "cond": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, 9 направлений; тест у всех (погрешность 0,363 — средняя SE нашего теста), в 35 % резюме по 4 ложных навыка; метка 0–3 (точный грейд и ≥ 75 % обязательных навыков — 3); модели, не люди",
+     "recompute": ""
+    },
+    "hard": {
+     "text": "0,87",
+     "value": 0.8689,
+     "kn": "",
+     "ci": "95 % ДИ 0,84–0,89",
+     "key": "matching.hard.mrr",
+     "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
+     "recompute": ""
+    }
+   },
+   {
+    "id": "top5_any",
+    "label": "Подбор: хотя бы один подходящий в первой пятёрке",
+    "hint": "",
+    "standard": {
+     "text": "98,1 %",
+     "value": 0.981,
+     "kn": "",
+     "ci": "95 % ДИ 96,2–99,5 %",
+     "key": "matching.top5_any",
+     "cond": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, 9 направлений; тест у всех (погрешность 0,363 — средняя SE нашего теста), в 35 % резюме по 4 ложных навыка; метка 0–3 (точный грейд и ≥ 75 % обязательных навыков — 3); модели, не люди",
+     "recompute": ""
+    },
+    "hard": {
+     "text": "98,0 %",
+     "value": 0.98,
+     "kn": "",
+     "ci": "95 % ДИ 96,5–99,2 %",
+     "key": "matching.hard.top5_any",
+     "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
+     "recompute": ""
+    }
+   },
+   {
+    "id": "over10",
+    "label": "Подбор: переоценённых в первой десятке",
+    "hint": "",
+    "standard": {
+     "text": "2,5 %",
+     "value": 0.0248,
+     "kn": "",
+     "ci": "95 % ДИ 1,6–3,4 %",
+     "key": "matching.over10",
+     "cond": "стандартные условия, принятые в аналогичных решениях: 3 отложенных мира × 70 потребностей × 900 кандидатов, 9 направлений; тест у всех (погрешность 0,363 — средняя SE нашего теста), в 35 % резюме по 4 ложных навыка; метка 0–3 (точный грейд и ≥ 75 % обязательных навыков — 3); модели, не люди",
+     "recompute": ""
+    },
+    "hard": {
+     "text": "1,4 %",
+     "value": 0.0143,
+     "kn": "",
+     "ci": "95 % ДИ 1,0–1,9 %",
+     "key": "matching.hard.over10",
+     "cond": "жёсткие условия («проверка на прочность»): 2 отложенных мира × 200 потребностей × 2 000 кандидатов; 20 % анкет завышают грейд и стек, погрешность теста 0,48, люди у порогов; модели, не люди",
+     "recompute": ""
+    }
+   }
+  ],
+  "real": [
+   {
+    "id": "hh",
+    "label": "Вакансии hh.ru: направление определено верно",
+    "value": {
+     "text": "85,1 %",
+     "value": 0.851,
+     "kn": "286 из 336",
+     "ci": "",
+     "key": "hh_match.direction_ok",
+     "cond": "второй отложенный набор: 336 свежих вакансий hh.ru (SHA-256 2bb77a1cd8d7…, заморожен 2026-10-21, прогон один); метки — поля hh.ru (роль и слова названия), разбор текста правилами без LLM; прогон 2026-10-21, код 249443367",
+     "recompute": ""
+    }
+   },
+   {
+    "id": "external",
+    "label": "Открытый набор вакансий — nDCG@10",
+    "value": {
+     "text": "0,58",
+     "value": 0.5848,
+     "kn": "",
+     "ci": "",
+     "key": "external_benchmarks.djinni.draft.ndcg@10",
+     "cond": "внешний открытый набор, метки-посредники (категория и стаж из анкеты), не люди; режим «без теста»; N = 50 вакансий × 200 анкет; один прогон после FREEZE",
+     "recompute": ""
+    }
+   },
+   {
+    "id": "fsp",
+    "label": "Официальных протоколов ФСП в индексе",
+    "value": {
+     "text": "18",
+     "value": 18,
+     "kn": "",
+     "ci": "",
+     "key": "fsp_protocols.index.documents",
+     "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+     "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp"
+    }
+   },
+   {
+    "id": "fsp_results",
+    "label": "Результатов спортсменов в индексе",
+    "value": {
+     "text": "2 908",
+     "value": 2908,
+     "kn": "",
+     "ci": "",
+     "key": "fsp_protocols.index.results",
+     "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+     "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp"
+    }
+   }
+  ]
+ },
+ "journal": [
+  {
+   "what": "Тест на грейд — итоговый прогон",
+   "key": "grade_verdict.main.bank_content_hash",
+   "kind": "банк заданий",
+   "hash": "913ad19f6a25",
+   "extra": "N = 3 000"
+  },
+  {
+   "what": "Подбор — отложенные миры",
+   "key": "matching.freeze_sha256",
+   "kind": "FREEZE",
+   "hash": "991271d5dc87",
+   "extra": ""
+  },
+  {
+   "what": "Вакансии hh.ru — второй отложенный набор",
+   "key": "hh_match.manifest_sha256",
+   "kind": "список вакансий",
+   "hash": "2bb77a1cd8d7",
+   "extra": ""
+  },
+  {
+   "what": "Чужой открытый генератор — один в один",
+   "key": "external_benchmarks.devdev_1to1.condition_ru",
+   "kind": "FREEZE",
+   "hash": "515460d3",
+   "extra": "пересчёт в чистой копии — 0 расхождений"
+  },
+  {
+   "what": "Открытый набор вакансий и резюме",
+   "key": "external_benchmarks.djinni.freeze.bench_sha256",
+   "kind": "набор",
+   "hash": "f06ae238d62e",
+   "extra": ""
+  },
+  {
+   "what": "Защита проверки ответов — набор атак",
+   "key": "anticheat.holdout_offline.dataset_sha256",
+   "kind": "набор атак",
+   "hash": "71c375aebb94",
+   "extra": "один проход"
+  },
+  {
+   "what": "Протоколы ФСП — ручная сверка",
+   "key": "fsp_protocols.ocr_audit.sample_sha256",
+   "kind": "выборка",
+   "hash": "5922ee0e3899",
+   "extra": "99 страниц"
+  }
+ ],
+ "repo": {
+  "grade_change_interval_days": 90,
+  "retake_same_grade_days": 30,
+  "invitation_cooldown_days": 30,
+  "probe_time_limit_s": 900,
+  "probe_minutes": 15,
+  "w": {
+   "test": 45,
+   "stack_required": 35,
+   "stack_desired": 5,
+   "fsp": 10,
+   "probe": 5
+  },
+  "w_test": 45,
+  "w_stack_required": 35,
+  "w_stack_desired": 5,
+  "w_fsp": 10,
+  "w_probe": 5,
+  "sprt_alpha_pct": "2 %",
+  "api_paths": 406,
+  "api_operations": 435,
+  "api_tags": [
+   {
+    "tag": "validation",
+    "ops": 30,
+    "description": "Публичные метрики качества: валидация теста и подбора, критерии ТЗ, проверка своих данных"
+   },
+   {
+    "tag": "interview",
+    "ops": 29,
+    "description": "Устная защита развёрнутых ответов теста и ИИ-интервью этапом найма (флаг INTERVIEW_ENABLED). Оценивает модель; грейд не меняется"
+   },
+   {
+    "tag": "ats",
+    "ops": 23,
+    "description": "Передача кандидатов в ATS: Хантфлоу API v2, Talantix GraphQL, «Поток» REST v3, вебхук с HMAC, экспорт JSON, PDF-профиль по подписанной ссылке"
+   },
+   {
+    "tag": "employer",
+    "ops": 23,
+    "description": "Работодатель: потребности, подборки с версиями, поиск, карточки кандидатов"
+   },
+   {
+    "tag": "ats-stub",
+    "ops": 19,
+    "description": "Демо-заглушки ATS (Хантфлоу, Talantix, «Поток») по настоящему HTTP"
+   },
+   {
+    "tag": "candidate",
+    "ops": 17,
+    "description": "Кандидат: опрос, согласия 152-ФЗ, приватность, ФСП ID, резюме, PDF-профиль"
+   },
+   {
+    "tag": "auth",
+    "ops": 16,
+    "description": "Регистрация, подтверждение почты, вход (JWT), второй фактор (TOTP)"
+   },
+   {
+    "tag": "cups",
+    "ops": 16,
+    "description": "«Кубок работодателя»: соревнование в категории на базе зонда, таблица результатов под псевдонимами, приглашения лучшим, запись в паспорт ФСП"
+   },
+   {
+    "tag": "hiring",
+    "ops": 16,
+    "description": "Найм после принятия приглашения: слоты собеседования, оффер со встречным, исход найма; этапы уходят в ATS работодателя и возвращаются обратно"
+   },
+   {
+    "tag": "fsp-cabinet",
+    "ops": 16,
+    "description": "Кабинет ФСП: спрос работодателей, эффект соревнований ФСП, реальные зарплатные вилки, воронки — только агрегаты (минимальная группа 5)"
+   },
+   {
+    "tag": "vacancies",
+    "ops": 15,
+    "description": "Вакансии и отклики кандидатов"
+   },
+   {
+    "tag": "passport",
+    "ops": 14,
+    "description": "Подписанный паспорт грейда (Ed25519): публичная проверка, ключи, отзыв"
+   },
+   {
+    "tag": "assignments",
+    "ops": 14,
+    "description": "Задания работодателя с автопроверкой: сборка 3–5 заданий банка по стеку потребности или вакансии, зонд кандидату, задание к вакансии, лента «Задания для вас»; результат — факт T1 по навыку"
+   },
+   {
+    "tag": "mutual",
+    "ops": 14,
+    "description": "Взаимный подбор (Н9): насколько предложение подходит кандидату; обратная связь по подборке и новые версии (Н2); ссылка для нанимающего руководителя — только чтение, без ПДн, 7 дней (Н3)"
+   },
+   {
+    "tag": "assessment",
+    "ops": 13,
+    "description": "Тест на грейд и экран «Категория и грейд» (правило 90 дней, демо-режим жюри)"
+   },
+   {
+    "tag": "jury-live",
+    "ops": 12,
+    "description": "Живая демонстрация для жюри: QR → мини-тест на телефоне → экспресс-категория → подборка → автоприглашение с push"
+   },
+   {
+    "tag": "admin",
+    "ops": 11,
+    "description": "Мини-админка (/admin): пользователи, компании, заявки на тарифы и партнёрство, обращения, флаги и воронка продукта"
+   },
+   {
+    "tag": "subscriptions",
+    "ops": 10,
+    "description": "Подписка на потребность («новые подходящие»), уведомления кабинета, напоминания"
+   },
+   {
+    "tag": "candidate-contact",
+    "ops": 9,
+    "description": "Кандидат: зонды и приглашения, принятие и отказ"
+   },
+   {
+    "tag": "contact",
+    "ops": 9,
+    "description": "Переписка по приглашению и отклику, встречное предложение кандидата, отзыв доступа к контактам"
+   },
+   {
+    "tag": "proctor",
+    "ops": 9,
+    "description": "Камера во время теста по согласию: анализ только в браузере, на сервер — события без кадров; без камеры тест доступен полностью"
+   },
+   {
+    "tag": "study",
+    "ops": 9,
+    "description": "Обезличенная статистика прохождения у жюри и посетителей стенда: уведомление и отказ, путь, необязательная анкета SUS и оценки топ-5, сводка для /validation (при N ≥ 3)"
+   },
+   {
+    "tag": "trio",
+    "ops": 9,
+    "description": "Трёхсторонняя связь по приглашению: работодатель ↔ кандидат ↔ представитель ФСП (согласие кандидата, маскировка контактов до принятия)"
+   },
+   {
+    "tag": "expert-panel",
+    "ops": 7,
+    "description": "Экспертная разметка: вход по ссылке, пары, ответы, Ангофф"
+   },
+   {
+    "tag": "jury",
+    "ops": 7,
+    "description": "Жюри: вход в один клик, личная песочница с демо-данными, сброс и удаление песочницы"
+   },
+   {
+    "tag": "warroom",
+    "ops": 7,
+    "description": "Боевой ИИ-Полигон: детерминированный симулятор архитектурных инцидентов и проверка античита"
+   },
+   {
+    "tag": "employer-contact",
+    "ops": 6,
+    "description": "Работодатель: зонды и приглашения-офферы (вилка обязательна, лимит 30 дней)"
+   },
+   {
+    "tag": "tariffs",
+    "ops": 6,
+    "description": "Тарифы работодателя: «Старт» (бесплатно), «Найм» (цена по запросу, демо-счёт без суммы), «Партнёр ФСП» (выдаёт ФСП); лимит приглашений в месяц. Кандидатам всегда бесплатно. Без TARIFFS_ENABLED — 404 tariffs_disabled."
+   },
+   {
+    "tag": "my-data",
+    "ops": 6,
+    "description": "«Мои данные»: что хранится о пользователе, выгрузка JSON, удаление, отзыв раскрытых контактов"
+   },
+   {
+    "tag": "sus",
+    "ops": 5,
+    "description": "Опрос юзабилити SUS и агрегаты для /validation"
+   },
+   {
+    "tag": "employer-trust",
+    "ops": 5,
+    "description": "Проверка работодателя в ЕГРЮЛ (ФНС) и индекс доверия"
+   },
+   {
+    "tag": "fsp-id",
+    "ops": 5,
+    "description": "Вход и связка через ФСП ID (демо, Keycloak, OIDC + PKCE)"
+   },
+   {
+    "tag": "push",
+    "ops": 5,
+    "description": "Web Push (VAPID) для PWA"
+   },
+   {
+    "tag": "telegram",
+    "ops": 5,
+    "description": "Уведомления в Telegram: привязка по одноразовому коду и быстрые ответы на приглашения"
+   },
+   {
+    "tag": "hh",
+    "ops": 3,
+    "description": "hh.ru: импорт своей вакансии работодателя (только чтение GET /vacancies/{id}) и «Рынок по hh.ru» — медиана и p25–p75 вилок живых вакансий. Без HH_ENABLED и токена приложения — 404 hh_disabled."
+   },
+   {
+    "tag": "expert",
+    "ops": 3,
+    "description": "Проверка развёрнутых ответов теста по рубрике: очередь, оценка, согласованность экспертов"
+   },
+   {
+    "tag": "profiles",
+    "ops": 3,
+    "description": "Профиль текущего пользователя: кандидат или работодатель"
+   },
+   {
+    "tag": "support",
+    "ops": 3,
+    "description": "Служба поддержки и обратная связь (/support): приём обращений и история своих заявок"
+   },
+   {
+    "tag": "catalog",
+    "ops": 2,
+    "description": "Справочник направлений, грейдов, категорий и стек-тегов"
+   },
+   {
+    "tag": "system",
+    "ops": 2,
+    "description": "Служебные методы"
+   },
+   {
+    "tag": "fsp-registry",
+    "ops": 1,
+    "description": "Предложение контракта реестра ФСП и его синтетический мок (не официальный API ФСП)"
+   },
+   {
+    "tag": "legal",
+    "ops": 1,
+    "description": "Тексты согласий и реквизиты оператора персональных данных"
+   }
+  ],
+  "api_tag_count": 42,
+  "api_version": "0.2.0"
+ }
+}

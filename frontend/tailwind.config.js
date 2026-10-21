@@ -1,27 +1,29 @@
-/** Палитра шаблона ЛЦТ; брендбук ФСП подключим, когда придёт. */
+/** Палитра брендбука Федерации спортивного программирования (ФСП): электрический индиго #402FFF, графит #0E1126 и благородный алый акцент #EC1D35. */
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
         brand: {
-          DEFAULT: "#FF0053",
-          // фон под белым текстом (кнопки, бейджи): #E0004C — 4,9 : 1, при наведении #C20042 — 6,2 : 1 (AA для 14 px)
-          strong: "#E0004C",
-          deep: "#C20042",
-          soft: "#FC3777",
-          blush: "#FFD6E4",
-          lavender: "#8A83D1",
-          plum: "#520978",
-          night: "#310F53",
-          ink: "#1C1D22",
+          DEFAULT: "#402FFF",
+          // фон под белым текстом (кнопки, бейджи): #3322E8 — 6,1 : 1, при наведении #2416BA — 8,2 : 1 (AAA/AA для 14 px)
+          strong: "#3322E8",
+          deep: "#2416BA",
+          soft: "#5B4BFF",
+          blush: "#ECEFFE",
+          lavender: "#5E6494",
+          plum: "#1E244D",
+          night: "#0E1126",
+          ink: "#131629",
+          crimson: "#EC1D35",
         },
       },
-      // Текст цветами палитры на белом: lavender #8A83D1 — 3,4 : 1, brand #FF0053 — 3,9 : 1, ниже AA для мелких
-      // подписей и ссылок. Для текста — те же оттенки чуть темнее (5,6 : 1 и 4,9 : 1); фоны, кнопки, рамки
-      // и графики остаются в исходных цветах палитры ЛЦТ.
-      textColor: { brand: { DEFAULT: "#E0004C", lavender: "#5F57B8" } },
-      fontFamily: { sans: ["Montserrat", "system-ui", "sans-serif"] },
+      // Высокий контраст AA на светлом фоне для мелких подписей и ссылок в единой гамме ФСП
+      textColor: { brand: { DEFAULT: "#3120E0", lavender: "#4A5080" } },
+      fontFamily: {
+        sans: ["Montserrat", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+      },
       maxWidth: { content: "72rem" },
     },
   },

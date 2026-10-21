@@ -91,7 +91,8 @@ export const GRADE_EXT: Record<string, string> = { lead: "Lead", principal: "Pri
 export const GRADE_TITLE_ALL: Record<string, string> = { ...GRADES, ...GRADE_EXT };
 export const catTitle = (id?: string | null) => {
   if (!id) return "Не присвоена";
-  const [d, g] = id.split(".");
+  const sep = id.includes(".") ? "." : id.includes("-") ? "-" : "_";
+  const [d, g] = id.split(sep);
   return `${DIRECTION_TITLES[d] ?? d} · ${GRADE_TITLE_ALL[g] ?? g}`;
 };
 
@@ -272,9 +273,9 @@ export function Toggle({ checked, onChange, label, hint }: { checked: boolean; o
 
 export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
-    <div className="card min-w-0 break-words">
-      <p className="stat-label text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{label}</p>
-      <p className="mt-2 text-xl font-bold tabular-nums text-brand-night">{value}</p>
+    <div className="card relative min-w-0 overflow-hidden break-words before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-[#2B1CE0] before:via-[#402FFF] before:to-[#7062FF]">
+      <p className="stat-label text-[11px] font-bold uppercase tracking-[0.06em] text-brand-lavender [overflow-wrap:normal] [word-break:normal] sm:text-xs sm:tracking-[0.11em]">{label}</p>
+      <p className="mt-2 font-mono text-2xl font-extrabold tabular-nums tracking-tight text-brand-night">{value}</p>
       {hint && <p className="mt-1 text-xs leading-relaxed text-brand-ink/65">{hint}</p>}
     </div>
   );

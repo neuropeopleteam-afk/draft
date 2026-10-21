@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CandidateCard, SCORE_HINT } from "../../components/CandidateCard";
 import { CompactCard } from "../../components/CompactCard";  // Я10: компактная подборка
 import { TournamentLaunch } from "../../components/FspTournament";  // Н5: отборочный турнир ФСП под вакансию
@@ -23,6 +23,7 @@ import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // под�
 import { NeedFileNote, NeedFileUpload, type NeedFileInfo } from "./NeedFile";  // Ф5: потребность из файла вакансии
 import { needPreset } from "../../lib/jury";  // Я9: заготовка своей потребности из проводника
 import { DictateNeed } from "../../components/VoiceNeed";  // «Надиктовать» (VOICE_NEED_ENABLED)
+import { VoiceBrief } from "../../components/elena/VoiceBrief";  // бриф голосом с Настей (Аватар, 21.10)
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -364,6 +365,7 @@ export function Needs() {
         </Field>
         {file && text.slice(0, 40) === file.text.slice(0, 40) && <NeedFileNote info={file} edited={text !== file.text} />}
         <DictateNeed fieldId="need" disabled={busy} onText={(t) => { setText((x) => (x.trim() ? `${x.trimEnd()} ${t}` : t)); setReq(null); fp.reset(); }} />
+        <VoiceBrief />
         {!req && (
           <div className="flex flex-wrap gap-4 text-sm">
             <button type="button" data-testid="sample-need" className="font-semibold text-brand hover:underline" onClick={() => setText(EXAMPLE)}>Подставить пример</button>
@@ -445,10 +447,46 @@ const REL: Record<string, string> = { exact: "точное совпадение"
 
 const TOP = 5, MORE = 10, WIDE_PX = 1000;  // Я10: первый экран подборки — 5 компактных карточек
 
+const GRADE_ORDER_LIST = ["junior", "middle", "senior", "lead", "principal"];
+const GRADE_CUTS_MAP: Record<string, number> = { junior: -1.0, middle: 0.0, senior: 1.0, lead: 1.6, principal: 2.1 };
+
+function stdNormCdf(x: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(x));
+  const d = 0.3989422804014327 * Math.exp((-x * x) / 2);
+  const p = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + 1.330274429 * t))));
+  return x >= 0 ? 1 - p : p;
+}
+
+/** Определяет кандидатов в подборке, чей подтверждённый тестом уровень находится у верхней границы запрошенного грейда (или выше),
+ *  и которых режим «Строго запрошенный грейд» переставляет ниже точного попадания в полосу грейда. */
+function isUpperBoundaryCandidate(r: any, req?: { direction?: string | null; grade?: string | null }): boolean {
+  const exactReason = (r?.reasons ?? []).find((x: any) => x.requirement === "Строго запрошенный грейд");
+  if (exactReason) {
+    if (exactReason.status === "partial") return true;
+    if (typeof exactReason.p_exact === "number" && exactReason.p_exact < 0.78) return true;
+  }
+  const g = req?.grade ?? "";
+  const idx = GRADE_ORDER_LIST.indexOf(g);
+  if (idx < 0) return false;
+  const candGrade = r?.card?.grade ?? (typeof r?.category_id === "string" && r.category_id.includes(".") ? r.category_id.split(".")[1] : null);
+  if (candGrade && GRADE_ORDER_LIST.indexOf(candGrade) > idx) return true;
+  const theta = r?.card?.test?.theta;
+  const se = Math.max(0.05, Number(r?.card?.test?.se ?? 0.45));
+  const cut = GRADE_CUTS_MAP[g];
+  const nextGrade = idx + 1 < GRADE_ORDER_LIST.length ? GRADE_ORDER_LIST[idx + 1] : null;
+  const nextCut = nextGrade ? GRADE_CUTS_MAP[nextGrade] : null;
+  if (typeof theta !== "number" || cut == null || nextCut == null) return false;
+  const lo = 1 - stdNormCdf((cut - theta) / se);
+  const hi = 1 - stdNormCdf((nextCut - theta) / se);
+  const pExact = Math.max(0, lo - hi);
+  return theta >= (cut + nextCut) / 2 && pExact < 0.78;
+}
+
 /** Подборка по потребности: категории, карточки с объяснениями, уточнение без потери версий. */
 export function Selection() {
   const { id, version } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const demoUi = useDemoUi();
   const need = useApi<any>(`/employer/needs/${id}`);
   const last = need.data?.versions?.at(-1)?.version;
@@ -472,7 +510,22 @@ export function Selection() {
   const [busy, setBusy] = useState(false);
 
   // FIX7 п. 10: стаж из потребности подставляется в «Стаж от, лет», если версия его не задала — уходит в следующую версию
-  useEffect(() => { if (sel.data) { setFilters(withNeedExperience(sel.data.filters ?? {}, sel.data.requirements)); setRealOnly(!!sel.data.filters?.real_only); setPicked([]); setShown(TOP); setOpen({}); setActive(null); } }, [sel.data]);
+  useEffect(() => {
+    if (sel.data) {
+      const urlExact = searchParams.get("grade_exact") === "1" || searchParams.get("grade_exact") === "true";
+      const baseFilters = withNeedExperience(sel.data.filters ?? {}, sel.data.requirements);
+      const exactVal = sel.data.filters?.grade_exact != null ? !!sel.data.filters.grade_exact : urlExact;
+      setFilters({ ...baseFilters, ...(exactVal ? { grade_exact: true } : {}) });
+      setRealOnly(!!sel.data.filters?.real_only);
+      const next = new URLSearchParams(searchParams);
+      if (exactVal) next.set("grade_exact", "1");
+      else next.delete("grade_exact");
+      if (next.toString() !== searchParams.toString()) {
+        setSearchParams(next, { replace: true });
+      }
+      setPicked([]); setShown(TOP); setOpen({}); setActive(null);
+    }
+  }, [sel.data]); // eslint-disable-line react-hooks/exhaustive-deps
   // Я10: первые TOP — компактно, остальные свёрнуты («Показать ещё»); на широком блоке (≥ 1000 px) доказательства — справа
   const [shown, setShown] = useState(TOP);
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -495,7 +548,7 @@ export function Selection() {
       if (refineReq) body.requirements = reqBody(refineReq);
       const r = await api<any>(`/employer/needs/${id}/selections`, { body });
       await need.reload(); setRefineReq(null);
-      navigate(`/employer/needs/${id}/v/${r.version}`);
+      navigate(`/employer/needs/${id}/v/${r.version}${f.grade_exact ? "?grade_exact=1" : ""}`);
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
 
@@ -506,7 +559,7 @@ export function Selection() {
       if (o.requirements) body.requirements = reqBody(o.requirements);
       const r = await api<any>(`/employer/needs/${id}/selections`, { body });
       await need.reload();
-      navigate(`/employer/needs/${id}/v/${r.version}`);
+      navigate(`/employer/needs/${id}/v/${r.version}${(o.filters as any)?.grade_exact ? "?grade_exact=1" : ""}`);
     } catch (e) { setWErr(errText(e)); } finally { setBusy(false); }
   }
 
@@ -518,7 +571,22 @@ export function Selection() {
       const body: any = { parent_version: v, filters: { ...f, conditions_off: off || undefined } };
       const r = await api<any>(`/employer/needs/${id}/selections`, { body });
       await need.reload();
-      navigate(`/employer/needs/${id}/v/${r.version}`);
+      navigate(`/employer/needs/${id}/v/${r.version}${f.grade_exact ? "?grade_exact=1" : ""}`);
+    } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  }
+
+  /** А2/А5 (21.10): переключение «Строго запрошенный грейд» сразу сохраняет новую версию подборки с filters.grade_exact. */
+  async function toggleGradeExact(exact: boolean) {
+    const nextFilters = { ...filters, grade_exact: exact || undefined };
+    setFilters(nextFilters);
+    setErr(null); setBusy(true);
+    try {
+      const { relaxation: _r, ...f } = nextFilters;
+      const body: any = { parent_version: v, filters: { ...f, grade_exact: exact || undefined } };
+      if (refineReq) body.requirements = reqBody(refineReq);
+      const r = await api<any>(`/employer/needs/${id}/selections`, { body });
+      await need.reload(); setRefineReq(null);
+      navigate(`/employer/needs/${id}/v/${r.version}${exact ? "?grade_exact=1" : ""}`);
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
 
@@ -534,6 +602,10 @@ export function Selection() {
 
   const allOrdered: any[] = s ? mutual.sorted<any>(s.results) : [];
   const ordered: any[] = realOnly ? allOrdered.filter((r) => !isSyntheticProfile(r)) : allOrdered;
+  const upperBoundaryCount = useMemo(
+    () => ordered.filter((r) => isUpperBoundaryCandidate(r, reqOf)).length,
+    [ordered, reqOf],
+  );
   const syntheticCount = allOrdered.filter((r) => isSyntheticProfile(r)).length;
   const visible = ordered.slice(0, Math.max(TOP, shown));
   const rest = ordered.length - visible.length;
@@ -567,7 +639,7 @@ export function Selection() {
         <Link to="/employer/needs" className="font-semibold text-brand hover:underline sm:hidden">Все потребности</Link>
         <span className="text-brand-ink/65">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
-          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} title={x.filters?.relaxation ? `из версии ${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
+          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}${x.filters?.grade_exact ? "?grade_exact=1" : ""}`} title={x.filters?.relaxation ? `из версии ${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
             версия {x.version} · {x.total}
           </Link>
         ))}
@@ -610,6 +682,11 @@ export function Selection() {
                   <b className="font-semibold text-brand-plum">Фильтр стека вакансии:</b> {(s.stack_filter ?? s.meta?.stack_filter).text}
                 </p>
               )}
+              {(s.grade_exact?.on || s.filters?.grade_exact) && (
+                <p className="rounded-xl border border-brand-night/10 bg-white px-3 py-2 text-xs font-medium text-brand-night" data-testid="grade-exact-note">
+                  <b className="font-semibold text-brand-plum">Строго запрошенный грейд:</b> По умолчанию в подборке есть и кандидаты, чей подтверждённый уровень у верхней границы запрошенного; строгий режим оставляет только точное совпадение.
+                </p>
+              )}
               {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
                 <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Место внутри категории определяют результат теста и достижения ФСП (отдельной осью); навыки вакансии, подтверждённые тестом, показаны строкой совпадения и фильтром стека. Самоописание (заявленный стек, грейд, формат, город, вилка) в балл не входит. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
               </div>}
@@ -630,6 +707,7 @@ export function Selection() {
                           picked={picked.includes(r.ref)} pickDisabled={picked.length >= 3} onPick={() => togglePick(r.ref)}
                           onInvite={() => { setInvited(null); setInvite(r); }} sent={sentRefs.includes(r.ref)}
                           badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
+                          upperBoundary={isUpperBoundaryCandidate(r, reqOf)}
                           side={side} active={side && activeRow?.ref === r.ref}
                           open={!side && isOpen} onToggle={() => (side ? setActive(r.ref) : setOpen({ ...open, [r.ref]: !isOpen }))}
                           details={evidence(r)} />
@@ -685,7 +763,7 @@ export function Selection() {
                         }} />
                       <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{relText(c.relation)} · рынок {range(c.market_range?.from, c.market_range?.to)} на руки</span></span>
                     </label>
-                    <span className="chip" title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, предварительно ${c.provisional}` : ""}${c.unconfirmed ? `, заявили без подтверждения ${c.unconfirmed}` : ""}`}>{c.count}{c.unconfirmed ? <span className="text-brand-ink/65"> +{c.unconfirmed}</span> : null}</span>
+                    <span className="chip" title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, нужен доп. этап ${c.provisional}` : ""}${c.unconfirmed ? `, заявили без подтверждения ${c.unconfirmed}` : ""}`}>{c.count}{c.unconfirmed ? <span className="text-brand-ink/65"> +{c.unconfirmed}</span> : null}</span>
                   </li>
                 ))}
               </ul>
@@ -701,7 +779,20 @@ export function Selection() {
               <Toggle checked={!!filters.fsp_protocol_only} onChange={(x) => setFilters({ ...filters, fsp_protocol_only: x || undefined })} label="Подтверждено протоколом ФСП"
                 hint="Оставить только кандидатов с достижениями, подтверждёнными официальным протоколом ФСП (ЕКП, ЕВСК, ссылка на PDF)." />
               <Toggle checked={!!filters.confirmed_only} onChange={(x) => setFilters({ ...filters, confirmed_only: x || undefined })} label="Только подтверждённый грейд"
-                hint="Убрать «Junior (предварительно)» и кандидатов без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждёным грейдом." />
+                hint="Убрать кандидатов со статусом «нужен доп. этап» и без подтверждённого грейда. Самооценка кандидата никогда не смешивается с подтверждённым грейдом." />
+              <div data-testid="grade-exact-toggle" className="space-y-1">
+                <Toggle
+                  checked={!!filters.grade_exact}
+                  onChange={(x) => {
+                    void toggleGradeExact(x);
+                  }}
+                  label="Строго запрошенный грейд"
+                  hint="По умолчанию в подборке есть и кандидаты, чей подтверждённый уровень у верхней границы запрошенного; строгий режим оставляет только точное совпадение."
+                />
+                <p className="text-xs font-medium text-brand-plum" data-testid="grade-exact-count">
+                  В этой подборке сильнее запроса (у верхней границы грейда): {upperBoundaryCount}
+                </p>
+              </div>
               <Toggle checked={!!filters.learn_from_company} onChange={(x) => setFilters({ ...filters, learn_from_company: x || undefined })} label="Учитывать решения компании"
                 hint="Скорректировать веса навыков по истории приглашений, собеседований и офферов вашей компании (по умолчанию выключено)." />
               {reqTags.length > 0 && (

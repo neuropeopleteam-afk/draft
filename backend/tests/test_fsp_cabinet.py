@@ -282,3 +282,165 @@ def test_stale_demo_cups_reseeded_on_jury_login(client):
     titles = {c["title"]: c for c in items}
     assert titles["Маршрутизация заказов"]["phase"] == "active" and titles["Маршрутизация заказов"]["my_status"] is None
     assert titles["Платёжный шлюз"]["my_place"] == 2
+
+
+def test_report_single_load_cache_60s_invalidation_and_byte_for_byte_equivalence(client, monkeypatch):
+    """2б-1 (21.10): /api/fsp-cabinet/report вызывает an.load ровно 1 раз (передаёт Data в build_regions_map и benefit),
+    кэш 60 с по ключу (days, include_demo, jury_key) не смешивает песочницы и сбрасывается при записи в БД,
+    а ответы report / regions / benefit совпадают байт-в-байт с прямым расчётом без кэша."""
+    from app.core.config import get_settings
+    from app.cup import tournament
+    from app.fsp_cabinet import analytics as an
+    from app.fsp_cabinet import benefit as benefit_mod
+    from app.fsp_cabinet.regions import build_regions_map
+
+    monkeypatch.setattr(get_settings(), "tariffs_enabled", True)
+    _platform_demo()
+    ta = analyst_token(client)
+    an.invalidate_cache()
+
+    load_calls = 0
+    orig_load = an.load
+
+    def spy_load(db, days=None, include_demo=True):
+        nonlocal load_calls
+        load_calls += 1
+        return orig_load(db, days, include_demo=include_demo)
+
+    monkeypatch.setattr(an, "load", spy_load)
+
+    # 1. Первый вызов /report делает ровно ОДИН вызов an.load (а не два — для an.report и build_regions_map)
+    r1 = client.get("/api/fsp-cabinet/report", headers=H(ta))
+    assert r1.status_code == 200, r1.text
+    assert load_calls == 1
+    rep_cached = r1.json()
+
+    # 2. Повторный вызов /report и /benefit с теми же параметрами берут данные из кэша (0 новых вызовов an.load)
+    r2 = client.get("/api/fsp-cabinet/report", headers=H(ta))
+    assert r2.status_code == 200
+    assert load_calls == 1
+    r_ben = client.get("/api/fsp-cabinet/benefit", headers=H(ta))
+    assert r_ben.status_code == 200
+    assert load_calls == 1
+    ben_cached = r_ben.json()
+
+    # 3. Байт-в-байт совпадение с прямым расчётом без кэша на тех же данных (кроме метки generated_at)
+    with SessionLocal() as db:
+        d_fresh = orig_load(db, None, include_demo=True)
+        expected_rep = {
+            **an.report(db, None, include_demo=True, d=d_fresh),
+            "regions_map": build_regions_map(db, None, d=d_fresh, include_demo=True),
+            "tournaments": tournament.cabinet_list(db, None, include_demo=True),
+        }
+        expected_ben = benefit_mod.compute(db, None, d=d_fresh, include_demo=True)
+
+    rep_cmp = {**rep_cached, "generated_at": expected_rep["generated_at"]}
+    assert json.dumps(rep_cmp, sort_keys=True, ensure_ascii=False) == json.dumps(
+        expected_rep, sort_keys=True, ensure_ascii=False
+    )
+    assert json.dumps(ben_cached, sort_keys=True, ensure_ascii=False) == json.dumps(
+        expected_ben, sort_keys=True, ensure_ascii=False
+    )
+
+    # 4. Песочницы жюри не смешиваются по ключу кэша
+    f_a = _login(client, "fsp", "new")
+    an.invalidate_cache()
+    load_calls = 0
+    assert client.get("/api/fsp-cabinet/report", headers=H(f_a["access_token"])).status_code == 200
+    assert load_calls == 1
+    # Запрос от аналитика вне песочницы имеет другой jury_key -> отдельный ключ кэша
+    assert client.get("/api/fsp-cabinet/report", headers=H(ta)).status_code == 200
+    assert load_calls == 2
+
+    # 5. Вход пользователя (обновление last_login_at, создание RefreshSession / AuditEvent / вход жюри в существующую песочницу) НЕ сбрасывает кэш
+    calls_before_login = load_calls
+    f_cand_login = _login(client, "candidate", f_a["scenario"])
+    assert f_cand_login.get("access_token")
+    r_after_login = client.get("/api/fsp-cabinet/report", headers=H(ta))
+    assert r_after_login.status_code == 200
+    assert load_calls == calls_before_login
+
+    # 6. Запись в таблицы, от которых зависит отчёт (приглашения, кандидаты, потребности), автоматически сбрасывает кэш
+    te = employer(client)
+    tc = candidate_with_category(client, "cache-bust@example.com")
+    assert client.post("/api/employer/invitations", json={**INVITE, "candidate_ref": my_ref(client, tc)}, headers=H(te)).status_code == 201
+    calls_before = load_calls
+    r_after = client.get("/api/fsp-cabinet/report", headers=H(ta))
+    assert r_after.status_code == 200
+    assert load_calls == calls_before + 1
+
+
+def test_demand_skills_deterministic_order_and_unspecified_city(client):
+    """А12/владелец (21.10):
+    1) demand.skills сортируется детерминированно по (-w, -invited_sk, tag) — порядок хвоста не зависит от порядка обхода set;
+    2) кандидаты и потребности без города (или с неизвестным городом) не раскидываются по округам по кругу,
+       а выносятся в строку «Город не указан» (в итогах учтены, на карте и в разрыве округов не учитываются)."""
+    import uuid
+    from app.core.db import SessionLocal
+    from app.fsp_cabinet import analytics as an
+    from app.fsp_cabinet.regions import CITY_UNSPECIFIED_TITLE, build_regions_map, resolve_geo
+    from app.modules.catalog.models import Category
+
+    # 1. Детерминированный порядок навыков при равных весах и числе приглашённых
+    d1 = an.Data(
+        cands={
+            uuid.uuid4(): an.Cand(
+                user_id=uuid.uuid4(),
+                category="backend.middle",
+                direction="backend",
+                skills={"zzzz_tag", "aaaa_tag", "mmmm_tag"},
+                invitations=[object()],
+            )
+        },
+        invs=[],
+        needs=[],
+        categories={},
+        cups=[],
+        entries=[],
+        period_days=None,
+    )
+    dem = an.demand(d1)
+    skill_tags = [s["tag"] for s in dem["skills"]]
+    assert skill_tags == ["aaaa_tag", "mmmm_tag", "zzzz_tag"]
+
+    # 2. resolve_geo без города или с неизвестным городом возвращает (None, 'Город не указан') независимо от fallback_idx
+    for idx in range(12):
+        assert resolve_geo(None, idx) == (None, CITY_UNSPECIFIED_TITLE)
+        assert resolve_geo("", idx) == (None, CITY_UNSPECIFIED_TITLE)
+        assert resolve_geo("Неизвестный Город XYZ", idx) == (None, CITY_UNSPECIFIED_TITLE)
+    assert resolve_geo("Москва", 5) == ("cfo", "Москва и МО")
+
+    # 3. В build_regions_map профили без города попадают в city_unspecified и total_confirmed, но НЕ в округа карты и НЕ в gap округов
+    cands_map = {}
+    for i in range(6):
+        uid = uuid.uuid4()
+        cands_map[uid] = an.Cand(user_id=uid, category="backend.middle", direction="backend", city="Москва", is_synthetic=False)
+    for i in range(5):
+        uid = uuid.uuid4()
+        cands_map[uid] = an.Cand(user_id=uid, category="backend.middle", direction="backend", city=None if i < 3 else "Неизвестныйград", is_synthetic=False)
+
+    d_geo = an.Data(
+        cands=cands_map,
+        invs=[],
+        needs=[],
+        categories={},
+        cups=[],
+        entries=[],
+        period_days=None,
+    )
+    with SessionLocal() as db:
+        rm = build_regions_map(db, None, d=d_geo, include_demo=False)
+    assert rm["total_confirmed"] == 11
+    assert rm["mapped_confirmed"] == 6
+    assert rm["city_unspecified"]["title"] == "Город не указан"
+    assert rm["city_unspecified"]["confirmed"] == 5
+    assert rm["city_unspecified"]["real_confirmed"] == 5
+    assert rm["city_unspecified"]["gap"] is None
+    assert "Город не указан" in rm["synthetic_note"]
+    cfo = next(x for x in rm["districts"] if x["id"] == "cfo")
+    assert cfo["confirmed"] == 6
+    for other in rm["districts"]:
+        if other["id"] != "cfo":
+            assert other["confirmed"] == 0
+
+

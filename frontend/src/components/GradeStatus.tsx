@@ -32,13 +32,13 @@ const STYLE: Record<GradeStatusKind, string> = {
 };
 
 export const STATUS_TITLES: Record<GradeStatusKind, string> = {
-  confirmed: "Грейд подтверждён", provisional: "Предварительно", unconfirmed: "Грейд не подтверждён",
+  confirmed: "Грейд подтверждён", provisional: "Нужен доп. этап", unconfirmed: "Грейд не подтверждён",
 };
 
-/** Компактная плашка статуса: «Грейд подтверждён» / «Предварительно · 58 %» / «Грейд не подтверждён (заявлен Middle)». */
+/** Компактная плашка статуса: «Грейд подтверждён» / «Нужен доп. этап · 58 %» / «Грейд не подтверждён (заявлен Middle)». */
 export function GradeBadge({ s, claimed }: { s?: GradeStatusInfo | null; claimed?: { title?: string; grade?: string } | null }) {
   if (!s) return null;
-  const label = s.status === "provisional" ? `Предварительно${s.p_pct != null ? ` · ${s.p_pct} %` : ""}`
+  const label = s.status === "provisional" ? `Нужен доп. этап${s.p_pct != null ? ` · ${s.p_pct} %` : ""}`
     : s.status === "unconfirmed" ? `Грейд не подтверждён${claimed?.title ? ` · заявлен ${claimed.title}` : s.claimed_title ? ` · заявлен ${s.claimed_title}` : ""}`
     : s.ext_preliminary ? `${s.grade_title ?? s.ext_preliminary.grade} по тесту · предварительно`
     : s.pending_review ? "Грейд по тесту · предварительно, ответы на проверке"
@@ -135,7 +135,7 @@ export function StatusCounts({ confirmed, provisional, unconfirmed, hiddenNote }
 }) {
   const parts: string[] = [];
   if (confirmed != null) parts.push(`подтверждённых ${confirmed}`);
-  if (provisional) parts.push(`предварительно ${provisional}`);
+  if (provisional) parts.push(`нужен доп. этап ${provisional}`);
   if (unconfirmed) parts.push(`грейд не подтверждён ${unconfirmed}`);
   if (!parts.length) return null;
   return (

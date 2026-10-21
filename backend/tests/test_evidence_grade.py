@@ -218,7 +218,7 @@ def test_sync_skeptic_lowers_one_step_with_code_assembly(monkeypatch, net):
     assert g.status == "scored" and g.method == "llm2" and g.criteria == {"cause": 1.0, "fix": 0.5} and g.score == 0.75
     ch = g.second["changes"]
     assert len(ch) == 1 and ch[0]["accepted"] and ch[0]["from"] == 1.0 and ch[0]["to"] == 0.5 and ch[0]["proposed"] == 0
-    assert g.second["verdict"] == "agree" and g.second["model_label"] == "Claude Fable 5.1"
+    assert g.second["verdict"] == "agree" and g.second["model_label"] == "вторая модель"
     assert g.second["kind"] == "skeptic" and g.scores == [1.0, 0.75]
 
 

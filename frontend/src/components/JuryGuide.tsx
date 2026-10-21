@@ -9,7 +9,7 @@ import { api } from "../lib/api";
 import { errText } from "./ui";
 
 const PERSONA_NAME: Record<string, string> = {
-  candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", candidate_junior: "демо-кандидат Junior (предварительно)",
+  candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", candidate_junior: "демо-кандидат «Junior — нужен доп. этап»",
   candidate_new: "демо-кандидат «Пройдите тест сами»", employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
 };
 export const whoAmI = (email: string) => {

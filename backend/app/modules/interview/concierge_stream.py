@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import os
 import logging
 import queue
 import re
@@ -22,7 +23,7 @@ from typing import Iterator
 
 log = logging.getLogger("interview.concierge")
 
-_HEAD_KEYS = ("action", "step", "point", "role", "user_name", "dir", "offer")
+_HEAD_KEYS = ("action", "step", "point", "role", "user_name", "dir", "offer", "full")
 
 
 def _spec(spec: str) -> tuple[str, str, str]:
@@ -51,6 +52,12 @@ def stream_llm(msgs: list[dict], spec: str, *, max_tokens: int = 420, stop: thre
         body["max_tokens"] = max_tokens + int(effort[1:])
     elif effort:
         body["reasoning"] = {"effort": effort}
+    # Claude через OpenRouter — всегда у одного поставщика: кэш подсказки живёт у поставщика, при переброске между ними
+    # каждый ход платил полным чтением подсказки (боевой 21.10 19:07–19:13: решение 3,8–6 с вместо 1,5–1,8 с). Замер 19:40:
+    # Vertex — холодный 2,7 с, тёплый 1,4–1,7; Anthropic — 5,0 / 1,7–2,3; Bedrock — 3,5 / 1,5–3,0.
+    pin = os.environ.get("CONCIERGE_OR_PROVIDER", "google-vertex,anthropic").strip()
+    if prov == "openrouter" and model.startswith("anthropic/") and pin:
+        body["provider"] = {"order": [p.strip() for p in pin.split(",") if p.strip()], "allow_fallbacks": True}
     with brain._client().stream("POST", url, headers=headers, json=body,
                                 timeout=httpx.Timeout(timeout, connect=5)) as r:
         if r.status_code != 200:
@@ -95,11 +102,13 @@ def parse_head(line: str) -> dict | None:
 
 
 class Splitter:
-    """Режет поток текста на фразы для голоса: по концу предложения; длинное первое — по запятой (быстрее звук)."""
+    """Режет поток текста на фразы для голоса — только по концу предложения: разрез по запятой давал интонацию конца
+    фразы посреди предложения («а имя, | пол и возраст»), естественность важнее 0,2 с. Исключение — первое предложение
+    длиннее first_cut знаков: режется по тире не ближе 60 знаков от начала."""
 
     END = re.compile(r"([.?…!]+)(\s+|$)")
 
-    def __init__(self, first_cut: int = 70):
+    def __init__(self, first_cut: int = 260):
         self.buf = ""
         self.n = 0
         self.first_cut = first_cut
@@ -115,10 +124,10 @@ class Splitter:
                     break
             if m is None:
                 if self.n == 0 and len(self.buf) > self.first_cut:
-                    cut = self.buf.rfind(", ", 28, self.first_cut + 30)
+                    cut = self.buf.rfind(" — ", 60, self.first_cut)
                     if cut > 0:
-                        out.append(self.buf[:cut + 1].strip())
-                        self.buf = self.buf[cut + 2:]
+                        out.append(self.buf[:cut].strip())
+                        self.buf = self.buf[cut + 3:]
                         self.n += 1
                         continue
                 break

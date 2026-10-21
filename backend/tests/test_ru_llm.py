@@ -45,9 +45,9 @@ def test_ru_only_need_delta_fenced_reply(monkeypatch, net):
         "direction": None, "grade": None, "experience_years_min": None, "work_format": None,
         "quotes": {"direction": None, "grade": None, "experience_years_min": None, "work_format": None}}), body["model"]))
     r = parse_need(NEED_TEXT)
-    assert r["method"] == "llm+rules" and r["llm"]["provider"] == "yandex" and r["llm"]["model_label"] == "YandexGPT 5.1"
+    assert r["method"] == "llm+rules" and r["llm"]["provider"] == "yandex" and r["llm"]["model_label"] == "языковая модель"
     grpc = next(i for i in r["stack_required"] if i["tag"] == "grpc")
-    assert grpc["evidence"]["model"] == "YandexGPT 5.1"
+    assert grpc["evidence"]["model"] == "языковая модель"
     (c,) = net.calls
     assert c["host"] == "ya.test" and c["headers"]["authorization"] == f"Api-Key {SECRET_YA}"
     assert "response_format" not in c["body"] and "reasoning" not in c["body"]  # у Yandex — без схемы и рассуждений
@@ -87,7 +87,7 @@ def test_ru_only_grade_second_same_model_independent_call(monkeypatch, net):
     net.on("ya.test", None, lambda req, body: reply(_fenced(near), body["model"]))
     g = grade_open(stem="Найдите ошибку бронирования", code=None, step_prompt=None, rubric=RUBRIC, answer=ANSWER)
     assert g.status == "scored" and g.method == "llm2" and g.score == 0.5 and "near_threshold" in g.checks
-    assert g.model_label == "YandexGPT 5.1" and g.second["model_label"] == "YandexGPT 5.1"
+    assert g.model_label == "языковая модель" and g.second["model_label"] == "вторая модель"
     first, second = net.calls
     assert {first["host"], second["host"]} == {"ya.test"} and first["model"] == second["model"]
     assert first["body"]["messages"] != second["body"]["messages"]  # второй вызов — обратный порядок, без первой оценки
@@ -101,7 +101,7 @@ def test_ru_only_resume_on_yandex(monkeypatch, net):
         {"stack": ["grpc", "kubernetes"], "roles": ["developer"], "soft_skills": [], "experience_years": 4}),
         body["model"]))
     o = extract("[ФИО]\nBackend. Опыт: 4 года. Сервисы на Go, межсервисное взаимодействие, деплой в кубер.")
-    assert o["method"] == "llm+rules" and o["llm"]["provider"] == "yandex" and o["llm"]["model_label"] == "YandexGPT 5.1"
+    assert o["method"] == "llm+rules" and o["llm"]["provider"] == "yandex" and o["llm"]["model_label"] == "языковая модель"
     by_llm = {s["tag"] for s in o["stack"] if s.get("by") == "llm"}
     assert "grpc" in by_llm and "kubernetes" in {x["tag"] for x in o["stack"]} and o["experience_years"] == 4.0
     assert all(c["host"] == "ya.test" for c in net.calls)

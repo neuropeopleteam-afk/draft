@@ -219,7 +219,13 @@ def test_ranking_provisional_below_confirmed_all_else_equal():
     req = {"direction": "backend", "grade": "junior"}
     s1, c1, r1 = ranking.score_candidate(bundle(False), req)
     s2, c2, r2 = ranking.score_candidate(bundle(True), req)
-    assert abs((s1 - s2) - 0.05) < 1e-9 and c2["provisional"] == 0.05 and c1["provisional"] == 0.0
+    from app.modules.matching import ltr
+
+    if ltr.enabled():  # match-v2: штраф «предварительно» — вес признака provisional (обучен, ltr_weights.json), не 0,05
+        pen = -ltr.weights()["provisional"]
+        assert pen > 0 and abs((s1 - s2) - pen) < 1e-4 and c2["provisional_flag"] == 1.0 and c1["provisional_flag"] == 0.0
+    else:
+        assert abs((s1 - s2) - 0.05) < 1e-9 and c2["provisional"] == 0.05 and c1["provisional"] == 0.0
     assert r2[0]["provisional"] and "предварительно" in r2[0]["text"]
     assert abs(bundle(False).strength() - bundle(True).strength() - 0.05) < 1e-9
 

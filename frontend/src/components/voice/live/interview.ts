@@ -25,9 +25,21 @@ export interface LiveInterviewDeps {
   onRepeat: () => void;
   /** Живой микрофон недоступен — экран переходит на кнопку «Ответить» или чат. */
   onUnavailable: (why: MicState) => void;
+  /** Бриф (короткие ответы «Middle», «Москва»): ответ от одного слова, пауза конца короче — 1,6–2,5 с. */
+  brief?: boolean;
+  /** Короткие фразы, пока готовится ответ (по умолчанию «Спасибо.»; разговор о кандидатах — «Сейчас посмотрю.»). */
+  fillers?: string[];
 }
 
 const RATE = 24000;
+
+/** Конец ответа в брифе: короткие ответы — 1,6 с тишины, развёрнутые — 2,5 с, оборванные на «и», «потому что» — 3,5 с. */
+function briefDelay(text: string): number {
+  const d = endDelay(text, "answer");
+  if (d <= 250) return d;
+  if (d >= 5000) return 3500;
+  return words(text).length < 8 ? 1600 : 2500;
+}
 const STALE_MS = 3500;
 const REPEAT_RX = /^(?:повтори(?:те)?|ещё раз|еще раз|не расслышал\w*|не понял\w*|можно ещё раз|можно еще раз|что вы сказали)/u;
 const FILLERS = ["Спасибо.", "Понятно, спасибо."];
@@ -60,6 +72,8 @@ export class LiveInterview {
     this.d.onView(this.view);
   }
 
+  private fillerList(): string[] { return this.d.fillers?.length ? this.d.fillers : FILLERS; }
+
   micLevel(): number { return this.listener?.level() ?? 0; }
   level(): number { return this.voice.level(); }
   isMuted(): boolean { return this.listener?.isMuted() ?? false; }
@@ -76,7 +90,7 @@ export class LiveInterview {
       gate: () => this.busy,
     });
     void this.listener.start();
-    for (const f of FILLERS) this.fillers.set(f, fetchPhrasePcm(apiUrl("/interview/concierge/speech"), f, true));
+    for (const f of this.fillerList()) this.fillers.set(f, fetchPhrasePcm(apiUrl("/interview/concierge/speech"), f, true));
   }
 
   toggleMute() {
@@ -173,7 +187,7 @@ export class LiveInterview {
     this.endTimer = window.setTimeout(() => {
       this.endTimer = 0;
       if (this.buf.version === v) void this.submit();
-    }, endDelay(text, "answer"));
+    }, this.d.brief ? briefDelay(text) : endDelay(text, "answer"));
   }
 
   private async submit() {
@@ -183,10 +197,11 @@ export class LiveInterview {
     const text = stripEndMarker(raw);
     const n = words(text).length;
     if (n <= 5 && REPEAT_RX.test(text.toLowerCase())) { this.d.onRepeat(); return; }
-    if (n < 2) return;   // одиночное «э», «да» — ещё не ответ
+    if (n < (this.d.brief ? 1 : 2)) return;   // одиночное «э», «да» — ещё не ответ (в брифе «Middle» — ответ)
     this.busy = true;
     this.set({ phase: "thinking" });
-    const f = FILLERS[this.fillerN++ % FILLERS.length];
+    const fl = this.fillerList();
+    const f = fl[this.fillerN++ % fl.length];
     void this.fillers.get(f)?.then((pcm) => { if (pcm && this.busy && !this.closed && !this.voice.speaking()) void this.voice.say(f, pcm, RATE); });
     let ok = false;
     try { ok = await this.d.onAnswer(text); } catch { ok = false; }

@@ -143,7 +143,10 @@ function GradeHint({ hint, grade, onPick }: { hint: Hint | null; grade: string; 
 }
 
 function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
+  const { me } = useAuth();
   const a = data.answers;
+  const ageGroup = me?.candidate?.age_group ?? "18+";
+  const maxExpByAge = ageGroup === "14-15" ? 1 : ageGroup === "16-17" ? 3 : 45;
   const dirEntries = useDirectionEntries();  // 5 базовых + направления расширения каталога с проверенным банком
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(a.direction ?? "");
@@ -180,8 +183,14 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
 
   const hasFullstack = dirEntries.some(([id]) => id === "backend") && dirEntries.some(([id]) => id === "frontend");
   const fullstack = direction === "backend" && additionalDirection === "frontend";
-  // UX-2: пределы сервера (OnboardingIn) — проверяем на своём шаге, до отправки: стаж 0–50 лет, минимум зарплаты ≤ 10 млн
-  const expBad = exp !== "" && !(Number(exp) >= 0 && Number(exp) <= 50);
+  // UX-2: пределы сервера (OnboardingIn) — проверяем на своём шаге, до отправки: стаж 0–45 лет и не больше возраста − 14, минимум зарплаты ≤ 10 млн
+  const expNum = Number(exp);
+  const expOutOfRange = exp !== "" && !(expNum >= 0 && expNum <= 45);
+  const expExceedsAge = exp !== "" && !expOutOfRange && expNum > maxExpByAge;
+  const expBad = expOutOfRange || expExceedsAge;
+  const expErrMsg = expExceedsAge
+    ? `Стаж не может быть больше возраста минус 14 лет (для возрастной группы ${ageGroup} — максимум ${maxExpByAge} г.)`
+    : "Стаж — от 0 до 45 лет (и не больше, чем возраст минус 14 лет)";
   const salaryBad = salary !== "" && !(Number(salary) > 0 && Number(salary) <= 10_000_000);
   const canNext = [!!direction, Object.keys(stack).length > 0, exp !== "" && !expBad, !salaryBad][step];
 
@@ -291,9 +300,9 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         )}
         {step === 2 && (
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Коммерческий стаж, лет" htmlFor="exp" hint={expBad ? undefined : "От 0 до 50"}>
-              <input id="exp" className="input" type="number" min={0} max={50} step={0.5} value={exp} onChange={(e) => setExp(e.target.value)} aria-invalid={expBad} aria-describedby={expBad ? "exp-err" : undefined} />
-              {expBad && <p id="exp-err" role="alert" className="mt-1 text-xs font-semibold text-brand-plum">Стаж — от 0 до 50 лет</p>}
+            <Field label="Коммерческий стаж, лет" htmlFor="exp" hint={expBad ? undefined : maxExpByAge < 45 ? `От 0 до ${maxExpByAge} лет (не больше, чем возраст − 14)` : "От 0 до 45 лет (не больше, чем возраст − 14)"}>
+              <input id="exp" className="input" type="number" min={0} max={maxExpByAge} step={0.5} value={exp} onChange={(e) => setExp(e.target.value)} aria-invalid={expBad} aria-describedby={expBad ? "exp-err" : undefined} />
+              {expBad && <p id="exp-err" role="alert" className="mt-1 text-xs font-semibold text-brand-plum">{expErrMsg}</p>}
             </Field>
             <Field label="Город" htmlFor="city">
               <input id="city" className="input" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Например, Казань" />
@@ -1022,6 +1031,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
   return (
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
+      {/* финальный этап теста — разговор с Настей для каждого (решение владельца 21.10); нижняя панель защиты скрывается сама */}
+      <DefensePanel sessionId={sessionId} live="auto" final />
       <ExtPreliminaryNote x={r.grade_preliminary} stage={extStage} direction={r.direction} className="mt-4" />
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · оценка менее точная, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (

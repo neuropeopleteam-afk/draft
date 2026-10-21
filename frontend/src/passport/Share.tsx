@@ -115,15 +115,15 @@ export function PassportCryptoChip({ refId }: { refId: string }) {
     return () => { on = false; };
   }, [refId]);
   if (d === undefined) return <span className="text-xs text-brand-ink/50">Паспорт: проверяем…</span>;
-  if (d === null) return <span className="text-xs text-brand-ink/55" title="Кандидат не выпустил подписанный паспорт или отозвал ссылку">Паспорт Ed25519: нет</span>;
+  if (d === null) return <span className="text-xs text-brand-ink/55" title="Кандидат не выпустил подписанный паспорт или отозвал ссылку">Цифровой паспорт: нет</span>;
   const dot: Record<PassportState, string> = { valid: "bg-emerald-600", revoked: "bg-brand", expired: "bg-amber-500", invalid_signature: "bg-brand" };
   return (
     <a href={d.path} target="_blank" rel="noreferrer" data-testid="passport-crypto-chip"
-      title={`Открыть проверку подписи${d.kid ? ` · ключ ${d.kid}` : ""}${d.test_key ? " · тестовый ключ стенда" : ""}`}
+      title={`Открыть проверку цифровой подписи${d.kid ? ` · ключ ${d.kid}` : ""}${d.test_key ? " · тестовый ключ стенда" : ""}`}
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold hover:underline ${d.state === "valid" ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-brand/30 bg-brand-blush/40 text-brand-plum"}`}>
       <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" /></svg>
       <span className={`h-1.5 w-1.5 rounded-full ${dot[d.state]}`} aria-hidden="true" />
-      Паспорт Ed25519: {CHIP_TEXT[d.state] ?? d.title.toLowerCase()}
+      Цифровой паспорт: {CHIP_TEXT[d.state] ?? d.title.toLowerCase()}
     </a>
   );
 }

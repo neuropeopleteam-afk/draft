@@ -196,8 +196,10 @@ def synth_stream(text: str, fmt: str = "pcm24", live: bool = False) -> Iterator[
 
     path = f"/v1/text-to-speech/{voice}/stream?output_format={out_fmt}"
     r = relay.route(TTS_HOST, path, {"xi-api-key": key, "Content-Type": "application/json", "Accept": "*/*"})
+    from app.modules.interview.concierge_numsay import spoken as _numsay
+
     body = {
-        "text": clean,
+        "text": _numsay(clean),   # числа — словами по-русски детерминированно (модель пишет цифрами, как в фактах)
         "model_id": TTS_LIVE_MODEL if live else TTS_MODEL,
         "language_code": "ru",
         "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "style": 0.0, "use_speaker_boost": True,
@@ -303,6 +305,16 @@ PHRASES: dict[str, str] = {
     "time_up": "На этом моё время с вами заканчивается. Спасибо за разговор. Если понадоблюсь — нажмите на меня снова.",
     "resume_tour": "Продолжаю.",
     "back_tour": "Возвращаюсь к обзору.",
+    # экран, который попросили: Настя сама не уходит; тишина 20 с — один такой вопрос (замечание владельца 21.10 17:33)
+    "detour_nudge": "Показать, что ниже на этом экране, — или вернуться к обзору?",
+    # не молчит (владелец 19:11): после ответа посреди обзора, после прокрутки, вне обзора — короткий вопрос
+    "tour_nudge": "Продолжаем обзор — или есть вопрос?",
+    "scroll_nudge": "Листать дальше — или рассказать про этот блок?",
+    "back_q": "Это весь экран. Вернуться к обзору?",
+    "free_nudge": "Что показать дальше?",
+    # разговор о кандидатах на сравнении (av15): пока готовится ответ — короткое «смотрю», не мёртвая тишина
+    "adv_wait1": "Сейчас посмотрю.",
+    "adv_wait2": "Так, смотрю в сравнение.",
     "sorry": "Не расслышала. Повторите, пожалуйста.",
     "back_to_tour": "Вернёмся к обзору?",
     # между разделами обзора — спросить, есть ли вопросы, и ждать ответа
@@ -464,7 +476,7 @@ STEP_BEATS: dict[str, list[str]] = {
     "cand-assessment": [
         "Сначала выбирают грейд, который хотите подтвердить, — от стажёра до Principal.",
         "Подсказка по стажу предлагает уровень, но выбор всегда за вами.",
-        "Режимов два: полный тест, который подтверждает грейд, и экспресс на пять–семь заданий — предварительная оценка.",
+        "Режимов два: полный тест и экспресс — до семи коротких заданий; правило подтверждения у них одно.",
         "Тест адаптивный: каждое следующее задание подбирается по прошлым ответам, поэтому он короче обычного.",
     ],
     "cand-category": [
@@ -657,6 +669,29 @@ STEP_BEATS: dict[str, list[str]] = {
 
 STEP_IDS = tuple(STEP_BEATS.keys())
 
+# Полный показ экрана — когда его просят («покажи Полигон», «подробнее», «полностью») не по порядку обзора: Настя сама
+# нажимает главные кнопки экрана. В STEP_IDS не входит (модель выбирает обычный шаг, браузер берёт «<шаг>-full»).
+# Замечание владельца 21.10 17:33: «покажи ИИ-Полигон» — три фразы, через 15 с ушла дальше сама.
+FULL_BEATS: dict[str, list[str]] = {
+    "warroom-full": [
+        "Боевой ИИ-Полигон — практический этап для старших уровней и витрина для технического жюри. Покажу оба "
+        "режима в работе.",
+        "Первый режим — живой архитектурный полигон: в высоконагруженной системе идёт авария, и кандидат её чинит — "
+        "выбирает меры, правит код и объясняет решение.",
+        "Запускаю инцидент: сама выберу меры в пределах бюджета, поправлю код и опишу, почему так.",
+        "Вот метрики под нагрузкой: успешный поток, время ответа, доля ошибок и потери бизнеса — видно, что "
+        "изменилось после исправления.",
+        "А это разбор: устранён ли инцидент, итоговый балл и уровень, который подтверждает решение. Он учитывается в "
+        "итоге проверки кандидата.",
+        "Второй режим — полигон перехвата ИИ-читера: слева приёмы нечестного кандидата, справа — что видит проверка.",
+        "Нажимаю «Показать перехват обмана»: кандидат копирует задание в нейросеть, но в буфер уходит вариант-двойник "
+        "с другими числами и невидимой меткой.",
+        "Ответ нейросети приходит с числами двойника — и проверка показывает, какие сигналы сработали и почему.",
+        "При этом попытку не аннулируют: назначается дополнительный этап или устная защита. Можно нажать любой "
+        "другой приём слева — разберу и его.",
+    ],
+}
+
 # Показ для жюри на 2 минуты (питч 24.10, текст — «Аватар — показ для жюри 2 минуты, текст по экранам»). Отдельный
 # маршрут «pitch»: в STEP_IDS не входит (модель туда не ведёт), реплики заранее озвучиваются и кэшируются.
 # Цифры — без точных чисел, которые меняет волна 2б (спортсменов — «больше двух тысяч»).
@@ -682,7 +717,7 @@ PITCH_BEATS: dict[str, list[str]] = {
     ],
     "pitch-defense": [
         "Теперь сторона кандидата. Грейд подтверждает адаптивный тест: каждое задание подбирается по прошлым ответам.",
-        "Спорный результат — три минуты устной защиты с ИИ-интервьюером по ответам самого кандидата: дополнительная "
+        "А после теста — финальный этап: три минуты разговора со мной по ответам самого кандидата: дополнительная "
         "проверка, что он сам понимает свои решения.",
     ],
     "pitch-fsp": [
@@ -702,6 +737,7 @@ def beats() -> dict[str, list[str]]:
     out = {k: list(v) for k, v in STEP_BEATS.items()}
     out["val-arena"] = [*STEP_BEATS["val-arena"], *_arena_lines()]
     out.update({k: list(v) for k, v in PITCH_BEATS.items()})
+    out.update({k: list(v) for k, v in FULL_BEATS.items()})
     return out
 
 
@@ -827,6 +863,10 @@ def _live_numbers_cached(_key: tuple) -> dict:
         ac = nums.get("anticheat") or {}
         if isinstance(ac.get("claim_ru"), str) and ac["claim_ru"].strip():
             out["anticheat_claim"] = ac["claim_ru"].strip()
+        bk = nums.get("bank") or {}
+        for k in ("families", "variants_20seeds", "checks", "checks_failed", "directions"):
+            if isinstance(bk.get(k), int) and not isinstance(bk.get(k), bool):
+                out["bank_" + k] = bk[k]
         dc = (nums.get("demo") or {}).get("candidates")
         if isinstance(dc, int) and dc > 0:
             out["demo_candidates"] = dc
@@ -887,10 +927,38 @@ def _grade_sentence(n: dict) -> str:
     return ("Точность грейда: " + "; ".join(parts) + ".") if parts else ""
 
 
+def _spoken_claim(t: str) -> str:
+    """Заявление из NUMBERS.json — для речи: без скобок с латиницей (поставщики моделей на сайте не называются, хеши,
+    формулы) и без технических параметров симуляции."""
+    t = re.sub(r"\s*\([^()]*[A-Za-zθ][^()]*\)", "", t or "")
+    t = re.sub(r"\s*θ\s*~\s*N\([^)]*\)[,;]?", "", t)
+    return re.sub(r"\s{2,}", " ", t).strip()
+
+
+def _bank_sentence(n: dict) -> str:
+    if not isinstance(n.get("bank_families"), int):
+        return ""
+    sp = lambda v: f"{v:,}".replace(",", "\u00a0")  # noqa: E731
+    parts = [f"Банк заданий — {sp(n['bank_families'])} параметрических семейств"]
+    if isinstance(n.get("bank_variants_20seeds"), int):
+        parts.append(f"{sp(n['bank_variants_20seeds'])} проверенных вариантов на 20 зёрнах")
+    if isinstance(n.get("bank_checks"), int):
+        parts.append(f"{sp(n['bank_checks'])} проверок ключей исполнением кода, ошибок — {n.get('bank_checks_failed', 0)}")
+    if isinstance(n.get("bank_directions"), int):
+        parts.append(f"{n['bank_directions']} ИТ-направлений")
+    return ", ".join(parts) + ". "
+
+
+# Когда в контекст модели нужен блок цифр: вопрос про цифры/проверку/банк — или уточнение к ответу с процентами
+# («а в жёстких условиях?»): без блока модель додумывала («точность падает»), хотя в жёстких она выше.
+_NUMBERS_Q = re.compile(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак|банк|семейств|вариант|сколько задан|"
+                        r"жёстк|жестк|стандартн|услови|вердикт|грейд|оценщик|интервал|ложн|списыв|утечк|симуляц")
+
+
 def numbers_chunk() -> dict[str, str]:
     n = live_numbers()
-    grade = _grade_sentence(n)
-    anti = str(n.get("anticheat_claim") or "")
+    grade = _spoken_claim(_grade_sentence(n))
+    anti = _spoken_claim(str(n.get("anticheat_claim") or ""))
     body = (
         f"Проверка механики (/validation), «Арена метрик» (данные на {n['as_of']}). Драфт против поиска по резюме на "
         f"мире со скрытой истиной: точность первой пятёрки — {_pc(n['p5'])}, первой десятки — {_pc(n['p10'])}; "
@@ -903,6 +971,7 @@ def numbers_chunk() -> dict[str, str]:
         body += anti.rstrip(".") + ". "
     else:
         body += "Цифры по защите от списывания — на экране «Проверка» (/validation). "
+    body += _bank_sentence(n)
     body += "Это синтетика: проверяется механика, а не люди."
     return {
         "id": "validation_numbers",
@@ -978,6 +1047,16 @@ def extract_name(text: str, current_name: str | None = None, asked: bool = False
         if (low not in _STOP_NAMES or low in _SELF_NAMES) and not low.startswith(("кандидат", "работодат")) \
                 and (low in _NAMES or len(low) >= 3):
             return _cap(cand)
+    if current_name and len(current_name.split()) == 1:
+        # уточнил полное обращение посреди разговора (19:04: «Иванович» → «Геннадий Иванович, покажи …»)
+        cur = re.escape(current_name)
+        m = re.search(rf"(?<![А-ЯЁа-яё])([А-ЯЁа-яё]{{2,18}})\s+{cur}(?![А-ЯЁа-яё])", t, re.I)
+        if m and re.fullmatch(_PATR, current_name, re.I) and m.group(1).lower().replace("ё", "е") in \
+                {n.replace("ё", "е") for n in _NAMES}:
+            return _cap(f"{m.group(1)} {current_name}")
+        m = re.search(rf"(?<![А-ЯЁа-яё]){cur}\s+({_PATR})(?![А-ЯЁа-яё])", t, re.I)
+        if m and current_name.lower().replace("ё", "е") in {n.replace("ё", "е") for n in _NAMES}:
+            return _cap(f"{current_name} {m.group(1)}")
     if current_name:
         return current_name
     t = re.sub(r"^\s*(?:настя|анастасия|настенька)[,.!\s]+", "", t, flags=re.I)   # «Настя, Алексей» — обращение к ней, имя дальше
@@ -1390,7 +1469,20 @@ def _brief(t: str, limit: int = 250) -> str:
     return res
 
 
-def turn(message: str, *, user_name: str | None = None, role: str | None = None, current_path: str = "/",
+def turn(message: str, **kw) -> dict:
+    """Решение по законченному ходу (см. _turn_core) + общие флаги для браузера: resume с «обзор» в просьбе — к обзору,
+    а не долистывать экран (tour); point с «нажми / включи / запусти» — нажать (click)."""
+    r = _turn_core(message, **kw)
+    if isinstance(r, dict):
+        n = _norm(message)
+        if r.get("action") == "resume" and r.get("tour") is None and TOUR_ASK.search(n):
+            r["tour"] = True
+        if r.get("action") == "point" and r.get("click") is None and CLICK_ASK.search(n):
+            r["click"] = True
+    return r
+
+
+def _turn_core(message: str, *, user_name: str | None = None, role: str | None = None, current_path: str = "/",
          step_id: str | None = None, touring: bool = False, paused: bool = False, history: list[dict] | None = None,
          session_id: str | None = None, screen: dict | None = None, last_said: str = "", awaiting: str | None = None,
          on_ack=None, no_llm: bool = False, defer_llm: bool = False) -> dict:
@@ -1463,7 +1555,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             # «что дальше?», «продолжай», «веди сама», «не останавливайся» — экскурсовод идёт дальше без модели
             ack("instant")
             if touring or paused or awaiting in ("continue", "checkin", "detour", "answer"):
-                return {**base, "kind": "instant", "action": "resume"}
+                return {**base, "kind": "instant", "action": "resume", "tour": bool(TOUR_ASK.search(t_norm))}
             if cur_role:
                 return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": cur_role,
                         "reply": _start_reply(name, cur_role, False, first_tour, skip_reg=_skip_reg(msg, s))}
@@ -1471,16 +1563,16 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         if awaiting == "checkin" and words_n <= 6:
             if CHECKIN_NO.search(t_norm):
                 ack("instant")
-                return {**base, "kind": "instant", "action": "resume"}
+                return {**base, "kind": "instant", "action": "resume", "tour": bool(TOUR_ASK.search(t_norm))}
             if CHECKIN_YES.search(t_norm):
                 ack("instant")
                 return {**base, "kind": "instant", "action": "listen", "phrase": "listen"}
         if awaiting in ("continue", "detour") and words_n <= 5 and CMD_NO.search(t_norm):
             ack("instant")
             return {**base, "kind": "instant", "action": "pause", "phrase": "no_more"}
-        if awaiting == "continue" and words_n <= 5 and CONT_YES.search(t_norm):
+        if awaiting in ("continue", "detour") and words_n <= 5 and CONT_YES.search(t_norm):
             ack("instant")   # «Всё понятно? Идём дальше?» — «понятно», «да, дальше», «всё ясно» — продолжаем
-            return {**base, "kind": "instant", "action": "resume"}
+            return {**base, "kind": "instant", "action": "resume", "tour": bool(TOUR_ASK.search(t_norm))}
         if (touring or paused) and words_n <= 7 and CMD_SKIP.search(t_norm):
             ack("instant")
             nxt = brain.next_section(step_id)
@@ -1499,7 +1591,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
                     # «открой кабинет работодателя» — обзор этого кабинета (уже смотрели — браузер пройдёт коротко)
                     return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": cab_role,
                             "reply": _start_reply(name, cab_role, False, first_tour, skip_reg=_skip_reg(msg, s))}
-                return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto"}
+                return {**base, "kind": "instant", "action": "goto", "step": g, "phrase": "goto", "full": bool(FULL_ASK.search(_norm(msg)))}
         quick = classify(msg, touring=touring, paused=paused)
         if quick:
             ack("instant")
@@ -1533,7 +1625,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         goto = detect_goto(msg, path=current_path, step=step_id) if not is_q and words_n <= 7 and not (clause and words_n > 3) else None
         if goto:
             ack("instant")
-            return {**base, "kind": "instant", "action": "goto", "step": goto, "phrase": "goto"}
+            return {**base, "kind": "instant", "action": "goto", "step": goto, "phrase": "goto", "full": bool(FULL_ASK.search(_norm(msg)))}
 
     if no_llm:
         # дневной лимит ходов модели исчерпан — без модели: экран по словам реплики или ответ из базы знаний
@@ -1546,8 +1638,8 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
     msgs = brain.build_messages(msg, sid=session_id, name=name, role=cur_role, path=current_path, step=step_id,
                                 touring=touring, paused=paused, screen=screen, history=history, awaiting=awaiting,
                                 last_said=last_said, accepted=accepted,
-                                numbers=numbers_chunk() if re.search(r"точн|цифр|процент|метрик|арен|провер|валидац|bm25|атак",
-                                                                     msg.lower()) or current_path.startswith("/validation") else None)
+                                numbers=numbers_chunk() if _NUMBERS_Q.search(msg.lower()) or current_path.startswith("/validation")
+                                or "процент" in (last_said or "").lower() else None)
     ctx = {"msg": msg, "name": name, "cur_role": cur_role, "touring": touring, "paused": paused, "step_id": step_id,
            "current_path": current_path, "first_tour": first_tour, "sid": session_id}
     if defer_llm:
@@ -1637,7 +1729,20 @@ def _decide(d: dict, ctx: dict, base: dict) -> dict:
            "point": point.strip() if point and action == "point" else None, "phrase": None, "reply": ""}
     if action == "scroll":
         out["dir"] = scroll_dir
+    if action == "resume" and TOUR_ASK.search(_norm(msg)):
+        out["tour"] = True   # «продолжай обзор», «вернись к обзору» — к обзору, а не долистывать экран
+    if action == "point" and CLICK_ASK.search(_norm(msg)):
+        out["click"] = True  # «включи / запусти / нажми» — нажать, а не только подсветить
+    if action == "goto" and (d.get("full") is True or FULL_ASK.search(_norm(msg))):
+        out["full"] = True   # «подробнее», «полностью», «почему не рассказала» — экран целиком, а не молча
     return out
+
+
+# Просят экран целиком или недовольны коротким показом (стенограмма 21.10 17:33: «Почему ты дальше про него не
+# рассказала? Я хотел полностью»).
+TOUR_ASK = re.compile(r"обзор|по порядку|верн\w* (?:к|в) (?:обзор|кабинет|показ)|продолж\w* (?:показ|обзор|экскурс)")
+CLICK_ASK = re.compile(r"нажми|нажать|включи|запусти|кликни|начни|открой")
+FULL_ASK = re.compile(r"подробн|полност|целиком|до конца|детальн|всё про|все про|не рассказал|не показал|не дорассказ")
 
 
 LEAD_ROLE = "Подскажите, кто вы: кандидат, работодатель или из Федерации? Покажу именно ваш кабинет."
@@ -1651,6 +1756,15 @@ def _lead_on(res: dict, ctx: dict, text: str) -> str | None:
     if res.get("action") not in ("answer",) or "?" in (text or ""):
         return None
     return LEAD_ROLE
+
+
+# Сбой модели на числах словами (боевой 21.10 18:05, FINAL №2: «семьдесят seven и шесть десятых... Нет, скажу чисто:
+# …»): фраза с английским числительным — не в голос; самопоправка в начале фразы — срезается, суть остаётся.
+_EN_NUM = re.compile(r"\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|"
+                     r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|"
+                     r"hundred|thousand|percent)\b", re.I)
+_SELF_FIX = re.compile(r"^(?:нет|ой|вернее|точнее|то есть)[,.!]?\s+(?:скажу\s+(?:чисто|точнее|правильно|иначе|по-другому)|"
+                       r"поправлюсь|оговорилась|ошиблась|точнее)\s*[:,.—–-]*\s*", re.I)
 
 
 class _Shaper:
@@ -1675,6 +1789,13 @@ class _Shaper:
         t = _clean_reply(raw)
         if not t or t == "Хорошо." and raw.strip() != "Хорошо.":
             return None
+        if _EN_NUM.search(t) and re.search(r"[а-яё]", t, re.I):
+            return None
+        fixed = _SELF_FIX.sub("", t)
+        if fixed != t:
+            if len(fixed) < 3:
+                return None
+            t = fixed[:1].upper() + fixed[1:]
         if self.n == 0:
             t = _drop_self_talk(t)
             if self.name and self.name_recent and t.lower().startswith(self.name.lower() + ","):
@@ -1731,6 +1852,9 @@ def brain_session(sid: str | None):
 
 def _j(d: dict) -> bytes:
     return (json.dumps(d, ensure_ascii=False) + "\n").encode()
+
+
+_GAP_B64 = base64.b64encode(b"\0" * int(24000 * 2 * 0.22)).decode()   # пауза между фразами живого ответа, 24 кГц
 
 
 def turn_stream(message: str, **kw) -> Iterator[bytes]:
@@ -1837,6 +1961,9 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
                 if j is None:
                     break
                 t, cq = j
+                if spoken:
+                    # синтез срезает тишину в начале каждой фразы — без паузы фразы слипаются; 220 мс — как вдох
+                    yield _j({"t": "pcm", "b64": _GAP_B64})
                 spoken.append(t)
                 yield _j({"t": "say", "text": t})
                 while True:

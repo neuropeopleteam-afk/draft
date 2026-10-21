@@ -87,7 +87,7 @@ export default function Support() {
   const supportEmail = meta?.support_email ?? "<форма обратной связи>";
 
   return (
-    <div className="min-h-screen bg-[#FBF8FC]">
+    <div className="min-h-screen bg-[#F4F6FC]">
       <SiteHeader />
       <main id="main" className="mx-auto max-w-content space-y-10 px-4 py-10 sm:px-6" data-testid="support-page">
         <header className="flex flex-wrap items-start justify-between gap-4">
@@ -224,7 +224,7 @@ export default function Support() {
               <h2 id="sup-faq-h" className="text-lg font-bold text-brand-night">Частые вопросы</h2>
               <div className="space-y-3">
                 {FAQ.map((f) => (
-                  <details key={f.q} className="rounded-xl bg-[#F3F2FB] p-3 text-sm">
+                  <details key={f.q} className="rounded-xl bg-[#EEF1FC] p-3 text-sm">
                     <summary className="cursor-pointer font-semibold text-brand-night">{f.q}</summary>
                     <p className="mt-2 text-xs leading-relaxed text-brand-ink/80">{f.a}</p>
                   </details>
@@ -251,7 +251,7 @@ export default function Support() {
                   <p className="text-xs text-brand-ink/60">{dtt(t.created_at)}</p>
                   <p className="text-brand-ink/85">{t.message}</p>
                   {t.admin_reply && (
-                    <div className="rounded-xl bg-[#F3F2FB] p-3 text-xs leading-relaxed text-brand-night">
+                    <div className="rounded-xl bg-[#EEF1FC] p-3 text-xs leading-relaxed text-brand-night">
                       <p className="font-bold text-brand-plum">Ответ поддержки:</p>
                       <p className="mt-1">{t.admin_reply}</p>
                     </div>

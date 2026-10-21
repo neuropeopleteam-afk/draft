@@ -47,36 +47,129 @@ NO_RETRY = (400, 401, 402, 403, 404, 422)
 
 def export_payload(db: Session, company: Company, *, invitation: Invitation | None = None,
                    application: VacancyApplication | None = None) -> dict:
-    """Карточка кандидата для ATS / экспорта: обезличенная карточка + контакты (уже раскрытые) + контекст."""
+    """Карточка кандидата для ATS / экспорта / вебхука:
+    - до согласия кандидата (приглашение ещё не принято или отозвано, либо чужая компания) — только ``candidate_ref``,
+      ``consent=False``, ``consent_at=None``, ``contacts=None`` (без ПДн);
+    - после принятия приглашения этой компании (или при самостоятельном отклике на её вакансию) — раскрытые кандидатом
+      контакты (``name``/``full_name``, ``email``, ``phone``, ``telegram`` с учётом ``shared_contacts``),
+      ``consent=True`` и ``consent_at`` (ISO-время согласия).
+    """
     cand_id = invitation.candidate_user_id if invitation else application.candidate_user_id
-    card = candidate_card_for(db, cand_id, include_hidden=False)
-    contacts = candidate_contacts(db, cand_id)
     cp = db.get(CandidateProfile, cand_id)
-    ctx: dict = {}
+    ref = cp.public_ref if cp else None
+    base = get_isettings().public_base_url.rstrip("/")
+
     if invitation is not None:
-        ctx = {"type": "invitation", "id": str(invitation.id), "status": invitation.status.value,
-               "position_title": invitation.position_title, "salary_from": invitation.salary_from,
-               "salary_to": invitation.salary_to, "accepted_at": invitation.responded_at.isoformat()
-               if invitation.responded_at else None, "evidence": invitation.evidence}
+        has_consent = bool(
+            invitation.company_id == company.id
+            and invitation.status == InvitationStatus.accepted
+            and invitation.contacts_revealed_at is not None
+            and cp is not None
+            and cp.deleted_at is None
+        )
+        if not has_consent:
+            status_val = invitation.status.value if hasattr(invitation.status, "value") else str(invitation.status)
+            return {
+                "schema": SCHEMA,
+                "exported_at": utcnow().isoformat(),
+                "source": {"platform": "Драфт (спецтрек ФСП)", "url": base},
+                "company": {"id": str(company.id), "name": company.name, "inn": company.inn},
+                "candidate_ref": ref,
+                "consent": False,
+                "consent_at": None,
+                "contacts": None,
+                "candidate": {
+                    "ref": ref,
+                    "consent": False,
+                    "consent_at": None,
+                    "contacts": None,
+                },
+                "context": {
+                    "type": "invitation",
+                    "id": str(invitation.id),
+                    "status": status_val,
+                    "position_title": invitation.position_title,
+                    "consent": False,
+                    "consent_at": None,
+                },
+            }
+        consent_dt = as_aware(invitation.contacts_revealed_at or invitation.responded_at)
+        consent_at = consent_dt.isoformat() if consent_dt is not None else utcnow().isoformat()
+        contacts = candidate_contacts(db, cand_id, invitation)
+        ctx = {
+            "type": "invitation",
+            "id": str(invitation.id),
+            "status": invitation.status.value,
+            "position_title": invitation.position_title,
+            "salary_from": invitation.salary_from,
+            "salary_to": invitation.salary_to,
+            "accepted_at": invitation.responded_at.isoformat() if invitation.responded_at else consent_at,
+            "consent": True,
+            "consent_at": consent_at,
+            "evidence": invitation.evidence,
+        }
     else:
         v = db.get(Vacancy, application.vacancy_id)
-        ctx = {"type": "vacancy_application", "id": str(application.id), "status": application.status,
-               "vacancy_id": str(v.id), "position_title": v.title, "salary_from": v.salary_from,
-               "salary_to": v.salary_to, "applied_at": application.created_at.isoformat(),
-               "cover_letter": application.cover_letter}
-    base = get_isettings().public_base_url.rstrip("/")
+        if v is None or v.company_id != company.id or cp is None or cp.deleted_at is not None:
+            return {
+                "schema": SCHEMA,
+                "exported_at": utcnow().isoformat(),
+                "source": {"platform": "Драфт (спецтрек ФСП)", "url": base},
+                "company": {"id": str(company.id), "name": company.name, "inn": company.inn},
+                "candidate_ref": ref,
+                "consent": False,
+                "consent_at": None,
+                "contacts": None,
+                "candidate": {"ref": ref, "consent": False, "consent_at": None, "contacts": None},
+                "context": {"type": "vacancy_application", "id": str(application.id), "consent": False, "consent_at": None},
+            }
+        consent_dt = as_aware(application.created_at)
+        consent_at = consent_dt.isoformat() if consent_dt is not None else utcnow().isoformat()
+        contacts = candidate_contacts(db, cand_id)
+        ctx = {
+            "type": "vacancy_application",
+            "id": str(application.id),
+            "status": application.status,
+            "vacancy_id": str(v.id),
+            "position_title": v.title,
+            "salary_from": v.salary_from,
+            "salary_to": v.salary_to,
+            "applied_at": application.created_at.isoformat(),
+            "consent": True,
+            "consent_at": consent_at,
+            "cover_letter": application.cover_letter,
+        }
+
+    card = candidate_card_for(db, cand_id, include_hidden=False)
     return {
-        "schema": SCHEMA, "exported_at": utcnow().isoformat(),
+        "schema": SCHEMA,
+        "exported_at": utcnow().isoformat(),
         "source": {"platform": "Драфт (спецтрек ФСП)", "url": base},
         "company": {"id": str(company.id), "name": company.name, "inn": company.inn},
-        "candidate": {"ref": cp.public_ref, "category_id": cp.current_category_id,
-                      "category_title": category_title(cp.current_category_id) if cp.current_category_id else None,
-                      "contacts": contacts, "card": card},
+        "candidate_ref": ref,
+        "consent": True,
+        "consent_at": consent_at,
+        "contacts": contacts,
+        "candidate": {
+            "ref": ref,
+            "fsp_id": cp.fsp_id_claimed,
+            "category_id": cp.current_category_id,
+            "category_title": category_title(cp.current_category_id) if cp.current_category_id else None,
+            "consent": True,
+            "consent_at": consent_at,
+            "contacts": contacts,
+            "card": card,
+        },
         "context": ctx,
-        "links": {"pdf": prof.pdf_url(str(company.id), str(cand_id)),
-                  "card": f"{base}/employer/candidates/{cp.public_ref}"},
-        "evidence_levels": {"T0": "заявлено кандидатом", "T1": "подтверждено тестом/зондом",
-                            "T2": "подтверждено реестром ФСП"},
+        "links": {
+            "pdf": prof.pdf_url(str(company.id), str(cand_id)),
+            "card": f"{base}/employer/candidates/{ref}",
+        },
+        "evidence_levels": {
+            "T0": "заявлено кандидатом",
+            "T1": "подтверждено тестом/зондом",
+            "T2": "подтверждено реестром ФСП",
+        },
     }
 
 
