@@ -1012,10 +1012,19 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
               Решение по заявленному уровню: <span data-testid="sprt-verdict-title">{v.title}</span>
             </p>
             <span className="chip tabular-nums">
-              Вероятность соответствия {Math.round((v.p_claimed ?? r.p_claimed ?? 0) * 100)} % · практических заданий {v.code_open_count ?? 0} из {v.n_scored ?? r.answered}
+              {v.rule === "sprt"
+                ? `Учтено ответов: ${v.n_scored ?? r.answered} · практических заданий ${v.code_open_count ?? 0}`
+                : `Вероятность соответствия ${Math.round((v.p_claimed ?? r.p_claimed ?? 0) * 100)} % · практических заданий ${v.code_open_count ?? 0} из ${v.n_scored ?? r.answered}`}
             </span>
           </div>
           <p className="mt-1.5 text-brand-ink/80">{v.explanation}</p>
+          {r.grade_by_answers?.product_grade && (
+            <p className="mt-1.5 text-brand-night" data-testid="grade-by-answers">
+              Уровень по ответам:{" "}
+              <b>{r.grade_by_answers.product_grade === "none" ? "ниже Стажёра" : (GRADE_TITLE_ALL[r.grade_by_answers.product_grade] ?? r.grade_by_answers.product_grade)}</b>
+              {r.grade_by_answers.preliminary ? " — предварительно, до доп. этапа" : ""}
+            </p>
+          )}
           {v.incident_stage && (
             <p className="mt-1.5 rounded-lg bg-white/80 px-3 py-1.5 text-xs font-medium text-brand-night" data-testid="incident-stage-summary">
               {v.incident_stage.summary_ru}
