@@ -409,6 +409,8 @@ def compute_verdict(
     boundary_level: float = 0.80,
     incident_stage: dict | None = None,
     suspicious: bool | dict | None = None,
+    followup_items: int = DEFAULT_FOLLOWUP_ITEMS,
+    followup_minutes: int = DEFAULT_FOLLOWUP_MINUTES,
 ) -> ThreeValuedVerdict:
     """Вычисляет статистику SPRT и трёхзначный вердикт по завершённым заданиям сессии (с учётом Боевого этапа А9 и сигналов античита А6)."""
     cut = float(GRADE_CUTS.get(claimed_grade, 0.0))
@@ -528,60 +530,54 @@ def compute_verdict(
         if not susp_reasons:
             susp_reasons.append("Признаки использования подсказок")
 
-    # Трёхзначный вердикт:
-    # - если попытка помечена античитом как подозрительная и претендует на подтверждение (или в серой зоне),
-    #   автоматического бана нет: вердикт переводится в needs_followup с обязательной устной защитой / доп. этапом;
-    # - если это уже второй этап (mode == "refine" или "confirm") или пройден Боевой этап инцидента (без неснятых подозрений), решение окончательное;
-    # - в основном тесте: если |LLR| < A и P(θ ≥ порога) лежит в пограничной полосе (1 − L; L), назначается 15-минутный доп. этап.
-    in_grey_zone = (abs(llr) < A) and ((1.0 - boundary_level) < p_claim < boundary_level)
-    oral_required = False
-    if susp_flagged and (confirmed or in_grey_zone or p_claim >= (1.0 - boundary_level)):
-        status = "needs_followup"
-        oral_required = True
-    elif mode in ("refine", "confirm") or inc_norm is not None:
+    # Трёхзначный вердикт (А4, 21.10) — то же правило, что у категории продукта и второго этапа, без отдельной логики:
+    # P = P(θ ≥ порога заявленного грейда) по итоговой оценке и её погрешности; L — уровень уверенности второго этапа
+    # (ASSESSMENT_TWO_STAGE_LEVEL, 0,8; полоса (1 − L; L) — граница, где предлагается второй этап, two_stage.boundary):
+    #   «подтверждён»     — категория присвоена (P ≥ ASSESSMENT_CONFIRM_LEVEL) и P ≥ L;
+    #   «не подтверждён»  — категория не присвоена и P ≤ 1 − L;
+    #   «нужен доп. этап» — всё между: короткий второй этап у этой границы, итог — по ответам обеих сессий.
+    # Это последовательная проверка гипотезы «уровень не ниже заявленного» в байесовской форме: тест идёт, пока
+    # апостериорные шансы не выйдут за L : (1 − L); статистика Вальда (llr) считается и отдаётся для прозрачности,
+    # в решении не участвует. Второй этап, дотестирование и Боевой этап — решение окончательное (как у категории).
+    # Сигналы античита (А6: разрыв форм, предзнание, person-fit, низкая достоверность) — не бан: доп. этап / устная защита.
+    level = float(boundary_level)
+    if mode in ("refine", "confirm") or inc_norm is not None:
         status = "confirmed" if confirmed else "not_confirmed"
-    elif in_grey_zone:
-        status = "needs_followup"
-    elif confirmed and (llr >= 0.0 or p_claim >= boundary_level):
+    elif confirmed and p_claim >= level:
         status = "confirmed"
-    elif not confirmed and (llr <= 0.0 or p_claim <= (1.0 - boundary_level)):
+    elif not confirmed and p_claim <= 1.0 - level:
         status = "not_confirmed"
     else:
+        status = "needs_followup"
+    oral_required = bool(susp_flagged and status != "not_confirmed")
+    if oral_required:
         status = "needs_followup"
 
     followup_needed = status == "needs_followup"
     g_title = GRADE_RU.get(claimed_grade, claimed_grade)
     p_pct = round(100 * p_claim)
+    lv_pct = round(100 * level)
     title_str = VERDICT_TITLES["needs_oral_defense"] if oral_required else VERDICT_TITLES[status]
     if oral_required:
         reasons_txt = f" ({'; '.join(susp_reasons)})" if susp_reasons else ""
         expl = (
-            f"Вердикт: нужен дополнительный этап / устная защита по уровню {g_title}{reasons_txt}. "
-            "Платформа не применяет автоматических банов: чтобы подтвердить самостоятельность решения и снять сомнения, "
-            f"пройдите 3-минутную устную защиту ответа или {DEFAULT_FOLLOWUP_MINUTES}-минутный дополнительный этап у порога."
+            f"Нужен дополнительный этап по уровню {g_title}{reasons_txt}. Автоматических блокировок нет: чтобы снять "
+            "сомнения в самостоятельности, пройдите короткую устную защиту одного из ответов или дополнительный этап "
+            "у порога уровня."
         )
     elif status == "confirmed":
-        expl = (
-            f"Вердикт: уровень {g_title} подтверждён с высокой статистической надёжностью "
-            f"(вероятность соответствия {p_pct} %, индекс последовательного теста LLR = {llr:+.2f} при пороге ±{A:.2f})."
-        )
+        expl = (f"Уровень {g_title} подтверждён: вероятность, что ваш уровень не ниже {g_title}, — {p_pct} % "
+                f"(уверенное решение — от {lv_pct} %).")
     elif status == "needs_followup":
-        inc_hint = (
-            " Для старших уровней (Senior / Lead / Principal) дополнительный этап можно пройти на интерактивном симуляторе инцидента («Боевой этап»)."
-            if claimed_grade in SENIOR_PLUS_GRADES else ""
-        )
-        expl = (
-            f"Вердикт: нужен дополнительный этап у границы уровня {g_title} "
-            f"(вероятность {p_pct} %, LLR = {llr:+.2f} внутри интервала [−{A:.2f}; +{A:.2f}]). "
-            f"Чтобы исключить случайную ошибку у порога, пройдите короткий {DEFAULT_FOLLOWUP_MINUTES}-минутный "
-            f"дополнительный этап (до {DEFAULT_FOLLOWUP_ITEMS} заданий) строго у этой границы.{inc_hint}"
-        )
+        inc_hint = (" Для Senior и выше второй этап может включать разбор инцидента."
+                    if claimed_grade in SENIOR_PLUS_GRADES else "")
+        expl = (f"Ответы — у самой границы уровня {g_title}: вероятность {p_pct} %, между {100 - lv_pct} % и {lv_pct} %, "
+                f"одной сессии мало для уверенного решения. Короткий второй этап у этой границы (до {followup_items} "
+                f"заданий, до {followup_minutes} минут) решит вопрос; итог — по ответам обеих сессий вместе.{inc_hint}")
     else:
-        expl = (
-            f"Вердикт: заявленный уровень {g_title} не подтверждён "
-            f"(вероятность соответствия {p_pct} %, LLR = {llr:+.2f}). "
-            "Принудительного понижения категории нет; если доказан уровень ниже, его можно принять без нового теста."
-        )
+        expl = (f"Уровень {g_title} не подтверждён: вероятность {p_pct} % (уверенное решение «нет» — до "
+                f"{100 - lv_pct} %). Принудительного понижения нет; если тест уверенно доказал уровень ниже, его можно "
+                "принять без нового теста.")
     if inc_norm is not None and inc_norm.get("summary_ru"):
         expl += " " + str(inc_norm["summary_ru"])
 
@@ -601,8 +597,8 @@ def compute_verdict(
         code_open_count=code_open,
         code_open_share=co_share,
         followup_needed=followup_needed,
-        followup_minutes=DEFAULT_FOLLOWUP_MINUTES,
-        followup_items=DEFAULT_FOLLOWUP_ITEMS,
+        followup_minutes=followup_minutes,
+        followup_items=followup_items,
         followup_cut_grade=claimed_grade,
         explanation=expl,
         incident_stage=inc_norm,

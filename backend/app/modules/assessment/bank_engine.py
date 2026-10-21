@@ -457,6 +457,9 @@ class BankEngine:
             theta=theta, soft_fast=state.get("mode") == "express" or bool(state.get("sandbox")), lz=lz)
         integ.setdefault("signals", {})["lz"] = lz  # индекс l_z — в сигналы достоверности (защита, IntegrityBadge)
         from app.modules.assessment import sprt as sprt_mod
+        from app.modules.assessment import two_stage as _ts
+
+        _tp = _ts.ext_params(_ts.params(), claimed)  # уровень L и объём второго этапа — те же, что у предложения
         verdict_obj = sprt_mod.compute_verdict(
             done,
             lookup,
@@ -466,6 +469,9 @@ class BankEngine:
             confirmed=dec.confirmed,
             assigned_grade=dec.assigned,
             mode=state.get("mode") or "full",
+            boundary_level=float(_tp["level"]),
+            followup_items=int(_tp["items"]),
+            followup_minutes=int(_tp["minutes"]),
             incident_stage=state.get("incident_stage"),
             suspicious=state.get("suspicious") if state.get("suspicious") is not None else {
                 "integrity": integ,
