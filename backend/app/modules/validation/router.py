@@ -127,6 +127,11 @@ def report(db: Session = Depends(get_db)):
     body, at = _rep_cache.get("body"), _rep_cache.get("at", 0.0)
     if body is not None and time.monotonic() - at < ttl:
         return Response(body, media_type="application/json")
+    if body is not None:
+        # А19 №6 (/validation 16 с): прошлый ответ — сразу, пересчёт — в фоне (живые счётчики отстают на один TTL)
+        if _rep_lock.acquire(blocking=False):
+            threading.Thread(target=_report_refresh, daemon=True).start()
+        return Response(body, media_type="application/json", headers={"X-Report-Stale": "1"})
     if not _rep_lock.acquire(blocking=body is None):  # пересчёт уже идёт — прошлый ответ
         return Response(body, media_type="application/json", headers={"X-Report-Stale": "1"})
     try:
@@ -136,6 +141,20 @@ def report(db: Session = Depends(get_db)):
             _rep_cache.update(body=body, at=time.monotonic())
         return Response(body, media_type="application/json")
     finally:
+        _rep_lock.release()
+
+
+def _report_refresh() -> None:
+    """Фоновый пересчёт /report своей сессией БД; блокировка уже взята вызывающим."""
+    from app.core.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        _rep_cache.update(body=_report_bytes(db), at=time.monotonic())
+    except Exception:  # noqa: BLE001 — фон не должен ронять воркер; следующий запрос попробует снова
+        pass
+    finally:
+        db.close()
         _rep_lock.release()
 
 

@@ -30,6 +30,8 @@ DATA = ROOT / "backend" / "app" / "modules" / "validation" / "data"
 BANK_SYNC = ROOT / "backend" / "assessment_bank" / "BANK_SYNC.json"
 OUT = ROOT / "docs" / "NUMBERS.json"
 FRONTEND_OUT = ROOT / "frontend" / "src" / "data" / "numbers.json"
+# копия для API (/api/validation/criteria читает цифры подбора отсюда — в образе бэкенда нет docs/)
+BACKEND_OUT = ROOT / "backend" / "app" / "modules" / "validation" / "data" / "numbers.json"
 A5_MATCHING = ROOT / "docs" / "realdata" / "numbers_matching.json"
 A6_ANTICHEAT = DATA / "grader_numbers.json"
 A3_MUTATION = ROOT / "docs" / "bank" / "mutation_report.json"
@@ -893,6 +895,38 @@ def _anon_other(s):
     return s
 
 
+HH_DEMAND = ROOT / "backend" / "app" / "modules" / "hh" / "data" / "demand.json"
+
+
+def dev_bench_v1_block() -> dict | None:
+    """Прежний бенчмарк разработки подбора v1 (арена /validation, «история»): все цифры арены — из
+    validation/data/matching_bench.json как есть (набор разработки, на нём подбор настраивался; не заголовок)."""
+    b = _load(DATA / "matching_bench.json")
+    if not b:
+        return None
+    keep = ("p@5", "p@10", "mrr", "ndcg@10", "recall@30")
+    mt = {m: {k: (v.get(k) or {}).get("mean") if isinstance(v.get(k), dict) else v.get(k) for k in keep if k in v}
+          for m, v in (b.get("metrics") or {}).items() if isinstance(v, dict)}
+    w = b.get("world") or {}
+    return {"what": "прежний бенчмарк разработки v1 (набор разработки; заголовок подбора — отложенная проверка, блок matching)",
+            "metrics": mt, "groups": b.get("groups"), "paired_platform_minus": b.get("paired_platform_minus"),
+            "world": {"n_needs": w.get("n_needs"), "n_candidates": w.get("n_candidates"),
+                      "relevant_per_need_mean": (w.get("relevant_per_need") or {}).get("mean")},
+            "generated_at": b.get("generated_at"), "artifact": "backend/app/modules/validation/data/matching_bench.json",
+            "recompute": "cd backend && python -m app.modules.validation.matching_bench"}
+
+
+def hh_demand_block() -> dict | None:
+    """Спрос hh.ru по направлениям (/validation, блок hh): открытые вакансии на дату снимка — из hh/data/demand.json."""
+    d = _load(HH_DEMAND)
+    if not d.get("directions"):
+        return None
+    return {"as_of": d.get("as_of"), "source": d.get("source"), "method": d.get("method"),
+            "directions": {k: {f: v.get(f) for f in ("title", "russia", "moscow", "spb", "with_salary_russia", "no_experience",
+                                                       "by_grade_title")} for k, v in d["directions"].items()},
+            "artifact": str(HH_DEMAND.relative_to(ROOT)), "recompute": "python tools/realdata/hh_plus.py demand"}
+
+
 def fsp_facts_block() -> dict | None:
     """Внешние факты о ФСП (не наши измерения): значение, цитата и источник — из docs/validation/fsp_facts.json."""
     f = _load(FSP_FACTS) or {}
@@ -1002,6 +1036,8 @@ def build() -> dict:
         "matching": matching,
         "external_benchmarks": external_block(),
         "fsp_facts": fsp_facts_block(),
+        "hh_demand": hh_demand_block(),
+        "history": {"matching_dev_bench_v1": dev_bench_v1_block()},
         "hh_match": hh,
         "anticheat": anticheat,
         "fsp_protocols": fsp,
@@ -1233,6 +1269,7 @@ def main() -> int:
     OUT.write_text(txt, encoding="utf-8")
     FRONTEND_OUT.parent.mkdir(parents=True, exist_ok=True)
     FRONTEND_OUT.write_text(txt, encoding="utf-8")
+    BACKEND_OUT.write_text(txt, encoding="utf-8")
     REPORT_MD.parent.mkdir(parents=True, exist_ok=True)
     REPORT_MD.write_text(report_md(new), encoding="utf-8")
     print(f"Записано {OUT.relative_to(ROOT)}, {FRONTEND_OUT.relative_to(ROOT)} и {REPORT_MD.relative_to(ROOT)}")

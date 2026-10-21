@@ -1,7 +1,7 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T16:35:20Z",
-  "git_commit": "b299f62249",
+  "generated_at": "2026-10-21T16:47:11Z",
+  "git_commit": "4c108bb997",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
     "code_and_open_families": 416,
@@ -11773,6 +11773,570 @@
     "checked_at": "2026-10-21",
     "what": "внешний факт (сайт ФСП), не измерение платформы",
     "artifact": "docs/validation/fsp_facts.json"
+  },
+  "hh_demand": {
+    "as_of": "2026-10-10T17:24:37+00:00",
+    "source": "api.hh.ru GET /vacancies (found)",
+    "method": "Число открытых вакансий в поиске hh.ru на дату: профессиональная роль + слова направления в названии (backend/app/modules/hh/directions.py); грейд — слово грейда в названии; «без опыта» — experience=noExperience. Для общих ролей («Программист, разработчик» и др.) это нижняя оценка: вакансия считается, только если слово направления есть в названии. Направления пересекаются мало (слова-исключения), но не нулём. Это поиск API hh.ru для приложения; на сайте hh.ru число может отличаться.",
+    "directions": {
+      "backend": {
+        "title": "Backend",
+        "russia": 1344,
+        "moscow": 781,
+        "spb": 195,
+        "with_salary_russia": 404,
+        "no_experience": 63,
+        "by_grade_title": {
+          "intern": 27,
+          "junior": 53,
+          "middle": 115,
+          "senior": 413
+        }
+      },
+      "frontend": {
+        "title": "Frontend",
+        "russia": 199,
+        "moscow": 123,
+        "spb": 19,
+        "with_salary_russia": 76,
+        "no_experience": 15,
+        "by_grade_title": {
+          "intern": 12,
+          "junior": 3,
+          "middle": 13,
+          "senior": 47
+        }
+      },
+      "qa": {
+        "title": "QA",
+        "russia": 956,
+        "moscow": 560,
+        "spb": 114,
+        "with_salary_russia": 237,
+        "no_experience": 76,
+        "by_grade_title": {
+          "intern": 38,
+          "junior": 45,
+          "middle": 55,
+          "senior": 156
+        }
+      },
+      "data_ml": {
+        "title": "Data/ML",
+        "russia": 377,
+        "moscow": 297,
+        "spb": 27,
+        "with_salary_russia": 51,
+        "no_experience": 9,
+        "by_grade_title": {
+          "intern": 6,
+          "junior": 7,
+          "middle": 28,
+          "senior": 126
+        }
+      },
+      "security": {
+        "title": "Информационная безопасность",
+        "russia": 1953,
+        "moscow": 886,
+        "spb": 188,
+        "with_salary_russia": 750,
+        "no_experience": 119,
+        "by_grade_title": {
+          "intern": 10,
+          "junior": 38,
+          "middle": 13,
+          "senior": 523
+        }
+      },
+      "devops": {
+        "title": "DevOps / SRE",
+        "russia": 679,
+        "moscow": 445,
+        "spb": 73,
+        "with_salary_russia": 152,
+        "no_experience": 27,
+        "by_grade_title": {
+          "intern": 12,
+          "junior": 22,
+          "middle": 23,
+          "senior": 130
+        }
+      },
+      "data_eng": {
+        "title": "Инженер данных",
+        "russia": 249,
+        "moscow": 197,
+        "spb": 15,
+        "with_salary_russia": 39,
+        "no_experience": 11,
+        "by_grade_title": {
+          "intern": 3,
+          "junior": 5,
+          "middle": 10,
+          "senior": 39
+        }
+      },
+      "mobile": {
+        "title": "Мобильная разработка",
+        "russia": 117,
+        "moscow": 79,
+        "spb": 14,
+        "with_salary_russia": 32,
+        "no_experience": 4,
+        "by_grade_title": {
+          "intern": 0,
+          "junior": 0,
+          "middle": 12,
+          "senior": 25
+        }
+      },
+      "analyst": {
+        "title": "Системный / бизнес-аналитик",
+        "russia": 1713,
+        "moscow": 1112,
+        "spb": 189,
+        "with_salary_russia": 457,
+        "no_experience": 88,
+        "by_grade_title": {
+          "intern": 29,
+          "junior": 43,
+          "middle": 25,
+          "senior": 309
+        }
+      }
+    },
+    "artifact": "backend/app/modules/hh/data/demand.json",
+    "recompute": "python tools/realdata/hh_plus.py demand"
+  },
+  "history": {
+    "matching_dev_bench_v1": {
+      "what": "прежний бенчмарк разработки v1 (набор разработки; заголовок подбора — отложенная проверка, блок matching)",
+      "metrics": {
+        "platform": {
+          "p@5": 0.751,
+          "p@10": 0.725,
+          "mrr": 0.896,
+          "ndcg@10": 0.566,
+          "recall@30": 0.24
+        },
+        "bm25": {
+          "p@5": 0.441,
+          "p@10": 0.432,
+          "mrr": 0.658,
+          "ndcg@10": 0.399,
+          "recall@30": 0.133
+        },
+        "keywords_grade": {
+          "p@5": 0.34,
+          "p@10": 0.359,
+          "mrr": 0.507,
+          "ndcg@10": 0.389,
+          "recall@30": 0.151
+        },
+        "random": {
+          "p@5": 0.052,
+          "p@10": 0.053,
+          "mrr": 0.158,
+          "ndcg@10": 0.049,
+          "recall@30": 0.015
+        },
+        "no_test": {
+          "p@5": 0.314,
+          "p@10": 0.36,
+          "mrr": 0.474,
+          "ndcg@10": 0.385,
+          "recall@30": 0.149
+        },
+        "grade_only": {
+          "p@5": 0.553,
+          "p@10": 0.556,
+          "mrr": 0.719,
+          "ndcg@10": 0.425,
+          "recall@30": 0.204
+        },
+        "no_fsp": {
+          "p@5": 0.768,
+          "p@10": 0.73,
+          "mrr": 0.892,
+          "ndcg@10": 0.574,
+          "recall@30": 0.241
+        },
+        "no_theta": {
+          "p@5": 0.72,
+          "p@10": 0.698,
+          "mrr": 0.88,
+          "ndcg@10": 0.549,
+          "recall@30": 0.236
+        },
+        "no_stack": {
+          "p@5": 0.741,
+          "p@10": 0.718,
+          "mrr": 0.879,
+          "ndcg@10": 0.559,
+          "recall@30": 0.24
+        },
+        "no_tier": {
+          "p@5": 0.507,
+          "p@10": 0.472,
+          "mrr": 0.696,
+          "ndcg@10": 0.404,
+          "recall@30": 0.144
+        },
+        "no_guard": {
+          "p@5": 0.819,
+          "p@10": 0.779,
+          "mrr": 0.904,
+          "ndcg@10": 0.648,
+          "recall@30": 0.257
+        }
+      },
+      "groups": {
+        "fsp": {
+          "platform": {
+            "with_fsp_percentile": 0.1238,
+            "without_fsp_percentile": 0.1437,
+            "without_fsp_share_of_relevant_top10": 0.552
+          },
+          "no_fsp": {
+            "with_fsp_percentile": 0.1363,
+            "without_fsp_percentile": 0.1368,
+            "without_fsp_share_of_relevant_top10": 0.66
+          },
+          "bm25": {
+            "with_fsp_percentile": 0.1124,
+            "without_fsp_percentile": 0.1056,
+            "without_fsp_share_of_relevant_top10": 0.667
+          },
+          "no_test": {
+            "with_fsp_percentile": 0.1095,
+            "without_fsp_percentile": 0.0974,
+            "without_fsp_share_of_relevant_top10": 0.721
+          },
+          "without_fsp_share_of_all_relevant": 0.664
+        },
+        "inflated": {
+          "platform": {
+            "irrelevant_inflated_top10": 0.069,
+            "inflated_top10": 0.203
+          },
+          "bm25": {
+            "irrelevant_inflated_top10": 0.3195,
+            "inflated_top10": 0.421
+          },
+          "keywords_grade": {
+            "irrelevant_inflated_top10": 0.5895,
+            "inflated_top10": 0.646
+          },
+          "no_test": {
+            "irrelevant_inflated_top10": 0.584,
+            "inflated_top10": 0.64
+          },
+          "no_guard": {
+            "irrelevant_inflated_top10": 0.1715,
+            "inflated_top10": 0.4985
+          },
+          "population_share": 0.198
+        },
+        "modest": {
+          "platform": {
+            "relevant_modest_percentile": 0.1288
+          },
+          "bm25": {
+            "relevant_modest_percentile": 0.1995
+          },
+          "keywords_grade": {
+            "relevant_modest_percentile": 0.2032
+          },
+          "no_test": {
+            "relevant_modest_percentile": 0.1961
+          },
+          "no_guard": {
+            "relevant_modest_percentile": 0.1276
+          }
+        }
+      },
+      "paired_platform_minus": {
+        "bm25": {
+          "p@5": {
+            "mean": 0.31,
+            "lo": 0.265,
+            "hi": 0.357
+          },
+          "p@10": {
+            "mean": 0.294,
+            "lo": 0.258,
+            "hi": 0.33
+          },
+          "ndcg@10": {
+            "mean": 0.168,
+            "lo": 0.138,
+            "hi": 0.196
+          },
+          "mrr": {
+            "mean": 0.238,
+            "lo": 0.181,
+            "hi": 0.293
+          },
+          "recall@30": {
+            "mean": 0.107,
+            "lo": 0.09,
+            "hi": 0.127
+          }
+        },
+        "keywords_grade": {
+          "p@5": {
+            "mean": 0.411,
+            "lo": 0.358,
+            "hi": 0.464
+          },
+          "p@10": {
+            "mean": 0.367,
+            "lo": 0.318,
+            "hi": 0.415
+          },
+          "ndcg@10": {
+            "mean": 0.177,
+            "lo": 0.141,
+            "hi": 0.213
+          },
+          "mrr": {
+            "mean": 0.389,
+            "lo": 0.338,
+            "hi": 0.438
+          },
+          "recall@30": {
+            "mean": 0.09,
+            "lo": 0.074,
+            "hi": 0.106
+          }
+        },
+        "random": {
+          "p@5": {
+            "mean": 0.699,
+            "lo": 0.664,
+            "hi": 0.732
+          },
+          "p@10": {
+            "mean": 0.673,
+            "lo": 0.644,
+            "hi": 0.701
+          },
+          "ndcg@10": {
+            "mean": 0.518,
+            "lo": 0.491,
+            "hi": 0.543
+          },
+          "mrr": {
+            "mean": 0.738,
+            "lo": 0.705,
+            "hi": 0.769
+          },
+          "recall@30": {
+            "mean": 0.226,
+            "lo": 0.205,
+            "hi": 0.249
+          }
+        },
+        "no_test": {
+          "p@5": {
+            "mean": 0.437,
+            "lo": 0.38,
+            "hi": 0.492
+          },
+          "p@10": {
+            "mean": 0.366,
+            "lo": 0.318,
+            "hi": 0.415
+          },
+          "ndcg@10": {
+            "mean": 0.182,
+            "lo": 0.143,
+            "hi": 0.22
+          },
+          "mrr": {
+            "mean": 0.422,
+            "lo": 0.359,
+            "hi": 0.479
+          },
+          "recall@30": {
+            "mean": 0.091,
+            "lo": 0.076,
+            "hi": 0.107
+          }
+        },
+        "grade_only": {
+          "p@5": {
+            "mean": 0.198,
+            "lo": 0.17,
+            "hi": 0.224
+          },
+          "p@10": {
+            "mean": 0.17,
+            "lo": 0.15,
+            "hi": 0.189
+          },
+          "ndcg@10": {
+            "mean": 0.142,
+            "lo": 0.127,
+            "hi": 0.157
+          },
+          "mrr": {
+            "mean": 0.178,
+            "lo": 0.149,
+            "hi": 0.207
+          },
+          "recall@30": {
+            "mean": 0.036,
+            "lo": 0.032,
+            "hi": 0.041
+          }
+        },
+        "no_fsp": {
+          "p@5": {
+            "mean": -0.017,
+            "lo": -0.032,
+            "hi": -0.003
+          },
+          "p@10": {
+            "mean": -0.005,
+            "lo": -0.013,
+            "hi": 0.004
+          },
+          "ndcg@10": {
+            "mean": -0.008,
+            "lo": -0.014,
+            "hi": -0.001
+          },
+          "mrr": {
+            "mean": 0.004,
+            "lo": -0.02,
+            "hi": 0.026
+          },
+          "recall@30": {
+            "mean": -0.001,
+            "lo": -0.002,
+            "hi": 0.001
+          }
+        },
+        "no_theta": {
+          "p@5": {
+            "mean": 0.031,
+            "lo": 0.011,
+            "hi": 0.053
+          },
+          "p@10": {
+            "mean": 0.028,
+            "lo": 0.014,
+            "hi": 0.041
+          },
+          "ndcg@10": {
+            "mean": 0.017,
+            "lo": 0.008,
+            "hi": 0.026
+          },
+          "mrr": {
+            "mean": 0.017,
+            "lo": -0.009,
+            "hi": 0.042
+          },
+          "recall@30": {
+            "mean": 0.004,
+            "lo": 0.002,
+            "hi": 0.006
+          }
+        },
+        "no_stack": {
+          "p@5": {
+            "mean": 0.01,
+            "lo": -0.004,
+            "hi": 0.025
+          },
+          "p@10": {
+            "mean": 0.007,
+            "lo": -0.001,
+            "hi": 0.017
+          },
+          "ndcg@10": {
+            "mean": 0.007,
+            "lo": 0.0,
+            "hi": 0.014
+          },
+          "mrr": {
+            "mean": 0.017,
+            "lo": -0.007,
+            "hi": 0.042
+          },
+          "recall@30": {
+            "mean": 0.0,
+            "lo": -0.001,
+            "hi": 0.002
+          }
+        },
+        "no_tier": {
+          "p@5": {
+            "mean": 0.244,
+            "lo": 0.198,
+            "hi": 0.289
+          },
+          "p@10": {
+            "mean": 0.253,
+            "lo": 0.213,
+            "hi": 0.294
+          },
+          "ndcg@10": {
+            "mean": 0.163,
+            "lo": 0.134,
+            "hi": 0.191
+          },
+          "mrr": {
+            "mean": 0.2,
+            "lo": 0.151,
+            "hi": 0.25
+          },
+          "recall@30": {
+            "mean": 0.097,
+            "lo": 0.081,
+            "hi": 0.115
+          }
+        },
+        "no_guard": {
+          "p@5": {
+            "mean": -0.068,
+            "lo": -0.097,
+            "hi": -0.038
+          },
+          "p@10": {
+            "mean": -0.054,
+            "lo": -0.075,
+            "hi": -0.032
+          },
+          "ndcg@10": {
+            "mean": -0.082,
+            "lo": -0.1,
+            "hi": -0.065
+          },
+          "mrr": {
+            "mean": -0.008,
+            "lo": -0.043,
+            "hi": 0.024
+          },
+          "recall@30": {
+            "mean": -0.017,
+            "lo": -0.021,
+            "hi": -0.013
+          }
+        }
+      },
+      "world": {
+        "n_needs": 200,
+        "n_candidates": 2000,
+        "relevant_per_need_mean": 106.7
+      },
+      "generated_at": "2026-10-20T07:41:58+00:00",
+      "artifact": "backend/app/modules/validation/data/matching_bench.json",
+      "recompute": "cd backend && python -m app.modules.validation.matching_bench"
+    }
   },
   "hh_match": {
     "direction_ok": {

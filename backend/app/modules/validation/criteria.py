@@ -32,6 +32,8 @@ SOURCES = {  # источник → файл расчёта и команда п
     # стандартные условия S-T (поправка №3): заголовок; жёсткие («product») — рядом, как проверка на прочность
     "product_st": (DATA / "product_sim_st.json", "make product-sim"),
     "cheat": (DATA / "cheat_bots.json", "make cheat-bots"),
+    # единый источник цифр сайта (копия docs/NUMBERS.json): подбор — отложенная проверка, тот же заголовок, что на главной
+    "numbers": (DATA / "numbers.json", "python3 tools/publish/gen_numbers.py"),
 }
 PERSONAS = {"candidate", "candidate_nofsp", "candidate_junior", "candidate_new", "employer", "expert", "fsp"}
 PERSONA_TITLE = {"candidate": "кандидат с ФСП", "candidate_nofsp": "кандидат без ФСП", "candidate_new": "кандидат без категории",
@@ -104,9 +106,9 @@ CRITERIA: list[dict] = [
          {"tz": "Проверяется на тестовом наборе пар «вакансия – кандидат» (доля релевантных кандидатов в топе выдачи)",
           "do": [go("Бенчмарк со скрытой истиной", "/validation#bench"),
                  go("Свой закрытый набор", "/validation#closed-set")],
-          "see": "Доля релевантных в топ-5 с 95 % ДИ против поиска по словам резюме (BM25); свой JSON/CSV — метрики сразу, без сохранения.",
-          "proof": metric("bench", "metrics.platform.p@5.mean", "Доля релевантных в топ-5 (P@5)", "pct1",
-                          "/validation#bench", ci="metrics.platform.p@5", vs=("у поиска по словам (BM25)", "metrics.bm25.p@5.mean")),
+          "see": "Доля релевантных в топ-5 с 95 % ДИ на отложенной проверке, рядом — жёсткие условия; свой JSON/CSV — метрики сразу, без сохранения.",
+          "proof": metric("numbers", "matching.p5.mean", "Доля релевантных в топ-5 (P@5), отложенная проверка", "pct1",
+                          "/validation#bench", ci="matching.p5", vs=("в жёстких условиях", "matching.hard.p5.mean")),
           "limit": "Истина бенчмарка — правила синтетического мира, не разметка людей."},
          {"tz": "на реальном сценарии (работодатель описывает потребность и получает подборку)",
           "do": [go("Написать свою потребность", "/employer/needs#need", "employer")],
@@ -381,6 +383,11 @@ def signature(src: str, d: dict) -> dict:
     if src == "bench":
         from app.modules.validation.headline import _bench_signature
         return _bench_signature(d)
+    if src == "numbers":
+        m = d.get("matching") or {}
+        return {"world": f"отложенная проверка подбора: {m.get('n_needs')} потребностей, {m.get('n_worlds')} мира, один прогон",
+                "seed": None, "config_hash": None, "commit": m.get("git_head") or d.get("git_commit") or "не записан",
+                "command": m.get("recompute") or SOURCES[src][1], "generated_at": m.get("generated_at") or d.get("generated_at")}
     if d.get("signature"):
         return d["signature"]
     sim = d.get("simulation") or {}
