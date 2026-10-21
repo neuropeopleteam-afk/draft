@@ -1,0 +1,75 @@
+{
+ "frozen_at": "2026-10-21T06:51:42+00:00",
+ "seeds": [
+  77021021,
+  77021022
+ ],
+ "configs": [
+  {
+   "seed": 77021021,
+   "n_needs": 200,
+   "n_candidates": 2000,
+   "theta_sigma": 0.48,
+   "se_reported": 0.4,
+   "items_mean": 14.8,
+   "common_share": 0.4,
+   "guess": 0.2,
+   "known_bonus": 0.3,
+   "unknown_penalty": -1.2,
+   "share_inflated": 0.2,
+   "share_modest": 0.15,
+   "inflate_all": false,
+   "fsp_base": -1.3,
+   "fsp_slope": 0.9,
+   "fsp_informative": true,
+   "truth": "capable",
+   "cov_full": 0.75,
+   "cov_min": 0.5,
+   "min_relevant_per_need": 3,
+   "decision": "bank",
+   "provisional": true
+  },
+  {
+   "seed": 77021022,
+   "n_needs": 200,
+   "n_candidates": 2000,
+   "theta_sigma": 0.48,
+   "se_reported": 0.4,
+   "items_mean": 14.8,
+   "common_share": 0.4,
+   "guess": 0.2,
+   "known_bonus": 0.3,
+   "unknown_penalty": -1.2,
+   "share_inflated": 0.2,
+   "share_modest": 0.15,
+   "inflate_all": false,
+   "fsp_base": -1.3,
+   "fsp_slope": 0.9,
+   "fsp_informative": true,
+   "truth": "capable",
+   "cov_full": 0.75,
+   "cov_min": 0.5,
+   "min_relevant_per_need": 3,
+   "decision": "bank",
+   "provisional": true
+  }
+ ],
+ "weights": {
+  "test": 0.45,
+  "stack_required": 0.35,
+  "stack_desired": 0.05,
+  "fsp": 0.1,
+  "probe": 0.05
+ },
+ "algorithm": "match-v1.3",
+ "code_before_run": "a5af45e72f1e23418a6f5a92b07217f8c4d99d2d",
+ "methods": [
+  "platform",
+  "no_fsp",
+  "no_test",
+  "keywords_grade",
+  "bm25",
+  "random"
+ ],
+ "rule": "Seed выбраны до прогона и раньше не использовались; прогон один; веса и правила подбора после прогона на этих мирах не настраиваются."
+}
