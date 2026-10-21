@@ -773,3 +773,14 @@ html[data-theme="light"] .np .fsp-serif-italic {
   hyphens: auto;
 }
 
+[data-testid="landing-numbers-grid"] [data-testid$="-st"] > p:nth-child(2),
+[data-testid="landing-numbers-grid"] [data-testid$="-hard"] > p:nth-child(2) {
+  white-space: nowrap;
+}
+[data-testid="landing-numbers-grid"] [data-testid$="-st"] > p:first-child,
+[data-testid="landing-numbers-grid"] [data-testid$="-hard"] > p:first-child {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: auto;
+}
+

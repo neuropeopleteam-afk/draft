@@ -134,7 +134,7 @@ export function Compare() {
   const cols = `minmax(12rem,16rem) repeat(${cs.length}, minmax(15rem,1fr))`;
 
   return (
-    <div className="min-w-0 max-w-6xl space-y-5">
+    <div className="w-full min-w-0 max-w-6xl space-y-5 overflow-x-hidden">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageTitle title="Сравнение кандидатов" subtitle={`«${data.need.title}»${data.need.version ? `, подборка, версия ${data.need.version}` : ""}. Рядом — только факты по требованиям потребности; сказанное кандидатом о себе в балл не входит. Кандидаты обезличены.`} />
         <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">

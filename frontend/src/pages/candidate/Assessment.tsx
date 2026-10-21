@@ -78,7 +78,7 @@ function testLenText(meta: any): string {
 
 function testLenShort(meta: any): string {
   const L = meta?.rules?.test_len;
-  return L ? `${L.min_items}–${L.max_items} (у спорного порога до ${L.contested_max_items}) + доп. этап до ${L.two_stage_items}` : "адаптивный";
+  return L ? `обычно ${L.min_items}–${L.max_items} заданий, при спорном результате — больше` : "обычно 8–20 заданий, при спорном результате — больше";
 }
 
 function expressFor(status: any, grade: string): ExpressParams {
@@ -617,6 +617,7 @@ function isAsciiTableLine(ln: string): boolean {
   if (!s) return false;
   if (/^[-+|:\s]{4,}$/.test(s) && s.includes("-")) return true;
   if ((s.match(/\|/g) ?? []).length >= 1 && /\S\s*\|\s*\S/.test(s)) return true;
+  if (/\b\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}|\b(?:GET|POST|PUT|DELETE|PATCH)\s+\/\S+|\bstatus=\d{3}\b|\b\d{1,3}(?:\.\d{1,3}){3}\b.*\bHTTP\//i.test(s)) return true;
   return false;
 }
 
