@@ -922,7 +922,9 @@ function TwoStageOffer({ t, claimed, direction }: { t: any; claimed: string; dir
   return (
     <section className="card mt-4 border-brand/30 bg-[#F3F2FB] text-sm" data-testid="two-stage-offer" aria-label="Уточнение уровня у границы">
       <p className="font-semibold text-brand-night">{lab}{t.status === "offered" ? ": можно уточнить" : ""}</p>
-      {t.status === "done" && o ? (
+      {t.status === "done" && o && o.rule === "sprt" ? (
+        <p className="mt-1 text-brand-ink/80" data-testid="two-stage-sprt-line">{stage2Line(o)}</p>
+      ) : t.status === "done" && o ? (
         <p className="mt-1 text-brand-ink/80">Уточнение {o.passed ? "пройдено" : "не подтвердило уровень у границы"}: по двум сессиям — <b>{GRADE_TITLE_ALL[o.final_grade] ?? "без категории"}</b> (новых заданий: {o.new_items}).</p>
       ) : (
         <>
@@ -940,9 +942,27 @@ function TwoStageOffer({ t, claimed, direction }: { t: any; claimed: string; dir
   );
 }
 
+/** Итог второго этапа по правилу SPRT (исправление 21.10): категория — только при «подтверждён»; иначе уровень по
+ * ответам предлагается (не подтверждён) или показывается как предварительный (решения нет — устная защита). */
+function stage2Line(o: any): string {
+  const f = GRADE_TITLE_ALL[o.final_grade] ?? "без категории";
+  if (o.verdict === "confirmed") return `Второй этап: заявленный уровень подтверждён по ответам обеих сессий (новых заданий: ${o.new_items}).`;
+  if (o.verdict === "not_confirmed") return `Второй этап: заявленный уровень не подтверждён. По ответам — ${f}: этот уровень можно принять или пересдать тест позже, принудительного понижения нет.`;
+  return `Второй этап: решения пока нет. По ответам — ${f} (предварительно); категория не присваивается до короткой устной защиты.`;
+}
+
 function TwoStageOutcome({ t }: { t: any }) {
   const o = t.refine || {};
   const lab = t.label ? t.label.charAt(0).toUpperCase() + t.label.slice(1) : "";
+  if (o.rule === "sprt") {
+    return (
+      <div className="card mt-4 text-sm" data-testid="two-stage-outcome">
+        <p className="font-semibold text-brand-night">{lab} — второй этап: {o.verdict === "confirmed" ? "подтверждён" : o.verdict === "not_confirmed" ? "не подтверждён" : "нужна устная защита"}</p>
+        <p className="mt-1 text-brand-ink/80" data-testid="two-stage-sprt-line">{stage2Line(o)}</p>
+        <p className="mt-1 text-xs text-brand-ink/65">Решение принято по ответам обеих сессий одной проверкой; работодатель видит только итог: «подтверждён тестом» или «нужен доп. этап».</p>
+      </div>
+    );
+  }
   return (
     <div className="card mt-4 text-sm" data-testid="two-stage-outcome">
       <p className="font-semibold text-brand-night">{lab} — уточнение {t.status === "passed" ? "пройдено" : "не пройдено"}</p>
