@@ -61,6 +61,14 @@ const isScreenshotCombo = (e: KeyboardEvent) => {
   );
 };
 
+const pluralSignals = (n: number) => {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return `${n} сигнал`;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return `${n} сигнала`;
+  return `${n} сигналов`;
+};
+
 interface LogItem {
   id: number;
   t: string;
@@ -93,7 +101,7 @@ function Radar({
       viewBox="0 0 320 320"
       className="mx-auto h-auto w-full max-w-[320px]"
       role="img"
-      aria-label={`Радар 21 сигнала: сработало ${hits}`}
+      aria-label={`Радар ${pluralSignals(signals.length)}: сработало ${hits}`}
       data-testid="wr-radar"
     >
       <defs>
@@ -436,6 +444,7 @@ export default function AntiCheatMode({
             },
           },
         });
+        setErr(null);
         setInspectRes(res);
         setLit((cur) => {
           const next = new Set(cur);
@@ -446,11 +455,12 @@ export default function AntiCheatMode({
           pushLog(ev.text, ev.signals, { real: opts.real, severe: ev.severe });
         });
         return res;
-      } catch {
+      } catch (e) {
+        setErr(errText(e));
         return null;
       }
     },
-    [lzShown, pushLog, realKeys]
+    [demoMode, lzShown, pushLog, realKeys]
   );
 
   // Реальные события браузера в режиме Б
@@ -871,7 +881,7 @@ export default function AntiCheatMode({
               className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-cyan-100"
             >
               <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-300" />
-              Паспорт честности попытки · 5 контуров · {signals.length} сигнал
+              Паспорт честности попытки · 5 контуров · {pluralSignals(signals.length)}
             </h3>
             <button
               type="button"
@@ -1019,7 +1029,7 @@ export default function AntiCheatMode({
               data-testid="wr-log"
             >
               {log.length === 0 && (
-                <li className="text-white/40">
+                <li className="text-white/65">
                   Журнал чист. Запустите любой сценарий слева или вставьте текст в поле ответа.
                 </li>
               )}
@@ -1043,6 +1053,15 @@ export default function AntiCheatMode({
                 </li>
               ))}
             </ol>
+            {err && !defense && (
+              <p
+                className="rounded-xl border border-rose-400/40 bg-rose-500/10 p-2.5 text-xs text-rose-200"
+                role="alert"
+                data-testid="wr-anticheat-err"
+              >
+                {err}
+              </p>
+            )}
           </div>
         </section>
       </div>

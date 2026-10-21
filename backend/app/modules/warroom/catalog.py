@@ -1376,7 +1376,6 @@ def parameterize_scenario(scenario_id: str, seed: int = 1001) -> dict[str, Any]:
             {
                 "id": m["id"],
                 "label": m["label"],
-                "sim_effect": "recovered" if m["id"] in req_set else ("degraded" if m["id"] in harm_set else "partial"),
                 "telemetry_note": m["tech"],
             }
             for m in MEASURES
@@ -1387,6 +1386,65 @@ def parameterize_scenario(scenario_id: str, seed: int = 1001) -> dict[str, Any]:
     # Не отдаём внутренние regex-шаблоны проверок кода наружу в сыром виде
     scn["public_checks"] = [{"id": c["id"], "label": c["label"], "forbid": c["forbid"]} for c in scn["checks"]]
     return scn
+
+
+def list_bank_incident_items(direction: str | None = None, seed: int = 1001) -> list[dict[str, Any]]:
+    """Возвращает проверенные задания банка формата `incident_sim` (А3), если они активны в реестре,
+    проходят генерацию без пустых шагов и очищены от `sim_effect` и ключей ответа.
+    """
+    out: list[dict[str, Any]] = []
+    try:
+        from assessment_bank import registry as bank_reg  # type: ignore
+
+        load_fn = getattr(bank_reg, "load_all_families", None) or getattr(bank_reg, "get_families", None)
+        if not callable(load_fn):
+            return out
+        families = load_fn()
+    except Exception:
+        return out
+
+    items_iter = families.values() if isinstance(families, dict) else (families or [])
+    for fam in items_iter:
+        try:
+            fmt = getattr(fam, "format", None) or (fam.get("format") if isinstance(fam, dict) else None)
+            inv = getattr(fam, "invariants", None) or (fam.get("invariants") if isinstance(fam, dict) else {})
+            extra = getattr(inv, "extra", None) if not isinstance(inv, dict) else inv.get("extra", {})
+            is_inc = fmt == "incident_sim" or (isinstance(extra, dict) and bool(extra.get("incident_sim")))
+            if not is_inc:
+                continue
+            fam_dir = getattr(fam, "direction", None) or (fam.get("direction") if isinstance(fam, dict) else None)
+            if direction and fam_dir and fam_dir != direction:
+                continue
+            gen_fn = getattr(fam, "generate", None)
+            if not callable(gen_fn):
+                continue
+            var = gen_fn(int(seed))
+            pv = getattr(var, "public_view", None) or (var.get("public_view") if isinstance(var, dict) else None)
+            if not isinstance(pv, dict):
+                continue
+            steps = pv.get("steps") or []
+            inc = copy.deepcopy(pv.get("incident") or {})
+            # Отбрасываем любые задания с пустыми шагами или пустыми вариантами ответа
+            if not pv.get("stem") or not steps or any(not s.get("prompt") or not s.get("options") for s in steps if isinstance(s, dict)):
+                continue
+            for act in inc.get("actions", []):
+                if isinstance(act, dict):
+                    act.pop("sim_effect", None)
+            out.append({
+                "family_id": getattr(fam, "family_id", None) or pv.get("family_id"),
+                "direction": fam_dir or direction or "backend",
+                "title": getattr(fam, "title", None) or pv.get("title") or "Боевой инцидент",
+                "stem": pv.get("stem"),
+                "steps": [
+                    {"prompt": s.get("prompt"), "options": list(s.get("options") or [])}
+                    for s in steps
+                    if isinstance(s, dict)
+                ],
+                "incident": inc,
+            })
+        except Exception:
+            continue
+    return out
 
 
 def evaluate_code_checks(scn: dict[str, Any], code: str) -> dict[str, Any]:

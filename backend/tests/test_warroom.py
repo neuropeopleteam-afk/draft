@@ -432,3 +432,50 @@ def test_warroom_api_never_leaks_keys_or_mechanics(client):
     assert my_r.status_code == 200, my_r.text
     _assert_no_leaks(my_r.json(), "/api/warroom/attempts/my (кандидат)")
 
+
+def test_no_empty_steps_and_verdict_impact(client):
+    """P0-2/P0-3 (21.10): ни одного пустого шага в сценариях; sprt_preview рассчитывает вклад в вердикт в демо и боевом режимах."""
+    from app.modules.warroom.catalog import list_bank_incident_items
+
+    reset_all()
+    for base in BASE_SCENARIOS:
+        scn = parameterize_scenario(base["id"], 1001)
+        assert scn["story"].strip()
+        assert len(scn["patches"]) >= 3 and all(p["code"].strip() for p in scn["patches"])
+        assert len(scn["checks"]) >= 4 and all(c["label"].strip() for c in scn["checks"])
+        assert len(scn["rubric"]) == 3 and abs(sum(r["weight"] for r in scn["rubric"]) - 1.0) < 1e-6
+        inc = scn["incident"]
+        assert len(inc["series"]) == 3 and len(inc["logs"]) >= 3 and len(inc["actions"]) >= 2
+        assert all("sim_effect" not in act for act in inc["actions"])
+
+    # Адаптер банка не падает и не возвращает пустых шагов
+    bank_items = list_bank_incident_items(seed=1001)
+    assert isinstance(bank_items, list)
+    for bi in bank_items:
+        assert bi["stem"] and bi["steps"]
+        assert all("sim_effect" not in a for a in bi.get("incident", {}).get("actions", []))
+
+    # Проверка sprt_preview (влияние на вердикт) при полном и частичном решении
+    req_ids = BASE_SCENARIOS[0]["required"]
+    scn_pub = client.get("/api/warroom/scenarios/payment?demo=true").json()
+    ev_pass = client.post(
+        "/api/warroom/evaluate",
+        json={
+            "scenario_id": "payment",
+            "measures": [{"id": m, "params": {}} for m in req_ids],
+            "code_patch": scn_pub["patches"][0]["code"],
+            "justification": REFERENCE_JUSTIFICATIONS["payment"],
+            "save": False,
+            "demo": True,
+        },
+    ).json()
+    assert ev_pass["passed"] is True
+    sp = ev_pass["sprt_preview"]
+    assert sp is not None
+    assert sp["verdict_status"] == "confirmed"
+    assert sp["stage_points"] == 4
+    assert sp["llr_delta"] > 0
+    assert sp["se_post"] < sp["se_before"]
+    assert "Подтверждён" in sp["verdict_title_ru"]
+
+

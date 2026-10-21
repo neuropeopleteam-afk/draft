@@ -205,7 +205,14 @@ export interface EvaluateResult extends SimulateResult {
   attempt_id?: string | null;
   saved_to_db?: boolean;
   sprt_preview?: {
+    verdict_status?: "confirmed" | "needs_followup" | "not_confirmed";
+    verdict_title_ru?: string;
+    stage_points?: number;
+    max_stage_points?: number;
+    explanation_ru?: string;
+    theta_before?: number;
     theta_post: number;
+    se_before?: number;
     se_post: number;
     llr_delta: number;
   } | null;
