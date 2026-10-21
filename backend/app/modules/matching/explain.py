@@ -501,8 +501,24 @@ def build_explain_from_result(
     from app.modules.fsp.relevance import protocol_highlight
 
     skills_fsp: list[dict[str, Any]] = []
+    # fsp-v3: лучший результат — из причины ранжирования (статус подтверждения и цитата официального протокола)
+    fr = next((r for r in reasons if r.get("requirement") == "Достижения ФСП" and r.get("fsp_status")), None)
+    if fr and not fsp_info.get("hidden"):
+        st = fr["fsp_status"]
+        pr = fr.get("protocol") or None
+        skills_fsp.append({
+            "text": fr.get("text") or "Достижение ФСП", "status": st, "protocol": pr,
+            "relevance": None, "focus_title": None, "highlighted_tags": [],
+            "source": ("Официальный протокол ФСП, подтверждено ФСП" if st == "verified" and pr else
+                       "Найдено в официальном протоколе ФСП, ждёт подтверждения ФСП — учитывается с весом 0,5"
+                       if st == "pending_fsp" else
+                       "Подтверждено реестром ФСП") + " (подтверждает соревновательную дисциплину и результат; "
+                      "конкретный технологический стек проверяется индивидуальным тестом)",
+        })
     if not fsp_info.get("hidden"):
-        for ach in (fsp_info.get("achievements") or [])[:4]:
+        seen_txt = (fr or {}).get("text") or ""
+        for ach in [a for a in (fsp_info.get("achievements") or []) if not (a.get("text") and a["text"] in seen_txt)
+                    ][:4 - len(skills_fsp)]:
             disc = ach.get("discipline")
             hl = protocol_highlight(disc, req.get("direction")) if disc else {}
             skills_fsp.append({
