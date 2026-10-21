@@ -52,7 +52,7 @@ export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
   if (below.length) risks.push(`ниже порога теста: ${below.join(", ")}`);
   const st = c.status?.status;
   if (st === "unconfirmed") risks.push("грейд не подтверждён тестом");
-  else if (st === "provisional" || c.category?.preliminary) risks.push("грейд предварительный");
+  else if (st === "provisional" || c.category?.preliminary) risks.push("нужен доп. этап по грейду");
   else if (c.category?.ext_preliminary) risks.push(`${c.status?.grade_title ?? "Lead/Principal"} — предварительно`);  // Я25
   const grade = reasons.find((x) => x.requirement === "Специализация и грейд");
   const off = /грейд на (?:ступень|две ступени|три ступени) (?:выше|ниже) запрошенного/.exec(grade?.text ?? "");
@@ -102,7 +102,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
   const gradeLine = st === "confirmed"
     ? `Грейд ${gradeTitle} подтверждён тестом и совпадает с вакансией`
     : st === "provisional"
-      ? `Грейд ${gradeTitle} подтверждён предварительно (у границы уровня)`
+      ? `Грейд ${gradeTitle}: нужен доп. этап (у границы уровня)`
       : `Грейд не подтверждён тестом${c.claimed?.title ? ` (заявлено: ${c.claimed.title})` : ""}`;
   const testScore100 = r.components?.test != null
     ? Math.round(Number(r.components.test) * 100)
