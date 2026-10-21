@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { num, pct, useApi } from "../ui";
 import { ScrollX } from "../A11y";
 import { makeModelAlias, noVendor } from "./noVendor";
+import { numCol } from "./numAlign";
 
 /** /validation#experts: какая модель где — облачные модели, открытая модель на CPU и правила на одних и тех же наборах
  * Названия моделей на экран — через noVendor/makeModelAlias (поставщики на сайте не называются).
@@ -43,16 +44,17 @@ export default function LlmModels() {
 }
 
 function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
+  const nc = (j: number) => numCol(rows, j);
   return (
     <ScrollX label={`Таблица: ${head.join(", ")}`} className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[44rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
-          <tr>{head.map((h, i) => <th key={i} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
+          <tr>{head.map((h, i) => <th key={i} scope="col" className={`px-3 py-2.5 font-semibold ${nc(i) ? "text-right" : ""}`}>{h}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
             <tr key={i} className="border-t border-brand-night/5">
-              {r.map((c, j) => <td key={j} className={`px-3 py-2 align-top tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
+              {r.map((c, j) => <td key={j} className={`px-3 py-2 ${nc(j) ? "text-right" : ""} align-top tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
             </tr>
           ))}
         </tbody>

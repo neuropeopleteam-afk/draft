@@ -31,6 +31,7 @@ import { ScrollX } from "../components/A11y";
 import { Fold, FoldAllButton, FoldGroup, FoldProvider } from "../components/validation/Fold";  // SIMPLIFY п.3: разделы свёрнуты
 import { makeModelAlias, noVendor } from "../components/validation/noVendor";
 import { getMatchingMetrics } from "../lib/numbers";
+import { numCol } from "../components/validation/numAlign";
 
 const fmtPct1 = (x: number) => (x * 100).toFixed(1).replace(".", ",");
 
@@ -646,16 +647,17 @@ function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: s
 }
 
 function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
+  const nc = (j: number) => numCol(rows, j);
   return (
     <ScrollX label="Таблица" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[40rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
-          <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
+          <tr>{head.map((h, hi) => <th key={h} scope="col" className={`px-3 py-2.5 font-semibold ${nc(hi) ? "text-right" : ""}`}>{h}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
             <tr key={i} className={`border-t border-brand-night/5 ${String(r[0]).startsWith("Среднее") || String(r[0]).startsWith("День 2") ? "bg-brand-blush/15 font-semibold" : ""}`}>
-              {r.map((c, j) => <td key={j} className={`px-3 py-2 tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
+              {r.map((c, j) => <td key={j} className={`px-3 py-2 ${nc(j) ? "text-right" : ""} tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
             </tr>
           ))}
         </tbody>

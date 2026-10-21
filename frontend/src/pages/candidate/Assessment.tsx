@@ -4,7 +4,7 @@ import { DefensePanel } from "../../components/Interview";
 import { IncidentSandbox, isIncidentTask } from "../../components/IncidentSandbox";  // Н2: пульт инцидента к архитектурным заданиям  // Я15: устная защита ответа, по желанию
 import { ThetaScale, levelWords } from "../../components/ThetaScale";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, fmtHoursText, num, pct, signed, useApi, plainText } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, fmtHoursText, num, pct, useApi, plainText } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";

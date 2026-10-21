@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Alert, DIRECTION_TITLES, Loading, useApi } from "../ui";
 import { ScrollX } from "../A11y";
 import { ProvenanceLine } from "./Provenance";
+import { numCol } from "./numAlign";
 
 /** Блок /validation: стабильность статуса «Junior (предварительно)» на симуляции теста
  *  (backend: app/modules/validation/junior_stability.py, make stability). */
@@ -113,16 +114,17 @@ function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: s
 }
 
 function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
+  const nc = (j: number) => numCol(rows, j);
   return (
     <ScrollX label="Таблица" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[44rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
-          <tr>{head.map((h, i) => <th key={i} scope="col" className="px-3 py-2.5 font-semibold">{h || <span className="sr-only">Строка</span>}</th>)}</tr>
+          <tr>{head.map((h, i) => <th key={i} scope="col" className={`px-3 py-2.5 font-semibold ${nc(i) ? "text-right" : ""}`}>{h || <span className="sr-only">Строка</span>}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
             <tr key={i} className="border-t border-brand-night/5">
-              {r.map((c, j) => <td key={j} className={`px-3 py-2 tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
+              {r.map((c, j) => <td key={j} className={`px-3 py-2 ${nc(j) ? "text-right" : ""} tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
             </tr>
           ))}
         </tbody>

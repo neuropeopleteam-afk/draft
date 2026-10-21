@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { DIRECTION_TITLES } from "../ui";
 import { ScrollX } from "../A11y";
+import { numCol } from "./numAlign";
 
 /* Блок /validation «Порог грейда Стажёр»: симуляция теста при четырёх порогах-кандидатах на текущем банке и на банке
    с лёгкими семействами. Данные — intern_cut из /api/validation/report (make intern-cut). Без подгонки: правило выбора
@@ -11,16 +12,17 @@ const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).repl
 const theta = (v?: number | null) => (v == null ? "—" : `${v < 0 ? "−" : ""}${Math.abs(v).toFixed(2).replace(".", ",").replace(/,?0+$/, "")}`);
 
 function Table({ head, rows, mark }: { head: string[]; rows: ReactNode[][]; mark?: number }) {
+  const nc = (j: number) => numCol(rows, j);
   return (
     <ScrollX label="Таблица" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[40rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
-          <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
+          <tr>{head.map((h, hi) => <th key={h} scope="col" className={`px-3 py-2.5 font-semibold ${nc(hi) ? "text-right" : ""}`}>{h}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
             <tr key={i} className={`border-t border-brand-night/5 ${i === mark ? "bg-brand-blush/15 font-semibold" : ""}`}>
-              {r.map((c, j) => <td key={j} className={`px-3 py-2 tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
+              {r.map((c, j) => <td key={j} className={`px-3 py-2 ${nc(j) ? "text-right" : ""} tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}
             </tr>
           ))}
         </tbody>
