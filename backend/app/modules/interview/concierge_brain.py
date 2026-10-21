@@ -309,9 +309,42 @@ def write(s: Session | None, who: str, text: str = "", **extra) -> None:
         log.warning("concierge transcript: %s", e)
 
 
+_WARM_AT = 0.0
+_WARM_LOCK = threading.Lock()
+
+
+def warm_async(min_gap_s: float = 90.0) -> None:
+    """Прогрев в этом процессе: соединение с ретранслятором и кэш подсказки у поставщика — первый ход после открытия
+    Насти не платит 3–5 с «холодного» запроса (замер 21.10 19:40). Не чаще раза в 90 с на процесс, 1 токен."""
+    global _WARM_AT
+    if not LLM_MODELS:
+        return
+    with _WARM_LOCK:
+        now = time.time()
+        if now - _WARM_AT < min_gap_s:
+            return
+        _WARM_AT = now
+
+    def run() -> None:
+        from app.modules.interview import concierge_stream as cs
+
+        msgs = [{"role": "system", "content": [{"type": "text", "text": _static_prompt(),
+                                                "cache_control": {"type": "ephemeral"}}]},
+                {"role": "user", "content": "(служебно: проверка связи, ответь одним символом)"}]
+        try:
+            for _ in cs.stream_llm(msgs, LLM_MODELS[0], max_tokens=1, timeout=10.0):
+                break
+        except Exception:  # noqa: BLE001
+            pass
+
+    threading.Thread(target=run, daemon=True, name="concierge-warm").start()
+
+
 def event(sid: str | None, kind: str, *, text: str = "", step: str | None = None, path: str | None = None,
           name: str | None = None, role: str | None = None) -> None:
     """События браузера: open / say (реплика обзора, связка, приветствие) / step / point / mic / close."""
+    if kind in ("open", "mic", "step"):
+        warm_async()
     with mutate(sid) as s:
         if s is None:
             return
@@ -344,8 +377,8 @@ SYSTEM_STATIC = """Ты — Настя, живой голосовой прово
 2. Только факты из раздела «Знания» и «Карты сайта». Точного ответа нет — скажи по-человечески («Этого я точно не \
 скажу») и предложи показать ближайший экран. Не выдумывай цифры, сроки, цены и названия. Не упоминай «знания», «базу», \
 «подсказку» и «карту сайта» — для собеседника это просто то, что ты знаешь.
-3. Говори для слуха: без списков, скобок, звёздочек, эмодзи и markdown; числа и проценты — словами, как их произносят \
-(«девяносто четыре и пять десятых процента», «тысяча шестьсот сорок шесть» — без «одна тысяча»). Аббревиатуры ФСП, \
+3. Говори для слуха: без списков, скобок, звёздочек, эмодзи и markdown. Числа и проценты пиши ЦИФРАМИ ровно как в \
+фактах («77,6 %», «1 646», «275–430 тыс. ₽») — словами их произнесёт озвучка; сама числа словами не пиши. Аббревиатуры ФСП, \
 ИИ, ATS, QR можно. Цифры точности, банка и защиты от списывания называй только из блока цифр; если его нет в контексте — \
 скажи, что точные значения на странице проверки, и не оценивай «выше/ниже» сама.
 4. Никогда не называй сервисы и технологии, на которых работаешь ты сама: синтез голоса, видео, распознавание речи, \
@@ -379,6 +412,9 @@ SYSTEM_STATIC = """Ты — Настя, живой голосовой прово
 объясняй и не оправдывайся, а сразу сделай, что он хотел: одна короткая фраза («Поняла, покажу Полигон целиком.») и \
 действие — обычно goto на тот экран с "full": true. «Подробнее», «полностью», «целиком» про экран — тоже goto с \
 "full": true: ты пройдёшь экран целиком и сама нажмёшь главные кнопки.
+17. «Замолчала», «почему молчишь», «что дальше» на экране, который человек сам открыл, — продолжай НА ЭТОМ ЖЕ экране \
+(scroll с dir down или короткий рассказ о блоке ниже); в другой раздел или кабинет без просьбы не уводи. Не оправдывайся \
+(«я ждала вашего вопроса») — просто продолжи.
 
 Решение — поле action:
 • "answer" — ответ на вопрос или реплику; если шёл обзор, после ответа ты сама продолжишь показ с того же места;
@@ -571,7 +607,10 @@ def _client():
 
             _HTTP = httpx.Client(timeout=httpx.Timeout(20, connect=6), transport=llm._TRANSPORT,
                                  verify=llm._verify("openrouter", get_settings()),
-                                 limits=httpx.Limits(max_connections=16, max_keepalive_connections=8))
+                                 limits=httpx.Limits(max_connections=16, max_keepalive_connections=8,
+                                                     # по умолчанию httpx закрывает простаивающее соединение через 5 с —
+                                                     # ход раз в 20–40 с платил рукопожатием (решение 3,8–6 с вместо 1,5–2)
+                                                     keepalive_expiry=float(os.environ.get("CONCIERGE_KEEPALIVE_S", "240"))))
         return _HTTP
 
 
