@@ -31,8 +31,8 @@ function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market, hh }:
       <div><p className="label">Сумма указана</p><BasisSeg value={basis} onChange={setBasis} /></div>
       <div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Вилка от, ₽ в месяц" htmlFor="sf"><input id="sf" required type="number" min={1} step={5000} className="input" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
-          <Field label="Вилка до, ₽ в месяц" htmlFor="st"><input id="st" required type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
+          <Field label={f > 0 ? `Вилка от, ₽ в месяц (${rub(f)})` : "Вилка от, ₽ в месяц"} htmlFor="sf"><input id="sf" required type="number" min={1} step={5000} className="input" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
+          <Field label={t > 0 ? `Вилка до, ₽ в месяц (${rub(t)})` : "Вилка до, ₽ в месяц"} htmlFor="st"><input id="st" required type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
         </div>
         <p className={`mt-2 text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/65"}`}>
           {veryWide ? `Слишком широкая вилка (разрыв более 3,5×): размытые диапазоны снижают отклик и индекс ответственности работодателя. При «от» ${rub(f)} укажите «до» не выше ${rub(maxTo(from))}.`
@@ -212,7 +212,7 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
     <div className="space-y-4">
       <Field label="Позиция" htmlFor="it"><input id="it" className={`input${hl("title")}`} aria-invalid={(show && miss.has("title")) || undefined} aria-describedby="invite-missing" value={title} onBlur={() => setTouched(true)} onChange={(e) => setTitle(e.target.value)} placeholder="Python-разработчик в команду платежей" /></Field>
       <Field label="Суть предложения" htmlFor="idesc"><textarea id="idesc" className={`input min-h-[110px]${hl("desc")}`} aria-invalid={(show && miss.has("desc")) || undefined} aria-describedby="invite-desc-count invite-missing" value={desc} onBlur={() => setTouched(true)} onChange={(e) => setDesc(e.target.value)} placeholder="Задачи, команда, формат, что предлагаем" />
-        <p id="invite-desc-count" className={`mt-1 text-xs ${desc.trim().length < INVITE_MIN.desc ? "text-amber-800" : "text-brand-ink/65"}`} data-testid="invite-desc-count">{desc.trim().length} / {INVITE_MIN.desc} знаков минимум</p></Field>
+        <p id="invite-desc-count" className={`mt-1 text-xs ${show && desc.trim().length < INVITE_MIN.desc ? "text-amber-800" : "text-brand-ink/65"}`} data-testid="invite-desc-count">{desc.trim().length} / {INVITE_MIN.desc} знаков минимум</p></Field>
       <Field label="Как с вами связаться" htmlFor="ic"><input id="ic" className={`input${hl("contact")}`} aria-invalid={(show && miss.has("contact")) || undefined} aria-describedby="invite-missing" value={contact} onBlur={() => setTouched(true)} onChange={(e) => setContact(e.target.value)} placeholder="Telegram @hr_company или hr@company.ru" /></Field>
       <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} basis={basis} setBasis={setBasis} market={market} hh={{ cref, needId }} />
       <OfferFitHint cref={cref} needId={needId} from={Number(from) || undefined} to={Number(to) || undefined} basis={basis} />

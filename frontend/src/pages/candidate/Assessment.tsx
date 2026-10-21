@@ -78,7 +78,7 @@ function testLenText(meta: any): string {
 
 function testLenShort(meta: any): string {
   const L = meta?.rules?.test_len;
-  return L ? `${L.min_items}–${L.max_items} (у спорного порога до ${L.contested_max_items}) + доп. этап до ${L.two_stage_items}` : "адаптивный";
+  return L ? `обычно ${L.min_items}–${L.max_items} заданий, при спорном результате — больше` : "обычно 8–20 заданий, при спорном результате — больше";
 }
 
 function expressFor(status: any, grade: string): ExpressParams {
@@ -489,17 +489,17 @@ function GradeChoice({ status, onb, onEditSurvey, express = false }: { status: a
       {(chosen?.category_id ?? status?.current?.category_id) && (
         <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}{status?.current?.grade_preliminary && (!chosen || chosen.direction === status.current.direction) ? " (предварительно)" : ""}</b> · <Link className="font-semibold underline" to="/candidate/category">подробнее</Link></Alert>
       )}
-      <div className={`mt-5 grid gap-3 sm:grid-cols-2 ${Object.keys(levels).length > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`} data-testid="grade-cards">
+      <div className={`mt-5 grid grid-cols-2 gap-2.5 sm:gap-3 ${Object.keys(levels).length > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`} data-testid="grade-cards">
         {Object.entries(levels).map(([id, t]) => (
           <button key={id} type="button" onClick={() => setGrade(id)} aria-pressed={grade === id}
-            className={`rounded-2xl border p-4 text-left transition-all ${grade === id ? "border-2 border-brand bg-brand-blush/40 shadow-sm" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
+            className={`rounded-2xl border p-3.5 sm:p-4 text-left transition-all ${grade === id ? "border-2 border-brand bg-brand-blush/40 shadow-sm" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
             <div className="flex items-center justify-between gap-2">
-              <p className="text-lg font-bold text-brand-night">{t}</p>
+              <p className="text-base sm:text-lg font-bold text-brand-night">{t}</p>
               {currentGrade === id && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-900">✓ Ваш грейд</span>}
             </div>
             {/* И23 (VS.1): уровень — по навыкам; Ф4: на карточке коротко, полный текст и стаж — ниже */}
             <p className="mt-1 text-xs leading-relaxed text-brand-ink/80">{GRADE_SKILLS_SHORT[id]}</p>
-            <span className="mt-2.5 flex flex-wrap gap-1.5">
+            <span className="mt-2 flex flex-wrap gap-1.5">
               {!hint.data && status?.claimed_grade === id && <span className="chip">Подсказка по стажу из опроса</span>}
               {hint.data?.suggested === id && <span className="chip">По вашему стажу</span>}
               {retakeLocks[id] && <span className="chip">Повтор с {dt(retakeLocks[id]).replace(/ г\.$/, "")}</span>}
@@ -508,7 +508,33 @@ function GradeChoice({ status, onb, onEditSurvey, express = false }: { status: a
         ))}
       </div>
 
-      {/* Главный блок запуска — сразу под карточками уровней на первом экране без прокрутки */}
+      {expressOk && (
+        <div className="card mt-4 text-sm" data-testid="mode-choice">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="font-semibold text-brand-night">Режим теста</p>
+            <Seg value={mode} onChange={setMode} options={modes(ex, exSenior.max_items, meta)} label="Режим теста" />
+          </div>
+          {/* Ф6 (В7, Н8) + Ф4: на первом экране — коротко; правило остановки и погрешность — под «Подробнее» */}
+          <p className="mt-2 text-brand-ink/75">
+            {mode === "express"
+              ? <><span className="chip mr-1.5" data-testid="jury-brief">Экспресс-калибровка · 5 минут</span>{`Быстрая проверка уровня (5–7 адаптивных задач банка без дотестирования${grade === "senior" ? ", за Senior — до 12" : ""}) вместо полного теста (до ${meta?.rules?.test_len?.contested_max_minutes ?? 105} мин).`}</>
+              : <FullLength len={len.data} meta={meta} brief />}
+          </p>
+          <details className="mt-2 text-xs text-brand-ink/70">
+            <summary className="cursor-pointer font-semibold text-brand-plum">Подробнее</summary>
+            {mode !== "express" && <p className="mt-2 leading-relaxed"><FullLength len={len.data} meta={meta} /></p>}
+            <p className="mt-2 leading-relaxed"><b>Как считается.</b>{" "}
+            {mode === "express"
+              ? (grade === "senior"
+                ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ ${meta?.rules?.confirm_pct ?? 80} %), оценка менее точная, чем у полного (± 0,6 против ± 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
+                : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ ${meta?.rules?.confirm_pct ?? 80} %), но оценка заметно менее точная (± 0,65 против ± 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
+              : `Полный тест: решение по заявленному грейду принимается последовательной проверкой у его порога — тест останавливается, как только решение надёжно; ${testLenText(meta)} Итог — «подтверждён», «не подтверждён» или «нужен доп. этап»; принудительного понижения нет.`}
+            </p>
+          </details>
+        </div>
+      )}
+
+      {/* Главный блок запуска — после выбора уровня и режима */}
       <div className="mt-4 rounded-2xl border-2 border-brand/25 bg-brand-blush/20 p-4" data-testid="test-launch-box">
         {locked && <div className="mb-3"><Alert kind="info">Следующая смена грейда в направлении {DIRECTION_TITLES[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
         {retakeLocked && !locked && (
@@ -517,7 +543,7 @@ function GradeChoice({ status, onb, onEditSurvey, express = false }: { status: a
         {error && <div className="mb-3"><Alert>{error}</Alert></div>}
         {!hasPython && (
           <p className="mb-3 rounded-xl border border-brand/20 bg-white/85 px-3.5 py-2.5 text-xs leading-relaxed text-brand-night" data-testid="python-code-notice">
-            Задания с кодом — на Python: достаточно уметь читать код. Задания на Java, Kotlin и Go появятся в следующей версии банка.
+            Задания с кодом — в основном на Python: нужно читать код и предсказывать результат его работы; программы с нуля писать не нужно. Задания на Java, Kotlin и Go — в следующей версии банка.
           </p>
         )}
         {!resume && (
@@ -557,31 +583,6 @@ function GradeChoice({ status, onb, onEditSurvey, express = false }: { status: a
       )}
       <GradeHint hint={hint.data ?? null} grade={grade} onPick={setGrade} />
       <div className="mt-4"><WarRoomSlot mode="candidate" grade={grade} direction={dir} /></div>
-      {expressOk && (
-        <div className="card mt-4 text-sm" data-testid="mode-choice">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="font-semibold text-brand-night">Режим теста</p>
-            <Seg value={mode} onChange={setMode} options={modes(ex, exSenior.max_items, meta)} label="Режим теста" />
-          </div>
-          {/* Ф6 (В7, Н8) + Ф4: на первом экране — коротко; правило остановки и погрешность — под «Подробнее» */}
-          <p className="mt-2 text-brand-ink/75">
-            {mode === "express"
-              ? <><span className="chip mr-1.5" data-testid="jury-brief">Экспресс-калибровка · 5 минут</span>{`Быстрая проверка уровня (5–7 адаптивных задач банка без дотестирования${grade === "senior" ? ", за Senior — до 12" : ""}) вместо полного теста (до ${meta?.rules?.test_len?.contested_max_minutes ?? 105} мин).`}</>
-              : <FullLength len={len.data} meta={meta} brief />}
-          </p>
-          <details className="mt-2 text-xs text-brand-ink/70">
-            <summary className="cursor-pointer font-semibold text-brand-plum">Подробнее</summary>
-            {mode !== "express" && <p className="mt-2 leading-relaxed"><FullLength len={len.data} meta={meta} /></p>}
-            <p className="mt-2 leading-relaxed"><b>Как считается.</b>{" "}
-            {mode === "express"
-              ? (grade === "senior"
-                ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ ${meta?.rules?.confirm_pct ?? 80} %), оценка менее точная, чем у полного (± 0,6 против ± 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
-                : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ ${meta?.rules?.confirm_pct ?? 80} %), но оценка заметно менее точная (± 0,65 против ± 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
-              : `Полный тест: решение по заявленному грейду принимается последовательной проверкой у его порога — тест останавливается, как только решение надёжно; ${testLenText(meta)} Итог — «подтверждён», «не подтверждён» или «нужен доп. этап»; принудительного понижения нет.`}
-            </p>
-          </details>
-        </div>
-      )}
       <details className="mt-4 text-sm">
         <summary className="cursor-pointer text-brand-ink/75">{expressOk ? <b className="text-brand-night">Как устроен тест</b> : <><b className="text-brand-night">Как устроен тест:</b> {testLenText(meta)}</>}</summary>
       <div className="card mt-2 space-y-3 text-sm text-brand-ink/75">
@@ -611,7 +612,24 @@ function GradeChoice({ status, onb, onEditSurvey, express = false }: { status: a
 /** Прохождение теста: одно задание на экране (адаптивный банк заданий или заглушка). */
 interface Opt { id: string; text: string; code?: string | null }
 
-/** Текст задания: `код` в обратных кавычках — моноширинным шрифтом (разметка банка заданий). */
+function isAsciiTableLine(ln: string): boolean {
+  const s = ln.trim();
+  if (!s) return false;
+  if (/^[-+|:\s]{4,}$/.test(s) && s.includes("-")) return true;
+  if ((s.match(/\|/g) ?? []).length >= 1 && /\S\s*\|\s*\S/.test(s)) return true;
+  if (/\b\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}|\b(?:GET|POST|PUT|DELETE|PATCH)\s+\/\S+|\bstatus=\d{3}\b|\b\d{1,3}(?:\.\d{1,3}){3}\b.*\bHTTP\//i.test(s)) return true;
+  return false;
+}
+
+function renderInlineRich(text: string) {
+  const parts = text.split("`");
+  if (parts.length < 3) return <>{fmtHoursText(text)}</>;
+  return <>{parts.map((p, i) => (i % 2 === 1 && i < parts.length - 1
+    ? <code key={i} className="rounded bg-brand-blush/50 px-1 font-mono text-[0.88em] font-medium">{p}</code>
+    : <span key={i}>{fmtHoursText(i % 2 === 1 ? "`" + p : p)}</span>))}</>;
+}
+
+/** Текст задания: `код` в обратных кавычках и ASCII-таблицы данных — моноширинным шрифтом (разметка банка заданий). */
 export function Rich({ text }: { text: string }) {
   // Фрагмент между невидимыми разделителями U+2063 — скрытая метка задания (не видна и не озвучивается)
   if (text.includes("\u2063")) {
@@ -619,11 +637,38 @@ export function Rich({ text }: { text: string }) {
       ? <span key={i} className="sr-only" aria-hidden="true">{p}</span>
       : <Rich key={i} text={p} />))}</>;
   }
-  const parts = text.split("`");
-  if (parts.length < 3) return <>{fmtHoursText(text)}</>;
-  return <>{parts.map((p, i) => (i % 2 === 1 && i < parts.length - 1
-    ? <code key={i} className="rounded bg-brand-blush/50 px-1 font-mono text-[0.88em] font-medium">{p}</code>
-    : <span key={i}>{fmtHoursText(i % 2 === 1 ? "`" + p : p)}</span>))}</>;
+  const lines = text.split("\n");
+  if (lines.length >= 2 && lines.some(isAsciiTableLine)) {
+    const blocks: { table: boolean; lines: string[] }[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      const ln = lines[i];
+      const nextIsTable = i + 1 < lines.length && isAsciiTableLine(lines[i + 1]);
+      const isHeader = /^[A-Za-z_][A-Za-z0-9_]*:?$/.test(ln.trim()) && nextIsTable;
+      const tbl = isAsciiTableLine(ln) || isHeader;
+      const last = blocks.at(-1);
+      if (last && last.table === tbl) last.lines.push(ln);
+      else blocks.push({ table: tbl, lines: [ln] });
+    }
+    return (
+      <>
+        {blocks.map((b, idx) =>
+          b.table ? (
+            <span
+              key={idx}
+              className="my-2 block overflow-x-auto rounded-xl border border-brand-night/10 bg-[#F4F6FC] px-3 py-2 font-mono text-xs font-normal leading-snug text-brand-night whitespace-pre"
+            >
+              {b.lines.join("\n")}
+            </span>
+          ) : (
+            <span key={idx} className="block">
+              {renderInlineRich(b.lines.join("\n"))}
+            </span>
+          )
+        )}
+      </>
+    );
+  }
+  return renderInlineRich(text);
 }
 
 function fmtTime(sec: number) {
@@ -883,7 +928,7 @@ export function TestRun() {
       <h1 ref={itemHead} tabIndex={-1} className="sr-only">{`Задание ${it.position}${it.steps_total ? `, шаг ${it.step} из ${it.steps_total}` : ""}`}</h1>
       <div className="card mt-4" onCopy={onCopy} onCut={onCopy} onContextMenu={(e) => { if (!(e.target as HTMLElement).closest("textarea, input")) e.preventDefault(); }}
         onDragStart={(e) => e.preventDefault()}>
-        <p className="select-none whitespace-pre-line text-base font-semibold leading-relaxed text-brand-night"><Rich text={it.stem} /></p>
+        <p className="select-none whitespace-pre-line text-base font-normal leading-relaxed text-brand-night"><Rich text={it.stem} /></p>
         {it.code && (
           <div className="mt-4 select-none overflow-x-auto rounded-xl bg-brand-ink py-3 text-sm leading-relaxed text-[#FFD6E4]" role={isLine ? "listbox" : undefined} aria-label={isLine ? "Строки кода: выберите строку с дефектом" : "Код задания"}
             tabIndex={isLine ? undefined : 0} onKeyDown={isLine ? (e) => pickLine(e, lines.length) : undefined}>
@@ -891,7 +936,7 @@ export function TestRun() {
               const n = i + 1;
               const sel = isLine && value === n;
               const cls = `flex w-full items-start gap-3 px-4 text-left font-mono text-[13px] ${sel ? "bg-brand/40" : isLine ? "hover:bg-white/10" : ""}`;
-              const body = (<><span className="w-7 shrink-0 select-none text-right text-[#FFD6E4]/60">{n}</span><span className="whitespace-pre">{ln || " "}</span></>);
+              const body = (<><span className="w-7 shrink-0 select-none text-right text-[#FFD6E4]/60">{n}</span><span className="min-w-0 flex-1 whitespace-pre-wrap break-words">{ln || " "}</span></>);
               return isLine
                 ? <button key={i} type="button" role="option" aria-selected={sel} tabIndex={(value ?? 1) === n ? 0 : -1} className={cls} onClick={() => setValue(n)}>{body}</button>
                 : <div key={i} className={cls}>{body}</div>;

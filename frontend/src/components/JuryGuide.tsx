@@ -23,21 +23,16 @@ export const whoAmI = (email: string) => {
  * никогда не оказывается под панелью. */
 function useReserveSpace(el: HTMLElement | null, side: boolean) {
   useEffect(() => {
-    const phone = window.matchMedia("(max-width: 639px)");
-    const wide = window.matchMedia("(min-width: 1440px)");
     const clear = () => { document.body.style.removeProperty("padding-bottom"); document.body.style.removeProperty("padding-right"); };
     if (!el) return clear;
     const set = () => {
       clear();
-      if (side && wide.matches && !phone.matches) document.body.style.setProperty("padding-right", `${el.offsetWidth + 24}px`);
-      else document.body.style.setProperty("padding-bottom", `${el.offsetHeight + 16}px`);
+      document.body.style.setProperty("padding-bottom", `${el.offsetHeight + 16}px`);
     };
     const ro = new ResizeObserver(set);
     ro.observe(el);
-    phone.addEventListener("change", set);
-    wide.addEventListener("change", set);
     set();
-    return () => { ro.disconnect(); phone.removeEventListener("change", set); wide.removeEventListener("change", set); clear(); };
+    return () => { ro.disconnect(); clear(); };
   }, [el, side]);
 }
 
