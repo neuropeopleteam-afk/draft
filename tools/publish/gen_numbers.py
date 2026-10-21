@@ -124,6 +124,20 @@ def static_numbers() -> dict:
     return {"memory_limits_mib": limits, "migrations": {"heads": sorted(revs - downs)}}
 
 
+def wilson(k: int, n: int) -> list[float] | None:
+    """95 % интервал Уилсона для доли k/n (z для 95 % — квантиль нормального распределения, а не подогнанное число)."""
+    if not n:
+        return None
+    from statistics import NormalDist
+
+    z = NormalDist().inv_cdf(0.975)
+    p = k / n
+    den = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / den
+    h = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / den
+    return [round(max(0.0, c - h), 4), round(min(1.0, c + h), 4)]
+
+
 def frac(d: dict | None) -> dict | None:
     if not isinstance(d, dict) or d.get("value") is None:
         return None
@@ -171,9 +185,16 @@ def bank_block() -> dict | None:
 def _ps_view(d: dict) -> dict:
     s = d.get("summary") or {}
     m = d.get("meta") or {}
+    fco = s.get("false_confirm_among_overclaim") or {}
+    n_all = s.get("n")
+    false_confirm_all = None
+    if fco.get("k") is not None and n_all:
+        false_confirm_all = {"value": round(fco["k"] / n_all, 4), "k": fco["k"], "n": n_all, "ci95": wilson(fco["k"], n_all)}
+    man = (m.get("bank") or {}).get("manifest") or {}
     out = {
         "n": s.get("n"),
         "verdict_accuracy": frac(s.get("verdict_accuracy_final")),
+        "false_confirm_all": false_confirm_all,
         "false_confirm": frac(s.get("false_confirm_among_overclaim")),
         "false_reject": frac(s.get("false_reject_among_true")),
         "confident_share": frac(s.get("confident_share_main")),
@@ -192,6 +213,9 @@ def _ps_view(d: dict) -> dict:
         "world": m.get("world"),
         "seeds": m.get("seeds"),
         "bank_families": (m.get("bank") or {}).get("n_families"),
+        "bank_commit": man.get("commit"),
+        "bank_content_hash": man.get("content_hash"),
+        "bank_synced_at": _date(man.get("synced_at")),
         "settings": m.get("settings"),
         "git_commit": m.get("git_commit"),
         "date": _date(m.get("date")),
@@ -217,14 +241,30 @@ def grade_verdict_block() -> dict | None:
     va, fc, cs, ca = v["verdict_accuracy"], v["false_confirm"], v["confident_share"], v["confident_accuracy"]
     ex = v["exact_grade"]
     mm, mt = v["minutes_main"] or {}, v["minutes_total"] or {}
+    fa = v["false_confirm_all"]
+    rt = v.get("retest") or {}
+    bank_now = _load(BANK_SYNC)
+    same_bank = bool(bank_now) and bank_now.get("content_hash") == v.get("bank_content_hash")
+    bank_condition = (
+        f"Прогон — на банке {v.get('bank_commit') or '—'} ({int_ru(v['bank_families'])} семейств, снимок "
+        f"{v.get('bank_content_hash') or '—'} от {v.get('bank_synced_at') or '—'}); "
+        + ("банк сайта тот же." if same_bank else
+           f"банк в репозитории сейчас другой: {bank_now.get('commit') or '—'} ({int_ru(bank_now.get('n_families'))} семейств) — "
+           f"цифры относятся к банку прогона.")
+    )
     claim = (
-        f"Симуляция продукта (движок стенда на банке из {int_ru(v['bank_families'])} семейств; модельные кандидаты, "
-        f"не люди; N = {int_ru(v['n'])}, отложенные зёрна): итоговый вердикт «соответствует заявленному грейду» верен в "
-        f"{pct(va and va['value'])} % (95 % ДИ {pct(va and va['ci95'][0])}–{pct(va and va['ci95'][1])} %), ложное "
-        f"подтверждение у завысивших заявку — {pct(fc and fc['value'])} %; после основной части уверенное решение у "
+        f"Симуляция продукта (движок стенда на банке {v.get('bank_commit') or '—'} из {int_ru(v['bank_families'])} семейств; "
+        f"модельные кандидаты, не люди; N = {int_ru(v['n'])}, отложенные зёрна): итоговый вердикт «соответствует "
+        f"заявленному грейду» верен в {pct(va and va['value'])} % (95 % ДИ {pct(va and va['ci95'][0])}–"
+        f"{pct(va and va['ci95'][1])} %); ложное подтверждение — {pct(fc and fc['value'])} % у завысивших заявку "
+        f"({pct(fa and fa['value'])} % всех кандидатов); после основной части уверенное решение у "
         f"{pct(cs and cs['value'])} % кандидатов, из них верных {pct(ca and ca['value'])} %; остальным предлагается "
-        f"короткий второй этап у порога. Точный грейд — {pct(ex and ex['value'])} %. Время основной части — в среднем "
-        f"{num(mm.get('mean'), 0)} мин (p90 {num(mm.get('p90'), 0)}), всего — {num(mt.get('mean'), 0)} мин."
+        f"короткий второй этап у порога. Точный грейд по всему пулу — {pct(ex and ex['value'])} %, ошибок на 2+ ступени — "
+        f"{pct(v['gross_error'] and v['gross_error']['value'])} %. Время основной части — в среднем "
+        f"{num(mm.get('mean'), 0)} мин (p90 {num(mm.get('p90'), 0)}), всего — {num(mt.get('mean'), 0)} мин"
+        + (f"; повторная независимая попытка даёт тот же грейд в {pct((rt.get('exact_agreement') or {}).get('value'))} %, "
+           f"тот же вердикт — в {pct((rt.get('verdict_agreement') or {}).get('value'))} % (пар {int_ru(rt.get('n_pairs'))})"
+           if rt else "") + "."
     )
     out = {
         "what": "Симуляция продукта: тот же движок, что на стенде (выбор заданий, остановка, дотестирование, вердикт, "
@@ -234,6 +274,7 @@ def grade_verdict_block() -> dict | None:
         "rater_noise": _ps_view(rater) | {"noise": (rater.get("meta") or {}).get("rater_noise_text_parts")} if rater else None,
         "selection": sel or None,
         "claim_ru": claim,
+        "bank_condition_ru": bank_condition,
         "recompute": v["command"],
         "code_ref": "backend/app/modules/validation/product_sim.py",
         "protocol": "docs/validation/PRODUCT_SIM_PROTOCOL.md",
