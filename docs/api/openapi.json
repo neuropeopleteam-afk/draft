@@ -64314,8 +64314,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "age_group_required",
-                    "message": "Возрастная группа и отметка согласия не могут быть пустыми"
+                    "code": "invalid_experience_years",
+                    "message": "Данные не прошли проверку"
                   }
                 },
                 "schema": {
@@ -64330,7 +64330,7 @@
                 }
               }
             },
-            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `age_group_required` — Возрастная группа и отметка согласия не могут быть пустыми."
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `invalid_experience_years`; `age_group_required` — Возрастная группа и отметка согласия не могут быть пустыми."
           }
         },
         "security": [
@@ -66231,12 +66231,18 @@
           "422": {
             "content": {
               "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "invalid_experience_years",
+                    "message": "Данные не прошли проверку"
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Ошибка валидации: неизвестные стек-теги или роли"
+            "description": "Ошибка валидации: неизвестные стек-теги или роли. Коды `detail.code`: `invalid_experience_years`."
           }
         },
         "security": [
