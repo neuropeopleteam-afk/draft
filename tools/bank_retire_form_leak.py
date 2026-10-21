@@ -113,28 +113,42 @@ def main() -> int:
         for u in users:
             nu = RET / Path(u).parent.name / Path(u).name
             nu.write_text(nu.read_text(encoding="utf-8").replace(mod, target), encoding="utf-8")
-    rows = "\n".join(f"| `{p['family_id']}` | {p['format']} | {RU[p['attack']]} | {p['acc'] * 100:.0f} % | "
-                     f"{p['chance'] * 100:.0f} % |" for p in picked)
+    # Раунды накапливаются: прежние выведенные семейства и их правило сохраняются (README и retired.json).
+    prev = json.loads((RET / "retired.json").read_text(encoding="utf-8")) if (RET / "retired.json").exists() else {}
+    rounds = prev.get("rounds") or ([{"rule": prev["rule"], "source": prev.get("source"),
+                                       "families": [p["family_id"] for p in prev.get("families", [])]}]
+                                     if prev.get("families") else [])
+    rounds.append({"rule": f"form attack >= {a.threshold}", "source": a.attack,
+                   "families": [p["family_id"] for p in picked]})
+    seen = {p["family_id"] for p in picked}
+    allp = [p for p in prev.get("families", []) if p["family_id"] not in seen] + picked
+    for p in picked:
+        p["round"] = len(rounds)
+    def _rows(ps):
+        return "\n".join(f"| `{p['family_id']}` | {p['format']} | {RU[p['attack']]} | {p['acc'] * 100:.0f} % | "
+                         f"{p['chance'] * 100:.0f} % | {p.get('round', 1)} |" for p in ps)
+    rules = "\n".join(f"- Раунд {i}: `python3 tools/bank_retire_form_leak.py --attack <json> --threshold "
+                      f"{r['rule'].split('>=')[1].strip()}` (прогон атаки: `{r.get('source')}`) — выведено "
+                      f"{len(r['families'])}." for i, r in enumerate(rounds, 1))
     (RET / "README.md").write_text(
         "# Семейства, выведенные из выдачи 21.10.2026: ключ узнаётся по форме варианта\n\n"
         "Решение оркестратора 21.10 (до заморозки банка для итоговых цифр). Причина — атака «решатель без знаний, "
         "изучивший открытый код или уже видевший семейство» (`tools/bank_position_attack.py`: обучение на 100 случайных "
-        "зёрнах из диапазона выдачи, проверка на других 100): по длине или тексту варианта (цифры заменены на #), "
-        "отдельно или в паре с буквой и сюжетом, ключ угадывается в ≥ 90 % вариантов. Обычно это choose_fix с одним "
-        "и тем же правильным исправлением (меняются только числа и имена) и концептуальные mcq с постоянной "
-        "формулировкой ключа. Универсальное правило без изучения семейства не работает («самый длинный» — 19,6 %, "
-        "«самый короткий» — 18,6 % при шансе 25 % по всем choose_fix), поэтому это вопрос утечкоустойчивости, а не "
-        "угадывания.\n\n"
+        "зёрнах из диапазона выдачи, проверка на других): по длине или тексту варианта (цифры заменены на #), "
+        "отдельно или в паре с буквой и сюжетом. Обычно это choose_fix с одним и тем же правильным исправлением "
+        "(меняются только числа и имена) и концептуальные mcq с постоянной формулировкой ключа. Универсальное правило "
+        "без изучения семейства не работает («самый длинный» — 19,6 %, «самый короткий» — 18,6 % при шансе 25 % по всем "
+        "choose_fix), поэтому это вопрос утечкоустойчивости, а не угадывания.\n\n"
         "Реестр читает только `families/*/*.yaml` — эти семейства не попадают ни в тест, ни в симуляцию, ни в "
         "валидатор. Генераторы сохранены без правок содержания (изменён только путь `generator:`). План — переделка: "
         "несколько верных форм исправления и формулировок на семейство, ранг длины ключа по зерну; затем возврат.\n\n"
-        f"Правило отбора: `python3 tools/bank_retire_form_leak.py --attack <json> --threshold {a.threshold}` "
-        f"(канарейки не трогаются). Выведено: {len(picked)}.\n\n"
-        "| Семейство | Формат | Атака | Угадывание | Шанс |\n|---|---|---|---|---|\n" + rows + "\n",
+        "Правило отбора (порог фиксируется до применения, канарейки не трогаются; после каждого раунда атака "
+        "перемеряется на новых зёрнах другим ключом):\n" + rules + f"\n\nВсего выведено: {len(allp)}.\n\n"
+        "| Семейство | Формат | Атака | Угадывание | Шанс | Раунд |\n|---|---|---|---|---|---|\n" + _rows(allp) + "\n",
         encoding="utf-8")
-    (RET / "retired.json").write_text(json.dumps({"rule": f"form attack >= {a.threshold}", "attacks": FORM_ATTACKS,
-                                                  "source": a.attack, "families": picked}, ensure_ascii=False,
-                                                 indent=1), encoding="utf-8")
+    (RET / "retired.json").write_text(json.dumps({"rule": " | ".join(r["rule"] for r in rounds), "attacks": FORM_ATTACKS,
+                                                  "rounds": rounds, "source": a.attack, "families": allp},
+                                                 ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"перенесено: {len(picked)} → {RET.relative_to(ROOT)}")
     return 0
 
