@@ -1,87 +1,67 @@
 {
   "$comment": "Единый источник цифр проекта «Драфт». Генерируется скриптом tools/publish/gen_numbers.py.",
-  "generated_at": "2026-10-20T18:47:56Z",
-  "git_commit": "7e471d081",
+  "generated_at": "2026-10-20T17:47:52Z",
+  "git_commit": "6229b82f",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
-    "families": 1824,
-    "families_base_snapshot": 1504,
-    "variants_20seeds": 36480,
+    "families": 1504,
+    "variants_20seeds": 30080,
+    "unique_variants_20seeds": 30080,
     "directions": 10,
-    "grades": [
-      "intern",
-      "junior",
-      "middle",
-      "senior",
-      "lead",
-      "principal"
-    ],
-    "formats": [
-      "mcq_concept",
-      "find_bug",
-      "predict_output",
-      "choose_fix",
-      "open_answer",
-      "open_book_3step",
-      "incident_sim"
-    ],
-    "code_and_open_families": 590,
-    "incident_sim_families": 40,
-    "lead_families": 271,
-    "principal_families": 266,
-    "a_mcq": 1.0,
-    "a_code_open": 1.3,
-    "seeds_per_family": 2147483646,
-    "sha256_prefix": "",
-    "bank_commit": "c027be45",
+    "fail": 0,
+    "checks": 10702,
+    "checks_failed": 0,
+    "bank_commit": "603474f",
+    "content_hash": "82a05fdbacf00481",
     "synced_at": "2026-10-20T11:19:30+00:00",
-    "recompute": "cd backend && pytest -q assessment_bank/tests",
-    "code_ref": "backend/assessment_bank/BANK_SYNC.json"
+    "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+    "code_ref": "backend/assessment_bank/BANK_SYNC.json",
+    "note": "волна 1 (20.10): банк продукта без изменений; обновлённый банк — после независимой проверки"
   },
   "sprt_verdict": {
-    "precision_decided": 0.9459,
+    "precision_decided": 0.9774,
     "precision_decided_ci": [
-      0.9334,
-      0.957
+      0.9714,
+      0.9833
     ],
-    "decided_share": 0.5671,
-    "verdict_accuracy_after_followup": 0.8363,
+    "decided_share": 0.78,
+    "verdict_accuracy_after_followup": 0.9233,
     "verdict_accuracy_after_followup_ci": [
-      0.8209,
-      0.8501
+      0.9143,
+      0.9323
     ],
-    "false_confirm_decided": 0.0118,
-    "false_confirm_overall": 0.0327,
-    "gross_error_rate": 0.0047,
-    "gross_error_count": 14,
-    "within_1": 0.9953,
+    "false_confirm_decided": 0.0124,
+    "false_confirm_overall": 0.0257,
+    "gross_error_rate": 0.0003,
+    "gross_error_count": 1,
+    "within_1": 0.9997,
     "within_1_ci": [
-      0.9927,
-      0.9977
+      0.999,
+      1.0
     ],
-    "exact_with_followup": 0.691,
+    "exact_with_followup": 0.806,
     "exact_with_followup_ci": [
-      0.6733,
-      0.7073
+      0.792,
+      0.8207
     ],
-    "exact_far_from_cut": 0.8351,
+    "exact_far_from_cut": 0.9566,
     "exact_far_from_cut_ci": [
-      0.8097,
-      0.8593
+      0.9361,
+      0.9749
     ],
-    "exact_single_stage": 0.6773,
-    "over_rate": 0.0867,
-    "under_rate": 0.2223,
-    "minutes_mean": 54.6,
-    "items_mean": 16.5,
+    "exact_single_stage": 0.764,
+    "over_rate": 0.109,
+    "under_rate": 0.085,
+    "minutes_mean": 51.5,
+    "items_mean": 17.3,
     "followup_minutes": 15,
-    "followup_share": 0.3667,
-    "code_open_share": 0.931,
+    "followup_share": 0.56,
+    "code_open_share": 0.676,
     "by_grade": {
       "intern": {
-        "n_true": 493,
-        "n_claimed": 459,
-        "exact_grade": 0.8722,
+        "n_true": 186,
+        "n_claimed": 195,
+        "exact_grade": 0.7688,
         "within_1": 1.0,
         "verdict_accuracy_all": 1.0,
         "verdict_precision_decided": 1.0,
@@ -89,67 +69,67 @@
         "false_confirm_rate": 0.0
       },
       "junior": {
-        "n_true": 632,
-        "n_claimed": 584,
-        "exact_grade": 0.7041,
-        "within_1": 0.9968,
-        "verdict_accuracy_all": 0.9007,
-        "verdict_precision_decided": 0.9678,
-        "decided_share": 0.6918,
-        "false_confirm_rate": 0.036
+        "n_true": 504,
+        "n_claimed": 468,
+        "exact_grade": 0.7778,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 0.9487,
+        "verdict_precision_decided": 0.985,
+        "decided_share": 0.8526,
+        "false_confirm_rate": 0.0256
       },
       "middle": {
-        "n_true": 783,
-        "n_claimed": 691,
-        "exact_grade": 0.7152,
-        "within_1": 0.9974,
-        "verdict_accuracy_all": 0.8683,
-        "verdict_precision_decided": 0.9633,
-        "decided_share": 0.5514,
-        "false_confirm_rate": 0.0492
+        "n_true": 830,
+        "n_claimed": 727,
+        "exact_grade": 0.8169,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 0.9312,
+        "verdict_precision_decided": 0.9809,
+        "decided_share": 0.7923,
+        "false_confirm_rate": 0.0289
       },
       "senior": {
-        "n_true": 657,
-        "n_claimed": 685,
-        "exact_grade": 0.6088,
-        "within_1": 0.9939,
-        "verdict_accuracy_all": 0.7854,
-        "verdict_precision_decided": 0.9146,
-        "decided_share": 0.4788,
-        "false_confirm_rate": 0.0292
+        "n_true": 823,
+        "n_claimed": 786,
+        "exact_grade": 0.8299,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 0.9135,
+        "verdict_precision_decided": 0.9704,
+        "decided_share": 0.7303,
+        "false_confirm_rate": 0.0305
       },
       "lead": {
-        "n_true": 307,
-        "n_claimed": 371,
-        "exact_grade": 0.557,
-        "within_1": 0.9902,
-        "verdict_accuracy_all": 0.8356,
-        "verdict_precision_decided": 0.9631,
-        "decided_share": 0.5849,
-        "false_confirm_rate": 0.0135
+        "n_true": 486,
+        "n_claimed": 507,
+        "exact_grade": 0.7922,
+        "within_1": 0.9979,
+        "verdict_accuracy_all": 0.9073,
+        "verdict_precision_decided": 0.9701,
+        "decided_share": 0.7258,
+        "false_confirm_rate": 0.0197
       },
       "principal": {
-        "n_true": 128,
-        "n_claimed": 210,
-        "exact_grade": 0.5234,
-        "within_1": 0.9766,
-        "verdict_accuracy_all": 0.719,
-        "verdict_precision_decided": 0.8649,
-        "decided_share": 0.5286,
-        "false_confirm_rate": 0.0143
+        "n_true": 171,
+        "n_claimed": 317,
+        "exact_grade": 0.8012,
+        "within_1": 1.0,
+        "verdict_accuracy_all": 0.8707,
+        "verdict_precision_decided": 0.9649,
+        "decided_share": 0.7192,
+        "false_confirm_rate": 0.0315
       }
     },
     "retest": {
-      "n": 1500,
-      "kappa_w": 0.8822,
-      "exact": 0.6367,
+      "n": 3000,
+      "kappa_w": 0.9173,
+      "exact": 0.738,
       "exact_ci": [
-        0.6133,
-        0.66
+        0.7217,
+        0.7537
       ],
-      "within_1": 0.9887,
-      "verdict_consistency": 0.844,
-      "r_theta": 0.9206
+      "within_1": 0.9993,
+      "verdict_consistency": 0.892,
+      "r_theta": 0.9492
     },
     "cross_validation": {
       "n_train_per_point": 1000,
@@ -160,16 +140,14 @@
       "chosen_params": {
         "alpha": 0.02,
         "delta": 0.35,
-        "p_hi": 0.9,
-        "p_lo": 0.1,
-        "p_final": 0.62,
-        "code_open_share": 0.3333,
+        "min_sprt_items": 6,
+        "code_open_share": 0.333,
         "followup_minutes": 15
       }
     },
     "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
     "code_ref": "backend/app/modules/validation/sprt_verdict.py",
-    "claim_ru": "Прогон продуктового движка AppCATSession на реальном банке заданий (1824 семейств, 590 кодовых и развёрнутых, D = 1,0 без искусственного множителя, кросс-валидация: пороги выбраны на train N = 800, проверены на отложенной выборке N = 3000, seed 2026102002): среди кандидатов с нетривиальной заявкой (Junior…Principal) точность уверенного вердикта составляет 94,6 % (95 % ДИ [93,3 %; 95,7 %]) при доле уверенных решений 1-го этапа 56,7 % (ложное подтверждение среди уверенных — 1,18 %); с учётом всех заявок включая стажёров — точность уверенных 95,9 % на 63,3 % пула. По всем кандидатам с учётом 2-го этапа у порога (назначается 36,7 % пула) вердикт верен в 83,6 % (среди всех заявок — 86,1 %, ложное подтверждение по пулу — 3,27 %). Точный грейд из 6 ступеней по всему пулу — 69,1 % (вдали от порога |θ − порог| ≥ 0,40, 28,9 % пула — 83,5 %), попадание в пределах ±1 ступени — 99,53 %, повторяемость между независимыми сессиями κw = 0,882 (точное совпадение 63,7 %, согласованность вердикта 84,4 %, N = 1500). Модельный расчёт до калибровки на живых людях."
+    "claim_ru": "Вердикт «кандидат соответствует заявленному грейду» (последовательный критерий SPRT α = 0,02 + 1/3 кодовых и практических заданий) верен в 97,7 % уверенных решений (95 % ДИ [97,1 %; 98,3 %]); уверенный вердикт на первом этапе получают 78,0 % кандидатов в среднем за 52 мин, остальным назначается 15-минутный дополнительный этап у спорного порога (для Senior/Lead/Principal — с интерактивным симулятором инцидента), С учётом доп, этапа точный грейд из 6 ступеней определяется в 80,6 % случаев (вдали от порога |θ − порог| ≥ 0,45 — 95,7 %), попадание в пределах ±1 ступени — 100,0 %, ложное подтверждение среди уверенных вердиктов — 1,2 %, повторяемость (test–retest) κw = 0,917 (кросс-валидированная симуляция 2PL/3PL, отложенная выборка N = 3000, seed 2026102002),"
   },
   "leak_k_variants": {
     "n_per_k": 2000,
@@ -1120,13 +1098,13 @@
     "generated_at": "2026-10-20T11:47:18+00:00",
     "views": {
       "far_from_cut": {
-        "value": 0.8351,
+        "value": 0.9566,
         "ci95": [
-          0.8097,
-          0.8593
+          0.9361,
+          0.9749
         ],
-        "share_of_candidates": 0.289,
-        "n": 867,
+        "share_of_candidates": 0.146,
+        "n": 438,
         "title": "Точный грейд вдали от границы порога (|θ − порог| ≥ 0,45 логита)",
         "definition": "Среди кандидатов не в пограничной зоне (≥ 0,45 логита от ближайшего порога) классификационный CAT + 1/3 кодовых заданий + доп. этап дают точное совпадение со скрытым истинным грейдом в 98,1 % случаев."
       },
@@ -1153,10 +1131,10 @@
         "definition": null
       },
       "within_1_cut": {
-        "value": 0.9953,
+        "value": 0.9997,
         "ci95": [
-          0.9927,
-          0.9977
+          0.999,
+          1.0
         ],
         "share_of_candidates": 1.0,
         "n": 3000,
@@ -1177,57 +1155,59 @@
   },
   "landing_cards": [
     {
-      "id": "verdict_precision",
-      "eyebrow": "Точность уверенного вердикта грейда",
-      "value": "94,6",
-      "accent": "%",
-      "subtext": "последовательный тест SPRT + 1/3 кодовых заданий · уверенный вердикт у 57 % кандидатов за ~55 мин, остальным — 15-мин доп, этап у порога · вдали от границы точный грейд 83,5 % (N = 3000)",
-      "recompute": "cd backend && python -m app.modules.validation.sprt_verdict",
-      "code_ref": "backend/app/modules/validation/sprt_verdict.py"
+      "id": "bank",
+      "eyebrow": "Банк заданий",
+      "value": "1 504",
+      "accent": "семейств",
+      "subtext": "30 080 вариантов на 20 зёрнах, все уникальны · 0 ошибок генерации · 10 702 проверок ключей исполнением кода — 0 ошибок · 10 ИТ-направлений",
+      "provenance": "валидатор банка, 20 зёрен",
+      "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+      "code_ref": "backend/assessment_bank/BANK_SYNC.json"
     },
     {
       "id": "matching_p5",
       "eyebrow": "Точность топ-5 подбора (P@5)",
-      "value": "90,3",
+      "value": "75,1",
       "accent": "%",
-      "subtext": "MRR = 0,96 · nDCG@10 = 0,96 · проверено на 414 реальных ИТ-вакансиях hh,ru (покрытие навыков 91,6 %)",
+      "subtext": "MRR 0,90 · 95 % ДИ 71,7–78,4 % · бенчмарк: 200 потребностей × 2 000 кандидатов (синтетический мир, seed 20261006)",
+      "provenance": "бенчмарк подбора, 20.10",
       "recompute": "cd backend && python -m app.modules.validation.matching_bench",
       "code_ref": "backend/app/modules/validation/matching_bench.py"
     },
     {
-      "id": "bank_and_leak",
-      "eyebrow": "Семейств в банке × 2,15 млрд зёрен",
-      "value": "1 824",
-      "accent": "× 2³¹",
-      "subtext": "10 ИТ-направлений, 590 практических семейств (код, открытые ответы, 40 симуляторов инцидентов для Senior/Lead/Principal) · при утечке K = 1 000 вариантов и открытом коде генераторов ложное подтверждение ≤ 0,9 %",
-      "recompute": "cd backend && python -m app.modules.validation.leak_k_variants",
-      "code_ref": "backend/app/modules/validation/leak_k_variants.py"
+      "id": "fsp_protocols",
+      "eyebrow": "Официальные протоколы ФСП",
+      "value": "19",
+      "accent": "документов",
+      "subtext": "3 139 результатов соревнований ФСП 2025–2026 и список кандидатов в сборную России 2026 — кандидат сам подтверждает достижение по документу с сайта ФСП",
+      "provenance": "индекс протоколов, 20.10",
+      "recompute": "python -m tools.fsp_protocols build",
+      "code_ref": "tools/fsp_protocols/"
     },
     {
-      "id": "expert_and_retest",
-      "eyebrow": "Согласие с экспертами и повтор κw",
-      "value": "0,96",
-      "accent": "κw",
-      "subtext": "согласие с консенсусом двух независимых моделей разных компаний (N = 40) и 414 метками E1–E3 · повторяемость test–retest κw = 0,88, ±1 ступень — 100 %",
-      "recompute": "cd backend && python -m app.modules.validation.expert_surrogate",
-      "code_ref": "backend/app/modules/validation/expert_surrogate.py"
+      "id": "hh_real",
+      "eyebrow": "Реальные вакансии hh.ru",
+      "value": "414",
+      "accent": "вакансий",
+      "subtext": "направление вакансии определяется верно в 90,3 %, грейд — в 90,8 % (эталон на реальных вакансиях, 20.10)",
+      "provenance": "эталон hh.ru, 20.10",
+      "recompute": "python tools/realdata/hh_plus.py match",
+      "code_ref": "docs/realdata/HH_MATCH_2660.md"
     }
   ],
   "jury_banner": {
-    "headline_ru": "Точность уверенного вердикта грейда — 94,6 % (SPRT α = 0,02, точный грейд вдали от границы — 83,5 %, ±1 ступень — 100 %); точность топ-5 подбора P@5 = 90,3 %, MRR = 0,96,",
+    "headline_ru": "Банк 1 504 семейств (30 080 вариантов, 0 ошибок генерации) · подбор P@5 75,1 % на бенчмарке · 414 реальных вакансий hh.ru · 19 официальных протоколов ФСП",
     "claims_ru": {
-      "verdict": "Прогон продуктового движка AppCATSession на реальном банке заданий (1824 семейств, 590 кодовых и развёрнутых, D = 1,0 без искусственного множителя, кросс-валидация: пороги выбраны на train N = 800, проверены на отложенной выборке N = 3000, seed 2026102002): среди кандидатов с нетривиальной заявкой (Junior…Principal) точность уверенного вердикта составляет 94,6 % (95 % ДИ [93,3 %; 95,7 %]) при доле уверенных решений 1-го этапа 56,7 % (ложное подтверждение среди уверенных — 1,18 %); с учётом всех заявок включая стажёров — точность уверенных 95,9 % на 63,3 % пула. По всем кандидатам с учётом 2-го этапа у порога (назначается 36,7 % пула) вердикт верен в 83,6 % (среди всех заявок — 86,1 %, ложное подтверждение по пулу — 3,27 %). Точный грейд из 6 ступеней по всему пулу — 69,1 % (вдали от порога |θ − порог| ≥ 0,40, 28,9 % пула — 83,5 %), попадание в пределах ±1 ступени — 99,53 %, повторяемость между независимыми сессиями κw = 0,882 (точное совпадение 63,7 %, согласованность вердикта 84,4 %, N = 1500). Модельный расчёт до калибровки на живых людях.",
-      "leak": "При утечке K = 100 и K = 1 000 опубликованных вариантов и открытом коде генераторов вероятность ложного подтверждения Senior у кандидата уровня Junior/Middle в фиксированном банке (200 вопросов) взлетает до 38,2 % и 100,0 %, тогда как в параметрическом банке «Драфт» (1824 семейств × 2,15·10⁹ серверных зёрен CSPRNG + канареечный детектор + перевод в устную защиту) остаётся на уровне 0,15 % и 0,00 %, а выигрыш в оценке θ не превышает +0,28 логита (симуляция N = 2000 на каждое K, seed 2026102004),",
-      "expert": "Согласие итогового грейда теста с экспертной разметкой: на 414 метках модельной панели E1–E3 (07,10,2026) κw = 0,916 (точное совпадение грейда 90,0 %, ±1 ступень — 100 %); по протоколу двух независимых моделей разных компаний (Anthropic + Google, 20,10,2026, N = 40 слепых профилей по 10 направлениям) межэкспертное согласие между моделями κw = 0,977 (точное совпадение 95,0 %), согласие платформы с консенсусом — κw = 0,957, точное совпадение 90,0 %, в пределах ±1 ступени — 100,0 % (суррогат экспертной комиссии до завершения пилота с живыми ИТ-специалистами),",
-      "matching": "Точность ранжирования кандидатов под требования работодателя: P@5 = 90,3 %, MRR = 0,960, nDCG@10 = 0,958 (60 потребностей × 240 кандидатов со скрытой истиной, 10 направлений, бутстреп 2 000 итераций),",
-      "hh": "Проверка на 414 реальных ИТ-вакансиях hh,ru (10 направлений): покрытие обязательных навыков в топ-5 подбора — 91,6 %, согласие по грейду (±1 ступень) — 99,6 %,",
-      "anticheat": "Защита от манипуляций и списывания: 100 % (90/90) на регрессионном наборе известных шаблонов инъекций, 95,0 % на отложенном наборе перефразированных атак при ≤ 1,5 % ложных срабатываний на честных ответах; подозрительные попытки не банятся автоматически, а переводятся на 3-минутную устную защиту решения."
+      "provenance": "Каждая цифра на сайте — с командой пересчёта и ссылкой на код.",
+      "grade": "Цифры точности грейда пересчитываются на банке и движке продукта и появятся после независимой проверки.",
+      "matching": "Подбор: P@5 75,1 %, MRR 0,90 на бенчмарке 200 × 2 000 (синтетический мир).",
+      "fsp": "Подтверждение достижений ФСП — по 19 официальным протоколам с сайта ФСП."
     }
   },
   "recompute_table": [
     {
       "section": "Вердикт SPRT, 6 грейдов и повторяемость test–retest",
-      "metric": "Точность уверенного вердикта 94,6 %, вдали от порога 83,5 %, κw = 0,882",
+      "metric": "Точность уверенного вердикта 97,7 %, вдали от порога 95,7 %, κw = 0,917",
       "sample": "Обучение N = 1 000, отложенный контроль N = 3000 (seed 2026102002)",
       "command": "cd backend && python -m app.modules.validation.sprt_verdict",
       "code_ref": "backend/app/modules/validation/sprt_verdict.py",
@@ -1273,5 +1253,6 @@
       "code_ref": "backend/app/modules/validation/grader_check.py",
       "artifact": "backend/app/modules/validation/data/grader_check.json"
     }
-  ]
+  ],
+  "$comment_wave1": "Волна 1 (20.10 вечер): на сайт выведены только проверенные факты; блоки sprt_verdict, leak_k_variants, expert_agreement — черновик, не показываются до независимой проверки."
 }

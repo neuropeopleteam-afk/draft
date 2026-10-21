@@ -14,6 +14,8 @@
 """
 from __future__ import annotations
 
+import math
+import re
 from typing import Any
 
 KINDS = ("no_face", "multi_face", "blocked", "camera_off")
@@ -169,3 +171,175 @@ def current_position(state: dict[str, Any]) -> int:
                 return int(i["position"])
         return max([int(i["position"]) for i in state["items"]] or [0]) + 1
     return len(state.get("answers") or {}) + 1
+
+
+# ------------------------------------------------------------------ «двойник при копировании» и индекс честности (P1)
+_DECOY_NUM_RE = re.compile(r"(?<![A-Za-zА-Яа-яЁё0-9_./\-])(\d+(?:[.,]\d+)?)(?![A-Za-zА-Яа-яЁё0-9_./\-])")
+_SKIP_NUMS = {0, 1, 2, 3, 200, 201, 204, 400, 401, 403, 404, 409, 422, 429, 500, 502, 503, 2024, 2025, 2026, 2027}
+
+
+def make_copy_decoy(stem: str, key_value: float | int | str | None = None, *, factor: float = 1.25) -> dict | None:
+    """Для параметрических числовых заданий: при копировании условия в буфер обмена (событие copy) подменяет одно
+    опорное число условия (на экране остаётся исходное).
+
+    Возвращает {"clipboard_stem", "orig_number", "decoy_number", "decoy_answer"} или None, если подходящего числа нет.
+    """
+    text = stem or ""
+    for m in _DECOY_NUM_RE.finditer(text):
+        raw = m.group(1)
+        try:
+            val = float(raw.replace(",", "."))
+        except ValueError:
+            continue
+        if val < 4 or (val.is_integer() and int(val) in _SKIP_NUMS):
+            continue
+        if "," in raw or "." in raw:
+            decoy_val = round(val * factor, 2)
+            if abs(decoy_val - val) < 1e-6:
+                decoy_val = round(val + 1.5, 2)
+            decoy_str = str(decoy_val).replace(".", ",") if "," in raw else str(decoy_val)
+        else:
+            iv = int(val)
+            decoy_iv = int(round(iv * factor))
+            if decoy_iv == iv:
+                decoy_iv = iv + 5
+            decoy_val = float(decoy_iv)
+            decoy_str = str(decoy_iv)
+        clip_stem = text[: m.start(1)] + decoy_str + text[m.end(1) :]
+        decoy_ans: float | None = None
+        if key_value is not None:
+            try:
+                kv = float(str(key_value).replace(",", "."))
+                if math.isfinite(kv) and val != 0:
+                    decoy_ans = round(kv * (decoy_val / val), 4)
+            except ValueError:
+                decoy_ans = None
+        return {
+            "clipboard_stem": clip_stem,
+            "orig_number": val,
+            "decoy_number": decoy_val,
+            "orig_str": raw,
+            "decoy_str": decoy_str,
+            "decoy_answer": decoy_ans,
+        }
+    return None
+
+
+def check_copy_decoy(answer: Any, decoy: dict | None, *, copied: bool = True, tol: float = 0.02) -> bool:
+    """Проверяет, решено ли задание по скопированному тексту-двойнику (без автоблокировки → сигнал в контур origin)."""
+    if not copied or not decoy:
+        return False
+    decoy_ans = decoy.get("decoy_answer")
+    orig_num = decoy.get("orig_number")
+    decoy_num = decoy.get("decoy_number")
+    if answer is None:
+        return False
+    # 1. Числовой ответ
+    try:
+        ans_val = float(str(answer).strip().replace(",", "."))
+        if decoy_ans is not None and math.isfinite(ans_val):
+            denom = max(1.0, abs(float(decoy_ans)))
+            if abs(ans_val - float(decoy_ans)) / denom <= tol:
+                return True
+    except ValueError:
+        pass
+    # 2. Развёрнутый ответ: упоминается подменённое число из буфера при отсутствии исходного числа с экрана
+    ans_str = str(answer)
+    decoy_s = str(decoy.get("decoy_str") or "")
+    orig_s = str(decoy.get("orig_str") or "")
+    if decoy_s and decoy_s in ans_str and (not orig_s or orig_s not in ans_str):
+        return True
+    if decoy_num is not None and orig_num is not None:
+        nums = [float(x.replace(",", ".")) for x in _DECOY_NUM_RE.findall(ans_str)]
+        if any(abs(x - float(decoy_num)) < 1e-6 for x in nums) and not any(abs(x - float(orig_num)) < 1e-6 for x in nums):
+            return True
+    return False
+
+
+def integrity_followup(integ: dict | None, *, decoy_hits: int = 0) -> dict:
+    """Сводный индекс честности попытки (person-fit + время + фокус + вставки + двойник при копировании) для А4.
+
+    Не блокирует кандидата автоматически, а переводит вердикт в «нужен дополнительный этап / устная защита»
+    при risk_points >= 2 или срабатывании двойника при копировании, формируя понятное объяснение для работодателя.
+    """
+    integ = integ or {}
+    sig = integ.get("signals") or {}
+    decoy_n = max(int(decoy_hits or 0), int(sig.get("copy_decoy_items") or 0))
+    decoy_hit = decoy_n > 0
+
+    factors: list[str] = []
+    human_parts: list[str] = []
+    pts = 0
+
+    # 1. Психометрическая согласованность ответов (person-fit)
+    lz = sig.get("lz")
+    if sig.get("lz_flag") or (isinstance(lz, (int, float)) and lz < -2.0):
+        factors.append("person_fit")
+        pts += 2 if (isinstance(lz, (int, float)) and lz < -3.0) else 1
+        human_parts.append("ошибки на базовых вопросах при верных ответах на сложных")
+
+    # 2. Аномалии времени и предзнание
+    if sig.get("preknowledge_flagged") or (sig.get("canary_fast") or 0) > 0 or (sig.get("instant_correct") or 0) >= 2 or (sig.get("fast_text_items") or 0) > 0:
+        factors.append("time_anomaly")
+        pts += 2 if sig.get("preknowledge_flagged") or (sig.get("instant_correct") or 0) >= 2 else 1
+        human_parts.append("ответы даны быстрее времени прочтения условия")
+
+    # 3. Уход со вкладки / экран
+    if (sig.get("focus_lost_items") or 0) >= 2 or (sig.get("hidden_s") or 0) >= 30 or (sig.get("fs_exits") or 0) >= 2 or (sig.get("printscreen_items") or 0) > 0:
+        factors.append("focus_lost")
+        pts += 2 if (sig.get("focus_lost_items") or 0) >= 5 or (sig.get("hidden_s") or 0) >= 180 else 1
+        human_parts.append("переключение вкладки или снимки экрана во время заданий")
+
+    # 4. Происхождение текста ответа (вставки, ИИ-метка, инъекции, ритм набора)
+    if (sig.get("paste_items") or 0) > 0 or (sig.get("ai_mark_items") or 0) > 0 or (sig.get("not_typed_items") or 0) > 0 or (sig.get("even_rhythm_items") or 0) > 0 or (sig.get("injection_items") or 0) > 0:
+        factors.append("paste_origin")
+        pts += 2 if (sig.get("ai_mark_items") or 0) > 0 or (sig.get("injection_items") or 0) > 0 or (sig.get("paste_items") or 0) >= 2 else 1
+        human_parts.append("вставка готового текста или признаки внешней подсказки в развёрнутом ответе")
+
+    # 5. Двойник при копировании
+    if decoy_hit:
+        factors.append("copy_decoy")
+        pts += 2
+        human_parts.append("расчёт выполнен по числу из скопированного в буфер условия-двойника")
+
+    # 6. Камера (если была включена и дала замечания)
+    cam = integ.get("camera") or {}
+    if cam.get("remarks"):
+        factors.append("camera")
+        pts += 1
+        human_parts.append("замечания камеры во время теста")
+
+    base_pts = int(integ.get("points") or 0)
+    risk_points = max(pts, base_pts + (2 if decoy_hit else 0))
+    honesty_index = round(max(0.0, 1.0 - 0.15 * risk_points), 2)
+    needs_followup = risk_points >= 2 or decoy_hit
+    followup_kind = ("oral_defense" if ("paste_origin" in factors or "copy_decoy" in factors or "person_fit" in factors)
+                     else "stage2") if needs_followup else None
+
+    if needs_followup:
+        joined = "; ".join(human_parts) if human_parts else "совокупность сигналов прохождения"
+        employer_reason = (
+            f"Назначен дополнительный проверочный этап ({'3-минутная устная защита' if followup_kind == 'oral_defense' else 'короткий доп. блок заданий у порога'}): "
+            f"зафиксированы нетипичные сигналы самостоятельности прохождения ({joined}). "
+            f"Попытка не аннулируется — дополнительный этап подтверждает квалификацию кандидата."
+        )
+        candidate_reason = (
+            "Для подтверждения результата на пограничном участке назначен короткий дополнительный этап. "
+            "Оценка не обнуляется — это стандартная процедура верификации грейда."
+        )
+    else:
+        employer_reason = "Самостоятельность прохождения подтверждена: показатели времени, фокуса и согласованности ответов в норме."
+        candidate_reason = "Замечаний к самостоятельности выполнения нет."
+
+    return {
+        "honesty_index": honesty_index,
+        "risk_points": risk_points,
+        "threshold_points": 2,
+        "needs_followup_stage": needs_followup,
+        "followup_kind": followup_kind,
+        "triggered_factors": factors,
+        "decoy_hit": decoy_hit,
+        "employer_reason_ru": employer_reason,
+        "candidate_reason_ru": candidate_reason,
+    }
+

@@ -57,7 +57,7 @@ def test_jury_view_only_for_lowered_level():
 
 
 def test_result_details_only_in_jury_demo_mode(client, bank_api, monkeypatch):
-    tok = client.post("/api/jury/login", json={"persona": "candidate"}).json()["access_token"]
+    tok = client.post("/api/jury/login", json={"persona": "candidate_nofsp"}).json()["access_token"]
     sid, fin, _ = _run_test_with_all_signals(client, tok)
     jury = fin["integrity_jury"]  # демо-режим жюри: те же причины, что у работодателя, — из уже собранных сигналов
     assert fin["sandbox"] and fin["integrity"]["level"] == "low"

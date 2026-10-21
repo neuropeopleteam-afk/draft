@@ -242,7 +242,7 @@ def candidate_passport(ref: str, user: User = Depends(employer), db: Session = D
 
 
 class RevokeIn(BaseModel):
-    reason: Literal["integrity_annulled", "admin"] = "admin"
+    reason: Literal["integrity_annulled", "appeal_revoked", "admin"] = "admin"
 
 
 @router.post("/api/admin/passports/{pid}/revoke", summary="Отозвать паспорт решением администратора "

@@ -188,6 +188,7 @@ export const AnamAvatar = forwardRef<AnamHandle, AnamAvatarProps>(function AnamA
     const t = tokenStore.get();
     const url = tokenPathRef.current ?? `/interview/sessions/${sessionId}/avatar-token`;
     const r = await fetch(apiUrl(url), { method: "POST", headers: t ? { Authorization: `Bearer ${t}` } : {} });
+    if (r.status === 429) markLimited();   // лимит минут видеопотока (на сегодня, на адрес) — повторы редкие, голос без видео
     if (!r.ok) throw new Error(String(r.status));
     return (await r.json()) as TokenOut;
   }

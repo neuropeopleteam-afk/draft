@@ -1,4 +1,4 @@
-// PWA: регистрация service worker, установка на главный экран, подписка на Web Push (VAPID).
+// Установка веб-приложения на главный экран, обновление кэша без пустых экранов и подписка на уведомления.
 import { api } from "../lib/api";
 
 type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
@@ -73,8 +73,7 @@ export function registerPwa() {
   sw.addEventListener("message", (e) => { if (e.data?.type === "sw-activated") onActivated(e.data.version); });
   window.addEventListener("load", () => {
     sw.register("/sw.js", { scope: "/", updateViaCache: "none" }).then((reg) => {
-      // Проверка обновления: сразу после загрузки, при возврате на вкладку и раз в 5 минут (вкладка жюри может быть
-      // открыта во время выкладки)
+      // Проверка обновления: сразу после загрузки, при возврате на вкладку и раз в 5 минут
       const check = () => reg.update().catch(() => undefined);
       check();
       void checkStale();
@@ -100,6 +99,10 @@ export const platform = (): "ios" | "android" | "desktop" => {
   if (/Android/i.test(ua)) return "android";
   return "desktop";
 };
+
+/** Проверка встроенного браузера мессенджера (Telegram, ВК и др.), где системная установка на экран «Домой» скрыта. */
+export const isInAppBrowser = (): boolean =>
+  /(Telegram|VKClient|VkApp|Instagram|FBAN|FBIOS|\bLine\/|MicroMessenger)/i.test(navigator.userAgent || "");
 
 export async function promptInstall(): Promise<string> {
   if (!deferred) return "unavailable";
@@ -127,12 +130,12 @@ export async function currentSubscription(): Promise<PushSubscription | null> {
 
 type PushKeys = { endpoint: string; keys: { p256dh: string; auth: string } };
 
-/** Разрешение → подписка в push-сервисе браузера → сохранение на сервере. save — куда сохранить подписку
+/** Разрешение → подписка в службе уведомлений браузера → сохранение на сервере. save — куда сохранить подписку
  * (по умолчанию — учётке, вошедшей в кабинет; гость живой демонстрации сохраняет по своему токену). */
 export async function subscribePush(save?: (j: PushKeys) => Promise<unknown>): Promise<{ ok: boolean; reason?: string }> {
-  if (!pushSupported()) return { ok: false, reason: "Браузер не поддерживает Web Push. На iPhone уведомления работают только в установленном приложении (iOS 16.4+)." };
+  if (!pushSupported()) return { ok: false, reason: "В этом режиме браузер не поддерживает уведомления. На iPhone сначала добавьте «Драфт» на экран «Домой» в Safari (iOS 16.4 и новее)." };
   const cfg = await api<{ enabled: boolean; vapid_public_key: string | null }>("/push/config", { auth: false });
-  if (!cfg.enabled || !cfg.vapid_public_key) return { ok: false, reason: "Web Push на сервере не настроен" };
+  if (!cfg.enabled || !cfg.vapid_public_key) return { ok: false, reason: "Служба уведомлений на сервере сейчас не настроена" };
   const perm = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
   if (perm !== "granted") return { ok: false, reason: "Уведомления запрещены в настройках браузера" };
   const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });

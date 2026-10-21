@@ -2,6 +2,21 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { api } from "./api";
 import { DIRECTIONS, DIRECTION_TITLES } from "../components/ui";
 
+export {
+  NUMBERS,
+  getAnticheatMetrics,
+  getExpertAgreement,
+  getHhMatchMetrics,
+  getJuryBanner,
+  getLandingCards,
+  getLeakKVariants,
+  getMatchingMetrics,
+  getMutationMetrics,
+  getRecomputeTable,
+  getSprtVerdict,
+  type LandingCardMetric,
+} from "./numbers";
+
 // Название продукта задаётся в одном месте — backend/app/core/config.py (product_name) — и приходит из /api/meta.
 export interface Meta {
   product_name: string; version: string; jury_mode_available: boolean; jury_tab_enabled?: boolean; demo_sandbox: boolean; assessment_engine: string;
@@ -66,15 +81,33 @@ export function daysText(n: number): string {
 }
 export const useProductName = () => useContext(Ctx)?.product_name ?? "";
 
-/** Свой заголовок вкладки экрана: «Мини-тест · Драфт». Ответ /api/meta приходит позже — он его не затирает;
- * при уходе с экрана возвращается общий заголовок. */
-export function usePageTitle(title: string) {
+function upsertMeta(attr: "name" | "property", key: string, content: string) {
+  if (typeof document === "undefined" || !content) return;
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+/** Свой заголовок и мета-описание страницы (включая OpenGraph для превью ссылок). */
+export function usePageTitle(title: string, description?: string) {
   const product = useProductName();
   useEffect(() => {
     ownTitle = true;
-    document.title = product ? `${title} · ${product}` : title;
+    const fullTitle = product ? `${title} · ${product}` : `${title} · Драфт`;
+    document.title = fullTitle;
+    upsertMeta("property", "og:title", fullTitle);
+    upsertMeta("property", "og:type", "website");
+    upsertMeta("property", "og:image", "/icons/icon-512.png");
+    if (description) {
+      upsertMeta("name", "description", description);
+      upsertMeta("property", "og:description", description);
+    }
     return () => { ownTitle = false; if (loaded) document.title = defaultTitle(loaded); };
-  }, [title, product]);
+  }, [title, description, product]);
 }
 
 /** Заголовок вкладки по экрану (WCAG 2.4.2): «<заголовок h1> · Драфт»; null — общий. Вызывает RouteAnnouncer

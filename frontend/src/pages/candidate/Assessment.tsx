@@ -20,6 +20,8 @@ import { FeedbackSummary } from "./Feedback";
 import { useLlmOff } from "../../components/LlmOff";
 import { MutualPrefs } from "../mutual/Candidate";  // интересы для взаимного подбора (Н9)
 import { CandidateEvidence } from "../../components/OpenEvidence";  // цитаты из ответа
+import { WarRoomSlot } from "../../components/WarRoomSlot";
+import { TaskAppealButton } from "../../components/TaskAppeal";
 
 interface Tag { id: string; title: string; kind: string; direction_id: string | null }
 interface Onb {
@@ -514,6 +516,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         </Alert>
       )}
       <GradeHint hint={hint.data ?? null} grade={grade} onPick={setGrade} />
+      <div className="mt-4"><WarRoomSlot mode="candidate" grade={grade} direction={dir} /></div>
       {expressOk && (
         <div className="card mt-4 text-sm" data-testid="mode-choice">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -523,7 +526,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           {/* Ф6 (В7, Н8) + Ф4: на первом экране — коротко; правило остановки и погрешность — под «Подробнее» */}
           <p className="mt-2 text-brand-ink/75">
             {mode === "express"
-              ? <><span className="chip mr-1.5" data-testid="jury-brief">Экспресс-калибровка · 5 минут</span>{`Быстрая проверка уровня (5–7 задач банка 2PL IRT без дотестирования${grade === "senior" ? ", за Senior — до 12" : ""}) вместо полного 80-минутного теста.`}</>
+              ? <><span className="chip mr-1.5" data-testid="jury-brief">Экспресс-калибровка · 5 минут</span>{`Быстрая проверка уровня (5–7 адаптивных задач банка без дотестирования${grade === "senior" ? ", за Senior — до 12" : ""}) вместо полного 80-минутного теста.`}</>
               : <FullLength len={len.data} brief />}
           </p>
           <details className="mt-2 text-xs text-brand-ink/70">
@@ -1068,8 +1071,10 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       )}
       <div className="mt-3"><Alert>{err}</Alert></div>
       <FeedbackSummary sessionId={sessionId} fallbackLink />
+      <div className="mt-4"><WarRoomSlot mode="candidate" grade={r.claimed_grade} direction={r.direction} /></div>
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>
+        <TaskAppealButton sessionId={sessionId} direction={r.direction} grade={r.claimed_grade} />
       </div>
     </div>
   );

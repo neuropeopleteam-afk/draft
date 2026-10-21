@@ -41,7 +41,7 @@ from app.modules.profiles.facts import (
 )
 from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
-from app.modules.matching import core_skill, grade_above, implied, must_have
+from app.modules.matching import core_skill, explain as explain_mod, grade_above, implied, must_have
 from app.core.origin import NO_FSP
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
@@ -108,8 +108,16 @@ def _pool_query(confirmed: bool):
     return q.where(~_has_category_clause(), CandidateProfile.onboarding_completed_at.is_not(None))
 
 
+def is_synthetic_profile(p: CandidateProfile) -> bool:
+    """Модельный или синтетический профиль (признак profiles.is_synthetic от А2 или метка demo_model в privacy)."""
+    if getattr(p, "is_synthetic", False):
+        return True
+    priv = p.privacy or {}
+    return bool(priv.get("is_synthetic") or priv.get("demo_model") or priv.get("demo_audience") == "model")
+
+
 def visible_pool(db: Session, direction: str | None = None, grades: list[str] | None = None,
-                 category_ids: list[str] | None = None) -> list[CandidateProfile]:
+                 category_ids: list[str] | None = None, real_only: bool = False) -> list[CandidateProfile]:
     """Кандидаты с категорией (подтверждённой или предварительной, основного или дополнительного направления),
     видимые работодателю."""
     legacy = [CandidateProfile.current_category_id.is_not(None)]
@@ -129,7 +137,8 @@ def visible_pool(db: Session, direction: str | None = None, grades: list[str] | 
          .where(CandidateProfile.visible_to_employers.is_(True),
                 or_(and_(*legacy), select(CandidateSpecialization.user_id).where(*special).exists()),
                 User.is_active.is_(True), User.is_email_verified.is_(True), jury_scope.pool_clause(User.email)))
-    return list(db.scalars(q).all())
+    rows = list(db.scalars(q).all())
+    return [p for p in rows if not is_synthetic_profile(p)] if real_only else rows
 
 
 def unconfirmed_pool(db: Session, direction: str | None = None, grades: list[str] | None = None,
@@ -350,10 +359,13 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         reasons.append({"requirement": "Формат работы", "level": "T0", "status": "declared" if ok else "mismatch",
                         "text": "Заявленный формат подходит" if ok else "Заявлен другой формат работы"})
     if cond["city"] and city_applies(p.work_format.value, allowed):
-        ok = getattr(p, "relocation", False) or (getattr(p, "city", None) or "").casefold() == cond["city"].casefold()
+        same_city = (getattr(p, "city", None) or "").casefold() == cond["city"].casefold()
+        reloc = bool(getattr(p, "relocation", False))
+        ok = same_city or reloc
         reasons.append({"requirement": "Город присутствия", "level": "T0",
-                        "status": "declared" if ok else "mismatch",
-                        "text": "Город подходит или заявлен переезд" if ok else
+                        "status": "declared" if same_city else "partial" if reloc else "mismatch",
+                        "text": f"Город присутствия совпадает ({cond['city']})" if same_city else
+                                f"Другой город ({getattr(p, 'city', None) or 'не указан'}), заявлена готовность к переезду в {cond['city']} (смягчает несовпадение города)" if reloc else
                                 f"Нужен {cond['city']}; заявлен другой город без переезда"})
     comps = {"test": test, "stack_required": round(sreq, 3), "stack_desired": round(sdes, 3), "fsp": fsp,
              "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0,
@@ -444,6 +456,8 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
     out = []
     for b in bundles:
         p = b.profile
+        if f.get("real_only") and is_synthetic_profile(p):  # исключить модельные/синтетические профили
+            continue
         if f.get("exclude_refs") and p.public_ref in f["exclude_refs"]:  # отзыв «не подходит» (Н2, modules/mutual)
             continue
         if f.get("fsp_only") and not b.achievements:
@@ -515,11 +529,13 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         if rank > limit and b.profile.public_ref not in include_refs:
             continue
         ci = core.get(b.profile.user_id)
-        results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
-                        "reasons": core_skill.annotate(reasons[:1] + [core_skill.reason(ci)] + reasons[1:], ci)
-                        if ci else reasons,
-                        "category_id": b.category_id, "must": must[b.profile.user_id], "core": ci,
-                        "grade_status": b.grade_status, "card": card(b, cats)})
+        rs = core_skill.annotate(reasons[:1] + [core_skill.reason(ci)] + reasons[1:], ci) if ci else reasons
+        item = {"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
+                "reasons": rs, "category_id": b.category_id, "must": must[b.profile.user_id], "core": ci,
+                "grade_status": b.grade_status, "card": card(b, cats)}
+        item["explain"] = explain_mod.build_explain_from_result(item, req, WEIGHTS)
+        results.append(item)
+    explain_mod.annotate_selection_neighbors(results, req, WEIGHTS)
     unc = unconfirmed_counts(db)
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)
@@ -531,15 +547,30 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
                   "hidden": max(0, before_conditions - len(bundles))}
     core_meta = core_meta_of(req, core)
     above_meta = grade_above.meta(above, results)
+    confirmed_n = sum(1 for _, b, _, _ in scored if b.grade_status == "confirmed")
+    primary_mr = recs[0]["market_range"] if recs else None
+    salary_cal = explain_mod.compute_salary_calibration(confirmed_n, req, primary_mr)
+    excl = list(filters.get("exclude_refs") or [])
+    rerank_diff = (
+        {
+            "excluded_count": len(excl),
+            "excluded_refs": excl,
+            "note": f"Скрыто по отметке «не подходит»: {len(excl)} профил. Выдача и объяснения «почему выше соседа» перестроены.",
+        }
+        if excl
+        else None
+    )
     meta = {"categories": recs, "conditions": conditions, "must_first": must_have.enabled(),
-            "total_matched": len(scored), "core": core_meta, "grade_above": above_meta}
+            "total_matched": len(scored), "core": core_meta, "grade_above": above_meta,
+            "salary_calibration": salary_cal, "rerank_diff": rerank_diff,
+            "t0_in_score": False, "ranking_basis_ru": explain_mod.RANKING_BASIS_RU}
     return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": algorithm(),
             "conditions": conditions, "must_first": must_have.enabled(), "core": core_meta, "meta": meta,
-            "grade_above": above_meta,
+            "grade_above": above_meta, "salary_calibration": salary_cal, "rerank_diff": rerank_diff,
             "weights": WEIGHTS, "provisional_penalty": PROVISIONAL_PENALTY,
             "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional),
             "unconfirmed_matched": sum(1 for _, b, _, _ in scored if b.unconfirmed),
-            "confirmed_matched": sum(1 for _, b, _, _ in scored if b.grade_status == "confirmed")}
+            "confirmed_matched": confirmed_n}
 
 
 def selection_order(scored: list, must: dict, core: dict, policy: str | None = None, above_id: str | None = None) -> list:
@@ -580,17 +611,18 @@ def core_meta_of(req: dict, core: dict) -> dict | None:
 
 def search(db: Session, *, direction=None, grade=None, category=None, stack: list[str] | None = None,
            stack_level: str = "any", fsp_only: bool = False, limit: int = 50, offset: int = 0,
-           confirmed_only: bool = False) -> dict:
+           confirmed_only: bool = False, real_only: bool = False) -> dict:
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     pool = visible_pool(db, direction=direction, grades=[grade] if grade else None,
-                        category_ids=[category] if category else None)
+                        category_ids=[category] if category else None, real_only=real_only)
     wanted = [category] if category else [c.id for c in cats.values() if c.grade_id == grade] if grade else None
     ids = [p.user_id for p in pool]
     if not confirmed_only:  # без подтверждённого грейда — по заявленному, ярусом ниже
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, direction=direction, grades=[grade] if grade else None,
-                                                             category_ids=[category] if category else None)]
+                                                             category_ids=[category] if category else None)
+                if not (real_only and is_synthetic_profile(p))]
     bundles = list(load_bundles(db, ids, direction=direction, category_ids=wanted).values())
-    f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only}
+    f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only, "real_only": real_only}
     if stack:
         f["stack_t1" if stack_level == "t1" else "stack_any"] = stack
     bundles = apply_filters(bundles, f)

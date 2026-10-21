@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, plural, rub, useApi } from "../../components/ui";
+import { Alert, DemoProfileBadge, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, plural, rub, useApi } from "../../components/ui";
 import { InlineThread } from "../../components/Chat";
 import { BasisSeg, MARKET_SOURCE, MarketNote, otherBasis, salaryText, type Basis } from "../../components/Salary";
 import { ApiError, api } from "../../lib/api";
@@ -25,6 +25,7 @@ function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market, hh }:
 }) {
   const f = Number(from), t = Number(to);
   const wide = f > 0 && t > f * SALARY_MAX_RATIO;
+  const veryWide = f > 0 && t > f * 3.5;
   return (
     <div className="space-y-3">
       <div><p className="label">Сумма указана</p><BasisSeg value={basis} onChange={setBasis} /></div>
@@ -34,7 +35,8 @@ function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market, hh }:
           <Field label="Вилка до, ₽ в месяц" htmlFor="st"><input id="st" required type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
         </div>
         <p className={`mt-2 text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/65"}`}>
-          {wide ? `Вилка слишком широкая: при «от» ${rub(f)} «до» — не выше ${rub(maxTo(from))}.`
+          {veryWide ? `Слишком широкая вилка (разрыв более 3,5×): размытые диапазоны снижают отклик и индекс ответственности работодателя. При «от» ${rub(f)} укажите «до» не выше ${rub(maxTo(from))}.`
+            : wide ? `Вилка слишком широкая: при «от» ${rub(f)} «до» — не выше ${rub(maxTo(from))}.`
             : f > 0 && t >= f ? `${otherBasis(f, t, basis)} · по шкале НДФЛ 13–22 %. «До» — не больше чем в 1,5 раза выше «от».`
               : "«До» — не больше чем в 1,5 раза выше «от»: узкая вилка показывает кандидату реальное предложение."}
         </p>
@@ -263,7 +265,7 @@ export function EmployerProbes() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-bold text-brand-night">{p.title}</p>
-              <p className="text-brand-ink/65">{p.candidate_deleted ? <><span className="font-semibold">{p.candidate_ref}</span> · кандидат удалил учётную запись</> : <><Link className="font-semibold text-brand" to={`/employer/candidates/${p.candidate_ref}`}>{p.candidate_ref}</Link> · {catTitle(p.candidate_category)}</>} · {salaryText(p.salary_from, p.salary_to, p.salary_basis)} · {dt(p.created_at)}</p>
+              <p className="flex flex-wrap items-center gap-1.5 text-brand-ink/65">{p.candidate_deleted ? <><span className="font-semibold">{p.candidate_ref}</span> · кандидат удалил учётную запись</> : <><Link className="font-semibold text-brand" to={`/employer/candidates/${p.candidate_ref}`}>{p.candidate_ref}</Link> <DemoProfileBadge c={p} /> · {catTitle(p.candidate_category)}</>} · {salaryText(p.salary_from, p.salary_to, p.salary_basis)} · {dt(p.created_at)}</p>
             </div>
             <Status s={p.status} />
           </div>
@@ -311,7 +313,7 @@ export function EmployerInvitations() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-bold text-brand-night">{i.position_title}</p>
-              <p className="text-brand-ink/65">{i.candidate_deleted ? <><span className="font-semibold">{i.candidate_ref}</span> · кандидат удалил учётную запись</> : <><Link className="font-semibold text-brand" to={`/employer/candidates/${i.candidate_ref}`}>{i.candidate_ref}</Link> · {catTitle(i.candidate_category)}</>} · {salaryText(i.salary_from, i.salary_to, i.salary_basis)}</p>
+              <p className="flex flex-wrap items-center gap-1.5 text-brand-ink/65">{i.candidate_deleted ? <><span className="font-semibold">{i.candidate_ref}</span> · кандидат удалил учётную запись</> : <><Link className="font-semibold text-brand" to={`/employer/candidates/${i.candidate_ref}`}>{i.candidate_ref}</Link> <DemoProfileBadge c={i} /> · {catTitle(i.candidate_category)}</>} · {salaryText(i.salary_from, i.salary_to, i.salary_basis)}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {i.counter && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Встречное ждёт решения</span>}
@@ -335,8 +337,13 @@ export function EmployerInvitations() {
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">Жалоба кандидата: <b>{i.complaint.reason_title.toLowerCase()}</b>. Жалобы снижают индекс доверия компании — его видят кандидаты.</p>
           ) : i.decline_reason && <p className="text-brand-ink/70">Причина отказа: «{i.decline_reason}»</p>}
           <InlineThread kind="invitation" id={i.id} thread={i.thread} onUpdate={reload} />
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <Link to={`/employer/trio?invitation=${i.id}`} className="btn-ghost !px-3 !py-1.5 text-xs" data-testid="trio-from-invitation">
+              Подключить ФСП к диалогу
+            </Link>
+            {["sent", "viewed"].includes(i.status) && <button className="text-sm font-semibold text-brand-plum hover:underline" onClick={() => withdraw(i.id)}>Отозвать</button>}
+          </div>
           <History items={i.history} />
-          {["sent", "viewed"].includes(i.status) && <button className="text-sm font-semibold text-brand-plum hover:underline" onClick={() => withdraw(i.id)}>Отозвать</button>}
         </article>
       ))}
     </div>
