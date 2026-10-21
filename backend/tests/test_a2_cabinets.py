@@ -595,6 +595,7 @@ def test_ats_webhook_no_contacts_before_consent_and_contacts_after_consent(clien
     """А2 (21.10): до согласия кандидата событие/карточка вебхука содержит только candidate_ref (consent=False, contacts=None);
     после принятия приглашения в вебхук ТОЛЬКО пригласившей компании уходят раскрытые кандидатом контакты
     (name/full_name, email, phone — с учётом shared_contacts), consent=True с временем согласия consent_at и валидной HMAC-подписью."""
+    import json
     import uuid
     from app.core.db import SessionLocal
     from app.integrations.ats import clients as ats_clients
