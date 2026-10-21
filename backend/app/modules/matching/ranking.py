@@ -17,6 +17,8 @@ score = 0,45·тест + 0,35·покрытие обязательного ст�
 """
 from __future__ import annotations
 
+import os
+
 from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import Session
 
@@ -141,10 +143,42 @@ def visible_pool(db: Session, direction: str | None = None, grades: list[str] | 
     return [p for p in rows if not is_synthetic_profile(p)] if real_only else rows
 
 
+def _score_part(t: dict) -> str:
+    """«8 из 10 верно, » — только если числа есть в факте теста (внешний набор жюри может их не дать)."""
+    if t.get("correct") is None or t.get("answered") is None:
+        return ""
+    return f"{t.get('correct')} из {t.get('answered')} верно, "
+
+
+def unconfirmed_by_claim() -> bool:
+    """Правило экспертов жюри (20.10): категория и фильтр грейда — только по тесту, самооценка не подмешивается.
+    По умолчанию (MATCH_UNCONFIRMED_BY_CLAIM=0) заявленный грейд кандидата без подтверждения НЕ используется ни как
+    фильтр, ни в баллах: такие кандидаты попадают в выдачу только по направлению из опроса (его выбирает сам кандидат
+    по ТЗ — отрасль и специализация), отдельным ярусом ниже подтверждённых, с пометкой «грейд не подтверждён».
+    При фильтре грейда в поиске их нет — у них нет проверенного грейда. =1 — прежнее поведение (по заявленному)."""
+    return os.environ.get("MATCH_UNCONFIRMED_BY_CLAIM", "0").lower() in ("1", "true", "yes", "on")
+
+
 def unconfirmed_pool(db: Session, direction: str | None = None, grades: list[str] | None = None,
-                     category_ids: list[str] | None = None) -> list[tuple[CandidateProfile, str, str]]:
+                     category_ids: list[str] | None = None,
+                     by_claim: bool | None = None) -> list[tuple[CandidateProfile, str, str]]:
     """Кандидаты без подтверждённого грейда (опрос пройден, категории нет), видимые работодателю, с заявленными
-    направлением и грейдом из последнего опроса: [(профиль, направление, грейд)]. Фильтры — по заявленному."""
+    направлением и грейдом из последнего опроса: [(профиль, направление, грейд)].
+    by_claim=False (по умолчанию, см. unconfirmed_by_claim): заявленный грейд не фильтрует — grades игнорируются,
+    category_ids сводятся к их направлениям. by_claim=True — фильтры по заявленной категории (прежнее поведение)."""
+    if by_claim is None:
+        by_claim = unconfirmed_by_claim()
+    if not by_claim:
+        grades = None
+        if category_ids:
+            dirs = {c.split(".", 1)[0] for c in category_ids}
+            category_ids = None
+            if direction and direction not in dirs:
+                return []
+            if len(dirs) == 1:
+                direction = direction or next(iter(dirs))
+            else:
+                return [x for x in unconfirmed_pool(db, direction=direction, by_claim=False) if x[1] in dirs]
     from app.modules.assessment.models import SurveyResponse
 
     profiles = list(db.scalars(_pool_query(confirmed=False)).all())
@@ -172,7 +206,7 @@ def unconfirmed_pool(db: Session, direction: str | None = None, grades: list[str
 def unconfirmed_counts(db: Session) -> dict[str, int]:
     """Сколько кандидатов без подтверждённого грейда заявили каждую категорию."""
     out: dict[str, int] = {}
-    for _, d, g in unconfirmed_pool(db):
+    for _, d, g in unconfirmed_pool(db, by_claim=True):  # справка «+n заявили категорию» — не фильтр и не балл
         out[f"{d}.{g}"] = out.get(f"{d}.{g}", 0) + 1
     return out
 
@@ -246,7 +280,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "partial",
             "text": f"Экспресс-категория {cat_title} по мини-тесту {b.test.created_at:%d.%m.%Y}: "
-                    f"{t.get('correct')} из {t.get('answered')} верно, θ = {theta_se(t.get('theta', 0), t.get('se'))}"
+                    f"{_score_part(t)}θ = {theta_se(t.get('theta', 0), t.get('se'))}"
                     " — предварительно, полный тест уточнит грейд",
         })
     elif b.test and b.provisional:
@@ -266,7 +300,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "confirmed",
             "text": f"Категория {cat_title} подтверждена тестом {b.test.created_at:%d.%m.%Y}{how}: "
-                    f"{t.get('correct')} из {t.get('answered')} верно, θ = {theta_se(t.get('theta', 0), t.get('se'))}",
+                    f"{_score_part(t)}θ = {theta_se(t.get('theta', 0), t.get('se'))}",
         })
     else:
         reasons.append({"requirement": "Специализация и грейд", "level": "none", "status": "missing",
@@ -495,8 +529,8 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     pool = visible_pool(db, category_ids=pool_ids)
     ids = [p.user_id for p in pool]
     if not filters.get("confirmed_only"):
-        # без подтверждённого грейда — по заявленной категории, отдельным ярусом ниже (видео №6: показывать, не скрывать);
-        # добор ступенью выше их не касается — только точный уровень
+        # без подтверждённого грейда — отдельным ярусом ниже (видео №6: показывать, не скрывать); по правилу экспертов
+        # (unconfirmed_by_claim) — по направлению из опроса, заявленный грейд не фильтрует и не даёт баллов
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids)]
     bundles = list(load_bundles(db, ids, direction=req.get("direction"), category_ids=pool_ids).values())
     # Ф2: условия потребности (формат, город — T0) применяются по умолчанию, только сужают выдачу и не дают баллов;
@@ -617,7 +651,10 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
                         category_ids=[category] if category else None, real_only=real_only)
     wanted = [category] if category else [c.id for c in cats.values() if c.grade_id == grade] if grade else None
     ids = [p.user_id for p in pool]
-    if not confirmed_only:  # без подтверждённого грейда — по заявленному, ярусом ниже
+    # без подтверждённого грейда — ярусом ниже. Правило экспертов: фильтр грейда/категории — только по тесту, поэтому
+    # при фильтре грейда или категории их нет (проверенного грейда у них нет); без него — по направлению из опроса
+    strict = not unconfirmed_by_claim()
+    if not confirmed_only and not (strict and (grade or category)):
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, direction=direction, grades=[grade] if grade else None,
                                                              category_ids=[category] if category else None)
                 if not (real_only and is_synthetic_profile(p))]
