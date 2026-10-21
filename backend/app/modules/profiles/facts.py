@@ -12,8 +12,8 @@ from dataclasses import dataclass, field, replace
 import math
 import uuid
 
-from sqlalchemy import delete, select
-from sqlalchemy.orm import Session
+from sqlalchemy import delete, event, select
+from sqlalchemy.orm import Session, defer
 
 from app.core.db import as_aware
 from app.core.enums import EvidenceLevel, FactSource
@@ -273,66 +273,162 @@ class Bundle:
         return round(max(0.0, 0.65 * test + 0.10 * probe + 0.25 * self.fsp - pen), 4)
 
 
+_BUNDLE_CACHE_KEY = "_a2_base_bundles"
+_BUNDLE_HOOK_INSTALLED = False
+
+
+def _install_bundle_cache_hook() -> None:
+    global _BUNDLE_HOOK_INSTALLED
+    if _BUNDLE_HOOK_INSTALLED:
+        return
+    _BUNDLE_HOOK_INSTALLED = True
+
+    @event.listens_for(Session, "after_flush")
+    def _clear_on_flush(session: Session, _flush_context) -> None:
+        session.info.pop(_BUNDLE_CACHE_KEY, None)
+
+    @event.listens_for(Session, "after_bulk_delete")
+    def _clear_on_bulk_delete(delete_context) -> None:
+        session = getattr(delete_context, "session", None)
+        if session is not None:
+            session.info.pop(_BUNDLE_CACHE_KEY, None)
+
+    @event.listens_for(Session, "after_bulk_update")
+    def _clear_on_bulk_update(update_context) -> None:
+        session = getattr(update_context, "session", None)
+        if session is not None:
+            session.info.pop(_BUNDLE_CACHE_KEY, None)
+
+
+_install_bundle_cache_hook()
+
+
+def _load_base_bundles(db: Session, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, Bundle]:
+    cache: dict[uuid.UUID, Bundle] = db.info.setdefault(_BUNDLE_CACHE_KEY, {})
+    missing = [uid for uid in dict.fromkeys(user_ids) if uid not in cache]
+    if missing:
+        profiles = db.scalars(select(CandidateProfile).where(CandidateProfile.user_id.in_(missing))).all()
+        fresh = {p.user_id: Bundle(profile=p) for p in profiles}
+        for r in db.scalars(select(CandidateSpecialization).where(CandidateSpecialization.user_id.in_(missing))):
+            if r.user_id in fresh:
+                fresh[r.user_id].specializations[r.direction_id] = r
+        for b in fresh.values():
+            if b.profile.current_direction_id not in b.specializations:
+                r = legacy_specialization(b.profile)
+                if r:
+                    b.specializations[r.direction_id] = r
+        facts = db.scalars(
+            select(CandidateFact).where(CandidateFact.user_id.in_(missing)).order_by(CandidateFact.created_at)
+        ).all()
+        # Старые факты не имеют value.direction: направление восстанавливается по сессии/зонду только для тех пользователей, у кого такие факты есть.
+        need_session_uids = {
+            f.user_id
+            for f in facts
+            if f.evidence_level != EvidenceLevel.T0
+            and f.kind in ("test_result", "skill")
+            and not (f.value or {}).get("direction")
+            and (f.source_ref or "").startswith("test_session:")
+        }
+        session_directions: dict[str, str] = {}
+        if need_session_uids:
+            from app.modules.assessment.models import TestSession
+
+            session_directions = {
+                f"test_session:{tid}": tdir
+                for tid, tdir in db.execute(
+                    select(TestSession.id, TestSession.direction_id).where(TestSession.user_id.in_(list(need_session_uids)))
+                )
+            }
+        need_probe_uids = {
+            f.user_id
+            for f in facts
+            if f.evidence_level != EvidenceLevel.T0
+            and f.kind in ("skill", "probe")
+            and not (f.value or {}).get("direction")
+            and f.source_ref
+            and not f.source_ref.startswith("test_session:")
+        }
+        probe_directions: dict[str, str] = {}
+        if need_probe_uids:
+            from app.modules.invitations.models import Probe
+            from app.modules.matching.models import EmployerNeed
+            from app.cup.models import Cup, CupEntry
+            from app.modules.assignments.models import Assignment, AssignmentAttempt
+
+            p_uids = list(need_probe_uids)
+            probe_directions = {
+                f"probe:{pid}": d
+                for pid, d in db.execute(
+                    select(Probe.id, EmployerNeed.direction_id)
+                    .outerjoin(EmployerNeed, EmployerNeed.id == Probe.need_id)
+                    .where(Probe.candidate_user_id.in_(p_uids))
+                )
+                if d
+            }
+            probe_directions.update({
+                f"cup:{cid}": category.split(".")[0]
+                for cid, category in db.execute(
+                    select(Cup.id, Cup.category_id)
+                    .join(CupEntry, CupEntry.cup_id == Cup.id)
+                    .where(CupEntry.candidate_user_id.in_(p_uids))
+                    .distinct()
+                )
+            })
+            probe_directions.update({
+                f"assignment:{aid}": d
+                for aid, d in db.execute(
+                    select(AssignmentAttempt.id, Assignment.direction_id)
+                    .join(Assignment, Assignment.id == AssignmentAttempt.assignment_id)
+                    .where(AssignmentAttempt.candidate_user_id.in_(p_uids))
+                )
+                if d
+            })
+        for f in facts:
+            b = fresh.get(f.user_id)
+            if b is None:
+                continue
+            if f.evidence_level == EvidenceLevel.T0:
+                b.t0[f.kind].append(f)
+            elif f.kind == "test_result":
+                d = f.value.get("direction") or session_directions.get(f.source_ref) or f.key.split(".")[0]
+                b.tests_by_direction[d] = f
+            elif f.kind == "skill":
+                d = (
+                    f.value.get("direction")
+                    or session_directions.get(f.source_ref)
+                    or probe_directions.get(f.source_ref)
+                    or b.profile.current_direction_id
+                )
+                sk = b.skills_by_direction.setdefault(d, {})
+                sk[f.key] = merge_skill(sk.get(f.key), f)
+            elif f.kind == "probe":
+                d = f.value.get("direction") or probe_directions.get(f.source_ref) or b.profile.current_direction_id
+                b.probes_by_direction.setdefault(d, []).append(f)
+        passports = db.scalars(select(FspPassport).where(FspPassport.user_id.in_(missing))).all()
+        by_pid = {}
+        for p in passports:
+            if p.user_id in fresh:
+                fresh[p.user_id].passport = p
+                by_pid[p.id] = fresh[p.user_id]
+        if by_pid:
+            for a in db.scalars(
+                select(FspAchievement)
+                .where(FspAchievement.passport_id.in_(list(by_pid)))
+                .order_by(FspAchievement.event_date.desc())
+            ).all():
+                by_pid[a.passport_id].achievements.append(a)
+        _load_claims(db, fresh)
+        cache.update(fresh)
+    return {uid: cache[uid] for uid in user_ids if uid in cache}
+
+
 def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | None = None,
                  category_ids: list[str] | None = None) -> dict[uuid.UUID, Bundle]:
     if not user_ids:
         return {}
-    profiles = db.scalars(select(CandidateProfile).where(CandidateProfile.user_id.in_(user_ids))).all()
-    out = {p.user_id: Bundle(profile=p) for p in profiles}
-    for r in db.scalars(select(CandidateSpecialization).where(CandidateSpecialization.user_id.in_(user_ids))):
-        out[r.user_id].specializations[r.direction_id] = r
-    for b in out.values():
-        if b.profile.current_direction_id not in b.specializations:
-            r = legacy_specialization(b.profile)
-            if r:
-                b.specializations[r.direction_id] = r
-    # Старые факты не имеют value.direction: направление восстанавливается по сессии, не по последнему тесту.
-    from app.modules.assessment.models import TestSession
-    session_directions = {f"test_session:{t.id}": t.direction_id for t in db.scalars(
-        select(TestSession).where(TestSession.user_id.in_(user_ids)))}
-    from app.modules.invitations.models import Probe
-    from app.modules.matching.models import EmployerNeed
-    from app.cup.models import Cup, CupEntry
-
-    probe_directions = {f"probe:{pid}": d for pid, d in db.execute(
-        select(Probe.id, EmployerNeed.direction_id).outerjoin(EmployerNeed, EmployerNeed.id == Probe.need_id)
-        .where(Probe.candidate_user_id.in_(user_ids))) if d}
-    probe_directions.update({f"cup:{cid}": category.split(".")[0] for cid, category in db.execute(
-        select(Cup.id, Cup.category_id).join(CupEntry, CupEntry.cup_id == Cup.id)
-        .where(CupEntry.candidate_user_id.in_(user_ids)).distinct())})
-    from app.modules.assignments.models import Assignment, AssignmentAttempt
-    probe_directions.update({f"assignment:{aid}": d for aid, d in db.execute(
-        select(AssignmentAttempt.id, Assignment.direction_id).join(Assignment, Assignment.id == AssignmentAttempt.assignment_id)
-        .where(AssignmentAttempt.candidate_user_id.in_(user_ids))) if d})
-    for f in db.scalars(select(CandidateFact).where(CandidateFact.user_id.in_(user_ids))
-                        .order_by(CandidateFact.created_at)).all():
-        b = out.get(f.user_id)
-        if b is None:
-            continue
-        if f.evidence_level == EvidenceLevel.T0:
-            b.t0[f.kind].append(f)
-        elif f.kind == "test_result":
-            d = f.value.get("direction") or session_directions.get(f.source_ref) or f.key.split(".")[0]
-            b.tests_by_direction[d] = f
-        elif f.kind == "skill":
-            d = (f.value.get("direction") or session_directions.get(f.source_ref)
-                 or probe_directions.get(f.source_ref) or b.profile.current_direction_id)
-            sk = b.skills_by_direction.setdefault(d, {})
-            sk[f.key] = merge_skill(sk.get(f.key), f)  # тест + задания работодателя (И7) — одно слитое значение
-        elif f.kind == "probe":
-            d = f.value.get("direction") or probe_directions.get(f.source_ref) or b.profile.current_direction_id
-            b.probes_by_direction.setdefault(d, []).append(f)
-    passports = db.scalars(select(FspPassport).where(FspPassport.user_id.in_(user_ids))).all()
-    by_pid = {}
-    for p in passports:
-        if p.user_id in out:
-            out[p.user_id].passport = p
-            by_pid[p.id] = out[p.user_id]
-    if by_pid:
-        for a in db.scalars(select(FspAchievement).where(FspAchievement.passport_id.in_(list(by_pid)))
-                            .order_by(FspAchievement.event_date.desc())).all():
-            by_pid[a.passport_id].achievements.append(a)
-    for uid, b in list(out.items()):
+    base = _load_base_bundles(db, user_ids)
+    out: dict[uuid.UUID, Bundle] = {}
+    for uid, b in base.items():
         primary = next((r.direction_id for r in b.specializations.values() if r.is_primary), b.profile.current_direction_id)
         proven = [r for r in b.specializations.values() if r.category_id]
         default = primary
@@ -345,7 +441,6 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | Non
             if eligible:
                 selected = sorted(eligible, key=lambda r: (not r.is_primary, -(r.rating_score or 0), r.direction_id))[0].direction_id
         out[uid] = b.for_direction(selected)
-    _load_claims(db, out)
     return out
 
 
@@ -355,16 +450,17 @@ def _load_claims(db: Session, out: dict) -> None:
     from app.core.enums import TestSessionStatus
     from app.modules.assessment.models import SurveyResponse, TestSession
 
-    ids = [uid for uid, b in out.items() if not b.category_id]
+    ids = [uid for uid, b in out.items() if not any(r.category_id for r in b.specializations.values()) and not b.profile.current_category_id]
     if not ids:
         return
     for sv in db.scalars(select(SurveyResponse).where(SurveyResponse.user_id.in_(ids))
                          .order_by(SurveyResponse.created_at.desc())).all():
         if out[sv.user_id].survey is None:
             out[sv.user_id].survey = sv
-    for ts in db.scalars(select(TestSession).where(TestSession.user_id.in_(ids),
-                                                   TestSession.status == TestSessionStatus.finished)
-                         .order_by(TestSession.created_at.desc())).all():
+    for ts in db.scalars(select(TestSession).options(defer(TestSession.state)).where(
+        TestSession.user_id.in_(ids),
+        TestSession.status == TestSessionStatus.finished,
+    ).order_by(TestSession.created_at.desc())).all():
         if out[ts.user_id].last_attempt is None:
             out[ts.user_id].last_attempt = ts
 

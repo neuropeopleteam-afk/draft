@@ -26,7 +26,7 @@ import statistics
 import time
 import uuid
 
-from sqlalchemy import and_, event, or_, select
+from sqlalchemy import and_, event, inspect as sa_inspect, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.db import as_aware, utcnow
@@ -130,15 +130,70 @@ class Data:
     allowed_companies: set[uuid.UUID] = field(default_factory=set)
 
 
-# ------------------------------------------------------------------ 60-секундный кэш с автосбросом при записи в БД
+# ------------------------------------------------------------------ 60-секундный кэш с выборочным сбросом при записи в таблицы отчёта
 CACHE_TTL_S = 60.0
 _CACHE: dict[tuple, tuple[float, object]] = {}
 _HOOK_INSTALLED = False
 
+# Таблицы, от которых реально зависят расчёты /api/fsp-cabinet/* (report, regions, benefit, tournaments и др.).
+# Записи в таблицы сессий/аудита/попыток входа и обновление User.last_login_at при входе кэш НЕ сбрасывают.
+_REPORT_TABLES = frozenset({
+    "candidate_profiles",
+    "candidate_facts",
+    "companies",
+    "employer_profiles",
+    "employer_needs",
+    "invitations",
+    "fsp_passports",
+    "fsp_achievements",
+    "cups",
+    "cup_entries",
+    "categories",
+    "hiring_outcomes",
+    "company_tariffs",
+})
+_USER_RELEVANT_ATTRS = ("email", "is_demo", "role", "is_active")
+
 
 def invalidate_cache() -> None:
-    """Сбрасывает кэш аналитики кабинета ФСП (вызывается автоматически при любом коммите с записью в БД)."""
+    """Сбрасывает кэш аналитики кабинета ФСП."""
     _CACHE.clear()
+
+
+def _is_spare_sandbox_seed() -> bool:
+    try:
+        from app.modules.jury import seed as jury_seed
+
+        return bool(jury_seed._SPARE.get())
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _user_has_report_changes(obj: object) -> bool:
+    try:
+        st = sa_inspect(obj)
+        for attr_name in _USER_RELEVANT_ATTRS:
+            attr = st.attrs.get(attr_name)
+            if attr is not None and attr.history.has_changes():
+                return True
+    except Exception:  # noqa: BLE001
+        return True
+    return False
+
+
+def _session_affects_report(session: Session) -> bool:
+    if _is_spare_sandbox_seed():
+        return False
+    for obj in (*session.new, *session.dirty, *session.deleted):
+        tbl = getattr(obj, "__tablename__", None)
+        if tbl in _REPORT_TABLES:
+            return True
+        if tbl == "users":
+            if obj in session.deleted:
+                return True
+            if obj in session.dirty and _user_has_report_changes(obj):
+                return True
+    return False
 
 
 def _install_Invalidation_hook() -> None:
@@ -149,16 +204,24 @@ def _install_Invalidation_hook() -> None:
 
     @event.listens_for(Session, "after_flush")
     def _on_after_flush(session: Session, _flush_context) -> None:
-        if session.new or session.dirty or session.deleted:
+        if _session_affects_report(session):
             _CACHE.clear()
 
     @event.listens_for(Session, "after_bulk_delete")
-    def _on_bulk_delete(_delete_context) -> None:
-        _CACHE.clear()
+    def _on_bulk_delete(delete_context) -> None:
+        if _is_spare_sandbox_seed():
+            return
+        tname = getattr(getattr(delete_context, "primary_table", None), "name", None)
+        if tname is None or tname in _REPORT_TABLES or tname == "users":
+            _CACHE.clear()
 
     @event.listens_for(Session, "after_bulk_update")
-    def _on_bulk_update(_update_context) -> None:
-        _CACHE.clear()
+    def _on_bulk_update(update_context) -> None:
+        if _is_spare_sandbox_seed():
+            return
+        tname = getattr(getattr(update_context, "primary_table", None), "name", None)
+        if tname is None or tname in _REPORT_TABLES:
+            _CACHE.clear()
 
 
 _install_Invalidation_hook()
@@ -397,7 +460,8 @@ def demand(d: Data) -> dict:
             supply_sk[s] += 1
             if c.invited:
                 invited_sk[s] += 1
-    tags = sorted(set(w) | {t for t, _ in invited_sk.most_common(10)}, key=lambda t: (-w.get(t, 0), -invited_sk.get(t, 0)))
+    top_invited = sorted(invited_sk, key=lambda t: (-invited_sk[t], t))[:10]
+    tags = sorted(set(w) | set(top_invited), key=lambda t: (-w.get(t, 0), -invited_sk.get(t, 0), t))
     skills = [{"tag": t, "title": tag_title(t), "direction": STACK.get(t, (None, None, None))[2],
                "needs_required": req.get(t, 0), "needs_desired": des.get(t, 0), "demand_weight": w.get(t, 0),
                "companies": len(comps.get(t, ())), "supply_confirmed": kc(supply_sk.get(t, 0)),
