@@ -240,7 +240,7 @@ def fmt(x):
        trap_desc={"inclusive": "правая граница включительно", "diff": "разность месяцев", "all": "без отсечения",
                   "all_default": "все секции и DEFAULT", "one": "одна секция", "plus_default": "плюс DEFAULT",
                   "minus_one": "без первой секции", "full_only": "только полные месяцы"},
-       trap_first="inclusive", rel=0.0, abs_min=1, n_above=(1, 2, 3))
+       trap_first="inclusive", rel=0.0, abs_min=1, n_above=(0, 1, 2, 3))  # ранг ключа — весь диапазон; недостающие — контрольные значения
 
 # ---------------------------------------------------------------- pytorch: размер входа Linear после свёрток
 define("data_ml.dl.pytorch_conv_flatten_mcq",

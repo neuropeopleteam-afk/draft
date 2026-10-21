@@ -47,7 +47,7 @@ print(fmt(float(U * W * conflict)))
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     doc, doc_acc = rng.choice(CONTEXTS)
-    n_below = rng.choice([0, 1, 2])
+    n_below = rng.choice([0, 1, 2, 3])  # ранг ключа равномерный; недостающие — контрольные значения
     fmt, fmt_src = formatter("int")
     for _ in range(6000):
         n = rng.choice([3, 4, 5])

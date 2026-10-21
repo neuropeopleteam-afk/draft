@@ -5,13 +5,15 @@ import contextlib
 from fractions import Fraction
 import hashlib
 import io
+import itertools
+import re
 import math
 import random
 import sqlite3
 from typing import Any, Callable, Sequence
 import zlib
 
-from assessment_bank.gen_utils import LETTERS, build_variant, make_options, make_rng
+from assessment_bank.gen_utils import LETTERS, build_variant, make_options, make_rng, spread_pick
 from assessment_bank.schema import AnswerKey, Check, Option, Variant
 
 SHORT_NOTE = "Ответ проверяется программой-моделью по тем же числам, что в условии."
@@ -93,9 +95,11 @@ options = {options}
 expected_key = {key!r}
 assert options[expected_key] == key_str, f"ключ {{expected_key}}={{options[expected_key]!r}} != {{key_str!r}}"
 trap_pool = {{v for v in raw_traps.values() if v != key_str}}
+controls = {controls!r}  # контрольные значения на шкале вариантов (не модель ошибки), если ловушек не хватило
+assert key_str not in controls, "контрольное значение совпало с ключом"
 for k, v in options.items():
     if k != expected_key:
-        assert v in trap_pool, f"дистрактор {{k}}={{v!r}} не из модели ошибок"
+        assert v in trap_pool or v in controls, f"дистрактор {{k}}={{v!r}} не из модели ошибок"
 print(expected_key)
 """
 
@@ -117,6 +121,7 @@ def _pick_traps(
     abs_min: float,
     trap_first: str | None = None,
     n_distractors: int = 3,
+    allow_controls: bool = True,
 ) -> list[tuple[str, str]] | None:
     """Выбрать ``n_distractors`` ловушек: ровно ``n_above`` строго больше ключа и ``n_distractors - n_above`` строго меньше."""
     kv = float(key_val)
@@ -151,31 +156,56 @@ def _pick_traps(
     above = primary_above + fallback_above
     below = primary_below + fallback_below
 
-    def select(pool: list[tuple[float, str, str]], need: int) -> list[tuple[str, str]] | None:
-        if need == 0:
-            return []
-        chosen: list[tuple[float, str, str]] = []
-        used_str = {key_s}
-        for tv, name, ts in pool:
-            if ts in used_str:
-                continue
-            if all(abs(tv - cv) >= max(abs_min, rel * 0.65 * max(abs(cv), abs(tv), 1e-9)) for cv, _, _ in chosen):
-                chosen.append((tv, name, ts))
-                used_str.add(ts)
-                if len(chosen) == need:
-                    return [(n, s) for _, n, s in chosen]
-        return None
-
     n_below = n_distractors - n_above
     if n_above < 0 or n_below < 0:
         return None
-    pa = select(above, n_above)
-    if pa is None:
+    info = {name: (tv, ts) for tv, name, ts in above + below}
+
+    def fits(vals: list[Any]) -> bool:
+        texts = [fmt(v) for v in vals]
+        if len(set(texts)) != len(texts) or key_s in texts:
+            return False
+        fv = [float(v) for v in vals]
+        if any(abs(x - kv) < max(abs_min, rel * max(abs(kv), 1e-9)) for x in fv):
+            return False
+        return all(abs(x - y) >= max(abs_min, rel * 0.65 * max(abs(x), abs(y), 1e-9))
+                   for x, y in itertools.combinations(fv, 2))
+
+    def control(x: float) -> Any:
+        """Контрольное значение: число, округлённое так, как его покажет fmt (иначе None)."""
+        if not math.isfinite(x) or x <= 0:
+            return None
+        v: Any = round(x) if isinstance(key_val, int) or (isinstance(key_val, Fraction) and key_val.denominator == 1) \
+            else x
+        try:
+            t = fmt(v)
+            back = _num_of(t)
+        except Exception:  # noqa: BLE001
+            return None
+        if back is None:
+            return None
+        if isinstance(v, int):
+            return v if v > 0 else None
+        return back if back > 0 and fmt(back) == t else None
+
+    # варианты — ровно по шкале, ранг ключа задан заранее; резервные «_fb_*» модели и контрольные «_fb_ctl*» —
+    # только если без них набор не собрать (аудит 21.10: иначе ключ выдают «ближайший к среднему»)
+    picked = spread_pick(rng, kv, [n for _, n, _ in below], [n for _, n, _ in above], n_below, n_above,
+                         lambda n: info[n][0], fits, fallback=lambda n: n.startswith("_fb_"), prefer=trap_first,
+                         control=control if allow_controls else None, min_step=max(0.15, 1.6 * rel))
+    if picked is None:
         return None
-    pb = select(below, n_below)
-    if pb is None:
+    return [(n, info[n][1] if n in info else fmt(v)) for n, v in picked]
+
+
+_NUM_RX = re.compile(r"-?\d[\d\u00a0 ]*(?:,\d+)?")
+
+
+def _num_of(text: str) -> float | None:
+    m = _NUM_RX.search(text)
+    if not m:
         return None
-    return pa + pb
+    return float(m.group(0).replace("\u00a0", "").replace(" ", "").replace(",", "."))
 
 
 def numeric_variant(
@@ -278,7 +308,8 @@ def numeric_variant(
     else:
         opts, key = place(family_id, seed, rng, (key_str, None), [(s, None) for _, s in picked])
     shown = {o.id: o.text for o in opts}
-    prog = _CHECK_TMPL.format(model=model.strip(), params=repr(P), options=repr(shown), key=key)
+    ctl_strs = sorted(st for n, st in picked if n.startswith("_fb_ctl"))
+    prog = _CHECK_TMPL.format(model=model.strip(), params=repr(P), options=repr(shown), key=key, controls=ctl_strs)
     chk = Check(name="model_and_traps", runner="python", program=prog, expect="stdout_equals",
                 expected_stdout=key, embeds_display_code=False)
     ctx_name = ctx if isinstance(ctx, str) else ctx[0]
@@ -287,15 +318,15 @@ def numeric_variant(
         expl = explain(P, ans, trap_dict if not stratified else trap_names)
     except Exception:
         expl = explain(P, ans, trap_names)
+    val_of = {n: s for n, s in picked}
+    ctrl = [f"«{val_of[n]}»" for n in trap_names if n.startswith("_fb_")]
     if trap_desc:
-        val_of = {n: s for n, s in picked}
         real = [f"«{val_of[n]}» — {trap_desc[n]}" for n in trap_names if n in trap_desc and not n.startswith("_fb_")]
-        ctrl = [f"«{val_of[n]}»" for n in trap_names if n.startswith("_fb_")]
         if real:
             expl = f"{expl} Дистракторы — типичные ошибки: {'; '.join(real)}."
-        if ctrl:
-            expl = (f"{expl} Контрольные значения рядом с ответом (не связаны с конкретной ошибкой): "
-                    f"{', '.join(ctrl)}.")
+    if ctrl:
+        expl = (f"{expl} Контрольные значения рядом с ответом (не связаны с конкретной ошибкой): "
+                f"{', '.join(ctrl)}.")
     return build_variant(
         family_id, seed,
         stem=stem(P, ctx),

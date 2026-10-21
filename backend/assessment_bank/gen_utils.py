@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import difflib
 import hashlib
+import itertools
+import math
 import random
 import textwrap
 from typing import Any, Callable, Iterable, Sequence
@@ -169,3 +171,87 @@ def pick_ranked(rng: random.Random, good: Any, pool: dict[str, Any], n_below: in
         if len(set(texts)) == len(texts):
             return picked
     return None
+
+
+def spread_pick(rng: random.Random, good: Any, below: Sequence[str], above: Sequence[str], n_below: int,
+                n_above: int, value: Callable[[str], Any], ok: Callable[[list[Any]], bool] | None = None,
+                fallback: Callable[[str], bool] | None = None, prefer: str | None = None,
+                control: Callable[[float], Any] | None = None, min_step: float = 0.15,
+                slack: float = 1.3, cap: int = 9) -> list[tuple[str, Any]] | None:
+    """Выбрать ловушки (``n_below`` ниже ключа, ``n_above`` выше) так, чтобы варианты стояли на шкале РОВНО.
+
+    Зачем (аудит банка 21.10, «решатель без знаний»): ловушки — грубые ошибки, они часто далеко от ключа, и ключ
+    оказывается «в середине кучи» или в стороне от неё; тогда его выдают «ближайший к среднему» и «центр кластера»
+    без знания предмета. Если зазоры между соседними вариантами примерно одинаковы (в логарифмической шкале для
+    положительных чисел), форма набора не зависит от того, где ключ, а ранг ключа задан заранее (``n_below``) —
+    позиционные эвристики дают уровень случайного выбора.
+
+    Перебираются сочетания (не больше ``cap`` кандидатов с каждой стороны); ``ok(значения ловушек)`` — прочие
+    требования к набору (различные подписи, минимальный зазор). Сначала берутся наборы с наименьшим числом резервных
+    (``fallback``) значений, затем — содержащие ``prefer``; из наборов с неравномерностью не хуже ``slack`` × лучшая
+    выбирается случайный.
+
+    ``control`` — если ловушек с нужной стороны не хватает, набор продолжается КОНТРОЛЬНЫМИ значениями «_fb_ctl*»
+    с тем же шагом, что у уже выбранных вариантов (не меньше ``min_step`` в логарифмической шкале); ``control(x)``
+    приводит число к допустимому виду (округление) или возвращает None. Контрольные значения не моделируют
+    ошибку — вызывающий обязан так их и назвать в разборе. Результат — [(имя, значение)] или None.
+    """
+    if n_below < 0 or n_above < 0:
+        return None
+    bl, ab = list(below)[:cap], list(above)[:cap]
+    g = float(good)
+    pos = g > 0 and all(float(value(n)) > 0 for n in bl + ab)
+    tr = (lambda x: math.log(float(x))) if pos else (lambda x: float(x))
+    itr = (lambda y: math.exp(y)) if pos else (lambda y: y)
+    step0 = math.log(1 + min_step) if pos else abs(g) * min_step or min_step
+
+    def collect(s_b: int, s_a: int) -> list[tuple[int, int, float, list[tuple[str, Any]]]]:
+        out = []
+        if len(bl) < n_below - s_b or len(ab) < n_above - s_a:
+            return out
+        for cb in itertools.combinations(bl, n_below - s_b):
+            for ca in itertools.combinations(ab, n_above - s_a):
+                real = [(n, value(n)) for n in list(cb) + list(ca)]
+                variants = [real]
+                if s_b or s_a:
+                    variants = []
+                    pts = sorted([tr(g)] + [tr(v) for _, v in real])
+                    mean_gap = (pts[-1] - pts[0]) / (len(pts) - 1) if len(pts) > 1 else step0
+                    for step in sorted({max(step0, mean_gap), step0}, reverse=True):
+                        extra = [control(itr(pts[0] - step * j)) for j in range(1, s_b + 1)]
+                        extra += [control(itr(pts[-1] + step * j)) for j in range(1, s_a + 1)]
+                        if any(x is None or (pos and float(x) <= 0) for x in extra):
+                            continue
+                        variants.append(real + [(f"_fb_ctl{j}", x) for j, x in enumerate(extra, 1)])
+                for items in variants:
+                    if sum(1 for _, v in items if v < good) != n_below or \
+                            sum(1 for _, v in items if v > good) != n_above:
+                        continue
+                    if ok is not None and not ok([v for _, v in items]):
+                        continue
+                    pts = sorted([tr(g)] + [tr(v) for _, v in items])
+                    gaps = [b - a for a, b in zip(pts, pts[1:])]
+                    if not gaps or min(gaps) <= 0:
+                        continue
+                    n_fb = sum(1 for n, _ in items if n.startswith("_fb_") or (fallback is not None and fallback(n)))
+                    out.append((n_fb, 0 if (prefer is None or prefer in [n for n, _ in items]) else 1,
+                                max(gaps) / min(gaps), items))
+        return out
+
+    cands = collect(0, 0)
+    if not cands and control is not None:
+        levels = sorted(((sb, sa) for sb in range(n_below + 1) for sa in range(n_above + 1) if sb + sa),
+                        key=lambda t: (t[0] + t[1], t))
+        for sb, sa in levels:
+            cands = collect(sb, sa)
+            if cands:
+                break
+    if not cands:
+        return None
+    m_fb = min(c[0] for c in cands)
+    cands = [c for c in cands if c[0] == m_fb]
+    m_pr = min(c[1] for c in cands)
+    cands = [c for c in cands if c[1] == m_pr]
+    best = min(c[2] for c in cands)
+    pool = [c[3] for c in cands if c[2] <= best * slack + 1e-12]
+    return list(rng.choice(pool))
