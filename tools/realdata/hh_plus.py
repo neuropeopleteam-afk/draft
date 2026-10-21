@@ -382,6 +382,9 @@ def match(limit: int) -> None:
     # implied) и потолок — какая доля обязательных навыков вакансии вообще может быть подтверждена тестом
     cov_best_t, ceil_v = defaultdict(list), defaultdict(list)
     compare = os.environ.get("HH_MATCH_COMPARE", "1") != "0"
+    # HH_MATCH_DIR_CONTROL=NEED_TITLE_ROLE — посчитать направление ещё и с выключенным флагом (только разбор, без подборки)
+    dir_control = os.environ.get("HH_MATCH_DIR_CONTROL") or ""
+    errors_ctrl: list[dict] = []
     if os.environ.get("HH_MATCH_MAX"):  # только проверка скрипта на наборе разработки (отложенный — запрещено)
         if "holdout" in str(CORPUS):
             sys.exit("HH_MATCH_MAX с отложенным набором запрещён")
@@ -422,6 +425,13 @@ def match(limit: int) -> None:
                 c["dir_ok"] += ok
                 if not ok:
                     errors.append({"id": it["id"], "field": "direction", "expected": d, "actual": r.get("direction")})
+                if dir_control:  # контроль, записанный в протоколе ДО прогона: тот же разбор без правила dir-v2
+                    rc = _parse_with(dir_control, text_of(v))
+                    okc = rc.get("direction") == d
+                    c["dir_ok_ctrl"] += okc
+                    if not okc:
+                        errors_ctrl.append({"id": it["id"], "field": "direction", "expected": d,
+                                            "actual": rc.get("direction")})
             gt = lb["grade_title"]
             if gt:
                 c["grade_labelled"] += 1
@@ -539,10 +549,31 @@ def match(limit: int) -> None:
            # все расхождения направления и грейда с метками hh.ru — для независимой проверки спорных меток
            # (hh_holdout.py adjudicate, протокол docs/realdata/hh_holdout_PROTOCOL.md)
            "disputed": [e for e in errors if e["field"] in ("direction", "grade")]}
+    if dir_control:
+        out["direction_control"] = {
+            "flag": f"{dir_control}=0", "direction_ok": _share(sum(c["dir_ok_ctrl"] for c in per.values()),
+                                                             sum(c["dir_labelled"] for c in per.values())),
+            "by_direction": {d: _share(c["dir_ok_ctrl"], c["dir_labelled"]) for d, c in sorted(per.items())
+                             if c["dir_labelled"]},
+            "disputed": errors_ctrl,
+            "what": f"Контроль: тот же код и тот же набор, направление разобрано с {dir_control}=0 (без правила "
+                    f"роли в названии, dir-v2) — для сравнения «до/после» на одном прогоне."}
     OUT_MATCH.parent.mkdir(parents=True, exist_ok=True)
     OUT_MATCH.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     MD_MATCH.write_text(render_match(out), encoding="utf-8")
     print(json.dumps({k: out[k] for k in ("n", "overall", "catalog_only")}, ensure_ascii=False, indent=1))
+
+
+def _parse_with(flag: str, text: str) -> dict:
+    """parse_need с выключенным флагом (flag=0) и восстановлением окружения."""
+    from app.modules.matching import need_parser
+
+    prev = os.environ.get(flag)
+    os.environ[flag] = "0"
+    try:
+        return need_parser.parse_need(text, use_llm=False)
+    finally:
+        os.environ.pop(flag) if prev is None else os.environ.__setitem__(flag, prev)
 
 
 def _share(a: int, b: int) -> dict:
