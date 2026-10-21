@@ -1,0 +1,246 @@
+{
+ "phase": "train",
+ "n_per_seed": 120,
+ "seeds": [
+  1201,
+  1202,
+  1203,
+  1204,
+  1205,
+  1206,
+  1207,
+  1208,
+  1209,
+  1210
+ ],
+ "common_args": [
+  "--retest"
+ ],
+ "note": "TRAIN — правило решения v2 (21.10 вечер, до FINAL №3): V0 = настройки FINAL №2 (STAND_ENV), V1–V11 — изменения поверх; S_* — стандартные условия (S-T мир), T_* — жёсткие; выбор — tools/publish/train_choice_v2.py по docs/validation/RULE_V2_2110.md (записано до запуска)",
+ "variants": {
+  "V0": {},
+  "V1": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80"
+  },
+  "V2": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_ALPHA": "0.03"
+  },
+  "V3": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_ALPHA": "0.03",
+   "ASSESSMENT_SPRT_DELTA": "0.35"
+  },
+  "V4": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_ALPHA": "0.03",
+   "ASSESSMENT_SPRT_DELTA": "0.35",
+   "ASSESSMENT_SPRT_BETA": "0.05"
+  },
+  "V5": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_ALPHA": "0.03",
+   "ASSESSMENT_TIME_WEIGHT": "0.5"
+  },
+  "V6": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_ALPHA": "0.03",
+   "ASSESSMENT_CLASSIFY_Z": "1.64"
+  },
+  "V7": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_ALPHA": "0.03",
+   "ASSESSMENT_EXPOSURE": "randomesque",
+   "ASSESSMENT_RANDOMESQUE_K": "3"
+  },
+  "V8": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_ALPHA": "0.03",
+   "ASSESSMENT_MIN_ITEMS": "12"
+  },
+  "V9": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "32",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "90",
+   "ASSESSMENT_SPRT_ALPHA": "0.03",
+   "ASSESSMENT_SPRT_DELTA": "0.40"
+  },
+  "V10": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_ALPHA": "0.03",
+   "ASSESSMENT_SPRT_DELTA": "0.35",
+   "ASSESSMENT_TIME_WEIGHT": "0.5"
+  },
+  "V11": {
+   "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+   "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+   "ASSESSMENT_SPRT_ALPHA": "0.03",
+   "ASSESSMENT_MAX_ITEMS": "24"
+  }
+ },
+ "configs": {
+  "S_V0": {
+   "env": {},
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V0": {
+   "env": {},
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V1": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V1": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80"
+   },
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V2": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_SPRT_ALPHA": "0.03"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V2": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_SPRT_ALPHA": "0.03"
+   },
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V3": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_SPRT_ALPHA": "0.03",
+    "ASSESSMENT_SPRT_DELTA": "0.35"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V3": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_SPRT_ALPHA": "0.03",
+    "ASSESSMENT_SPRT_DELTA": "0.35"
+   },
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V4": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_SPRT_ALPHA": "0.03",
+    "ASSESSMENT_SPRT_DELTA": "0.35",
+    "ASSESSMENT_SPRT_BETA": "0.05"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V4": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_SPRT_ALPHA": "0.03",
+    "ASSESSMENT_SPRT_DELTA": "0.35",
+    "ASSESSMENT_SPRT_BETA": "0.05"
+   },
+   "args": [
+    "--fixed"
+   ]
+  },
+  "S_V5": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_SPRT_ALPHA": "0.03",
+    "ASSESSMENT_TIME_WEIGHT": "0.5"
+   },
+   "args": [
+    "--world",
+    "st",
+    "--population",
+    "st",
+    "--bank-a",
+    "mcq=1.5,code=1.5",
+    "--fixed"
+   ]
+  },
+  "T_V5": {
+   "env": {
+    "ASSESSMENT_CONTESTED_MAX_ITEMS": "30",
+    "ASSESSMENT_CONTESTED_MAX_MINUTES": "80",
+    "ASSESSMENT_SPRT_ALPHA": "0.03",
+    "ASSESSMENT_TIME_WEIGHT": "0.5"
+   },
+   "args": [
+    "--fixed"
+   ]
+  }
+ },
+ "part_of": "TRAIN_PLAN_2110d.json"
+}

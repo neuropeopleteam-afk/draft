@@ -997,6 +997,12 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   const v = r.verdict ?? r.details?.verdict;
+  // А19 №5: решение и вероятность — один раз, в карточке вердикта; в пояснении ниже — только остальное
+  const explRest: string = (() => {
+    const e = String(r.explanation ?? "").trim();
+    const ve = String(v?.explanation ?? "").trim();
+    return ve && e.startsWith(ve) ? e.slice(ve.length).trim() : e;
+  })();
   const title = r.mode === "refine" && r.two_stage?.refine ? (r.two_stage.status === "passed" ? "Уточнение уровня пройдено" : "Уточнение не подтвердило уровень у границы")
     : r.accepted_lower ? `Принят уровень ${GRADE_TITLE_ALL[r.accepted_lower] ?? r.accepted_lower}`
     : r.confirmed && r.grade_preliminary ? `${GRADE_TITLE_ALL[r.grade_preliminary.grade] ?? r.grade_preliminary.grade} по тесту — предварительно`
@@ -1067,7 +1073,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       <DefensePanel sessionId={sessionId} live="auto" />
       {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}
       {r.two_stage && r.mode !== "refine" && r.two_stage.boundary && !extStage && <TwoStageOffer t={r.two_stage} claimed={r.claimed_grade} direction={r.direction} />}
-      <div className="card mt-4 text-sm text-brand-ink/75">{plainText(r.explanation)}</div>
+      {explRest && <div className="card mt-4 text-sm text-brand-ink/75">{plainText(explRest)}</div>}
       {r.level_position && <p className="mt-2 text-sm text-brand-ink/80" data-testid="level-position">Позиция внутри уровня {r.level_position.grade_title}: <b>{r.level_position.text}</b>{r.level_position.known ? " — по точности этого теста" : " (точнее этот тест пока сказать не может)"}</p>}
       {(r.confirmed || r.accepted_lower) && <p className="mt-3 text-xs text-brand-ink/65">Грейд — уровень навыков, подтверждённый этим тестом. Стаж в годах остаётся справкой в профиле и на грейд не влияет.</p>}
       {r.details?.n_scored != null && (

@@ -69,6 +69,19 @@ from app.modules.assessment.grades import (GRADE_RU, category_level, confirm_pct
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.skill_map import stack_gate, to_stack_tags
 from app.modules.assessment.weak_pool import weak_excluded
+from app.modules.assessment.display import display_stem
+
+
+_EXPRESS_EXCLUDE = Path(__file__).resolve().parent / "express_exclude.json"
+
+
+@lru_cache(maxsize=1)
+def express_excluded() -> frozenset[str]:
+    """Семейства, исключённые только из выбора экспресс-теста (express_exclude.json, список А3 21.10)."""
+    try:
+        return frozenset(json.loads(_EXPRESS_EXCLUDE.read_text(encoding="utf-8")).get("out_of_range_family_ids") or [])
+    except (OSError, ValueError):
+        return frozenset()
 from app.modules.catalog import levels as grade_levels
 from app.modules.catalog.seed_data import EXT_GRADE_ORDER
 
@@ -201,6 +214,8 @@ class BankEngine:
                 "select_at": s.assessment_select_at, "ext_own_first": s.assessment_extension_own_first,
                 "subpools": max(1, s.assessment_subpools),
                 "exposure": s.assessment_exposure,
+                # randomesque: k пишется в состояние сессии только в этом режиме — прежние сессии не меняются
+                **({"randomesque_k": max(1, int(s.assessment_randomesque_k))} if s.assessment_exposure == "randomesque" else {}),
                 "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer},
                 # частичный балл 0–4 (GPCM) — ключ только при флаге: сессии без него и прежние — как раньше
                 **({"partial_credit": True, "partial_credit_select": bool(s.assessment_partial_credit_select)}
@@ -703,12 +718,15 @@ class BankEngine:
         excl = set(stack_excluded(state.get("stack")))
         # Чистка пула (ASSESSMENT_WEAK_EXCLUDE, по умолчанию выкл.): слабые по калибровке семейства не выдаются
         excl.update(weak_excluded(self._settings()))
+        if state.get("mode") == "express":  # А19 (обход 2) / А3: варианты вне ряда ответов — только экспресс, основной тест как был
+            excl.update(express_excluded())
         if state["claimed_grade"] == "intern":
             excl.update(intern_exclusions(pool, state["direction"]))
         kw = dict(max_per_format=cfg.get("max_per_format", {}), max_item_time_s=cfg.get("max_item_time_s"),
                   code_open_share=cfg.get("code_open_share", 0.0 if state.get("mode") == "express" else 1.0 / 3.0),
                   exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl,
-                  seen=state.get("seen"), ext_lru=state.get("mode") in ("confirm", "refine"))
+                  seen=state.get("seen"), ext_lru=state.get("mode") in ("confirm", "refine"),
+                  randomesque_k=int(cfg.get("randomesque_k") or 0) if cfg.get("exposure") == "randomesque" else 0)
         if cfg.get("sprt"):  # поправка №2: SPRT у заявленного порога, угадывание по фактическому варианту
             from app.modules.assessment.sprt import public_guess
 
@@ -1050,7 +1068,7 @@ class BankEngine:
         c = state["cfg"]
         return ItemPublic(
             item_id=it["token"], position=it["position"], total=self._total_est(state), format=it["format"],
-            stem=ai_mark.apply(it["public"]["stem"], it.get("ai_mark")), options=self._step_options(it, k),
+            stem=ai_mark.apply(display_stem(it["public"]["stem"]), it.get("ai_mark")), options=self._step_options(it, k),
             code=it["public"]["code"],
             code_language=it["language"], time_limit_s=int(it["time_limit_s"]), skills=it["skills"],
             answer_kind=self._answer_kind(it, k), step=k if is_ob3 else None, steps_total=3 if is_ob3 else None,
@@ -1098,6 +1116,8 @@ class BankEngine:
             GRADES.index(k) if k in GRADES else -1))
         ps = "более 99 %" if p > 0.99 else ("менее 1 %" if p < 0.01 else f"{p * 100:.0f} %")
         if vd and vd.get("explanation"):
+            # пояснение начинается с решения вердикта (одна вероятность, один порог); на экране итога повтор не выводится:
+            # фронтенд показывает только остаток после vd.explanation (А19 №5). Текст целиком нужен там, где карточки нет.
             s = vd["explanation"]
             if vd.get("status") == "not_confirmed":
                 s += " Принудительного понижения нет: можно пройти полный тест."

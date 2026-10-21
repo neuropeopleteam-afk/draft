@@ -246,8 +246,10 @@ class Settings(BaseSettings):
     # Утёкший субпул — в карантин: ASSESSMENT_SUBPOOL_QUARANTINE=0 (номера через запятую)
     assessment_subpools: int = 2
     assessment_subpool_quarantine: str = ""
-    # Контроль частоты показа: sympson_hetter (K_f из assessment/exposure_k.json) | none
+    # Контроль частоты показа: sympson_hetter (K_f из assessment/exposure_k.json) | randomesque | none
     assessment_exposure: str = "sympson_hetter"
+    # randomesque (правило v2, TRAIN): ASSESSMENT_EXPOSURE=randomesque — случайное из k лучших по информации заданий
+    assessment_randomesque_k: int = 3
     # Я22: порог уверенности решения по грейду — подтверждение заявленного грейда и «принять уровень ниже»:
     # P(θ ≥ порога) ≥ значения. 0,6 — по перебору на симуляции всего пути (docs/validation/GRADE_ACCURACY.md): точно
     # истинный уровень 64 % против 57 % при 0,8, завышение 6,5 % (≤ 7 %), κw повтора 0,874 против 0,844, время то же.
