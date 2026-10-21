@@ -48,6 +48,7 @@ def _plan_view(pl):
 def test_pack2_build_export_import(client, monkeypatch):
     # пакет v2 размечен по порядку match-v1.2 — сверяем с продуктом без добора ступенью выше (Я12б, test_grade_above)
     monkeypatch.setenv("MATCH_GRADE_ABOVE", "0")
+    monkeypatch.setenv("MATCH_V2", "0")  # пакет v2 экспертов — порядок match-v1.2 (pack2.match_order), сверка с v1-путём
     from app.modules.experts import pack2
     from app.modules.experts.models import ExpertItem, ExpertLabel, ExpertPanelist
     from app.modules.matching import ranking

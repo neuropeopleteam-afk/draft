@@ -44,6 +44,8 @@ def _order(text: str, filters: dict | None = None) -> tuple[list[str], dict]:
 
 # ---------------------------------------------------------------- ярусы обязательного
 def test_tiers_put_full_required_first_and_flag_restores_old_order(client, monkeypatch):
+    monkeypatch.setenv("MATCH_V2", "0")  # ярусы обязательного и флаг MATCH_MUST_FIRST — match-v1.1+; в match-v2 их
+    # роль у каскада стека (сначала все обязательные, затем часть) — test_a5_match_v2::test_cascade_hides_nobody…
     a, _ = _cand(client, 0, FULL)
     b, _ = _cand(client, 1, NO_PG)
     c, _ = _cand(client, 2, TWO)
@@ -115,7 +117,8 @@ def test_missing_line_lists_up_to_three(client):
     assert m["missing"] == ["FastAPI", "PostgreSQL", "Redis"] and m["missing_more"] == 1 and m["tier"] == 2
 
 
-def test_api_selection_shows_must_and_candidate_detail(client):
+def test_api_selection_shows_must_and_candidate_detail(client, monkeypatch):
+    monkeypatch.setenv("MATCH_V2", "0")  # поля must_first/ярусы — подборка match-v1.1+; в match-v2 — stack_filter
     a, _ = _cand(client, 0, FULL)
     b, _ = _cand(client, 1, NO_PG)
     e = employer(client)
