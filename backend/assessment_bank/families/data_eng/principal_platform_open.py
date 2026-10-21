@@ -41,7 +41,7 @@ def _build(rng, ctx):
              growth=rng.choice([40, 60, 80]), cold=rng.choice([50, 65, 80]), incidents=rng.choice([9, 14, 22]),
              minutes=rng.choice([5, 15, 30]), share=rng.choice([10, 15, 25]), people=rng.choice([6, 10, 14]))
     pain = P["text"].format(**v)
-    stem = (f"Вы — главный инженер данных (Principal), компания — {ctx}. MPP-хранилище на {v['tb']} ТБ, "
+    stem = (f"Вы — главный инженер данных, компания — {ctx}. MPP-хранилище на {v['tb']} ТБ, "
             f"{v['pipelines']} конвейеров ведёт центральная команда из {v['people']} человек, данные поставляют "
             f"{v['domains']} доменных команд. Главная боль: {pain}. Руководство спрашивает, переходить ли на "
             f"lakehouse «целиком».\n\n"
