@@ -76,7 +76,7 @@ function note(s, text, { x = 0.45, y = 6.42, w = 12.4, h = 0.45, size = 9.5 } = 
 }
 const bullets = (arr, opt = {}) => arr.map((t) => ({ text: t, options: { bullet: { indent: 14 }, paraSpaceAfter: 5, ...opt } }));
 
-// ===================== ВЫСТУПЛЕНИЕ: 8 слайдов на ≈2 мин 45 с (текст — docs/presentation/PITCH.md) =====================
+// ===================== ВЫСТУПЛЕНИЕ: 7 слайдов на ≈2,5 мин (текст — docs/presentation/PITCH.md) =====================
 // Дальше — приложение для вопросов жюри (прежние слайды 2–12). Цифры — те же facts.json; нет цифры — «после итогового прогона».
 const pair = (id) => PAIRS.pairs.find((p) => p.id === id) || { label: id };
 const realv = (id) => PAIRS.real.find((r) => r.id === id) || { label: id };
@@ -210,46 +210,6 @@ function numCell(s, x, y, w, v, { size = 26, color = C.white } = {}) {
   note(s, 'Модельные кандидаты, не люди: где кандидаты модельные — это написано рядом с цифрой. Условия, N и команда пересчёта — на сайте, раздел «Как мы проверяем себя».', { y: 6.3 });
 }
 
-
-// ---------- В6а. На чужих данных: открытый генератор другого решения, его же кодом ----------
-// Обе строки рядом (решение владельца 21.10): по умолчанию — где мы ниже, и «строго запрошенный грейд» — с ценой.
-// Названий других решений нет; условие — из NUMBERS.json (external_benchmarks.…1to1.condition_ru).
-if (has('ext_main_ndcg10', 'ext_exact_ndcg10')) {
-  const s = base('На чужих данных');
-  title(s, 'Чужой открытый бенчмарк — его же кодом.\nПоказываем и строку, где мы ниже', { size: 28 });
-  sub(s, 'Генератор кандидатов и вакансий, тест и метки релевантности — из открытого кода другого решения, без изменений; наш подбор — четвёртой выдачей в его процедуре.', { y: 1.98, size: 12, h: 0.5 });
-  const rows = [['ndcg10', 'nDCG@10 — качество порядка'], ['p5', 'Точность в топ-5'], ['p10', 'Точность в топ-10'], ['rr', 'Первый подходящий (MRR)'], ['overrated10', 'Переоценённых в топ-10 ↓']];
-  const X = [0.45, 4.15, 5.95, 7.75, 9.45, 11.45], W = [3.6, 1.7, 1.7, 1.6, 1.95, 1.4], TW = 12.4;
-  const hy = 2.55;
-  card(s, 0.45, hy, TW, 0.62, { transparency: 85 });
-  const heads = [['Метрика', C.white], ['Другое решение,\nего код', C.white], ['Мы —\nпо умолчанию', C.white], ['Разность', C.white], ['Мы — «строго\nзапрошенный грейд»', C.ok], ['Разность', C.ok]];
-  heads.forEach(([t, col], i) => s.addText(t, { x: X[i] + (i ? 0 : 0.2), y: hy + 0.03, w: W[i], h: 0.56, fontFace: FONT, fontSize: 10, bold: true, color: col, valign: 'middle', margin: 0 }));
-  const sign = (f, lowerBetter) => {
-    if (!f) return C.faint;
-    const v = f.value; const good = lowerBetter ? v < 0 : v > 0;
-    const ci = (f.ci || '').match(/[−+]?\d+(?:,\d+)?/g) || [];
-    const num = (t) => parseFloat(t.replace('−', '-').replace(',', '.'));
-    const crosses = ci.length >= 2 && num(ci[1]) * num(ci[ci.length - 1]) <= 0;
-    return crosses ? C.muted : good ? C.ok : 'FF8A98';
-  };
-  rows.forEach(([m, lab], i) => {
-    const y = hy + 0.68 + i * 0.47;
-    if (i % 2 === 0) s.addShape(pptx.ShapeType.rect, { x: 0.45, y, w: TW, h: 0.45, fill: { color: C.white, transparency: 94 }, line: { color: C.white, transparency: 100 } });
-    const low = m === 'overrated10';
-    s.addText(lab, { x: X[0] + 0.2, y, w: W[0], h: 0.45, fontFace: FONT, fontSize: 12, color: C.text, valign: 'middle', margin: 0 });
-    const cells = [[F['ext_other_' + m], C.white], [F['ext_main_' + m], C.white], [F['ext_main_' + m + '_diff'], sign(F['ext_main_' + m + '_diff'], low)], [F['ext_exact_' + m], C.white], [F['ext_exact_' + m + '_diff'], sign(F['ext_exact_' + m + '_diff'], low)]];
-    cells.forEach(([f, col], j) => s.addText(f ? f.text : '—', { x: X[j + 1], y, w: W[j + 1], h: 0.45, fontFace: FONT, fontSize: 14, bold: true, color: col, valign: 'middle', margin: 0 }));
-  });
-  const yb = hy + 0.68 + rows.length * 0.47 + 0.1;
-  s.addText([
-    { text: 'Почему по умолчанию ниже: ', options: { bold: true, color: C.white } },
-    { text: 'мы показываем и кандидатов сильнее запроса, а метка этого генератора считает их лишь «частично подходящими». Если работодателю нужен строго запрошенный грейд — режим (опция подбора в API) точнее по всем четырём метрикам качества, цена — больше переоценённых в топ-10.', options: { color: C.text } },
-  ], { x: 0.45, y: yb, w: TW, h: 0.55, fontFace: FONT, fontSize: 11, margin: 0, valign: 'top' });
-  const cx = F.ext_main_ndcg10;
-  const cond = String(cx.cond).replace(/; проверка:.*$/, '');
-  const rechk = /0 расхождений/.test(String(cx.cond)) ? ' Независимый пересчёт в чистой копии репозитория — 0 расхождений.' : '';
-  note(s, `Условие: ${cond}.${rechk} Режим «строго запрошенный грейд» выбран на зёрнах разработки этого генератора, отчётные зёрна — другие. Зелёный — лучше, красный — хуже, серый — разница в пределах 95 % ДИ. Команда пересчёта — приложение Б документации.`, { y: 6.08, h: 0.8, size: 8.5 });
-}
 
 // ---------- В7. ФСП и команда ----------
 {
