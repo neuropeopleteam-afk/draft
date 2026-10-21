@@ -14,7 +14,7 @@ import { useAuth } from "../lib/auth";
 import { juryLogin } from "../lib/jury";
 import { ElenaEngine, findTarget, tabbarInset, topInset, type ElenaUi, type Stage } from "./elena/engine";
 import { TOUR_STEPS, type TourTrack } from "./elena/steps";
-import { AnamAvatar, type AnamHandle } from "./voice";
+import { AnamAvatar, preloadAnamSdk, type AnamHandle } from "./voice";
 
 export { TOUR_STEPS };
 export type { TourTrack };
@@ -228,6 +228,8 @@ export function InteractiveAvatarTour() {
   // окно в углу уходит в другой угол, когда подсвеченный блок оказывается под ним
   const [dodge, setDodge] = useState(false);
   const freeSince = useRef(0);
+  // старт быстрее (владелец 21.10 22:20): библиотека видеопотока грузится заранее, через 2 с после открытия страницы
+  useEffect(() => { const t = window.setTimeout(preloadAnamSdk, 2000); return () => window.clearTimeout(t); }, []);
   useEffect(() => {
     if (!open || !ui || ui.stage !== "corner") { setDodge(false); return; }
     const check = () => {
@@ -411,7 +413,8 @@ export function InteractiveAvatarTour() {
   // подпись кнопки — честно о том, что происходит: думает, говорит (перебить можно), слушает
   const micOn = ui.mic === "on";
   const listening = micOn && ui.hearing && !ui.speaking && ui.phase !== "thinking";
-  const micText = micOn && ui.userTalking ? "Слышу вас"
+  const micText = ui.phase === "connecting" ? "Подключаюсь…"
+    : micOn && ui.userTalking ? "Слышу вас"
     : micOn && ui.phase === "thinking" ? "Думаю…"
     : micOn && ui.speaking ? "Говорю"
     : listening ? (large && !f.small ? lbl.long : lbl.short)
