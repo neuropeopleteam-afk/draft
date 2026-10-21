@@ -1,0 +1,16 @@
+{
+ "tag": "pod_20",
+ "host": "http://127.0.0.1:18121",
+ "users": 20,
+ "ramp_per_s": 2.0,
+ "time": "3m",
+ "burst_at_s": 0,
+ "burst_n": 0,
+ "user_agent": "spectrek-load/pod_20",
+ "start": "2026-10-21T17:44:04+0000",
+ "route": "напрямую",
+ "users_after_ramp": 20,
+ "end": "2026-10-21T17:47:39+0000",
+ "locust_exit": 0,
+ "users_max": 20
+}
