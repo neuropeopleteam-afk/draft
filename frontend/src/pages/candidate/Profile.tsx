@@ -11,7 +11,14 @@ import { LlmOff } from "../../components/LlmOff";
 export default function Profile() {
   const { me, refresh } = useAuth();
   const c: any = me?.candidate ?? {};
-  const [form, setForm] = useState({ full_name: c.full_name ?? "", phone: c.phone ?? "", telegram: c.telegram ?? "" });
+  const ageGroup = c.age_group ?? "18+";
+  const maxExpByAge = ageGroup === "14-15" ? 1 : ageGroup === "16-17" ? 3 : 45;
+  const [form, setForm] = useState({
+    full_name: c.full_name ?? "",
+    phone: c.phone ?? "",
+    telegram: c.telegram ?? "",
+    experience_years: c.experience_years != null ? String(c.experience_years) : "",
+  });
   const [msg, setMsg] = useState<{ k: "ok" | "error"; t: string } | null>(null);
   const resume = useApi<any>("/me/resume");
   const card = useApi<any>("/me/card");
@@ -20,12 +27,40 @@ export default function Profile() {
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const expVal = form.experience_years.trim();
+  const expNum = Number(expVal);
+  const expOutOfRange = expVal !== "" && !(expNum >= 0 && expNum <= 45);
+  const expExceedsAge = expVal !== "" && !expOutOfRange && expNum > maxExpByAge;
+  const expBad = expOutOfRange || expExceedsAge;
+  const expErrMsg = expExceedsAge
+    ? `Стаж не может быть больше возраста минус 14 лет (для возрастной группы ${ageGroup} — максимум ${maxExpByAge} г.)`
+    : "Стаж — от 0 до 45 лет (и не больше, чем возраст минус 14 лет)";
+
   async function saveContacts(extra?: Partial<typeof form>) {
     setMsg(null);
+    const body = { ...form, ...extra };
+    const ev = body.experience_years.trim();
+    if (ev !== "") {
+      const n = Number(ev);
+      if (!(n >= 0 && n <= 45)) {
+        setMsg({ k: "error", t: "Стаж — от 0 до 45 лет (и не больше, чем возраст минус 14 лет)" });
+        return;
+      }
+      if (n > maxExpByAge) {
+        setMsg({ k: "error", t: `Стаж не может быть больше возраста минус 14 лет (для возрастной группы ${ageGroup} — максимум ${maxExpByAge} г.)` });
+        return;
+      }
+    }
     try {
-      const body = { ...form, ...extra };
-      await api("/me/candidate-profile", { method: "PATCH", body: { full_name: body.full_name || null, phone: body.phone || null, telegram: body.telegram || null } });
-      setForm(body); await refresh(); setMsg({ k: "ok", t: "Контакты сохранены. Работодатель увидит их только после того, как вы примете приглашение." });
+      const patchBody: Record<string, unknown> = {
+        full_name: body.full_name || null,
+        phone: body.phone || null,
+        telegram: body.telegram || null,
+      };
+      if (ev !== "") patchBody.experience_years = Number(ev);
+      await api("/me/candidate-profile", { method: "PATCH", body: patchBody });
+      setForm(body); await refresh(); await card.reload();
+      setMsg({ k: "ok", t: "Контакты сохранены. Работодатель увидит их только после того, как вы примете приглашение." });
     } catch (e) { setMsg({ k: "error", t: errText(e) }); }
   }
 
@@ -52,13 +87,17 @@ export default function Profile() {
       <YouthProfile onSaved={() => { void card.reload(); }} />
       <section className="card">
         <h2 className="font-bold text-brand-night">Контакты</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Имя и фамилия" htmlFor="fn"><input id="fn" className="input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
           <Field label="Телефон" htmlFor="ph"><input id="ph" className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+7 900 000-00-00" /></Field>
           <Field label="Telegram" htmlFor="tg"><input id="tg" className="input" value={form.telegram} onChange={(e) => setForm({ ...form, telegram: e.target.value })} placeholder="@username" /></Field>
+          <Field label="Коммерческий стаж, лет" htmlFor="profile-exp" hint={expBad ? undefined : maxExpByAge < 45 ? `От 0 до ${maxExpByAge} лет (не больше возраста − 14)` : "От 0 до 45 лет (не больше возраста − 14)"}>
+            <input id="profile-exp" type="number" min={0} max={maxExpByAge} step={0.5} className="input" value={form.experience_years} onChange={(e) => setForm({ ...form, experience_years: e.target.value })} aria-invalid={expBad} aria-describedby={expBad ? "profile-exp-err" : undefined} />
+            {expBad && <p id="profile-exp-err" role="alert" className="mt-1 text-xs font-semibold text-brand-plum">{expErrMsg}</p>}
+          </Field>
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
-          <button className="btn-primary" onClick={() => saveContacts()}>Сохранить контакты</button>
+          <button className="btn-primary" disabled={expBad} onClick={() => saveContacts()}>Сохранить контакты</button>
           <button className="btn-ghost" onClick={() => apiDownload("/me/profile.pdf", `profile-${c.public_ref ?? "me"}.pdf`).catch((e) => setMsg({ k: "error", t: errText(e) }))}>Скачать PDF-профиль</button>
         </div>
         <p className="mt-3 text-xs text-brand-ink/65">Все данные одним файлом и удаление учётной записи — в разделе <Link className="font-semibold text-brand hover:underline" to="/candidate/mydata">«Мои данные»</Link>.</p>

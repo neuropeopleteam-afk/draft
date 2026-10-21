@@ -3,9 +3,48 @@ from decimal import Decimal
 from typing import Literal
 import uuid
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.core.enums import UserRole, WorkFormat
+
+MAX_EXPERIENCE_YEARS = 45.0
+MIN_WORK_AGE = 14
+AGE_GROUP_MAX_AGE = {"14-15": 15, "16-17": 17}
+
+
+def validate_experience_years(
+    exp: float | Decimal | int | None,
+    *,
+    age: int | float | None = None,
+    age_group: str | None = None,
+) -> None:
+    """Проверяет стаж кандидата: 0..45 лет и не больше, чем (возраст − 14), если возраст или возрастная группа известны."""
+    if exp is None:
+        return
+    try:
+        val = float(exp)
+    except (TypeError, ValueError):
+        return
+    if val < 0 or val > MAX_EXPERIENCE_YEARS:
+        raise ValueError("Укажите коммерческий стаж от 0 до 45 лет (и не больше, чем возраст минус 14 лет)")
+    if age is not None:
+        try:
+            age_val = float(age)
+            max_by_age = max(0.0, age_val - MIN_WORK_AGE)
+            if val > max_by_age:
+                raise ValueError(
+                    f"Стаж ({val:g} л.) не может быть больше возраста минус 14 лет (максимум {max_by_age:g} л.)"
+                )
+        except (TypeError, ValueError):
+            pass
+    if age_group in AGE_GROUP_MAX_AGE:
+        max_age = AGE_GROUP_MAX_AGE[age_group]
+        max_by_group = max(0, max_age - MIN_WORK_AGE)
+        if val > max_by_group:
+            raise ValueError(
+                f"Стаж ({val:g} л.) не может быть больше возраста минус 14 лет "
+                f"(для возрастной группы {age_group} — максимум {max_by_group} г.)"
+            )
 
 
 class _ORM(BaseModel):
@@ -58,6 +97,23 @@ class CandidateProfileUpdate(BaseModel):
     salary_min_hidden: int | None = Field(None, gt=0, le=10_000_000)
     # Видимость работодателям управляется согласием на публикацию (POST/DELETE /api/me/consents/publication),
     # видимость отдельных полей — PUT /api/me/privacy.
+
+    @model_validator(mode="before")
+    @classmethod
+    def _check_exp_with_age(cls, data):
+        if isinstance(data, dict) and data.get("experience_years") is not None:
+            validate_experience_years(
+                data.get("experience_years"),
+                age=data.get("age"),
+                age_group=data.get("age_group"),
+            )
+        return data
+
+    @field_validator("experience_years")
+    @classmethod
+    def _check_exp_range(cls, v: Decimal | None) -> Decimal | None:
+        validate_experience_years(v)
+        return v
 
 
 class CompanyOut(_ORM):
