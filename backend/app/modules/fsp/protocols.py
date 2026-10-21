@@ -2,7 +2,7 @@
 и списку кандидатов в спортивные сборные команды РФ на 2026 год.
 
 Соответствие 152-ФЗ:
-- Поиск выполняется по криптографическим SHA-256 хешам: ``key_hash`` (ФИО + год рождения), ``fio_hash`` (ФИО),
+- Поиск выполняется по хешам HMAC-SHA256 (секрет FSP_INDEX_HMAC_KEY): ``key_hash`` (ФИО + год рождения), ``fio_hash`` (ФИО),
   ``team_hash`` (команда), а также по прямому совпадению ``fio_norm``, если индекс его содержит.
 - Путь к индексу задаётся переменной окружения ``FSP_PROTOCOLS_INDEX`` (по умолчанию ``/data_local/fsp_protocols/index.json``
   с резервным путём ``/opt/spectrek_fsp/data_local/fsp_protocols/index.json``).
@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import date
 import hashlib
+import hmac
 import json
 import os
 from pathlib import Path
@@ -90,15 +91,25 @@ def extract_birth_date(raw: str | None) -> tuple[str | None, str | None]:
     return None, None
 
 
+def _person_hash(text: str) -> str:
+    """Хэш персональных данных для индекса: HMAC-SHA256 с секретом FSP_INDEX_HMAC_KEY (152-ФЗ — без секрета
+    хэш ФИО из открытых протоколов обращается перебором). Без секрета — SHA-256 (совместимость с индексами
+    v1–v3; сверка всё равно работает по ФИО на сервере)."""
+    raw = (os.environ.get("FSP_INDEX_HMAC_KEY") or "").strip()
+    if raw:
+        return hmac.new(bytes.fromhex(raw), text.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 def compute_key_hash(fio_norm: str, birth_year: str | None = None) -> str:
-    """SHA-256 от `fio_norm:birth_year` (если год известен) или от `fio_norm`."""
+    """HMAC-SHA256 от `fio_norm:birth_year` (если год известен) или от `fio_norm`."""
     base = f"{fio_norm}:{birth_year}" if (fio_norm and birth_year) else fio_norm
-    return hashlib.sha256(base.encode("utf-8")).hexdigest()
+    return _person_hash(base)
 
 
 def compute_fio_hash(fio_norm: str) -> str:
-    """SHA-256 только от нормализованного ФИО (для поиска без ввода даты рождения)."""
-    return hashlib.sha256(fio_norm.encode("utf-8")).hexdigest()
+    """HMAC-SHA256 только от нормализованного ФИО (для поиска без ввода даты рождения)."""
+    return _person_hash(fio_norm)
 
 
 def compute_team_hash(team_name: str | None) -> str | None:

@@ -41,8 +41,8 @@
 
 ```json
 {
-  "key_hash": "<sha256>",
-  "fio_hash": "<sha256>",
+  "key_hash": "<hmac-sha256>",
+  "fio_hash": "<hmac-sha256>",
   "fio_norm": "<в серверном индексе вне git; в sample_anonymized.json удалено>",
   "birth_date": "<YYYY-MM-DD или YYYY в серверном индексе; в sample_anonymized.json удалено>",
   "discipline": "программирование алгоритмическое",
