@@ -135,16 +135,19 @@ export default function Headline() {
   const gv = getGradeVerdict();
   if (!gv) {
     return (
+      <div data-testid="validation-headline">
       <section id="headline" className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10" data-testid="v-headline">
         <h2 className="text-lg font-extrabold text-brand-night">Точность решения по грейду</h2>
         <p className="mt-2 text-sm text-brand-ink/70">Отчётный прогон симуляции продукта ещё не опубликован.</p>
       </section>
+      </div>
     );
   }
   const m = gv.main;
   const mm = m.minutes_main, mt = m.minutes_total;
   const rows = Object.entries(m.by_claim || {});
   return (
+    <div data-testid="validation-headline">
     <section id="headline" className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10" data-testid="v-headline">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-extrabold text-brand-night">Точность решения по грейду: симуляция продукта</h2>
@@ -226,6 +229,7 @@ export default function Headline() {
         <p className="mt-1">Код: <code>{gv.code_ref}</code>.</p>
       </details>
     </section>
+    </div>
   );
 }
 
