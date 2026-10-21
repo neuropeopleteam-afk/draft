@@ -536,8 +536,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/interview/concierge/turn"): "open",
     ("GET", "/api/interview/concierge/script"): "open",
     ("POST", "/api/interview/concierge/event"): "open",
-    # Счётчики расходов проводника за сегодня (без ПДн: суммы, число адресов, лимиты). Сейчас открыт без входа;
-    # зона чата «Аватар» — закрыть ролью администратора, когда там решат (тогда здесь станет "admin").
+    # Счётчики расходов проводника за сегодня (суммы, число адресов, лимиты) — только администратор (живая ветка
+    # d99e30987, чат «Аватар»).
     ("GET", "/api/interview/concierge/budget"): "admin",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
