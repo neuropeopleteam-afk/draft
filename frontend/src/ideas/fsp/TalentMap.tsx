@@ -43,8 +43,26 @@ interface RegionsMapData {
   total_confirmed: number | null;
   total_real: number | null;
   total_synthetic: number | null;
+  mapped_confirmed?: number | null;
+  mapped_real?: number | null;
   has_synthetic: boolean;
   synthetic_note: string;
+  unspecified_note?: string;
+  city_unspecified?: {
+    id: string;
+    title: string;
+    confirmed: number | null;
+    confirmed_raw?: number;
+    real_confirmed: number | null;
+    real_raw?: number;
+    synthetic_confirmed: number | null;
+    fsp_confirmed: number | null;
+    demand_needs: number;
+    demand_invitations: number;
+    demand_score: number;
+    gap: null;
+    note?: string;
+  };
   districts: DistrictRow[];
   recommendations: {
     district_id: string;
@@ -401,7 +419,23 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
               </div>
             )}
           </div>
-          {demoUi && <p className="mt-3 text-[11px] text-brand-ink/60">{data.synthetic_note}</p>}
+          {data.city_unspecified && (
+            <div
+              className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand-night/10 bg-[#F7F6FB] px-3 py-2 text-xs"
+              data-testid="fsp-city-unspecified-row"
+            >
+              <span className="font-semibold text-brand-night">
+                {data.city_unspecified.title}{" "}
+                <span className="font-normal text-brand-ink/65">(в итогах учтено; на карте и в разрыве округов не учитывается)</span>
+              </span>
+              <span className="tabular-nums text-brand-ink/80">
+                канд. <b>{fk(realOnly ? data.city_unspecified.real_confirmed : data.city_unspecified.confirmed)}</b> · спрос <b>{data.city_unspecified.demand_score}</b>
+              </span>
+            </div>
+          )}
+          <p className="mt-2 text-[11px] text-brand-ink/60">
+            {demoUi ? data.synthetic_note : (data.unspecified_note ?? "Строка «Город не указан» учитывает профили и потребности без города в общих итогах; на карте и в разрыве округов они не учитываются.")}
+          </p>
         </div>
       </div>
 
