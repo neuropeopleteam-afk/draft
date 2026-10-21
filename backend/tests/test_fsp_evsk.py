@@ -170,3 +170,14 @@ def test_discipline_relevance_from_rules_of_sport():
         assert 1.0 in vals, code                    # дисциплины равны: у каждой есть «близко»
         assert min(vals) >= 0.8, code               # мягкий коэффициент
         assert set(d["directions"]) == set(a["directions_all"]), code
+
+
+def test_uncertain_team_place_is_not_counted_until_checked():
+    # командный протокол, граница команды распознана неоднозначно: норматив не засчитываем до сверки по скану
+    r = evsk.evsk_rank_for({"place": 2, "event_id": "kr2025_prod_final", "place_uncertain": True}, birth_date="2000-01-01")
+    assert r["status"] == "place_unverified" and r["fulfilled"] is False
+    assert r["status_if_place_confirmed"] == "fulfilled" and r["rank"] == "КМС"
+    assert "place" in r["pending"]
+    best = evsk.best_evsk_for_athlete([{"place": 2, "event_id": "kr2025_prod_final", "place_uncertain": True},
+                                       {"place": 5, "event_id": "kr2025_prod_final"}], birth_date="2000-01-01")
+    assert best["rank"] == "I" and best["status"] == "fulfilled"

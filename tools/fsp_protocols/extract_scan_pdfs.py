@@ -70,7 +70,7 @@ def _call_vision_llm(img_path: Path, api_key: str) -> dict:
     payload = {
         "model": VISION_MODEL,
         "temperature": 0.0,
-        "max_tokens": 4096,
+        "max_tokens": int(os.environ.get("FSP_OCR_MAX_TOKENS", "16000")),  # 4096 обрезал плотные страницы (КР-2026 СИБ: 5 из 10 страниц терялись)
         "response_format": {"type": "json_object"},
         "messages": [
             {
@@ -91,7 +91,7 @@ def _call_vision_llm(img_path: Path, api_key: str) -> dict:
         },
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=60) as resp:
+    with urllib.request.urlopen(req, timeout=180) as resp:
         body = json.loads(resp.read().decode("utf-8"))
     content = body["choices"][0]["message"]["content"]
     content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())

@@ -4,12 +4,22 @@
 `/opt/spectrek_fsp/data_local/fsp_protocols/index.json` (или путь из переменной `FSP_PROTOCOLS_INDEX`).
 В карточку работодателя ФИО и дата рождения не попадают никогда — только обезличенный факт достижения,
 статус («Найдено в протоколе — ожидает подтверждения ФСП» или «Подтверждено протоколом ФСП»),
-номер ЕКП, расчётный разряд по ЕВСК и ссылка на официальный PDF протокола со страницей.
+номер ЕКП, норматив ЕВСК по протоколу (модуль А8 ``fsp/evsk.py``) и ссылка на официальный PDF протокола со страницей.
+
+Соответствие 152-ФЗ (А8):
+- Поиск выполняется по хешам HMAC-SHA256 (секрет FSP_INDEX_HMAC_KEY): ``key_hash`` (ФИО + год рождения), ``fio_hash`` (ФИО),
+  ``team_hash`` (команда), а также по прямому совпадению ``fio_norm``, если индекс его содержит.
+- Путь к индексу задаётся переменной окружения ``FSP_PROTOCOLS_INDEX`` (по умолчанию ``/data_local/fsp_protocols/index.json``
+  с резервным путём ``/opt/spectrek_fsp/data_local/fsp_protocols/index.json``).
+
+Честный статус (А2, P0-1): совпадение ФИО даёт только «найдено в протоколе — ожидает подтверждения ФСП»
+(``pending_fsp``); «подтверждено» (``verified``) — после входа через ФСП ID с тем же ФИО или решения представителя ФСП.
 """
 from __future__ import annotations
 
 from datetime import date
 import hashlib
+import hmac
 import json
 import os
 from pathlib import Path
@@ -22,34 +32,38 @@ from sqlalchemy.orm import Session
 from app.core.db import utcnow
 from app.core.enums import FspEventLevel, FspLinkSource
 from app.modules.auth.models import User
+from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateProfile
 
+# FSP_PROTOCOLS_INDEX (на стенде — index_v4.json, выкладка оркестратора) проверяется первым в _index_path()
 DEFAULT_PATHS = (
-    os.environ.get("FSP_PROTOCOLS_INDEX") or "",
-    "/opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json",
-    "/data_local/fsp_protocols/index_v2.json",
     "/data_local/fsp_protocols/index.json",
     "/opt/spectrek_fsp/data_local/fsp_protocols/index.json",
-    "/tmp/fsp_protocols/index_v2.json",
-    "/tmp/fsp_protocols/index.json",
+    "/app/data_local/fsp_protocols/index.json",
+    "data_local/fsp_protocols/index.json",
 )
 
+# Коды дисциплин — как в каталоге (catalog.constants.FSP_DISCIPLINES): algorithmic, product, security, robotics, uav
 DISCIPLINE_MAP = {
     "программирование продуктовое": "product",
     "продуктовое программирование": "product",
-    "программирование алгоритмическое": "algo",
-    "алгоритмическое программирование": "algo",
-    "программирование систем информационной безопасности": "infosec",
-    "информационная безопасность": "infosec",
+    "программирование алгоритмическое": "algorithmic",
+    "алгоритмическое программирование": "algorithmic",
+    "программирование систем информационной безопасности": "security",
+    "информационная безопасность": "security",
+    "кибербезопасность": "security",
     "программирование робототехники": "robotics",
+    "робототехника": "robotics",
     "программирование беспилотных авиационных систем": "uav",
+    "программирование бас": "uav",
 }
+DISCIPLINE_TITLES = {d["id"]: d["title"] for d in FSP_DISCIPLINES}
 
 DISCIPLINE_HUMAN = {
     "product": "продуктовое программирование",
-    "algo": "алгоритмическое программирование",
-    "infosec": "программирование систем информационной безопасности",
+    "algorithmic": "алгоритмическое программирование",
+    "security": "программирование систем информационной безопасности",
     "robotics": "программирование робототехники",
     "uav": "программирование БАС",
 }
@@ -76,9 +90,60 @@ def normalize_fio(fio: str) -> str:
     return " ".join(s.split())
 
 
+_YEAR_RE = re.compile(r"\b(19[5-9]\d|20[0-2]\d)\b")
+_DATE_RE = re.compile(r"\b(\d{2})\.(\d{2})\.(19[5-9]\d|20[0-2]\d)\b")
+
+
+def extract_birth_date(raw: str | None) -> tuple[str | None, str | None]:
+    """Извлекает дату рождения (YYYY-MM-DD или DD.MM.YYYY) и 4-значный год рождения (А8)."""
+    if not raw:
+        return None, None
+    s = str(raw).strip()
+    m = _DATE_RE.search(s)
+    if m:
+        dd, mm, yyyy = m.group(1), m.group(2), m.group(3)
+        return f"{yyyy}-{mm}-{dd}", yyyy
+    if re.match(r"^(19[5-9]\d|20[0-2]\d)-\d{2}-\d{2}$", s):
+        return s, s[:4]
+    ym = _YEAR_RE.search(s)
+    if ym:
+        return None, ym.group(1)
+    return None, None
+
+
+def _person_hash(text: str) -> str:
+    """Хэш персональных данных для индекса: HMAC-SHA256 с секретом FSP_INDEX_HMAC_KEY (152-ФЗ — без секрета
+    хэш ФИО из открытых протоколов обращается перебором). Без секрета — SHA-256 (совместимость с индексами
+    v1–v3; сверка всё равно работает по ФИО на сервере)."""
+    raw = (os.environ.get("FSP_INDEX_HMAC_KEY") or "").strip()
+    if raw:
+        return hmac.new(bytes.fromhex(raw), text.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def compute_key_hash(fio_norm: str, birth_year: str | None = None) -> str:
+    """HMAC-SHA256 от `fio_norm:birth_year` (если год известен) или от `fio_norm`."""
+    base = f"{fio_norm}:{birth_year}" if (fio_norm and birth_year) else fio_norm
+    return _person_hash(base)
+
+
+def compute_fio_hash(fio_norm: str) -> str:
+    """HMAC-SHA256 только от нормализованного ФИО (для поиска без ввода даты рождения)."""
+    return _person_hash(fio_norm)
+
+
+def compute_team_hash(team_name: str | None) -> str | None:
+    """SHA-256 от нормализованного названия команды (для командных протоколов без поимённого состава)."""
+    if not team_name:
+        return None
+    norm = re.sub(r"[\s\u00a0]+", " ", team_name.strip().lower().replace("ё", "е"))
+    return hashlib.sha256(f"team:{norm}".encode("utf-8")).hexdigest()
+
+
 def fio_sha256(fio: str) -> str:
+    """Хэш ФИО для сверки с полем ``fio_hash`` индекса — через HMAC А8 (имя функции сохранено для совместимости)."""
     norm = normalize_fio(fio)
-    return hashlib.sha256(norm.encode("utf-8")).hexdigest() if norm else ""
+    return compute_fio_hash(norm) if norm else ""
 
 
 def is_judge_or_non_athlete(rec: dict) -> bool:
@@ -172,14 +237,16 @@ def load_index() -> tuple[bool, list[dict]]:
 def _map_discipline(raw: str | None) -> str:
     if not raw:
         return "product"
-    low = raw.strip().lower()
+    low = raw.strip().lower().replace("ё", "е")
+    if low in DISCIPLINE_TITLES:
+        return low
     for k, v in DISCIPLINE_MAP.items():
         if k in low:
             return v
     if "алгоритм" in low:
-        return "algo"
-    if "безопасн" in low or "иб" in low:
-        return "infosec"
+        return "algorithmic"
+    if "безопасн" in low:
+        return "security"
     if "робот" in low:
         return "robotics"
     if "беспилот" in low or "бас" in low:
@@ -433,6 +500,43 @@ def _public_record(rec: dict, sources_by_url: dict[str, dict], *, is_fsp_verifie
     }
 
 
+def verify_candidate_fsp(
+    fio: str | None = None,
+    birth_date: str | None = None,
+    team: str | None = None,
+    index_path: Path | str | None = None,
+) -> dict:
+    """Совместимая обёртка верификации достижений кандидата по индексу официальных протоколов ФСП."""
+    old_env = os.environ.get("FSP_PROTOCOLS_INDEX")
+    try:
+        if index_path:
+            os.environ["FSP_PROTOCOLS_INDEX"] = str(index_path)
+            _CACHE["mtime"] = None
+        res = search_protocols(fio=fio, birth_date=birth_date, team=team)
+        matches = res.get("matches", [])
+        rank_order = {"ЗМС": 7, "МСМК": 6, "МС": 5, "КМС": 4, "I": 3, "I разряд": 3, "II": 2, "II разряд": 2, "III": 1, "III разряд": 1}
+        best_rank = None
+        best_score = 0
+        for m in matches:
+            rk = m.get("rank") or m.get("evsk_rank")
+            if rk and rank_order.get(rk, 0) > best_score:
+                best_score = rank_order[rk]
+                best_rank = rk
+        return {
+            **res,
+            "verified": bool(matches),
+            "highest_rank": best_rank,
+            "achievements": matches,
+        }
+    finally:
+        if index_path:
+            if old_env is None:
+                os.environ.pop("FSP_PROTOCOLS_INDEX", None)
+            else:
+                os.environ["FSP_PROTOCOLS_INDEX"] = old_env
+            _CACHE["mtime"] = None
+
+
 def search_protocols(
     fio: str | None = None,
     birth_date: str | None = None,
@@ -452,8 +556,11 @@ def search_protocols(
         }
 
     fio_norm = normalize_fio(fio or "")
-    f_hash = fio_sha256(fio or "") if fio_norm else ""
+    _, byear = extract_birth_date(birth_date)
+    f_hash = compute_fio_hash(fio_norm) if fio_norm else ""
+    k_hash = compute_key_hash(fio_norm, byear) if (fio_norm and byear) else ""
     team_q = (team or "").strip().lower()
+    t_hash = compute_team_hash(team) if team else None
     b_q = (birth_date or "").strip()
     verified_fio_norm = normalize_fio(fsp_id_verified_fio or "")
 
@@ -467,8 +574,9 @@ def search_protocols(
             continue
         if fio_norm:
             r_hash = r.get("fio_hash")
+            r_key_hash = r.get("key_hash")
             r_norm = normalize_fio(r.get("fio_norm") or r.get("fio") or "")
-            if r_hash and r_hash == f_hash:
+            if (r_hash and r_hash == f_hash) or (k_hash and r_key_hash == k_hash) or (r_key_hash and r_key_hash == f_hash):
                 pass
             elif r_norm and (r_norm == fio_norm or fio_norm in r_norm.split()):
                 pass
@@ -476,11 +584,11 @@ def search_protocols(
                 continue
         if b_q:
             rb = str(r.get("birth_date") or "").strip()
-            if rb and b_q not in rb:
+            if rb and b_q not in rb and (not byear or byear not in rb):
                 continue
         if team_q:
             rt = str(r.get("team") or "").strip().lower()
-            if team_q not in rt:
+            if team_q not in rt and (not t_hash or r.get("key_hash") != t_hash):
                 continue
         r_fio_norm = normalize_fio(r.get("fio_norm") or r.get("fio") or "")
         is_verified = bool(verified_fio_norm and r_fio_norm and verified_fio_norm == r_fio_norm)

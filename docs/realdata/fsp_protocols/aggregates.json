@@ -1,20 +1,20 @@
 {
- "generated_at": "2026-10-21T06:47:52+00:00",
+ "generated_at": "2026-10-21T07:28:43+00:00",
  "k_min": 3,
  "totals": {
   "records": 2911,
   "person_results": 2834,
-  "athletes": 2243,
+  "athletes": 2237,
   "events": 27,
   "regions": 69,
-  "athletes_with_evsk_norm": 125,
+  "athletes_with_evsk_norm": 130,
   "athletes_with_evsk_norm_by_rank": {
-   "КМС": 61,
-   "I": 55,
+   "КМС": 44,
+   "I": 65,
    "II": 5,
-   "III": 4
+   "III": 16
   },
-  "results_needing_second_result": 81
+  "results_needing_second_result": 70
  },
  "by_discipline": [
   {
@@ -23,18 +23,18 @@
    },
    "athletes": 1448,
    "results": 1676,
-   "podiums": 40,
-   "evsk_norm": 56,
-   "kms_plus": 23
+   "podiums": 42,
+   "evsk_norm": 82,
+   "kms_plus": 26
   },
   {
    "key": {
     "discipline": "программирование продуктовое"
    },
-   "athletes": 444,
-   "results": 565,
-   "podiums": 142,
-   "evsk_norm": 34,
+   "athletes": 438,
+   "results": 564,
+   "podiums": 154,
+   "evsk_norm": 37,
    "kms_plus": 13
   },
   {
@@ -43,9 +43,9 @@
    },
    "athletes": 306,
    "results": 345,
-   "podiums": 39,
-   "evsk_norm": 35,
-   "kms_plus": 25
+   "podiums": 6,
+   "evsk_norm": 11,
+   "kms_plus": 5
   },
   {
    "key": {
@@ -85,9 +85,9 @@
     "discipline": "программирование систем информационной безопасности"
    },
    "athletes": 1416,
-   "results": 1599,
-   "podiums": 36,
-   "evsk_norm": 41,
+   "results": 1600,
+   "podiums": 35,
+   "evsk_norm": 56,
    "kms_plus": 14
   },
   {
@@ -95,9 +95,9 @@
     "year": "2026",
     "discipline": "программирование продуктовое"
    },
-   "athletes": 367,
+   "athletes": 368,
    "results": 417,
-   "podiums": 128,
+   "podiums": 147,
    "evsk_norm": 0,
    "kms_plus": 0
   },
@@ -108,9 +108,9 @@
    },
    "athletes": 199,
    "results": 199,
-   "podiums": 36,
-   "evsk_norm": 28,
-   "kms_plus": 22
+   "podiums": 3,
+   "evsk_norm": 4,
+   "kms_plus": 2
   },
   {
    "key": {
@@ -128,10 +128,10 @@
     "year": "2025",
     "discipline": "программирование продуктовое"
    },
-   "athletes": 122,
-   "results": 148,
+   "athletes": 118,
+   "results": 147,
    "podiums": 27,
-   "evsk_norm": 34,
+   "evsk_norm": 37,
    "kms_plus": 13
   },
   {
@@ -162,10 +162,10 @@
     "discipline": "программирование систем информационной безопасности"
    },
    "athletes": 76,
-   "results": 77,
-   "podiums": 11,
-   "evsk_norm": 28,
-   "kms_plus": 11
+   "results": 76,
+   "podiums": 19,
+   "evsk_norm": 50,
+   "kms_plus": 19
   },
   {
    "key": {
@@ -184,9 +184,9 @@
    "key": {
     "event_status": null
    },
-   "athletes": 1362,
-   "results": 1389,
-   "podiums": 12,
+   "athletes": 1363,
+   "results": 1390,
+   "podiums": 15,
    "evsk_norm": 0,
    "kms_plus": 0
   },
@@ -196,9 +196,9 @@
    },
    "athletes": 750,
    "results": 839,
-   "podiums": 81,
-   "evsk_norm": 57,
-   "kms_plus": 37
+   "podiums": 52,
+   "evsk_norm": 33,
+   "kms_plus": 17
   },
   {
    "key": {
@@ -206,7 +206,7 @@
    },
    "athletes": 216,
    "results": 216,
-   "podiums": 71,
+   "podiums": 86,
    "evsk_norm": 0,
    "kms_plus": 0
   },
@@ -215,10 +215,10 @@
     "event_status": "kr_final"
    },
    "athletes": 181,
-   "results": 183,
-   "podiums": 27,
-   "evsk_norm": 70,
-   "kms_plus": 27
+   "results": 182,
+   "podiums": 35,
+   "evsk_norm": 95,
+   "kms_plus": 35
   },
   {
    "key": {
@@ -226,17 +226,17 @@
    },
    "athletes": 81,
    "results": 81,
-   "podiums": 11,
-   "evsk_norm": 14,
+   "podiums": 15,
+   "evsk_norm": 29,
    "kms_plus": 0
   },
   {
    "key": {
     "event_status": "chr"
    },
-   "athletes": 66,
-   "results": 66,
-   "podiums": 19,
+   "athletes": 65,
+   "results": 65,
+   "podiums": 18,
    "evsk_norm": 0,
    "kms_plus": 0
   },
@@ -246,7 +246,7 @@
    },
    "athletes": 59,
    "results": 59,
-   "podiums": 45,
+   "podiums": 47,
    "evsk_norm": 0,
    "kms_plus": 0
   }
@@ -256,40 +256,40 @@
    "key": {
     "fo": "ЦФО"
    },
-   "athletes": 747,
-   "results": 932,
-   "podiums": 65,
-   "evsk_norm": 35,
-   "kms_plus": 23
+   "athletes": 745,
+   "results": 929,
+   "podiums": 64,
+   "evsk_norm": 41,
+   "kms_plus": 16
   },
   {
    "key": {
     "fo": "ПФО"
    },
-   "athletes": 420,
-   "results": 503,
-   "podiums": 54,
-   "evsk_norm": 29,
-   "kms_plus": 11
+   "athletes": 421,
+   "results": 505,
+   "podiums": 45,
+   "evsk_norm": 24,
+   "kms_plus": 9
   },
   {
    "key": {
     "fo": "ЮФО"
    },
-   "athletes": 330,
-   "results": 469,
-   "podiums": 49,
-   "evsk_norm": 27,
-   "kms_plus": 16
+   "athletes": 329,
+   "results": 470,
+   "podiums": 39,
+   "evsk_norm": 14,
+   "kms_plus": 5
   },
   {
    "key": {
     "fo": "СЗФО"
    },
    "athletes": 251,
-   "results": 316,
-   "podiums": 18,
-   "evsk_norm": 18,
+   "results": 318,
+   "podiums": 20,
+   "evsk_norm": 22,
    "kms_plus": 10
   },
   {
@@ -298,7 +298,7 @@
    },
    "athletes": 165,
    "results": 176,
-   "podiums": 17,
+   "podiums": 19,
    "evsk_norm": 0,
    "kms_plus": 0
   },
@@ -306,11 +306,11 @@
    "key": {
     "fo": null
    },
-   "athletes": 157,
-   "results": 157,
-   "podiums": 2,
-   "evsk_norm": 3,
-   "kms_plus": 2
+   "athletes": 156,
+   "results": 156,
+   "podiums": 10,
+   "evsk_norm": 29,
+   "kms_plus": 10
   },
   {
    "key": {
@@ -326,20 +326,20 @@
    "key": {
     "fo": "СКФО"
    },
-   "athletes": 73,
-   "results": 100,
-   "podiums": 18,
-   "evsk_norm": 9,
+   "athletes": 72,
+   "results": 99,
+   "podiums": 16,
+   "evsk_norm": 8,
    "kms_plus": 0
   },
   {
    "key": {
     "fo": "ДФО"
    },
-   "athletes": 40,
-   "results": 45,
-   "podiums": 6,
-   "evsk_norm": 6,
+   "athletes": 41,
+   "results": 44,
+   "podiums": 4,
+   "evsk_norm": 5,
    "kms_plus": 0
   }
  ],
@@ -347,12 +347,12 @@
   {
    "region": "г. Москва",
    "fo": "ЦФО",
-   "athletes": 354,
-   "podiums": 17,
-   "evsk_norm": 19,
-   "kms_plus": 11,
+   "athletes": 348,
+   "podiums": 15,
+   "evsk_norm": 25,
+   "kms_plus": 9,
    "by_discipline": {
-    "программирование систем информационной безопасности": 332,
+    "программирование систем информационной безопасности": 326,
     "все дисциплины": 19,
     "программирование алгоритмическое": 15,
     "программирование продуктовое": 3
@@ -362,13 +362,13 @@
    "region": "г. Санкт-Петербург",
    "fo": "СЗФО",
    "athletes": 165,
-   "podiums": 13,
-   "evsk_norm": 14,
+   "podiums": 15,
+   "evsk_norm": 18,
    "kms_plus": 7,
    "by_discipline": {
-    "программирование систем информационной безопасности": 133,
+    "программирование систем информационной безопасности": 134,
     "все дисциплины": 18,
-    "программирование продуктовое": 18,
+    "программирование продуктовое": 17,
     "программирование робототехники": 10,
     "программирование алгоритмическое": 7
    }
@@ -376,13 +376,13 @@
   {
    "region": "Донецкая Народная Республика",
    "fo": "ЮФО",
-   "athletes": 143,
+   "athletes": 140,
    "podiums": 36,
-   "evsk_norm": 18,
-   "kms_plus": 8,
+   "evsk_norm": 14,
+   "kms_plus": 5,
    "by_discipline": {
-    "программирование продуктовое": 71,
     "программирование систем информационной безопасности": 71,
+    "программирование продуктовое": 67,
     "все дисциплины": 28,
     "программирование алгоритмическое": 19,
     "программирование робототехники": 19
@@ -391,12 +391,12 @@
   {
    "region": "Краснодарский край",
    "fo": "ЮФО",
-   "athletes": 104,
-   "podiums": 8,
-   "evsk_norm": 7,
-   "kms_plus": 6,
+   "athletes": 105,
+   "podiums": 0,
+   "evsk_norm": 0,
+   "kms_plus": 0,
    "by_discipline": {
-    "программирование систем информационной безопасности": 59,
+    "программирование систем информационной безопасности": 60,
     "программирование алгоритмическое": 26,
     "программирование беспилотных авиационных систем": 14,
     "программирование робототехники": 8,
@@ -422,12 +422,12 @@
   {
    "region": "Московская область",
    "fo": "ЦФО",
-   "athletes": 80,
-   "podiums": 4,
-   "evsk_norm": 1,
-   "kms_plus": 1,
+   "athletes": 83,
+   "podiums": 3,
+   "evsk_norm": 0,
+   "kms_plus": 0,
    "by_discipline": {
-    "программирование систем информационной безопасности": 62,
+    "программирование систем информационной безопасности": 65,
     "программирование продуктовое": 9,
     "программирование алгоритмическое": 7,
     "все дисциплины": 5,
@@ -451,12 +451,12 @@
   {
    "region": "Республика Татарстан",
    "fo": "ПФО",
-   "athletes": 66,
-   "podiums": 2,
+   "athletes": 65,
+   "podiums": 1,
    "evsk_norm": 1,
    "kms_plus": 0,
    "by_discipline": {
-    "программирование систем информационной безопасности": 40,
+    "программирование систем информационной безопасности": 39,
     "все дисциплины": 15,
     "программирование алгоритмическое": 7,
     "программирование продуктовое": 3,
@@ -467,9 +467,9 @@
    "region": "Кировская область",
    "fo": "ПФО",
    "athletes": 58,
-   "podiums": 15,
-   "evsk_norm": 4,
-   "kms_plus": 2,
+   "podiums": 7,
+   "evsk_norm": 0,
+   "kms_plus": 0,
    "by_discipline": {
     "программирование продуктовое": 38,
     "программирование алгоритмическое": 18,
@@ -480,8 +480,8 @@
    "region": "Орловская область",
    "fo": "ЦФО",
    "athletes": 55,
-   "podiums": 1,
-   "evsk_norm": 3,
+   "podiums": 8,
+   "evsk_norm": 8,
    "kms_plus": 0,
    "by_discipline": {
     "программирование систем информационной безопасности": 30,
@@ -506,12 +506,12 @@
   {
    "region": "Новосибирская область",
    "fo": "СФО",
-   "athletes": 48,
+   "athletes": 49,
    "podiums": 0,
    "evsk_norm": 0,
    "kms_plus": 0,
    "by_discipline": {
-    "программирование систем информационной безопасности": 44
+    "программирование систем информационной безопасности": 45
    }
   },
   {
@@ -544,7 +544,7 @@
    "fo": "ПФО",
    "athletes": 46,
    "podiums": 0,
-   "evsk_norm": 8,
+   "evsk_norm": 7,
    "kms_plus": 0,
    "by_discipline": {
     "программирование систем информационной безопасности": 39,
@@ -552,12 +552,25 @@
    }
   },
   {
+   "region": "Самарская область",
+   "fo": "ПФО",
+   "athletes": 45,
+   "podiums": 4,
+   "evsk_norm": 6,
+   "kms_plus": 0,
+   "by_discipline": {
+    "программирование систем информационной безопасности": 25,
+    "программирование продуктовое": 23,
+    "программирование робототехники": 3
+   }
+  },
+  {
    "region": "Смоленская область",
    "fo": "ЦФО",
    "athletes": 45,
-   "podiums": 17,
-   "evsk_norm": 3,
-   "kms_plus": 3,
+   "podiums": 14,
+   "evsk_norm": 0,
+   "kms_plus": 0,
    "by_discipline": {
     "программирование продуктовое": 22,
     "программирование систем информационной безопасности": 16,
@@ -580,19 +593,6 @@
    }
   },
   {
-   "region": "Самарская область",
-   "fo": "ПФО",
-   "athletes": 44,
-   "podiums": 4,
-   "evsk_norm": 6,
-   "kms_plus": 0,
-   "by_discipline": {
-    "программирование систем информационной безопасности": 24,
-    "программирование продуктовое": 23,
-    "программирование робототехники": 3
-   }
-  },
-  {
    "region": "Красноярский край",
    "fo": "СФО",
    "athletes": 43,
@@ -608,9 +608,9 @@
    "region": "Ростовская область",
    "fo": "ЮФО",
    "athletes": 42,
-   "podiums": 4,
-   "evsk_norm": 2,
-   "kms_plus": 2,
+   "podiums": 0,
+   "evsk_norm": 0,
+   "kms_plus": 0,
    "by_discipline": {
     "программирование систем информационной безопасности": 26,
     "программирование алгоритмическое": 11,
@@ -647,9 +647,9 @@
    "region": "Тверская область",
    "fo": "ЦФО",
    "athletes": 33,
-   "podiums": 2,
-   "evsk_norm": 1,
-   "kms_plus": 1,
+   "podiums": 0,
+   "evsk_norm": 0,
+   "kms_plus": 0,
    "by_discipline": {
     "программирование продуктовое": 29,
     "программирование алгоритмическое": 4
@@ -670,13 +670,24 @@
   {
    "region": "Томская область",
    "fo": "СФО",
-   "athletes": 28,
+   "athletes": 29,
    "podiums": 5,
    "evsk_norm": 0,
    "kms_plus": 0,
    "by_discipline": {
-    "программирование систем информационной безопасности": 24,
+    "программирование систем информационной безопасности": 25,
     "программирование продуктовое": 5
+   }
+  },
+  {
+   "region": "Приморский край",
+   "fo": "ДФО",
+   "athletes": 21,
+   "podiums": 4,
+   "evsk_norm": 5,
+   "kms_plus": 0,
+   "by_discipline": {
+    "программирование систем информационной безопасности": 21
    }
   },
   {
@@ -690,17 +701,6 @@
     "программирование продуктовое": 10,
     "программирование алгоритмическое": 7,
     "программирование беспилотных авиационных систем": 3
-   }
-  },
-  {
-   "region": "Приморский край",
-   "fo": "ДФО",
-   "athletes": 20,
-   "podiums": 6,
-   "evsk_norm": 6,
-   "kms_plus": 0,
-   "by_discipline": {
-    "программирование систем информационной безопасности": 20
    }
   },
   {
@@ -739,6 +739,19 @@
    }
   },
   {
+   "region": "Чувашская Республика",
+   "fo": "ПФО",
+   "athletes": 16,
+   "podiums": 7,
+   "evsk_norm": 0,
+   "kms_plus": 0,
+   "by_discipline": {
+    "программирование систем информационной безопасности": 8,
+    "программирование продуктовое": 5,
+    "программирование робототехники": 3
+   }
+  },
+  {
    "region": "Иркутская область",
    "fo": "СФО",
    "athletes": 15,
@@ -753,25 +766,12 @@
   {
    "region": "Тульская область",
    "fo": "ЦФО",
-   "athletes": 15,
+   "athletes": 14,
    "podiums": 0,
    "evsk_norm": 0,
    "kms_plus": 0,
    "by_discipline": {
-    "программирование систем информационной безопасности": 15
-   }
-  },
-  {
-   "region": "Чувашская Республика",
-   "fo": "ПФО",
-   "athletes": 15,
-   "podiums": 7,
-   "evsk_norm": 0,
-   "kms_plus": 0,
-   "by_discipline": {
-    "программирование систем информационной безопасности": 7,
-    "программирование продуктовое": 5,
-    "программирование робототехники": 3
+    "программирование систем информационной безопасности": 14
    }
   },
   {
@@ -814,12 +814,12 @@
   {
    "region": "Омская область",
    "fo": "СФО",
-   "athletes": 12,
+   "athletes": 10,
    "podiums": 0,
    "evsk_norm": 0,
    "kms_plus": 0,
    "by_discipline": {
-    "программирование систем информационной безопасности": 12
+    "программирование систем информационной безопасности": 10
    }
   },
   {
@@ -867,18 +867,6 @@
    }
   },
   {
-   "region": "Ставропольский край",
-   "fo": "СКФО",
-   "athletes": 9,
-   "podiums": 9,
-   "evsk_norm": 5,
-   "kms_plus": 0,
-   "by_discipline": {
-    "программирование продуктовое": 9,
-    "все дисциплины": 4
-   }
-  },
-  {
    "region": "Удмуртская Республика",
    "fo": "ПФО",
    "athletes": 9,
@@ -901,11 +889,23 @@
    }
   },
   {
+   "region": "Ставропольский край",
+   "fo": "СКФО",
+   "athletes": 8,
+   "podiums": 7,
+   "evsk_norm": 5,
+   "kms_plus": 0,
+   "by_discipline": {
+    "программирование продуктовое": 8,
+    "все дисциплины": 4
+   }
+  },
+  {
    "region": "Чеченская Республика",
    "fo": "СКФО",
    "athletes": 8,
    "podiums": 0,
-   "evsk_norm": 4,
+   "evsk_norm": 3,
    "kms_plus": 0,
    "by_discipline": {
     "программирование систем информационной безопасности": 8
@@ -993,6 +993,17 @@
    }
   },
   {
+   "region": "Ивановская область",
+   "fo": "ЦФО",
+   "athletes": 5,
+   "podiums": 0,
+   "evsk_norm": 0,
+   "kms_plus": 0,
+   "by_discipline": {
+    "программирование систем информационной безопасности": 5
+   }
+  },
+  {
    "region": "Ханты-Мансийский автономный округ — Югра",
    "fo": "УФО",
    "athletes": 5,
@@ -1011,17 +1022,6 @@
    "evsk_norm": 0,
    "kms_plus": 0,
    "by_discipline": {}
-  },
-  {
-   "region": "Ивановская область",
-   "fo": "ЦФО",
-   "athletes": 4,
-   "podiums": 0,
-   "evsk_norm": 0,
-   "kms_plus": 0,
-   "by_discipline": {
-    "программирование систем информационной безопасности": 4
-   }
   },
   {
    "region": "Волгоградская область",
@@ -1047,9 +1047,9 @@
   }
  ],
  "source": {
-  "index": "index_v2.json",
+  "index": "index_v4.json",
   "schema_version": "2.0",
-  "generated_at": "2026-10-21T06:38:17+00:00",
-  "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp"
+  "generated_at": "2026-10-21T07:28:43+00:00",
+  "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v4.json docs/realdata/fsp_protocols backend/app/modules/fsp"
  }
 }

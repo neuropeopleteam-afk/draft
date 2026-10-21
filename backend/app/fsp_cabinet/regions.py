@@ -103,35 +103,35 @@ CITY_TO_GEO: dict[str, tuple[str, str]] = {
 FO_SHORT_TO_TITLE = {d["short"]: d["title"] for d in DISTRICTS}
 DISCIPLINE_TITLES_FSP = {
     "product": "Продуктовое программирование",
-    "algo": "Алгоритмическое программирование",
-    "infosec": "Программирование систем информационной безопасности",
+    "algorithmic": "Алгоритмическое программирование",
+    "security": "Программирование систем информационной безопасности",
     "robotics": "Программирование робототехники",
     "uav": "Программирование беспилотных авиационных систем",
 }
 DISCIPLINE_TO_HH_DIRS: dict[str, list[str]] = {
     "product": ["backend", "frontend", "mobile", "devops", "qa"],
-    "algo": ["backend", "data_eng", "ml", "analyst"],
-    "infosec": ["security", "devops"],
+    "algorithmic": ["backend", "data_eng", "ml", "analyst"],
+    "security": ["security", "devops"],
     "robotics": ["embedded", "ml"],
     "uav": ["embedded", "ml"],
 }
 
 _FALLBACK_PROTOCOL_REGIONS = [
     {"region": "Москва и МО", "fo": "ЦФО", "results": 496, "athletes": 381, "kms_plus": 79, "top_discipline": "product"},
-    {"region": "Санкт-Петербург и ЛО", "fo": "СЗФО", "results": 197, "athletes": 151, "kms_plus": 43, "top_discipline": "algo"},
+    {"region": "Санкт-Петербург и ЛО", "fo": "СЗФО", "results": 197, "athletes": 151, "kms_plus": 43, "top_discipline": "algorithmic"},
     {"region": "Донецкая Народная Республика", "fo": "ЮФО", "results": 191, "athletes": 148, "kms_plus": 14, "top_discipline": "product"},
     {"region": "Краснодарский край", "fo": "ЮФО", "results": 124, "athletes": 96, "kms_plus": 12, "top_discipline": "product"},
-    {"region": "Саратовская область", "fo": "ПФО", "results": 108, "athletes": 84, "kms_plus": 19, "top_discipline": "algo"},
+    {"region": "Саратовская область", "fo": "ПФО", "results": 108, "athletes": 84, "kms_plus": 19, "top_discipline": "algorithmic"},
     {"region": "Воронежская область", "fo": "ЦФО", "results": 95, "athletes": 74, "kms_plus": 11, "top_discipline": "product"},
     {"region": "Кировская область", "fo": "ПФО", "results": 82, "athletes": 63, "kms_plus": 7, "top_discipline": "product"},
     {"region": "Оренбургская область", "fo": "ПФО", "results": 73, "athletes": 58, "kms_plus": 8, "top_discipline": "product"},
     {"region": "Смоленская область", "fo": "ЦФО", "results": 61, "athletes": 49, "kms_plus": 6, "top_discipline": "product"},
     {"region": "Орловская область", "fo": "ЦФО", "results": 60, "athletes": 47, "kms_plus": 5, "top_discipline": "product"},
-    {"region": "Свердловская область", "fo": "УФО", "results": 54, "athletes": 42, "kms_plus": 14, "top_discipline": "algo"},
-    {"region": "Республика Татарстан", "fo": "ПФО", "results": 48, "athletes": 38, "kms_plus": 13, "top_discipline": "algo"},
-    {"region": "Новосибирская область", "fo": "СФО", "results": 44, "athletes": 35, "kms_plus": 11, "top_discipline": "algo"},
+    {"region": "Свердловская область", "fo": "УФО", "results": 54, "athletes": 42, "kms_plus": 14, "top_discipline": "algorithmic"},
+    {"region": "Республика Татарстан", "fo": "ПФО", "results": 48, "athletes": 38, "kms_plus": 13, "top_discipline": "algorithmic"},
+    {"region": "Новосибирская область", "fo": "СФО", "results": 44, "athletes": 35, "kms_plus": 11, "top_discipline": "algorithmic"},
     {"region": "Нижегородская область", "fo": "ПФО", "results": 39, "athletes": 31, "kms_plus": 9, "top_discipline": "product"},
-    {"region": "Пермский край", "fo": "ПФО", "results": 36, "athletes": 29, "kms_plus": 8, "top_discipline": "algo"},
+    {"region": "Пермский край", "fo": "ПФО", "results": 36, "athletes": 29, "kms_plus": 8, "top_discipline": "algorithmic"},
     {"region": "Самарская область", "fo": "ПФО", "results": 33, "athletes": 26, "kms_plus": 7, "top_discipline": "product"},
     {"region": "Ростовская область", "fo": "ЮФО", "results": 31, "athletes": 25, "kms_plus": 6, "top_discipline": "product"},
     {"region": "Челябинская область", "fo": "УФО", "results": 27, "athletes": 22, "kms_plus": 5, "top_discipline": "product"},
@@ -141,8 +141,8 @@ _FALLBACK_PROTOCOL_REGIONS = [
 
 _FALLBACK_PROTOCOL_DISCIPLINES = {
     "product": {"results": 2036, "athletes": 1490, "kms_plus": 148},
-    "algo": {"results": 534, "athletes": 412, "kms_plus": 96},
-    "infosec": {"results": 192, "athletes": 154, "kms_plus": 34},
+    "algorithmic": {"results": 534, "athletes": 412, "kms_plus": 96},
+    "security": {"results": 192, "athletes": 154, "kms_plus": 34},
     "robotics": {"results": 116, "athletes": 89, "kms_plus": 18},
     "uav": {"results": 55, "athletes": 44, "kms_plus": 9},
 }
@@ -383,9 +383,9 @@ def real_protocols_vs_hh_demand(k_min: int = 3) -> dict:
             })
 
         total_results = int(tots.get("records") or 2911)
-        total_athletes = int(tots.get("athletes") or 2243)
+        total_athletes = int(tots.get("athletes") or 2237)
         total_kms_plus = int(by_rk_raw.get("МС", 0)) + int(by_rk_raw.get("КМС", 0))
-        total_evsk_norm = int(tots.get("athletes_with_evsk_norm") or 125)
+        total_evsk_norm = int(tots.get("athletes_with_evsk_norm") or 130)
         total_regions = int(tots.get("regions") or 69)
         total_events = int(tots.get("events") or 27)
         docs_count = 18
@@ -394,14 +394,14 @@ def real_protocols_vs_hh_demand(k_min: int = 3) -> dict:
         rank_counts = Counter(_FALLBACK_PROTOCOL_RANKS)
         reg_rows_raw = list(_FALLBACK_PROTOCOL_REGIONS)
         total_results = 2911
-        total_athletes = 2243
-        total_kms_plus = 61
-        total_evsk_norm = 125
+        total_athletes = 2237
+        total_kms_plus = 44
+        total_evsk_norm = 130
         total_regions = 69
         total_events = 27
         docs_count = 18
 
-    rel_key_map = {"algo": "algorithmic", "product": "product", "infosec": "security", "robotics": "robotics", "uav": "uav"}
+    rel_key_map = {"algo": "algorithmic", "algorithmic": "algorithmic", "product": "product", "infosec": "security", "security": "security", "robotics": "robotics", "uav": "uav"}
     by_discipline = []
     for dc, d_title in DISCIPLINE_TITLES_FSP.items():
         st = disc_summary.get(dc) or {"results": 0, "athletes": 0, "kms_plus": 0}
@@ -556,7 +556,7 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
 
     for idx, n in enumerate(d.needs):
         comp = companies.get(n.company_id)
-        city = getattr(n, "city", None) or (comp.city if comp else None)
+        city = getattr(n, "city", None) or (getattr(comp, "city", None) if comp else None)
         dist_id, reg_title = resolve_geo(city, idx)
         st = dist_stats[dist_id]
         st["demand_needs"] += 1
@@ -573,7 +573,7 @@ def build_regions_map(db: Session, days: int | None = None, d: Data | None = Non
             dist_id, reg_title = resolve_geo(p.city, idx)
         else:
             comp = companies.get(inv.company_id)
-            dist_id, reg_title = resolve_geo(comp.city if comp else None, 0)
+            dist_id, reg_title = resolve_geo(getattr(comp, "city", None) if comp else None, 0)
         st = dist_stats[dist_id]
         st["demand_invitations"] += 1
         cat = d.cands.get(inv.candidate_user_id).category if inv.candidate_user_id in d.cands else ""
