@@ -107,6 +107,11 @@ def _run(eng, st, rnd, target, oracle):
 
 
 def test_bank_refine_session_short_new_items_at_cut(monkeypatch):
+    # прежнее правило итога второго этапа (P ≥ 0,5 / 0,9); правило поправки №2 (продолжение SPRT, устная защита
+    # без «монетки») — tests/test_sprt_v2.py::test_two_stage_continues_sprt_and_oral_instead_of_coin
+    from app.core.config import get_settings as _gs
+
+    monkeypatch.setattr(_gs(), "assessment_verdict_rule", "posterior")
     from app.modules.assessment import bank_engine as be
     from app.modules.assessment.bank_engine import BankEngine
     from app.modules.assessment.grader import GradeOutcome
