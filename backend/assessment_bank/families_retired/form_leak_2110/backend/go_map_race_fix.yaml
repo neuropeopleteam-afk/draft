@@ -1,0 +1,45 @@
+family_id: backend.go.map_race_fix
+title: Горутины и общая map — мьютекс, копирование мьютекса, deadlock на канале
+direction: backend
+skills:
+- go
+- goroutines
+- go_channels
+- data_races
+- sync_mutex
+target_grades:
+- middle
+- senior
+format: choose_fix
+language: go
+invariants:
+  code_lines:
+  - 15
+  - 15
+  operations:
+  - 12
+  - 12
+  n_options: 4
+  defect_type: unsynchronized_map
+  extra:
+    distractors:
+    - value_receiver
+    - unlocked_write
+    - unbuffered_wait
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 0.6
+  a: 1.3
+  sigma_variant: 0.2
+  basis: Априорная, до калибровки на людях (a = 1,3). Четыре варианта по 15–24 строки; верный отличается от дистрактора
+    одним символом (*counter против counter — копирование мьютекса), ещё два — запись вне критической секции и deadlock
+    небуферизованного канала при wg.Wait() до чтения. Состав дистракторов фиксирован, варьируются контекст и данные;
+    Middle/Senior
+generator: assessment_bank.families_retired.form_leak_2110.backend.go_map_race_fix
+version: 1
+description: 'Подсчёт в горутинах с общей map. Выбрать исправление без гонок и взаимных блокировок. Проверка исполнением:
+  каждый вариант и исходный код собираются с детектором гонок (-race) и запускаются на тесте; верный проходит, остальные
+  падают.
+
+  '
