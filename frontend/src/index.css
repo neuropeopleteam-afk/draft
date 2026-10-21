@@ -767,3 +767,9 @@ html[data-theme="light"] .np .fsp-serif-italic {
   min-width: 100%;
 }
 
+[data-testid="exec-advisor"] ul[aria-label="Кандидаты в разговоре"] li {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: auto;
+}
+

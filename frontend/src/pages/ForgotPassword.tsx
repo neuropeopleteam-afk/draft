@@ -47,7 +47,7 @@ export function ForgotPassword() {
   return (
     <AuthShell
       title="Восстановление пароля"
-      subtitle="Это страница восстановления доступа: укажите почту своего аккаунта, чтобы получить 6-значный код для установки нового пароля."
+      subtitle="Укажите почту своего аккаунта, чтобы получить 6-значный код для установки нового пароля."
       lead={<>Вспомнили пароль? <Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Войти</Link></>}
       footer={<><Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Вернуться ко входу</Link> · <Link to="/support" className="font-semibold text-brand-plum hover:underline">Помощь</Link></>}
     >
@@ -119,7 +119,7 @@ export function ResetPassword() {
   return (
     <AuthShell
       title="Новый пароль"
-      subtitle="Это страница смены пароля: введите 6-значный код из письма и задайте новый пароль не короче 8 символов (буквы и цифры)."
+      subtitle="Введите 6-значный код из письма и задайте новый пароль не короче 8 символов (буквы и цифры)."
       lead={<><Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Ко входу</Link></>}
       footer={<>Код не пришёл? <Link to={`/forgot?email=${encodeURIComponent(email)}`} className="font-semibold text-brand hover:text-brand-soft">Запросить повторно</Link></>}
     >
