@@ -1,0 +1,30 @@
+family_id: mobile.ui.t21_dp_px_output
+title: Перевод dp в пиксели — приоритет умножения над сложением
+direction: mobile
+skills:
+- javascript
+- ui_layout
+- screen_density
+target_grades:
+- intern
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 6
+  - 6
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.8
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Два выражения из трёх переменных:
+    без скобок на плотность умножается только размер элемента, со скобками — вся сумма; одна ловушка — приоритет * над +.
+    Уровень Стажёра: арифметика и приоритет операций. Набор t21 (21.10) у порога Стажёра (b = −1,8)'
+generator: assessment_bank.families.mobile.t21_dp_px_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Программа переводит размеры макета React Native-экрана
+  из dp в пиксели для заданной плотности двумя выражениями — без скобок и со скобками; предсказать вывод console.log. Ключ
+  — независимая модель в генераторе на Python, проверка — исполнение показанного кода в песочнице Node.js.

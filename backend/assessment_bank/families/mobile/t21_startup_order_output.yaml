@@ -1,0 +1,32 @@
+family_id: mobile.startup.t21_startup_order_output
+title: Порядок шагов запуска приложения — синхронный код, then, await, queueMicrotask и таймеры
+direction: mobile
+skills:
+- javascript
+- event_loop
+- async_await
+target_grades:
+- senior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 11
+  - 18
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). 7–10 строк вывода: async-функция
+    с одним-двумя await, цепочка then, queueMicrotask, один-два setTimeout (иногда с then внутри). Нужно знать, что тело
+    async-функции до await синхронно, шаги цепочек и продолжения после await чередуются по одному в очереди микрозадач,
+    таймеры — после очереди, микрозадача из таймера — до следующего таймера. Уровень Senior: микро- и макрозадачи, async/await.
+    Набор t21 (21.10) у порога Senior (b = +1,1)'
+generator: assessment_bank.families.mobile.t21_startup_order_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Код запуска React Native-приложения смешивает синхронные
+  вызовы, async-функцию с await, цепочку промисов, queueMicrotask и setTimeout; предсказать порядок строк вывода. Ключ —
+  независимая модель в генераторе на Python, проверка — исполнение показанного кода в песочнице Node.js.

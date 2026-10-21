@@ -1,0 +1,31 @@
+family_id: mobile.release.t21_build_sort_output
+title: Номера сборок и версии приложения — sort() без функции сравнения
+direction: mobile
+skills:
+- javascript
+- versioning
+- mobile_release
+target_grades:
+- middle
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.05
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). 4–5 номеров сборок разной длины
+    сортируются sort() без компаратора и с ним, 3–4 строки версий — sort(), берётся крайняя. Одна неочевидная семантика:
+    sort() без функции сравнивает строковые представления посимвольно. Уровень Middle: sort() без функции. Набор t21 (21.10)
+    у порога Middle (b = +0,05)'
+generator: assessment_bank.families.mobile.t21_build_sort_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Экран выбора бета-сборки сортирует номера сборок и строки
+  версий; предсказать строковый и числовой порядок и крайнюю версию. Ключ — независимая модель в генераторе на Python, проверка
+  — исполнение показанного кода в песочнице Node.js.
