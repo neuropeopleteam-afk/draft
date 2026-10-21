@@ -1,15 +1,15 @@
 {
  "source": "docs/NUMBERS.json",
- "numbers_generated_at": "2026-10-20T17:47:52Z",
- "numbers_git_commit": "6229b82f",
+ "numbers_generated_at": "2026-10-21T13:11:48Z",
+ "numbers_git_commit": "2619a5dc2",
  "recompute_all": "python3 tools/publish/gen_numbers.py",
  "facts": {
   "bank_families": {
-   "text": "1 504",
+   "text": "1 646",
    "key": "bank.families",
-   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "cond": "автоматическая проверка банка: коммит банка ab16d27, 21.10.2026",
    "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
-   "value": 1504,
+   "value": 1646,
    "kn": "",
    "ci": "",
    "label": "семейств заданий в банке",
@@ -17,11 +17,11 @@
    "basis": "проверка банка"
   },
   "bank_variants": {
-   "text": "30 080",
+   "text": "32 896",
    "key": "bank.unique_variants_20seeds",
-   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "cond": "автоматическая проверка банка: коммит банка ab16d27, 21.10.2026",
    "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
-   "value": 30080,
+   "value": 32896,
    "kn": "",
    "ci": "",
    "label": "уникальных вариантов на проверке",
@@ -29,11 +29,11 @@
    "basis": "проверка банка"
   },
   "bank_checks": {
-   "text": "10 702",
+   "text": "38 131",
    "key": "bank.checks",
-   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "cond": "автоматическая проверка банка: коммит банка ab16d27, 21.10.2026",
    "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
-   "value": 10702,
+   "value": 38131,
    "kn": "",
    "ci": "",
    "label": "автоматических проверок ответов",
@@ -43,7 +43,7 @@
   "bank_checks_failed": {
    "text": "0",
    "key": "bank.checks_failed",
-   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "cond": "автоматическая проверка банка: коммит банка ab16d27, 21.10.2026",
    "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
    "value": 0,
    "kn": "",
@@ -55,7 +55,7 @@
   "bank_directions": {
    "text": "10",
    "key": "bank.directions",
-   "cond": "автоматическая проверка банка: коммит банка 603474f, 20.10.2026",
+   "cond": "автоматическая проверка банка: коммит банка ab16d27, 21.10.2026",
    "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
    "value": 10,
    "kn": "",
@@ -63,17 +63,383 @@
    "label": "направлений",
    "group": "bank",
    "basis": "проверка банка"
+  },
+  "bank_practical": {
+   "text": "416",
+   "key": "bank.code_and_open_families",
+   "cond": "автоматическая проверка банка: коммит банка ab16d27, 21.10.2026",
+   "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
+   "value": 416,
+   "kn": "",
+   "ci": "",
+   "label": "семейств с кодом и развёрнутым ответом",
+   "group": "bank",
+   "basis": "проверка банка"
+  },
+  "verdict_accuracy": {
+   "text": "87,9 %",
+   "key": "grade_verdict.main.verdict_accuracy",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 0.8793,
+   "kn": "2 638 из 3 000",
+   "ci": "95 % ДИ 86,7–89,0 %",
+   "label": "верный итог проверки заявленного грейда",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "confident_share": {
+   "text": "77,8 %",
+   "key": "grade_verdict.main.confident_share",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 0.7783,
+   "kn": "2 335 из 3 000",
+   "ci": "95 % ДИ 76,3–79,3 %",
+   "label": "кандидатов получают уверенный ответ уже по основному тесту",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "confident_accuracy": {
+   "text": "94,1 %",
+   "key": "grade_verdict.main.confident_accuracy",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 0.9409,
+   "kn": "2 197 из 2 335",
+   "ci": "95 % ДИ 93,1–95,0 %",
+   "label": "точность уверенного ответа",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "followup_share": {
+   "text": "31,1 %",
+   "key": "grade_verdict.main.followup_share",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 0.311,
+   "kn": "933 из 3 000",
+   "ci": "95 % ДИ 29,5–32,8 %",
+   "label": "кандидатов направляется на короткий дополнительный этап",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "exact_grade": {
+   "text": "71,0 %",
+   "key": "grade_verdict.main.exact_grade",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 0.7103,
+   "kn": "2 131 из 3 000",
+   "ci": "95 % ДИ 69,4–72,6 %",
+   "label": "грейд определён точно",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "false_confirm_all": {
+   "text": "6,3 %",
+   "key": "grade_verdict.main.false_confirm_all",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 0.0627,
+   "kn": "188 из 3 000",
+   "ci": "95 % ДИ 5,5–7,2 %",
+   "label": "ложных подтверждений от всех кандидатов",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "gross_error": {
+   "text": "0,0 %",
+   "key": "grade_verdict.main.gross_error",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 0.0,
+   "kn": "0 из 3 000",
+   "ci": "95 % ДИ 0,0–0,1 %",
+   "label": "ошибок больше чем на одну ступень",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "minutes_mean": {
+   "text": "37,9 мин",
+   "key": "grade_verdict.main.minutes_total.mean",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 37.9,
+   "kn": "",
+   "ci": "",
+   "label": "среднее время теста",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "minutes_p90": {
+   "text": "58,9 мин",
+   "key": "grade_verdict.main.minutes_total.p90",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 58.9,
+   "kn": "",
+   "ci": "",
+   "label": "время теста у 90 % кандидатов не больше",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "retest_verdict": {
+   "text": "83,8 %",
+   "key": "grade_verdict.main.retest.verdict_agreement",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026; повтор на другом наборе заданий",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 0.838,
+   "kn": "2 514 из 3 000",
+   "ci": "95 % ДИ 82,4–85,1 %",
+   "label": "совпадение итога при повторном прохождении",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "retest_exact": {
+   "text": "79,5 %",
+   "key": "grade_verdict.main.retest.exact_agreement",
+   "cond": "симуляция продукта: модельные кандидаты, не люди; N = 3 000; тот же движок теста, что на сайте; банк 603474f (1 504 семейств заданий); 21.10.2026; повтор на другом наборе заданий",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
+   "value": 0.7953,
+   "kn": "2 386 из 3 000",
+   "ci": "95 % ДИ 78,0–80,9 %",
+   "label": "совпадение грейда при повторном прохождении",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "verdict_misspec": {
+   "text": "86,7 %",
+   "key": "grade_verdict.misspec.verdict_accuracy",
+   "cond": "симуляция продукта, модельные кандидаты; N = 2 000; трудность и различающая сила заданий в «мире» сдвинуты случайно, движок об этом не знает; 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world misspec --n 2000 --out /w/out/product_sim_test_misspec.json",
+   "value": 0.8665,
+   "kn": "1 733 из 2 000",
+   "ci": "95 % ДИ 85,1–88,1 %",
+   "label": "верный итог при неточно известной трудности заданий",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "verdict_rater_noise": {
+   "text": "88,5 %",
+   "key": "grade_verdict.rater_noise.verdict_accuracy",
+   "cond": "симуляция продукта, модельные кандидаты; N = 1 500; проверка развёрнутых ответов ошибается случайно; 21.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 1500 --rater-noise 0.1 --out /w/out/product_sim_test_rater_noise.json",
+   "value": 0.8853,
+   "kn": "1 328 из 1 500",
+   "ci": "95 % ДИ 86,8–90,0 %",
+   "label": "верный итог при ошибках проверки развёрнутых ответов",
+   "group": "grade",
+   "basis": "симуляция, модельные кандидаты"
+  },
+  "cheat_bots_present": {
+   "text": "есть",
+   "key": "cheat_bots",
+   "cond": "",
+   "recompute": "cd backend && python -m app.modules.validation.cheat_bots --n 100 --k 10,100 --out /w/out/cheat_bots.json",
+   "value": null,
+   "kn": "",
+   "ci": "",
+   "label": "прогон ботов",
+   "group": "cheat",
+   "basis": "симуляция, боты"
+  },
+  "match_p5": {
+   "text": "0,75",
+   "key": "matching.p5.mean",
+   "cond": "модель: 200 потребностей × 2 000 модельных кандидатов на отложенных мирах (истина известна, не люди); миры заморожены до прогона, веса подбирались на других мирах; 20.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.matching_bench",
+   "value": 0.751,
+   "kn": "",
+   "ci": "95 % ДИ 0,72–0,78",
+   "label": "доля подходящих в первой пятёрке подборки (P@5)",
+   "group": "match",
+   "basis": "модель"
+  },
+  "match_mrr": {
+   "text": "0,90",
+   "key": "matching.mrr.mean",
+   "cond": "модель: 200 потребностей × 2 000 модельных кандидатов на отложенных мирах (истина известна, не люди); миры заморожены до прогона, веса подбирались на других мирах; 20.10.2026",
+   "recompute": "cd backend && python -m app.modules.validation.matching_bench",
+   "value": 0.896,
+   "kn": "",
+   "ci": "",
+   "label": "MRR — насколько высоко первый подходящий кандидат",
+   "group": "match",
+   "basis": "модель"
+  },
+  "hh_direction": {
+   "text": "90,3 %",
+   "key": "hh_match.direction_ok",
+   "cond": "реальные вакансии hh.ru: набор разработки (по этим вакансиям настраивался словарь); отложенный набор — после пересчёта А5; N = 414; ",
+   "recompute": "python tools/realdata/hh_plus.py match",
+   "value": 0.903,
+   "kn": "374 из 414",
+   "ci": "",
+   "label": "верно определено направление вакансии",
+   "group": "hh",
+   "basis": "реальные вакансии"
+  },
+  "ac_filter": {
+   "text": "77,8 %",
+   "key": "anticheat.holdout_offline.rate",
+   "cond": "отложенный набор атак на проверку ответов, составлен после фиксации кода фильтра (коммит 6b7c710c), один прогон без донастройки; N = 176 атак и 176 честных ответов; 20.10.2026",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 0.7784,
+   "kn": "137 из 176",
+   "ci": "",
+   "label": "атак перехвачено фильтром до оценки моделью",
+   "group": "ac",
+   "basis": "отложенный набор атак"
+  },
+  "ac_fp": {
+   "text": "1,1 %",
+   "key": "anticheat.holdout_offline.false_positive_rate",
+   "cond": "отложенный набор атак на проверку ответов, составлен после фиксации кода фильтра (коммит 6b7c710c), один прогон без донастройки; N = 176 атак и 176 честных ответов; 20.10.2026",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 0.0114,
+   "kn": "2 из 176",
+   "ci": "",
+   "label": "ложных срабатываний на честных ответах",
+   "group": "ac",
+   "basis": "отложенный набор"
+  },
+  "ac_chain_pierced": {
+   "text": "0 из 176",
+   "key": "anticheat.llm_chain.pierced",
+   "cond": "отложенный набор атак на проверку ответов, составлен после фиксации кода фильтра (коммит 6b7c710c), один прогон без донастройки; N = 176 атак и 176 честных ответов; 20.10.2026; полная цепочка проверки",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --llm --max-cost-usd 3.0",
+   "value": 0.0,
+   "kn": "",
+   "ci": "",
+   "label": "атак прошли всю цепочку защиты",
+   "group": "ac",
+   "basis": "отложенный набор атак"
+  },
+  "ac_honest_false": {
+   "text": "0 из 1 000",
+   "key": "anticheat.behavioral_followup.honest_false_followup",
+   "cond": "симуляция поведения: 1 000 модельных честных сессий и 500 модельных ботов; правило «два и больше сигнала или прямое доказательство», автоматической блокировки нет",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 0.0,
+   "kn": "",
+   "ci": "",
+   "label": "честных кандидатов ошибочно отправлено на проверку",
+   "group": "ac",
+   "basis": "симуляция"
+  },
+  "ac_bot_detect": {
+   "text": "100 %",
+   "key": "anticheat.behavioral_followup.bot_detection_rate",
+   "cond": "симуляция поведения: 1 000 модельных честных сессий и 500 модельных ботов; правило «два и больше сигнала или прямое доказательство», автоматической блокировки нет",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 1.0,
+   "kn": "500 из 500",
+   "ci": "",
+   "label": "модельных ботов отправлено на дополнительную проверку",
+   "group": "ac",
+   "basis": "симуляция"
+  },
+  "ac_signals": {
+   "text": "21",
+   "key": "anticheat.proctoring_signals_total",
+   "cond": "описание механики: число видов сигналов в коде",
+   "recompute": "python3 tools/grader_check/run_holdout_eval.py --offline",
+   "value": 21,
+   "kn": "",
+   "ci": "",
+   "label": "видов сигналов честности прохождения",
+   "group": "ac",
+   "basis": "код"
+  },
+  "fsp_documents": {
+   "text": "18",
+   "key": "fsp_protocols.index.documents",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 18,
+   "kn": "",
+   "ci": "",
+   "label": "официальных протоколов в индексе",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_events": {
+   "text": "27",
+   "key": "fsp_protocols.index.events",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 27,
+   "kn": "",
+   "ci": "",
+   "label": "соревнований",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_results": {
+   "text": "2 908",
+   "key": "fsp_protocols.index.results",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 2908,
+   "kn": "",
+   "ci": "",
+   "label": "результатов",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_athletes": {
+   "text": "2 232",
+   "key": "fsp_protocols.index.athletes",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 2232,
+   "kn": "",
+   "ci": "",
+   "label": "спортсменов",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_regions": {
+   "text": "69",
+   "key": "fsp_protocols.index.regions",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 69,
+   "kn": "",
+   "ci": "",
+   "label": "субъектов РФ",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_evsk": {
+   "text": "130",
+   "key": "fsp_protocols.index.athletes_with_evsk_norm",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": 130,
+   "kn": "",
+   "ci": "",
+   "label": "спортсменов с выполненным нормативом ЕВСК",
+   "group": "fsp",
+   "basis": "реальные документы"
+  },
+  "fsp_years": {
+   "text": "2025–2026",
+   "key": "fsp_protocols.index.years",
+   "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+   "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+   "value": "2025–2026",
+   "kn": "",
+   "ci": "",
+   "label": "годы протоколов",
+   "group": "fsp",
+   "basis": "реальные документы"
   }
  },
  "missing": [
-  "bank_practical",
   "bank_seeds",
-  "verdict_accuracy",
-  "cheat_bots_present",
-  "match_p5",
-  "hh_direction",
-  "ac_filter",
-  "fsp_documents",
+  "hh_skills",
   "load_p95"
  ],
  "pairs": {
@@ -153,7 +519,15 @@
    {
     "id": "hh",
     "label": "Вакансии hh.ru: направление определено верно",
-    "value": null
+    "value": {
+     "text": "90,3 %",
+     "value": 0.903,
+     "kn": "374 из 414",
+     "ci": "",
+     "key": "hh_match.direction_ok",
+     "cond": "набор разработки (по этим вакансиям настраивался словарь); отложенный набор — после пересчёта А5",
+     "recompute": ""
+    }
    },
    {
     "id": "external",
@@ -163,12 +537,28 @@
    {
     "id": "fsp",
     "label": "Официальных протоколов ФСП в индексе",
-    "value": null
+    "value": {
+     "text": "18",
+     "value": 18,
+     "kn": "",
+     "ci": "",
+     "key": "fsp_protocols.index.documents",
+     "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+     "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp"
+    }
    },
    {
     "id": "fsp_results",
     "label": "Результатов спортсменов в индексе",
-    "value": null
+    "value": {
+     "text": "2 908",
+     "value": 2908,
+     "kn": "",
+     "ci": "",
+     "key": "fsp_protocols.index.results",
+     "cond": "официальные протоколы ФСП России 2025–2026 с сайта федерации; судьи, тренеры и справки исключены; 21.10.2026",
+     "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp"
+    }
    }
   ]
  },
@@ -190,18 +580,19 @@
   "w_stack_desired": 5,
   "w_fsp": 10,
   "w_probe": 5,
-  "api_paths": 394,
-  "api_operations": 422,
+  "sprt_alpha_pct": "2 %",
+  "api_paths": 406,
+  "api_operations": 435,
   "api_tags": [
    {
-    "tag": "interview",
-    "ops": 25,
-    "description": "Устная защита развёрнутых ответов теста и ИИ-интервью этапом найма (флаг INTERVIEW_ENABLED). Оценивает модель; грейд не меняется"
+    "tag": "validation",
+    "ops": 30,
+    "description": "Публичные метрики качества: валидация теста и подбора, критерии ТЗ, проверка своих данных"
    },
    {
-    "tag": "validation",
-    "ops": 25,
-    "description": "Публичные метрики качества: валидация теста и подбора, критерии ТЗ, проверка своих данных"
+    "tag": "interview",
+    "ops": 29,
+    "description": "Устная защита развёрнутых ответов теста и ИИ-интервью этапом найма (флаг INTERVIEW_ENABLED). Оценивает модель; грейд не меняется"
    },
    {
     "tag": "ats",
@@ -239,6 +630,11 @@
     "description": "Найм после принятия приглашения: слоты собеседования, оффер со встречным, исход найма; этапы уходят в ATS работодателя и возвращаются обратно"
    },
    {
+    "tag": "fsp-cabinet",
+    "ops": 16,
+    "description": "Кабинет ФСП: спрос работодателей, эффект соревнований ФСП, реальные зарплатные вилки, воронки — только агрегаты (минимальная группа 5)"
+   },
+   {
     "tag": "vacancies",
     "ops": 15,
     "description": "Вакансии и отклики кандидатов"
@@ -259,9 +655,9 @@
     "description": "Взаимный подбор (Н9): насколько предложение подходит кандидату; обратная связь по подборке и новые версии (Н2); ссылка для нанимающего руководителя — только чтение, без ПДн, 7 дней (Н3)"
    },
    {
-    "tag": "fsp-cabinet",
-    "ops": 14,
-    "description": "Кабинет ФСП: спрос работодателей, эффект соревнований ФСП, реальные зарплатные вилки, воронки — только агрегаты (минимальная группа 5)"
+    "tag": "assessment",
+    "ops": 13,
+    "description": "Тест на грейд и экран «Категория и грейд» (правило 90 дней, демо-режим жюри)"
    },
    {
     "tag": "jury-live",
@@ -272,11 +668,6 @@
     "tag": "admin",
     "ops": 11,
     "description": "Мини-админка (/admin): пользователи, компании, заявки на тарифы и партнёрство, обращения, флаги и воронка продукта"
-   },
-   {
-    "tag": "assessment",
-    "ops": 11,
-    "description": "Тест на грейд и экран «Категория и грейд» (правило 90 дней, демо-режим жюри)"
    },
    {
     "tag": "subscriptions",
