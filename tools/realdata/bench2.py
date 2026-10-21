@@ -245,7 +245,7 @@ def parse(w: W2) -> list[dict]:
     return [parse_need(n.text, use_llm=False) for n in w.needs]
 
 
-def pool_for(bundles: list, req: dict) -> tuple[list[int], str | None]:
+def pool_for(bundles: list, req: dict, below: bool = True) -> tuple[list[int], str | None]:
     """Индексы кандидатов пула подборки (как build_selection) и категория добора ступенью выше."""
     from app.modules.matching import grade_above
     from app.modules.catalog.seed_data import GRADES
@@ -274,7 +274,14 @@ def pool_for(bundles: list, req: dict) -> tuple[list[int], str | None]:
         if n_exact < grade_above.MIN_EXACT and above:
             above_id = aid
             exact = exact + above
+    if g and d and below:  # match-v2, мягкий запасной режим — как build_selection: точного уровня (подтв. + предв.)
+        n_all = sum(1 for k, b in enumerate(bundles) if b.profile.current_category_id == f"{d}.{g}")  # меньше 10 —
+        bid = grade_above.below_category(req)  # подтверждённые ступенью ниже, после точного уровня
+        below = [k for k, b in enumerate(bundles) if bid and b.profile.current_category_id == bid and not b.provisional]
+        if grade_above.below_applies(req, n_all, len(below)):
+            exact = exact + below
     return exact + unc, above_id
+
 
 
 def order_v2(bundles: list, idx: list[int], req: dict, above_id: str | None, weights: dict | None = None) -> tuple[list[int], dict, list]:
@@ -575,7 +582,8 @@ def evaluate_world(w: W2, *, weights: dict | None = None, with_v13: bool = True,
         orc = sorted(order, key=lambda k: -int(rel[i][k]))
         per["oracle_pool"].append(need_metrics(rel[i], orc, over, belows[i]))
         if with_v13:
-            per["match_v13"].append(need_metrics(rel[i], order_v13(bundles, idx, req, above_id), over, belows[i]))
+            idx13, _ = pool_for(bundles, req, below=False)  # v1.3 — без мягкого режима ступенью ниже (его нет в v1.3)
+            per["match_v13"].append(need_metrics(rel[i], order_v13(bundles, idx13, req, above_id), over, belows[i]))
         info_rows.append({"pool": len(idx), "shown": len(order), "above": bool(above_id),
                           "dir_ok": req.get("direction") == n.direction, "grade_ok": req.get("grade") == n.grade,
                           "stack_thr": (info.get("stack_filter") or {}).get("threshold"),

@@ -81,3 +81,41 @@ def meta(info: dict | None, results: list[dict]) -> dict:
             "exact_count": info["exact"]["count"], "above_count": info["above"]["count"], "min_exact": MIN_EXACT,
             "keep": KEEP, "in_top5": sum(1 for r in results[:5] if r.get("category_id") == above_id),
             "text": text(info)}
+
+
+# ---------------------------------------------------------------- мягкий запасной режим: ступень ниже (match-v2, цикл №4)
+# Если в точной категории меньше MIN_EXACT_BELOW (10) кандидатов с подтверждённым или предварительным грейдом, подборка
+# добавляет подтверждённых кандидатов категории на ступень НИЖЕ — после всех кандидатов точного уровня (и добора выше),
+# до яруса «грейд не подтверждён»: работодатель видит ближайших по проверенному уровню, а не только тех, чей уровень не
+# проверен. У каждого — причина «грейд на ступень ниже запрошенного». Флаг MATCH_GRADE_BELOW (по умолчанию «1»).
+FLAG_BELOW = "MATCH_GRADE_BELOW"
+MIN_EXACT_BELOW = 10
+BELOW_REASON_REQ = "Грейд на ступень ниже"
+
+
+def below_enabled() -> bool:
+    return os.environ.get(FLAG_BELOW, "1").strip().lower() not in ("0", "false", "no", "off", "")
+
+
+def below_category(req: dict) -> str | None:
+    """Категория на ступень ниже уровня потребности."""
+    from app.modules.catalog.seed_data import GRADE_LEVEL
+
+    d, g = req.get("direction"), req.get("grade")
+    if not d or not g or g not in GRADE_LEVEL:
+        return None
+    prev = [x for x, lv in GRADE_LEVEL.items() if lv == GRADE_LEVEL[g] - 1]
+    return f"{d}.{prev[0]}" if prev else None
+
+
+def below_applies(req: dict, n_exact: int, n_below: int, filters: dict | None = None) -> str | None:
+    """id категории ступенью ниже, если мягкий режим действует (мало точного уровня, есть кого добавить), иначе None."""
+    if not below_enabled() or (filters or {}).get("categories"):
+        return None
+    bid = below_category(req)
+    return bid if bid and n_exact < MIN_EXACT_BELOW and n_below > 0 else None
+
+
+def below_text(n_exact: int) -> str:
+    return (f"Грейд на ступень ниже запрошенного: кандидатов точного уровня меньше {MIN_EXACT_BELOW} ({n_exact}), "
+            "поэтому после них показаны ближайшие по проверенному уровню")
