@@ -593,6 +593,8 @@ PARAM_OVERRIDES: dict[tuple[str, str], dict[str, object]] = {
     ("GET", "/api/employer/needs/parse/{job_id}"): {"job_id": "00000000-0000-4000-8000-000000000027"},  # И27
     # А9: Боевой ИИ-Полигон
     ("GET", "/api/warroom/scenarios/{scenario_id}"): {"scenario_id": "payment"},
+    # А2: решение по заявке на сверку протокола ФСП — несуществующая заявка (без тела аналитик получает 422, чужие роли — 401/403)
+    ("POST", "/api/fsp-cabinet/protocol-claims/{achievement_id}/decide"): {"achievement_id": "00000000-0000-4000-8000-0000000000a2"},
 }
 
 # Маршруты, меняющие состояние так, что дальнейшие проверки могут сломаться (сброс песочницы отзывает токены,
