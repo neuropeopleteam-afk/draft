@@ -27,6 +27,8 @@ export interface LiveInterviewDeps {
   onUnavailable: (why: MicState) => void;
   /** Бриф (короткие ответы «Middle», «Москва»): ответ от одного слова, пауза конца короче — 1,6–2,5 с. */
   brief?: boolean;
+  /** Короткие фразы, пока готовится ответ (по умолчанию «Спасибо.»; разговор о кандидатах — «Сейчас посмотрю.»). */
+  fillers?: string[];
 }
 
 const RATE = 24000;
@@ -70,6 +72,8 @@ export class LiveInterview {
     this.d.onView(this.view);
   }
 
+  private fillerList(): string[] { return this.d.fillers?.length ? this.d.fillers : FILLERS; }
+
   micLevel(): number { return this.listener?.level() ?? 0; }
   level(): number { return this.voice.level(); }
   isMuted(): boolean { return this.listener?.isMuted() ?? false; }
@@ -86,7 +90,7 @@ export class LiveInterview {
       gate: () => this.busy,
     });
     void this.listener.start();
-    for (const f of FILLERS) this.fillers.set(f, fetchPhrasePcm(apiUrl("/interview/concierge/speech"), f, true));
+    for (const f of this.fillerList()) this.fillers.set(f, fetchPhrasePcm(apiUrl("/interview/concierge/speech"), f, true));
   }
 
   toggleMute() {
@@ -196,7 +200,8 @@ export class LiveInterview {
     if (n < (this.d.brief ? 1 : 2)) return;   // одиночное «э», «да» — ещё не ответ (в брифе «Middle» — ответ)
     this.busy = true;
     this.set({ phase: "thinking" });
-    const f = FILLERS[this.fillerN++ % FILLERS.length];
+    const fl = this.fillerList();
+    const f = fl[this.fillerN++ % fl.length];
     void this.fillers.get(f)?.then((pcm) => { if (pcm && this.busy && !this.closed && !this.voice.speaking()) void this.voice.say(f, pcm, RATE); });
     let ok = false;
     try { ok = await this.d.onAnswer(text); } catch { ok = false; }
