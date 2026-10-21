@@ -181,6 +181,16 @@ function useViewport() {
   return vp;
 }
 
+/** ?pitch=1 — нажатие на Настю запускает показ для жюри (флаг живёт в вкладке; ?pitch=0 снимает). */
+function pitchFlag(): boolean {
+  try {
+    const q = new URLSearchParams(window.location.search).get("pitch");
+    if (q === "1") sessionStorage.setItem("draft.elena.pitch", "1");
+    if (q === "0") sessionStorage.removeItem("draft.elena.pitch");
+    return sessionStorage.getItem("draft.elena.pitch") === "1";
+  } catch { return false; }
+}
+
 /** Флаги проверок (адрес ?elena_debug=1 / ?elena_novideo=1 или localStorage draft.elena.debug / draft.elena.novideo). */
 function flag(name: string): boolean {
   try {
@@ -293,6 +303,18 @@ export function InteractiveAvatarTour() {
     else { setOpen(false); setUi(null); }
   }, []);
 
+  // показ для жюри (2 минуты): скрытый запуск — Ctrl+Alt+P на любой странице, или ?pitch=1 и нажатие на Настю
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.altKey && (e.code === "KeyP" || e.key.toLowerCase() === "p" || e.key.toLowerCase() === "з")) {
+        e.preventDefault();
+        begin("pitch", 0);   // синхронно в обработчике клавиши: звук и микрофон разрешаются этим жестом
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [begin]);
+
   // внешний запуск (кнопки «Пройти обзор» на страницах)
   useEffect(() => {
     const onEv = (e: Event) => {
@@ -363,7 +385,7 @@ export function InteractiveAvatarTour() {
   if (!open || !ui) {
     return (
       <div className="fixed right-5 z-40 print:hidden" style={{ bottom: "calc(1.25rem + var(--mobile-tabbar-h, 0px))" }}>
-        <button type="button" onClick={() => begin()} data-testid="floating-avatar-concierge"
+        <button type="button" onClick={() => begin(pitchFlag() ? "pitch" : undefined)} data-testid="floating-avatar-concierge"
           className="group flex items-center gap-3 rounded-full bg-[#120E24]/95 py-2 pl-2 pr-4 text-left text-white shadow-xl ring-1 ring-white/15 backdrop-blur transition hover:-translate-y-0.5 hover:ring-white/30">
           <span className="relative h-12 w-12 shrink-0">
             <img src="/avatar/guide.webp" alt="" aria-hidden="true" className="h-12 w-12 rounded-full object-cover" />

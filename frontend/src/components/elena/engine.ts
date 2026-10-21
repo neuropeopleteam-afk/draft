@@ -360,6 +360,9 @@ export class ElenaEngine {
   private doneSteps = new Set<string>();     // экраны, рассказанные до конца: при повторном обзоре — коротко, одной репликой
   private ducked = false;
   private lastSaid = "";
+  private pitchT0 = 0;          // показ для жюри: начало (таймер в заголовке вкладки — видит только владелец)
+  private pitchTimer = 0;
+  private pitchTitle = "";
   private lastAsked = false;            // ответ закончился вопросом — Настя ждёт ответа
   private lastFiller = "";
   private stepUtter: Utterance | null = null;
@@ -683,7 +686,8 @@ export class ElenaEngine {
     if (!this.alive(ep)) return;
     if (track) {
       this.tourTrack = track;
-      void this.runTour({ ids: TRACKS[track], track, i: stepIndex, b: 0 }, ep, { bridge: true, named: true });
+      if (track === "pitch") this.pitchStart();
+      void this.runTour({ ids: TRACKS[track], track, i: stepIndex, b: 0 }, ep, { bridge: track !== "pitch", named: true });
       return;
     }
     const mic: MicState = this.d.fakeMic ? "on" : this.listener?.getState() ?? "error";
@@ -737,6 +741,7 @@ export class ElenaEngine {
 
   close() {
     if (this.closed) return;
+    this.pitchStop(false);
     this.clearTyped();
     this.post("close");
     this.ep++;
@@ -1099,6 +1104,7 @@ export class ElenaEngine {
   }
 
   private async runTurn(text: string) {
+    if (this.pitchTurn(text)) return;
     const ep = ++this.ep;
     this.clearTimers();
     this.thinking = true;
@@ -1693,7 +1699,7 @@ export class ElenaEngine {
       this.curStep = step.id;
       this.prefetchFrom(ids, i + 1);
       this.set({ phase: "touring", track, stepNo: track ? i + 1 : 0, stepTotal: track ? ids.length : 0, target: null, click: null });
-      let bridge = prevCab !== step.cabinet ? this.bridgeText(step.cabinet, firstBridge, !!opts.named) : null;
+      let bridge = track === "pitch" ? null : prevCab !== step.cabinet ? this.bridgeText(step.cabinet, firstBridge, !!opts.named) : null;
       if (bridge) firstBridge = false;   // главная без связки — «Начнём со стороны кандидата» звучит на первом кабинете
       if (i === start.i) {
         // «Продолжаю.» / «Возвращаюсь к обзору.» — если связки раздела нет; «уже смотрели — пройду коротко» — вместо неё
@@ -1730,7 +1736,7 @@ export class ElenaEngine {
         if (!this.alive(ep)) return;
         await sleep(k < plan.length - 1 ? BEAT_GAP_MS : 200);
       }
-      if (!opts.single && !brief && !(await this.walkRest(step, ep))) return;
+      if (track !== "pitch" && !opts.single && !brief && !(await this.walkRest(step, ep))) return;
       this.doneSteps.add(step.id);
       if (opts.single) break;
       // между экранами одного раздела: каждые несколько экранов — короткий вопрос и ожидание ответа, иначе — окно для реплики
@@ -1758,7 +1764,60 @@ export class ElenaEngine {
       this.waitFor(null, ep, null);
       return;
     }
+    if (track === "pitch") { this.pitchStop(true); this.tourTrack = null; this.waitFor(null, ep, null); return; }
     if (track) await this.finishTour(track, ep);
+  }
+
+  /** Показ для жюри: таймер в заголовке вкладки (при показе вкладки в Телемосте его видит только владелец). */
+  private pitchStart() {
+    this.pitchStop(false);
+    this.pitchT0 = performance.now();
+    this.pitchTitle = document.title;
+    const tick = () => {
+      const s = Math.floor((performance.now() - this.pitchT0) / 1000);
+      document.title = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} · ${this.pitchTitle}`;
+    };
+    tick();
+    this.pitchTimer = window.setInterval(tick, 500);
+    // все реплики показа — в память сразу (на сервере они уже в кэше голоса)
+    this.prefetch(TRACKS.pitch.flatMap((id) => this.linesOf(id)));
+  }
+
+  private pitchStop(keepTime: boolean) {
+    if (!this.pitchTimer) return;
+    window.clearInterval(this.pitchTimer);
+    this.pitchTimer = 0;
+    const s = Math.floor((performance.now() - this.pitchT0) / 1000);
+    document.title = keepTime ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} ✓ · ${this.pitchTitle}` : this.pitchTitle;
+    if (keepTime) window.setTimeout(() => { if (!this.pitchTimer) document.title = this.pitchTitle; }, 15000);
+  }
+
+  /** Показ для жюри: реплика владельца — сразу следующий экран («Настя, кого позвать первым?», «Дальше»),
+   *  «назад» — предыдущий, «стоп»/«пауза» — остановиться. Без сервера и модели: мгновенно и предсказуемо. */
+  private pitchTurn(text: string): boolean {
+    if (this.tourTrack !== "pitch") return false;
+    const ids = TRACKS.pitch;
+    const cur = this.pos?.track === "pitch" ? this.pos.i : this.resumeAt?.track === "pitch" ? this.resumeAt.i - 1
+      : Math.max(0, ids.indexOf(this.curStep ?? ""));
+    const t = text.toLowerCase();
+    const ep = ++this.ep;
+    this.clearTimers();
+    this.turnCtl?.abort();
+    this.stepUtter = null;
+    this.pos = null;
+    this.resumeAt = null;
+    this.stopVoice(Math.min(350, this.softStopDelay()));
+    if (/(^|\s)(стоп|пауза|подожди|остановись|хватит)/.test(t)) {
+      this.paused = true;
+      this.resumeAt = { ids, track: "pitch", i: Math.max(0, cur), b: 0 };
+      this.set({ phase: "paused" });
+      return true;
+    }
+    const back = /(^|\s)(назад|верни|предыдущ)/.test(t);
+    const i = back ? Math.max(0, cur - 1) : cur + 1;
+    if (i >= ids.length) { this.pitchStop(true); this.tourTrack = null; this.waitFor(null, ep, null); return true; }
+    void this.runTour({ ids, track: "pitch", i, b: 0 }, ep, { bridge: false });
+    return true;
   }
 
   /** Открыть уже показанный экран ещё раз: переход, подсветка главного блока — без повтора реплик сценария. */
