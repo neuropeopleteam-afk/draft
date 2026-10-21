@@ -43,7 +43,7 @@ from app.modules.profiles.facts import (
 )
 from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
-from app.modules.matching import core_skill, explain as explain_mod, grade_above, implied, must_have
+from app.modules.matching import core_skill, explain as explain_mod, grade_above, implied, ltr, must_have
 from app.core.origin import NO_FSP
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
@@ -58,6 +58,8 @@ CORE_ALGORITHM = "match-v1.2"  # Я1: match-v1.1 + ядро роли (основ
 def algorithm() -> str:
     from app.modules.matching import core_skill
 
+    if ltr.enabled():  # match-v2: стек — фильтр, место — тест и ФСП (правило экспертов 20.10), веса — ltr_weights.json
+        return ltr.VERSION + ("+above" if grade_above.enabled() else "")
     if must_have.enabled():
         if core_skill.enabled():
             return grade_above.ALGORITHM if grade_above.enabled() else CORE_ALGORITHM
@@ -323,6 +325,8 @@ def score_candidate(b: Bundle, req: dict, weights: dict | None = None) -> tuple[
         reasons[-1]["text"] += f" — грейд {step} {rel} запрошенного"
         reasons[-1]["status"] = "partial"
 
+    failed_w = {"Обязательно": 0.0, "Желательно": 0.0}  # match-v2: тест проверил навык и не подтвердил
+
     def stack_part(items: list[dict], label: str) -> float:
         if not items:
             return 0.0
@@ -343,11 +347,13 @@ def score_candidate(b: Bundle, req: dict, weights: dict | None = None) -> tuple[
                                 "implied_by": imp[0],
                                 "text": f"Подтверждён через {tag_title(imp[0])}: {skill_evidence_text(imp[1])}"})
             elif f is not None:  # И18: тест проверял навык, порог не набран — это не «нет данных» (как в сравнении)
+                failed_w[label] += w / total
                 reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "mismatch", "weight": w,
                                 "text": skill_check_text(f)})  # Ф6 (Н5): тест и задание работодателя — раздельно
             elif tag in b.stack_t0:
                 reasons.append({"requirement": f"{label}: {title}", "level": "T0", "status": "declared", "weight": w,
-                                "text": "Заявлено кандидатом — не влияет на ранжирование, можно проверить коротким заданием"})
+                                "text": "Заявлено кандидатом — проходит фильтр стека, на место не влияет; можно "
+                                        "проверить коротким заданием"})
             else:
                 reasons.append({"requirement": f"{label}: {title}", "level": "none", "status": "missing", "weight": w,
                                 "text": "Не подтверждено: тест кандидата этот навык не проверял, в профиле он не заявлен — "
@@ -428,6 +434,19 @@ def score_candidate(b: Bundle, req: dict, weights: dict | None = None) -> tuple[
     comps = {"test": test, "stack_required": round(sreq, 3), "stack_desired": round(sdes, 3), "fsp": fsp,
              "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0,
              "grade_status": b.grade_status}
+    if ltr.enabled():
+        # match-v2: признаки только из теста, заданий и ФСП; балл — линейная модель (ltr_weights.json)
+        from app.modules.profiles.facts import GRADE_CUTS
+
+        g = req.get("grade") or b.grade
+        x = {"test": test, "margin": 0.0 if b.unconfirmed or not b.test else ltr.margin_of(t.get("theta"), GRADE_CUTS.get(g)),
+             "fsp": fsp, "required": round(sreq, 3), "desired": round(sdes, 3), "probe": probe,
+             "failed": round(failed_w["Обязательно"], 3), "provisional": 1.0 if b.provisional else 0.0}
+        W2 = weights if (weights and "margin" in weights) else ltr.weights()
+        comps.update({"margin": x["margin"], "required": x["required"], "desired": x["desired"],
+                      "failed": x["failed"], "provisional_flag": x["provisional"],
+                      "contrib": ltr.contributions(x, W2)})
+        return ltr.score(x, W2), comps, reasons
     W = weights or WEIGHTS  # learn-v1 («учитывать решения компании», по умолчанию выкл.) — matching/learn.py
     if not req.get("stack_required"):
         # Нет обязательного стека — вес переносим на тест
@@ -565,32 +584,44 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         # добор ступенью выше их не касается; real_only — рыночный режим (без демо-профилей)
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids, real_only=real_only)]
     bundles = list(load_bundles(db, ids, direction=req.get("direction"), category_ids=pool_ids).values())
-    # Ф2: условия потребности (формат, город — T0) применяются по умолчанию, только сужают выдачу и не дают баллов;
-    # сколько скрыто условиями — в ответе (чип «скрыто условиями: N», отмена — filters.conditions_off)
-    effective = condition_filters(req, filters)
-    before_conditions = len(apply_filters(bundles, {k: v for k, v in filters.items() if k != "conditions_off"}))
-    bundles = apply_filters(bundles, effective)
-    scored = []
-    W = filters.get("_weights") or WEIGHTS  # подстроенные по решениям компании (router: learn_from_company)
-    for b in bundles:
-        s, comps, reasons = score_candidate(b, req, W)
-        if filters.get("min_score") and s < float(filters["min_score"]):
-            continue
-        scored.append((s, b, comps, reasons))
-    # Ф2: ярус статуса грейда → ярус обязательного (0, 1, ≥ 2 непокрытых; must_have) → балл → рейтинг → ref
-    levels = must_have.declared_levels(db, [b.profile.user_id for _, b, _, _ in scored]) \
-        if must_have.declared_counts() else {}
-    must = must_have.tiers_for([b for _, b, _, _ in scored], req, levels)
-    core = core_skill.assess_pool([b for _, b, _, _ in scored], req)  # Я1: ядро роли (порядок — флаг RANK_CORE_SKILL)
-    if above:
-        # первые места — лучшие точного уровня по прежнему порядку (ярус обязательного — по пулу точного уровня),
-        # дальше — общий порядок, при равном ярусе обязательного точный уровень раньше
-        exact = [x for x in scored if x[1].category_id != above_id]
-        must_e = must_have.tiers_for([b for _, b, _, _ in exact], req, levels)
-        head = [x for x in selection_order(exact, must_e, core)[:grade_above.KEEP] if tier(x[1]) == 0]
-        scored = grade_above.merge(head, selection_order(scored, must, core, above_id=above_id))
+    stack_meta = None
+    if ltr.enabled():
+        # match-v2: условия (формат, город) и стек вакансии — фильтры; место — тест и ФСП (тот же код — в бенчмарке)
+        scored, info = order_bundles(bundles, req, filters, above_id=above_id)
+        effective, before_conditions, stack_meta = info["effective"], info["before_conditions"], info["stack_filter"]
+        n_after_conditions, W = info["after_conditions"], info["weights"]
+        levels = must_have.declared_levels(db, [b.profile.user_id for _, b, _, _ in scored]) \
+            if must_have.declared_counts() else {}
+        must = must_have.tiers_for([b for _, b, _, _ in scored], req, levels)  # только строка объяснения
+        core = core_skill.assess_pool([b for _, b, _, _ in scored], req)  # только строка объяснения
     else:
-        scored = selection_order(scored, must, core)
+        # Ф2: условия потребности (формат, город — T0) применяются по умолчанию, только сужают выдачу и не дают баллов;
+        # сколько скрыто условиями — в ответе (чип «скрыто условиями: N», отмена — filters.conditions_off)
+        effective = condition_filters(req, filters)
+        before_conditions = len(apply_filters(bundles, {k: v for k, v in filters.items() if k != "conditions_off"}))
+        bundles = apply_filters(bundles, effective)
+        scored = []
+        W = filters.get("_weights") or WEIGHTS  # подстроенные по решениям компании (router: learn_from_company)
+        for b in bundles:
+            s, comps, reasons = score_candidate(b, req, W)
+            if filters.get("min_score") and s < float(filters["min_score"]):
+                continue
+            scored.append((s, b, comps, reasons))
+        # Ф2: ярус статуса грейда → ярус обязательного (0, 1, ≥ 2 непокрытых; must_have) → балл → рейтинг → ref
+        levels = must_have.declared_levels(db, [b.profile.user_id for _, b, _, _ in scored]) \
+            if must_have.declared_counts() else {}
+        must = must_have.tiers_for([b for _, b, _, _ in scored], req, levels)
+        core = core_skill.assess_pool([b for _, b, _, _ in scored], req)  # Я1: ядро роли (порядок — флаг RANK_CORE_SKILL)
+        if above:
+            # первые места — лучшие точного уровня по прежнему порядку (ярус обязательного — по пулу точного уровня),
+            # дальше — общий порядок, при равном ярусе обязательного точный уровень раньше
+            exact = [x for x in scored if x[1].category_id != above_id]
+            must_e = must_have.tiers_for([b for _, b, _, _ in exact], req, levels)
+            head = [x for x in selection_order(exact, must_e, core)[:grade_above.KEEP] if tier(x[1]) == 0]
+            scored = grade_above.merge(head, selection_order(scored, must, core, above_id=above_id))
+        else:
+            scored = selection_order(scored, must, core)
+        n_after_conditions = len(bundles)
     results = []
     for rank, (s, b, comps, reasons) in enumerate(scored, start=1):
         if rank > limit and b.profile.public_ref not in include_refs:
@@ -611,7 +642,7 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     applied = {k: effective[k] for k in ("work_formats", "work_format", "city") if effective.get(k)}
     conditions = {"applied": applied, "text": conditions_text(applied), "off": bool(filters.get("conditions_off")),
                   "from_need": need_conditions(req)["work_formats"] is not None,
-                  "hidden": max(0, before_conditions - len(bundles))}
+                  "hidden": max(0, before_conditions - n_after_conditions)}
     core_meta = core_meta_of(req, core)
     above_meta = grade_above.meta(above, results)
     confirmed_n = sum(1 for _, b, _, _ in scored if b.grade_status == "confirmed")
@@ -627,17 +658,62 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         if excl
         else None
     )
-    meta = {"categories": recs, "conditions": conditions, "must_first": must_have.enabled(),
+    v2 = ltr.enabled()
+    stack = None
+    if stack_meta is not None:
+        stack = {**stack_meta, "text": ltr.threshold_text(stack_meta),
+                 "tag_titles": [tag_title(t) for t in stack_meta.get("tags") or []]}
+    meta = {"categories": recs, "conditions": conditions, "must_first": must_have.enabled() and not v2,
             "total_matched": len(scored), "core": core_meta, "grade_above": above_meta,
-            "salary_calibration": salary_cal, "rerank_diff": rerank_diff,
-            "t0_in_score": False, "ranking_basis_ru": explain_mod.RANKING_BASIS_RU}
+            "salary_calibration": salary_cal, "rerank_diff": rerank_diff, "stack_filter": stack,
+            "t0_in_score": False,
+            "ranking_basis_ru": explain_mod.RANKING_BASIS_V2_RU if v2 else explain_mod.RANKING_BASIS_RU,
+            "formula": explain_mod.formula_v2(W) if v2 else None}
     return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": algorithm(),
-            "conditions": conditions, "must_first": must_have.enabled(), "core": core_meta, "meta": meta,
+            "conditions": conditions, "must_first": must_have.enabled() and not v2, "core": core_meta, "meta": meta,
+            "stack_filter": stack,
             "grade_above": above_meta, "salary_calibration": salary_cal, "rerank_diff": rerank_diff,
             "weights": W, "provisional_penalty": PROVISIONAL_PENALTY,
             "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional),
             "unconfirmed_matched": sum(1 for _, b, _, _ in scored if b.unconfirmed),
             "confirmed_matched": confirmed_n}
+
+
+def order_bundles(bundles: list[Bundle], req: dict, filters: dict, *, above_id: str | None = None,
+                  weights: dict | None = None) -> tuple[list, dict]:
+    """match-v2: порядок подборки — ОДИН код для продукта (build_selection) и бенчмарка (tools/realdata/bench_holdout2).
+
+    1) условия потребности (формат, город) и фильтры работодателя — только сужают выдачу (Ф2);
+    2) стек вакансии — фильтр (ltr.stack_filter): обязательные навыки заявлены или подтверждены тестом, порог мягче,
+       если в первом ярусе осталось < 10;
+    3) порядок: ярус статуса грейда (подтверждён/предварительно → не подтверждён) → [добор ступенью выше: первые 2 места
+       — лучшие точного уровня, дальше точный уровень раньше] → балл match-v2 (тест и ФСП) → рейтинг → ref.
+    Возвращает ([(балл, Bundle, comps, reasons)], info)."""
+    W = weights or filters.get("_weights") or ltr.weights()
+    effective = condition_filters(req, filters)
+    before_conditions = len(apply_filters(bundles, {k: v for k, v in filters.items() if k != "conditions_off"}))
+    kept = apply_filters(bundles, effective)
+    scored = []
+    for b in kept:
+        s, comps, reasons = score_candidate(b, req, W)
+        if filters.get("min_score") and s < float(filters["min_score"]):
+            continue
+        scored.append((s, b, comps, reasons))
+    scored, sf = ltr.stack_filter(scored, req, filters, first_tier=lambda b: tier(b) == 0)
+
+    def key(x):
+        b = x[1]
+        return (tier(b), int(bool(above_id) and b.category_id == above_id), -x[0], -(b.rating or 0),
+                b.profile.public_ref or "")
+
+    if above_id:
+        exact = [x for x in scored if x[1].category_id != above_id]
+        head = [x for x in sorted(exact, key=key)[:grade_above.KEEP] if tier(x[1]) == 0]
+        scored = grade_above.merge(head, sorted(scored, key=key))
+    else:
+        scored = sorted(scored, key=key)
+    return scored, {"effective": effective, "before_conditions": before_conditions, "after_conditions": len(kept),
+                    "stack_filter": sf, "weights": W}
 
 
 def selection_order(scored: list, must: dict, core: dict, policy: str | None = None, above_id: str | None = None) -> list:

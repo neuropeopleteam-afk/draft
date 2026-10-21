@@ -44,6 +44,29 @@ RANKING_BASIS_RU = (
     "работодателей. Самозаявленные данные анкеты и резюме в расчёт балла и ярусов не входят (вес 0 %)."
 )
 
+RANKING_BASIS_V2_RU = (
+    "Категория и фильтр грейда — только по результату теста. Стек вакансии — фильтр: показаны кандидаты, у которых "
+    "обязательные навыки заявлены или подтверждены тестом (заявленное баллов не даёт). Место внутри категории — только "
+    "тест и ФСП: сила результата теста и запас над порогом грейда, достижения ФСП, навыки вакансии, подтверждённые "
+    "заданиями, короткие задания работодателей; минус — обязательные навыки, которые тест проверил и не подтвердил. "
+    "Самоописание (заявленный стек, грейд, формат, город, вилка) в балл не входит."
+)
+
+
+def formula_v2(weights: dict[str, float] | None = None) -> dict[str, Any]:
+    """Формула match-v2 для экрана: веса в процентах (сумма плюсов = 100), минусы отдельно."""
+    from app.modules.matching import ltr
+
+    w = weights or ltr.weights()
+    plus = [{"key": k, "title": ltr.TITLES[k], "pct": round(w[k] * 100)} for k in ltr.POSITIVE if w.get(k, 0) > 0]
+    minus = [{"key": k, "title": ltr.TITLES[k], "pct": round(-w[k] * 100)} for k in ltr.NEGATIVE if w.get(k, 0) < 0]
+    meta = ltr.model()["meta"]
+    return {"version": ltr.VERSION, "plus": plus, "minus": minus,
+            "text": "Место в категории = " + " + ".join(f"{x['title'][:1].lower()}{x['title'][1:]} {x['pct']} %" for x in plus)
+                    + "".join(f" − {x['title'][:1].lower()}{x['title'][1:]} {x['pct']} %" for x in minus),
+            "trained_on": meta.get("trained_on_ru"), "source": meta.get("source")}
+
+
 _PCT_RE = re.compile(r"(\d+)\s*%")
 
 
@@ -209,6 +232,10 @@ def build_why_above_next(
             "kind": "tier",
             "text": f"грейд подтверждён тестом на платформе (у {n_ref} уровень только самозаявлен)",
         })
+    c_contrib = (curr.get("components") or {}).get("contrib")
+    n_contrib = (nxt.get("components") or {}).get("contrib")
+    if c_contrib is not None and n_contrib is not None:
+        return _why_above_v2(curr, nxt, c_ref, n_ref, diff100, reasons, c_contrib, n_contrib)
 
     # 2. Ядро роли (основной язык / фреймворк)
     c_core = curr.get("core") or {}
@@ -294,6 +321,48 @@ def build_why_above_next(
         "headline": headline,
         "reasons": reasons[:3],
     }
+
+
+V2_WHY = {
+    "test": "сильнее результат теста на грейд",
+    "margin": "больше запас над порогом грейда по шкале теста",
+    "fsp": "достижения ФСП (реестр и официальные протоколы)",
+    "required": "больше обязательных навыков вакансии подтверждено тестом",
+    "desired": "подтверждены желательные навыки вакансии",
+    "probe": "выполнено короткое задание работодателя",
+}
+
+
+def _why_above_v2(curr: dict, nxt: dict, c_ref: str, n_ref: str, diff100: float, reasons: list,
+                  c_contrib: dict, n_contrib: dict) -> dict[str, Any]:
+    """match-v2: «почему выше соседа» — точная разность вкладов признаков линейной модели (в баллах из 100)."""
+    if (curr.get("category_id") and nxt.get("category_id") and curr.get("category_id") != nxt.get("category_id")
+            and (curr.get("card") or {}).get("above") is not True and (nxt.get("card") or {}).get("above") is True):
+        reasons.append({"kind": "tier", "text": f"точный уровень вакансии (у {n_ref} — ступенью выше)"})
+    diffs = []
+    for k, txt in V2_WHY.items():
+        d = round(float(c_contrib.get(k) or 0) - float(n_contrib.get(k) or 0), 1)
+        if d >= 0.3:
+            diffs.append((d, {"kind": k, "text": f"{txt} (+{str(d).replace('.', ',')} балла)", "points100": d}))
+    df = round(float(c_contrib.get("failed") or 0) - float(n_contrib.get("failed") or 0), 1)
+    if df >= 0.3:
+        diffs.append((df, {"kind": "failed", "points100": df,
+                           "text": f"у {n_ref} тест проверил и не подтвердил обязательный навык "
+                                   f"(−{str(df).replace('.', ',')} балла у него)"}))
+    dpv = round(float(c_contrib.get("provisional") or 0) - float(n_contrib.get("provisional") or 0), 1)
+    if dpv >= 0.3:
+        diffs.append((dpv, {"kind": "provisional", "points100": dpv,
+                            "text": f"грейд подтверждён окончательно (у {n_ref} — предварительно, "
+                                    f"−{str(dpv).replace('.', ',')} балла)"}))
+    reasons += [r for _, r in sorted(diffs, key=lambda x: -x[0])]
+    if not reasons:
+        reasons.append({"kind": "tie", "text": "равный балл теста и ФСП, выше общий рейтинг подтверждённого профиля"
+                                               if diff100 <= 0 else
+                                               f"выше суммарный балл теста и ФСП (+{str(diff100).replace('.', ',')} из 100)"})
+    short_list = "; ".join(r["text"] for r in reasons[:3])
+    return {"current_ref": c_ref, "next_ref": n_ref, "score_diff100": diff100,
+            "headline": f"Выше следующего кандидата ({n_ref}) за счёт: {short_list}", "reasons": reasons[:3],
+            "exact": True}
 
 
 def annotate_selection_neighbors(
@@ -621,7 +690,18 @@ def build_explain_from_result(
         w_map["stack_required"] = 0.0
 
     breakdown: list[dict[str, Any]] = []
-    for key in ("test", "stack_required", "stack_desired", "fsp", "probe"):
+    if comps.get("contrib") is not None:  # match-v2: вклады линейной модели (тест и ФСП), минусы — отрицательные
+        from app.modules.matching import ltr
+
+        w2 = weights if (weights and "margin" in weights) else ltr.weights()
+        raw = {**{k: comps.get(k) for k in ltr.FEATURES}, "provisional": comps.get("provisional_flag")}
+        for key in ltr.FEATURES:
+            if not w2.get(key):
+                continue
+            breakdown.append({"key": key, "label": ltr.TITLES[key], "weight_pct": round(w2[key] * 100),
+                              "raw_pct": round(float(raw.get(key) or 0.0) * 100),
+                              "points100": float(comps["contrib"].get(key) or 0.0), "minus": key in ltr.NEGATIVE})
+    for key in (() if breakdown else ("test", "stack_required", "stack_desired", "fsp", "probe")):
         label, default_pct = WEIGHT_LABELS[key]
         w = float(w_map.get(key, default_pct / 100.0))
         val = float(comps.get(key) or 0.0)
@@ -656,7 +736,7 @@ def build_explain_from_result(
         "required_confirmed": req_confirmed,
         "required_total": req_total,
         "t0_in_score": False,
-        "ranking_basis_ru": RANKING_BASIS_RU,
+        "ranking_basis_ru": RANKING_BASIS_V2_RU if comps.get("contrib") is not None else RANKING_BASIS_RU,
         "grade": {
             "title": cat_title,
             "status": grade_status,
