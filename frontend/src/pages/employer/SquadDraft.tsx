@@ -24,7 +24,10 @@ export default function SquadDraft() {
   return (
     <div className="max-w-5xl space-y-6">
       <PageTitle title="Командный Драфт ФСП"
-        subtitle="Выберите тип проекта, соберите сыгранное звено из проверенных специалистов и отправьте приглашения всей команде в один клик. Рядом — калькулятор экономики найма и рентген кода кандидата." />
+        subtitle="Выберите тип проекта и смоделируйте звено из 2–10 специалистов под месячный бюджет ФОТ. Рядом — калькулятор экономики найма и статический рентген кода (пример расчёта)." />
+      <Alert kind="info">
+        <b>Интерактивный пример расчёта.</b> Профили в таблице звена — модельные образцы для планирования бюджета и ролей проекта. Для отправки реальных приглашений живым кандидатам используйте раздел <Link to="/employer/needs" className="font-semibold text-brand hover:underline">«Потребности и вакансии»</Link> или <Link to="/employer/candidates" className="font-semibold text-brand hover:underline">«Поиск по базе»</Link>.
+      </Alert>
       <Seg label="Раздел Командного Драфта" value={tab} onChange={setTab} options={TABS} />
       {tab === "squad" && <SquadBuilder />}
       {tab === "roi" && <HireRoi />}
@@ -297,8 +300,8 @@ function SquadBuilder() {
       <div className="grid gap-3 sm:grid-cols-3">
         <Kpi label="Покрытие графа технологий" value={`${coverage}${NB}%`} tone={coverage < 100 ? "warn" : "ok"}
           hint={coverage < 100 && gaps.length ? `Белые пятна: ${gaps.join(", ")}` : "Без белых пятен: каждый навык проекта закрыт"} />
-        <Kpi label="Индекс командной синергии" value={`${synergy}${NB}%`} tone={synergy >= 90 ? "ok" : "night"}
-          hint={`${fspCount} из ${teamSize} играли командные турниры ФСП`} />
+        <Kpi label="Индекс синергии (оценка по формуле)" value={`${synergy}${NB}%`} tone={synergy >= 90 ? "ok" : "night"}
+          hint={`Оценка по формуле (80 + доля призёров ФСП − пробелы графа) · ${fspCount} из ${teamSize} с опытом турниров ФСП`} />
         <Kpi label="Экономия против агентства" value={mln(savings)} hint={`Комиссия 20${NB}% годового дохода команды не нужна`} />
       </div>
 
@@ -350,27 +353,27 @@ function SquadBuilder() {
           </table>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-night/10 pt-4">
-          <p className="text-xs text-brand-ink/65">Контакты откроются после принятия. Слоты интервью подобраны по календарям всех {teamSize} участников.</p>
+          <p className="text-xs text-brand-ink/65">Модельный расчёт звена ({teamSize} ролей). Реальные приглашения отправляются из подборки по потребности.</p>
           <button type="button" className="btn-primary" onClick={() => setSent(true)} data-testid="squad-batch-offer">
-            Отправить пакетный оффер всей команде ({teamSize} чел.) в 1 клик
+            Предпросмотр пакетного оффера ({teamSize} ролей, пример)
           </button>
         </div>
       </section>
 
-      <Modal open={sent} onClose={() => setSent(false)} title={`Пакетный оффер отправлен · ${teamSize} из ${teamSize}`}>
+      <Modal open={sent} onClose={() => setSent(false)} title={`Пример пакетного оффера · ${teamSize} ролей`}>
         <div className="space-y-4">
-          <Alert kind="ok">Приглашения с вилкой и слотом интервью ушли всем участникам звена «{p.short}». Ответы появятся в разделе «Приглашения».</Alert>
+          <Alert kind="info">Это демонстрационный пример расчёта звена «{p.short}» — реальные приглашения кандидатам отсюда не отправляются. Чтобы пригласить реальных кандидатов с зарплатной вилкой и слотами интервью, создайте подборку в разделе «Потребности и вакансии».</Alert>
           <ul className="divide-y divide-brand-night/10 text-sm">
             {team.map((t, i) => (
               <li key={t.x.code} className="flex flex-wrap items-baseline justify-between gap-2 py-2">
-                <span><b className="text-brand-night">{t.role}</b> <span className="font-mono text-xs text-brand-ink/65">{t.x.code}</span></span>
-                <span className="text-xs text-brand-ink/75">{rub(Math.round(t.x.salary * 0.95 / 5000) * 5000)} – {rub(Math.round(t.x.salary * 1.1 / 5000) * 5000)} · интервью {slots[i]}</span>
+                <span><b className="text-brand-night">{t.role}</b> <span className="font-mono text-xs text-brand-ink/65">{t.x.code} (модельный профиль)</span></span>
+                <span className="text-xs text-brand-ink/75">{rub(Math.round(t.x.salary * 0.95 / 5000) * 5000)} – {rub(Math.round(t.x.salary * 1.1 / 5000) * 5000)} · пример слота: {slots[i]}</span>
               </li>
             ))}
           </ul>
           <div className="flex flex-wrap justify-end gap-2">
-            <button type="button" className="btn-ghost" onClick={() => setSent(false)}>Остаться</button>
-            <button type="button" className="btn-primary" onClick={() => navigate("/employer/invitations")}>Перейти к приглашениям</button>
+            <button type="button" className="btn-ghost" onClick={() => setSent(false)}>Закрыть пример</button>
+            <button type="button" className="btn-primary" onClick={() => navigate("/employer/needs")}>Перейти к потребностям и подборкам</button>
           </div>
         </div>
       </Modal>
@@ -622,15 +625,15 @@ function CodeDna() {
   }
   const choose = (id: string) => { const s = SAMPLES.find((x) => x.id === id)!; setSample(id); setCode(s.code); setRes(null); };
   const verdict = res && (res.ai >= 60
-    ? { kind: "error" as const, t: `Высокий риск слепой ИИ-генерации: код выглядит как Senior, но реальный уровень — ${res.grade}. Стиль не совпадает с кодом кандидата из теста — проверьте авторство на устной защите.` }
+    ? { kind: "error" as const, t: `Высокий риск слепой ИИ-генерации по эвристике кода (оценка сложности фрагмента: ${res.grade}). Рекомендуем проверить понимание решений на устной защите.` }
     : res.style >= 70
-      ? { kind: "ok" as const, t: `Код написан человеком уровня ${res.grade}, стиль совпадает с решениями кандидата в тесте.` }
-      : { kind: "info" as const, t: `Признаков ИИ-генерации мало; уровень — ${res.grade}. Стиль отличается от теста — уточните на защите.` });
+      ? { kind: "ok" as const, t: `Эвристическая оценка фрагмента кода — ${res.grade}, структура соответствует эталонному инженерному профилю (${res.style} %).` }
+      : { kind: "info" as const, t: `Явных маркеров чат-бота мало; эвристическая оценка фрагмента — ${res.grade}. Отклонения от эталона структуры (${res.style} %) можно уточнить на собеседовании.` });
   return (
     <div className="space-y-5">
       <section className="card space-y-4" aria-label="Код кандидата">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-bold text-brand-night">Код кандидата</h2>
+          <h2 className="text-lg font-bold text-brand-night">Код кандидата (эвристический разбор фрагмента)</h2>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="Примеры кода">
             {SAMPLES.map((s, i) => (
               <button key={s.id} type="button" onClick={() => choose(s.id)} aria-pressed={sample === s.id}
@@ -643,7 +646,7 @@ function CodeDna() {
         <textarea aria-label="Код для рентгена" className="input min-h-[300px] font-mono text-xs leading-relaxed" spellCheck={false} value={code}
           onChange={(e) => { setCode(e.target.value); setSample(null); setRes(null); }} placeholder="Вставьте любой код кандидата" />
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-brand-ink/65">Код не покидает браузер: сигнатуры ИИ-генерации, канарейки и инженерные паттерны считаются локально.</p>
+          <p className="text-xs text-brand-ink/65">Статическая эвристика в браузере (21 правило: канарейки, галлюцинации API, транзакции, типы): не заменяет адаптивный тест платформы.</p>
           <button type="button" className="btn-primary" onClick={run} disabled={busy || !code.trim()} data-testid="code-xray">
             {busy ? "Просвечиваем…" : "Провести рентген кода"}
           </button>
@@ -653,9 +656,9 @@ function CodeDna() {
       {res && verdict && (
         <section className="card space-y-4" aria-live="polite" aria-label="Результат рентгена">
           <div className="grid gap-3 sm:grid-cols-3">
-            <Kpi label="Вероятность слепой ИИ-генерации" value={`${res.ai}${NB}%`} tone={res.ai >= 60 ? "warn" : "ok"} />
-            <Kpi label="Реальный инженерный уровень" value={res.grade} hint={`индекс по шкале теста ${th(res.theta)}`} />
-            <Kpi label="Сверка со стилем кандидата в тесте" value={`${res.style}${NB}%`} tone={res.style >= 70 ? "ok" : "warn"} />
+            <Kpi label="Маркеры ИИ-генерации (эвристика)" value={`${res.ai}${NB}%`} tone={res.ai >= 60 ? "warn" : "ok"} />
+            <Kpi label="Оценка по эвристике кода" value={res.grade} hint={`индекс паттернов ${th(res.theta)} (не результат теста)`} />
+            <Kpi label="Соответствие эталонному стилю (эвристика)" value={`${res.style}${NB}%`} tone={res.style >= 70 ? "ok" : "warn"} />
           </div>
           <Alert kind={verdict.kind}>{verdict.t}</Alert>
           <div>
