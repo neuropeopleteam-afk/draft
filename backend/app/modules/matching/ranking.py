@@ -345,27 +345,40 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
 
     sreq = stack_part(req.get("stack_required") or [], "Обязательно")
     sdes = stack_part(req.get("stack_desired") or [], "Желательно")
-    fsp = b.fsp
-    verified = [a for a in b.achievements if a.verified]
-    if verified:
-        best = min(verified, key=lambda a: a.place or 99)
-        from app.modules.fsp.rating import details
-        from app.modules.profiles.facts import DISCIPLINE_TITLES, fsp_relevance_on
+    # fsp-v3 (matching/fsp_factor.py): вес статуса — подтверждено ФСП 1,0; найдено в официальном протоколе и ждёт
+    # подтверждения ФСП 0,5; заявлено без документа 0; судьи и записи без мероприятия — не достижения. Нет ФСП — штраф 0.
+    from app.modules.matching import fsp_factor
+    from app.modules.profiles.facts import DISCIPLINE_TITLES
 
-        rel_on = fsp_relevance_on()  # И23: флаг FSP_DISCIPLINE_RELEVANCE, по умолчанию выкл. — текст прежний
-        rating = details(verified, direction=b.direction if rel_on else None, relevance=rel_on)
-        rb = (rating.get("relevance") or {}).get("best") or {}
-        rel_text = (f"Соревнования по «{DISCIPLINE_TITLES.get(rb['discipline'], rb['discipline'])}» — {rb['title']} кандидата "
-                    f"(коэффициент {str(rb['coef']).replace('.', ',')})" if rb.get("title") else "")
-        reasons.append({"requirement": "Достижения ФСП", "level": "T2", "status": "confirmed",
-                        "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")
-                        + f". Сила ФСП {ru_num(fsp, 3)}, соревнований: {rating['competitions']}"  # формула — в карточке (И18, Ф6 В5)
-                        + (f". {rel_text}" if rel_text else "")})  # И23: релевантность дисциплины — только при флаге
+    fd = fsp_factor.details(b.achievements, direction=b.direction or req.get("direction"))
+    fsp = fd["strength"]
+    if fd["best"]:
+        best = fd["best"]["a"]
+        st = fd["best"]["status"]
+        cnt = fd["counted"]
+        others = cnt["verified"] + cnt["pending_fsp"] - 1
+        pr = fsp_factor.protocol_ref(best)
+        head = fsp_factor.protocol_citation(best) if pr else achievement_text(best)
+        how = (" — официальный протокол ФСП, подтверждено ФСП" if st == "verified" and pr else
+               " — официальный протокол ФСП, ждёт подтверждения ФСП (вес 0,5)" if st == "pending_fsp" else "")
+        rel_text = ""
+        if fd["relevance"]:
+            from app.modules.fsp import relevance as fsp_rel
+
+            c = fd["best"]["coef"]
+            rel_text = (f". Соревнования по «{DISCIPLINE_TITLES.get(best.discipline, best.discipline)}» — "
+                        f"{fsp_rel.title(c)} кандидата (коэффициент {str(c).replace('.', ',')}; "
+                        f"{fd['best']['coef_source']})")
+        reasons.append({"requirement": "Достижения ФСП", "level": "T2" if st == "verified" else "T1",
+                        "status": "confirmed" if st == "verified" else "partial", "fsp_status": st,
+                        **({"protocol": pr} if pr else {}),
+                        "text": f"{head}{how}" + (f" и ещё {others}" if others > 0 else "")
+                        + f". Сила ФСП {ru_num(fsp, 3)}, соревнований: {fd['competitions']}" + rel_text})
     else:
-        # Неподтверждённые реестром записи (значок «из анкеты») — не T2: ни бонуса, ни пометки «подтверждено»
-        extra = len(b.achievements)
+        # заявленное без документа — не T2: ни бонуса, ни пометки «подтверждено» (самоописание не входит в балл)
+        extra = fd["counted"]["declared"]
         reasons.append({"requirement": "Достижения ФСП", "level": "T0" if extra else "none", "status": "neutral",
-                        "text": (f"Заявлено достижений ФСП без подтверждения реестром: {extra} — в ранжирование не входит"
+                        "text": (f"Заявлено достижений ФСП без подтверждения: {extra} — в ранжирование не входит"
                                  if extra else NO_FSP)})  # Я8: одна фраза о без-ФСП (core/origin.py)
     integ = (t or {}).get("integrity")
     if integ:
@@ -496,6 +509,11 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
             continue
         if f.get("fsp_only") and not b.achievements:
             continue
+        if f.get("fsp_protocol_only"):  # только с результатом из официального протокола ФСП (ждёт ФСП или подтверждено)
+            from app.modules.matching import fsp_factor
+
+            if not fsp_factor.has_protocol(b.achievements):
+                continue
         if f.get("confirmed_only") and (b.provisional or b.unconfirmed):  # только подтверждённый грейд
             continue
         if f.get("stack_t1") and not all(skill_confirmed(b.skills_t1.get(t)) for t in f["stack_t1"]):
@@ -645,7 +663,7 @@ def core_meta_of(req: dict, core: dict) -> dict | None:
 
 def search(db: Session, *, direction=None, grade=None, category=None, stack: list[str] | None = None,
            stack_level: str = "any", fsp_only: bool = False, limit: int = 50, offset: int = 0,
-           confirmed_only: bool = False, real_only: bool = False) -> dict:
+           confirmed_only: bool = False, real_only: bool = False, fsp_protocol_only: bool = False) -> dict:
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     pool = visible_pool(db, direction=direction, grades=[grade] if grade else None,
                         category_ids=[category] if category else None, real_only=real_only)
@@ -659,7 +677,8 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
                                                              category_ids=[category] if category else None)
                 if not (real_only and is_synthetic_profile(p))]
     bundles = list(load_bundles(db, ids, direction=direction, category_ids=wanted).values())
-    f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only, "real_only": real_only}
+    f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only, "real_only": real_only,
+         "fsp_protocol_only": fsp_protocol_only}
     if stack:
         f["stack_t1" if stack_level == "t1" else "stack_any"] = stack
     bundles = apply_filters(bundles, f)

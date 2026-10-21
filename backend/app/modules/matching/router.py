@@ -137,6 +137,8 @@ class Filters(BaseModel):
     stack_t1: list[str] | None = Field(None, description="Только с подтверждёнными (T1) навыками")
     stack_any: list[str] | None = Field(None, description="Навык заявлен (T0) или подтверждён (T1)")
     fsp_only: bool = False
+    fsp_protocol_only: bool = Field(False, description="Только с результатом из официального протокола ФСП (найдено в "
+                                                       "протоколе и ждёт подтверждения ФСП или подтверждено ФСП)")
     confirmed_only: bool = Field(False, description="Только подтверждённый грейд: без «Junior (предварительно)» и без "
                                                     "кандидатов со статусом «грейд не подтверждён»")
     work_format: Literal["office", "hybrid", "remote"] | None = None
@@ -576,6 +578,8 @@ def search_candidates(
     stack: list[str] = Query(default_factory=list, description="Стек-теги (все должны быть)"),
     stack_level: Literal["any", "t1"] = Query("any", description="any — заявлен или подтверждён; t1 — подтверждён"),
     fsp: bool = Query(False, description="Только с паспортом ФСП"),
+    fsp_protocol_only: bool = Query(False, description="Только с результатом из официального протокола ФСП "
+                                                       "(ждёт подтверждения ФСП или подтверждено ФСП)"),
     confirmed: bool = Query(False, description="Только подтверждённый грейд: без «Junior (предварительно)» и без "
                                                "«грейд не подтверждён» (по умолчанию они показываются ниже подтверждённых)"),
     real_only: bool = Query(False, description="Исключить модельные и синтетические профили (profiles.is_synthetic)"),
@@ -585,7 +589,7 @@ def search_candidates(
     my_company(db, user)
     return ranking.search(db, direction=direction, grade=grade, category=category, stack=stack or None,
                           stack_level=stack_level, fsp_only=fsp, limit=limit, offset=offset,
-                          confirmed_only=confirmed, real_only=real_only)
+                          confirmed_only=confirmed, real_only=real_only, fsp_protocol_only=fsp_protocol_only)
 
 
 @router.get("/categories", summary="Категории с числом видимых кандидатов и рыночным диапазоном", responses=AUTH)
