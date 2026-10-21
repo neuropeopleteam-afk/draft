@@ -57,9 +57,12 @@ def clean_text(text: str, path: str | None = None) -> str:
         for rule, rx in C.RULES:
             if rule in allow or not rx.search(line):
                 continue
-            for r2, sub_rx, repl in SUBS:
-                if r2 == rule:
-                    line = sub_rx.sub(repl, line)
+            for _ in range(5):  # «/home/user/workspace/…»: после первой замены снова встаёт «/workspace/»
+                for r2, sub_rx, repl in SUBS:
+                    if r2 == rule:
+                        line = sub_rx.sub(repl, line)
+                if not rx.search(line):
+                    break
         out.append(line)
     return "\n".join(out)
 
