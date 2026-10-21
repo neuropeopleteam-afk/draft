@@ -37,9 +37,7 @@ SUBS = [
      re.compile(r"[\w./-]*(?:reports_0\d{3}|tasks_0\d{3}|HANDOVER|handover/|PLAN_0\d{3})[\w./-]*"), "<внутренний документ>"),
     ("хэш ФИО (152-ФЗ)", re.compile(r"(?<=_hash)(\"?\s*[:=]\s*\"?)[0-9a-f]{64}"), r"\1<sha256>"),
     ("название другого решения", re.compile(r"[Сс]нотр[а-яё]*|[Ss]notra\w*"), "другое решение"),
-    ("соперники", re.compile(r"https?://github\.com/LaimOr127/[^\s\"')>\]]*", re.I), "<открытый репозиторий другого решения (MIT)>"),
-    ("соперники", re.compile(r"\bLaimOr127\b", re.I), "<автор другого решения>"),
-    ("соперники", re.compile(r"Dev_dev|IT Match", re.I), "другое решение"),
+    ("адрес стенда другого решения", re.compile(r"\b\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}\.sslip\.io\b[^\s\"')>]*", re.I), "<адрес стенда>"),
     ("закрытая ссылка Google Drive", re.compile(r"\S*drive\.google\.com/file\S*"), "<закрытая ссылка>"),
 ]
 STATS = {"dropped": 0, "rewritten": 0, "messages": 0}

@@ -39,12 +39,10 @@ RULES = [
     # 152-ФЗ: значение хэша ФИО/записи протокола ФСП в выгрузках (несолёный SHA-256 ФИО восстанавливается перебором)
     ("хэш ФИО (152-ФЗ)", re.compile(r"(?:fio|key)_hash\"?\s*[:=]\s*\"?[0-9a-f]{64}")),
     ("название другого решения", re.compile(r"снотр|snotra", re.I)),
+    # адреса стендов других решений (sslip.io по IP); названия соперников и ссылки на их открытый код — остаются
+    # (решение владельца 21.10: сравнение открыто, docs/COMPARISON.md)
+    ("адрес стенда другого решения", re.compile(r"\b\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}\.sslip\.io\b", re.I)),
 ]
-# Соперники по ТЗ (Dev_dev, IT Match, их репозиторий): правило включается только при публикации, PUBLISH_COMPETITORS=a|b
-# (а — обезличить везде; б — везде, кроме протокола сравнения с атрибуцией MIT). Решение — владельца.
-COMPETITORS = os.environ.get("PUBLISH_COMPETITORS", "").strip().lower()
-if COMPETITORS in ("a", "b"):
-    RULES.append(("соперники", re.compile(r"dev_dev|it match|laimor127", re.I)))
 BAD_NAMES = re.compile(r"(^|/)(\.env|id_rsa[^/]*|HANDOVER[^/]*|TZ_[^/]*|[^/]+\.(pem|key|p12|pfx))$")
 # ни вендорные, ни сгенерированные файлы не проверяем построчно
 SKIP = re.compile(r"(^|/)(package-lock\.json|static/apidocs/|public/vendor/|.*\.(png|jpg|jpeg|gif|svg|ico|wasm|tflite|gz|pdf|docx|y4m|woff2?))$")
@@ -64,8 +62,6 @@ ALLOW = {
 IGNORE_SELF = {"tools/publish/check_public_tree.py", "tools/publish/scan_history_values.py", "tools/publish/test_publish_tools.py",
                # вариант В публикации: список исключаемых путей и замены по этим же правилам (сами шаблоны — не нарушение)
                "ops/publish_exclude.txt", "ops/publish_sanitize.py", "ops/publish_history_scan.py"}
-if COMPETITORS == "b":
-    ALLOW["docs/realdata/DEVDEV_PROTOCOL.md"] = {"соперники"}  # атрибуция открытого генератора (MIT) — один файл
 MAX_BYTES = 20 * 1024 * 1024
 
 
