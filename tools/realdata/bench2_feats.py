@@ -63,7 +63,7 @@ def world_rows(w, doz: bool = False) -> dict:
                 row = {
                     "test": comps.get("test", 0.0), "margin": comps.get("margin", 0.0), "fsp": comps.get("fsp", 0.0),
                     "required": comps.get("required", 0.0), "desired": comps.get("desired", 0.0),
-                    "probe": comps.get("probe", 0.0), "failed": comps.get("failed", 0.0),
+                    "probe": comps.get("probe_v2", comps.get("probe", 0.0)), "failed": comps.get("failed", 0.0),
                     "provisional": 1.0 if b.provisional else 0.0,
                     "theta_cut": (th - GRADE_CUTS[g]) if (th is not None and not b.unconfirmed and g in GRADE_CUTS) else -3.0,
                     "theta_next": (th - GRADE_CUTS[nxt]) if (th is not None and nxt and not b.unconfirmed) else -3.0,

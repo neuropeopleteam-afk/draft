@@ -10,6 +10,7 @@
               угадывание 0,25; шум резюме: 35 % — по 4 ложных навыка, 10 % настоящих не указаны, грейд +1 у 25 %,
               −1 у 10 %; метка 0–3 по А15; формата и города у потребностей нет.
   sm_ideal  — то же, θ̂ = θ* (σ = 0) — опорная строка «идеальный тест».
+  sm_s55    — то же, σ = SE = 0,55 — строка чувствительности к погрешности теста (А15).
   hard      — наш строгий мир (BenchConfig по умолчанию: 5 направлений, 200 × 2000, σθ 0,48, 20 % раздутых резюме,
               ФСП, «предварительные»), метка bench_world.true_relevance («capable»); формат из текста потребности убран
               (метка его не учитывает — иначе фильтр условий продукта прятал бы релевантных).
@@ -35,7 +36,7 @@ BACKEND = REPO / "backend"
 if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
-CONDS = ("sm", "sm_ideal", "hard")
+CONDS = ("sm", "sm_ideal", "sm_s55", "hard")
 _STATE: dict = {}
 
 # --------------------------------------------------------------------------- 4 направления каталога-расширения (S-M)
@@ -133,6 +134,8 @@ def config(cond: str, seed: int):
     p = dict(SM_PARAMS, seed=seed, dirs=DIRS9)
     if cond == "sm_ideal":
         p["theta_sigma"] = 0.0
+    if cond == "sm_s55":  # чувствительность (А15): погрешность теста 0,55 вместо 0,413
+        p["theta_sigma"] = p["se_reported"] = 0.55
     return bw.BenchConfig(**p)
 
 
@@ -307,64 +310,87 @@ def order_v13(bundles: list, idx: list[int], req: dict, above_id: str | None) ->
 
 
 # --------------------------------------------------------------------------- дозапрос (вторая ступень подборки)
-# Работодатель отправляет топ-K подборки короткие задания по обязательным навыкам, которые не подтверждены проверкой
-# (в продукте — POST /api/employer/assignments mode=probe; факты T1 по навыкам сливаются с тестом через merge_skill).
-DOZ = {"k": 20, "per_skill": 3, "max_tasks": 9, "resp": 0.7}
+# Работодатель отправляет короткие задания по стеку потребности (в продукте — POST /api/employer/assignments,
+# mode=probe). Всё, кроме ответов кандидата, — код продукта: набор заданий assignments.bank.pick (стек потребности —
+# обязательные + желательные, n_tasks по умолчанию из схемы запроса), подсчёт по навыкам assignments.service._skills,
+# слияние с тестом profiles.facts.merge_skill, время — service.suggested_time, порядок — ranking.order_bundles.
+# Условия А15 (21.10): кого спрашивать — только по наблюдаемому (первые 20 первого яруса, у кого обязательный навык
+# заявлен, но не проверен); отклик 50 % (основная строка) и 70 % (справочно), кто ответил — случайно, независимо от
+# истины и балла; ответ — модель заданий теста мира (bench_world._run_test: угадывание, наклон 1,7, сдвиг «знает /
+# не знает» при доле известных навыков задания ≥ 0,5), трудность — середина полосы грейда + N(0; 0,5).
+DOZ = {"k": 20, "resp": 0.5}
 
 
-def dozapros_plan(w: W2, bundles: list, i: int, req: dict, order: list[int], p: dict | None = None) -> dict:
-    """{кандидат: (новые skills_t1, новые probes_t1)} для топ-K яруса 0 с непроверенными обязательными навыками.
-    Ответ на задание — та же модель, что задания теста мира (bench_world._run_test): p = guess + (1 − guess)·σ(1,7·
-    (θ* + сдвиг − b)), сдвиг known_bonus / unknown_penalty, b — середина полосы запрошенного грейда + N(0; 0,5).
-    Отвечает доля resp (кто не ответил — без изменений). Детерминированно по (зерно, потребность, кандидат)."""
+def probe_n_tasks() -> int:
+    """n_tasks по умолчанию — из схемы запроса продукта (assignments.router.ProbeIn / Field(5, ge=3, le=5))."""
+    from app.modules.assignments import router
+
+    for name in dir(router):
+        m = getattr(router, name)
+        f = getattr(m, "model_fields", {}).get("n_tasks") if isinstance(m, type) else None
+        if f is not None and f.default:
+            return int(f.default)
+    return 5
+
+
+def dozapros_plan(w: W2, bundles: list, i: int, req: dict, order: list[int], p: dict | None = None,
+                  cost: dict | None = None) -> dict:
+    """{кандидат: (новые skills_t1, новые probes_t1)}; cost (если передан) — счётчики цены дозапроса."""
+    from app.modules.assignments import bank, service
     from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
     from app.modules.matching import ltr, ranking
-    from app.modules.profiles.facts import merge_skill, skill_confirmed
+    from app.modules.profiles.facts import merge_skill
 
     bw = init(w.cond)["bw"]
     p = dict(DOZ, **(p or {}))
     cfg = w.cfg
-    tags = ltr.required_tags(req)
-    g = req.get("grade") or w.needs[i].grade
+    need = w.needs[i]
+    d = req.get("direction") or need.direction
+    g = req.get("grade") or need.grade
+    req_tags = ltr.required_tags(req)
+    stack = [t for t in req_tags + [x["tag"] for x in (req.get("stack_desired") or []) if x.get("tag")]
+             if service.known_tag(t)]
     gi = GRADE_ORDER.index(g) if g in GRADE_ORDER else 1
-    lo = GRADE_CUTS[g]
+    lo = GRADE_CUTS[GRADE_ORDER[gi]]
     hi = GRADE_CUTS[GRADE_ORDER[gi + 1]] if gi + 1 < len(GRADE_ORDER) else lo + 1.0
     centre = (lo + hi) / 2
+    seed_pick = int(np.random.SeedSequence([w.seed, 8, i]).generate_state(1)[0])
+    fams = bank.pick(d, g, stack, probe_n_tasks(), seed=seed_pick)
+    minutes = service.suggested_time(fams)
     out = {}
     top = [k for k in order if ranking.tier(bundles[k]) == 0][: p["k"]]
-    for k in top:
+    sent = [k for k in top if any(t in bundles[k].stack_t0 and bundles[k].skills_t1.get(t) is None for t in req_tags)]
+    if cost is not None:
+        cost["needs"] = cost.get("needs", 0) + 1
+        cost["sent"] = cost.get("sent", 0) + len(sent)
+        cost["tasks_per_candidate"] = len(fams)
+        cost["minutes_per_candidate"] = minutes
+    for k in sent:
         b = bundles[k]
-        todo = [t for t in tags if not skill_confirmed(b.skills_t1.get(t))]
-        if not todo:
-            continue
         rng = np.random.default_rng(np.random.SeedSequence([w.seed, 7, i, k]))
-        if rng.random() >= p["resp"]:
+        if rng.random() >= p["resp"]:  # не ответил (случайно, независимо от истины и балла)
             continue
         lat = w.cands[k].latent
+        items = []
+        for f in fams:
+            tags = list(f.get("tags") or [])
+            kf = sum(1 for t in tags if t in lat.known) / len(tags) if tags else 0.0
+            shift = cfg.known_bonus if kf >= 0.5 else cfg.unknown_penalty
+            bdiff = centre + rng.normal(0, 0.5)
+            pr = cfg.guess + (1 - cfg.guess) / (1 + math.exp(-1.7 * (lat.theta + shift - bdiff)))
+            items.append({"family_id": f["family_id"], "correct": bool(rng.random() < pr)})
+        if cost is not None:
+            cost["answered"] = cost.get("answered", 0) + 1
         sk = dict(b.skills_t1)
-        n_tasks, correct_all = 0, 0
-        for t in todo:
-            n = min(p["per_skill"], p["max_tasks"] - n_tasks)
-            if n <= 0:
-                break
-            shift = cfg.known_bonus if t in lat.known else cfg.unknown_penalty
-            c = 0
-            for _ in range(n):
-                bdiff = centre + rng.normal(0, 0.5)
-                pr = cfg.guess + (1 - cfg.guess) / (1 + math.exp(-1.7 * (lat.theta + shift - bdiff)))
-                c += int(rng.random() < pr)
-            n_tasks += n
-            correct_all += c
-            f = bw._fact(b.profile.user_id, "skill", t, {"correct": c, "total": n, "score": round(c / n, 3),
-                                                         "origin": "assignment", "direction": w.needs[i].direction},
-                         bw.EvidenceLevel.T1, bw.FactSource.probe, False)
-            sk[t] = merge_skill(sk.get(t), f)
-        if n_tasks:
-            pf = bw._fact(b.profile.user_id, "probe", f"probe.need{i}", {"score": round(correct_all / n_tasks, 3),
-                                                                           "origin": "assignment", "n": n_tasks,
-                                                                           "direction": w.needs[i].direction},
-                          bw.EvidenceLevel.T1, bw.FactSource.probe, False)
-            out[k] = (sk, list(b.probes_t1) + [pf])
+        for tag, v in service._skills(items).items():
+            fct = bw._fact(b.profile.user_id, "skill", tag, {**v, "origin": "assignment", "direction": d},
+                           bw.EvidenceLevel.T1, bw.FactSource.probe, False)
+            sk[tag] = merge_skill(sk.get(tag), fct)
+        sc = round(sum(1 for x in items if x["correct"]) / len(items), 4) if items else 0.0
+        pf = bw._fact(b.profile.user_id, "probe", f"assignment:need{i}", {"score": sc, "origin": "assignment",
+                                                                         "direction": d, "verdict": "автопроверка"},
+                      bw.EvidenceLevel.T1, bw.FactSource.probe, False)
+        out[k] = (sk, list(b.probes_t1) + [pf])
     return out
 
 
@@ -429,7 +455,8 @@ def baselines(w: W2, reqs: list[dict], seed: int = 7702113) -> dict[str, list[li
 
 
 # --------------------------------------------------------------------------- метрики
-def need_metrics(rel_row: np.ndarray, ranked: list[int], over_row: np.ndarray | None = None) -> dict:
+def need_metrics(rel_row: np.ndarray, ranked: list[int], over_row: np.ndarray | None = None,
+                 below_row: np.ndarray | None = None) -> dict:
     """Метрики одной потребности по списку мест (может быть короче мира: кого нет в подборке — не показан).
     nDCG@10: выигрыш 2^метка − 1, идеал — по всем кандидатам мира (не только по выданным)."""
     r = np.asarray(ranked[:30], dtype=int)
@@ -449,9 +476,11 @@ def need_metrics(rel_row: np.ndarray, ranked: list[int], over_row: np.ndarray | 
            "ndcg10": _ndcg(lambda x: 2 ** x - 1), "ndcg10_lin": _ndcg(lambda x: x),
            "mrr": 1.0 / (hit[0] + 1) if len(hit) else 0.0, "top5_any": float(bool(len(hit) and hit[0] < 5)),
            "r30": float((g[:30] >= 2).sum()) / min(30, n_rel) if n_rel else 0.0, "shown": int(min(len(ranked), 10))}
-    if over_row is not None:
-        top = r[:10]
-        out["over10"] = float(over_row[top].mean()) if len(top) else 0.0
+    top = r[:10]
+    if over_row is not None:  # «заявленный грейд выше истинного» (наше определение)
+        out["inflated10"] = float(over_row[top].mean()) if len(top) else 0.0
+    if below_row is not None:  # переоценённые по определению соперника: истинный грейд ниже требуемого
+        out["over10"] = float(below_row[top].mean()) if len(top) else 0.0
     return out
 
 
@@ -466,7 +495,16 @@ def overrated(w: W2) -> np.ndarray:
     return np.asarray(o, dtype=float)
 
 
-METRICS = ("p5", "p10", "ndcg10", "ndcg10_lin", "mrr", "top5_any", "r30", "over10")
+METRICS = ("p5", "p10", "ndcg10", "ndcg10_lin", "mrr", "top5_any", "r30", "over10", "inflated10")
+
+
+def below_required(w: W2, need) -> np.ndarray:
+    """1 — истинный грейд ниже требуемого (переоценённый в выдаче по определению соперника)."""
+    from app.modules.catalog.seed_data import GRADE_LEVEL
+
+    lv = GRADE_LEVEL[need.grade]
+    return np.asarray([1.0 if (c.latent.true_grade is None or GRADE_LEVEL[c.latent.true_grade] < lv) else 0.0
+                       for c in w.cands])
 
 
 def summarize(rows: list[dict]) -> dict:
@@ -511,23 +549,29 @@ def evaluate_world(w: W2, *, weights: dict | None = None, with_v13: bool = True,
     reqs = parse(w)
     rel = w.rel if label == "rel" else w.rel_l2
     over = overrated(w)
-    per = {"match_v2": [], "match_v2_doz": [], "oracle_pool": []}
+    per = {"match_v2": [], "match_v2_doz": [], "match_v2_doz70": [], "oracle_pool": []}
+    cost = {}
     if with_v13:
         per["match_v13"] = []
     info_rows = []
+    belows = [below_required(w, n) for n in w.needs]
     for i, (n, req) in enumerate(zip(w.needs, reqs, strict=True)):
         idx, above_id = pool_for(bundles, req)
         order, info, _ = order_v2(bundles, idx, req, above_id, weights=weights)
-        per["match_v2"].append(need_metrics(rel[i], order, over))
-        plan = dozapros_plan(w, bundles, i, req, order)
+        per["match_v2"].append(need_metrics(rel[i], order, over, belows[i]))
+        plan = dozapros_plan(w, bundles, i, req, order, cost=cost)
         with applied(bundles, plan):
             order_d, _, _ = order_v2(bundles, idx, req, above_id, weights=weights)
-        per["match_v2_doz"].append(need_metrics(rel[i], order_d, over))
+        per["match_v2_doz"].append(need_metrics(rel[i], order_d, over, belows[i]))
+        plan70 = dozapros_plan(w, bundles, i, req, order, p={"resp": 0.7})
+        with applied(bundles, plan70):
+            order_d7, _, _ = order_v2(bundles, idx, req, above_id, weights=weights)
+        per["match_v2_doz70"].append(need_metrics(rel[i], order_d7, over, belows[i]))
         # оракул пула: та же подборка (после фильтров), но по истинной метке — потолок порядка внутри подборки
         orc = sorted(order, key=lambda k: -int(rel[i][k]))
-        per["oracle_pool"].append(need_metrics(rel[i], orc, over))
+        per["oracle_pool"].append(need_metrics(rel[i], orc, over, belows[i]))
         if with_v13:
-            per["match_v13"].append(need_metrics(rel[i], order_v13(bundles, idx, req, above_id), over))
+            per["match_v13"].append(need_metrics(rel[i], order_v13(bundles, idx, req, above_id), over, belows[i]))
         info_rows.append({"pool": len(idx), "shown": len(order), "above": bool(above_id),
                           "dir_ok": req.get("direction") == n.direction, "grade_ok": req.get("grade") == n.grade,
                           "stack_thr": (info.get("stack_filter") or {}).get("threshold"),
@@ -535,9 +579,13 @@ def evaluate_world(w: W2, *, weights: dict | None = None, with_v13: bool = True,
                           "rel_shown": int(sum(1 for k in order if rel[i][k] >= 2))})
     if with_baselines:
         for meth, orders in baselines(w, reqs).items():
-            per[meth] = [need_metrics(rel[i], o, over) for i, o in enumerate(orders)]
+            per[meth] = [need_metrics(rel[i], o, over, belows[i]) for i, o in enumerate(orders)]
+    if cost.get("needs"):
+        cost["sent_per_need"] = round(cost["sent"] / cost["needs"], 2)
+        cost["answered_per_need"] = round(cost.get("answered", 0) / cost["needs"], 2)
+        cost["candidate_minutes_per_need"] = round(cost["answered_per_need"] * cost["minutes_per_candidate"], 1)
     return {"per_need": per, "info": info_rows, "digest": w.digest(), "resampled": w.resampled,
-            "n": len(w.needs), "m": len(w.cands)}
+            "n": len(w.needs), "m": len(w.cands), "doz_cost": cost}
 
 
 def run_world(cond: str, seed: int, labels: tuple[str, ...] = ("rel", "l2")) -> dict:
@@ -548,7 +596,7 @@ def run_world(cond: str, seed: int, labels: tuple[str, ...] = ("rel", "l2")) -> 
            "m": len(w.cands), "labels": {}}
     for lb in labels:
         r = evaluate_world(w, label=lb)
-        out["labels"][lb] = {"per_need": r["per_need"], "info": r["info"],
+        out["labels"][lb] = {"per_need": r["per_need"], "info": r["info"], "doz_cost": r["doz_cost"],
                              "summary": {k: summarize(v) for k, v in r["per_need"].items()}}
     return out
 

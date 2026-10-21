@@ -74,6 +74,7 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--report", default=None)
     ap.add_argument("--lin", default=None, help="признаки линейной модели через запятую (по умолчанию bench2_diag.LIN_FEATS)")
+    ap.add_argument("--fixed", default="fsp=0.10", help="фиксированные доли балла (правило продукта, объявлено до обучения)")
     a = ap.parse_args()
     if a.lin:
         dg.LIN_FEATS = tuple(a.lin.split(","))
@@ -97,7 +98,25 @@ def main() -> None:
         cv["now_threshold"].append(evaluate(Ws, te, dg.FALLBACK, "threshold"))
     cv_mean = {k: {c: {m: round(float(np.mean([p[c][m] for p in v])), 4) for m in v[0][c]} for c in v[0]}
                for k, v in cv.items()}
-    final = fit_joint(Ws, seeds)
+    fixed = {k: float(v) for k, v in (x.split("=") for x in a.fixed.split(",") if x)} if a.fixed else {}
+
+    def with_fixed(w: dict) -> dict:
+        """Доли из --fixed — правило продукта (ФСП 10 %: требование ТЗ), остальное — обученные веса × (1 − Σ долей)."""
+        a_sum = sum(fixed.values())
+        out = {k: round(v * (1 - a_sum), 4) for k, v in w.items()}
+        for k, v in fixed.items():
+            out[k] = round(out.get(k, 0.0) + v, 4)
+        return out
+
+    cv["joint_cascade_fixed"] = []
+    for f in (0, 1):
+        tr = {c: half[c][f] for c in seeds}
+        te = {c: half[c][1 - f] for c in seeds}
+        cv["joint_cascade_fixed"].append(evaluate(Ws, te, with_fixed(fit_joint(Ws, tr))))
+    cv_mean = {k: {c: {m: round(float(np.mean([p[c][m] for p in v])), 4) for m in v[0][c]} for c in v[0]}
+               for k, v in cv.items()}
+    learned = fit_joint(Ws, seeds)
+    final = with_fixed(learned)
     on_dev = evaluate(Ws, seeds, final)
     h = hashlib.sha256()
     for c in sorted(paths):
@@ -107,7 +126,14 @@ def main() -> None:
             "conditions": sorted(seeds), "labels": labels, "features": list(dg.LIN_FEATS),
             "features_sha256": h.hexdigest(), "filter": "каскад стека (ltr.THRESHOLDS)",
             "objective": "попарная логистическая, вес пары — разность 2^метка − 1, условия с равным весом, L2 1e-3",
-            "cv_by_worlds": cv_mean, "fit_on_all_dev": on_dev}
+            "cv_by_worlds": cv_mean, "fit_on_all_dev": on_dev, "learned_before_fixed": learned,
+            "fixed": fixed, "fixed_rule": "доля ФСП в балле — правило продукта (ТЗ: сила подтверждённого профиля включает "
+                                          "достижения ФСП), объявлено до обучения; остальные веса × (1 − доля)",
+            "signs": {k: ("+" if final.get(k, 0) > 0 else "−" if final.get(k, 0) < 0 else "0") for k in final},
+            "over_sign_note": "«тест выше порога следующего грейда»: знак из обучения; минус — кандидат «сильнее запроса» "
+                              "идёт после точно подходящих по грейду (объяснение в продукте говорит это прямо)",
+            "trained_on_ru": "миры разработки бенчмарка (зёрна 31000001–31000006, 20261006, 20261007; S-M и жёсткий; "
+                             "без дозапроса и после него) — модели, не люди"}
     out = {"weights": final, "meta": meta}
     Path(a.out).write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(json.dumps({"weights": final, "cv": cv_mean}, ensure_ascii=False, indent=1))

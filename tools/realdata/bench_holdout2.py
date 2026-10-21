@@ -28,9 +28,10 @@ ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 FREEZE = ROOT / "docs/realdata/bench_holdout2_FREEZE.json"
 RESULT = ROOT / "docs/realdata/bench_holdout2.json"
-WORLDS = {"sm": (77021131, 77021132, 77021135), "sm_ideal": (77021131, 77021132, 77021135), "hard": (77021141, 77021142)}
+WORLDS = {"sm": (77021131, 77021132, 77021135), "sm_ideal": (77021131, 77021132, 77021135),
+          "sm_s55": (77021131, 77021132, 77021135), "hard": (77021141, 77021142)}
 # проверка конвейера до FREEZE — только на мирах разработки (те же, что для обучения весов), результат — во временный файл
-DEV_WORLDS = {"sm": (31000001, 31000002), "sm_ideal": (31000001,), "hard": (31000001,)}
+DEV_WORLDS = {"sm": (31000001, 31000002), "sm_ideal": (31000001,), "sm_s55": (31000001,), "hard": (31000001,)}
 LABELS = ("rel", "l2")
 FROZEN_FILES = (
     "docs/realdata/bench_holdout2_PROTOCOL.md",
@@ -47,7 +48,8 @@ FROZEN_FILES = (
     "backend/app/modules/catalog/ext.py",
     "backend/app/modules/profiles/facts.py",
 )
-METHODS = ("match_v2", "match_v2_doz", "match_v13", "bm25", "words_grade", "tfidf_filter", "random", "oracle_pool")
+METHODS = ("match_v2", "match_v2_doz", "match_v2_doz70", "match_v13", "bm25", "words_grade", "tfidf_filter", "random",
+           "oracle_pool")
 
 
 def sha(p: Path) -> str:
@@ -94,7 +96,7 @@ def aggregate(worlds: list[dict], label: str) -> dict:
         L = w["labels"][label]
         for m in METHODS:
             per[m] += L["per_need"][m]
-        by_world.append({"seed": w["seed"], "digest": w["digest"], "n": w["n"], "m": w["m"],
+        by_world.append({"seed": w["seed"], "digest": w["digest"], "n": w["n"], "m": w["m"], "doz_cost": L.get("doz_cost"),
                          "summary": {m: L["summary"][m] for m in METHODS},
                          "parse": {"direction_ok": round(sum(x["dir_ok"] for x in L["info"]) / len(L["info"]), 4),
                                    "grade_ok": round(sum(x["grade_ok"] for x in L["info"]) / len(L["info"]), 4)}})
