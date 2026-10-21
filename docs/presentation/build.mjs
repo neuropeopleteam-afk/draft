@@ -328,8 +328,10 @@ const bullets = (arr, opt = {}) => arr.map((t) => ({ text: t, options: { bullet:
     s.addText(h, { x: 0.7, y, w: 7.3, h: 0.28, fontFace: FONT, fontSize: 11, color: C.muted, margin: 0 });
     s.addText(u.replace('https://', ''), { x: 0.7, y: y + 0.27, w: 7.3, h: 0.32, fontFace: FONT, fontSize: 14, bold: true, color: C.white, margin: 0, hyperlink: { url: u } });
   });
-  s.addImage({ path: A('logo_draft.png'), x: 8.95, y: 2.9, w: 3.4, h: 1.084 });
-  s.addText('Компании выбирают\nподтверждённых', { x: 8.95, y: 4.3, w: 3.9, h: 1.0, fontFace: FONT, fontSize: 18, bold: true, color: C.white, margin: 0 });
+  s.addImage({ path: A('logo_draft.png'), x: 8.95, y: 2.7, w: 2.9, h: 0.924 });
+  s.addText('Компании выбирают\nподтверждённых', { x: 8.95, y: 3.75, w: 3.9, h: 0.8, fontFace: FONT, fontSize: 16, bold: true, color: C.white, margin: 0 });
+  // План, а не результат: пилота на людях ещё не было (раздел 5 документации «План пилота с ФСП»)
+  cardText(s, 8.75, 4.7, 4.1, 1.5, 'Что дальше: пилот с ФСП', '300–500 участников, 6–8 недель: калибровка заданий на людях и слепое собеседование двумя экспертами. Протокол — до начала.', { headSize: 12.5, bodySize: 10 });
 }
 
 // ---------- запись ----------
