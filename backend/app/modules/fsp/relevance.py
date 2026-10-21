@@ -50,3 +50,42 @@ def explain(discipline: str | None, direction: str | None) -> dict:
 def every_discipline_is_close_somewhere() -> bool:
     """Инвариант «дисциплины равны»: у каждой дисциплины есть направление с коэффициентом 1,0 (проверяется тестом)."""
     return all(CLOSE in d.values() for d in AFFINITY.values())
+
+
+# Связка с индексом протоколов ФСП (А8): подтверждённый протокол подсвечивает профильный навык дисциплины
+PROTOCOL_SKILL_HIGHLIGHTS: dict[str, dict[str, object]] = {
+    "algorithmic": {
+        "focus_title": "Алгоритмы и структуры данных",
+        "tags": ("algorithms",),
+    },
+    "security": {
+        "focus_title": "Информационная безопасность (OWASP, защита сетей, форензика)",
+        "tags": ("owasp", "network-security", "siem-soc"),
+    },
+    "product": {
+        "focus_title": "Проектирование систем и продуктовая разработка",
+        "tags": ("rest-api", "sql", "docker"),
+    },
+    "robotics": {
+        "focus_title": "Алгоритмы управления и компьютерное зрение",
+        "tags": ("python", "cv", "algorithms"),
+    },
+    "uav": {
+        "focus_title": "Системы управления БАС и обработка телеметрии",
+        "tags": ("python", "cv", "algorithms"),
+    },
+}
+
+
+def protocol_highlight(discipline: str | None, direction: str | None = None) -> dict:
+    """Профильный навык, который подсвечивает подтверждённый протокол соревнования ФСП по дисциплине."""
+    info = PROTOCOL_SKILL_HIGHLIGHTS.get(discipline or "")
+    base = explain(discipline, direction)
+    if not info:
+        return {**base, "focus_title": None, "tags": []}
+    return {
+        **base,
+        "focus_title": info["focus_title"],
+        "tags": list(info["tags"]),
+    }
+

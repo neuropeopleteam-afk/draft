@@ -604,13 +604,15 @@ _TITLE_NOT_ANALYST = re.compile(r"данных|data|\bbi\b|\bml\b|machine|soc|б
 _TITLE_DEVOPS = re.compile(r"системн\w* администратор|linux[ -]?(?:engineer|инженер|администратор)|"
                            r"инженер\w* (?:виртуализац|vmware|openstack)|vmware|openstack", re.I)
 _TITLE_LANG_DEV = re.compile(r"(?:Python|Go|Golang|Java|Kotlin|PHP|C#|C\+\+|С\+\+|\.NET)[ -]*(?:разработ|developer)|"
-                             r"разработчик\w*\s+(?:Python|Go|Golang|Java|PHP|C#|C\+\+|С\+\+|\.NET)", re.I)
+                             r"разработчик\w*\s+(?:Python|Go|Golang|Java|PHP|C#|C\+\+|С\+\+|\.NET)|"
+                             r"(?:Senior|Middle|Junior)(?:/(?:Senior|Middle|Junior))?\s+(?:Python|Java|Go|Golang)\b", re.I)
 _TITLE_DATA_ENG = re.compile(r"data[ -]?инженер|etl\b|\bdwh\b", re.I)
 
 
 def _title_line_dirs(dtext: str, dkw: dict[str, list[str]]) -> dict[str, int]:
     """Направления по первой строке текста (название вакансии): ключевые слова и правила названия расширения."""
     line = dtext.split("\n", 1)[0][:200]
+    main_part = line.split("(", 1)[0].strip()
     found = find_keys(line, dkw)
     vis = catalog_ext.visible_ext()
     if "data_eng" in vis and _TITLE_DATA_ENG.search(line):
@@ -619,6 +621,10 @@ def _title_line_dirs(dtext: str, dkw: dict[str, list[str]]) -> dict[str, int]:
         found["devops"] = found.get("devops", 0) + 1
     if not found and _TITLE_LANG_DEV.search(line):  # «Java Developer Senior», «Разработчик С++ (middle)»
         return {"backend": 1}
+    if _TITLE_LANG_DEV.search(main_part) and "security" in found and "security" not in find_keys(main_part, dkw):
+        return {"backend": 1}
+    if "data_ml" in found and "devops" in found and re.search(r"\bml\s+platform", line, re.I):
+        return {"data_ml": found["data_ml"] + 1}
     if "analyst" in vis and "analyst" not in found and _TITLE_ANALYST.search(line) \
             and not _TITLE_NOT_ANALYST.search(line):
         found["analyst"] = 1
@@ -701,8 +707,10 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
             first = min((sp for t, sp in spans.items() if dirs.get(t) == direction), default=None)
             ev["direction"] = _ev(text, first, basis="stack")
 
-    # Грейд: ключевые слова, иначе по требуемому опыту
-    gk = find_keys(head, GRADE_KEYWORDS) or find_keys(text[:400], GRADE_KEYWORDS) or find_keys(text, GRADE_KEYWORDS)
+    # Грейд: сначала заголовок (первая строка), затем шапка и тело, иначе по требуемому опыту
+    first_line_head = text.split("\n", 1)[0][:200].split(":", 1)[0]
+    gk = ((find_keys(first_line_head, GRADE_KEYWORDS) if "\n" in text[:200] else None)
+          or find_keys(head, GRADE_KEYWORDS) or find_keys(text[:400], GRADE_KEYWORDS) or find_keys(text, GRADE_KEYWORDS))
     exp, exp_span = experience_span(text)
     if hint_grade:
         grade = hint_grade
@@ -1121,6 +1129,9 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
         merged["direction"] = own["direction"]  # расширение каталога: своё направление вместо ближайшего
         merged["evidence"]["direction"] = own["evidence"]
     merged["weight_rule"] = weight_rule()  # Я11 (С3-3): правило весов — рядом с весами в карточке
+    from app.modules.matching import vacancy_guard
+
+    merged["vacancy_guard"] = vacancy_guard.assess_need_dict(merged, text)
     return merged
 
 

@@ -1,22 +1,22 @@
-import { Suspense, useEffect } from "react";
-import { Link, Navigate, Route, Routes } from "react-router-dom";
-import { RouteAnnouncer, SkipLink } from "./components/A11y";  // А11: пропуск навигации, смена экрана
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { RouteAnnouncer, SkipLink } from "./components/A11y";
 import { JuryGuide } from "./components/JuryGuide";
 import { InteractiveAvatarTour } from "./components/InteractiveAvatarTour";
 import { StudyDock } from "./components/study/StudyDock";
-import { RouteBoundary, RouteFallback } from "./components/Boot";  // Я16: загрузка экрана, ошибка загрузки — экран повтора
+import { RouteBoundary, RouteFallback } from "./components/Boot";
 import Landing from "./pages/Landing";
 import { candidateSections } from "./pages/candidate/sections";
 import { employerSections } from "./pages/employer/sections";
 import { panelSections } from "./pages/expert/sections";
 import { fspSections } from "./ideas/fsp/sections";
+import { useAuth } from "./lib/auth";
 import { HashScroll } from "./lib/hashScroll";
+import { juryLogin } from "./lib/jury";
+import { useDemoAccess, useDemoUi } from "./lib/juryMode";
 import { lazyNamed } from "./lib/lazyPage";
 import { preloadSections } from "./lib/preload";
 
-// Я16: стартовый JS — общий код и главная (первый экран жюри). Остальные экраны — ленивыми файлами сборки по
-// модулям: роли (кандидат, работодатель, эксперт, ФСП) и тяжёлые экраны (валидация, критерии, графики) грузятся
-// при первом переходе. Один модуль = один файл, сколько бы экранов из него ни брали.
 const pg = {
   cabinet: () => import("./components/CabinetLayout"),
   studyAbout: () => import("./pages/StudyAbout"),
@@ -25,11 +25,12 @@ const pg = {
   validation: () => import("./pages/Validation"),
   login: () => import("./pages/Login"),
   register: () => import("./pages/Register"),
+  forgot: () => import("./pages/ForgotPassword"),
   security: () => import("./pages/Security"),
   verify: () => import("./pages/Verify"),
   assessment: () => import("./pages/candidate/Assessment"),
   category: () => import("./pages/candidate/Category"),
-  attempts: () => import("./pages/candidate/Attempts"),  // И26: две попытки теста рядом
+  attempts: () => import("./pages/candidate/Attempts"),
   feedback: () => import("./pages/candidate/Feedback"),
   contact: () => import("./pages/candidate/Contact"),
   messages: () => import("./pages/Messages"),
@@ -40,7 +41,7 @@ const pg = {
   empContact: () => import("./pages/employer/Contact"),
   compare: () => import("./pages/employer/Compare"),
   needs: () => import("./pages/employer/Needs"),
-  mutual: () => import("./pages/mutual/Employer"),  // взаимный подбор, ссылка руководителю (Н9, Н2, Н3)
+  mutual: () => import("./pages/mutual/Employer"),
   share: () => import("./pages/mutual/Share"),
   empOverview: () => import("./pages/employer/Overview"),
   search: () => import("./pages/employer/Search"),
@@ -51,33 +52,32 @@ const pg = {
   fspId: () => import("./integrations/FspId"),
   sus: () => import("./integrations/Sus"),
   vacancies: () => import("./integrations/Vacancies"),
-  assignCand: () => import("./pages/assignments/Candidate"),  // задания работодателя (И7)
+  assignCand: () => import("./pages/assignments/Candidate"),
   assignEmp: () => import("./pages/assignments/Employer"),
   cupCand: () => import("./ideas/cup/Candidate"),
   cupEmp: () => import("./ideas/cup/Employer"),
   fsp: () => import("./ideas/fsp/Cabinet"),
   liveGuest: () => import("./ideas/live/Guest"),
-  liveScreen: () => import("./ideas/live/Screen"),
+  livePitch: () => import("./pages/demo/LivePitch"),
   passport: () => import("./passport/VerifyPage"),
-  criteria: () => import("./pages/Criteria"),  // К1: проверка по критериям ТЗ
-  interview: () => import("./components/Interview"),  // Я15: разговор устной защиты и ИИ-интервью
+  criteria: () => import("./pages/Criteria"),
+  interview: () => import("./components/Interview"),
   tariffs: () => import("./pages/employer/Tariffs"),
   monetization: () => import("./pages/public/Monetization"),
-  legal: () => import("./pages/public/Legal"),  // юридические документы: политика ПД, согласие, соглашение, cookie, рекомендательные технологии  // «Тарифы и монетизация»: работодатели и спонсоры ФСП
-  trio: () => import("./pages/trio/Trio"),  // трёхсторонняя связь работодатель ↔ кандидат ↔ ФСП  // Я29: тарифы работодателя (TARIFFS_ENABLED)
-  fspBenefit: () => import("./ideas/fsp/Benefit"),  // Я29: «Польза для ФСП» и «Партнёры ФСП»
-  expertise: () => import("./pages/public/Expertise"),  // W2: единый хаб «Экспертиза ФСП»
-  warroom: () => import("./pages/WarRoom"),  // Боевой ИИ-Полигон: живая архитектура + видеоаватар + радар античита
-  squad: () => import("./pages/employer/SquadDraft"),  // Командный Драфт ФСП (Squad Builder) + ROI + Рентген кода
+  legal: () => import("./pages/public/Legal"),
+  trio: () => import("./pages/trio/Trio"),
+  fspBenefit: () => import("./ideas/fsp/Benefit"),
+  demoHub: () => import("./pages/demo/DemoHub"),
+  warroom: () => import("./pages/WarRoom"),
+  squad: () => import("./pages/employer/SquadDraft"),
+  support: () => import("./pages/support/Support"),
+  admin: () => import("./pages/admin/Admin"),
 };
 
-// FIX7: файлы основных разделов маршрута жюри — заранее, когда браузер свободен (lib/preload.ts): переход в раздел
-// не ждёт сеть. Порядок — как в проводнике жюри: кабинет, тест, потребности и подборка, карточка, валидация, критерии.
 const PRELOAD = [pg.cabinet, pg.assessment, pg.needs, pg.search, pg.validation, pg.criteria, pg.category, pg.compare, pg.feedback];
 
 const CabinetLayout = lazyNamed(pg.cabinet, "CabinetLayout");
 const InterviewRoom = lazyNamed(pg.interview, "InterviewRoom");
-const TariffsPublic = lazyNamed(pg.tariffs, "default");
 const Monetization = lazyNamed(pg.monetization, "default");
 const LegalPage = lazyNamed(pg.legal, "default");
 const TrioPage = lazyNamed(pg.trio, "TrioPage");
@@ -94,6 +94,8 @@ const ExpertPairs = lazyNamed(pg.panel, "ExpertPairs");
 const Validation = lazyNamed(pg.validation, "default");
 const Login = lazyNamed(pg.login, "default");
 const Register = lazyNamed(pg.register, "default");
+const ForgotPassword = lazyNamed(pg.forgot, "ForgotPassword");
+const ResetPassword = lazyNamed(pg.forgot, "ResetPassword");
 const TwoFactorLogin = lazyNamed(pg.security, "TwoFactorLogin");
 const TwoFactorSettings = lazyNamed(pg.security, "TwoFactorSettings");
 const Verify = lazyNamed(pg.verify, "default");
@@ -150,12 +152,46 @@ const FspOverview = lazyNamed(pg.fsp, "FspOverview");
 const FspReportLayout = lazyNamed(pg.fsp, "FspReportLayout");
 const FspSalaries = lazyNamed(pg.fsp, "FspSalaries");
 const LiveGuest = lazyNamed(pg.liveGuest, "default");
-const LiveScreen = lazyNamed(pg.liveScreen, "default");
+const LivePitch = lazyNamed(pg.livePitch, "default");
 const PassportVerify = lazyNamed(pg.passport, "default");
 const Criteria = lazyNamed(pg.criteria, "default");
 const JuryGo = lazyNamed(pg.criteria, "JuryGo");
-const Expertise = lazyNamed(pg.expertise, "default");
+const DemoHub = lazyNamed(pg.demoHub, "default");
 const WarRoom = lazyNamed(pg.warroom, "default");
+const Support = lazyNamed(pg.support, "default");
+const Admin = lazyNamed(pg.admin, "default");
+
+/** Переадресация со старого демо-маршрута с сохранением query и hash (для обзора Насти и закладок). */
+function RedirectPreserve({ to }: { to: string }) {
+  const loc = useLocation();
+  return <Navigate to={`${to}${loc.search}${loc.hash}`} replace />;
+}
+
+/** Ограничение доступа к /demo/* при выключенном демо-режиме на сервере. */
+function DemoGuard({ children }: { children: React.ReactElement }) {
+  const ok = useDemoAccess();
+  if (!ok) return <NotFound />;
+  return children;
+}
+
+/** Автоматический вход демо-аналитиком ФСП при переходе на /demo/fsp-benefit → /fsp/benefit внутри CabinetLayout. */
+function DemoFspBenefitRedirect() {
+  const { me, signIn, loading } = useAuth();
+  const navigate = useNavigate();
+  const started = useRef(false);
+  useEffect(() => {
+    if (loading || started.current) return;
+    if (me?.role === "fsp_analyst" || me?.role === "admin") {
+      navigate("/fsp/benefit", { replace: true });
+      return;
+    }
+    started.current = true;
+    juryLogin("fsp", signIn, "/fsp/benefit")
+      .then((to) => navigate(to, { replace: true }))
+      .catch(() => navigate("/login", { replace: true }));
+  }, [loading, me?.role, signIn, navigate]);
+  return <RouteFallback />;
+}
 
 export default function App() {
   useEffect(() => { preloadSections(PRELOAD); }, []);
@@ -166,20 +202,32 @@ export default function App() {
     <Suspense fallback={<RouteFallback />}>
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/validation" element={<Validation />} />
-      <Route path="/criteria" element={<Criteria />} />
-      {/* W2: «Экспертиза ФСП» — всё для экспертов жюри; /security — короткий адрес «Красной кнопки» */}
-      <Route path="/expertise" element={<Expertise />} />
-      {/* Боевой ИИ-Полигон: режим А — архитектура под нагрузкой и IRT θ, режим Б — перехват ИИ-читера (#anticheat) */}
-      <Route path="/warroom" element={<WarRoom />} />
+
+      {/* Раздел «Демо для жюри» (/demo/*) и совместимые прямые маршруты для e2e/проводника */}
+      <Route path="/demo" element={<DemoGuard><DemoHub /></DemoGuard>} />
+      <Route path="/demo/warroom" element={<DemoGuard><WarRoom /></DemoGuard>} />
+      <Route path="/demo/validation" element={<DemoGuard><Validation /></DemoGuard>} />
+      <Route path="/demo/criteria" element={<DemoGuard><Criteria /></DemoGuard>} />
+      <Route path="/demo/live" element={<DemoGuard><LivePitch /></DemoGuard>} />
+      <Route path="/demo/go" element={<DemoGuard><JuryGo /></DemoGuard>} />
+      <Route path="/demo/fsp-benefit" element={<DemoGuard><DemoFspBenefitRedirect /></DemoGuard>} />
+
+      <Route path="/expertise" element={<RedirectPreserve to="/demo" />} />
+      <Route path="/warroom" element={<DemoGuard><WarRoom /></DemoGuard>} />
+      <Route path="/validation" element={<DemoGuard><Validation /></DemoGuard>} />
+      <Route path="/criteria" element={<DemoGuard><Criteria /></DemoGuard>} />
+      <Route path="/jury/live" element={<RedirectPreserve to="/demo/live" />} />
+      <Route path="/jury/go" element={<DemoGuard><JuryGo /></DemoGuard>} />
       <Route path="/security" element={<Navigate to="/validation#red-button" replace />} />
-      <Route path="/jury/go" element={<JuryGo />} />
+      <Route path="/tariffs/live" element={<Navigate to="/pricing" replace />} />
+
       <Route path="/study" element={<StudyAbout />} />
       <Route path="/tariffs" element={<Monetization />} />
-      <Route path="/tariffs/live" element={<TariffsPublic />} />
       <Route path="/pricing" element={<Monetization />} />
+      <Route path="/support" element={<Support />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/sus" element={<AdminSus />} />
       {["/privacy", "/consent", "/terms", "/cookies", "/recommendations"].map((p) => <Route key={p} path={p} element={<LegalPage />} />)}
-      <Route path="/jury/live" element={<LiveScreen />} />
       <Route path="/j/:code" element={<LiveGuest />} />
       <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={panelSections} />}>
         <Route index element={<ExpertHome />} />
@@ -195,15 +243,15 @@ export default function App() {
       <Route path="/verify" element={<Verify />} />
       <Route path="/verify/:id" element={<PassportVerify />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot" element={<ForgotPassword />} />
+      <Route path="/reset" element={<ResetPassword />} />
       <Route path="/login/2fa" element={<TwoFactorLogin />} />
       <Route path="/fsp-id/done" element={<FspIdDone />} />
       <Route path="/install" element={<InstallPage />} />
       <Route path="/sus" element={<SusPage />} />
-      <Route path="/admin/sus" element={<AdminSus />} />
       <Route path="/candidate" element={<CabinetLayout role="candidate" title="Кабинет кандидата" sections={candidateSections} />}>
         <Route index element={<CandidateOverview />} />
         <Route path="assessment" element={<Assessment />} />
-        {/* «Пройдите тест сами» (жюри): тот же экран выбора грейда с экспресс-режимом, выбранным заранее */}
         <Route path="express" element={<Assessment express />} />
         <Route path="assessment/test/:id" element={<TestRun />} />
         <Route path="category" element={<Category />} />
@@ -282,20 +330,77 @@ export default function App() {
     <InteractiveAvatarTour />
     <HashScroll />
     <StudyDock />
+    <CookieBanner />
     <RouteAnnouncer />
     </>
   );
 }
 
-function NotFound() {
+const COOKIE_KEY = "draft_cookie_consent";
+
+function CookieBanner() {
+  const [choice, setChoice] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(COOKIE_KEY);
+    } catch {
+      return "essential";
+    }
+  });
+  const loc = useLocation();
+  if (choice || loc.pathname.startsWith("/j/")) return null;
+
+  function pick(val: "essential" | "all") {
+    try {
+      localStorage.setItem(COOKIE_KEY, val);
+    } catch { /* ignore */ }
+    setChoice(val);
+  }
+
   return (
-    <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+    <aside
+      aria-label="Настройки файлов cookie"
+      data-testid="cookie-banner"
+      className="fixed bottom-3 left-3 right-3 z-40 mx-auto max-w-3xl rounded-2xl border border-brand-night/15 bg-white/95 p-4 text-xs text-brand-ink shadow-xl backdrop-blur sm:flex sm:items-center sm:justify-between sm:gap-4 print:hidden"
+    >
+      <p className="leading-relaxed">
+        Мы используем файлы cookie для авторизации, безопасности входа и работы личного кабинета (без сторонних рекламных счётчиков). Подробнее — в{" "}
+        <Link to="/cookies" className="font-semibold text-brand hover:underline">Политике использования cookie</Link>.
+      </p>
+      <div className="mt-3 flex shrink-0 flex-wrap gap-2 sm:mt-0">
+        <button
+          type="button"
+          onClick={() => pick("essential")}
+          data-testid="cookie-essential"
+          className="rounded-xl border border-brand-night/15 bg-white px-3 py-1.5 font-semibold text-brand-night hover:bg-brand-blush/40"
+        >
+          Только необходимые
+        </button>
+        <button
+          type="button"
+          onClick={() => pick("all")}
+          data-testid="cookie-accept-all"
+          className="rounded-xl bg-brand px-3.5 py-1.5 font-bold text-white hover:bg-brand-deep"
+        >
+          Принять все
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function NotFound() {
+  const demoUi = useDemoUi();
+  return (
+    <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center" data-testid="not-found-page">
       <p className="text-6xl font-extrabold text-brand" aria-hidden="true">404</p>
       <h1 className="text-xl font-bold text-brand-night">Такой страницы нет</h1>
-      <p className="max-w-sm text-sm text-brand-ink/70">Возможно, ссылка устарела. Демо-учётки для жюри — во вкладке «Экспертиза ФСП», вход в один клик.</p>
+      <p className="max-w-sm text-sm text-brand-ink/70">
+        Возможно, ссылка устарела или страница была перемещена. Вернитесь на главную или обратитесь в службу поддержки.
+      </p>
       <div className="flex flex-wrap justify-center gap-3">
         <Link to="/" className="btn-primary">На главную</Link>
-        <Link to="/expertise" className="btn-ghost">Экспертиза ФСП</Link>
+        <Link to="/support" className="btn-ghost">Служба поддержки</Link>
+        {demoUi && <Link to="/demo" className="btn-ghost">Демо для жюри</Link>}
       </div>
     </main>
   );

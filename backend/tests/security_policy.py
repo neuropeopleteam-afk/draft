@@ -537,6 +537,42 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/interview/concierge/event"): "open",
     # WebSocket живого распознавания: обычный GET на него — 404 (не HTTP-маршрут), сам канал — с проверкой Origin и лимитами
     ("GET", "/api/interview/live/stt"): "stub",
+    # А5: режим «Принесите свой набор» для жюри (подбор, метрики P@5/P@10/nDCG@10/MRR, объяснение, выгрузка CSV)
+    ("GET", "/api/employer/benchmark/sample"): "open",
+    ("POST", "/api/employer/benchmark/upload"): "sandbox_employer",
+    # ---------------------------------------------------------------- А1: восстановление пароля, поддержка, заявки на тариф, мини-админка
+    ("POST", "/api/auth/forgot"): "open",
+    ("POST", "/api/auth/reset"): "open",
+    ("GET", "/api/support"): "open",
+    ("POST", "/api/support"): "open",
+    ("GET", "/api/support/my"): "auth",
+    ("POST", "/api/tariffs/request"): "open",
+    ("GET", "/api/tariffs/requests/my"): "employer",
+    ("GET", "/api/admin/overview"): "admin",
+    ("GET", "/api/admin/funnel"): "admin",
+    ("GET", "/api/admin/users"): "admin",
+    ("POST", "/api/admin/users/status"): "admin",
+    ("GET", "/api/admin/companies"): "admin",
+    ("POST", "/api/admin/companies/tariff"): "admin",
+    ("GET", "/api/admin/requests"): "admin",
+    ("POST", "/api/admin/requests/tariff-resolve"): "admin",
+    ("POST", "/api/admin/requests/support-resolve"): "admin",
+    ("GET", "/api/admin/flags"): "admin",
+    ("POST", "/api/admin/flags"): "admin",
+    # А7: уведомления в Telegram (привязка по одноразовому коду, проверка и вебхук бота)
+    ("GET", "/api/telegram/status"): "auth",
+    ("POST", "/api/telegram/link"): "auth",
+    ("DELETE", "/api/telegram/link"): "auth",
+    ("POST", "/api/telegram/test"): "auth",
+    ("POST", "/api/telegram/webhook"): "open",
+    # А9: Боевой ИИ-Полигон (/api/warroom/*)
+    ("GET", "/api/warroom/scenarios"): "open",
+    ("GET", "/api/warroom/scenarios/{scenario_id}"): "open",
+    ("POST", "/api/warroom/simulate"): "open",
+    ("POST", "/api/warroom/evaluate"): "open",
+    ("GET", "/api/warroom/attempts/my"): "candidate",
+    ("GET", "/api/warroom/candidates/{ref}"): "employer_ref",
+    ("POST", "/api/warroom/anticheat/inspect"): "open",
 }
 
 # Значения параметров пути, не зависящие от стороны (остальные — PARAMS в test_access_matrix.py: ресурсы сторон)
@@ -549,6 +585,8 @@ PARAM_OVERRIDES: dict[tuple[str, str], dict[str, object]] = {
     ("GET", "/api/messages/{kind}/{tid}"): {"kind": "invitation"},
     ("POST", "/api/messages/{kind}/{tid}"): {"kind": "invitation"},
     ("GET", "/api/employer/needs/parse/{job_id}"): {"job_id": "00000000-0000-4000-8000-000000000027"},  # И27
+    # А9: Боевой ИИ-Полигон
+    ("GET", "/api/warroom/scenarios/{scenario_id}"): {"scenario_id": "payment"},
 }
 
 # Маршруты, меняющие состояние так, что дальнейшие проверки могут сломаться (сброс песочницы отзывает токены,

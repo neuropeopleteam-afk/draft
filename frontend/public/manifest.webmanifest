@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Драфт — компании выбирают подтверждённых",
   "short_name": "Драфт",
-  "description": "Компании выбирают подтверждённых. Подбор ИТ-специалистов: работодатель находит кандидата с проверенным уровнем и приглашает с зарплатной вилкой, кандидат отвечает в один клик.",
+  "description": "Платформа подбора ИТ-специалистов с подтверждённым грейдом: работодатель получает точную подборку инженеров и приглашает с прозрачной вилкой зарплаты.",
   "lang": "ru",
   "dir": "ltr",
   "start_url": "/?source=pwa",
@@ -12,15 +12,37 @@
   "orientation": "portrait",
   "background_color": "#FBF8FC",
   "theme_color": "#310F53",
-  "categories": ["business", "productivity"],
+  "categories": ["business", "productivity", "education"],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/badge-72.png", "sizes": "72x72", "type": "image/png", "purpose": "monochrome" }
   ],
   "shortcuts": [
-    { "name": "Приглашения", "url": "/candidate/invitations", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Подборка кандидатов", "url": "/employer/selection", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "Подборка",
+      "short_name": "Подборка",
+      "description": "Подборки подтверждённых специалистов по вашим вакансиям",
+      "url": "/employer/needs?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Мой грейд",
+      "short_name": "Мой грейд",
+      "description": "Адаптивный тест и подтверждённый инженерный грейд",
+      "url": "/candidate/assessment?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Приглашения",
+      "short_name": "Приглашения",
+      "description": "Приглашения с вилкой зарплаты и диалоги с компаниями",
+      "url": "/candidate/invitations?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

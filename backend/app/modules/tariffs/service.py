@@ -47,7 +47,15 @@ def meta() -> dict:
 # ------------------------------------------------------------------ тариф компании
 
 def _jury_default(c: Company) -> str | None:
-    return P.JURY_DEFAULTS.get(c.name) if c.is_demo else None
+    if not c.is_demo:
+        return None
+    if c.name in P.JURY_DEFAULTS:
+        return P.JURY_DEFAULTS[c.name]
+    for k, v in P.JURY_DEFAULTS.items():
+        short = k.replace("Демо жюри:", "").strip()
+        if short and short in (c.name or ""):
+            return v
+    return None
 
 
 def row_of(db: Session, company_id: uuid.UUID) -> CompanyTariff | None:
@@ -294,8 +302,9 @@ def partners_overview(db: Session, actor: User) -> dict:
     comps = [db.get(Company, r.company_id) for r in rows]
     # компании песочницы жюри без строки тарифа (партнёр по умолчанию) — тоже видны своему кабинету
     if _jury_sid(actor.email) is not None:
+        jury_names = list(P.JURY_DEFAULTS) + [k.replace("Демо жюри:", "").strip() for k in P.JURY_DEFAULTS]
         for c in db.scalars(select(Company).where(Company.is_demo.is_(True),
-                                                  Company.name.in_(list(P.JURY_DEFAULTS)))).all():
+                                                  Company.name.in_(jury_names))).all():
             if c.id not in seen and effective(db, c)[1]:
                 comps.append(c)
     items = [company_brief(db, c, actor) for c in comps if c is not None and _visible(db, actor, c)]

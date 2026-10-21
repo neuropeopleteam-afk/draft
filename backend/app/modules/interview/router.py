@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import Literal
 import uuid
 
+import logging
+
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, WebSocket
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
@@ -22,6 +24,8 @@ from app.modules.interview import service as svc
 
 TAGS = [{"name": "interview", "description": "Устная защита развёрнутых ответов теста и ИИ-интервью этапом найма "
                                             "(флаг INTERVIEW_ENABLED). Оценивает модель; грейд не меняется"}]
+log = logging.getLogger("interview.concierge")
+
 router = APIRouter(prefix="/api/interview", tags=["interview"])
 candidate_router = APIRouter(prefix="/api/candidate", tags=["interview"])
 employer_router = APIRouter(prefix="/api/employer", tags=["interview"])
@@ -502,7 +506,7 @@ def stage_start(inv_id: uuid.UUID, body: StartIn, user: User = Depends(candidate
     return svc.view(svc.start_interview(db, user, inv, body.name, body.consent), "candidate")
 
 
-# ------------------------------------------------------------------ живой ИИ-проводник Елена (главная и все кабинеты)
+# ------------------------------------------------------------------ живой ИИ-проводник Настя (главная и все кабинеты)
 
 class ConciergeSpeechIn(BaseModel):
     text: str = Field(min_length=1, max_length=1000)
@@ -528,15 +532,24 @@ class ConciergeChatOut(BaseModel):
 
 
 @router.post("/concierge/avatar-token", response_model=AvatarTokenOut,
-             summary="Живой аватар ИИ-проводника Елены: токен сессии видеопотока с движением губ")
-def concierge_avatar_token() -> dict:
-    # У Елены — своя «манера» лица: спокойная, без улыбки, с чёткой артикуляцией (у интервьюера защиты — прежняя)
+             summary="Живой аватар ИИ-проводника Насти: токен сессии видеопотока с движением губ")
+def concierge_avatar_token(request: Request, sid: str | None = Query(None, max_length=64)) -> dict:
+    # У Насти — своё лицо (у интервьюера защиты — прежнее). Минуты видеопотока стоят денег: лимиты в сутки на всех,
+    # на один адрес и на один разговор (concierge_budget); сверх лимита — 429, браузер переходит на голос без видео.
     from app.modules.interview import concierge as cg
+    from app.modules.interview import concierge_budget as budget
 
+    ip = budget.client_ip(request)
+    if not budget.burst_ok(ip, 5):
+        raise api_error(429, "too_many_requests", "Слишком много запросов — попробуйте через минуту")
+    ok, why = budget.take("sessions", ip, 1, conv=sid)
+    if not ok:
+        log.info("concierge avatar-token: лимит %s (ip %s)", why, ip)
+        raise api_error(429, "avatar_budget", "Видеопоток на сегодня исчерпан — включён голосовой режим")
     try:
         from app.modules.interview.engine.providers import avatar as av
 
-        t = av.avatar_token(persona_name="Елена", director_notes=cg.anam_director_notes(),
+        t = av.avatar_token(persona_name="Настя", director_notes=cg.anam_director_notes(),
                             avatar_id=cg.ANAM_AVATAR_ID or None)
         return t.model_dump(mode="json") if hasattr(t, "model_dump") else dict(t)
     except ImportError:
@@ -549,16 +562,24 @@ def concierge_avatar_token() -> dict:
         raise api_error(503, "avatar_unavailable", "Живой видеопоток временно недоступен — включён голосовой режим") from None
 
 
-@router.post("/concierge/speech", summary="Голос ИИ-проводника Елены (mp3 или PCM для живого аватара)",
+@router.post("/concierge/speech", summary="Голос ИИ-проводника Насти (mp3 или PCM для живого аватара)",
              response_class=Response)
-def concierge_speech(body: ConciergeSpeechIn) -> Response:
+def concierge_speech(body: ConciergeSpeechIn, request: Request) -> Response:
     from app.modules.interview import concierge as cg
+    from app.modules.interview import concierge_budget as budget
 
     text = body.text.strip()
+    ip = budget.client_ip(request)
+    if not budget.burst_ok(ip):
+        raise api_error(429, "too_many_requests", "Слишком много запросов — попробуйте через минуту")
     if body.format == "pcm24":
         hit = cg.cached(text, "pcm24")
         if hit:
             return Response(hit, media_type="audio/pcm", headers={"Cache-Control": "public, max-age=86400", "X-Voice-Rate": "24000"})
+        # синтез вне кэша стоит знаков — считаем (постоянные фразы сценария уже в кэше и бесплатны)
+        ok, why = budget.take("tts", ip, len(text))
+        if not ok:
+            raise api_error(429, "tts_budget", "Синтез речи на сегодня исчерпан")
         gen = cg.synth_stream(text, "pcm24")
         try:
             first = next(gen)
@@ -577,6 +598,11 @@ def concierge_speech(body: ConciergeSpeechIn) -> Response:
 
         return StreamingResponse(body_iter(), media_type="audio/pcm",
                                  headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no", "X-Voice-Rate": "24000"})
+    fmt = "pcm" if body.format == "pcm" else "mp3"
+    if not cg.cached(text, fmt):
+        ok, why = budget.take("tts", ip, len(text))
+        if not ok:
+            raise api_error(429, "tts_budget", "Синтез речи на сегодня исчерпан")
     try:
         audio, mime = cg.cached_speak(text, "pcm_16000" if body.format == "pcm" else "mp3")
     except pt.EngineUnavailable:
@@ -594,10 +620,10 @@ class ConciergeTurnIn(BaseModel):
     paused: bool = False
     history: list[dict] = Field(default_factory=list, max_length=20)
     session_id: str | None = Field(None, max_length=64)
-    # что сейчас на экране: заголовок и видимые кнопки/заголовки (Елена отвечает «по экрану» и может показать элемент)
+    # что сейчас на экране: заголовок и видимые кнопки/заголовки (Настя отвечает «по экрану» и может показать элемент)
     screen: dict | None = None
     last_said: str = Field("", max_length=600)
-    # чего ждёт Елена после своей реплики: checkin | continue | detour | start | answer
+    # чего ждёт Настя после своей реплики: checkin | continue | detour | start | answer
     awaiting: str | None = Field(None, max_length=16)
 
 
@@ -611,11 +637,18 @@ class ConciergeEventIn(BaseModel):
     role: str | None = Field(None, max_length=32)
 
 
-@router.post("/concierge/turn", summary="Ход живого разговора с Еленой: решение и голос ответа одним потоком (NDJSON)",
+@router.post("/concierge/turn", summary="Ход живого разговора с Настей: решение и голос ответа одним потоком (NDJSON)",
              response_class=StreamingResponse)
-def concierge_turn(body: ConciergeTurnIn) -> StreamingResponse:
+def concierge_turn(body: ConciergeTurnIn, request: Request) -> StreamingResponse:
     from app.modules.interview import concierge as cg
+    from app.modules.interview import concierge_budget as budget
 
+    ip = budget.client_ip(request)
+    if not budget.burst_ok(ip, 2):
+        raise api_error(429, "too_many_requests", "Слишком много запросов — попробуйте через минуту")
+    ok, why = budget.take("turns", ip, 1)
+    if not ok:
+        log.info("concierge turn: лимит %s (ip %s) — без модели", why, ip)
     screen = None
     if isinstance(body.screen, dict):
         items = body.screen.get("items")
@@ -624,26 +657,37 @@ def concierge_turn(body: ConciergeTurnIn) -> StreamingResponse:
     gen = cg.turn_stream(body.message, user_name=(body.user_name or None), role=body.role, current_path=body.current_path,
                          step_id=body.step_id, touring=body.touring, paused=body.paused, history=body.history,
                          session_id=body.session_id, screen=screen, last_said=body.last_said,
-                         awaiting=body.awaiting if body.awaiting in ("checkin", "continue", "detour", "start", "answer") else None)
+                         awaiting=body.awaiting if body.awaiting in ("checkin", "continue", "detour", "start", "answer") else None,
+                         no_llm=not ok)
     return StreamingResponse(gen, media_type="application/x-ndjson",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
 @router.post("/concierge/event", status_code=204, response_class=Response,
-             summary="Событие разговора с Еленой для стенограммы: открытие, реплика обзора, шаг, закрытие")
-def concierge_event(body: ConciergeEventIn) -> Response:
+             summary="Событие разговора с Настей для стенограммы: открытие, реплика обзора, шаг, закрытие")
+def concierge_event(body: ConciergeEventIn, request: Request) -> Response:
     from app.modules.interview import concierge_brain as brain
+    from app.modules.interview import concierge_budget as budget
 
+    if not budget.burst_ok(budget.client_ip(request)):
+        return Response(status_code=204)
     brain.event(body.session_id, body.type, text=body.text, step=body.step, path=body.path, name=body.name, role=body.role)
     return Response(status_code=204)
 
 
-@router.get("/concierge/script", summary="Сценарий обзора Елены: приветствие, реплики шагов, связки (голос — из кэша)")
+@router.get("/concierge/script", summary="Сценарий обзора Насти: приветствие, реплики шагов, связки (голос — из кэша)")
 def concierge_script(name: str | None = Query(None, max_length=40)) -> dict:
     from app.modules.interview import concierge as cg
 
     cg.warm_async()
     return cg.script(name)
+
+
+@router.get("/concierge/budget", summary="Сегодняшние расходы проводника Насти и лимиты (для владельца)")
+def concierge_budget_usage() -> dict:
+    from app.modules.interview import concierge_budget as budget
+
+    return budget.usage()
 
 
 @router.websocket("/live/stt")
@@ -655,7 +699,7 @@ async def live_stt(ws: WebSocket) -> None:
 
 
 @router.post("/concierge/transcribe", response_model=TranscribeOut,
-             summary="Распознавание голоса собеседника для ИИ-проводника Елены")
+             summary="Распознавание голоса собеседника для ИИ-проводника Насти")
 async def concierge_transcribe(request: Request) -> dict:
     from app.core.config import get_settings
 
@@ -672,7 +716,7 @@ async def concierge_transcribe(request: Request) -> dict:
 
 
 @router.post("/concierge/chat", response_model=ConciergeChatOut,
-             summary="Живой диалог с ИИ-проводником Еленой: знакомство по имени, выбор роли и ответы на вопросы")
+             summary="Живой диалог с ИИ-проводником Настей: знакомство по имени, выбор роли и ответы на вопросы")
 def concierge_chat(body: ConciergeChatIn) -> dict:
     from app.modules.interview import concierge as cg
 

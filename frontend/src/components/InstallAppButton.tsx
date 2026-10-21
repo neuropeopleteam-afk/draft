@@ -1,10 +1,10 @@
-// «На телефон / RuStore»: заметная кнопка в шапке и на главной + окно установки в 1 клик.
-// Android/компьютер — системный запрос установки PWA (beforeinstallprompt), iOS — «На экран „Домой“» в Safari,
-// Android без Google-сервисов и RuStore — пакет APK (Trusted Web Activity той же PWA), см. /app/rustore.json.
+// «На телефон / RuStore»: кнопка в шапке, подвале и на главной + окно установки в 1 клик.
+// Android/компьютер — системный запрос установки на главный экран, iOS — «На экран „Домой“» в Safari,
+// Android и RuStore — подписанный пакет APK, см. /app/rustore.json.
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
-import { canPromptInstall, isStandalone, onInstallChange, platform, promptInstall } from "../integrations/pwa";
+import { canPromptInstall, isInAppBrowser, isStandalone, onInstallChange, platform, promptInstall } from "../integrations/pwa";
 
 interface RuStoreInfo { apk: string; package: string; version: string; size_mb: number; sha256: string; status: string }
 
@@ -36,6 +36,7 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
   }, [onClose]);
   const p = platform();
   const installed = isStandalone();
+  const inApp = isInAppBrowser();
   async function one() {
     const r = await promptInstall();
     setMsg(r === "accepted" ? "Готово — значок «Драфт» появился на главном экране." : r === "dismissed" ? "Установка отменена. Можно повторить в любой момент." : null);
@@ -52,29 +53,39 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
               <p className="text-sm text-brand-ink/65">iPhone, Android и RuStore · бесплатно</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Закрыть" className="rounded-lg p-2 text-brand-ink/60 hover:bg-brand-blush/40">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-brand-ink/60 hover:bg-brand-blush/40"
+          >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" /></svg>
           </button>
         </div>
 
         <div className="mt-5 space-y-3">
+          {inApp && (
+            <p className="rounded-2xl border border-amber-300 bg-amber-50 p-3.5 text-xs leading-relaxed text-amber-950">
+              Вы открыли ссылку внутри мессенджера. Нажмите «⋯» и выберите «Открыть в Safari / браузере», чтобы установить приложение на главный экран.
+            </p>
+          )}
           {installed ? (
             <p className="rounded-2xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Приложение уже установлено и открыто с главного экрана.</p>
           ) : canPromptInstall() ? (
-            <button type="button" onClick={one} className="btn-primary w-full !py-3.5 text-base" data-testid="install-one-click">Установить в 1 клик</button>
+            <button type="button" onClick={one} className="btn-primary min-h-[48px] w-full !py-3.5 text-base" data-testid="install-one-click">Установить в 1 клик</button>
           ) : p === "ios" ? (
             <div className="rounded-2xl border border-brand/30 bg-brand-blush/20 p-4 text-sm">
               <p className="font-semibold text-brand-night">iPhone и iPad — 3 касания в Safari</p>
-              <ol className="mt-2 list-decimal space-y-1 pl-5">
-                <li>Нажмите «Поделиться» <span aria-hidden="true">(квадрат со стрелкой вверх)</span> внизу экрана.</li>
-                <li>Выберите «На экран „Домой“».</li>
-                <li>Нажмите «Добавить» — «Драфт» откроется как приложение, с push-уведомлениями (iOS 16.4+).</li>
+              <ol className="mt-2 list-decimal space-y-1.5 pl-5">
+                <li>Нажмите <strong>«Поделиться»</strong> <span aria-hidden="true">(квадрат со стрелкой вверх)</span> на панели Safari.</li>
+                <li>Выберите в списке <strong>«На экран „Домой“»</strong>.</li>
+                <li>Нажмите <strong>«Добавить»</strong> — «Драфт» откроется на весь экран и сможет присылать уведомления (iOS 16.4+).</li>
               </ol>
             </div>
           ) : (
             <div className="rounded-2xl border border-brand-night/10 p-4 text-sm">
               <p className="font-semibold text-brand-night">{p === "android" ? "Android — Chrome или Яндекс Браузер" : "Компьютер — Chrome, Edge или Яндекс Браузер"}</p>
-              <p className="mt-1 text-brand-ink/75">{p === "android" ? "Меню ⋮ → «Установить приложение» или «Добавить на главный экран». Без Google-сервисов — пакет для RuStore ниже." : "Значок установки в адресной строке или меню браузера → «Установить Драфт». На телефон — отсканируйте QR-код."}</p>
+              <p className="mt-1 text-brand-ink/75">{p === "android" ? "Меню ⋮ → «Установить приложение» или «Добавить на главный экран». Также доступен подписанный пакет для RuStore ниже." : "Значок установки в адресной строке или меню браузера → «Установить Драфт». На телефон — отсканируйте QR-код."}</p>
             </div>
           )}
           {msg && <p className="text-sm font-semibold text-emerald-700" aria-live="polite">{msg}</p>}
@@ -85,7 +96,7 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
                 <p className="font-semibold text-brand-night">Android-пакет для RuStore</p>
                 <p className="text-xs text-brand-ink/65">{rs ? `${rs.package} · версия ${rs.version} · ${rs.size_mb} МБ` : "та же версия, что на сайте"}</p>
               </div>
-              {rs ? <a href={rs.apk} download className="btn-primary shrink-0 !px-4 !py-2 text-sm" data-testid="rustore-apk">Скачать APK</a>
+              {rs ? <a href={rs.apk} download className="btn-primary inline-flex min-h-[44px] shrink-0 items-center !px-4 !py-2 text-sm" data-testid="rustore-apk">Скачать APK</a>
                 : <span className="shrink-0 text-xs text-brand-ink/60">готовится</span>}
             </div>
             {rs && <p className="mt-2 text-[11px] leading-relaxed text-brand-ink/60">{rs.status}</p>}
@@ -97,21 +108,25 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
               <p className="text-sm text-brand-ink/75">Наведите камеру телефона на код — откроется эта страница с кнопкой установки.</p>
             </div>
           )}
-          <p className="text-center text-xs"><Link to="/install" onClick={onClose} className="font-semibold text-brand-plum hover:underline">Подробная инструкция и push-уведомления</Link></p>
+          <p className="text-center text-xs">
+            <Link to="/install" onClick={onClose} className="inline-flex min-h-[44px] items-center font-semibold text-brand-plum hover:underline">
+              Подробная инструкция и уведомления
+            </Link>
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-/** Кнопка «На телефон / RuStore»: variant="header" — компактная в шапке, "hero" — крупная на главной. */
+/** Кнопка «На телефон / RuStore»: variant="header" — компактная в шапке/подвале, "hero" — крупная на главной. */
 export function InstallAppButton({ variant = "header", premium = false }: { variant?: "header" | "hero"; premium?: boolean }) {
   const [open, setOpen] = useState(false);
   useEffect(() => { if (new URLSearchParams(window.location.search).get("install") === "1") setOpen(true); }, []);
   if (variant === "header" && isStandalone()) return null;
   const cls = variant === "hero"
-    ? `${premium ? "np-btn-ghost" : "btn-ghost"} inline-flex items-center gap-2 px-6 py-3.5 text-base`
-    : `inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-semibold ring-1 transition-colors ${premium ? "np-install" : "text-brand-plum ring-brand-night/15 hover:bg-brand-blush/40"}`;
+    ? `${premium ? "np-btn-ghost" : "btn-ghost"} inline-flex min-h-[44px] items-center gap-2 px-6 py-3.5 text-base`
+    : `inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-semibold ring-1 transition-colors ${premium ? "np-install" : "text-brand-plum ring-brand-night/15 hover:bg-brand-blush/40"}`;
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={cls} data-testid={variant === "hero" ? "install-hero" : "install-header"} aria-haspopup="dialog" title="Установить «Драфт» на телефон (iOS, Android, RuStore)">

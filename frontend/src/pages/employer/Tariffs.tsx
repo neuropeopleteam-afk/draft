@@ -1,12 +1,11 @@
-// Я29: тарифы работодателя — публичная страница /tariffs, раздел «Тарифы» кабинета, счётчик «осталось приглашений»,
-// метка «Партнёр ФСП». Всё показывается только при TARIFFS_ENABLED (/api/meta → tariffs.enabled). Цены и лимиты —
-// backend/app/modules/tariffs/plans.py; цена «Найма» — по запросу, оплаты нет — демонстрационный счёт без суммы.
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { SiteFooter, SiteHeader } from "../../components/SiteHeader";
 import { Alert, Field, Loading, NB, dateOnly, errText, plural, rub, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
+import { useAuth } from "../../lib/auth";
+import { useDemoUi } from "../../lib/juryMode";
 import { useMeta, usePageTitle } from "../../lib/meta";
 
 interface Plan {
@@ -19,13 +18,54 @@ interface TariffState {
   plan_id: Plan["id"]; plan: Plan; is_default: boolean; fsp_partner: boolean; partner_since: string | null; partner_note: string | null;
   partner_requested_at: string | null; usage: Usage; invoices: Invoice[]; plans: Plan[]; price_is_stub: boolean; invoice?: Invoice | null;
 }
+interface TariffReqRow {
+  id: string; plan: "hire" | "partner"; plan_title: string; company_name: string; contact_email: string;
+  status: "pending" | "approved" | "rejected"; admin_note: string | null; created_at: string;
+}
 
 export const useTariffsOn = () => !!useMeta()?.tariffs?.enabled;
 const invitesText = (n: number) => `${n}${NB}${plural(n, "приглашение", "приглашения", "приглашений")}`;
-// цена «Найма» — «по запросу» (решение владельца 11.10): число показываем, только если оно задано в plans.py
 const price = (p: Plan) => (p.price_rub_month === 0 ? "0 ₽" : p.price_rub_month ? rub(p.price_rub_month) : p.price_note);
 
-/** Метка «Партнёр ФСП» — в карточке компании, в приглашении кандидату, в кабинете работодателя. */
+const FALLBACK_PLANS: Plan[] = [
+  {
+    id: "start", title: "Старт", price_rub_month: 0, price_note: "Бесплатно", invites_per_month: 3,
+    summary: "Попробовать подбор: потребность текстом, подборка с объяснениями, 3 приглашения в месяц.",
+    self_service: true,
+    feature_list: [
+      { key: "ats", title: "Подключение ATS («Поток», Хантфлоу, Talantix, вебхук)", included: false },
+      { key: "assignments", title: "Задания от работодателя кандидатам с автопроверкой", included: false },
+      { key: "salary_market", title: "Рынок зарплат по категории у вилки приглашения", included: false },
+      { key: "fsp_selection_tasks", title: "Отборочные задачи компании на соревнованиях ФСП", included: false },
+      { key: "partner_badge", title: "Метка «Партнёр ФСП» в карточке компании и приглашениях", included: false },
+    ],
+  },
+  {
+    id: "hire", title: "Найм", price_rub_month: null, price_note: "По запросу", invites_per_month: 30,
+    summary: "Регулярный найм: 30 приглашений в месяц, передача в ATS, задания кандидатам, рыночная аналитика.",
+    self_service: true,
+    feature_list: [
+      { key: "ats", title: "Подключение ATS («Поток», Хантфлоу, Talantix, вебхук)", included: true },
+      { key: "assignments", title: "Задания от работодателя кандидатам с автопроверкой", included: true },
+      { key: "salary_market", title: "Рынок зарплат по категории у вилки приглашения", included: true },
+      { key: "fsp_selection_tasks", title: "Отборочные задачи компании на соревнованиях ФСП", included: false },
+      { key: "partner_badge", title: "Метка «Партнёр ФСП» в карточке компании и приглашениях", included: false },
+    ],
+  },
+  {
+    id: "partner", title: "Партнёр ФСП", price_rub_month: null, price_note: "Входит в спонсорский пакет ФСП", invites_per_month: 100,
+    summary: "Для спонсоров и партнёров федерации: всё из «Найма», отборочные задачи на соревнованиях ФСП, метка партнёра.",
+    self_service: false,
+    feature_list: [
+      { key: "ats", title: "Подключение ATS («Поток», Хантфлоу, Talantix, вебхук)", included: true },
+      { key: "assignments", title: "Задания от работодателя кандидатам с автопроверкой", included: true },
+      { key: "salary_market", title: "Рынок зарплат по категории у вилки приглашения", included: true },
+      { key: "fsp_selection_tasks", title: "Отборочные задачи компании на соревнованиях ФСП", included: true },
+      { key: "partner_badge", title: "Метка «Партнёр ФСП» в карточке компании и приглашениях", included: true },
+    ],
+  },
+];
+
 export function PartnerBadge({ on, className = "" }: { on?: boolean | null; className?: string }) {
   if (!on) return null;
   return (
@@ -37,14 +77,12 @@ export function PartnerBadge({ on, className = "" }: { on?: boolean | null; clas
   );
 }
 
-/** Счётчик «осталось приглашений» для формы приглашения, списка приглашений и обзора кабинета. */
 export function InvitesLeft({ compact = false }: { compact?: boolean }) {
   const on = useTariffsOn();
   const { data } = useApi<TariffState>(on ? "/employer/tariff" : null, [on]);
   if (!on || !data) return null;
   const u = data.usage;
   const low = u.invites_left <= Math.max(1, Math.round(u.invites_limit * 0.1));
-  // UX-2: компактная строка для обзора кабинета — тариф ссылкой и остаток одной фразой
   if (compact) return (
     <p className={`text-sm ${low ? "text-brand-plum" : "text-brand-ink/75"}`} data-testid="invites-left" aria-live="polite">
       {data.plan_id !== "partner" ? <Link to="/employer/tariffs" className="font-semibold text-brand hover:underline">Тариф «{data.plan.title}»</Link> : <>Тариф «{data.plan.title}»</>}
@@ -69,7 +107,7 @@ function PlanCard({ p, current, action }: { p: Plan; current?: boolean; action?:
           {current && <span className="chip">Ваш тариф</span>}
         </div>
         <p className={`mt-2 font-extrabold tabular-nums text-brand-night ${p.id === "partner" ? "text-lg leading-snug" : "text-2xl"}`}>{price(p)}</p>
-        <p className="text-xs text-brand-ink/65">{p.price_rub_month === 0 ? "Без оплаты" : p.id === "partner" ? "Подключает ФСП по договору" : "Демо: подключается сразу, демо-счёт без суммы"}</p>
+        <p className="text-xs text-brand-ink/65">{p.price_rub_month === 0 ? "Без оплаты" : p.id === "partner" ? "Подключается по спонсорскому договору с ФСП" : "Подключается по заявке (цена по запросу)"}</p>
       </div>
       <p className="text-sm leading-relaxed text-brand-ink/80">{p.summary}</p>
       <ul className="space-y-1.5 text-sm">
@@ -87,144 +125,216 @@ function PlanCard({ p, current, action }: { p: Plan; current?: boolean; action?:
 }
 
 function StubNote() {
-  return <p className="text-xs leading-relaxed text-brand-ink/65">Цена «Найма» — по запросу, не оферта. На прототипе нет настоящей оплаты: при выборе «Найма» выставляется демонстрационный счёт без суммы и тариф подключается сразу.</p>;
+  return <p className="text-xs leading-relaxed text-brand-ink/65">Цена тарифа «Найм» и спонсорских пакетов — по запросу, не является публичной офертой. Оферта и счёт направляются менеджером после обработки заявки; тариф активируется администратором.</p>;
 }
-
-// ------------------------------------------------------------------ публичная страница
 
 export default function TariffsPublic() {
   usePageTitle("Тарифы");
-  const on = useTariffsOn();
-  const meta = useMeta();
-  const { data, loading, error } = useApi<any>(on ? "/tariffs" : null, [on]);
   return (
     <div className="min-h-screen bg-[#FBF8FC]">
       <SiteHeader />
       <main id="main" className="mx-auto max-w-content space-y-8 px-4 py-10 sm:px-6">
-        <PageTitle title="Тарифы" subtitle="Кандидатам — всегда бесплатно. Работодателю — бесплатный старт, платный «Найм» для регулярного подбора и «Партнёр ФСП» для спонсоров федерации." />
-        {meta && !on ? <Alert kind="info">Тарифы на этом сервере не включены: все функции работодателя доступны без ограничений.</Alert>
-          : loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : data && (
-          <>
-            <div className="grid gap-5 lg:grid-cols-3">
-              {data.plans.map((p: Plan) => (
-                <PlanCard key={p.id} p={p} action={p.self_service
-                  ? <Link to="/register" className={p.id === "hire" ? "btn-primary w-full justify-center" : "btn-ghost w-full justify-center"}>{p.id === "start" ? "Начать бесплатно" : "Зарегистрироваться"}</Link>
-                  : <a href="#partner" className="btn-ghost w-full justify-center">Как стать партнёром</a>} />
-              ))}
-            </div>
-            <StubNote />
-            <section className="card space-y-3" id="partner">
-              <h2 className="text-lg font-bold text-brand-night">Партнёрам ФСП и кандидатам</h2>
-              <ul className="list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-brand-ink/85 marker:text-brand">
-                {data.notes.map((n: string) => <li key={n}>{n}</li>)}
-              </ul>
-            </section>
-            <section className="space-y-3">
-              <h2 className="text-lg font-bold text-brand-night">Ориентиры рынка</h2>
-              <div className="overflow-x-auto rounded-2xl border border-brand-night/10 bg-white">
-                <table className="w-full min-w-[34rem] text-left text-sm">
-                  <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.1em] text-brand-night"><tr><th scope="col" className="px-4 py-2.5">Сервис</th><th scope="col" className="px-4 py-2.5">Цена</th><th scope="col" className="px-4 py-2.5">Что за эти деньги</th></tr></thead>
-                  <tbody>{data.market_references.map((m: any) => (
-                    <tr key={m.title} className="border-t border-brand-night/10"><td className="px-4 py-2.5"><a href={m.url} className="font-semibold text-brand hover:underline" target="_blank" rel="noreferrer">{m.title}</a></td><td className="px-4 py-2.5 tabular-nums">{m.price}</td><td className="px-4 py-2.5 text-brand-ink/75">{m.unit}</td></tr>
-                  ))}</tbody>
-                </table>
-              </div>
-              <p className="text-xs leading-relaxed text-brand-ink/65">{data.market_note}</p>
-            </section>
-          </>
-        )}
+        <PageTitle title="Тарифы" subtitle="Кандидатам — всегда бесплатно. Работодателю — бесплатный старт, тариф «Найм» для регулярного подбора и «Партнёр ФСП» для спонсоров федерации." />
+        <div className="grid gap-5 lg:grid-cols-3">
+          {FALLBACK_PLANS.map((p) => (
+            <PlanCard key={p.id} p={p} action={<Link to="/pricing" className={p.id === "hire" ? "btn-primary w-full justify-center" : "btn-ghost w-full justify-center"}>{p.id === "start" ? "Начать бесплатно" : "Запросить тариф"}</Link>} />
+          ))}
+        </div>
+        <StubNote />
       </main>
       <SiteFooter />
     </div>
   );
 }
 
-// ------------------------------------------------------------------ кабинет работодателя
-
 export function EmployerTariffs() {
-  usePageTitle("Тарифы");
+  usePageTitle("Тарифы и лимиты компании");
   const on = useTariffsOn();
+  const { me } = useAuth();
+  const demoUi = useDemoUi();
   const { data, loading, error, setData } = useApi<TariffState>(on ? "/employer/tariff" : null, [on]);
+  const { data: myReqs, reload: reloadReqs } = useApi<{ items: TariffReqRow[] }>("/tariffs/requests/my");
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ k: "ok" | "error"; t: string } | null>(null);
-  const [note, setNote] = useState("");
-  async function choose(plan: string) {
+  const [reqPlan, setReqPlan] = useState<"hire" | "partner" | null>(null);
+  const [phone, setPhone] = useState("");
+  const [comment, setComment] = useState("");
+
+  async function chooseDemoInstant(plan: string) {
     setBusy(plan); setMsg(null);
     try {
       const st = await api<TariffState>("/employer/tariff", { body: { plan } });
       setData(st);
-      setMsg({ k: "ok", t: st.invoice ? `Тариф «${st.plan.title}» подключён. Выставлен демонстрационный счёт № ${st.invoice.number} без суммы (цена — по запросу) — оплата не проводится.` : `Тариф «${st.plan.title}» подключён.` });
+      setMsg({ k: "ok", t: `Тариф «${st.plan.title}» подключён.` });
     } catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(null); }
   }
-  async function requestPartner() {
-    setBusy("partner"); setMsg(null);
-    try { setData(await api<TariffState>("/employer/tariff/partner-request", { body: { note: note.trim() || null } })); setMsg({ k: "ok", t: "Заявка отправлена в Кабинет ФСП. Метку и тариф «Партнёр ФСП» подключает федерация." }); }
-    catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(null); }
+
+  async function submitTariffRequest(e: FormEvent) {
+    e.preventDefault();
+    if (!reqPlan) return;
+    setBusy("request"); setMsg(null);
+    try {
+      const r = await api<{ message: string }>("/tariffs/request", {
+        body: {
+          plan: reqPlan,
+          company_name: me?.employer?.company?.name ?? "Моя компания",
+          contact_name: me?.employer?.full_name ?? null,
+          contact_email: me?.email ?? null,
+          contact_phone: phone.trim() || null,
+          comment: comment.trim() || null,
+        },
+      });
+      setMsg({ k: "ok", t: r.message });
+      setReqPlan(null);
+      setComment("");
+      void reloadReqs();
+    } catch (err) {
+      setMsg({ k: "error", t: errText(err) });
+    } finally {
+      setBusy(null);
+    }
   }
-  if (!on) return <div className="max-w-3xl space-y-4"><PageTitle title="Тарифы" /><Alert kind="info">Тарифы на этом сервере не включены: все функции доступны без ограничений.</Alert></div>;
-  if (loading && !data) return <Loading />;
-  if (error || !data) return <Alert>{error}</Alert>;
-  const u = data.usage;
-  const pctUsed = u.invites_limit ? Math.min(100, Math.round((100 * u.invites_used) / u.invites_limit)) : 0;
+
+  if (loading && on && !data) return <Loading />;
+  if (error && on && !data) return <Alert>{error}</Alert>;
+
+  const plans = data?.plans ?? FALLBACK_PLANS;
+  const currentPlanId = data?.plan_id ?? "start";
+  const currentPlan = data?.plan ?? FALLBACK_PLANS[0];
+  const u = data?.usage;
+  const pctUsed = u && u.invites_limit ? Math.min(100, Math.round((100 * u.invites_used) / u.invites_limit)) : 0;
+  const pendingReq = myReqs?.items?.find((r) => r.status === "pending");
+
   return (
     <div className="max-w-6xl space-y-6">
-      <PageTitle title="Тарифы" subtitle="Ваш тариф и остаток приглашений; кандидатам — всегда бесплатно." />
+      <PageTitle title="Тарифы и лимиты" subtitle="Управление тарифом компании и заявки на расширение лимита приглашений. Кандидатам платформа всегда бесплатна." />
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
+      {pendingReq && (
+        <Alert kind="info">
+          Заявка на тариф «{pendingReq.plan_title}» отправлена ({dateOnly(pendingReq.created_at)}) и находится на рассмотрении у менеджера.
+        </Alert>
+      )}
       <section className="card grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]" aria-label="Текущий тариф">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Текущий тариф</p>
-          <p className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-brand-night">{data.plan.title} <PartnerBadge on={data.fsp_partner} /></p>
-          <p className="text-sm text-brand-ink/75">{data.plan.price_rub_month === 0 ? "0 ₽" : data.plan.id === "hire" ? "Цена — по запросу" : data.plan.price_note}</p>
-          {data.fsp_partner && data.partner_note && <p className="text-sm text-brand-ink/75">Основание: {data.partner_note}</p>}
-          {data.is_default && !data.fsp_partner && <p className="text-xs text-brand-ink/65">Тариф по умолчанию{data.plan_id === "hire" ? " демо-песочницы" : ""}: менять ничего не нужно.</p>}
+          <p className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-brand-night">
+            {currentPlan.title} <PartnerBadge on={data?.fsp_partner} />
+          </p>
+          <p className="text-sm text-brand-ink/75">{currentPlan.price_rub_month === 0 ? "0 ₽" : currentPlan.id === "hire" ? "Цена — по запросу" : currentPlan.price_note}</p>
+          {data?.fsp_partner && data.partner_note && <p className="text-sm text-brand-ink/75">Основание: {data.partner_note}</p>}
         </div>
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Приглашения в этом месяце</p>
-          <p className="text-2xl font-extrabold tabular-nums text-brand-night" data-testid="tariff-left">осталось {u.invites_left} из {u.invites_limit}</p>
-          <div className="h-2.5 overflow-hidden rounded-full bg-brand-blush/60" role="progressbar" aria-label="Использовано приглашений" aria-valuemin={0} aria-valuemax={u.invites_limit} aria-valuenow={u.invites_used}>
-            <div className="h-full rounded-full bg-brand" style={{ width: `${pctUsed}%` }} />
+        {u ? (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Приглашения в этом месяце</p>
+            <p className="text-2xl font-extrabold tabular-nums text-brand-night" data-testid="tariff-left">осталось {u.invites_left} из {u.invites_limit}</p>
+            <div className="h-2.5 overflow-hidden rounded-full bg-brand-blush/60" role="progressbar" aria-label="Использовано приглашений" aria-valuemin={0} aria-valuemax={u.invites_limit} aria-valuenow={u.invites_used}>
+              <div className="h-full rounded-full bg-brand" style={{ width: `${pctUsed}%` }} />
+            </div>
+            <p className="text-xs text-brand-ink/65">Отправлено {u.invites_used}. Лимит обновится {u.resets_on}.</p>
           </div>
-          <p className="text-xs text-brand-ink/65">Отправлено {u.invites_used}. Лимит обновится {u.resets_on}. Отозванное приглашение лимит не возвращает.</p>
-        </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Статус ограничений</p>
+            <p className="text-base font-bold text-brand-night">Все функции подбора доступны</p>
+            <p className="text-xs text-brand-ink/65">Для перехода на корпоративный тариф «Найм» или спонсорский пакет «Партнёр ФСП» отправьте заявку ниже.</p>
+          </div>
+        )}
       </section>
+
       <div className="grid gap-5 lg:grid-cols-3">
-        {data.plans.map((p) => {
-          const cur = p.id === data.plan_id;
-          const action = cur ? <p className="text-sm font-semibold text-brand-night">Подключён</p>
-            : p.id === "partner" ? null
-            : data.fsp_partner ? <p className="text-xs text-brand-ink/65">Сейчас действует «Партнёр ФСП» — его условия шире.</p>
-            : <button className={p.id === "hire" ? "btn-primary w-full justify-center" : "btn-ghost w-full justify-center"} disabled={!!busy} aria-busy={busy === p.id || undefined} onClick={() => choose(p.id)}>
-                {busy === p.id ? "Подключаем…" : p.id === "hire" ? "Подключить «Найм» (демо-счёт без суммы)" : "Перейти на «Старт»"}</button>;
+        {plans.map((p) => {
+          const cur = p.id === currentPlanId;
+          const action = cur ? (
+            <p className="text-sm font-semibold text-brand-night">Подключён</p>
+          ) : data?.fsp_partner ? (
+            <p className="text-xs text-brand-ink/65">Действует «Партнёр ФСП» — его условия шире.</p>
+          ) : p.id === "start" ? (
+            on ? (
+              <button className="btn-ghost w-full justify-center" disabled={!!busy} onClick={() => chooseDemoInstant("start")}>
+                Перейти на «Старт»
+              </button>
+            ) : null
+          ) : (
+            <div className="space-y-2">
+              <button
+                type="button"
+                className={p.id === "hire" ? "btn-primary w-full justify-center" : "btn-ghost w-full justify-center"}
+                disabled={!!busy}
+                onClick={() => setReqPlan(p.id as "hire" | "partner")}
+                data-testid={`employer-request-${p.id}`}
+              >
+                {p.id === "hire" ? "Запросить тариф «Найм»" : "Запросить статус «Партнёр ФСП»"}
+              </button>
+              {demoUi && on && p.id === "hire" && (
+                <button
+                  type="button"
+                  className="w-full text-center text-xs font-semibold text-brand-plum hover:underline"
+                  disabled={!!busy}
+                  onClick={() => chooseDemoInstant("hire")}
+                >
+                  Включить в демо-песочнице сразу
+                </button>
+              )}
+            </div>
+          );
           return <PlanCard key={p.id} p={p} current={cur} action={action} />;
         })}
       </div>
-      <StubNote />
-      {!data.fsp_partner && (
-        <section className="card space-y-3" aria-labelledby="partner-h">
-          <h2 id="partner-h" className="text-lg font-bold text-brand-night">Стать партнёром ФСП</h2>
-          <p className="text-sm leading-relaxed text-brand-ink/80">«Партнёр ФСП» входит в спонсорский пакет федерации: до 100 приглашений в месяц, отборочные задачи вашей компании на соревнованиях ФСП (проводит ФСП) и метка партнёра в карточке компании и приглашениях. Заявку рассматривает ФСП.</p>
-          {data.partner_requested_at ? <Alert kind="info">Заявка отправлена {dateOnly(data.partner_requested_at)} — ждёт решения ФСП.</Alert> : (
-            <div className="space-y-3">
-              <Field label="Чем компания хочет помочь ФСП (необязательно)" htmlFor="partner-note"><textarea id="partner-note" className="input min-h-[80px]" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Спонсор регионального этапа, задачи для отбора, стажировки для участников" /></Field>
-              <button className="btn-ghost" disabled={!!busy} aria-busy={busy === "partner" || undefined} onClick={requestPartner}>{busy === "partner" ? "Отправляем…" : "Отправить заявку в ФСП"}</button>
+
+      {reqPlan && (
+        <section className="card space-y-4 border-2 border-brand/30" data-testid="employer-tariff-request-modal">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-brand-night">
+                Заявка на подключение тарифа «{reqPlan === "hire" ? "Найм" : "Партнёр ФСП"}»
+              </h2>
+              <p className="text-sm text-brand-ink/70">
+                Компания: <b>{me?.employer?.company?.name ?? "Моя компания"}</b> · Контактная почта: <b>{me?.email}</b>
+              </p>
             </div>
-          )}
+            <button type="button" onClick={() => setReqPlan(null)} className="text-xs font-semibold text-brand-ink/60 hover:text-brand-night">
+              Закрыть
+            </button>
+          </div>
+          <form onSubmit={submitTariffRequest} className="space-y-3" noValidate>
+            <Field label="Телефон или Telegram для связи" htmlFor="emp-req-phone">
+              <input id="emp-req-phone" className="input max-w-md" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7 999 000-00-00" />
+            </Field>
+            <Field label="Комментарий к заявке (планируемое число вакансий или участие в соревнованиях ФСП)" htmlFor="emp-req-comment">
+              <textarea id="emp-req-comment" className="input min-h-[80px]" maxLength={500} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Укажите направления найма или пожелания по договору" />
+            </Field>
+            <div className="flex flex-wrap gap-3">
+              <button type="submit" className="btn-primary" disabled={busy === "request"} data-testid="employer-tariff-request-submit">
+                {busy === "request" ? "Отправляем…" : "Отправить заявку менеджеру"}
+              </button>
+              <button type="button" className="btn-ghost" onClick={() => setReqPlan(null)}>Отмена</button>
+            </div>
+          </form>
         </section>
       )}
-      <section className="card space-y-3" aria-labelledby="inv-h">
-        <h2 id="inv-h" className="text-lg font-bold text-brand-night">Демонстрационные счета</h2>
-        {!data.invoices.length ? <p className="text-sm text-brand-ink/65">Счетов нет{data.plan_id === "hire" && data.is_default ? " — тариф подключён по умолчанию" : ""}.</p> : (
-          <ul className="space-y-2">
-            {data.invoices.map((i) => (
-              <li key={i.id} className="rounded-xl border border-brand-night/10 p-3 text-sm" data-testid="demo-invoice">
-                <p className="font-semibold text-brand-night">Счёт № {i.number} · «{i.plan_title}» · сумма — по запросу</p>
-                <p className="text-brand-ink/75">Период {dateOnly(i.period_from)} — {dateOnly(i.period_to)}</p>
-                <p className="text-xs text-brand-ink/65">{i.note}</p>
+
+      <StubNote />
+
+      {myReqs?.items && myReqs.items.length > 0 && (
+        <section className="card space-y-3" aria-labelledby="reqs-h">
+          <h2 id="reqs-h" className="text-lg font-bold text-brand-night">История заявок на тариф</h2>
+          <ul className="space-y-2 text-sm">
+            {myReqs.items.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand-night/10 p-3">
+                <div>
+                  <p className="font-semibold text-brand-night">Тариф «{r.plan_title}» · {dateOnly(r.created_at)}</p>
+                  {r.admin_note && <p className="text-xs text-brand-ink/70">Комментарий: {r.admin_note}</p>}
+                </div>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                  r.status === "approved" ? "bg-emerald-50 text-emerald-700" : r.status === "rejected" ? "bg-rose-50 text-rose-700" : "bg-brand-blush text-brand-plum"
+                }`}>
+                  {r.status === "approved" ? "Одобрена" : r.status === "rejected" ? "Отклонена" : "На рассмотрении"}
+                </span>
               </li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

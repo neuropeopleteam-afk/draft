@@ -40,6 +40,17 @@ RELEVANCE_POLICY = (" Результат по дисциплине, близко
                     "дальше — 0,8 (дисциплины между собой равны: у каждой есть близкие специализации).")
 
 
+def team_factor(a) -> float:
+    """Личный результат весит больше командного (поле team из индекса протоколов ФСП)."""
+    team = getattr(a, "team", None)
+    if not team:
+        return 1.0
+    if isinstance(team, (list, tuple, set)):
+        n = len(team)
+        return max(0.80, round(1.0 / (1.0 + 0.05 * max(0, n - 1)), 4)) if n > 1 else 1.0
+    return 0.92
+
+
 def details(achievements, *, today: date | None = None, direction: str | None = None,
             relevance: bool = False) -> dict:
     """Сила паспорта. relevance=True (флаг FSP_DISCIPLINE_RELEVANCE) — вклад результата умножается на коэффициент
@@ -54,7 +65,7 @@ def details(achievements, *, today: date | None = None, direction: str | None = 
         # Один турнир может иметь несколько дисциплин/записей; повтор импорта не даёт бонус.
         key = getattr(a, "event_id", None) or (a.event_name.strip().casefold(), a.event_date)
         kind = result_kind(a)
-        value = RESULT_WEIGHTS[kind] * recency(a.event_date, today)
+        value = RESULT_WEIGHTS[kind] * recency(a.event_date, today) * team_factor(a)
         c = rel.coef(getattr(a, "discipline", None), direction) if relevance else 1.0
         value *= c
         if key not in events or value > events[key]["value"]:
