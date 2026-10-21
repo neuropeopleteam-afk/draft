@@ -9,6 +9,8 @@ import { MODE_SHORT, Phase } from "../shared";
 import { CameraStats } from "../../proctor/CameraStats";
 import { useDemoUi } from "../../lib/juryMode";
 import FspRankConverter from "../../components/FspRankConverter";
+import { FspCabinet3DStage } from "../../components/Fsp3DShowcase";
+import { NUMBERS } from "../../lib/numbers";
 import { TalentMap } from "./TalentMap";
 
 type Rep = any;
@@ -92,7 +94,7 @@ function ReportSkeleton() {
   return (
     <div className="space-y-6" role="status" aria-busy="true" aria-live="polite" data-testid="fsp-report-skeleton">
       <span className="sr-only">Загрузка…</span>
-      <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="card min-w-0 space-y-2.5">
             <div className="h-3 w-3/5 animate-pulse rounded bg-brand-blush/60" />
@@ -182,9 +184,22 @@ function Head({ title, subtitle, csv }: { title: string; subtitle: string; csv?:
     setErr(null);
     try { await apiDownload(`/fsp-cabinet/export/${id}.csv${q(days)}`, `fsp_${id}.csv`); } catch (e) { setErr(errText(e)); }
   }
+  const fspRegions = (NUMBERS as any)?.fsp_facts?.regions ?? 89;
+  const fspClaim = (NUMBERS as any)?.fsp_facts?.claim_ru ?? "89 действующих региональных представительств ФСП в России";
   return (
     <div className="space-y-4">
-      <PageTitle title={title} subtitle={subtitle} />
+      <div className="fsp-stage-card overflow-hidden rounded-3xl p-5 sm:p-6">
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <div className="min-w-0 flex-1 [&_h1]:text-white [&_p]:text-white/80">
+            <p className="mb-1.5 inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#B8B4FF]" title={fspClaim}>
+              <i className="fsp-pulse-dot" aria-hidden="true" />
+              ФСП: {fspRegions} региональных представительств
+            </p>
+            <PageTitle title={title} subtitle={subtitle} />
+          </div>
+          <FspCabinet3DStage kind="medallion" badge={`ФСП · ${fspRegions} представительств`} sub="Аналитика и кубки" />
+        </div>
+      </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="hidden sm:inline-flex"><Seg label="Период" value={days} onChange={setDays} options={PERIODS} /></span>
         <label className="flex items-center gap-2 text-sm sm:hidden">
@@ -260,7 +275,7 @@ export function FspOverview() {
         return (
           <>
             <DemoNote rep={rep} />
-            <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
               <Stat label="Кандидаты" value={fk(o.candidates)} hint={`с категорией · с ФСП ${fk(o.candidates_fsp)} (${fpct(o.fsp_share)})`} />
               <Stat label="Работодатели" value={o.companies_active} hint={`активных компаний · потребностей ${o.needs}`} />
               <Stat label="Приглашения" value={o.invitations} hint={`получили ${fk(o.invited_candidates)} кандидатов`} />
@@ -319,16 +334,26 @@ const METRICS = [
   { id: "supply", title: "Кандидаты", fmt: (v: any) => fk(v) },
 ] as const;
 
+const GRADE_RANK: Record<string, number> = { intern: 0, junior: 1, middle: 2, senior: 3, lead: 4, principal: 5 };
+
 export function FspDemand() {
   const [metric, setMetric] = useState<(typeof METRICS)[number]["id"]>("invitations");
   const [allSkills, setAllSkills] = useState(false);
+  const [hideEmptyCats, setHideEmptyCats] = useState(false);
   const m = METRICS.find((x) => x.id === metric)!;
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="max-w-6xl space-y-6 pb-12">
       <Head title="Спрос работодателей" subtitle="Какие категории и навыки нужны компаниям: потребности, приглашения-офферы и предложение подтверждённых кандидатов."
         csv={[{ id: "demand", title: "категории" }, { id: "skills", title: "навыки" }]} />
       <Body>{(rep) => {
-        const cats: any[] = rep.demand.categories;
+        const rawCats: any[] = rep.demand.categories ?? [];
+        const cats = [...rawCats].sort((a, b) => {
+          if (a.direction !== b.direction) return String(a.direction).localeCompare(String(b.direction));
+          return (GRADE_RANK[a.grade] ?? 99) - (GRADE_RANK[b.grade] ?? 99);
+        });
+        const visibleCats = hideEmptyCats
+          ? cats.filter((c) => (c.needs ?? 0) > 0 || (c.invitations ?? 0) > 0 || (c.supply ?? 0) > 0)
+          : cats;
         const get = (d: string, g: string) => cats.find((c) => c.direction === d && c.grade === g)?.[metric];
         const total = (x: any) => x.needs_required + x.needs_desired;
         const skillsAll: any[] = [...rep.demand.skills].sort((a, b) => total(b) - total(a) || b.needs_required - a.needs_required);
@@ -338,7 +363,6 @@ export function FspDemand() {
         return (
           <>
             <DemoNote rep={rep} />
-            <TalentMap data={rep.regions_map} />
             <Card title="Категории «направление · грейд»" sub="Выберите показатель. Пустая клетка с пунктиром — группа меньше 5 человек.">
               <Seg label="Показатель" value={metric} onChange={setMetric} options={METRICS.map(({ id, title }) => ({ id, title }))} />
               <Heatmap rows={DIRS} cols={GRS} cell={get} fmt={m.fmt} tone={metric === "needs" || metric === "invitations" ? "brand" : "night"} />
@@ -348,47 +372,111 @@ export function FspDemand() {
               <Legend items={[{ tone: "brand", label: "обязательно" }, { tone: "soft", label: "желательно" }]} />
               <ul className="space-y-3">
                 {skills.map((s) => (
-                  <li key={s.tag} className="grid gap-x-3 gap-y-1 sm:grid-cols-[11rem_minmax(0,1fr)_14rem] sm:items-center">
-                    <span className="text-sm font-medium text-brand-ink/85">{s.title}</span>
-                    <span className="flex items-center gap-2">
+                  <li key={s.tag} className="grid gap-x-3 gap-y-1 rounded-xl border border-brand-night/5 bg-[#F8F9FF] px-3.5 py-2.5 sm:grid-cols-[11rem_minmax(0,1fr)_15rem] sm:items-center">
+                    <span className="text-sm font-semibold text-brand-night">{s.title}</span>
+                    <span className="flex items-center gap-2.5">
                       <StackBar max={smax} parts={[{ value: s.needs_required, tone: "brand", label: "обязательно" }, { value: s.needs_desired, tone: "soft", label: "желательно" }]} />
-                      <span className="w-8 shrink-0 text-right text-sm font-semibold tabular-nums text-brand-night">{s.needs_required + s.needs_desired}</span>
+                      <span className="w-8 shrink-0 text-right font-mono text-sm font-bold tabular-nums text-brand-night">{s.needs_required + s.needs_desired}</span>
                     </span>
-                    <span className="text-xs text-brand-ink/65">
-                      компаний {s.companies} · подтвердили {fk(s.supply_confirmed)} · приглашены {fpct(s.invite_rate_with_skill)}
+                    <span className="text-xs text-brand-ink/70">
+                      компаний <b className="font-mono text-brand-night">{s.companies}</b> · подтв. <b className="font-mono text-brand-night">{fk(s.supply_confirmed)}</b> · офферы <b className="font-mono text-brand">{fpct(s.invite_rate_with_skill)}</b>
                     </span>
                   </li>
                 ))}
               </ul>
               {skillsAll.length > 12 && (
-                <button className="text-sm font-semibold text-brand-plum hover:text-brand" onClick={() => setAllSkills(!allSkills)}>
+                <button className="btn-ghost !px-3.5 !py-1.5 text-xs" onClick={() => setAllSkills(!allSkills)}>
                   {allSkills ? "Свернуть" : `Показать все навыки (${skillsAll.length})`}
                 </button>
               )}
             </Card>
-            <Card title="Таблица по категориям">
-              <div className="-mx-6 overflow-x-auto px-6">
-                <table className="w-full min-w-[46rem] text-left text-sm">
-                  <thead className="text-xs uppercase tracking-wide text-brand-ink/65">
-                    <tr><th className="py-2 pr-3">Категория</th><th className="pr-3 text-right">Потребности</th><th className="pr-3 text-right">Компании</th><th className="pr-3 text-right">Приглашения</th><th className="pr-3 text-right">Кандидаты</th><th className="pr-3 text-right">Приглашены</th><th className="pr-3 text-right">Приняли</th><th className="text-right">Медиана рынка</th></tr>
+            <Card title="Таблица по категориям" sub="Сводная матрица спроса компаний, предложения подтверждённых специалистов и конверсии приглашений по грейдам.">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-1">
+                <span className="text-xs text-brand-ink/65">
+                  Показано категорий: <b className="font-mono text-brand-night">{visibleCats.length}</b> из {cats.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setHideEmptyCats((v) => !v)}
+                  className="rounded-lg border border-brand-night/15 bg-[#F4F6FC] px-3 py-1 text-xs font-semibold text-brand-night transition hover:border-brand/40 hover:bg-brand-blush/60"
+                >
+                  {hideEmptyCats ? "Показать все категории" : "Скрыть пустые строки (0 потребностей)"}
+                </button>
+              </div>
+              <div className="overflow-x-auto rounded-2xl border border-brand-night/10">
+                <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-brand-night/10 bg-gradient-to-r from-[#EEF1FE] via-[#F4F6FF] to-[#EEF1FE] text-[11px] font-bold uppercase tracking-[0.04em] text-brand-plum">
+                      <th className="py-3 pl-3.5 pr-2">Категория</th>
+                      <th className="px-2 py-3 text-right">Потребн.</th>
+                      <th className="px-2 py-3 text-right">Компании</th>
+                      <th className="px-2 py-3 text-right">Приглаш.</th>
+                      <th className="px-2 py-3 text-right">Кандидаты</th>
+                      <th className="px-2 py-3 text-right">Приглашены</th>
+                      <th className="px-2 py-3 text-right">Приняли</th>
+                      <th className="whitespace-nowrap py-3 pl-2 pr-3.5 text-right">Медиана рынка</th>
+                    </tr>
                   </thead>
-                  <tbody className="divide-y divide-brand-night/5 tabular-nums">
-                    {cats.map((c) => (
-                      <tr key={c.category_id}>
-                        <td className="py-2 pr-3 font-medium text-brand-night">{c.title}</td>
-                        <td className="pr-3 text-right">{c.needs}</td>
-                        <td className="pr-3 text-right">{c.companies}</td>
-                        <td className="pr-3 text-right">{c.invitations}</td>
-                        <td className="pr-3 text-right">{fk(c.supply)}</td>
-                        <td className="pr-3 text-right">{fk(c.invited_candidates)}{c.invite_rate != null && <span className="text-brand-ink/65"> · {fpct(c.invite_rate)}</span>}</td>
-                        <td className="pr-3 text-right">{fk(c.accepted_candidates)}{c.accept_rate != null && <span className="text-brand-ink/65"> · {fpct(c.accept_rate)}</span>}</td>
-                        <td className="text-right">{ftr(c.market_median)}</td>
-                      </tr>
-                    ))}
+                  <tbody className="divide-y divide-brand-night/8 font-mono text-[13px] tabular-nums">
+                    {visibleCats.map((c) => {
+                      const isEmpty = !c.needs && !c.invitations;
+                      const [dirName, gradeName] = String(c.title ?? "").split(" · ");
+                      return (
+                        <tr
+                          key={c.category_id}
+                          className={`transition-colors hover:bg-[#F2F5FF] ${isEmpty ? "bg-gray-50/50 text-brand-ink/50" : "bg-white text-brand-night"}`}
+                        >
+                          <td className="py-2.5 pl-3.5 pr-2 font-sans">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className={`font-semibold ${isEmpty ? "text-brand-ink/60" : "text-brand-night"}`}>{dirName || c.title}</span>
+                              {gradeName && (
+                                <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-bold ${
+                                  isEmpty
+                                    ? "bg-gray-100 text-gray-500"
+                                    : "border border-brand/20 bg-brand-blush/70 text-brand-strong"
+                                }`}>
+                                  {gradeName}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-2 py-2.5 text-right font-semibold">{c.needs}</td>
+                          <td className="px-2 py-2.5 text-right">{c.companies}</td>
+                          <td className="px-2 py-2.5 text-right font-bold">{c.invitations}</td>
+                          <td className="px-2 py-2.5 text-right">{fk(c.supply)}</td>
+                          <td className="whitespace-nowrap px-2 py-2.5 text-right">
+                            <span>{fk(c.invited_candidates)}</span>
+                            {c.invite_rate != null && (
+                              <span className="ml-1 inline-flex rounded bg-brand/10 px-1.5 py-0.5 text-[11px] font-bold text-brand-strong">
+                                {fpct(c.invite_rate)}
+                              </span>
+                            )}
+                          </td>
+                          <td className="whitespace-nowrap px-2 py-2.5 text-right">
+                            <span>{fk(c.accepted_candidates)}</span>
+                            {c.accept_rate != null && (
+                              <span className="ml-1 inline-flex rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700">
+                                {fpct(c.accept_rate)}
+                              </span>
+                            )}
+                          </td>
+                          <td className="whitespace-nowrap py-2.5 pl-2 pr-3.5 text-right font-sans">
+                            {c.market_median ? (
+                              <span className="inline-flex rounded-lg bg-[#EEF1FE] px-2.5 py-1 font-mono text-xs font-bold text-brand-night">
+                                {ftr(c.market_median)}
+                              </span>
+                            ) : (
+                              <span className="text-brand-ink/40">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </Card>
+            <TalentMap data={rep.regions_map} />
           </>
         );
       }}</Body>
@@ -483,21 +571,31 @@ export function FspSalaries() {
               }))} />
             </Card>
             <Card title="По направлениям" sub="Квартили нижней и верхней границы вилки">
-              <div className="-mx-6 overflow-x-auto px-6">
-                <table className="w-full min-w-[40rem] text-left text-sm">
-                  <thead className="text-xs uppercase tracking-wide text-brand-ink/65">
-                    <tr><th className="py-2 pr-3">Направление</th><th className="pr-3 text-right">Офферы</th><th className="pr-3 text-right">«От», p25</th><th className="pr-3 text-right">«От», медиана</th><th className="pr-3 text-right">«До», медиана</th><th className="pr-3 text-right">«До», p75</th><th className="text-right">Середина</th></tr>
+              <div className="overflow-x-auto rounded-2xl border border-brand-night/10">
+                <table className="w-full min-w-[42rem] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-brand-night/10 bg-gradient-to-r from-[#EEF1FE] via-[#F4F6FF] to-[#EEF1FE] text-[11px] font-bold uppercase tracking-[0.08em] text-brand-plum">
+                      <th className="py-3 pl-4 pr-3">Направление</th>
+                      <th className="px-3 py-3 text-right">Офферы</th>
+                      <th className="px-3 py-3 text-right">«От», p25</th>
+                      <th className="px-3 py-3 text-right">«От», медиана</th>
+                      <th className="px-3 py-3 text-right">«До», медиана</th>
+                      <th className="px-3 py-3 text-right">«До», p75</th>
+                      <th className="py-3 pl-3 pr-4 text-right">Середина</th>
+                    </tr>
                   </thead>
-                  <tbody className="divide-y divide-brand-night/5 tabular-nums">
+                  <tbody className="divide-y divide-brand-night/8 font-mono text-[13px] tabular-nums">
                     {s.directions.map((d: any) => (
-                      <tr key={d.direction}>
-                        <td className="py-2 pr-3 font-medium text-brand-night">{d.title}</td>
-                        <td className="pr-3 text-right">{fk(d.offers)}</td>
-                        {d.suppressed ? <td colSpan={5} className="text-right text-brand-ink/65">скрыто: {d.reason}</td> : (
+                      <tr key={d.direction} className="bg-white transition-colors hover:bg-[#F2F5FF]">
+                        <td className="py-2.5 pl-4 pr-3 font-sans font-semibold text-brand-night">{d.title}</td>
+                        <td className="px-3 py-2.5 text-right">{fk(d.offers)}</td>
+                        {d.suppressed ? <td colSpan={5} className="py-2.5 pr-4 text-right font-sans text-xs text-brand-ink/60">скрыто: {d.reason}</td> : (
                           <>
-                            <td className="pr-3 text-right">{ftr(d.from_p25)}</td><td className="pr-3 text-right">{ftr(d.from_median)}</td>
-                            <td className="pr-3 text-right">{ftr(d.to_median)}</td><td className="pr-3 text-right">{ftr(d.to_p75)}</td>
-                            <td className="text-right font-semibold text-brand-night">{ftr(d.mid_median)}</td>
+                            <td className="px-3 py-2.5 text-right">{ftr(d.from_p25)}</td><td className="px-3 py-2.5 text-right">{ftr(d.from_median)}</td>
+                            <td className="px-3 py-2.5 text-right">{ftr(d.to_median)}</td><td className="px-3 py-2.5 text-right">{ftr(d.to_p75)}</td>
+                            <td className="py-2.5 pl-3 pr-4 text-right">
+                              <span className="inline-flex rounded-lg bg-[#EEF1FE] px-2.5 py-1 font-mono text-xs font-bold text-brand-night">{ftr(d.mid_median)}</span>
+                            </td>
                           </>
                         )}
                       </tr>
@@ -558,7 +656,7 @@ export function FspCups() {
   const demoUi = useDemoUi();
   return (
     <div className="max-w-6xl space-y-6">
-      <Head title="Кубки работодателей" subtitle="Кубок — публичное мероприятие платформы: компания и условия открыты, участники — только числом. Места записываются в паспорт ФСП (уровень «платформа», T1)." />
+      <Head title="Кубки работодателей" subtitle="Кубок — публичное мероприятие платформы: компания и условия открыты, участники — только числом. Места записываются в паспорт ФСП (подтверждено платформой)." />
       <Body>{(rep) => {
         const cups: any[] = (rep.cups ?? []).filter((c: any) => demoUi || (!c.is_demo && !/^Демо(?:\s+жюри)?:/i.test(c.company ?? "")));
         const tours: any[] = (rep.tournaments ?? []).filter((t: any) => demoUi || (!t.is_demo && !/^Демо(?:\s+жюри)?:/i.test(t.company ?? "")));
@@ -580,7 +678,7 @@ export function FspCups() {
                 <p className="text-sm text-brand-ink/70">{dt(c.starts_at)} — {dt(c.ends_at)} · {range(c.salary_from, c.salary_to)} · приглашения топ-{c.invite_top_n}</p>
                 <dl className="grid grid-cols-3 gap-2 text-center sm:grid-cols-5">
                   {[["Участники", c.participants], ["С местом", c.placed], ["Приглашены", c.invited], ["Приняли", c.accepted], ["В паспорте", c.passport_written]].map(([t, v]) => (
-                    <div key={t as string} className="rounded-xl bg-[#F7F4FA] px-2 py-2">
+                    <div key={t as string} className="rounded-xl bg-[#EEF1FC] px-2 py-2">
                       <dt className="text-xs font-semibold uppercase tracking-wide text-brand-ink/65">{t}</dt>
                       <dd className="mt-0.5 text-base font-bold tabular-nums text-brand-night">{fk(v as number | null)}</dd>
                     </div>
@@ -623,11 +721,11 @@ function Tournaments({ items, k }: { items: any[]; k: number }) {
               </div>
               <Phase p={t.phase} />
             </div>
-            {t.stack?.length > 0 && <p className="flex flex-wrap gap-1.5">{t.stack.map((s: string) => <span key={s} className="rounded-full bg-[#F7F4FA] px-2.5 py-0.5 text-xs font-semibold text-brand-night">{s}</span>)}</p>}
+            {t.stack?.length > 0 && <p className="flex flex-wrap gap-1.5">{t.stack.map((s: string) => <span key={s} className="rounded-full bg-[#EEF1FC] px-2.5 py-0.5 text-xs font-semibold text-brand-night">{s}</span>)}</p>}
             <ol className="list-decimal space-y-0.5 pl-5 text-sm text-brand-ink/80">{t.tasks.map((x: string, i: number) => <li key={i}>{x}</li>)}</ol>
             <dl className="grid grid-cols-3 gap-2 text-center">
               {[["Участники", t.participants], ["Оценено", t.scored], ["Приглашены", t.invited]].map(([n, v]) => (
-                <div key={n as string} className="rounded-xl bg-[#F7F4FA] px-2 py-2">
+                <div key={n as string} className="rounded-xl bg-[#EEF1FC] px-2 py-2">
                   <dt className="text-xs font-semibold uppercase tracking-wide text-brand-ink/65">{n}</dt>
                   <dd className="mt-0.5 text-base font-bold tabular-nums text-brand-night">{fk(v as number | null)}</dd>
                 </div>

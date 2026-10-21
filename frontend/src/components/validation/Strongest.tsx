@@ -1,5 +1,6 @@
 import { num, pct, useApi } from "../ui";
 import { ScrollX } from "../A11y";
+import { makeModelAlias, noVendor } from "./noVendor";
 
 /** /validation#strongest: «Какая модель где и почему» — сильнейшие модели по каждой LLM-функции на одних и тех же
  * входах: индекс качества с интервалом, надёжность, задержка, цена (backend: app/modules/validation/data/strongest.json ←
@@ -33,12 +34,13 @@ const ORDER = ["parse_need", "resume", "grade"];
 const v = (m: M | unknown) => (m && typeof m === "object" && "value" in (m as object) ? (m as { value: number | null }).value : null);
 const ci = (m: M) => (m?.ci90 ? `${num(m.ci90[0], 3)}–${num(m.ci90[1], 3)}` : null);
 
+const ALIASES = new WeakMap<Data, (k: string) => string>();
+/** Название модели на экран — роль или нейтральная буква (поставщики на сайте не называются, noVendor.ts). */
 function label(d: Data, key: string): string {
-  if (key === "rules") return "Правила (без LLM)";
-  const meta = d.models[key] ?? d.models[key.split("@")[0]];
-  const name = (meta?.name ?? key).split(": ").pop() ?? key;
-  const variant = key.includes("@") ? key.split("@")[1] : null;
-  return variant ? `${name} (${variant})` : name;
+  if (key === "rules") return "Правила (без модели)";
+  let a = ALIASES.get(d);
+  if (!a) { a = makeModelAlias(); ALIASES.set(d, a); }
+  return a(key);
 }
 
 function key3(f: string, q: Cell["quality"]): string {
@@ -102,14 +104,14 @@ function Func({ d, f }: { d: Data; f: string }) {
           Сильнейшая в пределах задержки — <b>{label(d, ch.strongest_within_latency)}</b> (качество {num(v(mc.quality.index), 3)}
           {ci(mc.quality.index) && ` [${ci(mc.quality.index)}]`}); в пределах шума — {ch.within_noise.map((m) => label(d, m)).join(", ") || "нет"}.
           {" "}Резерв другой семьи — {ch.reserve_other_family ? label(d, ch.reserve_other_family) : "—"}; лучшая открытая —{" "}
-          {ch.best_open ? label(d, ch.best_open) : "—"}; затем {ch.then}.
+          {ch.best_open ? label(d, ch.best_open) : "—"}; затем {noVendor(ch.then)}.
           {!!ch.full_run_rejected?.length && (
             <span className="mt-1 block" data-testid={`strongest-rejected-${f}`}>
-              Полный прогон (все входы) исключил: {ch.full_run_rejected.map((x) => `${label(d, x.model)} — ${x.why}`).join("; ")}
+              Полный прогон (все входы) исключил: {ch.full_run_rejected.map((x) => `${label(d, x.model)} — ${noVendor(x.why)}`).join("; ")}
               {ch.small_sample_leader && ` (лидер малой выборки — ${label(d, ch.small_sample_leader)})`}.
             </span>
           )}
-          {ch.main_full_run && <span className="block">Основная в полном прогоне: {ch.main_full_run}.</span>}
+          {ch.main_full_run && <span className="block">Основная в полном прогоне: {noVendor(ch.main_full_run)}.</span>}
         </p>
       )}
       <ScrollX label={`Модели: ${TITLE[f] ?? f}`} className="mt-3 hidden overflow-x-auto md:block">
@@ -206,7 +208,7 @@ export default function Strongest() {
         {n} вариантов моделей на одних и тех же входах, путь продукта целиком. Качество главное (индекс по метрикам функции,
         интервал — бутстреп 90 %), затем надёжность, задержка, цена. Выбор — лучшая по качеству среди уложившихся в тайм-аут
         стенда с успешными ответами не меньше 90 %. <b>Оценка моделью по эталону из трёх моделей — модель, не люди.</b>{" "}
-        Замер {d.date}, код {d.code_sha}. Модель стенда сейчас — Claude Sonnet 5.5; смена — отдельным решением, не этим замером.
+        Замер {d.date}, код {d.code_sha}. Модель стенда — отдельным решением, не этим замером.
       </p>
       {ORDER.filter((f) => d.functions[f]).map((f) => <Func key={f} d={d} f={f} />)}
       {d.full_run && Object.keys(d.full_run).length > 1 && <Full d={d} />}
@@ -216,8 +218,8 @@ export default function Strongest() {
           {d.judges_agreement.map((a) => `${label(d, a.a)} — ${label(d, a.b)}: MAE ${num(v(a.mae), 3)}, κw ${num(v(a.kappa_w), 2)} (n = ${a.n})`).join("; ")}.
         </p>
       )}
-      {d.pending && <p className="mt-2 text-sm text-brand-ink/75" data-testid="strongest-pending">Ещё не готово: {d.pending}</p>}
-      <p className="mt-1 text-xs text-brand-ink/65">{d.conditions.slice(0, 2).join(" ")} Подробно и как воспроизвести — docs/LLM.md, раздел 12.</p>
+      {d.pending && <p className="mt-2 text-sm text-brand-ink/75" data-testid="strongest-pending">Ещё не готово: {noVendor(d.pending)}</p>}
+      <p className="mt-1 text-xs text-brand-ink/65">{noVendor(d.conditions.slice(0, 2).join(" "))} Подробно и как воспроизвести — docs/LLM.md, раздел 12.</p>
     </div>
   );
 }

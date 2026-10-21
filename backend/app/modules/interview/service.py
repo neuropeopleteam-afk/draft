@@ -367,10 +367,20 @@ def own_attempt(db: Session, user: User, ts_id: uuid.UUID) -> TestSession:
     return ts
 
 
-def _jury_example(db: Session, jkey: str) -> InterviewSession | None:
-    return db.scalar(select(InterviewSession).where(InterviewSession.is_example.is_(True),
-                                                    InterviewSession.jury_scope == jkey)
-                     .order_by(InterviewSession.created_at).limit(1))
+def _jury_example(db: Session, jkey: str, direction_id: str | None = None) -> InterviewSession | None:
+    """Пример песочницы жюри — только того же направления, что и попытка (находка А19 21.10: на итоге Backend · Middle
+    в финальном этапе был пример про PWA и «Мой ответ в тесте: 50 КБ.»). Своего направления нет — без примера: живой
+    разговор идёт по последнему заданию самой попытки."""
+    rows = db.scalars(select(InterviewSession).where(InterviewSession.is_example.is_(True),
+                                                     InterviewSession.jury_scope == jkey)
+                      .order_by(InterviewSession.created_at).limit(20)).all()
+    if direction_id is None:
+        return rows[0] if rows else None
+    for r in rows:
+        ets = db.get(TestSession, r.test_session_id) if r.test_session_id else None
+        if ets is not None and getattr(ets, "direction_id", None) == direction_id:
+            return r
+    return None
 
 
 def jury_fallback(db: Session, ts: TestSession, example: InterviewSession | None) -> dict | None:
@@ -541,7 +551,7 @@ def defense_state(db: Session, user: User, ts: TestSession) -> dict:
         _expire(db, live)
     jkey = jury_key(user)
     if example is None and jkey:  # жюри без своего примера (экспресс-тест без развёрнутых ответов) — пример песочницы
-        example = _jury_example(db, jkey)
+        example = _jury_example(db, jkey, getattr(ts, "direction_id", None))
     fb = jury_fallback(db, ts, example) if (reason and jkey) else None
     used = sum(1 for r in _defense_rows(db, ts.id) if not r.is_example)
     # итог уже был (в том числе удалённый кандидатом) — повторной защиты этой попытки нет
@@ -587,7 +597,7 @@ def start_defense(db: Session, user: User, ts: TestSession, name: str, consent: 
     _limits(db, user, jkey)
     good, why = cx.eligible(ts)
     if why:  # Д2: жюри — разговор по защищаемому примеру или последнему заданию попытки
-        fb = jury_fallback(db, ts, latest_defense(db, ts.id)[1] or (_jury_example(db, jkey) if jkey else None))
+        fb = jury_fallback(db, ts, latest_defense(db, ts.id)[1] or (_jury_example(db, jkey, getattr(ts, "direction_id", None)) if jkey else None))
         if fb is None:
             raise api_error(422, "insufficient_context", why)
         ctx, meta_ = fb["ctx"], fb["meta"]

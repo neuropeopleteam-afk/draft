@@ -33,6 +33,21 @@ def _git(*a: str) -> str:
     return subprocess.run(["git", "-C", str(REPO), *a], capture_output=True, text=True).stdout.strip()
 
 
+
+def n_seeds_of(rep: dict) -> int | None:
+    """Число зёрен прогона валидатора — из самого отчёта, без значения по умолчанию.
+
+    Отчёт валидатора не пишет число зёрен отдельным полем; каждое семейство выдаёт по одному варианту на
+    зерно, поэтому n_seeds = вариантов / семейств (если делится нацело). Иначе — поле ``seeds`` отчёта или None.
+    """
+    summ = rep.get("summary") or {}
+    if summ.get("n_seeds"):
+        return int(summ["n_seeds"])
+    nv, nf = summ.get("n_variants_generated"), summ.get("n_families")
+    if nv and nf and nv % nf == 0:
+        return nv // nf
+    return rep.get("seeds")
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--validation-report", required=True)
@@ -55,7 +70,8 @@ def main() -> int:
     verified = sorted(d for d, x in readiness.items() if x["families"] >= sync_bank.READY_MIN_FAMILIES
                       and min(x["per_grade"].values()) >= sync_bank.READY_MIN_PER_GRADE)
     rep = json.loads(Path(a.validation_report).read_text(encoding="utf-8"))
-    summ = rep.get("summary") or {}
+    summ = dict(rep.get("summary") or {})
+    summ["n_seeds"] = n_seeds_of(rep)
 
     sys.path.insert(0, str(REPO / "backend"))
     from assessment_bank.registry import load_specs  # noqa: E402
@@ -153,7 +169,7 @@ def main() -> int:
                      for p in (json.loads((PKG / "families_retired" / "form_leak_2110" / "retired.json")
                                           .read_text(encoding="utf-8"))["families"]
                                if (PKG / "families_retired" / "form_leak_2110" / "retired.json").exists() else [])],
-        "validation": {"summary": summ, "seeds": rep.get("seeds") or summ.get("n_seeds") or 20,
+        "validation": {"summary": summ, "seeds": summ["n_seeds"],
                        "verify_seeds": rep.get("verify_seeds"), "where": a.where,
                        "commit": a.validated_commit or None,
                        "bank_unchanged_since": (not _git("diff", "--name-only", a.validated_commit, "HEAD", "--",

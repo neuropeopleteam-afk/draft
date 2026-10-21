@@ -285,13 +285,13 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
               const sup = supplyOf(d);
               const dem = demandOf(d);
               const fill = isSel
-                ? "#310F53"
+                ? "#0E1126"
                 : gap != null && gap > 0
-                  ? "#FCE4EC"
-                  : "#ECEAF8";
-              const stroke = isSel ? "#E0004C" : gap != null && gap > 0 ? "#E0004C" : "#8A83D1";
+                  ? "#E8ECFF"
+                  : "#E6EAFC";
+              const stroke = isSel ? "#402FFF" : gap != null && gap > 0 ? "#402FFF" : "#5E6494";
               const textFill = isSel ? "#FFFFFF" : "#1D0B30";
-              const subFill = isSel ? "#FFD6E4" : "#5B527A";
+              const subFill = isSel ? "#DCE2FF" : "#5B527A";
               return (
                 <g
                   key={d.id}
@@ -352,10 +352,10 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-brand-ink/65">
             <span className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm bg-[#FCE4EC] ring-1 ring-[#E0004C]" /> Дефицит кадров (спрос &gt; предложения)
+                <span className="h-2.5 w-2.5 rounded-sm bg-[#E8ECFF] ring-1 ring-[#402FFF]" /> Дефицит кадров (спрос &gt; предложения)
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm bg-[#ECEAF8] ring-1 ring-[#8A83D1]" /> Достаточный резерв
+                <span className="h-2.5 w-2.5 rounded-sm bg-[#E6EAFC] ring-1 ring-[#5E6494]" /> Достаточный резерв
               </span>
             </span>
             <span>Нажмите на округ для детализации по регионам</span>
@@ -374,18 +374,18 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-xl bg-[#F7F6FB] p-2.5">
-                <p className="text-[11px] text-brand-ink/65">Подтверждено</p>
+              <div className="rounded-xl bg-[#EEF1FC] p-2.5">
+                <p className="whitespace-nowrap text-[11px] font-medium text-brand-ink/70 [overflow-wrap:normal] [word-break:normal]" title="Подтверждено кандидатов">Подтв.</p>
                 <p className="mt-0.5 text-lg font-extrabold text-brand-night">{fk(supplyOf(active))}</p>
                 <p className="text-[10px] text-brand-ink/60">с ФСП: {fk(active.fsp_confirmed)}</p>
               </div>
-              <div className="rounded-xl bg-[#F7F6FB] p-2.5">
-                <p className="text-[11px] text-brand-ink/65">Спрос компаний</p>
+              <div className="rounded-xl bg-[#EEF1FC] p-2.5">
+                <p className="text-[11px] font-medium text-brand-ink/70 [overflow-wrap:normal] [word-break:normal]">Спрос компаний</p>
                 <p className="mt-0.5 text-lg font-extrabold text-brand-night">{demandOf(active)}</p>
                 <p className="text-[10px] text-brand-ink/60">потребностей: {active.demand_needs}</p>
               </div>
-              <div className="rounded-xl bg-[#F7F6FB] p-2.5">
-                <p className="text-[11px] text-brand-ink/65">Разрыв</p>
+              <div className="rounded-xl bg-[#EEF1FC] p-2.5">
+                <p className="text-[11px] font-medium text-brand-ink/70 [overflow-wrap:normal] [word-break:normal]">Разрыв</p>
                 <p className={`mt-0.5 text-lg font-extrabold ${(gapOf(active) ?? 0) > 0 ? "text-brand" : "text-emerald-700"}`}>
                   {gapOf(active) == null ? "< 5" : (gapOf(active) ?? 0) > 0 ? `+${gapOf(active)}` : gapOf(active)}
                 </p>
@@ -440,7 +440,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
       </div>
 
       {data.recommendations?.length > 0 && (
-        <div className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-4">
+        <div className="rounded-2xl border border-brand-night/10 bg-[#F4F6FC] p-4">
           <h3 className="text-sm font-bold text-brand-night">
             Приоритетный план региональных соревнований ФСП (по разрыву «спрос − предложение»)
           </h3>
@@ -480,7 +480,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs">
-              <span className="rounded-lg bg-[#F3F2FB] px-2.5 py-1 font-semibold text-brand-night">
+              <span className="rounded-lg bg-[#EEF1FC] px-2.5 py-1 font-semibold text-brand-night">
                 Протоколов ФСП: {data.real_protocols_vs_hh.summary.documents_count} ({data.real_protocols_vs_hh.summary.athlete_results} результатов)
               </span>
               <span className="rounded-lg bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-900">
@@ -494,7 +494,7 @@ export function TalentMap({ data }: { data?: RegionsMapData | null }) {
 
           <div className="flex flex-wrap gap-2">
             {data.real_protocols_vs_hh.by_rank.map((rk) => (
-              <div key={rk.rank} className="rounded-xl border border-brand-night/10 bg-[#FBF8FC] px-3 py-2 text-xs">
+              <div key={rk.rank} className="rounded-xl border border-brand-night/10 bg-[#F4F6FC] px-3 py-2 text-xs">
                 <span className="text-brand-ink/65">ЕВСК {rk.rank}: </span>
                 <b className="text-brand-night">
                   {rk.insufficient_data || rk.results == null ? "мало данных" : rk.results.toLocaleString("ru-RU")}

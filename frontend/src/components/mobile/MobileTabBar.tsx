@@ -486,7 +486,7 @@ export function MobileTabBar({
                         className={`rounded-2xl border p-2.5 transition-colors ${
                           active
                             ? "border-brand-night bg-brand-night text-white"
-                            : "border-brand-night/10 bg-[#FBF8FC] text-brand-ink"
+                            : "border-brand-night/10 bg-[#F4F6FC] text-brand-ink"
                         }`}
                       >
                         <Link
@@ -565,7 +565,7 @@ export function MobileTabBar({
                       className={`rounded-2xl border p-2.5 transition-colors ${
                         active
                           ? "border-brand-night bg-brand-night text-white"
-                          : "border-brand-night/10 bg-[#FBF8FC] text-brand-ink"
+                          : "border-brand-night/10 bg-[#F4F6FC] text-brand-ink"
                       }`}
                     >
                       <Link

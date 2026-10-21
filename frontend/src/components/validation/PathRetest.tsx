@@ -3,6 +3,7 @@ import { Alert, DIRECTION_TITLES, GRADE_TITLE_ALL, Loading, NB, num, pct, useApi
 import { AccuracyViews, SignatureLine } from "./Headline";
 import { ProvenanceLine, RetestVsTruth } from "./Provenance";
 import { ScrollX } from "../A11y";
+import { getTop5 } from "../../lib/numbers";
 
 /** Блоки /validation: test–retest всего пути кандидата, дискриминативность семейств, карточка калибровки
  *  (backend: app/modules/validation/path_retest.py, make path-retest). */
@@ -240,8 +241,22 @@ export function TwoStage() {
   );
 }
 
-/** W1: три числа точности грейда первыми в карточке точности (те же, что на первом экране; make accuracy-views). */
+/** W1: три числа точности грейда первыми — из единого источника (docs/NUMBERS.json, FINAL, стандартные условия), а не из
+ *  старого accuracy_views.json (замечание А19 №2: на экране было одно, в NUMBERS другое). */
 function PathAccuracy() {
-  const { data } = useApi<any>("/validation/headline", []);
-  return <AccuracyViews v={data?.accuracy} />;
+  const ex = (getTop5() ?? []).find((m) => m.id === "exact_grade") as any;
+  if (!ex) return null;
+  const w = ex.with ?? {};
+  const share = (x: any) => (x?.n && ex.n ? x.n / ex.n : null);
+  const items = [
+    w.far_grades4 && { id: "far", title: "Вдали от порога, 4 ступени", value: w.far_grades4.value, ci: w.far_grades4.ci95,
+      who: "кандидаты дальше 0,25 от любого порога", share: share(w.far_grades4),
+      text: `${w.far_grades4.k} из ${w.far_grades4.n} получили точный грейд` },
+    w.not_underclaim && { id: "no_under", title: "Без занизивших заявку", value: w.not_underclaim.value, ci: w.not_underclaim.ci95,
+      who: "кому продукт определяет грейд (без занизивших)", share: share(w.not_underclaim),
+      text: `${w.not_underclaim.k} из ${w.not_underclaim.n} — точный грейд` },
+    { id: "strict", title: ex.label_ru ?? "Точный грейд, все кандидаты", value: ex.value, ci: ex.ci95,
+      who: "все кандидаты", share: 1, text: `${ex.k} из ${ex.n} — точный грейд` },
+  ].filter(Boolean);
+  return <AccuracyViews v={{ items, note: ex.condition_ru, command: ex.recompute }} />;
 }

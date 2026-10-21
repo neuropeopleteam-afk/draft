@@ -656,7 +656,8 @@
         "open_book_3step": 22
       },
       "seconds": 82.0,
-      "jobs": 12
+      "jobs": 12,
+      "n_seeds": 20
     },
     "seeds": 20,
     "verify_seeds": null,

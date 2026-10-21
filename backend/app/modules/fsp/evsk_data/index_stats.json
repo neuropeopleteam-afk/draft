@@ -22,8 +22,8 @@
  },
  "place_unverified": 4,
  "what": "Официальные протоколы ФСП России 2025–2026 (fsp-russia.ru/about/documents): результаты, привязанные к соревнованиям; судьи, тренеры и строки справок исключены; норматив ЕВСК — по месту, числу субъектов РФ и составу судейской коллегии.",
- "generated_at": "2026-10-21T12:15:04+00:00",
- "index": "index_v6.json",
- "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+ "generated_at": "2026-10-21T14:26:21+00:00",
+ "index": "index_v7.json",
+ "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v7.json docs/realdata/fsp_protocols backend/app/modules/fsp",
  "code_ref": "tools/fsp_protocols/build_index_v2.py, backend/app/modules/fsp/evsk.py, backend/app/modules/fsp/protocol_stats.py"
 }

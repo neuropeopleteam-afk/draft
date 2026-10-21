@@ -70,6 +70,8 @@ def _fsp_thread_visible(db: Session, user: User, t: TrioThread) -> bool:
     comp = db.get(Company, t.company_id)
     cand_u = db.get(User, t.candidate_user_id)
     emp_u = db.get(User, comp.created_by) if comp and comp.created_by else None
+    if comp is None or cand_u is None:  # сирота удалённой песочницы (SQLite без каскада) — не показывать
+        return False
     if not jury_scope.visible(cand_u.email if cand_u else None):
         return False
     if not jury_scope.visible(emp_u.email if emp_u else None):

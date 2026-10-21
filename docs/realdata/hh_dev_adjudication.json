@@ -1,0 +1,307 @@
+{
+ "set": "набор разработки (414)",
+ "protocol": "как docs/realdata/hh_holdout_PROTOCOL.md, п. 2 (те же арбитры и подсказки), для расхождений разбора с метками на наборе разработки — для настройки, не для отчёта",
+ "arbiters": [
+  "anthropic/claude-sonnet-5.5",
+  "openai/gpt-6.1-sol"
+ ],
+ "rows": [
+  {
+   "id": "137906636",
+   "field": "direction",
+   "hh_label": "backend",
+   "parser": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml"
+  },
+  {
+   "id": "138188773",
+   "field": "grade",
+   "hh_label": "junior",
+   "parser": "intern",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "intern",
+    "openai/gpt-6.1-sol": "intern"
+   },
+   "final": "intern"
+  },
+  {
+   "id": "138011006",
+   "field": "direction",
+   "hh_label": "backend",
+   "parser": "qa",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "qa",
+    "openai/gpt-6.1-sol": "qa"
+   },
+   "final": "qa"
+  },
+  {
+   "id": "138259381",
+   "field": "direction",
+   "hh_label": "frontend",
+   "parser": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend"
+  },
+  {
+   "id": "138176406",
+   "field": "direction",
+   "hh_label": "frontend",
+   "parser": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend"
+  },
+  {
+   "id": "138299229",
+   "field": "direction",
+   "hh_label": "data_ml",
+   "parser": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend"
+  },
+  {
+   "id": "138232263",
+   "field": "direction",
+   "hh_label": "data_ml",
+   "parser": "data_eng",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_eng",
+    "openai/gpt-6.1-sol": "data_eng"
+   },
+   "final": "data_eng"
+  },
+  {
+   "id": "137993835",
+   "field": "direction",
+   "hh_label": "data_ml",
+   "parser": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend"
+  },
+  {
+   "id": "137611084",
+   "field": "direction",
+   "hh_label": "data_ml",
+   "parser": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend"
+  },
+  {
+   "id": "137908800",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it"
+  },
+  {
+   "id": "138191979",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it"
+  },
+  {
+   "id": "138321976",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops"
+  },
+  {
+   "id": "138320217",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it"
+  },
+  {
+   "id": "138317940",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it"
+  },
+  {
+   "id": "137834534",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "security",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops"
+  },
+  {
+   "id": "138298675",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml"
+  },
+  {
+   "id": "138178189",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "security",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "security",
+    "openai/gpt-6.1-sol": "security"
+   },
+   "final": "security"
+  },
+  {
+   "id": "137920616",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "security",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "security",
+    "openai/gpt-6.1-sol": "security"
+   },
+   "final": "security"
+  },
+  {
+   "id": "138239467",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "data_eng",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_eng",
+    "openai/gpt-6.1-sol": "data_eng"
+   },
+   "final": "data_eng"
+  },
+  {
+   "id": "138301211",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml"
+  },
+  {
+   "id": "138228530",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_eng",
+    "openai/gpt-6.1-sol": "data_eng"
+   },
+   "final": "data_eng"
+  },
+  {
+   "id": "137133877",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml"
+  },
+  {
+   "id": "137098467",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml"
+  },
+  {
+   "id": "138145491",
+   "field": "direction",
+   "hh_label": "mobile",
+   "parser": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend"
+  },
+  {
+   "id": "137180362",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": "frontend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "analyst",
+    "openai/gpt-6.1-sol": "analyst"
+   },
+   "final": "analyst"
+  },
+  {
+   "id": "137922571",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it"
+  },
+  {
+   "id": "138247338",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": "qa",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it"
+  }
+ ]
+}

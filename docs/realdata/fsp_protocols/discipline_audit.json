@@ -1,0 +1,53 @@
+{
+ "title": "Поле «дисциплина» у записей списка кандидатов в сборные РФ 2026 — восстановление и проверка (index_v7)",
+ "date": "2026-10-21",
+ "plan": "docs/realdata/fsp_protocols/discipline_audit_plan.json (коммит 01bc0ad77a — до чтения сканов)",
+ "population_records": 112,
+ "models": [
+  "google/gemini-2.5-pro",
+  "anthropic/claude-sonnet-5.5"
+ ],
+ "model_runs": 1,
+ "rows_read": 112,
+ "models_agree": 112,
+ "models_disagree": 0,
+ "resolved_by_eye": 0,
+ "matched_to_index": 112,
+ "unmatched": 0,
+ "result_by_discipline": {
+  "программирование систем информационной безопасности": 36,
+  "программирование продуктовое": 31,
+  "программирование робототехники": 29,
+  "программирование алгоритмическое": 10,
+  "программирование беспилотных авиационных систем": 6
+ },
+ "eye_audit": {
+  "seed": 20261021,
+  "pages": [
+   4,
+   10,
+   13,
+   16,
+   17
+  ],
+  "records_checked": 34,
+  "errors": 0,
+  "error_rate": 0.0,
+  "how": "столбец 2 каждой строки выбранных страниц (скан повёрнут, 200 dpi) сверен глазами с итоговым значением индекса"
+ },
+ "index": {
+  "in": "index_v6.json",
+  "out": "index_v7.json",
+  "sha256": "7c5181e0febc0e705e870dfa54266938367c369b32102f886ac2264382a4fc7c",
+  "records": 2908,
+  "athletes": 2232,
+  "note": "меняется только discipline у 112 записей; число результатов и спортсменов не меняется"
+ },
+ "recompute": [
+  "python3 tools/fsp_protocols/discipline_recover.py read <sbornaya.pdf> <out_dir>  (OPENROUTER_API_KEY)",
+  "python3 tools/fsp_protocols/discipline_recover.py merge <out_dir> rows.json",
+  "python3 tools/fsp_protocols/discipline_recover.py fixes index_v6.json rows.json fixes.json",
+  "python3 tools/fsp_protocols/apply_audit_fixes.py index_v6.json fixes.json index_v7.json  (FSP_INDEX_HMAC_KEY)"
+ ],
+ "pii": "ответы моделей, rows.json, fixes.json — только /opt/spectrek_fsp/data_local/fsp_protocols/work/discipline_v7/ (600); в git — только счётчики"
+}

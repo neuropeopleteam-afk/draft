@@ -7,7 +7,7 @@ const BG: Record<Tone, string> = {
   brand: "bg-brand", night: "bg-brand-night", lavender: "bg-brand-lavender", plum: "bg-brand-plum", soft: "bg-brand-soft", blush: "bg-brand-blush",
 };
 const FILL: Record<Tone, string> = {
-  brand: "#FF0053", night: "#310F53", lavender: "#8A83D1", plum: "#520978", soft: "#FC3777", blush: "#FFD6E4",
+  brand: "#402FFF", night: "#0E1126", lavender: "#5E6494", plum: "#1E244D", soft: "#5B4BFF", blush: "#DCE2FF",
 };
 
 const ru = (v: number, d = 0) => v.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -145,10 +145,10 @@ export function Donut({ value, label, tone = "brand" }: { value: number | null |
   return (
     <figure className="flex min-w-0 flex-col items-center gap-2" aria-label={`${label}: ${fpct(value)}`}>
       <svg viewBox="0 0 100 100" className="h-20 w-20 sm:h-28 sm:w-28" aria-hidden>
-        <circle cx="50" cy="50" r={r} fill="none" stroke="#FFD6E4" strokeWidth="12" opacity="0.6" />
+        <circle cx="50" cy="50" r={r} fill="none" stroke="#DCE2FF" strokeWidth="12" opacity="0.7" />
         {value != null && <circle cx="50" cy="50" r={r} fill="none" stroke={FILL[tone]} strokeWidth="12" strokeLinecap="round"
           strokeDasharray={`${c * v} ${c}`} transform="rotate(-90 50 50)" />}
-        <text x="50" y="55" textAnchor="middle" fontSize="18" fontWeight="800" fill="#310F53">{fpct(value)}</text>
+        <text x="50" y="55" textAnchor="middle" fontSize="18" fontWeight="800" fill="#0E1126">{fpct(value)}</text>
       </svg>
       <figcaption className="max-w-[10rem] text-center text-xs leading-snug text-brand-ink/65">{label}</figcaption>
     </figure>
@@ -162,12 +162,12 @@ export function Heatmap({ rows, cols, cell, fmt, tone = "night" }: {
 }) {
   const vals = rows.flatMap((r) => cols.map((c) => cell(r.id, c.id) ?? 0));
   const m = Math.max(1e-9, ...vals);
-  const rgb = tone === "brand" ? "255,0,83" : "49,15,83";
+  const rgb = tone === "brand" ? "64,47,255" : "14,17,38";
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[17.5rem] border-separate border-spacing-1 text-sm">
+      <table className="w-full min-w-[16.5rem] border-separate border-spacing-1 text-sm">
         <thead>
-          <tr><th className="w-[30%]" />{cols.map((c) => <th key={c.id} className="px-1 pb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-brand-ink/65 sm:text-xs">{c.title}</th>)}</tr>
+          <tr><th className="w-[24%] sm:w-[28%]" />{cols.map((c) => <th key={c.id} className="px-0.5 pb-1 text-center text-[10px] font-semibold uppercase tracking-normal text-brand-ink/65 sm:px-1 sm:text-xs sm:tracking-wide">{c.title}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r) => (
@@ -218,7 +218,7 @@ export function RangeChart({ rows }: { rows: RangeRowData[] }) {
           <li key={r.key} className="grid gap-x-3 gap-y-1 sm:grid-cols-[12rem_minmax(0,1fr)]">
             <span className="text-sm leading-snug text-brand-ink/85">{r.label}</span>
             <span>
-              <span className="relative block h-6 rounded-md bg-[#F7F4FA]">
+              <span className="relative block h-6 rounded-md bg-[#F2F4FC]">
                 {ticks.map((t) => <span key={t} className="absolute inset-y-0 border-l border-brand-night/5" style={{ left: pos(t) }} aria-hidden />)}
                 {r.market && <span className="absolute inset-y-0 rounded-md bg-brand-blush" style={{ left: pos(r.market[0]), width: width(r.market[0], r.market[1]) }} />}
                 {r.marketMedian ? <span className="absolute inset-y-0 w-0.5 bg-brand-lavender" style={{ left: pos(r.marketMedian) }} /> : null}

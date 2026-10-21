@@ -83,7 +83,8 @@ def main() -> None:
               f"{pct(g['inverse']['best_accuracy'])} при шансе {pct(g['inverse']['chance'])}; старые 4-вариантные — "
               f"{pct(g['other']['best_accuracy'])} при шансе {pct(g['other']['chance'])}.",
               f"- Постоянство содержания ключа ≥ 0,8 по вариантам: {au['key_constancy']['n_families_at_or_above']} семейств "
-              "— помечены `leak_resistance: low` (дефект один на семейство), чтобы движок ограничивал экспозицию.", ""]
+              "— помечены `leak_resistance: low` (дефект один на семейство); движок выдачи эту пометку пока не читает, "
+              "ограничение показа по ней — решение методики (А4).", ""]
     pa = q.get("position_attack")
     if pa:
         def _row(tag: str, r: dict) -> str:

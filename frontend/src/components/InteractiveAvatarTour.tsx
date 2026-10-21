@@ -424,7 +424,9 @@ export function InteractiveAvatarTour() {
     : !listening ? null
     : ui.phase === "paused" ? (large ? "Пауза. Скажите «дальше» или «Настя» и вопрос" : "Пауза — «дальше»")
     : !wakeMode ? (ui.awaiting === "start" && large ? "Скажите или нажмите: кандидат, работодатель, Федерация" : "Слушаю")
-    : ui.awaiting === "continue" || ui.awaiting === "detour" ? (large ? "Скажите «дальше» — продолжу, или «Настя» и вопрос" : "Скажите «дальше»")
+    // честно о том, что будет: ответ посреди её обзора — продолжит сама; экран, который попросили, — ждёт «дальше»
+    : (ui.awaiting === "continue" || ui.awaiting === "detour") && ui.autoNext ? (large ? "Сейчас продолжу — или «Настя» и вопрос" : "Сейчас продолжу")
+    : ui.awaiting === "continue" || ui.awaiting === "detour" ? (large ? "Жду вас: «дальше» или вопрос про экран" : "Жду: «дальше» или вопрос")
     : (large ? "Скажите «Настя» и вопрос или раздел" : "Скажите «Настя»");
   // пока говорит — подсказка тихая (тёмная, без пульса); слушает — зелёная
   const quietHint = !!turnHint && (ui.speaking || ui.phase === "touring");

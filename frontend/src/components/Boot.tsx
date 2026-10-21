@@ -74,9 +74,9 @@ function Screen({ title, text, children, note, why, badge, full = true }: { titl
     <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 rounded-3xl border border-brand-night/10 bg-white p-7 text-center shadow-sm sm:p-9">
       <div className="inline-flex items-center gap-2.5 text-sm font-extrabold text-brand-night">
         <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
-          <rect width="32" height="32" rx="8" fill="#310F53" />
-          <circle cx="12.5" cy="16" r="7" fill="none" stroke="#FFD6E4" strokeWidth="2.5" />
-          <circle cx="19.5" cy="16" r="7" fill="none" stroke="#FF0053" strokeWidth="2.5" />
+          <rect width="32" height="32" rx="8" fill="#0E1126" />
+          <circle cx="12.5" cy="16" r="7" fill="none" stroke="#DCE2FF" strokeWidth="2.5" />
+          <circle cx="19.5" cy="16" r="7" fill="none" stroke="#EC1D35" strokeWidth="2.5" />
         </svg>
         <span>Драфт</span>
         {badge && (
@@ -87,7 +87,7 @@ function Screen({ title, text, children, note, why, badge, full = true }: { titl
       </div>
       <h1 ref={h} tabIndex={-1} className="text-xl font-extrabold text-brand-night outline-none sm:text-2xl">{title}</h1>
       <p className="max-w-md text-base leading-relaxed text-brand-ink/80">{text}</p>
-      {why && <p className="max-w-md break-all rounded-xl bg-[#F3F2FB] px-3.5 py-2 font-mono text-xs text-brand-ink/80" data-boot-why>{why}</p>}
+      {why && <p className="max-w-md break-all rounded-xl bg-[#EEF1FC] px-3.5 py-2 font-mono text-xs text-brand-ink/80" data-boot-why>{why}</p>}
       {children && <div className="mt-1 flex flex-wrap justify-center gap-3">{children}</div>}
       <p className="min-h-[1.5em] text-sm font-medium text-brand-plum" role="status">{note ?? ""}</p>
     </div>

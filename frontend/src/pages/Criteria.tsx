@@ -17,7 +17,9 @@ type Go = { label: string; to: string; as: Persona | null; need: string | null }
 type Sig = { world?: string; seed?: number | null; commit?: string | null; generated_at?: string | null; n?: number | null };
 type Proof = (
   | { kind: "metric"; label: string; fmt: string; value: number; ci?: number[] | null; vs?: { label: string; value: number; fmt?: string } | null;
-      note?: string | null; anchor: string; signature?: Sig }
+      note?: string | null; anchor: string; signature?: Sig;
+      // правило владельца 21.10: заголовок — стандартные условия, то же число в жёстких условиях — всегда рядом
+      pair?: { label: string; value: number; fmt?: string; src?: string } | null }
   | { kind: "link"; label: string; anchor: string; missing?: boolean }
   | { kind: "doc"; label: string; path: string }) & { provenance?: Prov | null };  // Я8 п. 5: та же строка, что на /validation
 type Item = { id: string; n: string; tz: string; do: Go[]; see: string; proof: Proof; limit: string };
@@ -67,6 +69,7 @@ function ProofView({ p }: { p: Proof }) {
           <span className="text-2xl font-extrabold tabular-nums text-brand-night" data-testid="criteria-value">{fmt(p.value, p.fmt)}</span>
           {p.ci && <span className="text-xs tabular-nums text-brand-ink/65">95{NB}% ДИ {fmt(p.ci[0], p.fmt)} … {fmt(p.ci[1], p.fmt)}</span>}
         </p>
+        {p.pair && <p className="text-xs font-semibold text-brand-ink/75" data-testid="criteria-pair">стандартные условия · {p.pair.label}: <b className="tabular-nums">{fmt(p.pair.value, p.pair.fmt ?? p.fmt)}</b></p>}
         {(p.vs || p.note) && <p className="text-xs text-brand-ink/70">{p.vs && <>{p.vs.label}: <b className="tabular-nums">{fmt(p.vs.value, p.vs.fmt ?? p.fmt)}</b></>}{p.vs && p.note ? "; " : ""}{p.note}</p>}
         <SigLine s={p.signature} />
         <ProvenanceLine p={p.provenance} className="mt-1" />

@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { canPromptInstall, isInAppBrowser, isStandalone, onInstallChange, platform, promptInstall } from "../integrations/pwa";
 
-interface RuStoreInfo { apk: string; package: string; version: string; size_mb: number; sha256: string; status: string }
+interface RuStoreInfo { apk: string; package: string; version: string; size_mb: number; min_android?: string; sha256: string; status: string }
 
 export function PhoneIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -22,6 +22,100 @@ function useRuStore() {
   return info;
 }
 
+export function AndroidBetaDialog({ onClose }: { onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rs = useRuStore();
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", esc);
+    ref.current?.focus();
+    return () => document.removeEventListener("keydown", esc);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-brand-night/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        ref={ref}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="android-beta-title"
+        data-testid="install-dialog"
+        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 text-brand-ink shadow-2xl outline-none sm:rounded-3xl sm:p-6"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <img src="/icons/icon-192.png" alt="" className="h-12 w-12 rounded-2xl" />
+            <div>
+              <h2 id="android-beta-title" className="text-lg font-extrabold text-brand-night">Бета-версия приложения</h2>
+              <p className="font-mono text-xs text-brand-ink/65">
+                {rs ? `Версия ${rs.version} · ${rs.size_mb} МБ · Android ${rs.min_android ?? "7.0"} и новее` : "Загружаем параметры пакета…"}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Закрыть"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-brand-ink/60 hover:bg-brand-blush/40"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" /></svg>
+          </button>
+        </div>
+
+        <p className="mt-4 text-sm leading-relaxed text-brand-ink/85" data-testid="android-beta-text">
+          Это ранняя версия приложения «Драфт» для Android: внутри — тот же сайт, все функции работают так же. Возможны недочёты в оформлении и уведомлениях. Приложение подписано командой «Драфта», в RuStore пока не опубликовано — телефон попросит разрешить установку из этого источника.
+        </p>
+
+        <div className="mt-4 rounded-2xl border border-brand-night/10 bg-[#F4F6FC] px-4 py-3 text-xs text-brand-ink/75" data-testid="android-beta-meta">
+          {rs ? `Версия ${rs.version} · ${rs.size_mb} МБ · Android ${rs.min_android ?? "7.0"} и новее` : "Версия … · … МБ · Android … и новее"}
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-ghost min-h-[44px] px-4 py-2.5 text-sm"
+            data-testid="android-beta-cancel"
+          >
+            Отмена
+          </button>
+          <a
+            href={rs?.apk ?? "/app/draft-rustore.apk"}
+            download
+            className="btn-primary inline-flex min-h-[44px] items-center px-5 py-2.5 text-sm"
+            data-testid="rustore-apk"
+          >
+            Скачать бета-версию
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AndroidBetaButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        data-testid="landing-android-apk-btn"
+        aria-haspopup="dialog"
+        className="np-btn-ghost inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold sm:text-sm"
+      >
+        <PhoneIcon className="h-4 w-4 text-[#A59DFF]" />
+        <span>Скачать приложение для Android</span>
+      </button>
+      {open && createPortal(<AndroidBetaDialog onClose={() => setOpen(false)} />, document.body)}
+    </>
+  );
+}
+
 export function InstallDialog({ onClose }: { onClose: () => void }) {
   const [, force] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
@@ -35,6 +129,9 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
     return () => document.removeEventListener("keydown", esc);
   }, [onClose]);
   const p = platform();
+  if (p === "android") {
+    return <AndroidBetaDialog onClose={onClose} />;
+  }
   const installed = isStandalone();
   const inApp = isInAppBrowser();
   async function one() {
@@ -84,8 +181,8 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
             </div>
           ) : (
             <div className="rounded-2xl border border-brand-night/10 p-4 text-sm">
-              <p className="font-semibold text-brand-night">{p === "android" ? "Android — Chrome или Яндекс Браузер" : "Компьютер — Chrome, Edge или Яндекс Браузер"}</p>
-              <p className="mt-1 text-brand-ink/75">{p === "android" ? "Меню ⋮ → «Установить приложение» или «Добавить на главный экран». Также доступен подписанный APK для Android ниже." : "Значок установки в адресной строке или меню браузера → «Установить Драфт». На телефон — отсканируйте QR-код."}</p>
+              <p className="font-semibold text-brand-night">Компьютер — Chrome, Edge или Яндекс Браузер</p>
+              <p className="mt-1 text-brand-ink/75">Значок установки в адресной строке или меню браузера → «Установить Драфт». На телефон — отсканируйте QR-код.</p>
             </div>
           )}
           {msg && <p className="text-sm font-semibold text-emerald-700" aria-live="polite">{msg}</p>}
@@ -93,8 +190,8 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
           <div className="rounded-2xl border border-brand-night/10 p-4" id="rustore">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-semibold text-brand-night">APK для Android</p>
-                <p className="text-xs text-brand-ink/65">{rs ? `${rs.package} · версия ${rs.version} · ${rs.size_mb} МБ` : "та же версия, что на сайте"}</p>
+                <p className="font-semibold text-brand-night">Бета-версия приложения для Android</p>
+                <p className="text-xs text-brand-ink/65">{rs ? `Версия ${rs.version} · ${rs.size_mb} МБ · Android ${rs.min_android ?? "7.0"} и новее` : "загрузка параметров пакета…"}</p>
               </div>
               {rs ? <a href={rs.apk} download className="btn-primary inline-flex min-h-[44px] shrink-0 items-center !px-4 !py-2 text-sm" data-testid="rustore-apk">Скачать APK</a>
                 : <span className="shrink-0 text-xs text-brand-ink/60">готовится</span>}

@@ -1,0 +1,61 @@
+{
+ "what": "FREEZE сравнения «один в один» на генераторе Dev_dev (до прогона)",
+ "frozen_at": "2026-10-21T16:17:26+00:00",
+ "git_head_before_freeze_commit": "3da2d199fd83e1f06fc575249a1282c714dc3de3",
+ "their_repo": "https://github.com/LaimOr127/Digital-platform-aggregator-of-IT-vacancies-FSP-",
+ "their_commit": "dec3f95449d2f89972bd99f5b6fb661ddd836cea",
+ "holdout_seeds": [
+  77021191,
+  77021192,
+  77021193,
+  77021194,
+  77021195,
+  77021196
+ ],
+ "dev_seeds_never_these": [
+  1,
+  2,
+  3
+ ],
+ "rows": {
+  "main": {
+   "config": "final",
+   "mode": "default"
+  },
+  "exact": {
+   "config": "final",
+   "mode": "grade_exact"
+  },
+  "base": {
+   "config": "base",
+   "mode": "default"
+  }
+ },
+ "theta": "last",
+ "metrics": [
+  "p5",
+  "p10",
+  "ndcg10",
+  "rr",
+  "overrated10"
+ ],
+ "bootstrap": {
+  "reps": 2000,
+  "seed": 7702116
+ },
+ "files_sha256": {
+  "tools/realdata/devdev/export_world.py": "5463223d6e0a644bd4afed630344214737d3bec10af8498cd6901561aabb7f64",
+  "tools/realdata/devdev/rank_ours.py": "82e610f50ba454baca352b15d6cf559a2a540306fe0b4417dff0428069a5a3c5",
+  "tools/realdata/devdev/devdev_1to1_4.py": "c592c7db549056a7400d3df20bd1bedc34ce59250115361fc50c6213dff2c4dc",
+  "tools/realdata/bench2.py": "4bcd12ed718d9eeb2ffb60e8e6a30bbd894655a3eaf37f04be2f941fe256c101",
+  "docs/realdata/DEVDEV_PROTOCOL_4.md": "242a2228365f1c17236b05ce01b9cdb97997a0709574c2240cac054b800d922a"
+ },
+ "dirs_sha256": {
+  "backend/app/modules/matching": "57675639aa0f330da9749a9ae65715146f1b34dfef0c329c2bb927e4c3c0b24d",
+  "backend/app/modules/catalog": "d84b8232114f6bdb890a3a9e136ac9c3dc018b55d11e936ee78da7444090f3d3",
+  "backend/app/modules/profiles": "c363c5858d6fc2854ee6179f9681a8f6203daa9b0f60cb9b94e8484950bb6c08",
+  "backend/app/modules/fsp": "92c30a864ca5410faf5c988d9f06892dca16832b5f710e1844acadefe0519f2a",
+  "backend/app/modules/validation/bench_world.py": "6111882efa8f1965d3eda1895fe670d438e76f247c81a5a934f737cad3145167"
+ },
+ "rule": "один прогон: run отказывается при несовпадении любого хэша и при уже существующем результате"
+}

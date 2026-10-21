@@ -1,0 +1,442 @@
+{
+ "plan": {
+  "phase": "final",
+  "n_per_seed": 100,
+  "seeds": [
+   4401,
+   4402,
+   4403,
+   4404,
+   4405,
+   4406,
+   4407,
+   4408,
+   4409,
+   4410
+  ],
+  "common_args": [],
+  "note": "FINAL (поправки №3–3а): один прогон после заморозки банка А3 (ag/a3-bank 38707a52e1, дерево банка 948ecb79bb, content_hash 913ad19f6a259aff, 1 646 семейств); настройки — STAND_ENV с выбором T9 TRAIN-раунда 3; F_* — жёсткие условия на FINAL_SEEDS 4401–4410, S_T — стандартные условия на ST_SEEDS 5501–5510, B_* — боты на FINAL_SEED 4501 (n = 400 на стратегию); FINAL №2 (поправка №4): №1 аннулирован до просмотра, запечатан — docs/validation/FINAL1_SEALED.txt",
+  "a3_head": "38707a52e1 (дерево банка = ab16d27622 / 948ecb79bb)",
+  "bank_hash": "913ad19f6a259aff",
+  "configs": {
+   "F_calibrated": {
+    "n_per_seed": 300,
+    "args": [
+     "--retest",
+     "--fixed",
+     "--expect-bank-hash",
+     "913ad19f6a259aff"
+    ],
+    "out_name": "product_sim_final_calibrated.json"
+   },
+   "F_misspec": {
+    "n_per_seed": 200,
+    "args": [
+     "--world",
+     "misspec",
+     "--expect-bank-hash",
+     "913ad19f6a259aff"
+    ],
+    "out_name": "product_sim_final_misspec.json"
+   },
+   "F_rater": {
+    "n_per_seed": 150,
+    "args": [
+     "--rater-noise",
+     "0.1",
+     "--expect-bank-hash",
+     "913ad19f6a259aff"
+    ],
+    "out_name": "product_sim_final_rater.json"
+   },
+   "F_amult07": {
+    "n_per_seed": 100,
+    "args": [
+     "--world",
+     "amult",
+     "--a-mult",
+     "0.7",
+     "--expect-bank-hash",
+     "913ad19f6a259aff"
+    ],
+    "out_name": "product_sim_final_amult07.json"
+   },
+   "F_amult14": {
+    "n_per_seed": 100,
+    "args": [
+     "--world",
+     "amult",
+     "--a-mult",
+     "1.4",
+     "--expect-bank-hash",
+     "913ad19f6a259aff"
+    ],
+    "out_name": "product_sim_final_amult14.json"
+   },
+   "F_testlet": {
+    "n_per_seed": 100,
+    "args": [
+     "--world",
+     "testlet",
+     "--expect-bank-hash",
+     "913ad19f6a259aff"
+    ],
+    "out_name": "product_sim_final_testlet.json"
+   },
+   "F_fatigue": {
+    "n_per_seed": 100,
+    "args": [
+     "--world",
+     "fatigue",
+     "--expect-bank-hash",
+     "913ad19f6a259aff"
+    ],
+    "out_name": "product_sim_final_fatigue.json"
+   }
+  }
+ },
+ "summary": {
+  "F_calibrated": {
+   "n": 3000,
+   "confident_accuracy_main": 0.9165,
+   "confident_share_main": 0.818,
+   "confident_accuracy_final": 0.8963,
+   "confident_share_final": 0.9097,
+   "false_confirm_all": 0.0273,
+   "false_confirm_among_overclaim": 0.0707,
+   "false_reject_among_true": 0.2049,
+   "exact_grade_final": 0.754,
+   "exact_grade_final_not_underclaim": 0.7945,
+   "within_one_final": 0.9987,
+   "gross_error_2plus": 0.0013,
+   "undecided_final": 0.0903,
+   "followup_share": 0.182,
+   "oral_share": 0.0,
+   "extended_share": 0.3927,
+   "false_reject_all": 0.1257,
+   "exact_grade_final_5": 0.7597,
+   "exact_grade_final_4": 0.825,
+   "exact_grade_main": 0.7493,
+   "loss_3fc_fr": 0.2076,
+   "far_exact_grade_final": 0.8152,
+   "minutes_main": {
+    "mean": 41.5,
+    "p90": 69.2
+   },
+   "minutes_total": {
+    "mean": 44.9,
+    "p90": 81.1
+   },
+   "items_main": {
+    "mean": 23.0,
+    "min": 8,
+    "max": 36
+   },
+   "retest_kappa_w": 0.9057,
+   "retest_exact": 0.6853,
+   "retest_decision": 0.8093,
+   "engine_errors": 0,
+   "env": null,
+   "args": [
+    "--retest",
+    "--fixed",
+    "--expect-bank-hash",
+    "913ad19f6a259aff"
+   ]
+  },
+  "F_misspec": {
+   "n": 2000,
+   "confident_accuracy_main": 0.909,
+   "confident_share_main": 0.8245,
+   "confident_accuracy_final": 0.8937,
+   "confident_share_final": 0.9175,
+   "false_confirm_all": 0.023,
+   "false_confirm_among_overclaim": 0.0607,
+   "false_reject_among_true": 0.2142,
+   "exact_grade_final": 0.748,
+   "exact_grade_final_not_underclaim": 0.7893,
+   "within_one_final": 0.998,
+   "gross_error_2plus": 0.002,
+   "undecided_final": 0.0825,
+   "followup_share": 0.1755,
+   "oral_share": 0.0,
+   "extended_share": 0.381,
+   "false_reject_all": 0.133,
+   "exact_grade_final_5": 0.754,
+   "exact_grade_final_4": 0.819,
+   "exact_grade_main": 0.74,
+   "loss_3fc_fr": 0.202,
+   "far_exact_grade_final": 0.8151,
+   "minutes_main": {
+    "mean": 41.1,
+    "p90": 67.5
+   },
+   "minutes_total": {
+    "mean": 44.4,
+    "p90": 79.3
+   },
+   "items_main": {
+    "mean": 22.9,
+    "min": 8,
+    "max": 36
+   },
+   "retest_kappa_w": null,
+   "retest_exact": null,
+   "retest_decision": null,
+   "engine_errors": 0,
+   "env": null,
+   "args": [
+    "--world",
+    "misspec",
+    "--expect-bank-hash",
+    "913ad19f6a259aff"
+   ]
+  },
+  "F_rater": {
+   "n": 1500,
+   "confident_accuracy_main": 0.9347,
+   "confident_share_main": 0.8273,
+   "confident_accuracy_final": 0.9164,
+   "confident_share_final": 0.9087,
+   "false_confirm_all": 0.028,
+   "false_confirm_among_overclaim": 0.0737,
+   "false_reject_among_true": 0.1785,
+   "exact_grade_final": 0.7513,
+   "exact_grade_final_not_underclaim": 0.8069,
+   "within_one_final": 0.9987,
+   "gross_error_2plus": 0.0013,
+   "undecided_final": 0.0913,
+   "followup_share": 0.1727,
+   "oral_share": 0.0,
+   "extended_share": 0.3753,
+   "false_reject_all": 0.1107,
+   "exact_grade_final_5": 0.756,
+   "exact_grade_final_4": 0.8227,
+   "exact_grade_main": 0.7473,
+   "loss_3fc_fr": 0.1947,
+   "far_exact_grade_final": 0.8146,
+   "minutes_main": {
+    "mean": 40.8,
+    "p90": 67.6
+   },
+   "minutes_total": {
+    "mean": 44.2,
+    "p90": 81.3
+   },
+   "items_main": {
+    "mean": 22.7,
+    "min": 8,
+    "max": 36
+   },
+   "retest_kappa_w": null,
+   "retest_exact": null,
+   "retest_decision": null,
+   "engine_errors": 0,
+   "env": null,
+   "args": [
+    "--rater-noise",
+    "0.1",
+    "--expect-bank-hash",
+    "913ad19f6a259aff"
+   ]
+  },
+  "F_amult07": {
+   "n": 1000,
+   "confident_accuracy_main": 0.8767,
+   "confident_share_main": 0.819,
+   "confident_accuracy_final": 0.8557,
+   "confident_share_final": 0.901,
+   "false_confirm_all": 0.026,
+   "false_confirm_among_overclaim": 0.0691,
+   "false_reject_among_true": 0.2853,
+   "exact_grade_final": 0.666,
+   "exact_grade_final_not_underclaim": 0.7252,
+   "within_one_final": 0.99,
+   "gross_error_2plus": 0.01,
+   "undecided_final": 0.099,
+   "followup_share": 0.181,
+   "oral_share": 0.0,
+   "extended_share": 0.396,
+   "false_reject_all": 0.178,
+   "exact_grade_final_5": 0.672,
+   "exact_grade_final_4": 0.749,
+   "exact_grade_main": 0.661,
+   "loss_3fc_fr": 0.256,
+   "far_exact_grade_final": 0.7205,
+   "minutes_main": {
+    "mean": 41.1,
+    "p90": 67.7
+   },
+   "minutes_total": {
+    "mean": 44.5,
+    "p90": 77.0
+   },
+   "items_main": {
+    "mean": 23.0,
+    "min": 8,
+    "max": 36
+   },
+   "retest_kappa_w": null,
+   "retest_exact": null,
+   "retest_decision": null,
+   "engine_errors": 0,
+   "env": null,
+   "args": [
+    "--world",
+    "amult",
+    "--a-mult",
+    "0.7",
+    "--expect-bank-hash",
+    "913ad19f6a259aff"
+   ]
+  },
+  "F_amult14": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9469,
+   "confident_share_main": 0.847,
+   "confident_accuracy_final": 0.9323,
+   "confident_share_final": 0.916,
+   "false_confirm_all": 0.023,
+   "false_confirm_among_overclaim": 0.0612,
+   "false_reject_among_true": 0.1587,
+   "exact_grade_final": 0.81,
+   "exact_grade_final_not_underclaim": 0.851,
+   "within_one_final": 1.0,
+   "gross_error_2plus": 0.0,
+   "undecided_final": 0.084,
+   "followup_share": 0.153,
+   "oral_share": 0.0,
+   "extended_share": 0.335,
+   "false_reject_all": 0.099,
+   "exact_grade_final_5": 0.815,
+   "exact_grade_final_4": 0.865,
+   "exact_grade_main": 0.804,
+   "loss_3fc_fr": 0.168,
+   "far_exact_grade_final": 0.8681,
+   "minutes_main": {
+    "mean": 40.6,
+    "p90": 66.0
+   },
+   "minutes_total": {
+    "mean": 43.5,
+    "p90": 76.2
+   },
+   "items_main": {
+    "mean": 22.0,
+    "min": 8,
+    "max": 36
+   },
+   "retest_kappa_w": null,
+   "retest_exact": null,
+   "retest_decision": null,
+   "engine_errors": 0,
+   "env": null,
+   "args": [
+    "--world",
+    "amult",
+    "--a-mult",
+    "1.4",
+    "--expect-bank-hash",
+    "913ad19f6a259aff"
+   ]
+  },
+  "F_testlet": {
+   "n": 1000,
+   "confident_accuracy_main": 0.9197,
+   "confident_share_main": 0.834,
+   "confident_accuracy_final": 0.9061,
+   "confident_share_final": 0.916,
+   "false_confirm_all": 0.027,
+   "false_confirm_among_overclaim": 0.0718,
+   "false_reject_among_true": 0.1875,
+   "exact_grade_final": 0.758,
+   "exact_grade_final_not_underclaim": 0.8141,
+   "within_one_final": 0.997,
+   "gross_error_2plus": 0.003,
+   "undecided_final": 0.084,
+   "followup_share": 0.166,
+   "oral_share": 0.0,
+   "extended_share": 0.373,
+   "false_reject_all": 0.117,
+   "exact_grade_final_5": 0.765,
+   "exact_grade_final_4": 0.831,
+   "exact_grade_main": 0.743,
+   "loss_3fc_fr": 0.198,
+   "far_exact_grade_final": 0.8287,
+   "minutes_main": {
+    "mean": 40.9,
+    "p90": 63.9
+   },
+   "minutes_total": {
+    "mean": 43.9,
+    "p90": 73.6
+   },
+   "items_main": {
+    "mean": 22.6,
+    "min": 8,
+    "max": 36
+   },
+   "retest_kappa_w": null,
+   "retest_exact": null,
+   "retest_decision": null,
+   "engine_errors": 0,
+   "env": null,
+   "args": [
+    "--world",
+    "testlet",
+    "--expect-bank-hash",
+    "913ad19f6a259aff"
+   ]
+  },
+  "F_fatigue": {
+   "n": 1000,
+   "confident_accuracy_main": 0.8965,
+   "confident_share_main": 0.831,
+   "confident_accuracy_final": 0.8833,
+   "confident_share_final": 0.9,
+   "false_confirm_all": 0.011,
+   "false_confirm_among_overclaim": 0.0293,
+   "false_reject_among_true": 0.2772,
+   "exact_grade_final": 0.699,
+   "exact_grade_final_not_underclaim": 0.7483,
+   "within_one_final": 0.997,
+   "gross_error_2plus": 0.003,
+   "undecided_final": 0.1,
+   "followup_share": 0.169,
+   "oral_share": 0.0,
+   "extended_share": 0.374,
+   "false_reject_all": 0.173,
+   "exact_grade_final_5": 0.701,
+   "exact_grade_final_4": 0.79,
+   "exact_grade_main": 0.699,
+   "loss_3fc_fr": 0.206,
+   "far_exact_grade_final": 0.7815,
+   "minutes_main": {
+    "mean": 40.6,
+    "p90": 67.3
+   },
+   "minutes_total": {
+    "mean": 43.8,
+    "p90": 77.6
+   },
+   "items_main": {
+    "mean": 22.4,
+    "min": 8,
+    "max": 36
+   },
+   "retest_kappa_w": null,
+   "retest_exact": null,
+   "retest_decision": null,
+   "engine_errors": 0,
+   "env": null,
+   "args": [
+    "--world",
+    "fatigue",
+    "--expect-bank-hash",
+    "913ad19f6a259aff"
+   ]
+  }
+ },
+ "fails": [],
+ "elapsed_s": 600.1
+}

@@ -1,0 +1,762 @@
+{
+ "generated_at": "2026-10-21T10:16:33+00:00",
+ "protocol": "docs/realdata/hh_holdout2_PROTOCOL.md",
+ "protocol_sha256": "e8502bdc6c05d1f17bc55e61c300ab2e0ba4c8ae98e794e2c01248df98f610ac",
+ "arbiters": [
+  "anthropic/claude-sonnet-5.5",
+  "openai/gpt-6.1-sol"
+ ],
+ "direction": {
+  "value": 0.8899,
+  "k": 299,
+  "n": 336,
+  "disputed": 50,
+  "parser_right": 13,
+  "noisy_labels": 33,
+  "noisy_share": 0.0982
+ },
+ "grade": {
+  "value": 1.0,
+  "k": 103,
+  "n": 103,
+  "disputed": 0,
+  "parser_right": 0,
+  "noisy_labels": 0,
+  "noisy_share": 0.0
+ },
+ "rows": [
+  {
+   "id": "138640929",
+   "field": "direction",
+   "hh_label": "backend",
+   "parser": "frontend",
+   "parser_control": "frontend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "mobile",
+    "openai/gpt-6.1-sol": "mobile"
+   },
+   "final": "mobile",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137715097",
+   "field": "direction",
+   "hh_label": "backend",
+   "parser": "data_ml",
+   "parser_control": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138701571",
+   "field": "direction",
+   "hh_label": "backend",
+   "parser": "frontend",
+   "parser_control": "frontend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137415362",
+   "field": "direction",
+   "hh_label": "qa",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "qa",
+   "why": "арбитры разошлись — остаётся метка hh.ru"
+  },
+  {
+   "id": "138509992",
+   "field": "direction",
+   "hh_label": "data_ml",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138420031",
+   "field": "direction",
+   "hh_label": "data_ml",
+   "parser": "mobile",
+   "parser_control": "mobile",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137924141",
+   "field": "direction",
+   "hh_label": "data_ml",
+   "parser": "devops",
+   "parser_control": "devops",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138397406",
+   "field": "direction",
+   "hh_label": "data_ml",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138636496",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138624791",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": "devops",
+   "parser_control": "devops",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138613984",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138604721",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137455973",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": "frontend",
+   "parser_control": "frontend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "analyst",
+    "openai/gpt-6.1-sol": "analyst"
+   },
+   "final": "analyst",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137328061",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": "devops",
+   "parser_control": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138674466",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": "devops",
+   "parser_control": "devops",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138669184",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": "devops",
+   "parser_control": "devops",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138678549",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138665477",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": "analyst",
+   "parser_control": "analyst",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "security",
+    "openai/gpt-6.1-sol": "security"
+   },
+   "final": "security",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138660038",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "131029631",
+   "field": "direction",
+   "hh_label": "security",
+   "parser": "analyst",
+   "parser_control": "analyst",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "security",
+    "openai/gpt-6.1-sol": "security"
+   },
+   "final": "security",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138661735",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "арбитры разошлись — остаётся метка hh.ru"
+  },
+  {
+   "id": "138661607",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "qa",
+   "parser_control": "qa",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "136889137",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137534781",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138644915",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "security",
+   "parser_control": "security",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137960380",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137247348",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "data_ml",
+   "parser_control": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138674065",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138669358",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "security",
+   "parser_control": "security",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "security",
+    "openai/gpt-6.1-sol": "security"
+   },
+   "final": "security",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137427920",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "security",
+   "parser_control": "security",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "security",
+    "openai/gpt-6.1-sol": "security"
+   },
+   "final": "security",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138606030",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "data_eng",
+   "parser_control": "data_eng",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "135410394",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "qa",
+   "parser_control": "qa",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138581211",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "qa",
+   "parser_control": "qa",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "qa",
+    "openai/gpt-6.1-sol": "qa"
+   },
+   "final": "qa",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138523979",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser": "frontend",
+   "parser_control": "frontend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138484393",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "analyst",
+   "parser_control": "analyst",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "analyst",
+    "openai/gpt-6.1-sol": "analyst"
+   },
+   "final": "analyst",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138420317",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "devops",
+    "openai/gpt-6.1-sol": "devops"
+   },
+   "final": "devops",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138556212",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "data_ml",
+   "parser_control": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138664236",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "data_ml",
+   "parser_control": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138622411",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "analyst",
+   "parser_control": "analyst",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "analyst",
+    "openai/gpt-6.1-sol": "analyst"
+   },
+   "final": "analyst",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138527615",
+   "field": "direction",
+   "hh_label": "data_eng",
+   "parser": "qa",
+   "parser_control": "qa",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "qa",
+    "openai/gpt-6.1-sol": "qa"
+   },
+   "final": "qa",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "134602118",
+   "field": "direction",
+   "hh_label": "mobile",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "mobile",
+    "openai/gpt-6.1-sol": "mobile"
+   },
+   "final": "mobile",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138628693",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": "devops",
+   "parser_control": "devops",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "128540300",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137710363",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "136791353",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138278828",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": null,
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "analyst",
+    "openai/gpt-6.1-sol": "analyst"
+   },
+   "final": "analyst",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137652541",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "analyst",
+    "openai/gpt-6.1-sol": "analyst"
+   },
+   "final": "analyst",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138204668",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "analyst",
+    "openai/gpt-6.1-sol": "analyst"
+   },
+   "final": "analyst",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "135819418",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": "backend",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "analyst",
+    "openai/gpt-6.1-sol": "analyst"
+   },
+   "final": "analyst",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137593887",
+   "field": "direction",
+   "hh_label": "analyst",
+   "parser": "qa",
+   "parser_control": "qa",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "not_it",
+    "openai/gpt-6.1-sol": "not_it"
+   },
+   "final": "not_it",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "136624461",
+   "field": "direction",
+   "hh_label": "backend",
+   "parser_control": null,
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137576259",
+   "field": "direction",
+   "hh_label": "backend",
+   "parser_control": "security",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "136831842",
+   "field": "direction",
+   "hh_label": "backend",
+   "parser_control": "frontend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "138658988",
+   "field": "direction",
+   "hh_label": "backend",
+   "parser_control": "frontend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "backend",
+    "openai/gpt-6.1-sol": "backend"
+   },
+   "final": "backend",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137372651",
+   "field": "direction",
+   "hh_label": "data_ml",
+   "parser_control": "backend",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml",
+   "why": "оба арбитра согласны"
+  },
+  {
+   "id": "137740205",
+   "field": "direction",
+   "hh_label": "devops",
+   "parser_control": "data_ml",
+   "arbiters": {
+    "anthropic/claude-sonnet-5.5": "data_ml",
+    "openai/gpt-6.1-sol": "data_ml"
+   },
+   "final": "data_ml",
+   "why": "оба арбитра согласны"
+  }
+ ],
+ "what": "Спорные метки (разбор ≠ метка hh.ru) независимо проверены двумя моделями разных компаний, не видевшими ни метку, ни ответ разбора; итог — только при согласии обоих, иначе метка hh.ru. Модели, не люди.",
+ "direction_control": {
+  "value": 0.875,
+  "k": 294,
+  "n": 336,
+  "disputed": 56,
+  "parser_right": 14,
+  "noisy_labels": 34,
+  "noisy_share": 0.1012,
+  "flag": "NEED_TITLE_ROLE=0"
+ }
+}

@@ -126,6 +126,74 @@ def _balls(x: float) -> str:
     return "балл" if v == 1 else "балла" if v != int(v) or 2 <= v % 10 <= 4 and not 12 <= v % 100 <= 14 else "баллов"
 
 
+def _v1_factors(a: dict, b: dict, w: dict, zones: dict) -> list[dict]:
+    """match-v1.x: вклад теста, навыков, ФСП, задания и «предварительно» по весам ranking.WEIGHTS."""
+    factors: list[dict] = []
+    dt = w["test"] * (a["comps"]["test"] - b["comps"]["test"]) * 100
+    if abs(dt) >= 0.05:
+        th = (lambda x: f"θ {_n(x['theta'], sign=True)} ± {_n(x['se'])}" if x.get("theta") is not None
+              else "нет теста")
+        factors.append({"level": "T1", "points": dt, "label": "тест", "a": th(a), "b": th(b)})
+    for zone, label in (("stack_required", "обязательно"), ("stack_desired", "желательно")):
+        total = sum(i["weight"] for i in zones[zone]) or 1.0
+        for it in zones[zone]:
+            ta, tb = a["tags"].get(it["tag"], 0.0), b["tags"].get(it["tag"], 0.0)
+            d = w[zone] * it["weight"] / total * (ta - tb) * 100
+            if abs(d) >= 0.05:
+                pc = (lambda v: f"{v * 100:.0f} %" if v else "не подтверждено")
+                factors.append({"level": "T1", "points": d, "a": pc(ta), "b": pc(tb),
+                                "label": f"{label} {tag_title(it['tag'])}"})
+    df = w["fsp"] * (a["comps"]["fsp"] - b["comps"]["fsp"]) * 100
+    if abs(df) >= 0.05:
+        fs = (lambda x: f"сила паспорта {_n(x['comps']['fsp'])}" if x["comps"]["fsp"] else "нет подтверждённых")
+        factors.append({"level": "T2", "points": df, "label": "ФСП", "a": fs(a), "b": fs(b)})
+    dp = w["probe"] * (a["comps"]["probe"] - b["comps"]["probe"]) * 100
+    if abs(dp) >= 0.05:
+        pr = (lambda x: f"{x['comps']['probe'] * 100:.0f} %" if x["comps"]["probe"] else "нет")
+        factors.append({"level": "T1", "points": dp, "label": "задание с вилкой", "a": pr(a), "b": pr(b)})
+    # «Junior (предварительно)» — −0,05 к скору: подтверждённый выше при прочих равных
+    dv = -(a["comps"].get("provisional", 0.0) - b["comps"].get("provisional", 0.0)) * 100
+    if abs(dv) >= 0.05:
+        pv = (lambda x: "предварительно" if x["comps"].get("provisional") else "подтверждён")
+        factors.append({"level": "T1", "points": dv, "label": "грейд", "a": pv(a), "b": pv(b)})
+    return factors
+
+
+def _v2_factors(a: dict, b: dict) -> list[dict]:
+    """match-v2: разница баллов = Σ разниц вкладов признаков (ltr.contributions, «из 100»), без остатка."""
+    from app.modules.matching import ltr
+
+    w = ltr.weights()
+    alias = {"probe": "probe_v2", "provisional": "provisional_flag"}
+
+    def contrib(x, k):  # точный вклад из значений признаков (в comps — те же числа, что вошли в балл)
+        return w.get(k, 0.0) * float(x["comps"].get(alias.get(k, k)) or 0.0) * 100
+
+    def th(x):
+        return f"θ {_n(x['theta'], sign=True)} ± {_n(x['se'])}" if x.get("theta") is not None else "нет теста"
+
+    def val(x, k):
+        c = x["comps"]
+        if k in ("test", "margin", "in_band", "level_ok"):
+            return th(x)
+        if k == "fsp":
+            return f"сила паспорта {_n(c.get('fsp') or 0)}" if c.get("fsp") else "нет подтверждённых"
+        if k == "probe":
+            return f"{(c.get('probe') or 0) * 100:.0f} % верно" if c.get("probe_v2") else "заданий не было"
+        if k == "provisional":
+            return "предварительно" if c.get("provisional_flag") else "подтверждён"
+        v = c.get(k)
+        return f"{float(v) * 100:.0f} %" if isinstance(v, (int, float)) else "—"
+
+    out = []
+    for k in ltr.FEATURES:
+        d = contrib(a, k) - contrib(b, k)
+        if abs(d) >= 0.05:
+            out.append({"level": "T2" if k == "fsp" else "T1", "points": d, "label": ltr.TITLES[k].split(" (")[0],
+                        "a": val(a, k), "b": val(b, k), "key": k})
+    return out
+
+
 def why_pairs(items: list[dict], req: dict) -> list[dict]:
     """«Почему A выше B»: вклад каждого подтверждённого фактора в разницу скоров (в баллах из 100).
 
@@ -141,33 +209,10 @@ def why_pairs(items: list[dict], req: dict) -> list[dict]:
     for a, b in zip(order, order[1:]):
         diff = (a["score"] - b["score"]) * 100
         factors: list[dict] = []
-        dt = w["test"] * (a["comps"]["test"] - b["comps"]["test"]) * 100
-        if abs(dt) >= 0.05:
-            th = (lambda x: f"θ {_n(x['theta'], sign=True)} ± {_n(x['se'])}" if x.get("theta") is not None
-                  else "нет теста")
-            factors.append({"level": "T1", "points": dt, "label": "тест", "a": th(a), "b": th(b)})
-        for zone, label in (("stack_required", "обязательно"), ("stack_desired", "желательно")):
-            total = sum(i["weight"] for i in zones[zone]) or 1.0
-            for it in zones[zone]:
-                ta, tb = a["tags"].get(it["tag"], 0.0), b["tags"].get(it["tag"], 0.0)
-                d = w[zone] * it["weight"] / total * (ta - tb) * 100
-                if abs(d) >= 0.05:
-                    pc = (lambda v: f"{v * 100:.0f} %" if v else "не подтверждено")
-                    factors.append({"level": "T1", "points": d, "a": pc(ta), "b": pc(tb),
-                                    "label": f"{label} {tag_title(it['tag'])}"})
-        df = w["fsp"] * (a["comps"]["fsp"] - b["comps"]["fsp"]) * 100
-        if abs(df) >= 0.05:
-            fs = (lambda x: f"сила паспорта {_n(x['comps']['fsp'])}" if x["comps"]["fsp"] else "нет подтверждённых")
-            factors.append({"level": "T2", "points": df, "label": "ФСП", "a": fs(a), "b": fs(b)})
-        dp = w["probe"] * (a["comps"]["probe"] - b["comps"]["probe"]) * 100
-        if abs(dp) >= 0.05:
-            pr = (lambda x: f"{x['comps']['probe'] * 100:.0f} %" if x["comps"]["probe"] else "нет")
-            factors.append({"level": "T1", "points": dp, "label": "задание с вилкой", "a": pr(a), "b": pr(b)})
-        # «Junior (предварительно)» — −0,05 к скору: подтверждённый выше при прочих равных
-        dv = -(a["comps"].get("provisional", 0.0) - b["comps"].get("provisional", 0.0)) * 100
-        if abs(dv) >= 0.05:
-            pv = (lambda x: "предварительно" if x["comps"].get("provisional") else "подтверждён")
-            factors.append({"level": "T1", "points": dv, "label": "грейд", "a": pv(a), "b": pv(b)})
+        if (a["comps"].get("contrib") is not None) and (b["comps"].get("contrib") is not None):
+            factors = _v2_factors(a, b)  # match-v2: разница раскладывается по вкладам признаков модели (точно)
+        else:
+            factors = _v1_factors(a, b, w, zones)
         factors.sort(key=lambda f: -f["points"])
         pro = [f for f in factors if f["points"] > 0][:3]
         con = [f for f in factors if f["points"] < 0][-1:]  # главный фактор в пользу второго
