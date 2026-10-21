@@ -1,0 +1,31 @@
+family_id: devops.bash.t21_local_masks_status_output
+title: bash — local v=$(cmd) и export скрывают код возврата подстановки
+direction: devops
+skills:
+- bash
+- shell
+- exit_codes
+target_grades:
+- senior
+format: predict_output
+language: bash
+invariants:
+  code_lines:
+  - 14
+  - 15
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Три функции сохраняют
+    вывод команды с ненулевым кодом по-разному (local v=$(...), local v; v=$(...), export V=$(...), declare, простое
+    присваивание) и печатают $?; ловушка — у local / declare / export свой статус 0. Уровень Senior: семантика кодов
+    возврата и встроенных команд объявления. Набор t21 (21.10) у порога Senior (b = +0,8)'
+generator: assessment_bank.families.devops.t21_local_masks_status_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Скрипт получает тег релиза функцией с ненулевым
+  кодом и проверяет $? в трёх функциях; предсказать вывод. Ключ — независимая модель в генераторе, проверка — исполнение
+  показанного скрипта в bash-песочнице.
