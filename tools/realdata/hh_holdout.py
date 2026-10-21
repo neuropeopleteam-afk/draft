@@ -64,6 +64,8 @@ def manifest_sha(items: list[dict]) -> str:
 
 
 def git_head() -> str:
+    if os.environ.get("CODE_COMMIT"):  # прогон на копии без .git (сервер «Москва»): коммит передаётся явно
+        return os.environ["CODE_COMMIT"]
     try:
         return subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
     except (OSError, subprocess.CalledProcessError):

@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -32,6 +33,8 @@ METHODS = ("platform", "no_fsp", "no_test", "keywords_grade", "bm25", "random")
 
 
 def git_head() -> str:
+    if os.environ.get("CODE_COMMIT"):  # прогон на копии без .git (сервер «Москва»): коммит передаётся явно
+        return os.environ["CODE_COMMIT"]
     try:
         return subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
     except (OSError, subprocess.CalledProcessError):
