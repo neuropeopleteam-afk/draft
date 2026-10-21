@@ -26,7 +26,7 @@ from app.modules.proctor.models import ProctorEvent, ProctorSession
 
 log = logging.getLogger("app.proctor")
 
-CONSENT_VERSION = "2026-10-10"  # 10.10: строка оператора — как на сайте компании; 08.10: формулировка «effect» без названий сигналов (Р27)
+CONSENT_VERSION = "2026-10-21"  # 21.10: оператор — команда Neuropeople, без реквизитов юрлица (решение владельца); 10.10: строка оператора — как на сайте компании; 08.10: формулировка «effect» без названий сигналов (Р27)
 MAX_EVENTS_PER_SESSION = 2000
 MAX_OBSERVED_MS_SLACK = 120_000  # наблюдение по заданию не больше времени задания по часам сервера + запас
 
@@ -61,7 +61,7 @@ CONSENT = {
 def consent_text() -> dict:
     o = OPERATOR
     return {"kind": ConsentKind.proctoring.value, "version": CONSENT_VERSION, **CONSENT,
-            "operator": f"{o['full_name']} ({o['short_name']}), ИНН {o['inn']}, адрес для обращений: {o['email']}"}
+            "operator": f"Оператор платформы — {o['full_name']}; обращения — {o['email']}"}
 
 
 # ------------------------------------------------------------------ согласие

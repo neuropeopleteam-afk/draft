@@ -34,7 +34,7 @@ def egrul_found(monkeypatch):
     from app.integrations.egrul import client as eg
 
     calls = []
-    row = {"n": "ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ \"РОМАШКА\"", "c": "ООО \"РОМАШКА\"", "i": "<реквизит>",
+    row = {"n": "ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ \"РОМАШКА\"", "c": "ООО \"РОМАШКА\"", "i": "7736207543",
            "o": "1157746000000", "p": "770101001", "r": "10.03.2015", "g": "ГЕНЕРАЛЬНЫЙ ДИРЕКТОР: Иванов Иван Иванович",
            "rn": "г. Москва", "k": "ul"}
 
@@ -46,7 +46,7 @@ def egrul_found(monkeypatch):
     return calls
 
 
-def company_with_inn(client, te, inn="<реквизит>", site="https://romashka.ru"):
+def company_with_inn(client, te, inn="7736207543", site="https://romashka.ru"):
     r = client.patch("/api/me/company", json={"inn": inn, "website": site, "contact_email": "hr@romashka.ru"},
                      headers=H(te))
     assert r.status_code == 200, r.text
@@ -57,7 +57,7 @@ def company_with_inn(client, te, inn="<реквизит>", site="https://romashk
 def test_inn_checksum_and_parse():
     from app.integrations.egrul.client import parse_row, valid_inn
 
-    assert valid_inn("<реквизит>") and valid_inn("7707083893") and not valid_inn("9701316955")
+    assert valid_inn("7736207543") and valid_inn("7707083893") and not valid_inn("7736207544")
     assert valid_inn("500100732259") and not valid_inn("123")
     d = parse_row({"n": "ООО Т", "i": "7707083893", "r": "20.06.1991", "e": "01.02.2020", "g": "ДИРЕКТОР: Петров П.П."})
     assert d["registered_at"] == "1991-06-20" and d["liquidated_at"] == "2020-02-01"
@@ -73,7 +73,7 @@ def test_registry_check_cache_and_trust(client, egrul_found):
     assert ids["registry"]["status"] == "ok" and ids["email"]["status"] == "ok"  # домен почты = сайт компании
     assert ids["age"]["status"] == "ok" and 0 <= t["score"] <= 100 and t["level"] in ("high", "medium", "low")
     client.post("/api/employer/company/registry-check", headers=H(te))
-    assert egrul_found == ["<реквизит>"]  # второй раз — из кэша (7 дней)
+    assert egrul_found == ["7736207543"]  # второй раз — из кэша (7 дней)
 
 
 def test_registry_soft_degradation_on_captcha(client, monkeypatch):

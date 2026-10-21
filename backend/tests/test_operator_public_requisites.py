@@ -1,43 +1,52 @@
-"""Реквизиты оператора ПД — как на сайте компании (подвал и политика обработки ПД, 10.10, решение владельца): юридический
-адрес в полной редакции, e-mail info@ (общий и для обращений по ПД); фактического адреса и ФИО руководителя в коде и
-ответах API нет (на сайте они не опубликованы)."""
+"""Оператор платформы без реквизитов юрлица (решение владельца 21.10 22:28/22:40: «Драфт» — конкурсный прототип, юрлица
+нет нигде). Оператор — «команда Neuropeople (конкурсный прототип)», контакт — форма обратной связи на сайте. Ни ИНН, ни ОГРН,
+ни адреса, ни «ООО», ни почты на <сайт оператора> — ни в коде, ни в ответах API, ни в текстах согласий."""
 from __future__ import annotations
+
+import json
+import re
+from pathlib import Path
 
 from app.core import legal
 from app.modules.proctor import service as proctor
 
-HIDDEN_KEYS = ("director", "actual_address")
-EXPECTED_FIELDS = {"full_name", "short_name", "inn", "kpp", "ogrn", "legal_address", "email", "storage"}
+FORBIDDEN = re.compile(r"Neuropeople|ООО|<реквизит>|<реквизит>|770101001|neuropeople\.shop|<адрес>|<реквизит>|ИНН|ОГРН",
+                       re.I)
+EXPECTED_FIELDS = {"full_name", "short_name", "email", "storage"}
+ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_operator_matches_company_site():
+def test_operator_is_team_stub():
     o = legal.OPERATOR
-    assert o["short_name"] == "команда Neuropeople"
-    assert (o["inn"], o["kpp"], o["ogrn"]) == ("<реквизит>", "770101001", "<реквизит>")
-    assert "вн. тер. г. муниципальный округ Басманный" in o["legal_address"]
-    assert o["legal_address"].startswith("105082, г. Москва") and o["legal_address"].endswith("помещ. 3А/1/14")
-    assert o["email"] == "<форма обратной связи>" and "email_general" not in o
+    assert set(o) == EXPECTED_FIELDS
+    assert o["full_name"] == "команда Neuropeople (конкурсный прототип)"
+    assert "форма обратной связи" in o["email"] and "@" not in o["email"]
+    assert not FORBIDDEN.search(json.dumps(o, ensure_ascii=False))
 
 
-def test_no_director_and_actual_address_anywhere(client):
-    assert not any(k in legal.OPERATOR for k in HIDDEN_KEYS)
+def test_api_has_no_requisites(client):
     meta = client.get("/api/meta").json()["operator"]
-    assert not any(k in meta for k in HIDDEN_KEYS) and meta["email"] == "<форма обратной связи>"
+    assert set(meta) == EXPECTED_FIELDS and not FORBIDDEN.search(json.dumps(meta, ensure_ascii=False))
     for kind in ("processing", "publication"):
         c = client.get(f"/api/legal/consents/{kind}").json()
-        assert not any(k in c["operator"] for k in HIDDEN_KEYS), kind
         assert c["version"] == legal.CONSENT_VERSION
-    # в ответах — только перечень полей реквизитов с сайта компании, ничего сверх него
-    assert set(meta) == EXPECTED_FIELDS and set(legal.OPERATOR) == EXPECTED_FIELDS
-    for kind in ("processing", "publication"):
-        assert set(client.get(f"/api/legal/consents/{kind}").json()["operator"]) == EXPECTED_FIELDS
+        assert "Оператор платформы — команда Neuropeople (конкурсный прототип)" in c["text"], kind
+        assert not FORBIDDEN.search(json.dumps(c, ensure_ascii=False)), kind
+    sup = client.get("/api/support").json()
+    assert sup["support_email"] == "" and sup["legal_email"] == "" and "форма обратной связи" in sup["contact"]
+    assert not FORBIDDEN.search(json.dumps(sup, ensure_ascii=False))
 
 
-def test_consent_texts_carry_site_requisites(client):
-    proc = client.get("/api/legal/consents/processing").json()["text"]
-    assert "муниципальный округ Басманный" in proc and "<форма обратной связи>" in proc
-    assert "ИНН <реквизит>" in proc and "ОГРН <реквизит>" in proc
+def test_proctoring_consent_operator_stub():
     cam = proctor.consent_text()["operator"]
-    assert cam == ("команда Neuropeople (команда Neuropeople), ИНН <реквизит>, "
-                   "адрес для обращений: <форма обратной связи>")
-    assert proctor.CONSENT_VERSION == legal.CONSENT_VERSION  # обе редакции пересмотрены 10.10 вместе
+    assert cam.startswith("Оператор платформы — команда Neuropeople (конкурсный прототип)") and not FORBIDDEN.search(cam)
+    assert proctor.CONSENT_VERSION == legal.CONSENT_VERSION  # обе редакции пересмотрены 21.10 вместе
+
+
+def test_backend_sources_and_legal_docs_have_no_requisites():
+    """Код бэкенда, примеры API, OpenAPI и юридические документы — без реквизитов юрлица."""
+    paths = [*ROOT.joinpath("backend/app").rglob("*.py"), ROOT / "backend/app/core/api_examples.json",
+             ROOT / "docs/api/openapi.json", *ROOT.joinpath("docs/legal").glob("*.md")]
+    rx = re.compile(r"Neuropeople|<реквизит>|<реквизит>|neuropeople\.shop|<адрес>|<реквизит>", re.I)
+    bad = [str(p.relative_to(ROOT)) for p in paths if p.exists() and rx.search(p.read_text(encoding="utf-8"))]
+    assert not bad, bad
