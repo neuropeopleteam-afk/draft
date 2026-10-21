@@ -306,7 +306,12 @@ PHRASES: dict[str, str] = {
     "resume_tour": "Продолжаю.",
     "back_tour": "Возвращаюсь к обзору.",
     # экран, который попросили: Настя сама не уходит; тишина 20 с — один такой вопрос (замечание владельца 21.10 17:33)
-    "detour_nudge": "Рассказать про этот экран подробнее — или идём дальше?",
+    "detour_nudge": "Показать, что ниже на этом экране, — или вернуться к обзору?",
+    # не молчит (владелец 19:11): после ответа посреди обзора, после прокрутки, вне обзора — короткий вопрос
+    "tour_nudge": "Продолжаем обзор — или есть вопрос?",
+    "scroll_nudge": "Листать дальше — или рассказать про этот блок?",
+    "back_q": "Это весь экран. Вернуться к обзору?",
+    "free_nudge": "Что показать дальше?",
     # разговор о кандидатах на сравнении (av15): пока готовится ответ — короткое «смотрю», не мёртвая тишина
     "adv_wait1": "Сейчас посмотрю.",
     "adv_wait2": "Так, смотрю в сравнение.",
@@ -1042,6 +1047,16 @@ def extract_name(text: str, current_name: str | None = None, asked: bool = False
         if (low not in _STOP_NAMES or low in _SELF_NAMES) and not low.startswith(("кандидат", "работодат")) \
                 and (low in _NAMES or len(low) >= 3):
             return _cap(cand)
+    if current_name and len(current_name.split()) == 1:
+        # уточнил полное обращение посреди разговора (19:04: «Иванович» → «Геннадий Иванович, покажи …»)
+        cur = re.escape(current_name)
+        m = re.search(rf"(?<![А-ЯЁа-яё])([А-ЯЁа-яё]{{2,18}})\s+{cur}(?![А-ЯЁа-яё])", t, re.I)
+        if m and re.fullmatch(_PATR, current_name, re.I) and m.group(1).lower().replace("ё", "е") in \
+                {n.replace("ё", "е") for n in _NAMES}:
+            return _cap(f"{m.group(1)} {current_name}")
+        m = re.search(rf"(?<![А-ЯЁа-яё]){cur}\s+({_PATR})(?![А-ЯЁа-яё])", t, re.I)
+        if m and current_name.lower().replace("ё", "е") in {n.replace("ё", "е") for n in _NAMES}:
+            return _cap(f"{current_name} {m.group(1)}")
     if current_name:
         return current_name
     t = re.sub(r"^\s*(?:настя|анастасия|настенька)[,.!\s]+", "", t, flags=re.I)   # «Настя, Алексей» — обращение к ней, имя дальше
@@ -1454,7 +1469,20 @@ def _brief(t: str, limit: int = 250) -> str:
     return res
 
 
-def turn(message: str, *, user_name: str | None = None, role: str | None = None, current_path: str = "/",
+def turn(message: str, **kw) -> dict:
+    """Решение по законченному ходу (см. _turn_core) + общие флаги для браузера: resume с «обзор» в просьбе — к обзору,
+    а не долистывать экран (tour); point с «нажми / включи / запусти» — нажать (click)."""
+    r = _turn_core(message, **kw)
+    if isinstance(r, dict):
+        n = _norm(message)
+        if r.get("action") == "resume" and r.get("tour") is None and TOUR_ASK.search(n):
+            r["tour"] = True
+        if r.get("action") == "point" and r.get("click") is None and CLICK_ASK.search(n):
+            r["click"] = True
+    return r
+
+
+def _turn_core(message: str, *, user_name: str | None = None, role: str | None = None, current_path: str = "/",
          step_id: str | None = None, touring: bool = False, paused: bool = False, history: list[dict] | None = None,
          session_id: str | None = None, screen: dict | None = None, last_said: str = "", awaiting: str | None = None,
          on_ack=None, no_llm: bool = False, defer_llm: bool = False) -> dict:
@@ -1527,7 +1555,7 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
             # «что дальше?», «продолжай», «веди сама», «не останавливайся» — экскурсовод идёт дальше без модели
             ack("instant")
             if touring or paused or awaiting in ("continue", "checkin", "detour", "answer"):
-                return {**base, "kind": "instant", "action": "resume"}
+                return {**base, "kind": "instant", "action": "resume", "tour": bool(TOUR_ASK.search(t_norm))}
             if cur_role:
                 return {**base, "kind": "instant", "action": "start_tour", "skip_reg": _skip_reg(msg, s), "role": cur_role,
                         "reply": _start_reply(name, cur_role, False, first_tour, skip_reg=_skip_reg(msg, s))}
@@ -1535,16 +1563,16 @@ def turn(message: str, *, user_name: str | None = None, role: str | None = None,
         if awaiting == "checkin" and words_n <= 6:
             if CHECKIN_NO.search(t_norm):
                 ack("instant")
-                return {**base, "kind": "instant", "action": "resume"}
+                return {**base, "kind": "instant", "action": "resume", "tour": bool(TOUR_ASK.search(t_norm))}
             if CHECKIN_YES.search(t_norm):
                 ack("instant")
                 return {**base, "kind": "instant", "action": "listen", "phrase": "listen"}
         if awaiting in ("continue", "detour") and words_n <= 5 and CMD_NO.search(t_norm):
             ack("instant")
             return {**base, "kind": "instant", "action": "pause", "phrase": "no_more"}
-        if awaiting == "continue" and words_n <= 5 and CONT_YES.search(t_norm):
+        if awaiting in ("continue", "detour") and words_n <= 5 and CONT_YES.search(t_norm):
             ack("instant")   # «Всё понятно? Идём дальше?» — «понятно», «да, дальше», «всё ясно» — продолжаем
-            return {**base, "kind": "instant", "action": "resume"}
+            return {**base, "kind": "instant", "action": "resume", "tour": bool(TOUR_ASK.search(t_norm))}
         if (touring or paused) and words_n <= 7 and CMD_SKIP.search(t_norm):
             ack("instant")
             nxt = brain.next_section(step_id)
@@ -1701,6 +1729,10 @@ def _decide(d: dict, ctx: dict, base: dict) -> dict:
            "point": point.strip() if point and action == "point" else None, "phrase": None, "reply": ""}
     if action == "scroll":
         out["dir"] = scroll_dir
+    if action == "resume" and TOUR_ASK.search(_norm(msg)):
+        out["tour"] = True   # «продолжай обзор», «вернись к обзору» — к обзору, а не долистывать экран
+    if action == "point" and CLICK_ASK.search(_norm(msg)):
+        out["click"] = True  # «включи / запусти / нажми» — нажать, а не только подсветить
     if action == "goto" and (d.get("full") is True or FULL_ASK.search(_norm(msg))):
         out["full"] = True   # «подробнее», «полностью», «почему не рассказала» — экран целиком, а не молча
     return out
@@ -1708,6 +1740,8 @@ def _decide(d: dict, ctx: dict, base: dict) -> dict:
 
 # Просят экран целиком или недовольны коротким показом (стенограмма 21.10 17:33: «Почему ты дальше про него не
 # рассказала? Я хотел полностью»).
+TOUR_ASK = re.compile(r"обзор|по порядку|верн\w* (?:к|в) (?:обзор|кабинет|показ)|продолж\w* (?:показ|обзор|экскурс)")
+CLICK_ASK = re.compile(r"нажми|нажать|включи|запусти|кликни|начни|открой")
 FULL_ASK = re.compile(r"подробн|полност|целиком|до конца|детальн|всё про|все про|не рассказал|не показал|не дорассказ")
 
 
