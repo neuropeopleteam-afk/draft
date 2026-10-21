@@ -1,29 +1,92 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T10:16:12Z",
-  "git_commit": "66dddabb7",
+  "generated_at": "2026-10-21T13:11:48Z",
+  "git_commit": "2619a5dc2",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
-    "code_and_open_families": 259,
-    "families_live": 1492,
-    "families": 1504,
+    "code_and_open_families": 416,
+    "families_live": 1634,
+    "families": 1646,
     "directions": 10,
-    "variants_20seeds": 30080,
-    "unique_variants_20seeds": 30080,
-    "seeds": 20,
+    "variants_20seeds": 32920,
+    "unique_variants_20seeds": 32896,
+    "seeds": null,
     "fail": 0,
-    "checks": 10702,
+    "checks": 38131,
     "checks_failed": 0,
     "status": {
-      "PASS": 1474,
-      "WARN": 30,
-      "FAIL": 0
+      "PASS": 1617,
+      "WARN": 29
     },
-    "bank_commit": "603474f",
-    "content_hash": "82a05fdbacf00481",
-    "synced_at": "2026-10-20T11:19:30+00:00",
+    "bank_commit": "ab16d27",
+    "content_hash": "913ad19f6a259aff",
+    "synced_at": "2026-10-21T13:08:14+00:00",
     "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
-    "code_ref": "backend/assessment_bank/BANK_SYNC.json"
+    "code_ref": "backend/assessment_bank/BANK_SYNC.json",
+    "formats_total": {
+      "mcq_concept": 1219,
+      "predict_output": 262,
+      "open_answer": 57,
+      "find_bug": 67,
+      "choose_fix": 19,
+      "open_book_3step": 22
+    },
+    "practical_families": 427,
+    "choice_families": 1219,
+    "validation_100": {
+      "file": "docs/bank/validation_100_a526dc3ee.json",
+      "families": 1644,
+      "variants": 164400,
+      "unique_variants": 163992,
+      "checks": 38031,
+      "checks_failed": 0,
+      "fail": 0,
+      "warn": 39,
+      "note_ru": "валидатор на 100 зёрнах — на дереве банка до перезаморозки (без 2 возвращённых семейств)"
+    },
+    "guess_without_knowledge": {
+      "accuracy": 0.2195,
+      "chance": 0.2036,
+      "n_variants": 22610,
+      "heuristic": "series_exclusion",
+      "source": "docs/bank/audit_2110.json",
+      "command": "python3 ../tools/bank_audit.py --seeds 20 --jobs 12 --out /w/a3p/audit_2110.json"
+    },
+    "audit": {
+      "grade_in_stem": 0,
+      "public_leak": 0,
+      "generation_errors": 0,
+      "n_seeds": 20
+    },
+    "studied_code_attack": {
+      "chance": 0.2076,
+      "letter": 0.2073,
+      "len_rank": 0.2432,
+      "text": 0.2299,
+      "n_families": 1238,
+      "train_seeds": 100,
+      "test_seeds": 300,
+      "source": "docs/bank/position_attack_2110g_final.json",
+      "command": "../tools/bank_position_attack.py --train 100 --test 300 --key 2110g --jobs 14 --out /w/a3q/pos_2110g.json",
+      "claim_ru": "«Изучивший код» (знает генераторы, учится на 100 зёрнах, проверка на 300 других): угадывает букву ответа в 20,7 % при случайном 20,8 %; по длине варианта — 24,3 %, по тексту — 23,0 %"
+    },
+    "mutation": {
+      "file": "docs/bank/mutation_report.json",
+      "method": "мутанты эталонного решения (сравнения, ±1 к числу, + ↔ −, and ↔ or, True ↔ False) вне строк и комментариев, тесты задания без изменений; выживший мутант не «добивается»; недоступный исполнитель — вне знаменателя; эквивалентные мутанты не отделяются (оценка консервативная)",
+      "mutants_per_variant_max": 8,
+      "n_families": 108,
+      "n_ref_ok": 108,
+      "n_mutants": 316,
+      "n_killed": 218,
+      "mutation_kill_rate": 0.6899,
+      "n_known_bad": 186,
+      "n_known_bad_rejected": 186,
+      "known_bad_reject_rate": 1.0,
+      "unsupported_runner_families": 56,
+      "elapsed_s": 22.7,
+      "generated_at": "2026-10-21 13:04:09",
+      "recompute": "python3 tools/bank_mutation_check.py --seeds 1 --limit 8"
+    }
   },
   "grade_verdict": {
     "what": "Симуляция продукта: тот же движок, что на стенде (выбор заданий, остановка, дотестирование, вердикт, второй этап), на реальном банке; кандидаты — модельные, не люди.",
@@ -119,6 +182,12 @@
           0.0013
         ]
       },
+      "within_one": null,
+      "exact_grade_5": null,
+      "exact_grade_4": null,
+      "exact_grade_far_0_25": null,
+      "confident_accuracy_final": null,
+      "confident_share_final": null,
       "minutes_main": {
         "mean": 34.8,
         "p90": 52.2
@@ -553,6 +622,8 @@
             0.8508
           ]
         },
+        "decision_agreement": null,
+        "kappa_w_ci": null,
         "shared_families_mean": 0.0
       }
     },
@@ -648,6 +719,12 @@
           0.0028
         ]
       },
+      "within_one": null,
+      "exact_grade_5": null,
+      "exact_grade_4": null,
+      "exact_grade_far_0_25": null,
+      "confident_accuracy_final": null,
+      "confident_share_final": null,
       "minutes_main": {
         "mean": 35.4,
         "p90": 53.4
@@ -1154,6 +1231,12 @@
           0.0026
         ]
       },
+      "within_one": null,
+      "exact_grade_5": null,
+      "exact_grade_4": null,
+      "exact_grade_far_0_25": null,
+      "confident_accuracy_final": null,
+      "confident_share_final": null,
       "minutes_main": {
         "mean": 34.9,
         "p90": 53.3
@@ -1814,7 +1897,7 @@
       }
     },
     "claim_ru": "Симуляция продукта (движок стенда на банке 603474f из 1 504 семейств; модельные кандидаты, не люди; N = 3 000, отложенные зёрна): итоговый вердикт «соответствует заявленному грейду» верен в 87,9 % (95 % ДИ 86,7–89,0 %); ложное подтверждение — 16,0 % у завысивших заявку (6,3 % всех кандидатов); после основной части уверенное решение у 77,8 % кандидатов, из них верных 94,1 %; остальным предлагается короткий второй этап у порога. Точный грейд по всему пулу — 71,0 %, ошибок на 2+ ступени — 0,0 %. Время основной части — в среднем 35 мин (p90 52), всего — 38 мин; повторная независимая попытка даёт тот же грейд в 79,5 %, тот же вердикт — в 83,8 % (пар 3 000).",
-    "bank_condition_ru": "Прогон — на банке 603474f (1 504 семейств, снимок 82a05fdbacf00481 от 2026-10-20); банк сайта тот же.",
+    "bank_condition_ru": "Прогон — на банке 603474f (1 504 семейств, снимок 82a05fdbacf00481 от 2026-10-20); банк в репозитории сейчас другой: ab16d27 (1 646 семейств) — цифры относятся к банку прогона.",
     "recompute": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
     "code_ref": "backend/app/modules/validation/product_sim.py",
     "protocol": "docs/validation/PRODUCT_SIM_PROTOCOL.md"
@@ -2330,6 +2413,125 @@
     "recompute": "cd backend && python -m app.modules.validation.matching_bench",
     "code_ref": "backend/app/modules/validation/matching_bench.py"
   },
+  "external_benchmarks": {
+    "djinni": {
+      "dataset": "Djinni Recruitment Dataset (lang-uk, MIT), English, holdout 80 %",
+      "condition_ru": "внешний открытый набор, метки-посредники (категория и стаж из анкеты), не люди; режим «без теста»; N = 50 вакансий × 200 анкет; один прогон после FREEZE",
+      "date": "2026-10-21",
+      "main_config": "B_grade_from_text",
+      "main_metric": "ndcg@10",
+      "draft": {
+        "ndcg@10": {
+          "mean": 0.5848,
+          "ci95": [
+            0.5248,
+            0.6431
+          ]
+        },
+        "mrr_rel1": {
+          "mean": 0.934,
+          "ci95": [
+            0.87,
+            0.984
+          ]
+        },
+        "p@5_rel1": {
+          "mean": 0.852,
+          "ci95": [
+            0.784,
+            0.912
+          ]
+        },
+        "mrr_rel2": {
+          "mean": 0.657,
+          "ci95": [
+            0.5577,
+            0.7562
+          ]
+        },
+        "p@5_rel2": {
+          "mean": 0.464,
+          "ci95": [
+            0.384,
+            0.544
+          ]
+        }
+      },
+      "bm25": {
+        "ndcg@10": {
+          "mean": 0.3315,
+          "ci95": [
+            0.281,
+            0.3839
+          ]
+        },
+        "mrr_rel1": {
+          "mean": 0.801,
+          "ci95": [
+            0.7117,
+            0.885
+          ]
+        },
+        "p@5_rel1": {
+          "mean": 0.544,
+          "ci95": [
+            0.46,
+            0.628
+          ]
+        }
+      },
+      "draft_minus_bm25": {
+        "ndcg@10": {
+          "diff": 0.2533,
+          "ci95": [
+            0.1836,
+            0.3204
+          ]
+        },
+        "mrr_rel1": {
+          "diff": 0.133,
+          "ci95": [
+            0.0161,
+            0.2446
+          ]
+        },
+        "mrr_rel2": {
+          "diff": 0.1623,
+          "ci95": [
+            0.0115,
+            0.312
+          ]
+        },
+        "p@5_rel1": {
+          "diff": 0.308,
+          "ci95": [
+            0.204,
+            0.408
+          ]
+        },
+        "p@5_rel2": {
+          "diff": 0.236,
+          "ci95": [
+            0.156,
+            0.32
+          ]
+        }
+      },
+      "success_rule_ru": "нижняя граница 95 % ДИ (B − BM25) по nDCG@10 > 0",
+      "success": true,
+      "freeze": {
+        "frozen_at": "2026-10-21T11:18:32+00:00",
+        "bench_sha256": "f06ae238d62e6d50bf7461b508876dfccaa86ee0e0e20618061ae70845fb5ae3",
+        "vacancy_ids_sha256": "3e1ed97a7768b57cecce15dbd10f0dc30fc0b3698d7bb691727beeda25afc257",
+        "cv_ids_sha256": "51fe419e87ace05682e588cfb75839c363e9195ff44114b83a55ed3c7a6f2e0d",
+        "protocol_sha256": "2f62961f0e7eaccbc61f8ad5bb3ae2c550f32774d88ffc464563f6a726a52bf2"
+      },
+      "git_head_at_run": "db426e71d77185b5976e9146cba0d3f2aea7fc9d",
+      "recompute": "cd backend && python ../tools/realdata/djinni/final.py run",
+      "source": "docs/realdata/djinni/external_djinni.json",
+      "claim_ru": "Внешний открытый набор вакансий и анкет (не наши данные, метки-посредники, не люди): nDCG@10 0,585 [0,525; 0,643], выше BM25 на 0,253 — один прогон после фиксации протокола"
+    }
+  },
   "hh_match": {
     "n": 414,
     "direction_ok": {
@@ -2418,40 +2620,428 @@
     "index": {
       "documents": 18,
       "events": 27,
-      "results": 2911,
-      "person_results": 2834,
-      "athletes": 2243,
+      "results": 2908,
+      "person_results": 2831,
+      "athletes": 2232,
       "regions": 69,
       "years": "2025–2026",
-      "athletes_with_evsk_norm": 125,
+      "athletes_with_evsk_norm": 130,
       "athletes_with_evsk_norm_by_rank": {
-        "КМС": 61,
-        "I": 55,
+        "КМС": 44,
+        "I": 65,
         "II": 5,
-        "III": 4
+        "III": 16
       },
+      "place_status_counts": {
+        "disqualified": 4,
+        "no_place": 204,
+        "not_a_protocol": 112,
+        "placed": 2462,
+        "shared_range": 49
+      },
+      "place_unverified": 4,
       "what": "Официальные протоколы ФСП России 2025–2026 (fsp-russia.ru/about/documents): результаты, привязанные к соревнованиям; судьи, тренеры и строки справок исключены; норматив ЕВСК — по месту, числу субъектов РФ и составу судейской коллегии.",
-      "generated_at": "2026-10-21T06:47:53+00:00",
-      "index": "index_v2.json",
-      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "generated_at": "2026-10-21T11:39:47+00:00",
+      "index": "index_v6.json",
+      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/build_index_v2.py, backend/app/modules/fsp/evsk.py, backend/app/modules/fsp/protocol_stats.py"
     },
-    "ocr_audit": null,
-    "aggregates_totals": null,
-    "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+    "ocr_audit": {
+      "what": "Независимый аудит распознавания протоколов ФСП (v4): новая стратифицированная выборка, проверяющая модель третьего поставщика без подсказки ФИО, все расхождения разобраны глазами по изображению страницы",
+      "registered_plan": "docs/realdata/fsp_protocols/ocr_audit_v4_plan.json (коммит до сверки)",
+      "index": "index_v5.json",
+      "index_sha256": "7d976b65972af1a761f290e0eae1f0169f1a0cd83d5c30aa0344e322d6075607",
+      "seed": 2107075429,
+      "sample_sha256": "5922ee0e3899042ec5c7a3c4860ec9e4baa7750dea8c4d0493d6fbe525a61541",
+      "population": 2834,
+      "n": 155,
+      "strata": 14,
+      "verifier_model": "openai/gpt-5.4",
+      "build_models": [
+        "google/gemini-2.5-pro",
+        "anthropic/claude-sonnet-5.5"
+      ],
+      "checked_at": "2026-10-21T11:19:08+00:00",
+      "pages_checked": 99,
+      "usage": {
+        "prompt_tokens": 496566,
+        "completion_tokens": 116447,
+        "cost": 2.984087999999999
+      },
+      "errors": {
+        "fio": {
+          "errors": 1,
+          "checked": 155,
+          "rate": 0.0065,
+          "ci95": [
+            0.0011,
+            0.0356
+          ]
+        },
+        "birth_date": {
+          "errors": 0,
+          "checked": 133,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.0281
+          ]
+        },
+        "place": {
+          "errors": 0,
+          "checked": 149,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.0251
+          ]
+        }
+      },
+      "record_not_athlete": {
+        "errors": 1,
+        "checked": 155,
+        "rate": 0.0065,
+        "ci95": [
+          0.0011,
+          0.0356
+        ],
+        "what": "запись тренера/специалиста, ошибочно записанная спортсменом (найдено при разборе глазами)"
+      },
+      "verifier_disagreements_before_adjudication": {
+        "fio": 8,
+        "place": 4
+      },
+      "adjudication_counts": {
+        "birth_date:index_ok": 133,
+        "birth_date:not_applicable": 22,
+        "fio:index_error": 1,
+        "fio:index_ok": 154,
+        "place:index_ok": 149,
+        "place:not_applicable": 6
+      },
+      "place_absent": {
+        "total": 21,
+        "by_reason": {
+          "no_place": {
+            "count": 12,
+            "reason": "нет мест по построению: «б/м» (без места) в протоколе"
+          },
+          "not_a_protocol": {
+            "count": 6,
+            "reason": "нет мест по построению: список кандидатов в сборную"
+          },
+          "shared_range": {
+            "count": 3,
+            "reason": "место поделено — диапазон «a-b» (place_range), не одно число"
+          }
+        }
+      },
+      "adjudication_notes": [
+        "ФИО, 1 ошибка индекса: личный протокол, буква «щ» прочитана как «пш» (фамилия напечатана с «щ»; проверяющая модель права).",
+        "ФИО, 7 расхождений — индекс прав: проверяющая модель заменила редкую фамилию или имя на частое (2 имени и 4 фамилии, в том числе с «ъ», «ы», «х»); в одном случае в протоколе «ё», индекс хранит «е» по правилу нормализации.",
+        "Место, 4 расхождения — индекс прав во всех: в личных протоколах проверяющая модель взяла число из соседнего столбца (число решённых задач или штраф) вместо столбца «Место»; в командном протоколе — место соседней команды (27 вместо 28).",
+        "Найдено при разборе (вне трёх метрик): в списке кандидатов в сборную на стр. 3 продолжается раздел «Тренеры и специалисты» (строки 16–18, столбец «Должность»), а индекс записал эти 3 строки как спортсменов. В выборку попала 1 из них. Исправлено в index_v6 (person = false).",
+        "Поле «дисциплина» у всех 115 записей списка кандидатов — «все дисциплины» (взято из раздела тренеров), хотя у спортсменов в строке указана своя дисциплина. Поле в аудите не оценивалось; записано как известное ограничение.",
+        "Ограничение: 143 записи, где проверяющая модель совпала с индексом по всем полям, глазами не разбирались — одинаковая ошибка двух независимых чтений (разные поставщики) в оценку не попадает; поэтому доли — нижняя граница при допущении независимости ошибок, верхняя граница 95 % интервала Уилсона указана рядом."
+      ],
+      "recompute": "python3 tools/fsp_protocols/ocr_audit_v4.py report <sample.json> <check.json> <adjudication.json> docs/realdata/fsp_protocols/ocr_audit_v5.json",
+      "generated_at": "2026-10-21T11:49:37+00:00"
+    },
+    "aggregates_totals": {
+      "records": 2908,
+      "person_results": 2831,
+      "athletes": 2232,
+      "events": 27,
+      "regions": 69,
+      "athletes_with_evsk_norm": 130,
+      "athletes_with_evsk_norm_by_rank": {
+        "КМС": 44,
+        "I": 65,
+        "II": 5,
+        "III": 16
+      },
+      "results_needing_second_result": 84
+    },
+    "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
     "code_ref": "tools/fsp_protocols/"
   },
-  "mutation_testing": null,
+  "mutation_testing": {
+    "method": "мутанты эталонного решения (сравнения, ±1 к числу, + ↔ −, and ↔ or, True ↔ False) вне строк и комментариев, тесты задания без изменений; выживший мутант не «добивается»; недоступный исполнитель — вне знаменателя; эквивалентные мутанты не отделяются (оценка консервативная)",
+    "seeds": [
+      1
+    ],
+    "mutants_per_variant_max": 8,
+    "n_families": 108,
+    "n_ref_ok": 108,
+    "n_mutants": 316,
+    "n_killed": 218,
+    "mutation_kill_rate": 0.6899,
+    "n_known_bad": 186,
+    "n_known_bad_rejected": 186,
+    "known_bad_reject_rate": 1.0,
+    "unsupported_runner_families": 56,
+    "by_format": {
+      "find_bug": {
+        "families": 67,
+        "mutants": 180,
+        "killed": 117,
+        "known_bad": 63,
+        "known_bad_rejected": 63,
+        "kill_rate": 0.65,
+        "known_bad_reject_rate": 1.0
+      },
+      "choose_fix": {
+        "families": 19,
+        "mutants": 95,
+        "killed": 61,
+        "known_bad": 57,
+        "known_bad_rejected": 57,
+        "kill_rate": 0.6421,
+        "known_bad_reject_rate": 1.0
+      },
+      "open_book_3step": {
+        "families": 22,
+        "mutants": 41,
+        "killed": 40,
+        "known_bad": 66,
+        "known_bad_rejected": 66,
+        "kill_rate": 0.9756,
+        "known_bad_reject_rate": 1.0
+      }
+    },
+    "weakest_families": [
+      {
+        "family_id": "security.session.fixation_bug",
+        "kill_rate": 0.0,
+        "survivors": [
+          "строка 7: 32 → 33",
+          "строка 19: 16 → 17",
+          "строка 20: «True» → «False»"
+        ]
+      },
+      {
+        "family_id": "mobile.js.cursor_pagination_bug",
+        "kill_rate": 0.125,
+        "survivors": [
+          "строка 2: «+» → «-»",
+          "строка 2: 1000 → 1001",
+          "строка 6: «<» → «<=»"
+        ]
+      },
+      {
+        "family_id": "frontend.js.closure_var",
+        "kill_rate": 0.167,
+        "survivors": [
+          "строка 2: «===» → «!==»",
+          "строка 2: «||» → «&&»",
+          "строка 2: 0 → 1"
+        ]
+      },
+      {
+        "family_id": "common.dist.outbox_fix",
+        "kill_rate": 0.2,
+        "survivors": [
+          "строка 10: 0 → 1",
+          "строка 13: 1 → 2",
+          "строка 14: «==» → «!=»"
+        ]
+      },
+      {
+        "family_id": "mobile.js.background_timer_bug",
+        "kill_rate": 0.25,
+        "survivors": [
+          "строка 4: «-» → «+»",
+          "строка 4: 1 → 2",
+          "строка 20: 60 → 61"
+        ]
+      },
+      {
+        "family_id": "security.input.json_parser_bug",
+        "kill_rate": 0.25,
+        "survivors": [
+          "строка 3: 4096 → 4097",
+          "строка 6: «>» → «>=»",
+          "строка 11: «or» → «and»"
+        ]
+      },
+      {
+        "family_id": "security.crypto.hmac_canonical_bug",
+        "kill_rate": 0.333,
+        "survivors": [
+          "строка 6: 3600 → 3601",
+          "строка 10: «>» → «>=»",
+          "строка 12: «>» → «>=»"
+        ]
+      },
+      {
+        "family_id": "backend.arch.outbox_relay_fix",
+        "kill_rate": 0.375,
+        "survivors": [
+          "строка 11: 0 → 1",
+          "строка 17: 1 → 2",
+          "строка 18: «and» → «or»"
+        ]
+      },
+      {
+        "family_id": "backend.async.missing_await_bug",
+        "kill_rate": 0.375,
+        "survivors": [
+          "строка 3: 3 → 4",
+          "строка 5: 80 → 81",
+          "строка 9: 0 → 1"
+        ]
+      },
+      {
+        "family_id": "frontend.arch.lead_flag_rollout_fix",
+        "kill_rate": 0.375,
+        "survivors": [
+          "строка 4: «false» → «true»",
+          "строка 4: 50 → 51",
+          "строка 9: «+» → «-»"
+        ]
+      },
+      {
+        "family_id": "backend.arch.single_flight_fix",
+        "kill_rate": 0.4,
+        "survivors": [
+          "строка 14: «>» → «>=»",
+          "строка 15: 0 → 1",
+          "строка 23: «+» → «-»"
+        ]
+      },
+      {
+        "family_id": "backend.arch.lead_idempotency_fix",
+        "kill_rate": 0.5,
+        "survivors": [
+          "строка 5: 48 → 49",
+          "строка 6: 60 → 61",
+          "строка 21: «>» → «>=»"
+        ]
+      },
+      {
+        "family_id": "frontend.js.memoize_selector_bug",
+        "kill_rate": 0.5,
+        "survivors": [
+          "строка 2: «===» → «!==»",
+          "строка 2: «||» → «&&»",
+          "строка 2: 0 → 1"
+        ]
+      },
+      {
+        "family_id": "mobile.js.version_gate_bug",
+        "kill_rate": 0.5,
+        "survivors": [
+          "строка 5: «<» → «<=»",
+          "строка 6: 0 → 1",
+          "строка 7: 1 → 2"
+        ]
+      },
+      {
+        "family_id": "security.auth.token_audience_bug",
+        "kill_rate": 0.5,
+        "survivors": [
+          "строка 15: 1 → 2",
+          "строка 20: «<=» → «<»"
+        ]
+      },
+      {
+        "family_id": "backend.cache.invalidation_bug",
+        "kill_rate": 0.625,
+        "survivors": [
+          "строка 1: 12 → 13",
+          "строка 2: 31 → 32",
+          "строка 2: 5800 → 5801"
+        ]
+      },
+      {
+        "family_id": "backend.cache.key_params_bug",
+        "kill_rate": 0.625,
+        "survivors": [
+          "строка 1: 30 → 31",
+          "строка 2: 23 → 24",
+          "строка 2: 6100 → 6101"
+        ]
+      },
+      {
+        "family_id": "mobile.lead.sync_rebase_fix",
+        "kill_rate": 0.625,
+        "survivors": [
+          "строка 3: 0 → 1",
+          "строка 18: «>=» → «>»",
+          "строка 25: «>» → «>=»"
+        ]
+      },
+      {
+        "family_id": "qa.lead.retry_gate_fix",
+        "kill_rate": 0.625,
+        "survivors": [
+          "строка 1: 3 → 4",
+          "строка 27: «>» → «>=»",
+          "строка 37: 0 → 1"
+        ]
+      },
+      {
+        "family_id": "data_ml.py.missing_mean_bug",
+        "kill_rate": 0.667,
+        "survivors": [
+          "строка 20: 2 → 3"
+        ]
+      },
+      {
+        "family_id": "common.arch.lead_rate_limit_fix",
+        "kill_rate": 0.75,
+        "survivors": [
+          "строка 3: 2 → 3",
+          "строка 4: 50 → 51"
+        ]
+      },
+      {
+        "family_id": "common.dist.fencing_token_bug",
+        "kill_rate": 0.75,
+        "survivors": [
+          "строка 9: 1 → 2",
+          "строка 15: 0 → 1"
+        ]
+      },
+      {
+        "family_id": "data_ml.metrics.pooled_rate_bug",
+        "kill_rate": 0.75,
+        "survivors": [
+          "строка 6: «<» → «<=»"
+        ]
+      },
+      {
+        "family_id": "data_ml.metrics.prf_bug",
+        "kill_rate": 0.75,
+        "survivors": [
+          "строка 10: «+» → «-»",
+          "строка 13: 3 → 4"
+        ]
+      },
+      {
+        "family_id": "frontend.arch.optimistic_update_fix",
+        "kill_rate": 0.75,
+        "survivors": [
+          "строка 6: 0 → 1",
+          "строка 27: 0 → 1"
+        ]
+      }
+    ],
+    "families_ref_failed": [],
+    "elapsed_s": 22.7,
+    "generated_at": "2026-10-21 13:04:09",
+    "recompute": "python3 tools/bank_mutation_check.py --seeds 1 --limit 8"
+  },
   "load": null,
   "demo": null,
   "landing_cards": [
     {
       "id": "bank",
       "eyebrow": "Банк заданий",
-      "value": "1 504",
+      "value": "1 646",
       "accent": "семейств",
-      "subtext": "30 080 вариантов на 20 зёрнах, уникальных — 30 080 · ошибок генерации — 0 · 10 702 проверок ключей исполнением кода, ошибок — 0 · 10 ИТ-направлений",
-      "provenance": "валидатор банка, 2026-10-20",
+      "subtext": "32 920 вариантов на None зёрнах, уникальных — 32 896 · ошибок генерации — 0 · 38 131 проверок ключей исполнением кода, ошибок — 0 · 10 ИТ-направлений",
+      "provenance": "валидатор банка, 2026-10-21",
       "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
       "code_ref": "backend/assessment_bank/BANK_SYNC.json"
     },
@@ -2480,9 +3070,9 @@
       "eyebrow": "Официальные протоколы ФСП",
       "value": "18",
       "accent": "документов",
-      "subtext": "2 911 результатов · 2 243 спортсменов · 69 регионов · норматив разряда по ЕВСК подтверждён протоколом у 125 — кандидат находит своё достижение в официальном протоколе, подтверждение — через ФСП",
+      "subtext": "2 908 результатов · 2 232 спортсменов · 69 регионов · норматив разряда по ЕВСК подтверждён протоколом у 130 · проверка распознавания: ошибок в ФИО — 1 из 155, в местах — 0 из 149, в датах рождения — 0 из 133 — кандидат находит своё достижение в официальном протоколе, подтверждение — через ФСП",
       "provenance": "индекс протоколов, 2026-10-21",
-      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/"
     },
     {
@@ -2501,10 +3091,17 @@
   "top5_meta": {
     "st": null,
     "hard": null,
+    "standard_condition_ru": null,
+    "hard_condition_ru": null,
+    "bank_hash": null,
+    "bank_commit": null,
+    "bank_families": null,
+    "n": null,
+    "generated_at": null,
     "rule_ru": "Заголовок — стандартные условия (как в аналогичных решениях), рядом — те же метрики в жёстких условиях; обе строки всегда вместе (решение владельца 21.10, записано до прогонов)."
   },
   "jury_banner": {
-    "headline_ru": "Банк заданий: 1 504 семейств · Вердикт по заявленному грейду: 87,9 % · Точность топ-5 подбора (P@5): 75,1 % · Официальные протоколы ФСП: 18 документов · Реальные вакансии hh.ru: 414 вакансий",
+    "headline_ru": "Банк заданий: 1 646 семейств · Вердикт по заявленному грейду: 87,9 % · Точность топ-5 подбора (P@5): 75,1 % · Официальные протоколы ФСП: 18 документов · Реальные вакансии hh.ru: 414 вакансий",
     "claims_ru": {
       "provenance": "Каждая цифра на сайте — из JSON-артефакта с командой пересчёта и ссылкой на код (docs/NUMBERS.json).",
       "grade": "Симуляция продукта (движок стенда на банке 603474f из 1 504 семейств; модельные кандидаты, не люди; N = 3 000, отложенные зёрна): итоговый вердикт «соответствует заявленному грейду» верен в 87,9 % (95 % ДИ 86,7–89,0 %); ложное подтверждение — 16,0 % у завысивших заявку (6,3 % всех кандидатов); после основной части уверенное решение у 77,8 % кандидатов, из них верных 94,1 %; остальным предлагается короткий второй этап у порога. Точный грейд по всему пулу — 71,0 %, ошибок на 2+ ступени — 0,0 %. Время основной части — в среднем 35 мин (p90 52), всего — 38 мин; повторная независимая попытка даёт тот же грейд в 79,5 %, тот же вердикт — в 83,8 % (пар 3 000).",
@@ -2515,8 +3112,8 @@
   "recompute_table": [
     {
       "section": "Банк заданий",
-      "metric": "1 504 семейств, ошибок генерации 0, проверок ключей 10 702",
-      "sample": "20 зёрен",
+      "metric": "1 646 семейств, ошибок генерации 0, проверок ключей 38 131",
+      "sample": "None зёрен",
       "command": "cd backend && python -m assessment_bank validate --seeds 20",
       "code_ref": "backend/assessment_bank/BANK_SYNC.json",
       "artifact": "backend/assessment_bank/BANK_SYNC.json"
@@ -2563,9 +3160,9 @@
     },
     {
       "section": "Протоколы ФСП",
-      "metric": "18 документов, 2 911 результатов",
+      "metric": "18 документов, 2 908 результатов",
       "sample": "официальные протоколы с сайта ФСП",
-      "command": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v2.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+      "command": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
       "code_ref": "tools/fsp_protocols/",
       "artifact": "docs/realdata/fsp_protocols/index_stats.json"
     }

@@ -205,7 +205,62 @@ def bank_block() -> dict | None:
         "synced_at": b.get("synced_at"),
         "recompute": "cd backend && python -m assessment_bank validate --seeds 20",
         "code_ref": "backend/assessment_bank/BANK_SYNC.json",
+        **_bank_quality(b),
     }
+
+
+def _bank_quality(b: dict) -> dict:
+    """Качество банка для сайта и Насти (2б-1): из файлов А3 — метрики банка, валидатор на 100 зёрнах, атаки."""
+    bm = _load(ROOT / "docs" / "bank" / "bank_metrics_for_a4.json") or {}
+    q = bm.get("quality") or {}
+    out: dict = {}
+    if bm.get("content_hash") and bm.get("content_hash") != b.get("content_hash"):
+        return {"quality_note": "метрики банка А3 — для другого хэша, не показываются"}
+    pri = q.get("prior_a_by_format") or {}
+    # практические — всё, кроме вопросов с выбором ответа (a = 1,3 до калибровки на людях)
+    fams = bm.get("by_direction") or {}
+    fmt = {}
+    for d in fams.values():
+        for k, v in (d.get("formats") or {}).items():
+            fmt[k] = fmt.get(k, 0) + int(v)
+    if fmt:
+        out["formats_total"] = fmt
+        out["practical_families"] = sum(v for k, v in fmt.items() if k != "mcq_concept")
+        out["choice_families"] = fmt.get("mcq_concept", 0)
+    # валидатор на 100 зёрнах — самый свежий файл validation_100_*.json, если в нём тот же или больший банк
+    v100 = sorted((ROOT / "docs" / "bank").glob("validation_100_*.json"), key=lambda x: x.stat().st_mtime)
+    if v100:
+        vs = (_load(v100[-1]) or {}).get("summary") or {}
+        out["validation_100"] = {"file": str(v100[-1].relative_to(ROOT)), "families": vs.get("n_families"),
+                                 "variants": vs.get("n_variants_generated"), "unique_variants": vs.get("n_unique_variants"),
+                                 "checks": vs.get("n_checks"), "checks_failed": vs.get("n_checks_failed"),
+                                 "fail": vs.get("n_fail"), "warn": vs.get("n_warn"),
+                                 "note_ru": ("валидатор на 100 зёрнах — на дереве банка до перезаморозки (без 2 возвращённых "
+                                             "семейств)" if vs.get("n_families") != b.get("n_families") else None)}
+    au = q.get("audit") or {}
+    ga = (au.get("guess_attack") or {}).get("all_numeric_choice") or {}
+    if ga:
+        out["guess_without_knowledge"] = {"accuracy": ga.get("best_accuracy"), "chance": ga.get("chance"),
+                                          "n_variants": ga.get("n_variants"), "heuristic": ga.get("best_heuristic"),
+                                          "source": au.get("file"), "command": au.get("command")}
+    if au:
+        out["audit"] = {k: au.get(k) for k in ("grade_in_stem", "public_leak", "generation_errors", "n_seeds")}
+    pa = _load(ROOT / "docs" / "bank" / "position_attack_2110g_final.json") or {}
+    ps = pa.get("summary") or {}
+    if ps:
+        out["studied_code_attack"] = {
+            "chance": ps.get("chance"), "letter": (ps.get("letter") or {}).get("acc"),
+            "len_rank": (ps.get("len_rank") or {}).get("acc"), "text": (ps.get("text") or {}).get("acc"),
+            "n_families": pa.get("n_families"), "train_seeds": pa.get("train_seeds"), "test_seeds": pa.get("test_seeds"),
+            "source": "docs/bank/position_attack_2110g_final.json", "command": pa.get("command"),
+            "claim_ru": (f"«Изучивший код» (знает генераторы, учится на {pa.get('train_seeds')} зёрнах, проверка на "
+                         f"{pa.get('test_seeds')} других): угадывает букву ответа в {pct(((ps.get('letter') or {}).get('acc')))} % "
+                         f"при случайном {pct(ps.get('chance'))} %; по длине варианта — {pct((ps.get('len_rank') or {}).get('acc'))} %, "
+                         f"по тексту — {pct((ps.get('text') or {}).get('acc'))} %")}
+    mu = q.get("mutation") or {}
+    if mu:
+        out["mutation"] = {k: mu.get(k) for k in list(mu)[:15] if not isinstance(mu.get(k), (dict, list))}
+    return out
 
 
 def _ps_view(d: dict) -> dict:
@@ -428,7 +483,14 @@ def top5_meta(hard: dict, st: dict) -> dict:
                 "a_mcq": ba.get("mcq"), "a_code": ba.get("code"), "world": m.get("world"),
                 "population": m.get("population"), "date": _date(m.get("date")), "command": m.get("command"),
                 "git_commit": m.get("git_commit"), "condition_ru": _cond_ru(d)}
-    return {"st": one(st), "hard": one(hard),
+    a, b = one(st), one(hard)
+    man = (((hard or st or {}).get("meta") or {}).get("bank") or {}).get("manifest") or {}
+    return {"st": a, "hard": b,
+            # плоские поля для главной (Landing.tsx: standard_condition_ru / hard_condition_ru, Top5Meta)
+            "standard_condition_ru": (a or {}).get("condition_ru"), "hard_condition_ru": (b or {}).get("condition_ru"),
+            "bank_hash": man.get("content_hash"), "bank_commit": man.get("commit"),
+            "bank_families": man.get("n_families") or (len(man.get("families") or []) or None),
+            "n": (b or a or {}).get("n"), "generated_at": (b or a or {}).get("date"),
             "rule_ru": "Заголовок — стандартные условия (как в аналогичных решениях), рядом — те же метрики в жёстких "
                        "условиях; обе строки всегда вместе (решение владельца 21.10, записано до прогонов)."}
 
