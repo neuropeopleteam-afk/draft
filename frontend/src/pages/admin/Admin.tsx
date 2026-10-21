@@ -131,7 +131,7 @@ export default function Admin() {
   const flags = ov.data?.flags;
 
   return (
-    <div className="min-h-screen bg-[#F4F6FC] md:grid md:grid-cols-[16rem_minmax(0,1fr)]" data-testid="admin-cabinet">
+    <div className="min-h-screen bg-[#FBF8FC] md:grid md:grid-cols-[16rem_minmax(0,1fr)]" data-testid="admin-cabinet">
       <aside className="border-b border-brand-night/10 bg-white p-4 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:p-5">
         <div className="flex items-center justify-between gap-2">
           <Link to="/" aria-label="На главную"><Logo /></Link>
@@ -257,7 +257,7 @@ export default function Admin() {
                         ["Приглашений", funnel.invitations_sent, "С зарплатной вилкой"],
                         ["Принято офферов", funnel.invitations_accepted, "Контакты раскрыты"],
                       ] as [string, number, string][]).map(([label, val, sub], i) => (
-                        <div key={label} className="rounded-2xl border border-brand-night/10 bg-[#F4F6FC] p-3.5">
+                        <div key={label} className="rounded-2xl border border-brand-night/10 bg-[#FBF8FC] p-3.5">
                           <p className="text-[11px] font-bold uppercase tracking-wider text-brand-plum">Шаг {i + 1} · {label}</p>
                           <p className="mt-1 text-2xl font-extrabold tabular-nums text-brand-night">{val}</p>
                           <p className="mt-0.5 text-xs text-brand-ink/65">{sub}</p>
@@ -325,7 +325,7 @@ export default function Admin() {
                       <p className="text-xs text-brand-ink/75">
                         Контакт: {r.contact_name || "—"} · <b>{r.contact_email}</b> {r.contact_phone ? `· ${r.contact_phone}` : ""}
                       </p>
-                      {r.comment && <p className="rounded-xl bg-[#EEF1FC] p-2.5 text-xs text-brand-night">{r.comment}</p>}
+                      {r.comment && <p className="rounded-xl bg-[#F3F2FB] p-2.5 text-xs text-brand-night">{r.comment}</p>}
                       {r.status === "pending" ? (
                         <div className="flex flex-wrap items-center gap-2 pt-1">
                           {!r.company_id && (
@@ -400,7 +400,7 @@ export default function Admin() {
                       <p className="text-xs text-brand-ink/65">
                         От: {t.name || "—"} &lt;{t.email}&gt; · Категория: {t.category} · {dtt(t.created_at)}
                       </p>
-                      <p className="rounded-xl bg-[#EEF1FC] p-3 text-xs leading-relaxed text-brand-night">{t.message}</p>
+                      <p className="rounded-xl bg-[#F3F2FB] p-3 text-xs leading-relaxed text-brand-night">{t.message}</p>
                       {t.admin_reply && (
                         <p className="text-xs text-emerald-800"><b>Ответ:</b> {t.admin_reply}</p>
                       )}
@@ -463,7 +463,7 @@ export default function Admin() {
                             {c.is_demo && <span className="ml-1.5 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">демо</span>}
                           </td>
                           <td className="py-2.5 pr-3">
-                            <span className="rounded-full bg-[#EEF1FC] px-2.5 py-0.5 text-xs font-bold text-brand-night">
+                            <span className="rounded-full bg-[#F3F2FB] px-2.5 py-0.5 text-xs font-bold text-brand-night">
                               {c.plan_title}
                             </span>
                           </td>
@@ -477,7 +477,7 @@ export default function Admin() {
                                   disabled={c.plan_id === p || busy === `c-${c.id}`}
                                   onClick={() => setCompanyPlan(c.id, p)}
                                   className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                                    c.plan_id === p ? "bg-brand text-white" : "bg-[#EEF1FC] text-brand-night hover:bg-brand-blush"
+                                    c.plan_id === p ? "bg-brand text-white" : "bg-[#F3F2FB] text-brand-night hover:bg-brand-blush"
                                   }`}
                                 >
                                   {p === "start" ? "Старт" : p === "hire" ? "Найм" : "Партнёр ФСП"}

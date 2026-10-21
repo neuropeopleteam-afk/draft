@@ -29,13 +29,13 @@ export interface FeedbackData {
 
 const STATUS: Record<string, [string, string, string]> = {
   strong: ["Уверенно", "bg-emerald-50 text-emerald-800 ring-emerald-200", "bg-emerald-500"],
-  ok: ["В целом освоено", "bg-[#EEF1FC] text-brand-night ring-brand-lavender/30", "bg-brand-lavender"],
+  ok: ["В целом освоено", "bg-[#F3F2FB] text-brand-night ring-brand-lavender/30", "bg-brand-lavender"],
   gap: ["Пробел", "bg-brand-blush/50 text-brand-plum ring-brand/20", "bg-brand"],
   pending: ["На проверке", "bg-brand-night/5 text-brand-ink/70 ring-brand-night/10", "bg-brand-night/30"],
 };
 const DEMAND: Record<string, string> = {
   confirmed: "bg-emerald-50 text-emerald-800 ring-emerald-200", weak: "bg-brand-blush/50 text-brand-plum ring-brand/20",
-  declared: "bg-[#EEF1FC] text-brand-night ring-brand-lavender/30", missing: "bg-brand-night/5 text-brand-ink/70 ring-brand-night/10",
+  declared: "bg-[#F3F2FB] text-brand-night ring-brand-lavender/30", missing: "bg-brand-night/5 text-brand-ink/70 ring-brand-night/10",
 };
 const DEMAND_LEVEL: Record<string, string> = { confirmed: "T1", weak: "T1", declared: "T0", missing: "none" };
 const REL: Record<string, string> = { above: "выше ожидаемого для вашего уровня", below: "ниже ожидаемого для вашего уровня" };
@@ -209,13 +209,13 @@ export function DemandGapBanner({ fb: fbProp }: { fb?: FeedbackData | null }) {
   const hhSal = (fb.market_hh as any)?.salary;
   const needsCount = d.sources_in_category || d.sources || 0;
   return (
-    <section className="card space-y-3 border-brand/25 bg-gradient-to-r from-[#F4F6FC] to-white" data-testid="candidate-demand-gap">
+    <section className="card space-y-3 border-brand/25 bg-gradient-to-r from-[#FBF8FC] to-white" data-testid="candidate-demand-gap">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-brand">Аналитика спроса на ваш профиль</p>
           <h2 className="mt-0.5 text-base font-bold text-brand-night">Спрос на ваш профиль и чего не хватает до приглашений</h2>
         </div>
-        <span className="rounded-full bg-[#E6EAFC] px-2.5 py-1 text-xs font-semibold text-brand-night">
+        <span className="rounded-full bg-[#ECEAF8] px-2.5 py-1 text-xs font-semibold text-brand-night">
           {catTitle(fb.session?.category_id)}
         </span>
       </div>

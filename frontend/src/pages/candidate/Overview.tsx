@@ -148,8 +148,8 @@ export default function CandidateOverview() {
             </div>
           </li>
 
-          {iv?.enabled && iv.avatar ? (
-            <li className="flex flex-col justify-between rounded-2xl border-2 border-brand/40 bg-gradient-to-br from-[#EEF1FF] via-white to-[#E5EAFF] p-4 shadow-[0_12px_28px_-16px_rgba(64,47,255,0.35)]" data-testid="candidate-avatar">
+          { iv?.enabled && iv.avatar ? (
+            <li className="flex flex-col justify-between rounded-2xl border-2 border-brand/35 bg-brand-blush/25 p-4" data-testid="candidate-avatar">
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white">Шаг 3 · Ключевая фишка</span>
