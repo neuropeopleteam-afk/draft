@@ -532,7 +532,7 @@ export class ElenaEngine {
     this.lastSaid = text;
     if (log) this.post("say", { text, step: this.pos ? this.pos.ids[this.pos.i] : this.curStep });
     if (!pcm) {
-      onStart?.({ text, startedAt: performance.now(), durationMs: 0, push: () => undefined, end: async () => "done", progress: () => 1 } as Utterance, 0);
+      onStart?.({ text, append: () => undefined, startedAt: performance.now(), durationMs: 0, push: () => undefined, end: async () => "done", progress: () => 1 } as Utterance, 0);
       await sleep(Math.min(6000, 900 + text.length * 45));
       return this.alive(ep) ? "done" : "aborted";
     }
@@ -1116,6 +1116,7 @@ export class ElenaEngine {
     let utter: Utterance | null = null;
     let meta: Meta | null = null;
     let nav: Promise<boolean> | null = null;
+    let spoken = "";                     // ответ модели приходит по фразам («say») — собираем весь текст
     const finish = () => {
       window.clearTimeout(filler);
       window.clearTimeout(killer);
@@ -1146,20 +1147,25 @@ export class ElenaEngine {
           this.remember("user", text);
           if (meta.user_name) this.setName(meta.user_name);
           nav = this.prepare(meta, ep);      // экран начинает открываться, пока Настя говорит ответ
+        } else if (item.t === "say" && typeof item.text === "string") {
+          spoken = spoken ? `${spoken} ${item.text}` : item.text;
+          if (utter) utter.append(item.text);
+          this.lastSaid = spoken;
         } else if (item.t === "pcm" && typeof item.b64 === "string") {
           if (!utter) {
             window.clearTimeout(filler);
             await this.softStopSettled();
             if (!this.alive(ep)) throw new DOMException("stale", "AbortError");
-            utter = this.voice.begin(meta?.text ?? "", RATE);
+            utter = this.voice.begin(spoken || (meta?.text ?? ""), RATE);
             this.curUtter = utter;
             this.curUtterMs = 0;
-            this.lastSaid = meta?.text ?? "";
+            this.lastSaid = spoken || (meta?.text ?? "");
             this.set({ phase: "answering" });
           }
           utter.push(b64bytes(item.b64));
           this.thinking = false;             // звук пошёл — микрофон держит закрытым сама речь
         } else if (item.t === "end") {
+          if (meta && typeof item.text === "string" && item.text) meta.text = item.text;
           break;
         }
       }
@@ -1176,6 +1182,7 @@ export class ElenaEngine {
     }
     finish();
     if (!this.alive(ep) || !meta) return;
+    if (!meta.text && spoken) meta.text = spoken;
     if (meta.text) this.remember("elena", meta.text);
     if (utter) {
       const res = await utter.end();
