@@ -41,6 +41,9 @@ ROLES = ("all", "candidate", "employer", "fsp")
 
 TTS_HOST = "api.elevenlabs.io"
 TTS_MODEL = os.environ.get("CONCIERGE_TTS_MODEL", "eleven_turbo_v2_5")
+# Живые ответы модели (каждый раз новый текст, в кэш не идут): быстрая модель того же голоса — первый звук 0,6 с вместо
+# 1,3 с (замер 21.10 через ретранслятор). Реплики обзора и фразы сценария — прежней моделью из кэша (без пересинтеза).
+TTS_LIVE_MODEL = os.environ.get("CONCIERGE_TTS_LIVE_MODEL", "eleven_flash_v2_5")
 TTS_SPEED = float(os.environ.get("CONCIERGE_TTS_SPEED", "1.0"))
 # Лицо Насти (живой аватар). Экспериментальная «манера» (customStylePrompt) по опыту соседних живых стендов портит
 # движение губ, поэтому по умолчанию выключена; выразительность низкая, как у работающих стендов (0,09–0,35):
@@ -171,12 +174,13 @@ def _tts_client(verify):
         return c
 
 
-def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
-    """Голос фразы кусками по мере синтеза; постоянные фразы — из кэша. Куски PCM всегда чётной длины."""
+def synth_stream(text: str, fmt: str = "pcm24", live: bool = False) -> Iterator[bytes]:
+    """Голос фразы кусками по мере синтеза; постоянные фразы — из кэша. Куски PCM всегда чётной длины.
+    live — живой ответ модели: быстрая модель синтеза, без кэша (текст не повторится, диск не засоряем)."""
     clean = _clean(text)
     if not clean:
         return
-    hit = cached(clean, fmt)
+    hit = None if live else cached(clean, fmt)
     if hit:
         step = 19200
         for i in range(0, len(hit), step):
@@ -194,7 +198,7 @@ def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
     r = relay.route(TTS_HOST, path, {"xi-api-key": key, "Content-Type": "application/json", "Accept": "*/*"})
     body = {
         "text": clean,
-        "model_id": TTS_MODEL,
+        "model_id": TTS_LIVE_MODEL if live else TTS_MODEL,
         "language_code": "ru",
         "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "style": 0.0, "use_speaker_boost": True,
                            "speed": TTS_SPEED},
@@ -238,8 +242,10 @@ def synth_stream(text: str, fmt: str = "pcm24") -> Iterator[bytes]:
         raise
     except Exception as e:  # noqa: BLE001 — сеть, ретранслятор
         raise TtsError(type(e).__name__) from e
-    log.info("concierge tts %s: %d байт за %d мс", fmt, len(whole), int((time.monotonic() - t0) * 1000))
-    _store(clean, fmt, bytes(whole))
+    log.info("concierge tts %s%s: %d байт за %d мс", fmt, " live" if live else "", len(whole),
+             int((time.monotonic() - t0) * 1000))
+    if not live:
+        _store(clean, fmt, bytes(whole))
 
 
 def synth_bytes(text: str, fmt: str = "pcm24") -> bytes:
@@ -1784,7 +1790,7 @@ def turn_stream(message: str, **kw) -> Iterator[bytes]:
 
             def tts_job(text: str, cq: queue.Queue) -> None:
                 try:
-                    for chunk in synth_stream(text, "pcm24"):
+                    for chunk in synth_stream(text, "pcm24", live=True):
                         cq.put(("pcm", chunk))
                 except TtsError as e:
                     cq.put(("err", str(e)))
