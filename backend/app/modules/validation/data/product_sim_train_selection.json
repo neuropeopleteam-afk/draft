@@ -1,6 +1,7 @@
 {
  "rule": "max точность итогового вердикта; p90 основной ≤ 60 мин, всего ≤ 85; при равенстве (0,5 п.п.) — меньше ложных подтверждений",
  "phase": "train (TRAIN_SEEDS)",
+ "rounds_note": "раунд 1 — мир без угадывания (выбрано C8); раунд 2 — поправка 21.10: мир с угадыванием, строгий критерий подтверждения (сравнение только внутри раунда)",
  "rows": [
   {
    "config": "C0",
@@ -16,7 +17,8 @@
    "minutes_main_p90": 34.7,
    "minutes_total_p90": 38.5,
    "minutes_total_mean": 24.5,
-   "code_open_share": 0.215
+   "code_open_share": 0.215,
+   "round": 1
   },
   {
    "config": "C1",
@@ -34,7 +36,8 @@
    "minutes_main_p90": 36.8,
    "minutes_total_p90": 42.0,
    "minutes_total_mean": 26.5,
-   "code_open_share": 0.296
+   "code_open_share": 0.296,
+   "round": 1
   },
   {
    "config": "C2",
@@ -53,7 +56,8 @@
    "minutes_main_p90": 36.8,
    "minutes_total_p90": 42.0,
    "minutes_total_mean": 26.5,
-   "code_open_share": 0.296
+   "code_open_share": 0.296,
+   "round": 1
   },
   {
    "config": "C3",
@@ -73,7 +77,8 @@
    "minutes_main_p90": 39.9,
    "minutes_total_p90": 45.6,
    "minutes_total_mean": 30.7,
-   "code_open_share": 0.305
+   "code_open_share": 0.305,
+   "round": 1
   },
   {
    "config": "C4",
@@ -93,7 +98,8 @@
    "minutes_main_p90": 47.7,
    "minutes_total_p90": 53.1,
    "minutes_total_mean": 31.5,
-   "code_open_share": 0.306
+   "code_open_share": 0.306,
+   "round": 1
   },
   {
    "config": "C5",
@@ -113,7 +119,8 @@
    "minutes_main_p90": 36.3,
    "minutes_total_p90": 41.9,
    "minutes_total_mean": 26.4,
-   "code_open_share": 0.295
+   "code_open_share": 0.295,
+   "round": 1
   },
   {
    "config": "C6",
@@ -133,7 +140,8 @@
    "minutes_main_p90": 36.8,
    "minutes_total_p90": 42.0,
    "minutes_total_mean": 26.5,
-   "code_open_share": 0.296
+   "code_open_share": 0.296,
+   "round": 1
   },
   {
    "config": "C7",
@@ -153,7 +161,8 @@
    "minutes_main_p90": 36.8,
    "minutes_total_p90": 42.3,
    "minutes_total_mean": 26.7,
-   "code_open_share": 0.296
+   "code_open_share": 0.296,
+   "round": 1
   },
   {
    "config": "C8",
@@ -174,14 +183,62 @@
    "minutes_main_p90": 36.3,
    "minutes_total_p90": 41.9,
    "minutes_total_mean": 26.4,
-   "code_open_share": 0.295
+   "code_open_share": 0.295,
+   "round": 1
+  },
+  {
+   "config": "G8",
+   "desc": "C8 в мире с угадыванием (оценка уровня без угадывания)",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+    "ASSESSMENT_MAX_ITEMS": "20",
+    "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5",
+    "ASSESSMENT_GUESSING_3PL": "false"
+   },
+   "n": 1000,
+   "admissible": true,
+   "verdict_accuracy": 0.799,
+   "false_confirm": 0.4543,
+   "false_reject": 0.0286,
+   "confident_share": 0.847,
+   "exact_grade": 0.678,
+   "minutes_main_p90": 38.0,
+   "minutes_total_p90": 41.6,
+   "minutes_total_mean": 26.3,
+   "code_open_share": 0.297,
+   "round": 2
+  },
+  {
+   "config": "G9",
+   "desc": "C8 + оценка уровня с угадыванием (3PL, c = 1/4)",
+   "env": {
+    "ASSESSMENT_CODE_QUOTA_EXT": "true",
+    "ASSESSMENT_CONFIRM_LEVEL": "0.8",
+    "ASSESSMENT_MAX_ITEMS": "20",
+    "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5",
+    "ASSESSMENT_GUESSING_3PL": "true"
+   },
+   "n": 1000,
+   "admissible": true,
+   "verdict_accuracy": 0.891,
+   "false_confirm": 0.1259,
+   "false_reject": 0.0975,
+   "confident_share": 0.77,
+   "exact_grade": 0.743,
+   "minutes_main_p90": 53.5,
+   "minutes_total_p90": 59.7,
+   "minutes_total_mean": 38.9,
+   "code_open_share": 0.316,
+   "round": 2
   }
  ],
- "chosen": "C8",
+ "chosen": "G9",
  "chosen_env": {
   "ASSESSMENT_CODE_QUOTA_EXT": "true",
   "ASSESSMENT_CONFIRM_LEVEL": "0.8",
   "ASSESSMENT_MAX_ITEMS": "20",
-  "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5"
+  "ASSESSMENT_TWO_STAGE_CONFIRM": "0.5",
+  "ASSESSMENT_GUESSING_3PL": "true"
  }
 }
