@@ -95,10 +95,15 @@ export function Fsp() {
               Поиск по индексу 18 официальных итоговых протоколов соревнований ФСП и списку кандидатов в сборную РФ 2026 (fsp-russia.ru). Работодатели увидят подтверждённый результат только с вашего согласия.
             </p>
           </div>
-          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${data.protocols_available ? "bg-emerald-50 text-emerald-800" : "bg-gray-100 text-gray-600"}`}>
-            {data.protocols_available ? `Протоколы подключены (${num(data.protocols_indexed, 0)} записей)` : "Индекс не подключён"}
+          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${data.protocols_available ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}>
+            {data.protocols_available ? `Протоколы подключены (${num(data.protocols_indexed, 0)} записей)` : "Сверка временно недоступна"}
           </span>
         </div>
+        {data.protocols_available === false && (
+          <div className="rounded-xl border border-amber-300/70 bg-amber-50/70 p-3 text-xs text-amber-950" data-testid="fsp-protocols-unavailable-note">
+            Сверка по официальным протоколам ФСП временно недоступна на этом окружении. Ранее привязанные достижения паспорта и вход через ФСП ID работают в штатном режиме.
+          </div>
+        )}
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="ФИО спортсмена" htmlFor="pfio">
             <input id="pfio" className="input" value={fio} onChange={(e) => setFio(e.target.value)} placeholder="Фамилия Имя Отчество" />
@@ -135,10 +140,17 @@ export function Fsp() {
                           />
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800">
-                                {m.status_title ?? "Подтверждено по официальному протоколу ФСП"}
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                  m.protocol_status === "verified"
+                                    ? "bg-emerald-50 text-emerald-800"
+                                    : "bg-amber-50 text-amber-900"
+                                }`}
+                                data-testid="fsp-search-match-status"
+                              >
+                                {m.status_title ?? "Найдено в протоколе — ожидает подтверждения ФСП"}
                               </span>
-                              {m.rank && <span className="chip">Разряд/звание: {m.rank}</span>}
+                              {m.evsk_rank && <span className="chip">Разряд по ЕВСК: {m.evsk_rank}</span>}
                               {m.place != null && <span className="chip">Место: {m.place}</span>}
                             </div>
                             <p className="font-semibold text-brand-night">{m.event_title}</p>
@@ -146,6 +158,7 @@ export function Fsp() {
                               {[
                                 m.discipline_title ? `Дисциплина: ${m.discipline_title}` : null,
                                 m.ekp_no ? `ЕКП № ${m.ekp_no}` : null,
+                                m.evsk_basis ? `Основание ЕВСК: ${m.evsk_basis}` : null,
                                 m.date ? `Дата: ${m.date}` : null,
                                 m.team ? `Команда: ${m.team}` : null,
                                 m.region ? `Регион: ${m.region}` : null,
@@ -201,19 +214,24 @@ export function Fsp() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p>{a.text}</p>
-                    {a.protocol_verified && (
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
-                        {a.status_title ?? "Подтверждено по официальному протоколу ФСП"}
+                    {(a.protocol_status === "verified" || a.protocol_verified) && (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800" data-testid="fsp-passport-status-badge">
+                        {a.status_title ?? "Подтверждено протоколом ФСП"}
+                      </span>
+                    )}
+                    {a.protocol_status === "pending_fsp" && (
+                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-900" data-testid="fsp-passport-status-badge">
+                        {a.status_title ?? "Найдено в протоколе — ожидает подтверждения ФСП"}
                       </span>
                     )}
                   </div>
-                  {(a.team || a.evsk_code || a.ekp_no || a.sport_rank || a.region) && (
+                  {(a.team || a.evsk_code || a.ekp_no || a.evsk_rank || a.sport_rank || a.region) && (
                     <p className="mt-1 text-xs text-brand-ink/65">
                       {[
                         a.team ? `Команда: ${a.team}` : null,
                         a.team_result?.place ? `командное место: ${num(a.team_result.place, 0)}` : null,
-                        a.ekp_no ? `ЕКП № ${a.ekp_no}` : a.evsk_code ? `ЕВСК: ${a.evsk_code}` : null,
-                        a.sport_rank ? `разряд: ${a.sport_rank}` : null,
+                        a.ekp_no ? `ЕКП № ${a.ekp_no}` : null,
+                        a.evsk_rank ? `разряд по ЕВСК: ${a.evsk_rank}${a.evsk_basis ? ` (${a.evsk_basis})` : ""}` : a.sport_rank ? `разряд: ${a.sport_rank}` : null,
                         a.region ? `регион: ${a.region}` : null,
                       ].filter(Boolean).join(" · ")}
                     </p>

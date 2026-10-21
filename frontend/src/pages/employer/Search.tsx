@@ -74,6 +74,7 @@ export function Search() {
   const [stack, setStack] = useState<string[]>([]);
   const [level, setLevel] = useState<"any" | "t1">("any");
   const [fsp, setFsp] = useState(false);
+  const [fspProtocolOnly, setFspProtocolOnly] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [realOnly, setRealOnly] = useState(false);
   const [add, setAdd] = useState("");
@@ -84,6 +85,7 @@ export function Search() {
   stack.forEach((s) => qs.append("stack", s));
   qs.set("stack_level", level);
   if (fsp) qs.set("fsp", "true");
+  if (fspProtocolOnly) qs.set("fsp_protocol_only", "true");
   if (confirmed) qs.set("confirmed", "true");
   if (realOnly) qs.set("real_only", "true");
   qs.set("limit", String(PAGE));
@@ -92,7 +94,14 @@ export function Search() {
   const cats = useApi<any[]>(realOnly ? "/employer/categories?real_only=true" : "/employer/categories");
   const levels = useGrades(direction || null);  // с флагом GRADES_EXT_ENABLED — и Lead/Principal направления
   const avail = Object.values(tags).filter((t: any) => !direction || !t.direction_id || t.direction_id === direction);
-  const items: any[] = (data?.items ?? []).filter((c: any) => !realOnly || !isSyntheticProfile(c));
+  const items: any[] = (data?.items ?? []).filter((c: any) => {
+    if (realOnly && isSyntheticProfile(c)) return false;
+    if (fspProtocolOnly) {
+      const hasVer = Boolean(c.fsp?.has_protocol_verified || (c.fsp?.achievements ?? []).some((a: any) => a.protocol_status === "verified" || a.protocol_verified));
+      if (!hasVer) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -122,6 +131,10 @@ export function Search() {
           <Toggle checked={realOnly} onChange={(v) => { setRealOnly(v); setPage(0); }} label="Только реальные кандидаты"
             hint="Скрыть модельные демо-профили стенда. По умолчанию показаны все кандидаты с бейджем «демо-профиль»." />
           <Toggle checked={fsp} onChange={(v) => { setFsp(v); setPage(0); }} label="Есть паспорт ФСП" />
+          <div data-testid="search-filter-fsp-protocol">
+            <Toggle checked={fspProtocolOnly} onChange={(v) => { setFspProtocolOnly(v); setPage(0); }} label="Подтверждено протоколом ФСП"
+              hint="Только кандидаты с достижением из официального итогового протокола ФСП (ЕКП Минспорта РФ / ЕВСК), подтверждённым ФСП ID или представителем ФСП." />
+          </div>
           <Toggle checked={confirmed} onChange={(v) => { setConfirmed(v); setPage(0); }} label="Только подтверждённый грейд"
             hint="Без «Junior (предварительно)» и без кандидатов, чей грейд не подтверждён тестом. По умолчанию они показаны со статусом ниже подтверждённых." />
           {cats.data && (

@@ -94,10 +94,67 @@ def fsp_strength(achievements: list[FspAchievement], direction: str | None) -> f
 
 
 def achievement_text(a: FspAchievement) -> str:
+    tr = a.team_result or {}
+    pref = getattr(a, "protocol_ref", None) or {}
+    ekp_no = getattr(a, "ekp_no", None) or pref.get("ekp_no") or tr.get("ekp_no")
+    evsk_rank = getattr(a, "evsk_rank", None) or tr.get("evsk_rank")
+    evsk_basis = getattr(a, "evsk_basis", None) or tr.get("evsk_basis")
+    page = pref.get("page") or tr.get("page")
+    if (a.source_ref or "").startswith("protocol:") or ekp_no or pref.get("url") or tr.get("pdf_url"):
+        from app.modules.fsp.protocols import format_protocol_achievement_text
+
+        return format_protocol_achievement_text(
+            event_name=a.event_name,
+            event_date=a.event_date,
+            discipline=a.discipline,
+            place=a.place,
+            result_title=a.result_title,
+            ekp_no=ekp_no,
+            evsk_rank=evsk_rank or a.sport_rank,
+            evsk_basis=evsk_basis,
+            page=page,
+        )
     lvl = a.event_level.value if hasattr(a.event_level, "value") else a.event_level
     place = a.result_title or (f"{a.place} место" if a.place else "участник")
     year = f", {a.event_date.year}" if a.event_date else ""
     return f"{place.capitalize()}: {a.event_name} ({LEVEL_TITLES.get(lvl, lvl)}, {DISCIPLINE_TITLES.get(a.discipline, a.discipline)}{year})"
+
+
+def _achievement_card_item(a: FspAchievement, direction: str | None) -> dict:
+    tr = a.team_result or {}
+    pref = getattr(a, "protocol_ref", None) or {}
+    p_status = getattr(a, "protocol_status", None) or tr.get("protocol_status") or ("verified" if tr.get("protocol_verified") else "none")
+    ekp_no = getattr(a, "ekp_no", None) or pref.get("ekp_no") or tr.get("ekp_no")
+    evsk_rank = getattr(a, "evsk_rank", None) or tr.get("evsk_rank") or a.sport_rank
+    evsk_basis = getattr(a, "evsk_basis", None) or tr.get("evsk_basis")
+    pdf_url = pref.get("url") or tr.get("pdf_url")
+    page = pref.get("page") or tr.get("page")
+    doc_id = pref.get("doc_id") or tr.get("doc_id") or a.event_id
+    protocol_ref = (
+        {"doc_id": doc_id, "ekp_no": ekp_no, "page": page, "url": pdf_url}
+        if (pdf_url or ekp_no or p_status in ("pending_fsp", "verified"))
+        else None
+    )
+    status_title = (
+        "Подтверждено протоколом ФСП" if p_status == "verified"
+        else "Найдено в протоколе — ожидает подтверждения ФСП" if p_status == "pending_fsp"
+        else "Подтверждено реестром ФСП" if a.verified else "На проверке"
+    )
+    return {
+        "text": achievement_text(a),
+        "discipline": a.discipline,
+        "verified": bool(a.verified and p_status != "pending_fsp"),
+        "protocol_status": p_status,
+        "protocol_verified": p_status == "verified",
+        "status_title": status_title,
+        "ekp_no": ekp_no,
+        "evsk_rank": evsk_rank,
+        "evsk_basis": evsk_basis,
+        "protocol_ref": protocol_ref,
+        "pdf_url": pdf_url,
+        "page": page,
+        **({"relevance": fsp_relevance.explain(a.discipline, direction)} if fsp_relevance_on() else {}),
+    }
 
 
 def test_component(theta: float | None, se: float | None, grade: str | None) -> float:
@@ -321,6 +378,55 @@ def _two_stage(out: dict, t: dict) -> None:
         out["two_stage"] = note
 
 
+VERDICT_TITLES = {
+    "confirmed": "Подтверждён тестом",
+    "not_confirmed": "Не подтверждён",
+    "needs_followup": "Нужен доп. этап",
+}
+
+
+def _extract_verdict(b: "Bundle") -> dict | None:
+    """А2/А4 (21.10): извлекает трёхзначный вердикт SPRT (`confirmed` | `not_confirmed` | `needs_followup`) и поля доп. этапа."""
+    t = b.test.value if b.test else None
+    v = None
+    stage = None
+    if isinstance(t, dict):
+        stage = t.get("stage") if isinstance(t.get("stage"), dict) else None
+        v = (t.get("details") or {}).get("verdict") if isinstance(t.get("details"), dict) else None
+        if not isinstance(v, dict):
+            v = t.get("verdict") if isinstance(t.get("verdict"), dict) else None
+    if not isinstance(v, dict) and b.last_attempt is not None:
+        for attr in ("result", "details", "summary"):
+            raw = getattr(b.last_attempt, attr, None)
+            if isinstance(raw, dict):
+                if stage is None and isinstance(raw.get("stage"), dict):
+                    stage = raw.get("stage")
+                cand = (raw.get("details") or {}).get("verdict") if isinstance(raw.get("details"), dict) else raw.get("verdict")
+                if isinstance(cand, dict):
+                    v = cand
+                    break
+    if not isinstance(v, dict) or v.get("status") not in VERDICT_TITLES:
+        return None
+    st = v["status"]
+    if stage is None and isinstance(v.get("stage"), dict):
+        stage = v.get("stage")
+    has_stage_attempt = bool(stage and stage.get("attempt_id"))
+    default_title = "Подтверждён тестом и практическим этапом" if (st == "confirmed" and has_stage_attempt) else VERDICT_TITLES[st]
+    return {
+        "status": st,
+        "title": ("Подтверждён тестом и практическим этапом" if (st == "confirmed" and has_stage_attempt) else (v.get("title") or default_title)),
+        "explanation_ru": v.get("explanation_ru") or "",
+        "p_claimed": v.get("p_claimed"),
+        "oral_defense_required": bool(v.get("oral_defense_required", False)),
+        "followup_kind": v.get("followup_kind"),
+        "followup_url": v.get("followup_url"),
+        "followup_items": v.get("followup_items"),
+        "followup_minutes": v.get("followup_minutes"),
+        "followup_incident_title": v.get("followup_incident_title"),
+        "stage": stage,
+    }
+
+
 def passport_status(b: "Bundle") -> str:
     """FIX7 п. 6: статус грейда в паспорте — из того же источника, что и карточка (grade_status): «preliminary» —
     Junior предварительно, Lead/Principal по тесту (флаг GRADES_EXT_ENABLED) или открытые ответы теста ещё на проверке
@@ -350,6 +456,9 @@ def grade_status(b: "Bundle") -> dict:
            "direction": b.direction, "claimed_grade": None, "claimed_direction": None,
            "claimed_category_id": None, "claimed_title": None, "attempt": None, "p_pct": None, "text": ""}
     t = b.test.value if b.test else None
+    verdict = _extract_verdict(b)
+    if verdict is not None:
+        out["verdict"] = verdict
     if st in ("confirmed", "provisional") and t:
         _position(out, t, b.grade)
         _two_stage(out, t)
@@ -614,6 +723,7 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "defense": defense_badge(t),  # Я15: «ответ подтверждён устно / расхождения / не проходил»
             # экспресс-тест жюри (5–7 заданий, интервал шире) и принятый уровень ниже — видны работодателю честно
             "mode": t.get("mode", "full"), "accepted_lower": bool(t.get("accepted_lower")), "grade": t.get("grade"),
+            **({"verdict": _extract_verdict(b)} if _extract_verdict(b) else {}),
         } if t else None,
         "skills_confirmed": [
             {"tag": k, "title": tag_title(k), "score": f.value.get("score"), "level": "T1"}
@@ -629,10 +739,15 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "strength": b.fsp,
             "rating": fsp_rating(b.achievements, direction=b.direction if fsp_relevance_on() else None,
                                  relevance=fsp_relevance_on()),
-            "achievements": [{"text": achievement_text(a), "discipline": a.discipline, "verified": a.verified,
-                              **({"relevance": fsp_relevance.explain(a.discipline, b.direction)}
-                                 if fsp_relevance_on() else {})}
-                             for a in verified_achievements(b)[:5]],
+            "achievements": [_achievement_card_item(a, b.direction) for a in verified_achievements(b)[:5]],
+            "has_protocol_verified": any(
+                (getattr(a, "protocol_status", None) == "verified" or (a.team_result or {}).get("protocol_verified"))
+                for a in b.achievements
+            ),
+            "has_protocol_pending": any(
+                (getattr(a, "protocol_status", None) == "pending_fsp" or (a.team_result or {}).get("protocol_status") == "pending_fsp")
+                for a in b.achievements
+            ),
             "unverified_count": sum(1 for a in b.achievements
                                     if not a.verified and not (a.source_ref or "").startswith("cup:")),
         } if show("show_fsp") else {"linked": None, "hidden": True}),

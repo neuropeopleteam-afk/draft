@@ -179,6 +179,34 @@ export function CandidateCard({ c, score, reasons, explain, actions, must, core,
           {t ? <p className="mt-1 text-brand-ink/75" title={thetaHint(t.theta, t.se)}>{t.correct} из {t.answered} верно</p>
             : c.status?.attempt?.theta != null ? <p className="mt-1 text-brand-ink/65" title={thetaHint(c.status.attempt.theta, c.status.attempt.se)}>последняя попытка на {c.status.attempt.grade_title ?? c.status.attempt.grade}: грейд не подтверждён, в скор не входит</p>
             : <p className="mt-1 text-brand-ink/65">нет результата</p>}
+          {(t?.verdict || c.status?.verdict) && (() => {
+            const vd = t?.verdict || c.status?.verdict;
+            const stageAttemptId = vd.stage?.attempt_id || t?.stage?.attempt_id;
+            const cls = vd.status === "confirmed" ? "bg-emerald-100 text-emerald-900" : vd.status === "needs_followup" ? "bg-amber-100 text-amber-900" : "bg-rose-100 text-rose-900";
+            const label = vd.status === "confirmed" && stageAttemptId
+              ? "Подтверждён тестом и практическим этапом"
+              : (vd.title || (vd.status === "confirmed" ? "Подтверждён тестом" : vd.status === "needs_followup" ? "Нужен доп. этап" : "Не подтверждён"));
+            return (
+              <div className="mt-1.5 rounded-lg bg-white/80 p-2 text-xs" data-testid="test-verdict-box">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={`rounded-md px-2 py-0.5 font-bold ${cls}`} data-testid="test-verdict-badge">
+                    {label}
+                  </span>
+                  {vd.oral_defense_required && <span className="rounded-md bg-amber-50 px-2 py-0.5 font-semibold text-amber-900">рекомендована устная защита</span>}
+                  {stageAttemptId && (
+                    <a
+                      href={`#warroom-${c.ref ?? stageAttemptId}`}
+                      className="font-semibold text-brand hover:underline"
+                      data-testid="test-verdict-incident-link"
+                    >
+                      как решал инцидент →
+                    </a>
+                  )}
+                </div>
+                {vd.explanation_ru && <p className="mt-1 text-brand-ink/75">{vd.explanation_ru}</p>}
+              </div>
+            );
+          })()}
           {c.provisional && <p className="mt-1 text-xs text-brand-ink/70">P(уровень не ниже Junior) = {c.provisional.p_pct} % · подтверждение от {c.provisional.confirm_pct} %, «не доказанно ниже» от {c.provisional.level_pct} %{c.provisional.attempts ? ` · дотестирований ${c.provisional.attempts} из ${c.provisional.attempts_max}` : ""}</p>}
           {t && (t.mode === "express" || t.mode === "mini" || t.accepted_lower) && (
             <p className="mt-1 flex flex-wrap gap-1.5">
@@ -201,7 +229,40 @@ export function CandidateCard({ c, score, reasons, explain, actions, must, core,
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level={fsp.achievements?.length ? "T2" : "none"} /> Паспорт ФСП</p>
           {fsp.hidden ? <p className="mt-1 text-brand-ink/65">скрыто кандидатом</p>
             : fsp.achievements?.length ? (
-              <ul className="mt-1 space-y-1 text-brand-ink/75">{fsp.achievements.slice(0, compact ? 2 : 4).map((a: any, i: number) => <li key={i}>{a.text}{a.relevance?.title && <span className="ml-1 text-xs text-brand-plum">· {a.relevance.title}{a.relevance.coef < 1 ? ` (×${String(a.relevance.coef).replace(".", ",")})` : ""}</span>}</li>)}</ul>
+              <ul className="mt-1.5 space-y-2 text-brand-ink/75">{fsp.achievements.slice(0, compact ? 2 : 4).map((a: any, i: number) => {
+                const pdfUrl = a.pdf_url || a.protocol_ref?.url || (i === 0 ? c.protocol?.url : null);
+                const page = a.page || a.protocol_ref?.page || (i === 0 ? c.protocol?.page : null);
+                const pStatus = a.protocol_status || (a.protocol_verified ? "verified" : (i === 0 && c.fsp_status ? c.fsp_status : "none"));
+                return (
+                  <li key={i} className="leading-snug" data-testid="fsp-achievement-item">
+                    <span>{a.text}</span>
+                    {a.relevance?.title && <span className="ml-1 text-xs text-brand-plum">· {a.relevance.title}{a.relevance.coef < 1 ? ` (×${String(a.relevance.coef).replace(".", ",")})` : ""}</span>}
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                      {pStatus === "verified" && (
+                        <span className="rounded-md bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-900" data-testid="fsp-protocol-status-badge">
+                          Подтверждено протоколом ФСП
+                        </span>
+                      )}
+                      {pStatus === "pending_fsp" && (
+                        <span className="rounded-md bg-amber-100 px-2 py-0.5 font-semibold text-amber-900" data-testid="fsp-protocol-status-badge" title="До подтверждения представителем ФСП или входа через ФСП ID учитывается в ранжировании с пониженным весом">
+                          Найдено в протоколе — ожидает подтверждения ФСП
+                        </span>
+                      )}
+                      {pdfUrl && (
+                        <a
+                          href={pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-brand hover:underline"
+                          data-testid="fsp-protocol-pdf-link"
+                        >
+                          Официальный PDF протокола{page ? `, стр. ${page}` : ""} ↗
+                        </a>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}</ul>
             ) : <p className="mt-1 text-brand-ink/65">{NO_FSP}</p>}
           {fsp.unverified_count > 0 && <p className="mt-1 text-xs text-brand-ink/65">Заявлено без подтверждения реестром: {fsp.unverified_count} — не учитывается</p>}
           {fsp.origin && !fsp.hidden && <p className="mt-1"><OriginTag o={fsp.origin} /></p>}
@@ -238,7 +299,9 @@ export function CandidateCard({ c, score, reasons, explain, actions, must, core,
           </div>
         </details>
       )}
-      <WarRoomSlot mode="employer" candidateRef={c.ref} grade={c.grade ?? c.claimed?.grade} direction={c.direction} compact={compact} />
+      <div id={`warroom-${c.ref ?? ""}`}>
+        <WarRoomSlot mode="employer" candidateRef={c.ref} grade={c.grade ?? c.claimed?.grade} direction={c.direction} compact={compact} />
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         {c.market_range ? <MarketNote m={c.market_range} short /> : <span />}

@@ -5,8 +5,13 @@ import csv
 import io
 import logging
 
+from typing import Literal
+import uuid
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
+from pydantic import BaseModel, Field
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -147,3 +152,142 @@ def export(section: str, days: int | None = Days, user: User = Depends(analyst),
         w.writerow([_cell(row.get(c)) for c in cols])
     return Response(content="\ufeff" + buf.getvalue(), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="fsp_{section}.csv"'})
+
+
+class ProtocolClaimDecideIn(BaseModel):
+    action: Literal["approve", "reject"]
+    note: str | None = Field(None, max_length=500)
+
+
+@router.get("/protocol-claims", summary="Очередь заявок кандидатов на подтверждение достижений по официальным протоколам ФСП",
+            responses=AUTH)
+def list_protocol_claims(
+    status: Literal["all", "pending_fsp", "verified"] = Query("all"),
+    user: User = Depends(analyst),
+    db: Session = Depends(get_db),
+) -> dict:
+    from app.modules.catalog.constants import FSP_DISCIPLINES
+    from app.modules.fsp.models import FspAchievement, FspPassport
+    from app.modules.profiles.facts import achievement_text
+    from app.modules.profiles.models import CandidateProfile
+
+    _audit(user, "protocol-claims", None)
+    disc_titles = {d["id"]: d["title"] for d in FSP_DISCIPLINES}
+    rows = db.scalars(
+        select(FspAchievement)
+        .where(
+            or_(
+                FspAchievement.source_ref.like("protocol:%"),
+                FspAchievement.protocol_status.in_(("pending_fsp", "verified")),
+            )
+        )
+        .order_by(FspAchievement.created_at.desc())
+    ).all()
+    pids = list({r.passport_id for r in rows})
+    passports = {p.id: p for p in db.scalars(select(FspPassport).where(FspPassport.id.in_(pids))).all()} if pids else {}
+    uids = list({p.user_id for p in passports.values()})
+    profiles = {p.user_id: p for p in db.scalars(select(CandidateProfile).where(CandidateProfile.user_id.in_(uids))).all()} if uids else {}
+
+    items = []
+    pending_cnt = 0
+    verified_cnt = 0
+    for a in rows:
+        tr = a.team_result or {}
+        pref = a.protocol_ref or {}
+        st = a.protocol_status or tr.get("protocol_status") or ("verified" if tr.get("protocol_verified") else "pending_fsp")
+        if st == "pending_fsp":
+            pending_cnt += 1
+        elif st == "verified":
+            verified_cnt += 1
+        if status != "all" and st != status:
+            continue
+        pp = passports.get(a.passport_id)
+        prof = profiles.get(pp.user_id) if pp else None
+        ekp_no = a.ekp_no or pref.get("ekp_no") or tr.get("ekp_no")
+        evsk_rank = a.evsk_rank or tr.get("evsk_rank") or a.sport_rank
+        evsk_basis = a.evsk_basis or tr.get("evsk_basis")
+        pdf_url = pref.get("url") or tr.get("pdf_url")
+        page = pref.get("page") or tr.get("page")
+        doc_id = pref.get("doc_id") or tr.get("doc_id") or a.event_id
+        items.append({
+            "id": str(a.id),
+            "candidate_ref": prof.public_ref if prof else None,
+            "event_name": a.event_name,
+            "event_date": a.event_date.isoformat() if a.event_date else None,
+            "discipline": a.discipline,
+            "discipline_title": disc_titles.get(a.discipline, a.discipline),
+            "place": a.place,
+            "result_title": a.result_title,
+            "team_name": a.team_name,
+            "region": tr.get("region"),
+            "ekp_no": ekp_no,
+            "evsk_rank": evsk_rank,
+            "evsk_basis": evsk_basis,
+            "protocol_ref": {"doc_id": doc_id, "ekp_no": ekp_no, "page": page, "url": pdf_url},
+            "pdf_url": pdf_url,
+            "page": page,
+            "protocol_status": st,
+            "status_title": (
+                "Подтверждено протоколом ФСП" if st == "verified"
+                else "Найдено в протоколе — ожидает подтверждения ФСП" if st == "pending_fsp"
+                else tr.get("status_title") or "Отклонено"
+            ),
+            "fsp_note": tr.get("fsp_note"),
+            "formatted_text": achievement_text(a),
+            "created_at": a.created_at.isoformat() if a.created_at else None,
+        })
+    items.sort(key=lambda x: (0 if x["protocol_status"] == "pending_fsp" else 1))
+    return {
+        "counts": {"pending_fsp": pending_cnt, "verified": verified_cnt, "total": len(rows)},
+        "items": items,
+    }
+
+
+@router.post("/protocol-claims/{achievement_id}/decide",
+             summary="Подтвердить или отклонить заявку кандидата по официальному протоколу ФСП",
+             responses={**AUTH, 404: err("Заявка не найдена")})
+def decide_protocol_claim(
+    achievement_id: uuid.UUID,
+    data: ProtocolClaimDecideIn,
+    user: User = Depends(analyst),
+    db: Session = Depends(get_db),
+) -> dict:
+    from app.modules.fsp.models import FspAchievement, FspPassport
+    from app.modules.profiles.facts import achievement_text, refresh_rating
+
+    a = db.get(FspAchievement, achievement_id)
+    if a is None:
+        raise api_error(404, "claim_not_found", "Заявка на подтверждение протокола не найдена")
+    pp = db.get(FspPassport, a.passport_id)
+    tr = dict(a.team_result or {})
+    if data.action == "approve":
+        a.protocol_status = "verified"
+        a.verified = True
+        tr["protocol_verified"] = True
+        tr["protocol_status"] = "verified"
+        tr["status_title"] = "Подтверждено представителем ФСП по официальному протоколу"
+        if data.note:
+            tr["fsp_note"] = data.note
+        a.team_result = tr
+        if a.evsk_rank and pp and not pp.sport_rank:
+            pp.sport_rank = a.evsk_rank
+    else:
+        a.protocol_status = "none"
+        a.verified = False
+        tr["protocol_verified"] = False
+        tr["protocol_status"] = "rejected"
+        tr["status_title"] = "Отклонено представителем ФСП"
+        if data.note:
+            tr["fsp_note"] = data.note
+        a.team_result = tr
+    db.flush()
+    if pp is not None:
+        refresh_rating(db, pp.user_id)
+    db.commit()
+    return {
+        "id": str(a.id),
+        "protocol_status": a.protocol_status,
+        "verified": a.verified,
+        "status_title": tr.get("status_title"),
+        "formatted_text": achievement_text(a),
+    }
