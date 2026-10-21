@@ -1,7 +1,7 @@
 {
   "$comment": "Единый источник цифр «Драфт». Генерируется tools/publish/gen_numbers.py только из JSON-артефактов; констант нет. Модельные расчёты подписаны «модельные кандидаты, не люди».",
-  "generated_at": "2026-10-21T09:05:14Z",
-  "git_commit": "38f8572e6",
+  "generated_at": "2026-10-21T09:28:26Z",
+  "git_commit": "93d15540",
   "recompute_all": "python3 tools/publish/gen_numbers.py",
   "bank": {
     "code_and_open_families": 259,
@@ -1819,7 +1819,451 @@
     "code_ref": "backend/app/modules/validation/product_sim.py",
     "protocol": "docs/validation/PRODUCT_SIM_PROTOCOL.md"
   },
-  "cheat_bots": null,
+  "cheat_bots": {
+    "table": {
+      "control": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 1,
+          "value": 0.01,
+          "ci95": [
+            0.0018,
+            0.0545
+          ]
+        },
+        "needs_followup_main": 0.13,
+        "provisional_junior": {
+          "k": 5,
+          "value": 0.05
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.0,
+        "integrity_low": 0.28,
+        "by_claim": {
+          "junior": {
+            "n": 38,
+            "false_confirmed": 1
+          },
+          "middle": {
+            "n": 28,
+            "false_confirmed": 0
+          },
+          "senior": {
+            "n": 34,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "random": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 0,
+          "value": 0.0,
+          "ci95": [
+            0.0,
+            0.037
+          ]
+        },
+        "needs_followup_main": 0.0,
+        "provisional_junior": {
+          "k": 1,
+          "value": 0.01
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.0,
+        "integrity_low": 0.53,
+        "by_claim": {
+          "junior": {
+            "n": 33,
+            "false_confirmed": 0
+          },
+          "middle": {
+            "n": 34,
+            "false_confirmed": 0
+          },
+          "senior": {
+            "n": 33,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "position_A": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 1,
+          "value": 0.01,
+          "ci95": [
+            0.0018,
+            0.0545
+          ]
+        },
+        "needs_followup_main": 0.0,
+        "provisional_junior": {
+          "k": 2,
+          "value": 0.02
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.0,
+        "integrity_low": 0.45,
+        "by_claim": {
+          "junior": {
+            "n": 39,
+            "false_confirmed": 1
+          },
+          "middle": {
+            "n": 33,
+            "false_confirmed": 0
+          },
+          "senior": {
+            "n": 28,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "position_B": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 1,
+          "value": 0.01,
+          "ci95": [
+            0.0018,
+            0.0545
+          ]
+        },
+        "needs_followup_main": 0.01,
+        "provisional_junior": {
+          "k": 3,
+          "value": 0.03
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.0,
+        "integrity_low": 0.43,
+        "by_claim": {
+          "junior": {
+            "n": 35,
+            "false_confirmed": 1
+          },
+          "middle": {
+            "n": 39,
+            "false_confirmed": 0
+          },
+          "senior": {
+            "n": 26,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "position_C": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 0,
+          "value": 0.0,
+          "ci95": [
+            0.0,
+            0.037
+          ]
+        },
+        "needs_followup_main": 0.0,
+        "provisional_junior": {
+          "k": 1,
+          "value": 0.01
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.01,
+        "integrity_low": 0.58,
+        "by_claim": {
+          "junior": {
+            "n": 32,
+            "false_confirmed": 0
+          },
+          "middle": {
+            "n": 32,
+            "false_confirmed": 0
+          },
+          "senior": {
+            "n": 36,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "position_D": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 0,
+          "value": 0.0,
+          "ci95": [
+            0.0,
+            0.037
+          ]
+        },
+        "needs_followup_main": 0.02,
+        "provisional_junior": {
+          "k": 0,
+          "value": 0.0
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.0,
+        "integrity_low": 0.56,
+        "by_claim": {
+          "junior": {
+            "n": 31,
+            "false_confirmed": 0
+          },
+          "middle": {
+            "n": 38,
+            "false_confirmed": 0
+          },
+          "senior": {
+            "n": 31,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "longest": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 0,
+          "value": 0.0,
+          "ci95": [
+            0.0,
+            0.037
+          ]
+        },
+        "needs_followup_main": 0.0,
+        "provisional_junior": {
+          "k": 0,
+          "value": 0.0
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.01,
+        "integrity_low": 0.47,
+        "by_claim": {
+          "junior": {
+            "n": 28,
+            "false_confirmed": 0
+          },
+          "middle": {
+            "n": 41,
+            "false_confirmed": 0
+          },
+          "senior": {
+            "n": 31,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "median_number": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 0,
+          "value": 0.0,
+          "ci95": [
+            0.0,
+            0.037
+          ]
+        },
+        "needs_followup_main": 0.02,
+        "provisional_junior": {
+          "k": 3,
+          "value": 0.03
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.0,
+        "integrity_low": 0.51,
+        "by_claim": {
+          "junior": {
+            "n": 37,
+            "false_confirmed": 0
+          },
+          "middle": {
+            "n": 26,
+            "false_confirmed": 0
+          },
+          "senior": {
+            "n": 37,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "overlap": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 1,
+          "value": 0.01,
+          "ci95": [
+            0.0018,
+            0.0545
+          ]
+        },
+        "needs_followup_main": 0.0,
+        "provisional_junior": {
+          "k": 0,
+          "value": 0.0
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.01,
+        "integrity_low": 0.54,
+        "by_claim": {
+          "junior": {
+            "n": 32,
+            "false_confirmed": 1
+          },
+          "middle": {
+            "n": 37,
+            "false_confirmed": 0
+          },
+          "senior": {
+            "n": 31,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "leak_10": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 3,
+          "value": 0.03,
+          "ci95": [
+            0.0103,
+            0.0845
+          ]
+        },
+        "needs_followup_main": 0.17,
+        "provisional_junior": {
+          "k": 3,
+          "value": 0.03
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.0,
+        "integrity_low": 0.44,
+        "by_claim": {
+          "junior": {
+            "n": 26,
+            "false_confirmed": 2
+          },
+          "middle": {
+            "n": 45,
+            "false_confirmed": 1
+          },
+          "senior": {
+            "n": 29,
+            "false_confirmed": 0
+          }
+        }
+      },
+      "leak_100": {
+        "n": 100,
+        "false_confirmed": {
+          "k": 5,
+          "value": 0.05,
+          "ci95": [
+            0.0215,
+            0.1118
+          ]
+        },
+        "needs_followup_main": 0.16,
+        "provisional_junior": {
+          "k": 8,
+          "value": 0.08
+        },
+        "oral_defense": 0.0,
+        "preknowledge_flag": 0.0,
+        "integrity_low": 0.51,
+        "by_claim": {
+          "junior": {
+            "n": 38,
+            "false_confirmed": 3
+          },
+          "middle": {
+            "n": 29,
+            "false_confirmed": 2
+          },
+          "senior": {
+            "n": 33,
+            "false_confirmed": 0
+          }
+        }
+      }
+    },
+    "meta": {
+      "what": "боты-стратегии через движок продукта (реальные варианты и проверка ответа), не люди",
+      "n_per_strategy": 100,
+      "k_values": "10,100",
+      "seed": 3301,
+      "claims": [
+        "junior",
+        "middle",
+        "senior"
+      ],
+      "bot_theta": "порог заявленного грейда − 0,75 логита (для control и leak_K)",
+      "text_answers": "без модели не засчитываются (в пользу бота — оценка сверху)",
+      "settings": {
+        "assessment_ai_mark": false,
+        "assessment_classify_z": 1.28,
+        "assessment_code_quota_ext": true,
+        "assessment_confirm_level": 0.8,
+        "assessment_engine": "bank",
+        "assessment_exposure": "sympson_hetter",
+        "assessment_express_item_time_s": 240,
+        "assessment_express_max_items": 7,
+        "assessment_express_max_minutes": 20,
+        "assessment_express_min_items": 5,
+        "assessment_express_senior_item_time_s": 360,
+        "assessment_express_senior_max_items": 12,
+        "assessment_express_senior_max_minutes": 45,
+        "assessment_express_senior_min_items": 8,
+        "assessment_extension_items": 6,
+        "assessment_extension_minutes": 20,
+        "assessment_extension_own_first": true,
+        "assessment_guessing_3pl": true,
+        "assessment_max_items": 20,
+        "assessment_max_minutes": 60,
+        "assessment_max_open_answer": 1,
+        "assessment_max_open_book": 2,
+        "assessment_min_items": 8,
+        "assessment_partial_credit_enabled": false,
+        "assessment_partial_credit_select": true,
+        "assessment_se_target": 0.35,
+        "assessment_select_at": "cut",
+        "assessment_stop_rule": "classification",
+        "assessment_subpool_quarantine": "",
+        "assessment_subpools": 2,
+        "assessment_two_stage_above": 0.0,
+        "assessment_two_stage_confirm": 0.5,
+        "assessment_two_stage_confirm_up": 0.9,
+        "assessment_two_stage_enabled": true,
+        "assessment_two_stage_floor": false,
+        "assessment_two_stage_items": 8,
+        "assessment_two_stage_level": 0.8,
+        "assessment_two_stage_minutes": 15,
+        "assessment_weak_exclude": false,
+        "grades_ext_enabled": true,
+        "grades_ext_max_se": 0.6,
+        "grades_ext_min_items": 8,
+        "grades_ext_min_own": 1,
+        "grades_ext_min_total": 3,
+        "grades_ext_no_subpool": true,
+        "grades_ext_preliminary": true,
+        "grades_ext_prior_sd": 1.5,
+        "grades_ext_refine_item_time_s": 420.0,
+        "grades_ext_refine_items": 10,
+        "grades_ext_refine_minutes": 25
+      },
+      "bank_families": 1504,
+      "git_commit": null,
+      "date": "2026-10-21T09:22:04+00:00",
+      "command": "cd backend && python -m app.modules.validation.cheat_bots --n 100 --k 10,100 --out /w/out/cheat_bots.json",
+      "engine_errors": {
+        "n": 0,
+        "examples": []
+      },
+      "elapsed_s": 1182.5
+    },
+    "worst_strategy": "leak_100",
+    "claim_ru": "Боты-стратегии через движок продукта (11 стратегий × 100 попыток, реальные варианты и проверка ответа): самая успешная стратегия «leak_100» получила подтверждение заявленного грейда в 5,0 % попыток (95 % ДИ 2,1–11,2 %); контроль — честный кандидат на 0,75 логита ниже порога — 1,0 %.",
+    "recompute": "cd backend && python -m app.modules.validation.cheat_bots --n 100 --k 10,100 --out /w/out/cheat_bots.json",
+    "code_ref": "backend/app/modules/validation/cheat_bots.py"
+  },
   "matching": {
     "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
     "n_needs": 200,
@@ -2027,6 +2471,7 @@
     "claims_ru": {
       "provenance": "Каждая цифра на сайте — из JSON-артефакта с командой пересчёта и ссылкой на код (docs/NUMBERS.json).",
       "grade": "Симуляция продукта (движок стенда на банке 603474f из 1 504 семейств; модельные кандидаты, не люди; N = 3 000, отложенные зёрна): итоговый вердикт «соответствует заявленному грейду» верен в 87,9 % (95 % ДИ 86,7–89,0 %); ложное подтверждение — 16,0 % у завысивших заявку (6,3 % всех кандидатов); после основной части уверенное решение у 77,8 % кандидатов, из них верных 94,1 %; остальным предлагается короткий второй этап у порога. Точный грейд по всему пулу — 71,0 %, ошибок на 2+ ступени — 0,0 %. Время основной части — в среднем 35 мин (p90 52), всего — 38 мин; повторная независимая попытка даёт тот же грейд в 79,5 %, тот же вердикт — в 83,8 % (пар 3 000).",
+      "cheat": "Боты-стратегии через движок продукта (11 стратегий × 100 попыток, реальные варианты и проверка ответа): самая успешная стратегия «leak_100» получила подтверждение заявленного грейда в 5,0 % попыток (95 % ДИ 2,1–11,2 %); контроль — честный кандидат на 0,75 логита ниже порога — 1,0 %.",
       "anticheat": "На слепом отложенном наборе из 176 атак в 16 семействах, составленном независимыми моделями (DeepSeek V4 Flash, xAI Grok 4.7, Moonshot Kimi K2.5; SHA-256 71c375aebb94…) после фиксации кода фильтра и проверенном одним прогоном без донастройки, детерминированный фильтр перехватывает 137 из 176 (77.8 %) атак до вызова LLM при 2 из 176 (1.14 %) ложных срабатываний на новых честных ответах (0 из 261 на ответах панели); пробитие полной цепочки (фильтр + изоляция маркерами + проверка дословных цитат + вторая оценка Claude Sonnet 5.5 / Fable 5.1) составило 0 из 176 (0.00 %, устойчивость цепочки 100.00 %). На наборе разработки (Claude + GPT, 320 атак) перехват фильтра — 290 из 320 (90.6 %), на известных шаблонах панели — 1160 из 1160 (100 %)."
     }
   },
@@ -2046,6 +2491,14 @@
       "command": "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest --out /w/out/product_sim_test_calibrated.json",
       "code_ref": "backend/app/modules/validation/product_sim.py",
       "artifact": "backend/app/modules/validation/data/product_sim_test_calibrated.json"
+    },
+    {
+      "section": "«Обмани тест»: боты через движок",
+      "metric": "Боты-стратегии через движок продукта (11 стратегий × 100 попыток, реальные варианты и проверка ответа): самая успешная стратегия «leak_100» получила подтверждение заявленного грейда в 5,0 % попыток (95 % ДИ 2,1–11,2 %); контроль — честный кандидат на 0,75 логита ниже порога — 1,0 %.",
+      "sample": "100 попыток на стратегию",
+      "command": "cd backend && python -m app.modules.validation.cheat_bots --n 100 --k 10,100 --out /w/out/cheat_bots.json",
+      "code_ref": "backend/app/modules/validation/cheat_bots.py",
+      "artifact": "backend/app/modules/validation/data/cheat_bots.json"
     },
     {
       "section": "Подбор под потребность (бенчмарк)",
