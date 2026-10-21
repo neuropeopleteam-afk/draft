@@ -193,11 +193,11 @@ function Head({ title, subtitle, csv }: { title: string; subtitle: string; csv?:
           <div className="min-w-0 flex-1 [&_h1]:text-white [&_p]:text-white/80">
             <p className="mb-1.5 inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#B8B4FF]" title={fspClaim}>
               <i className="fsp-pulse-dot" aria-hidden="true" />
-              Федерация спортивного программирования России · {fspRegions} регионов
+              ФСП: {fspRegions} региональных представительств
             </p>
             <PageTitle title={title} subtitle={subtitle} />
           </div>
-          <FspCabinet3DStage kind="medallion" badge={`${fspRegions} регионов ФСП`} sub="Аналитика и кубки" />
+          <FspCabinet3DStage kind="medallion" badge={`ФСП · ${fspRegions} представительств`} sub="Аналитика и кубки" />
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
