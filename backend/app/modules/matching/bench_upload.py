@@ -33,7 +33,7 @@ from app.modules.catalog.seed_data import DIRECTIONS, GRADES, active_stack, know
 from app.modules.fsp.models import FspAchievement
 from app.modules.matching import bias as bias_mod, core_skill, explain as explain_mod, must_have
 from app.modules.matching.need_parser import parse_need
-from app.modules.matching.ranking import algorithm, score_candidate, selection_order
+from app.modules.matching.ranking import algorithm, score_candidate, selection_order, unconfirmed_by_claim
 from app.modules.profiles.facts import Bundle
 from app.modules.profiles.models import CandidateFact, CandidateProfile
 from app.modules.validation.matching_eval import ndcg as eval_ndcg
@@ -56,8 +56,10 @@ def safe_csv_cell(value: Any) -> str:
     return "'" + text if text.lstrip().startswith(("=", "+", "-", "@")) else text
 
 
-def _normalize_skill_list(raw_skills: Any) -> list[dict[str, Any]]:
-    """Принимает список [{tag, correct, total}] | [{tag, score}] | ['python', 'postgresql'] | 'python, postgresql'."""
+def _normalize_skill_list(raw_skills: Any, declared_out: list[str] | None = None) -> list[dict[str, Any]]:
+    """Подтверждённые тестом навыки: [{tag, correct, total}] | [{tag, score}]. Навык без результата
+    (строка 'python' или {tag} без correct/score) — НЕ подтверждён: уходит в declared_out (T0), а не получает
+    выдуманные «4 из 5» (замечание проверки 20.10: никаких чисел, которых нет во входных данных)."""
     if not raw_skills:
         return []
     if isinstance(raw_skills, str):
@@ -79,15 +81,18 @@ def _normalize_skill_list(raw_skills: Any) -> list[dict[str, Any]]:
             if not known_tag(tag) and tag not in st:
                 found = find_stack(item)
                 tag = found[0] if found else ""
-            if tag and tag not in seen:
-                seen.add(tag)
-                out.append({"tag": tag, "correct": 4, "total": 5, "score": 0.8})
+            if tag and tag not in seen and declared_out is not None:
+                declared_out.append(tag)
         elif isinstance(item, dict):
             tag = str(item.get("tag") or item.get("skill") or "").strip().lower()
             if not known_tag(tag) and tag not in st:
                 found = find_stack(tag)
                 tag = found[0] if found else ""
             if not tag or tag in seen:
+                continue
+            if item.get("score") is None and item.get("correct") is None:
+                if declared_out is not None:
+                    declared_out.append(tag)
                 continue
             seen.add(tag)
             if "score" in item and item["score"] is not None:
@@ -96,7 +101,7 @@ def _normalize_skill_list(raw_skills: Any) -> list[dict[str, Any]]:
                 cor = int(round(sc * tot))
             else:
                 tot = max(1, int(item.get("total") or 5))
-                cor = max(0, min(tot, int(item.get("correct") if item.get("correct") is not None else 4)))
+                cor = max(0, min(tot, int(item["correct"])))
                 sc = round(cor / tot, 3)
             out.append({"tag": tag, "correct": cor, "total": tot, "score": sc})
     return out
@@ -139,6 +144,7 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
 
     fmt_clean = (fmt or "json").strip().lower()
     stripped = content.lstrip("\ufeff").strip()
+    warnings: list[str] = []
     if fmt_clean == "json" or stripped.startswith("{"):
         try:
             raw = json.loads(stripped)
@@ -252,8 +258,26 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
         wf = str(c.get("work_format") or "any").strip().lower()
         if wf not in ("office", "hybrid", "remote", "any"):
             wf = "any"
-        skills = _normalize_skill_list(c.get("skills") or c.get("skills_confirmed") or c.get("skills_t1"))
+        unscored: list[str] = []
+        skills = _normalize_skill_list(c.get("skills") or c.get("skills_confirmed") or c.get("skills_t1"), unscored)
         decl = _normalize_declared_stack(c.get("declared_stack") or c.get("stack_t0"), resume_txt)
+        decl += [t for t in unscored if t not in decl]
+        # Правило экспертов жюри: грейд подтверждён только результатом теста (θ). Без θ — «не подтверждён», даже если
+        # в наборе написано confirmed: заявленный грейд не фильтрует и не даёт баллов.
+        gs_in = str(c.get("grade_status") or "").strip().lower()
+        gs = "confirmed" if theta is not None and gs_in in ("", "confirmed", "provisional") else "unconfirmed"
+        if gs_in == "provisional" and theta is not None:
+            gs = "provisional"
+        if gs_in in ("confirmed", "provisional") and theta is None:
+            warnings.append(f"Кандидат {cid}: grade_status={gs_in} без theta — считается «грейд не подтверждён».")
+        if unscored:
+            warnings.append(f"Кандидат {cid}: навыки без результата теста ({', '.join(unscored[:5])}) — "
+                            "учтены как заявленные, не подтверждённые.")
+        def _int_or_none(v: Any) -> int | None:
+            try:
+                return int(v) if v not in (None, "") else None
+            except (TypeError, ValueError):
+                return None
         ach_raw = c.get("achievements") or []
         if isinstance(ach_raw, str) and ach_raw.strip().startswith("["):
             try:
@@ -264,7 +288,9 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
             "id": cid,
             "direction": d,
             "grade": g,
-            "grade_status": c.get("grade_status") or ("confirmed" if theta is not None or skills else "unconfirmed"),
+            "grade_status": gs,
+            "correct": _int_or_none(c.get("correct")),
+            "answered": _int_or_none(c.get("answered")),
             "theta": theta,
             "se": max(0.05, min(3.0, se)),
             "work_format": wf,
@@ -288,12 +314,12 @@ def parse_uploaded_dataset(content: str, fmt: str = "json") -> dict[str, Any]:
             continue
         labels[(nid, cid)] = max(0, min(3, rel_val))
 
-    return {"needs": needs, "candidates": candidates, "labels": labels}
+    return {"needs": needs, "candidates": candidates, "labels": labels, "warnings": warnings[:50]}
 
 
 def _to_bundle(c: dict[str, Any]) -> Bundle:
     uid = uuid.uuid5(uuid.NAMESPACE_URL, "jury-bench:" + c["id"])
-    unconf = c.get("grade_status") == "unconfirmed" or (c.get("theta") is None and not c.get("skills"))
+    unconf = c.get("grade_status") == "unconfirmed" or c.get("theta") is None
     cat_id = None if unconf else f"{c['direction']}.{c['grade']}"
     p = CandidateProfile(
         user_id=uid,
@@ -326,8 +352,10 @@ def _to_bundle(c: dict[str, Any]) -> Bundle:
         )
 
     if not unconf:
-        theta_val = c["theta"] if c.get("theta") is not None else 0.5
-        b.test = fact("test_result", cat_id or f"{c['direction']}.{c['grade']}", {"theta": theta_val, "se": c["se"], "correct": 8, "answered": 10})
+        tv = {"theta": c["theta"], "se": c["se"]}
+        if c.get("correct") is not None and c.get("answered") is not None:
+            tv.update(correct=c["correct"], answered=c["answered"])
+        b.test = fact("test_result", cat_id or f"{c['direction']}.{c['grade']}", tv)
     for s in c.get("skills") or []:
         b.skills_t1[s["tag"]] = fact("skill", s["tag"], {"correct": s["correct"], "total": s["total"], "score": s["score"]})
     b.t0["stack"] = [fact("stack", t, {}, EvidenceLevel.T0) for t in (c.get("declared_stack") or [])]
@@ -350,7 +378,9 @@ def _to_bundle(c: dict[str, Any]) -> Bundle:
                 place=int(a.get("place") or 1),
                 event_date=date(2026, 1, 1),
                 event_name=str(a.get("event_name") or "Соревнование ФСП"),
-                verified=bool(a.get("verified", True)),
+                # подтверждение — только явное: verified=true или protocol_status=verified (решение 21.10); иначе —
+                # заявлено кандидатом (вес в ранжировании меньше, отсутствие ФСП — штраф 0)
+                verified=bool(a.get("verified")) or str(a.get("protocol_status") or "") == "verified",
                 source_ref="jury-upload:external",
             )
         )
@@ -394,10 +424,13 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         eligible: list[tuple[str, Bundle]] = []
         for cid, b in bundles.items():
             c_dir = b.direction or b.claimed_direction_id
-            c_grd = b.grade or b.claimed_grade_id
             if req.get("direction") and c_dir != req["direction"]:
                 continue
-            if req.get("grade") and c_grd != req["grade"]:
+            # правило экспертов: грейд — только по тесту; у не подтверждённого проверенного грейда нет, его заявленный
+            # грейд не фильтрует (он идёт отдельным ярусом ниже по направлению, как в продукте)
+            if req.get("grade") and not b.unconfirmed and b.grade != req["grade"]:
+                continue
+            if req.get("grade") and b.unconfirmed and unconfirmed_by_claim() and b.claimed_grade_id != req["grade"]:
                 continue
             eligible.append((cid, b))
 
@@ -424,7 +457,8 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
                 "city": c_raw.get("city"),
                 "relocation": c_raw.get("relocation"),
                 "skills_confirmed": [{"tag": sk["tag"], "title": sk["tag"], "score": sk["score"]} for sk in c_raw.get("skills") or []],
-                "test": {"theta": c_raw.get("theta"), "se": c_raw.get("se"), "correct": 8, "answered": 10} if not b.unconfirmed else None,
+                "test": ({"theta": c_raw.get("theta"), "se": c_raw.get("se"), "correct": c_raw.get("correct"),
+                          "answered": c_raw.get("answered")} if not b.unconfirmed else None),
                 "fsp": {"hidden": False, "achievements": [{"text": f"Соревнование ФСП ({a.get('discipline', 'algorithmic')}, место {a.get('place', 1)})"} for a in c_raw.get("achievements") or []]},
                 "probes": [{"title": "Тестовое задание работодателя", "verdict": "Выполнено"}] if c_raw.get("probe_score") else [],
             }
@@ -588,10 +622,13 @@ def evaluate_uploaded_dataset(content: str, fmt: str = "json", k: int = 5) -> di
         "fairness": fairness,
         "per_need": per_need,
         "csv_export": "\ufeff" + csv_buf.getvalue(),
+        "warnings": parsed.get("warnings") or [],
         "note": (
             "Набор обработан изолированно в памяти запроса (общая база кандидатов не изменяется). "
-            "Категория и фильтр грейда — только по подтверждённому тесту (T1); внутри категории — тест (T1), "
-            "подтверждённый стек (T1), достижения ФСП (T2) и короткие задания (T1). Самоописание (T0) в балл не входит."
+            "Категория и фильтр грейда — только по подтверждённому тесту (T1): кандидат без результата теста (θ) "
+            "идёт отдельным ярусом ниже только по направлению, его заявленный грейд не фильтрует и не даёт баллов. "
+            "Внутри категории — тест (T1), подтверждённый стек (T1), достижения ФСП (T2) и короткие задания (T1). "
+            "Самоописание (T0) в балл не входит; навык без результата теста считается заявленным."
         ),
     }
 
@@ -629,7 +666,9 @@ SAMPLE_DATASET: dict[str, Any] = {
                 {"tag": "redis", "correct": 3, "total": 4},
             ],
             "declared_stack": ["python", "fastapi", "postgresql", "docker", "redis"],
-            "achievements": [{"discipline": "product", "level": "national", "place": 2}],
+            "correct": 17,
+            "answered": 20,
+            "achievements": [{"discipline": "product", "level": "national", "place": 2, "protocol_status": "verified"}],
         },
         {
             "id": "cand-py-solid-no-fsp",
@@ -672,7 +711,9 @@ SAMPLE_DATASET: dict[str, Any] = {
                 {"tag": "nextjs", "correct": 3, "total": 4},
             ],
             "declared_stack": ["typescript", "react", "html-css", "nextjs"],
-            "achievements": [{"discipline": "product", "level": "regional", "place": 1}],
+            "correct": 16,
+            "answered": 20,
+            "achievements": [{"discipline": "product", "level": "regional", "place": 1, "protocol_status": "verified"}],
         },
         {
             "id": "cand-fe-inflated-t0",
@@ -709,6 +750,8 @@ def sample_dataset_response(fmt: str = "json") -> tuple[str, str, str]:
             "grade",
             "theta",
             "se",
+            "correct",
+            "answered",
             "work_format",
             "skills",
             "declared_stack",
