@@ -147,7 +147,7 @@ export function SiteHeader({ dark = false, premium = false }: { dark?: boolean; 
               <Link to="/login" className={`hidden rounded-lg px-2.5 py-2 text-sm font-semibold sm:inline-flex ${link}`}>
                 Войти
               </Link>
-              <Link to="/register?role=employer" className={`${cta} whitespace-nowrap px-3 sm:px-4 2xl:px-5 text-xs sm:text-sm`} data-testid="header-cta-employer">
+              <Link to="/register?role=employer" className={`${cta} whitespace-nowrap !px-3.5 !py-2 text-xs sm:text-sm`} data-testid="header-cta-employer">
                 <span className="sm:hidden">Начать</span>
                 <span className="hidden sm:inline">Создать вакансию</span>
               </Link>
