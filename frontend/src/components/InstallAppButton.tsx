@@ -50,7 +50,7 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
             <img src="/icons/icon-192.png" alt="" className="h-12 w-12 rounded-2xl" />
             <div>
               <h2 id="install-title" className="text-lg font-extrabold text-brand-night">«Драфт» на телефоне</h2>
-              <p className="text-sm text-brand-ink/65">iPhone, Android и RuStore · бесплатно</p>
+              <p className="text-sm text-brand-ink/65">iPhone и APK для Android · бесплатно</p>
             </div>
           </div>
           <button
@@ -85,7 +85,7 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
           ) : (
             <div className="rounded-2xl border border-brand-night/10 p-4 text-sm">
               <p className="font-semibold text-brand-night">{p === "android" ? "Android — Chrome или Яндекс Браузер" : "Компьютер — Chrome, Edge или Яндекс Браузер"}</p>
-              <p className="mt-1 text-brand-ink/75">{p === "android" ? "Меню ⋮ → «Установить приложение» или «Добавить на главный экран». Также доступен подписанный пакет для RuStore ниже." : "Значок установки в адресной строке или меню браузера → «Установить Драфт». На телефон — отсканируйте QR-код."}</p>
+              <p className="mt-1 text-brand-ink/75">{p === "android" ? "Меню ⋮ → «Установить приложение» или «Добавить на главный экран». Также доступен подписанный APK для Android ниже." : "Значок установки в адресной строке или меню браузера → «Установить Драфт». На телефон — отсканируйте QR-код."}</p>
             </div>
           )}
           {msg && <p className="text-sm font-semibold text-emerald-700" aria-live="polite">{msg}</p>}
@@ -93,7 +93,7 @@ export function InstallDialog({ onClose }: { onClose: () => void }) {
           <div className="rounded-2xl border border-brand-night/10 p-4" id="rustore">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-semibold text-brand-night">Android-пакет для RuStore</p>
+                <p className="font-semibold text-brand-night">APK для Android</p>
                 <p className="text-xs text-brand-ink/65">{rs ? `${rs.package} · версия ${rs.version} · ${rs.size_mb} МБ` : "та же версия, что на сайте"}</p>
               </div>
               {rs ? <a href={rs.apk} download className="btn-primary inline-flex min-h-[44px] shrink-0 items-center !px-4 !py-2 text-sm" data-testid="rustore-apk">Скачать APK</a>
@@ -129,9 +129,9 @@ export function InstallAppButton({ variant = "header", premium = false }: { vari
     : `inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-semibold ring-1 transition-colors ${premium ? "np-install" : "text-brand-plum ring-brand-night/15 hover:bg-brand-blush/40"}`;
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={cls} data-testid={variant === "hero" ? "install-hero" : "install-header"} aria-haspopup="dialog" title="Установить «Драфт» на телефон (iOS, Android, RuStore)">
+      <button type="button" onClick={() => setOpen(true)} className={cls} data-testid={variant === "hero" ? "install-hero" : "install-header"} aria-haspopup="dialog" title="Установить «Драфт» на телефон (iOS, APK для Android)">
         <PhoneIcon className={variant === "hero" ? "h-5 w-5" : "h-4 w-4"} />
-        {variant === "hero" ? <span>На телефон / RuStore</span> : <><span className="hidden flex-col text-left leading-none sm:flex"><span className="text-[13px]">На телефон</span><span className="mt-0.5 text-[10px] font-semibold opacity-85">iOS · RuStore</span></span><span className="sr-only sm:hidden">На телефон / RuStore</span></>}
+        {variant === "hero" ? <span>На телефон / APK для Android</span> : <><span className="hidden flex-col text-left leading-none sm:flex"><span className="text-[13px]">На телефон</span><span className="mt-0.5 text-[10px] font-semibold opacity-85">iOS · APK для Android</span></span><span className="sr-only sm:hidden">На телефон / APK для Android</span></>}
       </button>
       {/* портал в body: у стеклянной шапки backdrop-filter, иначе fixed-окно привязывается к шапке */}
       {open && createPortal(<InstallDialog onClose={() => setOpen(false)} />, document.body)}
