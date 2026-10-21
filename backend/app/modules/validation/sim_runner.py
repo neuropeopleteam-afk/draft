@@ -84,6 +84,7 @@ def main(argv=None) -> int:
                       "minutes_main": s.get("minutes_main"), "minutes_total": s.get("minutes_total"),
                       "items_main": s.get("items_main"), "retest_kappa_w": (d.get("retest") or {}).get("kappa_w_quadratic"),
                       "retest_exact": ((d.get("retest") or {}).get("exact_agreement") or {}).get("value"),
+                      "retest_decision": ((d.get("retest") or {}).get("decision_agreement") or {}).get("value"),
                       "engine_errors": (d.get("engine_errors") or {}).get("n"),
                       "env": plan["configs"][c].get("env"), "args": plan["configs"][c].get("args")}
     res = {"plan": plan, "summary": summary, "fails": fails, "elapsed_s": round(time.time() - t0, 1)}
