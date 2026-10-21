@@ -97,6 +97,9 @@ export interface GradeVerdictView {
   false_reject: Frac | null;
   confident_share: Frac | null;
   confident_accuracy: Frac | null;
+  /** Итог после доп. этапа (FINAL №2, gen_numbers) — заголовок «Точность уверенного вердикта». */
+  confident_accuracy_final?: Frac | null;
+  confident_share_final?: Frac | null;
   followup_share: Frac | null;
   exact_grade: Frac | null;
   exact_grade_not_above_claim: Frac | null;
