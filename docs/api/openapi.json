@@ -258,6 +258,21 @@
         "title": "AdminUserStatusIn",
         "type": "object"
       },
+      "AdvisorAnswerIn": {
+        "properties": {
+          "text": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "AdvisorAnswerIn",
+        "type": "object"
+      },
       "AdvisorIn": {
         "properties": {
           "question": {
@@ -321,6 +336,40 @@
           }
         },
         "title": "AdvisorSpeechIn",
+        "type": "object"
+      },
+      "AdvisorStartIn": {
+        "properties": {
+          "need_id": {
+            "format": "uuid",
+            "title": "Need Id",
+            "type": "string"
+          },
+          "refs": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Refs",
+            "type": "array"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "need_id"
+        ],
+        "title": "AdvisorStartIn",
         "type": "object"
       },
       "AntiCheatInspectIn": {
@@ -33575,7 +33624,7 @@
                 }
               }
             },
-            "description": "test_not_finished | already_accepted | accept_lower_unavailable. Коды `detail.code`: `test_not_finished` — Тест ещё не завершён; `already_accepted` — Уровень по этому тесту уже принят; `accept_lower_unavailable`; `specialization_limit` — Можно подтвердить два направления. Для теста выберите основное или дополнительное.."
+            "description": "test_not_finished | already_accepted | accept_lower_unavailable. Коды `detail.code`: `test_not_finished` — Тест ещё не завершён; `already_accepted` — Уровень по этому тесту уже принят; `integrity_review` — Ответы этой попытки похожи на угадывание — уровень ниже одним нажатием не принимается: пройдите тест ещё раз; `accept_lower_unavailable`; `specialization_limit` — Можно подтвердить два направления. Для теста выберите основное или дополнительное.."
           },
           "422": {
             "content": {
@@ -59786,6 +59835,336 @@
           }
         ],
         "summary": "Устная защита и ИИ-интервью кандидата для карточки работодателя",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/advisor": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "concierge_advisor_start_api_interview_concierge_advisor_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvisorStartIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Concierge Advisor Start Api Interview Concierge Advisor Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "version_not_found",
+                    "message": "Версия подборки не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено. Коды `detail.code`: `version_not_found` — Версия подборки не найдена; `need_not_found` — Потребность не найдена; `candidate_not_found` — Кандидат не найден или скрыл профиль."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Конфликт с текущим состоянием. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "compare_refs",
+                    "message": "Для сравнения выберите от 2 до 3 кандидатов"
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `compare_refs` — Для сравнения выберите от 2 до 3 кандидатов."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "rate_limited",
+                    "message": "Слишком много запросов — подождите минуту"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `rate_limited` — Слишком много запросов — подождите минуту."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Разговор с Настей о сравниваемых кандидатах: начать (короткое главное вслух)",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/advisor/{sid}/answer": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "concierge_advisor_answer_api_interview_concierge_advisor__sid__answer_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvisorAnswerIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Concierge Advisor Answer Api Interview Concierge Advisor  Sid  Answer Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "not_found",
+                    "message": "Разговор не найден — начните заново"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено. Коды `detail.code`: `not_found` — Разговор не найден — начните заново; `need_not_found` — Потребность не найдена; `candidate_not_found` — Кандидат не найден или скрыл профиль."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Конфликт с текущим состоянием. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "rate_limited",
+                    "message": "Лимит ответов на сегодня исчерпан"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `rate_limited` — Лимит ответов на сегодня исчерпан."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Разговор о кандидатах: вопрос руководителя → короткий ответ Насти",
+        "tags": [
+          "interview"
+        ]
+      }
+    },
+    "/api/interview/concierge/advisor/{sid}/speech": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "concierge_advisor_speech_api_interview_concierge_advisor__sid__speech_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sid",
+            "required": true,
+            "schema": {
+              "title": "Sid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "not_found",
+                    "message": "Разговор не найден — начните заново"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено. Коды `detail.code`: `not_found` — Разговор не найден — начните заново."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tts_budget",
+                    "message": "Голос на сегодня исчерпан — продолжите текстом"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много запросов. Коды `detail.code`: `tts_budget` — Голос на сегодня исчерпан — продолжите текстом."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tts_unavailable",
+                    "message": "Функция или внешний сервис недоступны"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Функция или внешний сервис недоступны. Коды `detail.code`: `tts_unavailable`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Разговор о кандидатах: голос текущей реплики Насти (PCM 24 кГц потоком)",
         "tags": [
           "interview"
         ]
