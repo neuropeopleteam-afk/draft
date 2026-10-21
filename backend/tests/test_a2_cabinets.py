@@ -673,7 +673,7 @@ def test_ats_webhook_no_contacts_before_consent_and_contacts_after_consent(clien
         assert recs2 == []
         with SessionLocal() as db:
             inv_row = db.get(Invitation, uuid.UUID(inv["id"]))
-            comp2 = next(c for c in db.query(Company).all() if c.id != inv_row.company_id and c.inn == "2222222222")
+            comp2 = next(c for c in db.query(Company).all() if c.id != inv_row.company_id and c.name == "2222222222")
             other_payload = export_payload(db, comp2, invitation=inv_row)
         assert other_payload["consent"] is False
         assert other_payload["contacts"] is None
