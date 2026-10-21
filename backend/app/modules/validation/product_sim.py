@@ -334,26 +334,35 @@ def run(phase: str, world_kind: str, n: int, seeds: tuple[int, ...], rater_noise
     per_seed = max(1, n // len(seeds))
     rows: list[dict] = []
     rt_pairs: list[tuple[dict, dict]] = []
+    errors: list[str] = []
     t0 = time.time()
     for s in seeds:
         sim = Sim(World(s, world_kind), rater_noise=rater_noise)
         for k in range(per_seed):
             p = sim.person()
-            o = sim.flow(p, two_stage_on=two_stage_on)
+            try:
+                o = sim.flow(p, two_stage_on=two_stage_on)
+            except Exception as ex:  # сбой движка — это находка, а не шум: считаем и показываем
+                errors.append(f"{type(ex).__name__}: {ex}"[:200])
+                continue
             rows.append({**{kk: p[kk] for kk in ("direction", "theta", "true_grade", "claim")},
                          **{kk: v for kk, v in o.items() if kk not in ("families", "seeds")}})
             if retest:
                 seen = {f: 0 for f in o["families"]}
                 seeds_ = {f: [int(v)] for f, v in o["seeds"].items()}
-                o2 = sim.flow(p, previous_subpools=[o["subpool"]] if o["subpool"] is not None else [],
-                              seen=seen, seen_seeds=seeds_, two_stage_on=two_stage_on)
-                rt_pairs.append((o, o2))
+                try:
+                    o2 = sim.flow(p, previous_subpools=[o["subpool"]] if o["subpool"] is not None else [],
+                                  seen=seen, seen_seeds=seeds_, two_stage_on=two_stage_on)
+                    rt_pairs.append((o, o2))
+                except Exception as ex:
+                    errors.append(f"retest {type(ex).__name__}: {ex}"[:200])
             if progress and (len(rows) % 100 == 0):
                 print(f"[{phase}/{world_kind}] {len(rows)}/{per_seed * len(seeds)} · {time.time() - t0:.0f} с",
                       file=sys.stderr, flush=True)
     out = {"summary": summarize(rows), "by_claim": by_claim(rows),
            "claims": dict(Counter(r["claim"] for r in rows)),
            "true_grades": dict(Counter(r["true_grade"] for r in rows)),
+           "engine_errors": {"n": len(errors), "examples": sorted(Counter(errors).items(), key=lambda kv: -kv[1])[:5]},
            "elapsed_s": round(time.time() - t0, 1)}
     if retest:
         a = [_rank(x["grade_final"]) for x, _ in rt_pairs]
