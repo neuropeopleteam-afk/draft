@@ -1075,8 +1075,46 @@ def _strip(d: dict) -> dict:
     return {k: v for k, v in d.items() if k not in ("generated_at", "git_commit")}
 
 
+# Поставщики моделей на сайте не называются (общие правила, решение владельца): NUMBERS читает сайт, поэтому все строки
+# проходят через замену названий моделей на нейтральные роли; полные идентификаторы — в исходных артефактах (code_ref/artifact).
+_VENDOR_SUBS = [
+    (r"вторая оценка\s+Claude[\w .]*?\d[\d.]*(?:\s*/\s*Fable\s*[\d.]+)?", "вторая оценка другой моделью"),
+    (r"OpenRouter \(зарубежный провайдер\)", "зарубежный провайдер"),
+    (r"Yandex AI Studio", "российское облако"),
+    (r"YandexGPT[\s\d.]*\d", "российская модель"), (r"YandexGPT", "российская модель"),
+    (r"модели семейства Claude", "модели того же семейства"),
+    (r"Claude(?: Sonnet| Opus| Haiku| Fable)?[\s\d.]*\d|\bSonnet\b[\s\d.]*\d?", "модель стенда"),
+    (r"\bClaude\b|\bSonnet\b", "модель стенда"), (r"\bFable\s*[\d.]+", "вторая модель"),
+    (r"gpt-oss-120b", "открытая модель-эталон"),
+    (r"\b(?:xAI|Moonshot|Anthropic|OpenAI|Google|Alibaba|Zhipu)\s+", ""),
+    (r"\b(?:DeepSeek|Grok|Kimi|Gemini|GLM|GPT|Qwen)[\w.\-]*(?:\s+(?:[A-Z]?\d[\w.\-]*|Flash|Pro|Mini))*", "модель"),
+    (r"OpenRouter", "зарубежный провайдер"),
+]
+_MODEL_ID = re.compile(r"^(?:anthropic|openai|google|x-ai|moonshotai|deepseek|qwen|z-ai|yandex|meta-llama|mistralai)/[\w.\-@:]+$", re.I)
+
+
+def _no_vendor_text(s: str) -> str:
+    if s.strip() and all(_MODEL_ID.match(x.strip()) for x in s.split(" + ")):
+        return "модель (идентификатор — в исходном артефакте)" if " + " not in s else "модели (идентификаторы — в исходном артефакте)"
+    for pat, rep in _VENDOR_SUBS:
+        s = re.sub(pat, rep, s)
+    # «(модель, модель, модель; SHA…)» → «(три модели разных компаний; SHA…)»
+    s = re.sub(r"\((?:модель,\s*){2}модель(?=[;)])", "(три модели разных компаний", s)
+    s = re.sub(r"\((?:модель,\s*)модель(?=[;)])", "(две модели разных компаний", s)
+    s = re.sub(r"\(модель стенда \+ модель(?=[,;)])", "(модели стенда и другой компании", s)
+    return s
+
+
+def no_vendor(o):
+    if isinstance(o, dict):
+        return {k: no_vendor(v) for k, v in o.items()}
+    if isinstance(o, list):
+        return [no_vendor(v) for v in o]
+    return _no_vendor_text(o) if isinstance(o, str) else o
+
+
 def main() -> int:
-    new = build()
+    new = no_vendor(build())
     if "--check" in sys.argv:
         if _strip(_load(OUT)) != _strip(json.loads(json.dumps(new, ensure_ascii=False))):
             print("NUMBERS.json устарел — запустите tools/publish/gen_numbers.py", file=sys.stderr)
