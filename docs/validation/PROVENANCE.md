@@ -25,6 +25,7 @@
 | «Обмани тест»: боты-стратегии и утечка вариантов через движок (`cheat_bots.json`) | #cheat | синтетика · банк не записан · 21.10.2026 · алгоритм `b94a01e93+a3` · `make cheat-bots` |
 | Повтор всего пути, точность к истине, D и r_pb (`path_retest.json`) | #headline, #path-retest, #discrimination | синтетика · исторический снимок · 11.10.2026 · алгоритм `25770a6` · банк `f563cfca` (268 семейств) · `make path-retest` |
 | Точность грейда: вдали от порога, без занижения заявки, строго (`accuracy_views.json`) | #headline | синтетика · исторический снимок · 20.10.2026 · алгоритм `18254a5` · банк `82a05fdb` · `make accuracy-views` |
+| Единый источник цифр сайта (копия docs/NUMBERS.json): подбор — отложенная проверка (`numbers.json`) | #headline | синтетика · текущий снимок · 21.10.2026 · коммит не записан · банк `913ad19f` (1646 семейств) · `make numbers` |
 | Бенчмарк подбора со скрытой истиной, абляции (`matching_bench.json`) | #headline, #bench, #ablations | синтетика · исторический снимок · 20.10.2026 · алгоритм `7d2962f` · банк `4d44ffb4` · `make bench` |
 | Повторы заданий между попытками (`attempts_repeat.json`) | #retest-repeats | синтетика · исторический снимок · 09.10.2026 · алгоритм `9dcade5` · банк `76c4164b` · `python -m app.modules.validation.attempts_repeat` |
 | Симуляция теста: точность, повтор, частота показа, утечка (`report.json`) | #retest, #test, #other-conditions, #exposure, #leak, #calibration | синтетика · исторический снимок · 19.10.2026 · алгоритм `41d0e68` · банк `4d44ffb4` (403 семейств) · `make validate` |
