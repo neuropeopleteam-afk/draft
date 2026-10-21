@@ -1,20 +1,20 @@
 {
  "weights": {
-  "test": 0.1373,
+  "test": 0.1391,
   "margin": 0.0,
   "fsp": 0.1,
   "required": 0.0,
   "desired": 0.0,
-  "probe": 0.2124,
-  "failed": -0.0067,
-  "provisional": -0.0064,
-  "in_band": 0.2005,
-  "level_ok": 0.3497
+  "probe": 0.2161,
+  "failed": 0.0,
+  "provisional": -0.0175,
+  "in_band": 0.2048,
+  "level_ok": 0.34
  },
  "meta": {
   "source": "tools/realdata/ltr_train.py",
   "version": "match-v2",
-  "trained_at": "2026-10-21T13:31:36+00:00",
+  "trained_at": "2026-10-21T13:41:54+00:00",
   "dev_seeds": {
    "sm": [
     "20261006",
@@ -66,142 +66,142 @@
    "in_band",
    "level_ok"
   ],
-  "features_sha256": "ef630028068f43f72bc18555dc15679f0c17c8bc54fd8d191f495fa2309cfa10",
+  "features_sha256": "389349e477a88eecc7229b25527b81a220a6e090c791c9b7dc2fd2cb7e773a94",
   "filter": "каскад стека (ltr.THRESHOLDS)",
   "objective": "попарная логистическая, вес пары — разность 2^метка − 1, условия с равным весом, L2 1e-3",
   "cv_by_worlds": {
    "joint_cascade": {
     "sm": {
-     "ndcg10": 0.6338,
-     "p5": 0.7268,
-     "p10": 0.7023,
-     "mrr": 0.8495,
-     "pool_rel_share": 0.6946
+     "ndcg10": 0.6299,
+     "p5": 0.7282,
+     "p10": 0.7048,
+     "mrr": 0.8332,
+     "pool_rel_share": 0.7011
     },
     "sm_doz": {
-     "ndcg10": 0.6389,
-     "p5": 0.7621,
-     "p10": 0.713,
-     "mrr": 0.8938,
-     "pool_rel_share": 0.6946
+     "ndcg10": 0.6321,
+     "p5": 0.7525,
+     "p10": 0.7087,
+     "mrr": 0.8888,
+     "pool_rel_share": 0.7011
     },
     "hard": {
-     "ndcg10": 0.566,
-     "p5": 0.7431,
-     "p10": 0.7337,
-     "mrr": 0.8488,
-     "pool_rel_share": 0.5225
+     "ndcg10": 0.5633,
+     "p5": 0.7394,
+     "p10": 0.7318,
+     "mrr": 0.8569,
+     "pool_rel_share": 0.523
     },
     "hard_doz": {
-     "ndcg10": 0.6267,
-     "p5": 0.8244,
-     "p10": 0.7797,
-     "mrr": 0.9323,
-     "pool_rel_share": 0.5225
+     "ndcg10": 0.6225,
+     "p5": 0.8224,
+     "p10": 0.7732,
+     "mrr": 0.9274,
+     "pool_rel_share": 0.523
     }
    },
    "now_threshold": {
     "sm": {
-     "ndcg10": 0.5718,
-     "p5": 0.7167,
-     "p10": 0.6987,
-     "mrr": 0.8246,
-     "pool_rel_share": 0.6946
+     "ndcg10": 0.5775,
+     "p5": 0.7271,
+     "p10": 0.7077,
+     "mrr": 0.8419,
+     "pool_rel_share": 0.7011
     },
     "sm_doz": {
-     "ndcg10": 0.587,
-     "p5": 0.746,
-     "p10": 0.7078,
-     "mrr": 0.8605,
-     "pool_rel_share": 0.6946
+     "ndcg10": 0.5898,
+     "p5": 0.7443,
+     "p10": 0.7117,
+     "mrr": 0.863,
+     "pool_rel_share": 0.7011
     },
     "hard": {
-     "ndcg10": 0.6071,
-     "p5": 0.8005,
-     "p10": 0.7803,
-     "mrr": 0.8904,
-     "pool_rel_share": 0.5225
+     "ndcg10": 0.6084,
+     "p5": 0.7984,
+     "p10": 0.7809,
+     "mrr": 0.8885,
+     "pool_rel_share": 0.523
     },
     "hard_doz": {
-     "ndcg10": 0.6351,
-     "p5": 0.8321,
-     "p10": 0.7958,
-     "mrr": 0.928,
-     "pool_rel_share": 0.5225
+     "ndcg10": 0.6336,
+     "p5": 0.8317,
+     "p10": 0.796,
+     "mrr": 0.9196,
+     "pool_rel_share": 0.523
     }
    },
    "joint_cascade_fixed": {
     "sm": {
-     "ndcg10": 0.6145,
-     "p5": 0.7343,
-     "p10": 0.6987,
-     "mrr": 0.8517,
-     "pool_rel_share": 0.6946
+     "ndcg10": 0.6124,
+     "p5": 0.7232,
+     "p10": 0.7048,
+     "mrr": 0.8421,
+     "pool_rel_share": 0.7011
     },
     "sm_doz": {
-     "ndcg10": 0.6286,
-     "p5": 0.7611,
-     "p10": 0.712,
-     "mrr": 0.8961,
-     "pool_rel_share": 0.6946
+     "ndcg10": 0.6216,
+     "p5": 0.7504,
+     "p10": 0.7118,
+     "mrr": 0.8874,
+     "pool_rel_share": 0.7011
     },
     "hard": {
-     "ndcg10": 0.5785,
-     "p5": 0.762,
-     "p10": 0.7483,
-     "mrr": 0.8689,
-     "pool_rel_share": 0.5225
+     "ndcg10": 0.5773,
+     "p5": 0.7644,
+     "p10": 0.75,
+     "mrr": 0.8656,
+     "pool_rel_share": 0.523
     },
     "hard_doz": {
-     "ndcg10": 0.6292,
-     "p5": 0.8234,
-     "p10": 0.7834,
-     "mrr": 0.936,
-     "pool_rel_share": 0.5225
+     "ndcg10": 0.6265,
+     "p5": 0.8223,
+     "p10": 0.7829,
+     "mrr": 0.9284,
+     "pool_rel_share": 0.523
     }
    }
   },
   "fit_on_all_dev": {
    "sm": {
-    "ndcg10": 0.6131,
-    "p5": 0.7314,
-    "p10": 0.6984,
-    "mrr": 0.8452,
-    "pool_rel_share": 0.6946
+    "ndcg10": 0.6142,
+    "p5": 0.7193,
+    "p10": 0.7039,
+    "mrr": 0.8449,
+    "pool_rel_share": 0.7011
    },
    "sm_doz": {
-    "ndcg10": 0.6278,
-    "p5": 0.7604,
-    "p10": 0.7104,
-    "mrr": 0.8948,
-    "pool_rel_share": 0.6946
+    "ndcg10": 0.6236,
+    "p5": 0.7436,
+    "p10": 0.713,
+    "mrr": 0.8859,
+    "pool_rel_share": 0.7011
    },
    "hard": {
-    "ndcg10": 0.5777,
-    "p5": 0.759,
-    "p10": 0.7488,
-    "mrr": 0.8654,
-    "pool_rel_share": 0.5225
+    "ndcg10": 0.5779,
+    "p5": 0.7641,
+    "p10": 0.7494,
+    "mrr": 0.8662,
+    "pool_rel_share": 0.523
    },
    "hard_doz": {
-    "ndcg10": 0.6295,
-    "p5": 0.8236,
-    "p10": 0.7839,
-    "mrr": 0.9357,
-    "pool_rel_share": 0.5225
+    "ndcg10": 0.6272,
+    "p5": 0.8229,
+    "p10": 0.7816,
+    "mrr": 0.9288,
+    "pool_rel_share": 0.523
    }
   },
   "learned_before_fixed": {
-   "test": 0.1526,
+   "test": 0.1545,
    "margin": 0.0,
    "fsp": 0.0,
    "required": 0.0,
    "desired": 0.0,
-   "probe": 0.236,
-   "failed": -0.0075,
-   "provisional": -0.0071,
-   "in_band": 0.2228,
-   "level_ok": 0.3886
+   "probe": 0.2401,
+   "failed": 0.0,
+   "provisional": -0.0194,
+   "in_band": 0.2275,
+   "level_ok": 0.3778
   },
   "fixed": {
    "fsp": 0.1
@@ -214,7 +214,7 @@
    "required": "0",
    "desired": "0",
    "probe": "+",
-   "failed": "−",
+   "failed": "0",
    "provisional": "−",
    "in_band": "+",
    "level_ok": "+"
