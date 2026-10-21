@@ -433,7 +433,12 @@ def get_leak_k_variants():
 @router.get("/cheat-challenge", summary="«Обмани тест»: отчётный прогон ботов через движок и последние живые попытки")
 def get_cheat_challenge():
     rep = json.loads(CHEAT_JSON.read_text(encoding="utf-8")) if CHEAT_JSON.exists() else {}
-    return {"table": rep.get("table"), "meta": rep.get("meta"), "attempts": list(reversed(_CHEAT_LIVE[-20:]))}
+    meta = dict(rep.get("meta") or {})
+    if isinstance(meta.get("settings"), dict):
+        # настройки прогона публикуются для воспроизводимости, но без флагов механики честности (ИИ-метка в условии):
+        # их название не должно уходить анониму (test_integrity_r27); полный снимок — в data/cheat_bots.json в репозитории
+        meta["settings"] = {k: v for k, v in meta["settings"].items() if "ai_mark" not in k}
+    return {"table": rep.get("table"), "meta": meta, "attempts": list(reversed(_CHEAT_LIVE[-20:]))}
 
 
 class CheatAttemptIn(BaseModel):
