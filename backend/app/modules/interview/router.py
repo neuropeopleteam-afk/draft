@@ -629,7 +629,7 @@ class ConciergeTurnIn(BaseModel):
 
 class ConciergeEventIn(BaseModel):
     session_id: str = Field(min_length=8, max_length=64)
-    type: Literal["open", "say", "step", "close", "mic", "point"]
+    type: Literal["open", "say", "step", "close", "mic", "point", "barge", "hand", "nav", "auto"]
     text: str = Field("", max_length=1200)
     step: str | None = Field(None, max_length=40)
     path: str | None = Field(None, max_length=200)

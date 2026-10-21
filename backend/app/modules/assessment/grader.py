@@ -510,7 +510,7 @@ _PATTERNS: list[tuple[str, re.Pattern]] = [
     ("model_address", re.compile(
         r"(?:\b(?:ты|вы)\s+(?:теперь|отныне)\s+[—-]?\s*(?:[\w\-]+\s+){0,2}?(?:эксперт|оценщик|модель|ассистент|"
         r"экзаменатор|помощник|system[\s\-]*ассистент)|\bты\s+больше\s+не\b|\byou\s+are\s+now\b|"
-        r"\b(?:system\s+prompt|системн\w+\s+(?:промпт|инструкц\w*|сообщени\w*|примечани\w*))|"
+        r"\b(?:system\s+prompt\s*(?:override|ignore|disregard|hack|leak|injection|:)|(?:ignore|override|disregard|forget|bypass|reveal)\s+(?:the\s+|your\s+)?system\s+prompt|системн\w+\s+(?:инструкц\w*|сообщени\w*|примечани\w*)|системн\w+\s+промпт\w*\s*(?::|игнорир|забуд|отмен|обойд))|"
         r"\bnote\s+(?:for|to)\s+(?:the\s+)?(?:automated\s+)?(?:grading\s+(?:system|model)|grader|evaluator)\b|"
         r"\bпримечание\s+для\s+(?:автоматической\s+|оценивающей\s+|проверяющей\s+)системы(?:\s+контроля)?\b|"
         r"\bдля\s+проверяющей\s+системы\s*\(|"
@@ -552,7 +552,18 @@ INJECTION_TITLES = {
     "all_criteria": "просьба засчитать все критерии",
     "llm_manipulation": "модель-оценщик отметила попытку повлиять на оценку",
     "meta_claims": "утверждения кандидата об оценке собственного ответа (вырезаны перед оценкой)",
+    "resume_override": "скрытая инструкция подмены грейда, стажа или стека в документе",
 }
+
+_RESUME_OVERRIDE_RE = re.compile(
+    r"(?:\b(?:присвой|назначь|выставь|установи|укажи|запиши)\w*\s+(?:мне\s+|кандидату\s+)?(?:грейд|уровень)\s+(?:senior|lead|principal|middle)\b"
+    r"|\b(?:assign|set|grant)\s+(?:the\s+)?(?:candidate\s+)?(?:grade|level)\s+(?:to\s+)?(?:senior|lead|principal|middle)\b"
+    r"|\b(?:добавь|включи|припиши)\w*\s+(?:мне\s+|кандидату\s+)?(?:в\s+стек|навык\w*|стек)\b"
+    r"|\b(?:add|include|append)\s+(?:to\s+)?(?:the\s+)?(?:candidate\s+)?(?:stack|skills)\s*:"
+    r"|\"stack\"\s*:\s*\[[^\]]*\]\s*,\s*\"(?:roles|soft_skills|experience_years)\""
+    r"|\bexperience_years\s*[:=]\s*\d+\b)",
+    re.IGNORECASE,
+)
 
 # Мягкие признаки: сами по себе не блокируют (могут встретиться в честном ответе), но ведут ко второй оценке.
 _SOFT = re.compile(
@@ -653,7 +664,75 @@ def injection_signals(text: str) -> list[str]:
     for code, rx in _PATTERNS:
         if rx.search(t):
             found.append(code)
+    if _RESUME_OVERRIDE_RE.search(t):
+        found.append("resume_override")
     return found
+
+
+def strip_injections_and_meta(text: str) -> tuple[str, list[str]]:
+    """Вырезает из текста предложения и строки с промпт-инъекциями (включая обфусцированные) и мета-утверждениями,
+    сохраняя переводы строк и честное техническое содержание (для резюме, PDF и открытых ответов).
+    """
+    raw = text or ""
+    if not raw:
+        return "", []
+    t_full = _deobfuscate(raw)
+    has_inj = bool(injection_signals(raw))
+    has_meta = bool(_META.search(t_full) or _has_meta_cooccurrence(t_full))
+    if not has_inj and not has_meta:
+        return raw, []
+
+    removed: list[str] = []
+
+    def _clean_html_comment(m: re.Match) -> str:
+        inner = m.group(1) or ""
+        if injection_signals(inner) or _META.search(_deobfuscate(inner)):
+            removed.append(m.group(0).strip())
+            return ""
+        return m.group(0)
+
+    work = _HTML_COMMENT.sub(_clean_html_comment, raw)
+    out_lines: list[str] = []
+    for line in work.split("\n"):
+        if not line.strip():
+            out_lines.append(line)
+            continue
+        line_work = _collapse_spaced(line)[0] if (_DOTTED_WORD.search(line) or _SPACED_RUN.search(line)) else line
+
+        def _seg_repl(m: re.Match) -> str:
+            seg = m.group(0)
+            seg_d = _deobfuscate(seg)
+            if _META.search(seg_d) or _has_meta_cooccurrence(seg_d) or injection_signals(seg):
+                removed.append(seg.strip())
+                return ""
+            return seg
+
+        cleaned_line = _SENT.sub(_seg_repl, line_work)
+        if injection_signals(cleaned_line) or _META.search(_deobfuscate(cleaned_line)):
+            removed.append(cleaned_line.strip())
+            continue
+        cleaned_line = re.sub(r"[ \t]{2,}", " ", cleaned_line).strip()
+        if cleaned_line:
+            out_lines.append(cleaned_line)
+
+    result = "\n".join(out_lines).strip()
+    return result, removed
+
+
+def sanitize_resume_for_llm(text: str) -> dict:
+    """Прогоняет текст резюме (в т.ч. извлечённый из PDF) через нормализатор и фильтр инъекций до подачи в LLM."""
+    raw = text or ""
+    norm_text, norms = normalize_for_filter(raw)
+    sigs = injection_signals(raw)
+    cleaned, removed = strip_injections_and_meta(raw)
+    safe_body = sanitize(cleaned)
+    return {
+        "cleaned_text": safe_body,
+        "llm_text": safe_body,
+        "signals": sigs,
+        "normalizations": norms,
+        "removed": removed,
+    }
 
 
 def soft_signals(text: str) -> list[str]:
@@ -668,7 +747,14 @@ def inspect(text: str) -> dict:
     raw = text or ""
     norm_text, norms = normalize_for_filter(raw)
     sigs = injection_signals(raw)
-    cleaned, meta_rem = strip_meta(raw)
+    _, meta_rem = strip_meta(raw)
+    if sigs:
+        cleaned, inj_rem = strip_injections_and_meta(raw)
+        for r_item in inj_rem:
+            if r_item and r_item not in meta_rem:
+                meta_rem.append(r_item)
+    else:
+        cleaned, _ = strip_meta(raw)
     soft = soft_signals(raw)
     if sigs:
         verdict, route = "blocked", "expert"
@@ -744,7 +830,14 @@ def classify_injection_llm(text: str, *, model: str | None = None, timeout_s: fl
     }
 
 
-from app.modules.proctor.rules import check_copy_decoy, integrity_followup, make_copy_decoy  # noqa: E402, F401
+from app.modules.proctor.rules import (  # noqa: E402, F401
+    audit_candidate_payload,
+    check_copy_decoy,
+    compute_form_gap,
+    detect_person_fit,
+    integrity_followup,
+    make_copy_decoy,
+)
 
 
 

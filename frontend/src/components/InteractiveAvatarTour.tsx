@@ -236,6 +236,7 @@ export function InteractiveAvatarTour() {
         say: (t: string) => eng.injectUser(String(t ?? "")), hear: (t: string) => eng.hear(String(t ?? "")),
         stt: (e: Parameters<ElenaEngine["injectStt"]>[0]) => eng.injectStt(e),
         ui: () => eng.getUi(), pause: () => eng.togglePause(), close: () => eng.close(),
+        hand: () => eng.raiseHand(), nav: (p: string) => eng.onPathChange(String(p ?? "")),
       };
     }
     eng.start(track, stepIndex);   // синхронно в обработчике нажатия: звук и микрофон разрешаются этим жестом
@@ -263,6 +264,26 @@ export function InteractiveAvatarTour() {
   useEffect(() => {
     if (open && loc.pathname.startsWith("/candidate/interview/")) close();
   }, [open, loc.pathname, close]);
+
+  // человек сам перешёл по сайту — режим «ведёте вы»: Настя коротко комментирует экран и не ведёт, пока не попросят
+  useEffect(() => {
+    if (open) engineRef.current?.onPathChange(loc.pathname);
+  }, [open, loc.pathname]);
+
+  // пробел — «поднять руку»: Настя договаривает предложение и слушает (не в полях ввода)
+  useEffect(() => {
+    if (!open) return;
+    const on = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || tag === "button" || el?.isContentEditable) return;
+      e.preventDefault();
+      engineRef.current?.raiseHand();
+    };
+    window.addEventListener("keydown", on);
+    return () => window.removeEventListener("keydown", on);
+  }, [open]);
 
   // окно закрыли вкладкой — стенограмма получает «close»
   useEffect(() => {
@@ -336,6 +357,10 @@ export function InteractiveAvatarTour() {
     : null;
   const btn = large ? "h-12 w-12" : "h-10 w-10";
   const ease = "cubic-bezier(.22,.8,.24,1)";
+  // «поднять руку» — пока Настя говорит или думает: договорит предложение и будет слушать
+  const canHand = micOn && !listening && ui.phase !== "paused" && ui.phase !== "connecting" && ui.phase !== "idle";
+  // знакомство: кто пришёл — можно не говорить, а нажать
+  const roleChips = large && ui.awaiting === "start" && ui.phase === "listening" && !ui.speaking;
 
   return (
     <>
@@ -393,6 +418,16 @@ export function InteractiveAvatarTour() {
               </span>
             </div>
           )}
+          {roleChips && (
+            <div className="absolute inset-x-3 bottom-[7.2rem] flex flex-wrap justify-center gap-1.5" data-testid="elena-role-chips">
+              {([["Кандидат", "я кандидат"], ["Работодатель", "я работодатель"], ["Федерация", "я из Федерации"]] as const).map(([label, say]) => (
+                <button key={label} type="button" onClick={() => eng?.injectUser(say)}
+                  className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#120E24] shadow backdrop-blur transition hover:bg-white">
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           {ui.phase === "thinking" && (
             <div className={`pointer-events-none absolute inset-x-0 flex justify-center gap-1.5 ${large ? "bottom-24" : "bottom-16"}`} aria-hidden="true" data-testid="elena-thinking">
               {[0, 1, 2].map((i) => <span key={i} className="h-2 w-2 animate-bounce rounded-full bg-white/85" style={{ animationDelay: `${i * 140}ms` }} />)}
@@ -424,6 +459,16 @@ export function InteractiveAvatarTour() {
                 </span>
                 <span className="truncate" data-testid="elena-mic-label">{micText}</span>
               </button>
+              {canHand && (
+                <button type="button" onClick={() => eng?.raiseHand()} aria-label="Сказать — Настя договорит и выслушает" title="Сказать (пробел)"
+                  data-testid="elena-hand"
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full bg-amber-400/95 font-semibold text-[#120E24] backdrop-blur transition hover:bg-amber-300 ${large ? "h-12 px-3.5 text-sm" : "h-10 px-2.5 text-xs"}`}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M8 12V5.5a1.5 1.5 0 0 1 3 0V11M11 5a1.5 1.5 0 0 1 3 0v6M14 6.5a1.5 1.5 0 0 1 3 0V12M17 9.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-4.9-2.5L4 13.8a1.6 1.6 0 0 1 2.6-1.9L8 13.5" />
+                  </svg>
+                  {large && !f.small ? "Сказать" : null}
+                </button>
+              )}
               {ui.canPause && (
                 <button type="button" onClick={() => eng?.togglePause()} aria-label={paused ? "Продолжить обзор" : "Пауза"} title={paused ? "Продолжить обзор" : "Пауза"}
                   data-testid="elena-pause" data-paused={paused ? "1" : "0"}

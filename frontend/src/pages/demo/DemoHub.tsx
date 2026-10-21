@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { IncidentSandbox } from "../../components/IncidentSandbox";
-import { launchLiveAvatar } from "../../components/Interview";
 import { JuryPanel } from "../../components/JuryPanel";
 import { MatchingBenchUpload } from "../../components/MatchingBenchUpload";
 import { ShieldIcon, SiteFooter, SiteHeader } from "../../components/SiteHeader";
@@ -10,15 +9,141 @@ import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { juryLogin, type Persona } from "../../lib/jury";
 import { useDemoAccess } from "../../lib/juryMode";
-import { usePageTitle } from "../../lib/meta";
-import { NUMBERS } from "../../lib/numbers";
+import { getLandingCards, usePageTitle } from "../../lib/meta";
+import { fmtPct, NUMBERS } from "../../lib/numbers";
+
+interface ActionItem {
+  label: string;
+  to?: string;
+  persona?: Persona;
+  testid: string;
+  primary?: boolean;
+}
+
+interface CapabilityCard {
+  id: string;
+  badge: string;
+  title: string;
+  summary: string;
+  recompute?: string;
+  actions: ActionItem[];
+}
+
+/**
+ * Вычисляет карточки новых возможностей для блока «Проверьте нас за 3 минуты».
+ * Пока функция или пересчитанный артефакт не влиты в NUMBERS.json — карточка полностью скрыта флагом (без заглушек «скоро»).
+ */
+export function getDemoCapabilityCards(searchParams?: URLSearchParams): CapabilityCard[] {
+  const forceAll = searchParams?.get("demo_features") === "all";
+  const landingCards = getLandingCards();
+  const fspLanding = landingCards.find((c) => c.id === "fsp_protocols");
+  const raw = NUMBERS as Record<string, any>;
+
+  const cards: CapabilityCard[] = [];
+
+  // 1. Официальные протоколы ФСП и разряд по ЕВСК (А8 / А2) — протоколы влиты в волну 1
+  const hasFspProtocols = Boolean(fspLanding || raw.fsp_protocols || forceAll);
+  if (hasFspProtocols) {
+    const evskInfo = raw.fsp_protocols?.evsk || raw.evsk;
+    const baseSub =
+      fspLanding?.subtext ??
+      "Сверка достижений кандидата по официальным протоколам всероссийских соревнований и списку сборной России с сайта ФСП.";
+    const evskSuffix = evskInfo?.summary_ru
+      ? ` ${evskInfo.summary_ru}`
+      : " Поддержано сопоставление с нормами ЕВСК и разведением кода ЕКП и спортивного разряда.";
+    cards.push({
+      id: "fsp-protocols",
+      badge: fspLanding ? `${fspLanding.value} ${fspLanding.accent} ФСП` : "Официальные документы ФСП",
+      title: "Верификация по официальным протоколам ФСП и разряд ЕВСК",
+      summary: `${baseSub}.${evskSuffix}`,
+      recompute: fspLanding?.recompute ?? "python -m tools.fsp_protocols build",
+      actions: [
+        { label: "Проверить в паспорте кандидата", persona: "candidate", to: "/candidate/fsp", testid: "cap-fsp-cand", primary: true },
+        { label: "Поиск у работодателя", persona: "employer", to: "/employer/search", testid: "cap-fsp-emp" },
+      ],
+    });
+  }
+
+  // 2. Трёхзначный вердикт SPRT «подтверждён / не подтверждён / доп. этап» (А4)
+  // В волне 1 стоит маркер $comment_wave1 и текст «пересчитываются» в jury_banner.claims_ru.grade — скрываем до влития проверенного расчёта А4
+  const gradeClaim = String(raw.jury_banner?.claims_ru?.grade ?? "");
+  const isWave1Draft = Boolean(raw.$comment_wave1 && gradeClaim.includes("пересчитываются"));
+  const hasSprtVerdictReady = Boolean((raw.sprt_verdict && !isWave1Draft) || raw.sprt_verdict?.verified === true || forceAll);
+  if (hasSprtVerdictReady && raw.sprt_verdict) {
+    const sv = raw.sprt_verdict;
+    cards.push({
+      id: "sprt-verdict",
+      badge: `Точность вердикта: ${fmtPct(sv.precision_decided, 1)}`,
+      title: "Вердикт: подтверждён / не подтверждён / нужен доп. этап",
+      summary: `Классификационный адаптивный тест у ближайшего порога грейда с последовательным критерием останова и обязательной квотой практических кодовых задач (доля уверенных вердиктов на 1-м этапе — ${fmtPct(sv.decided_share, 1)}).`,
+      recompute: sv.recompute,
+      actions: [
+        { label: "Экран категории и вердикта", persona: "candidate", to: "/candidate/category", testid: "cap-sprt-cat", primary: true },
+        { label: "Протокол валидации", to: "/demo/validation#protocols", testid: "cap-sprt-val" },
+      ],
+    });
+  }
+
+  // 3. Отложенный набор реальных вакансий hh.ru (А5)
+  const hhHoldout = raw.hh_match?.holdout || raw.hh_holdout;
+  if (Boolean(hhHoldout || forceAll)) {
+    const nHoldout = hhHoldout?.n ?? raw.hh_match?.n ?? 0;
+    const dirShare = hhHoldout?.direction_ok?.share ?? raw.hh_match?.overall?.direction_ok?.share;
+    const gradeShare = hhHoldout?.grade_ok?.share ?? raw.hh_match?.overall?.confirmed_exact?.share;
+    cards.push({
+      id: "hh-holdout",
+      badge: `Отложенный набор hh.ru: N = ${nHoldout}`,
+      title: "Слепой контроль подбора на отложенных вакансиях hh.ru",
+      summary: `Независимая проверка словаря и ранжирования на свежей отложенной выборке реальных вакансий hh.ru (точность направления ${fmtPct(dirShare, 1)}, согласие по грейду ${fmtPct(gradeShare, 1)}). Грейд — строго по тесту, стек — фильтр.`,
+      recompute: hhHoldout?.recompute ?? raw.hh_match?.recompute,
+      actions: [
+        { label: "Открыть стенд реальных вакансий", to: "/demo/validation#protocols", testid: "cap-hh-val", primary: true },
+        { label: "Проверить свой набор пар", to: "#demo-custom-bench", testid: "cap-hh-bench" },
+      ],
+    });
+  }
+
+  // 4. Нагрузочный прогон и зелёный контур тестов (А12)
+  const loadMetrics = raw.load || raw.perf || raw.quality;
+  if (Boolean(loadMetrics || forceAll)) {
+    const p95 = loadMetrics?.p95_ms ? `p95 = ${loadMetrics.p95_ms} мс` : "20 / 50 / 100 пользователей";
+    cards.push({
+      id: "load-tests",
+      badge: `Нагрузка и автотесты · ${p95}`,
+      title: "Нагрузочный прогон стенда и сквозные автотесты",
+      summary:
+        loadMetrics?.claim_ru ??
+        "Сквозная проверка под нагрузкой (формирование подборки, открытие профиля, поиск, вход) и автоматический контроль целостности API и схемы OpenAPI.",
+      recompute: loadMetrics?.recompute ?? "pytest && npx playwright test",
+      actions: [
+        { label: "Боевой ИИ-Полигон (нагрузка)", to: "/demo/warroom", testid: "cap-load-warroom", primary: true },
+        { label: "Состояние сервиса (/status)", to: "/status", testid: "cap-load-status" },
+      ],
+    });
+  }
+
+  // 5. Безопасный показ регистрации для экскурсии и жюри без создания мусорных учёток (А1)
+  cards.push({
+    id: "demo-register",
+    badge: "Экскурсия и 152-ФЗ · 0 мусорных записей",
+    title: "Демо-режим регистрации с мгновенным входом в роль",
+    summary:
+      "Демонстрация формы регистрации кандидата и работодателя с проверкой согласий 152-ФЗ и предзаполненными полями без засорения базы тестовыми аккаунтами.",
+    actions: [
+      { label: "Открыть демо-регистрацию (/demo/register)", to: "/demo/register", testid: "cap-demo-register", primary: true },
+      { label: "Как работодатель", to: "/demo/register?role=employer", testid: "cap-demo-register-emp" },
+    ],
+  });
+
+  return cards;
+}
 
 const CRITERIA_3MIN: {
   id: string;
   weight: string;
   title: string;
   summary: string;
-  actions: { label: string; to?: string; persona?: Persona; testid: string; primary?: boolean }[];
+  actions: ActionItem[];
 }[] = [
   {
     id: "c1",
@@ -99,7 +224,7 @@ const TZ_MAP: {
   {
     group: "Обязательный путь соискателя (п. 2.1, 3.1 ТЗ)",
     items: [
-      { req: "Регистрация с кодом подтверждения и согласием 152-ФЗ", impl: "Почта + 6-значный код + вход через ФСП ID", persona: null, to: "/register?role=candidate" },
+      { req: "Регистрация с кодом подтверждения и согласием 152-ФЗ", impl: "Почта + 6-значный код + вход через ФСП ID (безопасный демо-показ без записи в БД)", persona: null, to: "/demo/register" },
       { req: "Первичный опрос, стек и загрузка резюме (PDF)", impl: "Разбор стека + локальное обезличивание ФИО", persona: "candidate", to: "/candidate/profile" },
       { req: "Адаптивное тестирование и защита от утечки заданий", impl: `Индивидуальные варианты из ${NUMBERS.bank.families.toLocaleString("ru-RU")} семейств + адаптивный отбор`, persona: "candidate_new", to: "/candidate/express" },
       { req: "Присвоение категории «направление · грейд» и статус", impl: "Подтверждён / нужен доп. этап / не подтверждён + паспорт Ed25519", persona: "candidate", to: "/candidate/category" },
@@ -196,6 +321,7 @@ export default function DemoHub() {
   const demoAccess = useDemoAccess();
   const { me, signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [showIncident, setShowIncident] = useState(false);
@@ -203,6 +329,8 @@ export default function DemoHub() {
   const [benchBusy, setBenchBusy] = useState(false);
   const [benchResult, setBenchResult] = useState<any>(null);
   const [benchErr, setBenchErr] = useState<string | null>(null);
+
+  const capabilityCards = getDemoCapabilityCards(searchParams);
 
   if (!demoAccess) {
     return (
@@ -223,7 +351,7 @@ export default function DemoHub() {
       document.getElementById(to.slice(1))?.scrollIntoView({ behavior: "smooth" });
       return;
     }
-    if (to.startsWith("/api/")) {
+    if (to.startsWith("/api/") || to === "/status") {
       window.location.assign(to);
       return;
     }
@@ -246,6 +374,7 @@ export default function DemoHub() {
     setBusy("cand-avatar"); setErr(null);
     try {
       if (me?.role !== "candidate") await juryLogin("candidate", signIn);
+      const { launchLiveAvatar } = await import("../../components/Interview");
       await launchLiveAvatar(signIn, navigate, "candidate");
     } catch (e) { setErr(errText(e)); } finally { setBusy(null); }
   }
@@ -351,6 +480,49 @@ export default function DemoHub() {
               </article>
             ))}
           </div>
+
+          {/* Карточки проверенных возможностей (протоколы ФСП/ЕВСК, вердикт SPRT, отложенный hh.ru, нагрузка, демо-регистрация) */}
+          {capabilityCards.length > 0 && (
+            <div className="mt-6" data-testid="demo-3min-capabilities">
+              <p className="np-eyebrow">Ключевые доказательства и верифицированные модули</p>
+              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                {capabilityCards.map((cap) => (
+                  <article
+                    key={cap.id}
+                    className="np-glass flex flex-col justify-between border border-emerald-400/25 p-5"
+                    data-testid={`cap-card-${cap.id}`}
+                  >
+                    <div>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 font-mono text-xs font-bold text-emerald-300">
+                          {cap.badge}
+                        </span>
+                      </div>
+                      <h3 className="mt-3 text-base font-bold leading-snug np-text">{cap.title}</h3>
+                      <p className="mt-2 text-xs leading-relaxed np-muted">{cap.summary}</p>
+                      {cap.recompute && (
+                        <p className="mt-2 font-mono text-[11px] np-faint">Пересчёт: {cap.recompute}</p>
+                      )}
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2 pt-2">
+                      {cap.actions.map((a) => (
+                        <button
+                          key={a.testid}
+                          type="button"
+                          disabled={!!busy}
+                          data-testid={a.testid}
+                          onClick={() => void jump(a.persona, a.to ?? "/demo", a.testid)}
+                          className={`${a.primary ? "np-btn-primary" : "np-btn-ghost"} px-3.5 py-2 text-xs`}
+                        >
+                          {busy === a.testid ? "Открываем…" : a.label}
+                        </button>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Панель ролей и проверки за 12 минут */}
