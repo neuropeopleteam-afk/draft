@@ -20,6 +20,10 @@ os.environ["HIRING_REMIND_POLL_S"] = "0"  # напоминания о собес
 os.environ["ASSIGNMENTS_FEED_INTERVAL_S"] = "0"  # фоновая лента заданий — так же; её логика проверяется вызовом run_once
 os.environ["VALIDATION_REPORT_TTL_S"] = "0"  # отчёт /validation — без кэша: тесты меняют данные между запросами
 os.environ["SUBS_TICK_INTERVAL_S"] = "0"  # фоновый обход подписок (И25) — так же; логика — вызовом runner.tick
+# Кэш и счётчики бюджета Насти (concierge_budget: JSON на диске кэша) — свои у каждого процесса pytest. Без этого
+# процессы xdist и прошлые прогоны на одной машине делили /tmp/concierge_tts_cache и упирались в суточный лимит:
+# 429 avatar_budget вместо ожидаемых 503/200 (test_access_matrix на поде RunPod, 21.10).
+os.environ["CONCIERGE_TTS_CACHE_DIR"] = tempfile.mkdtemp(prefix="concierge_cache_")
 os.environ.pop("POSTBOX_ACCESS_KEY_ID", None)
 os.environ.pop("POSTBOX_SECRET_ACCESS_KEY", None)
 
@@ -55,11 +59,24 @@ def engine():
     eng.dispose()
 
 
+def _reset_concierge_budget() -> None:
+    import shutil
+    import sys
+
+    mod = sys.modules.get("app.modules.interview.concierge_budget")
+    if mod is None:  # модуль ещё не загружен — счётчиков нет
+        return
+    shutil.rmtree(mod._dir(), ignore_errors=True)
+    with mod._BURST_LOCK:
+        mod._BURST.clear()
+
+
 @pytest.fixture(autouse=True)
 def clean_db(engine):
     from app.core.ratelimit import reset_all
 
     reset_all()  # лимиты частоты в памяти процесса — у каждого теста свои
+    _reset_concierge_budget()  # суточные счётчики Насти — тоже: тест не должен зависеть от того, сколько прошло до него
     yield
     from app.models import metadata
 
