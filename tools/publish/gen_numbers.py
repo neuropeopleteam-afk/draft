@@ -513,7 +513,8 @@ def anticheat_block() -> dict | None:
 
 def fsp_block() -> dict | None:
     st = _load(A8_DIR / "index_stats.json")
-    oc = _load(A8_DIR / "ocr_audit.json")
+    # аудит распознавания: новейший (v5, выборка со стратами и разбором расхождений), иначе прежний
+    oc = _load(A8_DIR / "ocr_audit_v5.json") or _load(A8_DIR / "ocr_audit.json")
     agg = _load(A8_DIR / "aggregates.json")
     if not (st or oc or agg):
         return None
@@ -589,6 +590,11 @@ def landing_cards(bank, gv, matching, hh, fsp) -> list[dict]:
                 f"{ix.get('regions')} регионов" if ix.get("regions") is not None else None,
                 (f"норматив разряда по ЕВСК подтверждён протоколом у {ix.get('athletes_with_evsk_norm')}"
                  if ix.get("athletes_with_evsk_norm") is not None else None)]
+        er = ((fsp.get("ocr_audit") or {}).get("errors") or {}) if isinstance(fsp.get("ocr_audit"), dict) else {}
+        if all(isinstance(er.get(k), dict) for k in ("fio", "place", "birth_date")):
+            bits.append(f"проверка распознавания: ошибок в ФИО — {er['fio'].get('errors')} из {er['fio'].get('checked')}, "
+                        f"в местах — {er['place'].get('errors')} из {er['place'].get('checked')}, в датах рождения — "
+                        f"{er['birth_date'].get('errors')} из {er['birth_date'].get('checked')}")
         cards.append({
             "id": "fsp_protocols", "eyebrow": "Официальные протоколы ФСП", "value": str(ix["documents"]),
             "accent": "документов",
