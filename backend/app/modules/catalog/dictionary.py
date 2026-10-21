@@ -3,6 +3,7 @@
 Используются в двух местах: структурирование потребности работодателя и разбор резюме кандидата.
 Ключи стек-тегов совпадают с идентификаторами справочника (миграция 0002).
 """
+from functools import lru_cache
 import re
 
 from app.modules.catalog.seed_data import GRADES_EXT
@@ -10,71 +11,71 @@ from app.modules.catalog.seed_data import GRADES_EXT
 # id стек-тега → синонимы (нижний регистр; границы слова проверяются регулярным выражением)
 STACK_ALIASES: dict[str, list[str]] = {
     "algorithms": ["алгоритм", "структуры данных", "algorithms", "data structures", "leetcode", "олимпиадн"],
-    "sql": ["sql", "postgres sql", "запрос", "mysql", "t-sql", "pl/sql"],
-    "http": ["http", "rest", "веб-протокол", "tcp/ip"],
-    "git": ["git", "github", "gitlab", "bitbucket"],
-    "linux": ["linux", "bash", "unix", "ubuntu", "debian", "centos", "shell", "линукс"],
-    "docker": ["docker", "контейнер", "docker-compose", "докер"],
-    "kubernetes": ["kubernetes", "k8s", "кубер"],
-    "python": ["python", "питон", "python3", "пайтон"],
+    "sql": ["sql", "postgres sql", "запрос", "mysql", "t-sql", "pl/sql", "ms sql", "mssql", "transact-sql", "субд"],
+    "http": ["http", "rest", "веб-протокол", "tcp/ip", "websocket", "websockets"],
+    "git": ["git", "github", "gitlab", "bitbucket", "gitflic"],
+    "linux": ["linux", "bash", "unix", "ubuntu", "debian", "centos", "shell", "линукс", "rhel", "astra linux", "астра линукс", "ред ос", "redos", "systemd"],
+    "docker": ["docker", "контейнер", "docker-compose", "докер", "docker compose", "dockerfile", "containerd", "podman"],
+    "kubernetes": ["kubernetes", "k8s", "кубер", "openshift", "опеншифт", "k3s"],
+    "python": ["python", "питон", "python3", "пайтон", "pydantic", "celery", "sqlalchemy", "alembic"],
     "fastapi": ["fastapi", "fast api", "фаст апи", "фастапи"],  # «фаст апи» — сленг (И27, Н1)
     "django": ["django", "drf", "django rest", "джанго"],
-    "flask": ["flask"],
-    "asyncio": ["asyncio", "async/await", "асинхрон", "aiohttp"],
-    "postgresql": ["postgresql", "postgres", "постгр", "psql"],
-    "redis": ["redis", "редис"],
-    "kafka": ["kafka", "кафк"],
-    "rabbitmq": ["rabbitmq", "rabbit", "amqp"],
-    "rest-api": ["rest api", "restful", "openapi", "swagger", "api"],
-    "grpc": ["grpc", "protobuf"],
+    "flask": ["flask", "фласк"],
+    "asyncio": ["asyncio", "async/await", "асинхрон", "aiohttp", "async await"],
+    "postgresql": ["postgresql", "postgres", "постгр", "psql", "pg", "pl/pgsql"],
+    "redis": ["redis", "редис", "in-memory", "memcached"],
+    "kafka": ["kafka", "кафк", "apache kafka"],
+    "rabbitmq": ["rabbitmq", "rabbit", "amqp", "брокер сообщений", "очереди сообщений", "nats"],
+    "rest-api": ["rest api", "restful", "openapi", "swagger", "api", "graphql", "soap", "json api"],
+    "grpc": ["grpc", "protobuf", "protocol buffers"],
     "go": ["golang", "go-разработ", "на go", "go ", "голанг"],
-    "java": ["java", "spring"],
-    "kotlin": ["kotlin"],
-    "csharp": ["c#", "c sharp", ".net", "asp.net"],
-    "php": ["php", "laravel", "symfony"],
-    "javascript": ["javascript", "js", "es6", "ecmascript", "node.js", "nodejs", "джаваскрипт"],
+    "java": ["java", "spring", "jvm", "jdk", "spring boot", "spring framework", "hibernate", "maven", "junit"],
+    "kotlin": ["kotlin", "котлин", "ktor", "coroutines"],
+    "csharp": ["c#", "c sharp", ".net", "asp.net", "dotnet", ".net core", "entity framework", "ef core", "wpf", "wcf"],
+    "php": ["php", "laravel", "symfony", "yii", "yii2", "bitrix", "битрикс"],
+    "javascript": ["javascript", "js", "es6", "ecmascript", "node.js", "nodejs", "node js", "джаваскрипт", "ajax"],
     "typescript": ["typescript", "ts", "тайпскрипт"],
-    "react": ["react", "react.js", "reactjs", "реакт"],
-    "vue": ["vue", "vue.js", "vuejs", "nuxt"],
-    "angular": ["angular", "ангуляр"],
-    "nextjs": ["next.js", "nextjs"],
-    "html-css": ["html", "css", "scss", "sass", "вёрстк", "верстк"],
-    "tailwind": ["tailwind"],
+    "react": ["react", "react.js", "reactjs", "react js", "реакт"],
+    "vue": ["vue", "vue.js", "vuejs", "nuxt", "vue 2", "vue 3", "vue2", "vue3"],
+    "angular": ["angular", "ангуляр", "angularjs"],
+    "nextjs": ["next.js", "nextjs", "некст"],
+    "html-css": ["html", "css", "scss", "sass", "вёрстк", "верстк", "html5", "css3", "less", "flexbox", "grid"],
+    "tailwind": ["tailwind", "tailwindcss"],
     "state-management": ["redux", "zustand", "mobx", "effector", "управление состоянием", "редакс", "ngrx", "pinia", "vuex"],
     "vite-webpack": ["webpack", "vite", "rollup", "esbuild"],
     "frontend-testing": ["jest", "vitest", "testing library", "cypress"],
     # «доступност» — только в контексте интерфейса (CONTEXT_ALIASES ниже): «в пешей доступности», триада ИБ — не a11y
     "a11y": ["a11y", "доступност", "веб-доступност", "цифровая доступност", "цифровой доступност", "accessibility",
              "wcag"],
-    "pandas": ["pandas"],
-    "numpy": ["numpy"],
-    "scikit-learn": ["scikit-learn", "sklearn", "scikit"],
+    "pandas": ["pandas", "пандас", "polars", "dataframe"],
+    "numpy": ["numpy", "scipy"],
+    "scikit-learn": ["scikit-learn", "sklearn", "scikit", "catboost", "lightgbm", "xgboost", "градиентный бустинг"],
     "pytorch": ["pytorch", "torch", "tensorflow", "keras"],
-    "statistics": ["статистик", "a/b", "ab-тест", "а/б", "statistics", "гипотез"],
-    "spark": ["spark", "pyspark", "hadoop"],
-    "airflow": ["airflow"],
+    "statistics": ["статистик", "a/b", "ab-тест", "а/б", "statistics", "гипотез", "математическая статистика", "матстатистик", "теория вероятност", "эконометрик", "временные ряды"],
+    "spark": ["spark", "pyspark", "hadoop", "apache spark", "hdfs", "hive", "mapreduce", "big data", "больших данных"],
+    "airflow": ["airflow", "apache airflow", "dag", "prefect", "luigi"],
     "clickhouse": ["clickhouse", "кликхаус"],
-    "nlp": ["nlp", "обработка естественного языка", "llm", "трансформер", "bert", "rag"],
+    "nlp": ["nlp", "обработка естественного языка", "llm", "трансформер", "bert", "rag", "langchain"],
     "cv": ["computer vision", "компьютерное зрение", "opencv", "yolo", "cv-"],
-    "mlops": ["mlops", "mlflow", "kubeflow", "dvc"],
-    "test-design": ["тест-дизайн", "тест дизайн", "test design", "тест-кейс", "тест кейс", "чек-лист", "граничных значений"],
+    "mlops": ["mlops", "mlflow", "kubeflow", "dvc", "triton", "clearml"],
+    "test-design": ["тест-дизайн", "тест дизайн", "test design", "тест-кейс", "тест кейс", "test case", "чек-лист", "граничных значений", "функциональное тестирование", "функционального тестирования", "регрессионное тестирование", "регрессионного тестирования", "тестовая документация"],
     "manual-testing": ["ручное тестирование", "ручного тестирования", "manual testing", "мануальн", "ручной тестировщ",
-                       "ручного тестировщ", "тестировщик ручн", "manual qa", "баг-репорт", "баг репорт"],
-    "pytest": ["pytest"],
-    "selenium": ["selenium", "selenide"],
-    "playwright": ["playwright"],
-    "api-testing": ["тестирование api", "тестирования api", "postman", "api testing", "api-тест"],
-    "load-testing": ["нагрузочн", "jmeter", "locust", "k6", "load testing"],
-    "ci-cd": ["ci/cd", "ci cd", "jenkins", "gitlab ci", "github actions", "teamcity"],
-    "allure": ["allure"],
-    "owasp": ["owasp", "xss", "sql-инъекц", "csrf", "ssrf"],
+                       "ручного тестировщ", "тестировщик ручн", "manual qa", "баг-репорт", "баг репорт", "исследовательское тестирование", "приемочное тестирование"],
+    "pytest": ["pytest", "unittest"],
+    "selenium": ["selenium", "selenide", "selenium ide", "webdriver", "appium", "aqa"],
+    "playwright": ["playwright", "плейрайт"],
+    "api-testing": ["тестирование api", "тестирования api", "postman", "api testing", "api-тест", "charles", "fiddler", "soapui", "insomnia"],
+    "load-testing": ["нагрузочн", "jmeter", "locust", "k6", "load testing", "gatling"],
+    "ci-cd": ["ci/cd", "ci cd", "cicd", "jenkins", "gitlab ci", "github actions", "teamcity", "argo cd", "argocd"],
+    "allure": ["allure", "аллюр", "testops", "tms", "testrail", "qase"],
+    "owasp": ["owasp", "xss", "sql-инъекц", "csrf", "ssrf", "анализ защищенности", "анализа защищенности", "sast", "dast", "appsec"],
     "pentest": ["пентест", "pentest", "тестирование на проникновение", "penetration", "pentester", "red team", "redteam"],
-    "network-security": ["сетевая безопасность", "сетевой безопасност", "firewall", "межсетев", "ids", "ips", "vpn"],
-    "cryptography": ["криптограф", "cryptography", "pki", "tls", "шифрован"],
-    "siem-soc": ["siem", "soc", "splunk", "maxpatrol", "kuma", "elk"],
+    "network-security": ["сетевая безопасность", "сетевой безопасност", "firewall", "межсетев", "ids", "ips", "vpn", "ngfw", "vipnet", "dlp", "waf", "edr", "xdr", "active directory"],
+    "cryptography": ["криптограф", "cryptography", "pki", "tls", "шифрован", "ipsec"],
+    "siem-soc": ["siem", "soc", "splunk", "maxpatrol", "kuma", "elk", "расследование инцидентов", "реагирование на инцидент", "корреляция событий"],
     "reverse-engineering": ["реверс", "reverse engineering", "ida pro", "ghidra"],
     "forensics": ["форензик", "forensics", "расследован инцидент", "dfir"],
-    "burp-suite": ["burp"],
+    "burp-suite": ["burp", "burp suite", "nmap", "metasploit", "nessus"],
     "ctf": ["ctf", "capture the flag"],
 }
 
@@ -106,13 +107,19 @@ SHORT_TAG = {"go ": "go", "ts": "typescript", "js": "javascript", "soc": "siem-s
              "ips": "network-security", "api": "rest-api", "elk": "siem-soc", "k6": "load-testing"}
 
 DIRECTION_KEYWORDS: dict[str, list[str]] = {
-    "backend": ["backend", "бэкенд", "бекенд", "back-end", "серверн", "api-сервис", "микросервис", "бэк ", "бек "],
-    "frontend": ["frontend", "фронтенд", "front-end", "фронт", "клиентская часть", "интерфейс", "spa"],
+    "backend": ["backend", "бэкенд", "бекенд", "back-end", "серверн", "api-сервис", "микросервис", "бэк ", "бек ",
+                "разработчик python", "python-разработчик", "java-разработчик", "разработчик java", "go-разработчик",
+                "разработчик c#", "разработчик .net", "разработчик php"],
+    "frontend": ["frontend", "фронтенд", "front-end", "фронт", "клиентская часть", "интерфейс", "spa",
+                 "react-разработчик", "разработчик react", "vue-разработчик", "разработчик vue", "javascript/react", "node js"],
     "data_ml": ["data scien", "machine learning", "машинн", "ml-", "ml ", "data/ml", "аналитик данных", "дата-сайент",
-                "модел", "нейросет", "data engineer"],
-    "qa": ["qa", "тестировщик", "тестирован", "автотест", "quality assurance", "sdet"],
-    "security": ["информационн безопасност", "информационной безопасности", "кибербез", "иб ", "безопасност",
-                 "pentest", "пентест", "soc-аналитик", "appsec", "security"],
+                "ml-модел", "моделей машинн", "обучение модел", "нейросет", "data engineer", "deep learning", "computer vision"],
+    "qa": ["qa", "тестировщик", "тестирован", "автотест", "quality assurance", "sdet", "aqa", "инженер по тестированию", "специалист по тестированию"],
+    "security": ["информационн безопасност", "информационной безопасности", "кибербез", "иб ", "отдел иб", "управление иб",
+                 "специалист по иб", "инженер иб", "анализ защищенност", "анализа защищенност", "технической безопасности",
+                 "обеспечения безопасности", "корпоративной защиты", "фрод-мониторинг", "антифрод-аналитик", "pentest",
+                 "пентест", "soc-аналитик", "команду soc", "отдел soc", "специалист soc", "appsec", "devsecops",
+                 "security", "защит информац", "защиты информации"],
 }
 
 GRADE_KEYWORDS: dict[str, list[str]] = {
@@ -216,8 +223,22 @@ def _a11y_context(text: str, m: re.Match) -> bool:
 
 CONTEXT_ALIASES = {("a11y", "доступност"): _a11y_context}
 
+def _alias_pattern_str(alias: str) -> str:
+    a = re.escape(alias.strip())
+    right = r"(?![a-zA-Z0-9+#])" if re.search(r"[A-Za-z0-9+#.]$", alias.strip()) else ""
+    return rf"{a}{right}"
+
+
+def _combine_aliases(aliases: list[str]) -> list[re.Pattern]:
+    if not aliases:
+        return []
+    ordered = sorted(aliases, key=lambda x: -len(x.strip()))
+    body = "|".join(_alias_pattern_str(a) for a in ordered)
+    return [re.compile(rf"(?<![\w\-])(?:{body})", re.IGNORECASE)]
+
+
 _COMPILED: dict[str, list[re.Pattern]] = {
-    tag: [_alias_regex(a) for a in aliases if a not in CASE_SENSITIVE_SHORT and (tag, a) not in CONTEXT_ALIASES]
+    tag: _combine_aliases([a for a in aliases if a not in CASE_SENSITIVE_SHORT and (tag, a) not in CONTEXT_ALIASES])
     for tag, aliases in STACK_ALIASES.items()
 }
 _CONTEXTUAL = [(tag, _alias_regex(a), check) for (tag, a), check in CONTEXT_ALIASES.items()]
@@ -290,12 +311,12 @@ def _ext_compiled() -> dict[str, list[re.Pattern]]:
     if _EXT_COMPILED is None:
         from app.modules.catalog.ext import EXT_ALIASES
 
-        _EXT_COMPILED = {tag: [_alias_regex(a) for a in aliases] for tag, aliases in EXT_ALIASES.items()}
+        _EXT_COMPILED = {tag: _combine_aliases(aliases) for tag, aliases in EXT_ALIASES.items()}
     return _EXT_COMPILED
 
 
-def find_stack_spans(text: str) -> dict[str, tuple[int, int]]:
-    """Стек-теги в тексте → (начало, конец) первого упоминания: цитата, на основании которой тег извлечён."""
+@lru_cache(maxsize=512)
+def _find_stack_spans_cached(text: str, ext_tags: tuple[str, ...]) -> tuple[tuple[str, tuple[int, int]], ...]:
     found: dict[str, tuple[int, int]] = {}
     for tag, pats in _COMPILED.items():
         for p in pats:
@@ -314,10 +335,15 @@ def find_stack_spans(text: str) -> dict[str, tuple[int, int]]:
         if m and (tag not in found or m.start() < found[tag][0]):
             found[tag] = (m.start(), m.end())
     _ext_spans(text, found)
-    return found
+    return tuple(found.items())
 
 
-_UNSUPPORTED = {name: [_alias_regex(a) for a in aliases] for name, aliases in UNSUPPORTED_TECH.items()}
+def find_stack_spans(text: str) -> dict[str, tuple[int, int]]:
+    """Стек-теги в тексте → (начало, конец) первого упоминания: цитата, на основании которой тег извлечён."""
+    return dict(_find_stack_spans_cached(text, _visible_ext_tags()))
+
+
+_UNSUPPORTED = {name: _combine_aliases(aliases) for name, aliases in UNSUPPORTED_TECH.items()}
 
 
 def find_unsupported_spans(text: str) -> dict[str, tuple[int, int]]:

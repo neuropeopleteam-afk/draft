@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, type GradeStatusInfo } from "../../components/GradeStatus";
-import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, plainText as ruText, useApi } from "../../components/ui";
+import { Alert, DemoProfileBadge, Empty, Level, LevelLegend, Loading, Modal, Status, dt, plainText as ruText, useApi } from "../../components/ui";
 import { ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
 import { ReasonLevel } from "../../components/CandidateCard";  // Ф6 (Н5)
 import { ExecAdvisor } from "../../components/ExecAdvisor";  // Н1: ИИ-советник руководителя (живой диалог)
@@ -82,6 +82,11 @@ export function Compare() {
   refs.forEach((r) => qs.append("refs", r));
   if (v) qs.set("version", v);
   const { data, loading, error, reload } = useApi<CompareOut>(`/employer/needs/${id}/compare?${qs.toString()}`, [sp.toString()]);
+  const navigate = useNavigate();
+  const allNeeds = useApi<any[]>("/employer/needs");
+  const ver = v ? Number(v) : data?.need?.version ?? 1;
+  const selData = useApi<any>(id && ver ? `/employer/needs/${id}/selections/${ver}` : null, [id, ver]);
+  const synByRef = new Map<string, any>((selData.data?.results ?? []).map((r: any) => [r.ref, r.card ?? r]));
   const [probe, setProbe] = useState<string[] | null>(null);
   const [invite, setInvite] = useState<Cand | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -105,7 +110,19 @@ export function Compare() {
     <div className="min-w-0 max-w-6xl space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageTitle title="Сравнение кандидатов" subtitle={`«${data.need.title}»${data.need.version ? `, подборка, версия ${data.need.version}` : ""}. Рядом — только факты по требованиям потребности; сказанное кандидатом о себе в балл не входит. Кандидаты обезличены.`} />
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {(allNeeds.data?.length ?? 0) > 1 && (
+            <select
+              aria-label="Потребность для сравнения"
+              className="rounded-xl border border-brand-night/15 bg-white px-3 py-2 text-xs font-semibold text-brand-night"
+              value={id}
+              onChange={(e) => navigate(`/employer/needs/${e.target.value}/compare`)}
+            >
+              {allNeeds.data!.map((n: any) => (
+                <option key={n.id} value={n.id}>{n.title}</option>
+              ))}
+            </select>
+          )}
           <Link to={back} className="btn-ghost">К подборке</Link>
           <button className="btn-ghost" disabled={!cs.some((c) => !c.probe_active)} onClick={() => setProbe(cs.filter((c) => !c.probe_active).map((c) => c.ref))}>Задание всем ({cs.filter((c) => !c.probe_active).length})</button>
         </div>
@@ -128,7 +145,10 @@ export function Compare() {
                   {c.rank_in_selection && <span className="text-xs text-brand-ink/65">место {c.rank_in_selection} из {data.selection_total}</span>}
                 </div>
                 <p className="text-sm text-brand-ink/75">{c.category?.title ?? (c.claimed?.title ? `заявлено: ${c.claimed.title}` : "без категории")}</p>
-                <GradeBadge s={c.status} claimed={c.claimed} />
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <GradeBadge s={c.status} claimed={c.claimed} />
+                  <DemoProfileBadge c={synByRef.get(c.ref) ?? c} />
+                </div>
                 <div><PassportCryptoChip refId={c.ref} /></div>
                 <p className="text-2xl font-bold text-brand">{Math.round(c.score * 100)}<span className="text-sm font-semibold text-brand-ink/65"> из 100</span></p>
                 <div className="flex flex-wrap gap-1.5">
@@ -198,6 +218,22 @@ export function CompareLanding() {
   }, [pick?.id]);  // eslint-disable-line react-hooks/exhaustive-deps
   if (loading && !data) return <Loading />;
   if (error) return <Alert>{error}</Alert>;
-  if (!pick) return <Empty title="Сравнивать пока некого" text="Создайте потребность — в подборке отметьте 2–3 кандидатов и нажмите «Сравнить выбранных»." action={<Link to="/employer/needs" className="btn-primary">К потребностям</Link>} />;
+  if (!pick) {
+    return (
+      <div className="max-w-3xl space-y-5">
+        <PageTitle title="Сравнение кандидатов" subtitle="Сопоставление 2–3 кандидатов рядом по требованиям вашей потребности с рекомендацией ИИ-советника." />
+        <Empty
+          title="Сравнивать пока некого"
+          text="Создайте первую потребность (описание вакансии) — платформа подберёт кандидатов по подтверждённым навыкам и откроет таблицу сравнения топ-3 рядом."
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link to="/employer/needs" className="btn-primary">Создать потребность</Link>
+              <Link to="/employer/search" className="btn-ghost">Поиск по базе кандидатов</Link>
+            </div>
+          }
+        />
+      </div>
+    );
+  }
   return <Loading />;
 }

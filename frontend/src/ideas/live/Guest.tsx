@@ -66,8 +66,17 @@ export default function LiveGuest() {
     };
     const t = setInterval(tick, document.visibilityState === "visible" ? 1500 : 4000);
     const onVis = () => { if (document.visibilityState === "visible") void tick(); };
+    const onFocus = () => { void tick(); };
     document.addEventListener("visibilitychange", onVis);
-    return () => { stop = true; clearInterval(t); document.removeEventListener("visibilitychange", onVis); };
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("pageshow", onFocus);
+    return () => {
+      stop = true;
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pageshow", onFocus);
+    };
   }, [c, g?.stage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Момент приглашения: звук, вибрация, заголовок вкладки; без push — ещё и системное уведомление со страницы
@@ -88,8 +97,10 @@ export default function LiveGuest() {
   async function start(direction: string, wantPush: boolean) {
     unlockAudio();
     setError(null);
-    // Разрешение — прямо в обработчике нажатия (Safari и Chrome требуют жест пользователя)
-    const perm = wantPush && pushSupported() && Notification.permission === "default" ? Notification.requestPermission() : null;
+    // Разрешение — прямо в обработчике нажатия, но без блокировки старта теста на телефоне
+    const perm = wantPush && pushSupported() && typeof Notification !== "undefined" && Notification.permission === "default"
+      ? Notification.requestPermission().catch(() => "default" as NotificationPermission)
+      : null;
     try {
       const r = await guestApi<{ token: string; guest: Guest }>(c, "/start", { direction });
       guestToken.set(c, r.token);
@@ -97,10 +108,15 @@ export default function LiveGuest() {
       setG(r.guest);
       window.scrollTo({ top: 0 });
       if (wantPush && room?.push.enabled) {
-        await perm?.catch(() => undefined);
-        subscribePush((j) => guestApi(c, "/push", j))
-          .then((res) => setPush({ on: res.ok, note: res.ok ? null : res.reason ?? null }))
-          .catch(() => setPush({ on: false, note: "Подписаться на push не удалось — приглашение появится на этой странице" }));
+        void (async () => {
+          try {
+            if (perm) await Promise.race([perm, new Promise((res) => setTimeout(res, 4000))]);
+            const res = await subscribePush((j) => guestApi(c, "/push", j));
+            setPush({ on: res.ok, note: res.ok ? null : res.reason ?? null });
+          } catch {
+            setPush({ on: false, note: "Уведомление в фоне недоступно — приглашение появится на этой странице" });
+          }
+        })();
       }
     } catch (e) { setError(errText(e)); }
   }
@@ -112,10 +128,10 @@ export default function LiveGuest() {
       <header className="bg-brand-night px-4 pb-4 pt-[max(0.75rem,env(safe-area-inset-top))] text-white">
         {/* Полоска навигации: вернуться к большому экрану зала или на главную — без кнопки «назад» браузера */}
         <nav aria-label="Навигация мини-теста" className="-mx-4 mb-3 flex items-center justify-between gap-2 border-b border-white/10 px-4 pb-2.5">
-          <Link to="/jury/live" className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-brand-night hover:bg-brand-blush">
+          <Link to="/jury/live" className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-brand-night hover:bg-brand-blush">
             <span aria-hidden="true">←</span> Назад в зал
           </Link>
-          <Link to="/" className="inline-flex items-center rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/20">На главную</Link>
+          <Link to="/" className="inline-flex min-h-[44px] items-center rounded-xl bg-white/10 px-3.5 py-2 text-xs font-semibold text-white hover:bg-white/20">На главную</Link>
         </nav>
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Драфт · живая демонстрация</p>
         <p className="mt-1 text-base font-bold">{room?.company ?? "Демо жюри"}</p>
@@ -142,7 +158,7 @@ function IosHint() {
 }
 
 function Intro({ room, onStart, error }: { room: RoomPublic; onStart: (d: string, push: boolean) => Promise<void>; error: string | null }) {
-  const [dir, setDir] = useState<string | null>(null);
+  const [dir, setDir] = useState<string | null>(room.directions[0]?.id ?? "backend");
   const canPush = room.push.enabled && pushSupported();
   const [wantPush, setWantPush] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -160,7 +176,7 @@ function Intro({ room, onStart, error }: { room: RoomPublic; onStart: (d: string
         <div className="grid grid-cols-2 gap-2">
           {room.directions.map((d) => (
             <button key={d.id} type="button" aria-pressed={dir === d.id} onClick={() => setDir(d.id)}
-              className={`rounded-xl border px-3 py-3 text-left transition-colors ${dir === d.id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white"}`}>
+              className={`min-h-[56px] touch-manipulation rounded-xl border px-3 py-3 text-left transition-colors ${dir === d.id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white"}`}>
               <span className="block text-sm font-bold text-brand-night">{d.title}</span>
               <span className="mt-0.5 block text-[11px] leading-snug text-brand-ink/65">{d.need}</span>
             </button>
@@ -217,8 +233,8 @@ function Item({ code, g, item, onNext }: { code: string; g: Guest; item: LiveIte
             {lines.map((ln, i) => {
               const n = i + 1;
               const sel = isLine && value === n;
-              const cls = `flex w-full min-w-max items-start gap-2 px-3 py-0.5 text-left font-mono text-[12px] leading-relaxed ${sel ? "bg-brand/50" : ""}`;
-              const body = (<><span className="w-5 shrink-0 select-none text-right text-[#FFD6E4]/45">{n}</span><span className="whitespace-pre">{ln || " "}</span></>);
+              const cls = `flex w-full min-w-max items-center gap-2.5 px-3 ${isLine ? "min-h-[40px] py-1.5 touch-manipulation" : "py-0.5"} text-left font-mono text-[12.5px] leading-relaxed ${sel ? "bg-brand/55 font-bold text-white" : ""}`;
+              const body = (<><span className="w-6 shrink-0 select-none text-right text-[#FFD6E4]/60">{n}</span><span className="whitespace-pre">{ln || " "}</span></>);
               return isLine
                 ? <button key={i} type="button" role="option" aria-selected={sel} className={cls} onClick={() => setValue(n)}>{body}</button>
                 : <div key={i} className={cls}>{body}</div>;
@@ -230,12 +246,12 @@ function Item({ code, g, item, onNext }: { code: string; g: Guest; item: LiveIte
           <fieldset className="mt-4 min-w-0 space-y-2">
             <legend className="sr-only">Варианты ответа</legend>
             {item.options.map((o) => (
-              <label key={o.id} className={`flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-3 text-sm transition-colors ${value === o.id ? "border-brand bg-brand-blush/30" : "border-brand-night/10"}`}>
-                <input type="radio" name="opt" className="mt-0.5 accent-brand" checked={value === o.id} onChange={() => setValue(o.id)} />
+              <label key={o.id} className={`flex min-h-[48px] touch-manipulation cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 text-sm transition-colors ${value === o.id ? "border-brand bg-brand-blush/30" : "border-brand-night/10"}`}>
+                <input type="radio" name="opt" className="mt-1 h-4 w-4 shrink-0 accent-brand" checked={value === o.id} onChange={() => setValue(o.id)} />
                 <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                   <b className="mr-1.5 text-brand-lavender">{o.id}</b>
-                  <span className={o.code ? "" : "font-mono text-[12.5px]"}>{o.code ? <Rich text={o.text} /> : o.text}</span>
-                  {o.code && <pre className="mt-2 overflow-x-auto rounded-lg bg-brand-ink p-2.5 text-[11.5px] leading-relaxed text-[#FFD6E4]"><code>{o.code}</code></pre>}
+                  <span className={o.code ? "" : "font-mono text-[13px]"}>{o.code ? <Rich text={o.text} /> : o.text}</span>
+                  {o.code && <pre className="mt-2 max-w-full overflow-x-auto rounded-lg bg-brand-ink p-2.5 text-[11.5px] leading-relaxed text-[#FFD6E4]"><code>{o.code}</code></pre>}
                 </span>
               </label>
             ))}
@@ -244,7 +260,7 @@ function Item({ code, g, item, onNext }: { code: string; g: Guest; item: LiveIte
         <div className="mt-3"><Alert>{error}</Alert></div>
       </div>
       <div className="sticky bottom-0 -mx-4 mt-3 bg-gradient-to-t from-[#FBF8FC] via-[#FBF8FC] to-transparent px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4">
-        <button className="btn-primary w-full py-4 text-base" disabled={value === null || busy} onClick={send}>
+        <button className="btn-primary min-h-[48px] touch-manipulation w-full py-4 text-base" disabled={value === null || busy} onClick={send}>
           {busy ? (item.position === item.total ? "Считаем результат…" : "Отправляем…") : item.position === item.total ? "Ответить и узнать результат" : "Ответить"}
         </button>
       </div>
@@ -304,12 +320,12 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
           {inv.market && <p className="mt-1 text-xs text-white/70">Рынок категории: {rub(inv.market.from)} – {rub(inv.market.to)}</p>}
           {g.stage === "invited" ? (
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button className="btn bg-brand-strong py-3.5 text-white hover:bg-brand-deep" disabled={!!busy} onClick={() => respond(true)}>{busy === "accept" ? "Отправляем…" : "Принять"}</button>
-              <button className="btn bg-white/10 py-3.5 text-white hover:bg-white/20" disabled={!!busy} onClick={() => respond(false)}>{busy === "decline" ? "Отправляем…" : "Отклонить"}</button>
+              <button className="btn min-h-[48px] touch-manipulation bg-brand-strong py-3.5 text-white hover:bg-brand-deep" disabled={!!busy} onClick={() => respond(true)}>{busy === "accept" ? "Отправляем…" : "Принять"}</button>
+              <button className="btn min-h-[48px] touch-manipulation bg-white/10 py-3.5 text-white hover:bg-white/20" disabled={!!busy} onClick={() => respond(false)}>{busy === "decline" ? "Отправляем…" : "Отклонить"}</button>
             </div>
           ) : (
             <p className="mt-4 rounded-xl bg-white/10 px-3 py-2.5 text-sm">
-              {g.stage === "accepted" ? "Вы приняли приглашение: работодатель получил контакты, профиль ушёл в его ATS. На большом экране это видно." : "Вы отклонили приглашение. Работодатель увидит отказ, контакты останутся скрытыми."}
+              {g.stage === "accepted" ? "Вы приняли приглашение: работодатель получил контакты, профиль передан в кадровую систему. На большом экране это видно." : "Вы отклонили приглашение. Работодатель увидит отказ, контакты останутся скрытыми."}
             </p>
           )}
           {error && <p className="mt-2 text-sm text-brand-blush">{error}</p>}
@@ -345,7 +361,7 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
 
       {sel && selected && (
         <div className="card mt-4 p-4">
-          <button className="flex w-full items-center justify-between text-left text-sm font-bold text-brand-night" onClick={() => setWhy(!why)} aria-expanded={why}>
+          <button className="flex min-h-[44px] w-full items-center justify-between text-left text-sm font-bold text-brand-night" onClick={() => setWhy(!why)} aria-expanded={why}>
             Почему вы в подборке <span className="text-brand">{why ? "Скрыть" : "Показать"}</span>
           </button>
           {why && (

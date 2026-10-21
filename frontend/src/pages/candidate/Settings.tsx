@@ -14,26 +14,61 @@ export function Fsp() {
   const { data, loading, error, reload } = useApi<any>("/me/fsp");
   const [id, setId] = useState("");
   const [msg, setMsg] = useState<{ k: "ok" | "error"; t: string } | null>(null);
-  useEffect(() => { if (data?.fsp_id_claimed) setId(data.fsp_id_claimed); }, [data]);
+  const [fio, setFio] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [team, setTeam] = useState("");
+  const [pRes, setPRes] = useState<any>(null);
+  const [pPick, setPPick] = useState<string[]>([]);
+  const [pConsent, setPConsent] = useState(true);
+  const [pBusy, setPBusy] = useState(false);
+  useEffect(() => {
+    if (data?.fsp_id_claimed) setId(data.fsp_id_claimed);
+    if (data?.full_name && !fio) setFio(data.full_name);
+    if (typeof data?.show_fsp === "boolean") setPConsent(data.show_fsp);
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
   async function link() {
     setMsg(null);
     try { const r = await api<any>("/me/fsp/link", { body: { fsp_id: id } }); setMsg({ k: "ok", t: r.message }); await reload(); }
     catch (e) { setMsg({ k: "error", t: errText(e) }); }
   }
+  async function searchProtocols() {
+    setMsg(null); setPBusy(true);
+    try {
+      const r = await api<any>("/me/fsp/protocols/search", {
+        body: { fio: fio.trim() || null, birth_date: birthDate.trim() || null, team: team.trim() || null },
+      });
+      setPRes(r);
+      setPPick((r.matches ?? []).map((m: any) => m.record_id ?? m.key_hash));
+    } catch (e) { setMsg({ k: "error", t: errText(e) }); }
+    finally { setPBusy(false); }
+  }
+  async function confirmProtocols() {
+    if (!pPick.length) return;
+    setMsg(null); setPBusy(true);
+    try {
+      const r = await api<any>("/me/fsp/protocols/confirm", {
+        body: { key_hashes: pPick, consent_employers: pConsent },
+      });
+      setMsg({ k: "ok", t: r.message || "Подтверждено по официальному протоколу ФСП." });
+      setPRes(null);
+      await reload();
+    } catch (e) { setMsg({ k: "error", t: errText(e) }); }
+    finally { setPBusy(false); }
+  }
   if (loading && !data) return <Loading />;
   if (error) return <Alert>{error}</Alert>;
   return (
     <div className="max-w-3xl space-y-6">
-      <PageTitle title="Паспорт ФСП" subtitle="Достижения в соревнованиях по дисциплинам спортивного программирования (ЕВСК) — факты, подтверждённые реестром Федерации." />
+      <PageTitle title="Паспорт ФСП" subtitle="Достижения в соревнованиях по дисциплинам спортивного программирования (ЕВСК) — факты, подтверждённые реестром и официальными протоколами Федерации." />
       <section className="card space-y-4">
-        <div className="flex items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p>{data.origin && <OriginTag o={data.origin} />}</div>
+        <div className="flex flex-wrap items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p>{data.origin && <OriginTag o={data.origin} />}</div>
         <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром ФСП.` : data.note}</p>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl bg-[#F3F2FB] p-4 text-center text-sm" data-testid="fsp-identity-link">
           <div className="min-w-0"><p className="font-bold text-brand-night">ФСП ID</p><p className="mt-1 break-all text-xs text-brand-ink/70">{data.fsp_id_claimed || "Не указан"}</p></div>
           <span className="text-brand-plum" aria-label="Связь">↔</span>
-          <div><p className="font-bold text-brand-night">Ваш профиль</p><p className="mt-1 text-xs text-brand-ink/70">{data.identity_linked ? "Вход подтверждён OIDC" : data.linked ? "Демо-паспорт" : "Ожидает связи"}</p></div>
+          <div><p className="font-bold text-brand-night">Ваш профиль</p><p className="mt-1 text-xs text-brand-ink/70">{data.identity_linked ? "Вход подтверждён OIDC" : data.linked ? "Реестр ФСП подключается по договору с федерацией" : "Ожидает связи"}</p></div>
         </div>
-        {data.registry?.demo && <Alert kind="info">Демонстрационный стенд реестра ФСП: показаны тестовые спортивные достижения для проверки сценария.</Alert>}
+        {data.registry?.demo && <Alert kind="info">Реестр ФСП подключается по договору с федерацией. На демонстрационном стенде показаны тестовые достижения для проверки сценария.</Alert>}
         {data.registry_warning && <Alert kind="info">{data.registry_warning}</Alert>}
         {data.sport_rank && <p className="text-sm">Спортивный разряд: <b>{data.sport_rank}</b></p>}
         <FspIdLinkButton linkedVia={data.link_source} />
@@ -52,6 +87,97 @@ export function Fsp() {
         {data.fsp_id_claimed && !data.linked && <p className="text-xs text-brand-plum">Указан ФСП ID {data.fsp_id_claimed} — ожидает подтверждения реестром.</p>}
         {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       </section>
+      <section className="card space-y-4" data-testid="fsp-protocol-verify">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h2 className="font-bold text-brand-night">Подтверждение по официальным протоколам ФСП (2025–2026)</h2>
+            <p className="mt-1 text-sm text-brand-ink/70">
+              Поиск по индексу 18 официальных итоговых протоколов соревнований ФСП и списку кандидатов в сборную РФ 2026 (fsp-russia.ru). Работодатели увидят подтверждённый результат только с вашего согласия.
+            </p>
+          </div>
+          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${data.protocols_available ? "bg-emerald-50 text-emerald-800" : "bg-gray-100 text-gray-600"}`}>
+            {data.protocols_available ? `Протоколы подключены (${num(data.protocols_indexed, 0)} записей)` : "Индекс не подключён"}
+          </span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label="ФИО спортсмена" htmlFor="pfio">
+            <input id="pfio" className="input" value={fio} onChange={(e) => setFio(e.target.value)} placeholder="Фамилия Имя Отчество" />
+          </Field>
+          <Field label="Дата или год рождения (необязательно)" htmlFor="pbirth">
+            <input id="pbirth" className="input" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} placeholder="Например: 2004 или 22.02.2004" />
+          </Field>
+          <Field label="Команда (необязательно)" htmlFor="pteam">
+            <input id="pteam" className="input" value={team} onChange={(e) => setTeam(e.target.value)} placeholder="Для командных зачётов" />
+          </Field>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" className="btn-primary" disabled={pBusy || (!fio.trim() && !team.trim())} onClick={searchProtocols} data-testid="fsp-protocol-search-btn">
+            {pBusy ? "Проверяем протоколы…" : "Проверить по протоколам ФСП"}
+          </button>
+        </div>
+        {pRes && (
+          <div className="space-y-3 rounded-xl border border-brand-night/10 bg-[#F7F6FB] p-4 text-sm">
+            <p className="font-semibold text-brand-night">{pRes.message}</p>
+            {(pRes.matches ?? []).length > 0 && (
+              <>
+                <ul className="space-y-2">
+                  {pRes.matches.map((m: any) => {
+                    const key = m.record_id ?? m.key_hash;
+                    const checked = pPick.includes(key);
+                    return (
+                      <li key={key} className="rounded-xl bg-white p-3 ring-1 ring-brand-night/10">
+                        <label className="flex cursor-pointer items-start gap-3">
+                          <input
+                            type="checkbox"
+                            className="mt-1 accent-brand"
+                            checked={checked}
+                            onChange={(e) => setPPick(e.target.checked ? [...pPick, key] : pPick.filter((x) => x !== key))}
+                          />
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800">
+                                {m.status_title ?? "Подтверждено по официальному протоколу ФСП"}
+                              </span>
+                              {m.rank && <span className="chip">Разряд/звание: {m.rank}</span>}
+                              {m.place != null && <span className="chip">Место: {m.place}</span>}
+                            </div>
+                            <p className="font-semibold text-brand-night">{m.event_title}</p>
+                            <p className="text-xs text-brand-ink/70">
+                              {[
+                                m.discipline_title ? `Дисциплина: ${m.discipline_title}` : null,
+                                m.ekp_no ? `ЕКП № ${m.ekp_no}` : null,
+                                m.date ? `Дата: ${m.date}` : null,
+                                m.team ? `Команда: ${m.team}` : null,
+                                m.region ? `Регион: ${m.region}` : null,
+                              ].filter(Boolean).join(" · ")}
+                            </p>
+                            {m.pdf_url && (
+                              <p className="text-xs">
+                                <a href={m.pdf_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">
+                                  Официальный протокол PDF (fsp-russia.ru){m.page ? `, стр. ${m.page}` : ""} ↗
+                                </a>
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <Toggle
+                  checked={pConsent}
+                  onChange={setPConsent}
+                  label="Показывать подтверждённые достижения работодателям в обезличенной карточке"
+                  hint="ФИО и дата рождения не передаются — работодатель видит только факт достижения, дисциплину, место/разряд и ссылку на протокол."
+                />
+                <button type="button" className="btn-primary" disabled={pBusy || !pPick.length} onClick={confirmProtocols} data-testid="fsp-protocol-confirm-btn">
+                  Подтвердить и прикрепить к паспорту ({pPick.length})
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </section>
       {data.rating && (
         <section className="card space-y-3" title={`Коэффициент: ${num(data.rating.strength, 3)}`}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -68,7 +194,41 @@ export function Fsp() {
       {data.achievements?.length ? (
         <section className="card">
           <h2 className="font-bold text-brand-night">Достижения</h2>
-          <ul className="mt-3 space-y-3 text-sm">{data.achievements.map((a: any, i: number) => <li key={i} className="flex items-start gap-2"><Level level="T2" /><div><p>{a.text}</p>{(a.team || a.evsk_code || a.sport_rank) && <p className="mt-1 text-xs text-brand-ink/65">{[a.team ? `Команда: ${a.team}` : null, a.team_result?.place ? `командное место: ${num(a.team_result.place, 0)}` : null, a.evsk_code ? `ЕВСК: ${a.evsk_code}` : null, a.sport_rank ? `разряд: ${a.sport_rank}` : null].filter(Boolean).join(" · ")}</p>}</div></li>)}</ul>
+          <ul className="mt-3 space-y-3 text-sm">
+            {data.achievements.map((a: any, i: number) => (
+              <li key={i} className="flex items-start gap-2">
+                <Level level="T2" />
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p>{a.text}</p>
+                    {a.protocol_verified && (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                        {a.status_title ?? "Подтверждено по официальному протоколу ФСП"}
+                      </span>
+                    )}
+                  </div>
+                  {(a.team || a.evsk_code || a.ekp_no || a.sport_rank || a.region) && (
+                    <p className="mt-1 text-xs text-brand-ink/65">
+                      {[
+                        a.team ? `Команда: ${a.team}` : null,
+                        a.team_result?.place ? `командное место: ${num(a.team_result.place, 0)}` : null,
+                        a.ekp_no ? `ЕКП № ${a.ekp_no}` : a.evsk_code ? `ЕВСК: ${a.evsk_code}` : null,
+                        a.sport_rank ? `разряд: ${a.sport_rank}` : null,
+                        a.region ? `регион: ${a.region}` : null,
+                      ].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                  {a.pdf_url && (
+                    <p className="mt-1 text-xs">
+                      <a href={a.pdf_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">
+                        Официальный протокол PDF (fsp-russia.ru){a.page ? `, стр. ${a.page}` : ""} ↗
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : <Empty title="Достижений нет" text={`${NO_FSP}.`} />}
       <CupPassportEvents />

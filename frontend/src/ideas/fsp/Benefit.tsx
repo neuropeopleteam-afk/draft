@@ -3,7 +3,7 @@
 // пакета). Данные — backend/app/fsp_cabinet/benefit.py и backend/app/modules/tariffs; за флагом TARIFFS_ENABLED.
 import { useState } from "react";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Field, Loading, Seg, Stat, dateOnly, errText, useApi } from "../../components/ui";
+import { Alert, Field, Loading, Seg, Stat, cleanCompanyName, dateOnly, errText, useApi } from "../../components/ui";
 import { api, apiDownload } from "../../lib/api";
 import { usePageTitle } from "../../lib/meta";
 import { BarList, fk, fpct } from "../charts";
@@ -84,7 +84,7 @@ export function FspBenefit() {
         <>
           {rep.demo_share >= 0.99 && <Alert kind="info">Сейчас в данных только демо-компании и демо-кандидаты стенда (модель, не люди): приглашения и наймы сгенерированы по модели поведения. На живых данных раздел считает те же показатели.</Alert>}
           <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
-            <Stat label="Участников ФСП" value={fk(t.candidates_fsp)} hint="с подтверждённым достижением (T2), с категорией" />
+            <Stat label="Участников ФСП" value={fk(t.candidates_fsp)} hint="с подтверждённым достижением в реестре ФСП, с категорией" />
             <Stat label="Приглашены" value={fk(t.invited_fsp)} hint={`участников ФСП · доля ${fpct(t.invite_rate_fsp)}`} />
             <Stat label="Наняты" value={fk(t.hired_fsp)} hint={`участников ФСП · приняли приглашение ${fk(t.accepted_fsp)}`} />
             <Stat label="С ФСП-бонусом" value={fpct(rep.fsp_bonus_share)} hint={`приглашений участникам ФСП: ${rep.invitations_with_fsp_bonus ?? "< 5"} из ${rep.invitations}`} />
@@ -122,7 +122,7 @@ export function FspBenefit() {
                   <tbody className="tabular-nums">
                     {rep.partners.map((p: any) => (
                       <tr key={p.company_id} className="border-t border-brand-night/10">
-                        <th scope="row" className="px-3 py-2 font-semibold text-brand-night">{p.name}{p.city ? <span className="font-normal text-brand-ink/65"> · {p.city}</span> : null}</th>
+                        <th scope="row" className="px-3 py-2 font-semibold text-brand-night">{cleanCompanyName(p.name)}{p.city ? <span className="font-normal text-brand-ink/65"> · {p.city}</span> : null}</th>
                         <td className="px-3 py-2 text-right">{p.needs}</td>
                         <td className="px-3 py-2 text-right">{p.invitations}</td>
                         <td className="px-3 py-2 text-right">{p.invitations_fsp ?? "< 5"}{p.fsp_invite_share != null && <span className="text-brand-ink/65"> ({fpct(p.fsp_invite_share)})</span>}</td>
@@ -160,7 +160,7 @@ function CompanyRow({ c, onChange }: { c: any; onChange: () => void }) {
   return (
     <li className="rounded-xl border border-brand-night/10 p-3 text-sm" data-testid="partner-row">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-semibold text-brand-night">{c.name}</span>
+        <span className="font-semibold text-brand-night">{cleanCompanyName(c.name)}</span>
         <PartnerBadge on={c.fsp_partner} />
         <span className="text-brand-ink/65">{[c.city, c.inn && `ИНН ${c.inn}`, `тариф «${c.plan_title}»`].filter(Boolean).join(" · ")}</span>
       </div>

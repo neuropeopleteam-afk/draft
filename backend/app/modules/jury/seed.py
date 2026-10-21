@@ -155,9 +155,24 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
     обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений, кроме away_items — позиций, где
     «кандидат» уходил со вкладки (для демонстрации «достоверности результата»). Возвращает итог finish_session."""
     rng = np.random.default_rng(seed)
-    eng = DemoRespondentEngine(rng, theta, pending_left)
-    ts = assessment.start_session(db, user_id, claimed, engine_name="bank", direction=direction)
-    st = ts.result["state"]
+    # pending_left — для очереди эксперта нужен развёрнутый ответ «на проверке». Состав адаптивного теста зависит
+    # от seed сессии (криптостойкий ГСЧ), и в части вариантов развёрнутых заданий нет (банк по направлениям,
+    # 20.10: ~45 % тестов backend.middle) — тогда вариант без нужного числа ответов на проверке удаляется
+    # до завершения и тест проходится заново (не больше 8 раз; последний вариант остаётся как есть).
+    for attempt in range(8 if pending_left > 0 else 1):
+        eng = DemoRespondentEngine(rng, theta, pending_left)
+        ts = assessment.start_session(db, user_id, claimed, engine_name="bank", direction=direction)
+        _demo_answers(eng, ts.result["state"], theta, rng, away_items, copy_items)
+        if eng.pending_left <= 0 or attempt == 7:
+            break
+        db.delete(ts)
+        db.commit()
+    return _finish_demo_test(db, ts, eng, camera)
+
+
+def _demo_answers(eng: "DemoRespondentEngine", st: dict, theta: float, rng: np.random.Generator,
+                  away_items: tuple[int, ...], copy_items: tuple[int, ...]) -> None:
+    """Ответы демо-респондента на все задания сессии (без завершения)."""
     for _ in range(60):
         item = eng.next_item(st)
         if item is None:
@@ -175,6 +190,9 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
                                 "fs_ms": 60_000, "fs_out_ms": 0, "fs_exit": 0, "fs_na": 0})
             if step < it["parts"] and str(step) in it["answers"]:  # шаги тоже занимают время (часы сервера)
                 it["answers"][str(step)]["at"] = it["issued_at"] + (time.time() - it["issued_at"]) * step / it["parts"]
+
+
+def _finish_demo_test(db: Session, ts, eng: "DemoRespondentEngine", camera: bool) -> dict:
     assessment._drain_outbox(db, ts)
     from sqlalchemy.orm.attributes import flag_modified
 
@@ -408,6 +426,8 @@ def _create_jury(db: Session, sid: str) -> dict:
     needs = []
     for text_ in NEEDS:
         req = parse_need(text_, use_llm=False)
+        if text_.lower().startswith("frontend") and req.get("direction") != "frontend":
+            req["direction"] = "frontend"
         n = EmployerNeed(company_id=c.id, created_by=eu.id, title=text_.split(":")[0][:200], raw_text=text_,
                          requirements=req, direction_id=req.get("direction"), grade_id=req.get("grade"),
                          salary_from=req.get("salary_from"), salary_to=req.get("salary_to"), status=NeedStatus.active)
@@ -439,7 +459,8 @@ def _create_jury(db: Session, sid: str) -> dict:
     seed_jury_interest(db, eu, c, p1, p2, p3)
     from app.modules.mutual.demo import seed_jury_mutual  # взаимный подбор, отзывы, ссылка руководителю (Н9, Н2, Н3)
     seed_jury_mutual(db, eu, needs, p1, p2, p3)
-    _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
+    fsp_u = _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
+    _jury_trio(db, eu, c, p1, fsp_u)
     # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
     ex = _user(db, "expert", UserRole.expert, sid)  # не admin: только /api/expert/*, только демо-кандидаты
     db.commit()
@@ -528,6 +549,55 @@ def _maria_extras(db: Session, eu: User, maria: CandidateProfile) -> None:
     except Exception:  # noqa: BLE001
         db.rollback()
         log.exception("jury: Maria extras failed")
+
+
+def _jury_trio(db: Session, eu: User, c: Company, maria: CandidateProfile, fsp_u: User) -> None:
+    """А2 (PR-18): демо трёхсторонней связи внутри песочницы жюри (работодатель, кандидат Мария и ФСП)."""
+    from app.core.enums import InvitationStatus
+    from app.modules.invitations.models import Invitation
+    from app.modules.trio.models import TrioMessage, TrioThread
+
+    try:
+        with db.begin_nested():
+            now = utcnow()
+            # 1. Канал у Марии по приглашению от «Логистики Онлайн» — активен, с ответом представителя ФСП
+            inv_m = db.scalar(select(Invitation).where(Invitation.candidate_user_id == maria.user_id)
+                              .order_by(Invitation.created_at).limit(1))
+            if inv_m is not None and db.scalar(select(TrioThread.id).where(TrioThread.invitation_id == inv_m.id)) is None:
+                tm = TrioThread(invitation_id=inv_m.id, company_id=inv_m.company_id, candidate_user_id=maria.user_id,
+                                topic="fsp_check", created_by_side="candidate", created_by=maria.user_id,
+                                status="active", activated_at=now)
+                db.add(tm)
+                db.flush()
+                db.add_all([
+                    TrioMessage(thread_id=tm.id, sender_side="system",
+                                body="Кандидат подключил представителя ФСП к переписке."),
+                    TrioMessage(thread_id=tm.id, sender_user_id=maria.user_id, sender_side="candidate",
+                                body="Прошу представителя ФСП подтвердить мои результаты Всероссийского чемпионата по продуктовому программированию для работодателя."),
+                    TrioMessage(thread_id=tm.id, sender_user_id=fsp_u.id, sender_side="fsp",
+                                body="Подтверждаем по реестру ФСП: 2 место Всероссийского чемпионата по продуктовому программированию (дисциплина ЕВСК). Достижение верифицировано."),
+                ])
+            # 2. Канал у работодателя «Северный платёж» по принятому приглашению — активен и виден обеим сторонам и ФСП
+            inv_e = db.scalar(select(Invitation).where(
+                Invitation.company_id == c.id, Invitation.candidate_user_id != maria.user_id,
+                Invitation.status == InvitationStatus.accepted,
+            ).order_by(Invitation.created_at).limit(1))
+            if inv_e is not None and db.scalar(select(TrioThread.id).where(TrioThread.invitation_id == inv_e.id)) is None:
+                te = TrioThread(invitation_id=inv_e.id, company_id=c.id, candidate_user_id=inv_e.candidate_user_id,
+                                topic="offer", created_by_side="employer", created_by=eu.id,
+                                status="active", activated_at=now)
+                db.add(te)
+                db.flush()
+                db.add_all([
+                    TrioMessage(thread_id=te.id, sender_side="system",
+                                body="Кандидат согласился: представитель ФСП подключён к каналу."),
+                    TrioMessage(thread_id=te.id, sender_user_id=eu.id, sender_side="employer",
+                                body="Коллеги из ФСП, просим подтвердить участие кандидата в кубке по алгоритмическому программированию перед финальным оффером."),
+                    TrioMessage(thread_id=te.id, sender_user_id=fsp_u.id, sender_side="fsp",
+                                body="Проверено по протоколам ФСП: участие и зачётный результат подтверждены."),
+                ])
+    except Exception:  # noqa: BLE001
+        log.exception("jury: demo trio failed")
 
 
 def ensure_ideas(db: Session) -> None:

@@ -50,8 +50,11 @@ def _checker() -> BankEngine:
 
 def pool(direction: str) -> list[PoolItem]:
     items = [p for p in _pool(1) if not p.canary and p.format in FORMATS and p.time_limit_s <= MAX_ITEM_TIME_S]
-    own = [p for p in items if p.block == direction]
-    return own if len(own) >= 2 * N_ITEMS else own + [p for p in items if p.block == "common"]
+    # Для экспресс-демонстрации на телефоне приоритет — содержательным 1-касательным заданиям без многошаговых расчётов
+    mobile_items = [p for p in items if "_fwd_k" not in p.family_id and "_solve_" not in p.family_id]
+    base = mobile_items if len(mobile_items) >= 2 * N_ITEMS else items
+    own = [p for p in base if p.block == direction]
+    return own if len(own) >= 2 * N_ITEMS else own + [p for p in base if p.block == "common"]
 
 
 def new_state(direction: str) -> dict:
@@ -161,9 +164,11 @@ def result(st: dict) -> dict:
     lvl = category_level(theta, se, n_items=len(done))
     g = lvl.grade
     # Без единого верного ответа категории нет: доказательства уровня нет, даже если θ (EAP) с априорным N(0; 1)
-    # у самых лёгких заданий осталась у порога
+    # у самых лёгких заданий осталась у порога. При ≥ 1 верном ответе гарантируется хотя бы «Стажёр (предварительно)».
     if not any(float(i["x"][0]) > 0 for i in done):
         g = "none"
+    elif g == "none":
+        g = "intern"
     grade = None if g == "none" else g
     theta, se = theta_round(theta, se)  # одно округление θ и погрешности (fmt.theta_round): телефон, зал, подборка
     skills: dict[str, list[float]] = {}

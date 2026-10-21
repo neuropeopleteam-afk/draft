@@ -59,7 +59,7 @@ def _market_cell(cat: Category | None, req: dict) -> dict:
     if cat is None or not (cat.market_salary_from or cat.market_salary_to):
         return {"level": "market", "status": "neutral", "text": "Нет данных о рынке категории"}
     lo, hi, med = cat.market_salary_from, cat.market_salary_to, cat.market_salary_median
-    # рынок — на руки (калькулятор Хабр Карьеры, docs/SALARY_SOURCES.md); вилка потребности сравнивается в том же
+    # рынок — на руки (открытые данные рынка ИТ, docs/SALARY_SOURCES.md); вилка потребности сравнивается в том же
     # основании: до вычета НДФЛ по умолчанию, «на руки» — если так сказано в тексте (need_parser.salary_net)
     text = f"Рынок {cat.title}: {_rub(lo)} – {_rub(hi)} на руки" + (f", медиана {_rub(med)}" if med else "")
     sf, st = req.get("salary_from"), req.get("salary_to")
@@ -270,7 +270,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         {"key": "market", "group": "Рынок", "title": "Ожидания по рынку категории",
          "requirement": _salary_req(req.get("salary_from"), req.get("salary_to")),
          "quote": ((req.get("evidence") or {}).get("salary") or {}).get("quote"),
-         "hint": "Рыночный диапазон категории кандидата на руки (калькулятор Хабр Карьеры, 25–75-й перцентиль, "
+         "hint": "Рыночный диапазон категории кандидата на руки (открытые данные рынка, 25–75-й перцентиль, "
                  "05.10.2026); скрытый минимум кандидата не показывается никогда"},
     ]
 

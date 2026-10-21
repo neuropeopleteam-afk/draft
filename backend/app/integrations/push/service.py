@@ -60,11 +60,18 @@ def send_to_user(db: Session, user_id: uuid.UUID, title: str, body: str, url: st
 
 
 def notify_user(user_id: uuid.UUID | None, title: str, body: str, url: str = "/", tag: str | None = None) -> int:
-    """Для фоновых задач: своя сессия БД."""
+    """Для фоновых задач: своя сессия БД (Web Push + Telegram при наличии привязки)."""
     if user_id is None:
         return 0
     db = SessionLocal()
     try:
-        return send_to_user(db, user_id, title, body, url, tag)
+        sent = send_to_user(db, user_id, title, body, url, tag)
+        try:
+            from app.modules.telegram.service import send_to_user as send_telegram
+
+            sent += send_telegram(db, user_id, title, body, url, tag)
+        except Exception:  # noqa: BLE001
+            log.exception("telegram notify_user failed")
+        return sent
     finally:
         db.close()

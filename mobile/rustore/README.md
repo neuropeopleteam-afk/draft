@@ -1,19 +1,22 @@
-# «Драфт» для Android и RuStore (Trusted Web Activity)
+# «Драфт» для Android и RuStore
 
-Пакет `ru.fspdraft.app` — оболочка Trusted Web Activity над той же PWA (`https://fsp-draft.ru`), сгенерирована
-Bubblewrap (`twa-manifest.json`), minSdk 24, targetSdk 36. Готовый подписанный APK лежит в
-`frontend/public/app/draft-rustore.apk` и скачивается из окна «На телефон / RuStore» (шапка и главная страница).
+Пакет `ru.fspdraft.app` (версия `1.2.0`, `versionCode 3`, `minSdk 24`, `targetSdk 36`) — официальный Android-пакет для RuStore, собранный поверх веб-приложения `https://fsp-draft.ru/?source=twa` с поддержкой 4 ярлыков разделов («Подборка», «Мой грейд», «Приглашения», «Спрос ФСП»), системных уведомлений и прямых ссылок `https://fsp-draft.ru/*`.
 
-Сборка (JDK 17, Android SDK: build-tools 35, platform 36):
+Готовый подписанный APK лежит в `frontend/public/app/draft-rustore.apk` (1,22 МБ, SHA-256 `08652a136781deceb8b0f949c3f00e15d6dc24daf143c36e1d8bb1187b3d734c`), метаданные — в `frontend/public/app/rustore.json`, комплект материалов для модерации RuStore — в `mobile/rustore/store/`, пошаговая инструкция публикации для владельца — в `mobile/RUSTORE_PUBLISH.md`.
+
+## Сборка и подпись на сервере «Москва» (в одноразовом контейнере, ключ `:ro`)
 
 ```bash
-cd mobile/rustore
-echo "sdk.dir=$ANDROID_HOME" > local.properties
-./gradlew assembleRelease
-zipalign -p -f 4 app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
-apksigner sign --ks draft-upload.keystore --ks-key-alias draft --out draft-rustore.apk aligned.apk
+docker run --rm --user 0 --memory 512m --cpus 1 \
+  -v /opt/spectrek_fsp/work/ag_a7:/w \
+  -v /opt/spectrek_fsp/secrets/rustore:/ks:ro \
+  spectrek_fsp-api:latest \
+  bash -c 'export JAVA_HOME=/w/sdk/jdk PATH=/w/sdk/jdk/bin:/w/sdk/android/build-tools/35.0.0:$PATH;
+  apksigner sign --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
+    --ks /ks/draft-upload.keystore --ks-key-alias draft --ks-pass file:/ks/ks_pw.txt \
+    --out /w/draft-rustore.apk /w/aligned.apk &&
+  apksigner verify --min-sdk-version 21 --verbose --print-certs /w/draft-rustore.apk'
 ```
 
-Ключ загрузки и пароль — на сервере в `/opt/spectrek_fsp/secrets/rustore/` (в репозиторий не попадают).
-Отпечаток SHA-256 ключа опубликован в `/.well-known/assetlinks.json` — без него Android покажет адресную строку.
-Публикация: RuStore Консоль → «Новое приложение» → загрузить APK, иконку 512×512 и скриншоты; модерация — на стороне RuStore.
+Ключ загрузки и пароль хранятся на сервере в `/opt/spectrek_fsp/secrets/rustore/` (монтируются только для чтения, в репозиторий не попадают).
+Отпечаток SHA-256 сертификата (`34:88:E3:44:72:DC:16:D1:1A:E4:9B:2C:00:D3:71:57:27:8F:E2:C4:5D:BF:E0:59:3B:43:01:47:A3:A2:40:A6`) опубликован в `/.well-known/assetlinks.json`.

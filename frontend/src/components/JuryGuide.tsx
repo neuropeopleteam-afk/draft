@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { GUIDE_EVENT, guide, isJury, juryLogin, juryReset, personaOf, quick, STEPS, type GuideMode, type Persona } from "../lib/jury";
+import { useDemoUi } from "../lib/juryMode";
 import { QuickGuide, useQuickStep, useQuickSteps } from "./JuryQuick";  // Я9 «Проверка за 12 минут»
 import { api } from "../lib/api";
 import { errText } from "./ui";
@@ -81,8 +82,9 @@ export function JuryGuide() {
   const slot = useSlot();
   const [sim, setSim] = useState<any>(null);  // результат «смоделировать нового кандидата» (И25)
   const [ff, setFf] = useState<string | null>(null);  // «перемотать время»: напоминания Н6
+  const demoUi = useDemoUi();
   const isWebdriver = typeof navigator !== "undefined" && !!navigator.webdriver;
-  const active = guide.on() || (isWebdriver && isJury(me?.email));
+  const active = (demoUi || loc.pathname.startsWith("/demo")) && (guide.on() || (isWebdriver && isJury(me?.email)));
   const [mode, setMode] = useState<GuideMode>(quick.mode());  // Я9: «12 минут» или справочник
   const qSteps = useQuickSteps(), QUICK_LEN = qSteps.length;  // 8 или 9 (устная защита по флагу)
   const [q, setQ] = useQuickStep(qSteps, mode, loc.pathname, me?.email);
@@ -129,10 +131,11 @@ export function JuryGuide() {
   // Д4: живое интервью (/candidate/interview/*) — без проводника: в центре только аватар и «Ответить», без «Шаг 1 из 9»
   if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/") || loc.pathname === "/login/2fa"
     || loc.pathname.startsWith("/candidate/interview/")
-    || ["/login", "/register", "/criteria", "/jury/live"].includes(loc.pathname)) return null;  // k-final2: не накрывать вход, регистрацию, критерии и экран зала
+    || ["/login", "/register", "/demo/register", "/forgot", "/reset", "/500", "/criteria", "/demo/criteria", "/jury/live", "/demo/live"].includes(loc.pathname)) return null;
   if (!hidden && folded) return (
     <button ref={setBox} type="button" data-testid="guide-continue" onClick={() => setPeek(true)} aria-label="Развернуть проводник для жюри"
-      className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm">
+      style={{ bottom: "calc(0.75rem + var(--mobile-tabbar-h, 0px))" }}
+      className="fixed left-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:left-4 sm:px-4 sm:py-2.5 sm:text-sm">
       {mode === "quick" ? `Продолжить проверку: шаг ${q + 1} из ${QUICK_LEN}` : `Продолжить проверку: шаг ${step + 1} из ${STEPS.length}`}
     </button>
   );
@@ -146,7 +149,9 @@ export function JuryGuide() {
           : slot === slots.sidebar ? `Проводник жюри · шаг ${step + 1}/${STEPS.length}` : `Проводник ${step + 1}/${STEPS.length}`}
       </button>, slot);
     return (
-      <button ref={setBox} className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm"
+      <button ref={setBox}
+        style={{ bottom: "calc(0.75rem + var(--mobile-tabbar-h, 0px))" }}
+        className="fixed left-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:left-4 sm:px-4 sm:py-2.5 sm:text-sm"
         onClick={() => guide.show()} aria-label="Показать проводник для жюри">
         <span className="sm:hidden">{mode === "quick" ? `12 минут · ${q + 1}/${QUICK_LEN}` : `Проводник · ${step + 1}/${STEPS.length}`}</span>
         <span className="hidden sm:inline">{mode === "quick" ? `Проводник жюри · 12 минут · шаг ${q + 1}/${QUICK_LEN}` : `Проводник жюри · шаг ${step + 1}/${STEPS.length}`}</span>
@@ -243,7 +248,7 @@ export function JuryGuide() {
       )}
       <p className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs">
         {me && <span className="text-white/55">Вы вошли как {whoAmI(me.email)}</span>}
-        <Link to="/criteria" className="font-semibold text-brand-blush underline-offset-2 hover:underline">Проверить по критериям ТЗ</Link>
+        <Link to="/demo/criteria" className="font-semibold text-brand-blush underline-offset-2 hover:underline">Проверить по критериям ТЗ</Link>
       </p>
       {msg && <p className="mt-2 rounded-lg bg-white/10 px-3 py-2 text-xs text-brand-blush" role="status">{msg}</p>}
       <div className="mt-3 flex flex-wrap items-center gap-2">

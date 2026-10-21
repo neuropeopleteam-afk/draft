@@ -1,4 +1,4 @@
-// PWA: регистрация service worker, установка на главный экран, подписка на Web Push (VAPID).
+// Установка веб-приложения на главный экран, обновление кэша без пустых экранов и подписка на уведомления.
 import { api } from "../lib/api";
 
 type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
@@ -9,7 +9,16 @@ const listeners = new Set<() => void>();
 export const BUILD_ID: string = __APP_BUILD__;
 const LOADED_AT = Date.now();
 const KEY_RELOAD = "fsp_sw_reload_at";
+const KEY_STALE = "fsp_sw_stale";
 let reloadPending = false;
+
+function isEditingField(): boolean {
+  if (typeof document === "undefined") return false;
+  const el = document.activeElement as HTMLElement | null;
+  if (!el) return false;
+  const tag = (el.tagName || "").toUpperCase();
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable === true;
+}
 
 function reloadNow() {
   try {  // не чаще раза в 10 с — без циклов перезагрузки
@@ -19,47 +28,83 @@ function reloadNow() {
   window.location.reload();
 }
 
-/** После выкладки активирован SW новой сборки, а вкладка — прежней: перезагрузить сразу, если страница только
- * открылась или скрыта; иначе — при следующем переходе по приложению, чтобы не потерять ввод в форме. */
+/** После выкладки активирован SW новой сборки, а вкладка — прежней:
+ * если пользователь прямо сейчас не печатает в поле формы — перезагружаем сразу;
+ * если печатает — при завершении ввода, переходе по маршруту или сворачивании вкладки. */
 function onActivated(version: string) {
-  if (!version || version === BUILD_ID) return;
-  if (Date.now() - LOADED_AT < 15_000 || document.visibilityState === "hidden") return reloadNow();
+  if (!version || version === BUILD_ID || version === "__BUILD_ID__") return;
+  try {
+    sessionStorage.setItem(KEY_STALE, version);
+  } catch { /* ignore */ }
+  if (Date.now() - LOADED_AT < 15_000 || document.visibilityState === "hidden" || !isEditingField()) {
+    reloadNow();
+    return;
+  }
   reloadPending = true;
 }
 
-/** FIX7: версия сборки service worker, который управляет страницей (null — нет SW или не ответил за 2 с). */
+/** Версия сборки service worker, который управляет страницей (null — нет SW или не ответил за 2 с). */
 export function swVersion(): Promise<string | null> {
   const ctl = navigator.serviceWorker?.controller;
   if (!ctl) return Promise.resolve(null);
   return new Promise((resolve) => {
     const ch = new MessageChannel();
     const t = window.setTimeout(() => resolve(null), 2000);
-    ch.port1.onmessage = (e) => { window.clearTimeout(t); resolve(typeof e.data?.version === "string" ? e.data.version : null); };
-    try { ctl.postMessage({ type: "get-version" }, [ch.port2]); } catch { window.clearTimeout(t); resolve(null); }
+    ch.port1.onmessage = (e) => {
+      window.clearTimeout(t);
+      resolve(typeof e.data?.version === "string" ? e.data.version : null);
+    };
+    try {
+      ctl.postMessage({ type: "get-version" }, [ch.port2]);
+    } catch {
+      window.clearTimeout(t);
+      resolve(null);
+    }
   });
 }
 
-/** FIX7: проверка на устаревшие хеши при старте. Метка сборки — время (ГГГГММДДччммсс): SW новее страницы —
- *  страница прежней выкладки (вкладка или оболочка из кэша) и её файлы на сервере уже удалены → одна перезагрузка на
- *  эту версию (метка в sessionStorage — без петли). SW старше — он обновится сам (reg.update), страницу не трогаем. */
-const KEY_STALE = "fsp_sw_stale";
+/** Проверка на устаревшие хэши при старте и смене контроллера.
+ * Если активный SW отличается по версии от страницы (или новее по 14-значной метке времени),
+ * выполняем однократную перезагрузку на эту версию (метка в sessionStorage — без петли). */
 async function checkStale() {
   const v = await swVersion();
-  if (!v || v === BUILD_ID || !/^\d{14}$/.test(v) || !/^\d{14}$/.test(BUILD_ID) || v < BUILD_ID) return;
+  if (!v || v === BUILD_ID || v === "__BUILD_ID__") return;
+  if (/^\d{14}$/.test(v) && /^\d{14}$/.test(BUILD_ID) && v < BUILD_ID) return;
   try {
     if (sessionStorage.getItem(KEY_STALE) === v) return;
     sessionStorage.setItem(KEY_STALE, v);
-  } catch { return; }
-  reloadNow();
+  } catch {
+    return;
+  }
+  if (!isEditingField()) reloadNow();
+  else reloadPending = true;
 }
 
 function hookNavigation() {
   const push = history.pushState.bind(history);
   history.pushState = (data: any, unused: string, url?: string | URL | null) => {
     push(data, unused, url);
-    if (reloadPending) reloadNow();  // новый адрес уже в строке — загрузится новая версия
+    if (reloadPending) reloadNow();
   };
-  document.addEventListener("visibilitychange", () => { if (reloadPending && document.visibilityState === "hidden") reloadNow(); });
+  const replace = history.replaceState.bind(history);
+  history.replaceState = (data: any, unused: string, url?: string | URL | null) => {
+    replace(data, unused, url);
+    if (reloadPending) reloadNow();
+  };
+  window.addEventListener("popstate", () => {
+    if (reloadPending) reloadNow();
+  });
+  document.addEventListener("focusout", () => {
+    if (reloadPending && !isEditingField()) reloadNow();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (reloadPending && document.visibilityState === "hidden") reloadNow();
+  });
+  // Если старая вкладка попыталась загрузить удалённый ленивый чанк прежней выкладки до срабатывания таймера SW:
+  window.addEventListener("vite:preloadError", (e) => {
+    e.preventDefault();
+    reloadNow();
+  });
 }
 
 export function registerPwa() {
@@ -70,15 +115,37 @@ export function registerPwa() {
   }
   hookNavigation();
   const sw = navigator.serviceWorker;
-  sw.addEventListener("message", (e) => { if (e.data?.type === "sw-activated") onActivated(e.data.version); });
+  sw.addEventListener("message", (e) => {
+    if (e.data?.type === "sw-activated") onActivated(e.data.version);
+    else if (e.data?.type === "sw-asset-stale") reloadNow();
+  });
+  sw.addEventListener("controllerchange", () => {
+    void checkStale();
+  });
   window.addEventListener("load", () => {
     sw.register("/sw.js", { scope: "/", updateViaCache: "none" }).then((reg) => {
-      // Проверка обновления: сразу после загрузки, при возврате на вкладку и раз в 5 минут (вкладка жюри может быть
-      // открыта во время выкладки)
-      const check = () => reg.update().catch(() => undefined);
+      const promoteWaiting = () => {
+        if (reg.waiting) {
+          try { reg.waiting.postMessage({ type: "skip-waiting" }); } catch { /* ignore */ }
+        }
+      };
+      reg.addEventListener("updatefound", () => {
+        const inst = reg.installing;
+        if (!inst) return;
+        inst.addEventListener("statechange", () => {
+          if (inst.state === "installed") promoteWaiting();
+        });
+      });
+      promoteWaiting();
+      // Проверка обновления: сразу после загрузки, при возврате фокуса/вкладки, восстановлении сети и раз в 5 минут
+      const check = () => {
+        reg.update().then(() => promoteWaiting()).catch(() => undefined);
+        void checkStale();
+      };
       check();
-      void checkStale();
       document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
+      window.addEventListener("focus", check);
+      window.addEventListener("online", check);
       setInterval(check, 5 * 60 * 1000);
     }).catch(() => undefined);
   });
@@ -100,6 +167,10 @@ export const platform = (): "ios" | "android" | "desktop" => {
   if (/Android/i.test(ua)) return "android";
   return "desktop";
 };
+
+/** Проверка встроенного браузера мессенджера или соцсети, где системная установка на экран «Домой» скрыта. */
+export const isInAppBrowser = (): boolean =>
+  /(Telegram|VKClient|VkApp|Instagram|FBAN|FBIOS|\bLine\/|MicroMessenger)/i.test(navigator.userAgent || "");
 
 export async function promptInstall(): Promise<string> {
   if (!deferred) return "unavailable";
@@ -127,12 +198,12 @@ export async function currentSubscription(): Promise<PushSubscription | null> {
 
 type PushKeys = { endpoint: string; keys: { p256dh: string; auth: string } };
 
-/** Разрешение → подписка в push-сервисе браузера → сохранение на сервере. save — куда сохранить подписку
+/** Разрешение → подписка в службе уведомлений браузера → сохранение на сервере. save — куда сохранить подписку
  * (по умолчанию — учётке, вошедшей в кабинет; гость живой демонстрации сохраняет по своему токену). */
 export async function subscribePush(save?: (j: PushKeys) => Promise<unknown>): Promise<{ ok: boolean; reason?: string }> {
-  if (!pushSupported()) return { ok: false, reason: "Браузер не поддерживает Web Push. На iPhone уведомления работают только в установленном приложении (iOS 16.4+)." };
+  if (!pushSupported()) return { ok: false, reason: "В этом режиме браузер не поддерживает уведомления. На iPhone сначала добавьте «Драфт» на экран «Домой» в Safari (iOS 16.4 и новее)." };
   const cfg = await api<{ enabled: boolean; vapid_public_key: string | null }>("/push/config", { auth: false });
-  if (!cfg.enabled || !cfg.vapid_public_key) return { ok: false, reason: "Web Push на сервере не настроен" };
+  if (!cfg.enabled || !cfg.vapid_public_key) return { ok: false, reason: "Служба уведомлений на сервере сейчас не настроена" };
   const perm = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
   if (perm !== "granted") return { ok: false, reason: "Уведомления запрещены в настройках браузера" };
   const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });

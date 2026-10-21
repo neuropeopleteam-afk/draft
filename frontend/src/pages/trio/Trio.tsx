@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Loading, dtt, errText, useApi } from "../../components/ui";
+import { Alert, Empty, Loading, cleanCompanyName, dtt, errText, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 
 type Side = "candidate" | "employer" | "fsp" | "system";
@@ -36,16 +36,17 @@ function TriangleScheme({ t }: { t?: TrioThread | null }) {
         <div key={x.side} className={`rounded-xl px-2 py-2 ${x.joined ? SIDE_STYLE[x.side] : "border border-dashed border-brand-night/20 text-brand-ink/60"}`}>
           <span className={`mx-auto mb-1 block h-2 w-2 rounded-full ${DOT[x.side]}`} aria-hidden="true" />
           <span className="block font-semibold">{x.side === "employer" ? "Работодатель" : x.side === "candidate" ? "Кандидат" : "ФСП"}</span>
-          <span className="block truncate opacity-80" title={x.title}>{x.joined ? x.title : "ждёт согласия"}</span>
+          <span className="block truncate opacity-80" title={cleanCompanyName(x.title)}>{x.joined ? cleanCompanyName(x.title) : "ждёт согласия"}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function Body({ text }: { text: string }) {
+function Body({ text, mine = false }: { text: string; mine?: boolean }) {
   const parts = text.split(MASK);
-  return <p className="whitespace-pre-line break-words">{parts.map((p, i) => <span key={i}>{p}{i < parts.length - 1 && <span className="rounded bg-brand-night/10 px-1 text-[0.85em] font-semibold text-brand-plum">контакт скрыт</span>}</span>)}</p>;
+  const badgeCls = mine ? "bg-white/20 text-white" : "bg-brand-night/10 text-brand-plum";
+  return <p className="whitespace-pre-line break-words">{parts.map((p, i) => <span key={i}>{p}{i < parts.length - 1 && <span className={`rounded px-1 text-[0.85em] font-semibold ${badgeCls}`}>контакт скрыт</span>}</span>)}</p>;
 }
 
 function ThreadView({ id, onChange }: { id: string; onChange: () => void }) {
@@ -71,7 +72,7 @@ function ThreadView({ id, onChange }: { id: string; onChange: () => void }) {
     <div className="space-y-3" data-testid="trio-thread">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-bold text-brand-night">«{t.position}» · {t.company}</p>
+          <p className="font-bold text-brand-night">«{t.position}» · {cleanCompanyName(t.company)}</p>
           <p className="text-sm text-brand-ink/65">{t.candidate} · тема: {t.topic_title}</p>
         </div>
         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${STATUS_STYLE[t.status]}`}>{t.status_title}</span>
@@ -96,9 +97,9 @@ function ThreadView({ id, onChange }: { id: string; onChange: () => void }) {
             <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm ${m.mine ? "rounded-br-md bg-brand-night text-white" : `rounded-bl-md ${SIDE_STYLE[m.side]}`}`}>
               <p className={`mb-0.5 flex items-center gap-1.5 text-[11px] font-semibold ${m.mine ? "text-white/70" : ""}`}>
                 {!m.mine && <span className={`h-1.5 w-1.5 rounded-full ${DOT[m.side]}`} aria-hidden="true" />}
-                {m.mine ? "Вы" : m.side === "employer" ? t.company : m.side === "candidate" ? t.candidate : m.side_title}
+                {m.mine ? "Вы" : m.side === "employer" ? cleanCompanyName(t.company) : m.side === "candidate" ? t.candidate : m.side_title}
               </p>
-              <Body text={m.body} />
+              <Body text={m.body} mine={m.mine} />
               <p className={`mt-1 text-right text-[11px] ${m.mine ? "text-white/60" : "opacity-60"}`}>{dtt(m.at)}</p>
             </div>
           </div>
@@ -121,15 +122,23 @@ function ThreadView({ id, onChange }: { id: string; onChange: () => void }) {
   );
 }
 
-function NewThread({ role, onCreated }: { role: "candidate" | "employer"; onCreated: (id: string) => void }) {
+function NewThread({ role, initialInv, initialTopic, initialBody, onCreated }: { role: "candidate" | "employer"; initialInv?: string | null; initialTopic?: string | null; initialBody?: string | null; onCreated: (id: string) => void }) {
   const { data: el } = useApi<Eligible[]>("/trio/eligible");
   const { data: meta } = useApi<Meta>("/trio/meta");
-  const [inv, setInv] = useState("");
-  const [topic, setTopic] = useState("fsp_check");
-  const [body, setBody] = useState("");
+  const [inv, setInv] = useState(initialInv ?? "");
+  const [topic, setTopic] = useState(initialTopic ?? "fsp_check");
+  const [body, setBody] = useState(initialBody ?? "");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (el?.length && !inv) setInv(el[0].invitation_id); }, [el, inv]);
+  useEffect(() => {
+    if (initialInv && el?.some((x) => x.invitation_id === initialInv)) {
+      setInv(initialInv);
+    } else if (el?.length && !inv) {
+      setInv(el[0].invitation_id);
+    }
+  }, [el, inv, initialInv]);
+  useEffect(() => { if (initialTopic) setTopic(initialTopic); }, [initialTopic]);
+  useEffect(() => { if (initialBody && !body) setBody(initialBody); }, [initialBody]); // eslint-disable-line react-hooks/exhaustive-deps
   async function create() {
     setBusy(true); setErr(null);
     try { const t = await api<TrioThread>("/trio/threads", { body: { invitation_id: inv, topic, body: body.trim() || null } }); onCreated(t.id); setBody(""); }
@@ -143,7 +152,7 @@ function NewThread({ role, onCreated }: { role: "candidate" | "employer"; onCrea
         <div className="grid gap-3 md:grid-cols-2">
           <label className="text-sm">Приглашение
             <select className="input mt-1" value={inv} onChange={(e) => setInv(e.target.value)}>
-              {el.map((x) => <option key={x.invitation_id} value={x.invitation_id}>«{x.position}» · {x.counterpart}</option>)}
+              {el.map((x) => <option key={x.invitation_id} value={x.invitation_id}>«{x.position}» · {cleanCompanyName(x.counterpart)}</option>)}
             </select>
           </label>
           <label className="text-sm">Тема
@@ -169,20 +178,32 @@ export function TrioPage({ role }: { role: "candidate" | "employer" | "fsp" }) {
   const { data: meta } = useApi<Meta>("/trio/meta");
   const [sp, setSp] = useSearchParams();
   const sel = sp.get("t");
+  const invParam = sp.get("invitation");
+  const topicParam = sp.get("topic");
+  const bodyParam = sp.get("body");
   const open = (id: string) => setSp({ t: id }, { replace: !!sel });
+  useEffect(() => {
+    if (!sel && invParam && data?.length) {
+      const existing = data.find((x) => x.invitation_id === invParam);
+      if (existing) setSp({ t: existing.id }, { replace: true });
+    } else if (!sel && !invParam && data?.length) {
+      setSp({ t: data[0].id }, { replace: true });
+    }
+  }, [sel, invParam, data]); // eslint-disable-line react-hooks/exhaustive-deps
   const subtitle = role === "fsp"
-    ? "Каналы, куда работодатель или кандидат пригласили ФСП: подтверждение результатов соревнований, условия оффера, споры."
+    ? "Каналы, куда работодатель или кандидат пригласили ФСП: подтверждение результатов соревнований, условия оффера, апелляции и споры."
     : "Один канал на троих: работодатель, кандидат и представитель ФСП. ФСП подтверждает результаты соревнований и помогает договориться.";
+  const pageTitle = role === "fsp" ? "Подтверждение результатов (трёхсторонняя связь)" : "Трёхсторонняя связь";
   return (
     <div className="max-w-6xl space-y-6">
-      <PageTitle title="Трёхсторонняя связь" subtitle={subtitle} />
+      <PageTitle title={pageTitle} subtitle={subtitle} />
       <section className="card space-y-3">
         <TriangleScheme />
         <ul className="grid gap-1.5 text-sm text-brand-ink/75 md:grid-cols-2">
           {(meta?.rules ?? []).map((r) => <li key={r} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />{r}</li>)}
         </ul>
       </section>
-      {role !== "fsp" && <NewThread role={role} onCreated={(id) => { reload(); open(id); }} />}
+      {role !== "fsp" && <NewThread role={role} initialInv={invParam} initialTopic={topicParam} initialBody={bodyParam} onCreated={(id) => { reload(); open(id); }} />}
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Каналов пока нет" text={role === "fsp" ? "Когда работодатель или кандидат подключит ФСП к приглашению, канал появится здесь." : "Откройте канал по приглашению — форма выше."} />
       ) : (
@@ -193,8 +214,13 @@ export function TrioPage({ role }: { role: "candidate" | "employer" | "fsp" }) {
                 <button onClick={() => open(t.id)} aria-current={sel === t.id ? "true" : undefined}
                   className={`card w-full !p-3 text-left transition-colors hover:border-brand/40 ${sel === t.id ? "border-brand/50 bg-brand-blush/30" : ""}`}>
                   <div className="flex items-start justify-between gap-2">
-                    <p className="min-w-0 font-semibold text-brand-night">{role === "candidate" ? t.company : role === "employer" ? t.candidate : `${t.company} ↔ ${t.candidate}`}</p>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${STATUS_STYLE[t.status]}`}>{t.status === "pending" ? "ждёт согласия" : t.status === "active" ? "активен" : "закрыт"}</span>
+                    <p className="min-w-0 font-semibold text-brand-night">{role === "candidate" ? cleanCompanyName(t.company) : role === "employer" ? t.candidate : `${cleanCompanyName(t.company)} ↔ ${t.candidate}`}</p>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {(t.needs_my_consent || (t.status === "active" && t.last && !t.last.mine && t.last.side !== "system")) && (
+                        <span className="h-2 w-2 rounded-full bg-brand-strong" title="Новое событие в канале" />
+                      )}
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${STATUS_STYLE[t.status]}`}>{t.status === "pending" ? "ждёт согласия" : t.status === "active" ? "активен" : "закрыт"}</span>
+                    </div>
                   </div>
                   <p className="truncate text-xs text-brand-ink/65">«{t.position}» · {t.topic_title}</p>
                   <p className="mt-1 line-clamp-2 text-sm text-brand-ink/75">{t.last ? `${t.last.mine ? "Вы: " : t.last.side === "system" ? "" : `${t.last.side_title}: `}${t.last.body}` : "Сообщений пока нет"}</p>

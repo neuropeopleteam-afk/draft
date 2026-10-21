@@ -1,0 +1,38 @@
+{
+  "package_name": "ru.fspdraft.app",
+  "version_name": "1.2.0",
+  "version_code": 3,
+  "title": "Драфт — подтверждённый найм в ИТ",
+  "title_length": 32,
+  "short_description": "Платформа подбора ИТ-инженеров с проверенным грейдом и прозрачной зарплатой",
+  "short_description_length": 75,
+  "category_primary": "Бизнес",
+  "category_secondary": "Образование и карьера",
+  "age_rating": "16+",
+  "privacy_policy_url": "https://fsp-draft.ru/privacy",
+  "terms_url": "https://fsp-draft.ru/terms",
+  "website_url": "https://fsp-draft.ru",
+  "support_email": "<форма обратной связи>",
+  "legal_email": "<форма обратной связи>",
+  "operator": {
+    "name": "команда Neuropeople",
+    "inn": "<реквизит>",
+    "kpp": "770101001",
+    "ogrn": "<реквизит>",
+    "rkn_registry_number": "<реквизит>",
+    "rkn_order": "приказ № 493 от 07.09.2026",
+    "address": "<адрес>"
+  },
+  "assets": {
+    "apk": "frontend/public/app/draft-rustore.apk",
+    "icon_512": "mobile/rustore/store/icon-512.png",
+    "screenshots": [
+      "mobile/rustore/store/screenshots/01-landing.png",
+      "mobile/rustore/store/screenshots/02-employer-needs.png",
+      "mobile/rustore/store/screenshots/03-employer-compare.png",
+      "mobile/rustore/store/screenshots/04-candidate-grade.png",
+      "mobile/rustore/store/screenshots/05-candidate-skills.png",
+      "mobile/rustore/store/screenshots/06-fsp-analytics.png"
+    ]
+  }
+}

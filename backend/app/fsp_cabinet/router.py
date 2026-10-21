@@ -32,11 +32,24 @@ def _audit(user: User, what: str, days: int | None) -> None:
 @router.get("/report", summary="Вся аналитика кабинета одним ответом", responses=AUTH)
 def report(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     from app.cup import tournament
+    from app.fsp_cabinet.regions import build_regions_map
     from app.modules.jury import scope as jury_scope
 
     _audit(user, "report", days)
     # Н5: турниры «Компания × ФСП» под вакансии — отдельным списком (платформы и своей песочницы жюри, агрегаты)
-    return {**an.report(db, days), "tournaments": tournament.cabinet_list(db, jury_scope.key_of(user.email))}
+    return {
+        **an.report(db, days),
+        "regions_map": build_regions_map(db, days),
+        "tournaments": tournament.cabinet_list(db, jury_scope.key_of(user.email)),
+    }
+
+
+@router.get("/regions", summary="Карта талантов по регионам и федеральным округам РФ", responses=AUTH)
+def regions(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.fsp_cabinet.regions import build_regions_map
+
+    _audit(user, "regions", days)
+    return build_regions_map(db, days)
 
 
 @router.get("/overview", summary="Ключевые показатели", responses=AUTH)

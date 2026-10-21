@@ -1,0 +1,838 @@
+"""Маршруты API модуля «Боевой ИИ-Полигон» (`/api/warroom/*`).
+
+Строго разделяет два режима работы:
+1. «Боевой этап» (`mode="combat"`, вошедший реальный кандидат вне `/demo`):
+   - зерно параметризации (`seed`) назначается только сервером от `(user.id, scenario_id)`;
+   - клиенту не отдаются ключи ответа (`required`, `helpful`, `harmful`, `opt_min`, `opt_max`,
+     `trap`, `rubric.reference`, `incident.actions.sim_effect`), варианты патчей перемешаны под
+     нейтральными названиями;
+   - попытка сохраняется в `warroom_attempts` (до 5 попыток на сценарий) без прямой мутации `TestSession.result`;
+   - при включённом LLM вызывается ИИ-рецензент с проверкой цитат.
+2. «Демонстрационная витрина» (`mode="demo"`, гость, учётная запись жюри `*@jury.example.com` или флаг `demo=true` из `/demo/warroom`):
+   - доступны обучающие подсказки и быстрый демонстрационный прогон для жюри;
+   - запись в `warroom_attempts` и вызов платной LLM принудительно отключены (`saved_to_db = False`).
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import math
+from typing import Any
+import uuid
+
+from fastapi import APIRouter, Depends, Query, Request
+import jwt
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from app.core.db import as_aware, get_db
+from app.core.deps import oauth2_scheme, require_role
+from app.core.enums import UserRole
+from app.core.errors import api_error, err
+from app.core.ratelimit import SlidingWindow, client_ip, hit
+from app.core.security import decode_access_token
+from app.modules.assessment.models import TestSession
+from app.modules.auth.models import User
+from app.modules.warroom.anticheat_live import (
+    CONTOURS_SPEC,
+    inspect_anticheat_live,
+    public_signals_catalog,
+)
+from app.modules.warroom.catalog import (
+    BASE_SCENARIOS,
+    MEASURES,
+    SCENARIO_BY_ID,
+    parameterize_scenario,
+)
+from app.modules.warroom.models import WarRoomAttempt
+from app.modules.warroom.simulator import evaluate_solution, simulate_incident
+
+router = APIRouter(prefix="/api/warroom", tags=["warroom"])
+
+TAGS = [
+    {
+        "name": "warroom",
+        "description": "Боевой ИИ-Полигон: детерминированный симулятор архитектурных инцидентов и проверка античита",
+    }
+]
+
+candidate_dep = require_role(UserRole.candidate)
+employer_dep = require_role(UserRole.employer)
+
+# Ограничители частоты запросов (скользящее окно)
+_sim_limiter = SlidingWindow(120, 60.0)
+_eval_limiter = SlidingWindow(25, 60.0)
+_ac_limiter = SlidingWindow(45, 60.0)
+
+MAX_COMBAT_ATTEMPTS_PER_SCENARIO = 5
+
+
+def _optional_user(token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User | None:
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        if payload.get("typ"):
+            return None
+        uid = uuid.UUID(payload["sub"])
+    except (jwt.PyJWTError, KeyError, ValueError):
+        return None
+    user = db.get(User, uid)
+    if user is None or not user.is_active or payload.get("ver", 0) != user.token_version:
+        return None
+    return user
+
+
+def _is_jury_user(user: User | None) -> bool:
+    if user is None:
+        return False
+    email = (user.email or "").lower()
+    return email.endswith("@jury.example.com") or email.startswith("jury")
+
+
+def _is_combat_candidate(user: User | None, demo_flag: bool) -> bool:
+    """Истинно только для реального вошедшего кандидата в боевом режиме (не жюри и не /demo)."""
+    return bool(
+        user is not None
+        and user.role == UserRole.candidate
+        and not _is_jury_user(user)
+        and not demo_flag
+    )
+
+
+def _resolve_seed(user: User | None, scenario_id: str, explicit_seed: int | None, *, combat_mode: bool) -> int:
+    """В боевом режиме кандидата seed вычисляется строго на сервере от (user.id, scenario_id)."""
+    if combat_mode and user is not None:
+        raw = f"combat-seed:{user.id}:{scenario_id}".encode("utf-8")
+        h = int(hashlib.sha256(raw).hexdigest()[:8], 16)
+        return 1000 + (h % 9000)
+    if explicit_seed is not None:
+        return max(1, min(999_999, int(explicit_seed)))
+    if user is not None:
+        h = int(hashlib.sha256(f"{user.id}:{scenario_id}".encode("utf-8")).hexdigest()[:6], 16)
+        return 1000 + (h % 9000)
+    return 1001
+
+
+class MeasureItemIn(BaseModel):
+    id: str = Field(max_length=32)
+    params: dict[str, int | float | bool] = Field(default_factory=dict)
+
+
+class SimulateIn(BaseModel):
+    scenario_id: str = Field(default="payment", max_length=32)
+    seed: int | None = Field(default=None, ge=1, le=999_999)
+    measures: list[MeasureItemIn | str] = Field(default_factory=list, max_length=20)
+    code_patch: str | None = Field(default=None, max_length=12_000)
+    demo: bool = Field(default=False)
+
+
+class EvaluateIn(BaseModel):
+    scenario_id: str = Field(default="payment", max_length=32)
+    seed: int | None = Field(default=None, ge=1, le=999_999)
+    measures: list[MeasureItemIn | str] = Field(default_factory=list, max_length=20)
+    code_patch: str | None = Field(default=None, max_length=12_000)
+    justification: str = Field(default="", max_length=8_000)
+    elapsed_s: int = Field(default=180, ge=1, le=7_200)
+    save: bool = Field(default=True)
+    demo: bool = Field(default=False)
+    followup_attempt_id: str | None = Field(default=None, max_length=64)
+    integrity: dict[str, Any] | None = Field(default=None)
+
+
+class TelemetryIn(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    paste: int = Field(default=0, ge=0, le=10_000)
+    paste_chars: int = Field(default=0, ge=0, le=500_000)
+    copy_count: int = Field(default=0, alias="copy", ge=0, le=10_000)
+    focus_lost: int = Field(default=0, ge=0, le=10_000)
+    hidden_ms: int = Field(default=0, ge=0, le=86_400_000)
+    fs_exit: int = Field(default=0, ge=0, le=10_000)
+    fs_out_ms: int = Field(default=0, ge=0, le=86_400_000)
+    printscreen: int = Field(default=0, ge=0, le=10_000)
+    typed: int | None = Field(default=None, ge=0, le=500_000)
+    active_ms: int = Field(default=25_000, ge=1, le=86_400_000)
+    ik_cv: int | None = Field(default=None, ge=0, le=1000)
+    ik_cv_float: float | None = Field(default=None, ge=0.0, le=10.0)
+    key_intervals_ms: list[float] = Field(default_factory=list, max_length=300)
+    even_rhythm: bool = Field(default=False)
+    fast_text: bool = Field(default=False)
+    not_typed: bool = Field(default=False)
+    api_bypass: bool = Field(default=False)
+    canary_fast: bool = Field(default=False)
+    preknowledge_flagged: bool = Field(default=False)
+    fast_wrong: bool = Field(default=False)
+    ai_mark_hit: bool = Field(default=False)
+    decoy_hit: bool = Field(default=False)
+
+
+class LzItemIn(BaseModel):
+    a: float = Field(default=1.0, ge=0.1, le=5.0)
+    b: float = Field(default=0.0, ge=-5.0, le=5.0)
+    x: int = Field(default=0, ge=0, le=1)
+    t: float = Field(default=25.0, ge=0.5, le=3600.0)
+
+
+class CameraEventIn(BaseModel):
+    position: int = Field(default=1, ge=1, le=200)
+    kind: str = Field(default="no_face", max_length=32)
+    duration_ms: int = Field(default=5000, ge=0, le=3_600_000)
+    faces: int = Field(default=0, ge=0, le=20)
+
+
+class AntiCheatInspectIn(BaseModel):
+    answer_text: str = Field(default="", max_length=12_000)
+    attack_preset: str | None = Field(default=None, max_length=32)
+    telemetry: dict[str, Any] = Field(default_factory=dict)
+    camera_events: list[CameraEventIn] = Field(default_factory=list, max_length=30)
+    check_lz: bool = Field(default=False)
+    lz_theta: float = Field(default=1.2, ge=-4.0, le=4.5)
+    lz_items: list[LzItemIn] | None = Field(default=None, max_length=40)
+    demo: bool = Field(default=True)
+
+    @field_validator("telemetry")
+    @classmethod
+    def _validate_telemetry(cls, v: Any) -> dict[str, Any]:
+        if not isinstance(v, dict):
+            raise ValueError("telemetry must be an object")
+        return TelemetryIn.model_validate(v).model_dump(by_alias=True)
+
+
+def _public_measures_list(*, demo_mode: bool = False) -> list[dict[str, Any]]:
+    """Не отдаёт клиенту ключи решения (`opt_min`, `opt_max`, `trap`, `heals`) ни в одном режиме."""
+    _ = demo_mode
+    out: list[dict[str, Any]] = []
+    for m in MEASURES:
+        params_out: list[dict[str, Any]] = []
+        for p in m.get("params", []):
+            p_item: dict[str, Any] = {
+                "key": p["key"],
+                "label": p["label"],
+                "type": p["type"],
+                "min": p["min"],
+                "max": p["max"],
+                "step": p["step"],
+                "default": p["default"],
+                "unit": p["unit"],
+                "hint": p["hint"],
+            }
+            params_out.append(p_item)
+        item: dict[str, Any] = {
+            "id": m["id"],
+            "label": m["label"],
+            "tech": m["tech"],
+            "badge": m["badge"],
+            "at": m["at"],
+            "base_cost_rub": m["base_cost_rub"],
+            "params": params_out,
+        }
+        out.append(item)
+    return out
+
+
+def _public_scenario_dict(scn: dict[str, Any], *, demo_mode: bool) -> dict[str, Any]:
+    """Не отдаёт клиенту ключи (`required/helpful/harmful/reference/sim_effect/win/deploy`)
+    и в боевом режиме перемешивает варианты патчей под нейтральными названиями.
+    """
+    inc = copy.deepcopy(scn["incident"])
+    for act in inc.get("actions", []):
+        act.pop("sim_effect", None)
+
+    if demo_mode:
+        patches_out = scn["patches"]
+    else:
+        # Детерминированная перестановка патчей по (id, seed) с нейтральными заголовками
+        raw_patches = list(scn["patches"])
+        shift = (int(scn["seed"]) + len(scn["id"])) % len(raw_patches)
+        rotated = raw_patches[shift:] + raw_patches[:shift]
+        patches_out = [
+            {
+                "label": f"Вариант кода {idx + 1}",
+                "lang": p["lang"],
+                "code": p["code"],
+            }
+            for idx, p in enumerate(rotated)
+        ]
+
+    rubric_out = [
+        {"id": r["id"], "title": r["title"], "weight": r["weight"]}
+        for r in scn["rubric"]
+    ]
+
+    res: dict[str, Any] = {
+        "id": scn["id"],
+        "direction": scn["direction"],
+        "direction_title": scn["direction_title"],
+        "target_grade": scn["target_grade"],
+        "title": scn["title"],
+        "short": scn["short"],
+        "service": scn["service"],
+        "release": scn["release"],
+        "seed": scn["seed"],
+        "story": scn["story"],
+        "labels": scn["labels"],
+        "problem": scn["problem"],
+        "base": scn["base"],
+        "extra": scn["extra"],
+        "slo": scn["slo"],
+        "patches": patches_out,
+        "checks": scn["public_checks"],
+        "rubric": rubric_out,
+        "incident": inc,
+        "demo_mode": demo_mode,
+    }
+    return res
+
+
+def _attempt_out(row: WarRoomAttempt) -> dict[str, Any]:
+    scn = SCENARIO_BY_ID.get(row.scenario_id) or BASE_SCENARIOS[0]
+    return {
+        "id": str(row.id),
+        "scenario_id": row.scenario_id,
+        "scenario_title": scn["title"],
+        "direction": row.direction,
+        "direction_title": scn["direction_title"],
+        "target_grade": row.target_grade,
+        "confirmed_grade": row.confirmed_grade,
+        "seed": row.seed,
+        "slo_met": row.slo_met,
+        "cost_rub_month": row.cost_rub_month,
+        "cost_budget_rub_month": row.cost_budget_rub_month,
+        "sim_score": row.sim_score,
+        "code_score": row.code_score,
+        "rubric_score": row.rubric_score,
+        "total_score": row.total_score,
+        "passed": row.passed,
+        "reviewer_mode": row.reviewer_mode,
+        "rubric_details": row.rubric_details,
+        "metrics": row.metrics,
+        "incident_stage": row.incident_stage,
+        "elapsed_s": row.elapsed_s,
+        "sha256_sig": row.sha256_sig,
+        "created_at": as_aware(row.created_at).isoformat() if row.created_at else None,
+    }
+
+
+def _normalize_stage_dict(raw_stage: dict[str, Any], *, attempt_id: str | None = None) -> dict[str, Any]:
+    st = dict(raw_stage or {})
+    inc_id = str(st.get("incident_id") or st.get("scenario_id") or "payment")
+    scn = SCENARIO_BY_ID.get(inc_id) or BASE_SCENARIOS[0]
+    score = float(st.get("score") or 0.0)
+    passed = bool(st.get("passed"))
+    slo_met = bool(st.get("slo_met", passed))
+    act_s = float(st.get("actions_score") if st.get("actions_score") is not None else score)
+    code_s = float(st.get("code_score") if st.get("code_score") is not None else score)
+    rub_s = float(st.get("rubric_score") if st.get("rubric_score") is not None else score)
+    measures_ok = bool(st["measures_ok"]) if "measures_ok" in st else bool(slo_met and act_s >= 0.70)
+    code_ok = bool(st["code_ok"]) if "code_ok" in st else bool(code_s >= 0.75)
+    justification_ok = bool(st["justification_ok"]) if "justification_ok" in st else bool(rub_s >= 0.65)
+    minutes = int(st.get("minutes") or max(1, round(int(st.get("time_spent_s") or 180) / 60)))
+    integ = st.get("integrity") if isinstance(st.get("integrity"), dict) else {}
+    if not integ.get("signals") and st.get("rubric_score") == 0.0 and st.get("integrity", {}).get("level") == "low":
+        integ = {**integ, "signals": {"injection_items": 1}}
+    return {
+        **st,
+        "incident_id": inc_id,
+        "scenario_id": inc_id,
+        "title": str(st.get("title") or scn["title"]),
+        "score": round(score, 4),
+        "passed": passed,
+        "measures_ok": measures_ok,
+        "code_ok": code_ok,
+        "justification_ok": justification_ok,
+        "minutes": minutes,
+        "integrity": integ,
+        "attempt_id": attempt_id or st.get("attempt_id"),
+    }
+
+
+def get_candidate_incident_stage(
+    db: Session,
+    user_id: uuid.UUID,
+    direction: str | None = None,
+    test_session_id: uuid.UUID | None = None,
+) -> dict[str, Any] | None:
+    """Публичная точка чтения результата боевого этапа кандидата для методики грейда (А4) без мутации TestSession."""
+    stmt = select(WarRoomAttempt).where(WarRoomAttempt.user_id == user_id)
+    if test_session_id is not None:
+        stmt = stmt.where(WarRoomAttempt.test_session_id == test_session_id)
+    if direction:
+        stmt = stmt.where(WarRoomAttempt.direction == direction)
+    stmt = stmt.order_by(WarRoomAttempt.total_score.desc(), WarRoomAttempt.created_at.desc()).limit(1)
+    row = db.scalar(stmt)
+    if not row or not row.incident_stage:
+        return None
+    return _normalize_stage_dict(dict(row.incident_stage), attempt_id=str(row.id))
+
+
+_GRADE_RU_LABEL: dict[str, str] = {
+    "junior": "Junior",
+    "middle": "Middle",
+    "senior": "Senior",
+    "lead": "Lead",
+    "principal": "Principal",
+}
+
+
+def _resolve_followup_context(
+    db: Session,
+    followup_id: str | None,
+    user: User | None,
+) -> dict[str, Any] | None:
+    if not followup_id:
+        return None
+    try:
+        ts_uuid = uuid.UUID(str(followup_id))
+    except ValueError:
+        return None
+    ts = db.get(TestSession, ts_uuid)
+    if ts is None:
+        return None
+    if user is not None and user.role == UserRole.candidate and not _is_jury_user(user) and ts.user_id != user.id:
+        return None
+    res_obj = dict(ts.result or {})
+    er = dict(res_obj.get("engine_result") or {})
+    det = dict(er.get("details") or {})
+    verdict = dict(det.get("verdict") or {})
+    direction = str(getattr(ts, "direction_id", None) or res_obj.get("direction") or "backend")
+    claimed_grade = str(
+        verdict.get("followup_cut_grade")
+        or verdict.get("claimed_grade")
+        or getattr(ts, "claimed_grade_id", None)
+        or getattr(ts, "claimed_grade", None)
+        or "senior"
+    ).lower()
+    scn = next((s for s in BASE_SCENARIOS if s.get("direction") == direction), BASE_SCENARIOS[0])
+    inc_id = str(verdict.get("followup_incident_id") or scn["id"])
+    inc_scn = SCENARIO_BY_ID.get(inc_id) or scn
+    grade_label = _GRADE_RU_LABEL.get(claimed_grade, claimed_grade.capitalize())
+    return {
+        "attempt_id": str(ts.id),
+        "direction": direction,
+        "claimed_grade": claimed_grade,
+        "grade_label": grade_label,
+        "incident_id": inc_scn["id"],
+        "incident_title": inc_scn["title"],
+        "followup_minutes": int(verdict.get("followup_minutes") or 30),
+        "already_applied": bool(verdict.get("followup_applied")),
+        "status": str(verdict.get("status") or "needs_followup"),
+        "banner_ru": f"Это доп. этап вашей проверки на {grade_label}: почините сервис — результат войдёт в итог.",
+    }
+
+
+_GRADE_CUTS: dict[str, float] = {
+    "junior": -1.0,
+    "middle": 0.0,
+    "senior": 1.0,
+    "lead": 1.8,
+    "principal": 2.4,
+}
+
+
+def _compute_sprt_preview(
+    res: dict[str, Any],
+    latest_ts: TestSession | None = None,
+) -> dict[str, Any]:
+    """Рассчитывает вклад практического этапа в вердикт грейда (через sprt.incorporate_incident_stage А4 или совместимую формулу)."""
+    target_g = str(res.get("target_grade") or "senior")
+    cut = float(_GRADE_CUTS.get(target_g, 1.0))
+    th0 = cut
+    se0 = 0.38
+    claimed_g = target_g
+    if latest_ts is not None and isinstance(latest_ts.result, dict) and "theta" in latest_ts.result:
+        try:
+            th0 = float(latest_ts.result.get("theta") or cut)
+            se0 = max(0.10, float(latest_ts.result.get("se") or 0.38))
+            claimed_g = str(latest_ts.result.get("claimed_grade") or target_g)
+        except (TypeError, ValueError):
+            th0, se0, claimed_g = cut, 0.38, target_g
+
+    th1: float | None = None
+    se1: float | None = None
+    llr_d: float | None = None
+    try:
+        from app.modules.assessment import sprt as sprt_mod  # type: ignore
+
+        inc_fn = getattr(sprt_mod, "incorporate_incident_stage", None)
+        if callable(inc_fn):
+            t_post, s_post, l_delta, _ = inc_fn(th0, se0, claimed_g, res["incident_stage"])
+            th1, se1, llr_d = float(t_post), float(s_post), float(l_delta)
+    except Exception:
+        th1 = None
+
+    score = max(0.0, min(1.0, float(res.get("total_score") or 0.0)))
+    if th1 is None or se1 is None or llr_d is None:
+        a_inc = 1.45
+        delta = 0.35
+        p_exp = 1.0 / (1.0 + math.exp(-a_inc * (th0 - cut)))
+        info = max(a_inc * a_inc * p_exp * (1.0 - p_exp), 0.25)
+        prec0 = 1.0 / (se0 * se0)
+        prec1 = prec0 + info
+        th1 = max(-4.0, min(4.5, th0 + (a_inc * (score - p_exp)) / prec1))
+        se1 = math.sqrt(1.0 / prec1)
+        p1 = 1.0 / (1.0 + math.exp(-a_inc * ((cut + delta / 2.0) - cut)))
+        p0 = 1.0 / (1.0 + math.exp(-a_inc * ((cut - delta / 2.0) - cut)))
+        llr_d = score * math.log(p1 / p0) + (1.0 - score) * math.log((1.0 - p1) / (1.0 - p0))
+
+    passed = bool(res.get("passed"))
+    pts = int(res.get("points_gpcm") or 0)
+    conf_g = str(res.get("confirmed_grade") or "middle")
+    rule_note = "Вклад практического этапа — по правилу, на людях ещё не откалиброван."
+    if passed:
+        v_status = "confirmed"
+        v_title = f"Подтверждён уровень {conf_g.upper()}"
+        expl = (
+            f"Практический этап оценён на {pts} из 4 баллов ({round(score * 100)} %): "
+            f"показатели работы сервиса восстановлены в рамках бюджета, дословные цитаты проверены — "
+            f"результат даёт основание для вердикта «Подтверждён {conf_g.upper()}». {rule_note}"
+        )
+    elif score >= 0.45:
+        v_status = "needs_followup"
+        v_title = "Нужен дополнительный этап у порога"
+        expl = (
+            f"Практический этап оценён на {pts} из 4 баллов ({round(score * 100)} %): "
+            f"результат в пограничной зоне для уровня {target_g.upper()}, рекомендуется доработка решения или короткий уточняющий этап. {rule_note}"
+        )
+    else:
+        v_status = "not_confirmed"
+        v_title = f"Уровень {target_g.upper()} не подтверждён"
+        expl = (
+            f"Практический этап оценён на {pts} из 4 баллов ({round(score * 100)} %): "
+            f"целевые показатели работы сервиса не восстановлены (текущий ориентир — {conf_g.upper()}). {rule_note}"
+        )
+
+    return {
+        "verdict_status": v_status,
+        "verdict_title_ru": v_title,
+        "stage_points": pts,
+        "max_stage_points": 4,
+        "explanation_ru": expl,
+        "rule_ru": rule_note,
+        "theta_before": round(th0, 3),
+        "theta_post": round(th1, 3),
+        "se_before": round(se0, 3),
+        "se_post": round(se1, 3),
+        "llr_delta": round(llr_d, 3),
+    }
+
+
+@router.get("/scenarios", summary="Каталог 8 боевых инцидентов, архитектурных мер и контуров античита")
+def list_scenarios(
+    seed: int | None = Query(default=None, ge=1, le=999_999),
+    demo: bool = Query(default=False),
+    followup: str | None = Query(default=None, max_length=64),
+    user: User | None = Depends(_optional_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    followup_ctx = _resolve_followup_context(db, followup, user)
+    combat_mode = bool(followup_ctx is not None or followup or _is_combat_candidate(user, demo))
+    demo_mode = not combat_mode
+    items = []
+    for s in BASE_SCENARIOS:
+        eff_seed = _resolve_seed(user, s["id"], seed, combat_mode=combat_mode)
+        items.append(_public_scenario_dict(parameterize_scenario(s["id"], eff_seed), demo_mode=demo_mode))
+
+    # Расшифровка сигналов античита отдаётся только для демо-режима жюри (решение владельца Р27)
+    show_detailed_signals = bool(demo_mode and demo and (_is_jury_user(user) or user is None))
+    sigs = public_signals_catalog(demo_mode=show_detailed_signals)
+    return {
+        "mode": "combat" if combat_mode else "demo",
+        "demo_mode": demo_mode,
+        "seed": items[0]["seed"] if items else 1001,
+        "scenarios": items,
+        "measures": _public_measures_list(demo_mode=demo_mode),
+        "anticheat_contours": CONTOURS_SPEC,
+        "anticheat_signals": sigs,
+        "total_signals": len(sigs),
+        "followup_context": followup_ctx,
+    }
+
+
+@router.get(
+    "/scenarios/{scenario_id}",
+    summary="Параметризованный по seed боевой инцидент",
+    responses={404: err("Сценарий не найден")},
+)
+def get_scenario(
+    scenario_id: str,
+    seed: int | None = Query(default=None, ge=1, le=999_999),
+    demo: bool = Query(default=False),
+    user: User | None = Depends(_optional_user),
+) -> dict[str, Any]:
+    if scenario_id not in SCENARIO_BY_ID:
+        raise api_error(404, "scenario_not_found", "Боевой сценарий не найден")
+    combat_mode = _is_combat_candidate(user, demo)
+    demo_mode = not combat_mode
+    eff_seed = _resolve_seed(user, scenario_id, seed, combat_mode=combat_mode)
+    scn = parameterize_scenario(scenario_id, eff_seed)
+    return _public_scenario_dict(scn, demo_mode=demo_mode)
+
+
+@router.post(
+    "/simulate",
+    summary="Детерминированный расчёт метрик, стоимости и проверки кода",
+    responses={404: err("Сценарий не найден"), 429: err("Слишком много запросов")},
+)
+def simulate_endpoint(
+    body: SimulateIn,
+    request: Request,
+    user: User | None = Depends(_optional_user),
+) -> dict[str, Any]:
+    rate_key = str(user.id) if user is not None else client_ip(request)
+    hit(_sim_limiter, rate_key, "warroom_simulate_rate_limited", "Слишком много запросов к симулятору")
+    if body.scenario_id not in SCENARIO_BY_ID:
+        raise api_error(404, "scenario_not_found", "Боевой сценарий не найден")
+
+    combat_mode = _is_combat_candidate(user, body.demo)
+    eff_seed = _resolve_seed(user, body.scenario_id, body.seed, combat_mode=combat_mode)
+    raw_measures = [m.model_dump() if isinstance(m, MeasureItemIn) else m for m in body.measures]
+    return simulate_incident(body.scenario_id, eff_seed, raw_measures, body.code_patch)
+
+
+@router.post(
+    "/evaluate",
+    summary="Полная оценка решения инцидента (симулятор + код + рубрика с цитатами)",
+    responses={404: err("Сценарий не найден"), 429: err("Слишком много запросов")},
+)
+def evaluate_endpoint(
+    body: EvaluateIn,
+    request: Request,
+    user: User | None = Depends(_optional_user),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    rate_key = str(user.id) if user is not None else client_ip(request)
+    hit(_eval_limiter, rate_key, "warroom_evaluate_rate_limited", "Слишком много проверок решения")
+    if body.scenario_id not in SCENARIO_BY_ID:
+        raise api_error(404, "scenario_not_found", "Боевой сценарий не найден")
+
+    followup_ts: TestSession | None = None
+    if body.followup_attempt_id:
+        try:
+            f_uuid = uuid.UUID(str(body.followup_attempt_id))
+        except ValueError:
+            raise api_error(404, "attempt_not_found", "Попытка теста не найдена")
+        followup_ts = db.get(TestSession, f_uuid)
+        if followup_ts is None:
+            raise api_error(404, "attempt_not_found", "Попытка теста не найдена")
+        if user is not None and user.role == UserRole.candidate and not _is_jury_user(user) and followup_ts.user_id != user.id:
+            raise api_error(403, "forbidden", "Чужая попытка теста")
+
+    eff_user = user or (db.get(User, followup_ts.user_id) if followup_ts is not None else None)
+    combat_mode = bool(followup_ts is not None or _is_combat_candidate(eff_user, body.demo))
+    eff_seed = _resolve_seed(eff_user, body.scenario_id, body.seed, combat_mode=combat_mode)
+    raw_measures = [m.model_dump() if isinstance(m, MeasureItemIn) else m for m in body.measures]
+
+    # Вызов платной LLM и запись в БД как свидетельства грейда разрешены ТОЛЬКО для вошедшего кандидата в боевом режиме
+    res = evaluate_solution(
+        scenario_id=body.scenario_id,
+        seed=eff_seed,
+        measures=raw_measures,
+        code_patch=body.code_patch,
+        justification=body.justification,
+        elapsed_s=body.elapsed_s,
+        allow_llm=combat_mode,
+    )
+
+    attempt_id: str | None = None
+    saved_to_db = False
+    latest_ts: TestSession | None = followup_ts
+    if latest_ts is None and eff_user is not None:
+        latest_ts = db.scalar(
+            select(TestSession)
+            .where(TestSession.user_id == eff_user.id)
+            .order_by(TestSession.created_at.desc())
+            .limit(1)
+        )
+    sprt_preview = _compute_sprt_preview(res, latest_ts)
+
+    if combat_mode and (body.save or followup_ts is not None) and eff_user is not None:
+        existing_cnt = int(
+            db.scalar(
+                select(func.count(WarRoomAttempt.id)).where(
+                    WarRoomAttempt.user_id == eff_user.id,
+                    WarRoomAttempt.scenario_id == res["scenario_id"],
+                )
+            )
+            or 0
+        )
+        if existing_cnt >= MAX_COMBAT_ATTEMPTS_PER_SCENARIO and followup_ts is None:
+            raise api_error(
+                429,
+                "warroom_attempt_limit_reached",
+                f"Достигнут лимит боевых попыток по этому сценарию ({MAX_COMBAT_ATTEMPTS_PER_SCENARIO})",
+            )
+
+        ts_id = latest_ts.id if latest_ts is not None else None
+
+        row = WarRoomAttempt(
+            user_id=eff_user.id,
+            test_session_id=ts_id,
+            scenario_id=res["scenario_id"],
+            direction=res["direction"],
+            target_grade=res["target_grade"],
+            confirmed_grade=res["confirmed_grade"],
+            seed=res["seed"],
+            measures=raw_measures,
+            code_patch=body.code_patch or "",
+            justification=body.justification or "",
+            metrics=res["metrics"],
+            slo_met=res["slo"]["slo_met"],
+            cost_rub_month=res["metrics"]["cost_rub_month"],
+            cost_budget_rub_month=res["metrics"]["cost_budget_rub_month"],
+            sim_score=res["scores"]["sim_score"],
+            code_score=res["scores"]["code_score"],
+            rubric_score=res["rubric"]["rubric_score"],
+            total_score=res["total_score"],
+            passed=res["passed"],
+            reviewer_mode=res["rubric"]["reviewer_mode"],
+            rubric_details=res["rubric"],
+            incident_stage=res["incident_stage"],
+            elapsed_s=body.elapsed_s,
+            sha256_sig=res["sha256_sig"],
+        )
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        attempt_id = str(row.id)
+        saved_to_db = True
+
+    followup_result: dict[str, Any] | None = None
+    if followup_ts is not None and eff_user is not None:
+        stage_payload = _normalize_stage_dict(res["incident_stage"], attempt_id=attempt_id)
+        if isinstance(body.integrity, dict) and body.integrity:
+            stage_payload["integrity"] = body.integrity
+
+        apply_fn = None
+        try:
+            from app.modules.assessment import service as _assessment_service  # type: ignore
+
+            apply_fn = getattr(_assessment_service, "apply_followup_stage", None)
+        except Exception:
+            apply_fn = None
+
+        if callable(apply_fn):
+            raw_fw = apply_fn(db, str(followup_ts.id), stage_payload)
+            nv = raw_fw.get("verdict") if isinstance(raw_fw, dict) else None
+            if isinstance(nv, dict):
+                sprt_preview = {
+                    **sprt_preview,
+                    "verdict_status": str(nv.get("status") or sprt_preview["verdict_status"]),
+                    "verdict_title_ru": str(nv.get("title") or sprt_preview["verdict_title_ru"]),
+                    "explanation_ru": str(nv.get("explanation_ru") or nv.get("explanation") or sprt_preview["explanation_ru"]),
+                    "rule_ru": str(nv.get("rule_ru") or sprt_preview.get("rule_ru") or ""),
+                    "oral_defense_required": bool(nv.get("oral_defense_required")),
+                    "followup_applied": True,
+                }
+                followup_result = {
+                    "attempt_id": str(raw_fw.get("attempt_id") or followup_ts.id),
+                    "grade": raw_fw.get("grade"),
+                    "changed": raw_fw.get("changed"),
+                    "verdict": {
+                        "status": nv.get("status"),
+                        "title": nv.get("title"),
+                        "explanation_ru": nv.get("explanation_ru") or nv.get("explanation"),
+                        "oral_defense_required": bool(nv.get("oral_defense_required")),
+                        "followup_applied": True,
+                        "mode": nv.get("mode", "refine"),
+                    },
+                }
+        else:
+            followup_result = {
+                "attempt_id": str(followup_ts.id),
+                "status": "pending_review",
+                "verdict": {
+                    "status": "pending_review",
+                    "title": "На проверке",
+                    "explanation_ru": (
+                        "Решение дополнительного этапа сохранено и передано в расчёт итогового вердикта. "
+                        "Вклад практического этапа — по правилу, на людях ещё не откалиброван."
+                    ),
+                },
+            }
+
+    return {
+        **res,
+        "mode": "combat" if combat_mode else "demo",
+        "attempt_id": attempt_id,
+        "saved_to_db": saved_to_db,
+        "sprt_preview": sprt_preview,
+        "followup_result": followup_result,
+    }
+
+
+@router.get("/attempts/my", summary="Мои попытки прохождения Боевого ИИ-Полигона (для кабинета кандидата)")
+def my_attempts(
+    user: User = Depends(candidate_dep),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    rows = db.scalars(
+        select(WarRoomAttempt)
+        .where(WarRoomAttempt.user_id == user.id)
+        .order_by(WarRoomAttempt.created_at.desc())
+        .limit(25)
+    ).all()
+    items = [_attempt_out(r) for r in rows]
+    best_by_dir: dict[str, dict[str, Any]] = {}
+    for it in items:
+        d = it["direction"]
+        if d not in best_by_dir or it["total_score"] > best_by_dir[d]["total_score"]:
+            best_by_dir[d] = it
+    return {
+        "count": len(items),
+        "passed_count": sum(1 for it in items if it["passed"]),
+        "best_by_direction": best_by_dir,
+        "attempts": items,
+        "latest_incident_stage": items[0]["incident_stage"] if items else None,
+    }
+
+
+@router.get(
+    "/candidates/{ref}",
+    summary="Результаты Боевого ИИ-Полигона кандидата для карточки работодателя",
+    responses={401: err("Не выполнен вход"), 403: err("Только для работодателя"), 404: err("Кандидат не найден")},
+)
+def candidate_warroom(
+    ref: str,
+    user: User = Depends(employer_dep),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    from app.modules.invitations.service import profile_by_ref
+    from app.modules.matching.router import my_company
+
+    prof = profile_by_ref(db, ref)
+    _ = my_company(db, user)
+    rows = db.scalars(
+        select(WarRoomAttempt)
+        .where(WarRoomAttempt.user_id == prof.user_id)
+        .order_by(WarRoomAttempt.created_at.desc())
+        .limit(20)
+    ).all()
+    items = [_attempt_out(r) for r in rows]
+    best = max(items, key=lambda x: x["total_score"]) if items else None
+    return {
+        "candidate_ref": ref,
+        "has_attempts": bool(items),
+        "passed": any(it["passed"] for it in items),
+        "best_attempt": best,
+        "latest_incident_stage": best["incident_stage"] if best else None,
+        "attempts": items,
+    }
+
+
+@router.post(
+    "/anticheat/inspect",
+    summary="Режим Б: проверка ответа и телеметрии античитом бэкенда",
+    responses={429: err("Слишком много запросов")},
+)
+def anticheat_inspect_endpoint(
+    body: AntiCheatInspectIn,
+    request: Request,
+    user: User | None = Depends(_optional_user),
+) -> dict[str, Any]:
+    rate_key = str(user.id) if user is not None else client_ip(request)
+    hit(_ac_limiter, rate_key, "warroom_anticheat_rate_limited", "Слишком много проверок античита")
+    # Детальная расшифровка сигналов — только в демо-режиме (гость на демо-стенде или жюри)
+    demo_mode = bool(body.demo and (user is None or _is_jury_user(user) or user.role != UserRole.candidate))
+    return inspect_anticheat_live(body.model_dump(by_alias=True), demo_mode=demo_mode)

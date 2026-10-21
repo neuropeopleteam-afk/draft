@@ -189,6 +189,7 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
         salary_min_hidden=int(round(base * rnd.uniform(0.9, 1.3), -4)), privacy={}, visible_to_employers=True,
         public_ref=new_public_ref(db), onboarding_completed_at=utcnow(), roles=roles,
         headline=f"{direction} · {grade} (демо)" if status == "confirmed" else f"{direction} (демо)",
+        is_synthetic=True,
     )
     db.add(p)
     if grade in ("lead", "principal"):

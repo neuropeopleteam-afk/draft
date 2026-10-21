@@ -229,3 +229,40 @@ def rewrite(text: str, findings: list[dict], req: dict) -> str | None:
         s += "."
     tail = f"Оцениваем по навыкам и уровню: {_level_phrase(req)}, {_skills_phrase(req)}."
     return f"{s} {tail}".strip()
+
+
+FOUR_FIFTHS_THRESHOLD = 0.80
+
+
+def fairness_four_fifths(
+    rate_without_fsp: float,
+    rate_with_fsp: float,
+    *,
+    n_without_fsp: int | None = None,
+    n_with_fsp: int | None = None,
+) -> dict:
+    """Правило справедливости «4/5» (Adverse Impact / Four-Fifths Rule) для кандидатов без истории ФСП.
+
+    При равном результате теста и подтверждённом стеке доля прохождения в топ-5 у кандидатов без истории ФСП
+    должна составлять не менее 4/5 (0,80) от доли кандидатов с паспортом ФСП (штраф за отсутствие ФСП = 0,0).
+    """
+    denom = max(rate_with_fsp, 1e-9)
+    ratio = round(min(1.0, rate_without_fsp / denom), 4) if rate_with_fsp > 0 else 1.0
+    passed = ratio >= FOUR_FIFTHS_THRESHOLD
+    return {
+        "rule": "four_fifths",
+        "threshold": FOUR_FIFTHS_THRESHOLD,
+        "selection_rate_without_fsp": round(rate_without_fsp, 4),
+        "selection_rate_with_fsp": round(rate_with_fsp, 4),
+        "disparate_impact_ratio": ratio,
+        "penalty_without_fsp": 0.0,
+        "passed": passed,
+        "n_without_fsp": n_without_fsp,
+        "n_with_fsp": n_with_fsp,
+        "verdict_ru": (
+            f"Правило 4/5 выполнено: отношение долей отбора без ФСП / с ФСП при равном тесте = {str(round(ratio, 2)).replace('.', ',')} ≥ 0,80 (штраф за отсутствие ФСП = 0)."
+            if passed
+            else f"Отношение долей отбора без ФСП / с ФСП = {str(round(ratio, 2)).replace('.', ',')} < 0,80."
+        ),
+    }
+

@@ -2,6 +2,21 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { api } from "./api";
 import { DIRECTIONS, DIRECTION_TITLES } from "../components/ui";
 
+export {
+  NUMBERS,
+  getAnticheatMetrics,
+  getExpertAgreement,
+  getHhMatchMetrics,
+  getJuryBanner,
+  getLandingCards,
+  getLeakKVariants,
+  getMatchingMetrics,
+  getMutationMetrics,
+  getRecomputeTable,
+  getSprtVerdict,
+  type LandingCardMetric,
+} from "./numbers";
+
 // Название продукта задаётся в одном месте — backend/app/core/config.py (product_name) — и приходит из /api/meta.
 export interface Meta {
   product_name: string; version: string; jury_mode_available: boolean; jury_tab_enabled?: boolean; demo_sandbox: boolean; assessment_engine: string;
@@ -66,15 +81,58 @@ export function daysText(n: number): string {
 }
 export const useProductName = () => useContext(Ctx)?.product_name ?? "";
 
-/** Свой заголовок вкладки экрана: «Мини-тест · Драфт». Ответ /api/meta приходит позже — он его не затирает;
- * при уходе с экрана возвращается общий заголовок. */
-export function usePageTitle(title: string) {
+function upsertMeta(attr: "name" | "property", key: string, content: string) {
+  if (typeof document === "undefined" || !content) return;
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+function defaultOgImageForPath(pathname: string): string {
+  if (pathname.startsWith("/demo") || pathname.startsWith("/expertise") || pathname.startsWith("/warroom") || pathname.startsWith("/validation") || pathname.startsWith("/criteria")) {
+    return "/favicon-og-demo.png";
+  }
+  if (pathname.startsWith("/pricing") || pathname.startsWith("/tariffs")) {
+    return "/favicon-og-pricing.png";
+  }
+  return "/favicon-og-1200x630.png";
+}
+
+/** Свой заголовок и мета-описание страницы (включая OpenGraph и Twitter Card для превью ссылок). */
+export function usePageTitle(title: string, description?: string, ogImage?: string) {
   const product = useProductName();
   useEffect(() => {
     ownTitle = true;
-    document.title = product ? `${title} · ${product}` : title;
+    const fullTitle = product ? `${title} · ${product}` : `${title} · Драфт`;
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const imgPath = ogImage ?? defaultOgImageForPath(pathname);
+    const imgUrl = imgPath.startsWith("http") ? imgPath : `${origin}${imgPath}`;
+    document.title = fullTitle;
+    upsertMeta("property", "og:title", fullTitle);
+    upsertMeta("property", "og:type", "website");
+    upsertMeta("property", "og:locale", "ru_RU");
+    upsertMeta("property", "og:site_name", product || "Драфт");
+    if (origin) upsertMeta("property", "og:url", `${origin}${pathname}`);
+    upsertMeta("property", "og:image", imgUrl);
+    upsertMeta("property", "og:image:type", "image/png");
+    upsertMeta("property", "og:image:width", "1200");
+    upsertMeta("property", "og:image:height", "630");
+    upsertMeta("property", "og:image:alt", fullTitle);
+    upsertMeta("name", "twitter:card", "summary_large_image");
+    upsertMeta("name", "twitter:title", fullTitle);
+    upsertMeta("name", "twitter:image", imgUrl);
+    if (description) {
+      upsertMeta("name", "description", description);
+      upsertMeta("property", "og:description", description);
+      upsertMeta("name", "twitter:description", description);
+    }
     return () => { ownTitle = false; if (loaded) document.title = defaultTitle(loaded); };
-  }, [title, product]);
+  }, [title, description, ogImage, product]);
 }
 
 /** Заголовок вкладки по экрану (WCAG 2.4.2): «<заголовок h1> · Драфт»; null — общий. Вызывает RouteAnnouncer
