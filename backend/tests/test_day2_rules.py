@@ -369,7 +369,7 @@ def test_profile_pdf(client):
 
 def test_meta_and_selfhosted_docs(client):
     m = client.get("/api/meta").json()
-    assert m["product_name"] and m["operator"]["inn"] == "<реквизит>"
+    assert m["product_name"] and "inn" not in m["operator"]  # 21.10: реквизитов юрлица нет (конкурсный прототип, решение владельца)
     html = client.get("/api/docs").text
     assert "/api/static/apidocs/swagger-ui-bundle.js" in html and "cdn" not in html.lower()
     assert client.get("/api/static/apidocs/swagger-ui-bundle.js").status_code == 200

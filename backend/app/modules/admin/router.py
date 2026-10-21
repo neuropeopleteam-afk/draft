@@ -161,7 +161,7 @@ def _tariff_req_out(r: TariffRequest) -> dict:
 
 
 def _send_mail_safe(to: str, subject: str, text: str) -> None:
-    if to.endswith((".invalid", "@jury.example.com")):
+    if not to or to.endswith((".invalid", "@jury.example.com")):
         return
     try:
         get_mailer().send(Message(to=to, subject=subject, text=text))
@@ -176,8 +176,10 @@ def _send_mail_safe(to: str, subject: str, text: str) -> None:
 def support_meta() -> dict:
     s = get_settings()
     return {
-        "support_email": s.support_email,
-        "legal_email": "<форма обратной связи>",
+        # 21.10 (решение владельца): публичных адресов почты нет — только форма обратной связи на этой странице
+        "support_email": "",
+        "legal_email": "",
+        "contact": "форма обратной связи на сайте (раздел «Поддержка»)",
         "categories": [
             {"id": "general", "title": "Общий вопрос по платформе"},
             {"id": "tariff", "title": "Подключение тарифа «Найм» и договоры"},
@@ -237,7 +239,7 @@ def create_support_ticket(
     )
     return {
         "ticket": _ticket_out(ticket),
-        "support_email": s.support_email,
+        "support_email": "",  # 21.10: публичного адреса нет (решение владельца)
         "message": "Обращение зарегистрировано. Ответ придёт на указанную почту и появится в разделе «Поддержка».",
     }
 
@@ -516,7 +518,7 @@ def _flags_state() -> dict:
         "tariffs_enabled": bool(s.tariffs_enabled),
         "demo_sandbox": bool(s.demo_sandbox),
         "study_enabled": bool(s.study_enabled),
-        "support_email": s.support_email,
+        "support_email": "",  # 21.10: публичного адреса нет (решение владельца)
     }
 
 

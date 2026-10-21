@@ -32,7 +32,7 @@ def _h(token: str) -> dict[str, str]:
 def test_support_ticket_flow_and_admin_resolve(client):
     meta = client.get("/api/support")
     assert meta.status_code == 200
-    assert meta.json()["support_email"] and len(meta.json()["categories"]) >= 4
+    assert meta.json()["support_email"] == "" and meta.json()["contact"] and len(meta.json()["categories"]) >= 4
 
     # гость без почты -> 422
     assert client.post("/api/support", json={"subject": "Вопрос", "message": "Текст обращения"}).status_code == 422
