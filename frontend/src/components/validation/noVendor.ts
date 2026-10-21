@@ -26,6 +26,8 @@ export function makeModelAlias(): (keyOrName: string | null | undefined) => stri
   return (raw) => {
     const s = String(raw ?? "").trim();
     if (!s) return "—";
+    // уже нейтральная подпись с сервера (validation/no_vendor.py): «модель стенда», «модель А» — как есть
+    if (/[а-яё]/i.test(s)) return s.charAt(0).toUpperCase() + s.slice(1);
     const [base, variant] = s.split("@");
     let name = ROLE.find(([re]) => re.test(s))?.[1];
     if (!name) {
