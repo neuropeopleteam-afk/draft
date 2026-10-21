@@ -52,10 +52,6 @@ export function DecisionProofStrip({
         desc: formula.text ?? p.title,
       }))
     : SEGMENTS;
-  const bank2 = (NUMBERS as any)?.bank_v2;
-  const bankFamilies = bank2?.families ?? NUMBERS?.bank?.families ?? 1824;
-  const bankVariants = bank2?.variants_20seeds ?? NUMBERS?.bank?.variants_20seeds ?? 36480;
-  const bankPractical = bank2?.families_checked ?? 590;
 
   return (
     <div className={`rounded-2xl border border-brand-night/10 bg-[#F8F6FC] p-3.5 sm:p-4 ${className}`} data-testid="decision-proof-strip">
@@ -78,7 +74,7 @@ export function DecisionProofStrip({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="text-xs font-semibold text-brand hover:underline"
+          className="inline-flex min-h-[44px] items-center rounded-lg px-2.5 py-2 text-xs font-semibold text-brand hover:bg-brand/5 hover:underline"
           aria-expanded={open}
           data-testid="under-the-hood-toggle"
         >
@@ -124,7 +120,7 @@ export function DecisionProofStrip({
           <div>
             <p className="font-bold text-brand-night">2. Банк и античит</p>
             <p className="mt-1">
-              {bankFamilies.toLocaleString("ru-RU")} параметрических семейств ({bankVariants.toLocaleString("ru-RU")} вариантов, {bankPractical.toLocaleString("ru-RU")} практических семейств с кодом, открытым ответом и разбором инцидентов). Открытые ответы проверяются двухконтурным оценщиком с дословными цитатами и защитой от промпт-инъекций.
+              {NUMBERS.bank.families.toLocaleString("ru-RU")} параметрических семейств ({NUMBERS.bank.variants_20seeds.toLocaleString("ru-RU")} проверенных вариантов на 20 зёрнах, {NUMBERS.bank.code_and_open_families} практических семейств с кодом и симулятором инцидента). Открытые ответы проверяются двухконтурным оценщиком с дословными цитатами и защитой от инъекций; подозрительные попытки переводятся на 3-минутную устную защиту.
             </p>
           </div>
           <div>

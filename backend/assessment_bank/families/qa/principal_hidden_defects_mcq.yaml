@@ -1,23 +1,34 @@
 family_id: qa.principal.hidden_defects_mcq
 title: Сколько дефектов ещё не найдено — две независимые команды и разная находимость по слоям (Principal, короткое)
 direction: qa
-skills: [defect_management, quality_metrics, statistics, risk_based_testing]
-target_grades: [principal]
+skills:
+- defect_management
+- quality_metrics
+- statistics
+- risk_based_testing
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    distractors: "три из пяти моделей ошибок: pooled, minus_sum (ниже ключа); total, minus_max (выше); unique_only; меньше ключа 0–2 равновероятно"
+    distractors: 'три из пяти моделей ошибок: pooled, minus_sum (ниже ключа); total, minus_max (выше); unique_only;
+      меньше ключа 0–2 равновероятно'
 time_limit_s: 420
 canary: false
 prior_difficulty:
   b: 2.6
-  a: 1.3
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: оценка остаточных дефектов по двум независимым командам тестирования методом повторного отлова с разбиением на слои с разной находимостью. Senior и Lead обычно не знают метода, считают одну общую оценку (занижает хвост трудных дефектов) или путают ненайденные с найденными одной командой; Principal считает по слоям. Ловушки с обеих сторон от ключа"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Короткое расчётное задание у границы Lead/Principal: оценка
+    остаточных дефектов по двум независимым командам тестирования методом повторного отлова с разбиением на слои
+    с разной находимостью. Senior и Lead обычно не знают метода, считают одну общую оценку (занижает хвост трудных
+    дефектов) или путают ненайденные с найденными одной командой; Principal считает по слоям. Ловушки с обеих сторон
+    от ключа'
 generator: assessment_bank.families.qa.principal_hidden_defects_mcq
 version: 1
-description: >
-  Оценка числа ещё не найденных дефектов по результатам двух независимых команд в двух слоях с разной
+description: 'Оценка числа ещё не найденных дефектов по результатам двух независимых команд в двух слоях с разной
   находимостью. Ключ — программа: множества найденных дефектов и оценка по слоям точными дробями.
+
+  '

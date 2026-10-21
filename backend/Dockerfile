@@ -10,6 +10,9 @@ COPY requirements.txt requirements-dev.txt ./
 RUN pip install -r requirements.txt -r requirements-dev.txt
 
 COPY . .
+# Итоговые цифры (docs/NUMBERS.json) — из того же коммита, что и код: их читает Настя (/srv/docs/NUMBERS.json).
+# Контекст docs задаётся при сборке: docker build --build-context docs=docs backend (compose: additional_contexts).
+COPY --from=docs NUMBERS.json /srv/docs/NUMBERS.json
 RUN useradd --uid 10001 --no-create-home app && chown -R app /srv/backend
 USER app
 

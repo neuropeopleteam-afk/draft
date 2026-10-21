@@ -1,0 +1,29 @@
+family_id: data_eng.etl.t21_partition_slice_output
+title: Срезы списка дневных партиций — правая граница, отрицательные индексы, выход за конец
+direction: data_eng
+skills:
+- python
+- partitioning
+- backfill
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 5
+  - 5
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.7
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Взять срез parts[i:j] и последние
+    k партиций parts[-k:] и назвать первый, последний элемент и длину; ловушки — правая граница не входит, отрицательный
+    индекс и срез за концом списка. Уровень Стажёра: индексы и срезы, len. Набор t21 (21.10) у порога Стажёра (b = −1,7)'
+generator: assessment_bank.families.data_eng.t21_partition_slice_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Список дневных партиций и два среза для обработки; предсказать
+  вывод print. Ключ — независимый расчёт индексов в генераторе, проверка — исполнение показанного кода в песочнице Python.

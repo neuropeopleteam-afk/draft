@@ -1,0 +1,31 @@
+family_id: data_eng.stream.t21_watermark_gen_send_output
+title: Водяной знак потока в генераторе — next, send и return через StopIteration.value
+direction: data_eng
+skills:
+- python
+- streaming
+- watermarks
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 17
+  - 17
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проследить генератор водяного
+    знака: next() выдаёт стартовое значение, send(ts) возвращает знак после обработки события, return приходит в StopIteration.value;
+    ловушки — что именно возвращает send и событие, равное знаку, при <= и <. Уровень Senior: send/return генератора. Набор
+    t21 (21.10) у порога Senior (b = +0,9)'
+generator: assessment_bank.families.data_eng.t21_watermark_gen_send_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Генератор отслеживает водяной знак потока и считает опоздавшие
+  события; предсказать вывод next, send и итог из StopIteration. Ключ — независимая модель в генераторе, проверка — исполнение
+  показанного кода в песочнице Python.

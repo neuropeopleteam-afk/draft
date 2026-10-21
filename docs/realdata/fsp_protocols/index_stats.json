@@ -1,9 +1,9 @@
 {
  "documents": 18,
  "events": 27,
- "results": 2911,
- "person_results": 2834,
- "athletes": 2236,
+ "results": 2908,
+ "person_results": 2831,
+ "athletes": 2232,
  "regions": 69,
  "years": "2025–2026",
  "athletes_with_evsk_norm": 130,
@@ -16,14 +16,14 @@
  "place_status_counts": {
   "disqualified": 4,
   "no_place": 204,
-  "not_a_protocol": 115,
+  "not_a_protocol": 112,
   "placed": 2462,
   "shared_range": 49
  },
  "place_unverified": 4,
  "what": "Официальные протоколы ФСП России 2025–2026 (fsp-russia.ru/about/documents): результаты, привязанные к соревнованиям; судьи, тренеры и строки справок исключены; норматив ЕВСК — по месту, числу субъектов РФ и составу судейской коллегии.",
- "generated_at": "2026-10-21T10:09:13+00:00",
- "index": "index_v5.json",
- "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v5.json docs/realdata/fsp_protocols backend/app/modules/fsp",
+ "generated_at": "2026-10-21T11:39:47+00:00",
+ "index": "index_v6.json",
+ "recompute": "python3 tools/fsp_protocols/export_public.py /opt/spectrek_fsp/data_local/fsp_protocols/index_v6.json docs/realdata/fsp_protocols backend/app/modules/fsp",
  "code_ref": "tools/fsp_protocols/build_index_v2.py, backend/app/modules/fsp/evsk.py, backend/app/modules/fsp/protocol_stats.py"
 }

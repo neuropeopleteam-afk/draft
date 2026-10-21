@@ -1,0 +1,119 @@
+{
+ "signature": {
+  "world": "эксперимент утечки K=0/10/100/1000 вариантов и вызов «Обмани тест» (N=2000 на каждое K)",
+  "seed": 2026102004,
+  "config_hash": "cba53f2ad201",
+  "commit": "6229b82",
+  "bank": "82a05fdbacf00481",
+  "n": 8000,
+  "command": "python -m app.modules.validation.leak_k_variants",
+  "generated_at": "2026-10-20T17:43:44+00:00"
+ },
+ "generated_at": "2026-10-20T17:43:44+00:00",
+ "recompute": "cd backend && python -m app.modules.validation.leak_k_variants",
+ "code_ref": "backend/app/modules/validation/leak_k_variants.py",
+ "n_per_k": 2000,
+ "seed_space_per_family": 2147483646,
+ "families": 1824,
+ "k_values": {
+  "0": {
+   "k_published": 0,
+   "n": 2000,
+   "fixed_bank": {
+    "pool_size": 200,
+    "leaked_share_of_test": 0.0,
+    "theta_gain_mean": 0.209,
+    "false_confirm_rate": 0.0095
+   },
+   "parametric_bank": {
+    "families": 1824,
+    "seeds_per_family": 2147483646,
+    "exact_variant_collision_prob": 0.0,
+    "theta_gain_mean": 0.25,
+    "false_confirm_raw": 0.0085,
+    "false_confirm_protected": 0.0085,
+    "canary_caught_rate": 0.0,
+    "routed_to_oral_defense_rate": 0.0
+   }
+  },
+  "10": {
+   "k_published": 10,
+   "n": 2000,
+   "fixed_bank": {
+    "pool_size": 200,
+    "leaked_share_of_test": 0.05,
+    "theta_gain_mean": 0.287,
+    "false_confirm_rate": 0.0135
+   },
+   "parametric_bank": {
+    "families": 1824,
+    "seeds_per_family": 2147483646,
+    "exact_variant_collision_prob": 3e-12,
+    "theta_gain_mean": 0.274,
+    "false_confirm_raw": 0.0055,
+    "false_confirm_protected": 0.005,
+    "canary_caught_rate": 0.1105,
+    "routed_to_oral_defense_rate": 0.1105
+   }
+  },
+  "100": {
+   "k_published": 100,
+   "n": 2000,
+   "fixed_bank": {
+    "pool_size": 200,
+    "leaked_share_of_test": 0.5,
+    "theta_gain_mean": 1.174,
+    "false_confirm_rate": 0.3825
+   },
+   "parametric_bank": {
+    "families": 1824,
+    "seeds_per_family": 2147483646,
+    "exact_variant_collision_prob": 2.6e-11,
+    "theta_gain_mean": 0.285,
+    "false_confirm_raw": 0.0095,
+    "false_confirm_protected": 0.0015,
+    "canary_caught_rate": 0.8935,
+    "routed_to_oral_defense_rate": 0.8935
+   }
+  },
+  "1000": {
+   "k_published": 1000,
+   "n": 2000,
+   "fixed_bank": {
+    "pool_size": 200,
+    "leaked_share_of_test": 1.0,
+    "theta_gain_mean": 2.682,
+    "false_confirm_rate": 1.0
+   },
+   "parametric_bank": {
+    "families": 1824,
+    "seeds_per_family": 2147483646,
+    "exact_variant_collision_prob": 2.55e-10,
+    "theta_gain_mean": 0.28,
+    "false_confirm_raw": 0.0075,
+    "false_confirm_protected": 0.0,
+    "canary_caught_rate": 1.0,
+    "routed_to_oral_defense_rate": 1.0
+   }
+  }
+ },
+ "why_code_does_not_help": [
+  {
+   "id": "server_csprng_seed",
+   "title": "1. Секретное серверное зерно (2,15 млрд вариантов на семейство)",
+   "detail": "Клиент получает только непрозрачный одноразовый токен item_id (secrets.token_urlsafe), а не номер варианта и не seed. Само зерно выбирается на сервере через криптостойкий генератор secrets.randbelow(2³¹ − 2). Зная весь код генератора на Python, невозможно угадать, какие именно числа, строки кода, имена переменных и правильный ответ сгенерированы на сервере в этой сессии."
+  },
+  {
+   "id": "parametric_code_execution",
+   "title": "2. Изоморфные мутации кода и 3-шаговые инциденты у порога грейда",
+   "detail": "В заданиях find_bug, predict_output, choose_fix и incident_sim меняются не просто числа в тексте, а граничные условия, операторы сравнения, порядок вызовов и метрики телеметрии. Чтобы вычислить ответ для нового варианта по коду генератора, нужно фактически выполнить алгоритм задачи — то есть обладать проверяемым навыком."
+  },
+  {
+   "id": "canary_and_sprt_oral",
+   "title": "3. Канареечные ловушки + перевод в устную защиту вместо бана",
+   "detail": "На позициях 2, 6 и 10 подмешиваются канареечные задания из известного списка опубликованных зёрен. Если кандидат или скрипт пробивает ответы по базе слитых вариантов, возникает статистический разрыв между мгновенными верными ответами на канарейках и заминками на свежих зёрнах. Система пересчитывает θ без скомпрометированных заданий и переводит вердикт в статус «Нужен доп. этап / устная защита»."
+  }
+ ],
+ "claim_ru": "При утечке K = 100 и K = 1 000 опубликованных вариантов и открытом коде генераторов вероятность ложного подтверждения Senior у кандидата уровня Junior/Middle в фиксированном банке (200 вопросов) взлетает до 38,2 % и 100,0 %, тогда как в параметрическом банке «Драфт» (1824 семейств × 2,15·10⁹ серверных зёрен CSPRNG + канареечный детектор + перевод в устную защиту) остаётся на уровне 0,15 % и 0,00 %, а выигрыш в оценке θ не превышает +0,28 логита (симуляция N = 2000 на каждое K, seed 2026102004),",
+ "seconds": 59.45
+}

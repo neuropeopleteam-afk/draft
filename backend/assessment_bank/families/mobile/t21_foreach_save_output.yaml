@@ -1,0 +1,31 @@
+family_id: mobile.offline.t21_foreach_save_output
+title: Сохранение черновика через forEach с async-колбэком — кто кого ждёт
+direction: mobile
+skills:
+- javascript
+- async_await
+- persistence
+target_grades:
+- senior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 14
+  - 15
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.85
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). forEach с async-колбэком и await
+    внутри, промис async-функции и .then после неё, 3–4 таймера с разными задержками. Нужно понять, что forEach не ждёт
+    колбэки (функция и её then завершаются раньше записей), а записи завершаются в порядке задержек. Уровень Senior: async/await
+    и очередь задач. Набор t21 (21.10) у порога Senior (b = +0,85)'
+generator: assessment_bank.families.mobile.t21_foreach_save_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). При уходе с экрана формы части черновика сохраняются через
+  forEach с async-колбэком; предсказать порядок строк вывода и значения saved.length. Ключ — независимая модель в генераторе
+  на Python, проверка — исполнение показанного кода в песочнице Node.js.

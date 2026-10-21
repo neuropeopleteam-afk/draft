@@ -31,7 +31,7 @@ function TriangleScheme({ t }: { t?: TrioThread | null }) {
     { side: "employer", title: "Работодатель", joined: true }, { side: "candidate", title: "Кандидат", joined: true },
     { side: "fsp", title: "Представитель ФСП", joined: true }] as Participant[];
   return (
-    <div className="grid grid-cols-3 gap-2 text-center text-xs" aria-label="Участники канала">
+    <div className="grid grid-cols-1 gap-2 text-center text-xs sm:grid-cols-3" aria-label="Участники канала">
       {p.map((x) => (
         <div key={x.side} className={`rounded-xl px-2 py-2 ${x.joined ? SIDE_STYLE[x.side] : "border border-dashed border-brand-night/20 text-brand-ink/60"}`}>
           <span className={`mx-auto mb-1 block h-2 w-2 rounded-full ${DOT[x.side]}`} aria-hidden="true" />

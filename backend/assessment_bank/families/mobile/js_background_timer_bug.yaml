@@ -1,23 +1,37 @@
 family_id: mobile.js.background_timer_bug
 title: Таймер в свёрнутом приложении — счёт по тикам отстаёт
 direction: mobile
-skills: [lifecycle, background_execution, javascript, timers, event_loop]
-target_grades: [junior, middle]
+skills:
+- lifecycle
+- background_execution
+- javascript
+- timers
+- event_loop
+target_grades:
+- junior
+- middle
 format: find_bug
 language: javascript
 invariants:
-  code_lines: [17, 18]
-  operations: [14, 15]
+  code_lines:
+  - 17
+  - 18
+  operations:
+  - 14
+  - 15
   defect_type: tick_counting
 time_limit_s: 200
 canary: false
 prior_difficulty:
   b: -0.3
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.2
-  basis: "17–20 строк, одна ошибочная строка (elapsed += 1 в тике); нужно знать, что в фоне таймеры приостанавливаются и тики не догоняются; рядом — служебная функция форматирования и строка с вибрацией по elapsed. Различает Junior и Middle (b ≈ −0,3)"
+  basis: Априорная, до калибровки на людях (a = 1,3). 17–20 строк, одна ошибочная строка (elapsed += 1 в тике);
+    нужно знать, что в фоне таймеры приостанавливаются и тики не догоняются; рядом — служебная функция форматирования
+    и строка с вибрацией по elapsed. Различает Junior и Middle (b ≈ −0,3)
 generator: assessment_bank.families.mobile.js_background_timer_bug
 version: 1
-description: >
-  Таймер на экране считает время числом тиков setInterval; после фона отстаёт. Ключ: модель таймеров в Node
-  (в фоне часы идут, тиков нет) — дефектный код показывает меньшее время, исправленный — реальное.
+description: 'Таймер на экране считает время числом тиков setInterval; после фона отстаёт. Ключ: модель таймеров
+  в Node (в фоне часы идут, тиков нет) — дефектный код показывает меньшее время, исправленный — реальное.
+
+  '

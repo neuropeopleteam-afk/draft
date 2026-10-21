@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import Any, Callable, Sequence
 
+from assessment_bank.gen_utils import spread_pick
+
 
 def argmin_sep(d: dict[str, float], rel: float = 0.04) -> str | None:
     """Ключ минимума, если второй по величине больше минимума хотя бы на ``rel`` от второго; иначе None."""
@@ -64,9 +66,9 @@ def pick_traps(rng: Any, key: float, cand: dict[str, float], n_above: int, *, re
     below = sorted(n for n, v in cand.items() if v < key)
     if len(above) < n_above or len(below) < k - n_above:
         return None
-    for _ in range(12):
-        names = rng.sample(above, n_above) + rng.sample(below, k - n_above)
-        vals = [key] + [cand[n] for n in names]
-        if distinct_ok(vals, rel, abs_min):
-            return sorted(names)
-    return None
+    rng.shuffle(above)
+    rng.shuffle(below)
+    # варианты — ровно по шкале (аудит 21.10: иначе ключ выдают «ближайший к среднему» и «центр кластера»)
+    picked = spread_pick(rng, key, below, above, k - n_above, n_above, cand.__getitem__,
+                         lambda tv: distinct_ok([key, *tv], rel, abs_min))
+    return sorted(n for n, _ in picked) if picked else None

@@ -1,0 +1,31 @@
+family_id: security.input.t21_regex_anchor_output
+title: Шаблон разрешённых символов — re.match, ^…$ и re.fullmatch, завершающий \n
+direction: security
+skills:
+- python
+- security
+- input_validation
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 7
+  - 7
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Для 4–5 входов определить результат
+    трёх проверок: re.match совпадает с началом («admin;rm» проходит), «$» в ^…$ допускает завершающий перевод строки, re.fullmatch
+    требует совпадения целиком; плюс пустая строка и регистр. Уровень Senior: глубокая семантика якорей регулярных выражений.
+    Набор t21 (21.10) у порога Senior (b = +0,8)'
+generator: assessment_bank.families.security.t21_regex_anchor_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Валидация имени по шаблону разрешённых символов тремя способами;
+  предсказать True/False по каждому входу. Ключ — независимая модель по символам в генераторе, проверка — исполнение показанного
+  кода в песочнице Python.

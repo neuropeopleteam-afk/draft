@@ -1,0 +1,37 @@
+family_id: security.input.t21_reserved_names_output
+title: Служебные имена при регистрации — strip(), lower() и точное совпадение в списке
+direction: security
+skills:
+- python
+- security
+- input_validation
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra:
+    entries:
+    - 5
+    - 6
+    reserved:
+    - 3
+    - 4
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл по 5–6 заявкам со
+    счётчиком и проверкой name.strip().lower() in reserved; ловушки — strip() убирает пробелы только по краям, in по
+    списку требует точного совпадения («administrator», «r00t» не совпадают). Уровень Стажёра: цикл, if и строковые
+    методы. Набор t21 (21.10) у порога Стажёра (b = −1,6)'
+generator: assessment_bank.families.security.t21_reserved_names_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Регистрация отклоняет служебные имена по списку
+  после strip() и lower(); предсказать отклонённые заявки и число принятых. Ключ — независимая модель в генераторе,
+  проверка — исполнение показанного кода в песочнице Python.'

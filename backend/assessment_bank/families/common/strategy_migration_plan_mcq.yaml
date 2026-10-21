@@ -1,25 +1,44 @@
 family_id: common.strategy.migration_plan_mcq
 title: План миграции хранилища без простоя и с откатом — порядок шагов и перенос истории без затирания обновлений
 direction: common
-skills: [migrations, technical_strategy, databases, distributed_systems, data_consistency]
-target_grades: [principal]
+skills:
+- migrations
+- technical_strategy
+- databases
+- distributed_systems
+- data_consistency
+target_grades:
+- principal
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    steps: [dual_write, backfill, verify, switch_reads, stop_old_writes]
-    distractors_fixed: [overwrite_backfill]
-    distractors_pool: [backfill_first, stop_before_read, read_before_backfill]
+    steps:
+    - dual_write
+    - backfill
+    - verify
+    - switch_reads
+    - stop_old_writes
+    distractors_fixed:
+    - overwrite_backfill
+    distractors_pool:
+    - backfill_first
+    - stop_before_read
+    - read_before_backfill
 time_limit_s: 480
 canary: false
 prior_difficulty:
   b: 2.5
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.3
-  basis: "Априорная трудность (не по людям). Четыре плана из пяти шагов; порядок «двойная запись → перенос → сверка → чтение → остановка записи» знает и Lead, но тонкий дистрактор (тот же порядок, перенос снимком с перезаписью) присутствует всегда: отличить можно, только представив обновление строки во время переноса. Граница Lead/Principal (θ ≈ 2,75); σ 0,3 — два других дистрактора выбираются из трёх разной очевидности"
+  basis: 'Априорная, до калибровки на людях (a = 1,0). Четыре плана из пяти шагов; порядок «двойная запись → перенос
+    → сверка → чтение → остановка записи» знает и Lead, но тонкий дистрактор (тот же порядок, перенос снимком с
+    перезаписью) присутствует всегда: отличить можно, только представив обновление строки во время переноса. Граница
+    Lead/Principal (θ ≈ 2,75); σ 0,3 — два других дистрактора выбираются из трёх разной очевидности'
 generator: assessment_bank.families.common.strategy_migration_plan_mcq
 version: 1
-description: >
-  Principal: выбор плана онлайн-миграции хранилища под нагрузкой с сохранением отката. Ключ — исполнением
+description: 'Principal: выбор плана онлайн-миграции хранилища под нагрузкой с сохранением отката. Ключ — исполнением
   модели: план проигрывается на записях и чтениях, проверяются инварианты.
+
+  '

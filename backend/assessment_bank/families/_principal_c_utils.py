@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Any, Callable, Sequence
 
 from assessment_bank.families._lead_b_utils import computed_mcq
+from assessment_bank.gen_utils import spread_pick
 
 # Форматы подписи: все варианты одной длины (проверяется), десятичная запятая.
 FMT = {
@@ -67,24 +68,41 @@ def pick_traps(good: float, pool: dict[str, float], n_below: int, rng, fmt: Call
         ok[k] = v
     below = sorted(k for k, v in ok.items() if v < good)
     above = sorted(k for k, v in ok.items() if v > good)
-    if len(below) < n_below or len(above) < 3 - n_below:
-        return None
-    for _ in range(12):
-        traps = rng.sample(below, n_below) + rng.sample(above, 3 - n_below)
-        vals = [good] + [ok[t] for t in traps]
+    def fits(tvals: list[float]) -> bool:
+        vals = [good] + list(tvals)
         texts = [fmt(v) for v in vals]
         if len(set(texts)) != 4 or len({len(t) for t in texts}) != 1:
-            continue
+            return False
         sv = sorted(vals)
-        if all(b - a >= rel * max(abs(b), 1e-12) for a, b in zip(sv, sv[1:])):
-            return traps
-    return None
+        return all(b - a >= rel * max(abs(b), 1e-12) for a, b in zip(sv, sv[1:]))
+
+    def control(x: float) -> float | None:
+        v = round(x * _SCALE[kind]) / _SCALE[kind]
+        if v <= 0 or (lo is not None and v < lo) or (hi is not None and v >= hi):
+            return None
+        return v
+
+    rng.shuffle(below)
+    rng.shuffle(above)
+    # варианты — ровно по шкале, ранг ключа задан заранее; если ловушек с одной стороны не хватает — контрольные
+    # значения «_fb_ctl*» тем же шагом (аудит 21.10: иначе ключ выдают «ближайший к среднему» и «центр кластера»)
+    picked = spread_pick(rng, good, below, above, n_below, 3 - n_below, ok.__getitem__, fits,
+                         control=control, min_step=max(0.15, 1.6 * rel))
+    if picked is None:
+        return None
+    for n, v in picked:
+        pool[n] = v  # контрольные значения — в общий словарь (по нему numeric_mcq строит подписи)
+    return [n for n, _ in picked]
 
 
 def numeric_mcq(fid: str, seed: int, rng, *, ctx: str, stem: str, good: float, pool: dict[str, float],
                 traps: Sequence[str], fmt: Callable[[float], str], program: str, why: str,
                 params: dict[str, Any], code: str | None = None, note: str | None = None):
     """Расчётный mcq_concept: ``program`` печатает подпись верного варианта (через вложенный ``fmt``)."""
+    ctl = [fmt(pool[t]) for t in traps if t.startswith("_fb_")]
+    if ctl:
+        why = (f"{why} Контрольные значения на той же шкале (не связаны с конкретной ошибкой): "
+               f"{', '.join(ctl)}.")
     return computed_mcq(fid, seed, rng, stem=stem, correct=fmt(good), distractors=[fmt(pool[t]) for t in traps],
                         program=program, why=why, context=ctx, code=code, language="text",
                         params={**params, "traps": list(traps), "good": good},

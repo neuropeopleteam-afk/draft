@@ -65,6 +65,12 @@ KINDS = {"synthetic": "синтетика", "model": "модель, не люд�
          "doc": "документация", "measured": "замер нагрузки", "yours": "ваши данные"}
 # источник → файл расчёта, чем пересчитать, кто «размечал», какие блоки /validation он кормит
 SOURCES: dict[str, dict] = {
+    # А4 (21.10): симуляция продукта — движок стенда на реальном банке; боты «Обмани тест» через движок
+    "product": {"file": "product_sim_test_calibrated.json", "command": "make product-sim", "kind": "synthetic",
+                "title": "Симуляция продукта: вердикт по грейду, точный грейд, повтор (движок стенда, реальный банк)",
+                "sections": ["product-sim"]},
+    "cheat": {"file": "cheat_bots.json", "command": "make cheat-bots", "kind": "synthetic",
+              "title": "«Обмани тест»: боты-стратегии и утечка вариантов через движок", "sections": ["cheat"]},
     "path": {"file": "path_retest.json", "command": "make path-retest", "kind": "synthetic",
              "title": "Повтор всего пути, точность к истине, D и r_pb", "sections": ["headline", "path-retest", "discrimination"]},
     "accuracy": {"file": "accuracy_views.json", "command": "make accuracy-views", "kind": "synthetic",
@@ -126,6 +132,12 @@ def stamp(src: str, d: dict | None = None) -> dict:
         return out
     m = bank_manifest()
     sig = d.get("signature") or {}
+    mt = d.get("meta") if isinstance(d.get("meta"), dict) else {}
+    if not sig and (mt.get("git_commit") or mt.get("date")):  # симуляция продукта и боты пишут подпись в meta
+        man = ((mt.get("bank") or {}).get("manifest") or {}) if isinstance(mt.get("bank"), dict) else {}
+        sig = {"generated_at": mt.get("date") or mt.get("generated_at"), "commit": mt.get("git_commit"),
+               "bank": man.get("content_hash") or mt.get("bank_hash"), "command": None}
+        d = {**d, "bank": {"n_families": man.get("n_families")}}
     if sig:
         b = d.get("bank") if isinstance(d.get("bank"), dict) else {}
         # число семейств банка расчёта — из самого отчёта (если записано): после синхронизации банка снимок

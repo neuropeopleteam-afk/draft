@@ -1,0 +1,32 @@
+family_id: data_eng.etl.t21_dict_dedup_order_output
+title: Дедупликация по ключу через dict — какое значение остаётся и порядок ключей
+direction: data_eng
+skills:
+- python
+- deduplication
+- etl
+target_grades:
+- intern
+- junior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 7
+  - 8
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Свернуть 5–7 записей по ключу
+    в словарь по правилу последнее / первое / наибольшее и напечатать его; ловушки — порядок ключей в dict по первой вставке
+    при перезаписи значения и подсчёт отброшенных дублей. Уровень Junior: подсчёт в словаре вместе с порядком обхода. Набор
+    t21 (21.10) у порога Junior (b = −1,1)'
+generator: assessment_bank.families.data_eng.t21_dict_dedup_order_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Поток изменений с повторами ключей сворачивается в dict
+  перед загрузкой; предсказать напечатанные пары и число дублей. Ключ — независимая модель в генераторе, проверка — исполнение
+  показанного кода в песочнице Python.

@@ -1,0 +1,31 @@
+family_id: data_eng.sql.t21_lag_change_output
+title: 'SQL — изменения из ежедневных снимков: LAG по партиции и сравнение с NULL (<> и IS NOT)'
+direction: data_eng
+skills:
+- sql
+- window_functions
+- cdc
+target_grades:
+- senior
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 14
+  - 14
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Для 6–12 снимков 2–3 счетов вычислить
+    LAG(status) по партиции и отфильтровать строки по status <> prev_status или status IS NOT prev_status; ловушки — у первого
+    снимка prev = NULL и сравнение <> даёт UNKNOWN, переходы в NULL и из NULL. Уровень Senior: LAG по партиции вместе с
+    NULL в сравнениях. Набор t21 (21.10) у порога Senior (b = +1,0)'
+generator: assessment_bank.families.data_eng.t21_lag_change_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Ежедневные снимки статусов и запрос, который через LAG
+  выделяет изменения для загрузки истории; предсказать строки результата. Ключ — независимая модель в генераторе, проверка
+  — исполнение запроса в sqlite.

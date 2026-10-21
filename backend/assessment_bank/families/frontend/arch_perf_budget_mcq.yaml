@@ -1,25 +1,39 @@
 family_id: frontend.arch.perf_budget_mcq
 title: Бюджет LCP — какое одно изменение (SSR, разделение кода, preload, AVIF) укладывает критический путь в бюджет
 direction: frontend
-skills: [web_performance, core_web_vitals, system_design, bundlers, critical_rendering_path]
-target_grades: [lead]
+skills:
+- web_performance
+- core_web_vitals
+- system_design
+- bundlers
+- critical_rendering_path
+target_grades:
+- lead
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    proposals: [ssr, split, preload, compress]
+    proposals:
+    - ssr
+    - split
+    - preload
+    - compress
     budget_between_best_and_second: true
 time_limit_s: 480
 canary: false
 prior_difficulty:
   b: 1.8
-  a: 1.2
+  a: 1.0
   sigma_variant: 0.35
-  basis: "Априорная трудность (не по людям). Нужно построить критический путь загрузки для четырёх предложений (каждое меняет свой участок графа зависимостей) и сравнить с бюджетом; бюджет посередине между лучшим и вторым (разрыв ≥ 15 %), победитель меняется от варианта к варианту — «любимое» решение (SSR, preload) не всегда верно. Senior знает приёмы, но выбирает по эвристике; расчёт критического пути под ограничение — граница Senior/Lead (θ ≈ 2,0). σ 0,35 — в части вариантов победитель очевиднее"
+  basis: Априорная, до калибровки на людях (a = 1,0). Нужно построить критический путь загрузки для четырёх предложений
+    (каждое меняет свой участок графа зависимостей) и сравнить с бюджетом; бюджет посередине между лучшим и вторым
+    (разрыв ≥ 15 %), победитель меняется от варианта к варианту — «любимое» решение (SSR, preload) не всегда верно.
+    Senior знает приёмы, но выбирает по эвристике; расчёт критического пути под ограничение — граница Senior/Lead
+    (θ ≈ 2,0). σ 0,35 — в части вариантов победитель очевиднее
 generator: assessment_bank.families.frontend.arch_perf_budget_mcq
 version: 1
-description: >
-  Lead: SPA на мобильной сети (RTT, пропускная способность, размеры HTML/CSS/JS/изображения, время исполнения) и
-  четыре предложения команды; верно единственное, укладывающее LCP в бюджет. Ключ — исполнением модели графа
-  зависимостей.
+description: 'Lead: SPA на мобильной сети (RTT, пропускная способность, размеры HTML/CSS/JS/изображения, время исполнения)
+  и четыре предложения команды; верно единственное, укладывающее LCP в бюджет. Ключ — исполнением модели графа зависимостей.
+
+  '

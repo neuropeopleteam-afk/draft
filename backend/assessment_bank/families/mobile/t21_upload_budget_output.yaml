@@ -1,0 +1,30 @@
+family_id: mobile.offline.t21_upload_budget_output
+title: Отбор фото из офлайн-очереди в лимит трафика — цикл с суммой и if
+direction: mobile
+skills:
+- javascript
+- offline_first
+- networking
+target_grades:
+- intern
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 7
+  - 7
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл по 5–6 размерам с суммой
+    и условием «помещается в лимит»; ловушка — после пропуска крупного фото цикл продолжается и берёт следующие маленькие,
+    граница <=. Уровень Стажёра: цикл со счётчиком и суммой, if. Набор t21 (21.10) у порога Стажёра (b = −1,6)'
+generator: assessment_bank.families.mobile.t21_upload_budget_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Программа отбирает фото из офлайн-очереди, пока сумма размеров
+  укладывается в лимит трафика; предсказать число отобранных фото и их суммарный размер. Ключ — независимая модель в генераторе
+  на Python, проверка — исполнение показанного кода в песочнице Node.js.

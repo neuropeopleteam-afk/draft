@@ -1,0 +1,34 @@
+family_id: data_eng.sql.t21_rows_threshold_count_output
+title: SQL — COUNT(*) и SUM по журналу загрузок с фильтром WHERE и границей порога
+direction: data_eng
+skills:
+- sql
+- etl
+- aggregation
+target_grades:
+- intern
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 4
+  - 4
+  extra:
+    rows:
+    - 7
+    - 9
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.7
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Отфильтровать 7–9 строк журнала
+    по двум условиям WHERE и посчитать COUNT(*) и SUM; ловушки — строка ровно на пороге (>= или >) и статус partial, который
+    проходит условие <> failed. Уровень Стажёра: одна базовая конструкция SQL (WHERE + агрегат). Набор t21 (21.10) у порога
+    Стажёра (b = −1,7)'
+generator: assessment_bank.families.data_eng.t21_rows_threshold_count_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Журнал ночных загрузок и запрос с COUNT(*), SUM и фильтром
+  по статусу и порогу числа строк; предсказать строку результата. Ключ — независимый подсчёт в генераторе, проверка — исполнение
+  запроса в sqlite.

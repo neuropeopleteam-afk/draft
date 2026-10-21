@@ -1,25 +1,38 @@
 family_id: devops.bash.exit_status_output
 title: bash — коды возврата в списках && / || и $?
 direction: devops
-skills: [bash, shell, exit_codes, linux]
-target_grades: [intern, junior]
+skills:
+- bash
+- shell
+- exit_codes
+- linux
+target_grades:
+- intern
+- junior
 format: predict_output
 language: bash
 invariants:
-  code_lines: [4, 5]
-  operations: [7, 11]
+  code_lines:
+  - 4
+  - 5
+  operations:
+  - 7
+  - 11
   extra:
     subtype: exit_status_lists
 time_limit_s: 180
 canary: false
 prior_difficulty:
   b: -1.2
-  a: 1.2
+  a: 1.3
   sigma_variant: 0.3
-  basis: "4–5 строк, 3–4 условия (test -f/-d, grep -qsF, сравнение переменной) и 5 форм списков; в каждом варианте есть ловушка — grep по отсутствующему файлу (код 2) или $? после ложного условия перед &&. Один подтип; у порога Junior, грейд «Стажёр»"
+  basis: Априорная, до калибровки на людях (a = 1,3). 4–5 строк, 3–4 условия (test -f/-d, grep -qsF, сравнение переменной)
+    и 5 форм списков; в каждом варианте есть ловушка — grep по отсутствующему файлу (код 2) или $? после ложного
+    условия перед &&. Один подтип; у порога Junior, грейд «Стажёр»
 generator: assessment_bank.families.devops.bash_exit_status_output
 version: 1
-description: >
-  Предсказать вывод короткого скрипта проверки перед развёртыванием: какие ветки && / || выполнятся и что
-  напечатает $?. Ключ — независимая модель статусов; проверка — исполнение показанного скрипта в bash с теми
+description: 'Предсказать вывод короткого скрипта проверки перед развёртыванием: какие ветки && / || выполнятся
+  и что напечатает $?. Ключ — независимая модель статусов; проверка — исполнение показанного скрипта в bash с теми
   же файлами.
+
+  '

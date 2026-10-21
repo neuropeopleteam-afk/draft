@@ -1,13 +1,22 @@
 family_id: qa.pytest.float_assert_bug
 title: pytest — точное сравнение float в тесте
 direction: qa
-skills: [pytest, python, test_design]
-target_grades: [intern, junior]
+skills:
+- pytest
+- python
+- test_design
+target_grades:
+- intern
+- junior
 format: find_bug
 language: python
 invariants:
-  code_lines: [8, 10]
-  operations: [3, 4]
+  code_lines:
+  - 8
+  - 10
+  operations:
+  - 3
+  - 4
   defect_type: float_exact_equality
   extra:
     subtype: inexact_decimal_sum
@@ -15,11 +24,14 @@ time_limit_s: 150
 canary: false
 prior_difficulty:
   b: -1.2
-  a: 1.0
+  a: 1.3
   sigma_variant: 0.2
-  basis: "3–4 теста по одной проверке; реализация верна по условию; нужно знать, что десятичные дроби в double неточны и сравнивать через approx; ловушки — точные значения (целые, половинки); у порога Junior, грейд «Стажёр»"
+  basis: Априорная, до калибровки на людях (a = 1,3). 3–4 теста по одной проверке; реализация верна по условию;
+    нужно знать, что десятичные дроби в double неточны и сравнивать через approx; ловушки — точные значения (целые,
+    половинки); у порога Junior, грейд «Стажёр»
 generator: assessment_bank.families.qa.py_float_assert_bug
 version: 1
-description: >
-  Лёгкое семейство у порога Junior: найти тест с точным сравнением float. Проверка исполнением:
-  дефектный тест красный на верной реализации, исправленный зелёный и ловит мутанта.
+description: 'Лёгкое семейство у порога Junior: найти тест с точным сравнением float. Проверка исполнением: дефектный
+  тест красный на верной реализации, исправленный зелёный и ловит мутанта.
+
+  '

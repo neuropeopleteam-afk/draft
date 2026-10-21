@@ -223,11 +223,11 @@ export function Fsp() {
           <h2 className="font-bold text-brand-night">Достижения</h2>
           <ul className="mt-3 space-y-3 text-sm">
             {data.achievements.map((a: any, i: number) => (
-              <li key={i} className="flex items-start gap-2">
-                <Level level="T2" />
-                <div>
+              <li key={i} className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-2">
+                <span className="shrink-0 self-start"><Level level="T2" /></span>
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p>{a.text}</p>
+                    <p className="break-words">{a.text}</p>
                     {(a.protocol_status === "verified" || a.protocol_verified) && (
                       <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800" data-testid="fsp-passport-status-badge">
                         {a.status_title ?? "Подтверждено протоколом ФСП"}

@@ -1,0 +1,42 @@
+family_id: mobile.js.offline_queue_fix
+title: Офлайн-очередь изменений — отправка по порядку при обрыве связи
+direction: mobile
+skills:
+- offline_first
+- networking
+- javascript
+- retries
+target_grades:
+- middle
+format: choose_fix
+language: javascript
+invariants:
+  code_lines:
+  - 10
+  - 10
+  operations:
+  - 7
+  - 7
+  defect_type: skip_failed_op
+  n_options: 4
+  extra:
+    distractors:
+    - remove_first
+    - retry_drop
+    - requeue_tail
+time_limit_s: 270
+canary: false
+prior_difficulty:
+  b: 0.3
+  a: 1.3
+  sigma_variant: 0.2
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Нужно одновременно сохранить порядок и не потерять операцию
+    при обрыве; фиксированный состав дистракторов: каждый решает одну из двух задач (удаление до отправки, выброс
+    после трёх попыток, перенос в конец), длины сопоставимы. Middle (b ≈ 0,3), различает Junior и Middle'
+generator: assessment_bank.families_retired.form_leak_2110.mobile.js_offline_queue_fix
+version: 1
+description: 'Очередь офлайн-операций при ошибке пропускает операцию и отправляет следующие. Ключ: модель сервера
+  в Node (отклоняет операции не по порядку, связь пропадает посреди отправки и возвращается) — проходит только отправка
+  головы очереди с остановкой на ошибке.
+
+  '

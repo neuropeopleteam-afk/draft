@@ -156,3 +156,9 @@ openapi-audit: ## Аудит полноты OpenAPI: описания, ошиб�
 	cd backend && $(PY) ../tools/openapi_audit.py
 
 .PHONY: coverage test-bank stack-ci e2e e2e-stand openapi openapi-audit openapi-examples
+
+product-sim: ## Симуляция продукта (А4): итоговый прогон по docs/validation/FINAL_PLAN_2110.json на замороженном банке (≈ 15 мин на 16 ядрах; WORKERS=8)
+	cd backend && python -m app.modules.validation.sim_runner --plan ../docs/validation/FINAL_PLAN_2110.json --workers $${WORKERS:-8} --out-dir ../out/product_sim_final
+
+cheat-bots: ## «Обмани тест» (А4): боты-стратегии, единая форма и утечка K = 10/100/1000 через движок (n = 400 на стратегию)
+	cd backend && python -m app.modules.validation.cheat_bots --n 400 --k 10,100,1000 --strategies control,single_form,random,position_A,position_B,position_C,position_D,longest,median_number,overlap --out ../out/cheat_bots.json

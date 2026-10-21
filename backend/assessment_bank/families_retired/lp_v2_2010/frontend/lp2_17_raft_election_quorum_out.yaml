@@ -1,0 +1,34 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: frontend.principal_v2.raft_election_quorum_out
+title: 'Frontend-разработка: Отбор лидера по актуальности журнала (term, длина) и подсчёт кворума голосов'
+direction: frontend
+skills:
+- javascript
+- typescript
+- react
+- state_management
+- web_performance
+target_grades:
+- lead
+- principal
+format: predict_output
+language: python
+invariants:
+  defect_type: raft_log_completeness
+  extra:
+    wave: LP-v2
+    slot: 17
+    direction_ru: Frontend-разработка
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.52
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Frontend-разработка: отбор лидера по актуальности
+    журнала (term, длина) и подсчёт кворума голосов; формат predict_output, целевые грейды lead, principal (b =
+    2,52 у порога старшего грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.frontend.lp2_17_raft_election_quorum_out
+version: 1
+description: 'Frontend-разработка (lead, principal): Отбор лидера по актуальности журнала (term, длина) и подсчёт
+  кворума голосов. Проверка исполнением и рубрикой.'

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from pathlib import Path
 
 from app.core.config import get_settings
 from app.modules.assessment.grades import level_position
@@ -198,7 +199,22 @@ def test_weak_exclude_flag(monkeypatch):
     assert not get_settings().assessment_weak_exclude
     assert weak_pool.weak_excluded() == frozenset()
     assert weak_pool.weak_excluded(NS(assessment_weak_exclude=True)) == weak_pool.WEAK_FAMILIES
-    assert len(weak_pool.WEAK_FAMILIES) == 26 and gs.WEAK_FAMILIES is weak_pool.WEAK_FAMILIES
+    # Список меняется при перезаморозке банка (выведенные семейства из него убираются), поэтому проверяем не длину,
+    # а смысл: список не пуст, один объект с симуляцией и каждое семейство есть в ДЕЙСТВУЮЩЕМ банке (не в выведенных).
+    assert weak_pool.WEAK_FAMILIES and gs.WEAK_FAMILIES is weak_pool.WEAK_FAMILIES
+    import re as _re
+
+    bank_root = Path(__file__).resolve().parents[1] / "assessment_bank"
+    def _ids(sub: str) -> set[str]:
+        out = set()
+        for y in (bank_root / sub).rglob("*.yaml"):
+            m = _re.search(r"^family_id:\s*(\S+)", y.read_text(encoding="utf-8"), _re.M)
+            if m:
+                out.add(m.group(1))
+        return out
+    live, retired = _ids("families"), _ids("families_retired")
+    assert weak_pool.WEAK_FAMILIES <= live, sorted(weak_pool.WEAK_FAMILIES - live)
+    assert not (weak_pool.WEAK_FAMILIES & retired), sorted(weak_pool.WEAK_FAMILIES & retired)
     from app.modules.validation import sim
 
     ids = {i.family_id for i in sim.make_pool(1)}

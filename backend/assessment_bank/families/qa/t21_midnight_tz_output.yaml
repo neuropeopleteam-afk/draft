@@ -1,0 +1,32 @@
+family_id: qa.time.t21_midnight_tz_output
+title: События около полуночи по суткам UTC и по суткам Москвы — aware datetime и astimezone
+direction: qa
+skills:
+- python
+- testing
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 12
+  - 12
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проследить перевод каждой
+    отметки astimezone в UTC и в МСК (UTC + 3 ч) и подсчёт по датам после перевода: МСК 00:00–02:59 — предыдущие
+    сутки UTC, UTC 21:00–23:59 — следующие сутки по Москве, остальные отметки остаются в своих сутках; переход
+    бывает и через границу месяца. Пояса и полночь в тестах «за вчера» с двумя источниками времени — уровень
+    Senior. Набор t21 (21.10) у порога Senior (b = 0,8)'
+generator: assessment_bank.families.qa.t21_midnight_tz_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Журнал из 5–6 событий около полуночи: отметки
+  клиента по Москве (timezone(timedelta(hours=3))) и сервера по UTC; каждое событие переводится astimezone в UTC и в
+  МСК, печатается число событий по датам (ММ-ДД) для обоих способов. Ключ — независимая модель сдвига на ±3 часа в
+  генераторе, проверка — исполнение показанного кода в песочнице Python.'

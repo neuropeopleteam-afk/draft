@@ -90,6 +90,12 @@ export default function Category() {
               </div>
             );
           })()}
+          {!(gs?.verdict || s.verdict) && s.sessions?.[0]?.verdict && (
+            <p className="mt-2 text-xs text-brand-ink/75" data-testid="category-sprt-verdict">
+              Вердикт последнего теста: <b>{s.sessions[0].verdict.title}</b>
+              {s.sessions[0].verdict.followup?.needed ? ` (рекомендован ${s.sessions[0].verdict.followup.minutes}-минутный доп. этап у порога)` : ""}
+            </p>
+          )}
           {(gs?.status === "unconfirmed" || gs?.pending_review) && <GradeStatusNote s={gs} className="mt-2" />}
           <ExtPreliminaryNote x={gs?.ext_preliminary} stage={s.two_stage} direction={c.direction} className="mt-3" />
           {!gs?.ext_preliminary && <TwoStageNote t={s.two_stage} direction={c.direction} className="mt-3" />}

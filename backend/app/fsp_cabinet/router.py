@@ -52,57 +52,95 @@ def report(days: int | None = Days, user: User = Depends(analyst), db: Session =
 
     _audit(user, "report", days)
     inc_demo = _inc_demo(db, user)
+    jkey = jury_scope.key_of(user.email)
+    cached = an.cache_get("report", db, days, inc_demo, jury_key=jkey)
+    if isinstance(cached, dict):
+        return cached
+    d = an.load_cached(db, days, include_demo=inc_demo, jury_key=jkey)
     # Н5: турниры «Компания × ФСП» под вакансии — отдельным списком (платформы и своей песочницы жюри, агрегаты)
-    return {
-        **an.report(db, days, include_demo=inc_demo),
-        "regions_map": build_regions_map(db, days, include_demo=inc_demo),
-        "tournaments": tournament.cabinet_list(db, jury_scope.key_of(user.email), include_demo=inc_demo),
+    out = {
+        **an.report(db, days, include_demo=inc_demo, d=d),
+        "regions_map": build_regions_map(db, days, d=d, include_demo=inc_demo),
+        "tournaments": tournament.cabinet_list(db, jkey, include_demo=inc_demo),
     }
+    return an.cache_set("report", db, days, inc_demo, out, jury_key=jkey)
 
 
 @router.get("/regions", summary="Карта талантов по регионам и федеральным округам РФ", responses=AUTH)
 def regions(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
     from app.fsp_cabinet.regions import build_regions_map
+    from app.modules.jury import scope as jury_scope
 
     _audit(user, "regions", days)
-    return build_regions_map(db, days, include_demo=_inc_demo(db, user))
+    inc_demo = _inc_demo(db, user)
+    jkey = jury_scope.key_of(user.email)
+    cached = an.cache_get("regions", db, days, inc_demo, jury_key=jkey)
+    if isinstance(cached, dict):
+        return cached
+    d = an.load_cached(db, days, include_demo=inc_demo, jury_key=jkey)
+    out = build_regions_map(db, days, d=d, include_demo=inc_demo)
+    return an.cache_set("regions", db, days, inc_demo, out, jury_key=jkey)
 
 
 @router.get("/overview", summary="Ключевые показатели", responses=AUTH)
 def overview(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "overview", days)
-    return an.overview(an.load(db, days, include_demo=_inc_demo(db, user)))
+    inc_demo = _inc_demo(db, user)
+    jkey = jury_scope.key_of(user.email)
+    return an.overview(an.load_cached(db, days, include_demo=inc_demo, jury_key=jkey))
 
 
 @router.get("/demand", summary="Спрос работодателей по категориям и навыкам", responses=AUTH)
 def demand(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "demand", days)
-    return an.demand(an.load(db, days, include_demo=_inc_demo(db, user)))
+    inc_demo = _inc_demo(db, user)
+    jkey = jury_scope.key_of(user.email)
+    return an.demand(an.load_cached(db, days, include_demo=inc_demo, jury_key=jkey))
 
 
 @router.get("/fsp-effect", summary="Какие дисциплины, разряды и результаты ФСП ведут к приглашениям и принятиям",
             responses=AUTH)
 def fsp_effect(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "fsp_effect", days)
-    return an.fsp_effect(an.load(db, days, include_demo=_inc_demo(db, user)))
+    inc_demo = _inc_demo(db, user)
+    jkey = jury_scope.key_of(user.email)
+    return an.fsp_effect(an.load_cached(db, days, include_demo=inc_demo, jury_key=jkey))
 
 
 @router.get("/salaries", summary="Реальные зарплатные вилки из приглашений по категориям", responses=AUTH)
 def salaries(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "salaries", days)
-    return an.salaries(an.load(db, days, include_demo=_inc_demo(db, user)))
+    inc_demo = _inc_demo(db, user)
+    jkey = jury_scope.key_of(user.email)
+    return an.salaries(an.load_cached(db, days, include_demo=inc_demo, jury_key=jkey))
 
 
 @router.get("/funnel", summary="Воронки «соревнование → приглашение → принятие»", responses=AUTH)
 def funnel(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> dict:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "funnel", days)
-    return an.funnel(an.load(db, days, include_demo=_inc_demo(db, user)))
+    inc_demo = _inc_demo(db, user)
+    jkey = jury_scope.key_of(user.email)
+    return an.funnel(an.load_cached(db, days, include_demo=inc_demo, jury_key=jkey))
 
 
 @router.get("/cups", summary="Кубки работодателей как мероприятия", responses=AUTH)
 def cups(days: int | None = Days, user: User = Depends(analyst), db: Session = Depends(get_db)) -> list[dict]:
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, "cups", days)
-    return an.cups_section(an.load(db, days, include_demo=_inc_demo(db, user)), db)
+    inc_demo = _inc_demo(db, user)
+    jkey = jury_scope.key_of(user.email)
+    return an.cups_section(an.load_cached(db, days, include_demo=inc_demo, jury_key=jkey), db)
 
 
 def _cell(v) -> str:
@@ -134,9 +172,14 @@ def export(section: str, days: int | None = Days, user: User = Depends(analyst),
            db: Session = Depends(get_db)) -> Response:
     if section not in EXPORTS:
         raise api_error(404, "export_not_found", "Нет такого раздела выгрузки")
+    from app.modules.jury import scope as jury_scope
+
     _audit(user, f"export:{section}", days)
     rows_of, cols = EXPORTS[section]
-    rep = an.report(db, days, include_demo=_inc_demo(db, user))
+    inc_demo = _inc_demo(db, user)
+    jkey = jury_scope.key_of(user.email)
+    d = an.load_cached(db, days, include_demo=inc_demo, jury_key=jkey)
+    rep = an.report(db, days, include_demo=inc_demo, d=d)
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
     w.writerow(cols)

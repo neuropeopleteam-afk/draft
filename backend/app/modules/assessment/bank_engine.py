@@ -81,7 +81,8 @@ MAX_TEXT = 20_000
 
 
 def bank_manifest() -> dict:
-    p = Path(assessment_bank.__file__).parent / "BANK_SYNC.json"
+    local_p = Path(__file__).resolve().parents[3] / "assessment_bank" / "BANK_SYNC.json"
+    p = local_p if local_p.exists() else (Path(assessment_bank.__file__).parent / "BANK_SYNC.json")
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -176,6 +177,23 @@ class BankEngine:
 
     def _base_cfg(self) -> dict:
         s = self._settings()
+        from app.modules.assessment.sprt import verdict_params
+
+        vp = verdict_params()
+        if vp["rule"] == "sprt":
+            # Поправка №2 (21.10 вечер): одна непрерывная сессия с SPRT у заявленного порога — обычные пределы
+            # (ASSESSMENT_MAX_ITEMS / MINUTES) действуют, когда решение уже принято; пока не принято — продление у
+            # спорного порога до ASSESSMENT_CONTESTED_MAX_ITEMS / MINUTES. Отдельного дотестирования нет (ext_items 0):
+            # его роль играет продление, а после сессии — второй этап у того же порога (two_stage)
+            return {**self._base_cfg_legacy(s), "max_items": int(s.assessment_contested_max_items),
+                    "max_time_s": float(s.assessment_contested_max_minutes) * 60.0, "ext_items": 0,
+                    "sprt": {"alpha": vp["alpha"], "beta": vp["beta"], "delta": vp["delta"],
+                             "actual_k": vp["actual_k"], "time_weight": float(s.assessment_time_weight),
+                             "soft_max_items": int(s.assessment_max_items),
+                             "soft_max_time_s": float(s.assessment_max_minutes) * 60.0}}
+        return self._base_cfg_legacy(s)
+
+    def _base_cfg_legacy(self, s) -> dict:
         return {"min_items": s.assessment_min_items, "max_items": s.assessment_max_items,
                 "se_target": s.assessment_se_target, "max_time_s": s.assessment_max_minutes * 60.0,
                 "ext_items": s.assessment_extension_items, "ext_time_s": s.assessment_extension_minutes * 60.0,
@@ -191,9 +209,16 @@ class BankEngine:
     # ------------------------------------------------------------------ протокол
     def _express_cfg(self, cfg: dict, claimed_grade: str) -> dict:
         p = express_params(self._settings(), claimed_grade)
-        return {**cfg, "mode": "express", "min_items": p["min_items"], "max_items": p["max_items"],
-                "max_time_s": p["max_minutes"] * 60.0, "canary_positions": [], "ext_items": 0,
-                "max_item_time_s": float(p["item_time_s"]), "max_per_format": {"open_book_3step": 0, "open_answer": 0}}
+        out = {**cfg, "mode": "express", "min_items": p["min_items"], "max_items": p["max_items"],
+               "max_time_s": p["max_minutes"] * 60.0, "canary_positions": [], "ext_items": 0,
+               "max_item_time_s": float(p["item_time_s"]), "max_per_format": {"open_book_3step": 0, "open_answer": 0}}
+        # Экспресс (только демо-режим жюри, 5–7 / до 12 заданий) решает по прежнему правилу — вероятность уровня не
+        # ниже заявленного ≥ ASSESSMENT_CONFIRM_LEVEL: последовательной проверке SPRT 7 заданий почти никогда не хватает
+        # (даже при всех верных ответах она осталась бы «без решения»). Полный тест — SPRT, как в протоколе
+        out.pop("sprt", None)
+        out["max_items"] = p["max_items"]
+        out["max_time_s"] = p["max_minutes"] * 60.0
+        return out
 
     def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
               previous_subpools: list[int] | None = None, previous_families: list[str] | None = None,
@@ -414,6 +439,7 @@ class BankEngine:
         detector = CanaryDetector()
         det = detector.statistic(clean, canary)
         rescored, excluded = False, 0
+        mask: list = []
         if det.flagged:
             # маска — метод детектора, не результата (было det.suspicious_mask → AttributeError и 500 на завершении
             # теста у каждого, у кого сработал детектор предзнания; найдено симуляцией продукта 21.10)
@@ -425,6 +451,33 @@ class BankEngine:
         scored = [i for i in done if not i["canary"]]
         # потолок категории по длине теста и погрешности — то же отображение θ → категория, что у мини-теста (grades)
         dec = decide_grade(theta, se, claimed, n_items=len(scored), direction=state["direction"])
+        # Поправка №2 (21.10 вечер): решение по заявленному грейду — SPRT у его порога только по ответам (без
+        # априорного стягивания), «уровень по ответам» — оценка Уорма (WLE); ответы, исключённые детектором
+        # предзнания, не участвуют ни в том, ни в другом
+        from app.modules.assessment import sprt as _sp
+
+        _vp = _sp.verdict_params()
+        # по новому правилу — только сессии, начатые по нему (в cfg есть блок sprt); начатые раньше доигрываются и
+        # завершаются по прежним правилам
+        sprt_mode = _vp["rule"] == "sprt" and bool((state.get("cfg") or {}).get("sprt"))
+        g_sprt: dict | None = None
+        if sprt_mode:
+            excl_k = {clean_idx[i] for i, m in enumerate(mask) if m} if (det.flagged and rescored) else set()
+            done_v = [it for k, it in enumerate(done) if k not in excl_k]
+            cut_c = float(_sp.GRADE_CUTS.get(claimed, 0.0))
+            order = tuple(grade_levels.available_grades(state["direction"]))
+            nxt = _sp.next_grade(claimed, order)
+            extra = [float(_sp.GRADE_CUTS[nxt])] if nxt in _sp.GRADE_CUTS else []
+            llr_v, th_w, se_w, n_parts, *more = _sp.items_llr_wle(done_v, lookup, cut_c, _vp["delta"],
+                                                                 actual=_vp["actual_k"], extra_cuts=extra)
+            llr_next = (more[0] if more else {}).get(extra[0]) if extra else None
+            th_pt = th_w if _vp["point_estimator"] == "wle" else float(theta)
+            up_b = _sp.sprt_bounds(_vp["alpha"], _vp["beta"])[0]
+            g_sprt = {"llr": llr_v, "theta_wle": th_w, "se_wle": se_w, "n_parts": n_parts, "cut": cut_c,
+                      "status": _sp.sprt_status(llr_v, _vp["alpha"], _vp["beta"]),
+                      "point_grade": _sp.point_grade(th_pt, order), "order": order, "llr_next": llr_next,
+                      "next_up": bool(llr_next is not None and llr_next >= up_b),
+                      "upgrade_rule": _vp["upgrade_rule"], "point_estimator": _vp["point_estimator"]}
 
         new_scored = [i for i in state["items"] if i["done"] and not i["canary"]]
         pending = [i for i in scored if any(v is None for v in i["x"])]
@@ -458,6 +511,37 @@ class BankEngine:
             for i in done], pk, extra=state.get("integrity_extra") or {},  # extra — сигналы сессии внешних модулей
             theta=theta, soft_fast=state.get("mode") == "express" or bool(state.get("sandbox")), lz=lz)
         integ.setdefault("signals", {})["lz"] = lz  # индекс l_z — в сигналы достоверности (защита, IntegrityBadge)
+        from app.modules.assessment import sprt as sprt_mod
+        from app.modules.assessment import two_stage as _ts
+
+        _tp = _ts.ext_params(_ts.params(), claimed)  # уровень L и объём второго этапа — те же, что у предложения
+        verdict_obj = sprt_mod.compute_verdict(
+            done,
+            lookup,
+            claimed,
+            theta,
+            se,
+            confirmed=dec.confirmed,
+            assigned_grade=dec.assigned,
+            mode=state.get("mode") or "full",
+            sprt_state=g_sprt,
+            alpha=_vp["alpha"] if sprt_mode else sprt_mod.DEFAULT_ALPHA,
+            beta=_vp["beta"] if sprt_mode else None,
+            delta=_vp["delta"] if sprt_mode else sprt_mod.DEFAULT_DELTA,
+            boundary_level=float(_tp["level"]),
+            followup_items=int(_tp["items"]),
+            followup_minutes=int(_tp["minutes"]),
+            incident_stage=state.get("incident_stage"),
+            suspicious=state.get("suspicious") if state.get("suspicious") is not None else {
+                # решение «доп. этап» — только правило А6 (2+ сигнала / ловушка) внутри compute_verdict
+                "integrity": integ,
+                "level": integ.get("level"),
+                "preknowledge_flagged": det.flagged,
+                "format_gap_flag": bool((integ.get("signals") or {}).get("format_gap_flag")),
+                "lz": lz,
+                "reasons": list(integ.get("reasons") or []) if integ.get("level") == "low" else [],
+            },
+        )
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families, "mode": state.get("mode", "full"),
             "length": {"min_items": state["cfg"]["min_items"], "max_items": state["cfg"]["max_items"],
@@ -479,7 +563,8 @@ class BankEngine:
             "integrity": integ,
             "subpool": state.get("subpool"), "exposure": state["cfg"].get("exposure"),
             "formats": {f: sum(1 for i in scored if i["format"] == f) for f in sorted({i["format"] for i in scored})},
-            "category": f"{state['direction']}.{claimed}" if (dec.confirmed or dec.provisional) else None,
+            "category": (f"{state['direction']}.{claimed}" if (dec.confirmed or dec.provisional) else None)
+            if g_sprt is None else (f"{state['direction']}.{claimed}" if g_sprt["status"] == "confirmed" else None),
             "assigned_grade": dec.assigned,
             "provisional": ({"reason": dec.provisional_reason, "p": dec.p_claimed, "cut": self.scale.cuts[claimed],
                              "level": 0.10} if dec.provisional else None),
@@ -491,12 +576,33 @@ class BankEngine:
             "trace": [[round(t, 3), round(s_, 3)] for t, s_ in sess.trace],
             "grading": [{"format": i["format"], "parts": [g.get("method") if g else "auto" for g in i["grading"]],
                          "status": "pending" if any(v is None for v in i["x"]) else "scored"}
-                        for i in scored if i["format"] in ("open_answer", "open_book_3step")],
+                        for i in scored if i["format"] in ("open_answer", "open_book_3step", "incident_sim")],
+            "verdict": verdict_obj.as_dict(),
+            "sprt": verdict_obj.as_dict(),
         }
+        vd = verdict_obj.as_dict()
+        if g_sprt is not None:
+            vd["rule"] = "sprt"
+            details["verdict"] = {**details["verdict"], "rule": "sprt"}
+            details["sprt"] = details["verdict"]
+            prod = _sp.product_grade(vd["status"] if not vd.get("followup", {}).get("oral_defense_required") else
+                                     "needs_followup", g_sprt["point_grade"], claimed, g_sprt["order"],
+                                     upgrade=g_sprt["upgrade_rule"], next_up=g_sprt["next_up"])
+            details["grade_by_answers"] = {
+                "rule": "sprt", "theta_wle": round(g_sprt["theta_wle"], 4), "se_wle": round(g_sprt["se_wle"], 4),
+                "point_estimator": g_sprt["point_estimator"], "point_grade": g_sprt["point_grade"],
+                "product_grade": prod, "upgrade_rule": g_sprt["upgrade_rule"], "next_up": g_sprt["next_up"],
+                "llr_next": None if g_sprt["llr_next"] is None else round(float(g_sprt["llr_next"]), 3),
+                "preliminary": vd["status"] == "needs_followup"}
         if state.get("mode") == "refine":  # Я26: итог уточнения — по общей оценке обеих сессий
             from app.modules.assessment.two_stage import refine_result
 
             details["two_stage"] = refine_result(state, theta, se, len(new_scored))
+            if g_sprt is not None:  # поправка №2: итог второго этапа — то же SPRT по ответам обеих сессий
+                ts2 = details["two_stage"]
+                ts2.update(final_grade=details["grade_by_answers"]["product_grade"],
+                           passed=vd["status"] == "confirmed", verdict=vd["status"], rule="sprt",
+                           oral_defense_required=vd["status"] == "needs_followup")
         if state["cfg"].get("partial_credit"):
             details["partial_credit"] = partial_credit.session_summary(scored)
         retake = dec.retake_lower
@@ -505,11 +611,27 @@ class BankEngine:
                                      "claimed_above_ceiling": GRADES.index(claimed) > GRADES.index(lvl.ceiling)}
         # θ и погрешность округляются один раз (fmt.theta_round): итог, факты, подборка и приглашение — одинаково
         theta_r, se_r = theta_round(theta, se)
+        if g_sprt is not None:  # поправка №2: категория — по решению SPRT; «Junior (предварительно)» заменён доп. этапом
+            # категория — по решению SPRT; если правило А6 перевело попытку на доп. этап / устную защиту, вердикт
+            # показывает это рядом (как и до поправки: категория присваивалась, удержание — в вердикте)
+            conf = g_sprt["status"] == "confirmed"
+            gba = details["grade_by_answers"]
+            explanation = self._explain_sprt(vd, gba, claimed, details, theta_r, se_r)
+            return EngineResult(
+                engine=self.name, theta=theta_r, se=se_r, claimed_grade=claimed,
+                point_grade=gba["point_grade"], confirmed=conf,
+                upgrade_available=bool(conf and GRADES.index(gba["point_grade"]) > GRADES.index(claimed))
+                if gba["point_grade"] in GRADES and claimed in GRADES else False,
+                retake_lower=retake if vd["status"] == "not_confirmed" else None, probabilities=dec.probabilities,
+                answered=len(answered), correct=correct, skills=skills, explanation=explanation,
+                details=_finite(details), provisional=False, provisional_reason=None, p_claimed=dec.p_claimed,
+            )
         return EngineResult(
             engine=self.name, theta=theta_r, se=se_r, claimed_grade=claimed,
             point_grade=dec.point_grade, confirmed=dec.confirmed, upgrade_available=dec.upgrade_available,
             retake_lower=retake, probabilities=dec.probabilities, answered=len(answered), correct=correct,
-            skills=skills, explanation=self._explain(dec, theta_r, se_r, claimed, details), details=_finite(details),
+            skills=skills, explanation=(self._explain_express(dec, claimed, details) if details.get("mode") == "express"
+                                        else self._explain(dec, theta_r, se_r, claimed, details)), details=_finite(details),
             provisional=dec.provisional, provisional_reason=dec.provisional_reason, p_claimed=dec.p_claimed,
         )
 
@@ -584,8 +706,16 @@ class BankEngine:
         if state["claimed_grade"] == "intern":
             excl.update(intern_exclusions(pool, state["direction"]))
         kw = dict(max_per_format=cfg.get("max_per_format", {}), max_item_time_s=cfg.get("max_item_time_s"),
+                  code_open_share=cfg.get("code_open_share", 0.0 if state.get("mode") == "express" else 1.0 / 3.0),
                   exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl,
                   seen=state.get("seen"), ext_lru=state.get("mode") in ("confirm", "refine"))
+        if cfg.get("sprt"):  # поправка №2: SPRT у заявленного порога, угадывание по фактическому варианту
+            from app.modules.assessment.sprt import public_guess
+
+            kw["sprt"] = cfg["sprt"]
+            kw["guess"] = {it["family_id"]: public_guess(it["format"], int(it.get("parts") or len(it.get("x") or [1])),
+                                                         it.get("public"), actual=bool(cfg["sprt"].get("actual_k")))
+                           for it in prior + state["items"] if it.get("public") is not None}
         if state.get("mode") == "refine":  # Я26: вторая сессия у границы — правило выбора и стопа из two_stage
             from app.modules.assessment.two_stage import RefineSession
 
@@ -649,7 +779,8 @@ class BankEngine:
             "theta_before": round(float(sess.theta), 3),
             "repeat": pi.family_id in (state.get("seen") or {}),  # И26: семейство из прошлой попытки (запасной путь LRU)
             "public": {"stem": pv["stem"], "code": pv["code"], "options": pv["options"], "steps": steps,
-                       "code_lines": len((pv["code"] or "").splitlines())},
+                       "code_lines": len((pv["code"] or "").splitlines()),
+                       **({"incident": pv["incident"]} if pv.get("incident") is not None else {})},
             "key": v.answer_key.model_dump(include={"kind", "value", "accept"}),
             "rubric": v.rubric.model_dump() if v.rubric else None,
             "answers": {}, "x": [None] * spec.n_parts, "grading": [None] * spec.n_parts, "done": False,
@@ -673,7 +804,7 @@ class BankEngine:
 
     @staticmethod
     def _answer_kind(it: dict, step: int) -> str:
-        if it["format"] == "open_book_3step":
+        if it["format"] in ("open_book_3step", "incident_sim"):
             return "text" if step == 3 else "option"
         return ANSWER_KIND.get(it["format"], "option")
 
@@ -682,7 +813,7 @@ class BankEngine:
         opts = it["public"]["options"]
         if not opts:
             return None
-        if it["format"] == "open_book_3step":
+        if it["format"] in ("open_book_3step", "incident_sim"):
             return [{k: o[k] for k in ("id", "text", "code") if o.get(k) is not None}
                     for o in opts if o.get("step") == step] or None
         return [{k: o[k] for k in ("id", "text", "code") if o.get(k) is not None} for o in opts]
@@ -719,7 +850,7 @@ class BankEngine:
             got = normalize_output(a["1"]["value"])
             ok = got == normalize_output(str(key["value"])) or got in {normalize_output(x) for x in key.get("accept", [])}
             it["x"][0] = float(ok)
-        elif fmt == "open_book_3step":
+        elif fmt in ("open_book_3step", "incident_sim"):
             for k in (1, 2):
                 it["x"][k - 1] = float(a[str(k)]["value"] == key["value"].get(str(k)))
             if it["x"][2] is None:
@@ -751,7 +882,7 @@ class BankEngine:
         """Индексы частей задания с развёрнутым ответом (оцениваются по рубрике)."""
         if it["format"] == "open_answer":
             return [0]
-        if it["format"] == "open_book_3step":
+        if it["format"] in ("open_book_3step", "incident_sim"):
             return [2]
         return []
 
@@ -768,7 +899,7 @@ class BankEngine:
                 out.append({
                     "token": it["token"], "part": part, "format": it["format"], "position": it["position"],
                     "stem": it["public"]["stem"], "code": it["public"]["code"], "code_language": it.get("language"),
-                    "step_prompt": steps[part]["prompt"] if it["format"] == "open_book_3step" and len(steps) > part else None,
+                    "step_prompt": steps[part]["prompt"] if it["format"] in ("open_book_3step", "incident_sim") and len(steps) > part else None,
                     "rubric": it.get("rubric"), "answer": ans.get("value"), "skills": it.get("skills", []),
                     # disputed (И27): вторая оценка в фоне разошлась с первой уже после итога — ответ эксперту
                     "status": "pending" if it["x"][part] is None or (g.get("disputed") and not g.get("expert"))
@@ -815,6 +946,95 @@ class BankEngine:
         state.setdefault("outbox", []).append({"type": "review", "token": token})
         return rec
 
+    # ------------------------------------------------------------------ апелляция кандидата по заданию (А4/А8)
+    def list_appeals(self, state: dict) -> list[dict]:
+        out = []
+        for it in state.get("items", []):
+            ap = it.get("appeal")
+            if ap:
+                out.append({
+                    "item_id": it["token"],
+                    "position": it["position"],
+                    "format": it["format"],
+                    **ap,
+                })
+        return out
+
+    def submit_appeal(self, state: dict, item_id: str, reason: str, actor: str = "candidate") -> dict | None:
+        """Кандидат оспаривает задание → статус задания ``under_review``, пересчёт θ и вердикта без спорного задания."""
+        it = next((i for i in state.get("items", []) if i.get("token") == item_id), None)
+        if it is None:
+            return None
+        ap = {
+            "status": "under_review",
+            "reason": (reason or "").strip()[:2000],
+            "actor": actor,
+            "created_at": time.time(),
+        }
+        it["appeal"] = ap
+        active_state = {
+            **state,
+            "items": [i for i in state.get("items", []) if (i.get("appeal") or {}).get("status") not in ("under_review", "excluded")],
+        }
+        res_without = self.finish(active_state) if any(i.get("done") for i in active_state["items"]) else None
+        ap["recomputed_without_item"] = {
+            "theta": res_without.theta if res_without else None,
+            "se": res_without.se if res_without else None,
+            "confirmed": res_without.confirmed if res_without else None,
+            "verdict": (res_without.details or {}).get("verdict") if res_without else None,
+        }
+        return {"item_id": it["token"], "position": it["position"], "format": it["format"], **ap}
+
+    def resolve_appeal(
+        self,
+        state: dict,
+        item_id: str,
+        decision: str,
+        score: float | None = None,
+        comment: str | None = None,
+        reviewer: str = "expert",
+    ) -> dict | None:
+        """Решение эксперта по апелляции: ``uphold_candidate`` (засчитать / выставить score), ``exclude`` (исключить из θ)
+        или ``uphold_key`` (оставить исходную оценку).
+        """
+        it = next((i for i in state.get("items", []) if i.get("token") == item_id), None)
+        if it is None:
+            return None
+        ap = dict(it.get("appeal") or {"reason": "", "created_at": time.time()})
+        if decision == "exclude":
+            ap["status"] = "excluded"
+        elif decision == "uphold_candidate":
+            ap["status"] = "resolved_upheld"
+            new_sc = 1.0 if score is None else max(0.0, min(1.0, float(score)))
+            it["x"] = [new_sc] * len(it.get("x") or [1.0])
+            it["done"] = True
+            it.setdefault("time_s", 60.0)
+            it.setdefault("log_t", math.log(max(1.0, float(it["time_s"]))))
+        else:
+            ap["status"] = "resolved_rejected"
+            if score is not None:
+                new_sc = max(0.0, min(1.0, float(score)))
+                it["x"] = [new_sc] * len(it.get("x") or [1.0])
+                it.setdefault("time_s", 60.0)
+                it.setdefault("log_t", math.log(max(1.0, float(it["time_s"]))))
+        ap["decision"] = decision
+        ap["comment"] = (comment or "").strip()[:2000]
+        ap["reviewer"] = reviewer
+        ap["resolved_at"] = time.time()
+        it["appeal"] = ap
+        active_state = {
+            **state,
+            "items": [i for i in state.get("items", []) if (i.get("appeal") or {}).get("status") not in ("under_review", "excluded")],
+        }
+        res_after = self.finish(active_state) if any(i.get("done") for i in active_state["items"]) else None
+        ap["recomputed_after_resolution"] = {
+            "theta": res_after.theta if res_after else None,
+            "se": res_after.se if res_after else None,
+            "confirmed": res_after.confirmed if res_after else None,
+            "verdict": (res_after.details or {}).get("verdict") if res_after else None,
+        }
+        return {"item_id": it["token"], "position": it["position"], "format": it["format"], **ap}
+
     def _total_est(self, state: dict) -> int:
         c = state["cfg"]
         ext = state.get("ext")
@@ -826,7 +1046,7 @@ class BankEngine:
     def _public(self, state: dict, it: dict) -> ItemPublic:
         k = self._current_step(it)
         steps = it["public"]["steps"]
-        is_ob3 = it["format"] == "open_book_3step"
+        is_ob3 = it["format"] in ("open_book_3step", "incident_sim")
         c = state["cfg"]
         return ItemPublic(
             item_id=it["token"], position=it["position"], total=self._total_est(state), format=it["format"],
@@ -838,7 +1058,61 @@ class BankEngine:
             elapsed_s=int(max(0, time.time() - it["issued_at"])), block="common" if it["block"] == "common" else "direction",
             adaptive=True, min_items=c["min_items"], max_items=c["max_items"],
             answered=sum(1 for i in state["items"] if i["done"]), extension=bool(it.get("ext")) or state.get("mode") in ("confirm", "refine"),
+            incident=it["public"].get("incident"),
         )
+
+    @staticmethod
+    def _explain_sprt(vd: dict, gba: dict, claimed: str, details: dict, theta: float | None = None,
+                      se: float | None = None) -> str:
+        """Пояснение итога простыми словами (поправка №2): вердикт по заявленному грейду и уровень по ответам;
+        оценка θ — то же округлённое один раз значение, что в итоге, фактах и подборке (fmt.theta_round)."""
+        s = vd.get("explanation") or ""  # без θ и сырых оценок (правило владельца: без θ/IRT в основном интерфейсе)
+        pg = gba.get("product_grade")
+        if pg and pg != claimed and vd.get("status") == "confirmed":
+            s += f" По ответам ваш уровень — {GRADE_RU.get(pg, pg)}: выше заявленного; его можно подтвердить отдельно."
+        elif pg and vd.get("status") == "not_confirmed":
+            s += (f" По ответам уровень — {GRADE_RU.get(pg, pg) if pg != 'none' else 'ниже Стажёра'}; его можно принять "
+                  "без нового теста.")
+        if details.get("pending_review"):
+            s += (f" Открытых ответов на проверке: {details['pending_review']} — они пока не учтены, "
+                  "результат предварительный.")
+        if (details.get("preknowledge") or {}).get("rescored"):
+            s += " Часть ответов не учтена в оценке уровня: по ним есть признаки, что ответы были известны заранее."
+        if details.get("mode") == "express":
+            s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без дотестирования, поэтому интервал θ "
+                  "шире, чем у полного теста; правило решения то же — последовательная проверка у порога заявленного "
+                  "грейда: решение принимается только при достаточной уверенности, иначе нужен полный тест.")
+            if claimed == "senior":
+                mx = (details.get("length") or {}).get("max_items", 12)
+                s += (f" За Senior экспресс длиннее (до {mx} заданий): крайняя категория подтверждается при почти всех "
+                      "верных ответах.")
+        return s
+
+    @staticmethod
+    def _explain_express(dec, claimed: str, details: dict) -> str:
+        """Пояснение экспресс-теста жюри простыми словами — без θ и сырых оценок (правило владельца)."""
+        g = GRADE_RU[claimed]
+        p = sum(v for k, v in dec.probabilities.items() if GRADES.index(claimed) <= (
+            GRADES.index(k) if k in GRADES else -1))
+        ps = "более 99 %" if p > 0.99 else ("менее 1 %" if p < 0.01 else f"{p * 100:.0f} %")
+        if dec.confirmed:
+            s = f"Грейд {g} подтверждён экспресс-тестом: вероятность уровня не ниже {g} — {ps}."
+        else:
+            s = (f"Грейд {g} экспресс-тестом пока не подтверждён: вероятность уровня не ниже {g} — {ps} (нужно ≥ "
+                 f"{confirm_pct()} %). Принудительного понижения нет: можно пройти полный тест.")
+        if details.get("pending_review"):
+            s += (f" Открытых ответов на проверке: {details['pending_review']} — они пока не учтены, "
+                  "результат предварительный.")
+        if (details.get("preknowledge") or {}).get("rescored"):
+            s += " Часть ответов не учтена в оценке уровня: по ним есть признаки, что ответы были известны заранее."
+        s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без дотестирования, поэтому интервал "
+              f"оценки шире, чем у полного теста; правило решения экспресса — вероятность уровня не ниже заявленного ≥ "
+              f"{confirm_pct()} % (полный тест решает последовательной проверкой у порога).")
+        if claimed == "senior":
+            mx = (details.get("length") or {}).get("max_items", 12)
+            s += (f" За Senior экспресс длиннее (до {mx} заданий): крайняя категория подтверждается при почти всех верных "
+                  "ответах.")
+        return s
 
     @staticmethod
     def _explain(dec, theta: float, se: float, claimed: str, details: dict) -> str:
@@ -881,7 +1155,8 @@ class BankEngine:
             s += " Часть ответов не учтена в оценке уровня: по ним есть признаки, что ответы были известны заранее."
         if details.get("mode") == "express":
             s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без дотестирования, "
-                  "поэтому интервал θ шире, чем у полного теста (8–16 заданий); правило решения то же — P ≥ 80 %.")
+                  f"поэтому интервал θ шире, чем у полного теста; правило решения экспресса — вероятность уровня не ниже "
+                  f"заявленного ≥ {confirm_pct()} % (полный тест решает последовательной проверкой у порога).")
             if claimed == "senior":
                 mx = (details.get("length") or {}).get("max_items", 12)
                 s += (f" За Senior экспресс длиннее (до {mx} заданий): крайняя категория подтверждается при почти всех верных "

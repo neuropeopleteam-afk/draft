@@ -1,0 +1,30 @@
+family_id: data_eng.dq.t21_rowcount_check_output
+title: Сверка числа строк источника и хранилища — функция с if и return
+direction: data_eng
+skills:
+- python
+- data_quality
+- etl
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Вызвать простую функцию сверки
+    для 3–4 пар (источник, хранилище) и записать её результаты; ловушки — порядок аргументов и знак разности, первая сработавшая
+    ветка завершает функцию. Уровень Стажёра: простая функция и if. Набор t21 (21.10) у порога Стажёра (b = −1,9)'
+generator: assessment_bank.families.data_eng.t21_rowcount_check_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Функция сверяет число строк в источнике и хранилище и возвращает
+  ok, dup N или lost N; предсказать вывод для нескольких таблиц. Ключ — независимый расчёт в генераторе, проверка — исполнение
+  показанного кода в песочнице Python.

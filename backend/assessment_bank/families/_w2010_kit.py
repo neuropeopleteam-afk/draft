@@ -1,49 +1,66 @@
-"""Помощники семейств волны 20.10 («расширение банка до 455+»): короткие Principal у границы θ ≈ 3,0 и
-короткие Senior/Lead по навыкам вакансий hh.ru, которых не было в банке.
-
-Три шаблона, общие для всех семейств волны; содержание (модель предметной области, ловушки, тексты) — в файле
-семейства.
-
-* :func:`numeric_variant` — расчётный mcq_concept с числовым ответом. Модель предметной области — исходный текст
-  Python (``MODEL``) с функциями ``answer(P)``, ``traps(P) -> {имя ловушки: значение}`` и ``fmt(x) -> подпись``;
-  по желанию ``brute(P)`` — независимый расчёт другим способом (перебор, пошаговая имитация). Генератор и проверка
-  исполняют ОДИН и тот же текст модели: проверка «model» печатает букву варианта, совпадающего с ``fmt(answer(P))``,
-  проверка «brute» (если есть) — букву по ``brute(P)``, проверка «trap» — букву самой «соблазнительной» ловушки и
-  ожидает, что она отличается от ключа (ловушка действительно неверна при этих числах). Сколько ловушек больше ключа
-  (0–3) выбирается по seed ДО подбора чисел — ключ не угадывается по месту числа среди четырёх.
-* :func:`choice_variant` — mcq_concept «какую из четырёх альтернатив выбрать»: модель — ``best(P) -> имя`` и
-  ``traps(P) -> {ловушка: имя альтернативы}``; целевая альтернатива выбрана по seed до подбора чисел (ответ
-  равновероятен среди альтернатив), не меньше двух ловушек указывают на другие альтернативы.
-* :func:`codefix_variant` — choose_fix: показан код с дефектом и четыре замены; каждая замена исполняется
-  (python или sqlite) и сравнивается с выводом эталона: верная — stdout_equals, остальные — stdout_differs,
-  показанный код с дефектом — тоже stdout_differs.
-
-Позиция ключа — по кругу от seed (сдвиг от family_id), остальные варианты перемешиваются rng: на 20 seed каждая
-буква ключом ровно 5 раз.
-"""
+"""Общий конструктор расчётных и кодовых семейств волны 10 и волны 20.10-S."""
 from __future__ import annotations
 
-from fractions import Fraction
-
 import contextlib
+from fractions import Fraction
 import io
+import itertools
+import re
+import math
+import random
 import sqlite3
-import zlib
 from typing import Any, Callable, Sequence
 
-from assessment_bank.gen_utils import build_variant, make_rng
-from assessment_bank.schema import AnswerKey, Check, Option
+from assessment_bank.gen_utils import LETTERS, build_variant, make_options, make_rng, spread_pick
+from assessment_bank.schema import AnswerKey, Check, Option, Variant
 
-LETTERS = "ABCDEF"
 SHORT_NOTE = "Ответ проверяется программой-моделью по тем же числам, что в условии."
 
 
+def num(v: int | float | Fraction, nd: int = 0, *, decimals: int | None = None) -> str:
+    """Форматирование числа по-русски: неразрывный пробел между тысячами, запятая в дробной части."""
+    if decimals is not None:
+        nd = decimals
+    if isinstance(v, Fraction):
+        if v.denominator == 1 and nd == 0:
+            v = int(v)
+        else:
+            v = float(v)
+    if nd > 0:
+        s = f"{float(v):,.{nd}f}"
+    elif isinstance(v, int) or (isinstance(v, float) and v.is_integer()):
+        s = f"{int(round(v)):,}"
+    else:
+        s = f"{float(v):,.2f}".rstrip("0").rstrip(".")
+    return s.replace(",", "\u00a0").replace(".", ",")
+
+
+def slot(family_id: str, seed: int, n: int, salt: str) -> int:
+    """Номер 0…n−1 для зерна: в каждом блоке из n подряд идущих зёрен каждый номер — ровно один раз; перестановка
+    блока — от sha256(семейство, блок, salt). У разных salt перестановки независимы.
+
+    Зачем (аудит 21.10, tools/bank_position_attack.py): раньше буква ключа ((crc32 + seed) mod n), ранг ключа по
+    величине (seed mod n, в волне S — 2·seed mod n), сюжет (contexts[seed mod L]), первая ловушка и верная
+    альтернатива ((7·seed + crc32) mod n) были функциями одного остатка зерна. Противник, изучивший открытый код
+    или несколько вариантов семейства, узнавал ключ по связке «буква ↔ ранг» или «сюжет ↔ буква» без знаний
+    (до 100 % при шансе 25 %). Теперь каждая величина равномерна сама по себе и не связана с остальными."""
+    if n <= 1:
+        return 0
+    return make_rng(family_id, seed // n, f"slot:{salt}").sample(range(n), n)[seed % n]
+
+
 def key_pos(family_id: str, seed: int, n: int = 4) -> int:
-    return (zlib.crc32(family_id.encode()) + seed) % n
+    """Буква ключа — равномерно и независимо от ранга, сюжета и ловушек (см. slot)."""
+    return slot(family_id, seed, n, "keypos")
 
 
-def place(family_id: str, seed: int, rng: Any, good: tuple[str, str | None],
-          wrong: Sequence[tuple[str, str | None]]) -> tuple[list[Option], str]:
+def place(
+    family_id: str,
+    seed: int,
+    rng: Any,
+    good: tuple[str, str | None],
+    wrong: Sequence[tuple[str, str | None]],
+) -> tuple[list[Option], str]:
     """Ключ — на позицию key_pos, остальные — в случайном порядке."""
     ws = list(wrong)
     rng.shuffle(ws)
@@ -55,16 +72,12 @@ def place(family_id: str, seed: int, rng: Any, good: tuple[str, str | None],
     return opts, LETTERS[pos]
 
 
-def load_model(src: str) -> dict[str, Any]:
-    ns: dict[str, Any] = {"__name__": "model"}
-    exec(compile(src, "<model>", "exec"), ns)  # noqa: S102 — наш собственный код модели
-    return ns
-
-
 def _letter_program(model: str, P: dict, shown: dict[str, str], expr: str) -> str:
-    return (f"{model}\n\nP = {P!r}\nopts = {shown!r}\nans = {expr}\n"
-            "hit = [k for k, t in opts.items() if t == ans]\n"
-            "print(hit[0] if len(hit) == 1 else 'AMBIGUOUS')\n")
+    return (
+        f"{model}\n\nP = {P!r}\nopts = {shown!r}\nans = {expr}\n"
+        "hit = [k for k, t in opts.items() if t == ans]\n"
+        "print(hit[0] if len(hit) == 1 else 'AMBIGUOUS')\n"
+    )
 
 
 def search(rng: Any, sample: Callable[[Any], dict], accept: Callable[[dict], Any], tries: int = 20000):
@@ -81,78 +94,283 @@ def _distinct(vals: Sequence[float], rel: float, abs_min: float) -> bool:
     return all(b - a >= max(rel * max(abs(b), 1e-9), abs_min) for a, b in zip(v, v[1:]))
 
 
-def numeric_variant(family_id: str, seed: int, *, contexts: Sequence[Any], sample: Callable[[Any], dict],
-                    model: str, stem: Callable[[dict, Any], str], explain: Callable[[dict, Any, dict], str],
-                    accept: Callable[[dict, dict], bool] | None = None, rel: float = 0.12, abs_min: float = 1.0,
-                    trap_first: str | None = None, note: str = SHORT_NOTE,
-                    trap_desc: dict[str, str] | None = None, n_above_choices: Sequence[int] = (0, 1, 2, 3)) -> Any:
-    rng = make_rng(family_id, seed)
-    ctx = contexts[seed % len(contexts)] if len(contexts) >= 4 else rng.choice(list(contexts))
-    n_above = 0
-    ns = load_model(model)
+_CHECK_TMPL = """{model}
 
-    def ok(P):
-        if accept is not None and not accept(P, ns):
-            return None
-        a = ns["answer"](P)
-        cand = {k: v for k, v in ns["traps"](P).items() if v is not None and v != a}
-        above = sorted(k for k, v in cand.items() if v > a)
-        below = sorted(k for k, v in cand.items() if v < a)
-        if len(above) < n_above or len(below) < 3 - n_above:
-            return None
-        for _ in range(12):
-            names = rng.sample(above, n_above) + rng.sample(below, 3 - n_above)
-            vals = [a] + [cand[n] for n in names]
-            texts = [ns["fmt"](x) for x in vals]
-            if _distinct(vals, rel, abs_min) and len(set(texts)) == 4:
-                return a, {n: cand[n] for n in sorted(names)}
-        return None
+P = {params}
+ans = answer(P)
+assert ans is not None, "answer(P) вернул None"
+if "brute" in dir():
+    b = brute(P)
+    assert b == ans, f"answer={{ans}} != brute={{b}}"
+key_str = fmt(ans)
+raw_traps = {{k: fmt(v) for k, v in traps(P).items() if v is not None}}
+options = {options}
+expected_key = {key!r}
+assert options[expected_key] == key_str, f"ключ {{expected_key}}={{options[expected_key]!r}} != {{key_str!r}}"
+trap_pool = {{v for v in raw_traps.values() if v != key_str}}
+controls = {controls!r}  # контрольные значения на шкале вариантов (не модель ошибки), если ловушек не хватило
+assert key_str not in controls, "контрольное значение совпало с ключом"
+for k, v in options.items():
+    if k != expected_key:
+        assert v in trap_pool or v in controls, f"дистрактор {{k}}={{v!r}} не из модели ошибок"
+print(expected_key)
+"""
 
-    first = list(n_above_choices)[seed % len(n_above_choices)]
-    rest = [x for x in n_above_choices if x != first]
-    rng.shuffle(rest)                      # запасной ход — равновероятно среди остальных (ранг ключа не смещается)
-    for n_above in [first] + rest:
-        try:
-            P, (a, traps) = search(rng, sample, ok, tries=4000)
-            break
-        except RuntimeError:
+
+def load_model(model: str) -> dict[str, Any]:
+    ns: dict[str, Any] = {"__name__": "model", "Fraction": Fraction, "F": Fraction, "math": math, "num": num}
+    exec(compile(model, "<model>", "exec"), ns)  # noqa: S102 — исполняется только собственный код генератора
+    return ns
+
+
+def _pick_traps(
+    rng: random.Random,
+    key_val: int | float | Fraction,
+    traps: dict[str, Any],
+    n_above: int,
+    fmt: Callable[[Any], str],
+    *,
+    rel: float,
+    abs_min: float,
+    trap_first: str | None = None,
+    n_distractors: int = 3,
+    allow_controls: bool = True,
+) -> list[tuple[str, str]] | None:
+    """Выбрать ``n_distractors`` ловушек: ровно ``n_above`` строго больше ключа и ``n_distractors - n_above`` строго меньше."""
+    kv = float(key_val)
+    key_s = fmt(key_val)
+    primary_above: list[tuple[float, str, str]] = []
+    primary_below: list[tuple[float, str, str]] = []
+    fallback_above: list[tuple[float, str, str]] = []
+    fallback_below: list[tuple[float, str, str]] = []
+    for name, val in traps.items():
+        if val is None:
             continue
-    else:
-        raise RuntimeError("не удалось подобрать параметры")
-    if "brute" in ns and ns["fmt"](ns["brute"](P)) != ns["fmt"](a):
-        raise RuntimeError("модель и независимый расчёт расходятся")
-    good = ns["fmt"](a)
-    opts, key = place(family_id, seed, rng, (good, None), [(ns["fmt"](v), None) for v in traps.values()])
-    shown = {o.id: o.text for o in opts}
-    checks = [Check(name="model", runner="python", program=_letter_program(model, P, shown, "fmt(answer(P))"),
-                    expect="stdout_equals", expected_stdout=key, embeds_display_code=False)]
-    if "brute" in ns:
-        checks.append(Check(name="brute", runner="python",
-                            program=_letter_program(model, P, shown, "fmt(brute(P))"),
-                            expect="stdout_equals", expected_stdout=key, embeds_display_code=False))
-    tname = trap_first if trap_first in traps else sorted(traps)[0]
-    checks.append(Check(name=f"trap:{tname}", runner="python",
-                        program=_letter_program(model, P, shown, f"fmt(traps(P)[{tname!r}])"),
-                        expect="stdout_differs", expected_stdout=key, embeds_display_code=False))
-    expl = explain(P, a, traps)
-    if trap_desc:
-        expl += " Неверные варианты: " + "; ".join(f"{ns['fmt'](v)} — {trap_desc[n]}" for n, v in traps.items()) + "."
-    ak = AnswerKey(kind="option", value=key, explanation=expl)
-    params = {k: v for k, v in P.items()}
-    params.update({"answer": float(a) if isinstance(a, Fraction) else a, "traps": sorted(traps), "n_above": n_above})
-    return build_variant(family_id, seed, stem=stem(P, ctx), options=opts, answer_key=ak,
-                         context=ctx if isinstance(ctx, str) else ctx[0], verification="execution",
-                         checks=checks, language="text", display_code_note=note, params=params)
+        tv = float(val)
+        if not math.isfinite(tv) or tv <= 0:
+            continue
+        ts = fmt(val)
+        if ts == key_s:
+            continue
+        if abs(tv - kv) < max(abs_min, rel * max(abs(kv), 1e-9)):
+            continue
+        is_fb = name.startswith("_fb_")
+        if tv > kv:
+            (fallback_above if is_fb else primary_above).append((tv, name, ts))
+        elif tv < kv:
+            (fallback_below if is_fb else primary_below).append((tv, name, ts))
+    rng.shuffle(primary_above)
+    rng.shuffle(primary_below)
+    rng.shuffle(fallback_above)
+    rng.shuffle(fallback_below)
+    if trap_first:
+        primary_above.sort(key=lambda x: 0 if x[1] == trap_first else 1)
+        primary_below.sort(key=lambda x: 0 if x[1] == trap_first else 1)
+    above = primary_above + fallback_above
+    below = primary_below + fallback_below
+
+    n_below = n_distractors - n_above
+    if n_above < 0 or n_below < 0:
+        return None
+    info = {name: (tv, ts) for tv, name, ts in above + below}
+
+    def fits(vals: list[Any]) -> bool:
+        texts = [fmt(v) for v in vals]
+        if len(set(texts)) != len(texts) or key_s in texts:
+            return False
+        fv = [float(v) for v in vals]
+        if any(abs(x - kv) < max(abs_min, rel * max(abs(kv), 1e-9)) for x in fv):
+            return False
+        return all(abs(x - y) >= max(abs_min, rel * 0.65 * max(abs(x), abs(y), 1e-9))
+                   for x, y in itertools.combinations(fv, 2))
+
+    def control(x: float) -> Any:
+        """Контрольное значение: число, округлённое так, как его покажет fmt (иначе None)."""
+        if not math.isfinite(x) or x <= 0:
+            return None
+        v: Any = round(x) if isinstance(key_val, int) or (isinstance(key_val, Fraction) and key_val.denominator == 1) \
+            else x
+        try:
+            t = fmt(v)
+            back = _num_of(t)
+        except Exception:  # noqa: BLE001
+            return None
+        if back is None:
+            return None
+        if isinstance(v, int):
+            return v if v > 0 else None
+        return back if back > 0 and fmt(back) == t else None
+
+    # варианты — ровно по шкале, ранг ключа задан заранее; резервные «_fb_*» модели и контрольные «_fb_ctl*» —
+    # только если без них набор не собрать (аудит 21.10: иначе ключ выдают «ближайший к среднему»)
+    picked = spread_pick(rng, kv, [n for _, n, _ in below], [n for _, n, _ in above], n_below, n_above,
+                         lambda n: info[n][0], fits, fallback=lambda n: n.startswith("_fb_"), prefer=trap_first,
+                         control=control if allow_controls else None, min_step=max(0.15, 1.6 * rel))
+    if picked is None:
+        return None
+    return [(n, info[n][1] if n in info else fmt(v)) for n, v in picked]
 
 
-def choice_variant(family_id: str, seed: int, *, contexts: Sequence[Any], alts: dict[str, str],
-                   sample: Callable[[Any], dict], model: str, stem: Callable[[dict, Any], str],
-                   explain: Callable[[dict, str, dict], str], trap_first: str | None = None,
-                   note: str = SHORT_NOTE, trap_desc: dict[str, str] | None = None) -> Any:
+_NUM_RX = re.compile(r"-?\d[\d\u00a0 ]*(?:,\d+)?")
+
+
+def _num_of(text: str) -> float | None:
+    m = _NUM_RX.search(text)
+    if not m:
+        return None
+    return float(m.group(0).replace("\u00a0", "").replace(" ", "").replace(",", "."))
+
+
+def numeric_variant(
+    family_id: str,
+    seed: int,
+    *,
+    contexts: Sequence[Any],
+    sample: Callable[[random.Random], dict[str, Any]],
+    model: str,
+    stem: Callable[[dict[str, Any], Any], str],
+    explain: Callable[[dict[str, Any], Any, Any], str],
+    code: Callable[[dict[str, Any], Any], str | None] | None = None,
+    accept: Callable[[dict[str, Any], dict[str, Any]], bool] | None = None,
+    rel: float = 0.04,
+    abs_min: float = 1.0,
+    tries: int = 800,
+    trap_first: str | None = None,
+    note: str = SHORT_NOTE,
+    trap_desc: dict[str, str] | None = None,
+    n_above_choices: Sequence[int] = (0, 1, 2, 3),
+    n_distractors: int = 3,
+    ns_cached: dict[str, Any] | None = None,
+    stratified: bool = False,
+) -> Variant:
+    """Собрать расчётный вариант с гарантированным разбросом дистракторов и проверкой исполнением."""
     rng = make_rng(family_id, seed)
-    ctx = contexts[seed % len(contexts)] if len(contexts) >= 4 else rng.choice(list(contexts))
+    ctx = contexts[slot(family_id, seed, len(contexts), "ctx")] if len(contexts) >= 4 else rng.choice(list(contexts))
+    ns = ns_cached if ns_cached is not None else load_model(model)
+    fmt = ns["fmt"]
+    choices_tup = tuple(n_above_choices)
+    # ранг ключа (сколько ловушек выше) — своя перестановка, не связанная с буквой ключа и сюжетом (см. slot)
+    target_na = choices_tup[slot(family_id, seed, len(choices_tup), "n_above")]
+    trap_keys = sorted(trap_desc) if trap_desc else []
+    if trap_first is None and trap_keys:
+        trap_first = trap_keys[slot(family_id, seed, len(trap_keys), "trap_first")]
+
+    picked: list[tuple[str, str]] | None = None
+    P: dict[str, Any] = {}
+    ans: Any = None
+    n_above = target_na
+    for _ in range(tries):
+        P = sample(rng)
+        if accept is not None and not accept(P, ns):
+            continue
+        ans = ns["answer"](P)
+        if ans is None:
+            continue
+        raw_traps = ns["traps"](P)
+        picked = _pick_traps(
+            rng, ans, raw_traps, target_na, fmt,
+            rel=rel, abs_min=abs_min, trap_first=trap_first, n_distractors=n_distractors,
+        )
+        if picked is not None:
+            break
+    else:
+        order = list(choices_tup)
+        rng.shuffle(order)
+        for _ in range(tries):
+            P = sample(rng)
+            if accept is not None and not accept(P, ns):
+                continue
+            ans = ns["answer"](P)
+            if ans is None:
+                continue
+            raw_traps = ns["traps"](P)
+            for na in order:
+                picked = _pick_traps(
+                    rng, ans, raw_traps, na, fmt,
+                    rel=rel, abs_min=abs_min, trap_first=trap_first, n_distractors=n_distractors,
+                )
+                if picked is not None:
+                    n_above = na
+                    break
+            if picked is not None:
+                break
+        else:
+            raise RuntimeError(f"{family_id}: не удалось подобрать параметры (seed={seed})")
+
+    key_str = fmt(ans)
+    trap_names = [n for n, _ in picked]
+    raw_all = ns["traps"](P)
+    trap_dict = {n: raw_all[n] for n in trap_names if n in raw_all}
+    if stratified:
+        n_tot = n_distractors + 1
+        key_idx = key_pos(family_id, seed, n_tot)  # не связана с рангом ключа и сюжетом (см. slot)
+        dist_strs = [s for _, s in picked]
+        rng.shuffle(dist_strs)
+        opts: list[Option] = []
+        di = 0
+        for i in range(n_tot):
+            if i == key_idx:
+                opts.append(Option(id=LETTERS[i], text=key_str))
+            else:
+                opts.append(Option(id=LETTERS[i], text=dist_strs[di]))
+                di += 1
+        key = LETTERS[key_idx]
+    else:
+        opts, key = place(family_id, seed, rng, (key_str, None), [(s, None) for _, s in picked])
+    shown = {o.id: o.text for o in opts}
+    ctl_strs = sorted(st for n, st in picked if n.startswith("_fb_ctl"))
+    prog = _CHECK_TMPL.format(model=model.strip(), params=repr(P), options=repr(shown), key=key, controls=ctl_strs)
+    chk = Check(name="model_and_traps", runner="python", program=prog, expect="stdout_equals",
+                expected_stdout=key, embeds_display_code=False)
+    ctx_name = ctx if isinstance(ctx, str) else ctx[0]
+    code_str = code(P, ctx) if code is not None else None
+    try:
+        expl = explain(P, ans, trap_dict if not stratified else trap_names)
+    except Exception:
+        expl = explain(P, ans, trap_names)
+    val_of = {n: s for n, s in picked}
+    ctrl = [f"«{val_of[n]}»" for n in trap_names if n.startswith("_fb_")]
+    if trap_desc:
+        real = [f"«{val_of[n]}» — {trap_desc[n]}" for n in trap_names if n in trap_desc and not n.startswith("_fb_")]
+        if real:
+            expl = f"{expl} Дистракторы — типичные ошибки: {'; '.join(real)}."
+    if ctrl:
+        expl = (f"{expl} Контрольные значения рядом с ответом (не связаны с конкретной ошибкой): "
+                f"{', '.join(ctrl)}.")
+    return build_variant(
+        family_id, seed,
+        stem=stem(P, ctx),
+        code=code_str,
+        options=opts,
+        answer_key=AnswerKey(kind="option", value=key, explanation=expl),
+        context=ctx_name,
+        verification="execution",
+        checks=[chk],
+        language="text",
+        display_code_note=note,
+        params={**P, "answer": float(ans) if isinstance(ans, Fraction) else ans, "n_above": n_above, "traps": trap_names},
+    )
+
+
+def choice_variant(
+    family_id: str,
+    seed: int,
+    *,
+    contexts: Sequence[Any],
+    alts: dict[str, str],
+    sample: Callable[[Any], dict],
+    model: str,
+    stem: Callable[[dict, Any], str],
+    explain: Callable[[dict, str, dict], str],
+    trap_first: str | None = None,
+    note: str = SHORT_NOTE,
+    trap_desc: dict[str, str] | None = None,
+) -> Any:
+    rng = make_rng(family_id, seed)
+    ctx = contexts[slot(family_id, seed, len(contexts), "ctx")] if len(contexts) >= 4 else rng.choice(list(contexts))
     order = list(alts)
-    target = order[(seed * 7 + zlib.crc32(family_id.encode())) % len(order)]
+    # верная альтернатива — своя перестановка, не связанная с буквой ключа и сюжетом (см. slot)
+    target = order[slot(family_id, seed, len(order), "target")]
     ns = load_model(model)
 
     def ok(P):
@@ -188,7 +406,6 @@ def choice_variant(family_id: str, seed: int, *, contexts: Sequence[Any], alts: 
                          checks=checks, language="text", display_code_note=note, params=params)
 
 
-# --------------------------------------------------------------------------- choose_fix с исполнением
 def run_py(program: str) -> str:
     buf = io.StringIO()
     ns: dict[str, Any] = {"__name__": "__main__"}
@@ -212,10 +429,25 @@ def run_sql(setup: str, query: str) -> str:
     return "\n".join("|".join("NULL" if v is None else str(v) for v in r) for r in rows)
 
 
-def codefix_variant(family_id: str, seed: int, rng: Any, *, ctx: str, stem: str, runner: str, buggy: str,
-                    good: str, wrongs: Sequence[tuple[str, str]], label: str, harness: Callable[[str], str] | None,
-                    setup: str = "", explanation: str, defect_type: str, params: dict[str, Any],
-                    language: str) -> Any:
+def codefix_variant(
+    family_id: str,
+    seed: int,
+    rng: Any,
+    *,
+    ctx: str,
+    stem: str,
+    runner: str,
+    buggy: str,
+    good: str,
+    wrongs: Sequence[tuple[str, str]],
+    label: str,
+    harness: Callable[[str], str] | None,
+    setup: str = "",
+    explanation: str,
+    defect_type: str,
+    params: dict[str, Any],
+    language: str,
+) -> Any:
     """runner python: harness(code) -> программа (код дословно + тест, печать результата); sqlite: setup + запрос."""
     def out(code):
         return run_py(harness(code)) if runner == "python" else run_sql(setup, code)
@@ -241,9 +473,3 @@ def codefix_variant(family_id: str, seed: int, rng: Any, *, ctx: str, stem: str,
     return build_variant(family_id, seed, stem=stem, code=buggy, options=opts, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type=defect_type, language=language,
                          params={**params, "wrongs": [n for n, _ in wrongs]})
-
-
-def num(x: float, nd: int = 0) -> str:
-    """Число по-русски: десятичная запятая, неразрывный пробел в тысячах."""
-    s = f"{x:,.{nd}f}".replace(",", "\u00a0").replace(".", ",")
-    return s

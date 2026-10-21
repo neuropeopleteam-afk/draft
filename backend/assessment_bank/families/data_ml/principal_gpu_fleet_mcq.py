@@ -5,19 +5,16 @@ p95 задержки), требование p95 ≤ S мс, средний по�
 нелинейно) и требование пережить потерю одной зоны из z в пик. Сколько GPU нужно минимум (поровну по зонам)?
 
 Ключ: пропускная способность c — у наибольшего пакета, укладывающегося в S; в зону — n = ⌈пик / ((z − 1)·c·u)⌉;
-всего z·n. Ловушки одной формы (число GPU), больше ключа 0, 1 или 2 равновероятно:
-  больше ключа — batch1 (без пакетирования: пропускная способность пакета 1), each_zone (каждая зона держит весь пик);
-  меньше ключа — avg (средний поток вместо пика), no_zone (пик поровну на все z зон без запаса на потерю),
-  no_sla (самый большой пакет, не укладывающийся в S), no_cap (без предела загрузки).
-Ключ проверяется исполнением: программа выбирает пакет по таблице, затем перебирает число GPU в зоне и для каждой
-возможной потери зоны проверяет, что оставшиеся GPU держат пик при пределе загрузки.
+всего z·n. Ловушки одной формы (число GPU), ранг ключа задаётся по seed до подбора чисел (0–3 ниже ключа) и
+выбирается через spread_pick. Ключ проверяется исполнением: программа выбирает пакет по таблице, затем перебирает
+число GPU в зоне и для каждой возможной потери зоны проверяет, что оставшиеся GPU держат пик при пределе загрузки.
 """
 from __future__ import annotations
 
 import math
 
 from assessment_bank.families._lead_b_utils import ru_num
-from assessment_bank.families._principal_b_kit import distinct_ok, search, trap_split
+from assessment_bank.families._principal_b_kit import pick_traps, search
 from assessment_bank.families.common._lead_kit import fmt_num, numeric_mcq
 from assessment_bank.gen_utils import make_rng, text_table
 
@@ -52,11 +49,16 @@ def _need(load, cap, util, zones, survive=True):
     return zones * math.ceil(load / (zones * cap * util) - 1e-9)
 
 
-ABOVE = ["batch1", "each_zone"]
-BELOW = ["avg", "no_zone", "no_sla", "no_cap"]
-WHY = {"batch1": "без пакетирования (пропускная способность пакета 1)", "each_zone": "каждая зона держит весь пик",
-       "avg": "средний поток вместо пика", "no_zone": "пик поровну на все зоны без запаса на потерю зоны",
-       "no_sla": "самый большой пакет, хотя его p95 выше требования", "no_cap": "без предела загрузки"}
+WHY = {
+    "batch1": "без пакетирования (пропускная способность пакета 1)",
+    "prev_batch": "взят пакет на ступень меньше максимального допустимого по SLA",
+    "two_zones": "запас на потерю двух зон одновременно вместо одной",
+    "each_zone": "каждая зона держит весь пик в одиночку",
+    "avg": "средний поток вместо пика",
+    "no_zone": "пик поровну на все зоны без запаса на потерю зоны",
+    "no_sla": "самый большой пакет, хотя его p95 выше требования",
+    "no_cap": "без предела загрузки",
+}
 
 
 def _sample(rng):
@@ -69,14 +71,15 @@ def _sample(rng):
     nxt = BATCHES[BATCHES.index(best) + 1]
     sla = int(math.floor((lat[best] + lat[nxt]) / 2 / 10) * 10)
     return {"l0": l0, "alpha": alpha, "eff": eff, "lat": lat, "thr": thr, "best": best, "sla": sla,
-            "avg": rng.choice([150, 300, 600, 1200, 2500]), "peak_k": rng.choice([1.6, 2.0, 2.5, 3.0]),
-            "util": rng.choice([0.6, 0.7, 0.75]), "zones": rng.choice([3, 3, 4])}
+            "avg": rng.choice([150, 250, 300, 450, 600, 900, 1200, 1800, 2500]),
+            "peak_k": rng.choice([1.6, 2.0, 2.5, 3.0]),
+            "util": rng.choice([0.6, 0.7, 0.75]), "zones": rng.choice([3, 4])}
 
 
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx = rng.choice(CONTEXTS)
-    traps = trap_split(rng, ABOVE, BELOW)
+    n_above = make_rng(FAMILY_ID, seed // 4, "rank").sample(range(4), 4)[seed % 4]
 
     def accept(p):
         if not (p["lat"][p["best"]] <= p["sla"] < p["lat"][BATCHES[BATCHES.index(p["best"]) + 1]]):
@@ -85,17 +88,26 @@ def generate(seed: int):
             return None
         cap, peak, u, z = p["thr"][p["best"]], p["avg"] * p["peak_k"], p["util"], p["zones"]
         good = _need(peak, cap, u, z)
-        alln = {"batch1": _need(peak, p["thr"][1], u, z), "each_zone": z * math.ceil(peak / (cap * u) - 1e-9),
-                "avg": _need(p["avg"], cap, u, z), "no_zone": _need(peak, cap, u, z, survive=False),
-                "no_sla": _need(peak, p["thr"][32], u, z), "no_cap": _need(peak, cap, 1.0, z)}
-        vals = [good] + [alln[t] for t in traps]
-        if not (6 <= good <= 400) or min(vals) < 3 or not distinct_ok(vals, 0.12, 2):
+        if not (12 <= good <= 85):
             return None
-        if any(alln[t] <= good for t in traps if t in ABOVE) or any(alln[t] >= good for t in traps if t in BELOW):
+        prev_b = BATCHES[max(0, BATCHES.index(p["best"]) - 1)]
+        alln = {
+            "batch1": _need(peak, p["thr"][1], u, z),
+            "prev_batch": _need(peak, p["thr"][prev_b], u, z),
+            "two_zones": z * math.ceil(peak / (max(1, z - 2) * cap * u) - 1e-9),
+            "each_zone": z * math.ceil(peak / (cap * u) - 1e-9),
+            "avg": _need(p["avg"], cap, u, z),
+            "no_zone": _need(peak, cap, u, z, survive=False),
+            "no_sla": _need(peak, p["thr"][32], u, z),
+            "no_cap": _need(peak, cap, 1.0, z),
+        }
+        cand = {k: v for k, v in alln.items() if v != good and 10 <= v <= 99}
+        traps = pick_traps(rng, good, cand, n_above, rel=0.10, abs_min=2)
+        if traps is None:
             return None
-        return good, alln
+        return good, cand, traps
 
-    p, (good, alln) = search(rng, _sample, accept)
+    p, (good, alln, traps) = search(rng, _sample, accept)
     rows = [(b, p["thr"][b], p["lat"][b]) for b in BATCHES]
     table = text_table(["Пакет", "Запросов/с на одну GPU", "p95, мс"], rows)
     stem = (f"Вы планируете бюджет мощности на год: {ctx}, синхронный ответ, требование p95 ≤ {p['sla']} мс. "
@@ -118,7 +130,7 @@ def generate(seed: int):
     return numeric_mcq(FAMILY_ID, seed, rng, ctx=ctx, stem=stem, good=gpu(good),
                        distractors=[gpu(alln[t]) for t in traps], program=program, explanation=expl,
                        params={"sla": p["sla"], "avg": p["avg"], "peak_k": p["peak_k"], "util": p["util"],
-                               "zones": p["zones"], "best_batch": p["best"], "gpus": good,
+                               "zones": p["zones"], "best_batch": p["best"], "gpus": good, "n_above": n_above,
                                "traps": {t: alln[t] for t in traps}},
                        note="Ответ проверяется программой: выбор пакета по таблице и перебор числа GPU в зоне с "
                             "проверкой каждой возможной потери зоны.")

@@ -108,7 +108,7 @@ def generate(seed: int):
             "делятся — там кавычки не обязательны.")
     stem = (f"Скрипт обработки ({ctx}) запускают как `bash job.sh \"{src}\" \"{dest}\"`; в каталоге лежат "
             f"файлы с пробелами в именах, например «{files[0]}.{ext}». Скрипт работает на каталогах без пробелов, "
-            "но здесь падает или обрабатывает не всё. Укажите номер строки с ошибкой.")
+            "но здесь падает или обрабатывает не всё. Укажите номер строки, которую достаточно исправить одной правкой, чтобы ошибка ушла.")
     ak = AnswerKey(kind="line", value=key, explanation=expl)
     return build_variant(FAMILY_ID, seed, stem=stem, code=code, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="unquoted_expansion",

@@ -1,0 +1,34 @@
+family_id: analyst.python.t21_dedup_eq_hash_output
+title: Дедупликация записей через set и dict — __eq__, __hash__ и какой ключ остаётся
+direction: analyst
+skills:
+- python
+- data_cleaning
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 13
+  - 15
+  extra:
+    items:
+    - 5
+    - 6
+    with_eq_share: 0.7
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Проследить set и dict для
+    5–6 объектов класса с __hash__ по ключу и (обычно) __eq__; ловушки — при повторе ключа dict оставляет первый
+    объект-ключ и его позицию, но берёт последнее значение; без __eq__ одинаковый хэш не делает объекты равными.
+    Уровень Senior: __eq__/__hash__ в set и dict. Набор t21 (21.10) у порога Senior (b = +1,1)'
+generator: assessment_bank.families.analyst.t21_dedup_eq_hash_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Визиты / заявки / анкеты / входы с повторяющимся
+  ключом пользователя; класс с __hash__ (и обычно __eq__), set и словарь last[obj] = obj.attr; предсказать вывод. Ключ
+  — независимая модель в генераторе, проверка — исполнение показанного кода в песочнице Python.'

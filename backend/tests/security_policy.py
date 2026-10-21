@@ -200,6 +200,9 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/assessment/sessions/{session_id}/result"): "candidate_own",
     ("GET", "/api/assessment/sessions/{session_id}/evidence"): "candidate_own",  # feat/evidence-grade
     ("POST", "/api/assessment/sessions/{session_id}/accept-lower"): "candidate_own",
+    # А4: апелляция по заданию теста (только кандидат — владелец своей сессии; токен задания не из мира теста → OK404)
+    ("GET", "/api/assessment/sessions/{session_id}/appeals"): "candidate_own",
+    ("POST", "/api/assessment/sessions/{session_id}/appeals"): "candidate_own404",
     # камера по согласию (feat/proctor, pc01): только кандидат; сессия — своя (чужая → 404); работодателю API нет,
     # агрегат ФСП — аналитик и администратор (в песочнице жюри — персона «Федерация»)
     ("GET", "/api/proctor/consent"): "candidate",
@@ -458,6 +461,12 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/closed-set/template/{format}"): "open",  # feat/realdata
     ("POST", "/api/validation/closed-set/evaluate"): "sandbox_employer",
     ("POST", "/api/validation/closed-set/export"): "sandbox_employer",
+    # А4: методика грейда SPRT, утечка K вариантов, вызов «Обмани тест», кросс-вендорный протокол экспертов
+    ("GET", "/api/validation/sprt-verdict"): "open",
+    ("GET", "/api/validation/leak-k-variants"): "open",
+    ("GET", "/api/validation/cheat-challenge"): "open",
+    ("POST", "/api/validation/cheat-challenge/attempt"): "open",
+    ("GET", "/api/validation/expert-surrogate"): "open",
     # подписка на потребность, уведомления, напоминания (И25, Н6 — feat/subs)
     ("GET", "/api/employer/subscriptions"): "employer",
     ("GET", "/api/employer/needs/{need_id}/subscription"): "employer_own",

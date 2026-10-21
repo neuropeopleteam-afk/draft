@@ -1,24 +1,43 @@
 family_id: data_ml.review.ml_system_open
 title: Ревью дизайна ML-системы ведущим — утечки, валидация, расхождение обучения и онлайна, петли, выкладка, мониторинг
 direction: data_ml
-skills: [ml_systems, data_leakage, training_serving_skew, model_evaluation, ml_monitoring]
-target_grades: [lead]
+skills:
+- ml_systems
+- data_leakage
+- training_serving_skew
+- model_evaluation
+- ml_monitoring
+target_grades:
+- lead
 format: open_answer
 language: text
 invariants:
   extra:
     planted_flaws: 3
     sound_items: 2
-    flaw_pool: [target_leakage, random_split, train_serve_skew, feedback_loop, metric_mismatch, big_bang_rollout, service_only_monitoring, threshold_05]
+    flaw_pool:
+    - target_leakage
+    - random_split
+    - train_serve_skew
+    - feedback_loop
+    - metric_mismatch
+    - big_bang_rollout
+    - service_only_monitoring
+    - threshold_05
 time_limit_s: 1500
 canary: false
 prior_difficulty:
   b: 1.8
-  a: 1.1
+  a: 1.3
   sigma_variant: 0.35
-  basis: "Априорная трудность (не по людям). Пять пунктов дизайн-документа ML-системы: 3 изъяна из пула 8 и 2 здравых решения; полный балл — найти все три, связать с числами условия (подозрительный AUC, записей на клиента, бюджет проверки, задержка меток), предложить проверяемую меру и не поднять ложную тревогу. Senior находит утечку и разбиение, пропуская петлю обратной связи, расхождение признаков и метрику бюджета, — граница Senior/Lead (θ ≈ 2,0); σ 0,35"
+  basis: 'Априорная, до калибровки на людях (a = 1,3). Пять пунктов дизайн-документа ML-системы: 3 изъяна из пула
+    8 и 2 здравых решения; полный балл — найти все три, связать с числами условия (подозрительный AUC, записей на
+    клиента, бюджет проверки, задержка меток), предложить проверяемую меру и не поднять ложную тревогу. Senior находит
+    утечку и разбиение, пропуская петлю обратной связи, расхождение признаков и метрику бюджета, — граница Senior/Lead
+    (θ ≈ 2,0); σ 0,35'
 generator: assessment_bank.families.data_ml.review_ml_system_open
 version: 1
-description: >
-  Lead: ревью дизайн-документа модели перед запуском; три заложенных изъяна и два здравых пункта. Рубрика по
-  каждому изъяну и по приоритетам без ложных тревог; оценка с цитатами-доказательствами.
+description: 'Lead: ревью дизайн-документа модели перед запуском; три заложенных изъяна и два здравых пункта. Рубрика
+  по каждому изъяну и по приоритетам без ложных тревог; оценка с цитатами-доказательствами.
+
+  '

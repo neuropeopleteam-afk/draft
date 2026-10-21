@@ -1,0 +1,34 @@
+family_id: frontend.routing.t21_query_parse_output
+title: Разбор строки запроса — split, деструктуризация пары и повторный параметр
+direction: frontend
+skills:
+- javascript
+- routing
+target_grades:
+- intern
+- junior
+format: predict_output
+language: javascript
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra:
+    pairs:
+    - 5
+    - 5
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.85
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две конструкции вместе:
+    split по «&» и «=» с деструктуризацией пары в объект; нужно учесть, что повторный параметр перезаписывается,
+    параметр без «=» даёт undefined, а значения — строки (page + 1 склеивает). Уровень Junior: split/join
+    и деструктуризация. Набор t21 (21.10) у порога Junior (b = −0,85)'
+generator: assessment_bank.families.frontend.t21_query_parse_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Роутер вручную разбирает строку запроса в объект
+  параметров; предсказать два параметра, число ключей и выражение с числовым параметром. Ключ — независимая
+  модель разбора в генераторе, проверка — исполнение показанного кода в Node.js.'

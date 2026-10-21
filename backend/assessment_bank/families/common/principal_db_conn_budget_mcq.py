@@ -49,6 +49,8 @@ def traps(P):
         "no_reserve": (P["K"] + P["u"]) * pool(P, P["t"]),
         "naive": P["K"] * pool(P, P["t"], skew=False, rho=False) + P["R"],
         "reserve_each": (P["K"] + P["u"]) * (pool(P, P["t"]) + P["R"]),
+        "two_queries": (P["K"] + P["u"]) * pool(P, int(P["t"] * 1.35)) + P["R"],
+        "double_surge": (P["K"] + 2 * P["u"]) * pool(P, P["t"]) + P["R"],
         "blue_green": 2 * P["K"] * pool(P, P["t"]) + P["R"],
     }
 
@@ -90,9 +92,11 @@ TRAP_DESC = {"p99": "время удержания p99 вместо средне
              "no_surge": "без экземпляров выкладки (maxSurge)", "no_reserve": "без резерва на БД",
              "naive": "пул по среднему потоку без запаса и без выкладки",
              "reserve_each": "резерв прибавлен к пулу каждого экземпляра",
+             "two_queries": "запас +35 % времени удержания на повторную проверку в транзакции",
+             "double_surge": "двойной maxSurge на случай одновременного отката",
              "blue_green": "выкладка посчитана как удвоение парка (blue-green), а не maxSurge"}
 
 
 def generate(seed: int):
     return numeric_variant(FAMILY_ID, seed, contexts=CONTEXTS, sample=_sample, model=MODEL, stem=_stem,
-                           explain=_explain, rel=0.06, abs_min=3, trap_first="no_surge", trap_desc=TRAP_DESC)
+                           explain=_explain, rel=0.06, abs_min=3, trap_desc=TRAP_DESC)

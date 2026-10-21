@@ -26,6 +26,10 @@ SOURCES = {  # источник → файл расчёта и команда п
     "bench": (DATA / "matching_bench.json", "make bench"),
     "path": (DATA / "path_retest.json", "make path-retest"),
     "report": (DATA / "report.json", "make validate"),
+    # А4 (21.10): симуляция продукта (движок стенда на реальном банке) и боты через движок
+    "product": (DATA / "product_sim_test_calibrated.json",
+                "cd backend && python -m app.modules.validation.product_sim --phase test --world calibrated --n 3000 --retest"),
+    "cheat": (DATA / "cheat_bots.json", "cd backend && python -m app.modules.validation.cheat_bots --n 100 --k 10,100"),
 }
 PERSONAS = {"candidate", "candidate_nofsp", "candidate_junior", "candidate_new", "employer", "expert", "fsp"}
 PERSONA_TITLE = {"candidate": "кандидат с ФСП", "candidate_nofsp": "кандидат без ФСП", "candidate_new": "кандидат без категории",
@@ -120,20 +124,21 @@ CRITERIA: list[dict] = [
             "предложенной командой процедуры валидации и приведённых ею результатов."),
      "items": [
          {"tz": "Устойчивость механики к распространению заданий между кандидатами",
-          "do": [go("«Слить» часть банка вживую", "/validation#red-button"), go("Таблица утечки", "/validation#leak")],
-          "see": "Атака утечкой на живом движке: детектор предзнания и карантин субпула против фиксированной формы.",
-          "proof": metric("report", "simulation.asr_mean.app.leak_detector_rotation",
-                          "Успех атаки при утечке 30 % вариантов: детектор + карантин", "pct1", "/validation#leak",
-                          vs=("фиксированная форма", "simulation.asr_mean.app.fixed_leak")),
-          "limit": "Симуляция: модель списывающих (25 % кандидатов), не люди."},
+          "do": [go("«Слить» часть банка вживую", "/validation#red-button"), go("Боты против теста", "/validation#v-cheat-challenge")],
+          "see": "Боты проходят настоящий тест: утечка 10 и 100 вариантов каждого задания, угадывание, «решатель без знаний».",
+          "proof": metric("cheat", "table.leak_100.false_confirmed.value",
+                          "Бот с утечкой 100 вариантов каждого задания: грейд подтверждён", "pct1", "/validation#v-cheat-challenge",
+                          ci="table.leak_100.false_confirmed.ci95",
+                          vs=("контроль — честный, но слабее заявки", "table.control.false_confirmed.value", "pct1")),
+          "limit": "Боты через движок продукта, не люди; развёрнутые ответы ботов не засчитываются (оценка сверху)."},
          {"tz": "согласованность результата (даёт ли тест стабильный грейд при повторном прохождении)",
-          "do": [go("Весь путь дважды", "/validation#path-retest"),
+          "do": [go("Повторяемость", "/validation#headline"),
                  go("Пройти тест самому дважды", "/candidate/express", "candidate_new")],
-          "see": "Совпадение грейда при повторе опроса, теста и решения; ваша вторая попытка — из другого набора заданий.",
-          "proof": metric("path", "total.path_grade.kappa_w", "κ с весами, повтор всего пути", "num3",
-                          "/validation#path-retest", ci="total.path_grade.kappa_w_ci",
-                          vs=("грейд совпал", "total.path_grade.exact", "pct1")),
-          "limit": "Синтетические кандидаты (модель 2PL); повтор на людях — после калибровки."},
+          "see": "Две независимые попытки одного кандидата без общих семейств заданий: тот же грейд и тот же вердикт.",
+          "proof": metric("product", "retest.kappa_w_quadratic", "κ с весами, две независимые попытки", "num3",
+                          "/validation#headline",
+                          vs=("тот же грейд", "retest.exact_agreement.value", "pct1")),
+          "limit": "Симуляция продукта: модельные кандидаты, не люди; повтор на людях — после калибровки."},
          {"tz": "дискриминативность заданий (насколько они разделяют слабых и сильных кандидатов)",
           "do": [go("D и r_pb семейств", "/validation#discrimination")],
           "see": "Индекс D и r_pb по семействам и форматам, слабые семейства с причинами.",
@@ -142,21 +147,23 @@ CRITERIA: list[dict] = [
           "limit": "Пилот симулирован по авторским параметрам; панель моделей — не люди."},
          {"tz": "соответствие результата экспертной оценке или эталонной разметке команды",
           "do": [go("Модельная панель (не люди)", "/validation#experts"), go("Разметить самому", "/expert", "expert")],
-          "see": "Согласие с эталоном, статус панели и кто размечал: люди или модель в ролях экспертов.",
-          "proof": metric("path", "total.truth.kappa_w_true", "κ с весами: грейд против истинного", "num3",
-                          "/validation#path-retest", note="эталон — истина симуляции"),
-          "limit": "Эталон — истина симуляции и модельная панель; разметка людьми — в сборе."},
+          "see": "Эталон — истинный уровень модельного кандидата: верный ли итоговый вердикт по заявке; разметка людьми — в сборе.",
+          "proof": metric("product", "summary.verdict_accuracy_final.value", "Верный вердикт по заявке (эталон — истинный уровень)",
+                          "pct1", "/validation#headline", ci="summary.verdict_accuracy_final.ci95",
+                          vs=("точный грейд", "summary.exact_grade_final.value", "pct1")),
+          "limit": "Эталон — истина симуляции продукта; согласие с экспертами-людьми не измерено."},
          {"tz": "корректность категоризации кандидатов по стеку, специализации и пройденным тестам",
           "do": [go("Категории Марии", "/candidate/category", "candidate"),
                  go("Поиск по категории", "/employer/search", "employer")],
           "see": "Категория «направление · грейд» только по тесту (T1); у Марии две специализации, у каждой свой тест.",
-          "proof": metric("path", "total.truth.over_share", "Грейд выше истинного", "pct1", "/validation#path-retest",
-                          vs=("ниже истинного", "total.truth.under_share")),
-          "limit": "При сомнении правило даёт уровень ниже — доля «ниже истинного» заметна."},
+          "proof": metric("product", "summary.false_confirm_among_overclaim.value", "Ложное подтверждение у завысивших заявку",
+                          "pct1", "/validation#headline", ci="summary.false_confirm_among_overclaim.ci95",
+                          vs=("ложный отказ у соответствующих", "summary.false_reject_among_true.value", "pct1")),
+          "limit": "Симуляция продукта: модельные кандидаты, не люди."},
          {"tz": "качество предложенной командой процедуры валидации и приведённых ею результатов",
-          "do": [go("5 чисел с подписью мира", "/validation#headline"),
+          "do": [go("Точность решения по грейду", "/validation#headline"),
                  go("Проверьте сами на движке", "/validation#self-check")],
-          "see": "Каждое число — с 95 % ДИ, seed, конфигурацией и коммитом; синтетический кандидат на настоящем движке.",
+          "see": "Симуляция самого продукта: настройки выбраны на одних зёрнах, цифры — на других; 95 % ДИ, команда пересчёта.",
           "proof": link("Калибровка: что есть сейчас и что будет на людях", "/validation#calibration"),
           "limit": "Параметры заданий — экспертная предкалибровка; калибровка на людях — после пилота."},
      ]},
@@ -306,7 +313,7 @@ UNIQUE: list[dict] = [
      "do": [go("Атаковать", "/validation#red-button")]},
     {"title": "Повтор теста и сравнение попыток",
      "text": "Пройдите экспресс-тест дважды: вторая попытка — из другого набора заданий; история — в «Категории».",
-     "do": [go("Пройти тест", "/candidate/express", "candidate_new"), go("Весь путь дважды", "/validation#path-retest")]},
+     "do": [go("Пройти тест", "/candidate/express", "candidate_new"), go("Повторяемость", "/validation#headline")]},
     {"title": "Камера по согласию",
      "text": "Перед тестом — выбор «с камерой» или «без»; кадры разбираются в браузере, наружу — только события.",
      "do": [go("Экран выбора", "/candidate/express", "candidate_new")]},
@@ -571,11 +578,11 @@ INTERVIEW_NOTE = {
 
 
 # Я25: Lead и Principal (флаг GRADES_EXT_ENABLED, по умолчанию выкл.; docs/GRADES_EXT.md)
-GRADES_EXT_GO = go("Lead и Principal: точность", "/validation#grades-ext")
+GRADES_EXT_GO = go("Lead и Principal: точность по заявке", "/validation#headline")
 GRADES_EXT_SEE = ("Шесть уровней: Стажёр…Senior, Lead, Principal; Lead/Principal — только полным тестом и только в "
                   "направлениях, где банк их проверяет.")
-GRADES_EXT_LIMIT = ("Lead и Principal пока «предварительно»: на модели при нынешнем банке тест различает их хуже, чем "
-                    "Junior–Senior; что нужно для 64 % — /validation#grades-ext.")
+GRADES_EXT_LIMIT = ("Точность по заявке Lead и Principal — в таблице «По заявленному грейду» симуляции продукта "
+                    "(/validation#headline); у спорного порога Senior+ доп. этап — разбор инцидента.")
 
 
 def _grades_ext_on() -> bool:

@@ -1,0 +1,30 @@
+family_id: devops.disk.t21_retention_arith_output
+title: 'bash — место под логи: приоритет операций и деление нацело в $(( ))'
+direction: devops
+skills:
+- bash
+- linux
+- logging
+target_grades:
+- intern
+format: predict_output
+language: bash
+invariants:
+  code_lines:
+  - 7
+  - 7
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.8
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две строки арифметики
+    $(( )): умножение выполняется раньше сложения, деление — нацело (дробная часть отбрасывается). Уровень Стажёра:
+    базовая арифметика оболочки без ветвлений и циклов. Набор t21 (21.10) у порога Стажёра (b = −1,8)'
+generator: assessment_bank.families.devops.t21_retention_arith_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Скрипт считает место под логи за срок хранения
+  и долю диска в процентах; предсказать вывод echo. Ключ — независимый расчёт в генераторе, проверка — исполнение
+  показанного скрипта в bash-песочнице.

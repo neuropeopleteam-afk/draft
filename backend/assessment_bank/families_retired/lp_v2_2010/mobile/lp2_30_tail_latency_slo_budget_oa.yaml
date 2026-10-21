@@ -1,0 +1,33 @@
+# Волна LP-v2 (tools/bank_lp_gen.py): содержательное семейство старших грейдов (код, 3 шага, инцидент, архитектура).
+family_id: mobile.principal_v2.tail_latency_slo_budget_oa
+title: 'Мобильная разработка: Системная архитектура удержания p99 в жёстком SLO при десятикратных пиках'
+direction: mobile
+skills:
+- architecture
+- kotlin_coroutines
+- swift_concurrency
+- offline_first
+- ui_threading
+target_grades:
+- principal
+format: open_answer
+language: text
+invariants:
+  defect_type: tail_latency_architecture
+  extra:
+    wave: LP-v2
+    slot: 30
+    direction_ru: Мобильная разработка
+time_limit_s: 780
+canary: false
+prior_difficulty:
+  b: 2.97
+  a: 1.3
+  sigma_variant: 0.25
+  basis: 'Априорная, до калибровки на людях (a = 1,3, σ = 0,25). Мобильная разработка: системная архитектура удержания
+    p99 в жёстком slo при десятикратных пиках; формат open_answer, целевые грейды principal (b = 2,97 у порога старшего
+    грейда).'
+generator: assessment_bank.families_retired.lp_v2_2010.mobile.lp2_30_tail_latency_slo_budget_oa
+version: 1
+description: 'Мобильная разработка (principal): Системная архитектура удержания p99 в жёстком SLO при десятикратных
+  пиках. Проверка исполнением и рубрикой.'

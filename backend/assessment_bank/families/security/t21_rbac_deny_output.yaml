@@ -1,0 +1,32 @@
+family_id: security.authz.t21_rbac_deny_output
+title: RBAC с наследованием ролей — обход с visited, явный запрет сильнее разрешения
+direction: security
+skills:
+- python
+- security
+- authorization
+- access_control
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 17
+  - 17
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Собрать права роли обходом графа
+    наследования со стеком и множеством visited (ромб и цикл), разрешения и запреты со всех уровней, итог allow − deny;
+    ловушки — запрет у предка отменяет разрешение потомка, повторный визит пропускается. Уровень Senior: обход графа и теоретико-множественная
+    семантика решения. Набор t21 (21.10) у порога Senior (b = +0,9)'
+generator: assessment_bank.families.security.t21_rbac_deny_output
+version: 1
+description: Набор t21 (короткие практические у порогов, 21.10). Сервис авторизации собирает права роли по цепочке наследования
+  с явными запретами; предсказать решение для 3–4 пар (роль, действие). Ключ — независимая модель обхода в генераторе, проверка
+  — исполнение показанного кода в песочнице Python.

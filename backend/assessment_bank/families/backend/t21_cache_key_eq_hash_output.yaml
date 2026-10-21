@@ -1,0 +1,30 @@
+family_id: backend.cache.t21_cache_key_eq_hash_output
+title: Ключ кэша с __eq__ и __hash__ — склейка записей и судьба ключа-объекта
+direction: backend
+skills:
+- python
+- caching
+target_grades:
+- senior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 13
+  - 13
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.95
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Надо проследить словарь с
+    пользовательскими __eq__ / __hash__: равные ключи склеиваются, значение — последнее, а ключ-объект остаётся первым;
+    коллизия хэшей без равенства записи не склеивает. Уровень Senior: __eq__ / __hash__ в dict. Набор t21 (21.10) у
+    порога Senior (b = +0,95)'
+generator: assessment_bank.families.backend.t21_cache_key_eq_hash_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Ключ кэша — объект, равенство которого учитывает
+  только одно поле; предсказать число записей, значения, поля первого ключа и результат поиска. Ключ — независимая
+  модель словаря в генераторе, проверка — исполнение показанного кода в песочнице Python.'

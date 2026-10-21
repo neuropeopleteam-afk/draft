@@ -1,0 +1,29 @@
+family_id: backend.cache.t21_cache_hits_loaded_output
+title: Кэш в словаре — попадания и промахи в потоке запросов
+direction: backend
+skills:
+- python
+- caching
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл по 6–8 id с if / else
+    и проверкой `in` по словарю, который заполняется в том же цикле: первое обращение — промах, повторы — попадания.
+    Уровень Стажёра: цикл со счётчиком и список без библиотек. Набор t21 (21.10) у порога Стажёра (b = −1,6)'
+generator: assessment_bank.families.backend.t21_cache_hits_loaded_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Обработчик кэширует ответы БД в словаре и считает
+  попадания; предсказать число попаданий и список ключей кэша. Ключ — независимый подсчёт первых вхождений
+  в генераторе, проверка — исполнение показанного кода в песочнице Python.'

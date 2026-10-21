@@ -1,0 +1,30 @@
+family_id: backend.db.t21_sql_row_number_top_output
+title: Самые медленные запросы по эндпоинтам — ROW_NUMBER по PARTITION
+direction: backend
+skills:
+- sql
+- window_functions
+target_grades:
+- middle
+format: predict_output
+language: sql
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra: {}
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: 0.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Одна неочевидная семантика:
+    ROW_NUMBER() нумерует заново в каждой партиции, поэтому фильтр rn <= N оставляет по N строк из каждой группы, а не
+    на всю таблицу; надо учесть направление сортировки и маленькую группу. Уровень Middle: ROW_NUMBER по PARTITION.
+    Набор t21 (21.10) у порога Middle (b = +0,1)'
+generator: assessment_bank.families.backend.t21_sql_row_number_top_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Отчёт для разбора инцидента отбирает самые медленные
+  или самые быстрые запросы в каждой группе через ROW_NUMBER по PARTITION; предсказать строки результата. Ключ —
+  независимая модель в генераторе, проверка — исполнение запроса в SQLite.'

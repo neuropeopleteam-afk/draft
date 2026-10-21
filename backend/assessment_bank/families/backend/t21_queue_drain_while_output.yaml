@@ -1,0 +1,29 @@
+family_id: backend.queue.t21_queue_drain_while_output
+title: Разбор очереди пачками — цикл while и остаток после последнего прохода
+direction: backend
+skills:
+- python
+- queues
+target_grades:
+- intern
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 7
+  - 7
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.8
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Цикл while со счётчиком
+    проходов: надо досчитать до последней неполной пачки и заметить, что pending уходит в минус. Уровень Стажёра: один
+    цикл и арифметика. Набор t21 (21.10) у порога Стажёра (b = −1,8)'
+generator: assessment_bank.families.backend.t21_queue_drain_while_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Воркер разбирает очередь пачками в цикле while;
+  предсказать число проходов и итоговое значение счётчика сообщений. Ключ — независимый расчёт в генераторе,
+  проверка — исполнение показанного кода в песочнице Python.'

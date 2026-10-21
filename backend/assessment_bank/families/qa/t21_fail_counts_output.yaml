@@ -1,0 +1,26 @@
+family_id: qa.flaky.t21_fail_counts_output
+title: Сводка падений по тестам — подсчёт в словаре и sorted с ключом-кортежем
+direction: qa
+skills:
+- python
+- testing
+target_grades:
+- intern
+- junior
+format: predict_output
+language: python
+invariants:
+  code_lines:
+  - 8
+  - 8
+  extra: {}
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: 'Априорная, до калибровки на людях (a = 1,3 — практическое без вариантов ответа). Две конструкции вместе: подсчёт в словаре через split и get по логу из 6–8 записей и sorted с ключом (-счётчик, имя); ловушки — тесты без падений не попадают в словарь, при равных счётчиках порядок задаёт имя, а не лог. Уровень Junior. Набор t21 (21.10) у порога Junior (b = −1,0)'
+generator: assessment_bank.families.qa.t21_fail_counts_output
+version: 1
+description: 'Набор t21 (короткие практические у порогов, 21.10). Лог перезапусков «тест:статус»: программа считает падения каждого теста и печатает сводку по убыванию; предсказать вывод. Ключ — независимый подсчёт в генераторе, проверка — исполнение показанного кода в песочнице Python.'

@@ -1,21 +1,17 @@
-"""devops.k8s.pdb_disruptions_mcq — mcq_concept: допустимые выселения по PodDisruptionBudget.
+"""devops.k8s.pdb_disruptions_mcq — mcq_concept: сколько подов можно выселить по PodDisruptionBudget.
 
-Семантика (документация Kubernetes «Specifying a Disruption Budget for your Application», контроллер disruption):
-expectedPods — число реплик владельца (Deployment); desiredHealthy = minAvailable (процент — от expectedPods с
-округлением ВВЕРХ) или expectedPods − maxUnavailable (процент — тоже с округлением вверх); currentHealthy — число
-ГОТОВЫХ подов под селектором; disruptionsAllowed = max(0, currentHealthy − desiredHealthy). Выселение (kubectl drain,
-Eviction API) при disruptionsAllowed = 0 отклоняется (429). Подтипы: min_available, max_unavailable; значение —
-число или процент; в каждом варианте часть подов не готова. Дистракторы — фиксированный состав типовых ошибок:
-для процента — считать от replicas, а не от готовых; округлить процент вниз; взять бюджет «как есть»
-(maxUnavailable или replicas − minAvailable), не вычитая уже неготовые; для числа (где «от replicas» и «как есть»
-совпадают) — от replicas, «0: пока есть неготовые, выселять нельзя», «все готовые поды». Ключ — исполнение модели контроллера над показанным манифестом
-и списком подов в песочнице Python.
+По спецификации Kubernetes (DisruptionController): desiredHealthy = ⌈minAvailable × replicas⌉ или
+replicas − ⌈maxUnavailable × replicas⌉ (процент округляется вверх: intstr.GetScaledValueFromIntOrPercent(..., true));
+disruptionsAllowed = max(0, currentHealthy − desiredHealthy), где currentHealthy — число подов в состоянии Ready.
+Неготовые поды уже «съедают» бюджет выселений. Подтипы: min_available, max_unavailable (число или процент).
+Ранг ключа задаётся по seed до подбора параметров (0–3 ниже ключа), ловушки отбираются через spread_pick.
+Ключ — исполнение модели контроллера над показанным манифестом и списком подов в песочнице Python.
 """
 from __future__ import annotations
 
 import math
 
-from assessment_bank.gen_utils import build_variant, make_options, make_rng, plural
+from assessment_bank.gen_utils import build_variant, make_options, make_rng, plural, spread_pick
 from assessment_bank.schema import AnswerKey, Check
 
 from ._yaml_model import emit, program
@@ -50,37 +46,58 @@ def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, app = rng.choice(CTX)
     sub = rng.choice(["min_available", "max_unavailable"])
+    n_below = make_rng(FAMILY_ID, seed // 4, "rank").sample(range(4), 4)[seed % 4]
     for _ in range(3000):
-        rep = rng.randint(4, 12)
+        rep = rng.randint(7, 15)
         unready = rng.randint(1, 3)
         healthy = rep - unready
-        pct = rng.random() < 0.6
+        pct = rng.random() < 0.65
         if sub == "min_available":
             if pct:
-                p = rng.choice([25, 30, 40, 50, 60, 70, 75, 80])
+                p = rng.choice([25, 30, 35, 40, 50, 60, 65, 70])
                 val, desired, desired_floor = f"{p}%", math.ceil(p * rep / 100), math.floor(p * rep / 100)
             else:
-                v = rng.randint(1, rep - 1)
+                v = rng.randint(2, rep - 4)
                 val, desired, desired_floor = v, v, v
-            as_is = rep - desired
         else:
             if pct:
-                p = rng.choice([10, 20, 25, 30, 40, 50])
+                p = rng.choice([25, 30, 35, 40, 50, 60, 65])
                 mu, mu_floor = math.ceil(p * rep / 100), math.floor(p * rep / 100)
                 val, desired, desired_floor = f"{p}%", rep - mu, rep - mu_floor
             else:
-                v = rng.randint(1, max(1, rep // 2))
+                v = rng.randint(3, rep - 3)
                 val, desired, desired_floor = v, rep - v, rep - v
-            as_is = rep - desired
         right = max(0, healthy - desired)
-        from_rep = max(0, rep - desired)
-        rounded = max(0, healthy - desired_floor)
-        if pct:
-            wrong = [from_rep, rounded, as_is]
-        else:  # для числа «от replicas» и «как есть» совпадают: вместо них — «0» и «все готовые»
-            wrong = [from_rep, 0, healthy]
-        if len({right, *wrong}) == 4:
+        if not (3 <= right <= 6):
+            continue
+        cand_raw = {
+            "zero": 0,
+            "one_only": 1,
+            "double_unready": right - unready,
+            "strict_gt": right - 1,
+            "plus_one": right + 1,
+            "from_rep": rep - desired,
+            "rounded": healthy - desired_floor,
+            "plus_unready": right + unready,
+            "desired_val": desired,
+            "healthy_val": healthy,
+        }
+        cand = {}
+        for k, x in cand_raw.items():
+            if 0 <= x <= 9 and x != right and x not in cand.values():
+                cand[k] = x
+        below = [k for k, x in cand.items() if x < right]
+        above = [k for k, x in cand.items() if x > right]
+        if len(below) < n_below or len(above) < 3 - n_below:
+            continue
+        rng.shuffle(below)
+        rng.shuffle(above)
+        sp = spread_pick(rng, right, below, above, n_below, 3 - n_below, cand.__getitem__, min_step=0.05)
+        if sp is not None:
+            wrong = [x for _, x in sp]
             break
+    else:
+        raise RuntimeError("не удалось подобрать параметры")
     key_field = "minAvailable" if sub == "min_available" else "maxUnavailable"
     manifest = {"apiVersion": "policy/v1", "kind": "PodDisruptionBudget",
                 "metadata": {"name": f"{app}-pdb"},
@@ -118,4 +135,5 @@ def generate(seed: int):
                          verification="execution", checks=checks, language="yaml",
                          display_code_note="Исполняется модель контроллера PodDisruptionBudget над показанным "
                                            "манифестом и списком подов",
-                         params={"subtype": sub, "value": str(val), "replicas": rep, "unready": unready})
+                         params={"subtype": sub, "value": str(val), "replicas": rep, "unready": unready,
+                                 "n_below": n_below})

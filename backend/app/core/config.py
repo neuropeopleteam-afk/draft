@@ -270,6 +270,33 @@ class Settings(BaseSettings):
     assessment_two_stage_above: float = 0.0
     # итог уточнения не ниже уровня первой сессии (без понижения по итогу второй сессии)
     assessment_two_stage_floor: bool = False
+    # А4 (21.10): квота ≥ 1/3 практических заданий и в дотестировании у порога / втором этапе (assessment/exposure.py)
+    assessment_code_quota_ext: bool = False
+    # А4 (21.10): оценка уровня с угадыванием c = 1/4 в частях с выбором варианта (assessment/exposure.py)
+    assessment_guessing_3pl: bool = False
+    # А4 (21.10, поправка №2 протокола — docs/validation/PRODUCT_SIM_PROTOCOL.md): решение по заявленному грейду —
+    # последовательный критерий Вальда (SPRT) у порога заявленного грейда только по ответам, без априорного стягивания
+    # к середине шкалы. H₁: θ = порог + δ против H₀: θ = порог − δ; «подтверждён» — LLR ≥ ln((1 − β)/α), «не
+    # подтверждён» — LLR ≤ ln(β/(1 − α)), между — «нужен доп. этап» (assessment/sprt.py). posterior — прежнее правило
+    # P(θ ≥ порога) ≥ ASSESSMENT_CONFIRM_LEVEL по оценке с априорным N(0; 1)
+    assessment_verdict_rule: str = "sprt"
+    assessment_sprt_delta: float = 0.35
+    assessment_sprt_alpha: float = 0.05
+    assessment_sprt_beta: float = 0.10
+    # Продление у спорного порога (решение оркестратора 21.10): пока SPRT по заявленному грейду не принял решения,
+    # тест идёт дальше обычных ASSESSMENT_MAX_ITEMS / ASSESSMENT_MAX_MINUTES — до N заданий и M минут
+    assessment_contested_max_items: int = 30
+    assessment_contested_max_minutes: int = 90
+    # Выбор задания: информация (3PL с угадыванием) на единицу ожидаемого времени в степени w (0 — только информация)
+    assessment_time_weight: float = 1.0
+    # Угадывание c = 1/K по фактическому числу вариантов шага и 1/строк — у «строки с ошибкой»; false — c = 1/4 у
+    # частей с выбором и 0 у остальных (как до 21.10 вечер)
+    assessment_guess_actual_k: bool = True
+    # «Уровень по ответам» (поправка №2): оценка уровня — wle (Уорм, без априорного) | eap (с априорным N(0; 1), как
+    # оценка θ движка); выше заявленного — upgrade: sprt (только если SPRT у следующего порога уверенно «выше») | point
+    # (по оценке уровня) | none (не выше заявленного, как до 21.10)
+    assessment_point_estimator: str = "wle"
+    assessment_upgrade_rule: str = "sprt"
     # Я22: чистка пула — 26 семейств, слабых по калибровке панелью моделей (assessment/weak_pool.py), не выдаются ни в
     # основной части, ни в дотестировании. false — пул как раньше. По умолчанию выключено: на симуляции повтор (κw)
     # с исключением ниже (docs/validation/GRADE_ACCURACY.md, «Чистка пула»)

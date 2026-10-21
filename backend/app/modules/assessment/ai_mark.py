@@ -19,7 +19,7 @@ import re
 import secrets
 
 SEP = "\u2063"  # INVISIBLE SEPARATOR — граница скрытого фрагмента для интерфейса
-FORMATS = ("open_answer", "open_book_3step")
+FORMATS = ("open_answer", "open_book_3step", "incident_sim")
 
 # слово (именительный падеж), основа для поиска (кириллица), основа латиницей (если модель ответит по-английски).
 # Латиница — только там, где она не совпадает с ИТ-словами: нет «mongoose» (ODM), «juniper» (сетевое
