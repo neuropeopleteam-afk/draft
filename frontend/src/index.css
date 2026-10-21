@@ -333,15 +333,15 @@ html[data-theme="light"] .np .np-card { background: linear-gradient(180deg, #FFF
 }
 html[data-theme="light"] .np .np-grad { background-image: linear-gradient(95deg, #2415BA 0%, #402FFF 55%, #6557FF 100%); }
 .np-hero-shimmer {
-  background: linear-gradient(100deg, #FFFFFF 0%, #D8D2FF 22%, #8B7EFF 45%, #7CE8FF 68%, #FF7A92 86%, #FFFFFF 100%);
+  background: linear-gradient(105deg, #FFFFFF 0%, #FFFFFF 32%, #DDD8FF 46%, #B8B0FF 52%, #F2F0FF 60%, #FFFFFF 74%, #FFFFFF 100%);
   background-size: 240% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: npTextIridescence 5.2s ease-in-out infinite;
+  animation: npTextIridescence 6.5s ease-in-out infinite;
 }
 html[data-theme="light"] .np .np-hero-shimmer {
-  background-image: linear-gradient(100deg, #101432 0%, #402FFF 35%, #685AFF 65%, #D41430 88%, #101432 100%);
+  background-image: linear-gradient(105deg, #0F132E 0%, #0F132E 34%, #402FFF 50%, #0F132E 68%, #0F132E 100%);
 }
 .np-chip { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.25rem 0.7rem;
   font-size: 0.75rem; font-weight: 600; color: #DCE2FF; border: 1px solid var(--np-line-2); background: var(--np-surface); white-space: nowrap; }
@@ -445,12 +445,12 @@ html[data-theme="light"] .np .np-hero-shimmer {
   font-style: italic;
   font-weight: 700;
   letter-spacing: -0.01em;
-  background: linear-gradient(100deg, #A59DFF 0%, #E0DCFF 28%, #FFFFFF 50%, #FF8598 74%, #A59DFF 100%);
+  background: linear-gradient(105deg, #C8C2FF 0%, #ECE9FF 32%, #FFFFFF 50%, #F7C2CE 70%, #C8C2FF 100%);
   background-size: 240% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: fspSheen 5.5s ease-in-out infinite;
+  animation: fspSheen 6.5s ease-in-out infinite;
 }
 html[data-theme="light"] .np .fsp-serif-italic {
   background-image: linear-gradient(100deg, #1F12A6 0%, #402FFF 32%, #7A6BFF 58%, #D41430 82%, #1F12A6 100%);
