@@ -305,6 +305,9 @@ PHRASES: dict[str, str] = {
     "back_tour": "Возвращаюсь к обзору.",
     # экран, который попросили: Настя сама не уходит; тишина 20 с — один такой вопрос (замечание владельца 21.10 17:33)
     "detour_nudge": "Рассказать про этот экран подробнее — или идём дальше?",
+    # разговор о кандидатах на сравнении (av15): пока готовится ответ — короткое «смотрю», не мёртвая тишина
+    "adv_wait1": "Сейчас посмотрю.",
+    "adv_wait2": "Так, смотрю в сравнение.",
     "sorry": "Не расслышала. Повторите, пожалуйста.",
     "back_to_tour": "Вернёмся к обзору?",
     # между разделами обзора — спросить, есть ли вопросы, и ждать ответа
@@ -1719,6 +1722,15 @@ def _lead_on(res: dict, ctx: dict, text: str) -> str | None:
     return LEAD_ROLE
 
 
+# Сбой модели на числах словами (боевой 21.10 18:05, FINAL №2: «семьдесят seven и шесть десятых... Нет, скажу чисто:
+# …»): фраза с английским числительным — не в голос; самопоправка в начале фразы — срезается, суть остаётся.
+_EN_NUM = re.compile(r"\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|"
+                     r"sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|"
+                     r"hundred|thousand|percent)\b", re.I)
+_SELF_FIX = re.compile(r"^(?:нет|ой|вернее|точнее|то есть)[,.!]?\s+(?:скажу\s+(?:чисто|точнее|правильно|иначе|по-другому)|"
+                       r"поправлюсь|оговорилась|ошиблась|точнее)\s*[:,.—–-]*\s*", re.I)
+
+
 class _Shaper:
     """Чистит каждую фразу ответа перед голосом: служебное, мораль, оправдания, повторы, лишнее имя, длина."""
 
@@ -1741,6 +1753,13 @@ class _Shaper:
         t = _clean_reply(raw)
         if not t or t == "Хорошо." and raw.strip() != "Хорошо.":
             return None
+        if _EN_NUM.search(t) and re.search(r"[а-яё]", t, re.I):
+            return None
+        fixed = _SELF_FIX.sub("", t)
+        if fixed != t:
+            if len(fixed) < 3:
+                return None
+            t = fixed[:1].upper() + fixed[1:]
         if self.n == 0:
             t = _drop_self_talk(t)
             if self.name and self.name_recent and t.lower().startswith(self.name.lower() + ","):

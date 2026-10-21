@@ -90,8 +90,10 @@ def contacts_revealed(db: Session, company_id: uuid.UUID, candidate_id: uuid.UUI
 def candidate_contacts(db: Session, candidate_id: uuid.UUID, inv: Invitation | None = None) -> dict:
     p = db.get(CandidateProfile, candidate_id)
     u = db.get(User, candidate_id)
-    if p.deleted_at is not None:  # кандидат удалил учётную запись («Мои данные»): контактов больше нет
-        return {"full_name": None, "email": None, "phone": None, "telegram": None, "github": None}
+    if p is None or p.deleted_at is not None:  # кандидат удалил учётную запись («Мои данные»): контактов больше нет
+        return {"name": None, "full_name": None, "email": None, "phone": None, "telegram": None, "github": None}
+    if inv is not None and (inv.status != InvitationStatus.accepted or inv.contacts_revealed_at is None):
+        return {"name": None, "full_name": None, "email": None, "phone": None, "telegram": None, "github": None}
     if inv is None:
         inv = db.scalar(select(Invitation).where(
             Invitation.candidate_user_id == candidate_id,
@@ -101,8 +103,10 @@ def candidate_contacts(db: Session, candidate_id: uuid.UUID, inv: Invitation | N
     allowed = (inv.employment_terms or {}).get("shared_contacts") if inv is not None else None
     allow = set(allowed) if isinstance(allowed, list) and allowed else None
     github = (p.privacy or {}).get("github")
+    full_name = p.full_name if (allow is None or "full_name" in allow) else None
     out = {
-        "full_name": p.full_name if (allow is None or "full_name" in allow) else None,
+        "name": full_name,
+        "full_name": full_name,
         "email": u.email if (allow is None or "email" in allow) else None,
         "phone": p.phone if (allow is None or "phone" in allow) else None,
         "telegram": p.telegram if (allow is None or "telegram" in allow) else None,

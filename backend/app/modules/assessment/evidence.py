@@ -419,7 +419,7 @@ def skeptic_review(*, stem: str, code: str | None, step_prompt: str | None, rubr
         if not res.ok:
             sk["ok"], sk["error"] = False, res.error or "invalid_json"
         out.update(latency_ms=res.latency_ms, model=res.model, provider=res.provider,
-                   model_label=model_label(res.model) if res.model else None)
+                   model_label=model_label(res.model, second=True) if res.model else None)
         a = assemble(first, sk, rubric, red.text, task_text_of(stem, code, step_prompt),
                      disagree=s.llm_grading_disagree, disputed=disputed)
     except Exception as e:  # noqa: BLE001 — фоновая задача: ошибка = «скептик не ответил»

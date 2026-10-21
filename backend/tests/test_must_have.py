@@ -22,6 +22,13 @@ NO_PG = {"python": 1.0, "fastapi": 1.0, "kafka": 1.0, "docker": 1.0, "redis": 1.
 TWO = {"python": 1.0, "fastapi": 0.33, "kafka": 1.0, "docker": 1.0, "redis": 1.0, "kubernetes": 1.0}  # FastAPI ниже порога
 
 
+@pytest.fixture(autouse=True)
+def _match_v1(monkeypatch):
+    """Весь модуль — ярусы обязательного (must_have, match-v1.1+) в v1-пути подборки: явно MATCH_V2=0. В match-v2 их роль
+    у каскада стека (ярус статуса → ступень стека → балл; балл не пересекает ступень) — test_a5_match_v2."""
+    monkeypatch.setenv("MATCH_V2", "0")
+
+
 def _cand(client, i: int, skills: dict, **onb) -> tuple[str, uuid.UUID]:
     t = candidate_with_category(client, email=f"mh{i}@example.com", **onb)
     me = client.get("/api/me", headers=H(t)).json()

@@ -129,6 +129,8 @@ async def lifespan(_app: FastAPI):
     start_hiring_reminders()  # напоминания о собеседованиях (HIRING_REMIND_POLL_S; 0 — выключено)
     # Подписка на потребность и напоминания (И25, Н6): фоновый обход, под арендой в БД
     subs_runner.start_background(get_settings().subs_tick_interval_s)
+    # прогрев схемы OpenAPI в каждом воркере: иначе первый /api/openapi.json после перезапуска — до 60 с
+    threading.Thread(target=_app.openapi, daemon=True).start()
     yield
 
 

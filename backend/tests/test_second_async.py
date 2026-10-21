@@ -47,7 +47,7 @@ def test_second_opinion_verdicts(monkeypatch, net):
     net.on("or.test", FABLE, _grade({"cause": 1, "fix": 0.5}))  # 0,75 — рядом с 0,5
     r = second_call(**kw)
     assert r["verdict"] == "agree" and r["combined"]["score"] == 0.625 and r["label"] == "пересмотрено второй моделью"
-    assert r["model_label"] == "Claude Fable 5.1" and r["status"] == "done" and r["revised_at"]
+    assert r["model_label"] == "вторая модель" and r["status"] == "done" and r["revised_at"]
     assert net.calls[-1]["body"]["messages"][0]["content"].startswith("Ты — второй, независимый проверяющий")
     net.on("or.test", FABLE, _grade({"cause": 0, "fix": 0}, "weak"))
     assert second_call(**{**kw, "first": {"score": 1.0, "criteria": {"cause": 1.0, "fix": 1.0}}})["verdict"] == "disagree"

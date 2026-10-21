@@ -93,7 +93,10 @@ def test_selection_adds_above_grade_after_best_exact(client, monkeypatch):
     monkeypatch.setenv(GA.FLAG, "1")
     on = _selection()
     order = [r["ref"] for r in on["results"]]
-    assert on["grade_above"]["applied"] and on["algorithm"] == GA.ALGORITHM
+    from app.modules.matching import ltr
+
+    # подпись алгоритма — активного: match-v1.3 (добор выше) или match-v2+above при MATCH_V2=1 (добор тот же)
+    assert on["grade_above"]["applied"] and on["algorithm"] == ("match-v2+above" if ltr.enabled() else GA.ALGORITHM)
     assert refs["s"] in order
     # первые KEEP мест — лучшие точного уровня; кандидат уровнем выше (покрывает всё обязательное) — сразу за ними
     assert order.index(refs["x"]) < order.index(refs["s"]) and order.index(refs["y"]) < order.index(refs["s"])
